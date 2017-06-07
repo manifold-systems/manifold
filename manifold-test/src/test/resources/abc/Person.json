@@ -1,0 +1,20 @@
+{
+  "Name": "Dickson Yamada",
+  "Age": 39,
+  "Address": {
+    "Number": 9604,
+    "Street": "Donald Court",
+    "City": "Golden Shores",
+    "State": "FL"
+  },
+  "Hobby": [
+    {
+      "Category": "Sport",
+      "Name": "Baseball"
+    },
+    {
+      "Category": "Recreation",
+      "Name": "Hiking"
+    }
+  ]
+}
