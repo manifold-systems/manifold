@@ -4,7 +4,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.gosu-lang</groupId>
+  <groupId>org.manifold-systems</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>

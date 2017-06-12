@@ -14,6 +14,12 @@ public abstract class JavaSourceProducer<M extends ResourceFileSourceProducer.IM
   }
 
   @Override
+  public ProducerKind getProducerKind()
+  {
+    return ProducerKind.Primary;
+  }
+
+  @Override
   public ClassType getClassType( String fqn )
   {
     return ClassType.JavaClass;

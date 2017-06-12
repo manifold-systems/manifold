@@ -39,7 +39,7 @@ public interface IModule
 
   Set<ISourceProducer> getSourceProducers();
 
-  ISourceProducer findSourceProducerFor( String fqn );
+  Set<ISourceProducer> findSourceProducersFor( String fqn );
 
   JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler );
 }

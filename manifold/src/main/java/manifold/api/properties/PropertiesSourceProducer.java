@@ -48,7 +48,7 @@ public class PropertiesSourceProducer extends JavaSourceProducer<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
     SrcClass srcClass = new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get( 0 ), topLevelFqn ).make();

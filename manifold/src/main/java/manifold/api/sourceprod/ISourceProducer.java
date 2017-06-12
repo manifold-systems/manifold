@@ -18,7 +18,25 @@ public interface ISourceProducer extends IFileConnected
   enum SourceKind
   {
     Java,
-    Gosu;
+    Gosu
+  }
+
+  /**
+   * Specifies the involvement of this producer wrt the completeness of the source
+   */
+  enum ProducerKind
+  {
+    /** Produces complete valid source and does not depend on contributions from other producers */
+    Primary,
+
+    /** Supplements the source produced from a Primary producer or set of Partial producers */
+    Supplemental,
+
+    /** Cooperates with other producers to collectively provide complete valid source */
+    Partial,
+
+    /** Does not directly contribute source */
+    None
   }
 
   void init( ITypeLoader tl );
@@ -32,6 +50,11 @@ public interface ISourceProducer extends IFileConnected
    * What kind of source is produced?  Java or Gosu?
    */
   SourceKind getSourceKind();
+
+  /**
+   * How does this producer contribute toward the source file produced
+   */
+  ProducerKind getProducerKind();
 
   /**
    * The file extensions this producer handles (no dot).
@@ -62,7 +85,7 @@ public interface ISourceProducer extends IFileConnected
   /**
    * Produce source corresponding with the fqn.
    */
-  String produce( String fqn, DiagnosticListener<JavaFileObject> errorHandler );
+  String produce( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
 
   Collection<String> getAllTypeNames();
   Collection<TypeName> getTypeNames( String namespace );

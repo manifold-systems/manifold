@@ -70,7 +70,7 @@ public class JsonImplSourceProducer extends JavaSourceProducer<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     SrcClass srcClass = new JsonImplCodeGen( model.getType(), topLevelFqn ).make();

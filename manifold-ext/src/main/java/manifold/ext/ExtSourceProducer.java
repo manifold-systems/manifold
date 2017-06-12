@@ -13,7 +13,6 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.ModulePathCache;
-import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
 import manifold.api.sourceprod.ClassType;
 import manifold.api.sourceprod.ITypeProcessor;
@@ -28,12 +27,18 @@ import manifold.util.StreamUtil;
  */
 public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITypeProcessor
 {
-  public static final String EXTENSIONS_PACKAGE = "extensions";
+  private static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
   public void init( ITypeLoader typeLoader )
   {
     init( typeLoader, FILE_EXTENSIONS, ( fqn, file ) -> Model.addFile( fqn, file, this ) );
+  }
+
+  @Override
+  public ProducerKind getProducerKind()
+  {
+    return ProducerKind.Supplemental;
   }
 
   @Override
@@ -109,10 +114,13 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
     if( typesForFile != null && typesForFile.length > 0 )
     {
       String fqn = typesForFile[0];
-      fqn = fqn.substring( EXTENSIONS_PACKAGE.length() + 1 );
-      int iDot = fqn.lastIndexOf( '.' );
-      fqn = iDot == -1 ? fqn : fqn.substring( 0, iDot );
-      return new String[]{fqn};
+      if( fqn.startsWith( EXTENSIONS_PACKAGE ) )
+      {
+        fqn = fqn.substring( EXTENSIONS_PACKAGE.length() + 1 );
+        int iDot = fqn.lastIndexOf( '.' );
+        fqn = iDot == -1 ? fqn : fqn.substring( 0, iDot );
+        return new String[]{fqn};
+      }
     }
     return typesForFile;
   }
@@ -137,12 +145,9 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
   }
 
   @Override
-  protected String produce( String topLevelFqn, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass = new ExtCodeGen( model, topLevelFqn ).make( errorHandler );
-    StringBuilder sb = new StringBuilder();
-    srcClass.render( sb, 0 );
-    return sb.toString();
+    return new ExtCodeGen( model, topLevelFqn, existing ).make( errorHandler );
   }
 
   @Override

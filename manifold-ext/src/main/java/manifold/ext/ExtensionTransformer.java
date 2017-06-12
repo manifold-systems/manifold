@@ -53,7 +53,7 @@ class ExtensionTransformer extends TreeTranslator
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
       JavacTaskImpl javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn );
+      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
       m.type = method.type;
@@ -98,7 +98,7 @@ class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           JavacTaskImpl javacTask = (JavacTaskImpl)JavacHook.instance().getJavacTask();
-          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass );
+          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
           outer:
           for( Symbol elem : extClassSym.members().getElements() )

@@ -145,6 +145,32 @@ public class SrcClass extends SrcStatement<SrcClass>
     return this;
   }
 
+  public SrcClass imports( String... classes )
+  {
+    for( String c: classes )
+    {
+      _imports.add( c );
+    }
+    return this;
+  }
+
+  public SrcClass addImport( Class cls )
+  {
+    return addImport( cls.getName() );
+  }
+
+  public SrcClass addImport( String path )
+  {
+    _imports.add( path );
+    return this;
+  }
+
+  public SrcClass addStaticImport( String path )
+  {
+    _imports.add( " static " + path );
+    return this;
+  }
+
   public String getPackage()
   {
     return _package;

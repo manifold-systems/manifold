@@ -110,8 +110,8 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
   @Override
   public void maybeAssignGousType( ClassLoader loader, String fqn, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
-    ISourceProducer sp = getCurrentModule().findSourceProducerFor( fqn );
-    if( sp != null )
+    Set<ISourceProducer> sps = getCurrentModule().findSourceProducersFor( fqn );
+    if( !sps.isEmpty() )
     {
       assigner.accept( fqn, null );
     }

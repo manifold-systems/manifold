@@ -4,6 +4,7 @@ import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
 import javax.lang.model.type.NoType;
@@ -32,15 +33,33 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol )
+  SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit )
   {
-    return makeSrcClass( fqn, classSymbol );
+    return makeStub( fqn, classSymbol, compilationUnit, true );
+  }
+  public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, boolean withMembers )
+  {
+    return makeSrcClass( fqn, classSymbol, compilationUnit, withMembers );
   }
 
-  private SrcClass makeSrcClass( String fqn, Symbol.ClassSymbol classSymbol )
+  private SrcClass makeSrcClass( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, boolean withMembers )
   {
     SrcClass srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ) )
       .modifiers( classSymbol.getModifiers() );
+    if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
+    {
+      for( JCTree.JCImport imp: compilationUnit.getImports() )
+      {
+        if( imp.staticImport )
+        {
+          srcClass.addStaticImport( imp.getQualifiedIdentifier().toString() );
+        }
+        else
+        {
+          srcClass.addImport( imp.getQualifiedIdentifier().toString() );
+        }
+      }
+    }
     for( Attribute.Compound annotationMirror : classSymbol.getAnnotationMirrors() )
     {
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( annotationMirror.getAnnotationType().toString() );
@@ -62,19 +81,22 @@ public class SrcClassUtil
     {
       srcClass.iface( makeNestedType( iface ) );
     }
-    for( Symbol sym : classSymbol.getEnclosedElements() )
+    if( withMembers )
     {
-      if( sym instanceof Symbol.ClassSymbol )
+      for( Symbol sym : classSymbol.getEnclosedElements() )
       {
-        addInnerClass( srcClass, sym );
-      }
-      else if( sym instanceof Symbol.VarSymbol )
-      {
-        addField( srcClass, sym );
-      }
-      else if( sym instanceof Symbol.MethodSymbol )
-      {
-        addMethod( srcClass, (Symbol.MethodSymbol)sym );
+        if( sym instanceof Symbol.ClassSymbol )
+        {
+          addInnerClass( srcClass, sym );
+        }
+        else if( sym instanceof Symbol.VarSymbol )
+        {
+          addField( srcClass, sym );
+        }
+        else if( sym instanceof Symbol.MethodSymbol )
+        {
+          addMethod( srcClass, (Symbol.MethodSymbol)sym );
+        }
       }
     }
     return srcClass;
@@ -100,7 +122,7 @@ public class SrcClassUtil
 
   private void addInnerClass( SrcClass srcClass, Symbol sym )
   {
-    SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym );
+    SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym, null, true );
     srcClass.addInnerClass( innerClass );
   }
 

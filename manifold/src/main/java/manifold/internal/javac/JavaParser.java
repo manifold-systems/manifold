@@ -49,7 +49,7 @@ public class JavaParser implements IJavaParser
 
   private JavaCompiler _javac;
   private JavaFileManager _fileManager;
-  private GosuJavaFileManager _gfm;
+  private ManifoldJavaFileManager _gfm;
 
   private JavaParser()
   {
@@ -83,7 +83,7 @@ public class JavaParser implements IJavaParser
             ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).collect( Collectors.toList() ) );
             ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile ).collect( Collectors.toList() ) );
           }
-          _gfm = new GosuJavaFileManager( _fileManager, null, false );
+          _gfm = new ManifoldJavaFileManager( _fileManager, null, false );
         }
         catch( IOException e )
         {

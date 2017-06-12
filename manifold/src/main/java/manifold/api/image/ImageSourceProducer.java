@@ -35,7 +35,7 @@ public class ImageSourceProducer extends JavaSourceProducer<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new ImageCodeGen( model._url, topLevelFqn ).make();
     StringBuilder sb = srcClass.render( new StringBuilder(), 0 );

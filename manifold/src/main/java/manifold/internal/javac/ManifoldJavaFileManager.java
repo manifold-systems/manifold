@@ -26,7 +26,7 @@ import manifold.util.cache.FqnCacheNode;
 
 /**
  */
-class GosuJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> implements ITypeLoaderListener
+class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> implements ITypeLoaderListener
 {
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
@@ -34,7 +34,7 @@ class GosuJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> imp
   private JavaFileManager _javacMgr;
   private Log _issueLogger;
 
-  GosuJavaFileManager( JavaFileManager fileManager, Log issueLogger, boolean fromJavaC )
+  ManifoldJavaFileManager( JavaFileManager fileManager, Log issueLogger, boolean fromJavaC )
   {
     super( fileManager );
     _fromJavaC = fromJavaC;

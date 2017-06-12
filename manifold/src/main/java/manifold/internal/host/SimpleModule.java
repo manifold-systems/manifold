@@ -20,6 +20,9 @@ import manifold.api.sourceprod.ISourceProducer;
 import manifold.api.sourceprod.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
 
+
+import static manifold.api.sourceprod.ISourceProducer.ProducerKind.*;
+
 /**
  */
 public abstract class SimpleModule implements ITypeLoader, IModule
@@ -91,22 +94,50 @@ public abstract class SimpleModule implements ITypeLoader, IModule
 
   public JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    ISourceProducer sp = findSourceProducerFor( fqn );
-    return sp != null
-    ? new GeneratedJavaStubFileObject( fqn, () -> sp.produce( fqn, errorHandler ) )
-    : null;
+    Set<ISourceProducer> sps = findSourceProducersFor( fqn );
+    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, () -> compoundProduce( sps, fqn, errorHandler ) );
   }
 
-  public ISourceProducer findSourceProducerFor( String fqn )
+  private String compoundProduce( Set<ISourceProducer> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
+    ISourceProducer found = null;
+    String result = "";
+    for( ISourceProducer sp: sps )
+    {
+      if( sp.getProducerKind() == Primary ||
+          sp.getProducerKind() == Partial )
+      {
+        if( found != null && (found.getProducerKind() == Primary || sp.getProducerKind() == Primary) )
+        {
+          //## todo: how better to handle this?
+          throw new UnsupportedOperationException( "The type, " + fqn + ", has conflicting source producers: '" +
+                                                   found.getClass().getName() + "' and '" + sp.getClass().getName() + "'" );
+        }
+        found = sp;
+        result = sp.produce( fqn, result, errorHandler );
+      }
+    }
+    for( ISourceProducer sp: sps )
+    {
+      if( sp.getProducerKind() == ISourceProducer.ProducerKind.Supplemental )
+      {
+        result = sp.produce( fqn, result, errorHandler );
+      }
+    }
+    return result;
+  }
+
+  public Set<ISourceProducer> findSourceProducersFor( String fqn )
+  {
+    Set<ISourceProducer> sps = new HashSet<>( 2 );
     for( ISourceProducer sp: getSourceProducers() )
     {
       if( sp.isType( fqn ) )
       {
-        return sp;
+        sps.add( sp );
       }
     }
-    return null;
+    return sps;
   }
 
   protected void initializeSourceProducers()
@@ -161,12 +192,15 @@ public abstract class SimpleModule implements ITypeLoader, IModule
       }
     }
 
-    // Also load from this loader
-    loader = ServiceLoader.load( ISourceProducer.class, getClass().getClassLoader() );
-    for( ISourceProducer sp: loader )
+    if( Thread.currentThread().getContextClassLoader() != getClass().getClassLoader() )
     {
-      sp.init( this );
-      sps.add( sp );
+      // Also load from this loader
+      loader = ServiceLoader.load( ISourceProducer.class, getClass().getClassLoader() );
+      for( ISourceProducer sp : loader )
+      {
+        sp.init( this );
+        sps.add( sp );
+      }
     }
   }
 

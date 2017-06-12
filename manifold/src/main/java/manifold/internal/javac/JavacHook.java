@@ -53,7 +53,7 @@ public class JavacHook extends AbstractProcessor
 
   private JavacProcessingEnvironment _jpe;
   private Context _ctx;
-  private GosuJavaFileManager _gosuFileManager;
+  private ManifoldJavaFileManager _gosuFileManager;
   private JavaFileManager _fileManager;
   private Set<JavaFileObject> _javaInputFiles;
   private List<String> _gosuInputFiles;
@@ -86,7 +86,7 @@ public class JavacHook extends AbstractProcessor
     hijackJavacFileManager();
   }
 
-  GosuJavaFileManager getGosuFileManager()
+  ManifoldJavaFileManager getGosuFileManager()
   {
     return _gosuFileManager;
   }
@@ -118,7 +118,7 @@ public class JavacHook extends AbstractProcessor
 
   private void hijackJavacFileManager()
   {
-    if( !(_fileManager instanceof GosuJavaFileManager) )
+    if( !(_fileManager instanceof ManifoldJavaFileManager) )
     {
       injectGosuFileManager();
       ManifoldHost.initializeAndCompileNonJavaFiles( _jpe, _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
@@ -127,7 +127,7 @@ public class JavacHook extends AbstractProcessor
 
   private void injectGosuFileManager()
   {
-    _gosuFileManager = new GosuJavaFileManager( _fileManager, Log.instance( _ctx ), true );
+    _gosuFileManager = new ManifoldJavaFileManager( _fileManager, Log.instance( _ctx ), true );
     _ctx.put( JavaFileManager.class, (JavaFileManager)null );
     _ctx.put( JavaFileManager.class, _gosuFileManager );
   }

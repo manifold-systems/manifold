@@ -136,10 +136,10 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
   /**
    * Generate Source code for the named model.
    * @param topLevelFqn The qualified name of the top-level type to produce.
-   * @param model The model your source code provider uses to generate the source.
-   * @return The source code for the specified top-level type.
+   * @param existing The source produced from other producers so far; if not empty, this producer must not be a Primary producer.
+   *@param model The model your source code provider uses to generate the source.  @return The source code for the specified top-level type.
    */
-  protected abstract String produce( String topLevelFqn, M model, DiagnosticListener<JavaFileObject> errorHandler );
+  protected abstract String produce( String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
 
   protected M getModel( String topLevel )
   {
@@ -259,12 +259,12 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
   }
 
   @Override
-  public String produce( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  public String produce( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
   {
     String topLevel = findTopLevelFqn( fqn );
     LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( topLevel );
 
-    String source = produce( topLevel, lazyModel.get(), errorHandler );
+    String source = produce( topLevel, existing, lazyModel.get(), errorHandler );
 
     // Now remove the model since we don't need it anymore
     lazyModel.clear();

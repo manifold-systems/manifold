@@ -1,9 +1,12 @@
 package manifold.internal.javac;
 
+import com.sun.source.util.TreePath;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
+import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.tree.JCTree;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
@@ -19,6 +22,7 @@ import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.Pair;
 
 /**
  * Utility to get ClassSymbol for a given type name.
@@ -88,10 +92,22 @@ public class ClassSymbols
     return (JavacTaskImpl)_javacTool.getTask( errors, _fm, null, Collections.singletonList( "-proc:none" ), null, null );
   }
 
-  public Symbol.ClassSymbol getClassSymbol( JavacTaskImpl javacTask, String fqn )
+  public Pair<Symbol.ClassSymbol,JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
-    return elementUtils.getTypeElement( fqn );
+    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
+    JavacTrees trees = JavacTrees.instance( javacTask.getContext() );
+    TreePath path = trees.getPath( typeElement );
+    if( path != null )
+    {
+      return new Pair<>( typeElement, (JCTree.JCCompilationUnit)path.getCompilationUnit() );
+    }
+    else
+    {
+      // TreePath is only applicable to a source file;
+      // if fqn is not a source file, there is no compilation unit available
+      return new Pair<>( typeElement, null );
+    }
   }
 
   public SrcClass makeSrcClassStub( String fqn )
@@ -101,12 +117,12 @@ public class ClassSymbols
   public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut )
   {
     JavacTaskImpl javacTask = getJavacTask();
-    Symbol.ClassSymbol classSymbol = getClassSymbol( javacTask, fqn );
+    Pair<Symbol.ClassSymbol,JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
     if( javacTaskOut != null )
     {
       javacTaskOut[0] = javacTask;
     }
-    return SrcClassUtil.instance().makeStub( fqn, classSymbol );
+    return SrcClassUtil.instance().makeStub( fqn, pair.getFirst(), pair.getSecond() );
   }
 
   private class CacheClearer implements ITypeLoaderListener
