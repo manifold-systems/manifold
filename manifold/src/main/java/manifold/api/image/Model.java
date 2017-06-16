@@ -1,43 +1,27 @@
 package manifold.api.image;
 
 import java.net.MalformedURLException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.ResourceFileSourceProducer;
+import manifold.api.sourceprod.AbstractSingleFileModel;
 
 /**
  */
-class Model implements ResourceFileSourceProducer.IModel
+class Model extends AbstractSingleFileModel
 {
-  private String _fqn;
-  private IFile _file;
   String _url;
 
-  Model( String fqn, IFile file )
+  Model( String fqn, Set<IFile> files )
   {
-    _fqn = fqn;
-    _file = file;
+    super( fqn, files );
     try
     {
-      _url = file.toURI().toURL().toString();
+      _url = getFile().toURI().toURL().toString();
     }
     catch( MalformedURLException e )
     {
       throw new RuntimeException( e );
     }
-  }
-
-  @Override
-  public String getFqn()
-  {
-    return _fqn;
-  }
-
-  @Override
-  public List<IFile> getFiles()
-  {
-    return Collections.singletonList( _file );
   }
 
   public String getUrl()

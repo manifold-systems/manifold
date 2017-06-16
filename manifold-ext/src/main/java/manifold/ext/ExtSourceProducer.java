@@ -32,7 +32,7 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSIONS, ( fqn, file ) -> Model.addFile( fqn, file, this ) );
+    init( typeLoader, FILE_EXTENSIONS, (fqn, files) -> new Model( fqn, files, this ) );
   }
 
   @Override
@@ -141,7 +141,6 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
   public void clear()
   {
     super.clear();
-    Model.clear();
   }
 
   @Override

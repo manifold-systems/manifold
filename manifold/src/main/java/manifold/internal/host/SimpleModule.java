@@ -10,6 +10,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFile;
 import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
@@ -25,6 +26,7 @@ import static manifold.api.sourceprod.ISourceProducer.ProducerKind.*;
 
 /**
  */
+@SuppressWarnings("WeakerAccess")
 public abstract class SimpleModule implements ITypeLoader, IModule
 {
   private List<IDirectory> _classpath;
@@ -133,6 +135,19 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     for( ISourceProducer sp: getSourceProducers() )
     {
       if( sp.isType( fqn ) )
+      {
+        sps.add( sp );
+      }
+    }
+    return sps;
+  }
+
+  public Set<ISourceProducer> findSourceProducersFor( IFile file )
+  {
+    Set<ISourceProducer> sps = new HashSet<>( 2 );
+    for( ISourceProducer sp: getSourceProducers() )
+    {
+      if( sp.handlesFile( file ) )
       {
         sps.add( sp );
       }

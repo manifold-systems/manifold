@@ -5,6 +5,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.sourceprod.ISourceProducer;
 
@@ -40,6 +41,7 @@ public interface IModule
   Set<ISourceProducer> getSourceProducers();
 
   Set<ISourceProducer> findSourceProducersFor( String fqn );
+  Set<ISourceProducer> findSourceProducersFor( IFile file );
 
   JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler );
 }

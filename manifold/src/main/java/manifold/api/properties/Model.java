@@ -3,46 +3,29 @@ package manifold.api.properties;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
-import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.json.Json;
-import manifold.api.sourceprod.ResourceFileSourceProducer;
+import manifold.api.sourceprod.AbstractSingleFileModel;
 import manifold.util.cache.FqnCache;
 
 /**
  */
-class Model implements ResourceFileSourceProducer.IModel
+class Model extends AbstractSingleFileModel
 {
-  private String _fqn;
-  private IFile _file;
   private FqnCache<String> _cache;
 
-  public Model( String fqn, IFile file )
+  public Model( String fqn, Set<IFile> files )
   {
-    _fqn = fqn;
-    _file = file;
-
-    buildCache( fqn, file );
+    super( fqn, files );
+    buildCache( fqn, getFile() );
   }
 
   public Model( String fqn, FqnCache<String> cache )
   {
-    _fqn = fqn;
-    _file = null;
+    super( fqn, Collections.emptySet() );
     _cache = cache;
-  }
-
-  @Override
-  public String getFqn()
-  {
-    return _fqn;
-  }
-
-  @Override
-  public List<IFile> getFiles()
-  {
-    return Collections.singletonList( _file );
   }
 
   public FqnCache<String> getCache()

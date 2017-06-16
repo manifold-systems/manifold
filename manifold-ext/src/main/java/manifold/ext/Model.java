@@ -1,46 +1,26 @@
 package manifold.ext;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.ResourceFileSourceProducer;
+import manifold.api.sourceprod.IModel;
 
 /**
  */
-public class Model implements ResourceFileSourceProducer.IModel
+public class Model implements IModel
 {
-  private static final Map<String, Model> MODELS = new ConcurrentHashMap<>();
-
-  static Model addFile( String fqnExtended, IFile file, ExtSourceProducer sp )
-  {
-    Model model = MODELS.get( fqnExtended );
-    if( model == null )
-    {
-      MODELS.put( fqnExtended, model = new Model( fqnExtended, new ArrayList<>(), sp ) );
-    }
-    if( !model.getFiles().contains( file ) )
-    {
-      model.getFiles().add( file );
-    }
-    return model;
-  }
-  static void clear()
-  {
-    MODELS.clear();
-  }
-
   private final ExtSourceProducer _sp;
   private final String _fqnExtended;
-  private List<IFile> _files;
+  private Set<IFile> _files;
 
-  Model( String extendedFqn, List<IFile> files, ExtSourceProducer sp )
+  Model( String extendedFqn, Set<IFile> files, ExtSourceProducer sp )
   {
     _fqnExtended = extendedFqn;
-    _files = files;
+    _files = new HashSet<>( files );
     _sp = sp;
   }
 
@@ -51,13 +31,38 @@ public class Model implements ResourceFileSourceProducer.IModel
   }
 
   @Override
-  public List<IFile> getFiles()
+  public Set<IFile> getFiles()
   {
     if( _files == null )
     {
-      _files = new ArrayList<>();
+      _files = new HashSet<>();
     }
     return _files;
+  }
+
+  @Override
+  public void addFile( IFile file )
+  {
+    if( !getFiles().add( file ) )
+    {
+      throw new IllegalStateException( "Model already contains " + file.getName() );
+    }
+  }
+
+  @Override
+  public void removeFile( IFile file )
+  {
+    if( !getFiles().remove( file ) )
+    {
+      throw new IllegalStateException( "Model does not contain " + file.getName() );
+    }
+  }
+
+  @Override
+  public void updateFile( IFile file )
+  {
+    getFiles().remove( file );
+    getFiles().add( file );
   }
 
   ExtSourceProducer getSourceProducer()

@@ -13,6 +13,7 @@ public class SimpleTest extends TestCase
   public void testMe()
   {
     "this is impossible".echo();
+    "this is impossible".helloWorld();
 
     ArrayList<String> lsist = new ArrayList<>( Arrays.asList( "hi", "and", "hello" ) );
 

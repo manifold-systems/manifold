@@ -31,7 +31,7 @@ public class JavascriptSourceProducer extends JavaSourceProducer<JavascriptModel
   @Override
   protected String produce( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errrorHandler )
   {
-    SrcClass srcClass = new JavascriptCodeGen( model.getFiles().get( 0 ), topLevelFqn ).make();
+    SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make();
     //## todo: use errorhandler(), look at JsonImplSourceProvider
     return srcClass.render( new StringBuilder(), 0 ).toString();
   }

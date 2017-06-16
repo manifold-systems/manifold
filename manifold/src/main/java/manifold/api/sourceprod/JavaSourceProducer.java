@@ -5,7 +5,7 @@ package manifold.api.sourceprod;
  *
  * @param <M> The model you derive backing production of source code.
  */
-public abstract class JavaSourceProducer<M extends ResourceFileSourceProducer.IModel> extends ResourceFileSourceProducer<M>
+public abstract class JavaSourceProducer<M extends IModel> extends ResourceFileSourceProducer<M>
 {
   @Override
   public SourceKind getSourceKind()

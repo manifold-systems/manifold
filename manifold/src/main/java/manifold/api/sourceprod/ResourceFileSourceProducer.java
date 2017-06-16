@@ -2,9 +2,10 @@ package manifold.api.sourceprod;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import manifold.internal.host.ManifoldHost;
 import manifold.util.GosuClassUtil;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
+import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -32,13 +34,13 @@ import manifold.util.concurrent.LocklessLazyVar;
  *
  * @param <M> The model you derive backing production of source code.
  */
-public abstract class ResourceFileSourceProducer<M extends ResourceFileSourceProducer.IModel> extends BaseService implements ISourceProducer
+public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseService implements ISourceProducer
 {
   private ITypeLoader _typeLoader;
   private Set<String> _extensions;
   private LocklessLazyVar<FqnCache<LocklessLazyVar<M>>> _fqnToModel;
   private  String _typeFactoryFqn;
-  private  BiFunction<String, IFile, M> _modelMapper;
+  private  BiFunction<String, Set<IFile>, M> _modelMapper;
   @SuppressWarnings("all")
   private CacheClearer _cacheClearer;
 
@@ -53,7 +55,7 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
    * @param extensions The extension of the resource file this source producer handles
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
-  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, IFile, M> modelMapper )
+  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, Set<IFile>, M> modelMapper )
   {
     init( typeLoader, extensions, modelMapper, null );
   }
@@ -63,14 +65,15 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
    * @param modelMapper A function to provide a model given a qualified name and resource file
    * @param typeFactoryFqn For Gosu Lab.  Optional.
    */
-  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, IFile, M> modelMapper, String typeFactoryFqn )
+  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
   {
     _typeLoader = typeLoader;
     _extensions = extensions;
     _typeFactoryFqn = typeFactoryFqn;
     _modelMapper = modelMapper;
     _fqnToModel = LocklessLazyVar.make( () -> {
-      FqnCache<LocklessLazyVar<M>> cache = new FqnCache<>();
+      FqnCache<LocklessLazyVar<M>> fqnToModel = new FqnCache<>();
+      Map<String, Set<IFile>> aliasFqnToFiles = new HashMap<>();
       for( String ext: _extensions )
       {
         FqnCache<IFile> fileCache = ModulePathCache.instance().get( getModule() ).getExtensionCache( ext );
@@ -81,23 +84,57 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
             String aliasFqn = aliasFqn( fqn, file );
             if( aliasFqn != null )
             {
-              cache.add( aliasFqn, LocklessLazyVar.make( () -> _modelMapper.apply( aliasFqn, file ) ) );
-              for( String addFqn : getAdditionalTypes( aliasFqn, file ) )
+              Set<IFile> files = aliasFqnToFiles.get( aliasFqn );
+              if( files == null )
               {
-                cache.add( addFqn, LocklessLazyVar.make( () -> getModel( aliasFqn ) ) ); // use same model as base fqn
+                files = new ConcurrentHashSet<>();
+              }
+              if( !isDuplicate( file, files ) )
+              {
+                files.add( file );
+                aliasFqnToFiles.put( aliasFqn, files );
               }
             }
           }
         } );
       }
+
+      for( Map.Entry<String, Set<IFile>> entry: aliasFqnToFiles.entrySet() )
+      {
+        String aliasFqn = entry.getKey();
+        Set<IFile> files = entry.getValue();
+        fqnToModel.add( aliasFqn, LocklessLazyVar.make( () -> _modelMapper.apply( aliasFqn, files ) ) );
+        for( IFile file: files )
+        {
+          for( String addFqn : getAdditionalTypes( aliasFqn, file ) )
+          {
+            fqnToModel.add( addFqn, LocklessLazyVar.make( () -> getModel( aliasFqn ) ) ); // use same model as base fqn
+          }
+        }
+      }
+
       Map<String, LocklessLazyVar<M>> peripheralTypes = getPeripheralTypes();
       if( peripheralTypes != null )
       {
-        cache.addAll( peripheralTypes );
+        fqnToModel.addAll( peripheralTypes );
       }
-      return cache;
+      return fqnToModel;
     } );
     ManifoldHost.addTypeLoaderListenerAsWeakRef( getModule(), _cacheClearer = new CacheClearer() );
+  }
+
+  protected boolean isDuplicate( IFile file, Set<IFile> files )
+  {
+    Set<String> fqnForFile = ModulePathCache.instance().get( getModule() ).getFqnForFile( file );
+    for( IFile f: files )
+    {
+      Set<String> fqn = ModulePathCache.instance().get( getModule() ).getFqnForFile( f );
+      if( fqnForFile.equals( fqn ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -295,7 +332,7 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
     }
 
     M model = getModel( topLevel );
-    return model != null ? model.getFiles() : Collections.emptyList();
+    return model != null ? new ArrayList<>( model.getFiles() ) : Collections.emptyList();
   }
 
   @Override
@@ -365,56 +402,63 @@ public abstract class ResourceFileSourceProducer<M extends ResourceFileSourcePro
         return;
       }
 
+      Set<ISourceProducer> sps = getModule().findSourceProducersFor( request.file );
+      if( !sps.contains( ResourceFileSourceProducer.this ) )
+      {
+        return;
+      }
+
       switch( request.kind )
       {
         case MODIFICATION:
-          Arrays.stream( request.types ).forEach(
-            fqn -> {
-              LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( fqn );
-              if( lazyModel != null )
-              {
-                lazyModel.clear();
-              }
-              else if( request.file != null )
-              {
-                String aliasFqn = aliasFqn( fqn, request.file );
-                if( aliasFqn != null )
-                {
-                  _fqnToModel.get().add( aliasFqn, LocklessLazyVar.make( () -> _modelMapper.apply( aliasFqn, request.file ) ) );
-                }
-              }
-            } );
+          for( String type: getTypesForFile( request.file ) )
+          {
+            M lazyModel = getModel( type );
+            if( lazyModel != null )
+            {
+              lazyModel.updateFile( request.file );
+            }
+            else
+            {
+              _fqnToModel.get().add( type, LocklessLazyVar.make( () -> _modelMapper.apply( type, Collections.singleton( request.file ) ) ) );
+            }
+          }
           break;
 
         case CREATION:
         {
-          Arrays.stream( request.types ).forEach(
-            fqn -> {
-              if( request.file != null )
-              {
-                String aliasFqn = aliasFqn( fqn, request.file );
-                if( aliasFqn != null )
-                {
-                  _fqnToModel.get().add( aliasFqn, LocklessLazyVar.make( () -> _modelMapper.apply( aliasFqn, request.file ) ) );
-                }
-              }
-            } );
+          for( String type: getTypesForFile( request.file ) )
+          {
+            M lazyModel = getModel( type );
+            if( lazyModel != null )
+            {
+              lazyModel.addFile( request.file );
+            }
+            else
+            {
+              _fqnToModel.get().add( type, LocklessLazyVar.make( () -> _modelMapper.apply( type, Collections.singleton( request.file ) ) ) );
+            }
+          }
           break;
         }
 
         case DELETION:
         {
-          Arrays.stream( request.types ).forEach(
-            fqn -> _fqnToModel.get().remove( fqn ) );
+          for( String type: getTypesForFile( request.file ) )
+          {
+            M lazyModel = getModel( type );
+            if( lazyModel != null )
+            {
+              lazyModel.removeFile( request.file );
+            }
+            if( lazyModel.getFiles().size() == 0 )
+            {
+              _fqnToModel.get().remove( type );
+            }
+          }
           break;
         }
       }
     }
-  }
-
-  public interface IModel
-  {
-    String getFqn();
-    List<IFile> getFiles();
   }
 }
