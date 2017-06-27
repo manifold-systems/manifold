@@ -10,7 +10,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface Extension
+public @interface Structural
 {
-  Class[] interfaces() default {};
 }

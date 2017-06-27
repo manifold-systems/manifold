@@ -33,6 +33,11 @@ public abstract class CompiledTypeProcessor implements TaskListener
     JavaCompiler compiler = JavaCompiler.instance( context );
     compiler.shouldStopPolicyIfNoError = CompileState.max( compiler.shouldStopPolicyIfNoError, CompileState.FLOW );
     _issueReporter = new IssueReporter<>( Log.instance( context ) );
+
+//    DiagnosticListener dl = context.get( DiagnosticListener.class );
+//    context.put( DiagnosticListener.class, (DiagnosticListener)null );
+//    context.put( DiagnosticListener.class, new WrappedDiagnosticListener( dl ) );
+
     _typesToProcess = new HashSet<>();
   }
 
@@ -40,6 +45,12 @@ public abstract class CompiledTypeProcessor implements TaskListener
    * Subclasses override to process a compiled type.
    */
   public abstract void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter );
+
+//  /**
+//   * Subclasses override to filter javac compile errors / warnings.
+//   */
+//  public abstract boolean filterError( Diagnostic diagnostic );
+
 
   public Context getContext()
   {
@@ -103,4 +114,23 @@ public abstract class CompiledTypeProcessor implements TaskListener
   {
     return TreeMaker.instance( getContext() );
   }
+
+//  private class WrappedDiagnosticListener implements DiagnosticListener
+//  {
+//    private final DiagnosticListener _dl;
+//
+//    public WrappedDiagnosticListener( DiagnosticListener dl )
+//    {
+//      _dl = dl;
+//    }
+//
+//    @Override
+//    public void report( Diagnostic diagnostic )
+//    {
+//      if( !filterError( diagnostic ) )
+//      {
+//        _dl.report( diagnostic );
+//      }
+//    }
+//  }
 }

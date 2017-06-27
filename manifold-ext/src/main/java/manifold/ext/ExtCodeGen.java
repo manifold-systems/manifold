@@ -29,7 +29,6 @@ import manifold.ext.api.ExtensionMethod;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavaParser;
-import manifold.util.Pair;
 
 /**
  */
@@ -78,20 +77,38 @@ class ExtCodeGen
         srcClass.iface( iface.toString() );
       }
     }
-    addExtensionMethods( srcClass, errorHandler );
-    if( !_existingSource.isEmpty() )
-    {
-      return addExtensionMethodsToExistingSource( srcClass );
-    }
-    else
-    {
-      return srcClass.render( new StringBuilder(), 0 ).toString();
-    }
+    return addExtensions( srcClass, errorHandler );
   }
 
-  private String addExtensionMethodsToExistingSource( SrcClass srcClass )
+  private String addExtensionsToExistingSource( SrcClass srcClass, boolean methodExtensions, boolean interfaceExtensions )
   {
     StringBuilder sb = new StringBuilder();
+    if( methodExtensions )
+    {
+      addExtensionMethodsToExistingSource( srcClass, sb );
+    }
+    if( interfaceExtensions )
+    {
+      addExtensionInterfacesToExistingSource( srcClass, sb );
+    }
+    return sb.toString();
+  }
+
+  private void addExtensionInterfacesToExistingSource( SrcClass srcClass, StringBuilder sb )
+  {
+    String start = (srcClass.isInterface() ? "interface " : "class ") + srcClass.getSimpleName();
+    int iStart = sb.indexOf( start );
+    int iBrace = sb.indexOf( "{", iStart );
+    StringBuilder sbSrcClass = new StringBuilder();
+    srcClass.render( sbSrcClass, 0 );
+    int iSrcClassStart = sbSrcClass.indexOf( start );
+    int iSrcClassBrace = sbSrcClass.indexOf( "{", iSrcClassStart );
+    String fromSrcClass = sbSrcClass.substring( iSrcClassStart, iSrcClassBrace );
+    sb.replace( iStart, iBrace, fromSrcClass );
+  }
+
+  private void addExtensionMethodsToExistingSource( SrcClass srcClass, StringBuilder sb )
+  {
     int iBrace = _existingSource.lastIndexOf( '}' );
     sb.append( _existingSource.substring( 0, iBrace ) );
     for( AbstractSrcMethod method: srcClass.getMethods() )
@@ -99,11 +116,12 @@ class ExtCodeGen
       method.render( sb, 2 );
     }
     sb.append( "\n}" );
-    return sb.toString();
   }
 
-  private void addExtensionMethods( SrcClass extendedClass, DiagnosticListener<JavaFileObject> errorHandler )
+  private String addExtensions( SrcClass extendedClass, DiagnosticListener<JavaFileObject> errorHandler )
   {
+    boolean methodExtensions = false;
+    boolean interfaceExtensions = false;
     Set<String> allExtensions = findAllExtensions();
     for( String fqn : allExtensions )
     {
@@ -114,8 +132,22 @@ class ExtCodeGen
         for( AbstractSrcMethod method : extensionClass.getMethods() )
         {
           addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
+          methodExtensions = true;
+        }
+        for( SrcType iface: extensionClass.getInterfaces() )
+        {
+          addExtensionInteface( iface, extendedClass, errorHandler, javacTask[0] );
+          interfaceExtensions = true;
         }
       }
+    }
+    if( !_existingSource.isEmpty() )
+    {
+      return addExtensionsToExistingSource( extendedClass, methodExtensions, interfaceExtensions );
+    }
+    else
+    {
+      return extendedClass.render( new StringBuilder(), 0 ).toString();
     }
   }
 
@@ -138,6 +170,11 @@ class ExtCodeGen
     return fqns;
   }
 
+  private void addExtensionInteface( SrcType iface, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  {
+    extendedType.iface( iface );
+  }
+
   private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
   {
     if( !isExtensionMethod( method, extendedType ) )
@@ -150,6 +187,9 @@ class ExtCodeGen
 //    {
 //      return;
 //    }
+
+    // the class is a produced class, therefore we must delegate the calls since calls are not replaced
+    boolean delegateCalls = !_existingSource.isEmpty();
 
     SrcMethod srcMethod = new SrcMethod( extendedType );
     long modifiers = method.getModifiers();
@@ -169,10 +209,14 @@ class ExtCodeGen
     // remove static
     srcMethod.modifiers( modifiers & ~Modifier.STATIC );
 
-    // mark as extension method for efficient lookup during method call replacement
-    srcMethod.annotation(
-      new SrcAnnotationExpression( ExtensionMethod.class )
-        .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() ) );
+    if( !delegateCalls )
+    {
+      // mark as extension method for efficient lookup during method call replacement
+      srcMethod.annotation(
+        new SrcAnnotationExpression( ExtensionMethod.class )
+          .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() ) );
+    }
+
     srcMethod.returns( method.getReturnType() );
 
     String name = method.getSimpleName();
@@ -201,10 +245,37 @@ class ExtCodeGen
       srcMethod.addThrowType( (SrcType)throwType );
     }
 
-    srcMethod.body( new SrcStatementBlock()
-                      .addStatement(
-                        new SrcRawStatement()
-                          .rawText( "throw new RuntimeException();" ) ) );
+    if( delegateCalls )
+    {
+      // delegate to the extension method
+
+      StringBuilder call = new StringBuilder();
+      SrcType returnType = srcMethod.getReturnType();
+      if( returnType != null && !returnType.getName().equals( void.class.getName() ) )
+      {
+        call.append( "return " );
+      }
+      String extClassName = ((SrcClass)method.getOwner()).getName();
+      call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( "(this" );
+      for( SrcParameter param: srcMethod.getParameters() )
+      {
+        call.append( ", " ).append( param.getSimpleName() );
+      }
+      call.append( ");\n" );
+      srcMethod.body( new SrcStatementBlock()
+                              .addStatement(
+                                new SrcRawStatement()
+                                  .rawText( call.toString() ) ) );
+    }
+    else
+    {
+      // stub the body
+
+      srcMethod.body( new SrcStatementBlock()
+                        .addStatement(
+                          new SrcRawStatement()
+                            .rawText( "throw new " + RuntimeException.class.getSimpleName() + "(\"Should not exist at runtime!\");" ) ) );
+    }
 
     extendedType.addMethod( srcMethod );
   }

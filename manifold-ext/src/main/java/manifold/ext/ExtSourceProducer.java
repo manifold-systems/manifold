@@ -18,7 +18,6 @@ import manifold.api.sourceprod.ClassType;
 import manifold.api.sourceprod.ITypeProcessor;
 import manifold.api.sourceprod.JavaSourceProducer;
 import manifold.ext.api.Extension;
-import manifold.ext.api.This;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.StreamUtil;
@@ -32,7 +31,7 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSIONS, (fqn, files) -> new Model( fqn, files, this ) );
+    init( typeLoader, FILE_EXTENSIONS, ( fqn, files ) -> new Model( fqn, files, this ) );
   }
 
   @Override
@@ -82,12 +81,12 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
             if( file.getExtension().equals( "java" ) )
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( "@Extension" ) && content.contains( "@This" );
+              return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() ); // && content.contains( "@This" );
             }
             else
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( Extension.class.getName().replace( '.', '/' ) ) && content.contains( This.class.getName().replace( '.', '/' ) );
+              return content.contains( Extension.class.getName().replace( '.', '/' ) );// && content.contains( This.class.getName().replace( '.', '/' ) );
             }
           }
           catch( IOException e )
@@ -156,8 +155,47 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
     if( typeElement.getKind() == ElementKind.CLASS )
     {
       JCTree tree = (JCTree)typeProcessor.getTreeUtil().getTree( typeElement );
-      TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor );
+      TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor, typeElement );
       tree.accept( visitor );
     }
   }
+
+//  @Override
+//  public boolean filterError( TypeProcessor typeProcessor, Diagnostic diagnostic )
+//  {
+//    if( diagnostic.getKind() == Diagnostic.Kind.ERROR )
+//    {
+//      Object[] args = ((JCDiagnostic)diagnostic).getArgs();
+//      if( args != null )
+//      {
+//        for( Object arg: args )
+//        {
+//          if( arg instanceof JCDiagnostic )
+//          {
+//            JCDiagnostic jcArg = (JCDiagnostic)arg;
+//            if( jcArg.getCode().equals( "compiler.misc.inconvertible.types" ) )
+//            {
+//              Object[] argArgs = jcArg.getArgs();
+//              if( argArgs != null && argArgs.length == 2 )
+//              {
+//                Type.ClassType type = (Type.ClassType)argArgs[1];
+//                if( type.tsym.hasAnnotations() )
+//                {
+//                  for( Attribute.Compound anno: type.tsym.getAnnotationMirrors() )
+//                  {
+//                    if( ((Type.ClassType)anno.getAnnotationType()).tsym.getQualifiedName().toString().equals( Structural.class.getName() ) )
+//                    {
+//                      //((JCDiagnostic)diagnostic).getDiagnosticPosition().getTree().type = type;
+//                      return true;
+//                    }
+//                  }
+//                }
+//              }
+//            }
+//          }
+//        }
+//      }
+//    }
+//    return false;
+//  }
 }

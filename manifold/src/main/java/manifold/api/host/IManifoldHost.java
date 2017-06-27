@@ -39,7 +39,7 @@ public interface IManifoldHost extends IService
 
   JavaFileObject produceFile( String fqn, IModule module, DiagnosticListener<JavaFileObject> errorHandler );
 
-  void maybeAssignGousType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner );
+  void maybeAssignManifoldType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner );
 
   void performLockedOperation( ClassLoader loader, Runnable operation );
 

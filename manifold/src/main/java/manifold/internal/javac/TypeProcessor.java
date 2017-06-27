@@ -19,6 +19,22 @@ public class TypeProcessor extends CompiledTypeProcessor
     super( javacTask );
   }
 
+//  @Override
+//  public boolean filterError( Diagnostic diagnostic )
+//  {
+//    for( ISourceProducer sp: ManifoldHost.getCurrentModule().getSourceProducers() )
+//    {
+//      if( sp instanceof ITypeProcessor )
+//      {
+//        if( ((ITypeProcessor)sp).filterError( this, diagnostic ) )
+//        {
+//          return true;
+//        }
+//      }
+//    }
+//    return false;
+//  }
+
   @Override
   public void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter )
   {

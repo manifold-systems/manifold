@@ -1,5 +1,6 @@
 package extensions.abc.benis_png;
 
+import abc.IMyStructuralInterface;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 
@@ -8,7 +9,7 @@ import abc.benis_png;
 /**
  */
 @Extension
-public class MyBenis_pngExt
+public abstract class MyBenis_pngExt implements IMyStructuralInterface
 {
   public static int width( @This abc.benis_png thiz )
   {

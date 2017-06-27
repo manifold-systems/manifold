@@ -138,7 +138,7 @@ public class ManifoldHost
 
   public static void maybeAssignGosuType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
-    host().maybeAssignGousType( loader, strType, url, assigner );
+    host().maybeAssignManifoldType( loader, strType, url, assigner );
   }
 
   public static void performLockedOperation( ClassLoader loader, Runnable operation )

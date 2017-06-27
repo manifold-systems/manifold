@@ -108,7 +108,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
   }
 
   @Override
-  public void maybeAssignGousType( ClassLoader loader, String fqn, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
+  public void maybeAssignManifoldType( ClassLoader loader, String fqn, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
     Set<ISourceProducer> sps = getCurrentModule().findSourceProducersFor( fqn );
     if( !sps.isEmpty() )
