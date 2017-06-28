@@ -1,9 +1,7 @@
 package manifold.ext;
 
 import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.util.TreePath;
 import com.sun.tools.javac.api.JavacTaskImpl;
-import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
@@ -37,25 +35,41 @@ import manifold.internal.javac.TypeProcessor;
 public class ExtensionTransformer extends TreeTranslator
 {
   private static final String STRUCTURAL_PROXY = "_structuralproxy_";
+  private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
 
   private final ExtSourceProducer _sp;
   private final TypeProcessor _tp;
-  private final Symbol.ClassSymbol _typeElement;
 
-  ExtensionTransformer( ExtSourceProducer sp, TypeProcessor typeProcessor, Symbol.ClassSymbol typeElement )
+  ExtensionTransformer( ExtSourceProducer sp, TypeProcessor typeProcessor )
   {
     _sp = sp;
     _tp = typeProcessor;
-    _typeElement = typeElement;
   }
 
   /**
-   * Erase all structural inteface type literals to Object
+   * Erase all structural interface type literals to Object
    */
   @Override
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
+    if( isStructuralInterface( tree.sym ) )
+    {
+      Symtab symbols = Symtab.instance( _tp.getContext() );
+      Symbol.ClassSymbol objectSym = (Symbol.ClassSymbol)symbols.objectType.tsym;
+      tree.sym = objectSym;
+      tree.type = objectSym.type;
+    }
+    result = tree;
+  }
+
+  /**
+   * Erase all structural interface type literals to Object
+   */
+  @Override
+  public void visitSelect( JCTree.JCFieldAccess tree )
+  {
+    super.visitSelect( tree );
     if( isStructuralInterface( tree.sym ) )
     {
       Symtab symbols = Symtab.instance( _tp.getContext() );
@@ -84,32 +98,6 @@ public class ExtensionTransformer extends TreeTranslator
     result = tree;
   }
 
-//  @Override
-//  public void visitAssign( JCTree.JCAssign tree )
-//  {
-//    super.visitAssign( tree );
-//    if( isStructuralInterface( tree.type.tsym ) )
-//    {
-//      Symtab symbols = Symtab.instance( _tp.getContext() );
-//
-//      tree.rhs.type = symbols.objectType;
-//      tree.type = symbols.objectType;
-//    }
-//    result = tree;
-//  }
-//
-//  @Override
-//  public void visitVarDef( JCTree.JCVariableDecl tree )
-//  {
-//    super.visitVarDef( tree );
-//    if( isStructuralInterface( tree.type.tsym ) )
-//    {
-//      Symtab symbols = Symtab.instance( _tp.getContext() );
-//      tree.init.type = symbols.objectType;
-//    }
-//  }
-
-
   /**
    * Replace all extension method call-sites with static calls to extension methods
    */
@@ -120,11 +108,15 @@ public class ExtensionTransformer extends TreeTranslator
     Symbol.MethodSymbol method = findExtMethod( tree );
     if( method != null )
     {
+      // The structural interface method is implemented as an extension method,
+      // replace with extension method call
       replaceExtCall( tree, method );
       result = tree;
     }
     else if( isStructuralMethod( tree ) )
     {
+      // The structural interface method is implemented directly in the type or supertype hierarchy,
+      // replace with proxy call
       result = replaceStructuralCall( tree );
     }
     else
@@ -132,61 +124,6 @@ public class ExtensionTransformer extends TreeTranslator
       result = tree;
     }
   }
-
-//  private JCTree replaceStructuralCall( JCTree.JCMethodInvocation oldCall )
-//  {
-//    JCExpression methodSelect = oldCall.getMethodSelect();
-//    if( methodSelect instanceof JCTree.JCFieldAccess )
-//    {
-//      Types types = Types.instance( _tp.getContext() );
-//      Symtab symbols = Symtab.instance( _tp.getContext() );
-//      Names names = Names.instance( _tp.getContext() );
-//      JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
-//      Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
-//      Symbol.MethodSymbol method = lookupMethod( oldCall.pos(), names.fromString( "invoke" ), reflectMethodClassSym.type,
-//                                                 List.from( new Type[]{symbols.objectType, symbols.stringType, types.makeArrayType( symbols.stringType ), types.makeArrayType( symbols.objectType )} ) );
-//
-//      JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
-//      TreeMaker make = _tp.getTreeMaker();
-//      JavacElements javacElems = _tp.getElementUtil();
-//      JCExpression thisArg = m.selected;
-//
-//      ArrayList<JCExpression> newArgs = new ArrayList<>();
-//      ArrayList<JCExpression> ifaceArgs = new ArrayList<>();
-//      for( JCExpression expr : oldCall.args )
-//      {
-//        ifaceArgs.add( boxIfPrimitive( expr ) );
-//      }
-//      ArrayList<JCExpression> paramTypes = new ArrayList<>();
-//      for( Type paramType: oldCall.type.getParameterTypes() )
-//      {
-//        JCTree.JCLiteral literal = make.Literal( paramType.tsym.getQualifiedName().toString() );
-//        paramTypes.add( literal );
-//      }
-//      newArgs.add( thisArg );
-//      newArgs.add( make.Literal( ((JCTree.JCFieldAccess)oldCall.meth).getIdentifier().toString() ) );
-//      newArgs.add( make.NewArray( null, List.nil(), List.from( paramTypes ) ).setType( types.makeArrayType( symbols.stringType ) ) );
-//      newArgs.add( make.NewArray( null, List.nil(), List.from( ifaceArgs ) ).setType( types.makeArrayType( symbols.objectType ) ) );
-//
-//
-//      JCTree.JCMethodInvocation newCall = make.Apply( List.nil(), memberAccess( make, javacElems, ExtensionTransformer.class.getName() + ".invoke" ), List.from( newArgs ) );
-//      newCall.type = symbols.objectType;
-//      JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)newCall.getMethodSelect();
-//      newMethodSelect.sym = method;
-//      newMethodSelect.type = method.type;
-//      assignTypes( newMethodSelect.selected, reflectMethodClassSym );
-//
-//      Type returnType = oldCall.getMethodSelect().type.getReturnType();
-//      JCTree result = unboxIfNecessary( newCall, returnType );
-//      if( result == oldCall )
-//      {
-//        result = make.TypeCast( returnType, oldCall );
-//        result.type = returnType;
-//      }
-//      return result;
-//    }
-//    return null;
-//  }
 
   private JCTree replaceStructuralCall( JCTree.JCMethodInvocation theCall )
   {
@@ -197,8 +134,8 @@ public class ExtensionTransformer extends TreeTranslator
       Names names = Names.instance( _tp.getContext() );
       JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
       Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
-      Symbol.MethodSymbol makeInterfaceProxyMethod = lookupMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
-                                                                   List.from( new Type[]{symbols.objectType, symbols.classType} ) );
+      Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
+                                                                    List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
       TreeMaker make = _tp.getTreeMaker();
@@ -371,21 +308,6 @@ public class ExtensionTransformer extends TreeTranslator
     return createNewProxy( root, iface );
   }
 
-//  private static Map<String, Map<Object, Object>> PROXY_INSTANCE_CACHE = new ConcurrentHashMap<String, Map<Object, Object>>();
-//  private static Object findCachedProxy( Object root, String iface ) {
-//    Map<Object, Object> proxyInstanceByInstance = PROXY_INSTANCE_CACHE.get( iface );
-//    if( proxyInstanceByInstance == null ) {
-//      PROXY_INSTANCE_CACHE.put( iface, proxyInstanceByInstance = Collections.synchronizedMap( new WeakHashMap<Object, Object>() ) );
-//    }
-//    Object proxyInstance = proxyInstanceByInstance.get( root );
-//    if( proxyInstance == null ) {
-//      proxyInstanceByInstance.put( root, proxyInstance = createNewProxy( root, iface ) );
-//    }
-//    return proxyInstance;
-//  }
-
-  private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
-
   private static Object createNewProxy( Object root, Class<?> iface )
   {
     if( iface.isAssignableFrom( root.getClass() ) )
@@ -421,147 +343,12 @@ public class ExtensionTransformer extends TreeTranslator
     return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
   }
 
-//  public static Object invoke( Object receiver, String name, String[] paramTypes, Object[] args )
-//  {
-//    Class[] types = new Class[paramTypes.length];
-//    for( int i = 0; i < types.length; i++ )
-//    {
-//      try
-//      {
-//        types[i] = Class.forName( paramTypes[i], false, receiver.getClass().getClassLoader() );
-//      }
-//      catch( ClassNotFoundException e )
-//      {
-//        throw new RuntimeException( e );
-//      }
-//    }
-//    Method m = getDeclaredMethod( receiver.getClass(), name, types );
-//    if( m == null )
-//    {
-//      m = getExtensionMethod( receiver.getClass(), name, types );
-//    }
-//    m.setAccessible( true );
-//    try
-//    {
-//      return m.invoke( receiver, args );
-//    }
-//    catch( Exception e )
-//    {
-//      throw new RuntimeException( e );
-//    }
-//  }
-//
-//  private static Method getExtensionMethod( Class<?> aClass, String name, Class[] types )
-//  {
-//    return null;
-//  }
-//
-//  private static Method getDeclaredMethod( Class<?> cls, String name, Class[] paramTypes )
-//  {
-//    try
-//    {
-//      for( Method m : cls.getDeclaredMethods() )
-//      {
-//        if( m.getName().equals( name ) && Arrays.equals( m.getParameters(), paramTypes ) )
-//        {
-//          return m;
-//        }
-//      }
-//      Class<?> superclass = cls.getSuperclass();
-//      if( superclass != null )
-//      {
-//        Method m = getDeclaredMethod( superclass, name, paramTypes );
-//        if( m != null )
-//        {
-//          return m;
-//        }
-//      }
-//      for( Class iface : cls.getInterfaces() )
-//      {
-//        Method m = getDeclaredMethod( iface, name, paramTypes );
-//        if( m != null )
-//        {
-//          return m;
-//        }
-//      }
-//      return null;
-//    }
-//    catch( Exception e )
-//    {
-//      throw new RuntimeException( e );
-//    }
-//  }
-//
-//  @SuppressWarnings("unchecked")
-//  private <T extends JCTree> T boxIfPrimitive( T tree )
-//  {
-//    return tree.type.isPrimitive() ? (T)boxPrimitive( (JCExpression)tree ) : tree;
-//  }
-//
-//  private JCExpression boxPrimitive( JCExpression tree )
-//  {
-//    Types types = Types.instance( _tp.getContext() );
-//    return boxPrimitive( tree, types.boxedClass( tree.type ).type );
-//  }
-//
-//  private JCExpression boxPrimitive( JCExpression tree, Type box )
-//  {
-//    Names names = Names.instance( _tp.getContext() );
-//    Symbol valueOfSym = lookupMethod( tree.pos(),
-//                                      names.valueOf,
-//                                      box,
-//                                      List.<Type>nil().prepend( tree.type ) );
-//    TreeMaker make = make_at( tree.pos() );
-//    return make.App( make.QualIdent( valueOfSym ), List.of( tree ) );
-//  }
-//
-//  JCExpression unboxIfNecessary( JCExpression tree, Type primitive )
-//  {
-//    if( !primitive.isPrimitive() )
-//    {
-//      return tree;
-//    }
-//
-//    Types types = Types.instance( _tp.getContext() );
-//    TreeMaker make = _tp.getTreeMaker();
-//    Type unboxedType = types.unboxedType( tree.type );
-//    if( unboxedType.getTag() == TypeTag.NONE )
-//    {
-//      unboxedType = primitive;
-//      make_at( tree.pos() );
-//      tree = make.TypeCast( types.boxedClass( unboxedType ).type, tree );
-//    }
-//    else
-//    {
-//      // There must be a conversion from unboxedType to primitive.
-//      if( !types.isSubtype( unboxedType, primitive ) )
-//      {
-//        throw new AssertionError( tree );
-//      }
-//    }
-//    make_at( tree.pos() );
-//    Names names = Names.instance( _tp.getContext() );
-//    Symbol valueSym = lookupMethod( tree.pos(),
-//                                    unboxedType.tsym.name.append( names.Value ), // x.intValue()
-//                                    tree.type,
-//                                    List.nil() );
-//    return make.App( make.Select( tree, valueSym ) );
-//  }
-
-  private Symbol.MethodSymbol lookupMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
+  private Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
     Resolve rs = Resolve.instance( _tp.getContext() );
     AttrContext attrContext = new AttrContext();
     Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
-    JavacTrees trees = JavacTrees.instance( _tp.getContext() );
-    TreePath path = trees.getPath( _typeElement );
-    env.toplevel = (JCTree.JCCompilationUnit)path.getCompilationUnit();
+    env.toplevel = _tp.getCompilationUnit();
     return rs.resolveInternalMethod( pos, env, qual, name, args, null );
   }
-
-//  private TreeMaker make_at( JCDiagnostic.DiagnosticPosition pos )
-//  {
-//    TreeMaker make = _tp.getTreeMaker();
-//    return make.at( pos );
-//  }
 }

@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
@@ -9,6 +10,7 @@ import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.comp.CompileStates.CompileState;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
@@ -22,6 +24,7 @@ import javax.tools.JavaFileObject;
 public abstract class CompiledTypeProcessor implements TaskListener
 {
   private final JavacTask _javacTask;
+  private JCTree.JCCompilationUnit _compilationUnit;
   private final Set<String> _typesToProcess;
   private final IssueReporter<JavaFileObject> _issueReporter;
 
@@ -62,6 +65,37 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return _javacTask;
   }
 
+  public JCTree.JCCompilationUnit getCompilationUnit()
+  {
+    return _compilationUnit;
+  }
+
+  public JavacElements getElementUtil()
+  {
+    return JavacElements.instance( getContext() );
+  }
+
+  public Trees getTreeUtil()
+  {
+    return Trees.instance( getJavacTask() );
+  }
+
+  public TreeMaker getTreeMaker()
+  {
+    return TreeMaker.instance( getContext() );
+  }
+
+  public TreePath getPath( Tree node )
+  {
+    return getTreeUtil().getPath( getCompilationUnit(), node );
+  }
+
+  public Tree getParent( Tree node )
+  {
+    TreePath parentPath = getTreeUtil().getPath( getCompilationUnit(), node ).getParentPath();
+    return parentPath == null ? null : parentPath.getLeaf();
+  }
+  
   public boolean addTypesToProcess( RoundEnvironment roundEnv )
   {
     for( TypeElement elem : ElementFilter.typesIn( roundEnv.getRootElements() ) )
@@ -89,6 +123,8 @@ public abstract class CompiledTypeProcessor implements TaskListener
       return;
     }
 
+    _compilationUnit = (JCTree.JCCompilationUnit)e.getCompilationUnit();
+
     TypeElement elem = e.getTypeElement();
     TreePath path = Trees.instance( _javacTask ).getPath( elem );
 
@@ -98,21 +134,6 @@ public abstract class CompiledTypeProcessor implements TaskListener
   @Override
   public void started( TaskEvent e )
   {
-  }
-
-  public JavacElements getElementUtil()
-  {
-    return JavacElements.instance( getContext() );
-  }
-
-  public Trees getTreeUtil()
-  {
-    return Trees.instance( getJavacTask() );
-  }
-
-  public TreeMaker getTreeMaker()
-  {
-    return TreeMaker.instance( getContext() );
   }
 
 //  private class WrappedDiagnosticListener implements DiagnosticListener

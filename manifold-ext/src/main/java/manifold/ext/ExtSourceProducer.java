@@ -155,7 +155,7 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
     if( typeElement.getKind() == ElementKind.CLASS )
     {
       JCTree tree = (JCTree)typeProcessor.getTreeUtil().getTree( typeElement );
-      TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor, typeElement );
+      TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor );
       tree.accept( visitor );
     }
   }
