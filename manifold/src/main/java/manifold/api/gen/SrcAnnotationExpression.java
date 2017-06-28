@@ -35,9 +35,24 @@ public class SrcAnnotationExpression extends SrcExpression<SrcAnnotationExpressi
     return this;
   }
 
-  public String getType()
+  public SrcAnnotationExpression copy()
+  {
+    SrcAnnotationExpression copy = new SrcAnnotationExpression( _fqn );
+    for( SrcArgument expr: _arguments )
+    {
+      copy.addArgument( expr.copy() );
+    }
+    return copy;
+  }
+
+  public String getAnnotationType()
   {
     return _fqn;
+  }
+
+  public List<SrcArgument> getArguments()
+  {
+    return _arguments;
   }
 
   public StringBuilder render( StringBuilder sb, int indent )

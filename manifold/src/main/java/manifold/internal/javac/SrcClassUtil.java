@@ -67,6 +67,7 @@ public class SrcClassUtil
       {
         annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.fst.type.toString() ), value.snd.getValue() );
       }
+      srcClass.addAnnotation( annoExpr );
     }
     for( Symbol.TypeVariableSymbol typeVar : classSymbol.getTypeParameters() )
     {
@@ -79,7 +80,7 @@ public class SrcClassUtil
     }
     for( Type iface : classSymbol.getInterfaces() )
     {
-      srcClass.iface( makeNestedType( iface ) );
+      srcClass.addInterface( makeNestedType( iface ) );
     }
     if( withMembers )
     {

@@ -5,7 +5,7 @@ import java.util.List;
 
 /**
  */
-public class SrcMethodCallExpression extends SrcExpression
+public class SrcMethodCallExpression extends SrcExpression<SrcMethodCallExpression>
 {
   private List<SrcArgument> _arguments = new ArrayList<>();
 
@@ -14,9 +14,26 @@ public class SrcMethodCallExpression extends SrcExpression
     name( name );
   }
 
+  @Override
+  public SrcMethodCallExpression copy()
+  {
+    SrcMethodCallExpression expr = new SrcMethodCallExpression( getSimpleName() );
+    for( SrcArgument arg: _arguments )
+    {
+      expr.addArgument( arg.copy() );
+    }
+    return expr;
+  }
+
+  public List<SrcArgument> getArguments()
+  {
+    return _arguments;
+  }
+
   public SrcMethodCallExpression addArgument( SrcArgument arg )
   {
     _arguments.add( arg );
+    arg.setOwner( this );
     return this;
   }
 

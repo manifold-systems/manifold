@@ -15,9 +15,16 @@ public class SrcRawExpression extends SrcExpression<SrcRawExpression>
   {
     _text = makeCompileTimeConstantValue( new SrcType( type ), value );
   }
+
   public SrcRawExpression( SrcType type, Object value )
   {
     _text = makeCompileTimeConstantValue( type, value );
+  }
+
+  @Override
+  public SrcRawExpression copy()
+  {
+    return new SrcRawExpression( _text );
   }
 
   public StringBuilder render( StringBuilder sb, int indent )

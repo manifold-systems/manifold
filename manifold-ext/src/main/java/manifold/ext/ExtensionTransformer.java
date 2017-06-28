@@ -25,7 +25,6 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import manifold.ext.api.ExtensionMethod;
 import manifold.ext.api.Structural;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.TypeProcessor;

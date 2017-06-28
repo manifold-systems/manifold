@@ -64,21 +64,21 @@ public class SrcClass extends SrcStatement<SrcClass>
     return this;
   }
 
-  public SrcClass iface( SrcType iface )
+  public SrcClass addInterface( SrcType iface )
   {
     _interfaces.add( iface );
     iface.setOwner( this );
     return this;
   }
-  public SrcClass iface( Class iface )
+  public SrcClass addInterface( Class iface )
   {
     SrcType t = new SrcType( iface );
-    return iface( t );
+    return addInterface( t );
   }
-  public SrcClass iface( String iface )
+  public SrcClass addInterface( String iface )
   {
     SrcType t = new SrcType( iface );
-    return iface( t );
+    return addInterface( t );
   }
 
   public SrcClass addField( SrcField field )

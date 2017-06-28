@@ -25,6 +25,18 @@ public class SrcMemberAccessExpression extends SrcExpression<SrcMemberAccessExpr
     return this;
   }
 
+  @Override
+  public SrcMemberAccessExpression copy()
+  {
+    SrcIdentifier[] path = new SrcIdentifier[_path.size()];
+    for( int i = 0; i < path.length; i++ )
+    {
+      SrcIdentifier id = path[i];
+      path[i] = id.copy();
+    }
+    return new SrcMemberAccessExpression( path );
+  }
+
   public StringBuilder render( StringBuilder sb, int indent )
   {
     return render( sb, indent, false );

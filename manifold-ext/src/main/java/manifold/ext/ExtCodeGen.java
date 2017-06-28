@@ -25,7 +25,7 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.ext.api.ExtensionMethod;
+import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavaParser;
@@ -52,62 +52,140 @@ class ExtCodeGen
 
   String make( DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass;
-    if( _existingSource.isEmpty() )
+    SrcClass srcExtended;
+    if( !_existingSource.isEmpty() )
     {
-      // Add methods to an existing class (not source)
-
-      srcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( _fqn );
+      srcExtended = makeStubFromSource();
     }
     else
     {
-      // Add methods to source produced from a different producer
-
-      List<CompilationUnitTree> trees = new ArrayList<>();
-      JavaParser.instance().parseText( _existingSource, trees, null, null, null );
-      JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)trees.get( 0 ).getTypeDecls().get( 0 );
-      srcClass = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
-        .modifiers( classDecl.getModifiers().getFlags() );
-      if( classDecl.extending != null )
-      {
-        srcClass.superClass( classDecl.extending.toString() );
-      }
-      for( JCTree.JCExpression iface: classDecl.implementing )
-      {
-        srcClass.iface( iface.toString() );
-      }
+      srcExtended = ClassSymbols.instance( getModule() ).makeSrcClassStub( _fqn );
     }
-    return addExtensions( srcClass, errorHandler );
+    return addExtensions( srcExtended, errorHandler );
   }
 
-  private String addExtensionsToExistingSource( SrcClass srcClass, boolean methodExtensions, boolean interfaceExtensions )
+  private SrcClass makeStubFromSource()
+  {
+    SrcClass srcExtended;List<CompilationUnitTree> trees = new ArrayList<>();
+    JavaParser.instance().parseText( _existingSource, trees, null, null, null );
+    JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)trees.get( 0 ).getTypeDecls().get( 0 );
+    srcExtended = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
+      .modifiers( classDecl.getModifiers().getFlags() );
+    if( classDecl.extending != null )
+    {
+      srcExtended.superClass( classDecl.extending.toString() );
+    }
+    for( JCTree.JCExpression iface: classDecl.implementing )
+    {
+      srcExtended.addInterface( iface.toString() );
+    }
+    return srcExtended;
+  }
+
+  private String addExtensions( SrcClass extendedClass, DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    boolean methodExtensions = false;
+    boolean interfaceExtensions = false;
+    boolean annotationExtensions = false;
+    Set<String> allExtensions = findAllExtensions();
+    for( String fqn : allExtensions )
+    {
+      JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
+      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask );
+      if( srcExtension != null )
+      {
+        for( AbstractSrcMethod method : srcExtension.getMethods() )
+        {
+          addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
+          methodExtensions = true;
+        }
+        for( SrcType iface: srcExtension.getInterfaces() )
+        {
+          addExtensionInteface( iface, extendedClass, errorHandler, javacTask[0] );
+          interfaceExtensions = true;
+        }
+        for( SrcAnnotationExpression anno: srcExtension.getAnnotations() )
+        {
+          addExtensionAnnotation( anno, extendedClass, errorHandler, javacTask[0] );
+          annotationExtensions = true;
+        }
+      }
+    }
+    if( !_existingSource.isEmpty() )
+    {
+      return addExtensionsToExistingClass( extendedClass, methodExtensions, interfaceExtensions, annotationExtensions );
+    }
+    else
+    {
+      return extendedClass.render( new StringBuilder(), 0 ).toString();
+    }
+  }
+
+  private String addExtensionsToExistingClass( SrcClass srcClass, boolean methodExtensions, boolean interfaceExtensions, boolean annotationExtensions )
   {
     StringBuilder sb = new StringBuilder();
     if( methodExtensions )
     {
-      addExtensionMethodsToExistingSource( srcClass, sb );
+      addExtensionMethodsToExistingClass( srcClass, sb );
     }
     if( interfaceExtensions )
     {
-      addExtensionInterfacesToExistingSource( srcClass, sb );
+      addExtensionInterfacesToExistingClass( srcClass, sb );
+    }
+    if( annotationExtensions )
+    {
+      addExtensionAnnotationsToExistingClass( srcClass, sb );
     }
     return sb.toString();
   }
 
-  private void addExtensionInterfacesToExistingSource( SrcClass srcClass, StringBuilder sb )
+  private void addExtensionInterfacesToExistingClass( SrcClass srcClass, StringBuilder sb )
   {
     String start = (srcClass.isInterface() ? "interface " : "class ") + srcClass.getSimpleName();
     int iStart = sb.indexOf( start );
     int iBrace = sb.indexOf( "{", iStart );
+
     StringBuilder sbSrcClass = new StringBuilder();
     srcClass.render( sbSrcClass, 0 );
     int iSrcClassStart = sbSrcClass.indexOf( start );
     int iSrcClassBrace = sbSrcClass.indexOf( "{", iSrcClassStart );
     String fromSrcClass = sbSrcClass.substring( iSrcClassStart, iSrcClassBrace );
+
     sb.replace( iStart, iBrace, fromSrcClass );
   }
 
-  private void addExtensionMethodsToExistingSource( SrcClass srcClass, StringBuilder sb )
+  private void addExtensionAnnotationsToExistingClass( SrcClass srcClass, StringBuilder sb )
+  {
+    if( srcClass.getAnnotations().isEmpty() )
+    {
+      return;
+    }
+
+    StringBuilder sbAnnos = new StringBuilder();
+    for( SrcAnnotationExpression anno: srcClass.getAnnotations() )
+    {
+      anno.render( sbAnnos, 0 ).append( '\n' );
+    }
+
+    String start = (srcClass.isInterface() ? "interface " : "class ") + srcClass.getSimpleName();
+    int iStart = sb.indexOf( start );
+    while( iStart != 0 )
+    {
+      if( sb.charAt( iStart ) == '\n' )
+      {
+        break;
+      }
+      iStart--;
+    }
+    if( sb.charAt( iStart ) == '\n' )
+    {
+      iStart++;
+    }
+
+    sb.insert( iStart, sbAnnos );
+  }
+
+  private void addExtensionMethodsToExistingClass( SrcClass srcClass, StringBuilder sb )
   {
     int iBrace = _existingSource.lastIndexOf( '}' );
     sb.append( _existingSource.substring( 0, iBrace ) );
@@ -116,39 +194,6 @@ class ExtCodeGen
       method.render( sb, 2 );
     }
     sb.append( "\n}" );
-  }
-
-  private String addExtensions( SrcClass extendedClass, DiagnosticListener<JavaFileObject> errorHandler )
-  {
-    boolean methodExtensions = false;
-    boolean interfaceExtensions = false;
-    Set<String> allExtensions = findAllExtensions();
-    for( String fqn : allExtensions )
-    {
-      JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
-      SrcClass extensionClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask );
-      if( extensionClass != null )
-      {
-        for( AbstractSrcMethod method : extensionClass.getMethods() )
-        {
-          addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
-          methodExtensions = true;
-        }
-        for( SrcType iface: extensionClass.getInterfaces() )
-        {
-          addExtensionInteface( iface, extendedClass, errorHandler, javacTask[0] );
-          interfaceExtensions = true;
-        }
-      }
-    }
-    if( !_existingSource.isEmpty() )
-    {
-      return addExtensionsToExistingSource( extendedClass, methodExtensions, interfaceExtensions );
-    }
-    else
-    {
-      return extendedClass.render( new StringBuilder(), 0 ).toString();
-    }
   }
 
   private Set<String> findAllExtensions()
@@ -172,7 +217,15 @@ class ExtCodeGen
 
   private void addExtensionInteface( SrcType iface, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
   {
-    extendedType.iface( iface );
+    extendedType.addInterface( iface );
+  }
+
+  private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  {
+    if( extendedType.getAnnotations().stream().noneMatch( e -> e.getAnnotationType().equals( anno.getAnnotationType() ) ) )
+    {
+      extendedType.addAnnotation( anno.copy() );
+    }
   }
 
   private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
@@ -212,7 +265,7 @@ class ExtCodeGen
     if( !delegateCalls )
     {
       // mark as extension method for efficient lookup during method call replacement
-      srcMethod.annotation(
+      srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
           .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() ) );
     }
@@ -293,7 +346,7 @@ class ExtCodeGen
     }
     SrcParameter param = params.get( 0 );
     List<SrcAnnotationExpression> annotations = param.getAnnotations();
-    if( annotations.size() > 0 && annotations.get( 0 ).getType().equals( This.class.getName() ) )
+    if( annotations.size() > 0 && annotations.get( 0 ).getAnnotationType().equals( This.class.getName() ) )
     {
       return false;
     }
@@ -309,5 +362,10 @@ class ExtCodeGen
     //        errorHandler.report( new JavacDiagnostic( classSymbol.sourcefile, Diagnostic.Kind.WARN, position.getStartPosition(), 0, 0,
     //                                                  "Illegal extension method. '" + extendedMethodName +
     //                                                  "' overloads or shadows a method in the extended class" ) );
+  }
+
+  public boolean isManifoldExtAnnotation( SrcAnnotationExpression anno )
+  {
+    return anno.getAnnotationType().startsWith( Extension.class.getPackage().getName() );
   }
 }

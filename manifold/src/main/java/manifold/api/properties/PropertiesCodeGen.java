@@ -61,7 +61,7 @@ public class PropertiesCodeGen
       return;
     }
 
-    srcClass.annotation( addSourcePositionAnnotation( node ) );
+    srcClass.addAnnotation( addSourcePositionAnnotation( node ) );
 
     srcClass.addField(
       new SrcField( srcClass )
@@ -85,7 +85,7 @@ public class PropertiesCodeGen
                       : new SrcRawExpression( "new " + type + "()" ) );
       if( _file != null )
       {
-        propertyField.annotation( addSourcePositionAnnotation( childNode ) );
+        propertyField.addAnnotation( addSourcePositionAnnotation( childNode ) );
       }
       srcClass.addField( propertyField );
       if( !childNode.isLeaf() )

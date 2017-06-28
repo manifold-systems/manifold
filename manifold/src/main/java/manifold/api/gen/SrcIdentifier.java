@@ -9,6 +9,12 @@ public class SrcIdentifier extends SrcExpression<SrcIdentifier>
     name( name );
   }
 
+  @Override
+  public SrcIdentifier copy()
+  {
+    return new SrcIdentifier( getSimpleName() );
+  }
+
   public StringBuilder render( StringBuilder sb, int indent )
   {
     return render( sb, indent, false );

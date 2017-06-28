@@ -21,7 +21,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     super( owner );
   }
 
-  public T annotation( SrcAnnotationExpression anno )
+  public T addAnnotation( SrcAnnotationExpression anno )
   {
     _annotations.add( anno );
     return (T)this;

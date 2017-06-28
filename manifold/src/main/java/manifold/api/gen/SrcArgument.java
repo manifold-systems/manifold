@@ -23,6 +23,11 @@ public class SrcArgument extends SrcAnnotated<SrcArgument>
     _value.setOwner( this );
   }
 
+  public SrcArgument copy()
+  {
+    return new SrcArgument( _value.copy() );
+  }
+
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {

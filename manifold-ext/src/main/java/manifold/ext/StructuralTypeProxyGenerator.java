@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import manifold.ext.api.ExtensionMethod;
 import manifold.internal.runtime.protocols.GosuClassesUrlConnection;
 
 /**
@@ -28,7 +27,14 @@ public class StructuralTypeProxyGenerator
     }
     catch( ClassNotFoundException e )
     {
-      throw new RuntimeException( e );
+      try
+      {
+        return Class.forName( fqnProxy, false, StructuralTypeProxyGenerator.class.getClassLoader() );
+      }
+      catch( ClassNotFoundException e1 )
+      {
+        throw new RuntimeException( e1 );
+      }
     }
   }
 

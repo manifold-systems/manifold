@@ -7,6 +7,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import junit.framework.TestCase;
 
 /**
@@ -60,6 +62,36 @@ public class SimpleTest extends TestCase
     assertSame( coord, is );
   }
 
+  public void testStructuralOnExistingInterface()
+  {
+    Callable<String> callable = (Callable<String>)new MyCallable();
+    try
+    {
+      assertEquals( "callable", callable.call() );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public void testStructuralOnExistingInterfaceHasCompileErrorForUsingOutsideProjectScope()
+  {
+    try
+    {
+      Executors.privilegedCallable( (Callable<String>)new MyCallable() ).call();
+      fail();
+    }
+    catch( IncompatibleClassChangeError e )
+    {
+      // expected, cannot use structural type outside module scope of declared @Structural
+    }
+    catch( Exception e )
+    {
+      fail();
+    }
+  }
+
   private double foo( Coordinate c )
   {
     return c.getX();
@@ -78,6 +110,22 @@ public class SimpleTest extends TestCase
     public String lol( Integer i )
     {
       return "lol" + i;
+    }
+  }
+
+  public static class MyRunnable // implemnets Runnable
+  {
+    public void run()
+    {
+      System.out.println( "runnable" );
+    }
+  }
+
+  public static class MyCallable // implemnets Runnable
+  {
+    public String call()
+    {
+      return "callable";
     }
   }
 }
