@@ -3,7 +3,10 @@ package manifold.api.gen;
 import com.sun.tools.javac.code.Flags;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -14,6 +17,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   private long _modifiers;
   private String _name;
   private List<SrcParameter> _parameters = new ArrayList<>();
+  private Map<String, Object> _userData = Collections.emptyMap();
 
   public SrcAnnotated() {}
   public SrcAnnotated( SrcAnnotated owner )
@@ -139,6 +143,32 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   public List<SrcParameter> getParameters()
   {
     return _parameters;
+  }
+
+  public T withUserData( String tag, Object value )
+  {
+    if( _userData.isEmpty() )
+    {
+      _userData = new HashMap<>();
+    }
+    _userData.put( tag, value );
+    return (T)this;
+  }
+  public Object getUserData( String tag )
+  {
+    return _userData.get( tag );
+  }
+  public Object removeUserData( String tag )
+  {
+    if( _userData.isEmpty() )
+    {
+      return null;
+    }
+    return _userData.remove( tag );
+  }
+  public void clearUserData()
+  {
+    _userData = Collections.emptyMap();
   }
 
   protected void renderAnnotations( StringBuilder sb, int indent, boolean sameLine )

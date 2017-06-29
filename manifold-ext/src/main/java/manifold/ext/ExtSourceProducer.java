@@ -26,7 +26,7 @@ import manifold.util.StreamUtil;
  */
 public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITypeProcessor
 {
-  private static final String EXTENSIONS_PACKAGE = "extensions";
+  static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
   public void init( ITypeLoader typeLoader )
@@ -81,25 +81,18 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
             if( file.getExtension().equals( "java" ) )
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() ); // && content.contains( "@This" );
+              return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() );
             }
             else
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( Extension.class.getName().replace( '.', '/' ) );// && content.contains( This.class.getName().replace( '.', '/' ) );
+              return content.contains( Extension.class.getName().replace( '.', '/' ) );
             }
           }
           catch( IOException e )
           {
             // eat
           }
-//          for( IFile f: ModulePathCache.instance().get( getModule() ).findFiles( extendedType ) )
-//          {
-//            if( FILE_EXTENSIONS.contains( f.getExtension() ) )
-//            {
-//              return true;
-//            }
-//          }
         }
       }
     }

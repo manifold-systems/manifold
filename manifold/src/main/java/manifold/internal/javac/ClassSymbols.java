@@ -112,12 +112,16 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn )
   {
-    return makeSrcClassStub( fqn, null );
+    return makeSrcClassStub( fqn, null, null );
   }
-  public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut )
+  public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
   {
     JavacTaskImpl javacTask = getJavacTask();
     Pair<Symbol.ClassSymbol,JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
+    if( compUnit != null )
+    {
+      compUnit[0] = pair.getSecond();
+    }
     if( javacTaskOut != null )
     {
       javacTaskOut[0] = javacTask;

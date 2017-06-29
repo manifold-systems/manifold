@@ -19,7 +19,9 @@ import java.util.Set;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
+import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import manifold.util.JavacDiagnostic;
 
 public abstract class CompiledTypeProcessor implements TaskListener
 {
@@ -95,7 +97,35 @@ public abstract class CompiledTypeProcessor implements TaskListener
     TreePath parentPath = getTreeUtil().getPath( getCompilationUnit(), node ).getParentPath();
     return parentPath == null ? null : parentPath.getLeaf();
   }
-  
+
+  public JCTree.JCClassDecl getClassDecl( Tree node )
+  {
+    if( node == null || node instanceof JCTree.JCCompilationUnit )
+    {
+      return null;
+    }
+
+    if( node instanceof JCTree.JCClassDecl )
+    {
+      return (JCTree.JCClassDecl)node;
+    }
+
+    return getClassDecl( getParent( node ) );
+  }
+
+  public JavaFileObject getFile( Tree node )
+  {
+    JCTree.JCClassDecl classDecl = getClassDecl( node );
+    return classDecl == null ? null : classDecl.sym.sourcefile;
+  }
+
+  public void report( JCTree tree, Diagnostic.Kind kind, String msg )
+  {
+    IssueReporter<JavaFileObject> reporter = new IssueReporter<>( Log.instance( getContext() ) );
+    JavaFileObject file = getFile( tree );
+    reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
+  }
+
   public boolean addTypesToProcess( RoundEnvironment roundEnv )
   {
     for( TypeElement elem : ElementFilter.typesIn( roundEnv.getRootElements() ) )

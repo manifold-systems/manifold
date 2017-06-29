@@ -20,4 +20,10 @@ public abstract class MyBenis_pngExt implements IMyStructuralInterface
   {
     return stringParam + thiz.width();
   }
+
+  // test warning for missing @This
+  public static String myMethod2( benis_png thiz, String stringParam )
+  {
+    return stringParam + thiz.width();
+  }
 }

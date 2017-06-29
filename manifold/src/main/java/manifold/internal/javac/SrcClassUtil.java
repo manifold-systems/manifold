@@ -170,6 +170,16 @@ public class SrcClassUtil
     for( Symbol.VarSymbol param : method.getParameters() )
     {
       srcMethod.addParam( param.flatName().toString(), new SrcType( param.type.toString() ) );
+      if( param.hasAnnotations() )
+      {
+        for( Attribute.Compound anno: param.getAnnotationMirrors() )
+        {
+          if( anno.getAnnotationType().toString().equals( "manifold.ext.api.This" ) )
+          {
+            srcMethod.withUserData( "_extMethod", method );
+          }
+        }
+      }
     }
     for( Type throwType : method.getThrownTypes() )
     {

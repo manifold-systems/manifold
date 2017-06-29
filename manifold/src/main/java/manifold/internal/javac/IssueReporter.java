@@ -30,7 +30,22 @@ public class IssueReporter<T> implements DiagnosticListener<T>
     _issueLogger.multipleErrors = true;
     try
     {
-      _issueLogger.error( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
+      switch( diagnostic.getKind() )
+      {
+        case ERROR:
+          _issueLogger.error( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
+          break;
+        case WARNING:
+          _issueLogger.warning( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
+          break;
+        case MANDATORY_WARNING:
+          _issueLogger.mandatoryWarning( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
+          break;
+        case NOTE:
+        case OTHER:
+          _issueLogger.note( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
+          break;
+      }
     }
     finally
     {

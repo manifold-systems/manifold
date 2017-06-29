@@ -2,10 +2,21 @@ package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.comp.AttrContext;
+import com.sun.tools.javac.comp.AttrContextEnv;
+import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,7 +36,6 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavaParser;
@@ -66,10 +76,10 @@ class ExtCodeGen
 
   private SrcClass makeStubFromSource()
   {
-    SrcClass srcExtended;List<CompilationUnitTree> trees = new ArrayList<>();
+    List<CompilationUnitTree> trees = new ArrayList<>();
     JavaParser.instance().parseText( _existingSource, trees, null, null, null );
     JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)trees.get( 0 ).getTypeDecls().get( 0 );
-    srcExtended = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
+    SrcClass srcExtended = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
       .modifiers( classDecl.getModifiers().getFlags() );
     if( classDecl.extending != null )
     {
@@ -91,7 +101,21 @@ class ExtCodeGen
     for( String fqn : allExtensions )
     {
       JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
-      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask );
+      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, null );
+
+//      JavacTaskImpl[] javacTask = {null};
+//      JCTree.JCCompilationUnit[] compUnit = {null};
+//      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, compUnit );
+//
+//      Context ctx = javacTask[0].getContext();
+//      JavacElements elementUtils = JavacElements.instance( ctx );
+//      Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
+//      Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( ctx,
+//                                                                    Trees.instance( javacTask[0] ).getTree( reflectMethodClassSym ),
+//                                                                    Names.instance( ctx ).fromString( "constructProxy" ), reflectMethodClassSym.type,
+//                                                                    com.sun.tools.javac.util.List.from( new Type[]{symbols.objectType, symbols.classType} ) );
+
+
       if( srcExtension != null )
       {
         for( AbstractSrcMethod method : srcExtension.getMethods() )
@@ -236,7 +260,7 @@ class ExtCodeGen
     }
 
 //    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> extendedClassSym = ClassSymbols.instance( getModule() ).getClassSymbol( javacTask, extendedType.getName() );
-//    if( !verifyExtensionMethod( method, extendedClassSym.getFirst(), errorHandler, javacTask ) )
+//    if( !verifyExtensionMethod( method, extendedClassSym.getFirst(), srcExtension, errorHandler, javacTask ) )
 //    {
 //      return;
 //    }
@@ -354,18 +378,23 @@ class ExtCodeGen
     return param.getType().getName().endsWith( extendedType.getSimpleName() );
   }
 
-  private boolean verifyExtensionMethod( AbstractSrcMethod method, Symbol.ClassSymbol extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
-  {
-    return true;
-    //## todo: warn if method with same signature exists in extended type hierarchy
-    //     JCDiagnostic.DiagnosticPosition position = ((JCTree)Trees.instance( javacTask ).getTree( extensionMethodSymbol )).pos();
-    //        errorHandler.report( new JavacDiagnostic( classSymbol.sourcefile, Diagnostic.Kind.WARN, position.getStartPosition(), 0, 0,
-    //                                                  "Illegal extension method. '" + extendedMethodName +
-    //                                                  "' overloads or shadows a method in the extended class" ) );
-  }
+//  private Symbol.MethodSymbol resolveMethod( Context ctx, JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, com.sun.tools.javac.util.List<Type> args )
+//  {
+//    Resolve rs = Resolve.instance( ctx );
+//    AttrContext attrContext = new AttrContext();
+//    Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
+//    env.toplevel = _tp.getCompilationUnit();
+//    return rs.resolveInternalMethod( pos, env, qual, name, args, null );
+//  }
 
-  public boolean isManifoldExtAnnotation( SrcAnnotationExpression anno )
-  {
-    return anno.getAnnotationType().startsWith( Extension.class.getPackage().getName() );
-  }
+//  private boolean verifyExtensionMethod( AbstractSrcMethod method, Symbol.ClassSymbol extendedType, SrcClass extensionType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+//  {
+//    // warn if method with same signature exists in extended type hierarchy
+//    /////JCDiagnostic.DiagnosticPosition position = ((JCTree)Trees.instance( javacTask ).getTree( extensionType )).pos();
+////
+////    errorHandler.report( new JavacDiagnostic( new SourceJavaFileObject( findFile( extensionType.getName(), _model ) ), Diagnostic.Kind.WARNING, methodOffset, 0, 0,
+////                                              "Illegal extension method. '" + method.getSimpleName() +
+////                                              "' overloads or shadows a method in the extended class" ) );
+//    return true;
+//  }
 }

@@ -1,6 +1,7 @@
 package manifold.ext;
 
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
@@ -21,11 +22,16 @@ import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.tools.Diagnostic;
+import manifold.ext.api.Extension;
 import manifold.ext.api.Structural;
+import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.TypeProcessor;
 
@@ -122,6 +128,98 @@ public class ExtensionTransformer extends TreeTranslator
     {
       result = tree;
     }
+  }
+
+  /**
+   * Issue errors/warnings if an extension method violates extension method grammar or conflicts with an existing method
+   */
+  @Override
+  public void visitMethodDef( JCTree.JCMethodDecl tree )
+  {
+    super.visitMethodDef( tree );
+    verifyExtensionMethod( tree );
+    result = tree;
+  }
+
+  private void verifyExtensionMethod( JCTree.JCMethodDecl tree )
+  {
+    if( !isFromExtensionClass( tree ) )
+    {
+      return;
+    }
+
+    List<JCTree.JCVariableDecl> parameters = tree.getParameters();
+    if( parameters.length() == 0 )
+    {
+      return;
+    }
+
+    String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
+    if( !extendedClassName.startsWith( ExtSourceProducer.EXTENSIONS_PACKAGE + '.' ) )
+    {
+      return;
+    }
+
+    extendedClassName = extendedClassName.substring( ExtSourceProducer.EXTENSIONS_PACKAGE.length() + 1 );
+
+    for( int i = 0; i < parameters.size(); i++ )
+    {
+      JCTree.JCVariableDecl param = parameters.get( i );
+      long methodModifiers = tree.getModifiers().flags;
+      if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
+      {
+        if( i != 0 )
+        {
+          _tp.report( param, Diagnostic.Kind.ERROR, "@This must target only the first parameter of an extension method" );
+        }
+        else if( !Modifier.isStatic( (int)methodModifiers ) )
+        {
+          _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must be declared 'static'" );
+        }
+
+        if( Modifier.isPrivate( (int)methodModifiers ) )
+        {
+          _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must not be declared 'private'" );
+        }
+
+        if( !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
+        {
+          _tp.report( param, Diagnostic.Kind.ERROR, "Expecting type '" + extendedClassName + "' for @This parameter" );
+        }
+      }
+      else if( i == 0 &&
+               Modifier.isStatic( (int)methodModifiers ) &&
+               !Modifier.isPrivate( (int)methodModifiers ) &&
+               param.type.toString().equals( extendedClassName ) )
+      {
+        _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an extension method?" );
+      }
+    }
+  }
+
+  private boolean isFromExtensionClass( JCTree.JCMethodDecl tree )
+  {
+    Tree parent = _tp.getParent( tree );
+    if( parent instanceof JCTree.JCClassDecl )
+    {
+      if( hasAnnotation( ((JCTree.JCClassDecl)parent).getModifiers().getAnnotations(), Extension.class ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
+  {
+    for( JCTree.JCAnnotation anno: annotations )
+    {
+      if( anno.getAnnotationType().type.toString().equals( annoClass.getCanonicalName() ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   private JCTree replaceStructuralCall( JCTree.JCMethodInvocation theCall )

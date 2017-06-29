@@ -28,6 +28,7 @@ public class SrcClass extends SrcStatement<SrcClass>
   private List<SrcClass> _innerClasses = new ArrayList<>();
   private List<SrcType> _typeVars;
 
+
   public SrcClass( String fqn, Kind kind )
   {
     this( fqn, null, kind );
