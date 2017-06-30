@@ -41,6 +41,7 @@ public interface IModule
   Set<ISourceProducer> getSourceProducers();
 
   Set<ISourceProducer> findSourceProducersFor( String fqn );
+
   Set<ISourceProducer> findSourceProducersFor( IFile file );
 
   JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler );

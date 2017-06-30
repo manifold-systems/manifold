@@ -69,7 +69,7 @@ class Model extends AbstractSingleFileModel
     }
 
     JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
-    for( IIssue issue: _issues.getIssues() )
+    for( IIssue issue : _issues.getIssues() )
     {
       Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
       errorHandler.report( new JavacDiagnostic( file, kind, issue.getStartOffset(), issue.getLine(), issue.getColumn(), issue.getMessage() ) );

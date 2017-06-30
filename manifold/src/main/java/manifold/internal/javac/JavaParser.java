@@ -35,13 +35,14 @@ import manifold.util.Pair;
 
 /**
  * A tool for parsing and compiling Java source.
- *
+ * <p>
  * A notable feature of this tool is its ability to compile Java sources that reference
- * and invoke Gosu types.  This feature enables bi-directional Java interop with Gosu.
+ * and invoke Manifold types.  This feature enables bi-directional Java interop with Manifold.
  */
 public class JavaParser implements IJavaParser
 {
   private static final JavaParser INSTANCE = new JavaParser();
+
   public static JavaParser instance()
   {
     return INSTANCE;
@@ -64,14 +65,14 @@ public class JavaParser implements IJavaParser
       JavacHook javacHook = JavacHook.instance();
       if( javacHook != null )
       {
-        // Share our existing Gosu file manager from Javac
+        // Share our existing Manifold file manager from Javac
 
         _fileManager = javacHook.getJavaFileManager();
-        _gfm = javacHook.getGosuFileManager();
+        _gfm = javacHook.getManFileManager();
       }
       else
       {
-        // Make a new Gosu file manager exclusively for this JavaParser
+        // Make a new Manifold file manager exclusively for this JavaParser
 
         _fileManager = _javac.getStandardFileManager( null, null, Charset.forName( "UTF-8" ) );
 
@@ -217,7 +218,7 @@ public class JavaParser implements IJavaParser
     }
     IFile iFile = ManifoldHost.getFileSystem().getIFile( new File( file.getName() ) );
     List<IDirectory> sourcePath = ManifoldHost.getGlobalModule().getSourcePath();
-    for( IDirectory dir: sourcePath )
+    for( IDirectory dir : sourcePath )
     {
       if( iFile.isDescendantOf( dir ) )
       {

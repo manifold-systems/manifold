@@ -31,7 +31,7 @@ public class SrcSwitchCase extends SrcStatement<SrcSwitchCase>
       }
       else
       {
-        _stmt.render( sb, indent+INDENT );
+        _stmt.render( sb, indent + INDENT );
       }
     }
     return sb;

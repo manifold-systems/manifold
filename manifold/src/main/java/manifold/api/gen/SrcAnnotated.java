@@ -19,7 +19,10 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   private List<SrcParameter> _parameters = new ArrayList<>();
   private Map<String, Object> _userData = Collections.emptyMap();
 
-  public SrcAnnotated() {}
+  public SrcAnnotated()
+  {
+  }
+
   public SrcAnnotated( SrcAnnotated owner )
   {
     super( owner );
@@ -46,7 +49,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   public static long modifiersFrom( Set<javax.lang.model.element.Modifier> modifiers )
   {
     long mods = 0;
-    for( javax.lang.model.element.Modifier mod: modifiers )
+    for( javax.lang.model.element.Modifier mod : modifiers )
     {
       switch( mod )
       {
@@ -103,6 +106,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     param.setOwner( this );
     return (T)this;
   }
+
   public T addParam( String name, Class type )
   {
     SrcParameter param = new SrcParameter( name, type );
@@ -110,6 +114,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     _parameters.add( param );
     return (T)this;
   }
+
   public T addParam( String name, String type )
   {
     SrcParameter param = new SrcParameter( name, type );
@@ -117,6 +122,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     _parameters.add( param );
     return (T)this;
   }
+
   public T addParam( String name, SrcType type )
   {
     SrcParameter param = new SrcParameter( name, type );
@@ -154,10 +160,12 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     _userData.put( tag, value );
     return (T)this;
   }
+
   public Object getUserData( String tag )
   {
     return _userData.get( tag );
   }
+
   public Object removeUserData( String tag )
   {
     if( _userData.isEmpty() )
@@ -166,6 +174,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     }
     return _userData.remove( tag );
   }
+
   public void clearUserData()
   {
     _userData = Collections.emptyMap();
@@ -234,6 +243,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   {
     return renderModifiers( sb, _modifiers, isDefault, defModifier );
   }
+
   protected String renderModifiers( StringBuilder sb, long modifiers, boolean isDefault, int defModifier )
   {
     if( isDefault )

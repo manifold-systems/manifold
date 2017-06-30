@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util.cache;
 
 import java.util.Set;
@@ -9,7 +5,8 @@ import java.util.function.Predicate;
 
 /**
  */
-public interface IFqnCache<T> {
+public interface IFqnCache<T>
+{
   T get( String fqn );
 
   FqnCacheNode getNode( String fqn );
@@ -32,6 +29,7 @@ public interface IFqnCache<T> {
    * @param visitor returns whether or not to terminate visiting
    */
   boolean visitDepthFirst( Predicate<T> visitor );
+
   boolean visitNodeDepthFirst( Predicate<FqnCacheNode> visitor );
 
   /**

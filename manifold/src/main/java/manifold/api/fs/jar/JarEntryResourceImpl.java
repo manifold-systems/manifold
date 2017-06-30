@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.jar;
 
 import java.io.File;
@@ -22,60 +18,77 @@ public abstract class JarEntryResourceImpl implements IResource
   protected String _name;
   private boolean _exists = false;
 
-  protected JarEntryResourceImpl(String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile) {
+  protected JarEntryResourceImpl( String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
+  {
     _name = name;
     _parent = parent;
     _jarFile = jarFile;
   }
 
-  public void setEntry(JarEntry entry) {
+  public void setEntry( JarEntry entry )
+  {
     _entry = entry;
     setExists();
   }
 
-  protected void setExists() {
+  protected void setExists()
+  {
     _exists = true;
-    if (getParent() instanceof JarEntryResourceImpl) {
-      ((JarEntryResourceImpl) getParent()).setExists();
+    if( getParent() instanceof JarEntryResourceImpl )
+    {
+      ((JarEntryResourceImpl)getParent()).setExists();
     }
   }
 
   @Override
-  public IDirectory getParent() {
+  public IDirectory getParent()
+  {
     return _parent;
   }
 
   @Override
-  public String getName() {
+  public String getName()
+  {
     return _name;
   }
 
   @Override
-  public boolean exists() {
+  public boolean exists()
+  {
     return _exists;
   }
 
   @Override
-  public boolean delete() throws IOException {
+  public boolean delete() throws IOException
+  {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public URI toURI() {
-    try {
-      return new URI("jar:" + _jarFile.toURI().toString() + "!/" + getEntryName().replace(" ","%20"));
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
+  public URI toURI()
+  {
+    try
+    {
+      return new URI( "jar:" + _jarFile.toURI().toString() + "!/" + getEntryName().replace( " ", "%20" ) );
+    }
+    catch( URISyntaxException e )
+    {
+      throw new RuntimeException( e );
     }
   }
 
-  private String getEntryName() {
-    if (_entry != null) {
+  private String getEntryName()
+  {
+    if( _entry != null )
+    {
       return _entry.getName();
-    } else {
+    }
+    else
+    {
       String result = _name;
       IDirectory parent = _parent;
-      while (!(parent instanceof JarFileDirectoryImpl)) {
+      while( !(parent instanceof JarFileDirectoryImpl) )
+      {
         result = parent.getName() + "/" + result;
         parent = parent.getParent();
       }
@@ -84,55 +97,68 @@ public abstract class JarEntryResourceImpl implements IResource
   }
 
   @Override
-  public ResourcePath getPath() {
-    return _parent.getPath().join(_name);
+  public ResourcePath getPath()
+  {
+    return _parent.getPath().join( _name );
   }
 
   @Override
-  public boolean isChildOf(IDirectory dir) {
-    return dir.equals(getParent());
+  public boolean isChildOf( IDirectory dir )
+  {
+    return dir.equals( getParent() );
   }
 
   @Override
-  public boolean isDescendantOf(IDirectory dir) {
-    return dir.getPath().isDescendant(getPath());
+  public boolean isDescendantOf( IDirectory dir )
+  {
+    return dir.getPath().isDescendant( getPath() );
   }
 
   @Override
-  public File toJavaFile() {
+  public File toJavaFile()
+  {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public boolean isJavaFile() {
+  public boolean isJavaFile()
+  {
     return false;
   }
 
   @Override
-  public String toString() {
+  public String toString()
+  {
     return getPath().toString();
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
+  public boolean equals( Object obj )
+  {
+    if( obj == this )
+    {
       return true;
     }
 
-    if (obj instanceof JarEntryResourceImpl) {
-      return getPath().equals(((JarEntryResourceImpl) obj).getPath());
-    } else {
+    if( obj instanceof JarEntryResourceImpl )
+    {
+      return getPath().equals( ((JarEntryResourceImpl)obj).getPath() );
+    }
+    else
+    {
       return false;
     }
   }
 
   @Override
-  public boolean create() {
+  public boolean create()
+  {
     return false;
   }
 
   @Override
-  public boolean isInJar() {
+  public boolean isInJar()
+  {
     return true;
   }
 }

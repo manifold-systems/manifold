@@ -39,7 +39,7 @@ public class TypeProcessor extends CompiledTypeProcessor
   public void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter )
   {
     String fqn = element.getQualifiedName().toString();
-    for( ISourceProducer sp: ManifoldHost.getCurrentModule().getSourceProducers() )
+    for( ISourceProducer sp : ManifoldHost.getCurrentModule().getSourceProducers() )
     {
       if( sp instanceof ITypeProcessor )
       {

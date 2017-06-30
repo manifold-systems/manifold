@@ -11,13 +11,13 @@ import manifold.internal.runtime.Bootstrap;
 
 
 /**
- * Add a static block to top-level classes to bootstrap Gosu:
+ * Add a static block to top-level classes to bootstrap Manifold:
  * <pre>
  *   static {
  *     Bootstrap.init();
  *   }
  * </pre>
- * Note this call is fast and does nothing if Gosu is already bootstrapped.
+ * Note this call is fast and does nothing if Manifold is already bootstrapped.
  */
 class BootstrapInserter extends TreeTranslator
 {

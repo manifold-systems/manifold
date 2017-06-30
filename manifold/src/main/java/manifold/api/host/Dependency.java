@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.host;
 
 public class Dependency
@@ -24,7 +20,7 @@ public class Dependency
   {
     return _exported;
   }
-  
+
   public String toString()
   {
     return _module.toString() + (_exported ? " (exported)" : " (not exported)");

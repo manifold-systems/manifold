@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.def;
 
 import java.io.File;
@@ -16,46 +12,57 @@ import manifold.api.fs.IFileUtil;
 public class JavaFileImpl extends JavaResourceImpl implements IFile
 {
 
-  public JavaFileImpl(File file) {
-    super(file);
+  public JavaFileImpl( File file )
+  {
+    super( file );
   }
 
   @Override
-  public InputStream openInputStream() throws IOException {
-    return new FileInputStream(_file);
+  public InputStream openInputStream() throws IOException
+  {
+    return new FileInputStream( _file );
   }
 
   @Override
-  public OutputStream openOutputStream() throws IOException {
-    return new FileOutputStream(_file);
+  public OutputStream openOutputStream() throws IOException
+  {
+    return new FileOutputStream( _file );
   }
 
   @Override
-  public OutputStream openOutputStreamForAppend() throws IOException {
-    return new FileOutputStream(_file, true);
+  public OutputStream openOutputStreamForAppend() throws IOException
+  {
+    return new FileOutputStream( _file, true );
   }
 
   @Override
-  public String getExtension() {
-    return IFileUtil.getExtension( this);
+  public String getExtension()
+  {
+    return IFileUtil.getExtension( this );
   }
 
   @Override
-  public String getBaseName() {
-    return IFileUtil.getBaseName(this);
+  public String getBaseName()
+  {
+    return IFileUtil.getBaseName( this );
   }
 
   @Override
-  public boolean create() {
-    try {
+  public boolean create()
+  {
+    try
+    {
       return _file.createNewFile();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
     }
   }
 
   @Override
-  public boolean exists() {
+  public boolean exists()
+  {
     return _file.isFile();
   }
 }

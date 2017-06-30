@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
 import java.util.AbstractList;
@@ -10,8 +6,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
 
-public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomAccess {
-  public static final DynamicArray EMPTY = new DynamicArray(0);
+public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomAccess
+{
+  public static final DynamicArray EMPTY = new DynamicArray( 0 );
 
   /**
    * The array buffer into which the elements of the ArrayList are stored.
@@ -30,22 +27,27 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * Constructs an empty list with the specified initial capacity.
    *
    * @param initialCapacity the initial capacity of the list
+   *
    * @throws IllegalArgumentException if the specified initial capacity
    *                                  is negative
    */
-  public DynamicArray( int initialCapacity) {
+  public DynamicArray( int initialCapacity )
+  {
     super();
-    if (initialCapacity < 0)
-      throw new IllegalArgumentException("Illegal Capacity: " +
-          initialCapacity);
+    if( initialCapacity < 0 )
+    {
+      throw new IllegalArgumentException( "Illegal Capacity: " +
+                                          initialCapacity );
+    }
     this.data = new Object[initialCapacity];
   }
 
   /**
    * Constructs an empty list with an initial capacity of ten.
    */
-  public DynamicArray() {
-    this(10);
+  public DynamicArray()
+  {
+    this( 10 );
   }
 
   /**
@@ -54,13 +56,15 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * iterator.
    *
    * @param c the collection whose elements are to be placed into this list
+   *
    * @throws NullPointerException if the specified collection is null
    */
-  public DynamicArray( Collection<? extends E> c) {
+  public DynamicArray( Collection<? extends E> c )
+  {
     data = c.toArray();
     size = data.length;
     // c.toArray might (incorrectly) not return Object[] (see 6260652)
-    if (data.getClass() != Object[].class)
+    if( data.getClass() != Object[].class )
     {
       Object[] copy = new Object[size];
       System.arraycopy( data, 0, copy, 0, size );
@@ -68,7 +72,8 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
     }
   }
 
-  protected DynamicArray( DynamicArray<E> source ) {
+  protected DynamicArray( DynamicArray<E> source )
+  {
     size = source.size;
     data = Arrays.copyOf( source.data, size );
     modCount = 0;
@@ -80,7 +85,8 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @return a copy of this <tt>DynamicArray</tt> instance
    */
-  public DynamicArray<E> copy() {
+  public DynamicArray<E> copy()
+  {
     return new DynamicArray<E>( this );
   }
 
@@ -89,11 +95,13 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * list's current size.  An application can use this operation to minimize
    * the storage of an <tt>ArrayList</tt> instance.
    */
-  public void trimToSize() {
+  public void trimToSize()
+  {
     modCount++;
     int oldCapacity = data.length;
-    if (size < oldCapacity) {
-      data = Arrays.copyOf(data, size);
+    if( size < oldCapacity )
+    {
+      data = Arrays.copyOf( data, size );
     }
   }
 
@@ -104,16 +112,20 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @param minCapacity the desired minimum capacity
    */
-  public void ensureCapacity(int minCapacity) {
+  public void ensureCapacity( int minCapacity )
+  {
     modCount++;
     int oldCapacity = data.length;
-    if (minCapacity > oldCapacity) {
+    if( minCapacity > oldCapacity )
+    {
       Object oldData[] = data;
       int newCapacity = (oldCapacity * 3) / 2 + 1;
-      if (newCapacity < minCapacity)
+      if( newCapacity < minCapacity )
+      {
         newCapacity = minCapacity;
+      }
       // minCapacity is usually close to size, so this is a win:
-      data = Arrays.copyOf(data, newCapacity);
+      data = Arrays.copyOf( data, newCapacity );
     }
   }
 
@@ -122,7 +134,8 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @return the number of elements in this list
    */
-  public int size() {
+  public int size()
+  {
     return size;
   }
 
@@ -131,7 +144,8 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @return <tt>true</tt> if this list contains no elements
    */
-  public boolean isEmpty() {
+  public boolean isEmpty()
+  {
     return size == 0;
   }
 
@@ -142,10 +156,12 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
    *
    * @param o element whose presence in this list is to be tested
+   *
    * @return <tt>true</tt> if this list contains the specified element
    */
-  public boolean contains(Object o) {
-    return indexOf(o) >= 0;
+  public boolean contains( Object o )
+  {
+    return indexOf( o ) >= 0;
   }
 
   /**
@@ -155,15 +171,27 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
    * or -1 if there is no such index.
    */
-  public int indexOf(Object o) {
-    if (o == null) {
-      for (int i = 0; i < size; i++)
-        if (data[i] == null)
+  public int indexOf( Object o )
+  {
+    if( o == null )
+    {
+      for( int i = 0; i < size; i++ )
+      {
+        if( data[i] == null )
+        {
           return i;
-    } else {
-      for (int i = 0; i < size; i++)
-        if (o.equals(data[i]))
+        }
+      }
+    }
+    else
+    {
+      for( int i = 0; i < size; i++ )
+      {
+        if( o.equals( data[i] ) )
+        {
           return i;
+        }
+      }
     }
     return -1;
   }
@@ -175,15 +203,27 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
    * or -1 if there is no such index.
    */
-  public int lastIndexOf(Object o) {
-    if (o == null) {
-      for (int i = size - 1; i >= 0; i--)
-        if (data[i] == null)
+  public int lastIndexOf( Object o )
+  {
+    if( o == null )
+    {
+      for( int i = size - 1; i >= 0; i-- )
+      {
+        if( data[i] == null )
+        {
           return i;
-    } else {
-      for (int i = size - 1; i >= 0; i--)
-        if (o.equals(data[i]))
+        }
+      }
+    }
+    else
+    {
+      for( int i = size - 1; i >= 0; i-- )
+      {
+        if( o.equals( data[i] ) )
+        {
           return i;
+        }
+      }
     }
     return -1;
   }
@@ -200,10 +240,11 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * APIs.
    *
    * @return an array containing all of the elements in this list in
-   *         proper sequence
+   * proper sequence
    */
-  public Object[] toArray() {
-    return Arrays.copyOf(data, size);
+  public Object[] toArray()
+  {
+    return Arrays.copyOf( data, size );
   }
 
   /**
@@ -224,19 +265,26 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * @param a the array into which the elements of the list are to
    *          be stored, if it is big enough; otherwise, a new array of the
    *          same runtime type is allocated for this purpose.
+   *
    * @return an array containing the elements of the list
+   *
    * @throws ArrayStoreException  if the runtime type of the specified array
    *                              is not a supertype of the runtime type of every element in
    *                              this list
    * @throws NullPointerException if the specified array is null
    */
-  public <T> T[] toArray(T[] a) {
-    if (a.length < size)
-      // Make a new array of a's runtime type, but my contents:
-      return (T[]) Arrays.copyOf(data, size, a.getClass());
-    System.arraycopy(data, 0, a, 0, size);
-    if (a.length > size)
+  public <T> T[] toArray( T[] a )
+  {
+    if( a.length < size )
+    // Make a new array of a's runtime type, but my contents:
+    {
+      return (T[])Arrays.copyOf( data, size, a.getClass() );
+    }
+    System.arraycopy( data, 0, a, 0, size );
+    if( a.length > size )
+    {
       a[size] = null;
+    }
     return a;
   }
 
@@ -246,13 +294,16 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * Returns the element at the specified position in this list.
    *
    * @param index index of the element to return
+   *
    * @return the element at the specified position in this list
+   *
    * @throws IndexOutOfBoundsException {@inheritDoc}
    */
-  public E get(int index) {
-    RangeCheck(index);
+  public E get( int index )
+  {
+    RangeCheck( index );
 
-    return (E) data[index];
+    return (E)data[index];
   }
 
   /**
@@ -261,13 +312,16 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @param index   index of the element to replace
    * @param element element to be stored at the specified position
+   *
    * @return the element previously at the specified position
+   *
    * @throws IndexOutOfBoundsException {@inheritDoc}
    */
-  public E set(int index, E element) {
-    RangeCheck(index);
+  public E set( int index, E element )
+  {
+    RangeCheck( index );
 
-    E oldValue = (E) data[index];
+    E oldValue = (E)data[index];
     data[index] = element;
     return oldValue;
   }
@@ -276,10 +330,12 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * Appends the specified element to the end of this list.
    *
    * @param e element to be appended to this list
+   *
    * @return <tt>true</tt> (as specified by {@link Collection#add})
    */
-  public boolean add(E e) {
-    ensureCapacity(size + 1);  // Increments modCount!!
+  public boolean add( E e )
+  {
+    ensureCapacity( size + 1 );  // Increments modCount!!
     data[size++] = e;
     return true;
   }
@@ -291,16 +347,20 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @param index   index at which the specified element is to be inserted
    * @param element element to be inserted
+   *
    * @throws IndexOutOfBoundsException {@inheritDoc}
    */
-  public void add(int index, E element) {
-    if (index > size || index < 0)
+  public void add( int index, E element )
+  {
+    if( index > size || index < 0 )
+    {
       throw new IndexOutOfBoundsException(
-          "Index: " + index + ", Size: " + size);
+        "Index: " + index + ", Size: " + size );
+    }
 
-    ensureCapacity(size + 1);  // Increments modCount!!
-    System.arraycopy(data, index, data, index + 1,
-        size - index);
+    ensureCapacity( size + 1 );  // Increments modCount!!
+    System.arraycopy( data, index, data, index + 1,
+                      size - index );
     data[index] = element;
     size++;
   }
@@ -311,19 +371,24 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * indices).
    *
    * @param index the index of the element to be removed
+   *
    * @return the element that was removed from the list
+   *
    * @throws IndexOutOfBoundsException {@inheritDoc}
    */
-  public E remove(int index) {
-    RangeCheck(index);
+  public E remove( int index )
+  {
+    RangeCheck( index );
 
     modCount++;
-    E oldValue = (E) data[index];
+    E oldValue = (E)data[index];
 
     int numMoved = size - index - 1;
-    if (numMoved > 0)
-      System.arraycopy(data, index + 1, data, index,
-          numMoved);
+    if( numMoved > 0 )
+    {
+      System.arraycopy( data, index + 1, data, index,
+                        numMoved );
+    }
     data[--size] = null; // Let gc do its work
 
     return oldValue;
@@ -340,21 +405,32 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * changed as a result of the call).
    *
    * @param o element to be removed from this list, if present
+   *
    * @return <tt>true</tt> if this list contained the specified element
    */
-  public boolean remove(Object o) {
-    if (o == null) {
-      for (int index = 0; index < size; index++)
-        if (data[index] == null) {
-          fastRemove(index);
+  public boolean remove( Object o )
+  {
+    if( o == null )
+    {
+      for( int index = 0; index < size; index++ )
+      {
+        if( data[index] == null )
+        {
+          fastRemove( index );
           return true;
         }
-    } else {
-      for (int index = 0; index < size; index++)
-        if (o.equals(data[index])) {
-          fastRemove(index);
+      }
+    }
+    else
+    {
+      for( int index = 0; index < size; index++ )
+      {
+        if( o.equals( data[index] ) )
+        {
+          fastRemove( index );
           return true;
         }
+      }
     }
     return false;
   }
@@ -363,12 +439,15 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
   * Private remove method that skips bounds checking and does not
   * return the value removed.
   */
-  private void fastRemove(int index) {
+  private void fastRemove( int index )
+  {
     modCount++;
     int numMoved = size - index - 1;
-    if (numMoved > 0)
-      System.arraycopy(data, index + 1, data, index,
-          numMoved);
+    if( numMoved > 0 )
+    {
+      System.arraycopy( data, index + 1, data, index,
+                        numMoved );
+    }
     data[--size] = null; // Let gc do its work
   }
 
@@ -376,12 +455,15 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * Removes all of the elements from this list.  The list will
    * be empty after this call returns.
    */
-  public void clear() {
+  public void clear()
+  {
     modCount++;
 
     // Let gc do its work
-    for (int i = 0; i < size; i++)
+    for( int i = 0; i < size; i++ )
+    {
       data[i] = null;
+    }
 
     size = 0;
   }
@@ -396,14 +478,17 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * list is nonempty.)
    *
    * @param c collection containing elements to be added to this list
+   *
    * @return <tt>true</tt> if this list changed as a result of the call
+   *
    * @throws NullPointerException if the specified collection is null
    */
-  public boolean addAll(Collection<? extends E> c) {
+  public boolean addAll( Collection<? extends E> c )
+  {
     Object[] a = c.toArray();
     int numNew = a.length;
-    ensureCapacity(size + numNew);  // Increments modCount
-    System.arraycopy(a, 0, data, size, numNew);
+    ensureCapacity( size + numNew );  // Increments modCount
+    System.arraycopy( a, 0, data, size, numNew );
     size += numNew;
     return numNew != 0;
   }
@@ -419,25 +504,32 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * @param index index at which to insert the first element from the
    *              specified collection
    * @param c     collection containing elements to be added to this list
+   *
    * @return <tt>true</tt> if this list changed as a result of the call
+   *
    * @throws IndexOutOfBoundsException {@inheritDoc}
    * @throws NullPointerException      if the specified collection is null
    */
-  public boolean addAll(int index, Collection<? extends E> c) {
-    if (index > size || index < 0)
+  public boolean addAll( int index, Collection<? extends E> c )
+  {
+    if( index > size || index < 0 )
+    {
       throw new IndexOutOfBoundsException(
-          "Index: " + index + ", Size: " + size);
+        "Index: " + index + ", Size: " + size );
+    }
 
     Object[] a = c.toArray();
     int numNew = a.length;
-    ensureCapacity(size + numNew);  // Increments modCount
+    ensureCapacity( size + numNew );  // Increments modCount
 
     int numMoved = size - index;
-    if (numMoved > 0)
-      System.arraycopy(data, index, data, index + numNew,
-          numMoved);
+    if( numMoved > 0 )
+    {
+      System.arraycopy( data, index, data, index + numNew,
+                        numMoved );
+    }
 
-    System.arraycopy(a, 0, data, index, numNew);
+    System.arraycopy( a, 0, data, index, numNew );
     size += numNew;
     return numNew != 0;
   }
@@ -451,20 +543,24 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    *
    * @param fromIndex index of first element to be removed
    * @param toIndex   index after last element to be removed
+   *
    * @throws IndexOutOfBoundsException if fromIndex or toIndex out of
    *                                   range (fromIndex &lt; 0 || fromIndex &gt;= size() || toIndex
    *                                   &gt; size() || toIndex &lt; fromIndex)
    */
-  protected void removeRange(int fromIndex, int toIndex) {
+  protected void removeRange( int fromIndex, int toIndex )
+  {
     modCount++;
     int numMoved = size - toIndex;
-    System.arraycopy(data, toIndex, data, fromIndex,
-        numMoved);
+    System.arraycopy( data, toIndex, data, fromIndex,
+                      numMoved );
 
     // Let gc do its work
     int newSize = size - (toIndex - fromIndex);
-    while (size != newSize)
+    while( size != newSize )
+    {
       data[--size] = null;
+    }
   }
 
   /**
@@ -473,10 +569,13 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
    * negative: It is always used immediately prior to an array access,
    * which throws an ArrayIndexOutOfBoundsException if index is negative.
    */
-  private void RangeCheck(int index) {
-    if (index >= size)
+  private void RangeCheck( int index )
+  {
+    if( index >= size )
+    {
       throw new IndexOutOfBoundsException(
-          "Index: " + index + ", Size: " + size);
+        "Index: " + index + ", Size: " + size );
+    }
   }
 
 }

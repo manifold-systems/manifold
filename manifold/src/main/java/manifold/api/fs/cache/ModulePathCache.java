@@ -35,8 +35,8 @@ public class ModulePathCache
   private PathCache makePathCache( IModule module )
   {
     return new PathCache( module,
-      () -> makeModuleSourcePath( module ),
-      () -> _cacheByModule.evict( module ) );
+                          () -> makeModuleSourcePath( module ),
+                          () -> _cacheByModule.evict( module ) );
   }
 
   private List<IDirectory> makeModuleSourcePath( IModule module )

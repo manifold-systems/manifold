@@ -13,18 +13,21 @@ public class SrcField extends SrcAnnotated<SrcField>
     name( name );
     type( type );
   }
+
   public SrcField( String name, String type )
   {
     super();
     name( name );
     type( type );
   }
+
   public SrcField( String name, SrcType type )
   {
     super();
     name( name );
     type( type );
   }
+
   public SrcField( SrcClass srcClass )
   {
     super( srcClass );
@@ -35,11 +38,13 @@ public class SrcField extends SrcAnnotated<SrcField>
     _type = type;
     return this;
   }
+
   public SrcField type( Class type )
   {
     _type = new SrcType( type );
     return this;
   }
+
   public SrcField type( String type )
   {
     _type = new SrcType( type );

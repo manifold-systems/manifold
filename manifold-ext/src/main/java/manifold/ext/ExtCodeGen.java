@@ -2,21 +2,9 @@ package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.comp.AttrContext;
-import com.sun.tools.javac.comp.AttrContextEnv;
-import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.comp.Resolve;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.JCDiagnostic;
-import com.sun.tools.javac.util.Name;
-import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -85,7 +73,7 @@ class ExtCodeGen
     {
       srcExtended.superClass( classDecl.extending.toString() );
     }
-    for( JCTree.JCExpression iface: classDecl.implementing )
+    for( JCTree.JCExpression iface : classDecl.implementing )
     {
       srcExtended.addInterface( iface.toString() );
     }
@@ -123,12 +111,12 @@ class ExtCodeGen
           addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
           methodExtensions = true;
         }
-        for( SrcType iface: srcExtension.getInterfaces() )
+        for( SrcType iface : srcExtension.getInterfaces() )
         {
           addExtensionInteface( iface, extendedClass, errorHandler, javacTask[0] );
           interfaceExtensions = true;
         }
-        for( SrcAnnotationExpression anno: srcExtension.getAnnotations() )
+        for( SrcAnnotationExpression anno : srcExtension.getAnnotations() )
         {
           addExtensionAnnotation( anno, extendedClass, errorHandler, javacTask[0] );
           annotationExtensions = true;
@@ -186,7 +174,7 @@ class ExtCodeGen
     }
 
     StringBuilder sbAnnos = new StringBuilder();
-    for( SrcAnnotationExpression anno: srcClass.getAnnotations() )
+    for( SrcAnnotationExpression anno : srcClass.getAnnotations() )
     {
       anno.render( sbAnnos, 0 ).append( '\n' );
     }
@@ -213,7 +201,7 @@ class ExtCodeGen
   {
     int iBrace = _existingSource.lastIndexOf( '}' );
     sb.append( _existingSource.substring( 0, iBrace ) );
-    for( AbstractSrcMethod method: srcClass.getMethods() )
+    for( AbstractSrcMethod method : srcClass.getMethods() )
     {
       method.render( sb, 2 );
     }
@@ -334,15 +322,15 @@ class ExtCodeGen
       }
       String extClassName = ((SrcClass)method.getOwner()).getName();
       call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( "(this" );
-      for( SrcParameter param: srcMethod.getParameters() )
+      for( SrcParameter param : srcMethod.getParameters() )
       {
         call.append( ", " ).append( param.getSimpleName() );
       }
       call.append( ");\n" );
       srcMethod.body( new SrcStatementBlock()
-                              .addStatement(
-                                new SrcRawStatement()
-                                  .rawText( call.toString() ) ) );
+                        .addStatement(
+                          new SrcRawStatement()
+                            .rawText( call.toString() ) ) );
     }
     else
     {

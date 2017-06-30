@@ -18,20 +18,26 @@ import java.lang.annotation.RetentionPolicy;
 public @interface SourcePosition
 {
   String URL = "url";
+
   String url();
 
   String OFFSET = "offset";
+
   int offset() default -1;
 
   String LENGTH = "length";
+
   int length() default -1;
 
   String TYPE = "type";
+
   String type() default "";
 
   String FEATURE = "feature";
+
   String feature();
 
   String LINE = "line";
+
   int line() default -1;
 }

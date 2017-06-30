@@ -25,16 +25,24 @@ public interface ISourceProducer extends IFileConnected
    */
   enum ProducerKind
   {
-    /** Produces complete valid source and does not depend on contributions from other producers */
+    /**
+     * Produces complete valid source and does not depend on contributions from other producers
+     */
     Primary,
 
-    /** Supplements the source produced from a Primary producer or set of Partial producers */
+    /**
+     * Supplements the source produced from a Primary producer or set of Partial producers
+     */
     Supplemental,
 
-    /** Cooperates with other producers to collectively provide complete valid source */
+    /**
+     * Cooperates with other producers to collectively provide complete valid source
+     */
     Partial,
 
-    /** Does not directly contribute source */
+    /**
+     * Does not directly contribute source
+     */
     None
   }
 
@@ -59,6 +67,7 @@ public interface ISourceProducer extends IFileConnected
    * Does this producer supply source for the specified fqn?
    */
   boolean isType( String fqn );
+
   boolean isTopLevelType( String fqn );
 
   /**
@@ -82,6 +91,7 @@ public interface ISourceProducer extends IFileConnected
   String produce( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
 
   Collection<String> getAllTypeNames();
+
   Collection<TypeName> getTypeNames( String namespace );
 
   List<IFile> findFilesForType( String fqn );

@@ -1,17 +1,13 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
-public class GosuEscapeUtil
+public class ManEscapeUtil
 {
   /**
    * Escape any special characters in the string, using the Java escape syntax.
    * For example any tabs become \t, newlines become \n etc.
    *
    * @return the escaped string. Returns the original string unchanged if it
-   *         contains no special characters.
+   * contains no special characters.
    */
   public static String escapeForJava( String string )
   {
@@ -45,7 +41,7 @@ public class GosuEscapeUtil
    * @param ch Escaped character code.
    *
    * @return The string expression of the character code, null if <code>ch</code> is not an escaped character.
-   *         Supports Unicode.
+   * Supports Unicode.
    */
   public static String escapeForJava( char ch )
   {

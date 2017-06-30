@@ -17,6 +17,7 @@ public class SrcArgument extends SrcAnnotated<SrcArgument>
     _value = new SrcRawExpression( type, value );
     _value.setOwner( this );
   }
+
   public SrcArgument( SrcType type, Object value )
   {
     _value = new SrcRawExpression( type, value );

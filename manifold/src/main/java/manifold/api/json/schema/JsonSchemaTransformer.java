@@ -1,14 +1,11 @@
 package manifold.api.json.schema;
 
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
@@ -71,7 +68,7 @@ public class JsonSchemaTransformer
     JsonStructureType definitionsHolder = new JsonStructureType( null, JSCH_DEFINITIONS );
     List<IJsonType> result = new ArrayList<>();
     cache( definitionsHolder );
-    for( Map.Entry<String, Object> entry: definitions.entrySet() )
+    for( Map.Entry<String, Object> entry : definitions.entrySet() )
     {
       String name = entry.getKey();
       Bindings value = (Bindings)entry.getValue();
@@ -188,7 +185,7 @@ public class JsonSchemaTransformer
     }
 
     IJsonType type = null;
-    for( Object elem: list )
+    for( Object elem : list )
     {
       IJsonType csr = Json.transformJsonObject( "", null, elem );
       if( type == null )
@@ -215,7 +212,7 @@ public class JsonSchemaTransformer
     JsonStructureType type = buildHierarchy( parent, name, list );
     if( type != null )
     {
-      for( Object elem: list )
+      for( Object elem : list )
       {
         if( elem instanceof Bindings )
         {
@@ -236,7 +233,7 @@ public class JsonSchemaTransformer
   private JsonStructureType buildHierarchy( JsonSchemaType parent, String name, List list )
   {
     JsonStructureType type = null;
-    for( Object elem: list )
+    for( Object elem : list )
     {
       if( elem instanceof Bindings )
       {

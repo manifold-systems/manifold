@@ -28,7 +28,7 @@ import sun.misc.URLClassPath;
 public class Manifold
 {
   private static final Manifold INSTANCE = new Manifold();
-  
+
   private List<File> _classpath;
   private DefaultSingleModule _module;
 
@@ -130,7 +130,7 @@ public class Manifold
         {
           File filePath = new File( pathElement );
           IDirectory resource = ManifoldHost.getFileSystem().getIDirectory( filePath );
-          expanded.add(resource);
+          expanded.add( resource );
         }
       }
     }
@@ -293,7 +293,7 @@ public class Manifold
     return retval;
   }
 
-  public List<String> getGosuBootstrapJars() throws ClassNotFoundException
+  public List<String> getManifoldBootstrapJars() throws ClassNotFoundException
   {
     return Collections.singletonList( getClassLocation( "com.sun.source.tree.Tree" ) //get tools.jar
     );

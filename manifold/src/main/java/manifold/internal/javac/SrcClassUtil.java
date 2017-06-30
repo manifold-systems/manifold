@@ -37,6 +37,7 @@ public class SrcClassUtil
   {
     return makeStub( fqn, classSymbol, compilationUnit, true );
   }
+
   public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, boolean withMembers )
   {
     return makeSrcClass( fqn, classSymbol, compilationUnit, withMembers );
@@ -48,7 +49,7 @@ public class SrcClassUtil
       .modifiers( classSymbol.getModifiers() );
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
     {
-      for( JCTree.JCImport imp: compilationUnit.getImports() )
+      for( JCTree.JCImport imp : compilationUnit.getImports() )
       {
         if( imp.staticImport )
         {
@@ -172,7 +173,7 @@ public class SrcClassUtil
       srcMethod.addParam( param.flatName().toString(), new SrcType( param.type.toString() ) );
       if( param.hasAnnotations() )
       {
-        for( Attribute.Compound anno: param.getAnnotationMirrors() )
+        for( Attribute.Compound anno : param.getAnnotationMirrors() )
         {
           if( anno.getAnnotationType().toString().equals( "manifold.ext.api.This" ) )
           {

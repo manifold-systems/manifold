@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.lang.model.element.ElementKind;
-import manifold.util.GosuClassUtil;
+import manifold.util.ManClassUtil;
 
 /**
  */
@@ -33,6 +33,7 @@ public class SrcClass extends SrcStatement<SrcClass>
   {
     this( fqn, null, kind );
   }
+
   public SrcClass( String fqn, SrcClass enclosingClass, Kind kind )
   {
     super( enclosingClass );
@@ -45,8 +46,8 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private SrcClass fullName( String fqn )
   {
-    _package = GosuClassUtil.getPackage( fqn );
-    return name( GosuClassUtil.getShortClassName( fqn ) );
+    _package = ManClassUtil.getPackage( fqn );
+    return name( ManClassUtil.getShortClassName( fqn ) );
   }
 
   public SrcClass superClass( SrcType superClass )
@@ -54,11 +55,13 @@ public class SrcClass extends SrcStatement<SrcClass>
     _superClass = superClass;
     return this;
   }
+
   public SrcClass superClass( Class superClass )
   {
     _superClass = new SrcType( superClass );
     return this;
   }
+
   public SrcClass superClass( String superClass )
   {
     _superClass = new SrcType( superClass );
@@ -71,11 +74,13 @@ public class SrcClass extends SrcStatement<SrcClass>
     iface.setOwner( this );
     return this;
   }
+
   public SrcClass addInterface( Class iface )
   {
     SrcType t = new SrcType( iface );
     return addInterface( t );
   }
+
   public SrcClass addInterface( String iface )
   {
     SrcType t = new SrcType( iface );
@@ -116,6 +121,7 @@ public class SrcClass extends SrcStatement<SrcClass>
     property.setOwner( this );
     return this;
   }
+
   public SrcClass addSetProperty( SrcSetProperty property )
   {
     _setProperties.put( property.getSimpleName(), property );
@@ -132,14 +138,14 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   public SrcClass addStaticBlock( SrcStatementBlock block )
   {
-    _staticBlocks.add(block);
-    block.setOwner(this);
+    _staticBlocks.add( block );
+    block.setOwner( this );
     return this;
   }
 
   public SrcClass imports( Class<?>... classes )
   {
-    for( Class c: classes )
+    for( Class c : classes )
     {
       _imports.add( c.getName() );
     }
@@ -148,7 +154,7 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   public SrcClass imports( String... classes )
   {
-    for( String c: classes )
+    for( String c : classes )
     {
       _imports.add( c );
     }
@@ -241,6 +247,7 @@ public class SrcClass extends SrcStatement<SrcClass>
   {
     return _kind == Kind.Interface;
   }
+
   public boolean isEnum()
   {
     return _kind == Kind.Enum;
@@ -261,6 +268,7 @@ public class SrcClass extends SrcStatement<SrcClass>
   {
     return render( sb, indent, true );
   }
+
   public StringBuilder render( StringBuilder sb, int indent, boolean includePackage )
   {
     if( includePackage )
@@ -287,7 +295,7 @@ public class SrcClass extends SrcStatement<SrcClass>
   {
     sb.append( "/* Generated */\n" )
       .append( "package " ).append( _package ).append( ";\n\n" );
-    for( String u: _imports )
+    for( String u : _imports )
     {
       sb.append( "import " ).append( u ).append( ";\n" );
     }
@@ -332,7 +340,7 @@ public class SrcClass extends SrcStatement<SrcClass>
       sb.append( i > 0 ? ",\n" : "" )
         .append( indent( sb, indent ) )
         .append( c.getSimpleName() )
-        .append( i == _enumConsts.size()-1 ? ";\n\n" : "" );
+        .append( i == _enumConsts.size() - 1 ? ";\n\n" : "" );
     }
   }
 
@@ -400,16 +408,16 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private void renderFields( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// fields //\n" );
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// fields //\n" );
     for( SrcField field : _fields )
     {
       field.render( sb, indent );
     }
   }
-  
+
   private void renderMethods( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// methods //\n" );
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// methods //\n" );
     for( AbstractSrcMethod method : _methods )
     {
       method.render( sb, indent );
@@ -418,18 +426,18 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private void renderStaticBlocks( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// static blocks //\n" );
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// static blocks //\n" );
     for( SrcStatementBlock block : _staticBlocks )
     {
-      sb.append( "\n" ).append( indent( sb, indent )).append( "static {" );
+      sb.append( "\n" ).append( indent( sb, indent ) ).append( "static {" );
       block.render( sb, indent );
-      sb.append( "\n" ).append( indent( sb, indent )).append( "}" );
+      sb.append( "\n" ).append( indent( sb, indent ) ).append( "}" );
     }
   }
 
   private void renderConstructors( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// constructors //\n" );
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// constructors //\n" );
     for( SrcConstructor ctor : _constructors )
     {
       ctor.render( sb, indent );
@@ -438,8 +446,8 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private void renderProperties( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// properties //\n" );
-    for( Map.Entry<String, SrcGetProperty> entry: _getProperties.entrySet() )
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// properties //\n" );
+    for( Map.Entry<String, SrcGetProperty> entry : _getProperties.entrySet() )
     {
       entry.getValue().render( sb, indent );
       SrcSetProperty srcSetProperty = _setProperties.get( entry.getKey() );
@@ -449,7 +457,7 @@ public class SrcClass extends SrcStatement<SrcClass>
       }
       sb.append( "\n" );
     }
-    for( Map.Entry<String, SrcSetProperty> entry: _setProperties.entrySet() )
+    for( Map.Entry<String, SrcSetProperty> entry : _setProperties.entrySet() )
     {
       SrcGetProperty srcGetProperty = _getProperties.get( entry.getKey() );
       if( srcGetProperty == null )
@@ -483,14 +491,15 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private void renderInnerClasses( StringBuilder sb, int indent )
   {
-    sb.append( "\n" ).append( indent( sb, indent )).append( "// inner classes //\n" );
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// inner classes //\n" );
     for( SrcClass innerClass : _innerClasses )
     {
       innerClass.render( sb, indent, false );
     }
   }
 
-  public enum Kind {
+  public enum Kind
+  {
     Class,
     Interface,
     Annotation,

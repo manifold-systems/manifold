@@ -1,29 +1,30 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
-public class Pair<F, S> {
+public class Pair<F, S>
+{
 
   final F _first;
   final S _second;
 
-  public Pair( F first, S second) {
+  public Pair( F first, S second )
+  {
     _first = first;
     _second = second;
   }
 
-  public F getFirst() {
+  public F getFirst()
+  {
     return _first;
   }
 
-  public S getSecond() {
+  public S getSecond()
+  {
     return _second;
   }
 
-  public static <T, V> Pair<T, V> make(T f, V s) {
-    return new Pair<T,V>(f, s);
+  public static <T, V> Pair<T, V> make( T f, V s )
+  {
+    return new Pair<T, V>( f, s );
   }
 
   public boolean equals( Object o )

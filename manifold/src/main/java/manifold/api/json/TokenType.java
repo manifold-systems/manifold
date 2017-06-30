@@ -1,6 +1,7 @@
 package manifold.api.json;
 
-enum TokenType {
+enum TokenType
+{
   LCURLY,
   RCURLY,
   LSQUARE,

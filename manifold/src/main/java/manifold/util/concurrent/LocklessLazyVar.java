@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util.concurrent;
 
 /**
@@ -19,15 +15,19 @@ public abstract class LocklessLazyVar<T>
   public final T get()
   {
     T result = _val;
-    if(result == NULL) {
+    if( result == NULL )
+    {
       return null;
     }
     if( result == null )
     {
       result = init();
-      if (result == null) {
+      if( result == null )
+      {
         _val = (T)NULL;
-      } else {
+      }
+      else
+      {
         _val = result;
       }
     }
@@ -52,24 +52,24 @@ public abstract class LocklessLazyVar<T>
     _val = val;
   }
 
-  public boolean isLoaded() {
+  public boolean isLoaded()
+  {
     return _val != null;
   }
 
-  /**
-   * A simple init interface to make LockingLazyVar's easier to construct
-   * from gosu.
-   */
-  public static interface LazyVarInit<Q> {
-    public Q init();
+  public interface LazyVarInit<Q>
+  {
+    Q init();
   }
 
   /**
    * Creates a new LockingLazyVar based on the type of the LazyVarInit passed in.
    * This method is intended to be called with a lambda or block from Gosu.
    */
-  public static <Q> LocklessLazyVar<Q> make( final LazyVarInit<Q> closure ) {
-    return new LocklessLazyVar<Q>(){
+  public static <Q> LocklessLazyVar<Q> make( final LazyVarInit<Q> closure )
+  {
+    return new LocklessLazyVar<Q>()
+    {
       protected Q init()
       {
         return closure.init();

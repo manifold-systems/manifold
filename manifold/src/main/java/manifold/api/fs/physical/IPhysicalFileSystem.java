@@ -1,13 +1,10 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.physical;
 
 import java.util.List;
 import manifold.api.fs.ResourcePath;
 
-public interface IPhysicalFileSystem {
+public interface IPhysicalFileSystem
+{
 
   List<? extends IFileMetadata> listFiles( ResourcePath directoryPath );
 

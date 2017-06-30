@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
 import java.io.File;
@@ -12,7 +8,7 @@ import java.util.Set;
  * This class is in part derived from org.apache.commons.lang.ClassUtils and is intended
  * to break a dependency on that project.
  */
-public class GosuClassUtil
+public class ManClassUtil
 {
   public static String getNameNoPackage( String className )
   {
@@ -32,12 +28,13 @@ public class GosuClassUtil
    */
   public static String getPackage( String className )
   {
-    if( className == null || !className.contains(".") )
+    if( className == null || !className.contains( "." ) )
     {
       return "";
     }
     int packageIndex = className.lastIndexOf( '.' );
-    if (packageIndex < 0) {
+    if( packageIndex < 0 )
+    {
       return "";
     }
     return className.substring( 0, packageIndex );

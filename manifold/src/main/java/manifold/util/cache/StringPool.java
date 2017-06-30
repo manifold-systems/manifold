@@ -14,13 +14,16 @@ public class StringPool
   private int _total;
   private long _size;
 
-  private StringPool() {
+  private StringPool()
+  {
     _map = new ConcurrentHashMap<>();
   }
 
-  public static String get( String value ) {
+  public static String get( String value )
+  {
     String existing = INSTANCE._map.get( value );
-    if( existing != null ) {
+    if( existing != null )
+    {
       return existing;
     }
     INSTANCE._map.put( value, value );
@@ -39,7 +42,8 @@ public class StringPool
 //    return value;
 //  }
 
-  public static void printStats() {
+  public static void printStats()
+  {
     System.out.println( "MISSES: " + INSTANCE._misses );
     System.out.println( "TOTAL: " + INSTANCE._total );
     System.out.println( "SIZE: " + INSTANCE._size );

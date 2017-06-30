@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.internal.runtime.protocols;
 
 import java.io.ByteArrayInputStream;
@@ -25,7 +21,7 @@ import manifold.util.Pair;
 
 /**
  */
-public class GosuClassesUrlConnection extends URLConnection
+public class ManClassesUrlConnection extends URLConnection
 {
   private static final String[] JAVA_NAMESPACES_TO_IGNORE = {
     "java/", "javax/", "sun/"
@@ -57,7 +53,7 @@ public class GosuClassesUrlConnection extends URLConnection
   private boolean _bDirectory;
   private boolean _bInvalid;
 
-  GosuClassesUrlConnection( URL url )
+  ManClassesUrlConnection( URL url )
   {
     super( url );
   }
@@ -99,7 +95,7 @@ public class GosuClassesUrlConnection extends URLConnection
         if( iIndexClass > 0 )
         {
           strType = strType.substring( 0, iIndexClass ).replace( '$', '.' );
-          maybeAssignGosuType( findClassLoader( getURL().getHost() ), strType );
+          maybeAssignType( findClassLoader( getURL().getHost() ), strType );
         }
         else if( strPath.endsWith( "/" ) )
         {
@@ -131,7 +127,7 @@ public class GosuClassesUrlConnection extends URLConnection
     throw new IllegalStateException( "Can't find ClassLoader with identity hash: " + identityHash );
   }
 
-  private void maybeAssignGosuType( ClassLoader loader, String strType )
+  private void maybeAssignType( ClassLoader loader, String strType )
   {
     Supplier<String> proxySupplier = getProxySupplier( strType );
     if( proxySupplier != null )
@@ -143,11 +139,11 @@ public class GosuClassesUrlConnection extends URLConnection
       return;
     }
 
-    ManifoldHost.maybeAssignGosuType( loader, strType, getURL(), ( fqn, type ) ->
+    ManifoldHost.maybeAssignType( loader, strType, getURL(), ( fqn, type ) ->
     {
       if( fqn != null )
       {
-        // If there were a class file for the Java type on disk, it would have loaded by now (the gosuclass protocol is last).
+        // If there were a class file for the Java type on disk, it would have loaded by now (the manclass protocol is last).
         // Therefore we compile and load the java class from the Java source file, eventually a JavaType based on the resulting class
         // may load, if a source-based one hasn't already loaded.
         try
@@ -203,7 +199,7 @@ public class GosuClassesUrlConnection extends URLConnection
     {
       return new ByteArrayInputStream( new byte[0] );
     }
-    throw new IOException( "Invalid or missing Gosu class for: " + url.toString() );
+    throw new IOException( "Invalid or missing Manifold class for: " + url.toString() );
   }
 
   public boolean isValid()
@@ -248,11 +244,11 @@ public class GosuClassesUrlConnection extends URLConnection
 //      // Log the exception, it tends to get swallowed esp. if the class doesn't parse.
 //      //
 //      // Note this is sometimes OK because the failure is recoverable. For example,
-//      // a Gosu class references a Java class which in turn extends the Gosu class.
+//      // a Manifold class references a Java class which in turn extends the Manifold class.
 //      // Due the the circular reference at the header level, the Java compiler will
-//      // fail to compile the Gosu class via this Url loader (because the Gosu class
+//      // fail to compile the Manifold class via this Url loader (because the Manifold class
 //      // needs the Java class, which is compiling). In this case the DefaultTypeLoader
-//      // catches the exception and generates a Java stub for the Gosu class and returns
+//      // catches the exception and generates a Java stub for the Manifold class and returns
 //      // that as the definitive JavaClassInfo.  Thus, we don't really want to log
 //      // a nasty message here or print the stack trace, if it's recoverable.
 //

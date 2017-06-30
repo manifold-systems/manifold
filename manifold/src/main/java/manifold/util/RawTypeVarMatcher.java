@@ -8,11 +8,13 @@ public class RawTypeVarMatcher implements TypeVarToTypeMap.ITypeVarMatcher<TypeV
 {
   private static final RawTypeVarMatcher INSTANCE = new RawTypeVarMatcher();
 
-  public static RawTypeVarMatcher instance() {
+  public static RawTypeVarMatcher instance()
+  {
     return INSTANCE;
   }
 
-  private RawTypeVarMatcher() {
+  private RawTypeVarMatcher()
+  {
   }
 
   @Override

@@ -12,8 +12,8 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.sourceprod.SourcePosition;
-import manifold.util.GosuClassUtil;
-import manifold.util.GosuEscapeUtil;
+import manifold.util.ManClassUtil;
+import manifold.util.ManEscapeUtil;
 
 /**
  */
@@ -32,7 +32,7 @@ public class ImageCodeGen
   {
     try
     {
-      String simpleName = GosuClassUtil.getShortClassName( _fqn );
+      String simpleName = ManClassUtil.getShortClassName( _fqn );
       return new SrcClass( _fqn, SrcClass.Kind.Class ).imports( URL.class, SourcePosition.class )
         .superClass( new SrcType( ImageIcon.class ) )
         .addField( new SrcField( "INSTANCE", simpleName ).modifiers( Modifier.STATIC ) )
@@ -52,7 +52,7 @@ public class ImageCodeGen
                                .addStatement(
                                  new SrcRawStatement()
                                    .rawText( "try {" )
-                                   .rawText( "  return INSTANCE != null ? INSTANCE : new " + simpleName + "(new URL(\"" + GosuEscapeUtil.escapeForGosuStringLiteral( _url ) + "\"));" )
+                                   .rawText( "  return INSTANCE != null ? INSTANCE : new " + simpleName + "(new URL(\"" + ManEscapeUtil.escapeForGosuStringLiteral( _url ) + "\"));" )
                                    .rawText( "} catch(Exception e) {" )
                                    .rawText( "  throw new RuntimeException(e);" )
                                    .rawText( "}" ) ) ) );

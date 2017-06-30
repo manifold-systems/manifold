@@ -22,7 +22,8 @@ import manifold.api.sourceprod.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
 
 
-import static manifold.api.sourceprod.ISourceProducer.ProducerKind.*;
+import static manifold.api.sourceprod.ISourceProducer.ProducerKind.Partial;
+import static manifold.api.sourceprod.ISourceProducer.ProducerKind.Primary;
 
 /**
  */
@@ -104,7 +105,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   {
     ISourceProducer found = null;
     String result = "";
-    for( ISourceProducer sp: sps )
+    for( ISourceProducer sp : sps )
     {
       if( sp.getProducerKind() == Primary ||
           sp.getProducerKind() == Partial )
@@ -119,7 +120,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         result = sp.produce( fqn, result, errorHandler );
       }
     }
-    for( ISourceProducer sp: sps )
+    for( ISourceProducer sp : sps )
     {
       if( sp.getProducerKind() == ISourceProducer.ProducerKind.Supplemental )
       {
@@ -132,7 +133,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public Set<ISourceProducer> findSourceProducersFor( String fqn )
   {
     Set<ISourceProducer> sps = new HashSet<>( 2 );
-    for( ISourceProducer sp: getSourceProducers() )
+    for( ISourceProducer sp : getSourceProducers() )
     {
       if( sp.isType( fqn ) )
       {
@@ -145,7 +146,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public Set<ISourceProducer> findSourceProducersFor( IFile file )
   {
     Set<ISourceProducer> sps = new HashSet<>( 2 );
-    for( ISourceProducer sp: getSourceProducers() )
+    for( ISourceProducer sp : getSourceProducers() )
     {
       if( sp.handlesFile( file ) )
       {
@@ -222,7 +223,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public Set<TypeName> getChildrenOfNamespace( String packageName )
   {
     Set<TypeName> children = new HashSet<>();
-    for( ISourceProducer sp: getSourceProducers() )
+    for( ISourceProducer sp : getSourceProducers() )
     {
       Collection<TypeName> typeNames = sp.getTypeNames( packageName );
       children.addAll( typeNames );

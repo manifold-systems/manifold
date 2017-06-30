@@ -18,6 +18,7 @@ public interface IJsonIO
   {
     return read( null, bindings );
   }
+
   static <E extends IJsonIO> E read( String tag, Bindings bindings )
   {
     if( tag != null && !tag.isEmpty() )
@@ -47,6 +48,7 @@ public interface IJsonIO
   {
     write( null, obj, bindings );
   }
+
   static <E extends IJsonIO> void write( String tag, E obj, Bindings bindings )
   {
     if( obj == null )
@@ -73,8 +75,9 @@ public interface IJsonIO
 
   static <E extends IJsonIO> List<E> readList( Bindings bindings )
   {
-    return readList( null, bindings ); 
+    return readList( null, bindings );
   }
+
   static <E extends IJsonIO> List<E> readList( String tag, Bindings bindings )
   {
     //noinspection unchecked
@@ -85,7 +88,7 @@ public interface IJsonIO
     }
 
     List<E> objs = list.isEmpty() ? Collections.emptyList() : new ArrayList<>();
-    for( Bindings elem: list )
+    for( Bindings elem : list )
     {
       objs.add( read( elem ) );
     }
@@ -125,8 +128,6 @@ public interface IJsonIO
    * and write anything from/to the Bindings.
    * <p>
    * Use #read() etc. to read proper Json data.
-   *
-   * @param bindings
    */
   default void load( Bindings bindings )
   {
@@ -143,8 +144,6 @@ public interface IJsonIO
    * values, but you can save anything you like.
    * <p>
    * Use #write(String, Object, Bindings) etc. to write proper Json data.
-   *
-   * @param bindings
    */
   default void save( Bindings bindings )
   {
@@ -156,7 +155,7 @@ public interface IJsonIO
   static void loadFields( IJsonIO obj, Class cls, Bindings bindings )
   {
     Field[] fields = cls.getDeclaredFields();
-    for( Field f: fields )
+    for( Field f : fields )
     {
       if( f.isSynthetic() || Modifier.isStatic( f.getModifiers() ) || Modifier.isTransient( f.getModifiers() ) )
       {
@@ -209,7 +208,7 @@ public interface IJsonIO
     }
 
     Field[] fields = cls.getDeclaredFields();
-    for( Field f: fields )
+    for( Field f : fields )
     {
       if( f.isSynthetic() || Modifier.isStatic( f.getModifiers() ) || Modifier.isTransient( f.getModifiers() ) )
       {
@@ -237,7 +236,7 @@ public interface IJsonIO
           {
             if( isSimpleType( ((List)value).get( 0 ) ) )
             {
-               bindings.put( f.getName(), value );
+              bindings.put( f.getName(), value );
             }
             else
             {
@@ -273,17 +272,18 @@ public interface IJsonIO
     }
     return isSimpleType( value.getClass() );
   }
+
   static boolean isSimpleType( Class cls )
   {
     return cls == null ||
-        cls == int.class ||
-        cls == long.class ||
-        cls == float.class ||
-        cls == double.class ||
-        cls == String.class ||
-        cls == Integer.class ||
-        cls == Long.class ||
-        cls == Float.class ||
-        cls == Double.class;
+           cls == int.class ||
+           cls == long.class ||
+           cls == float.class ||
+           cls == double.class ||
+           cls == String.class ||
+           cls == Integer.class ||
+           cls == Long.class ||
+           cls == Float.class ||
+           cls == Double.class;
   }
 }

@@ -53,7 +53,7 @@ public class JavacHook extends AbstractProcessor
 
   private JavacProcessingEnvironment _jpe;
   private Context _ctx;
-  private ManifoldJavaFileManager _gosuFileManager;
+  private ManifoldJavaFileManager _manFileManager;
   private JavaFileManager _fileManager;
   private Set<JavaFileObject> _javaInputFiles;
   private List<String> _gosuInputFiles;
@@ -86,9 +86,9 @@ public class JavacHook extends AbstractProcessor
     hijackJavacFileManager();
   }
 
-  ManifoldJavaFileManager getGosuFileManager()
+  ManifoldJavaFileManager getManFileManager()
   {
-    return _gosuFileManager;
+    return _manFileManager;
   }
 
   JavaFileManager getJavaFileManager()
@@ -120,16 +120,16 @@ public class JavacHook extends AbstractProcessor
   {
     if( !(_fileManager instanceof ManifoldJavaFileManager) )
     {
-      injectGosuFileManager();
+      injectManFileManager();
       ManifoldHost.initializeAndCompileNonJavaFiles( _jpe, _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
     }
   }
 
-  private void injectGosuFileManager()
+  private void injectManFileManager()
   {
-    _gosuFileManager = new ManifoldJavaFileManager( _fileManager, Log.instance( _ctx ), true );
+    _manFileManager = new ManifoldJavaFileManager( _fileManager, Log.instance( _ctx ), true );
     _ctx.put( JavaFileManager.class, (JavaFileManager)null );
-    _ctx.put( JavaFileManager.class, _gosuFileManager );
+    _ctx.put( JavaFileManager.class, _manFileManager );
   }
 
   private String deriveOutputPath()
@@ -175,15 +175,15 @@ public class JavacHook extends AbstractProcessor
 
     List<String> actualPaths = new ArrayList<>();
     outer:
-    for( String path: paths )
+    for( String path : paths )
     {
-      for( String p: paths )
+      for( String p : paths )
       {
         //noinspection StringEquality
         String unmodifiedPath = path;
         if( path.endsWith( File.separator + '.' ) )
         {
-          path = path.substring( 0, path.length()-2 );
+          path = path.substring( 0, path.length() - 2 );
         }
         if( p != unmodifiedPath && p.startsWith( path ) )
         {
@@ -205,7 +205,7 @@ public class JavacHook extends AbstractProcessor
   private void deriveSourcePath( Set<JavaFileObject> inputFiles, Set<String> sourcePath )
   {
     outer:
-    for( JavaFileObject inputFile: inputFiles )
+    for( JavaFileObject inputFile : inputFiles )
     {
       for( String sp : sourcePath )
       {

@@ -21,7 +21,8 @@ public class NashornJsonParser implements IJsonParser
   private ScriptEngine _engine;
 
   private NashornJsonParser()
-  {}
+  {
+  }
 
   public Bindings parseJson( String jsonText ) throws ScriptException
   {

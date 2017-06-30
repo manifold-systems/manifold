@@ -5,7 +5,7 @@ import java.net.URI;
 import javax.tools.SimpleJavaFileObject;
 
 /**
-*/
+ */
 public class StringJavaFileObject extends SimpleJavaFileObject
 {
   private final String _src;

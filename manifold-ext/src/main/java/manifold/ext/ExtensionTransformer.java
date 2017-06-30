@@ -212,7 +212,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
   {
-    for( JCTree.JCAnnotation anno: annotations )
+    for( JCTree.JCAnnotation anno : annotations )
     {
       if( anno.getAnnotationType().type.toString().equals( annoClass.getCanonicalName() ) )
       {

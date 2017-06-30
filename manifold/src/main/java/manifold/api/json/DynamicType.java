@@ -11,7 +11,9 @@ public class DynamicType implements IJsonType
     return INSTANCE;
   }
 
-  private DynamicType() {}
+  private DynamicType()
+  {
+  }
 
   @Override
   public String getName()

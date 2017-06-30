@@ -14,11 +14,11 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
-import manifold.api.host.IManifoldHost;
+import manifold.api.sourceprod.TypeName;
 
 /**
  */
@@ -64,7 +64,7 @@ public class ManifoldHost
             }
           }
         }
-        
+
         if( HOST == null )
         {
           HOST = new DefaultManifoldHost();
@@ -136,7 +136,7 @@ public class ManifoldHost
     return host().produceFile( fqn, module, errorHandler );
   }
 
-  public static void maybeAssignGosuType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
+  public static void maybeAssignType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
     host().maybeAssignManifoldType( loader, strType, url, assigner );
   }

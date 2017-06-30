@@ -29,7 +29,7 @@ public class JavaCompileIssuesException extends RuntimeException
       return sb.append( "No error messages available" ).toString();
     }
     sb.append( "\n" );
-    for( Diagnostic d: errorHandler.getDiagnostics() )
+    for( Diagnostic d : errorHandler.getDiagnostics() )
     {
       sb.append( d.toString() ).append( "\n" );
     }

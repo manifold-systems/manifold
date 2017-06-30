@@ -1,8 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
-
 package manifold.util;
 
 import java.io.Serializable;
@@ -17,9 +12,9 @@ import java.io.Serializable;
  * @author Stephen Colebourne
  * @author Gary Gregory
  * @author Mario Winterer
- * <a href="mailto:david@davidkarlsen.com">David J. M. Karlsen</a>
+ *         <a href="mailto:david@davidkarlsen.com">David J. M. Karlsen</a>
  */
-public class GosuObjectUtil
+public class ManObjectUtil
 {
   /**
    * <p>Singleton used as a <code>null</code> placeholder where
@@ -41,6 +36,7 @@ public class GosuObjectUtil
 
   // Defaulting
   //-----------------------------------------------------------------------
+
   /**
    * <p>Returns a default value if the object passed is
    * <code>null</code>.</p>
@@ -55,9 +51,11 @@ public class GosuObjectUtil
    *
    * @param object       the <code>Object</code> to test, may be <code>null</code>
    * @param defaultValue the default value to return, may be <code>null</code>
+   *
    * @return <code>object</code> if it is not <code>null</code>, defaultValue otherwise
    */
-  public static Object defaultIfNull(Object object, Object defaultValue) {
+  public static Object defaultIfNull( Object object, Object defaultValue )
+  {
     return object != null ? object : defaultValue;
   }
 
@@ -78,16 +76,20 @@ public class GosuObjectUtil
    *
    * @param object1 the first object, may be <code>null</code>
    * @param object2 the second object, may be <code>null</code>
+   *
    * @return <code>true</code> if the values of both objects are the same
    */
-  public static boolean equals(Object object1, Object object2) {
-    if (object1 == object2) {
+  public static boolean equals( Object object1, Object object2 )
+  {
+    if( object1 == object2 )
+    {
       return true;
     }
-    if ((object1 == null) || (object2 == null)) {
+    if( (object1 == null) || (object2 == null) )
+    {
       return false;
     }
-    return object1.equals(object2);
+    return object1.equals( object2 );
   }
 
   /**
@@ -100,15 +102,19 @@ public class GosuObjectUtil
    * </pre>
    *
    * @param obj the object to obtain the hash code of, may be <code>null</code>
+   *
    * @return the hash code of the object, or zero if null
+   *
    * @since 2.1
    */
-  public static int hashCode(Object obj) {
+  public static int hashCode( Object obj )
+  {
     return (obj == null) ? 0 : obj.hashCode();
   }
 
   // Identity ToString
   //-----------------------------------------------------------------------
+
   /**
    * <p>Gets the toString that would be produced by <code>Object</code>
    * if a class did not override toString itself. <code>null</code>
@@ -122,22 +128,26 @@ public class GosuObjectUtil
    *
    * @param object the object to create a toString for, may be
    *               <code>null</code>
+   *
    * @return the default toString text, or <code>null</code> if
-   *         <code>null</code> passed in
+   * <code>null</code> passed in
    */
-  public static String identityToString(Object object) {
-    if (object == null) {
+  public static String identityToString( Object object )
+  {
+    if( object == null )
+    {
       return null;
     }
     StringBuffer buffer = new StringBuffer();
-    identityToString(buffer, object);
+    identityToString( buffer, object );
     return buffer.toString();
   }
 
   /**
    * @return true if the given object is a pure java object array, false otherwise
    */
-  public static boolean isJavaReferenceArray(Object o) {
+  public static boolean isJavaReferenceArray( Object o )
+  {
     return o instanceof Object[];
   }
 
@@ -154,15 +164,18 @@ public class GosuObjectUtil
    *
    * @param buffer the buffer to append to
    * @param object the object to create a toString for
+   *
    * @since 2.4
    */
-  public static void identityToString(StringBuffer buffer, Object object) {
-    if (object == null) {
-      throw new NullPointerException("Cannot get the toString of a null identity");
+  public static void identityToString( StringBuffer buffer, Object object )
+  {
+    if( object == null )
+    {
+      throw new NullPointerException( "Cannot get the toString of a null identity" );
     }
-    buffer.append(object.getClass().getName())
-      .append('@')
-      .append(Integer.toHexString(System.identityHashCode(object)));
+    buffer.append( object.getClass().getName() )
+      .append( '@' )
+      .append( Integer.toHexString( System.identityHashCode( object ) ) );
   }
 
   /**
@@ -179,26 +192,32 @@ public class GosuObjectUtil
    *
    * @param buffer the buffer to append to, may be <code>null</code>
    * @param object the object to create a toString for, may be <code>null</code>
+   *
    * @return the default toString text, or <code>null</code> if
-   *         <code>null</code> passed in
+   * <code>null</code> passed in
+   *
    * @since 2.0
    * @deprecated The design of this method is bad - see LANG-360. Instead, use identityToString(StringBuffer, Object).
    */
-  public static StringBuffer appendIdentityToString(StringBuffer buffer, Object object) {
-    if (object == null) {
+  public static StringBuffer appendIdentityToString( StringBuffer buffer, Object object )
+  {
+    if( object == null )
+    {
       return null;
     }
-    if (buffer == null) {
+    if( buffer == null )
+    {
       buffer = new StringBuffer();
     }
     return buffer
-      .append(object.getClass().getName())
-      .append('@')
-      .append(Integer.toHexString(System.identityHashCode(object)));
+      .append( object.getClass().getName() )
+      .append( '@' )
+      .append( Integer.toHexString( System.identityHashCode( object ) ) );
   }
 
   // ToString
   //-----------------------------------------------------------------------
+
   /**
    * <p>Gets the <code>toString</code> of an <code>Object</code> returning
    * an empty string ("") if <code>null</code> input.</p>
@@ -211,11 +230,14 @@ public class GosuObjectUtil
    * </pre>
    *
    * @param obj the Object to <code>toString</code>, may be null
+   *
    * @return the passed in Object's toString, or nullStr if <code>null</code> input
+   *
    * @see String#valueOf(Object)
    * @since 2.0
    */
-  public static String toString(Object obj) {
+  public static String toString( Object obj )
+  {
     return obj == null ? "" : obj.toString();
   }
 
@@ -233,32 +255,41 @@ public class GosuObjectUtil
    *
    * @param obj     the Object to <code>toString</code>, may be null
    * @param nullStr the String to return if <code>null</code> input, may be null
+   *
    * @return the passed in Object's toString, or nullStr if <code>null</code> input
+   *
    * @see String#valueOf(Object)
    * @since 2.0
    */
-  public static String toString(Object obj, String nullStr) {
+  public static String toString( Object obj, String nullStr )
+  {
     return obj == null ? nullStr : obj.toString();
   }
 
   // Min/Max
   //-----------------------------------------------------------------------
+
   /**
    * Null safe comparison of Comparables.
    *
    * @param c1 the first comparable, may be null
    * @param c2 the second comparable, may be null
+   *
    * @return <ul>
-   *         <li>If both objects are non-null and unequal, the lesser object.
-   *         <li>If both objects are non-null and equal, c1.
-   *         <li>If one of the comparables is null, the non-null object.
-   *         <li>If both the comparables are null, null is returned.
-   *         </ul>
+   * <li>If both objects are non-null and unequal, the lesser object.
+   * <li>If both objects are non-null and equal, c1.
+   * <li>If one of the comparables is null, the non-null object.
+   * <li>If both the comparables are null, null is returned.
+   * </ul>
    */
-  public static Object min(Comparable c1, Comparable c2) {
-    if (c1 != null && c2 != null) {
-      return c1.compareTo(c2) < 1 ? c1 : c2;
-    } else {
+  public static Object min( Comparable c1, Comparable c2 )
+  {
+    if( c1 != null && c2 != null )
+    {
+      return c1.compareTo( c2 ) < 1 ? c1 : c2;
+    }
+    else
+    {
       return c1 != null ? c1 : c2;
     }
   }
@@ -268,23 +299,29 @@ public class GosuObjectUtil
    *
    * @param c1 the first comparable, may be null
    * @param c2 the second comparable, may be null
+   *
    * @return <ul>
-   *         <li>If both objects are non-null and unequal, the greater object.
-   *         <li>If both objects are non-null and equal, c1.
-   *         <li>If one of the comparables is null, the non-null object.
-   *         <li>If both the comparables are null, null is returned.
-   *         </ul>
+   * <li>If both objects are non-null and unequal, the greater object.
+   * <li>If both objects are non-null and equal, c1.
+   * <li>If one of the comparables is null, the non-null object.
+   * <li>If both the comparables are null, null is returned.
+   * </ul>
    */
-  public static Object max(Comparable c1, Comparable c2) {
-    if (c1 != null && c2 != null) {
-      return c1.compareTo(c2) >= 0 ? c1 : c2;
-    } else {
+  public static Object max( Comparable c1, Comparable c2 )
+  {
+    if( c1 != null && c2 != null )
+    {
+      return c1.compareTo( c2 ) >= 0 ? c1 : c2;
+    }
+    else
+    {
       return c1 != null ? c1 : c2;
     }
   }
 
   // Null
   //-----------------------------------------------------------------------
+
   /**
    * <p>Class used as a null placeholder where <code>null</code>
    * has another meaning.</p>
@@ -299,7 +336,8 @@ public class GosuObjectUtil
    * <p>Another example is <code>Hashtable</code>, where <code>null</code>
    * cannot be stored.</p>
    */
-  public static class Null implements Serializable {
+  public static class Null implements Serializable
+  {
     /**
      * Required for serialization support. Declare serialization compatibility with Commons Lang 1.0
      *
@@ -310,7 +348,8 @@ public class GosuObjectUtil
     /**
      * Restricted constructor - singleton.
      */
-    Null() {
+    Null()
+    {
       super();
     }
 
@@ -319,8 +358,9 @@ public class GosuObjectUtil
      *
      * @return the singleton value
      */
-    private Object readResolve() {
-      return GosuObjectUtil.NULL;
+    private Object readResolve()
+    {
+      return ManObjectUtil.NULL;
     }
   }
 }

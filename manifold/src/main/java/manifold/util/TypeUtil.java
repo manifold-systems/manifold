@@ -1,13 +1,5 @@
 package manifold.util;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-
 /**
  */
 public class TypeUtil

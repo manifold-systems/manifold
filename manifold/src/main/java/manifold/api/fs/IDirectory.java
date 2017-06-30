@@ -1,13 +1,10 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs;
 
 import java.io.IOException;
 import java.util.List;
 
-public interface IDirectory extends IResource {
+public interface IDirectory extends IResource
+{
 
   IDirectory dir( String relativePath );
 
@@ -16,6 +13,7 @@ public interface IDirectory extends IResource {
    * it will be constructed based on the current directory
    *
    * @param path the path of the file
+   *
    * @return The file that is under the directory with the name
    */
   IFile file( String path );
@@ -38,6 +36,7 @@ public interface IDirectory extends IResource {
    * in the list of cached children.
    *
    * @param path the path of the file
+   *
    * @return true if the path represents a file that exists as a child of this directory
    */
   boolean hasChildFile( String path );

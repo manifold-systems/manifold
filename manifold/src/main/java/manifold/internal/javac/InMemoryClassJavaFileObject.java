@@ -9,7 +9,7 @@ import java.net.URI;
 import javax.tools.SimpleJavaFileObject;
 
 /**
-*/
+ */
 public class InMemoryClassJavaFileObject extends SimpleJavaFileObject
 {
   private final ByteArrayOutputStream _outputStream;

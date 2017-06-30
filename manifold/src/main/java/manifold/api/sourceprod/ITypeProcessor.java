@@ -1,6 +1,5 @@
 package manifold.api.sourceprod;
 
-import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;

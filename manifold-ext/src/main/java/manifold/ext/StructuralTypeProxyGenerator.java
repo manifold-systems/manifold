@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
-import manifold.internal.runtime.protocols.GosuClassesUrlConnection;
+import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
  * Used at runtime to dynamically proxy a type that structurally (as opposed to nominally)
@@ -20,7 +20,7 @@ public class StructuralTypeProxyGenerator
   {
     StructuralTypeProxyGenerator gen = new StructuralTypeProxyGenerator();
     String fqnProxy = getNamespace( iface ) + '.' + name;
-    GosuClassesUrlConnection.putProxySupplier( fqnProxy, () -> gen.generateProxy( iface, rootClass, name ).toString() );
+    ManClassesUrlConnection.putProxySupplier( fqnProxy, () -> gen.generateProxy( iface, rootClass, name ).toString() );
     try
     {
       return Class.forName( fqnProxy, false, iface.getClassLoader() );

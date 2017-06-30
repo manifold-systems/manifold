@@ -18,7 +18,7 @@ public class SrcMethodCallExpression extends SrcExpression<SrcMethodCallExpressi
   public SrcMethodCallExpression copy()
   {
     SrcMethodCallExpression expr = new SrcMethodCallExpression( getSimpleName() );
-    for( SrcArgument arg: _arguments )
+    for( SrcArgument arg : _arguments )
     {
       expr.addArgument( arg.copy() );
     }

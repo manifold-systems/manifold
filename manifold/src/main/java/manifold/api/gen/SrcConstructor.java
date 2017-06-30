@@ -17,7 +17,8 @@ public class SrcConstructor extends SrcStatement<SrcConstructor>
   {
   }
 
-  public SrcConstructor body( SrcStatementBlock body ) {
+  public SrcConstructor body( SrcStatementBlock body )
+  {
     _body = body;
     return this;
   }

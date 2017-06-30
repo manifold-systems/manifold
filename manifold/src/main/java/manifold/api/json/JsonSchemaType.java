@@ -38,6 +38,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   {
     return _definitions;
   }
+
   public void setDefinitions( List<IJsonType> definitions )
   {
     _definitions = definitions;

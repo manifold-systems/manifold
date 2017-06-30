@@ -32,7 +32,7 @@ import manifold.util.Pair;
  */
 public class ClassSymbols
 {
-  private static final Map<IModule,ClassSymbols> INSTANCES = new ConcurrentHashMap<>();
+  private static final Map<IModule, ClassSymbols> INSTANCES = new ConcurrentHashMap<>();
 
   private final IModule _module;
   private JavacTool _javacTool;
@@ -92,7 +92,7 @@ public class ClassSymbols
     return (JavacTaskImpl)_javacTool.getTask( errors, _fm, null, Collections.singletonList( "-proc:none" ), null, null );
   }
 
-  public Pair<Symbol.ClassSymbol,JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
+  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
     Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
@@ -114,10 +114,11 @@ public class ClassSymbols
   {
     return makeSrcClassStub( fqn, null, null );
   }
+
   public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
   {
     JavacTaskImpl javacTask = getJavacTask();
-    Pair<Symbol.ClassSymbol,JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
     if( compUnit != null )
     {
       compUnit[0] = pair.getSecond();

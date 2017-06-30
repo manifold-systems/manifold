@@ -8,8 +8,10 @@ import manifold.util.concurrent.LocklessLazyVar;
 public class BytecodeOptions
 {
   public static LocklessLazyVar<Boolean> JDWP_ENABLED =
-    new LocklessLazyVar<Boolean>() {
-      protected Boolean init() {
+    new LocklessLazyVar<Boolean>()
+    {
+      protected Boolean init()
+      {
         List<String> values = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments();
         for( String value : values )
         {

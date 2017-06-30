@@ -14,6 +14,7 @@ public class SrcMemberAccessExpression extends SrcExpression<SrcMemberAccessExpr
   {
     Arrays.stream( path ).forEach( e -> _path.add( e ) );
   }
+
   public SrcMemberAccessExpression( String... path )
   {
     Arrays.stream( path ).forEach( e -> _path.add( new SrcIdentifier( e ) ) );

@@ -12,10 +12,12 @@ import manifold.util.concurrent.LocklessLazyVar;
 public class Json
 {
   private static String _parser = System.getProperty( "gosu.json.parser" );
+
   public static String getParserName()
   {
     return _parser;
   }
+
   @SuppressWarnings("UnusedDeclaration")
   public static void setParserName( String fqn )
   {
@@ -24,7 +26,8 @@ public class Json
   }
 
   private static final LocklessLazyVar<IJsonParser> PARSER =
-    new LocklessLazyVar<IJsonParser>() {
+    new LocklessLazyVar<IJsonParser>()
+    {
 
       @Override
       protected IJsonParser init()
@@ -50,6 +53,7 @@ public class Json
    * Parse the JSON string as one of a javax.script.Bindings instance.
    *
    * @param json A Standard JSON formatted string
+   *
    * @return A javax.script.Bindings instance
    */
   @SuppressWarnings("UnusedDeclaration")
@@ -67,17 +71,17 @@ public class Json
 
   /**
    * Makes a tree of structure types reflecting the Bindings.
-   *<p/>
+   * <p/>
    * If the bindings represent a Json Schema format (v.4), the types are transformed according to that schema.
    * Otherwise, the bindings are assumed to be a sample Json document whereby types are derived directly
    * from the sample.  Note when multiple samples exist for the same type eg., array elements, the samples
    * are merged and reconciled.
-   *<p/>
+   * <p/>
    * A structure type contains a property member for each name/value pair in the Bindings.  A property has the same name as the key and follows these rules:
    * <ul>
-   *   <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
-   *   <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
-   *   <li> Otherwise, if the value is a List, the property is a List parameterized with the component type, and the component type recursively follows these rules
+   * <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
+   * <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
+   * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type, and the component type recursively follows these rules
    * </ul>
    */
   public static String makeStructureTypes( String nameForStructure, Bindings bindings, boolean mutable )
@@ -236,7 +240,7 @@ public class Json
     for( int i = 0; i < name.length(); i++ )
     {
       char c = name.charAt( i );
-      if( c == '_' || c =='$' || (i == 0 ? Character.isLetter( c ) : Character.isLetterOrDigit( c )) )
+      if( c == '_' || c == '$' || (i == 0 ? Character.isLetter( c ) : Character.isLetterOrDigit( c )) )
       {
         sb.append( c );
       }

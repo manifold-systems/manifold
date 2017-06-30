@@ -57,7 +57,7 @@ class ArrayTransformer
     Object items = _jsonObj.get( JSCH_ITEMS );
     if( items instanceof List )
     {
-      for( Object elem: (List)items )
+      for( Object elem : (List)items )
       {
         IJsonType csr = _schemaTx.transformType( _type, _name, (Bindings)elem );
         if( componentType == null )

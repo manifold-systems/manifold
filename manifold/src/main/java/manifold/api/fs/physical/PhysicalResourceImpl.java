@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.physical;
 
 import java.io.File;
@@ -16,90 +12,112 @@ public class PhysicalResourceImpl implements IResource
   protected final ResourcePath _path;
   protected final IPhysicalFileSystem _backingFileSystem;
 
-  protected PhysicalResourceImpl(ResourcePath path, IPhysicalFileSystem backingFileSystem) {
+  protected PhysicalResourceImpl( ResourcePath path, IPhysicalFileSystem backingFileSystem )
+  {
     _path = path;
     _backingFileSystem = backingFileSystem;
   }
 
   @Override
-  public IDirectory getParent() {
-    if (_path.getParent() == null) {
+  public IDirectory getParent()
+  {
+    if( _path.getParent() == null )
+    {
       return null;
-    } else {
-      return new PhysicalDirectoryImpl(_path.getParent(), _backingFileSystem);
+    }
+    else
+    {
+      return new PhysicalDirectoryImpl( _path.getParent(), _backingFileSystem );
     }
   }
 
   @Override
-  public String getName() {
+  public String getName()
+  {
     return _path.getName();
   }
 
   @Override
-  public boolean exists() {
+  public boolean exists()
+  {
     return getIFileMetadata().exists();
   }
 
   @Override
-  public boolean delete() throws IOException {
-    return _backingFileSystem.delete(_path);
+  public boolean delete() throws IOException
+  {
+    return _backingFileSystem.delete( _path );
   }
 
   @Override
-  public URI toURI() {
+  public URI toURI()
+  {
     return toJavaFile().toURI();
   }
 
   @Override
-  public ResourcePath getPath() {
+  public ResourcePath getPath()
+  {
     return _path;
   }
 
   @Override
-  public boolean isChildOf(IDirectory dir) {
-    return dir.getPath().isChild(_path);
+  public boolean isChildOf( IDirectory dir )
+  {
+    return dir.getPath().isChild( _path );
   }
 
   @Override
-  public boolean isDescendantOf( IDirectory dir ) {
-    return dir.getPath().isDescendant(_path);
+  public boolean isDescendantOf( IDirectory dir )
+  {
+    return dir.getPath().isDescendant( _path );
   }
 
   @Override
-  public File toJavaFile() {
-    return new File(_path.getPathString());
+  public File toJavaFile()
+  {
+    return new File( _path.getPathString() );
   }
 
   @Override
-  public boolean isJavaFile() {
+  public boolean isJavaFile()
+  {
     return true;
   }
 
   @Override
-  public boolean isInJar() {
+  public boolean isInJar()
+  {
     return false;
   }
 
   @Override
-  public boolean create() {
+  public boolean create()
+  {
     return false;
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj instanceof IResource) {
-      return _path.equals(((IResource) obj).getPath());
-    } else {
+  public boolean equals( Object obj )
+  {
+    if( obj instanceof IResource )
+    {
+      return _path.equals( ((IResource)obj).getPath() );
+    }
+    else
+    {
       return false;
     }
   }
 
   @Override
-  public String toString() {
+  public String toString()
+  {
     return getPath().getFileSystemPathString();
   }
-  
-  protected IFileMetadata getIFileMetadata() {
-    return _backingFileSystem.getFileMetadata(_path);
+
+  protected IFileMetadata getIFileMetadata()
+  {
+    return _backingFileSystem.getFileMetadata( _path );
   }
 }

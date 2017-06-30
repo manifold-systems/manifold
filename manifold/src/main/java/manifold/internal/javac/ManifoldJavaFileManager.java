@@ -15,12 +15,12 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
-import manifold.api.sourceprod.TypeName;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
+import manifold.api.sourceprod.TypeName;
 import manifold.internal.host.ManifoldHost;
-import manifold.util.GosuClassUtil;
+import manifold.util.ManClassUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
 
@@ -92,7 +92,7 @@ class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
 
       for( TypeName tn : children )
       {
-        if( names.contains( GosuClassUtil.getShortClassName( tn.name ) ) )
+        if( names.contains( ManClassUtil.getShortClassName( tn.name ) ) )
         {
           continue;
         }
@@ -197,7 +197,8 @@ class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
   {
     HashSet<InMemoryClassJavaFileObject> files = new HashSet<>();
     _classFiles.visitDepthFirst(
-      o -> {
+      o ->
+      {
         if( o != null )
         {
           files.add( o );

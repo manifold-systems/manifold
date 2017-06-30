@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.jar;
 
 import java.io.File;
@@ -22,7 +18,8 @@ import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
 import manifold.internal.host.ManifoldHost;
 
-public class JarFileDirectoryImpl implements IJarFileDirectory {
+public class JarFileDirectoryImpl implements IJarFileDirectory
+{
 
   private File _file;
   private JarFile _jarFile;
@@ -30,183 +27,230 @@ public class JarFileDirectoryImpl implements IJarFileDirectory {
   private List<IDirectory> _childDirs;
   private List<IFile> _childFiles;
 
-  public JarFileDirectoryImpl(File file) {
+  public JarFileDirectoryImpl( File file )
+  {
     _resources = new HashMap<String, IResource>();
     _childFiles = new ArrayList<IFile>();
     _childDirs = new ArrayList<IDirectory>();
     _file = file;
 
-    if (file.exists()) {
-      try {
-        _jarFile = new JarFile(file);
+    if( file.exists() )
+    {
+      try
+      {
+        _jarFile = new JarFile( file );
         Enumeration<JarEntry> entries = _jarFile.entries();
-        while (entries.hasMoreElements()) {
+        while( entries.hasMoreElements() )
+        {
           JarEntry e = entries.nextElement();
-          processJarEntry(e);
+          processJarEntry( e );
         }
-      } catch (IOException e) {
-        throw new RuntimeException(e);
+      }
+      catch( IOException e )
+      {
+        throw new RuntimeException( e );
       }
     }
   }
 
-  private void processJarEntry(JarEntry e) {
-    List<String> pathComponents = IDirectoryUtil.splitPath( e.getName());
-    if (pathComponents.isEmpty()) {
+  private void processJarEntry( JarEntry e )
+  {
+    List<String> pathComponents = IDirectoryUtil.splitPath( e.getName() );
+    if( pathComponents.isEmpty() )
+    {
       return;
     }
-    if (pathComponents.size() == 1) {
-      String name = pathComponents.get(0);
-      if (e.isDirectory()) {
-        JarEntryDirectoryImpl resource = getOrCreateDirectory(name);
-        resource.setEntry(e);
-      } else {
-        JarEntryFileImpl resource = getOrCreateFile(name);
-        resource.setEntry(e);
+    if( pathComponents.size() == 1 )
+    {
+      String name = pathComponents.get( 0 );
+      if( e.isDirectory() )
+      {
+        JarEntryDirectoryImpl resource = getOrCreateDirectory( name );
+        resource.setEntry( e );
       }
-    } else {
-      JarEntryDirectoryImpl parentDirectory = getOrCreateDirectory(pathComponents.get(0));
-      for (int i = 1; i < pathComponents.size() - 1; i++) {
-        parentDirectory = parentDirectory.getOrCreateDirectory(pathComponents.get(i));
+      else
+      {
+        JarEntryFileImpl resource = getOrCreateFile( name );
+        resource.setEntry( e );
+      }
+    }
+    else
+    {
+      JarEntryDirectoryImpl parentDirectory = getOrCreateDirectory( pathComponents.get( 0 ) );
+      for( int i = 1; i < pathComponents.size() - 1; i++ )
+      {
+        parentDirectory = parentDirectory.getOrCreateDirectory( pathComponents.get( i ) );
       }
 
-      if (e.isDirectory()) {
-        JarEntryDirectoryImpl leafDir = parentDirectory.getOrCreateDirectory(pathComponents.get(pathComponents.size() - 1));
-        leafDir.setEntry(e);
-      } else {
-        JarEntryFileImpl leafFile = parentDirectory.getOrCreateFile(pathComponents.get(pathComponents.size() - 1));
-        leafFile.setEntry(e);
+      if( e.isDirectory() )
+      {
+        JarEntryDirectoryImpl leafDir = parentDirectory.getOrCreateDirectory( pathComponents.get( pathComponents.size() - 1 ) );
+        leafDir.setEntry( e );
+      }
+      else
+      {
+        JarEntryFileImpl leafFile = parentDirectory.getOrCreateFile( pathComponents.get( pathComponents.size() - 1 ) );
+        leafFile.setEntry( e );
       }
     }
   }
 
-  public InputStream getInputStream(JarEntry entry) throws IOException {
-    return _jarFile.getInputStream(entry);
+  public InputStream getInputStream( JarEntry entry ) throws IOException
+  {
+    return _jarFile.getInputStream( entry );
   }
 
   // IJarFileDirectory methods
 
   @Override
-  public JarEntryDirectoryImpl getOrCreateDirectory(String relativeName) {
-    IResource resource = _resources.get(relativeName);
-    if(resource instanceof IFile){
-      throw new UnsupportedOperationException("The requested resource " + relativeName + " is now being accessed as a directory, but was previously accessed as a file.");
+  public JarEntryDirectoryImpl getOrCreateDirectory( String relativeName )
+  {
+    IResource resource = _resources.get( relativeName );
+    if( resource instanceof IFile )
+    {
+      throw new UnsupportedOperationException( "The requested resource " + relativeName + " is now being accessed as a directory, but was previously accessed as a file." );
     }
-    JarEntryDirectoryImpl result = (JarEntryDirectoryImpl) resource;
-    if (result == null) {
-      result = new JarEntryDirectoryImpl(relativeName, this, this);
-      _resources.put(relativeName, result);
-      _childDirs.add(result);
+    JarEntryDirectoryImpl result = (JarEntryDirectoryImpl)resource;
+    if( result == null )
+    {
+      result = new JarEntryDirectoryImpl( relativeName, this, this );
+      _resources.put( relativeName, result );
+      _childDirs.add( result );
     }
     return result;
   }
 
   @Override
-  public JarEntryFileImpl getOrCreateFile(String relativeName) {
-    IResource resource = _resources.get(relativeName);
-    if(resource instanceof IDirectory){
-      throw new UnsupportedOperationException("The requested resource " + relativeName + " is now being accessed as a file, but was previously accessed as a directory.");
+  public JarEntryFileImpl getOrCreateFile( String relativeName )
+  {
+    IResource resource = _resources.get( relativeName );
+    if( resource instanceof IDirectory )
+    {
+      throw new UnsupportedOperationException( "The requested resource " + relativeName + " is now being accessed as a file, but was previously accessed as a directory." );
     }
-    JarEntryFileImpl result = (JarEntryFileImpl) resource;
-    if (result == null) {
-      result = new JarEntryFileImpl(relativeName, this, this);
-      _resources.put(relativeName, result);
-      _childFiles.add(result);
+    JarEntryFileImpl result = (JarEntryFileImpl)resource;
+    if( result == null )
+    {
+      result = new JarEntryFileImpl( relativeName, this, this );
+      _resources.put( relativeName, result );
+      _childFiles.add( result );
     }
     return result;
   }
 
   // IDirectory methods
 
-    @Override
-  public IDirectory dir(String relativePath) {
-    return IDirectoryUtil.dir(this, relativePath);
+  @Override
+  public IDirectory dir( String relativePath )
+  {
+    return IDirectoryUtil.dir( this, relativePath );
   }
 
   @Override
-  public IFile file(String path) {
-    return IDirectoryUtil.file(this, path);
+  public IFile file( String path )
+  {
+    return IDirectoryUtil.file( this, path );
   }
 
   @Override
-  public boolean mkdir() throws IOException {
+  public boolean mkdir() throws IOException
+  {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public List<? extends IDirectory> listDirs() {
+  public List<? extends IDirectory> listDirs()
+  {
     List<IDirectory> results = new ArrayList<IDirectory>();
-    for (IDirectory child : _childDirs) {
-      if (child.exists()) {
-        results.add(child);
+    for( IDirectory child : _childDirs )
+    {
+      if( child.exists() )
+      {
+        results.add( child );
       }
     }
     return results;
   }
 
   @Override
-  public List<? extends IFile> listFiles() {
+  public List<? extends IFile> listFiles()
+  {
     List<IFile> results = new ArrayList<IFile>();
-    for (IFile child : _childFiles) {
-      if (child.exists()) {
-        results.add(child);
+    for( IFile child : _childFiles )
+    {
+      if( child.exists() )
+      {
+        results.add( child );
       }
     }
     return results;
   }
 
   @Override
-  public String relativePath(IResource resource) {
-    return IDirectoryUtil.relativePath(this, resource);
+  public String relativePath( IResource resource )
+  {
+    return IDirectoryUtil.relativePath( this, resource );
   }
 
   @Override
-  public IDirectory getParent() {
+  public IDirectory getParent()
+  {
     File parentFile = _file.getParentFile();
-    if (parentFile != null) {
-      return ManifoldHost.getFileSystem().getIDirectory( parentFile);
-    } else {
+    if( parentFile != null )
+    {
+      return ManifoldHost.getFileSystem().getIDirectory( parentFile );
+    }
+    else
+    {
       return null;
     }
   }
 
   @Override
-  public String getName() {
+  public String getName()
+  {
     return _file.getName();
   }
 
   @Override
-  public boolean exists() {
+  public boolean exists()
+  {
     return _file.exists();
   }
 
   @Override
-  public boolean delete() throws IOException {
+  public boolean delete() throws IOException
+  {
     return _file.delete();
   }
 
   @Override
-  public URI toURI() {
+  public URI toURI()
+  {
     return _file.toURI();
   }
 
   @Override
-  public ResourcePath getPath() {
-    return ResourcePath.parse( _file.getAbsolutePath());
+  public ResourcePath getPath()
+  {
+    return ResourcePath.parse( _file.getAbsolutePath() );
   }
 
   @Override
-  public boolean isChildOf(IDirectory dir) {
-    return dir.equals(getParent());
+  public boolean isChildOf( IDirectory dir )
+  {
+    return dir.equals( getParent() );
   }
 
   @Override
-  public boolean isDescendantOf(IDirectory dir) {
-    return dir.getPath().isDescendant(getPath());
+  public boolean isDescendantOf( IDirectory dir )
+  {
+    return dir.getPath().isDescendant( getPath() );
   }
 
   @Override
-  public File toJavaFile() {
+  public File toJavaFile()
+  {
     return _file;
   }
 
@@ -216,50 +260,62 @@ public class JarFileDirectoryImpl implements IJarFileDirectory {
   }
 
   @Override
-  public boolean isJavaFile() {
+  public boolean isJavaFile()
+  {
     return true;
   }
 
   @Override
-  public boolean isInJar() {
+  public boolean isInJar()
+  {
     return true;
   }
 
   @Override
-  public boolean create() {
+  public boolean create()
+  {
     return false;
   }
 
   @Override
-  public String toString() {
+  public String toString()
+  {
     return toJavaFile().getPath();
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (obj == this) {
+  public boolean equals( Object obj )
+  {
+    if( obj == this )
+    {
       return true;
     }
 
-    if (obj instanceof JarFileDirectoryImpl) {
-      return getPath().equals(((JarFileDirectoryImpl) obj).getPath());
-    } else {
+    if( obj instanceof JarFileDirectoryImpl )
+    {
+      return getPath().equals( ((JarFileDirectoryImpl)obj).getPath() );
+    }
+    else
+    {
       return false;
     }
   }
 
   @Override
-  public void clearCaches() {
+  public void clearCaches()
+  {
   }
 
   @Override
-  public boolean hasChildFile(String path) {
-    IFile childFile = file(path);
+  public boolean hasChildFile( String path )
+  {
+    IFile childFile = file( path );
     return childFile != null && childFile.exists();
   }
 
   @Override
-  public boolean isAdditional() {
+  public boolean isAdditional()
+  {
     return false;
   }
 }

@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
 import java.util.AbstractList;
@@ -48,7 +44,8 @@ public class RegExpMatch extends AbstractList<String> implements List<String>
   }
 
   @Override
-  public String toString() {
+  public String toString()
+  {
     return "[RegExpMatch: " + _matcher + "]";
   }
 }

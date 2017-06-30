@@ -37,7 +37,7 @@ public class SrcType extends SrcElement
     _isDiamond = simpleType._diamond;
     _arrayDims = simpleType._arrayDim;
     _componentType = _arrayDims > 0 ? new SrcType( simpleType.getComponentType() ) : null;
-    for( TypeNameParser.Type param: simpleType._params )
+    for( TypeNameParser.Type param : simpleType._params )
     {
       addTypeParam( new SrcType( param ) );
     }
@@ -52,6 +52,7 @@ public class SrcType extends SrcElement
   {
     return _enclosingType;
   }
+
   public void setEnclosingType( SrcType enclosingType )
   {
     _enclosingType = enclosingType;
@@ -62,12 +63,14 @@ public class SrcType extends SrcElement
     _typeParams.add( srcType );
     return this;
   }
+
   public SrcType addTypeParam( Class type )
   {
     SrcType srcType = new SrcType( type );
     _typeParams.add( srcType );
     return this;
   }
+
   public SrcType addTypeParam( String type )
   {
     SrcType srcType = new SrcType( type );
@@ -79,14 +82,17 @@ public class SrcType extends SrcElement
   {
     _isPrimitive = primitive;
   }
+
   public void setInterface( boolean isInterface )
   {
     _isInterface = isInterface;
   }
+
   public void setEnum( boolean isEnum )
   {
     _isEnum = isEnum;
   }
+
   public void setAnnotation( boolean isAnno )
   {
     _isAnnotation = isAnno;

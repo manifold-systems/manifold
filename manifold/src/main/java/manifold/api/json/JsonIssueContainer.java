@@ -3,12 +3,12 @@ package manifold.api.json;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
-import manifold.api.fs.IFile;
-import manifold.internal.javac.IIssue;
 import java.util.Collections;
 import java.util.List;
+import java.util.StringTokenizer;
 import javax.script.ScriptException;
+import manifold.api.fs.IFile;
+import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
 import manifold.util.StreamUtil;
 
@@ -43,7 +43,7 @@ public class JsonIssueContainer implements IIssueContainer
       if( line.startsWith( "[" ) )
       {
         int lineNum = parseNum( line.substring( 1 ), ':' );
-        int column = parseNum( line.substring( line.indexOf( ':' )+1 ) + 1, ']' );
+        int column = parseNum( line.substring( line.indexOf( ':' ) + 1 ) + 1, ']' );
         int offset = findOffset( file, lineNum, column );
         String msg = line.substring( line.indexOf( ']' ) + 1 );
         _issues.add( new JsonIssue( IIssue.Kind.Error, offset, lineNum, column, msg ) );
@@ -64,7 +64,7 @@ public class JsonIssueContainer implements IIssueContainer
           offset = content.indexOf( '\n', offset ) + 1;
         }
       }
-      return offset + column-1;
+      return offset + column - 1;
     }
     catch( IOException e )
     {

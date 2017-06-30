@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs;
 
 import java.io.File;
@@ -25,7 +21,8 @@ public interface IFileSystem extends IService
 
 //  IFile getFakeFile( URL url, IModule module );
 
-  public enum CachingMode {
+  public enum CachingMode
+  {
     NO_CACHING,
     CHECK_TIMESTAMPS,
     FUZZY_TIMESTAMPS,

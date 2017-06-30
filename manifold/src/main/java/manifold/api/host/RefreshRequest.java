@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.host;
 
 
@@ -16,7 +12,8 @@ public class RefreshRequest
   public final RefreshKind kind;
   public final String[] types;
 
-  public RefreshRequest( IFile file, String[] types, IModule module, ITypeLoader typeLoader, RefreshKind kind) {
+  public RefreshRequest( IFile file, String[] types, IModule module, ITypeLoader typeLoader, RefreshKind kind )
+  {
     this.file = file;
     this.kind = kind;
     this.types = types;
@@ -24,29 +21,36 @@ public class RefreshRequest
     this.typeLoader = typeLoader;
   }
 
-  public RefreshRequest( IFile file, String[] types, ITypeLoader typeLoader, RefreshKind kind) {
-    this(file, types, getModule(typeLoader), typeLoader, kind);
+  public RefreshRequest( IFile file, String[] types, ITypeLoader typeLoader, RefreshKind kind )
+  {
+    this( file, types, getModule( typeLoader ), typeLoader, kind );
   }
 
-  public RefreshRequest( String[] allTypes, RefreshRequest request, ITypeLoader typeLoader) {
-    this(request.file, allTypes, typeLoader, request.kind);
+  public RefreshRequest( String[] allTypes, RefreshRequest request, ITypeLoader typeLoader )
+  {
+    this( request.file, allTypes, typeLoader, request.kind );
   }
 
-  public RefreshRequest( IFile file, String[] types, IModule module, RefreshKind kind) {
-    this( file, types, ManifoldHost.getLoader( file, module), kind);
+  public RefreshRequest( IFile file, String[] types, IModule module, RefreshKind kind )
+  {
+    this( file, types, ManifoldHost.getLoader( file, module ), kind );
   }
 
-  private static IModule getModule(ITypeLoader typeLoader) {
-    if (typeLoader == null) {
-      throw new RuntimeException("A refresh request must have a valid typeloader");
+  private static IModule getModule( ITypeLoader typeLoader )
+  {
+    if( typeLoader == null )
+    {
+      throw new RuntimeException( "A refresh request must have a valid typeloader" );
     }
     return typeLoader.getModule();
   }
 
   @Override
-  public String toString() {
+  public String toString()
+  {
     String s = kind + " of ";
-    for (String type : types) {
+    for( String type : types )
+    {
       s += type + ", ";
     }
     s += "from " + (typeLoader != null ? typeLoader : module);

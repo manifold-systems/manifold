@@ -1,7 +1,7 @@
 package manifold.api.gen;
 
 import java.lang.reflect.Array;
-import manifold.util.GosuEscapeUtil;
+import manifold.util.ManEscapeUtil;
 
 /**
  */
@@ -10,7 +10,10 @@ public abstract class SrcElement
   public static final int INDENT = 2;
   private SrcAnnotated _owner;
 
-  public SrcElement() {}
+  public SrcElement()
+  {
+  }
+
   public SrcElement( SrcAnnotated owner )
   {
     _owner = owner;
@@ -22,6 +25,7 @@ public abstract class SrcElement
   {
     return _owner;
   }
+
   public void setOwner( SrcAnnotated owner )
   {
     _owner = owner;
@@ -59,7 +63,7 @@ public abstract class SrcElement
     {
       if( String.class.getName().equals( type.getName() ) )
       {
-        result = "\"" + GosuEscapeUtil.escapeForJava( value.toString() ) + "\"";
+        result = "\"" + ManEscapeUtil.escapeForJava( value.toString() ) + "\"";
       }
       else if( type.isEnum() )
       {
@@ -67,7 +71,7 @@ public abstract class SrcElement
       }
       else if( type.getName().equals( char.class.getName() ) )
       {
-        result = "'" + GosuEscapeUtil.escapeForJava( value.toString() ) + "'";
+        result = "'" + ManEscapeUtil.escapeForJava( value.toString() ) + "'";
       }
       else
       {
@@ -76,7 +80,7 @@ public abstract class SrcElement
     }
     else if( value instanceof Character )
     {
-      result = "'" + GosuEscapeUtil.escapeForJava( value.toString() ) + "'";
+      result = "'" + ManEscapeUtil.escapeForJava( value.toString() ) + "'";
     }
     else if( value.getClass().isArray() )
     {

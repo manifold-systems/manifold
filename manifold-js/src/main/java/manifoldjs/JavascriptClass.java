@@ -4,13 +4,12 @@ package manifoldjs;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import manifold.api.gen.*;
-import manifold.util.GosuClassUtil;
+import manifold.util.ManClassUtil;
 import manifold.api.sourceprod.SourcePosition;
 import manifoldjs.parser.Parser;
 import manifoldjs.parser.Tokenizer;
 import manifoldjs.parser.tree.*;
 
-import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.lang.reflect.Modifier;
@@ -92,7 +91,7 @@ public class JavascriptClass {
             if (node.isStatic()) srcMethod.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
-                  .rawText("return JavascriptClass.invokeStatic(ENGINE, \"" + GosuClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" + generateArgList(parameters.toParamList()) + ");")));
+                  .rawText( "return JavascriptClass.invokeStatic(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" + generateArgList( parameters.toParamList()) + ");")));
             else srcMethod.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
@@ -116,7 +115,7 @@ public class JavascriptClass {
             if (node.isStatic()) getter.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
-                  .rawText("return JavascriptClass.getStaticProp(ENGINE, \"" + GosuClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
+                  .rawText( "return JavascriptClass.getStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
             else getter.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
@@ -133,7 +132,7 @@ public class JavascriptClass {
             if (node.isStatic()) setter.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
-                  .rawText("JavascriptClass.setStaticProp(ENGINE, \"" + GosuClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
+                  .rawText( "JavascriptClass.setStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
             else setter.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()

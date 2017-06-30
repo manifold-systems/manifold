@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.properties;
 
 import java.util.Arrays;
@@ -25,12 +21,13 @@ public class SystemProperties
   {
     Map<String, LocklessLazyVar<Model>> systemProps = new HashMap<>( 2 );
     systemProps.put( FQN,
-      LocklessLazyVar.make(
-      () -> {
-        FqnCache<String> cache = new FqnCache<>( FQN, true, Json::makeIdentifier );
-        _keys.forEach( key -> cache.add( key, System.getProperty( key ) ) );
-        return new Model( FQN, cache );
-      } ) );
+                     LocklessLazyVar.make(
+                       () ->
+                       {
+                         FqnCache<String> cache = new FqnCache<>( FQN, true, Json::makeIdentifier );
+                         _keys.forEach( key -> cache.add( key, System.getProperty( key ) ) );
+                         return new Model( FQN, cache );
+                       } ) );
     return systemProps;
   }
 

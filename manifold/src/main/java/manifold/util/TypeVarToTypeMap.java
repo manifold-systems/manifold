@@ -45,6 +45,7 @@ public class TypeVarToTypeMap
     Pair<Type, Boolean> pair = _map.get( tvType );
     return pair != null ? pair.getFirst() : null;
   }
+
   public Pair<Type, Boolean> getPair( TypeVariable tvType )
   {
     return _map.get( tvType );
@@ -64,7 +65,7 @@ public class TypeVarToTypeMap
 
   public Type getByString( String tv )
   {
-    for( TypeVariable key: _map.keySet() )
+    for( TypeVariable key : _map.keySet() )
     {
       if( tv.equals( key.getName() ) || tv.equals( key.getName() ) )
       {
@@ -83,6 +84,7 @@ public class TypeVarToTypeMap
   {
     return put( tvType, type, false );
   }
+
   public Type put( TypeVariable tvType, Type type, boolean bReverse )
   {
     Type existing = remove( tvType );
@@ -122,7 +124,7 @@ public class TypeVarToTypeMap
     return _map.keySet();
   }
 
-  public Set<Map.Entry<TypeVariable,Pair<Type, Boolean>>> entrySet()
+  public Set<Map.Entry<TypeVariable, Pair<Type, Boolean>>> entrySet()
   {
     return _map.entrySet();
   }
@@ -138,21 +140,28 @@ public class TypeVarToTypeMap
     return _map.values();
   }
 
-  public boolean isStructural() {
+  public boolean isStructural()
+  {
     return _bStructural;
   }
-  public void setStructural( boolean bStructural ) {
+
+  public void setStructural( boolean bStructural )
+  {
     _bStructural = bStructural;
   }
 
-  public boolean isInferredForCovariance( TypeVariable tv ) {
+  public boolean isInferredForCovariance( TypeVariable tv )
+  {
     return !isStructural() || _typesInferredFromCovariance.contains( tv );
   }
-  public void setInferredForCovariance( TypeVariable tv ) {
+
+  public void setInferredForCovariance( TypeVariable tv )
+  {
     _typesInferredFromCovariance.add( tv );
   }
 
-  public interface ITypeVarMatcher<E> {
+  public interface ITypeVarMatcher<E>
+  {
     boolean matches( E thisOne, TypeVariable thatOne );
   }
 
@@ -160,6 +169,7 @@ public class TypeVarToTypeMap
   {
     return _bReparsing;
   }
+
   public void setReparsing( boolean bReparsing )
   {
     _bReparsing = bReparsing;

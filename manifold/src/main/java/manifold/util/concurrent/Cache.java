@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util.concurrent;
 
 import java.io.Serializable;
@@ -26,10 +22,11 @@ import manifold.util.ILogger;
 /**
  * static var MY_CACHE = new Cache<Foo, Bar>( 1000, \ foo -> getBar( foo ) )
  */
-public class Cache<K, V> {
+public class Cache<K, V>
+{
 
   private ConcurrentLinkedHashMap<K, V> _cacheImlp;
-  private final MissHandler<K,V> _missHandler;
+  private final MissHandler<K, V> _missHandler;
   private final String _name;
   private final int _size;
 
@@ -40,87 +37,111 @@ public class Cache<K, V> {
 
   private ScheduledFuture<?> _loggingTask;
 
-  /** This will create a new cache
+  /**
+   * This will create a new cache
    *
-   * @param name the name of the cache for logging
-   * @param size the maximum size of the log
+   * @param name        the name of the cache for logging
+   * @param size        the maximum size of the log
    * @param missHandler how to handle misses, this is required not to be null
    */
-  public Cache( String name, int size, MissHandler<K, V> missHandler) {
+  public Cache( String name, int size, MissHandler<K, V> missHandler )
+  {
     _name = name;
     _size = size;
     clearCacheImpl();
     _missHandler = missHandler;
   }
 
-  private void clearCacheImpl() {
-    _cacheImlp = new ConcurrentLinkedHashMap<K,V>( ConcurrentLinkedHashMap.EvictionPolicy.SECOND_CHANCE, _size);
+  private void clearCacheImpl()
+  {
+    _cacheImlp = new ConcurrentLinkedHashMap<K, V>( ConcurrentLinkedHashMap.EvictionPolicy.SECOND_CHANCE, _size );
   }
 
-  /** This will evict a specific key from the cache.
+  /**
+   * This will evict a specific key from the cache.
    *
    * @param key the key to evict
+   *
    * @return the current value for that key
    */
-  public V evict(K key) {
-    return _cacheImlp.remove(key);
+  public V evict( K key )
+  {
+    return _cacheImlp.remove( key );
   }
 
-  /** This will put a specific entry in the cache
+  /**
+   * This will put a specific entry in the cache
    *
-   * @param key this is the key
+   * @param key   this is the key
    * @param value this is the value
+   *
    * @return the old value for this key
    */
-  public V put(K key, V value) {
-    return _cacheImlp.put(key, value);
+  public V put( K key, V value )
+  {
+    return _cacheImlp.put( key, value );
   }
 
-  /** This will get a specific entry, it will call the missHandler if it is not found.
+  /**
+   * This will get a specific entry, it will call the missHandler if it is not found.
    *
    * @param key the object to find
+   *
    * @return the found object (may be null)
    */
-  public V get(K key) {
-    V value = _cacheImlp.get(key);
+  public V get( K key )
+  {
+    V value = _cacheImlp.get( key );
     _requests.incrementAndGet();
-    if (value == null) {
-      value = _missHandler.load(key);
-      _cacheImlp.put(key, value);
+    if( value == null )
+    {
+      value = _missHandler.load( key );
+      _cacheImlp.put( key, value );
       _misses.incrementAndGet();
-    } else {
+    }
+    else
+    {
       _hits.incrementAndGet();
     }
     return value;
   }
 
-  public int getConfiguredSize() {
+  public int getConfiguredSize()
+  {
     return _size;
   }
 
-  public int getUtilizedSize() {
+  public int getUtilizedSize()
+  {
     return _cacheImlp.size();
   }
 
-  public int getRequests() {
+  public int getRequests()
+  {
     return _requests.get();
   }
 
-  public int getMisses() {
+  public int getMisses()
+  {
     return _misses.get();
   }
 
-  public int getHits() {
+  public int getHits()
+  {
     return _hits.get();
   }
 
-  public double getHitRate() {
+  public double getHitRate()
+  {
     int requests = getRequests();
     int hits = getHits();
-    if (requests == 0) {
+    if( requests == 0 )
+    {
       return 0.0;
-    } else {
-      return ((double) hits) / requests;
+    }
+    else
+    {
+      return ((double)hits) / requests;
     }
   }
 
@@ -128,48 +149,62 @@ public class Cache<K, V> {
    * Sets up a recurring task every n seconds to report on the status of this cache.  This can be useful
    * if you are doing exploratory caching and wish to monitor the performance of this cache with minimal fuss.
    * Consider
+   *
    * @param seconds how often to log the entry
-   * @param logger the logger to use
+   * @param logger  the logger to use
+   *
    * @return this
    */
-  public synchronized Cache<K, V> logEveryNSeconds(int seconds, final ILogger logger) {
-    if (_loggingTask == null) {
-      ScheduledExecutorService service = Executors.newScheduledThreadPool(1);
-      _loggingTask = service.scheduleAtFixedRate(new Runnable() {
-        public void run() {
-          logger.info(Cache.this);
+  public synchronized Cache<K, V> logEveryNSeconds( int seconds, final ILogger logger )
+  {
+    if( _loggingTask == null )
+    {
+      ScheduledExecutorService service = Executors.newScheduledThreadPool( 1 );
+      _loggingTask = service.scheduleAtFixedRate( new Runnable()
+      {
+        public void run()
+        {
+          logger.info( Cache.this );
         }
-      }, seconds, seconds, TimeUnit.SECONDS);
-    } else {
-      throw new IllegalStateException("Logging for " + this + " is already enabled");
+      }, seconds, seconds, TimeUnit.SECONDS );
+    }
+    else
+    {
+      throw new IllegalStateException( "Logging for " + this + " is already enabled" );
     }
     return this;
   }
 
-  public synchronized void stopLogging() {
-    if (_loggingTask != null) {
-      _loggingTask.cancel(false);
+  public synchronized void stopLogging()
+  {
+    if( _loggingTask != null )
+    {
+      _loggingTask.cancel( false );
     }
   }
 
-  public interface MissHandler<L, W> {
+  public interface MissHandler<L, W>
+  {
     public W load( L key );
   }
 
-  public void clear() {
+  public void clear()
+  {
     clearCacheImpl();
-    _hits.set(0);
-    _misses.set(0);
-    _requests.set(0);
+    _hits.set( 0 );
+    _misses.set( 0 );
+    _requests.set( 0 );
   }
 
   @Override
-  public String toString() {
-    return "Cache \"" + _name + "\"( Hits:" + getHits() + ", Misses:" + getMisses() + ", Requests:" + getRequests() + ", Hit rate:" + BigDecimal.valueOf(getHitRate() * 100.0).setScale(2, BigDecimal.ROUND_DOWN) + "% )";
+  public String toString()
+  {
+    return "Cache \"" + _name + "\"( Hits:" + getHits() + ", Misses:" + getMisses() + ", Requests:" + getRequests() + ", Hit rate:" + BigDecimal.valueOf( getHitRate() * 100.0 ).setScale( 2, BigDecimal.ROUND_DOWN ) + "% )";
   }
 
-  public static <K, V> Cache<K, V> make(String name, int size, MissHandler<K, V> handler) {
-    return new Cache<K, V>(name, size, handler);
+  public static <K, V> Cache<K, V> make( String name, int size, MissHandler<K, V> handler )
+  {
+    return new Cache<K, V>( name, size, handler );
   }
 
   /**
@@ -207,10 +242,11 @@ public class Cache<K, V> {
    * impact on the map's hit rate. The LRU policy creates a dead node on every successful retrieval
    * and a new node is placed at the tail of the list. For this reason, the LRU's efficiency cannot
    * be compared directly to a {@link java.util.LinkedHashMap} evicting in access order.
-   *
+   * <p>
    * <a href="mailto:ben.manes@reardencommerce.com">Ben Manes</a>
    */
-  static class ConcurrentLinkedHashMap<K, V> extends AbstractMap<K, V> implements ConcurrentMap<K, V>, Serializable {
+  static class ConcurrentLinkedHashMap<K, V> extends AbstractMap<K, V> implements ConcurrentMap<K, V>, Serializable
+  {
     private static final long serialVersionUID = 8350170357874293408L;
     final List<EvictionListener<K, V>> listeners;
     final ConcurrentMap<K, Node<K, V>> data;
@@ -228,8 +264,9 @@ public class Cache<K, V> {
      * @param maximumCapacity The maximum capacity to coerces to. The size may exceed it temporarily.
      * @param listeners       The listeners registered for notification when an entry is evicted.
      */
-    public ConcurrentLinkedHashMap(EvictionPolicy policy, int maximumCapacity, EvictionListener<K, V>... listeners) {
-      this(policy, maximumCapacity, 16, listeners);
+    public ConcurrentLinkedHashMap( EvictionPolicy policy, int maximumCapacity, EvictionListener<K, V>... listeners )
+    {
+      this( policy, maximumCapacity, 16, listeners );
     }
 
     /**
@@ -241,22 +278,24 @@ public class Cache<K, V> {
      *                         performs internal sizing to try to accommodate this many threads.
      * @param listeners        The listeners registered for notification when an entry is evicted.
      */
-    public ConcurrentLinkedHashMap(EvictionPolicy policy, int maximumCapacity, int concurrencyLevel, EvictionListener<K, V>... listeners) {
-      if ((policy == null) || (maximumCapacity < 0) || (concurrencyLevel <= 0)) {
+    public ConcurrentLinkedHashMap( EvictionPolicy policy, int maximumCapacity, int concurrencyLevel, EvictionListener<K, V>... listeners )
+    {
+      if( (policy == null) || (maximumCapacity < 0) || (concurrencyLevel <= 0) )
+      {
         throw new IllegalArgumentException();
       }
-      this.listeners = (listeners == null) ? Collections.<EvictionListener<K, V>>emptyList() : Arrays.asList(listeners);
-      this.data = new ConcurrentHashMap<K, Node<K, V>>(maximumCapacity, 0.75f, concurrencyLevel);
-      this.capacity = new AtomicInteger(maximumCapacity);
+      this.listeners = (listeners == null) ? Collections.<EvictionListener<K, V>>emptyList() : Arrays.asList( listeners );
+      this.data = new ConcurrentHashMap<K, Node<K, V>>( maximumCapacity, 0.75f, concurrencyLevel );
+      this.capacity = new AtomicInteger( maximumCapacity );
       this.length = new AtomicInteger();
       this.head = new Node<K, V>();
       this.tail = new Node<K, V>();
       this.policy = policy;
 
-      head.setPrev(head);
-      head.setNext(tail);
-      tail.setPrev(head);
-      tail.setNext(tail);
+      head.setPrev( head );
+      head.setNext( tail );
+      tail.setPrev( head );
+      tail.setNext( tail );
     }
 
     /**
@@ -264,7 +303,8 @@ public class Cache<K, V> {
      *
      * @return Whether the map has overflowed and an entry should be evicted.
      */
-    private boolean isOverflow() {
+    private boolean isOverflow()
+    {
       return length.get() > capacity();
     }
 
@@ -274,12 +314,15 @@ public class Cache<K, V> {
      *
      * @param capacity The maximum capacity of the map.
      */
-    public void setCapacity(int capacity) {
-      if (capacity < 0) {
+    public void setCapacity( int capacity )
+    {
+      if( capacity < 0 )
+      {
         throw new IllegalArgumentException();
       }
-      this.capacity.set(capacity);
-      while (isOverflow()) {
+      this.capacity.set( capacity );
+      while( isOverflow() )
+      {
         evict();
       }
     }
@@ -289,7 +332,8 @@ public class Cache<K, V> {
      *
      * @return The maximum capacity.
      */
-    public int capacity() {
+    public int capacity()
+    {
       return capacity.get();
     }
 
@@ -297,7 +341,8 @@ public class Cache<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public int size() {
+    public int size()
+    {
       return data.size();
     }
 
@@ -305,9 +350,11 @@ public class Cache<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public void clear() {
-      for (K key : keySet()) {
-        remove(key);
+    public void clear()
+    {
+      for( K key : keySet() )
+      {
+        remove( key );
       }
     }
 
@@ -315,37 +362,45 @@ public class Cache<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public boolean containsKey(Object key) {
-      return data.containsKey(key);
+    public boolean containsKey( Object key )
+    {
+      return data.containsKey( key );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean containsValue(Object value) {
-      return data.containsValue(new Node<Object, Object>(null, value));
+    public boolean containsValue( Object value )
+    {
+      return data.containsValue( new Node<Object, Object>( null, value ) );
     }
 
     /**
      * Evicts a single entry if the map exceeds the maximum capacity.
      */
-    private void evict() {
-      while (isOverflow()) {
+    private void evict()
+    {
+      while( isOverflow() )
+      {
         Node<K, V> node = poll();
-        if (node == null) {
+        if( node == null )
+        {
           return;
-        } else if (policy.onEvict(this, node)) {
+        }
+        else if( policy.onEvict( this, node ) )
+        {
           V value = node.getValue();
-          if (value != null) {
+          if( value != null )
+          {
             K key = node.getKey();
-            data.remove(key);
-            notifyEviction(key, value);
+            data.remove( key );
+            notifyEviction( key, value );
           }
           length.decrementAndGet();
           return;
         }
-        offer(node);
+        offer( node );
       }
     }
 
@@ -355,10 +410,12 @@ public class Cache<K, V> {
      * @param key   The entry's key.
      * @param value The entry's value.
      */
-    private void notifyEviction(K key, V value) {
-      for (int i = 0; i < listeners.size(); i++) {
-        EvictionListener<K, V> listener = listeners.get(i);
-        listener.onEviction(key, value);
+    private void notifyEviction( K key, V value )
+    {
+      for( int i = 0; i < listeners.size(); i++ )
+      {
+        EvictionListener<K, V> listener = listeners.get( i );
+        listener.onEviction( key, value );
       }
     }
 
@@ -368,18 +425,24 @@ public class Cache<K, V> {
      *
      * @return The first node on the list or <tt>null</tt> if empty.
      */
-    private Node<K, V> poll() {
-      for (; ;) {
+    private Node<K, V> poll()
+    {
+      for( ; ; )
+      {
         Node<K, V> node = head.getNext();
-        if (head.casNext(node, node.getNext())) {
-          for (; ;) {
-            if (node.casState( Node.State.LINKED, Node.State.UNLINKING)) {
-              node.getNext().setPrev(head);
-              node.setState( Node.State.UNLINKED);
+        if( head.casNext( node, node.getNext() ) )
+        {
+          for( ; ; )
+          {
+            if( node.casState( Node.State.LINKED, Node.State.UNLINKING ) )
+            {
+              node.getNext().setPrev( head );
+              node.setState( Node.State.UNLINKED );
               return node;
             }
             Node.State state = node.getState();
-            if ( state == Node.State.SENTINEL) {
+            if( state == Node.State.SENTINEL )
+            {
               return null;
             }
           }
@@ -392,17 +455,22 @@ public class Cache<K, V> {
      *
      * @param node An unlinked node to append to the tail of the list.
      */
-    private void offer(Node<K, V> node) {
-      node.setState( Node.State.LINKING);
-      node.setNext(tail);
-      for (; ;) {
+    private void offer( Node<K, V> node )
+    {
+      node.setState( Node.State.LINKING );
+      node.setNext( tail );
+      for( ; ; )
+      {
         Node<K, V> prev = tail.getPrev();
-        node.setPrev(prev);
-        if (prev.casNext(tail, node)) {
+        node.setPrev( prev );
+        if( prev.casNext( tail, node ) )
+        {
           Node<K, V> next = tail;
-          for (; ;) {
-            if (next.casPrev(prev, node)) {
-              node.setState( Node.State.LINKED);
+          for( ; ; )
+          {
+            if( next.casPrev( prev, node ) )
+            {
+              node.setState( Node.State.LINKED );
               return;
             }
             // walk up the list until a node can be linked
@@ -416,13 +484,16 @@ public class Cache<K, V> {
      * Adds a node to the list and data store if it does not already exist.
      *
      * @param node An unlinked node to add.
+     *
      * @return The previous value in the data store.
      */
-    private Node<K, V> putIfAbsent(Node<K, V> node) {
-      Node<K, V> old = data.putIfAbsent(node.getKey(), node);
-      if (old == null) {
+    private Node<K, V> putIfAbsent( Node<K, V> node )
+    {
+      Node<K, V> old = data.putIfAbsent( node.getKey(), node );
+      if( old == null )
+      {
         length.incrementAndGet();
-        offer(node);
+        offer( node );
         evict();
       }
       return old;
@@ -432,11 +503,13 @@ public class Cache<K, V> {
      * {@inheritDoc}
      */
     @Override
-    public V get(Object key) {
-      Node<K, V> node = data.get(key);
-      if (node != null) {
+    public V get( Object key )
+    {
+      Node<K, V> node = data.get( key );
+      if( node != null )
+      {
         V value = node.getValue();
-        policy.onGet(this, node);
+        policy.onGet( this, node );
         return value;
       }
       return null;
@@ -445,33 +518,39 @@ public class Cache<K, V> {
     /**
      * {@inheritDoc}
      */
-    public V put(K key, V value) {
-      if (value == null) {
+    public V put( K key, V value )
+    {
+      if( value == null )
+      {
         throw new IllegalArgumentException();
       }
-      Node<K, V> old = putIfAbsent(new Node<K, V>(key, value));
-      return (old == null) ? null : old.getAndSetValue(value);
+      Node<K, V> old = putIfAbsent( new Node<K, V>( key, value ) );
+      return (old == null) ? null : old.getAndSetValue( value );
     }
 
     /**
      * {@inheritDoc}
      */
-    public V putIfAbsent(K key, V value) {
-      if (value == null) {
+    public V putIfAbsent( K key, V value )
+    {
+      if( value == null )
+      {
         throw new IllegalArgumentException();
       }
-      Node<K, V> old = putIfAbsent(new Node<K, V>(key, value));
+      Node<K, V> old = putIfAbsent( new Node<K, V>( key, value ) );
       return (old == null) ? null : old.getValue();
     }
 
     /**
      * {@inheritDoc}
      */
-    public V remove(Object key) {
-      Node<K, V> node = data.remove(key);
-      if (node != null) {
+    public V remove( Object key )
+    {
+      Node<K, V> node = data.remove( key );
+      if( node != null )
+      {
         V value = node.getValue();
-        policy.onRemove(this, node);
+        policy.onRemove( this, node );
         return value;
       }
       return null;
@@ -480,10 +559,12 @@ public class Cache<K, V> {
     /**
      * {@inheritDoc}
      */
-    public boolean remove(Object key, Object value) {
-      Node<K, V> node = data.get(key);
-      if ((node != null) && node.value.equals(value) && data.remove(key, node)) {
-        policy.onRemove(this, node);
+    public boolean remove( Object key, Object value )
+    {
+      Node<K, V> node = data.get( key );
+      if( (node != null) && node.value.equals( value ) && data.remove( key, node ) )
+      {
+        policy.onRemove( this, node );
         return true;
       }
       return false;
@@ -492,36 +573,42 @@ public class Cache<K, V> {
     /**
      * {@inheritDoc}
      */
-    public V replace(K key, V value) {
-      if (value == null) {
+    public V replace( K key, V value )
+    {
+      if( value == null )
+      {
         throw new IllegalArgumentException();
       }
-      Node<K, V> node = data.get(key);
-      return (node == null) ? null : node.getAndSetValue(value);
+      Node<K, V> node = data.get( key );
+      return (node == null) ? null : node.getAndSetValue( value );
     }
 
     /**
      * {@inheritDoc}
      */
-    public boolean replace(K key, V oldValue, V newValue) {
-      if (newValue == null) {
+    public boolean replace( K key, V oldValue, V newValue )
+    {
+      if( newValue == null )
+      {
         throw new IllegalArgumentException();
       }
-      Node<K, V> node = data.get(key);
-      return (node != null) && node.casValue(oldValue, newValue);
+      Node<K, V> node = data.get( key );
+      return (node != null) && node.casValue( oldValue, newValue );
     }
 
     /**
      * {@inheritDoc}
      */
-    public Set<Entry<K, V>> entrySet() {
+    public Set<Entry<K, V>> entrySet()
+    {
       return new EntrySetAdapter();
     }
 
     /**
      * A listener registered for notification when an entry is evicted.
      */
-    public interface EvictionListener<K, V> {
+    public interface EvictionListener<K, V>
+    {
 
       /**
        * A call-back notification that the entry was evicted.
@@ -535,103 +622,127 @@ public class Cache<K, V> {
     /**
      * The replacement policy to apply to determine which entry to discard to when the capacity has been reached.
      */
-    public enum EvictionPolicy {
+    public enum EvictionPolicy
+    {
 
       /**
        * Evicts entries based on insertion order.
        */
-      FIFO() {
-        <K, V> void onGet(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          // do nothing
-        }
-        <K, V> boolean onEvict(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          return true;
-        }
-      },
+      FIFO()
+        {
+          <K, V> void onGet( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            // do nothing
+          }
+
+          <K, V> boolean onEvict( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            return true;
+          }
+        },
 
       /**
        * Evicts entries based on insertion order, but gives an entry a "second chance" if it has been requested recently.
        */
-      SECOND_CHANCE() {
-        <K, V> void onGet(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          node.setMarked(true);
-        }
-        <K, V> void onRemove(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          super.onRemove(map, node);
-          node.setMarked(false);
-        }
-        <K, V> boolean onEvict(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          if (node.isMarked()) {
-            node.setMarked(false);
-            return false;
+      SECOND_CHANCE()
+        {
+          <K, V> void onGet( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            node.setMarked( true );
           }
-          return true;
-        }
-      },
+
+          <K, V> void onRemove( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            super.onRemove( map, node );
+            node.setMarked( false );
+          }
+
+          <K, V> boolean onEvict( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            if( node.isMarked() )
+            {
+              node.setMarked( false );
+              return false;
+            }
+            return true;
+          }
+        },
 
 
       /**
        * Evicts entries based on how recently they are used, with the least recent evicted first.
        */
-      LRU() {
-        <K, V> void onGet(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          Node<K, V> newNode = new Node<K, V>(node.getKey(), node.getValue());
-          if (map.data.replace(node.getKey(), node, newNode)) {
-            map.length.incrementAndGet();
-            onRemove(map, node);
-            map.offer(newNode);
-            map.evict();
+      LRU()
+        {
+          <K, V> void onGet( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            Node<K, V> newNode = new Node<K, V>( node.getKey(), node.getValue() );
+            if( map.data.replace( node.getKey(), node, newNode ) )
+            {
+              map.length.incrementAndGet();
+              onRemove( map, node );
+              map.offer( newNode );
+              map.evict();
+            }
           }
-        }
-        <K, V> boolean onEvict(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-          return true;
-        }
-      };
+
+          <K, V> boolean onEvict( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+          {
+            return true;
+          }
+        };
 
       /**
        * Performs any operations required by the policy after a node was successfully retrieved.
-       * @param map the map to for this listener
+       *
+       * @param map  the map to for this listener
        * @param node the specific node
        */
-      abstract <K, V> void onGet(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node);
+      abstract <K, V> void onGet( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node );
 
       /**
        * Expires a node so that, for all intents and purposes, it is a dead on the list. The
        * caller of this method should have already removed the node from the mapping so that
        * no key can look it up. When the node reaches the head of the list it will be evicted.
-       * @param map the map to for this listener
+       *
+       * @param map  the map to for this listener
        * @param node the specific node
        */
-      <K, V> void onRemove(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node) {
-        node.setValue(null);
+      <K, V> void onRemove( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node )
+      {
+        node.setValue( null );
       }
 
       /**
        * Determines whether to evict the node at the head of the list. If false, the node is offered
        * to the tail.
-       * @param map the map to for this listener
+       *
+       * @param map  the map to for this listener
        * @param node the specific node
+       *
        * @return whether this node is to be evicted
        */
-      abstract <K, V> boolean onEvict(ConcurrentLinkedHashMap<K, V> map, Node<K, V> node);
+      abstract <K, V> boolean onEvict( ConcurrentLinkedHashMap<K, V> map, Node<K, V> node );
     }
 
     /**
      * A node on the double-linked list. This list cross-cuts the data store.
      */
     @SuppressWarnings("unchecked")
-    static final class Node<K, V> implements Serializable {
+    static final class Node<K, V> implements Serializable
+    {
       private static final long serialVersionUID = 1461281468985304519L;
       private static final AtomicReferenceFieldUpdater<Node, Object> valueUpdater =
-              AtomicReferenceFieldUpdater.newUpdater(Node.class, Object.class, "value");
+        AtomicReferenceFieldUpdater.newUpdater( Node.class, Object.class, "value" );
       private static final AtomicReferenceFieldUpdater<Node, State> stateUpdater =
-              AtomicReferenceFieldUpdater.newUpdater(Node.class, State.class, "state");
+        AtomicReferenceFieldUpdater.newUpdater( Node.class, State.class, "state" );
       private static final AtomicReferenceFieldUpdater<Node, Node> prevUpdater =
-              AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "prev");
+        AtomicReferenceFieldUpdater.newUpdater( Node.class, Node.class, "prev" );
       private static final AtomicReferenceFieldUpdater<Node, Node> nextUpdater =
-              AtomicReferenceFieldUpdater.newUpdater(Node.class, Node.class, "next");
+        AtomicReferenceFieldUpdater.newUpdater( Node.class, Node.class, "next" );
 
-      public static enum State {
+      public static enum State
+      {
         SENTINEL, UNLINKED, UNLINKING, LINKING, LINKED
       }
 
@@ -645,155 +756,186 @@ public class Cache<K, V> {
       /**
        * Creates a sentinel node.
        */
-      public Node() {
+      public Node()
+      {
         this.key = null;
         this.state = State.SENTINEL;
       }
 
       /**
        * Creates a new, unlinked node.
-       * @param key the key
+       *
+       * @param key   the key
        * @param value the value
        */
-      public Node(K key, V value) {
+      public Node( K key, V value )
+      {
         this.key = key;
         this.value = value;
         this.state = State.UNLINKED;
       }
 
-      public K getKey() {
+      public K getKey()
+      {
         return key;
       }
 
-      public V getValue() {
+      public V getValue()
+      {
         return value;
       }
 
-      public void setValue(V value) {
-        valueUpdater.set(this, value);
+      public void setValue( V value )
+      {
+        valueUpdater.set( this, value );
       }
 
-      public V getAndSetValue(V value) {
-        return (V) valueUpdater.getAndSet(this, value);
+      public V getAndSetValue( V value )
+      {
+        return (V)valueUpdater.getAndSet( this, value );
       }
 
-      public boolean casValue(V expect, V update) {
-        return valueUpdater.compareAndSet(this, expect, update);
+      public boolean casValue( V expect, V update )
+      {
+        return valueUpdater.compareAndSet( this, expect, update );
       }
 
-      public Node<K, V> getPrev() {
+      public Node<K, V> getPrev()
+      {
         return prev;
       }
 
-      public void setPrev(Node<K, V> node) {
-        prevUpdater.set(this, node);
+      public void setPrev( Node<K, V> node )
+      {
+        prevUpdater.set( this, node );
       }
 
-      public boolean casPrev(Node<K, V> expect, Node<K, V> update) {
-        return prevUpdater.compareAndSet(this, expect, update);
+      public boolean casPrev( Node<K, V> expect, Node<K, V> update )
+      {
+        return prevUpdater.compareAndSet( this, expect, update );
       }
 
-      public Node<K, V> getNext() {
+      public Node<K, V> getNext()
+      {
         return next;
       }
 
-      public void setNext(Node<K, V> node) {
-        nextUpdater.set(this, node);
+      public void setNext( Node<K, V> node )
+      {
+        nextUpdater.set( this, node );
       }
 
-      public boolean casNext(Node<K, V> expect, Node<K, V> update) {
-        return nextUpdater.compareAndSet(this, expect, update);
+      public boolean casNext( Node<K, V> expect, Node<K, V> update )
+      {
+        return nextUpdater.compareAndSet( this, expect, update );
       }
 
-      public boolean isMarked() {
+      public boolean isMarked()
+      {
         return marked;
       }
 
-      public void setMarked(boolean marked) {
+      public void setMarked( boolean marked )
+      {
         this.marked = marked;
       }
 
-      public State getState() {
+      public State getState()
+      {
         return state;
       }
 
-      public void setState(State state) {
-        stateUpdater.set(this, state);
+      public void setState( State state )
+      {
+        stateUpdater.set( this, state );
       }
 
-      public boolean casState(State expect, State update) {
-        return stateUpdater.compareAndSet(this, expect, update);
+      public boolean casState( State expect, State update )
+      {
+        return stateUpdater.compareAndSet( this, expect, update );
       }
 
       /**
        * Only ensures that the values are equal, as the key may be <tt>null</tt> for look-ups.
        */
       @Override
-      public boolean equals(Object obj) {
-        if (obj == this) {
+      public boolean equals( Object obj )
+      {
+        if( obj == this )
+        {
           return true;
-        } else if (!(obj instanceof Node)) {
+        }
+        else if( !(obj instanceof Node) )
+        {
           return false;
         }
         V value = getValue();
-        Node<?, ?> node = (Node<?, ?>) obj;
-        return (value == null) ? (node.getValue() == null) : value.equals(node.getValue());
+        Node<?, ?> node = (Node<?, ?>)obj;
+        return (value == null) ? (node.getValue() == null) : value.equals( node.getValue() );
       }
 
       /**
        * {@inheritDoc}
        */
       @Override
-      public int hashCode() {
+      public int hashCode()
+      {
         return ((key == null) ? 0 : key.hashCode()) ^
-                ((value == null) ? 0 : value.hashCode());
+               ((value == null) ? 0 : value.hashCode());
       }
 
       @Override
-      public String toString() {
-        return String.format("Node[state=%s, marked=%b, key=%s, value=%s]", getState(), isMarked(), getKey(), getValue());
+      public String toString()
+      {
+        return String.format( "Node[state=%s, marked=%b, key=%s, value=%s]", getState(), isMarked(), getKey(), getValue() );
       }
     }
 
     /**
      * An adapter to represent the data store's entry set in the external type.
      */
-    private final class EntrySetAdapter extends AbstractSet<Entry<K, V>> {
+    private final class EntrySetAdapter extends AbstractSet<Entry<K, V>>
+    {
       private final ConcurrentLinkedHashMap<K, V> map = ConcurrentLinkedHashMap.this;
 
       /**
        * {@inheritDoc}
        */
       @Override
-      public void clear() {
+      public void clear()
+      {
         map.clear();
       }
 
       /**
        * {@inheritDoc}
        */
-      public int size() {
+      public int size()
+      {
         return map.size();
       }
 
       /**
        * {@inheritDoc}
        */
-      public Iterator<Entry<K, V>> iterator() {
-        return new EntryIteratorAdapter(map.data.entrySet().iterator());
+      public Iterator<Entry<K, V>> iterator()
+      {
+        return new EntryIteratorAdapter( map.data.entrySet().iterator() );
       }
 
       /**
        * {@inheritDoc}
        */
       @Override
-      public boolean contains(Object obj) {
-        if (!(obj instanceof Entry)) {
+      public boolean contains( Object obj )
+      {
+        if( !(obj instanceof Entry) )
+        {
           return false;
         }
-        Entry<?, ?> entry = (Entry<?, ?>) obj;
-        Node<K, V> node = map.data.get(entry.getKey());
-        return (node != null) && (node.value.equals(entry.getValue()));
+        Entry<?, ?> entry = (Entry<?, ?>)obj;
+        Node<K, V> node = map.data.get( entry.getKey() );
+        return (node != null) && (node.value.equals( entry.getValue() ));
       }
 
 
@@ -801,45 +943,52 @@ public class Cache<K, V> {
        * {@inheritDoc}
        */
       @Override
-      public boolean add(Entry<K, V> entry) {
-        return (map.putIfAbsent(entry.getKey(), entry.getValue()) == null);
+      public boolean add( Entry<K, V> entry )
+      {
+        return (map.putIfAbsent( entry.getKey(), entry.getValue() ) == null);
       }
 
       /**
        * {@inheritDoc}
        */
       @Override
-      public boolean remove(Object obj) {
-        if (!(obj instanceof Entry)) {
+      public boolean remove( Object obj )
+      {
+        if( !(obj instanceof Entry) )
+        {
           return false;
         }
-        Entry<?, ?> entry = (Entry<?, ?>) obj;
-        return map.remove(entry.getKey(), entry.getValue());
+        Entry<?, ?> entry = (Entry<?, ?>)obj;
+        return map.remove( entry.getKey(), entry.getValue() );
       }
     }
 
     /**
      * An adapter to represent the data store's entry iterator in the external type.
      */
-    private final class EntryIteratorAdapter implements Iterator<Entry<K, V>> {
+    private final class EntryIteratorAdapter implements Iterator<Entry<K, V>>
+    {
       private final Iterator<Entry<K, Node<K, V>>> iterator;
       private Entry<K, Node<K, V>> current;
 
-      public EntryIteratorAdapter(Iterator<Entry<K, Node<K, V>>> iterator) {
+      public EntryIteratorAdapter( Iterator<Entry<K, Node<K, V>>> iterator )
+      {
         this.iterator = iterator;
       }
 
       /**
        * {@inheritDoc}
        */
-      public boolean hasNext() {
+      public boolean hasNext()
+      {
         return iterator.hasNext();
       }
 
       /**
        * {@inheritDoc}
        */
-      public Entry<K, V> next() {
+      public Entry<K, V> next()
+      {
         current = iterator.next();
         K key = current.getKey();
         Node<K, V> node = current.getValue();
@@ -850,11 +999,13 @@ public class Cache<K, V> {
       /**
        * {@inheritDoc}
        */
-      public void remove() {
-        if (current == null) {
+      public void remove()
+      {
+        if( current == null )
+        {
           throw new IllegalStateException();
         }
-        ConcurrentLinkedHashMap.this.remove(current.getKey(), current.getValue());
+        ConcurrentLinkedHashMap.this.remove( current.getKey(), current.getValue() );
         current = null;
       }
     }
@@ -863,50 +1014,62 @@ public class Cache<K, V> {
      * This duplicates {@link AbstractMap.SimpleEntry} until the class is made accessible.
      * Update: SimpleEntry is public in JDK 6.
      */
-    private static final class SimpleEntry<K, V> implements Entry<K, V> {
+    private static final class SimpleEntry<K, V> implements Entry<K, V>
+    {
       private final K key;
       private V value;
 
-      public SimpleEntry(K key, V value) {
+      public SimpleEntry( K key, V value )
+      {
         this.key = key;
         this.value = value;
       }
 
-      public K getKey() {
+      public K getKey()
+      {
         return key;
       }
 
-      public V getValue() {
+      public V getValue()
+      {
         return value;
       }
 
-      public V setValue(V value) {
+      public V setValue( V value )
+      {
         V oldValue = this.value;
         this.value = value;
         return oldValue;
       }
 
-      public boolean equals(Object obj) {
-        if (obj == this) {
+      public boolean equals( Object obj )
+      {
+        if( obj == this )
+        {
           return true;
-        } else if (!(obj instanceof Entry)) {
+        }
+        else if( !(obj instanceof Entry) )
+        {
           return false;
         }
-        Entry<?, ?> entry = (Entry<?, ?>) obj;
-        return eq(key, entry.getKey()) && eq(value, entry.getValue());
+        Entry<?, ?> entry = (Entry<?, ?>)obj;
+        return eq( key, entry.getKey() ) && eq( value, entry.getValue() );
       }
 
-      public int hashCode() {
+      public int hashCode()
+      {
         return ((key == null) ? 0 : key.hashCode()) ^
-                ((value == null) ? 0 : value.hashCode());
+               ((value == null) ? 0 : value.hashCode());
       }
 
-      public String toString() {
+      public String toString()
+      {
         return key + "=" + value;
       }
 
-      private static boolean eq(Object o1, Object o2) {
-        return (o1 == null) ? (o2 == null) : o1.equals(o2);
+      private static boolean eq( Object o1, Object o2 )
+      {
+        return (o1 == null) ? (o2 == null) : o1.equals( o2 );
       }
     }
   }

@@ -52,14 +52,14 @@ public class JsonImplCodeGen
   private void addConstructors( SrcClass srcClass )
   {
     srcClass.addConstructor( new SrcConstructor()
-                       .body( new SrcStatementBlock()
-                                .addStatement( new SrcRawStatement()
-                                                 .rawText( "super();" ) ) ) );
+                               .body( new SrcStatementBlock()
+                                        .addStatement( new SrcRawStatement()
+                                                         .rawText( "super();" ) ) ) );
     srcClass.addConstructor( new SrcConstructor()
-                       .addParam( "bindings", Bindings.class.getSimpleName() )
-                       .body( new SrcStatementBlock()
-                                .addStatement( new SrcRawStatement()
-                                                 .rawText( "super(bindings);" ) ) ) );
+                               .addParam( "bindings", Bindings.class.getSimpleName() )
+                               .body( new SrcStatementBlock()
+                                        .addStatement( new SrcRawStatement()
+                                                         .rawText( "super(bindings);" ) ) ) );
   }
 
   private void addInnerTypes( SrcClass srcClass, Map<String, IJsonParentType> innerClasses )

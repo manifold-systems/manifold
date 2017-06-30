@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.util;
 
 import java.util.ArrayList;
@@ -9,10 +5,12 @@ import java.util.EmptyStackException;
 import java.util.Iterator;
 import java.util.List;
 
-public class Stack<T> implements Iterable<T> {
+public class Stack<T> implements Iterable<T>
+{
   private final ArrayList<T> _list;
 
-  public Stack() {
+  public Stack()
+  {
     _list = new ArrayList<T>();
   }
 
@@ -26,76 +24,102 @@ public class Stack<T> implements Iterable<T> {
     _list = list;
   }
 
-  public boolean push(T item) {
-    return _list.add(item);
+  public boolean push( T item )
+  {
+    return _list.add( item );
   }
 
-  public void insert(T item, int iPos) {
-    _list.add(iPos, item);
+  public void insert( T item, int iPos )
+  {
+    _list.add( iPos, item );
   }
 
-  public T pop() {
-    if (isEmpty()) {
+  public T pop()
+  {
+    if( isEmpty() )
+    {
       throw new EmptyStackException();
     }
-    return _list.remove(size() - 1);
+    return _list.remove( size() - 1 );
   }
 
-  public T peek() {
-    if (isEmpty()) {
+  public T peek()
+  {
+    if( isEmpty() )
+    {
       throw new EmptyStackException();
     }
-    return _list.get(size() - 1);
+    return _list.get( size() - 1 );
   }
 
-  public T getBase() {
-    if (isEmpty()) {
+  public T getBase()
+  {
+    if( isEmpty() )
+    {
       throw new EmptyStackException();
     }
-    return _list.get(0);
+    return _list.get( 0 );
   }
 
-  public boolean contains(T obj) {
-    return _list.contains(obj);
+  public boolean contains( T obj )
+  {
+    return _list.contains( obj );
   }
 
-  public Iterator<T> iterator() {
+  public Iterator<T> iterator()
+  {
     return _list.iterator();
   }
 
-  public T get(int i) {
-    return _list.get(i);
+  public T get( int i )
+  {
+    return _list.get( i );
   }
 
-  public int indexOf(T o) {
-    return _list.indexOf(o);
+  public int indexOf( T o )
+  {
+    return _list.indexOf( o );
   }
 
-  public void clear() {
+  public void clear()
+  {
     _list.clear();
   }
 
-  public int size() {
+  public int size()
+  {
     return _list.size();
   }
 
-  public boolean isEmpty() {
+  public boolean isEmpty()
+  {
     return _list.isEmpty();
   }
 
   @SuppressWarnings({"RedundantIfStatement"})
-  public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+  public boolean equals( Object o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
 
-    Stack stack = (Stack) o;
+    Stack stack = (Stack)o;
 
-    if (!_list.equals(stack._list)) return false;
+    if( !_list.equals( stack._list ) )
+    {
+      return false;
+    }
 
     return true;
   }
 
-  public int hashCode() {
+  public int hashCode()
+  {
     return _list.hashCode();
   }
 

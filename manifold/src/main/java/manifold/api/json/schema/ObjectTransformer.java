@@ -20,6 +20,7 @@ class ObjectTransformer
     ObjectTransformer objectTx = new ObjectTransformer( schemaTx, name, parent, jsonObj );
     return objectTx.transform();
   }
+
   static JsonStructureType transform( JsonSchemaTransformer schemaTx, JsonStructureType type, Bindings jsonObj )
   {
     ObjectTransformer objectTx = new ObjectTransformer( schemaTx, type, jsonObj );
@@ -32,6 +33,7 @@ class ObjectTransformer
     _jsonObj = jsonObj;
     _type = new JsonStructureType( parent, name );
   }
+
   private ObjectTransformer( JsonSchemaTransformer schemaTx, JsonStructureType type, Bindings jsonObj )
   {
     _schemaTx = schemaTx;
@@ -66,7 +68,7 @@ class ObjectTransformer
       return;
     }
 
-    for( Map.Entry<String, Object> entry: properties.entrySet() )
+    for( Map.Entry<String, Object> entry : properties.entrySet() )
     {
       String name = entry.getKey();
       Bindings value = (Bindings)entry.getValue();

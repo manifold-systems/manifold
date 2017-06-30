@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.internal.runtime.protocols;
 
 import java.io.IOException;
@@ -19,10 +15,11 @@ public class Handler extends URLStreamHandler
 
   public static final Handler INSTANCE = new Handler();
 
-  static {
+  static
+  {
     // Preload the Url Connection classes to prevent LinkageErrors during initial load
-    Arrays.asList( GosuClassesUrlConnection.class,
-                   GosuClassesUrlConnection.LazyByteArrayInputStream.class );
+    Arrays.asList( ManClassesUrlConnection.class,
+                   ManClassesUrlConnection.LazyByteArrayInputStream.class );
   }
 
   @Override
@@ -37,7 +34,7 @@ public class Handler extends URLStreamHandler
     _visited.put( u, u );
     try
     {
-      GosuClassesUrlConnection connection = new GosuClassesUrlConnection( u );
+      ManClassesUrlConnection connection = new ManClassesUrlConnection( u );
       return connection.isValid() ? connection : null;
     }
     finally

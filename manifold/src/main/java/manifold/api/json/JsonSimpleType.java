@@ -37,7 +37,7 @@ public enum JsonSimpleType implements IJsonType
 
     return valueOf( JsonSimpleType.class, jsonObj.getClass().getSimpleName() );
   }
-  
+
   JsonSimpleType merge( JsonSimpleType other )
   {
     if( this == JsonSimpleType.String ||
@@ -196,5 +196,5 @@ public enum JsonSimpleType implements IJsonType
         break;
     }
     return null;
-  }  
+  }
 }

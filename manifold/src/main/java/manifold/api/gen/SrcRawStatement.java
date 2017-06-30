@@ -13,6 +13,7 @@ public class SrcRawStatement extends SrcStatement<SrcRawStatement>
   {
     super();
   }
+
   public SrcRawStatement( SrcStatementBlock owner )
   {
     super( owner );
@@ -31,7 +32,7 @@ public class SrcRawStatement extends SrcStatement<SrcRawStatement>
 
   public StringBuilder render( StringBuilder sb, int indent, boolean sameLine )
   {
-    for( String text: _text )
+    for( String text : _text )
     {
       indent( sb, indent );
       sb.append( text ).append( "\n" );

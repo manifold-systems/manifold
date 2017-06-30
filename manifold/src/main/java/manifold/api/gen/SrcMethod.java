@@ -8,6 +8,7 @@ public class SrcMethod extends AbstractSrcMethod<SrcMethod>
   {
     this( null );
   }
+
   public SrcMethod( SrcClass srcClass )
   {
     super( srcClass );

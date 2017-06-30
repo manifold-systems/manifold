@@ -10,16 +10,19 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
   {
     name( name );
   }
+
   public SrcParameter( String name, Class type )
   {
     name( name );
     type( type );
   }
+
   public SrcParameter( String name, String type )
   {
     name( name );
     type( type );
   }
+
   public SrcParameter( String name, SrcType type )
   {
     name( name );
@@ -31,11 +34,13 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
     _type = type;
     return this;
   }
+
   public SrcParameter type( Class type )
   {
     _type = new SrcType( type );
     return this;
   }
+
   public SrcParameter type( String type )
   {
     _type = new SrcType( type );
@@ -52,6 +57,7 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
   {
     return render( sb, indent, false );
   }
+
   public StringBuilder render( StringBuilder sb, int indent, boolean varArgs )
   {
     renderAnnotations( sb, 0, true );

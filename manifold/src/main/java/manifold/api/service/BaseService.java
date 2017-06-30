@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.service;
 
 public abstract class BaseService implements IService
@@ -25,11 +21,13 @@ public abstract class BaseService implements IService
     _inited = false;
   }
 
-  protected void doInit() {
+  protected void doInit()
+  {
     // for subclasses
   }
-  
-  protected void doUninit() {
+
+  protected void doUninit()
+  {
     // for subclasses
   }
 }

@@ -20,6 +20,7 @@ public class SrcStatementBlock extends SrcStatement<SrcStatementBlock>
   {
     return render( sb, indent, true );
   }
+
   public StringBuilder render( StringBuilder sb, int indent, boolean sameLine )
   {
     if( sameLine )
@@ -30,9 +31,9 @@ public class SrcStatementBlock extends SrcStatement<SrcStatementBlock>
     {
       sb.append( indent( sb, indent ) ).append( "{\n" );
     }
-    for( SrcStatement stmt: _statements )
+    for( SrcStatement stmt : _statements )
     {
-      stmt.render( sb, indent+INDENT );
+      stmt.render( sb, indent + INDENT );
     }
     sb.append( indent( sb, indent ) ).append( "}\n" );
     return sb;

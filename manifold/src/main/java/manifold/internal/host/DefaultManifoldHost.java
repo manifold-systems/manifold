@@ -15,13 +15,13 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
-import manifold.api.service.BaseService;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.TypeName;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
+import manifold.api.service.BaseService;
+import manifold.api.sourceprod.ISourceProducer;
+import manifold.api.sourceprod.TypeName;
 import manifold.util.BytecodeOptions;
 
 /**
@@ -37,7 +37,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     "new", "null", "package", "private", "protected", "public",
     "return", "short", "static", "strictfp", "super", "switch",
     "synchronized", "this", "throw", "throws", "transient", "true",
-    "try", "void", "volatile", "while" };
+    "try", "void", "volatile", "while"};
 
   public IFileSystem getFileSystem()
   {
@@ -128,14 +128,14 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     Set<String> sp = sourcePath.get();
 
     List<String> all = new ArrayList<>();
-    for( String p: sp )
+    for( String p : sp )
     {
       if( !all.contains( p ) )
       {
         all.add( p );
       }
     }
-    for( String p: cp )
+    for( String p : cp )
     {
       if( !all.contains( p ) )
       {
@@ -149,5 +149,5 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
   {
     return Manifold.instance().getModule().getChildrenOfNamespace( packageName );
   }
-  
+
 }

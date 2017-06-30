@@ -26,6 +26,7 @@ public class JsonStructureType extends JsonSchemaType
   {
     _superTypes.add( superType );
   }
+
   public List<IJsonParentType> getSuperTypes()
   {
     return _superTypes;
@@ -35,6 +36,7 @@ public class JsonStructureType extends JsonSchemaType
   {
     _innerTypes.put( name, type );
   }
+
   public IJsonParentType findChild( String name )
   {
     return _innerTypes.get( name );
@@ -87,8 +89,8 @@ public class JsonStructureType extends JsonSchemaType
     }
 
     JsonStructureType mergedType = new JsonStructureType( getParent(), getName() );
-    
-    for( Map.Entry<String, IJsonType> e: _members.entrySet() )
+
+    for( Map.Entry<String, IJsonType> e : _members.entrySet() )
     {
       String memberName = e.getKey();
       IJsonType memberType = other.findMemberType( memberName );
@@ -110,8 +112,8 @@ public class JsonStructureType extends JsonSchemaType
         return null;
       }
     }
-    
-    for( Map.Entry<String, IJsonParentType> e: _innerTypes.entrySet() )
+
+    for( Map.Entry<String, IJsonParentType> e : _innerTypes.entrySet() )
     {
       String name = e.getKey();
       IJsonType innerType = other.findChild( name );
@@ -133,10 +135,10 @@ public class JsonStructureType extends JsonSchemaType
         return null;
       }
     }
-    
+
     return mergedType;
   }
-  
+
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
     indent( sb, indent );

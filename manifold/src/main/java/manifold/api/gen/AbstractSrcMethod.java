@@ -18,15 +18,16 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
 
   public AbstractSrcMethod( SrcClass srcClass )
   {
-     super( srcClass );
-     _typeVars = Collections.emptyList();
-     _throwTypes = Collections.emptyList();
+    super( srcClass );
+    _typeVars = Collections.emptyList();
+    _throwTypes = Collections.emptyList();
   }
 
   public boolean isConstructor()
   {
     return _isConstructor;
   }
+
   public void setConstructor( boolean isConstructor )
   {
     _isConstructor = isConstructor;
@@ -37,11 +38,13 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     _returns = returns;
     return (T)this;
   }
+
   public T returns( Class returns )
   {
     _returns = new SrcType( returns );
     return (T)this;
   }
+
   public T returns( String returns )
   {
     _returns = new SrcType( returns );
@@ -56,7 +59,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     _typeVars.add( typeVar );
   }
-  
+
   public void addThrowType( SrcType type )
   {
     if( _throwTypes.isEmpty() )
@@ -65,7 +68,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     _throwTypes.add( type );
   }
-  
+
   public T body( SrcStatementBlock body )
   {
     _body = body;

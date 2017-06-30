@@ -38,13 +38,13 @@ public class SrcSwitchStatement extends SrcStatement<SrcSwitchStatement>
   {
     indent( sb, indent );
     sb.append( "switch(" ).append( _expr ).append( ") { \n" );
-    for( SrcSwitchCase caseStmt: _cases )
+    for( SrcSwitchCase caseStmt : _cases )
     {
-      caseStmt.render( sb, indent+INDENT );
+      caseStmt.render( sb, indent + INDENT );
     }
     if( _default != null )
     {
-      indent( sb, indent+INDENT );
+      indent( sb, indent + INDENT );
       sb.append( "default:\n" );
       if( _default instanceof SrcStatementBlock )
       {
@@ -52,7 +52,7 @@ public class SrcSwitchStatement extends SrcStatement<SrcSwitchStatement>
       }
       else
       {
-        _default.render( sb, indent+INDENT );
+        _default.render( sb, indent + INDENT );
       }
     }
     sb.append( indent( sb, indent ) ).append( "}\n" );

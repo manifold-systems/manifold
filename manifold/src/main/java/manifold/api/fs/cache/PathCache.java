@@ -11,10 +11,10 @@ import java.util.function.Supplier;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileUtil;
-import manifold.api.json.Json;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
+import manifold.api.json.Json;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
@@ -57,7 +57,7 @@ public class PathCache
   public Set<IFile> findFiles( String fqn )
   {
     Set<IFile> result = Collections.emptySet();
-    for( String ext: _filesByExtension.keySet() )
+    for( String ext : _filesByExtension.keySet() )
     {
       IFile file = _filesByExtension.get( ext ).get( fqn );
       if( file != null )
@@ -130,6 +130,7 @@ public class PathCache
       cache.add( fqn, file );
     }
   }
+
   private void removeFromExtension( String fqn, IFile file, Map<String, FqnCache<IFile>> filesByExtension )
   {
     String ext = file.getExtension().toLowerCase();
@@ -202,7 +203,8 @@ public class PathCache
         case CREATION:
         {
           Arrays.stream( request.types ).forEach(
-            fqn -> {
+            fqn ->
+            {
               addToReverseMap( request.file, fqn );
               addToExtension( fqn, request.file, _filesByExtension );
             } );
@@ -212,7 +214,8 @@ public class PathCache
         case DELETION:
         {
           Arrays.stream( request.types ).forEach(
-            fqn -> {
+            fqn ->
+            {
               removeFromReverseMap( request.file, fqn );
               removeFromExtension( fqn, request.file, _filesByExtension );
             } );

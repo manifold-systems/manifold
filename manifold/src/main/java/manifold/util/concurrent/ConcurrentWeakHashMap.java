@@ -1744,7 +1744,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
     }
 
     // Read the keys and values, and put the mappings in the table
-    for(; ; )
+    for( ; ; )
     {
       K key = (K)s.readObject();
       V value = (V)s.readObject();

@@ -14,6 +14,7 @@ public class SrcAnnotationExpression extends SrcExpression<SrcAnnotationExpressi
   {
     _fqn = fqn;
   }
+
   public SrcAnnotationExpression( Class type )
   {
     _fqn = type.getName();
@@ -24,11 +25,13 @@ public class SrcAnnotationExpression extends SrcExpression<SrcAnnotationExpressi
     _arguments.add( arg );
     return this;
   }
+
   public SrcAnnotationExpression addArgument( String paramName, Class type, Object value )
   {
     _arguments.add( new SrcArgument( type, value ).name( paramName ) );
     return this;
   }
+
   public SrcAnnotationExpression addArgument( String paramName, SrcType type, Object value )
   {
     _arguments.add( new SrcArgument( type, value ).name( paramName ) );
@@ -38,7 +41,7 @@ public class SrcAnnotationExpression extends SrcExpression<SrcAnnotationExpressi
   public SrcAnnotationExpression copy()
   {
     SrcAnnotationExpression copy = new SrcAnnotationExpression( _fqn );
-    for( SrcArgument expr: _arguments )
+    for( SrcArgument expr : _arguments )
     {
       copy.addArgument( expr.copy() );
     }

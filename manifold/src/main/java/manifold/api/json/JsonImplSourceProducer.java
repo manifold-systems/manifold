@@ -7,10 +7,10 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
+import manifold.api.host.ITypeLoader;
 import manifold.api.sourceprod.ClassType;
 import manifold.api.sourceprod.JavaSourceProducer;
-import manifold.api.host.ITypeLoader;
-import manifold.util.GosuClassUtil;
+import manifold.util.ManClassUtil;
 
 /**
  */
@@ -39,7 +39,7 @@ public class JsonImplSourceProducer extends JavaSourceProducer<Model>
 
   static String makeImplName( String fqn )
   {
-    return GosuClassUtil.getPackage( fqn ) + '.' + IMPL + '.' + GosuClassUtil.getShortClassName( fqn );
+    return ManClassUtil.getPackage( fqn ) + '.' + IMPL + '.' + ManClassUtil.getShortClassName( fqn );
   }
 
   @Override

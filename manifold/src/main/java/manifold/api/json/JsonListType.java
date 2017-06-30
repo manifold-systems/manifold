@@ -31,6 +31,7 @@ public class JsonListType extends JsonSchemaType
   {
     _innerTypes.put( name, type );
   }
+
   public IJsonParentType findChild( String name )
   {
     return _innerTypes.get( name );
@@ -40,6 +41,7 @@ public class JsonListType extends JsonSchemaType
   {
     return _componentType;
   }
+
   public void setComponentType( IJsonType compType )
   {
     if( _componentType != null && _componentType != compType )
@@ -71,7 +73,7 @@ public class JsonListType extends JsonSchemaType
       }
     }
 
-    for( Map.Entry<String, IJsonParentType> e: _innerTypes.entrySet() )
+    for( Map.Entry<String, IJsonParentType> e : _innerTypes.entrySet() )
     {
       String name = e.getKey();
       IJsonType innerType = other.findChild( name );
@@ -99,7 +101,7 @@ public class JsonListType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
-    for( IJsonParentType child: _innerTypes.values() )
+    for( IJsonParentType child : _innerTypes.values() )
     {
       child.render( sb, indent, mutable );
     }

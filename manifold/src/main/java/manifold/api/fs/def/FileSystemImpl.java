@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs.def;
 
 import java.io.File;
@@ -29,11 +25,10 @@ import manifold.api.fs.jar.JarFileDirectoryImpl;
 import manifold.api.fs.url.URLFileImpl;
 import manifold.api.service.BaseService;
 import manifold.internal.host.ManifoldHost;
-import manifold.util.GosuStringUtil;
+import manifold.util.ManStringUtil;
 
 public class FileSystemImpl extends BaseService implements IFileSystem
 {
-
   private Map<File, IDirectory> _cachedDirInfo;
   private CachingMode _cachingMode;
 
@@ -48,7 +43,8 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   // turn into a perf issue
   static final Object CACHED_FILE_SYSTEM_LOCK = new Object();
 
-  public FileSystemImpl(CachingMode cachingMode) {
+  public FileSystemImpl( CachingMode cachingMode )
+  {
     _cachedDirInfo = new HashMap<File, IDirectory>();
     _cachingMode = cachingMode;
     _iDirectoryResourceExtractor = new IDirectoryResourceExtractor();
@@ -58,20 +54,25 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   }
 
   @Override
-  public IDirectory getIDirectory(File dir) {
-    if (USE_NEW_API) {
-      return FileFactory.instance().getIDirectory( dir);
+  public IDirectory getIDirectory( File dir )
+  {
+    if( USE_NEW_API )
+    {
+      return FileFactory.instance().getIDirectory( dir );
     }
 
-    if (dir == null) {
+    if( dir == null )
+    {
       return null;
     }
 
-    dir = normalizeFile(dir);
+    dir = normalizeFile( dir );
 
-    synchronized (CACHED_FILE_SYSTEM_LOCK) {
-      IDirectory directory = _cachedDirInfo.get(dir);
-      if (directory == null) {
+    synchronized( CACHED_FILE_SYSTEM_LOCK )
+    {
+      IDirectory directory = _cachedDirInfo.get( dir );
+      if( directory == null )
+      {
         directory = createDir( dir );
         _cachedDirInfo.put( dir, directory );
       }
@@ -80,19 +81,25 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   }
 
   @Override
-  public IFile getIFile( File file) {
-    if (USE_NEW_API) {
-      return FileFactory.instance().getIFile(file);
+  public IFile getIFile( File file )
+  {
+    if( USE_NEW_API )
+    {
+      return FileFactory.instance().getIFile( file );
     }
 
-    if (file == null) {
+    if( file == null )
+    {
       return null;
-    } else {
+    }
+    else
+    {
       return new JavaFileImpl( normalizeFile( file ) );
     }
   }
 
-  public static File normalizeFile(File file) {
+  public static File normalizeFile( File file )
+  {
 
 //    return file;
     String absolutePath = file.getAbsolutePath();
@@ -100,115 +107,154 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
     boolean reallyNormalized = false;
     int lastIndex = 0;
-    for (int i = 0; i < absolutePath.length(); i++) {
-      char c = absolutePath.charAt(i);
-      if (c == '/' || c == '\\') {
-        String component = absolutePath.substring(lastIndex, i);
-        if (component.equals(".")) {
+    for( int i = 0; i < absolutePath.length(); i++ )
+    {
+      char c = absolutePath.charAt( i );
+      if( c == '/' || c == '\\' )
+      {
+        String component = absolutePath.substring( lastIndex, i );
+        if( component.equals( "." ) )
+        {
           reallyNormalized = true;
-        } else if (component.equals("..")) {
-          components.remove(components.size() - 1);
+        }
+        else if( component.equals( ".." ) )
+        {
+          components.remove( components.size() - 1 );
           reallyNormalized = true;
-        } else {
-          components.add(component);
+        }
+        else
+        {
+          components.add( component );
         }
         lastIndex = i + 1;
       }
     }
 
-    String component = absolutePath.substring(lastIndex);
-    if (component.equals(".")) {
+    String component = absolutePath.substring( lastIndex );
+    if( component.equals( "." ) )
+    {
       reallyNormalized = true;
-    } else if (component.equals("..")) {
-      components.remove(components.size() - 1);
+    }
+    else if( component.equals( ".." ) )
+    {
+      components.remove( components.size() - 1 );
       reallyNormalized = true;
-    } else {
-      components.add(component);
+    }
+    else
+    {
+      components.add( component );
     }
 
-    return reallyNormalized ? new File( GosuStringUtil.join( components, "/")) : file;
+    return reallyNormalized ? new File( ManStringUtil.join( components, "/" ) ) : file;
   }
 
   @Override
-  public void setCachingMode(CachingMode cachingMode) {
-    synchronized (CACHED_FILE_SYSTEM_LOCK) {
+  public void setCachingMode( CachingMode cachingMode )
+  {
+    synchronized( CACHED_FILE_SYSTEM_LOCK )
+    {
       _cachingMode = cachingMode;
-      for (IDirectory dir : _cachedDirInfo.values()) {
-        if (dir instanceof JavaDirectoryImpl) {
-          ((JavaDirectoryImpl) dir).setCachingMode(cachingMode);
+      for( IDirectory dir : _cachedDirInfo.values() )
+      {
+        if( dir instanceof JavaDirectoryImpl )
+        {
+          ((JavaDirectoryImpl)dir).setCachingMode( cachingMode );
         }
       }
     }
   }
 
-  private IDirectory createDir( File dir ) {
+  private IDirectory createDir( File dir )
+  {
     // PL-21817 in OSGi/Equinox JAR could be named as "bundlefile"
-    if ( (dir.getName().toLowerCase().endsWith(".jar") || dir.getName().toLowerCase().endsWith(".zip") || dir.getName().equals("bundlefile")) && dir.isFile()) {
+    if( (dir.getName().toLowerCase().endsWith( ".jar" ) || dir.getName().toLowerCase().endsWith( ".zip" ) || dir.getName().equals( "bundlefile" )) && dir.isFile() )
+    {
       return new JarFileDirectoryImpl( dir );
-    } else {
+    }
+    else
+    {
       return new JavaDirectoryImpl( dir, _cachingMode );
     }
   }
 
-  public void clearAllCaches() {
-    if (USE_NEW_API) {
+  public void clearAllCaches()
+  {
+    if( USE_NEW_API )
+    {
       FileFactory.instance().getDefaultPhysicalFileSystem().clearAllCaches();
       return;
     }
-    synchronized (CACHED_FILE_SYSTEM_LOCK) {
-      for (IDirectory dir : _cachedDirInfo.values()) {
+    synchronized( CACHED_FILE_SYSTEM_LOCK )
+    {
+      for( IDirectory dir : _cachedDirInfo.values() )
+      {
         dir.clearCaches();
       }
     }
   }
 
-  static boolean isDirectory(File f) {
+  static boolean isDirectory( File f )
+  {
     String name = f.getName();
-    if (isAssumedFileSuffix(getFileSuffix(name))) {
+    if( isAssumedFileSuffix( getFileSuffix( name ) ) )
+    {
       return false;
-    } else {
+    }
+    else
+    {
       return f.isDirectory();
     }
   }
 
-  private static String getFileSuffix(String name) {
-    int dotIndex = name.lastIndexOf('.');
-    if (dotIndex == -1) {
+  private static String getFileSuffix( String name )
+  {
+    int dotIndex = name.lastIndexOf( '.' );
+    if( dotIndex == -1 )
+    {
       return null;
-    } else {
-      return name.substring(dotIndex + 1);
+    }
+    else
+    {
+      return name.substring( dotIndex + 1 );
     }
   }
 
   @Override
-  public IDirectory getIDirectory(URL url) {
-    if (url == null) {
+  public IDirectory getIDirectory( URL url )
+  {
+    if( url == null )
+    {
       return null;
     }
 
-    IProtocolAdapter protocolAdapter = _protocolAdapters.get(url.getProtocol());
-    if (protocolAdapter != null) {
-      return protocolAdapter.getIDirectory(url);
+    IProtocolAdapter protocolAdapter = _protocolAdapters.get( url.getProtocol() );
+    if( protocolAdapter != null )
+    {
+      return protocolAdapter.getIDirectory( url );
     }
 
-    return _iDirectoryResourceExtractor.getClassResource(url);
+    return _iDirectoryResourceExtractor.getClassResource( url );
   }
 
   @Override
-  public IFile getIFile( URL url ) {
-    if (url == null) {
+  public IFile getIFile( URL url )
+  {
+    if( url == null )
+    {
       return null;
     }
 
-    IProtocolAdapter protocolAdapter = _protocolAdapters.get(url.getProtocol());
-    if (protocolAdapter != null) {
-      return protocolAdapter.getIFile(url);
+    IProtocolAdapter protocolAdapter = _protocolAdapters.get( url.getProtocol() );
+    if( protocolAdapter != null )
+    {
+      return protocolAdapter.getIFile( url );
     }
 
-    if (USE_NEW_API) {
-      return FileFactory.instance().getIFile(url);
+    if( USE_NEW_API )
+    {
+      return FileFactory.instance().getIFile( url );
     }
-    return _iFileResourceExtractor.getClassResource(url);
+    return _iFileResourceExtractor.getClassResource( url );
   }
 
 //  @Override
@@ -216,88 +262,116 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 //    return null;
 //  }
 
-  private void loadProtocolAdapters() {
-    ServiceLoader<IProtocolAdapter> adapters = ServiceLoader.load(IProtocolAdapter.class, getClass().getClassLoader());
-    for (IProtocolAdapter adapter : adapters) {
-      for (String protocol : adapter.getSupportedProtocols()) {
-        _protocolAdapters.put(protocol, adapter);
+  private void loadProtocolAdapters()
+  {
+    ServiceLoader<IProtocolAdapter> adapters = ServiceLoader.load( IProtocolAdapter.class, getClass().getClassLoader() );
+    for( IProtocolAdapter adapter : adapters )
+    {
+      for( String protocol : adapter.getSupportedProtocols() )
+      {
+        _protocolAdapters.put( protocol, adapter );
       }
     }
   }
 
-  private void loadProtocolAdapter(Collection<IProtocolAdapter> adapters, String adapterName) {
-    try {
+  private void loadProtocolAdapter( Collection<IProtocolAdapter> adapters, String adapterName )
+  {
+    try
+    {
       Class<? extends IProtocolAdapter> adapterClass =
-              Class.forName(adapterName, true, Thread.currentThread().getContextClassLoader()).asSubclass(IProtocolAdapter.class);
-      adapters.add(adapterClass.newInstance());
-    } catch (ClassNotFoundException e) {
+        Class.forName( adapterName, true, Thread.currentThread().getContextClassLoader() ).asSubclass( IProtocolAdapter.class );
+      adapters.add( adapterClass.newInstance() );
+    }
+    catch( ClassNotFoundException e )
+    {
       // It's not in the classpath, just ignore
-    } catch (InstantiationException e) {
-      throw new RuntimeException(e);
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
+    }
+    catch( InstantiationException e )
+    {
+      throw new RuntimeException( e );
+    }
+    catch( IllegalAccessException e )
+    {
+      throw new RuntimeException( e );
     }
   }
 
-  private abstract class ResourceExtractor<J extends IResource> {
+  private abstract class ResourceExtractor<J extends IResource>
+  {
 
-    J getClassResource(URL _url) {
-      if (_url == null) {
+    J getClassResource( URL _url )
+    {
+      if( _url == null )
+      {
         return null;
       }
 
-      if ( _url.getProtocol().equals( "file" ) ) {
-        return getIResourceFromJavaFile(_url);
+      if( _url.getProtocol().equals( "file" ) )
+      {
+        return getIResourceFromJavaFile( _url );
       }
-      else if ( _url.getProtocol().equals( "jar" ) ) {
+      else if( _url.getProtocol().equals( "jar" ) )
+      {
         JarURLConnection urlConnection;
         URL jarFileUrl;
-        try {
-          urlConnection = (JarURLConnection) _url.openConnection();
+        try
+        {
+          urlConnection = (JarURLConnection)_url.openConnection();
           jarFileUrl = urlConnection.getJarFileURL();
-        } catch (IOException e) {
-          throw new RuntimeException(e);
         }
-        File dir = new File(jarFileUrl.getFile());
+        catch( IOException e )
+        {
+          throw new RuntimeException( e );
+        }
+        File dir = new File( jarFileUrl.getFile() );
 
         IDirectory jarFileDirectory;
-        synchronized (CACHED_FILE_SYSTEM_LOCK) {
-          jarFileDirectory = _cachedDirInfo.get(dir);
-          if (jarFileDirectory == null) {
+        synchronized( CACHED_FILE_SYSTEM_LOCK )
+        {
+          jarFileDirectory = _cachedDirInfo.get( dir );
+          if( jarFileDirectory == null )
+          {
             jarFileDirectory = createDir( dir );
             _cachedDirInfo.put( dir, jarFileDirectory );
           }
         }
 
-        return getIResourceFromJarDirectoryAndEntryName(jarFileDirectory,urlConnection.getEntryName());
+        return getIResourceFromJarDirectoryAndEntryName( jarFileDirectory, urlConnection.getEntryName() );
       }
-      else if ( _url.getProtocol().equals( "http" ) ) {
-        J res = getIResourceFromURL(_url);
-        if ( res != null ) {
+      else if( _url.getProtocol().equals( "http" ) )
+      {
+        J res = getIResourceFromURL( _url );
+        if( res != null )
+        {
           return res;
         }
       }
       throw new RuntimeException( "Unrecognized protocol: " + _url.getProtocol() );
     }
 
-    abstract J getIResourceFromURL(URL location);
+    abstract J getIResourceFromURL( URL location );
 
-    abstract J getIResourceFromJarDirectoryAndEntryName(IDirectory jarFS, String entryName);
+    abstract J getIResourceFromJarDirectoryAndEntryName( IDirectory jarFS, String entryName );
 
-    abstract J getIResourceFromJavaFile(URL location);
+    abstract J getIResourceFromJavaFile( URL location );
 
-    protected File getFileFromURL(URL url) {
-      try {
+    protected File getFileFromURL( URL url )
+    {
+      try
+      {
         URI uri = url.toURI();
-        if ( uri.getFragment() != null ) {
+        if( uri.getFragment() != null )
+        {
           uri = new URI( uri.getScheme(), uri.getSchemeSpecificPart(), null );
         }
         return new File( uri );
       }
-      catch ( URISyntaxException ex ) {
+      catch( URISyntaxException ex )
+      {
         throw new RuntimeException( ex );
       }
-      catch ( IllegalArgumentException ex ) {
+      catch( IllegalArgumentException ex )
+      {
         // debug getting IAE only in TH - unable to parse URL with fragment identifier
         throw new IllegalArgumentException( "Unable to parse URL " + url.toExternalForm(), ex );
       }
@@ -305,34 +379,42 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
   }
 
-  private class IFileResourceExtractor extends ResourceExtractor<IFile> {
+  private class IFileResourceExtractor extends ResourceExtractor<IFile>
+  {
 
-    IFile getIResourceFromJarDirectoryAndEntryName(IDirectory jarFS, String entryName) {
-      return jarFS.file(entryName);
+    IFile getIResourceFromJarDirectoryAndEntryName( IDirectory jarFS, String entryName )
+    {
+      return jarFS.file( entryName );
     }
 
-    IFile getIResourceFromJavaFile(URL location) {
-      return ManifoldHost.getFileSystem().getIFile( getFileFromURL( location) );
+    IFile getIResourceFromJavaFile( URL location )
+    {
+      return ManifoldHost.getFileSystem().getIFile( getFileFromURL( location ) );
     }
 
     @Override
-    IFile getIResourceFromURL(URL location) {
-      return new URLFileImpl( location);
+    IFile getIResourceFromURL( URL location )
+    {
+      return new URLFileImpl( location );
     }
   }
 
-  private class IDirectoryResourceExtractor extends ResourceExtractor<IDirectory> {
+  private class IDirectoryResourceExtractor extends ResourceExtractor<IDirectory>
+  {
 
-    protected IDirectory getIResourceFromJarDirectoryAndEntryName(IDirectory jarFS, String entryName) {
-      return jarFS.dir(entryName);
+    protected IDirectory getIResourceFromJarDirectoryAndEntryName( IDirectory jarFS, String entryName )
+    {
+      return jarFS.dir( entryName );
     }
 
-    protected IDirectory getIResourceFromJavaFile(URL location) {
-      return ManifoldHost.getFileSystem().getIDirectory( getFileFromURL( location) );
+    protected IDirectory getIResourceFromJavaFile( URL location )
+    {
+      return ManifoldHost.getFileSystem().getIDirectory( getFileFromURL( location ) );
     }
 
     @Override
-    IDirectory getIResourceFromURL(URL location) {
+    IDirectory getIResourceFromURL( URL location )
+    {
       return null;
     }
 
@@ -340,34 +422,36 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
   private static final Set<String> FILE_SUFFIXES;
 
-  static {
+  static
+  {
     FILE_SUFFIXES = new HashSet<String>();
-    FILE_SUFFIXES.add("class");
-    FILE_SUFFIXES.add("eti");
-    FILE_SUFFIXES.add("etx");
-    FILE_SUFFIXES.add("gif");
-    FILE_SUFFIXES.add("gr");
-    FILE_SUFFIXES.add("grs");
-    FILE_SUFFIXES.add("gs");
-    FILE_SUFFIXES.add("gst");
-    FILE_SUFFIXES.add("gsx");
-    FILE_SUFFIXES.add("gti");
-    FILE_SUFFIXES.add("gx");
-    FILE_SUFFIXES.add("jar");
-    FILE_SUFFIXES.add("java");
-    FILE_SUFFIXES.add("pcf");
-    FILE_SUFFIXES.add("png");
-    FILE_SUFFIXES.add("properties");
-    FILE_SUFFIXES.add("tti");
-    FILE_SUFFIXES.add("ttx");
-    FILE_SUFFIXES.add("txt");
-    FILE_SUFFIXES.add("wsdl");
-    FILE_SUFFIXES.add("xml");
-    FILE_SUFFIXES.add("xsd");
+    FILE_SUFFIXES.add( "class" );
+    FILE_SUFFIXES.add( "eti" );
+    FILE_SUFFIXES.add( "etx" );
+    FILE_SUFFIXES.add( "gif" );
+    FILE_SUFFIXES.add( "gr" );
+    FILE_SUFFIXES.add( "grs" );
+    FILE_SUFFIXES.add( "gs" );
+    FILE_SUFFIXES.add( "gst" );
+    FILE_SUFFIXES.add( "gsx" );
+    FILE_SUFFIXES.add( "gti" );
+    FILE_SUFFIXES.add( "gx" );
+    FILE_SUFFIXES.add( "jar" );
+    FILE_SUFFIXES.add( "java" );
+    FILE_SUFFIXES.add( "pcf" );
+    FILE_SUFFIXES.add( "png" );
+    FILE_SUFFIXES.add( "properties" );
+    FILE_SUFFIXES.add( "tti" );
+    FILE_SUFFIXES.add( "ttx" );
+    FILE_SUFFIXES.add( "txt" );
+    FILE_SUFFIXES.add( "wsdl" );
+    FILE_SUFFIXES.add( "xml" );
+    FILE_SUFFIXES.add( "xsd" );
   }
 
-  private static boolean isAssumedFileSuffix(String suffix) {
-    return FILE_SUFFIXES.contains(suffix);
+  private static boolean isAssumedFileSuffix( String suffix )
+  {
+    return FILE_SUFFIXES.contains( suffix );
   }
 
 }

@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.sourceprod;
 
 public enum ClassType
@@ -16,40 +12,47 @@ public enum ClassType
   Annotation,
   Enum,
   JavaClass,
-  Unknown
-  ;
+  Unknown;
 
-  public boolean isJava() {
+  public boolean isJava()
+  {
     return this == JavaClass;
   }
 
-  public boolean isGosu() {
+  public boolean isGosu()
+  {
     return
-        this == Enhancement ||
-        this == Program ||
-        this == Template ||
-        this == Eval ||
-        this == Class ||
-        this == Interface ||
-        this == Structure ||
-        this == Annotation ||
-        this == Enum;
+      this == Enhancement ||
+      this == Program ||
+      this == Template ||
+      this == Eval ||
+      this == Class ||
+      this == Interface ||
+      this == Structure ||
+      this == Annotation ||
+      this == Enum;
   }
 
-  public static ClassType getFromFileName(String name) {
-    if (name.endsWith( ".java")) {
+  public static ClassType getFromFileName( String name )
+  {
+    if( name.endsWith( ".java" ) )
+    {
       return JavaClass;
     }
-    if (name.endsWith( ".gsx" )) {
+    if( name.endsWith( ".gsx" ) )
+    {
       return Enhancement;
     }
-    if (name.endsWith( ".gsp" )) {
+    if( name.endsWith( ".gsp" ) )
+    {
       return Program;
     }
-    if (name.endsWith( ".gst" )) {
+    if( name.endsWith( ".gst" ) )
+    {
       return Template;
     }
-    if (name.endsWith( ".gs" ) ) {
+    if( name.endsWith( ".gs" ) )
+    {
       return Class;
     }
     return Unknown;
@@ -78,8 +81,10 @@ public enum ClassType
     }
   }
 
-  public String keyword() {
-    switch( this ) {
+  public String keyword()
+  {
+    switch( this )
+    {
       case Enhancement:
         return "enhancement";
       case Interface:
@@ -95,7 +100,7 @@ public enum ClassType
       case Template:
       case Eval:
       case JavaClass:
-         return "class";
+        return "class";
       default:
         return "<unknown>";
     }

@@ -10,7 +10,7 @@ import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
-*/
+ */
 public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
 {
   private String _name;

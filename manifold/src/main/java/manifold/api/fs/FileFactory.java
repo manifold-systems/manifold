@@ -1,7 +1,3 @@
-/*
- * Copyright 2014 Guidewire Software, Inc.
- */
-
 package manifold.api.fs;
 
 import java.io.File;
@@ -15,117 +11,156 @@ import manifold.api.fs.physical.PhysicalDirectoryImpl;
 import manifold.api.fs.physical.PhysicalFileImpl;
 import manifold.api.fs.physical.fast.FastPhysicalFileSystem;
 
-public class FileFactory {
-
+public class FileFactory
+{
   private static final FileFactory INSTANCE = new FileFactory();
 
   private IPhysicalFileSystem _defaultPhysicalFileSystem;
 
-  private FileFactory() {
+  private FileFactory()
+  {
     _defaultPhysicalFileSystem = createDefaultPhysicalFileSystem();
   }
 
-  public static FileFactory instance() {
+  public static FileFactory instance()
+  {
     return INSTANCE;
   }
 
-  public IDirectory getIDirectory(File f) {
-    if (f.getName().endsWith(".jar") && f.isFile()) {
-      return new JarFileDirectoryImpl( f);
-    } else {
-      return new PhysicalDirectoryImpl( ResourcePath.parse( f.getAbsolutePath()), _defaultPhysicalFileSystem);
+  public IDirectory getIDirectory( File f )
+  {
+    if( f.getName().endsWith( ".jar" ) && f.isFile() )
+    {
+      return new JarFileDirectoryImpl( f );
+    }
+    else
+    {
+      return new PhysicalDirectoryImpl( ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
     }
   }
 
-  public IFile getIFile(File f) {
-    return new PhysicalFileImpl( ResourcePath.parse( f.getAbsolutePath()), _defaultPhysicalFileSystem);
+  public IFile getIFile( File f )
+  {
+    return new PhysicalFileImpl( ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
   }
 
-  public IDirectory getIDirectory(String absolutePath) {
-    if (absolutePath.endsWith(".jar") && new File(absolutePath).isFile()) {
-      return new JarFileDirectoryImpl(new File(absolutePath));
-    } else {
-      return new PhysicalDirectoryImpl(ResourcePath.parse(absolutePath), _defaultPhysicalFileSystem);
+  public IDirectory getIDirectory( String absolutePath )
+  {
+    if( absolutePath.endsWith( ".jar" ) && new File( absolutePath ).isFile() )
+    {
+      return new JarFileDirectoryImpl( new File( absolutePath ) );
+    }
+    else
+    {
+      return new PhysicalDirectoryImpl( ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
     }
   }
 
-  public IFile getIFile(String absolutePath) {
-    return new PhysicalFileImpl(ResourcePath.parse(absolutePath), _defaultPhysicalFileSystem);
+  public IFile getIFile( String absolutePath )
+  {
+    return new PhysicalFileImpl( ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
   }
 
-  public IFile getIFile(URL url) {
-    try {
+  public IFile getIFile( URL url )
+  {
+    try
+    {
       return getIFile( url.toURI() );
     }
-    catch( URISyntaxException e ) {
+    catch( URISyntaxException e )
+    {
       throw new RuntimeException( e );
     }
   }
-  public IFile getIFile(URI uri) {
+
+  public IFile getIFile( URI uri )
+  {
     return getIFile( uri, true );
   }
-  public IFile getIFile(URL url, boolean bCreateIfNotExists) {
-    try {
+
+  public IFile getIFile( URL url, boolean bCreateIfNotExists )
+  {
+    try
+    {
       return getIFile( url.toURI(), bCreateIfNotExists );
     }
-    catch( URISyntaxException e ) {
+    catch( URISyntaxException e )
+    {
       throw new RuntimeException( e );
     }
   }
-  public IFile getIFile(URI uri, boolean bCreateIfNotExists) {
-    if ( uri.getScheme().equals("file")) {
-      try {
-        if (uri.getFragment() != null) {
-          uri = new URI(uri.getScheme(), uri.getSchemeSpecificPart(), null);
+
+  public IFile getIFile( URI uri, boolean bCreateIfNotExists )
+  {
+    if( uri.getScheme().equals( "file" ) )
+    {
+      try
+      {
+        if( uri.getFragment() != null )
+        {
+          uri = new URI( uri.getScheme(), uri.getSchemeSpecificPart(), null );
         }
-        return getIFile(new File(uri));
+        return getIFile( new File( uri ) );
       }
-      catch (URISyntaxException ex) {
-        throw new RuntimeException(ex);
+      catch( URISyntaxException ex )
+      {
+        throw new RuntimeException( ex );
       }
-      catch (IllegalArgumentException ex) {
+      catch( IllegalArgumentException ex )
+      {
         // debug getting IAE only in TH - unable to parse URL with fragment identifier
-        throw new IllegalArgumentException("Unable to parse URI " + uri, ex);
+        throw new IllegalArgumentException( "Unable to parse URI " + uri, ex );
       }
-    } else if ( uri.getScheme().equals("jar")) {
+    }
+    else if( uri.getScheme().equals( "jar" ) )
+    {
       String path = uri.getPath();
       path = path == null ? uri.getSchemeSpecificPart() : path;
-      int idx = path.lastIndexOf('!');
-      String filePath = path.substring(idx + 1);
-      String jarPath = path.substring(0, idx);
+      int idx = path.lastIndexOf( '!' );
+      String filePath = path.substring( idx + 1 );
+      String jarPath = path.substring( 0, idx );
       File jarFile;
-      try {
-        jarFile = getIFile(new URL(jarPath)).toJavaFile();
+      try
+      {
+        jarFile = getIFile( new URL( jarPath ) ).toJavaFile();
       }
-      catch (MalformedURLException e) {
-        throw new RuntimeException(e);
+      catch( MalformedURLException e )
+      {
+        throw new RuntimeException( e );
       }
-      JarFileDirectoryImpl jarFileDirectory = new JarFileDirectoryImpl(jarFile);
+      JarFileDirectoryImpl jarFileDirectory = new JarFileDirectoryImpl( jarFile );
 
-      if( bCreateIfNotExists ) {
+      if( bCreateIfNotExists )
+      {
         return jarFileDirectory.getOrCreateFile( filePath );
       }
       return jarFileDirectory.file( filePath );
-    } else {
-      throw new RuntimeException("Unrecognized protocol: " + uri.getScheme());
+    }
+    else
+    {
+      throw new RuntimeException( "Unrecognized protocol: " + uri.getScheme() );
     }
   }
 
-  public IPhysicalFileSystem getDefaultPhysicalFileSystem() {
+  public IPhysicalFileSystem getDefaultPhysicalFileSystem()
+  {
     return _defaultPhysicalFileSystem;
   }
 
-  public IPhysicalFileSystem getRootPhysicalFileSystem() {
+  public IPhysicalFileSystem getRootPhysicalFileSystem()
+  {
     return _defaultPhysicalFileSystem;
   }
 
-  public void setDefaultPhysicalFileSystem(IPhysicalFileSystem fileSystem) {
+  public void setDefaultPhysicalFileSystem( IPhysicalFileSystem fileSystem )
+  {
     _defaultPhysicalFileSystem = fileSystem;
   }
 
   // ---------------------------- Private Implementation Methods
 
-  private IPhysicalFileSystem createDefaultPhysicalFileSystem() {
+  private IPhysicalFileSystem createDefaultPhysicalFileSystem()
+  {
     return new FastPhysicalFileSystem();
   }
 }
