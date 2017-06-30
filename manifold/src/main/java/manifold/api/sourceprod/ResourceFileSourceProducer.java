@@ -37,10 +37,9 @@ import manifold.util.concurrent.LocklessLazyVar;
 public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseService implements ISourceProducer
 {
   private ITypeLoader _typeLoader;
-  private Set<String> _extensions;
   private LocklessLazyVar<FqnCache<LocklessLazyVar<M>>> _fqnToModel;
-  private  String _typeFactoryFqn;
-  private  BiFunction<String, Set<IFile>, M> _modelMapper;
+  private String _typeFactoryFqn;
+  private BiFunction<String, Set<IFile>, M> _modelMapper;
   @SuppressWarnings("all")
   private CacheClearer _cacheClearer;
 
@@ -52,30 +51,34 @@ public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseS
 
   /**
    * @param typeLoader The typeloader passed into the ISourceProvider implementation constructor
-   * @param extensions The extension of the resource file this source producer handles
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
-  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, Set<IFile>, M> modelMapper )
+  protected void init( ITypeLoader typeLoader, BiFunction<String, Set<IFile>, M> modelMapper )
   {
-    init( typeLoader, extensions, modelMapper, null );
+    init( typeLoader, modelMapper, null );
   }
   /**
    * @param typeLoader The typeloader passed into the ISourceProvider implementation constructor
-   * @param extensions The extension of the resource file this source producer handles
    * @param modelMapper A function to provide a model given a qualified name and resource file
    * @param typeFactoryFqn For Gosu Lab.  Optional.
    */
-  protected void init( ITypeLoader typeLoader, Set<String> extensions, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
+  protected void init( ITypeLoader typeLoader, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
   {
     _typeLoader = typeLoader;
-    _extensions = extensions;
     _typeFactoryFqn = typeFactoryFqn;
     _modelMapper = modelMapper;
     _fqnToModel = LocklessLazyVar.make( () -> {
       FqnCache<LocklessLazyVar<M>> fqnToModel = new FqnCache<>();
       Map<String, Set<IFile>> aliasFqnToFiles = new HashMap<>();
-      for( String ext: _extensions )
+      Map<String, FqnCache<IFile>> extensionCaches = ModulePathCache.instance().get( getModule() ).getExtensionCaches();
+      for( Map.Entry<String, FqnCache<IFile>> entry: extensionCaches.entrySet() )
       {
+        String ext = entry.getKey();
+        if( !handlesFileExtension( ext ) )
+        {
+          continue;
+        }
+
         FqnCache<IFile> fileCache = ModulePathCache.instance().get( getModule() ).getExtensionCache( ext );
         fileCache.getFqns().forEach( fqn -> {
           IFile file = fileCache.get( fqn );
@@ -187,7 +190,7 @@ public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseS
   @Override
   public boolean handlesFile( IFile file )
   {
-    return _extensions.stream().anyMatch( ext -> ext.equalsIgnoreCase( file.getExtension() ) );
+    return handlesFileExtension( file.getExtension() );
   }
 
   @Override
@@ -230,12 +233,6 @@ public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseS
   public ITypeLoader getTypeLoader()
   {
     return _typeLoader;
-  }
-
-  @Override
-  public Set<String> getExtensions()
-  {
-    return _extensions;
   }
 
   @Override

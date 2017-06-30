@@ -19,7 +19,13 @@ public class JavascriptSourceProducer extends JavaSourceProducer<JavascriptModel
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSIONS, JavascriptModel::new );
+    init( typeLoader, JavascriptModel::new );
+  }
+
+  @Override
+  public boolean handlesFileExtension( String fileExtension )
+  {
+    return FILE_EXTENSIONS.contains( fileExtension.toLowerCase() );
   }
 
   @Override

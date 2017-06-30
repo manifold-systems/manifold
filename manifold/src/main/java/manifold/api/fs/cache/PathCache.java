@@ -82,6 +82,11 @@ public class PathCache
     return extCache;
   }
 
+  public Map<String, FqnCache<IFile>> getExtensionCaches()
+  {
+    return _filesByExtension;
+  }
+
   public Set<String> getFqnForFile( IFile file )
   {
     return _reverseMap.get( file );

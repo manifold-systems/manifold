@@ -31,7 +31,13 @@ public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITyp
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSIONS, ( fqn, files ) -> new Model( fqn, files, this ) );
+    init( typeLoader, ( fqn, files ) -> new Model( fqn, files, this ) );
+  }
+
+  @Override
+  public boolean handlesFileExtension( String fileExtension )
+  {
+    return FILE_EXTENSIONS.contains( fileExtension.toLowerCase() );
   }
 
   @Override

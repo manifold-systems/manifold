@@ -2,7 +2,6 @@ package manifold.api.sourceprod;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
@@ -55,11 +54,6 @@ public interface ISourceProducer extends IFileConnected
    * How does this producer contribute toward the source file produced
    */
   ProducerKind getProducerKind();
-
-  /**
-   * The file extensions this producer handles (no dot).
-   */
-  Set<String> getExtensions();
 
   /**
    * Does this producer supply source for the specified fqn?

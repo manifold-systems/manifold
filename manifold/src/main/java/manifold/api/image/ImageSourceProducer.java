@@ -19,7 +19,13 @@ public class ImageSourceProducer extends JavaSourceProducer<Model>
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSIONS, Model::new );
+    init( typeLoader, Model::new );
+  }
+
+  @Override
+  public boolean handlesFileExtension( String fileExtension )
+  {
+    return FILE_EXTENSIONS.contains( fileExtension.toLowerCase() );
   }
 
   @Override

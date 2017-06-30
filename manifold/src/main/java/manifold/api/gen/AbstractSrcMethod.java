@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  */
-public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatement<AbstractSrcMethod<T>>
+public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatement<T>
 {
   private SrcType _returns;
   private SrcStatementBlock _body;

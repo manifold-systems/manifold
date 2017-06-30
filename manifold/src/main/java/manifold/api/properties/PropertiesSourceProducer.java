@@ -20,12 +20,17 @@ import manifold.util.concurrent.LocklessLazyVar;
 
 public class PropertiesSourceProducer extends JavaSourceProducer<Model>
 {
-  private static final Set<String> FILE_EXTENSION = Collections.singleton( "properties" );
+  private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 
   public void init( ITypeLoader typeLoader )
   {
-    init( typeLoader, FILE_EXTENSION, Model::new,
-          "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
+    init( typeLoader, Model::new, "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
+  }
+
+  @Override
+  public boolean handlesFileExtension( String fileExtension )
+  {
+    return FILE_EXTENSIONS.contains( fileExtension.toLowerCase() );
   }
 
   @Override

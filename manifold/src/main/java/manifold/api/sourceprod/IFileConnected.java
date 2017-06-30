@@ -7,6 +7,8 @@ import manifold.api.host.RefreshKind;
  */
 public interface IFileConnected
 {
+  boolean handlesFileExtension( String fileExtension );
+
   boolean handlesFile( IFile file );
 
   /**
