@@ -79,7 +79,7 @@ public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseS
           continue;
         }
 
-        FqnCache<IFile> fileCache = ModulePathCache.instance().get( getModule() ).getExtensionCache( ext );
+        FqnCache<IFile> fileCache = entry.getValue();
         fileCache.getFqns().forEach( fqn -> {
           IFile file = fileCache.get( fqn );
           if( file != null && handlesFile( file ) )
