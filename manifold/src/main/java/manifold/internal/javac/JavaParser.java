@@ -41,11 +41,15 @@ import manifold.util.Pair;
  */
 public class JavaParser implements IJavaParser
 {
-  private static final JavaParser INSTANCE = new JavaParser();
+  private static final ThreadLocal<JavaParser> INSTANCE = new ThreadLocal<>();
 
   public static JavaParser instance()
   {
-    return INSTANCE;
+    if( INSTANCE.get() == null )
+    {
+      INSTANCE.set( new JavaParser() );
+    }
+    return INSTANCE.get();
   }
 
   private JavaCompiler _javac;
@@ -275,6 +279,14 @@ public class JavaParser implements IJavaParser
     {
       throw new RuntimeException( e );
     }
+  }
+
+  public JavacTaskImpl getJavacTask()
+  {
+    init();
+
+    StringWriter errors = new StringWriter();
+    return (JavacTaskImpl)_javac.getTask( errors, _gfm, null, Collections.singletonList( "-proc:none" ), null, null );
   }
 
   @Override

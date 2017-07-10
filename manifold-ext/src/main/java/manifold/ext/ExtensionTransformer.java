@@ -18,6 +18,7 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
@@ -28,12 +29,17 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
 import manifold.ext.api.Extension;
+import manifold.ext.api.ICallHandler;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
+import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
+import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.Pair;
 
 /**
  */
@@ -227,7 +233,7 @@ public class ExtensionTransformer extends TreeTranslator
     JCExpression methodSelect = theCall.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
-      Symtab symbols = Symtab.instance( _tp.getContext() );
+      Symtab symbols = _tp.getSymtab();
       Names names = Names.instance( _tp.getContext() );
       JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
       Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
@@ -407,7 +413,8 @@ public class ExtensionTransformer extends TreeTranslator
 
   private static Object createNewProxy( Object root, Class<?> iface )
   {
-    if( iface.isAssignableFrom( root.getClass() ) )
+    Class rootClass = root.getClass();
+    if( iface.isAssignableFrom( rootClass ) )
     {
       return root;
     }
@@ -417,7 +424,6 @@ public class ExtensionTransformer extends TreeTranslator
     {
       PROXY_CACHE.put( iface, proxyByClass = new ConcurrentHashMap<>() );
     }
-    Class rootClass = root.getClass();
     Constructor proxyClassCtor = proxyByClass.get( rootClass );
     if( proxyClassCtor == null )
     {
@@ -436,16 +442,82 @@ public class ExtensionTransformer extends TreeTranslator
 
   private static Class createProxy( Class iface, Class rootClass )
   {
+    if( hasCallHandlerMethod( rootClass ) )
+    {
+      String relativeProxyName = rootClass.getSimpleName() + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
+      return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
+    }
+
     String relativeProxyName = rootClass.getSimpleName() + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
   }
 
+  private static boolean hasCallHandlerMethod( Class rootClass )
+  {
+    String fqn = rootClass.getCanonicalName();
+    JavacTaskImpl javacTask = JavaParser.instance().getJavacTask();
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
+    if( Types.instance( javacTask.getContext() ).isAssignable( callHandlerSymbol.getFirst().asType(), classSymbol.getFirst().asType() ) )
+    {
+      // Nominally implements ICallHandler
+      return true;
+    }
+
+    return hasCallMethod( javacTask, classSymbol.getFirst() );
+  }
+
+  private static boolean hasCallMethod( JavacTaskImpl javacTask, Symbol.ClassSymbol classSymbol )
+  {
+    Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
+    Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
+    for( Symbol s: elems )
+    {
+      if( s instanceof Symbol.MethodSymbol )
+      {
+        List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)s).getParameters();
+        if( parameters.size() != 5 )
+        {
+          return false;
+        }
+
+        Symtab symbols = Symtab.instance( javacTask.getContext() );
+        Types types = Types.instance( javacTask.getContext() );
+        return types.erasure( parameters.get( 0 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 1 ).asType().equals( symbols.stringType ) &&
+               types.erasure( parameters.get( 2 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 3 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 3 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 4 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType().equals( symbols.objectType );
+      }
+    }
+    Type superclass = classSymbol.getSuperclass();
+    if( !(superclass instanceof NoType) )
+    {
+      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)superclass.tsym ) )
+      {
+        return true;
+      }
+    }
+    for( Type iface: classSymbol.getInterfaces() )
+    {
+      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)iface.tsym ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
-    Resolve rs = Resolve.instance( _tp.getContext() );
+    return resolveMethod( pos, _tp.getContext(), _tp.getCompilationUnit(), name, qual, args );
+  }
+  private static Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Context ctx, JCTree.JCCompilationUnit compUnit, Name name, Type qual, List<Type> args )
+  {
+    Resolve rs = Resolve.instance( ctx );
     AttrContext attrContext = new AttrContext();
     Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
-    env.toplevel = _tp.getCompilationUnit();
+    env.toplevel = compUnit;
     return rs.resolveInternalMethod( pos, env, qual, name, args, null );
   }
 }

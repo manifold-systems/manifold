@@ -7,6 +7,8 @@ import com.sun.source.util.TaskListener;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.comp.CompileStates.CompileState;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
@@ -87,6 +89,11 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return TreeMaker.instance( getContext() );
   }
 
+  public Symtab getSymtab()
+  {
+    return Symtab.instance( getContext() );
+  }
+
   public TreePath getPath( Tree node )
   {
     return getTreeUtil().getPath( getCompilationUnit(), node );
@@ -117,6 +124,11 @@ public abstract class CompiledTypeProcessor implements TaskListener
   {
     JCTree.JCClassDecl classDecl = getClassDecl( node );
     return classDecl == null ? null : classDecl.sym.sourcefile;
+  }
+
+  public Symbol.ClassSymbol getClassSymbol( String fqn )
+  {
+    return getElementUtil().getTypeElement( fqn );
   }
 
   public void report( JCTree tree, Diagnostic.Kind kind, String msg )

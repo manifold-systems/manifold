@@ -10,7 +10,7 @@ import manifold.ext.api.This;
 /**
  */
 @Extension
-public abstract class MyRectangularShapeExtension //implements IGenericThing, Coordinate
+public abstract class MyRectangularShapeExtension implements IGenericThing, Coordinate
 {
   public static String lol( @This RectangularShape thiz, Integer i )
   {

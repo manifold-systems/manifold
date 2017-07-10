@@ -40,12 +40,12 @@ public class SimpleTest extends TestCase
     assertEquals( Arrays.asList( "a", "b" ), l2.<String>append( "a", "b" ) );
 
     Rectangle rc = new Rectangle( 4, 5, 6, 7 );
-    foo( (abc.Coordinate)rc );
-    Coordinate coord = (Coordinate)rc;
+    foo( rc );
+    Coordinate coord = rc;
     double d = coord.getX();
     System.out.println( d );
     System.out.println( coord.lol( 7 ) );
-    IGenericThing<String> gthing = (IGenericThing)rc;
+    IGenericThing<String> gthing = rc;
     List<String> glist = gthing.foo( "hi", new ArrayList<>() );
     System.out.println( glist.get( 0 ) );
   }
