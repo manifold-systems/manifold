@@ -82,8 +82,26 @@ public class Manifold
 
     _classpath = classpath;
 
-    List<IDirectory> cp = classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).collect( Collectors.toList() );
-    initPaths( createDefaultClassPath(), cp, null );
+    List<IDirectory> cp = createDefaultClassPath();
+    List<IDirectory> sp = classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).collect( Collectors.toList() );
+
+    List<IDirectory> all = new ArrayList<>();
+    for( IDirectory p : sp )
+    {
+      if( !all.contains( p ) )
+      {
+        all.add( p );
+      }
+    }
+    for( IDirectory p : cp )
+    {
+      if( !all.contains( p ) )
+      {
+        all.add( p );
+      }
+    }
+
+    initPaths( createDefaultClassPath(), all, null );
   }
 
   public void initPaths( List<IDirectory> classpath,
