@@ -17,6 +17,7 @@
     <module>manifold-ext-test</module>
     <module>manifold-js</module>
     <module>manifold-js-test</module>
+    <module>manifold-collections</module>
   </modules>
 
   <properties>
