@@ -1,6 +1,7 @@
 package manifold.api.gen;
 
 import com.sun.tools.javac.code.Flags;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -134,6 +135,23 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   public List<SrcAnnotationExpression> getAnnotations()
   {
     return _annotations;
+  }
+
+  public boolean hasAnnotation( Class<? extends Annotation> annoClass )
+  {
+    return hasAnnotation( annoClass.getCanonicalName() );
+  }
+
+  public boolean hasAnnotation( String fqn )
+  {
+    for( SrcAnnotationExpression anno: getAnnotations() )
+    {
+      if( anno.getAnnotationType().equals( fqn ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   public long getModifiers()

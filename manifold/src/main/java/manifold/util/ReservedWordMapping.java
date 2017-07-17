@@ -1,4 +1,4 @@
-package manifold.api.json;
+package manifold.util;
 
 import java.util.HashMap;
 import java.util.Map;

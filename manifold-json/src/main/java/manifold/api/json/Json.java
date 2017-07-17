@@ -50,7 +50,7 @@ public class Json
     };
 
   /**
-   * Parse the JSON string as one of a javax.script.Bindings instance.
+   * Parse the JSON string as a javax.script.Bindings instance.
    *
    * @param json A Standard JSON formatted string
    *
@@ -226,29 +226,5 @@ public class Json
     // if the existing type is dynamic, override it with a more specific type,
     // otherwise the types disagree...
     throw new RuntimeException( "Incompatible types: " + type1.getName() + " vs: " + type2.getName() );
-  }
-
-  public static String makeIdentifier( String name )
-  {
-    String identifier = ReservedWordMapping.getIdentifierForName( name );
-    if( !identifier.equals( name ) )
-    {
-      return identifier;
-    }
-
-    StringBuilder sb = new StringBuilder();
-    for( int i = 0; i < name.length(); i++ )
-    {
-      char c = name.charAt( i );
-      if( c == '_' || c == '$' || (i == 0 ? Character.isLetter( c ) : Character.isLetterOrDigit( c )) )
-      {
-        sb.append( c );
-      }
-      else
-      {
-        sb.append( '_' );
-      }
-    }
-    return sb.toString();
   }
 }

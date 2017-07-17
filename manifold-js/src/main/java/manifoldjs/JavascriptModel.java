@@ -15,6 +15,11 @@ public class JavascriptModel extends AbstractSingleFileModel
   JavascriptModel( String fqn, Set<IFile> files )
   {
     super( fqn, files );
+    assignUrl();
+  }
+
+  private void assignUrl()
+  {
     try
     {
       _url = getFile().toURI().toURL().toString();
@@ -28,6 +33,13 @@ public class JavascriptModel extends AbstractSingleFileModel
   public String getUrl()
   {
     return _url;
+  }
+
+  @Override
+  public void updateFile( IFile file )
+  {
+    super.updateFile( file );
+    assignUrl();
   }
 }
 

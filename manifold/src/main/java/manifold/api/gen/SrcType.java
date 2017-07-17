@@ -149,6 +149,85 @@ public class SrcType extends SrcElement
     return null;
   }
 
+  @Override
+  public boolean equals( Object o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
+
+    SrcType srcType = (SrcType)o;
+
+    if( _arrayDims != srcType._arrayDims )
+    {
+      return false;
+    }
+    if( _isPrimitive != srcType._isPrimitive )
+    {
+      return false;
+    }
+    if( _isDiamond != srcType._isDiamond )
+    {
+      return false;
+    }
+    if( _isEnum != srcType._isEnum )
+    {
+      return false;
+    }
+    if( _isInterface != srcType._isInterface )
+    {
+      return false;
+    }
+    if( _isAnnotation != srcType._isAnnotation )
+    {
+      return false;
+    }
+    if( !_fqn.equals( srcType._fqn ) )
+    {
+      return false;
+    }
+    if( _componentType != null ? !_componentType.equals( srcType._componentType ) : srcType._componentType != null )
+    {
+      return false;
+    }
+    if( _enclosingType != null ? !_enclosingType.equals( srcType._enclosingType ) : srcType._enclosingType != null )
+    {
+      return false;
+    }
+    if( _superOrExtends != null ? !_superOrExtends.equals( srcType._superOrExtends ) : srcType._superOrExtends != null )
+    {
+      return false;
+    }
+    if( _bound != null ? !_bound.equals( srcType._bound ) : srcType._bound != null )
+    {
+      return false;
+    }
+    return _typeParams != null ? _typeParams.equals( srcType._typeParams ) : srcType._typeParams == null;
+  }
+
+  @Override
+  public int hashCode()
+  {
+    int result = _fqn.hashCode();
+    result = 31 * result + (_componentType != null ? _componentType.hashCode() : 0);
+    result = 31 * result + (_enclosingType != null ? _enclosingType.hashCode() : 0);
+    result = 31 * result + (_superOrExtends != null ? _superOrExtends.hashCode() : 0);
+    result = 31 * result + (_bound != null ? _bound.hashCode() : 0);
+    result = 31 * result + (_typeParams != null ? _typeParams.hashCode() : 0);
+    result = 31 * result + _arrayDims;
+    result = 31 * result + (_isPrimitive ? 1 : 0);
+    result = 31 * result + (_isDiamond ? 1 : 0);
+    result = 31 * result + (_isEnum ? 1 : 0);
+    result = 31 * result + (_isInterface ? 1 : 0);
+    result = 31 * result + (_isAnnotation ? 1 : 0);
+    return result;
+  }
+
   public StringBuilder render( StringBuilder sb, int indent )
   {
     if( _enclosingType != null )

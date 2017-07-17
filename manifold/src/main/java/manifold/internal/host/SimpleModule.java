@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
@@ -15,7 +16,6 @@ import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.image.ImageSourceProducer;
-import manifold.api.json.JsonImplSourceProducer;
 import manifold.api.properties.PropertiesSourceProducer;
 import manifold.api.sourceprod.ISourceProducer;
 import manifold.api.sourceprod.TypeName;
@@ -179,11 +179,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
 
   private void addBuiltIn( Set<ISourceProducer> sps )
   {
-    ISourceProducer sp = new JsonImplSourceProducer();
-    sp.init( this );
-    sps.add( sp );
-
-    sp = new PropertiesSourceProducer();
+    ISourceProducer sp = new PropertiesSourceProducer();
     sp.init( this );
     sps.add( sp );
 
@@ -195,7 +191,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   protected void addRegistered( Set<ISourceProducer> sps )
   {
     // Load from Thread Context Loader
-    // (currently the IJ plugin creates a loaders for accessing source producers from project classpath)
+    // (currently the IJ plugin creates loaders for accessing source producers from project classpath)
     ServiceLoader<ISourceProducer> loader = ServiceLoader.load( ISourceProducer.class );
     Iterator<ISourceProducer> iterator = loader.iterator();
     if( iterator.hasNext() )
@@ -212,12 +208,37 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     {
       // Also load from this loader
       loader = ServiceLoader.load( ISourceProducer.class, getClass().getClassLoader() );
-      for( ISourceProducer sp : loader )
+      for( iterator = loader.iterator(); iterator.hasNext(); )
       {
-        sp.init( this );
-        sps.add( sp );
+        try
+        {
+          ISourceProducer sp = iterator.next();
+          sp.init( this );
+          if( isAbsent( sps, sp ) )
+          {
+            sps.add( sp );
+          }
+        }
+        catch( ServiceConfigurationError e )
+        {
+          // avoid chicken/egg errors from attempting to build a module that self-registers a source producer
+          // it's important to allow a source producer module to specify its xxx.ISourceProducer file in its META-INF
+          // directory so that users of the source producer don't have to
+        }
       }
     }
+  }
+
+  private boolean isAbsent( Set<ISourceProducer> sps, ISourceProducer sp )
+  {
+    for( ISourceProducer existingSp: sps )
+    {
+      if( existingSp.getClass().equals( sp.getClass() ) )
+      {
+        return false;
+      }
+    }
+    return true;
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )

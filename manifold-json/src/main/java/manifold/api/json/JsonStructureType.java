@@ -1,10 +1,13 @@
 package manifold.api.json;
 
+import extensions.java.net.URL.ManUrlExt;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import manifold.api.sourceprod.ActualName;
+import manifold.util.JsonUtil;
+import manifold.util.ManStringUtil;
 
 /**
  */
@@ -146,17 +149,20 @@ public class JsonStructureType extends JsonSchemaType
     String name = getName();
     String identifier = addActualNameAnnotation( sb, indent, name );
 
-    sb.append( "structure " ).append( identifier ).append( addSuperTypes( sb ) ).append( " {\n" );
+    sb.append( "@Structural\n" );
+    indent( sb, indent );
+    sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb ) ).append( " {\n" );
     renderTopLevelFactoryMethods( sb, indent + 2 );
     for( String key : _members.keySet() )
     {
-      identifier = addActualNameAnnotation( sb, indent + 2, key );
+      String propertyType = _members.get( key ).getName();
+      identifier = ManStringUtil.capitalize( addActualNameAnnotation( sb, indent + 2, key ) );
       indent( sb, indent + 2 );
-      sb.append( "property get " ).append( identifier ).append( "(): " ).append( _members.get( key ).getName() ).append( "\n" );
+      sb.append( propertyType ).append( " get" ).append( identifier ).append( "();\n" );
       if( mutable )
       {
         indent( sb, indent + 2 );
-        sb.append( "property set " ).append( identifier ).append( "( " ).append( "$value: " ).append( _members.get( key ).getName() ).append( " )\n" );
+        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
       }
     }
     for( IJsonParentType child : _innerTypes.values() )
@@ -183,7 +189,7 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addActualNameAnnotation( StringBuilder sb, int indent, String name )
   {
-    String identifier = Json.makeIdentifier( name );
+    String identifier = JsonUtil.makeIdentifier( name );
     if( !identifier.equals( name ) )
     {
       indent( sb, indent );
@@ -194,36 +200,67 @@ public class JsonStructureType extends JsonSchemaType
 
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )
   {
-    if( getParent() != null )
+    indent( sb, indent );
+    sb.append( "static " ).append( getName() ).append( " create() {\n" );
+    indent( sb, indent );
+    sb.append( "  return (" ).append( getName() ).append( ")new javax.script.SimpleBindings();\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+
+    if( !shouldRenderTopLevel( this ) )
     {
       // Only add factory methods to top-level json structure
       return;
     }
 
     indent( sb, indent );
-    sb.append( "static function fromJson( jsonText: String ): " ).append( getName() ).append( " {\n" );
+    sb.append( "static " ).append( getName() ).append( " fromJson(String jsonText) {\n" );
     indent( sb, indent );
-    sb.append( "  return gw.lang.reflect.json.Json.fromJson( jsonText ) as " ).append( getName() ).append( "\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
-    indent( sb, indent );
-    sb.append( "static function fromJsonUrl( url: String ): " ).append( getName() ).append( " {\n" );
-    indent( sb, indent );
-    sb.append( "  return new java.net.URL( url ).JsonContent\n" );
+    sb.append( "  return (" ).append( getName() ).append( ")" ).append( Json.class.getName() ).append( ".fromJson(jsonText);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
     indent( sb, indent );
-    sb.append( "static function fromJsonUrl( url: java.net.URL ): " ).append( getName() ).append( " {\n" );
+    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(String url) {\n" );
     indent( sb, indent );
-    sb.append( "  return url.JsonContent\n" );
+    sb.append( "  try {\n" );
+    indent( sb, indent );
+    sb.append( "    return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(new java.net.URL(url));\n" );
+    indent( sb, indent );
+    sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+    indent( sb, indent );
+    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url) {\n" );
+    indent( sb, indent );
+    sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(url);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
     indent( sb, indent );
-    sb.append( "static function fromJsonFile( file: java.io.File ) : " ).append( getName() ).append( " {\n" );
+    sb.append( "static " ).append( getName() ).append( " fromJsonFile(java.io.File file) {\n" );
     indent( sb, indent );
-    sb.append( "  return fromJsonUrl( file.toURI().toURL() )\n" );
+    sb.append( "  try {\n" );
+    indent( sb, indent );
+    sb.append( "    return (" ).append( getName() ).append( ")fromJsonUrl(file.toURI().toURL());\n" );
+    indent( sb, indent );
+    sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
     indent( sb, indent );
     sb.append( "}\n" );
+  }
+
+  private boolean shouldRenderTopLevel( IJsonParentType type )
+  {
+    IJsonParentType parent = type.getParent();
+    if( parent == null )
+    {
+      return true;
+    }
+
+    if( parent instanceof JsonListType )
+    {
+      return shouldRenderTopLevel( parent );
+    }
+
+    return false;
   }
 
   private void indent( StringBuilder sb, int indent )

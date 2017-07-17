@@ -11,7 +11,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * !!! For internal use only !!!
  * <p/>
  * This annotation is added to a generated extension method when it is added to the extended class.
- * It serves as a means to easily and efficiently identify an extension method during method call analysis.
+ * It serves as a means to efficiently identify an extension method during method call analysis.
  * This annotation is never applied to code on disk.
  */
 @Target({METHOD})
@@ -19,4 +19,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface ExtensionMethod
 {
   String extensionClass();
+  boolean isStatic();
 }

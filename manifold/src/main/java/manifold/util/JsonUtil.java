@@ -7,6 +7,30 @@ import javax.script.Bindings;
  */
 public class JsonUtil
 {
+  public static String makeIdentifier( String name )
+  {
+    String identifier = ReservedWordMapping.getIdentifierForName( name );
+    if( !identifier.equals( name ) )
+    {
+      return identifier;
+    }
+
+    StringBuilder sb = new StringBuilder();
+    for( int i = 0; i < name.length(); i++ )
+    {
+      char c = name.charAt( i );
+      if( c == '_' || c == '$' || (i == 0 ? Character.isLetter( c ) : Character.isLetterOrDigit( c )) )
+      {
+        sb.append( c );
+      }
+      else
+      {
+        sb.append( '_' );
+      }
+    }
+    return sb.toString();
+  }
+
   /**
    * Serializes this Bindings instance to a JSON formatted String
    */
@@ -122,7 +146,7 @@ public class JsonUtil
     }
   }
 
-  private static StringBuilder appendValue( StringBuilder sb, Object comp )
+  public static StringBuilder appendValue( StringBuilder sb, Object comp )
   {
     if( comp instanceof String )
     {

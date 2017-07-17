@@ -25,9 +25,11 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
@@ -40,6 +42,8 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.Pair;
+import manifold.util.concurrent.ConcurrentHashSet;
+import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 /**
  */
@@ -47,6 +51,7 @@ public class ExtensionTransformer extends TreeTranslator
 {
   private static final String STRUCTURAL_PROXY = "_structuralproxy_";
   private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
+  private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
 
   private final ExtSourceProducer _sp;
   private final TypeProcessor _tp;
@@ -64,10 +69,9 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
-    if( isStructuralInterface( tree.sym ) )
+    if( isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
     {
-      Symtab symbols = Symtab.instance( _tp.getContext() );
-      Symbol.ClassSymbol objectSym = (Symbol.ClassSymbol)symbols.objectType.tsym;
+      Symbol.ClassSymbol objectSym = getObjectClass();
       tree.sym = objectSym;
       tree.type = objectSym.type;
     }
@@ -81,10 +85,9 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitSelect( JCTree.JCFieldAccess tree )
   {
     super.visitSelect( tree );
-    if( isStructuralInterface( tree.sym ) )
+    if( isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
     {
-      Symtab symbols = Symtab.instance( _tp.getContext() );
-      Symbol.ClassSymbol objectSym = (Symbol.ClassSymbol)symbols.objectType.tsym;
+      Symbol.ClassSymbol objectSym = getObjectClass();
       tree.sym = objectSym;
       tree.type = objectSym.type;
     }
@@ -97,14 +100,12 @@ public class ExtensionTransformer extends TreeTranslator
     super.visitTypeCast( tree );
     if( isStructuralInterface( tree.type.tsym ) )
     {
-      Symtab symbols = Symtab.instance( _tp.getContext() );
-      Symbol.ClassSymbol objectSym = (Symbol.ClassSymbol)symbols.objectType.tsym;
-
+      tree.expr = replaceCastExpression( tree.getExpression(), tree.type );
       //## todo:
       // implement a structural assignability test and
       // conditionally erase the type based on whether or not
       // it is assignable to the structural interface
-      tree.type = objectSym.type;
+      tree.type = getObjectClass().type;
     }
     result = tree;
   }
@@ -117,10 +118,12 @@ public class ExtensionTransformer extends TreeTranslator
   {
     super.visitApply( tree );
     Symbol.MethodSymbol method = findExtMethod( tree );
+
+    eraseGenericStructuralVarargs( tree );
+
     if( method != null )
     {
-      // The structural interface method is implemented as an extension method,
-      // replace with extension method call
+      // Replace with extension method call
       replaceExtCall( tree, method );
       result = tree;
     }
@@ -133,6 +136,30 @@ public class ExtensionTransformer extends TreeTranslator
     else
     {
       result = tree;
+    }
+  }
+
+  private boolean isReceiver( JCTree tree )
+  {
+    Tree parent = _tp.getParent( tree );
+    if( parent instanceof JCTree.JCFieldAccess )
+    {
+      return ((JCTree.JCFieldAccess)parent).getExpression() == tree;
+    }
+    return false;
+  }
+
+  private Symbol.ClassSymbol getObjectClass()
+  {
+    Symtab symbols = Symtab.instance( _tp.getContext() );
+    return (Symbol.ClassSymbol)symbols.objectType.tsym;
+  }
+
+  private void eraseGenericStructuralVarargs( JCTree.JCMethodInvocation tree )
+  {
+    if( tree.varargsElement instanceof Type.ClassType && isStructuralInterface( tree.varargsElement.tsym ) )
+    {
+      tree.varargsElement = _tp.getSymtab().objectType;
     }
   }
 
@@ -168,24 +195,18 @@ public class ExtensionTransformer extends TreeTranslator
 
     extendedClassName = extendedClassName.substring( ExtSourceProducer.EXTENSIONS_PACKAGE.length() + 1 );
 
+    boolean thisAnnoFound = false;
     for( int i = 0; i < parameters.size(); i++ )
     {
       JCTree.JCVariableDecl param = parameters.get( i );
       long methodModifiers = tree.getModifiers().flags;
       if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
       {
+        thisAnnoFound = true;
+
         if( i != 0 )
         {
           _tp.report( param, Diagnostic.Kind.ERROR, "@This must target only the first parameter of an extension method" );
-        }
-        else if( !Modifier.isStatic( (int)methodModifiers ) )
-        {
-          _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must be declared 'static'" );
-        }
-
-        if( Modifier.isPrivate( (int)methodModifiers ) )
-        {
-          _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must not be declared 'private'" );
         }
 
         if( !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
@@ -198,7 +219,21 @@ public class ExtensionTransformer extends TreeTranslator
                !Modifier.isPrivate( (int)methodModifiers ) &&
                param.type.toString().equals( extendedClassName ) )
       {
-        _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an extension method?" );
+        _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an instance extension method?" );
+      }
+    }
+
+    if( thisAnnoFound || hasAnnotation( tree.getModifiers().getAnnotations(), Extension.class ) )
+    {
+      long methodModifiers = tree.getModifiers().flags;
+      if( !Modifier.isStatic( (int)methodModifiers ) )
+      {
+        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must be declared 'static'" );
+      }
+
+      if( Modifier.isPrivate( (int)methodModifiers ) )
+      {
+        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must not be declared 'private'" );
       }
     }
   }
@@ -269,12 +304,47 @@ public class ExtensionTransformer extends TreeTranslator
     return null;
   }
 
+  private JCExpression replaceCastExpression( JCExpression expression, Type type )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    Symtab symbols = _tp.getSymtab();
+    Names names = Names.instance( _tp.getContext() );
+    JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
+    Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
+
+    Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( expression.pos(), names.fromString( "assignStructuralIdentity" ), reflectMethodClassSym.type,
+                                                                  List.from( new Type[]{symbols.objectType, symbols.classType} ) );
+
+    JavacElements javacElems = _tp.getElementUtil();
+    ArrayList<JCExpression> newArgs = new ArrayList<>();
+    newArgs.add( expression );
+    JCTree.JCFieldAccess ifaceClassExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, type.tsym.getQualifiedName().toString() + ".class" );
+    ifaceClassExpr.type = symbols.classType;
+    ifaceClassExpr.sym = symbols.classType.tsym;
+    assignTypes( ifaceClassExpr.selected, type.tsym );
+    newArgs.add( ifaceClassExpr );
+
+    JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, ExtensionTransformer.class.getName() + ".assignStructuralIdentity" ), List.from( newArgs ) );
+    makeProxyCall.type = symbols.objectType;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
+    newMethodSelect.sym = makeInterfaceProxyMethod;
+    newMethodSelect.type = makeInterfaceProxyMethod.type;
+    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+
+    JCTypeCast castCall = make.TypeCast( symbols.objectType, makeProxyCall );
+    castCall.type = symbols.objectType;
+
+    return castCall;
+
+  }
+
   private void replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method )
   {
     JCExpression methodSelect = tree.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
+      boolean isStatic = m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
       TreeMaker make = _tp.getTreeMaker();
       JavacElements javacElems = _tp.getElementUtil();
       JCExpression thisArg = m.selected;
@@ -286,10 +356,12 @@ public class ExtensionTransformer extends TreeTranslator
       m.sym = method;
       m.type = method.type;
 
-      ArrayList<JCExpression> newArgs = new ArrayList<>( tree.args );
-      newArgs.add( 0, thisArg );
-
-      tree.args = List.from( newArgs );
+      if( !isStatic )
+      {
+        ArrayList<JCExpression> newArgs = new ArrayList<>( tree.args );
+        newArgs.add( 0, thisArg );
+        tree.args = List.from( newArgs );
+      }
     }
   }
 
@@ -325,6 +397,7 @@ public class ExtensionTransformer extends TreeTranslator
         if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
+          boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
           JavacTaskImpl javacTask = (JavacTaskImpl)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
@@ -336,14 +409,15 @@ public class ExtensionTransformer extends TreeTranslator
               Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
               List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
               List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)meth.sym).getParameters();
-              if( extParams.size() - 1 != calledParams.size() )
+              int thisOffset = isStatic ? 0 : 1;
+              if( extParams.size() - thisOffset != calledParams.size() )
               {
                 continue;
               }
-              for( int i = 1; i < extParams.size(); i++ )
+              for( int i = thisOffset; i < extParams.size(); i++ )
               {
                 Symbol.VarSymbol extParam = extParams.get( i );
-                Symbol.VarSymbol calledParam = calledParams.get( i - 1 );
+                Symbol.VarSymbol calledParam = calledParams.get( i - thisOffset );
                 if( !types.isSameType( types.erasure( extParam.type ), types.erasure( calledParam.type ) ) )
                 {
                   continue outer;
@@ -364,10 +438,13 @@ public class ExtensionTransformer extends TreeTranslator
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
-      JCExpression thisArg = m.selected;
-      if( isStructuralInterface( thisArg.type.tsym ) )
+      if( !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
-        return true;
+        JCExpression thisArg = m.selected;
+        if( isStructuralInterface( thisArg.type.tsym ) )
+        {
+          return true;
+        }
       }
     }
     return false;
@@ -409,6 +486,19 @@ public class ExtensionTransformer extends TreeTranslator
   {
     // return findCachedProxy( root, iface ); // this is only beneficial when structural invocation happens in a loop, otherwise too costly
     return createNewProxy( root, iface );
+  }
+
+  @SuppressWarnings("UnusedDeclaration")
+  public static Object assignStructuralIdentity( Object obj, Class iface )
+  {
+    //## note: we'd like to avoid the operation if the obj not a ICallHandler,
+    // but that is an expensive structural check, more expensive than this call...
+    //  if( obj instanceof ICallHandler )
+    //  {
+    Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
+    ifaces.add( iface );
+   //   }
+    return obj;
   }
 
   private static Object createNewProxy( Object root, Class<?> iface )
@@ -471,7 +561,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
     Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
-    for( Symbol s: elems )
+    for( Symbol s : elems )
     {
       if( s instanceof Symbol.MethodSymbol )
       {
@@ -498,7 +588,7 @@ public class ExtensionTransformer extends TreeTranslator
         return true;
       }
     }
-    for( Type iface: classSymbol.getInterfaces() )
+    for( Type iface : classSymbol.getInterfaces() )
     {
       if( hasCallMethod( javacTask, (Symbol.ClassSymbol)iface.tsym ) )
       {
@@ -512,6 +602,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     return resolveMethod( pos, _tp.getContext(), _tp.getCompilationUnit(), name, qual, args );
   }
+
   private static Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Context ctx, JCTree.JCCompilationUnit compUnit, Name name, Type qual, List<Type> args )
   {
     Resolve rs = Resolve.instance( ctx );
@@ -519,5 +610,68 @@ public class ExtensionTransformer extends TreeTranslator
     Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
     env.toplevel = compUnit;
     return rs.resolveInternalMethod( pos, env, qual, name, args, null );
+  }
+
+  /**
+   * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
+   * but the association of the structural interface with the receiver is lost.  For example:
+   * <pre>
+   *   Person person = Person.create(); // Person is a JsonSourceProducer interface; the rumtime type of person here is really just a Map (or Binding)
+   *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPerosnExt extension methods class
+   *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
+   * </pre>
+   */
+  public static Object invokeUnhandled( Object thiz, Class proxiedIface, String name, Class returnType, Class[] paramTypes, Object[] args )
+  {
+    Set<Class> ifaces = ID_MAP.get( thiz );
+    if( ifaces != null )
+    {
+      for( Class iface : ifaces )
+      {
+        Method m = findMethod( iface, name, paramTypes );
+        if( m != null )
+        {
+          try
+          {
+            Object result = m.invoke( constructProxy( thiz, iface ), args );
+            //## todo: maybe coerce result if return types are not directly assignable?  e.g., Integer vs. Double
+            return result;
+          }
+          catch( Exception e )
+          {
+            throw new RuntimeException( e );
+          }
+        }
+      }
+    }
+    return ICallHandler.UNHANDLED;
+  }
+
+  private static Method findMethod( Class<?> iface, String name, Class[] paramTypes )
+  {
+    try
+    {
+      Method m = iface.getDeclaredMethod( name, paramTypes );
+      if( m == null )
+      {
+        for( Class superIface : iface.getInterfaces() )
+        {
+          m = findMethod( superIface, name, paramTypes );
+          if( m != null )
+          {
+            break;
+          }
+        }
+      }
+      if( m != null )
+      {
+        return m;
+      }
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+    return null;
   }
 }

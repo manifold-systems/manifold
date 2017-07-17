@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import manifold.api.json.Json;
+import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -24,7 +24,7 @@ public class SystemProperties
                      LocklessLazyVar.make(
                        () ->
                        {
-                         FqnCache<String> cache = new FqnCache<>( FQN, true, Json::makeIdentifier );
+                         FqnCache<String> cache = new FqnCache<>( FQN, true, JsonUtil::makeIdentifier );
                          _keys.forEach( key -> cache.add( key, System.getProperty( key ) ) );
                          return new Model( FQN, cache );
                        } ) );

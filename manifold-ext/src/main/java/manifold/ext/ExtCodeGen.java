@@ -4,12 +4,15 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
@@ -24,9 +27,12 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
+import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavaParser;
+import manifold.internal.javac.SourceJavaFileObject;
+import manifold.util.JavacDiagnostic;
 
 /**
  */
@@ -253,16 +259,24 @@ class ExtCodeGen
 //      return;
 //    }
 
+    if( reportError( method, extendedType, errorHandler, javacTask ) )
+    {
+      return;
+    }
+
     // the class is a produced class, therefore we must delegate the calls since calls are not replaced
     boolean delegateCalls = !_existingSource.isEmpty();
 
+    boolean isInstanceExtensionMethod = isInstanceExtensionMethod( method, extendedType );
+
     SrcMethod srcMethod = new SrcMethod( extendedType );
     long modifiers = method.getModifiers();
-    if( extendedType.isInterface() )
+    if( extendedType.isInterface() && isInstanceExtensionMethod )
     {
       // extension method must be default method in interface to not require implementation
       modifiers |= Flags.DEFAULT;
     }
+
 //## Don't mark extension methods on classes as final, it otherwise blocks extended
 //   classes from implementing an interface with the same method signature
 //    else
@@ -271,37 +285,43 @@ class ExtCodeGen
 //      modifiers |= Modifier.FINAL;
 //    }
 
-    // remove static
-    srcMethod.modifiers( modifiers & ~Modifier.STATIC );
+    if( isInstanceExtensionMethod )
+    {
+      // remove static for instance method
+      modifiers &= ~Modifier.STATIC;
+    }
+
+    srcMethod.modifiers( modifiers );
 
     if( !delegateCalls )
     {
       // mark as extension method for efficient lookup during method call replacement
       srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
-          .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() ) );
+          .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
+          .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod ) );
     }
 
     srcMethod.returns( method.getReturnType() );
 
     String name = method.getSimpleName();
     srcMethod.name( name );
-    List<SrcType> typeParams = method.getTypeVariables();
+    List typeParams = method.getTypeVariables();
 
     // extension method must reflect extended type's type vars before its own
     int extendedTypeVarCount = extendedType.getTypeVariables().size();
-    for( int i = extendedTypeVarCount; i < typeParams.size(); i++ )
+    for( int i = isInstanceExtensionMethod ? extendedTypeVarCount : 0; i < typeParams.size(); i++ )
     {
-      SrcType typeVar = typeParams.get( i );
+      SrcType typeVar = (SrcType)typeParams.get( i );
       srcMethod.addTypeVar( typeVar );
     }
 
-    List<SrcParameter> params = method.getParameters();
-    for( int i = 1; i < params.size(); i++ )
+    List params = method.getParameters();
+    for( int i = isInstanceExtensionMethod ? 1 : 0; i < params.size(); i++ )
     {
       // exclude This param
 
-      SrcParameter param = params.get( i );
+      SrcParameter param = (SrcParameter)params.get( i );
       srcMethod.addParam( param.getSimpleName(), param.getType() );
     }
 
@@ -321,10 +341,18 @@ class ExtCodeGen
         call.append( "return " );
       }
       String extClassName = ((SrcClass)method.getOwner()).getName();
-      call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( "(this" );
+      call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( '(' );
+      if( isInstanceExtensionMethod )
+      {
+        call.append( "this" );
+      }
       for( SrcParameter param : srcMethod.getParameters() )
       {
-        call.append( ", " ).append( param.getSimpleName() );
+        if( call.charAt( call.length()-1 ) != '(' )
+        {
+          call.append( ", " );
+        }
+        call.append( param.getSimpleName() );
       }
       call.append( ");\n" );
       srcMethod.body( new SrcStatementBlock()
@@ -345,20 +373,77 @@ class ExtCodeGen
     extendedType.addMethod( srcMethod );
   }
 
+  private boolean reportError( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  {
+    boolean duplicate = false;
+    outer:
+    for( AbstractSrcMethod m: extendedType.getMethods() )
+    {
+      if( m.getSimpleName().equals( method.getSimpleName() ) && m.getParameters().size() == method.getParameters().size()-1 )
+      {
+        List parameters = method.getParameters();
+        List params = m.getParameters();
+        for( int i = 1; i < parameters.size(); i++ )
+        {
+          SrcParameter param = (SrcParameter)parameters.get( i );
+          SrcParameter p = (SrcParameter)params.get( i-1 );
+          if( !param.getType().equals( p.getType() ) )
+          {
+            continue outer;
+          }
+        }
+        duplicate = true;
+        break;
+      }
+    }
+
+    if( !duplicate )
+    {
+      return false;
+    }
+
+    JavacElements elems = JavacElements.instance( javacTask.getContext() );
+    Symbol.ClassSymbol sym = elems.getTypeElement( ((SrcClass)method.getOwner()).getName() );
+    JavaFileObject file = sym.sourcefile;
+    errorHandler.report( new JavacDiagnostic( new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.ERROR, 0, 0, 0,
+                                              "Illegal extension method. '" + method.getSimpleName() +
+                                              "' duplicates a method in the extended class" ) );
+    return true;
+  }
+
   private boolean isExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
   {
     if( !Modifier.isStatic( (int)method.getModifiers() ) || Modifier.isPrivate( (int)method.getModifiers() ) )
     {
       return false;
     }
-    List<SrcParameter> params = method.getParameters();
+
+    if( method.hasAnnotation( Extension.class ) )
+    {
+      return true;
+    }
+
+    return hasThisAnnotation( method, extendedType );
+  }
+  private boolean isInstanceExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
+  {
+    if( !Modifier.isStatic( (int)method.getModifiers() ) || Modifier.isPrivate( (int)method.getModifiers() ) )
+    {
+      return false;
+    }
+
+    return hasThisAnnotation( method, extendedType );
+  }
+
+  private boolean hasThisAnnotation( AbstractSrcMethod method, SrcClass extendedType )
+  {
+    List params = method.getParameters();
     if( params.size() == 0 )
     {
       return false;
     }
-    SrcParameter param = params.get( 0 );
-    List<SrcAnnotationExpression> annotations = param.getAnnotations();
-    if( annotations.size() > 0 && annotations.get( 0 ).getAnnotationType().equals( This.class.getName() ) )
+    SrcParameter param = (SrcParameter)params.get( 0 );
+    if( !param.hasAnnotation( This.class ) )
     {
       return false;
     }

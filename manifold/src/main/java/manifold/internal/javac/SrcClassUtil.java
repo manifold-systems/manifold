@@ -9,10 +9,12 @@ import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
+import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
+import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
@@ -61,15 +63,7 @@ public class SrcClassUtil
         }
       }
     }
-    for( Attribute.Compound annotationMirror : classSymbol.getAnnotationMirrors() )
-    {
-      SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( annotationMirror.getAnnotationType().toString() );
-      for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
-      {
-        annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.fst.type.toString() ), value.snd.getValue() );
-      }
-      srcClass.addAnnotation( annoExpr );
-    }
+    addAnnotations( srcClass, classSymbol );
     for( Symbol.TypeVariableSymbol typeVar : classSymbol.getTypeParameters() )
     {
       srcClass.addTypeVar( makeTypeVarType( typeVar ) );
@@ -143,6 +137,7 @@ public class SrcClassUtil
   private void addMethod( SrcClass srcClass, Symbol.MethodSymbol method )
   {
     SrcMethod srcMethod = new SrcMethod( srcClass );
+    addAnnotations( srcMethod, method );
     srcMethod.modifiers( method.getModifiers() );
     if( (method.flags() & Flags.VARARGS) != 0 )
     {
@@ -170,17 +165,9 @@ public class SrcClassUtil
     }
     for( Symbol.VarSymbol param : method.getParameters() )
     {
-      srcMethod.addParam( param.flatName().toString(), new SrcType( param.type.toString() ) );
-      if( param.hasAnnotations() )
-      {
-        for( Attribute.Compound anno : param.getAnnotationMirrors() )
-        {
-          if( anno.getAnnotationType().toString().equals( "manifold.ext.api.This" ) )
-          {
-            srcMethod.withUserData( "_extMethod", method );
-          }
-        }
-      }
+      SrcParameter srcParam = new SrcParameter( param.flatName().toString(), new SrcType( param.type.toString() ) );
+      srcMethod.addParam( srcParam );
+      addAnnotations( srcParam, param );
     }
     for( Type throwType : method.getThrownTypes() )
     {
@@ -191,6 +178,19 @@ public class SrcClassUtil
                         new SrcRawStatement()
                           .rawText( "throw new RuntimeException();" ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  private void addAnnotations( SrcAnnotated<?> srcAnnotated, Symbol symbol )
+  {
+    for( Attribute.Compound annotationMirror : symbol.getAnnotationMirrors() )
+    {
+      SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( annotationMirror.getAnnotationType().toString() );
+      for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
+      {
+        annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.fst.type.toString() ), value.snd.getValue() );
+      }
+      srcAnnotated.addAnnotation( annoExpr );
+    }
   }
 
   private SrcType makeTypeVarType( Symbol.TypeVariableSymbol typeVar )

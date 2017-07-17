@@ -13,6 +13,7 @@ import manifold.api.json.Json;
 import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
+import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 
 /**
@@ -35,7 +36,7 @@ public class JsonSchemaTransformer
 
   private JsonSchemaTransformer()
   {
-    _typeByFqn = new FqnCache<>( "doc", true, Json::makeIdentifier );
+    _typeByFqn = new FqnCache<>( "doc", true, JsonUtil::makeIdentifier );
   }
 
   public static boolean isSchema( Bindings bindings )
