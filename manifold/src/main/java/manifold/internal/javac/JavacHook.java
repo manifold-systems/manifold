@@ -140,13 +140,11 @@ public class JavacHook extends AbstractProcessor
       String ping = "__dummy__";
       //JavaFileObject classFile = _jpe.getFiler().createClassFile( ping );
       JavaFileObject classFile = _fileManager.getJavaFileForOutput( StandardLocation.CLASS_OUTPUT, ping, JavaFileObject.Kind.CLASS, null );
-      URI uri = classFile.toUri();
-      if( !uri.getScheme().equals( "file" ) )
+      if( !isPhysicalFile( classFile ) )
       {
         return "";
       }
-
-      File dummyFile = new File( uri );
+      File dummyFile = new File( classFile.toUri() );
       String path = dummyFile.getAbsolutePath();
       path = path.substring( 0, path.length() - (File.separatorChar + ping + ".class").length() );
       return path;
@@ -214,6 +212,11 @@ public class JavacHook extends AbstractProcessor
     outer:
     for( JavaFileObject inputFile : inputFiles )
     {
+      if( !isPhysicalFile( inputFile ) )
+      {
+        continue;
+      }
+
       for( String sp : sourcePath )
       {
         if( inputFile.getName().startsWith( sp + File.separatorChar ) )
@@ -232,6 +235,12 @@ public class JavacHook extends AbstractProcessor
         _jpe.getMessager().printMessage( Diagnostic.Kind.WARNING, "Could not find type for file: " + inputFile );
       }
     }
+  }
+
+  private boolean isPhysicalFile( JavaFileObject inputFile )
+  {
+    URI uri = inputFile.toUri();
+    return uri != null && uri.getScheme().equalsIgnoreCase( "file" );
   }
 
   private String derivePath( TypeElement type, JavaFileObject inputFile )
