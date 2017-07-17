@@ -14,8 +14,8 @@ import manifold.api.fs.IFileUtil;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
-import manifold.api.json.Json;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
 
@@ -146,7 +146,7 @@ public class PathCache
     String path;
     if( relativePath.length() > 0 )
     {
-      path = relativePath + '.' + Json.makeIdentifier( resourceName );
+      path = relativePath + '.' + JsonUtil.makeIdentifier( resourceName );
     }
     else
     {

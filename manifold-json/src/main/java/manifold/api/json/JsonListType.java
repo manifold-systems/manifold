@@ -24,7 +24,7 @@ public class JsonListType extends JsonSchemaType
 
   public String getName()
   {
-    return "List<" + _componentType.getName() + ">";
+    return "java.util.List<" + _componentType.getName() + ">";
   }
 
   public void addChild( String name, IJsonParentType type )
@@ -34,7 +34,12 @@ public class JsonListType extends JsonSchemaType
 
   public IJsonParentType findChild( String name )
   {
-    return _innerTypes.get( name );
+    IJsonParentType inner = _innerTypes.get( name );
+    if( inner == null && _componentType instanceof IJsonParentType )
+    {
+      inner = ((IJsonParentType)_componentType).findChild( name );
+    }
+    return inner;
   }
 
   public IJsonType getComponentType()

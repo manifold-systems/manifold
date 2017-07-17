@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
+import manifold.ext.ExtensionTransformer;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.This;
@@ -13,45 +14,47 @@ import manifold.ext.api.This;
  */
 @SuppressWarnings("unused")
 @Extension
-public abstract class MapStructExt //implements ICallHandler
+public abstract class MapStructExt implements ICallHandler
 {
-  private static Object NULL = new Object()
-  {
-    @Override
-    public String toString()
-    {
-      return "NULL";
-    }
-  };
-
   @SuppressWarnings("unused")
   public static Object call( @This Map thiz, Class iface, String name, Class returnType, Class[] paramTypes, Object[] args )
   {
     assert paramTypes.length == args.length;
 
-    Object value = NULL;
+    Object value = ICallHandler.UNHANDLED;
     if( returnType != void.class && paramTypes.length == 0 )
     {
-      value = getValue( thiz, name, "get", returnType, paramTypes, args );
-      if( value == NULL )
-      {
-        value = getValue( thiz, name, "is", returnType, paramTypes, args );
-      }
+      value = getValue( thiz, name, returnType, paramTypes, args );
     }
-    if( value == NULL )
+    if( value == ICallHandler.UNHANDLED )
     {
       if( returnType == void.class )
       {
         value = setValue( thiz, name, paramTypes, args );
       }
-      if( value == NULL )
+      if( value == ICallHandler.UNHANDLED )
       {
         value = invoke( thiz, name, returnType, paramTypes, args );
       }
-      if( value == NULL )
-      {
-        throw new RuntimeException( "Missing method: " + name + "(" + Arrays.toString( paramTypes ) + ")" );
-      }
+    }
+    if( value == ICallHandler.UNHANDLED )
+    {
+      value = ExtensionTransformer.invokeUnhandled( thiz, iface, name, returnType, paramTypes, args );
+    }
+    if( value == ICallHandler.UNHANDLED )
+    {
+      throw new RuntimeException( "Missing method: " + name + "(" + Arrays.toString( paramTypes ) + ")" );
+    }
+    return value;
+  }
+
+  private static Object getValue( @This Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
+  {
+    Object value;
+    value = getValue( thiz, name, "get", returnType, paramTypes, args );
+    if( value == ICallHandler.UNHANDLED )
+    {
+      value = getValue( thiz, name, "is", returnType, paramTypes, args );
     }
     return value;
   }
@@ -65,7 +68,7 @@ public abstract class MapStructExt //implements ICallHandler
       if( c == '_' && name.length() > getLen + 1 )
       {
         getLen++;
-        c = name.charAt( getLen );
+        c = Character.toUpperCase( name.charAt( getLen ) );
       }
       if( Character.isUpperCase( c ) )
       {
@@ -79,9 +82,10 @@ public abstract class MapStructExt //implements ICallHandler
         {
           return thiz.get( key );
         }
+        return null;
       }
     }
-    return NULL;
+    return ICallHandler.UNHANDLED;
   }
 
   private static Object setValue( Map thiz, String name, Class[] paramTypes, Object[] args )
@@ -124,7 +128,7 @@ public abstract class MapStructExt //implements ICallHandler
       thiz.put( key, args[0] );
       return null;
     }
-    return NULL;
+    return ICallHandler.UNHANDLED;
   }
 
   private static Object invoke( Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
@@ -132,7 +136,7 @@ public abstract class MapStructExt //implements ICallHandler
     Object value = thiz.get( name );
     if( value == null )
     {
-      return NULL;
+      return ICallHandler.UNHANDLED;
     }
     try
     {
@@ -144,7 +148,7 @@ public abstract class MapStructExt //implements ICallHandler
           return m.invoke( value, args );
         }
       }
-      return NULL;
+      return ICallHandler.UNHANDLED;
     }
     catch( Exception e )
     {

@@ -92,6 +92,12 @@ public class SimpleTest extends TestCase
     }
   }
 
+  public void testStaticMethod()
+  {
+    List<String> l = Arrays.asList( "hi", "bye" );
+    assertEquals( "hi, bye", String.valueOf( l ) );
+  }
+
   private double foo( Coordinate c )
   {
     return c.getX();

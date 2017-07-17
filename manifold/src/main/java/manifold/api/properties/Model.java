@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 import manifold.api.fs.IFile;
-import manifold.api.json.Json;
 import manifold.api.sourceprod.AbstractSingleFileModel;
+import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 
 /**
@@ -33,6 +33,13 @@ class Model extends AbstractSingleFileModel
     return _cache;
   }
 
+  @Override
+  public void updateFile( IFile file )
+  {
+    super.updateFile( file );
+    buildCache( getFqn(), file );
+  }
+
   private void buildCache( String fqn, IFile file )
   {
     try( InputStream propertiesStream = file.openInputStream() )
@@ -40,7 +47,7 @@ class Model extends AbstractSingleFileModel
       Properties properties = new Properties();
       properties.load( propertiesStream );
 
-      FqnCache<String> cache = new FqnCache<>( fqn, true, Json::makeIdentifier );
+      FqnCache<String> cache = new FqnCache<>( fqn, true, JsonUtil::makeIdentifier );
 
       for( String key : properties.stringPropertyNames() )
       {

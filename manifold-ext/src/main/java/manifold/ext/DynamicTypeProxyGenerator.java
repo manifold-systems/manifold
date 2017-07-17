@@ -2,7 +2,6 @@ package manifold.ext;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
@@ -93,17 +92,17 @@ public class DynamicTypeProxyGenerator
       return;
     }
 
-    Type returnType = mi.getReturnType();
-    sb.append( "  public " )./*append( getTypeVarList( mi ) ).append( ' ' ).*/append( returnType.getTypeName() ).append( ' ' ).append( mi.getName() ).append( "(" );
-    Type[] params = mi.getParameterTypes();
+    Class returnType = mi.getReturnType();
+    sb.append( "  public " )./*append( getTypeVarList( mi ) ).append( ' ' ).*/append( returnType.getCanonicalName() ).append( ' ' ).append( mi.getName() ).append( "(" );
+    Class[] params = mi.getParameterTypes();
     for( int i = 0; i < params.length; i++ )
     {
       if( i > 0 )
       {
         sb.append( ", " );
       }
-      Type pi = params[i];
-      sb.append( pi.getTypeName() ).append( " p" ).append( i );
+      Class pi = params[i];
+      sb.append( pi.getCanonicalName() ).append( " p" ).append( i );
     }
     sb.append( ") {\n" )
       .append( returnType == void.class
@@ -111,7 +110,7 @@ public class DynamicTypeProxyGenerator
                : "    return " )
       .append( maybeCastReturnType( returnType ) )
       //## todo: maybe we need to explicitly parameterize if the method is generic for some cases?
-      .append( "_root" ).append( ".call(" ).append( ifaceType.getTypeName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( mi.getReturnType().getTypeName() ).append( ".class, " ).append( "new Class[] {" );
+      .append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
     Class<?>[] parameterTypes = mi.getParameterTypes();
     for( int i = 0; i < parameterTypes.length; i++ )
     {
@@ -120,7 +119,7 @@ public class DynamicTypeProxyGenerator
         sb.append( ", " );
       }
       Class paramType = parameterTypes[i];
-      sb.append( paramType.getTypeName() ).append( ".class" );
+      sb.append( paramType.getCanonicalName() ).append( ".class" );
     }
     sb.append( "}, " );
     sb.append( "new Object[] {" );
@@ -136,10 +135,10 @@ public class DynamicTypeProxyGenerator
     sb.append( "  }\n" );
   }
 
-  private String maybeCastReturnType( Type returnType )
+  private String maybeCastReturnType( Class returnType )
   {
     return returnType != void.class
-           ? "(" + returnType.getTypeName() + ")"
+           ? "(" + returnType.getCanonicalName() + ")"
            : "";
   }
 }

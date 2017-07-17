@@ -1,5 +1,6 @@
 package extensions.java.lang.String;
 
+import java.util.List;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 
@@ -28,5 +29,22 @@ public class MyStringExt
       }
     }
     return true;
+  }
+
+  /** for static ext method test */
+  @Extension
+  public static String valueOf( List list )
+  {
+    StringBuilder sb = new StringBuilder();
+    for( int i = 0; i < list.size(); i++ )
+    {
+      Object o = list.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      sb.append( o );
+    }
+    return sb.toString();
   }
 }

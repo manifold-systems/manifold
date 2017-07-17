@@ -12,6 +12,7 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.sourceprod.SourcePosition;
+import manifold.util.JsonUtil;
 
 /**
  */
@@ -142,7 +143,7 @@ public class JsonImplCodeGen
 
   private String makePropertyName( String key )
   {
-    StringBuilder name = new StringBuilder( Json.makeIdentifier( key ) );
+    StringBuilder name = new StringBuilder( JsonUtil.makeIdentifier( key ) );
     char firstChar = name.charAt( 0 );
     if( Character.isLowerCase( firstChar ) )
     {

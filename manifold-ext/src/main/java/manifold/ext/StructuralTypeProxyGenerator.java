@@ -91,13 +91,13 @@ public class StructuralTypeProxyGenerator
       return;
     }
 
-    Type returnType = mi.getReturnType();
-    sb.append( "  public " )./*append( getTypeVarList( mi ) ).append( ' ' ).*/append( returnType.getTypeName() ).append( ' ' ).append( mi.getName() ).append( "(" );
-    Type[] params = mi.getParameterTypes();
+    Class returnType = mi.getReturnType();
+    sb.append( "  public " )./*append( getTypeVarList( mi ) ).append( ' ' ).*/append( returnType.getCanonicalName() ).append( ' ' ).append( mi.getName() ).append( "(" );
+    Class[] params = mi.getParameterTypes();
     for( int i = 0; i < params.length; i++ )
     {
-      Type pi = params[i];
-      sb.append( ' ' ).append( pi.getTypeName() ).append( " p" ).append( i );
+      Class pi = params[i];
+      sb.append( ' ' ).append( pi.getCanonicalName() ).append( " p" ).append( i );
       sb.append( i < params.length - 1 ? ',' : ' ' );
     }
     sb.append( ") {\n" )
@@ -162,11 +162,11 @@ public class StructuralTypeProxyGenerator
     return true;
   }
 
-  private String maybeCastReturnType( Method mi, Type returnType, Type rootType )
+  private String maybeCastReturnType( Method mi, Class returnType, Type rootType )
   {
     //## todo:
     return returnType != void.class
-           ? "(" + returnType.getTypeName() + ")"
+           ? "(" + returnType.getCanonicalName() + ")"
            : "";
   }
 }

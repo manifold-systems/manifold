@@ -24,6 +24,11 @@ class Model extends AbstractSingleFileModel
   Model( String fqn, Set<IFile> files )
   {
     super( fqn, files );
+    init();
+  }
+
+  private void init()
+  {
     Bindings bindings;
     try
     {
@@ -59,6 +64,13 @@ class Model extends AbstractSingleFileModel
   public JsonStructureType getType()
   {
     return _type;
+  }
+
+  @Override
+  public void updateFile( IFile file )
+  {
+    super.updateFile( file );
+    init();
   }
 
   void report( DiagnosticListener<JavaFileObject> errorHandler )
