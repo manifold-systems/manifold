@@ -16,51 +16,51 @@ public class ManifoldCollectionExt
   //=================================================================
   // Straight stream pass throughs
   //=================================================================
-  public static <T, R> Stream<R> map(@This Collection<T> thiz, Function<? super T, R> mapper)
+  public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E, R> mapper)
   {
     return thiz.stream().map(mapper);
   }
 
-  public static <T> Stream<T> filter(@This Collection<T> thiz, Predicate<? super T> predicate)
+  public static <E> Stream<E> filter(@This Collection<E> thiz, Predicate<? super E> predicate)
   {
     return thiz.stream().filter(predicate);
   }
 
-  public static <T, R, A> R collect(@This Collection<T> thiz, Collector<? super T, A, R> collector){
+  public static <E, R, A> R collect(@This Collection<E> thiz, Collector<? super E, A, R> collector){
     return thiz.stream().collect(collector);
   }
 
-  public static <T> Stream<T> distinct(@This Collection<T> thiz)
+  public static <E> Stream<E> distinct(@This Collection<E> thiz)
   {
     return thiz.stream().distinct();
   }
 
-  public static <T> Stream<T> sorted(@This Collection<T> thiz)
+  public static <E> Stream<E> sorted(@This Collection<E> thiz)
   {
     return thiz.stream().sorted();
   }
 
-  public static <T> Stream<T> sorted(@This Collection<T> thiz, Comparator<? super T> comparator)
+  public static <E> Stream<E> sorted(@This Collection<E> thiz, Comparator<? super E> comparator)
   {
     return thiz.stream().sorted(comparator);
   }
 
-  public static <T> T reduce(@This Collection<T> thiz, T identity, BinaryOperator<T> accumulator)
+  public static <E> E reduce(@This Collection<E> thiz, E identity, BinaryOperator<E> accumulator)
   {
     return thiz.stream().reduce(identity, accumulator);
   }
 
-  public static <T> boolean anyMatch(@This Collection<T> thiz, Predicate<? super T> comparator)
+  public static <E> boolean anyMatch(@This Collection<E> thiz, Predicate<? super E> comparator)
   {
     return thiz.stream().anyMatch(comparator);
   }
 
-  public static <T> boolean allMatch(@This Collection<T> thiz, Predicate<? super T> comparator)
+  public static <E> boolean allMatch(@This Collection<E> thiz, Predicate<? super E> comparator)
   {
     return thiz.stream().allMatch(comparator);
   }
 
-  public static <T> boolean noneMatch(@This Collection<T> thiz, Predicate<? super T> comparator)
+  public static <E> boolean noneMatch(@This Collection<E> thiz, Predicate<? super E> comparator)
   {
     return thiz.stream().noneMatch(comparator);
   }
@@ -69,17 +69,17 @@ public class ManifoldCollectionExt
   // Remove Optional
   //=================================================================
 
-  public static <T> T reduce(@This Collection<T> thiz, BinaryOperator<T> accumulator)
+  public static <E> E reduce(@This Collection<E> thiz, BinaryOperator<E> accumulator)
   {
     return thiz.stream().reduce(accumulator).orElse(null);
   }
 
-  public static <T> T min(@This Collection<T> thiz, Comparator<? super T> comparator)
+  public static <E> E min(@This Collection<E> thiz, Comparator<? super E> comparator)
   {
     return thiz.stream().min(comparator).orElse(null);
   }
 
-  public static <T> T max(@This Collection<T> thiz, Comparator<? super T> comparator)
+  public static <E> E max(@This Collection<E> thiz, Comparator<? super E> comparator)
   {
     return thiz.stream().max(comparator).orElse(null);
   }
@@ -88,24 +88,38 @@ public class ManifoldCollectionExt
   // Embellishments
   //=================================================================
 
-  public static <T> String join(@This Collection<T> thiz, CharSequence delimiter)
+  public static <E> String join(@This Collection<E> thiz, CharSequence delimiter)
   {
     return thiz.stream().map(ManObjectUtil::toString).collect(Collectors.joining(delimiter));
   }
 
-  public static <T> List<T> toList(@This Collection<T> thiz)
+  public static <E> List<E> toList(@This Collection<E> thiz)
   {
     return new ArrayList<>(thiz);
   }
 
-  public static <T> Set<T> toSet(@This Collection<T> thiz)
+  public static <E> Set<E> toSet(@This Collection<E> thiz)
   {
     return new HashSet<>(thiz);
   }
 
-  public static <T, K, V> Map<K, V> toMap(@This Collection<T> thiz, Function<? super Object, K> keyMapper, Function<? super Object, V> valueMapper)
+  public static <E> SortedSet<E> toSortedSet(@This Collection<E> thiz) {
+    return new TreeSet<E>(thiz);
+  }
+
+  public static <E, K, V> Map<K, V> toMap(@This Collection<E> thiz, Function<? super E, K> keyMapper, Function<? super E, V> valueMapper)
   {
     return thiz.stream().collect(Collectors.toMap(keyMapper, valueMapper));
+  }
+
+  public static <E, K> Map<K, E> toMap(@This Collection<E> thiz, Function<? super E, K> keyMapper)
+  {
+    return thiz.stream().collect(Collectors.toMap(keyMapper, Function.identity()));
+  }
+
+  public static <E, V> Map<V, List<E>> groupingBy(@This Collection<E> thiz, Function<? super E, V> valueMapper)
+  {
+    return thiz.stream().collect(Collectors.groupingBy(valueMapper));
   }
 
 }
