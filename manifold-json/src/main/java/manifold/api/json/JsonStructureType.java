@@ -236,6 +236,12 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "}\n" );
     indent( sb, indent );
+    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url, javax.script.Bindings json) {\n" );
+    indent( sb, indent );
+    sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".postForJsonContent(url, json);\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+    indent( sb, indent );
     sb.append( "static " ).append( getName() ).append( " fromJsonFile(java.io.File file) {\n" );
     indent( sb, indent );
     sb.append( "  try {\n" );
