@@ -35,7 +35,6 @@ import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
-import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
@@ -69,7 +68,7 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
-    if( isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
+    if( TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       tree.sym = objectSym;
@@ -85,7 +84,7 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitSelect( JCTree.JCFieldAccess tree )
   {
     super.visitSelect( tree );
-    if( isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
+    if( TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       tree.sym = objectSym;
@@ -98,13 +97,9 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitTypeCast( JCTypeCast tree )
   {
     super.visitTypeCast( tree );
-    if( isStructuralInterface( tree.type.tsym ) )
+    if( TypeUtil.isStructuralInterface( tree.type.tsym ) )
     {
       tree.expr = replaceCastExpression( tree.getExpression(), tree.type );
-      //## todo:
-      // implement a structural assignability test and
-      // conditionally erase the type based on whether or not
-      // it is assignable to the structural interface
       tree.type = getObjectClass().type;
     }
     result = tree;
@@ -157,7 +152,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void eraseGenericStructuralVarargs( JCTree.JCMethodInvocation tree )
   {
-    if( tree.varargsElement instanceof Type.ClassType && isStructuralInterface( tree.varargsElement.tsym ) )
+    if( tree.varargsElement instanceof Type.ClassType && TypeUtil.isStructuralInterface( tree.varargsElement.tsym ) )
     {
       tree.varargsElement = _tp.getSymtab().objectType;
     }
@@ -441,7 +436,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
         JCExpression thisArg = m.selected;
-        if( isStructuralInterface( thisArg.type.tsym ) )
+        if( TypeUtil.isStructuralInterface( thisArg.type.tsym ) )
         {
           return true;
         }
@@ -463,22 +458,6 @@ public class ExtensionTransformer extends TreeTranslator
       expr = make.Select( expr, node.getName( components[i] ) );
     }
     return expr;
-  }
-
-  private boolean isStructuralInterface( Symbol sym )
-  {
-    if( !sym.isInterface() || !sym.hasAnnotations() )
-    {
-      return false;
-    }
-    for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
-    {
-      if( annotation.type.toString().equals( Structural.class.getName() ) )
-      {
-        return true;
-      }
-    }
-    return false;
   }
 
   @SuppressWarnings("UnusedDeclaration")

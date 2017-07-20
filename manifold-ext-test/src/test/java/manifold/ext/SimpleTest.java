@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import junit.framework.TestCase;
+import manifold.ext.api.Structural;
 
 /**
  */
@@ -60,6 +61,27 @@ public class SimpleTest extends TestCase
 
     // asserts object identity is not lost
     assertSame( coord, is );
+
+    Point pt = new Point();
+    coord = (Coordinate)pt;
+    assertEquals( 3.0, coord.getX() );
+    assertEquals( 4.0, coord.getY() );
+    assertEquals( "lol5", coord.lol( 5 ) );
+
+    // asserts object identity is not lost
+    assertSame( coord, pt );
+
+    TestFields<String> tf = new TestFields<>();
+    ITestFields<String> itf = (ITestFields<String>)tf;
+    itf.setWidth( 2 );
+    assertEquals( 2, itf.getWidth() );
+    itf.setName( "hi" );
+    assertEquals( "hi", itf.getName() );
+    itf.setFoo( Arrays.asList( "a", "b" ) );
+    assertEquals( Arrays.asList( "a", "b" ), itf.getFoo() );
+
+    // asserts object identity is not lost
+    assertSame( itf, tf );
   }
 
   public void testStructuralOnExistingInterface()
@@ -103,6 +125,26 @@ public class SimpleTest extends TestCase
     return c.getX();
   }
 
+  @Structural
+  public interface ITestFields<T extends CharSequence>
+  {
+    int getWidth();
+    void setWidth( int i );
+
+    T getName();
+    void setName( T t );
+
+    <E extends List<T>> E getFoo();
+    <E extends List<T>> void setFoo( E e );
+  }
+
+  public static class TestFields<Z extends CharSequence> // implements ITestFields
+  {
+    public int width;
+    public Z name;
+    public List<Z> foo;
+  }
+
   public static class ImplementStructurally //implements Coordinate
   {
     public double getX()
@@ -113,6 +155,16 @@ public class SimpleTest extends TestCase
     {
       return 2;
     }
+    public String lol( Integer i )
+    {
+      return "lol" + i;
+    }
+  }
+
+  public static class Point // implements Coordinate
+  {
+    public int x = 3;
+    public int y = 4;
     public String lol( Integer i )
     {
       return "lol" + i;

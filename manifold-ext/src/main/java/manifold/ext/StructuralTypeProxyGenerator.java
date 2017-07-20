@@ -1,9 +1,16 @@
 package manifold.ext;
 
+import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.lang.reflect.Type;
+import java.util.Arrays;
+import javax.lang.model.type.NoType;
+import manifold.internal.host.ManifoldHost;
+import manifold.internal.javac.ClassSymbols;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
@@ -12,15 +19,23 @@ import manifold.internal.runtime.protocols.ManClassesUrlConnection;
  */
 public class StructuralTypeProxyGenerator
 {
-  private StructuralTypeProxyGenerator()
+  private final Class<?> _iface;
+  private Class<?> _rootClass;
+  private final String _name;
+  private Symbol.ClassSymbol _rootClassSymbol;
+
+  private StructuralTypeProxyGenerator( Class<?> iface, Class<?> rootClass, String name )
   {
+    _iface = iface;
+    _rootClass = rootClass;
+    _name = name;
   }
 
   public static Class makeProxy( Class<?> iface, Class<?> rootClass, final String name )
   {
-    StructuralTypeProxyGenerator gen = new StructuralTypeProxyGenerator();
+    StructuralTypeProxyGenerator gen = new StructuralTypeProxyGenerator( iface, rootClass, name );
     String fqnProxy = getNamespace( iface ) + '.' + name;
-    ManClassesUrlConnection.putProxySupplier( fqnProxy, () -> gen.generateProxy( iface, rootClass, name ).toString() );
+    ManClassesUrlConnection.putProxySupplier( fqnProxy, () -> gen.generateProxy().toString() );
     try
     {
       return Class.forName( fqnProxy, false, iface.getClassLoader() );
@@ -38,19 +53,19 @@ public class StructuralTypeProxyGenerator
     }
   }
 
-  private StringBuilder generateProxy( Class ifaceType, Class implType, String name )
+  private StringBuilder generateProxy()
   {
     return new StringBuilder()
-      .append( "package " ).append( getNamespace( ifaceType ) ).append( ";\n" )
+      .append( "package " ).append( getNamespace( _iface ) ).append( ";\n" )
       .append( "\n" )
-      .append( "public class " ).append( name ).append( " implements " ).append( ifaceType.getCanonicalName() ).append( " {\n" )
-      .append( "  private final " ).append( implType.getCanonicalName() ).append( " _root;\n" )
+      .append( "public class " ).append( _name ).append( " implements " ).append( _iface.getCanonicalName() ).append( " {\n" )
+      .append( "  private final " ).append( _rootClass.getCanonicalName() ).append( " _root;\n" )
       .append( "  \n" )
-      .append( "  public " ).append( name ).append( "(" ).append( implType.getCanonicalName() ).append( " root) {\n" )
+      .append( "  public " ).append( _name ).append( "(" ).append( _rootClass.getCanonicalName() ).append( " root) {\n" )
       .append( "    _root = root;\n" )
       .append( "  }\n" )
       .append( "  \n" )
-      .append( implementIface( ifaceType, implType ) )
+      .append( implementIface() )
       .append( "}" );
   }
 
@@ -64,13 +79,13 @@ public class StructuralTypeProxyGenerator
     return nspace;
   }
 
-  private String implementIface( Class ifaceType, Class rootType )
+  private String implementIface()
   {
     StringBuilder sb = new StringBuilder();
     // Interface methods
-    for( Method mi : ifaceType.getMethods() )
+    for( Method mi : _iface.getMethods() )
     {
-      genInterfaceMethodDecl( sb, mi, rootType );
+      genInterfaceMethodDecl( sb, mi, _rootClass );
     }
 
     return sb.toString();
@@ -104,15 +119,248 @@ public class StructuralTypeProxyGenerator
       .append( returnType == void.class
                ? "    "
                : "    return " )
-      .append( maybeCastReturnType( mi, returnType, rootType ) )
-      //## todo: maybe we need to explicitly parameterize if the method is generic for some cases?
-      .append( "_root" ).append( "." ).append( mi.getName() ).append( "(" );
+      .append( maybeCastReturnType( mi, returnType, rootType ) );
+    if( !handleField( sb, mi ) )
+    {
+      handleMethod( sb, mi, params );
+    }
+    sb.append( "  }\n" );
+  }
+
+  private void handleMethod( StringBuilder sb, Method mi, Class[] params )
+  {
+    //## todo: maybe we need to explicitly parameterize if the method is generic for some cases?
+    sb.append( "_root" ).append( '.' ).append( mi.getName() ).append( "(" );
     for( int i = 0; i < params.length; i++ )
     {
       sb.append( ' ' ).append( "p" ).append( i ).append( i < params.length - 1 ? ',' : ' ' );
     }
-    sb.append( ");\n" )
-      .append( "  }\n" );
+    sb.append( ");\n" );
+  }
+
+  private boolean handleField( StringBuilder sb, Method method )
+  {
+    String propertyName = getPropertyNameFromGetter( method );
+    if( propertyName != null )
+    {
+      Field field = findField( propertyName, _rootClass, method.getReturnType(), Variance.Covariant );
+      if( field != null )
+      {
+        sb.append( "_root" ).append( '.' ).append( field.getName() ).append( ";\n" );
+        return true;
+      }
+    }
+    else
+    {
+      propertyName = getPropertyNameFromSetter( method );
+      if( propertyName != null )
+      {
+        Field field = findField( propertyName, _rootClass, method.getParameterTypes()[0], Variance.Contravariant );
+        if( field != null )
+        {
+          sb.append( "_root" ).append( '.' ).append( field.getName() ).append( " = p0;\n" );
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  enum Variance
+  {
+    Covariant, Contravariant
+  }
+
+  private Field findField( String name, Class rootType, Class<?> returnType, Variance variance )
+  {
+    String nameUpper = Character.toUpperCase( name.charAt( 0 ) ) + (name.length() > 1 ? name.substring( 1 ) : "");
+    String nameLower = Character.toLowerCase( name.charAt( 0 ) ) + (name.length() > 1 ? name.substring( 1 ) : "");
+    String nameUnder = '_' + nameLower;
+
+    for( Field field : rootType.getFields() )
+    {
+      String fieldName = field.getName();
+      Class<?> toType = variance == Variance.Covariant ? returnType : field.getType();
+      Class<?> fromType = variance == Variance.Covariant ? field.getType() : returnType;
+      if( (toType.isAssignableFrom( fromType ) ||
+           arePrimitiveTypesAssignable( toType, fromType )) &&
+          (fieldName.equals( nameUpper ) ||
+           fieldName.equals( nameLower ) ||
+           fieldName.equals( nameUnder )) )
+      {
+        return field;
+      }
+    }
+    return null;
+  }
+
+  public static boolean arePrimitiveTypesAssignable( Class toType, Class fromType )
+  {
+    if( toType == null || fromType == null || !toType.isPrimitive() || !fromType.isPrimitive() )
+    {
+      return false;
+    }
+    if( toType == fromType )
+    {
+      return true;
+    }
+
+    if( toType == double.class )
+    {
+      return fromType == float.class ||
+             fromType == int.class ||
+             fromType == char.class ||
+             fromType == short.class ||
+             fromType == byte.class;
+    }
+    if( toType == float.class )
+    {
+      return fromType == char.class ||
+             fromType == short.class ||
+             fromType == byte.class;
+    }
+    if( toType == long.class )
+    {
+      return fromType == int.class ||
+             fromType == char.class ||
+             fromType == short.class ||
+             fromType == byte.class;
+    }
+    if( toType == int.class )
+    {
+      return fromType == short.class ||
+             fromType == char.class ||
+             fromType == byte.class;
+    }
+    if( toType == short.class )
+    {
+      return fromType == byte.class;
+    }
+
+    return false;
+  }
+
+  private String getPropertyNameFromGetter( Method method )
+  {
+    Class<?>[] params = method.getParameterTypes();
+    if( params.length != 0 )
+    {
+      return null;
+    }
+    String name = method.getName();
+    String propertyName = null;
+    for( String prefix : Arrays.asList( "get", "is" ) )
+    {
+      if( name.length() > prefix.length() &&
+          name.startsWith( prefix ) )
+      {
+        if( prefix.equals( "is" ) &&
+            (!method.getReturnType().equals( boolean.class ) &&
+             !method.getReturnType().equals( Boolean.class )) )
+        {
+          break;
+        }
+
+        if( hasPotentialMethod( getRootClassSymbol(), name, method.getParameterCount() ) )
+        {
+          // try not to let a field match when a method should match
+          break;
+        }
+
+        propertyName = name.substring( prefix.length() );
+        char firstChar = propertyName.charAt( 0 );
+        if( firstChar == '_' && propertyName.length() > 1 )
+        {
+          propertyName = propertyName.substring( 1 );
+        }
+        else if( Character.isAlphabetic( firstChar ) &&
+                 !Character.isUpperCase( firstChar ) )
+        {
+          propertyName = null;
+          break;
+        }
+      }
+    }
+    return propertyName;
+  }
+
+  private String getPropertyNameFromSetter( Method method )
+  {
+    if( method.getReturnType() != void.class )
+    {
+      return null;
+    }
+
+    Class<?>[] params = method.getParameterTypes();
+    if( params.length != 1 )
+    {
+      return null;
+    }
+
+    String name = method.getName();
+    String propertyName = null;
+    if( name.length() > "set".length() &&
+        name.startsWith( "set" ) )
+    {
+      if( hasPotentialMethod( getRootClassSymbol(), name, method.getParameterCount() ) )
+      {
+        // try not to let a field match when a method should match
+        return null;
+      }
+
+      propertyName = name.substring( "set".length() );
+      char firstChar = propertyName.charAt( 0 );
+      if( firstChar == '_' && propertyName.length() > 1 )
+      {
+        propertyName = propertyName.substring( 1 );
+      }
+      else if( Character.isAlphabetic( firstChar ) &&
+               !Character.isUpperCase( firstChar ) )
+      {
+        propertyName = null;
+      }
+    }
+    return propertyName;
+  }
+
+  private boolean hasPotentialMethod( Symbol.ClassSymbol rootClassSymbol, String name, int paramCount )
+  {
+    if( rootClassSymbol == null || rootClassSymbol instanceof NoType )
+    {
+      return false;
+    }
+
+    for( Symbol member : rootClassSymbol.members().getElements( e -> e.flatName().toString().equals( name ) ) )
+    {
+      Symbol.MethodSymbol methodSym = (Symbol.MethodSymbol)member;
+      if( methodSym.getParameters().size() == paramCount )
+      {
+        return true;
+      }
+    }
+    if( hasPotentialMethod( (Symbol.ClassSymbol)rootClassSymbol.getSuperclass().tsym, name, paramCount ) )
+    {
+      return true;
+    }
+    for( Type iface : rootClassSymbol.getInterfaces() )
+    {
+      if( hasPotentialMethod( (Symbol.ClassSymbol)iface.tsym, name, paramCount ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private Symbol.ClassSymbol getRootClassSymbol()
+  {
+    if( _rootClassSymbol == null )
+    {
+      ClassSymbols classSymbols = ClassSymbols.instance( ManifoldHost.getGlobalModule() );
+      JavacTaskImpl javacTask = classSymbols.getJavacTask();
+      _rootClassSymbol = classSymbols.getClassSymbol( javacTask, _rootClass.getCanonicalName() ).getFirst();
+    }
+    return _rootClassSymbol;
   }
 
   public static boolean isObjectMethod( Method mi )
@@ -127,7 +375,7 @@ public class StructuralTypeProxyGenerator
         {
           paramTypes = getParamTypes( mi );
         }
-        Parameter[] objParams = mi.getParameters();
+        Parameter[] objParams = objMi.getParameters();
         if( objParams.length == paramTypes.length )
         {
           for( int i = 0; i < objParams.length; i++ )
@@ -162,7 +410,7 @@ public class StructuralTypeProxyGenerator
     return true;
   }
 
-  private String maybeCastReturnType( Method mi, Class returnType, Type rootType )
+  private String maybeCastReturnType( Method mi, Class returnType, Class rootType )
   {
     //## todo:
     return returnType != void.class
