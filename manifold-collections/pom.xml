@@ -4,18 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-      <groupId>systems.manifold</groupId>
+      <groupId>org.manifold-systems</groupId>
       <artifactId>manifold-parent</artifactId>
       <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>manifold-ext-test</artifactId>
+    <artifactId>manifold-collections</artifactId>
 
-    <name>Manifold :: ExtensionTest</name>
+    <name>Manifold :: Collections</name>
 
     <dependencies>
       <dependency>
-        <groupId>systems.manifold</groupId>
+        <groupId>org.manifold-systems</groupId>
         <artifactId>manifold-ext</artifactId>
         <version>${project.version}</version>
       </dependency>

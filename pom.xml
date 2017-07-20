@@ -4,7 +4,7 @@
                              http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.manifold-systems</groupId>
+  <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
@@ -19,18 +19,19 @@
     <module>manifold-json-test</module>
     <module>manifold-js</module>
     <module>manifold-js-test</module>
+    <module>manifold-collections</module>
   </modules>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <dist.man.snapshotrepo.url>https://oss.sonatype.org/content/repositories/snapshots</dist.man.snapshotrepo.url>
-    <scm.root>scm:git:git@github.com:gosu-lang</scm.root>
+    <scm.root>scm:git:git@github.com:manifold-systems</scm.root>
   </properties>
 
   <scm>
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
-    <url>https://github.com/gosu-lang/manifold</url>
+    <url>https://github.com/manifold-systems/manifold</url>
     <tag>HEAD</tag>
   </scm>
 

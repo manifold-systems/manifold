@@ -2,8 +2,10 @@ package extensions.java.net.URL;
 
 import extensions.javax.script.Bindings.ManBindingsExt;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -13,6 +15,7 @@ import javax.script.Bindings;
 import manifold.api.json.Json;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
+import manifold.util.JsonUtil;
 import manifold.util.StreamUtil;
 
 /**
@@ -60,6 +63,93 @@ public class ManUrlExt
     {
       throw new RuntimeException( e );
     }
+  }
+
+  /**
+   * Use http POST to pass JSON bindings to this URL and get back the full content as a String.
+   * <p>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
+   * the argument is coerced to a String.  All arguments are URL encoded.
+   *
+   * @return The full content of this URL coerced to a String.
+   *
+   * @see #postForJsonContent(URL, Bindings)
+   */
+  public static String postForTextContent( @This URL url, Bindings bindings )
+  {
+    try
+    {
+      byte[] bytes = makeArguments( bindings ).getBytes( "UTF-8" );
+      HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+      conn.setRequestMethod( "POST" );
+      conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
+      conn.setRequestProperty( "Content-Length", String.valueOf( bytes.length ) );
+      conn.setDoOutput( true );
+      try( OutputStream out = conn.getOutputStream() )
+      {
+        out.write( bytes );
+      }
+      try( Reader in = StreamUtil.getInputStreamReader( conn.getInputStream() ) )
+      {
+        return StreamUtil.getContent( in );
+      }
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Use http POST to pass JSON bindings to this URL and get the full content as a JSON object.
+   * <p>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
+   * the argument is coerced to a String.  All arguments are URL encoded.
+   *
+   * @return The full content of this URL's stream as a JSON object.
+   *
+   * @see #postForTextContent(URL, Bindings)
+   */
+  @SuppressWarnings("unused")
+  public static Bindings postForJsonContent( @This URL url, Bindings bindings )
+  {
+    return Json.fromJson( postForTextContent( url, bindings ) );
+  }
+
+  private static String makeArguments( Bindings arguments )
+  {
+    try
+    {
+      StringBuilder sb = new StringBuilder();
+      for( Map.Entry<String, Object> entry : arguments.entrySet() )
+      {
+        if( sb.length() != 0 )
+        {
+          sb.append( '&' );
+        }
+        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
+                .append( '=' )
+                .append( makeValue( entry.getValue() ) );
+      }
+      return sb.toString();
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  private static String makeValue( Object value ) throws UnsupportedEncodingException
+  {
+    if( value instanceof Bindings )
+    {
+      value = JsonUtil.toJson( (Bindings)value );
+    }
+    else if( value instanceof List )
+    {
+      value = JsonUtil.listToJson( (List)value );
+    }
+    return URLEncoder.encode( value.toString(), "UTF-8" );
   }
 
   /**
