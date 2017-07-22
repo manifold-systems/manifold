@@ -83,7 +83,7 @@ public class Manifold
     _classpath = classpath;
 
     List<IDirectory> cp = createDefaultClassPath();
-    List<IDirectory> sp = classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).collect( Collectors.toList() );
+    List<IDirectory> sp = classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).filter( e -> !excludeFromSourcePath( e.toJavaFile().getAbsolutePath() ) ).collect( Collectors.toList() );
 
     List<IDirectory> all = new ArrayList<>();
     for( IDirectory p : sp )
@@ -97,11 +97,35 @@ public class Manifold
     {
       if( !all.contains( p ) )
       {
-        all.add( p );
+        if( !excludeFromSourcePath( p.toJavaFile().getAbsolutePath() ) )
+        {
+          all.add( p );
+        }
       }
     }
 
     initPaths( createDefaultClassPath(), all, null );
+  }
+
+  static boolean excludeFromSourcePath( String p )
+  {
+    warnIfRoot( p );
+    String path = p.replace( File.separatorChar, '/' ).toLowerCase();
+    return path.contains( "/java/" ) ||
+           path.contains( "/idea_rt.jar" );
+  }
+
+  private static void warnIfRoot( String p )
+  {
+    for( File root: File.listRoots() )
+    {
+      if( new File( p ).equals( root ) )
+      {
+        System.out.println( "!!!" );
+        System.out.println( "WARNING: Root file " + p + " is in the Manifold classpath" );
+        System.out.println( "!!!" );
+      }
+    }
   }
 
   public void initPaths( List<IDirectory> classpath,

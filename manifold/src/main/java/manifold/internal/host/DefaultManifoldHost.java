@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import javax.tools.DiagnosticListener;
@@ -124,8 +125,8 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
 
   public void initializeAndCompileNonJavaFiles( JavacProcessingEnvironment jpe, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
   {
-    List<String> cp = classpath.get();
-    Set<String> sp = sourcePath.get();
+    List<String> cp = classpath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
+    Set<String> sp = sourcePath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );
 
     List<String> all = new ArrayList<>();
     for( String p : sp )

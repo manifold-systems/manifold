@@ -48,7 +48,7 @@ public abstract class MapStructExt implements ICallHandler
     return value;
   }
 
-  private static Object getValue( @This Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object getValue( Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
   {
     Object value;
     value = getValue( thiz, name, "get", returnType, paramTypes, args );
