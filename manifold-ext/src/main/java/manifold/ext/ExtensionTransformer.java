@@ -284,6 +284,7 @@ public class ExtensionTransformer extends TreeTranslator
       newArgs.add( ifaceClassExpr );
 
       JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, ExtensionTransformer.class.getName() + ".constructProxy" ), List.from( newArgs ) );
+      makeProxyCall.setPos( theCall.pos );
       makeProxyCall.type = thisArg.type;
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
       newMethodSelect.sym = makeInterfaceProxyMethod;
