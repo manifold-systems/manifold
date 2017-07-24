@@ -56,10 +56,10 @@ public class Manifold
    */
   public void init()
   {
-    init( null );
+    init( null, null );
   }
 
-  public void init( List<File> classpath )
+  public void init( List<File> sourcepath, List<File> classpath )
   {
     List<File> combined = new ArrayList<>();
     if( classpath != null )
@@ -67,10 +67,10 @@ public class Manifold
       combined.addAll( classpath );
     }
     combined.addAll( deriveClasspathFrom( Manifold.class ) );
-    setClasspath( combined );
+    setPaths( sourcepath, combined );
   }
 
-  public void setClasspath( List<File> classpath )
+  public void setPaths( List<File> sourcepath, List<File> classpath )
   {
     classpath = new ArrayList<>( classpath );
     removeDups( classpath );
@@ -83,7 +83,9 @@ public class Manifold
     _classpath = classpath;
 
     List<IDirectory> cp = createDefaultClassPath();
-    List<IDirectory> sp = classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).filter( e -> !excludeFromSourcePath( e.toJavaFile().getAbsolutePath() ) ).collect( Collectors.toList() );
+    cp.addAll( classpath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).collect( Collectors.toList() ) );
+    removeDups( cp );
+    List<IDirectory> sp = sourcepath.stream().map( file -> ManifoldHost.getFileSystem().getIDirectory( file ) ).filter( e -> !excludeFromSourcePath( e.toJavaFile().getAbsolutePath() ) ).collect( Collectors.toList() );
 
     List<IDirectory> all = new ArrayList<>();
     for( IDirectory p : sp )
@@ -104,10 +106,10 @@ public class Manifold
       }
     }
 
-    initPaths( createDefaultClassPath(), all, null );
+    initPaths( cp, all, null );
   }
 
-  static boolean excludeFromSourcePath( String p )
+  public static boolean excludeFromSourcePath( String p )
   {
     warnIfRoot( p );
     String path = p.replace( File.separatorChar, '/' ).toLowerCase();
@@ -196,14 +198,15 @@ public class Manifold
     return classpath;
   }
 
-  private static void removeDups( List<File> classpath )
+  private static void removeDups( List classpath )
   {
     for( int i = classpath.size() - 1; i >= 0; i-- )
     {
-      File f = classpath.get( i );
+      Object f = classpath.get( i );
       classpath.remove( i );
       if( !classpath.contains( f ) )
       {
+        //noinspection unchecked
         classpath.add( i, f );
       }
     }

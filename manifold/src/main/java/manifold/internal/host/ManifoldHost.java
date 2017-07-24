@@ -1,7 +1,9 @@
 package manifold.internal.host;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.io.File;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -87,7 +89,11 @@ public class ManifoldHost
 
   public static void bootstrap()
   {
-    host().bootstrap();
+    bootstrap( Collections.emptyList(), Collections.emptyList() );
+  }
+  public static void bootstrap( List<File> sourcepath, List<File> classpath  )
+  {
+    host().bootstrap( sourcepath, classpath );
   }
 
   public static IModule getGlobalModule()

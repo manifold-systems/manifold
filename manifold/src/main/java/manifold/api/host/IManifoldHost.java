@@ -1,6 +1,7 @@
 package manifold.api.host;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.io.File;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +22,7 @@ public interface IManifoldHost extends IService
 {
   ClassLoader getActualClassLoader();
 
-  void bootstrap();
+  void bootstrap( List<File> sourcepath, List<File> classpath );
 
   IModule getGlobalModule();
 

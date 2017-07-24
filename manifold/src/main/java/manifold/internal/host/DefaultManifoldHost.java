@@ -1,8 +1,10 @@
 package manifold.internal.host;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -54,14 +56,14 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     return Thread.currentThread().getContextClassLoader();
   }
 
-  public void bootstrap()
+  public void bootstrap( List<File> sourcepath, List<File> classpath )
   {
     if( Manifold.isBootstrapped() )
     {
       return;
     }
 
-    Manifold.instance().init();
+    Manifold.instance().init( sourcepath, classpath );
   }
 
   public IModule getGlobalModule()
