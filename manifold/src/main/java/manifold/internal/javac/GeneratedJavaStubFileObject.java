@@ -62,7 +62,7 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
 
   private void maybeDumpSource( String source )
   {
-    if( !shouldDumpSource() )
+    if( shouldDumpSource() )
     {
       System.out.println( "\n================\n" );
       System.out.println( getName() );
@@ -75,7 +75,7 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
   private boolean shouldDumpSource()
   {
     return _dumpSource == null
-           ? System.getProperty( ARG_DUMP_SOURCE, "" ).equalsIgnoreCase( "false" )
+           ? _dumpSource = !System.getProperty( ARG_DUMP_SOURCE, "" ).isEmpty()
            : _dumpSource;
   }
 
