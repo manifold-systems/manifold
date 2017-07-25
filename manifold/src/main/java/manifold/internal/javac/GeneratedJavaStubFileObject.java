@@ -9,6 +9,8 @@ import java.util.function.Supplier;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 
+import static manifold.api.sourceprod.ISourceProducer.ARG_DUMP_SOURCE;
+
 /**
  */
 public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
@@ -53,7 +55,28 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
   @Override
   public CharSequence getCharContent( boolean ignoreEncodingErrors ) throws IOException
   {
-    return _src.get();
+    String source = _src.get();
+    maybeDumpSource( source );
+    return source;
+  }
+
+  private void maybeDumpSource( String source )
+  {
+    if( !shouldDumpSource() )
+    {
+      System.out.println( "\n================\n" );
+      System.out.println( getName() );
+      System.out.println( "\n================\n" );
+      System.out.println( source );
+    }
+  }
+
+  private static Boolean _dumpSource;
+  private boolean shouldDumpSource()
+  {
+    return _dumpSource == null
+           ? System.getProperty( ARG_DUMP_SOURCE, "" ).equalsIgnoreCase( "false" )
+           : _dumpSource;
   }
 
   @Override

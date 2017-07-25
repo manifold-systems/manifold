@@ -12,6 +12,11 @@ import manifold.api.host.ITypeLoader;
 public interface ISourceProducer extends IFileConnected
 {
   /**
+   *  System property to aid in debugging generated source.
+   */
+  String ARG_DUMP_SOURCE = "manifold.dump.source";
+
+  /**
    * Supported kinds of source.
    */
   enum SourceKind
