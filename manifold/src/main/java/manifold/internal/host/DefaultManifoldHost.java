@@ -42,6 +42,12 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     "synchronized", "this", "throw", "throws", "transient", "true",
     "try", "void", "volatile", "while"};
 
+  @Override
+  public boolean isBootstrapped()
+  {
+    return Manifold.instance().getModule() != null;
+  }
+
   public IFileSystem getFileSystem()
   {
     if( BytecodeOptions.JDWP_ENABLED.get() )

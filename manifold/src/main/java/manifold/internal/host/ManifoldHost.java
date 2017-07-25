@@ -161,4 +161,9 @@ public class ManifoldHost
   {
     return host().getChildrenOfNamespace( packageName );
   }
+
+  public static boolean isBootstrapped()
+  {
+    return host().isBootstrapped();
+  }
 }

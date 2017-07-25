@@ -43,7 +43,7 @@ public class Manifold
 
   static boolean isBootstrapped()
   {
-    return instance().getModule() != null;
+    return ManifoldHost.isBootstrapped();
   }
 
   public DefaultSingleModule getModule()

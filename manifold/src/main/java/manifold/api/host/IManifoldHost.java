@@ -22,6 +22,7 @@ public interface IManifoldHost extends IService
 {
   ClassLoader getActualClassLoader();
 
+  boolean isBootstrapped();
   void bootstrap( List<File> sourcepath, List<File> classpath );
 
   IModule getGlobalModule();
