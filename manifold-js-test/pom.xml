@@ -32,6 +32,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <compilerArgs>
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+        </configuration>
         <executions>
           <execution>
             <id>default-compile</id>

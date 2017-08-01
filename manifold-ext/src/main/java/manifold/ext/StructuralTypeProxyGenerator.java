@@ -330,7 +330,7 @@ public class StructuralTypeProxyGenerator
       return false;
     }
 
-    for( Symbol member : rootClassSymbol.members().getElements( e -> e.flatName().toString().equals( name ) ) )
+    for( Symbol member : rootClassSymbol.members().getSymbols( e -> e.flatName().toString().equals( name ) ) )
     {
       Symbol.MethodSymbol methodSym = (Symbol.MethodSymbol)member;
       if( methodSym.getParameters().size() == paramCount )

@@ -12,9 +12,9 @@ public class JavascriptProgramTest {
   public void testBasicJavascript() {
     assertEquals("Hello from Javascript", JavascriptProgram.exampleFunction("Hello"));
 
-    assertEquals(1.0, JavascriptProgram.nextNumber());
-    assertEquals(2.0, JavascriptProgram.nextNumber());
-    assertEquals(3.0, JavascriptProgram.nextNumber());
+    assertEquals(1, JavascriptProgram.nextNumber());
+    assertEquals(2, JavascriptProgram.nextNumber());
+    assertEquals(3, JavascriptProgram.nextNumber());
   }
 
 }

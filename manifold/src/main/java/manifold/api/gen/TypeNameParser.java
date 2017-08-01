@@ -71,6 +71,13 @@ public class TypeNameParser
       {
         throw new RuntimeException( "expecting '>" );
       }
+      Type innerType = parseType();
+      if( innerType != null )
+      {
+        //## note: ignoring type args for outer type of inner type e.g., abc.Outer<E>.Inner become abc.Outer.Inner
+        innerType._fqn = type._fqn + innerType._fqn;
+        type = innerType;
+      }
     }
     while( match( '[' ) )
     {
@@ -159,7 +166,11 @@ public class TypeNameParser
     String _superOrExtends;
     List<Type> _bound;
     boolean _diamond;
-    public int _arrayDim;
+    int _arrayDim;
+
+    public Type()
+    {
+    }
 
     public Type( String fqn )
     {

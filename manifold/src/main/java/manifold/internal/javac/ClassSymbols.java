@@ -5,11 +5,13 @@ import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,13 +91,13 @@ public class ClassSymbols
     init();
 
     StringWriter errors = new StringWriter();
-    return (JavacTaskImpl)_javacTool.getTask( errors, _fm, null, Collections.singletonList( "-proc:none" ), null, null );
+    return (JavacTaskImpl)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
   }
 
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
-    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
+    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( Symtab.instance( javacTask.getContext() ).noModule, fqn );
     JavacTrees trees = JavacTrees.instance( javacTask.getContext() );
     TreePath path = trees.getPath( typeElement );
     if( path != null )

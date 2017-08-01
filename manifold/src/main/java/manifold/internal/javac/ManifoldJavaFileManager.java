@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import java.io.File;
 import java.io.IOException;
@@ -34,14 +35,14 @@ class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
   private JavaFileManager _javacMgr;
   private Log _issueLogger;
 
-  ManifoldJavaFileManager( JavaFileManager fileManager, Log issueLogger, boolean fromJavaC )
+  ManifoldJavaFileManager( JavaFileManager fileManager, Context ctx, boolean fromJavaC )
   {
     super( fileManager );
     _fromJavaC = fromJavaC;
     _javacMgr = fileManager;
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
-    _issueLogger = issueLogger;
+    _issueLogger = ctx == null ? null : Log.instance( ctx );
     ManifoldHost.addTypeLoaderListenerAsWeakRef( null, this );
   }
 

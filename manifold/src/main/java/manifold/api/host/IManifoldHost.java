@@ -45,7 +45,7 @@ public interface IManifoldHost extends IService
 
   void performLockedOperation( ClassLoader loader, Runnable operation );
 
-  void initializeAndCompileNonJavaFiles( JavacProcessingEnvironment jpe, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath );
+  void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath );
 
   Set<TypeName> getChildrenOfNamespace( String packageName );
 

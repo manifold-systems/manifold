@@ -187,7 +187,7 @@ public class SrcClassUtil
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( annotationMirror.getAnnotationType().toString() );
       for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
       {
-        annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.fst.type.toString() ), value.snd.getValue() );
+        annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.snd.type.toString() ), value.snd.getValue() );
       }
       srcAnnotated.addAnnotation( annoExpr );
     }

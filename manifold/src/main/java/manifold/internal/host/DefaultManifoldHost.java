@@ -50,11 +50,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
 
   public IFileSystem getFileSystem()
   {
-    if( BytecodeOptions.JDWP_ENABLED.get() )
-    {
-      return new FileSystemImpl( IFileSystem.CachingMode.NO_CACHING );
-    }
-    return new FileSystemImpl( IFileSystem.CachingMode.FULL_CACHING );
+    return Manifold.instance().getFileSystem();
   }
 
   public ClassLoader getActualClassLoader()
@@ -131,7 +127,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     operation.run();
   }
 
-  public void initializeAndCompileNonJavaFiles( JavacProcessingEnvironment jpe, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
+  public void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
   {
     List<String> cp = classpath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
     Set<String> sp = sourcePath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );

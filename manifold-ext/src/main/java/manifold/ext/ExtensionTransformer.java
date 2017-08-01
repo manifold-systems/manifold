@@ -398,7 +398,7 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
           outer:
-          for( Symbol elem : extClassSym.members().getElements() )
+          for( Symbol elem : extClassSym.members().getSymbols() )
           {
             if( elem instanceof Symbol.MethodSymbol && elem.flatName().toString().equals( meth.sym.name.toString() ) )
             {
@@ -540,7 +540,7 @@ public class ExtensionTransformer extends TreeTranslator
   private static boolean hasCallMethod( JavacTaskImpl javacTask, Symbol.ClassSymbol classSymbol )
   {
     Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
-    Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
+    Iterable<Symbol> elems = classSymbol.members().getSymbolsByName( call );
     for( Symbol s : elems )
     {
       if( s instanceof Symbol.MethodSymbol )
