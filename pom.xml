@@ -91,7 +91,7 @@
           <version>3.3</version>
           <configuration>
             <source>1.8</source>
-            <target>1.9</target>
+            <target>1.8</target>
             <encoding>UTF-8</encoding>
           </configuration>
           <executions>
@@ -129,7 +129,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.20</version>
           <configuration>
-            <argLine>--illegal-access=permit --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED</argLine>
+            <!--<argLine>&#45;&#45;illegal-access=permit &#45;&#45;add-opens=java.base/jdk.internal.loader=ALL-UNNAMED</argLine>-->
             <useManifestOnlyJar>false</useManifestOnlyJar>
           </configuration>
         </plugin>
@@ -169,23 +169,23 @@
   </dependencyManagement>
 
   <profiles>
-    <!--<profile>-->
-      <!--<id>internal.tools-jar</id>-->
-      <!--<activation>-->
-        <!--<file>-->
-          <!--<exists>${java.home}/../lib/tools.jar</exists>-->
-        <!--</file>-->
-      <!--</activation>-->
-      <!--<dependencies>-->
-        <!--<dependency>-->
-          <!--<groupId>com.sun</groupId>-->
-          <!--<artifactId>tools</artifactId>-->
-          <!--<version>1.8.0</version>-->
-          <!--<scope>system</scope>-->
-          <!--<systemPath>${java.home}/../lib/tools.jar</systemPath>-->
-        <!--</dependency>-->
-      <!--</dependencies>-->
-    <!--</profile>-->
+    <profile>
+      <id>internal.tools-jar</id>
+      <activation>
+        <file>
+          <exists>${java.home}/../lib/tools.jar</exists>
+        </file>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+          <version>1.8.0</version>
+          <scope>system</scope>
+          <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+      </dependencies>
+    </profile>
     <profile>
       <id>release</id>
       <build>

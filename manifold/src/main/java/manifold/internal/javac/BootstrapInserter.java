@@ -21,9 +21,9 @@ import manifold.internal.runtime.Bootstrap;
  */
 class BootstrapInserter extends TreeTranslator
 {
-  private JavacHook _javacJacker;
+  private JavacPlugin _javacJacker;
 
-  public BootstrapInserter( JavacHook javacJacker )
+  public BootstrapInserter( JavacPlugin javacJacker )
   {
     _javacJacker = javacJacker;
   }

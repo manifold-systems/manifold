@@ -7,11 +7,9 @@ import com.sun.source.util.SourcePositions;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
-import com.sun.tools.javac.code.Symtab;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -19,7 +17,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -71,13 +68,13 @@ public class JavaParser implements IJavaParser
     {
       _javac = JavacTool.create();
 
-      JavacHook javacHook = JavacHook.instance();
+      JavacPlugin javacHook = JavacPlugin.instance();
       if( javacHook != null )
       {
         // Share our existing Manifold file manager from Javac
 
         _fileManager = javacHook.getJavaFileManager();
-        _gfm = javacHook.getManFileManager();
+        _gfm = javacHook.getManifoldFileManager();
       }
       else if( JavacPlugin.instance() != null )
       {

@@ -1,43 +1,49 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.JavacTaskImpl;
-import com.sun.tools.javac.code.ClassFinder;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.comp.Modules;
+import com.sun.tools.javac.comp.Enter;
+import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
+import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.JavacDiagnostic;
+
+//import com.sun.tools.javac.code.ClassFinder;
+//import com.sun.tools.javac.comp.Modules;
 
 /**
  */
@@ -77,15 +83,7 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (JavacTaskImpl)task;
-    _ctx = _javacTask.getContext();
-    _fileManager = _ctx.get( JavaFileManager.class );
-    //_javaInputFiles = fetchJavaInputFiles();
-    _javaInputFiles = new HashSet<>();
-    _gosuInputFiles = fetchGosuInputFiles();
-    _treeMaker = TreeMaker.instance( _ctx );
-    _javacElements = JavacElements.instance( _ctx );
-    _typeProcessor = new TypeProcessor( task );
-    _issueReporter = new IssueReporter(  Log.instance( getContext() ) );
+    hijackJavacFileManager();
     task.addTaskListener( this );
   }
 
@@ -143,6 +141,15 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     if( !(_fileManager instanceof ManifoldJavaFileManager) && _manFileManager == null )
     {
+      _ctx = _javacTask.getContext();
+      _fileManager = _ctx.get( JavaFileManager.class );
+      _javaInputFiles = fetchJavaInputFiles();
+      _gosuInputFiles = fetchGosuInputFiles();
+      _treeMaker = TreeMaker.instance( _ctx );
+      _javacElements = JavacElements.instance( _ctx );
+      _typeProcessor = new TypeProcessor( _javacTask );
+      _issueReporter = new IssueReporter( Log.instance( getContext() ) );
+
       injectManFileManager();
       ManifoldHost.initializeAndCompileNonJavaFiles( _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
     }
@@ -153,19 +160,20 @@ public class JavacPlugin implements Plugin, TaskListener
     _manFileManager = new ManifoldJavaFileManager( _fileManager, _ctx, true );
     _ctx.put( JavaFileManager.class, (JavaFileManager)null );
     _ctx.put( JavaFileManager.class, _manFileManager );
+
     try
     {
-      Field field = ClassFinder.class.getDeclaredField( "fileManager" );
+      Field field = ClassReader.class.getDeclaredField( "fileManager" );
       field.setAccessible( true );
-      field.set( ClassFinder.instance( getContext() ), _manFileManager );
-
-      field = ClassFinder.class.getDeclaredField( "preferSource" );
-      field.setAccessible( true );
-      field.set( ClassFinder.instance( getContext() ), true );
+      field.set( ClassReader.instance( getContext() ), _manFileManager );
 
       field = ClassWriter.class.getDeclaredField( "fileManager" );
       field.setAccessible( true );
       field.set( ClassWriter.instance( getContext() ), _manFileManager );
+
+      field = Enter.class.getDeclaredField( "fileManager" );
+      field.setAccessible( true );
+      field.set( Enter.instance( getContext() ), _manFileManager );
     }
     catch( Exception e )
     {
@@ -273,8 +281,8 @@ public class JavacPlugin implements Plugin, TaskListener
       }
       else
       {
-
-        getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0, "Could not find type for file: " + inputFile ) );
+        //noinspection unchecked
+        getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, "Could not find type for file: " + inputFile ) );
       }
     }
   }
@@ -300,7 +308,7 @@ public class JavacPlugin implements Plugin, TaskListener
     File file = new File( inputFile.toUri() );
     String name = file.getName();
     name = name.substring( 0, name.lastIndexOf( '.' ) );
-    String packageName = Modules.instance( getContext() ).findPackageInFile.findPackageNameOf( inputFile ).toString();
+    String packageName = findPackageInFile( inputFile ).toString();
     return packageName + '.' + name;
 
 //    String path = inputFile.getName();
@@ -316,38 +324,22 @@ public class JavacPlugin implements Plugin, TaskListener
 //      tokens.add( tokenizer.nextToken() );
 //    }
 //    String typeName = "";
-//    TypeElement type = null;
+//    String foundType = null;
 //    for( int i = tokens.size() - 1; i >= 0; i-- )
 //    {
 //      typeName = tokens.get( i ) + typeName;
-//      TypeElement csr = getType( typeName );
+//      String csr = getType( compUnits, typeName );
 //      if( csr != null )
 //      {
-//        type = csr;
+//        foundType = csr;
 //      }
 //      if( i > 0 )
 //      {
 //        typeName = '.' + typeName;
 //      }
 //    }
-//    return type;
+//    return foundType;
   }
-
-//  private Set<JavaFileObject> fetchJavaInputFiles()
-//  {
-//    try
-//    {
-//      JavaCompiler javaCompiler = JavaCompiler.instance( _ctx );
-//      Field field = javaCompiler.getClass().getDeclaredField( "inputFiles" );
-//      field.setAccessible( true );
-//      //noinspection unchecked
-//      return (Set<JavaFileObject>)field.get( javaCompiler );
-//    }
-//    catch( Exception e )
-//    {
-//      throw new RuntimeException( e );
-//    }
-//  }
 
   private List<String> fetchGosuInputFiles()
   {
@@ -359,45 +351,99 @@ public class JavacPlugin implements Plugin, TaskListener
     return Collections.emptyList();
   }
 
-
-  private TypeElement getType( String className )
+  private Set<JavaFileObject> fetchJavaInputFiles()
   {
-    return JavacElements.instance( getContext() ).getTypeElement( className );
-    // DeclaredType declaredType = jpe.getTypeUtils().getDeclaredType( typeElement );
-    // return new ElementTypePair( typeElement, declaredType );
+    try
+    {
+      Field field = JavacTaskImpl.class.getDeclaredField( "fileObjects" );
+      field.setAccessible( true );
+      //noinspection unchecked
+      return new HashSet<>( (Collection<JavaFileObject>)field.get( _javacTask ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   @Override
   public void started( TaskEvent e )
   {
-    switch( e.getKind() )
-    {
-      case PARSE:
-        addSourceFile( e.getSourceFile() );
-        break;
-      case ENTER:
-        hijackJavacFileManager();
-        break;
-      case ANALYZE:
-        if( e.getSourceFile().getName().contains( "/List.java" ) )
-        {
-          System.out.println( "### List.java" );
-        }
-        break;
-      case GENERATE:
-        break;
-      case ANNOTATION_PROCESSING:
-        break;
-      case ANNOTATION_PROCESSING_ROUND:
-        break;
-      case COMPILATION:
-        break;
-    }
-    System.out.println( e );
   }
 
-  private void addSourceFile( JavaFileObject sourceFile )
+  @Override
+  public void finished( TaskEvent e )
   {
-    _javaInputFiles.add( sourceFile );
+    switch( e.getKind() )
+    {
+      case ENTER:
+        process( e );
+        break;
+//      case COMPILATION:
+//        break;
+    }
+
+  }
+
+  private boolean process( TaskEvent e )
+  {
+    Set<String> typesToProcess = new HashSet<>();
+    String packageName = e.getCompilationUnit().getPackageName().toString();
+    for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
+    {
+      if( classDecl instanceof JCTree.JCClassDecl )
+      {
+        typesToProcess.add( packageName + '.' + ((JCTree.JCClassDecl)classDecl).getSimpleName() );
+        insertBootstrap( (JCTree.JCClassDecl)classDecl );
+      }
+    }
+    _typeProcessor.addTypesToProcess( typesToProcess );
+
+    return false;
+  }
+
+  private void insertBootstrap( JCTree.JCClassDecl tree )
+  {
+    TreeTranslator visitor = new BootstrapInserter( this );
+    tree.accept( visitor );
+  }
+
+  private Name findPackageInFile( JavaFileObject file )
+  {
+    return parseAndGetName( file, t -> t.getPackageName() != null
+                                       ? TreeInfo.fullName( t.getPackageName() )
+                                       : null );
+  }
+
+  private Name parseAndGetName( JavaFileObject file, Function<JCTree.JCCompilationUnit, Name> tree2Name )
+  {
+    Log.DiagnosticHandler dh = new Log.DiscardDiagnosticHandler( Log.instance( _ctx ) );
+    try
+    {
+      JCTree.JCCompilationUnit t = parse( file );
+      return tree2Name.apply( t );
+    }
+    catch( IOException e )
+    {
+      return null;
+    }
+    finally
+    {
+      Log.instance( _ctx ).popDiagnosticHandler( dh );
+    }
+  }
+
+  private JCTree.JCCompilationUnit parse( JavaFileObject file ) throws IOException
+  {
+    try
+    {
+      Method parse = JavaCompiler.class.getDeclaredMethod( "parse", JavaFileObject.class, CharSequence.class );
+      parse.setAccessible( true );
+      return (JCTree.JCCompilationUnit)parse.invoke( JavaCompiler.instance( _ctx ), file, file.getCharContent( false ) );
+    }
+    catch( Exception e )
+    {
+      throw new IOException( e );
+    }
   }
 }

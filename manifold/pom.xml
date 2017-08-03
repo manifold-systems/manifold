@@ -34,7 +34,6 @@
               <customTaskPrefix>wut</customTaskPrefix>
               <target name="pre-jar">
                 <echo message="Generating ${annotation.descriptor.file}"/>
-                <echo message="manifold.internal.javac.JavacHook" file="${annotation.descriptor.file}"/>
               </target>
             </configuration>
           </execution>

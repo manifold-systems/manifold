@@ -29,7 +29,7 @@ import manifold.util.Pair;
 /**
  * Utility to get ClassSymbol for a given type name.
  * <p/>
- * Note this class must have a FileManager separate from the one used in JavaParser (or JavacHook)
+ * Note this class must have a FileManager separate from the one used in JavaParser (or JavacPlugin)
  * to avoid circularity issues.
  */
 public class ClassSymbols
@@ -97,7 +97,7 @@ public class ClassSymbols
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
-    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( Symtab.instance( javacTask.getContext() ).noModule, fqn );
+    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
     JavacTrees trees = JavacTrees.instance( javacTask.getContext() );
     TreePath path = trees.getPath( typeElement );
     if( path != null )
