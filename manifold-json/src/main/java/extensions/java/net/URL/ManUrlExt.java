@@ -79,7 +79,7 @@ public class ManUrlExt
   {
     try
     {
-      byte[] bytes = makeArguments( bindings ).getBytes( "UTF-8" );
+      byte[] bytes = bindings.makeArguments().getBytes( "UTF-8" );
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod( "POST" );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
@@ -114,29 +114,6 @@ public class ManUrlExt
   public static Bindings postForJsonContent( @This URL url, Bindings bindings )
   {
     return Json.fromJson( postForTextContent( url, bindings ) );
-  }
-
-  private static String makeArguments( Bindings arguments )
-  {
-    try
-    {
-      StringBuilder sb = new StringBuilder();
-      for( Map.Entry<String, Object> entry : arguments.entrySet() )
-      {
-        if( sb.length() != 0 )
-        {
-          sb.append( '&' );
-        }
-        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
-                .append( '=' )
-                .append( makeValue( entry.getValue() ) );
-      }
-      return sb.toString();
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
   }
 
   private static String makeValue( Object value ) throws UnsupportedEncodingException

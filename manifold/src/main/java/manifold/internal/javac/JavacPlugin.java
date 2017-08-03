@@ -42,9 +42,6 @@ import javax.tools.StandardLocation;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.JavacDiagnostic;
 
-//import com.sun.tools.javac.code.ClassFinder;
-//import com.sun.tools.javac.comp.Modules;
-
 /**
  */
 public class JavacPlugin implements Plugin, TaskListener
@@ -239,7 +236,7 @@ public class JavacPlugin implements Plugin, TaskListener
         {
           path = path.substring( 0, path.length() - 2 );
         }
-        if( p != unmodifiedPath && p.startsWith( path ) )
+        if( !p.equals( unmodifiedPath ) && p.startsWith( path ) )
         {
           continue outer;
         }
@@ -310,35 +307,6 @@ public class JavacPlugin implements Plugin, TaskListener
     name = name.substring( 0, name.lastIndexOf( '.' ) );
     String packageName = findPackageInFile( inputFile ).toString();
     return packageName + '.' + name;
-
-//    String path = inputFile.getName();
-//    int dotJava = path.lastIndexOf( ".java" );
-//    if( dotJava < 0 )
-//    {
-//      return null;
-//    }
-//    path = path.substring( 0, dotJava );
-//    List<String> tokens = new ArrayList<>();
-//    for( StringTokenizer tokenizer = new StringTokenizer( path, File.separator, false ); tokenizer.hasMoreTokens(); )
-//    {
-//      tokens.add( tokenizer.nextToken() );
-//    }
-//    String typeName = "";
-//    String foundType = null;
-//    for( int i = tokens.size() - 1; i >= 0; i-- )
-//    {
-//      typeName = tokens.get( i ) + typeName;
-//      String csr = getType( compUnits, typeName );
-//      if( csr != null )
-//      {
-//        foundType = csr;
-//      }
-//      if( i > 0 )
-//      {
-//        typeName = '.' + typeName;
-//      }
-//    }
-//    return foundType;
   }
 
   private List<String> fetchGosuInputFiles()
@@ -379,10 +347,7 @@ public class JavacPlugin implements Plugin, TaskListener
       case ENTER:
         process( e );
         break;
-//      case COMPILATION:
-//        break;
     }
-
   }
 
   private boolean process( TaskEvent e )

@@ -1,6 +1,9 @@
 package extensions.javax.script.Bindings;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.Json;
 import manifold.ext.api.Extension;
@@ -12,27 +15,6 @@ import manifold.util.JsonUtil;
 @Extension
 public class ManBindingsExt
 {
-  /**
-   * Generates a static type corresponding with this Bindings object.  The generated type is a nesting of structure types.
-   * This nesting of types is intended to be placed in a .gs file as a top-level structure, or embedded as an inner type.
-   * <p>
-   * A structure type is a direct mapping of property members to name/value pairs in a Bindings.  A property has the same name as the key and follows these rules:
-   * <ul>
-   * <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
-   * <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
-   * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type where the component type is the structural union inferred from the values of the List recursively following these rules for each value
-   * </ul>
-   */
-  public static String toStructure( @This Bindings thiz, String nameForStructure )
-  {
-    return toStructure( thiz, nameForStructure, true );
-  }
-
-  public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
-  {
-    return Json.makeStructureTypes( nameForStructure, thiz, mutable );
-  }
-
   /**
    * Serializes this Bindings instance to a JSON formatted String
    */
@@ -205,6 +187,59 @@ public class ManBindingsExt
     }
   }
 
+  /**
+   * Convert this Json Bindings to an arguments String suitable for a Json Url.
+   */
+  public static String makeArguments( @This Bindings arguments )
+  {
+    try
+    {
+      StringBuilder sb = new StringBuilder();
+      for( Map.Entry<String, Object> entry : arguments.entrySet() )
+      {
+        if( sb.length() != 0 )
+        {
+          sb.append( '&' );
+        }
+        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
+          .append( '=' )
+          .append( makeValue( entry.getValue() ) );
+      }
+      return sb.toString();
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Convert the Object to a String value suitable for a Json Url argument.
+   * @param value A Json value.  On of: Bindings, List, or simple value.
+   * @return Json formatted value String.
+   */
+  @Extension
+  public static String makeValue( Object value )
+  {
+    if( value instanceof Bindings )
+    {
+      value = JsonUtil.toJson( (Bindings)value );
+    }
+    else if( value instanceof List )
+    {
+      value = JsonUtil.listToJson( (List)value );
+    }
+
+    try
+    {
+      return URLEncoder.encode( value.toString(), "UTF-8" );
+    }
+    catch( UnsupportedEncodingException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
   private static void appendCommaNewLine( StringBuilder sb, boolean bComma )
   {
     if( bComma )
@@ -222,5 +257,26 @@ public class ManBindingsExt
       sb.append( ' ' );
       i++;
     }
+  }
+
+  /**
+   * Generates a static type corresponding with this Bindings object.  The generated type is a nesting of structure types.
+   * This nesting of types is intended to be placed in a .gs file as a top-level structure, or embedded as an inner type.
+   * <p>
+   * A structure type is a direct mapping of property members to name/value pairs in a Bindings.  A property has the same name as the key and follows these rules:
+   * <ul>
+   * <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
+   * <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
+   * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type where the component type is the structural union inferred from the values of the List recursively following these rules for each value
+   * </ul>
+   */
+  public static String toStructure( @This Bindings thiz, String nameForStructure )
+  {
+    return toStructure( thiz, nameForStructure, true );
+  }
+
+  public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
+  {
+    return Json.makeStructureTypes( nameForStructure, thiz, mutable );
   }
 }
