@@ -19,11 +19,6 @@
         <artifactId>manifold-ext</artifactId>
         <version>${project.version}</version>
       </dependency>
-      <dependency>
-        <groupId>junit</groupId>
-        <artifactId>junit</artifactId>
-        <scope>test</scope>
-      </dependency>
     </dependencies>
 
     <build>
@@ -36,16 +31,21 @@
               <arg>-Xplugin:Manifold</arg>
             </compilerArgs>
           </configuration>
-          <executions>
-            <execution>
-              <id>default-compile</id>
-              <configuration>
-                <excludes>
-                  <exclude>manifoldjs/plugin/legacy/**</exclude>
-                </excludes>
-              </configuration>
-            </execution>
-          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+              <manifestEntries>
+                <!--class files as source must be available for extension method classes-->
+                <Contains-Sources>java,class</Contains-Sources>
+              </manifestEntries>
+            </archive>
+          </configuration>
         </plugin>
       </plugins>
     </build>

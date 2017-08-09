@@ -15,11 +15,16 @@
     <module>manifold-test</module>
     <module>manifold-ext</module>
     <module>manifold-ext-test</module>
+    <module>manifold-io</module>
+    <module>manifold-io-test</module>
     <module>manifold-json</module>
     <module>manifold-json-test</module>
     <module>manifold-js</module>
     <module>manifold-js-test</module>
+    <module>manifold-text</module>
+    <module>manifold-text-test</module>
     <module>manifold-collections</module>
+    <module>manifold-collections-test</module>
   </modules>
 
   <properties>
@@ -164,6 +169,7 @@
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.12</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>

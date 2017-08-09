@@ -7,7 +7,8 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
-public class ManifoldStreamExtTest {
+public class ManifoldStreamCollectionsExtTest
+{
 
     @Test
     public void embellishments(){

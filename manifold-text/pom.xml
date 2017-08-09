@@ -10,9 +10,9 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-json</artifactId>
+  <artifactId>manifold-text</artifactId>
 
-  <name>Manifold :: Json</name>
+  <name>Manifold :: Text</name>
 
   <dependencies>
     <dependency>
@@ -23,6 +23,11 @@
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-collections</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

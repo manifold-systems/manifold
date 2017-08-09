@@ -3,27 +3,26 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-json</artifactId>
+  <artifactId>manifold-collections-test</artifactId>
 
-  <name>Manifold :: Json</name>
-
+  <name>Manifold :: CollectionsTest</name>
+  
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold</artifactId>
+      <artifactId>manifold-collections</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
-      <version>${project.version}</version>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 
@@ -33,28 +32,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
+          <source>1.8</source>
           <compilerArgs>
             <arg>-Xplugin:Manifold</arg>
           </compilerArgs>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <configuration>
-          <archive>
-            <manifest>
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-            <manifestEntries>
-              <!--class files as source must be available for extension method classes-->
-              <Contains-Sources>java,class</Contains-Sources>
-            </manifestEntries>
-          </archive>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
-
 
 </project>

@@ -1,10 +1,11 @@
 package extensions.java.util.Collection;
 
-import org.junit.Test;
+//import org.junit.Test;
 
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import org.junit.Test;
+
 
 import static org.junit.Assert.assertEquals;
 

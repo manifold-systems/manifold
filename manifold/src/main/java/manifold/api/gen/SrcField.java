@@ -6,6 +6,7 @@ public class SrcField extends SrcAnnotated<SrcField>
 {
   private SrcType _type;
   private SrcExpression _initializer;
+  private boolean _enumConst;
 
   public SrcField( String name, Class type )
   {
@@ -57,21 +58,38 @@ public class SrcField extends SrcAnnotated<SrcField>
     return this;
   }
 
+  public boolean isEnumConst()
+  {
+    return _enumConst;
+  }
+  public SrcField enumConst()
+  {
+    _enumConst = true;
+    return this;
+  }
+
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {
     renderAnnotations( sb, indent, false );
     indent( sb, indent );
-    renderModifiers( sb, false, 0 );
-    _type.render( sb, 0 ).append( ' ' ).append( getSimpleName() );
-    if( _initializer != null )
+    if( isEnumConst() )
     {
-      sb.append( " = " );
-      _initializer.render( sb, 0 ).append( ";\n" );
+      sb.append( getSimpleName() ).append( ",\n" );
     }
     else
     {
-      sb.append( ";\n" );
+      renderModifiers( sb, false, 0 );
+      _type.render( sb, 0 ).append( ' ' ).append( getSimpleName() );
+      if( _initializer != null )
+      {
+        sb.append( " = " );
+        _initializer.render( sb, 0 ).append( ";\n" );
+      }
+      else
+      {
+        sb.append( ";\n" );
+      }
     }
     return sb;
   }

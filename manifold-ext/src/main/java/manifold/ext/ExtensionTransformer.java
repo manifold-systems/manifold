@@ -204,7 +204,7 @@ public class ExtensionTransformer extends TreeTranslator
           _tp.report( param, Diagnostic.Kind.ERROR, "@This must target only the first parameter of an extension method" );
         }
 
-        if( !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
+        if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
           _tp.report( param, Diagnostic.Kind.ERROR, "Expecting type '" + extendedClassName + "' for @This parameter" );
         }

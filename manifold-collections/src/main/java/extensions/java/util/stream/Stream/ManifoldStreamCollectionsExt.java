@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Extension
-public class ManifoldStreamExt
+public class ManifoldStreamCollectionsExt
 {
   public static <T> List<T> toList(@This Stream<T> thiz)
   {

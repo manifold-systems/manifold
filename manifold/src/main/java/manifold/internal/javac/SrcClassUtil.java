@@ -81,6 +81,12 @@ public class SrcClassUtil
     {
       for( Symbol sym : classSymbol.getEnclosedElements() )
       {
+        long modifiers = SrcAnnotated.modifiersFrom( sym.getModifiers() );
+        if( Modifier.isPrivate( (int)modifiers ) )
+        {
+          continue;
+        }
+
         if( sym instanceof Symbol.ClassSymbol )
         {
           addInnerClass( srcClass, sym );
@@ -91,11 +97,20 @@ public class SrcClassUtil
         }
         else if( sym instanceof Symbol.MethodSymbol )
         {
-          addMethod( srcClass, (Symbol.MethodSymbol)sym );
+          if( !isEnumMethod( sym ) )
+          {
+            addMethod( srcClass, (Symbol.MethodSymbol)sym );
+          }
         }
       }
     }
     return srcClass;
+  }
+
+  private boolean isEnumMethod( Symbol sym )
+  {
+    return sym.getEnclosingElement().isEnum() &&
+           (sym.toString().equals( "values()" ) || sym.toString().equals( "valueOf(java.lang.String)" ));
   }
 
   private SrcType makeNestedType( Type type )
@@ -126,10 +141,17 @@ public class SrcClassUtil
   {
     Symbol.VarSymbol field = (Symbol.VarSymbol)sym;
     SrcField srcField = new SrcField( field.name.toString(), new SrcType( field.type.toString() ) );
-    srcField.modifiers( field.getModifiers() );
-    if( Modifier.isFinal( (int)srcField.getModifiers() ) )
+    if( sym.isEnum() )
     {
-      srcField.initializer( new SrcRawExpression( getValueForType( sym.type ) ) );
+      srcField.enumConst();
+    }
+    else
+    {
+      srcField.modifiers( field.getModifiers() );
+      if( Modifier.isFinal( (int)srcField.getModifiers() ) )
+      {
+        srcField.initializer( new SrcRawExpression( getValueForType( sym.type ) ) );
+      }
     }
     srcClass.addField( srcField );
   }
