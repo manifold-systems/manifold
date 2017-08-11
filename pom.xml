@@ -20,6 +20,8 @@
     <module>manifold-js</module>
     <module>manifold-js-test</module>
     <module>manifold-collections</module>
+    <module>manifold-sql</module>
+    <module>manifold-sql-test</module>
   </modules>
 
   <properties>
