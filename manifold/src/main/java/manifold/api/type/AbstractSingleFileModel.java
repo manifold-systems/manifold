@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import java.util.HashSet;
 import java.util.Set;

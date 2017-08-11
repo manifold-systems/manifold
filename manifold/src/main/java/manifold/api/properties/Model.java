@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.AbstractSingleFileModel;
+import manifold.api.type.AbstractSingleFileModel;
 import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 

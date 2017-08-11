@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

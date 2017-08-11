@@ -19,7 +19,7 @@ import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.type.TypeName;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.cache.FqnCache;

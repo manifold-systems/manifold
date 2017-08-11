@@ -144,11 +144,11 @@ public class Manifold
   {
     DefaultSingleModule singleModule = new DefaultSingleModule( classpath, sourcePath, outputPath );
 
-    // Must assign _module BEFORE we initializeSourceProducers() to prevent double bootstrapping
+    // Must assign _module BEFORE we initializeTypeManifolds() to prevent double bootstrapping
     // stemming from an embedded bootstrap() call in a source producer class
     _module = singleModule;
 
-    singleModule.initializeSourceProducers();
+    singleModule.initializeTypeManifolds();
   }
 
   public void initPaths( List<String> classpath, List<String> sourcePath, String outputPath )

@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,7 +34,7 @@ import manifold.util.concurrent.LocklessLazyVar;
  *
  * @param <M> The model you derive backing production of source code.
  */
-public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseService implements ISourceProducer
+public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseService implements ITypeManifold
 {
   private ITypeLoader _typeLoader;
   private LocklessLazyVar<FqnCache<LocklessLazyVar<M>>> _fqnToModel;
@@ -404,8 +404,8 @@ public abstract class ResourceFileSourceProducer<M extends IModel> extends BaseS
         return;
       }
 
-      Set<ISourceProducer> sps = getModule().findSourceProducersFor( request.file );
-      if( !sps.contains( ResourceFileSourceProducer.this ) )
+      Set<ITypeManifold> sps = getModule().findTypeManifoldsFor( request.file );
+      if( !sps.contains( ResourceFileTypeManifold.this ) )
       {
         return;
       }

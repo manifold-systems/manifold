@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
@@ -17,10 +17,6 @@ public class TypeName implements Comparable
     this.kind = kind;
     this.visibility = visibility;
   }
-//
-//  public TypeName( IType innerType) {
-//    this( innerType.getName(), innerType.getTypeLoader(), Kind.TYPE, Visibility.PUBLIC);
-//  }
 
   @Override
   public int compareTo( Object o )

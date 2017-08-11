@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import java.util.Collection;
 import java.util.List;
@@ -9,7 +9,7 @@ import manifold.api.host.ITypeLoader;
 
 /**
  */
-public interface ISourceProducer extends IFileConnected
+public interface ITypeManifold extends IFileConnected
 {
   /**
    *  System property to aid in debugging generated source.

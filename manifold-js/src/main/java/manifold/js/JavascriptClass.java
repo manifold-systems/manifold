@@ -5,7 +5,7 @@ import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import manifold.api.gen.*;
 import manifold.util.ManClassUtil;
-import manifold.api.sourceprod.SourcePosition;
+import manifold.api.type.SourcePosition;
 import manifold.js.parser.Parser;
 import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.*;

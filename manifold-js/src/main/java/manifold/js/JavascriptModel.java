@@ -3,7 +3,7 @@ package manifold.js;
 import java.net.MalformedURLException;
 import java.util.Set;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.AbstractSingleFileModel;
+import manifold.api.type.AbstractSingleFileModel;
 
 /**
  * Created by carson on 5/10/17.

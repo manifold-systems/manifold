@@ -6,8 +6,8 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.ITypeProcessor;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.ITypeProcessor;
 import manifold.internal.host.ManifoldHost;
 
 /**
@@ -22,7 +22,7 @@ public class TypeProcessor extends CompiledTypeProcessor
 //  @Override
 //  public boolean filterError( Diagnostic diagnostic )
 //  {
-//    for( ISourceProducer sp: ManifoldHost.getCurrentModule().getSourceProducers() )
+//    for( ITypeManifold sp: ManifoldHost.getCurrentModule().getTypeManifolds() )
 //    {
 //      if( sp instanceof ITypeProcessor )
 //      {
@@ -39,7 +39,7 @@ public class TypeProcessor extends CompiledTypeProcessor
   public void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter )
   {
     String fqn = element.getQualifiedName().toString();
-    for( ISourceProducer sp : ManifoldHost.getCurrentModule().getSourceProducers() )
+    for( ITypeManifold sp : ManifoldHost.getCurrentModule().getTypeManifolds() )
     {
       if( sp instanceof ITypeProcessor )
       {

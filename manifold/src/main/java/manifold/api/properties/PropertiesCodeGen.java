@@ -21,7 +21,7 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcSwitchCase;
 import manifold.api.gen.SrcSwitchStatement;
 import manifold.api.gen.SrcType;
-import manifold.api.sourceprod.SourcePosition;
+import manifold.api.type.SourcePosition;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;

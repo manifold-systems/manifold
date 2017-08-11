@@ -7,13 +7,13 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.sourceprod.ClassType;
-import manifold.api.sourceprod.JavaSourceProducer;
+import manifold.api.type.ClassType;
+import manifold.api.type.JavaTypeManifold;
 
 /**
  * Created by carson on 5/10/17.
  */
-public class JavascriptSourceProducer extends JavaSourceProducer<JavascriptModel>
+public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
 {
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "js", "jst" ) );
 

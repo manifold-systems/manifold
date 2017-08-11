@@ -5,17 +5,17 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.IModel;
+import manifold.api.type.IModel;
 
 /**
  */
 public class Model implements IModel
 {
-  private final ExtSourceProducer _sp;
+  private final ExtensionManifold _sp;
   private final String _fqnExtended;
   private Set<IFile> _files;
 
-  Model( String extendedFqn, Set<IFile> files, ExtSourceProducer sp )
+  Model( String extendedFqn, Set<IFile> files, ExtensionManifold sp )
   {
     _fqnExtended = extendedFqn;
     _files = new HashSet<>( files );
@@ -63,7 +63,7 @@ public class Model implements IModel
     getFiles().add( file );
   }
 
-  ExtSourceProducer getSourceProducer()
+  ExtensionManifold getTypeManifold()
   {
     return _sp;
   }

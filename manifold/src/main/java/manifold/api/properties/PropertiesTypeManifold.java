@@ -9,12 +9,12 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.sourceprod.JavaSourceProducer;
+import manifold.api.type.JavaTypeManifold;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
 import manifold.util.concurrent.LocklessLazyVar;
 
-public class PropertiesSourceProducer extends JavaSourceProducer<Model>
+public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 

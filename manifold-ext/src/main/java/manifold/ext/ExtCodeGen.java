@@ -51,7 +51,7 @@ class ExtCodeGen
 
   private IModule getModule()
   {
-    return _model.getSourceProducer().getTypeLoader().getModule();
+    return _model.getTypeManifold().getTypeLoader().getModule();
   }
 
   String make( DiagnosticListener<JavaFileObject> errorHandler )

@@ -1,10 +1,8 @@
 package manifold.internal.host;
 
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -17,15 +15,13 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
-import manifold.api.fs.def.FileSystemImpl;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.service.BaseService;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.TypeName;
-import manifold.util.BytecodeOptions;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.TypeName;
 
 /**
  */
@@ -115,7 +111,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
   @Override
   public void maybeAssignManifoldType( ClassLoader loader, String fqn, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
-    Set<ISourceProducer> sps = getCurrentModule().findSourceProducersFor( fqn );
+    Set<ITypeManifold> sps = getCurrentModule().findTypeManifoldsFor( fqn );
     if( !sps.isEmpty() )
     {
       assigner.accept( fqn, null );

@@ -1,6 +1,5 @@
 package manifold.internal.host;
 
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.File;
 import java.net.URL;
 import java.util.Collections;
@@ -20,7 +19,7 @@ import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.type.TypeName;
 
 /**
  */

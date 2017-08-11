@@ -1,6 +1,5 @@
 package manifold.api.host;
 
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.File;
 import java.net.URL;
 import java.util.List;
@@ -14,9 +13,13 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.service.IService;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.type.TypeName;
 
 /**
+ * Implement this interface to host and drive Manifold in custom way.  For instance
+ * another JVM language can implement this to expose Manifold types directly to its
+ * type system.  Other implementations include IDE plugins for Manifold e.g., the
+ * IntelliJ plugin implements this to use Intellij's file system.
  */
 public interface IManifoldHost extends IService
 {

@@ -9,7 +9,7 @@ import java.util.function.Supplier;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 
-import static manifold.api.sourceprod.ISourceProducer.ARG_DUMP_SOURCE;
+import static manifold.api.type.ITypeManifold.ARG_DUMP_SOURCE;
 
 /**
  */

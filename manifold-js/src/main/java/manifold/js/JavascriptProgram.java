@@ -1,7 +1,7 @@
 package manifold.js;
 
 import manifold.api.gen.*;
-import manifold.api.sourceprod.SourcePosition;
+import manifold.api.type.SourcePosition;
 import manifold.js.parser.tree.FunctionNode;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;

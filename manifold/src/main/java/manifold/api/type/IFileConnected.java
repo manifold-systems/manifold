@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import manifold.api.fs.IFile;
 import manifold.api.host.RefreshKind;

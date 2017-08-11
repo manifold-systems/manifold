@@ -1,4 +1,4 @@
-package manifold.api.sourceprod;
+package manifold.api.type;
 
 import javax.tools.JavaFileObject;
 import manifold.internal.javac.IssueReporter;

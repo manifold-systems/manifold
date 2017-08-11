@@ -4,14 +4,14 @@ import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.host.ITypeLoader;
-import manifold.api.sourceprod.ClassType;
-import manifold.api.sourceprod.JavaSourceProducer;
+import manifold.api.type.ClassType;
+import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Structural;
 import manifold.util.ManClassUtil;
 
 /**
  */
-public class JsonSourceProducer extends JavaSourceProducer<JsonModel>
+public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
 {
   public static final String FILE_EXTENSION = "json";
 

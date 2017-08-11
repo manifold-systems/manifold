@@ -11,7 +11,7 @@ import manifold.api.gen.SrcGetProperty;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
-import manifold.api.sourceprod.SourcePosition;
+import manifold.api.type.SourcePosition;
 import manifold.util.JsonUtil;
 
 /**
@@ -30,7 +30,7 @@ public class JsonImplCodeGen
   public SrcClass make()
   {
     return genClass( _fqn, _model );
-    //return genClass( _fqn, _fqn.substring( 0, _fqn.length() - JsonImplSourceProducer.IMPL_SUFFIX.length() ), _model );
+    //return genClass( _fqn, _fqn.substring( 0, _fqn.length() - JsonImplTypeManifold.IMPL_SUFFIX.length() ), _model );
   }
 
   private SrcClass genClass( String fqnImpl, JsonStructureType model )

@@ -7,7 +7,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
-import manifold.api.sourceprod.ISourceProducer;
+import manifold.api.type.ITypeManifold;
 
 /**
  */
@@ -38,11 +38,11 @@ public interface IModule
    */
   List<Dependency> getDependencies();
 
-  Set<ISourceProducer> getSourceProducers();
+  Set<ITypeManifold> getTypeManifolds();
 
-  Set<ISourceProducer> findSourceProducersFor( String fqn );
+  Set<ITypeManifold> findTypeManifoldsFor( String fqn );
 
-  Set<ISourceProducer> findSourceProducersFor( IFile file );
+  Set<ITypeManifold> findTypeManifoldsFor( IFile file );
 
   JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler );
 }

@@ -8,12 +8,12 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.sourceprod.ClassType;
-import manifold.api.sourceprod.JavaSourceProducer;
+import manifold.api.type.ClassType;
+import manifold.api.type.JavaTypeManifold;
 
 /**
  */
-public class ImageSourceProducer extends JavaSourceProducer<Model>
+public class ImageTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "jpg", "png", "bmp", "wbmp", "gif" ) );
 

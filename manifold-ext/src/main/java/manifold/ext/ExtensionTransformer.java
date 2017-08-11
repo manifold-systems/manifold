@@ -52,10 +52,10 @@ public class ExtensionTransformer extends TreeTranslator
   private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
 
-  private final ExtSourceProducer _sp;
+  private final ExtensionManifold _sp;
   private final TypeProcessor _tp;
 
-  ExtensionTransformer( ExtSourceProducer sp, TypeProcessor typeProcessor )
+  ExtensionTransformer( ExtensionManifold sp, TypeProcessor typeProcessor )
   {
     _sp = sp;
     _tp = typeProcessor;
@@ -183,12 +183,12 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
-    if( !extendedClassName.startsWith( ExtSourceProducer.EXTENSIONS_PACKAGE + '.' ) )
+    if( !extendedClassName.startsWith( ExtensionManifold.EXTENSIONS_PACKAGE + '.' ) )
     {
       return;
     }
 
-    extendedClassName = extendedClassName.substring( ExtSourceProducer.EXTENSIONS_PACKAGE.length() + 1 );
+    extendedClassName = extendedClassName.substring( ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
 
     boolean thisAnnoFound = false;
     for( int i = 0; i < parameters.size(); i++ )
@@ -596,7 +596,7 @@ public class ExtensionTransformer extends TreeTranslator
    * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
    * but the association of the structural interface with the receiver is lost.  For example:
    * <pre>
-   *   Person person = Person.create(); // Person is a JsonSourceProducer interface; the rumtime type of person here is really just a Map (or Binding)
+   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the rumtime type of person here is really just a Map (or Binding)
    *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPerosnExt extension methods class
    *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
    * </pre>

@@ -14,9 +14,9 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.host.ITypeLoader;
-import manifold.api.sourceprod.ClassType;
-import manifold.api.sourceprod.ITypeProcessor;
-import manifold.api.sourceprod.JavaSourceProducer;
+import manifold.api.type.ClassType;
+import manifold.api.type.ITypeProcessor;
+import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Extension;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
@@ -24,7 +24,7 @@ import manifold.util.StreamUtil;
 
 /**
  */
-public class ExtSourceProducer extends JavaSourceProducer<Model> implements ITypeProcessor
+public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeProcessor
 {
   static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
