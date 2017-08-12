@@ -102,10 +102,11 @@ public class ManifoldCollectionExt
   /**
    * Adds all elements of the given Iterable to this Collection
    */
-  public static <E> boolean addAll( @This Collection<E> thiz, Iterable<E> elements )
+  public static <E> boolean addAll( @This Collection<E> thiz, Iterable<? extends E> elements )
   {
     if( elements instanceof Collection )
     {
+      //noinspection unchecked
       return thiz.addAll( (Collection<? extends E>)elements );
     }
     else

@@ -90,7 +90,7 @@ public class ManIterableExt
   {
     if( thiz instanceof List )
     {
-      if( ((List)thiz).isEmpty() )
+      if( ((List<T>)thiz).isEmpty() )
       {
         return null;
       }
@@ -201,7 +201,7 @@ public class ManIterableExt
   {
     if( thiz instanceof List )
     {
-      return ((List)thiz).isEmpty() ? null : ((List<T>)thiz).get( ((List)thiz).size() - 1 );
+      return ((List<T>)thiz).isEmpty() ? null : ((List<T>)thiz).get( ((List)thiz).size() - 1 );
     }
     else
     {
@@ -242,7 +242,7 @@ public class ManIterableExt
   {
     if( thiz instanceof List )
     {
-      return thiz.single();
+      return ((List<T>)thiz).single();
     }
     else
     {
@@ -293,7 +293,7 @@ public class ManIterableExt
   {
     if( thiz instanceof List )
     {
-      return ((List)thiz).size() == 1 ? ((List<T>)thiz).get( 0 ) : null;
+      return ((List<T>)thiz).size() == 1 ? ((List<T>)thiz).get( 0 ) : null;
     }
     else
     {
@@ -664,7 +664,7 @@ public class ManIterableExt
 
   private static <T> int collectionSizeOrDefault( Iterable<T> thiz, int def )
   {
-    return thiz instanceof Collection ? ((Collection)thiz).size() : def;
+    return thiz instanceof Collection ? ((Collection<T>)thiz).size() : def;
   }
 
   /**
@@ -789,7 +789,7 @@ public class ManIterableExt
    */
   public static <T> List<T> subList( @This Iterable<T> thiz, int fromIndex, int toIndex )
   {
-    if( thiz instanceof Collection && ((Collection)thiz).isEmpty() )
+    if( thiz instanceof Collection && ((Collection<T>)thiz).isEmpty() )
     {
       return emptyList();
     }
@@ -797,7 +797,7 @@ public class ManIterableExt
     if( thiz instanceof List )
     {
       //noinspection unchecked
-      return ((List)thiz).subList( fromIndex, !toEnd ? toIndex : ((List)thiz).size() );
+      return ((List<T>)thiz).subList( fromIndex, !toEnd ? toIndex : ((List<T>)thiz).size() );
     }
     ArrayList<T> list = new ArrayList<>();
     Iterator<T> iter = thiz.iterator();
