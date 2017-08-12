@@ -571,6 +571,11 @@ public class ManIterableExt
    */
   public static <T> int count( @This Iterable<T> thiz )
   {
+    if( thiz instanceof Collection )
+    {
+      return ((Collection<T>)thiz).size();
+    }
+
     int count = 0;
     for( T element : thiz )
     {

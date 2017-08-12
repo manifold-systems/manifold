@@ -12,9 +12,11 @@ public class ManIterableExtTest extends ExtensionManifoldTest {
 
   public void testCount() {
     Iterable<String> iter = makeTestIterable();
-
     assertEquals(4, iter.count());
     assertEquals(3, iter.count(e -> e.contains("c")));
+
+    iter = makeNonCollection();
+    assertEquals(4, iter.count());
   }
 
   public void testFilterIndexedTo() {
