@@ -134,7 +134,7 @@ public class ManIterableExt
   {
     if( thiz instanceof List )
     {
-      return thiz.last();
+      return ((List<T>)thiz).last();
     }
     else
     {
@@ -522,7 +522,7 @@ public class ManIterableExt
   public static <T> Set<T> intersect( @This Iterable<T> thiz, Iterable<T> other )
   {
     Set<T> set = thiz.toSet();
-    set.retainAll( coerceToUniqueCollection( thiz, other ) );
+    set.retainAll( coerceToUniqueCollection( other ) );
     return set;
   }
 
@@ -534,7 +534,7 @@ public class ManIterableExt
   public static <T> Set<T> subtract( @This Iterable<T> thiz, Iterable<T> other )
   {
     Set<T> set = thiz.toSet();
-    set.removeAll( coerceToUniqueCollection( thiz, other ) );
+    set.removeAll( coerceToUniqueCollection( other ) );
     return set;
   }
 
@@ -552,14 +552,14 @@ public class ManIterableExt
     return set;
   }
 
-  private static <T> Collection<T> coerceToUniqueCollection( Iterable<T> thiz, Iterable<T> source )
+  private static <T> Collection<T> coerceToUniqueCollection( Iterable<T> source )
   {
-    if( thiz instanceof Collection && ((Collection)thiz).size() < 2 )
+    if( source instanceof Collection && ((Collection)source).size() <= 1 )
     {
-      return (Collection<T>)thiz;
+      return (Collection<T>)source;
     }
     HashSet<T> set = new HashSet<>();
-    for( T elem : thiz )
+    for( T elem : source )
     {
       set.add( elem );
     }

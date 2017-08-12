@@ -57,6 +57,25 @@ public class SrcAnnotationExpression extends SrcExpression<SrcAnnotationExpressi
   {
     return _arguments;
   }
+  public SrcArgument getArgument( String paramName )
+  {
+    for( SrcArgument arg: _arguments )
+    {
+      String argName = arg.getSimpleName();
+      if( argName != null && !argName.isEmpty() )
+      {
+        if( paramName.equals( argName ) )
+        {
+          return arg;
+        }
+      }
+      else if( paramName == null || paramName.isEmpty() || paramName.equals( "value" ) )
+      {
+        return arg;
+      }
+    }
+    return null;
+  }
 
   public StringBuilder render( StringBuilder sb, int indent )
   {

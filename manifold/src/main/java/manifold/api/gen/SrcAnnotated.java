@@ -136,6 +136,17 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
   {
     return _annotations;
   }
+  public SrcAnnotationExpression getAnnotation( Class<? extends Annotation> annoClass )
+  {
+    for( SrcAnnotationExpression anno: getAnnotations() )
+    {
+      if( anno.getAnnotationType().equals( annoClass.getName() ) )
+      {
+        return anno;
+      }
+    }
+    return null;
+  }
 
   public boolean hasAnnotation( Class<? extends Annotation> annoClass )
   {

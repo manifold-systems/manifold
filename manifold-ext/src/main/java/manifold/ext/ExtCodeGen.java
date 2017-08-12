@@ -9,7 +9,7 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.tools.Diagnostic;
@@ -216,7 +216,7 @@ class ExtCodeGen
 
   private Set<String> findAllExtensions()
   {
-    Set<String> fqns = new HashSet<>();
+    Set<String> fqns = new LinkedHashSet<>();
 
     PathCache pathCache = ModulePathCache.instance().get( getModule() );
     for( IFile file : _model.getFiles() )
@@ -375,7 +375,7 @@ class ExtCodeGen
 
   private boolean reportError( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
   {
-    boolean duplicate = false;
+    AbstractSrcMethod duplicate = null;
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
     {
@@ -392,12 +392,12 @@ class ExtCodeGen
             continue outer;
           }
         }
-        duplicate = true;
+        duplicate = m;
         break;
       }
     }
 
-    if( !duplicate )
+    if( duplicate == null )
     {
       return false;
     }
@@ -405,9 +405,19 @@ class ExtCodeGen
     JavacElements elems = JavacElements.instance( javacTask.getContext() );
     Symbol.ClassSymbol sym = elems.getTypeElement( ((SrcClass)method.getOwner()).getName() );
     JavaFileObject file = sym.sourcefile;
-    errorHandler.report( new JavacDiagnostic( new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.ERROR, 0, 0, 0,
-                                              "Illegal extension method. '" + method.getSimpleName() +
-                                              "' duplicates a method in the extended class" ) );
+    SrcAnnotationExpression anno = duplicate.getAnnotation( ExtensionMethod.class );
+    if( anno != null )
+    {
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.WARNING, 0, 0, 0,
+                                                "Illegal extension method. '" + method.getSimpleName() + " from " + ((SrcClass)method.getOwner()).getName() +
+                                                  "' duplicates another extension method from " + anno.getArgument( ExtensionMethod.extensionClass ).getValue() ) );
+    }
+    else
+    {
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.WARNING, 0, 0, 0,
+                                                "Illegal extension method. '" + method.getSimpleName() + " from " + ((SrcClass)method.getOwner()).getName() +
+                                                  "' duplicates a method in the extended class, " + extendedType.getName() ) );
+    }
     return true;
   }
 
