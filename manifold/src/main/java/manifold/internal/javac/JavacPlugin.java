@@ -305,7 +305,13 @@ public class JavacPlugin implements Plugin, TaskListener
     File file = new File( inputFile.toUri() );
     String name = file.getName();
     name = name.substring( 0, name.lastIndexOf( '.' ) );
-    String packageName = findPackageInFile( inputFile ).toString();
+    Name pkg = findPackageInFile( inputFile );
+    if( pkg == null )
+    {
+      Log.instance( _ctx ).warning( "Failed to find package for: " + file );
+      return null;
+    }
+    String packageName = pkg.toString();
     return packageName + '.' + name;
   }
 
@@ -400,6 +406,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private JCTree.JCCompilationUnit parse( JavaFileObject file ) throws IOException
   {
+    JavaFileObject prev = Log.instance( _ctx ).useSource( file );
     try
     {
       Method parse = JavaCompiler.class.getDeclaredMethod( "parse", JavaFileObject.class, CharSequence.class );
@@ -409,6 +416,10 @@ public class JavacPlugin implements Plugin, TaskListener
     catch( Exception e )
     {
       throw new IOException( e );
+    }
+    finally
+    {
+      Log.instance( _ctx ).useSource( prev );
     }
   }
 }
