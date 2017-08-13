@@ -1,12 +1,9 @@
 package extensions.java.util.stream.Stream;
 
 import manifold.api.ExtensionManifoldTest;
-import org.junit.Test;
 
 import java.util.*;
 import java.util.stream.Stream;
-
-import static org.junit.Assert.assertEquals;
 
 public class ManifoldStreamCollectionsExtTest extends ExtensionManifoldTest {
 

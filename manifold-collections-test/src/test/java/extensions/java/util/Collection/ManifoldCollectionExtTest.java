@@ -1,16 +1,9 @@
 package extensions.java.util.Collection;
 
-//import org.junit.Test;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
-import junit.framework.TestCase;
 import manifold.api.ExtensionManifoldTest;
-import org.junit.Test;
-
-
-import static org.junit.Assert.assertEquals;
 
 public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
   @Override
@@ -27,19 +20,19 @@ public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
   }
 
   public void testAllMatch() {
-    List<String> c = makeTestCollection();
+    Collection<String> c = makeTestCollection();
     assertTrue(c.allMatch(e -> e.length() > 3));
     assertFalse(c.allMatch(e -> e.length() > 4));
   }
 
   public void testAnyMatch() {
-    List<String> c = makeTestCollection();
+    Collection<String> c = makeTestCollection();
     assertTrue(c.anyMatch(e -> e.length() > 5));
     assertFalse(c.anyMatch(e -> e.length() > 6));
   }
 
   public void testCollect() {
-    List<String> c = makeTestCollection();
+    Collection<String> c = makeTestCollection();
     assertEquals(new HashSet<>(makeTestCollection()), c.collect(Collectors.toSet()));
   }
 
@@ -54,7 +47,7 @@ public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
   public void testGroupingBy() {
     Map<Boolean, List<String>> result = new HashMap<>();
     result.put(true, Arrays.asList("scott", "carson", "luca"));
-    result.put(false, Arrays.asList("kyle"));
+    result.put(false, Collections.singletonList("kyle"));
     assertEquals(result, makeTestCollection().groupingBy(e -> e.contains("c")));
   }
 
@@ -111,18 +104,14 @@ public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
     resultV.put( 'k', 4 );
     resultV.put( 'c', 6 );
     resultV.put( 'l', 4 );
-    assertEquals(resultV, makeTestCollection().toMap( e -> e.charAt(0), e -> e.length() ));
+    assertEquals(resultV, makeTestCollection().toMap( e -> e.charAt(0), String::length));
   }
 
-  private List<String> makeTestCollection() {
+  private Collection<String> makeTestCollection() {
     return Arrays.asList("scott", "kyle", "carson", "luca");
   }
 
   private Iterable<String> makeTestIterable() {
     return Arrays.asList("fred", "barney");
-  }
-
-  private <T> List<T> lst(T... args) {
-    return Arrays.asList(args);
   }
 }
