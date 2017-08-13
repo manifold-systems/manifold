@@ -1,5 +1,7 @@
 package extensions.java.util.stream.Stream;
 
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 
@@ -16,15 +18,12 @@ public class ManifoldStreamCollectionsExt
     return thiz.collect(Collectors.toList());
   }
 
+  /**
+   * @return A set containing all the elements from the stream, retaining the order of the elements visited.
+   */
   public static <T> Set<T> toSet(@This Stream<T> thiz)
   {
-    return thiz.collect(Collectors.toSet());
-  }
-
-  public static <T> SortedSet<T> toSortedSet(@This Stream<T> thiz) {
-    TreeSet<T> es = new TreeSet<>();
-    thiz.forEachOrdered(es::add);
-    return es;
+    return thiz.collect( (Supplier<Set<T>>)LinkedHashSet::new, Set::add, Set::addAll);
   }
 
   public static <T, K, V> Map<K, V> toMap(@This Stream<T> thiz, Function<? super T, K> keyMapper, Function<? super T, V> valueMapper)

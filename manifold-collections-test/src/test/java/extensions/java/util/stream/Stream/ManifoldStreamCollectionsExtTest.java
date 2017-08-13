@@ -20,8 +20,6 @@ public class ManifoldStreamCollectionsExtTest
 
         assertEquals( new HashSet<>(stream(sampleList).toList()), stream(sampleList).toSet());
 
-        assertEquals( new TreeSet<>(stream(sampleList).toList()), stream(sampleList).toSortedSet());
-
         Map<Integer, String> byLen = stream(sampleList).toMap( String::length);
         assertEquals("a", byLen.get(1));
         assertEquals("aaa", byLen.get(3));

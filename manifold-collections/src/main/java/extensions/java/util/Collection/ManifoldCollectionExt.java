@@ -154,11 +154,6 @@ public class ManifoldCollectionExt
     return new LinkedHashSet<>( thiz );
   }
 
-  public static <E> SortedSet<E> toSortedSet( @This Collection<E> thiz )
-  {
-    return new TreeSet<>( thiz );
-  }
-
   public static <E, K, V> Map<K, V> toMap( @This Collection<E> thiz, Function<? super E, K> keyMapper, Function<? super E, V> valueMapper )
   {
     return thiz.stream().collect( Collectors.toMap( keyMapper, valueMapper ) );

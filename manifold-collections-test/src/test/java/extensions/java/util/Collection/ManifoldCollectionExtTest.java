@@ -4,67 +4,125 @@ package extensions.java.util.Collection;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import junit.framework.TestCase;
+import manifold.api.ExtensionManifoldTest;
 import org.junit.Test;
 
 
 import static org.junit.Assert.assertEquals;
 
-public class ManifoldCollectionExtTest {
+public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
+  @Override
+  public void testCoverage() {
+    testCoverage(ManifoldCollectionExt.class);
+  }
 
-    @Test
-    public void passthroughs(){
+  public void testAddAll() {
+    List<String> c = new ArrayList<>(makeTestCollection());
+    c.addAll(makeTestIterable());
+    List<String> expected = new ArrayList<>(makeTestCollection());
+    expected.addAll((List<String>) makeTestIterable());
+    assertEquals(expected, c);
+  }
 
-        // straight pass through to stream tests
-        assertEquals(lst(1, 2, 3), lst("a", "aa", "aaa").map(String::length).toList());
-        assertEquals(lst("aa", "aaa"), lst("a", "aa", "aaa").filter(s -> s.length() > 1).toList());
-        assertEquals("aaaaaa", lst("a", "aa", "aaa").collect(Collectors.joining()));
+  public void testAllMatch() {
+    List<String> c = makeTestCollection();
+    assertTrue(c.allMatch(e -> e.length() > 3));
+    assertFalse(c.allMatch(e -> e.length() > 4));
+  }
 
-        assertEquals(lst("a", "b", "c"), lst("b", "c", "a").sorted().toList());
-        assertEquals(lst("c", "b", "a"), lst("b", "c", "a").sorted(Comparator.reverseOrder()).toList());
-        assertEquals("bca", lst("b", "c", "a").reduce("", String::concat));
+  public void testAnyMatch() {
+    List<String> c = makeTestCollection();
+    assertTrue(c.anyMatch(e -> e.length() > 5));
+    assertFalse(c.anyMatch(e -> e.length() > 6));
+  }
 
-        assertEquals(true, lst("b", "c", "a").anyMatch(s -> s.equals("a")));
-        assertEquals(true, lst("b", "c", "a").allMatch(s -> s.length() > 0));
-        assertEquals(true, lst("b", "c", "a").noneMatch(s -> s.length() == 0));
+  public void testCollect() {
+    List<String> c = makeTestCollection();
+    assertEquals(new HashSet<>(makeTestCollection()), c.collect(Collectors.toSet()));
+  }
 
-    }
+  public void testDistinct() {
+    assertEquals(Arrays.asList('a', 'b', 'c').toSet(), Arrays.asList('a', 'b', 'b', 'c').distinct().toSet());
+  }
 
-    @Test
-    public void removeOptional(){
+  public void testFilter() {
+    assertEquals(Arrays.asList("scott", "carson", "luca"), makeTestCollection().filter(e -> e.contains("c")).toList());
+  }
 
-        // remove optional tests
-        assertEquals("bca", lst("b", "c", "a").reduce(String::concat));
-        assertEquals("c", lst("b", "c", "a").max(String::compareTo));
-        assertEquals("a", lst("b", "c", "a").min(String::compareTo));
-    }
+  public void testGroupingBy() {
+    Map<Boolean, List<String>> result = new HashMap<>();
+    result.put(true, Arrays.asList("scott", "carson", "luca"));
+    result.put(false, Arrays.asList("kyle"));
+    assertEquals(result, makeTestCollection().groupingBy(e -> e.contains("c")));
+  }
 
-    @Test
-    public void embellishments(){
+  public void testJoin() {
+    assertEquals("scott; kyle; carson; luca", makeTestCollection().join("; "));
+  }
 
-        // embellishments
-        List<String> lst = lst("a", "aa", "aaa");
-        assertEquals("a,aa,aaa", lst.join(","));
-        assertEquals(lst, lst.toList());
-        assertEquals(new HashSet<>(lst), lst.toSet());
-        assertEquals(new TreeSet<>(lst), lst.toSortedSet());
+  public void testMap() {
+    assertEquals(Arrays.asList('s', 'k', 'c', 'l'), makeTestCollection().map(e -> e.charAt(0)).toList());
+  }
 
-        Map<Integer, String> byLen = lst.toMap(String::length);
-        assertEquals("a", byLen.get(1));
-        assertEquals("aaa", byLen.get(3));
+  public void testMax() {
+    assertEquals("scott", makeTestCollection().max(String::compareTo));
+  }
 
-        Map<Integer, Integer> hashCodeByLen = lst.toMap(String::length, String::hashCode);
-        assertEquals((Integer) "a".hashCode(), hashCodeByLen.get(1));
-        assertEquals((Integer) "aaa".hashCode(), hashCodeByLen.get(3));
+  public void testMin() {
+    assertEquals("carson", makeTestCollection().min(String::compareTo));
+  }
 
-        Map<Integer, List<String>> stringsByLength = lst("a", "b", "aa", "ab", "abc").groupingBy(String::length);
-        assertEquals(2, stringsByLength.get(1).size());
-        assertEquals(2, stringsByLength.get(2).size());
-        assertEquals(1, stringsByLength.get(3).size());
-        assertEquals(null, stringsByLength.get(4));
+  public void testNoneMatch() {
+    assertTrue(makeTestCollection().noneMatch(e -> e.contains("z")));
+    assertFalse(makeTestCollection().noneMatch(e -> e.contains("s")));
+  }
 
-    }
+  public void testReduce() {
+    assertEquals("scottkylecarsonluca", makeTestCollection().reduce((e, f) -> e + f));
+    String result = "foo";
+    assertEquals("fooscottkylecarsonluca", makeTestCollection().reduce(result, (e, f) -> e + f));
+  }
 
-    private <T> List<T> lst(T... args) {
-        return Arrays.asList(args);
-    }
+  public void testSorted() {
+    assertEquals(Arrays.asList("carson", "kyle", "luca", "scott"), makeTestCollection().sorted().toList());
+  }
+
+  public void testToList() {
+    assertEquals(makeTestCollection(), makeTestCollection().toList());
+    assertEquals(makeTestCollection(), makeTestCollection().toSet().toList());
+  }
+
+  public void testToSet() {
+    assertEquals(makeTestCollection(), makeTestCollection().toSet().toList());
+  }
+
+  public void testToMap() {
+    Map<Character, String> result = new HashMap<>();
+    result.put( 's', "scott" );
+    result.put( 'k', "kyle" );
+    result.put( 'c', "carson" );
+    result.put( 'l', "luca" );
+    assertEquals(result, makeTestCollection().toMap( e -> e.charAt(0)));
+
+    Map<Character, Integer> resultV = new HashMap<>();
+    resultV.put( 's', 5 );
+    resultV.put( 'k', 4 );
+    resultV.put( 'c', 6 );
+    resultV.put( 'l', 4 );
+    assertEquals(resultV, makeTestCollection().toMap( e -> e.charAt(0), e -> e.length() ));
+  }
+
+  private List<String> makeTestCollection() {
+    return Arrays.asList("scott", "kyle", "carson", "luca");
+  }
+
+  private Iterable<String> makeTestIterable() {
+    return Arrays.asList("fred", "barney");
+  }
+
+  private <T> List<T> lst(T... args) {
+    return Arrays.asList(args);
+  }
 }
