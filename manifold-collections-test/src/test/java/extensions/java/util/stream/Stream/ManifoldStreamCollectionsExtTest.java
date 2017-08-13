@@ -1,5 +1,6 @@
 package extensions.java.util.stream.Stream;
 
+import manifold.api.ExtensionManifoldTest;
 import org.junit.Test;
 
 import java.util.*;
@@ -7,35 +8,47 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
-public class ManifoldStreamCollectionsExtTest
-{
+public class ManifoldStreamCollectionsExtTest extends ExtensionManifoldTest {
 
-    @Test
-    public void embellishments(){
+  @Override
+  public void testCoverage() {
+    testCoverage(ManifoldStreamCollectionsExt.class);
+  }
 
-        // embellishments
-        List<String> sampleList = Arrays.asList("a", "aa", "aaa");
+  public void testGroupingBy() {
+    Map<Integer, List<String>> stringsByLength = stream(Arrays.asList("a", "b", "aa", "ab", "abc")).groupingBy(String::length);
+    assertEquals(2, stringsByLength.get(1).size());
+    assertEquals(2, stringsByLength.get(2).size());
+    assertEquals(1, stringsByLength.get(3).size());
+    assertEquals(null, stringsByLength.get(4));
+  }
 
-        assertEquals( sampleList, stream(sampleList).toList());
+  public void testToList() {
+    List<String> sampleList = makeTestList();
+    assertEquals(sampleList, stream(sampleList).toList());
+  }
 
-        assertEquals( new HashSet<>(stream(sampleList).toList()), stream(sampleList).toSet());
+  public void testToSet() {
+    List<String> sampleList = makeTestList();
+    assertEquals(new HashSet<>(stream(sampleList).toList()), stream(sampleList).toSet());
+  }
 
-        Map<Integer, String> byLen = stream(sampleList).toMap( String::length);
-        assertEquals("a", byLen.get(1));
-        assertEquals("aaa", byLen.get(3));
+  public void testToMap() {
+    List<String> sampleList = makeTestList();
+    Map<Integer, String> byLen = stream(sampleList).toMap(String::length);
+    assertEquals("a", byLen.get(1));
+    assertEquals("aaa", byLen.get(3));
 
-        Map<Integer, Integer> hashCodeByLen = stream(sampleList).toMap( String::length, String::hashCode);
-        assertEquals((Integer) "a".hashCode(), hashCodeByLen.get(1));
-        assertEquals((Integer) "aaa".hashCode(), hashCodeByLen.get(3));
+    Map<Integer, Integer> hashCodeByLen = stream(sampleList).toMap(String::length, String::hashCode);
+    assertEquals((Integer) "a".hashCode(), hashCodeByLen.get(1));
+    assertEquals((Integer) "aaa".hashCode(), hashCodeByLen.get(3));
+  }
 
-        Map<Integer, List<String>> stringsByLength = stream(Arrays.asList("a", "b", "aa", "ab", "abc")).groupingBy(String::length);
-        assertEquals(2, stringsByLength.get(1).size());
-        assertEquals(2, stringsByLength.get(2).size());
-        assertEquals(1, stringsByLength.get(3).size());
-        assertEquals(null, stringsByLength.get(4));
-    }
+  private List<String> makeTestList() {
+    return Arrays.asList("a", "aa", "aaa");
+  }
 
-    private <T> Stream<T> stream(Collection<T> c) {
-        return c.stream();
-    }
+  private <T> Stream<T> stream(Collection<T> c) {
+    return c.stream();
+  }
 }
