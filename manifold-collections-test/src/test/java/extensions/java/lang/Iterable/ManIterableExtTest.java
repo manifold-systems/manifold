@@ -1,6 +1,6 @@
 package extensions.java.lang.Iterable;
 
-import manifold.api.ExtensionManifoldTest;
+import manifold.test.api.ExtensionManifoldTest;
 import manifold.util.Pair;
 
 import java.util.*;

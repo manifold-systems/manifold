@@ -1,4 +1,4 @@
-package manifold.api;
+package manifold.test.api;
 
 import junit.framework.TestCase;
 
@@ -29,7 +29,7 @@ public abstract class ExtensionManifoldTest extends TestCase {
           getClass().getMethod("test" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
         } catch (Exception e) {
           String fullDesc = m.toString();
-          untested.add(new StringBuilder("Untested: ").append(fullDesc.substring(fullDesc.indexOf('.' + m.getName() + '(') + 1)).toString());
+          untested.add( "Untested: " + fullDesc.substring( fullDesc.indexOf( '.' + m.getName() + '(' ) + 1 ) );
         }
       }
     }

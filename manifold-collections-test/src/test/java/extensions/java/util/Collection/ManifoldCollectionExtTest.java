@@ -3,7 +3,7 @@ package extensions.java.util.Collection;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import manifold.api.ExtensionManifoldTest;
+import manifold.test.api.ExtensionManifoldTest;
 
 public class ManifoldCollectionExtTest extends ExtensionManifoldTest {
   @Override

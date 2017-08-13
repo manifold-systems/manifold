@@ -1,6 +1,6 @@
 package extensions.java.util.stream.Stream;
 
-import manifold.api.ExtensionManifoldTest;
+import manifold.test.api.ExtensionManifoldTest;
 
 import java.util.*;
 import java.util.stream.Stream;
