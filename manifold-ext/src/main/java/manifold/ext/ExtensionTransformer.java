@@ -68,7 +68,7 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
-    if( TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
+    if( tree.sym != null && TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       tree.sym = objectSym;

@@ -3,6 +3,8 @@ package manifold.internal.javac;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -45,7 +47,19 @@ public class TypeProcessor extends CompiledTypeProcessor
       {
         JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing: " + element.getQualifiedName() );
 
-        ((ITypeProcessor)sp).process( fqn, this, issueReporter );
+        try
+        {
+          ((ITypeProcessor)sp).process( fqn, this, issueReporter );
+        }
+        catch( Throwable e )
+        {
+          StringWriter stackTrace = new StringWriter();
+          e.printStackTrace( new PrintWriter( stackTrace ) );
+          issueReporter.reportError( "Fatal error processing with Manifold type processor: " + sp.getClass().getName() +
+                                     "\non type: " + fqn +
+                                     "\nPlease report the error with the accompanying stack trace.\n" + stackTrace );
+          throw e;
+        }
       }
     }
   }

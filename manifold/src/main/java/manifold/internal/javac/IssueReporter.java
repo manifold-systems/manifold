@@ -8,6 +8,7 @@ import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import manifold.util.JavacDiagnostic;
 
 /**
  */
@@ -19,6 +20,19 @@ public class IssueReporter<T> implements DiagnosticListener<T>
   public IssueReporter( Log issueLogger )
   {
     _issueLogger = issueLogger;
+  }
+
+  public void reportInfo( String msg )
+  {
+    report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.NOTE, 0, 0, 0, msg ) );
+  }
+  public void reportWarning( String msg )
+  {
+    report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, msg ) );
+  }
+  public void reportError( String msg )
+  {
+    report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0, msg ) );
   }
 
   public void report( Diagnostic<? extends T> diagnostic )
