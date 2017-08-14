@@ -769,15 +769,15 @@ public class ManCharSequenceExt
 
   // indexOf
 
-  public static int indexOf( @This CharSequence thiz, char ch )
+  public static int indexOf( @This CharSequence thiz, int ch )
   {
     return thiz.indexOf( ch, 0, false );
   }
-  public static int indexOf( @This CharSequence thiz, char ch, boolean ignoreCase )
+  public static int indexOf( @This CharSequence thiz, int ch, boolean ignoreCase )
   {
     return thiz.indexOf( ch, 0, ignoreCase );
   }
-  public static int indexOf( @This CharSequence thiz, char ch, int startIndex )
+  public static int indexOf( @This CharSequence thiz, int ch, int startIndex )
   {
     return thiz.indexOf( ch, startIndex, false );
   }
@@ -788,10 +788,10 @@ public class ManCharSequenceExt
    *
    * @returns An index of the first occurrence of [char] or -1 if none is found.
    */
-  public static int indexOf( @This CharSequence thiz, char ch, int startIndex, boolean ignoreCase )
+  public static int indexOf( @This CharSequence thiz, int ch, int startIndex, boolean ignoreCase )
   {
     return (ignoreCase || !(thiz instanceof String))
-           ? indexOfAny( thiz, new char[]{ch}, startIndex, ignoreCase )
+           ? indexOfAny( thiz, new char[]{(char)ch}, startIndex, ignoreCase )
            : thiz.toString().indexOf( ch, startIndex );
   }
 
@@ -822,15 +822,15 @@ public class ManCharSequenceExt
            : thiz.toString().indexOf( string, startIndex );
   }
 
-  public static int lastIndexOf( @This CharSequence thiz, char ch )
+  public static int lastIndexOf( @This CharSequence thiz, int ch )
   {
     return thiz.lastIndexOf( ch, thiz.lastIndex(), false );
   }
-  public static int lastIndexOf( @This CharSequence thiz, char ch, boolean ignoreCase )
+  public static int lastIndexOf( @This CharSequence thiz, int ch, boolean ignoreCase )
   {
     return thiz.lastIndexOf( ch, thiz.lastIndex(), ignoreCase );
   }
-  public static int lastIndexOf( @This CharSequence thiz, char ch, int startIndex )
+  public static int lastIndexOf( @This CharSequence thiz, int ch, int startIndex )
   {
     return thiz.lastIndexOf( ch, startIndex, false );
   }
@@ -843,10 +843,10 @@ public class ManCharSequenceExt
    *
    * @returns An index of the first occurrence of [char] or -1 if none is found.
    */
-  public static int lastIndexOf( @This CharSequence thiz, char ch, int startIndex, boolean ignoreCase )
+  public static int lastIndexOf( @This CharSequence thiz, int ch, int startIndex, boolean ignoreCase )
   {
     return (ignoreCase || !(thiz instanceof String))
-           ? thiz.lastIndexOfAny( new char[]{ch}, startIndex, ignoreCase )
+           ? thiz.lastIndexOfAny( new char[]{(char)ch}, startIndex, ignoreCase )
            : thiz.toString().lastIndexOf( ch, startIndex );
   }
 

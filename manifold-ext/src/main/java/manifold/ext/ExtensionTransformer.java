@@ -596,11 +596,12 @@ public class ExtensionTransformer extends TreeTranslator
    * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
    * but the association of the structural interface with the receiver is lost.  For example:
    * <pre>
-   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the rumtime type of person here is really just a Map (or Binding)
+   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the runtime type of person here is really just a Map (or Binding)
    *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPerosnExt extension methods class
    *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
    * </pre>
    */
+  //## todo: this is inefficient, we should consider caching the methods by signature along with the interfaces
   public static Object invokeUnhandled( Object thiz, Class proxiedIface, String name, Class returnType, Class[] paramTypes, Object[] args )
   {
     Set<Class> ifaces = ID_MAP.get( thiz );

@@ -15,11 +15,7 @@ public class ManBufferedReaderExt
   /**
    * Returns a sequence of corresponding file lines.
    * <p>
-   * *Note*: the caller must close the underlying `BufferedReader`
-   * when the iteration is finished; as the user may not complete the iteration loop (e.g. using a method like find() or any() on the iterator
-   * may terminate the iteration early.
-   * <p>
-   * We suggest you try the method [useLines] instead which closes the stream when the processing is complete.
+   * *Note*: the caller must close the underlying `BufferedReader` when the iteration is finished
    *
    * @return a sequence of corresponding file lines. The sequence returned can be iterated only once.
    */

@@ -17,6 +17,11 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext-test</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-io</artifactId>
       <version>${project.version}</version>
     </dependency>
