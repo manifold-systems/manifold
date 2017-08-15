@@ -119,7 +119,7 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
   {
-    JavacTaskImpl javacTask = getJavacTask();
+    JavacTaskImpl javacTask = javacTaskOut != null && javacTaskOut[0] != null ? javacTaskOut[0] : getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
     if( compUnit != null )
     {

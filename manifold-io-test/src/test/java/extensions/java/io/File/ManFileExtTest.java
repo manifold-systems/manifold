@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Created by smckinney on 8/13/2017.
  */
 public class ManFileExtTest extends ExtensionManifoldTest {
   public void testCoverage() {

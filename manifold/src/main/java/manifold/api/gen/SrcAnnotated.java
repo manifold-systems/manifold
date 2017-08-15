@@ -219,6 +219,10 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
 
   protected String renderParameters( StringBuilder sb )
   {
+    return renderParameters( sb, false );
+  }
+  protected String renderParameters( StringBuilder sb, boolean forSignature )
+  {
     sb.append( '(' );
     for( int i = 0; i < _parameters.size(); i++ )
     {
@@ -228,7 +232,7 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
       }
       SrcParameter param = _parameters.get( i );
       boolean isVarArgs = i == _parameters.size() - 1 && (getModifiers() & 0x00000080) != 0; // Modifier.VARARGS
-      param.render( sb, 0, isVarArgs );
+      param.render( sb, 0, isVarArgs, forSignature );
     }
     sb.append( ')' );
     return "";

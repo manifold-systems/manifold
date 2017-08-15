@@ -211,7 +211,7 @@ public class ExtensionTransformer extends TreeTranslator
       }
       else if( i == 0 &&
                Modifier.isStatic( (int)methodModifiers ) &&
-               !Modifier.isPrivate( (int)methodModifiers ) &&
+               Modifier.isPublic( (int)methodModifiers ) &&
                param.type.toString().equals( extendedClassName ) )
       {
         _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an instance extension method?" );
