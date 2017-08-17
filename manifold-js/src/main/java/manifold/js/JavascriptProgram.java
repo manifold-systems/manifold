@@ -2,7 +2,10 @@ package manifold.js;
 
 import manifold.api.gen.*;
 import manifold.api.type.SourcePosition;
+import manifold.js.parser.Parser;
+import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.FunctionNode;
+import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
 
@@ -43,7 +46,7 @@ public class JavascriptProgram {
             srcMethod.body(new SrcStatementBlock()
                     .addStatement(
                             new SrcRawStatement()
-                                    .rawText("return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList(firstChild.toParamList()) + ");")));
+                                    .rawText("return (" + node.getReturnType() + ")invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList(firstChild.toParamList()) + ");")));
             clazz.addMethod(srcMethod);
 
         }
@@ -66,7 +69,9 @@ public class JavascriptProgram {
 
     public static ScriptEngine init(String programName) {
         ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
-        safe(() -> nashorn.eval(loadSrcForName(programName)));
+        Parser parser = new Parser(new Tokenizer(loadSrcForName(programName)));
+        Node programNode =  parser.parse();
+        safe(() -> nashorn.eval(programNode.genCode()));
         return nashorn;
     }
 

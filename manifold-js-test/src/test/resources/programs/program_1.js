@@ -1,3 +1,7 @@
+//==============================================================================
+// simple functions
+//==============================================================================
+
 // basic string
 function returnsString() {
   return "foo";
@@ -13,6 +17,10 @@ function returnsObject() {
   return {"foo" : "bar"};
 }
 
+// typed string
+function returnsStringAsString() : String {
+  return "foo";
+}
 
 // state in program should be statically maintained
 var x = 10

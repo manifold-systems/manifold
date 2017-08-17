@@ -26,4 +26,10 @@ public class BasicProgramTest {
     assertEquals("bar", o.get("foo"));
   }
 
+  @Test
+  public void testBasicTypedReturn() {
+    String str = program_1.returnsStringAsString();
+    assertEquals("foo", str);
+  }
+
 }
