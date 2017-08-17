@@ -148,7 +148,7 @@ public class ManClassesUrlConnection extends URLConnection
         // may load, if a source-based one hasn't already loaded.
         try
         {
-          Pair<JavaFileObject, String> pair = JavaParser.instance().findJavaSource( fqn, null );
+          Pair<JavaFileObject, String> pair = JavaParser.instance().findJavaSource( fqn, new DiagnosticCollector<>() );
           if( pair != null )
           {
             _javaSrcFile = pair.getFirst();

@@ -33,6 +33,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
+import manifold.ExtIssueMsg;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.This;
@@ -176,12 +177,6 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    List<JCTree.JCVariableDecl> parameters = tree.getParameters();
-    if( parameters.length() == 0 )
-    {
-      return;
-    }
-
     String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
     if( !extendedClassName.startsWith( ExtensionManifold.EXTENSIONS_PACKAGE + '.' ) )
     {
@@ -191,6 +186,7 @@ public class ExtensionTransformer extends TreeTranslator
     extendedClassName = extendedClassName.substring( ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
 
     boolean thisAnnoFound = false;
+    List<JCTree.JCVariableDecl> parameters = tree.getParameters();
     for( int i = 0; i < parameters.size(); i++ )
     {
       JCTree.JCVariableDecl param = parameters.get( i );
@@ -201,12 +197,12 @@ public class ExtensionTransformer extends TreeTranslator
 
         if( i != 0 )
         {
-          _tp.report( param, Diagnostic.Kind.ERROR, "@This must target only the first parameter of an extension method" );
+          _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_THIS_FIRST.get() );
         }
 
         if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
-          _tp.report( param, Diagnostic.Kind.ERROR, "Expecting type '" + extendedClassName + "' for @This parameter" );
+          _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
         }
       }
       else if( i == 0 &&
@@ -214,7 +210,7 @@ public class ExtensionTransformer extends TreeTranslator
                Modifier.isPublic( (int)methodModifiers ) &&
                param.type.toString().equals( extendedClassName ) )
       {
-        _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an instance extension method?" );
+        _tp.report( param, Diagnostic.Kind.WARNING, ExtIssueMsg.MSG_MAYBE_MISSING_THIS.get() );
       }
     }
 
@@ -223,12 +219,12 @@ public class ExtensionTransformer extends TreeTranslator
       long methodModifiers = tree.getModifiers().flags;
       if( !Modifier.isStatic( (int)methodModifiers ) )
       {
-        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must be declared 'static'" );
+        _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_MUST_BE_STATIC.get( tree.getName() ) );
       }
 
       if( Modifier.isPrivate( (int)methodModifiers ) )
       {
-        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must not be declared 'private'" );
+        _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_MUST_NOT_BE_PRIVATE.get( tree.getName() ) );
       }
     }
   }

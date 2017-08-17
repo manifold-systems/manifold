@@ -15,6 +15,7 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
@@ -373,15 +374,13 @@ class ExtCodeGen
     SrcAnnotationExpression anno = duplicate.getAnnotation( ExtensionMethod.class );
     if( anno != null )
     {
-      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.WARNING, 0, 0, 0,
-                                                "Illegal extension method. '" + method.signature() + " from " + ((SrcClass)method.getOwner()).getName() +
-                                                  "' duplicates another extension method from " + anno.getArgument( ExtensionMethod.extensionClass ).getValue() ) );
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
+                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_DUPLICATION.get( method.signature(), ((SrcClass)method.getOwner()).getName(), anno.getArgument( ExtensionMethod.extensionClass ).getValue()) ) );
     }
     else
     {
-      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.WARNING, 0, 0, 0,
-                                                "Illegal extension method. '" + method.signature() + " from " + ((SrcClass)method.getOwner()).getName() +
-                                                  "' duplicates a method in the extended class, " + extendedType.getName() ) );
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
+                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_SHADOWS.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
     }
     return true;
   }

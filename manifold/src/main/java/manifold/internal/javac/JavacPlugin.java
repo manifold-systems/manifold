@@ -40,6 +40,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
 
 /**
@@ -279,7 +280,7 @@ public class JavacPlugin implements Plugin, TaskListener
       else
       {
         //noinspection unchecked
-        getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, "Could not find type for file: " + inputFile ) );
+        getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, IssueMsg.MSG_COULD_NOT_FIND_TYPE_FOR_FILE.get( inputFile ) ) );
       }
     }
   }
@@ -287,7 +288,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private boolean isPhysicalFile( JavaFileObject inputFile )
   {
     URI uri = inputFile.toUri();
-    return uri != null && uri.getScheme().equalsIgnoreCase( "file" );
+    return uri != null && uri.getScheme() != null && uri.getScheme().equalsIgnoreCase( "file" );
   }
 
   private String derivePath( String type, JavaFileObject inputFile )

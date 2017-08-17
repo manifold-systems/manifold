@@ -80,16 +80,16 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
         int iDot = extendedType.lastIndexOf( '.' );
         if( iDot > 0 )
         {
-          //extendedType = extendedType.substring( 0, iDot );
           try
           {
-            // barf
-            if( file.getExtension().equals( "java" ) )
+            //## note: this is pretty sloppy science here, but we don't want to parse java or use asm at this point
+
+            if( file.getExtension().equalsIgnoreCase( "java" ) )
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
               return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() );
             }
-            else
+            else // .class file
             {
               String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
               return content.contains( Extension.class.getName().replace( '.', '/' ) );
