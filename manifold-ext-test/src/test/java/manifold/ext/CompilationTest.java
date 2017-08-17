@@ -35,7 +35,7 @@ import manifold.util.StreamUtil;
 
 /**
  */
-public class TestCompilation extends TestCase
+public class CompilationTest extends TestCase
 {
   public void testCompilation() throws ClassNotFoundException, IllegalAccessException, InstantiationException
   {
@@ -52,7 +52,7 @@ public class TestCompilation extends TestCase
                                                                       throw new RuntimeException( e1 );
                                                                     }
                                                                   } ).toArray( URL[]::new ), null );
-    Class<?> cls = Class.forName( "manifold.ext.TestCompilation$Tests", true, cl );
+    Class<?> cls = Class.forName( Tests.class.getName(), true, cl );
     cls.newInstance();
   }
 
@@ -73,8 +73,24 @@ public class TestCompilation extends TestCase
 
     public void testCompilation() throws IOException, URISyntaxException
     {
-      initCompiler();
+      ClassLoader prevLoader = Thread.currentThread().getContextClassLoader();
+      Thread.currentThread().setContextClassLoader( getClass().getClassLoader() );
+      try
+      {
+        initCompiler();
 
+        runTests();
+      }
+      finally
+      {
+        Thread.currentThread().setContextClassLoader( prevLoader );
+        //noinspection ResultOfMethodCallIgnored
+        _outputDir.delete();
+      }
+    }
+
+    private void runTests() throws IOException, URISyntaxException
+    {
       compileFile( _javacTool, _fm, "/extensions/abc/benis_png/MyBenis_pngExt_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_EXTENSION_SHADOWS, 1 ),
                    new Pair<>( ExtIssueMsg.MSG_MAYBE_MISSING_THIS, 19 ) );
@@ -96,7 +112,6 @@ public class TestCompilation extends TestCase
       _javacTool = JavacTool.create();
       DiagnosticCollector<JavaFileObject> dc = new DiagnosticCollector<>();
       _fm = _javacTool.getStandardFileManager( dc, Locale.getDefault(), Charset.defaultCharset() );
-      Thread.currentThread().setContextClassLoader( getClass().getClassLoader() );
       URLClassLoader loader = (URLClassLoader)getClass().getClassLoader();
       List<File> classpath = Arrays.stream( loader.getURLs() ).map( url ->
                                                                     {
