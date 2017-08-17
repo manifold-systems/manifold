@@ -24,11 +24,11 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
   public int size;
 
   /**
-   * Constructs an empty list with the specified initial capacity.
+   * Constructs an empty list with the specified demo capacity.
    *
-   * @param initialCapacity the initial capacity of the list
+   * @param initialCapacity the demo capacity of the list
    *
-   * @throws IllegalArgumentException if the specified initial capacity
+   * @throws IllegalArgumentException if the specified demo capacity
    *                                  is negative
    */
   public DynamicArray( int initialCapacity )
@@ -43,7 +43,7 @@ public class DynamicArray<E> extends AbstractList<E> implements List<E>, RandomA
   }
 
   /**
-   * Constructs an empty list with an initial capacity of ten.
+   * Constructs an empty list with an demo capacity of ten.
    */
   public DynamicArray()
   {

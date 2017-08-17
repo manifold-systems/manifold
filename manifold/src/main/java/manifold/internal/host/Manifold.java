@@ -145,7 +145,7 @@ public class Manifold
     DefaultSingleModule singleModule = new DefaultSingleModule( classpath, sourcePath, outputPath );
 
     // Must assign _module BEFORE we initializeTypeManifolds() to prevent double bootstrapping
-    // stemming from an embedded bootstrap() call in a source producer class
+    // stemming from an embedded demo() call in a source producer class
     _module = singleModule;
 
     singleModule.initializeTypeManifolds();

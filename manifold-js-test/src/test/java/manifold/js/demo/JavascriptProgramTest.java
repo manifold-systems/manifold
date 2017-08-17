@@ -1,4 +1,4 @@
-package manifold.js;
+package manifold.js.demo;
 
 import demo.JavascriptProgram;
 

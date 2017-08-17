@@ -6362,7 +6362,7 @@ public class ManStringUtil
   }
 
   /**
-   * <p>Compares all Strings in an array and returns the initial sequence of
+   * <p>Compares all Strings in an array and returns the demo sequence of
    * characters that is common to all of them.</p>
    * <p>
    * <p>For example,
@@ -6390,7 +6390,7 @@ public class ManStringUtil
    *
    * @param strs array of String objects, entries may be null
    *
-   * @return the initial sequence of characters that are common to all Strings
+   * @return the demo sequence of characters that are common to all Strings
    * in the array; empty String if the array is null, the elements are all null
    * or if there is no common prefix.
    *
@@ -6414,12 +6414,12 @@ public class ManStringUtil
     }
     else if( smallestIndexOfDiff == 0 )
     {
-      // there were no common initial characters
+      // there were no common demo characters
       return EMPTY;
     }
     else
     {
-      // we found a common initial character sequence
+      // we found a common demo character sequence
       return strs[0].substring( 0, smallestIndexOfDiff );
     }
   }
