@@ -66,10 +66,10 @@ body {
   padding: 32px;
 }
 
-/*pre.prettyprint {*/
-  /*max-width: 70%;*/
-  /*margin: 8px auto;*/
-/*}*/
+pre.prettyprint {
+  max-width: 70%;
+  margin: 8px auto;
+}
 
 /*pre.special {*/
   /*display: inline-block !important;*/
