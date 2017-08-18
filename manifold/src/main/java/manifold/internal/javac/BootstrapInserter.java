@@ -11,7 +11,7 @@ import manifold.internal.runtime.Bootstrap;
 
 
 /**
- * Add a static block to top-level classes to bootstrap Manifold:
+ * Add a static block to top-level classes to demo Manifold:
  * <pre>
  *   static {
  *     Bootstrap.init();

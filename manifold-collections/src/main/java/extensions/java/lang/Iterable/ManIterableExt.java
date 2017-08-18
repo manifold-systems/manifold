@@ -865,7 +865,7 @@ public class ManIterableExt
   }
 
   /**
-   * Accumulates value starting with [initial] value and applying [operation] from left to right to current accumulator value and each element.
+   * Accumulates value starting with [demo] value and applying [operation] from left to right to current accumulator value and each element.
    * <p>
    * The operation is _terminal_.
    */

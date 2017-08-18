@@ -17,7 +17,7 @@ public class Handler extends URLStreamHandler
 
   static
   {
-    // Preload the Url Connection classes to prevent LinkageErrors during initial load
+    // Preload the Url Connection classes to prevent LinkageErrors during demo load
     Arrays.asList( ManClassesUrlConnection.class,
                    ManClassesUrlConnection.LazyByteArrayInputStream.class );
   }

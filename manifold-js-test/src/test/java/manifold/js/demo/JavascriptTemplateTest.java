@@ -1,6 +1,5 @@
-package manifold.js;
+package manifold.js.demo;
 
-import demo.*;
 import org.junit.Test;
 
 import java.util.Arrays;
