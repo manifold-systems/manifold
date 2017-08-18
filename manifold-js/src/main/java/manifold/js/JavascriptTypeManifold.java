@@ -40,7 +40,6 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
     SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make();
     //## todo: use errorhandler(), look at JsonImplSourceProvider
     String str = srcClass.render(new StringBuilder(), 0).toString();
-    System.out.println(str);
     return str;
   }
 

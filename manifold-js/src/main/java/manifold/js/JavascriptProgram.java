@@ -19,65 +19,69 @@ import static manifold.js.Util.safe;
 
 public class JavascriptProgram {
 
-    /* codegen */
-    static SrcClass genProgram(String fqn, ProgramNode programNode) {
-        SrcClass clazz = new SrcClass(fqn, SrcClass.Kind.Class).superClass(JavascriptProgram.class)
-          .imports( SourcePosition.class );
+  /* codegen */
+  static SrcClass genProgram(String fqn, ProgramNode programNode) {
+    SrcClass clazz = new SrcClass(fqn, SrcClass.Kind.Class).superClass(JavascriptProgram.class)
+      .imports(SourcePosition.class);
 
-        clazz.addField(new SrcField("ENGINE", ScriptEngine.class)
-                .modifiers(Modifier.STATIC)
-                .initializer(new SrcRawExpression(("init(\"" + fqn + "\")"))));
+    clazz.addField(new SrcField("ENGINE", ScriptEngine.class)
+      .modifiers(Modifier.STATIC)
+      .initializer(new SrcRawExpression(("init(\"" + fqn + "\")"))));
 
-        clazz.addConstructor(new SrcConstructor().modifiers(Modifier.PRIVATE).body(new SrcStatementBlock()));
+    clazz.addConstructor(new SrcConstructor().modifiers(Modifier.PRIVATE).body(new SrcStatementBlock()));
 
-        for (FunctionNode node : programNode.getChildren(FunctionNode.class)) {
-            AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
-                    .name(node.getName())
-                    .modifiers(Modifier.STATIC | Modifier.PUBLIC)
-                    .returns(node.getReturnType());
+    for (FunctionNode node : programNode.getChildren(FunctionNode.class)) {
+      AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
+        .name(node.getName())
+        .modifiers(Modifier.STATIC | Modifier.PUBLIC)
+        .returns(node.getReturnType());
 
-            // params
-            ParameterNode firstChild = node.getFirstChild(ParameterNode.class);
-            for (SrcParameter srcParameter : firstChild.toParamList()) {
-                srcMethod.addParam(srcParameter);
-            }
+      // params
+      ParameterNode firstChild = node.getFirstChild(ParameterNode.class);
+      for (SrcParameter srcParameter : firstChild.toParamList()) {
+        srcMethod.addParam(srcParameter);
+      }
 
-            //impl
-            srcMethod.body(new SrcStatementBlock()
-                    .addStatement(
-                            new SrcRawStatement()
-                                    .rawText("return (" + node.getReturnType() + ")invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList(firstChild.toParamList()) + ");")));
-            clazz.addMethod(srcMethod);
+      //impl
+      srcMethod.body(new SrcStatementBlock()
+        .addStatement(
+          new SrcRawStatement()
+            .rawText("return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList(firstChild.toParamList()) + ");")));
+      clazz.addMethod(srcMethod);
 
-        }
-        return clazz;
     }
+    return clazz;
+  }
 
-    static String generateArgList(SrcParameter[] srcParameters) {
-        StringBuilder sb = new StringBuilder();
-        for (SrcParameter srcParameter : srcParameters) {
-            sb.append(",");
-            sb.append(srcParameter.getSimpleName());
-        }
-        return sb.toString();
+  static String generateArgList(SrcParameter[] srcParameters) {
+    StringBuilder sb = new StringBuilder();
+    for (SrcParameter srcParameter : srcParameters) {
+      sb.append(",");
+      sb.append(srcParameter.getSimpleName());
     }
+    return sb.toString();
+  }
 
-    /* implementation */
-    public static Object invoke(ScriptEngine engine, String func, Object... args) {
-        return safe(() -> ((Invocable) engine).invokeFunction(func, args));
+  /* implementation */
+  public static <T> T invoke(ScriptEngine engine, String func, Object... args) {
+    try {
+      return (T) ((Invocable) engine).invokeFunction(func, args);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
+  }
 
-    public static ScriptEngine init(String programName) {
-        ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
-        Parser parser = new Parser(new Tokenizer(loadSrcForName(programName)));
-        Node programNode =  parser.parse();
-        safe(() -> nashorn.eval(programNode.genCode()));
-        return nashorn;
-    }
+  public static ScriptEngine init(String programName) {
+    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
+    Parser parser = new Parser(new Tokenizer(loadSrcForName(programName)));
+    Node programNode = parser.parse();
+    safe(() -> nashorn.eval(programNode.genCode()));
+    return nashorn;
+  }
 
-    static String loadSrcForName(String name) {
-        String file = "/" + name.replace(".", "/") + ".js";
-        InputStream resourceAsStream = JavascriptCodeGen.class.getResourceAsStream(file);
-        return Util.loadContent(resourceAsStream);
-    }
+  static String loadSrcForName(String name) {
+    String file = "/" + name.replace(".", "/") + ".js";
+    InputStream resourceAsStream = JavascriptCodeGen.class.getResourceAsStream(file);
+    return Util.loadContent(resourceAsStream);
+  }
 }

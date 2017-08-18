@@ -142,13 +142,13 @@ public class JavascriptClass {
     }
 
     /* implementation */
-    public static Object invoke(ScriptObjectMirror context, String func, Object... args) {
-        return context.callMember(func, args);
+    public static <T> T invoke(ScriptObjectMirror context, String func, Object... args) {
+        return (T) context.callMember(func, args);
     }
 
-    public static Object invokeStatic(ScriptEngine engine, String className, String func, Object... args) {
+    public static <T> T invokeStatic(ScriptEngine engine, String className, String func, Object... args) {
         ScriptObjectMirror classObject = (ScriptObjectMirror) engine.get(className);
-        return classObject.callMember(func, args);
+        return (T) classObject.callMember(func, args);
     }
 
     public static Object getProp(ScriptObjectMirror context, String prop) {
