@@ -8,10 +8,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -203,7 +200,7 @@ class ExtCodeGen
 
   private Set<String> findAllExtensions()
   {
-    Set<String> fqns = new LinkedHashSet<>();
+    Set<String> fqns = new TreeSet<>();
 
     PathCache pathCache = ModulePathCache.instance().get( getModule() );
     for( IFile file : _model.getFiles() )
