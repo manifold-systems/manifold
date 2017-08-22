@@ -61,7 +61,7 @@ will print
 
 ## Javascript Class Support
 
-Javascript classes are exposed as regular classes in Java. They have the same functionallity as Java classes,
+Javascript classes are exposed as regular classes in Java. They have the same functionality as Java classes,
 including constructors, methods, static methods, and properties.
 
 Javascript: foo.js

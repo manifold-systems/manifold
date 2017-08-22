@@ -55,3 +55,14 @@ var x = 10
 function incrementAndGet() {
   return x++;
 }
+
+var y = "foo"
+function setY(i) {
+  y = i;
+}
+
+var y = "foo"
+function getY() {
+  return y;
+}
+

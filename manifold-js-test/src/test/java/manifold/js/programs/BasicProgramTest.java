@@ -61,6 +61,20 @@ public class BasicProgramTest {
   }
 
   @Test
+  public void testStateIsPreservedInPrograms() {
+    assertEquals(10d, program_1.incrementAndGet());
+    assertEquals(11d, program_1.incrementAndGet());
+    assertEquals(12d, program_1.incrementAndGet());
+  }
+
+  @Test
+  public void testStateCanBeUpdatedInPrograms() {
+    assertEquals("foo", program_1.getY());
+    assertEquals(null, program_1.setY("bar"));
+    assertEquals("bar", program_1.getY());
+  }
+
+  @Test
   public void testThreeArgs() {
     assertEquals(1, program_1.threeArgs(1, 2, true));
     assertEquals(2, program_1.threeArgs(1, 2, false));
