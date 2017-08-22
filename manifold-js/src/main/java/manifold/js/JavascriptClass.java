@@ -163,7 +163,7 @@ public class JavascriptClass {
     }
 
     public static void setProp(ScriptObjectMirror context, String prop, Object value) {
-        context.put(prop, value);
+        context.setMember(prop, value);
     }
 
     public static void setStaticProp(ScriptEngine engine, String className, String property, Object value) {
