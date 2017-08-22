@@ -5,7 +5,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -67,7 +70,9 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
       System.out.println( "\n================\n" );
       System.out.println( getName() );
       System.out.println( "\n================\n" );
-      System.out.println( source );
+      int[] line = new int[]{1};
+      String code = Arrays.stream(source.split("\n")).map(s -> line[0]++ + ":  " + s + "\n").reduce(String::concat).orElse("");
+      System.out.println(code);
     }
   }
 
