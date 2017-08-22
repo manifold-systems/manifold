@@ -10,6 +10,7 @@ import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
 
 import javax.script.Invocable;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.io.InputStream;
@@ -73,6 +74,7 @@ public class JavascriptProgram {
 
   public static ScriptEngine init(String programName) {
     ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
+    nashorn.setBindings(new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE);
     Parser parser = new Parser(new Tokenizer(loadSrcForName(programName)));
     Node programNode = parser.parse();
     safe(() -> nashorn.eval(programNode.genCode()));

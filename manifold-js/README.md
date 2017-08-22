@@ -5,8 +5,6 @@ The library supports the use of javascript programs from Java, the use of ES6-fl
 java, the use of Java classes from javascript, as well as the creation of type-safe javascript expressions for
 use in Java as a scripting layer.
 
-This library is sponsored and supported by [Guidewire Software](http://www.guidewire.com)
-
 ## Javascript Program Support
 
 Manifold.js makes standard ES5-style Javascript programs available as types in Java.
@@ -300,21 +298,17 @@ Java:
     demo.printSize(); // Prints 3
 ```
 
-## Multi-threading Support
+## Threading
 
-The current implementation of Nashorn is not yet stable for multi-threading. Although it
-allows for multi-threading, the implementation is very slow when it comes to creating
-and deleting objects.
+Manifold.js is subject to the same threading restrictions that the Nashorn javascript engine is.  All programs and classes use
+a ConcurrentHashMap for their Bindings, and should thus be safe for inter-thread use [per this SO article](https://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424).
 
-Users should not attempt to access any Nashorn objects from multiple threads.
+## Javascript Language Extensions
 
-## Javascript Extensions
+### Typescript-Style Typing (Parameters & Return Types)
 
-### Typescript Style Typing
-
-In order to allow for greater control and readability, Manifold.js allows for specifying the types of variables that can
-be parameters and return types. The supported types include any in the standard java.lang.* package, however those found
-in the java.util.* packages must be imported.
+In order to allow for greater control and readability in Java, Manifold.js allows you to specify the types parameters and return
+types using Typescript syntax.
 
 Javascript:
 
@@ -359,6 +353,3 @@ Javascript:
         return list.map( a => {return a + 1});
     }
 ```
-
-
-

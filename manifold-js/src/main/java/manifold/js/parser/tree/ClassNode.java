@@ -93,6 +93,7 @@ public class ClassNode extends Node {
                 .append((getSuperClass() == null? "" : getSuperClass())) //Possibly give superclass as arg
                 .append(");");
 
+        code.append("\n" + getName() + ";");
         return code.toString();
     }
 

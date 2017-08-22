@@ -10,13 +10,13 @@ import manifold.js.parser.Parser;
 import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.*;
 
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.lang.reflect.Modifier;
 
 import static manifold.js.JavascriptProgram.generateArgList;
 import static manifold.js.JavascriptProgram.loadSrcForName;
-import static manifold.js.Util.safe;
 
 public class JavascriptClass {
 
@@ -106,38 +106,40 @@ public class JavascriptClass {
             final String name = node.getName();
             final String capitalizedName = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-            AbstractSrcMethod<SrcMethod> getter = new SrcMethod()
-              .name("get" + capitalizedName)
-              .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
-              .returns(node.getReturnType());
+            if (node.isSetter()) {
+                AbstractSrcMethod<SrcMethod> setter = new SrcMethod()
+                  .name("set" + capitalizedName)
+                  .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
+                  .addParam("val", Object.class)
+                  .returns("void");
 
-            //impl
-            if (node.isStatic()) getter.body(new SrcStatementBlock()
-              .addStatement(
-                new SrcRawStatement()
-                  .rawText( "return JavascriptClass.getStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
-            else getter.body(new SrcStatementBlock()
-              .addStatement(
-                new SrcRawStatement()
-                  .rawText("return JavascriptClass.getProp(_context, \"" + name + "\");")));
-            clazz.addMethod(getter);
+                //impl
+                if (node.isStatic()) setter.body(new SrcStatementBlock()
+                  .addStatement(
+                    new SrcRawStatement()
+                      .rawText( "JavascriptClass.setStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
+                else setter.body(new SrcStatementBlock()
+                  .addStatement(
+                    new SrcRawStatement()
+                      .rawText("JavascriptClass.setProp(_context, \"" + name + "\", val);")));
+                clazz.addMethod(setter);
+            } else {
+                AbstractSrcMethod<SrcMethod> getter = new SrcMethod()
+                  .name("get" + capitalizedName)
+                  .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
+                  .returns(node.getReturnType());
 
-            AbstractSrcMethod<SrcMethod> setter = new SrcMethod()
-              .name("set" + capitalizedName)
-              .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
-              .addParam("val", Object.class)
-              .returns("void");
-
-            //impl
-            if (node.isStatic()) setter.body(new SrcStatementBlock()
-              .addStatement(
-                new SrcRawStatement()
-                  .rawText( "JavascriptClass.setStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
-            else setter.body(new SrcStatementBlock()
-              .addStatement(
-                new SrcRawStatement()
-                  .rawText("JavascriptClass.setProp(_context, \"" + name + "\", val);")));
-            clazz.addMethod(setter);
+                //impl
+                if (node.isStatic()) getter.body(new SrcStatementBlock()
+                  .addStatement(
+                    new SrcRawStatement()
+                      .rawText( "return JavascriptClass.getStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
+                else getter.body(new SrcStatementBlock()
+                  .addStatement(
+                    new SrcRawStatement()
+                      .rawText("return JavascriptClass.getProp(_context, \"" + name + "\");")));
+                clazz.addMethod(getter);
+            }
         }
     }
 
@@ -147,7 +149,7 @@ public class JavascriptClass {
     }
 
     public static <T> T invokeStatic(ScriptEngine engine, String className, String func, Object... args) {
-        ScriptObjectMirror classObject = (ScriptObjectMirror) engine.get(className);
+        ScriptObjectMirror classObject = getClassObject(engine, className);
         return (T) classObject.callMember(func, args);
     }
 
@@ -156,31 +158,41 @@ public class JavascriptClass {
     }
 
     public static Object getStaticProp(ScriptEngine engine, String className, String property) {
-        ScriptObjectMirror classObject = (ScriptObjectMirror) engine.get(className);
+        ScriptObjectMirror classObject = getClassObject(engine, className);
         return classObject.get(property);
     }
 
     public static void setProp(ScriptObjectMirror context, String prop, Object value) {
-        context.put("_" + prop, value);
+        context.put(prop, value);
     }
 
     public static void setStaticProp(ScriptEngine engine, String className, String property, Object value) {
-        ScriptObjectMirror classObject = (ScriptObjectMirror) engine.get(className);
+        ScriptObjectMirror classObject = getClassObject(engine, className);
         classObject.put("_" + property, value); //TODO why the underscore?
     }
 
     public static ScriptEngine init(String programName) {
         ScriptEngine nashorn = new ScriptEngineManager().getEngineByName("nashorn");
+        nashorn.setBindings(new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE);
         Parser parser = new Parser(new Tokenizer(loadSrcForName(programName)));
         Node programNode =  parser.parse();
         ClassNode classNode = programNode.getFirstChild(ClassNode.class);
-        safe(() -> nashorn.eval(classNode.genCode()));
+        String script = classNode.genCode();
+        try {
+            nashorn.eval(script);
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
         return nashorn;
     }
 
     public static ScriptObjectMirror initInstance(ScriptEngine engine, String name, Object... args){
-        JSObject classObject =  (ScriptObjectMirror) engine.get(name);
+        JSObject classObject = getClassObject(engine, name);
         return (ScriptObjectMirror) classObject.newObject(args);
+    }
+
+    private static ScriptObjectMirror getClassObject(ScriptEngine engine, String name) {
+        return (ScriptObjectMirror) ((ScriptObjectMirror) engine.get("nashorn.global")).get(name);
     }
 
 }
