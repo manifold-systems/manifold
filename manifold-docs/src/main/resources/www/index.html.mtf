@@ -1,0 +1,5 @@
+<%@ layout www.layout.main %>
+
+<h1>Main Page</h1>
+
+<p>Lorem Ipsum</p>

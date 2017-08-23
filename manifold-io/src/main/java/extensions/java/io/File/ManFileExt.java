@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
@@ -445,7 +446,21 @@ public class ManFileExt
     } );
   }
 
-  public static boolean copyRecursively( @This File thiz, File target, boolean overwrite, BiFunction<File, IOException, OnErrorAction> onError )
+  public static boolean copyRecursively( @This File thiz, File target, Predicate<File> filter )
+  {
+    return copyRecursively( thiz, target, false, ( t, u ) ->
+    {
+      throw new RuntimeException( u );
+    }, filter);
+  }
+
+  public static boolean copyRecursively( @This File thiz, File target, boolean overwrite, BiFunction<File, IOException, OnErrorAction> onError ) {
+    return copyRecursively(thiz, target, overwrite, onError, file -> true);
+  }
+
+  public static boolean copyRecursively( @This File thiz, File target, boolean overwrite,
+                                         BiFunction<File, IOException, OnErrorAction> onError,
+                                         Predicate<File> filter)
   {
     if( !thiz.exists() )
     {
@@ -461,6 +476,9 @@ public class ManFileExt
                                                   }
                                                 } ) )
     {
+      if (!filter.test(src)) {
+        continue;
+      }
       if( !src.exists() )
       {
         if( OnErrorAction.TERMINATE == onError.apply( src, new NoSuchFileException( src.toString(), null, "The source file doesn't exist." ) ) )
