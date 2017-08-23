@@ -37,11 +37,11 @@ public class LayoutTest {
     @Test
     public void PlainDefaultLayoutTest() {
         ILayout lo = IsLayout.asLayout();
-        ManifoldTemplates.setDefaultTemplate(lo);
+        ManifoldTemplates.setDefaultLayout(lo);
         assertEquals("HeaderPlainFooter", PlainFile.render());
-        ManifoldTemplates.setDefaultTemplate("directives", IsLayout3.asLayout());
+        ManifoldTemplates.setDefaultLayout("directives", IsLayout3.asLayout());
         assertEquals("3Plain4", PlainFile.render());
-        ManifoldTemplates.resetDefaultTemplates();
+        ManifoldTemplates.resetDefaultLayout();
     }
 
     @Test

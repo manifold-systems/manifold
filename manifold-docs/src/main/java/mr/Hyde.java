@@ -3,6 +3,7 @@ package mr;
 import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
 import manifold.internal.host.ManifoldHost;
+import manifold.templates.ManifoldTemplates;
 import manifold.util.StreamUtil;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -22,13 +23,19 @@ public class Hyde {
   static HtmlRenderer MD_RENDERER = HtmlRenderer.builder().escapeHtml(false).build();
 
   public static void main(String[] args) throws Exception {
+
+    log("Generating Site...");
     File outputDir = makeOutputDir();
     File wwwDir = fileFromResourcePath("/www");
+
+    // Set default layout
+    ManifoldTemplates.setDefaultLayout(www.layout.main.asLayout());
 
     //==========================================================================================
     //  Generate Templates
     //==========================================================================================
     PathCache pathCache = ModulePathCache.instance().get(ManifoldHost.getCurrentModule());
+    log("Processing Templates...");
     for (String fqn : pathCache.getExtensionCache("mtf").getFqns()) {
 
       // ignore layouts and non-www stuff
@@ -41,6 +48,7 @@ public class Hyde {
         writeTo(f, renderTemplate(fqn, "_html"));
       }
 
+      //TODO better MD processing (detect header/footer?)
       if (fqn.endsWith("_md")) {
         File f = new File(outputDir, getNameFromFile(fqn));
         writeTo(f, mdToHtml(renderTemplate(fqn, "_md")));
@@ -50,7 +58,14 @@ public class Hyde {
     //==========================================================================================
     //  Copy non-template Resources
     //==========================================================================================
+    log("Copying Resources...");
     copyDirInto(wwwDir, outputDir, file -> !file.getName().endsWith(".mtf"));
+
+    log("Done!");
+  }
+
+  private static void log(String s) {
+    System.out.println("Mr. Hyde says: " + s);
   }
 
   private static File fileFromResourcePath(String name) throws URISyntaxException {

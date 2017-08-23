@@ -31,7 +31,7 @@ public class BaseTemplate {
         if (_explicitLayout != null) {
             return _explicitLayout;
         } else {
-            return ManifoldTemplates.getDefaultTemplate(this.getClass().getName());
+            return ManifoldTemplates.getDefaultLayout(this.getClass().getName());
         }
     }
 

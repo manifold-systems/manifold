@@ -438,8 +438,8 @@ The above code will generate the following HTML:
 Manifold Templates also supports the ability to set default layouts for templates via the
 `ManifoldTemplates.java` configuration class:
 ```java
-  ManifoldTemplates.setDefaultTemplate(myLayout); //Sets default template for all templates
-  ManifoldTemplates.setDefaultTemplate("some.package", myLayout) //Sets default templates for all templates in "some.package"
+  ManifoldTemplates.setDefaultLayout(myLayout); //Sets default template for all templates
+  ManifoldTemplates.setDefaultLayout("some.package", myLayout) //Sets default templates for all templates in "some.package"
 ```
 By default, more specific layout declarations will take precedence over less
 specific ones. For example, templates with a declared layout (using the layout directive)

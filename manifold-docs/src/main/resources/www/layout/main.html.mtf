@@ -26,6 +26,8 @@
     <!--<script>hljs.initHighlightingOnLoad();</script>-->
 </head>
 <body>
+
 <%@ content %>
+
 </body>
 </html>

@@ -36,6 +36,7 @@ li {
 body {
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 14pt;
+  padding: 12px;
 }
 
 .red {

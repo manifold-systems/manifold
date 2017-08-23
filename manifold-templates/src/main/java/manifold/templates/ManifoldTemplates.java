@@ -9,24 +9,24 @@ import java.util.HashMap;
  * For configuration purposes
  */
 public class ManifoldTemplates {
-    private static HashMap<String, ILayout> DEFAULT_TEMPLATE_MAP;
+    private static HashMap<String, ILayout> DEFAULT_LAYOUT_MAP;
     private static TraceCallback TRACER = (c, t) -> {}; // NO-OP tracer by default
 
     static {
-        DEFAULT_TEMPLATE_MAP = new HashMap<>();
-        DEFAULT_TEMPLATE_MAP.put("", ILayout.EMPTY);
+        DEFAULT_LAYOUT_MAP = new HashMap<>();
+        DEFAULT_LAYOUT_MAP.put("", ILayout.EMPTY);
     }
 
-    public static void resetDefaultTemplates() {
-        DEFAULT_TEMPLATE_MAP = new HashMap<>();
-        DEFAULT_TEMPLATE_MAP.put("", ILayout.EMPTY);
+    public static void resetDefaultLayout() {
+        DEFAULT_LAYOUT_MAP = new HashMap<>();
+        DEFAULT_LAYOUT_MAP.put("", ILayout.EMPTY);
     }
-    public static void setDefaultTemplate(ILayout layout) {
-        DEFAULT_TEMPLATE_MAP.put("", layout);
+    public static void setDefaultLayout(ILayout layout) {
+        DEFAULT_LAYOUT_MAP.put("", layout);
     }
 
-    public static void setDefaultTemplate(String somePackage, ILayout layout) {
-        DEFAULT_TEMPLATE_MAP.put(somePackage, layout);
+    public static void setDefaultLayout(String somePackage, ILayout layout) {
+        DEFAULT_LAYOUT_MAP.put(somePackage, layout);
     }
 
     public static void trace() {
@@ -37,11 +37,11 @@ public class ManifoldTemplates {
         TRACER = tracer;
     }
 
-    public static ILayout getDefaultTemplate(String packageName) {
-        if (DEFAULT_TEMPLATE_MAP.containsKey(packageName)) {
-            return DEFAULT_TEMPLATE_MAP.get(packageName);
+    public static ILayout getDefaultLayout(String packageName) {
+        if (DEFAULT_LAYOUT_MAP.containsKey(packageName)) {
+            return DEFAULT_LAYOUT_MAP.get(packageName);
         } else {
-            return getDefaultTemplate(packageName.substring(0, Math.max(0, packageName.lastIndexOf('.'))));
+            return getDefaultLayout(packageName.substring(0, Math.max(0, packageName.lastIndexOf('.'))));
         }
     }
 
