@@ -25,6 +25,8 @@
     <module>manifold-text-test</module>
     <module>manifold-collections</module>
     <module>manifold-collections-test</module>
+    <module>manifold-templates</module>
+    <module>manifold-templates-test</module>
   </modules>
 
   <properties>

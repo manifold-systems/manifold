@@ -1,0 +1,5 @@
+<%@ extends TestTemplateSuperClass %>
+<h1>Hello</h1>
+<%@ section mySection %>
+<h2>This section should extend the same thing</h2>
+<%@ end section %>

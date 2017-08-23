@@ -1,0 +1,1 @@
+<%@ params(int y) %><%@ section mySection (y) %>First Section: ${y}<%@ section yourSection(y) %>Second Section: ${y}<%@ end section %><%@ end section %>

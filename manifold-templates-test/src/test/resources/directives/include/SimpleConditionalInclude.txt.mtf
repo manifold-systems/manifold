@@ -1,0 +1,1 @@
+<%@ params(boolean a) %><%@ include directives.imports.SimpleImport if a%><%@ include statements.SimpleStatement if(a)%>

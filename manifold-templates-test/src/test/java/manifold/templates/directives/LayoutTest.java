@@ -1,0 +1,51 @@
+package manifold.templates.directives;
+
+import manifold.templates.ManifoldTemplates;
+import manifold.templates.runtime.ILayout;
+import org.junit.Test;
+import directives.layouts.*;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * Created by hkalidhindi on 7/17/2017.
+ */
+public class LayoutTest {
+
+    @Test
+    public void layoutTestWithoutContent() {
+        assertEquals("HeaderFooter", HasLayout.render());
+    }
+
+    @Test
+    public void layoutTestWithContent() {
+        assertEquals("HeaderContentFooter", HasLayoutAndContent1.render());
+        assertEquals("HeaderContentFooter", HasLayoutAndContent2.render());
+    }
+
+    @Test
+    public void NestedLayoutTestWithContent() {
+        assertEquals("HeaderH2ContentF2Footer", HasNestedLayout.render());
+    }
+
+    @Test
+    public void PlainOverrideLayoutTest() {
+        ILayout lo = IsLayout.asLayout();
+        assertEquals("HeaderPlainFooter", PlainFile.render(lo));
+    }
+
+    @Test
+    public void PlainDefaultLayoutTest() {
+        ILayout lo = IsLayout.asLayout();
+        ManifoldTemplates.setDefaultTemplate(lo);
+        assertEquals("HeaderPlainFooter", PlainFile.render());
+        ManifoldTemplates.setDefaultTemplate("directives", IsLayout3.asLayout());
+        assertEquals("3Plain4", PlainFile.render());
+        ManifoldTemplates.resetDefaultTemplates();
+    }
+
+    @Test
+    public void LayoutPrecedenceTest() {
+        assertEquals("HeaderH2ContentF2Footer", HasNestedLayout.render());
+    }
+}

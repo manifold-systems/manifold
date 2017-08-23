@@ -1,0 +1,1 @@
+<%= Math.round(Math.pow(2,4)) %>
