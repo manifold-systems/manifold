@@ -28,7 +28,7 @@ This function could be invoked from Java like so:
     System.out.println( ExampleProgram.hello("Java Programmers") )
 ```
 
-#### Parameter & Return Types
+### Parameter & Return Types
 
 The parameters and the return type of javascript functions are all of type `Object`.
 
@@ -57,7 +57,65 @@ will print
     0.0
     1.0
 
-## Javascript Class Support
+### Threading
+
+Manifold.js is subject to the same threading restrictions that the Nashorn javascript engine is.  All programs and classes use
+a ConcurrentHashMap for their Bindings, and should thus be safe for inter-thread use [per this SO article](https://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424).
+
+### Typescript-Style Typing (Parameters & Return Types)
+
+In order to allow for greater control and readability in Java, Manifold.js allows you to specify the types parameters and return
+types using Typescript syntax.
+
+Javascript:
+
+```javascript
+    import java.util.ArrayList;
+    class Sample {
+        constructor(a : String) {
+            this.foo = a;
+        }
+
+        foo (bar: String, baz : Integer) : ArrayList {
+           var arrlist = new ArrayList();
+           for(var i = 0 ; i < baz ; i ++) {
+               arrlist.add(bar);
+           }
+           return arrlist;
+        }
+    }
+```
+
+Java:
+
+```java
+    Sample sample = new Sample();
+    System.out.println(foo("Hello", 5)) // ["Hello","Hello","Hello","Hello","Hello"]
+```
+
+### ES6-style Arrow Functions
+
+Manifold.js supports the use of ES6 Arrow Functions inside any Javascript program or class.
+
+Javascript:
+
+```javascript
+    //Arrow function expression
+    function filterEvens(list) {
+        return list.filter( a => a % 2 == 0);
+    }
+
+    //Arrow function statements
+    function incrementList(list) {
+        return list.map( a => {return a + 1});
+    }
+```
+
+## Experimental Features
+
+The following features are experimental.
+
+### Javascript Class Support
 
 Javascript classes are exposed as regular classes in Java. They have the same functionality as Java classes,
 including constructors, methods, static methods, and properties.
@@ -196,7 +254,7 @@ Java:
     System.out.println(foo.getBars()) // Prints 42
 ```
 
-## Javascript Template Support
+### Javascript Template Support
 
 Javascript templates are supported as first class citizens. A Javascript String Template is a file that ends
 in the .jst extension.
@@ -229,7 +287,7 @@ Java:
 
 ```
 
-## Accessing Javascript Classes from Java
+### Accessing Javascript Classes from Java
 
 Javascript classes can be accessed using the same syntax as Java classes.
 
@@ -245,7 +303,7 @@ Java:
     System.out.println(Foo.hello()) // Hello
 ```
 
-### Accessing Java Classes from Javascript
+#### Accessing Java Classes from Javascript
 
 The (non-standard javascript) import statement is used to extend Java classes with javascript methods.
 
@@ -271,7 +329,7 @@ This can be invoked from Java like so:
 
 NB: The import statement in Manifold.js acts like the java import statement, not the (unsupported) javascript version.
 
-### Extending Java Classes from Javascript
+#### Extending Java Classes from Javascript
 
 Java classes can be extended using javascript, allowing for the creation of modified classes. One
 known limitation is that the constructor of the superclass cannot be overwritten.
@@ -296,60 +354,4 @@ Java:
     demo.add(2);
     demo.add(3);
     demo.printSize(); // Prints 3
-```
-
-## Threading
-
-Manifold.js is subject to the same threading restrictions that the Nashorn javascript engine is.  All programs and classes use
-a ConcurrentHashMap for their Bindings, and should thus be safe for inter-thread use [per this SO article](https://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424).
-
-## Javascript Language Extensions
-
-### Typescript-Style Typing (Parameters & Return Types)
-
-In order to allow for greater control and readability in Java, Manifold.js allows you to specify the types parameters and return
-types using Typescript syntax.
-
-Javascript:
-
-```javascript
-    import java.util.ArrayList;
-    class Sample {
-        constructor(a : String) {
-            this.foo = a;
-        }
-
-        foo (bar: String, baz : Integer) : ArrayList {
-           var arrlist = new ArrayList();
-           for(var i = 0 ; i < baz ; i ++) {
-               arrlist.add(bar);
-           }
-           return arrlist;
-        }
-    }
-```
-
-Java:
-
-```java
-    Sample sample = new Sample();
-    System.out.println(foo("Hello", 5)) // ["Hello","Hello","Hello","Hello","Hello"]
-```
-
-### ES6 Arrow Functions
-
-Manifold.js supports the use of ES6 Arrow Functions inside any Javascript program or class.
-
-Javascript:
-
-```javascript
-    //Arrow function expression
-    function filterEvens(list) {
-        return list.filter( a => a % 2 == 0);
-    }
-
-    //Arrow function statements
-    function incrementList(list) {
-        return list.map( a => {return a + 1});
-    }
 ```
