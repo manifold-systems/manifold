@@ -1,7 +1,6 @@
 package manifold.internal.javac;
 
 import com.sun.source.util.JavacTask;
-import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -38,9 +37,8 @@ public class TypeProcessor extends CompiledTypeProcessor
 //  }
 
   @Override
-  public void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter )
+  public void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter )
   {
-    String fqn = element.getQualifiedName().toString();
     for( ITypeManifold sp : ManifoldHost.getCurrentModule().getTypeManifolds() )
     {
       if( sp instanceof ITypeProcessor )
@@ -49,14 +47,14 @@ public class TypeProcessor extends CompiledTypeProcessor
 
         try
         {
-          ((ITypeProcessor)sp).process( fqn, this, issueReporter );
+          ((ITypeProcessor)sp).process( element, this, issueReporter );
         }
         catch( Throwable e )
         {
           StringWriter stackTrace = new StringWriter();
           e.printStackTrace( new PrintWriter( stackTrace ) );
           issueReporter.reportError( "Fatal error processing with Manifold type processor: " + sp.getClass().getName() +
-                                     "\non type: " + fqn +
+                                     "\non type: " + element.getQualifiedName() +
                                      "\nPlease report the error with the accompanying stack trace.\n" + stackTrace );
           throw e;
         }

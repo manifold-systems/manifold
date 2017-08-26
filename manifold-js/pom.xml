@@ -33,16 +33,6 @@
             <arg>-Xplugin:Manifold</arg>
           </compilerArgs>
         </configuration>
-        <executions>
-          <execution>
-            <id>default-compile</id>
-            <configuration>
-              <excludes>
-                <exclude>manifoldjs/plugin/legacy/**</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>
