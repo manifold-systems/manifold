@@ -1,7 +1,6 @@
 package manifold.ext;
 
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,6 +8,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
@@ -148,14 +148,12 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  public void process( String fqn, TypeProcessor typeProcessor, IssueReporter<JavaFileObject> issueReporter )
+  public void process( TypeElement typeElement, TypeProcessor typeProcessor, IssueReporter<JavaFileObject> issueReporter )
   {
-    Symbol.ClassSymbol typeElement = typeProcessor.getElementUtil().getTypeElement( fqn );
     if( typeElement.getKind() == ElementKind.CLASS || typeElement.getKind() == ElementKind.INTERFACE )
     {
-      JCTree tree = (JCTree)typeProcessor.getTreeUtil().getTree( typeElement );
       TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor );
-      tree.accept( visitor );
+      typeProcessor.getTree().accept( visitor );
     }
   }
 
