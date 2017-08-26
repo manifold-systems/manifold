@@ -1,3 +1,9 @@
-<h1>Main Page</h1>
-
-<p>Lorem Ipsum</p>
+<div class="jumbotron">
+    <h1>Manifold</h1>
+    <p>A JVM Metaprogramming library</p>
+    <p>
+        <a href="docs.html" class="btn btn-primary btn-large">
+            Go To Guide
+        </a>
+    </p>
+</div>

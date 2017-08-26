@@ -35,9 +35,8 @@ public class Hyde {
     //  Generate Templates
     //==========================================================================================
     PathCache pathCache = ModulePathCache.instance().get(ManifoldHost.getCurrentModule());
-    log("Processing Templates...");
+    log("Generating Templates...");
     for (String fqn : pathCache.getExtensionCache("mtf").getFqns()) {
-
       // ignore layouts and non-www stuff
       if (fqn.contains(".layout.")) {
         continue;
