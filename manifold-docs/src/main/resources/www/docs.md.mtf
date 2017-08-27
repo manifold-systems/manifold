@@ -353,7 +353,7 @@ requires only that a class implement interface _methods_, there is no need for a
 implements an interface.
 
 Although nominal typing is arguably more sound and easier for both people and machines to digest, in some
-circumstances the flexibility of structural can be more suitable. Take the following classes:
+circumstances the flexibility of structural typing makes it more suitable. Take the following classes:
 
 <pre class="prettyprint">
 public class Rectangle {
@@ -402,7 +402,7 @@ Collections.sort(points, coordSorter); // error
 
 Of course Java is not happy with this because `List<Point>` is not a `List<Coordinate>`
 
-This is where Manifold steps in with structural interfaces:
+This is where Manifold can help with structural interfaces:
 
 <pre class="prettyprint">
 @Structural
@@ -415,12 +415,12 @@ public interface Coordinate {
 Adding `@Structural` to `Coordinate` effectively changes it to behave _structurally_ -- Java no longer
 requires classes to implement it by name, only its methods must be implemented.
 
-###Variance
+###Type Assignability and Variance
 
 Essentially a type is assignable to a structural inteface if it provides compatible versions of all the
 methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
 deliberate. The looser term concerns the notion that a structural inteface method is variant with respect
-to the types in it’s signature. Specifically its parameter types are contravariant and its return type is
+to the types in its signature. Specifically its parameter types are contravariant and its return type is
 covariant. For example:
 
 <pre class="prettyprint">
@@ -437,7 +437,7 @@ public static class MyCapitalizer {
 </pre>
 
 At first glance it looks like `MyCapitaizer` does not satisfy the structure of `Capitalizer`, neither the
-parameter type nor the return type of the method match the ineterface. After careful inspection, however,
+parameter type nor the return type of the method match the interface. After careful inspection, however,
 it is clear the methods are call-compatible from the perspective of `Capitalizer`:
 
 <pre class="prettyprint">
