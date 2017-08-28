@@ -1,60 +1,19 @@
 ## Manifold in a Nutshell
 
-At its core Manifold is a unique framework for dynamically and transparently extending Java's type system.
+At its core Manifold is a unique framework that dynamically and transparently extends Java's type system.
 
-Building on this framework Manifold provides constructive features we see in other languages and platforms
-like:
+Building on this core framework Manifold provides constructive features, some of which we see in other 
+languages and platforms like:
 
+* **Type-safe Metaprogramming**
 * **Extension Methods**
-* **Metaprogramming**
 * **Structural Typing**
 
 Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
 integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
 runtime classes, and type-safe access to raw **SQL**.
 
-At a high level these features are classified as **Extension Manifolds** and **Type Manifolds**.
-
-### Extension Manifolds
-
-Extension Manifolds let you augment existing Java classes including Java's own runtime classes such as
-`String`. You can add new methods, annotations, and interfaces to any class your project uses.
-
-Let's say you want to make a new method for `String` so you can easily echo the string's value to the
-console. With plain Java you might write a "Util" library like this:
-
-<pre class="prettyprint lang-java"> public class MyStringUtil {
-    public static void echo(String value) {
-      System.out.println(value);
-    }
-  }</pre>
-
-And you'd use it like this:
-
-<pre class="prettyprint lang-java">  MyStringUtil.echo("Manifold");</pre>
-
-Instead with Manifold you create an _**Extension Class**_:
-
-<pre class="prettyprint">  @Extension
-  public class MyStringExtension {
-    public static void echo(@This String thiz) {
-      System.out.println(thiz);
-    }
-  }</pre>
-
-Here we've added a new `echo()` method to `String`, so we use it like this:
-
-<pre class="prettyprint">  "Manifold".ehco();</pre>
-
-This is a powerful feature. Extensions eliminate a lot of intermediate code in the form of "Util" libraries
-and the like. They also clean up code by making it easier to read and write since the methods are object
-oriented. Arguably the most beneficial aspect of extensions is how much easier it is to discover and use
-them in your IDE:
-
-##todo: screenshot of code completion showing the echo() method on String
-
-There's a lot more to extensions including the addition of **Structural Interfaces** similar to types in
-the [Go language](https://golang.org/). We'll cover more later in this guide.
+At a hight level all Manifold features are classified as **Type Manifolds** and **Extension Manifolds**.
 
 ### Type Manifolds
 
@@ -85,11 +44,54 @@ Manifold supports:
 *   BareBones templates (*)
 *   DDL and SQL (*)
 
+### Extension Manifolds
+
+An Extension Manifold is a special kind of Type Manifold that lets you augment existing Java classes 
+including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
+interfaces to any class your project uses.
+
+Let's say you want to make a new method for `String` so you can easily echo the string's value to the
+console. With plain Java you might write a "Util" library like this:
+
+<pre class="prettyprint lang-java"> public class MyStringUtil {
+    public static void echo(String value) {
+      System.out.println(value);
+    }
+  }</pre>
+
+And you'd use it like this:
+
+<pre class="prettyprint lang-java">  MyStringUtil.echo("Manifold");</pre>
+
+Instead with Manifold you create an _**Extension Class**_:
+
+<pre class="prettyprint">  @Extension
+  public class MyStringExtension {
+    public static void echo(@This String thiz) {
+      System.out.println(thiz);
+    }
+  }</pre>
+
+Here we've added a new `echo()` method to `String`, so we use it like this:
+
+<pre class="prettyprint">  "Manifold".ehco();</pre>
+
+Extensions eliminate a lot of intermediate code in the form of "Util" libraries
+and the like. They also clean up code by making it easier to read and write since the methods are object
+oriented. Arguably the most beneficial aspect of extensions is how much easier it is to discover and use
+them in your IDE:
+
+##todo: screenshot of code completion showing the echo() method on String
+
+There's a lot more to extensions including the addition of **Structural Interfaces** similar to types in
+the [Go language](https://golang.org/). We'll cover more later in this guide.
+
+
 ### Benefits
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
 generation step in the build, no extra .class files to manage, no annotation processors, and no extra
-class loaders engaged at runtime.
+class loaders to engage at runtime.
 
 Benefits of this approach include:
 
@@ -98,7 +100,7 @@ Benefits of this approach include:
 processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- you can build your own Manifolds
-*   **No code generation step**
+*   **No code generation build step**
 *   **Rich IDE experience** with IntelliJ IDEA
 
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
@@ -158,16 +160,20 @@ it from regular methods in the class.
 
 That's all there is to it. You can use extensions just like normal methods on the extended class:
 
-<pre class="prettyprint">String name = "Manifold";
-name.echo();</pre>
+<pre class="prettyprint">
+String name = "Manifold";
+name.echo();
+</pre>
 
 You can also define `static` extension methods. Since static methods don't have a receiver, the method
 itself must be annotated with `manifold.ext.api.Extension`:
 
-<pre class="prettyprint">@Extension
+<pre class="prettyprint">
+@Extension
 public static String lineSeparator() {
   return System.lineSeparator();
-}</pre>
+}
+</pre>
 
 Call static extensions just as if they were on the extended class:
 
@@ -179,26 +185,30 @@ You can extend generic classes too and define generic methods. This is how Manif
 work with collections and other generic classes. For example, here is the `first()` extension method on
 `Iterable`:
 
-<pre class="prettyprint">public static <T> T first(@This Iterable<T> thiz, Predicate<T> predicate) {
+<pre class="prettyprint">
+public static &lt;T> T first(@This Iterable&lt;T> thiz, Predicate&lt;T> predicate) {
   for (T element: thiz) {
     if (predicate.test(element)) {
       return element;
     }
   }
   throw new NoSuchElementException();
-}</pre>
+}
+</pre>
 
-Notice the method is implemented as a generic method with the same type variable designation as the
-extended class: `T`. Since extension methods are static this is how we convey type variables from the
-extended class to the extension method. Note type variable names, must match the extended type's type
-variables and must be declared in the same order.
+Notice the extesnion is a generic method with the same type variable designation as the
+extended class: `T` from `Iterable<T>`. Since extension methods are static this is how we convey type 
+variables from the extended class to the extension method. Note type variable names must match the 
+extended type's type variables and must be declared in the same order.
 
 To define a generic extension method you append the type variables of the method to the list of the
 extended class' type variables. Manifold's `map()` extension illustrates this format:
 
-<pre class="prettyprint">public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E, R> mapper) {
+<pre class="prettyprint">
+public static &lt;E, R> Stream<R> map(@This Collection&lt;E> thiz, Function&lt;? super E, R> mapper) {
   return thiz.stream().map(mapper);
-}</pre>
+}
+</pre>
 
 Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
 variable `E`.
@@ -207,13 +217,14 @@ variable `E`.
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
-call to a static method in an extension look like an instance method call on the extended class. As a
+call to a static method in an extension look like a call to an instance method on the extended class. As a
 consequence extension calls dispatch **statically**.
 
 So unlike a virtual method call an extension call is always made based on the extended type declared in
 the extension, not the runtime type of the left hand side of the call. To illustrate:
 
-<pre class="prettyprint">public class Tree {
+<pre class="prettyprint">
+public class Tree {
 }
 
 public class Dogwood extends Tree {
@@ -227,7 +238,8 @@ public static void bark(@This Dogwood thiz) {
 }
 
 Tree tree = new Dogwood();
-tree.bark();</pre>
+tree.bark(); // "rough"
+</pre>
 
 At compile-time `tree` is of type `Tree`, therefore it transforms to a static invocation of `bark(Tree)`,
 which prints "rough".
@@ -237,7 +249,8 @@ of the extended object is null at the call site. Manifold extension libraries ex
 improve readability and null-safety. For example, `isNullOrEmpty()` on `CharSequence` compares the
 receiver's value to null so you don't have to:
 
-<pre class="prettyprint">public static boolean isNullOrEmpty(@This CharSequence thiz) {
+<pre class="prettyprint">
+public static boolean isNullOrEmpty(@This CharSequence thiz) {
   return thiz == null || thiz.length() == 0;
 }
 
@@ -254,7 +267,8 @@ Here the example doesn't check for null and instead shifts the burden to the ext
 An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:
 
-<pre class="prettyprint">public class Tree {
+<pre class="prettyprint">
+public class Tree {
   public void kind() {
     println("evergreen");
   }
@@ -262,7 +276,8 @@ parameters match a class method, the class method always has precedence over the
 
 public static void kind(@This Tree thiz) {
   println("binary");
-}</pre>
+}
+</pre>
 
 The extension method never wins, a call to `kind()` always prints "evergreen". Additionally, if at
 compile-time `Tree` and the extension conflict as in the example, the compiler warns of the conflict
@@ -271,7 +286,8 @@ in the extension class.
 An extension method may overload a class method where the method names are the same, but the parameter
 types are different:
 
-<pre class="prettyprint">public class Tree {
+<pre class="prettyprint">
+public class Tree {
   public void harvest() {
     println("nuts");
   }
@@ -279,7 +295,8 @@ types are different:
 
 public static void harvest(@This Tree thiz, boolean all) {
   println(all ? "wood" : thiz.harvest());
-}</pre>
+}
+</pre>
 
 A call to `tree.harvest(true)` prints "wood".
 
@@ -291,11 +308,11 @@ the module's.
 
 ### Annotation Extensions
 
-Extension classes are not limited to extension methods. Other features can be projected onto the extended
-class, these include _annotations_. At present annotation extensions are limited to the extended class;
-you can't yet add annotations to members of the extended class.
+In addition to adding new methods, extension classes can also add _annotations_ to a class. At present 
+annotation extensions are limited to the extended class; you can't yet add annotations to members of the 
+extended class.
 
-Annotations added to an extension class are logically applied to the extended class. However, it should
+It should
 be noted as with all Manifold features the effects are compile-time manifestations; extension annotations
 are limited to a compile-time existence. Therefore, even if an annotation has `RUNTIME` retention, it will
 only be accessible on the extended class at compile-time. This feature is most useful when using
@@ -328,7 +345,7 @@ Manifold includes several useful extension libraries for commonly used classes.
 
 ## Structural Interfaces
 
-Java is a _nominally_ typed language, meaning types are assignable based on the names declared in their
+Java is a _nominally_ typed language -- types are assignable based on the names declared in their
 type definitions. For example:
 
 <pre class="prettyprint">
