@@ -400,7 +400,7 @@ List<Point> points = Arrays.asList(new Point(2, 1), new Point(3, 5), new Point(1
 Collections.sort(points, coordSorter); // error
 </pre>
 
-Of course Java is not happy with this because `List<Point>` is not a `List<Coordinate>`
+Of course Java is not happy with this because because `Point` does not nominally implement `Coordinate`. 
 
 This is where Manifold can help with structural interfaces:
 
@@ -415,9 +415,10 @@ public interface Coordinate {
 Adding `@Structural` to `Coordinate` effectively changes it to behave _structurally_ -- Java no longer
 requires classes to implement it by name, only its methods must be implemented.
 
+
 ###Type Assignability and Variance
 
-Essentially a type is assignable to a structural inteface if it provides compatible versions of all the
+Essentially a type is assignable to a structural interface if it provides compatible versions of all the
 methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
 deliberate. The looser term concerns the notion that a structural inteface method is variant with respect
 to the types in its signature. Specifically its parameter types are contravariant and its return type is
@@ -460,8 +461,10 @@ reference types.
 
 ###Implementation by Field
 
-Call-compatibility is not limited to methods.  A class can implement a structural interface property
-method with a public field:
+Another example where classes have wiggle room implementing structural interfaces involves property 
+getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
+can access and/or change. Since a field is basically the same thing a class can implement a getter and/or 
+a setter with a field:
 
 <pre class="prettyprint">
 @Structural
@@ -477,24 +480,124 @@ public class Person {
 Name person = (Name) new Person();
 person.setName("Bubba");
 String name = person.getName();
-</pre>
+</pre>                                                             
 
-Basically a field can serve as a property method if it matches the property method's declared name, minus
-the get/set prefixes. Note a field can match a property method in different ways.  For example, `Person`'s
-field could be any of the following: `name`, `_name`, or `Name`.
+Basically a field implements a property method if its name matches the method's name minus the 
+is/get/set prefixes and taking into account field naming conventions. For example, fields `Name`, `name`, 
+and `_name` all match the `getName()` property method and are weighted in that order.
+
 
 ###Implementation by Extension
 
+It's possible to implement methods of a structural interface via extension methods.  Looking back at the
+`Coordinate` example, consider this class:
+<pre class="prettyprint">
+public class Vector {
+  private double _magnitude;
+  private double _direction;
+  
+  public Vector(double magnitude, double direction) {
+    _magnitude = magnitude;
+    _direction = direction;
+  }
+  
+  // Does not have X, Y coordinate methods  :(
+}
+</pre>
 
+In physics a vector and a coordinate are different ways of expressing the same thing; they can be converted 
+from one to another.  So it follows the `coordSorter` example can sort `Vector` instances in terms of X, Y 
+`Coordinates`... if `Vector` supplied `getX()` and `getY()` methods, which it does not.
 
-###Dynamic Typing
+What if an extension class supplied the methods?
+  
+<pre class="prettyprint">
+@Extension
+public class MyVectorExtension {
+  public double getX(@This Vector thiz) {
+    return thiz.getMagnitude() * Math.cos(thiz.getDirection); 
+  }
+  public double getY(@This Vector thiz) {
+    return thiz.getMagnitude() * Math.sin(thiz.getDirection); 
+  }
+}
+</pre>
 
-blah blah
+Voila! `Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
 
+In general implementation by extension is a powerful technique to provide a common API for classes your 
+project uses.
 
-##todo: cover details about type assignability and other stuff
+  
+###Dynamic Typing with `ICallHandler`
+
+Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`.  
+
+<pre class="prettyprint">
+public interface ICallHandler {
+  /**
+   * A value resulting from #call() indicating the call could not be dispatched.
+   */
+  Object UNHANDLED = new Object() {
+    @Override
+    public String toString() {
+      return "Unhandled";
+    }
+  };
+
+  /**
+   * Dispatch a call to an interface method.
+   *
+   * @param iface The extended interface and owner of the method
+   * @param name The name of the method
+   * @param returnType The return type of the method
+   * @param paramTypes The parameter types of the method
+   * @param args The arguments from the call site
+   * @return The result of the method call or UNHANDLED if the method is not dispatched.  
+   *   Null if the method's return type is void.
+   */
+  Object call(Class iface, String name, Class returnType, Class[] paramTypes, Object[] args);
+}
+</pre>
+
+A class can implement `ICallHandler` nominally or it can be made to implement it via extension class.  
+Either way instances of the class can be cast to _any_ structural interface.  Structural calls
+dispatch to `ICallHandler.call()`.  The class' implementation
+of `call()` can delegate the call any way it chooses.
+
+For instance, via class extension Manifold provides `ICallHandler` support for `java.util.Map` so that 
+getter and setter calls work directly with values in the map:
+
+<pre class="prettyprint">
+Map<String,Object> map = new HashMap<>();
+Name person = (Name) map;
+perosn.setName("Manifold");
+println(person.getName());
+</pre>
+ 
+Because `Map` is a `ICallHandler` instances of it can be cast to any structural interface, such as
+`Name` from the earlier example.  The `ICallHandler` implementation transforms get/set property calls
+to get/put calls into the map using the name of the property in the method.  Additionally, method calls
+can be made on map entries where the entry key matches name of the method and the value is an instance 
+of a functional interface matching the signature of the call:
+
+<pre class="prettyprint">
+map.put( "run", (Runnable)()-> println("hello") );
+Runnable runner = (Runnable) map;
+runner.run();
+</pre>
+
+This example prints "run" because `Map.call()` dispatches the call to the "run" entry having a 
+`Runnable` functional interface value.
+
+Note the similarity of this functionality on `Map` with _expando_ types in dynamic languages.  The
+main difference being that invocations must be made through structural interfaces and not directly on 
+the map.
+
+See `extensions.java.util.Map.MapStructExt.java` for details.
+
 
 ## Type Manifolds
 
-fuckin' manifolds, how do they work?
+manifolds, how do they work?
 

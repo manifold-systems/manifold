@@ -634,13 +634,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   private static Class createProxy( Class iface, Class rootClass )
   {
+    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     if( hasCallHandlerMethod( rootClass ) )
     {
-      String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
       return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
     }
-
-    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
   }
 
