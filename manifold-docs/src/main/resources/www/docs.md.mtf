@@ -1,6 +1,6 @@
 ## Manifold in a Nutshell
 
-At its core Manifold is a unique framework that dynamically and transparently extends Java's type system.
+At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
 
 Building on this core framework Manifold provides constructive features, some of which we see in other 
 languages and platforms like:
@@ -13,7 +13,7 @@ Leveraging these features Manifold delivers a powerful set of Java extensions in
 integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
 runtime classes, and type-safe access to raw **SQL**.
 
-At a hight level all Manifold features are classified as **Type Manifolds** and **Extension Manifolds**.
+At a high level all Manifold features are classified as **Type Manifolds** and **Extension Manifolds**.
 
 ### Type Manifolds
 
@@ -41,8 +41,8 @@ Manifold supports:
 *   JavaScript
 *   Properties resource files
 *   Image resource files
-*   BareBones templates (*)
-*   DDL and SQL (*)
+*   BareBones templates (coming soon)
+*   DDL and SQL (comming soon)
 
 ### Extension Manifolds
 
@@ -109,6 +109,12 @@ it incrementally without having to rewrite classes or conform to a new way of do
 ## Setup
 
 blah blah blah
+
+
+## Type Manifolds
+
+manifolds, how do they work?
+
 
 ## Extension Classes
 
@@ -312,11 +318,72 @@ In addition to adding new methods, extension classes can also add _annotations_ 
 annotation extensions are limited to the extended class; you can't yet add annotations to members of the 
 extended class.
 
-It should
-be noted as with all Manifold features the effects are compile-time manifestations; extension annotations
-are limited to a compile-time existence. Therefore, even if an annotation has `RUNTIME` retention, it will
-only be accessible on the extended class at compile-time. This feature is most useful when using
-annotation processors and you need to annotate classes you otherwise can't modify.
+It should be noted extension annotations are limited to a compile-time existence. Therefore, even if an 
+annotation has `RUNTIME` retention, it will only be accessible on the extended class at compile-time. This 
+feature is most useful when using annotation processors and you need to annotate classes you otherwise 
+can't modify.
+
+You can also make existing interfaces structural using annotation extensions:
+
+<pre class="prettyprint">
+package extensions.abc.Widget;
+@Extension
+@Structural // makes the interface structural
+public class MyWidgetExtension {
+}
+</pre>
+
+This extension effectively changes the `abc.Widget` interface into a structural interface. Classes in 
+your project no longer have to declare they implement it nominally.  
+
+See _Structural Interfaces_ later in this guide for fuller coverage of structural interfaces.
+
+### Interface Extensions
+
+An extension class can add interfaces to its extended class.  This feature helps with a variety of 
+use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
+  
+<pre class="prettyprint">
+public final class Foo {
+  public String sayHello() {
+    return "hi";      
+  }
+}
+
+@Structural
+public interface Hello {
+  String sayHello();
+}
+</pre>
+
+Although `Foo` does not implement `Hello` nominally, it defines the `sayHello()` method that otherwise 
+satisfies the interface.  Let's assume we don't control `Foo`'s implementation, but we need it to
+implement `Hello` nominally.  We can do that with an interface extension:
+
+<pre class="prettyprint">
+@Extension
+public class MyFooExtension implements Hello {
+}
+</pre>
+
+Now the compiler believes `Foo` directly implements `Hello`, so your project's source code can use `Foo` 
+structurally: 
+
+<pre class="prettyprint">
+Hello hello = new Foo();
+hello.sayHello();
+</pre>
+
+(see _Structural Interfaces_ later in this guide for fuller coverage of structural 
+interfaces) 
+
+Essentially interface extensions help improve architecture where you don't control the implementation of 
+classes your project uses.  Another example of this involves _logical decoupling_.  For example, if you 
+have a class with two or more more logical traits mixed together as methods of the class, interface 
+extensions facilitate the definition of new interfaces to provide logical _views_ separating the class into
+cohesive traits.  Use interface extensions to add the new interfaces to the existing class' definition. 
+
+:todo maybe provide example involving List?
 
 ### Extension Libraries
 
@@ -433,13 +500,12 @@ Adding `@Structural` to `Coordinate` effectively changes it to behave _structura
 requires classes to implement it by name, only its methods must be implemented.
 
 
-###Type Assignability and Variance
+### Type Assignability and Variance
 
-Essentially a type is assignable to a structural interface if it provides compatible versions of all the
+A type is assignable to a structural interface if it provides compatible versions of all the
 methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
-deliberate. The looser term concerns the notion that a structural inteface method is variant with respect
-to the types in its signature. Specifically its parameter types are contravariant and its return type is
-covariant. For example:
+deliberate. The looser term concerns the notion that a structural interface method is variant with respect
+to the types in its signature:
 
 <pre class="prettyprint">
 @Structural
@@ -476,7 +542,7 @@ as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no lo
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.
 
-###Implementation by Field
+### Implementation by Field
 
 Another example where classes have wiggle room implementing structural interfaces involves property 
 getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
@@ -504,7 +570,7 @@ is/get/set prefixes and taking into account field naming conventions. For exampl
 and `_name` all match the `getName()` property method and are weighted in that order.
 
 
-###Implementation by Extension
+### Implementation by Extension
 
 It's possible to implement methods of a structural interface via extension methods.  Looking back at the
 `Coordinate` example, consider this class:
@@ -546,7 +612,7 @@ In general implementation by extension is a powerful technique to provide a comm
 project uses.
 
   
-###Dynamic Typing with `ICallHandler`
+### Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`.  
 
@@ -608,13 +674,7 @@ This example prints "run" because `Map.call()` dispatches the call to the "run" 
 `Runnable` functional interface value.
 
 Note the similarity of this functionality on `Map` with _expando_ types in dynamic languages.  The
-main difference being that invocations must be made through structural interfaces and not directly on 
-the map.
+main difference is that invocations must be made through structural interfaces and not directly on 
+the map, otherwise `Map` behaves pretty much like an expando object.
 
 See `extensions.java.util.Map.MapStructExt.java` for details.
-
-
-## Type Manifolds
-
-manifolds, how do they work?
-
