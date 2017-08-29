@@ -13,14 +13,15 @@ Leveraging these features Manifold delivers a powerful set of Java extensions in
 integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
 runtime classes, and type-safe access to raw **SQL**.
 
-At a high level all Manifold features are classified as **Type Manifolds** and **Extension Manifolds**.
+At a high level each of these features is classified as either a **Type Manifold** or an
+**Extension** via the **Extension Manifold**.
 
 ### Type Manifolds
 
 A _type manifold_ transforms a data source into a data _type_ you can use directly in your Java code 
-without a code generation step or other build artifact. Essentially with type manifolds a data source 
-**_is_** a data type. Structural changes you make to your data source are _immediately_ available in your 
-code.   
+without a code generation step or other build artifact. In essence with type manifolds a data source 
+**_is_** a data type -- data changes you make through a type manifold are _immediately_ available 
+in your code.   
 
 For instance, normally you access Java properties resources like this:
 
@@ -52,9 +53,10 @@ Manifold supports:
 *   BareBones templates (coming soon)
 *   DDL and SQL (comming soon)
 
-### Extension Manifolds
 
-An _extension manifold_ is a special kind of type manifold that lets you augment existing Java classes 
+### The Extension Manifold
+
+The _extension manifold_ is a special kind of type manifold that lets you augment existing Java classes 
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
 interfaces to any class your project uses.
 
@@ -94,13 +96,13 @@ Here we've added a new `echo()` method to `String`, so we use it like this:
 
 Extensions eliminate a lot of intermediate code in the form of "Util" libraries
 and the like. They also clean up code by making it easier to read and write since the methods are object
-oriented. Arguably the most beneficial aspect of extensions is how much easier it is to discover and use
+oriented. Perhaps the most beneficial aspect of extensions is how much easier it is to discover and use
 them in your IDE:
 
 ![echo method](images/echo_example.png)
 
 
-There's a lot more to extensions including **Structural Interfaces**, which are similar to types in
+There's a lot more to extensions including **Structural Interfaces**, which are similar to interfaces in
 the [Go language](https://golang.org/). We'll cover more later in this guide.
 
 
@@ -165,13 +167,13 @@ public class MyStringExtension {
 }
 ```
 
-All extension classes must be rooted in the `extensions` package. In addition the remainder of the package
+All extension classes must be rooted in the `extensions` package. Furthermore the remainder of the package
 name must be the qualified name of the extended class. Thus, as the example illustrates, an extension
 class on `java.lang.String` must reside directly in package `extensions.java.lang.String`. Note this
 convention facilitates fast access to extension classes and avoids the overhead and ceremony of
 alternative means such as annotation processors.
 
-In addition an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
+Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
 extension classes from other classes that may reside in the same package.
 
 ### <a class="anchor" id="extensions-basics"></a>Extension Method Basics
@@ -452,7 +454,7 @@ Greeting foo = new Foo(); // error
 This does not compile because `Foo` does not explicitly implement `Greeting` by name in its `implements`
 clause.
 
-By contrast a structurally typed language has no problem with this example.  Basically, structural typing
+By contrast a _structurally_ typed language has no problem with this example.  Basically, structural typing
 requires only that a class implement interface _methods_, there is no need for a class to declare that it
 implements an interface.
 
@@ -518,6 +520,10 @@ public interface Coordinate {
 
 Adding `@Structural` to `Coordinate` effectively changes it to behave _structurally_ -- Java no longer
 requires classes to implement it by name, only its methods must be implemented.
+
+Note a class can still implement a structural interface nominally. Doing so helps both people and tooling 
+comprehend your code faster. The general idea is to use an interface structurally when you otherwise can't 
+use it nominally or doing so overcomplicates your code.
 
 
 ### Type Assignability and Variance

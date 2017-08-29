@@ -595,7 +595,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     //## note: we'd like to avoid the operation if the obj not a ICallHandler,
     // but that is an expensive structural check, more expensive than this call...
-    //  if( obj instanceof ICallHandler )
+    //  if( obj is a ICallHandler )
     //  {
     Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
     ifaces.add( iface );
