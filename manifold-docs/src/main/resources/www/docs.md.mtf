@@ -271,8 +271,8 @@ At compile-time `tree` is of type `Tree`, therefore it transforms to a static in
 which prints "rough".
 
 Another consequence of static dispatching is that an extension method can receive a call even if the value
-of the extended object is null at the call site. Manifold extension libraries exploit this feature to
-improve readability and null-safety. For example, `isNullOrEmpty()` on `CharSequence` compares the
+of the extended object is `null` at the call site. Manifold extension libraries exploit this feature to
+improve readability and null-safety. For example, `CharSequence.isNullOrEmpty()` compares the
 receiver's value to null so you don't have to:
 
 ```java
@@ -408,7 +408,7 @@ cohesive traits.  Use interface extensions to add the new interfaces to the exis
 ### Extension Libraries
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
-Manifold includes several useful extension libraries for commonly used classes.
+Manifold includes several extension libraries for commonly used classes.
 
 *   **Collections**
 
@@ -433,7 +433,7 @@ Manifold includes several useful extension libraries for commonly used classes.
 ## Structural Interfaces
 
 Java is a _nominally_ typed language -- types are assignable based on the names declared in their
-type definitions. For example:
+definitions. For example:
 
 ```java
 public class Foo {
@@ -484,8 +484,8 @@ as a `Comparator` implementation. Each class defines methods for obtaining X, Y 
 classes don't implement a common interface. We don't control the implementation of the classes, so we're
 faced with having to write three distinct, yet nearly identical, Comparators.
 
-This is where we the flexibility of structural interface could really help. If Java supported it, we'd
-declare a structural type with the `getX()` and` getY()` methods and write only one `Comparator`:
+This is where the flexibility of structural interfaces could really help. If Java supported it, we'd
+declare a structural interface with `getX()` and` getY()` methods and write only one `Comparator`:
 
 ```java
 public interface Coordinate {
@@ -556,7 +556,7 @@ assignable to `Capitalizer`’s `CharSequence` return type – _covariant_ retur
 call-compatibility. Therefore, even though their method signatures aren’t identical, `MyCapitalizer` is
 structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`’s methods.
 
-Note signature variance also involves primitive types.  You may have spotted this in the `Component`
+Signature variance also involves primitive types.  You may have spotted this in the `Component`
 class referenced earlier in the `Coordinate` example where `Component.getX()` returns `int`, not `double`
 as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no loss of precision
 the method is call-compatible. As a result signature variance holds for primitive types as well as
@@ -634,7 +634,7 @@ project uses.
   
 ### Dynamic Typing with `ICallHandler`
 
-Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`.  
+Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
 
 ```java
 public interface ICallHandler {
@@ -663,7 +663,7 @@ public interface ICallHandler {
 }
 ```
 
-A class can implement `ICallHandler` nominally or it can be made to implement it via extension class.  
+A class can implement `ICallHandler` nominally or it can be made to implement it via extension class.
 Either way instances of the class can be cast to _any_ structural interface.  Structural calls
 dispatch to `ICallHandler.call()`.  The class' implementation
 of `call()` can delegate the call any way it chooses.
