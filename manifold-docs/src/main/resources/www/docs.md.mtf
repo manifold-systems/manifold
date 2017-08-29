@@ -132,7 +132,71 @@ blah blah blah
 
 ## Type Manifolds
 
-manifolds, how do they work?
+As Java programmers we access and process a wide range of data sources.  These include properties files, 
+image files, JSON, XML, SQL, and JavaScript (and a lot more). There are several ways we go about
+ accessing them.  For 
+instance, we typically use utility libraries to access images and properties, we run code generators to
+write classes for JSON and XML, and sometimes we use DSLs and ORMs to approximate SQL 
+and model relational schemas.  Fundamentally we resort to these tools because 
+Java's type system doesn't give us direct access to the data sources, right?
+
+What if we didn't need libraries or code generators and instead we could access data sources 
+directly?  This is essentially what type manifolds achieve.
+
+Basically a type manifold is a sort of type system _driver_ that provides direct access to a specific data 
+source as a set of types in Java.  There is no code generation step or Java class files to create.  You
+reference the structure of the data source (the metadata) directly in your code using types provided by the type manifold.
+Changes you make to the metadata are immediately available in your code, with no compilation or build step
+involved.  Essentially the data source _is_ the type.
+
+To illustrate, normally you access Java properties resources like this:
+
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+String myMessage = myProperties.getProperty("my.message");
+```
+
+This is a lot of code, but since properties files are foreign to Java's type system there is no direct,
+type-safe access to them...
+
+Until now:
+
+```java
+String myMessage = MyProperties.my.message;
+```
+
+Concise and type-safe!
+
+Any type of data source accessible to Java is a potential type manifold. These include resource files,
+schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. 
+ 
+Currently Manifold provides reference implementations for a few commonly used data sources:
+
+*   JSON and JSON Schema
+*   JavaScript
+*   Properties files
+*   Image files
+*   Template files
+
+The Manifold team is also working on direct support more data sources including:
+*   Standard SQL and DDL
+*   CSV   
+
+### JSON and JSON Schema
+
+
+### JavaScript
+
+
+### Properties Files
+
+
+### Image Files
+
+
+### Template Files
+
 
 
 ## Extension Classes
@@ -224,7 +288,7 @@ public static <T> T first(@This Iterable<T> thiz, Predicate<T> predicate) {
 }
 ```
 
-Notice the extesnion is a generic method with the same type variable designation as the
+Notice the extension is a generic method with the same type variable designation as the
 extended class: `T` from `Iterable<T>`. Since extension methods are static this is how we convey type 
 variables from the extended class to the extension method. Note type variable names must match the 
 extended type's type variables and must be declared in the same order.
@@ -458,7 +522,7 @@ By contrast a _structurally_ typed language has no problem with this example.  B
 requires only that a class implement interface _methods_, there is no need for a class to declare that it
 implements an interface.
 
-Although nominal typing is arguably more sound and easier for both people and machines to digest, in some
+Although nominal typing is perhaps more sound and easier for both people and machines to digest, in some
 circumstances the flexibility of structural typing makes it more suitable. Take the following classes:
 
 ```java
@@ -562,7 +626,7 @@ assignable to `Capitalizer`’s `CharSequence` return type – _covariant_ retur
 call-compatibility. Therefore, even though their method signatures aren’t identical, `MyCapitalizer` is
 structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`’s methods.
 
-Signature variance also involves primitive types.  You may have spotted this in the `Component`
+Signature variance also supports primitive types.  You may have spotted this in the `Component`
 class referenced earlier in the `Coordinate` example where `Component.getX()` returns `int`, not `double`
 as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no loss of precision
 the method is call-compatible. As a result signature variance holds for primitive types as well as
@@ -624,18 +688,18 @@ What if an extension class supplied the methods?
 @Extension
 public class MyVectorExtension {
   public double getX(@This Vector thiz) {
-    return thiz.getMagnitude() * Math.cos(thiz.getDirection); 
+    return thiz.getMagnitude() * Math.cos(thiz.getDirection()); 
   }
   public double getY(@This Vector thiz) {
-    return thiz.getMagnitude() * Math.sin(thiz.getDirection); 
+    return thiz.getMagnitude() * Math.sin(thiz.getDirection()); 
   }
 }
 ```
 
 Voila! `Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
 
-In general implementation by extension is a powerful technique to provide a common API for classes your 
-project uses.
+Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
+project does not control.
 
   
 ### Dynamic Typing with `ICallHandler`
@@ -670,9 +734,9 @@ public interface ICallHandler {
 ```
 
 A class can implement `ICallHandler` nominally or it can be made to implement it via extension class.
-Either way instances of the class can be cast to _any_ structural interface.  Structural calls
-dispatch to `ICallHandler.call()`.  The class' implementation
-of `call()` can delegate the call any way it chooses.
+Either way instances of the class can be cast to _any_ structural interface where structural calls
+dispatch to `ICallHandler.call()`.  The class' implementation of `call()` can delegate the call any 
+way it chooses.
 
 For instance, via class extension Manifold provides `ICallHandler` support for `java.util.Map` so that 
 getter and setter calls work directly with values in the map:
