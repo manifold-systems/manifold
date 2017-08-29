@@ -125,9 +125,17 @@ processors, or runtime agents
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.
 
+
 ## Setup
 
-blah blah blah
+### Maven
+
+### Gradle
+
+### Ant
+
+### IntelliJ 
+
 
 
 ## Type Manifolds
@@ -173,30 +181,93 @@ schemas, queries, database definitions, templates, spreadsheets, programming lan
  
 Currently Manifold provides reference implementations for a few commonly used data sources:
 
-*   JSON and JSON Schema
-*   JavaScript
 *   Properties files
 *   Image files
+*   JSON and JSON Schema
+*   JavaScript
 *   Template files
 
-The Manifold team is also working on direct support more data sources including:
+The Manifold team is also working on direct support for more data sources including:
 *   Standard SQL and DDL
 *   CSV   
-
-### JSON and JSON Schema
-
-
-### JavaScript
 
 
 ### Properties Files
 
+Most Java projects incorporate properties resource files (*.properties files) as a means of separating
+text from source. Unfortunately access to these files requires typical boilerplate library code and the 
+use of hard-coded strings:
+
+`resources/abc/MyProperties.properties`:
+```properties
+my.chocolate = Chocolate
+my.chocolate.dark = Dark Chocolate
+my.chocolate.milk = Milk Chocolate
+```
+
+Normally we access a properties file indirectly using the `Properties` utility with hard-coded strings:
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+```
+
+Then we use the resulting Properties instance to access individual properties as hard-coded strings: 
+```java
+println(myProperties.getProperty("my.dark.chocolate"));
+```
+
+With the Properties type manifold we can access properties directly using simple, type-safe code:
+```java
+println(abc.MyProperties.my.dark.chocolate);
+```
+
+Behind the scenes the Properties manifold creates the `abc.MyProperties` class, which directly reflects 
+the properties in the resource file.  Changes you make in the file are immediately available in your code 
+with no user intervention in between -- no code gen files, no compiling, no DSLs.
+
+:todo screencast to demonstrate immediate access to changes in java
 
 ### Image Files
 
+User interfaces utilize image resource files for one purpose or another.  Java supports most of the
+popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
+`javax.swing.ImageIcon` and `javax.scene.image.Image`.
+  
+As with any library, access to the underlying data source is indirect: 
+```java
+ImageIcon image = new ImageIcon("abc/widget/images/companyLogo.png");
+```
+
+But then we typically layer another library on top of this one to help with caching the image and so 
+forth:
+```java
+import abc.widget.util.ImageUtilties;
+
+ImageIcon image = ImageUtilities.getCachedImage("abc/widget/images/companyLogo.png");
+render(image);
+```
+
+The image type manifold eliminates all of this and provides direct, type-safe access to image resources.
+```java
+import abc.widget.images.*;
+
+ImageIcon image = companyLogo_png.get();
+render(image);
+```
+
+All image resources are accessible as classes where each class has the same name as its resource file
+including a suffix encoding the image extension, this helps distinguish between images of 
+different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
+ `ImageIcon` class, which facilitates usage of the image classes with existing frameworks. As will all
+  type manifolds there are no code gen files or other build steps involved.
+
+### JSON and JSON Schema
+
+### JavaScript
 
 ### Template Files
 
+### Build Your Own Manifold
 
 
 ## Extension Classes
