@@ -1,6 +1,7 @@
 package manifold.api.json;
 
 import extensions.java.net.URL.ManUrlExt;
+import extensions.javax.script.Bindings.ManBindingsExt;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -207,6 +208,28 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "}\n" );
 
+    // These are all implemented by Bindings via ManBindingsExt
+    indent( sb, indent );
+    sb.append( "default String" ).append( " toJson() {\n" );
+    indent( sb, indent );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toJson(this);\n" );
+    indent( sb, indent );
+    sb.append( "};\n");
+
+    indent( sb, indent );
+    sb.append( "default String" ).append( " toXml() {\n" );
+    indent( sb, indent );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this);\n" );
+    indent( sb, indent );
+    sb.append( "};\n");
+
+    indent( sb, indent );
+    sb.append( "default String" ).append( " toXml(String name) {\n" );
+    indent( sb, indent );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this, name);\n" );
+    indent( sb, indent );
+    sb.append( "};\n");
+
     if( !shouldRenderTopLevel( this ) )
     {
       // Only add factory methods to top-level json structure
@@ -219,6 +242,7 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "  return (" ).append( getName() ).append( ")" ).append( Json.class.getName() ).append( ".fromJson(jsonText);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
+
     indent( sb, indent );
     sb.append( "static " ).append( getName() ).append( " fromJsonUrl(String url) {\n" );
     indent( sb, indent );
@@ -229,18 +253,21 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
     indent( sb, indent );
     sb.append( "}\n" );
+
     indent( sb, indent );
     sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url) {\n" );
     indent( sb, indent );
     sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(url);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
+
     indent( sb, indent );
     sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url, javax.script.Bindings json) {\n" );
     indent( sb, indent );
     sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".postForJsonContent(url, json);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
+
     indent( sb, indent );
     sb.append( "static " ).append( getName() ).append( " fromJsonFile(java.io.File file) {\n" );
     indent( sb, indent );

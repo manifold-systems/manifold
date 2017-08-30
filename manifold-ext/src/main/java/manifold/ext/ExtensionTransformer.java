@@ -729,6 +729,11 @@ public class ExtensionTransformer extends TreeTranslator
     {
       for( Class iface : ifaces )
       {
+        if( iface == proxiedIface )
+        {
+          continue;
+        }
+
         Method m = findMethod( iface, name, paramTypes );
         if( m != null )
         {
@@ -771,7 +776,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     catch( Exception e )
     {
-      throw new RuntimeException( e );
+      return null;
     }
     return null;
   }

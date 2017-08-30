@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.Json;
+import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.JsonUtil;
@@ -23,6 +24,16 @@ public class ManBindingsExt
     StringBuilder sb = new StringBuilder();
     toJson( thiz, sb, 0 );
     return sb.toString();
+  }
+
+  public static String toJson( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toJson( bindings );
+    }
+    return null;
   }
 
   /**
@@ -126,6 +137,26 @@ public class ManBindingsExt
     StringBuilder sb = new StringBuilder();
     toXml( thiz, name, sb, 0 );
     return sb.toString();
+  }
+
+  public static String toXml( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings );
+    }
+    return null;
+  }
+
+  public static String toXml( Object obj, String name )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings, name );
+    }
+    return null;
   }
 
   public static void toXml( @This Bindings thiz, String name, StringBuilder sb, int indent )
@@ -278,5 +309,31 @@ public class ManBindingsExt
   public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
   {
     return Json.makeStructureTypes( nameForStructure, thiz, mutable );
+  }
+
+  private static Bindings getBindingsFrom( Object obj )
+  {
+    Bindings bindings = null;
+    if( obj instanceof Bindings )
+    {
+      bindings = (Bindings)obj;
+    }
+    else
+    {
+      while( obj instanceof AbstractDynamicTypeProxy )
+      {
+        final Object root = ((AbstractDynamicTypeProxy)obj).getRoot();
+        if( root instanceof Bindings )
+        {
+          bindings = (Bindings)root;
+          break;
+        }
+        else
+        {
+          obj = root;
+        }
+      }
+    }
+    return bindings;
   }
 }

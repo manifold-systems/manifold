@@ -269,7 +269,7 @@ multitude of others.  They all do basically the same thing -- given a pre-define
 the libaries can read from and write to the type in terms of JSON:
 
 ```java
-Widget widget = new Widget(72, "prime");
+Widget widget = new Widget(bindings);
 ObjectMapper mapper = new ObjectMapper();
 
 String jsonStr = mapper.writeValueAsString(widget);
@@ -285,19 +285,21 @@ in the form of a generated or hand-crafted Java file.  Toward that goal, the JSO
 abstract types directly from your sample JSON or JSON Schema resource files:
 
 ```java
-Widget widget = new Widget(72, "prime");
+Widget widget = (Widget) bindings;
 
 String jsonStr = widget.toJson();
 Widget result = Widget.fromJson(jsonStr); 
 ```
 
-This approach removes the library and connects your code directly to JSON metadata, with no generated
-files in between. Another advantage of this technique involves type identity.  The Widget type is just
-an interface directly on the JSON Bindings.  The interface both abstracts and preserves the underlying
-implementation details of the JSON data storage.  This is achieved via a Manifold [extension interface](#extension-interfaces) on 
-the `javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces)
--- JSON types are structural interfaces. Essentially, the `widget` object _is_ the Bindings object; 
-changes you make to `widget` are changes directly on the Bindings. 
+This approach eliminates library usage and connects your code directly to JSON metadata.
+Another advantage involves type identity.  The `Widget` type is just
+an interface directly on the JSON Bindings.  The interface both abstracts and preserves the 
+implementation details of the underlying JSON object -- the `Bindings` object isn't wrapped or proxied.
+This is achieved via a Manifold [extension interface](#extension-interfaces) on the 
+`javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces) -- 
+JSON types are structural interfaces. Essentially, the `widget` object _is_ the `Bindings` object; 
+changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
+manifolds, there are no generated files or other build steps involved. 
  
 
 :todo See Bindings extension
