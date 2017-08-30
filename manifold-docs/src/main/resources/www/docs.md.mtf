@@ -1,101 +1,324 @@
 ## Manifold in a Nutshell
 
-At its core Manifold is a unique framework for dynamically and transparently extending Java's type system.
+At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
 
-Building on this framework Manifold provides constructive features we see in other languages and platforms like:
+Building on this core framework Manifold provides Java with constructive features 
+found in other languages and platforms like:
 
+* **Type-safe Metaprogramming**
 * **Extension Methods**
-* **Metaprogramming**
 * **Structural Typing**
 
-Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON** integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's runtime classes, and type-safe access to raw **SQL**.
+Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
+integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
+runtime classes, and type-safe access to raw **SQL**.
 
-At a high level these features are classified as **Extension Manifolds** and **Type Manifolds**.
-
-### Extension Manifolds
-
-Extension Manifolds let you augment existing Java classes including Java's own runtime classes such as `String`. You can add new methods, annotations, and interfaces to any class your project uses.
-
-Let's say you want to make a new method for `String` so you can easily echo the string's value to the console. With plain Java you might write a "Util" library like this:
-
-<pre class="prettyprint lang-java"> public class MyStringUtil {
-    public static void echo(String value) {
-      System.out.println(value);
-    }
-  }</pre>
-
-And you'd use it like this:
-
-<pre class="prettyprint lang-java">  MyStringUtil.echo("Manifold");</pre>
-
-Instead with Manifold you create an _**Extension Class**_:
-
-<pre class="prettyprint">  @Extension
-  public class MyStringExtension {
-    public static void echo(@This String thiz) {
-      System.out.println(thiz);
-    }
-  }</pre>
-
-Here we've added a new `echo()` method to `String`, so we use it like this:
-
-<pre class="prettyprint">  "Manifold".ehco();</pre>
-
-This is a powerful feature. Extensions eliminate a lot of intermediate code in the form of "Util" libraries and the like. They also clean up code by making it easier to read and write since the methods are object oriented. Arguably the most beneficial aspect of extensions is how much easier it is to discover and use them in your IDE:
-
-##todo: screenshot of code completion showing the echo() method on String
-
-There's a lot more to extensions including the addition of **Structural Interfaces** similar to types in the [Go language](https://golang.org/). We'll cover more later in this guide.
+At a high level each of these features is classified as either a **Type Manifold** or an
+**Extension** via the **Extension Manifold**.
 
 ### Type Manifolds
 
-Type Manifolds simplify and standardize type-safe access to a variety of data sources. For instance, normally you access Java properties resources like this:
+A _type manifold_ transforms a data source into a data _type_ you can use directly in your Java code 
+without a code generation step or other build artifact. In essence with type manifolds a data source 
+**_is_** a data type -- data changes you make through a type manifold are _immediately_ available 
+in your code.   
 
-<pre class="prettyprint">  Properties myProperties = new Properties();
-  myProperties.load( getClass().getResourceAsStream( "/abc/MyProperties.properties" ) );
-  String myMessage = myProperties.getProperty( "my.message" );</pre>
+For instance, normally you access Java properties resources like this:
 
-This is a lot of code, but since properties files are foreign to Java's type system there is no direct, type-safe access to them...
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+String myMessage = myProperties.getProperty("my.message");
+```
+
+This is a lot of code, but since properties files are foreign to Java's type system there is no direct,
+type-safe access to them...
 
 Until now:
 
-<pre class="prettyprint">  String myMessage = MyProperties.my.message;</pre>
+```java
+String myMessage = MyProperties.my.message;
+```
 
 Concise and type-safe!
 
-Any type of data source accessible to Java is a potential Type Manifold. These include resource files, schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. Currently Manifold supports:
+Any type of data source accessible to Java is a potential type manifold. These include resource files,
+schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. Currently
+Manifold supports:
 
 *   JSON and JSON Schema
 *   JavaScript
 *   Properties resource files
 *   Image resource files
-*   BareBones templates (*)
-*   DDL and SQL (*)
+*   BareBones templates (coming soon)
+*   DDL and SQL (comming soon)
+
+
+### The Extension Manifold
+
+The _extension manifold_ is a special kind of type manifold that lets you augment existing Java classes 
+including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
+interfaces to any class your project uses.
+
+Let's say you want to make a new method for `String` so you can easily echo the string's value to the
+console. With plain Java you might write a "Util" library like this:
+
+```java
+public class MyStringUtil {
+  public static void echo(String value) {
+    System.out.println(value);
+  }
+}
+```
+
+And you'd use it like this:
+
+```java
+MyStringUtil.echo("Manifold");
+```
+
+Instead with Manifold you create an _**Extension Class**_:
+
+```java
+@Extension
+public class MyStringExtension {
+  public static void echo(@This String thiz) {
+    System.out.println(thiz);
+  }
+}
+```  
+
+Here we've added a new `echo()` method to `String`, so we use it like this:
+
+```java
+"Manifold".ehco();
+```
+
+Extensions eliminate a lot of intermediate code in the form of "Util" libraries
+and the like. They also clean up code by making it easier to read and write since the methods are object
+oriented. Perhaps the most beneficial aspect of extensions is how much easier it is to discover and use
+them in your IDE:
+
+![echo method](images/echo_example.png)
+
+
+There's a lot more to extensions including **Structural Interfaces**, which are similar to interfaces in
+the [Go language](https://golang.org/). We'll cover more later in this guide.
+
 
 ### Benefits
 
-Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code generation step in the build, no extra .class files to manage, no annotation processors, and no extra class loaders engaged at runtime.
+Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
+generation step in the build, no extra .class files to manage, no annotation processors, and no extra
+class loaders to engage at runtime.
 
 Benefits of this approach include:
 
 *   **Zero turnaround** -- live, type-safe access to data; make, discover, and use changes instantly
-*   **Lightweight**, direct integration with standard Java, requires no special compilers, annotation processors, or runtime agents
+*   **Lightweight**, direct integration with standard Java, requires no special compilers, annotation
+processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- you can build your own Manifolds
-*   **No code generation step**
+*   **No code generation build step**
 *   **Rich IDE experience** with IntelliJ IDEA
 
-Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using it incrementally without having to rewrite classes or conform to a new way of doing things.
+Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
+it incrementally without having to rewrite classes or conform to a new way of doing things.
+
 
 ## Setup
 
-blah blah blah
+### Maven
+
+### Gradle
+
+### Ant
+
+### IntelliJ 
+
+
+
+## Type Manifolds
+
+As Java programmers we access and process a wide range of data sources.  These include properties files, 
+image files, JSON, XML, SQL, and JavaScript (and a lot more). There are several ways we go about
+ accessing them.  For 
+instance, we typically use utility libraries to access images and properties, we run code generators to
+write classes for JSON and XML, and sometimes we use DSLs and ORMs to approximate SQL 
+and model relational schemas.  Fundamentally we resort to these tools because 
+Java's type system doesn't give us direct access to the data sources, right?
+
+What if we didn't need libraries or code generators and instead we could access data sources 
+directly?  This is essentially what type manifolds achieve.
+
+Basically a type manifold is a sort of type system _driver_ that provides direct access to a specific data 
+source as a set of types in Java.  There is no code generation step or Java class files to create.  You
+reference the structure of the data source (the metadata) directly in your code using types provided by the type manifold.
+Changes you make to the metadata are immediately available in your code, with no compilation or build step
+involved.  Essentially the data source _is_ the type.
+
+To illustrate, normally you access Java properties resources like this:
+
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+String myMessage = myProperties.getProperty("my.message");
+```
+
+This is a lot of code, but since properties files are foreign to Java's type system there is no direct,
+type-safe access to them...
+
+Until now:
+
+```java
+String myMessage = MyProperties.my.message;
+```
+
+Concise and type-safe!
+
+Any type of data source accessible to Java is a potential type manifold. These include resource files,
+schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. 
+ 
+Currently Manifold provides reference implementations for a few commonly used data sources:
+
+*   Properties files
+*   Image files
+*   JSON and JSON Schema
+*   JavaScript
+*   Template files
+
+The Manifold team is also working on direct support for more data sources including:
+*   Standard SQL and DDL
+*   CSV   
+
+
+### Properties Files
+
+Most Java projects incorporate [properties resource files](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html)
+ (*.properties files) as a means of separating text from source. Unfortunately access to these files 
+ requires typical boilerplate library code and the use of hard-coded strings:
+
+`resources/abc/MyProperties.properties`:
+```properties
+my.chocolate = Chocolate
+my.chocolate.dark = Dark Chocolate
+my.chocolate.milk = Milk Chocolate
+```
+
+Normally we access a properties file indirectly using the `Properties` utility with hard-coded strings:
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+```
+
+Then we use the resulting Properties instance to access individual properties as hard-coded strings: 
+```java
+println(myProperties.getProperty("my.dark.chocolate"));
+```
+
+With the Properties type manifold we can access properties directly using simple, type-safe code:
+```java
+println(abc.MyProperties.my.dark.chocolate);
+```
+
+Behind the scenes the Properties manifold creates the `abc.MyProperties` class, which directly reflects 
+the properties in the resource file.  Changes you make in the file are immediately available in your code 
+with no user intervention in between -- no code gen files, no compiling, no DSLs.
+
+:todo screencast to demonstrate immediate access to changes in java
+
+### Image Files
+
+User interfaces utilize image resource files for one purpose or another.  Java supports most of the
+popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
+`javax.swing.ImageIcon` and `javax.scene.image.Image`.
+  
+As with any library, access to the underlying data source is indirect: 
+```java
+ImageIcon image = new ImageIcon("abc/widget/images/companyLogo.png");
+```
+
+But then we typically layer another library on top of this one to help with caching the image and so 
+forth:
+```java
+import abc.widget.util.ImageUtilties;
+
+ImageIcon image = ImageUtilities.getCachedImage("abc/widget/images/companyLogo.png");
+render(image);
+```
+
+The image type manifold eliminates all of this and provides direct, type-safe access to image resources.
+```java
+import abc.widget.images.*;
+
+ImageIcon image = companyLogo_png.get();
+render(image);
+```
+
+All image resources are accessible as classes where each class has the same name as its resource file
+including a suffix encoding the image extension, this helps distinguish between images of 
+different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
+ `ImageIcon` class, which facilitates usage of the image classes with existing frameworks. As with all
+  type manifolds there are no code gen files or other build steps involved.
+
+### JSON and JSON Schema
+[JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
+structured data format. There is no shortage of JSON libraries for Java, these include 
+[Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
+multitude of others.  They all do basically the same thing -- given a pre-defined or generated type, 
+the libaries can read from and write to the type in terms of JSON:
+
+```java
+Widget widget = new Widget(72, "prime");
+ObjectMapper mapper = new ObjectMapper();
+
+String jsonStr = mapper.writeValueAsString(widget);
+Widget result = mapper.readValue(jsonStr, Widget.class);
+```
+
+This isn't so bad, but it's pretty typical boilerplate code with the usual drawbacks.  
+
+The JSON type manifold takes a different approach.  Going back to first principles, the _JSON_ is the 
+metadata -- the metadata is defined by a JSON sample or a schema e.g., [JSON Schema](http://json-schema.org/).  
+Either way the JSON is the source of truth, as such we want to avoid introducing another system of record 
+in the form of a generated or hand-crafted Java file.  Toward that goal, the JSON manifold produces
+abstract types directly from your sample JSON or JSON Schema resource files:
+
+```java
+Widget widget = new Widget(72, "prime");
+
+String jsonStr = widget.toJson();
+Widget result = Widget.fromJson(jsonStr); 
+```
+
+This approach removes the library and connects your code directly to JSON metadata, with no generated
+files in between. Another advantage of this technique involves type identity.  The Widget type is just
+an interface directly on the JSON Bindings.  The interface both abstracts and preserves the underlying
+implementation details of the JSON data storage.  This is achieved via a Manifold [extension interface](#extension-interfaces) on 
+the `javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces)
+-- JSON types are structural interfaces. Essentially, the `widget` object _is_ the Bindings object; 
+changes you make to `widget` are changes directly on the Bindings. 
+ 
+
+:todo See Bindings extension
+
+
+### JavaScript
+
+### Template Files
+
+### Build Your Own Manifold
+
 
 ## Extension Classes
 
-Similar to other languages such as C# and Kotlin, with Manifold you can define methods and other features as logical extensions to existing Java classes. This is achieved using _extension classes_. An extension class is a normal Java class you define as a container for features you want to apply to another class, normally to one you can't modify directly, such as `java.lang.String`:
+Similar to other languages such as C# and Kotlin, with Manifold you can define methods and other features
+as logical extensions to existing Java classes. This is achieved using _extension classes_. An extension
+class is a normal Java class you define as a container for features you want to apply to another class,
+normally to one you can't modify directly, such as `java.lang.String`:
 
-<pre class="prettyprint">// package format: extensions.<qualified-name-of-extended-class>
+```java
+// package format: extensions.<qualified-name-of-extended-class>
 package extensions.java.lang.String;
 
 import manifold.ext.api.*;
@@ -117,62 +340,94 @@ public class MyStringExtension {
     return System.lineSeparator();
   }
 }
-</pre>
+```
 
-All extension classes must be rooted in the `extensions` package. In addition the remainder of the package name must be the qualified name of the extended class. Thus, as the example illustrates, an extension class on `java.lang.String` must reside directly in package `extensions.java.lang.String`. Note this convention facilitates fast access to extension classes and avoids the overhead and ceremony of alternative means such as annotation processors.
+All extension classes must be rooted in the `extensions` package. Furthermore the remainder of the package
+name must be the qualified name of the extended class. Thus, as the example illustrates, an extension
+class on `java.lang.String` must reside directly in package `extensions.java.lang.String`. Note this
+convention facilitates fast access to extension classes and avoids the overhead and ceremony of
+alternative means such as annotation processors.
 
-In addition an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes extension classes from other classes that may reside in the same package.
+Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
+extension classes from other classes that may reside in the same package.
 
 ### <a class="anchor" id="extensions-basics"></a>Extension Method Basics
 
-An extension method must be declared `static` and non-`private`. As the receiver of the call, the first parameter of an extension _instance_ method must have the same type as the extended class. The `MyStringExtension` example illustrates this; the first parameter of instance method `echo` is `java.lang.String`. In addition the parameter must be annotated with `manifold.ext.api.This` to distuish it from regular methods in the class.
+An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
+parameter of an extension _instance_ method must have the same type as the extended class. The
+`MyStringExtension` example illustrates this; the first parameter of instance method `echo` is
+`java.lang.String`. In addition the parameter must be annotated with `manifold.ext.api.This` to distuish
+it from regular methods in the class.
 
 That's all there is to it. You can use extensions just like normal methods on the extended class:
 
-<pre class="prettyprint">String name = "Manifold";
-name.echo();</pre>
+```java
+String name = "Manifold";
+name.echo();
+```
 
-You can also define `static` extension methods. Since static methods don't have a receiver, the method itself must be annotated with `manifold.ext.api.Extension`:
+You can also define `static` extension methods. Since static methods don't have a receiver, the method
+itself must be annotated with `manifold.ext.api.Extension`:
 
-<pre class="prettyprint">@Extension
+```java
+@Extension
 public static String lineSeparator() {
   return System.lineSeparator();
-}</pre>
+}
+```
 
 Call static extensions just as if they were on the extended class:
 
-<pre class="prettyprint">String.lineSeparator()</pre>
+```java
+String.lineSeparator()
+```
 
 ### <a class="anchor" id="extensions-generics"></a>Generics
 
-You can extend generic classes too and define generic methods. This is how Manifold extension libraries work with collections and other generic classes. For example, here is the `first()` extension method on `Iterable`:
+You can extend generic classes too and define generic methods. This is how Manifold extension libraries
+work with collections and other generic classes. For example, here is the `first()` extension method on
+`Iterable`:
 
-<pre class="prettyprint">public static <T> T first(@This Iterable<T> thiz, Predicate<T> predicate) {
+```java
+public static <T> T first(@This Iterable<T> thiz, Predicate<T> predicate) {
   for (T element: thiz) {
     if (predicate.test(element)) {
       return element;
     }
   }
   throw new NoSuchElementException();
-}</pre>
+}
+```
 
-Notice the method is implemented as a generic method with the same type variable designation as the extended class: `T`. Since extension methods are static this is how we convey type variables from the extended class to the extension method. Note type variable names, must match the extended type's type variables and must be declared in the same order.
+Notice the extension is a generic method with the same type variable designation as the
+extended class: `T` from `Iterable<T>`. Since extension methods are static this is how we convey type 
+variables from the extended class to the extension method. Note type variable names must match the 
+extended type's type variables and must be declared in the same order.
 
-To define a generic extension method you append the type variables of the method to the list of the extended class' type variables. Manifold's `map()` extension illustrates this format:
+To define a generic extension method you append the type variables of the method to the list of the
+extended class' type variables. Manifold's `map()` extension illustrates this format:
 
-<pre class="prettyprint">public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E, R> mapper) {
+```java
+public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E, R> mapper) {
   return thiz.stream().map(mapper);
-}</pre>
+}
+```
 
-Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type variable `E`.
+Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
+variable `E`.
 
 ### <a class="anchor" id="extensions-static"></a>Static Dispatching
 
-An extension class does not physically alter its extended class; the methods defined in an extension are not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a call to a static method in an extension look like an instance method call on the extended class. As a consequence extension calls dispatch **statically**.
+An extension class does not physically alter its extended class; the methods defined in an extension are
+not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
+call to a static method in an extension look like a call to an instance method on the extended class. As a
+consequence extension calls dispatch **statically**.
 
-So unlike a virtual method call an extension call is always made based on the extended type declared in the extension, not the runtime type of the left hand side of the call. To illustrate:
+So unlike a virtual method call an extension call is always made based on the extended type declared in
+the extension, not the runtime type of the left hand side of the call. To illustrate:
 
-<pre class="prettyprint">public class Tree {
+```java
+public class Tree {
 }
 
 public class Dogwood extends Tree {
@@ -186,13 +441,19 @@ public static void bark(@This Dogwood thiz) {
 }
 
 Tree tree = new Dogwood();
-tree.bark();</pre>
+tree.bark(); // "rough"
+```
 
-At compile-time `tree` is of type `Tree`, therefore it transforms to a static invocation of `bark(Tree)`, which prints "rough".
+At compile-time `tree` is of type `Tree`, therefore it transforms to a static invocation of `bark(Tree)`,
+which prints "rough".
 
-Another consequence of static dispatching is that an extension method can receive a call even if the value of the extended object is null at the call site. Manifold extension libraries exploit this feature to improve readability and null-safety. For example, `isNullOrEmpty()` on `CharSequence` compares the receiver's value to null so you don't have to:
+Another consequence of static dispatching is that an extension method can receive a call even if the value
+of the extended object is `null` at the call site. Manifold extension libraries exploit this feature to
+improve readability and null-safety. For example, `CharSequence.isNullOrEmpty()` compares the
+receiver's value to null so you don't have to:
 
-<pre class="prettyprint">public static boolean isNullOrEmpty(@This CharSequence thiz) {
+```java
+public static boolean isNullOrEmpty(@This CharSequence thiz) {
   return thiz == null || thiz.length() == 0;
 }
 
@@ -200,15 +461,17 @@ String name = null;
 if (name.isNullOrEmpty()) {
   println("empty");
 }
-</pre>
+```
 
 Here the example doesn't check for null and instead shifts the burden to the extension.
 
 ### <a class="anchor" id="extensions-accessibility"></a>Accessibility and Scope
 
-An extension method never shadows or overrides a class method; when an extension method's name and parameters match a class method, the class method always has precedence over the extension. For example:
+An extension method never shadows or overrides a class method; when an extension method's name and
+parameters match a class method, the class method always has precedence over the extension. For example:
 
-<pre class="prettyprint">public class Tree {
+```java
+public class Tree {
   public void kind() {
     println("evergreen");
   }
@@ -216,13 +479,18 @@ An extension method never shadows or overrides a class method; when an extension
 
 public static void kind(@This Tree thiz) {
   println("binary");
-}</pre>
+}
+```
 
-The extension method never wins, a call to `kind()` always prints "evergreen". Additionally, if at compile-time `Tree` and the extension conflict as in the example, the compiler warns of the conflict in the extension class.
+The extension method never wins, a call to `kind()` always prints "evergreen". Additionally, if at
+compile-time `Tree` and the extension conflict as in the example, the compiler warns of the conflict
+in the extension class.
 
-An extension method may overload a class method where the method names are the same, but the parameter types are different:
+An extension method may overload a class method where the method names are the same, but the parameter
+types are different:
 
-<pre class="prettyprint">public class Tree {
+```java
+public class Tree {
   public void harvest() {
     println("nuts");
   }
@@ -230,23 +498,97 @@ An extension method may overload a class method where the method names are the s
 
 public static void harvest(@This Tree thiz, boolean all) {
   println(all ? "wood" : thiz.harvest());
-}</pre>
+}
+```
 
 A call to `tree.harvest(true)` prints "wood".
 
-Since extension method references resolve at compile-time, you can limit the compile-time accessibility of an extension class simply by limiting the scope of the JAR file containing the extension. For example, if you're using Maven the scope of an extension matches the dependency relationship you assign in your pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as the module's.
+Since extension method references resolve at compile-time, you can limit the compile-time accessibility
+of an extension class simply by limiting the scope of the JAR file containing the extension. For example,
+if you're using Maven the scope of an extension matches the dependency relationship you assign in your
+pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as
+the module's.
 
 ### Annotation Extensions
 
-Extension classes are not limited to extension methods. Other features can be projected onto the extended class, these include _annotations_. At present annotation extensions are limited to the extended class; you can't yet add annotations to members of the extended class.
+In addition to adding new methods, extension classes can also add _annotations_ to a class. At present 
+annotation extensions are limited to the extended class; you can't yet add annotations to members of the 
+extended class.
 
-Annotations added to an extension class are logically applied to the extended class. However, it should be noted as with all Manifold features the effects are compile-time manifestations; extension annotations are limited to a compile-time existence. Therefore, even if an annotation has `RUNTIME` retention, it will only be accessible on the extended class at compile-time. This feature is most useful when using annotation processors and you need to annotate classes you otherwise can't modify.
+It should be noted extension annotations are limited to a compile-time existence. Therefore, even if an 
+annotation has `RUNTIME` retention, it will only be accessible on the extended class at compile-time. This 
+feature is most useful when using annotation processors and you need to annotate classes you otherwise 
+can't modify.
+
+You can also make existing interfaces structural using annotation extensions:
+
+```java
+package extensions.abc.Widget;
+@Extension
+@Structural // makes the interface structural
+public class MyWidgetExtension {
+}
+```
+
+This extension effectively changes the `abc.Widget` interface into a structural interface. Classes in 
+your project no longer have to declare they implement it nominally.  
+
+See _Structural Interfaces_ later in this guide for fuller coverage of structural interfaces.
+
+<a name="extension-interfaces"></a>
+### Extension Interfaces
+
+An extension class can add interfaces to its extended class.  This feature helps with a variety of 
+use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
+  
+```java
+public final class Foo {
+  public String sayHello() {
+    return "hi";      
+  }
+}
+
+@Structural
+public interface Hello {
+  String sayHello();
+}
+```
+
+Although `Foo` does not implement `Hello` nominally, it defines the `sayHello()` method that otherwise 
+satisfies the interface.  Let's assume we don't control `Foo`'s implementation, but we need it to
+implement `Hello` nominally.  We can do that with an extension interfaces:
+
+```java
+@Extension
+public class MyFooExtension implements Hello {
+}
+```
+
+Now the compiler believes `Foo` directly implements `Hello`, so your project's source code can use `Foo` 
+structurally: 
+
+```java
+Hello hello = new Foo();
+hello.sayHello();
+```
+
+(see _Structural Interfaces_ later in this guide for fuller coverage of structural 
+interfaces) 
+
+Essentially extension interfaces help improve architecture where you don't control the implementation of 
+classes your project uses.  Another example of this involves _logical decoupling_.  For example, if you 
+have a class with two or more more logical traits mixed together as methods of the class, interface 
+extensions facilitate the definition of new interfaces to provide logical _views_ separating the class into
+cohesive traits.  Use extension interfaces to add the new interfaces to the existing class' definition. 
+
+:todo maybe provide example involving List?
 
 ### Extension Libraries
 
-An extension library is a logical grouping of functionality defined by a set of extension classes. Manifold includes several useful extension libraries for commonly used classes.
+An extension library is a logical grouping of functionality defined by a set of extension classes.
+Manifold includes several extension libraries for commonly used classes.
 
-*   >**Collections**
+*   **Collections**
 
     examples...
 
@@ -258,7 +600,7 @@ An extension library is a logical grouping of functionality defined by a set of 
 
     examples...
 
-*   >**Concurrent**
+*   **Concurrent**
 
     examples...
 
@@ -266,11 +608,14 @@ An extension library is a logical grouping of functionality defined by a set of 
 
     examples...
 
+<a name="structural-interfaces"></a>
 ## Structural Interfaces
 
-Java is a nominally typed language, meaning types are assignable based on the names declared in their type definitions. For example:
+Java is a _nominally_ typed language -- types are assignable based on the names declared in their
+definitions. For example:
 
-<pre class="prettyprint">public class Foo {
+```java
+public class Foo {
   public void hello() {
     println("hello");
   }
@@ -281,38 +626,48 @@ public interface Greeting {
 }
 
 Greeting foo = new Foo(); // error
-</pre>
+```
 
-This does not compile because `Foo` does not explicitly implement `Greeting` by name in its `implements` clause.
+This does not compile because `Foo` does not explicitly implement `Greeting` by name in its `implements`
+clause.
 
-A structurally typed language is less strict about type assignment. Instead of expecting explicit declarations of implemented types by name, it only requires that a class implement the methods of an interface. Therefore, a structurally typed language would have no problem with the example.
+By contrast a _structurally_ typed language has no problem with this example.  Basically, structural typing
+requires only that a class implement interface _methods_, there is no need for a class to declare that it
+implements an interface.
 
-Although nominal typing is arguably more sound and easier for both humans and machines to digest, in some circumstances the flexibility of structural typing can't be ignored. Take the following classes:
+Although nominal typing is perhaps more sound and easier for both people and machines to digest, in some
+circumstances the flexibility of structural typing makes it more suitable. Take the following classes:
 
-<pre class="prettyprint">class Rectangle {
+```java
+public class Rectangle {
   public double getX();
   public double getY();
   ...
 }
 
-class Point {
+public class Point {
   public double getX();
   public double getY();
   ...
 }
 
-class Component {
+public class Component {
   public int getX();
   public int getY();
   ...
 }
-</pre>
+```
 
-Let's say we're tasked with sorting instances of these according to location in the coordinate plane, say as a `Comparator` implementation. Each class defines methods for obtaining X, Y coordinates, but these properties don't implement a common interface. We don't own the implementation of these classes, so we're faced with having to write three distinct, yet nearly identical, Comparators.
+Let's say we're tasked with sorting instances of these according to location in the coordinate plane, say
+as a `Comparator` implementation. Each class defines methods for obtaining X, Y coordinates, but these
+classes don't implement a common interface. We don't control the implementation of the classes, so we're
+faced with having to write three distinct, yet nearly identical, Comparators.
 
-This is where we the flexibility of structural could really help. If Java supported it, we'd declare a structural type with the getX() and getY() properties and write only one `Comparator`:
+This is where the flexibility of structural interfaces could really help. If Java supported it, we'd
+declare a structural interface with `getX()` and` getY()` methods and write only one `Comparator`:
 
-<pre class="prettyprint">public interface Coordinate {
+```java
+public interface Coordinate {
   double getX();
   double getY();
 }
@@ -325,23 +680,224 @@ Comparator<Coordinate> coordSorter = new Comparator<>() {
 }
 
 List<Point> points = Arrays.asList(new Point(2, 1), new Point(3, 5), new Point(1, 1));
-Collections.sort(points, coordSorter);</pre>
+Collections.sort(points, coordSorter); // error
+```
 
-Of course Java is not happy with this because `List<Point>` is not a `List<Coordinate>`
+Of course Java is not happy with this because because `Point` does not nominally implement `Coordinate`. 
 
-This is where Manifold steps in with structural interfaces:
+This is where Manifold can help with structural interfaces:
 
-<pre class="prettyprint">@Structural
+```java
+@Structural
 public interface Coordinate {
   double getX();
   double getY();
-}</pre>
+}
+```
 
-Adding `@Structural` to `Coordinate` effectively changes it to behave _structurally_ -- Java no longer requires classes to implement it by name, only its methods must be implemented.
+Adding `@Structural` to `Coordinate` effectively changes it to behave _structurally_ -- Java no longer
+requires classes to implement it by name, only its methods must be implemented.
 
-##todo: cover details about type assignability and other stuff
+Note a class can still implement a structural interface nominally. Doing so helps both people and tooling 
+comprehend your code faster. The general idea is to use an interface structurally when you otherwise can't 
+use it nominally or doing so overcomplicates your code.
 
-## Type Manifolds
 
-fuckin' manifolds, how do they work?
+### Type Assignability and Variance
+
+A type is assignable to a structural interface if it provides compatible versions of all the
+methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
+deliberate. The looser term concerns the notion that a structural interface method is variant with respect
+to the types in its signature:
+
+```java
+@Structural
+public interface Capitalizer {
+  CharSequence capitalize(String s);
+}
+
+public static class MyCapitalizer {
+  public String capitalize(CharSequence s) {
+    return s.isNullOrEmpty() ? "" : Character.toUpperCase(s.charAt(0)) + s.substring(1);
+  }
+}
+```
+
+At first glance it looks like `MyCapitaizer` does not satisfy the structure of `Capitalizer`, neither the
+parameter type nor the return type of the method match the interface. After careful inspection, however,
+it is clear the methods are call-compatible from the perspective of `Capitalizer`:
+
+```java
+Capitalizer cap = (Capitalizer) new MyCapitalizer();
+CharSequence properName = cap.capitalize("tigers");
+```
+
+`MyCapitalizer`’s method can be called with `Capitalizer`’s `String` parameter because `MyCapitalizer`’s
+`CharSequence` parameter is assignable from `String` – _contravariant_ parameter types support
+call-compatibility. Similarly we can accept `MyCapitaizer`’s `String` return type because it is
+assignable to `Capitalizer`’s `CharSequence` return type – _covariant_ return types support
+call-compatibility. Therefore, even though their method signatures aren’t identical, `MyCapitalizer` is
+structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`’s methods.
+
+Signature variance also supports primitive types.  You may have spotted this in the `Component`
+class referenced earlier in the `Coordinate` example where `Component.getX()` returns `int`, not `double`
+as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no loss of precision
+the method is call-compatible. As a result signature variance holds for primitive types as well as
+reference types.
+
+### Implementation by Field
+
+Another example where classes have wiggle room implementing structural interfaces involves property 
+getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
+can access and/or change. Since a field is basically the same thing a class can implement a getter and/or 
+a setter with a field:
+
+```java
+@Structural
+public interface Name {
+  String getName();
+  void setName(String name);
+}
+
+public class Person {
+  public String name;
+}
+
+Name person = (Name) new Person();
+person.setName("Bubba");
+String name = person.getName();
+```                                                             
+
+Basically a field implements a property method if its name matches the method's name minus the 
+is/get/set prefixes and taking into account field naming conventions. For example, fields `Name`, `name`, 
+and `_name` all match the `getName()` property method and are weighted in that order.
+
+
+### Implementation by Extension
+
+It's possible to implement methods of a structural interface via extension methods.  Looking back at the
+`Coordinate` example, consider this class:
+```java
+public class Vector {
+  private double _magnitude;
+  private double _direction;
+  
+  public Vector(double magnitude, double direction) {
+    _magnitude = magnitude;
+    _direction = direction;
+  }
+  
+  // Does not have X, Y coordinate methods  :(
+}
+```
+
+In physics a vector and a coordinate are different ways of expressing the same thing; they can be converted 
+from one to another.  So it follows the `coordSorter` example can sort `Vector` instances in terms of X, Y 
+`Coordinates`... if `Vector` supplied `getX()` and `getY()` methods, which it does not.
+
+What if an extension class supplied the methods?
+  
+```java
+@Extension
+public class MyVectorExtension {
+  public double getX(@This Vector thiz) {
+    return thiz.getMagnitude() * Math.cos(thiz.getDirection()); 
+  }
+  public double getY(@This Vector thiz) {
+    return thiz.getMagnitude() * Math.sin(thiz.getDirection()); 
+  }
+}
+```
+
+Voila! `Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
+
+Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
+project does not control.
+
+  
+### Dynamic Typing with `ICallHandler`
+
+Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
+
+```java
+public interface ICallHandler {
+  /**
+   * A value resulting from #call() indicating the call could not be dispatched.
+   */
+  Object UNHANDLED = new Object() {
+    @Override
+    public String toString() {
+      return "Unhandled";
+    }
+  };
+
+  /**
+   * Dispatch a call to an interface method.
+   *
+   * @param iface The extended interface and owner of the method
+   * @param name The name of the method
+   * @param returnType The return type of the method
+   * @param paramTypes The parameter types of the method
+   * @param args The arguments from the call site
+   * @return The result of the method call or UNHANDLED if the method is not dispatched.  
+   *   Null if the method's return type is void.
+   */
+  Object call(Class iface, String name, Class returnType, Class[] paramTypes, Object[] args);
+}
+```
+
+A class can implement `ICallHandler` nominally or it can be made to implement it via extension class.
+Either way instances of the class can be cast to _any_ structural interface where structural calls
+dispatch to `ICallHandler.call()`.  The class' implementation of `call()` can delegate the call any 
+way it chooses.
+
+For instance, via class extension Manifold provides `ICallHandler` support for `java.util.Map` so that 
+getter and setter calls work directly with values in the map:
+
+```java
+Map<String,Object> map = new HashMap<>();
+Name person = (Name) map;
+perosn.setName("Manifold");
+println(person.getName());
+```
+ 
+Because `Map` is a `ICallHandler` instances of it can be cast to any structural interface, such as
+`Name` from the earlier example.  The `ICallHandler` implementation transforms get/set property calls
+to get/put calls into the map using the name of the property in the method.  Additionally, method calls
+can be made on map entries where the entry key matches name of the method and the value is an instance 
+of a functional interface matching the signature of the call:
+
+```java
+map.put( "run", (Runnable)()-> println("hello") );
+Runnable runner = (Runnable) map;
+runner.run();
+```
+
+This example prints "run" because `Map.call()` dispatches the call to the "run" entry having a 
+`Runnable` functional interface value.
+
+Note the similarity of this functionality on `Map` with _expando_ types in dynamic languages.  The
+main difference is that invocations must be made through structural interfaces and not directly on 
+the map, otherwise `Map` behaves pretty much like an expando object.
+
+See `extensions.java.util.Map.MapStructExt.java` for details.
+
+
+## IDE -- IntelliJ IDEA
+:todo
+
+## Use with other JVM Languages
+:todo
+
+## Commercial Usage
+:todo
+
+## History
+:todo
+
+## Philosophy
+:todo
+
+## Conclusion
+:todo
 

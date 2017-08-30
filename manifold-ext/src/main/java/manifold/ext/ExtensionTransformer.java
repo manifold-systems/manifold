@@ -595,7 +595,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     //## note: we'd like to avoid the operation if the obj not a ICallHandler,
     // but that is an expensive structural check, more expensive than this call...
-    //  if( obj instanceof ICallHandler )
+    //  if( obj is a ICallHandler )
     //  {
     Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
     ifaces.add( iface );
@@ -634,13 +634,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   private static Class createProxy( Class iface, Class rootClass )
   {
+    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     if( hasCallHandlerMethod( rootClass ) )
     {
-      String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
       return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
     }
-
-    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
   }
 
