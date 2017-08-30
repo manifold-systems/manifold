@@ -194,9 +194,9 @@ The Manifold team is also working on direct support for more data sources includ
 
 ### Properties Files
 
-Most Java projects incorporate properties resource files (*.properties files) as a means of separating
-text from source. Unfortunately access to these files requires typical boilerplate library code and the 
-use of hard-coded strings:
+Most Java projects incorporate [properties resource files](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html)
+ (*.properties files) as a means of separating text from source. Unfortunately access to these files 
+ requires typical boilerplate library code and the use of hard-coded strings:
 
 `resources/abc/MyProperties.properties`:
 ```properties
@@ -258,10 +258,50 @@ render(image);
 All image resources are accessible as classes where each class has the same name as its resource file
 including a suffix encoding the image extension, this helps distinguish between images of 
 different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
- `ImageIcon` class, which facilitates usage of the image classes with existing frameworks. As will all
+ `ImageIcon` class, which facilitates usage of the image classes with existing frameworks. As with all
   type manifolds there are no code gen files or other build steps involved.
 
 ### JSON and JSON Schema
+[JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
+structured data format. There is no shortage of JSON libraries for Java, these include 
+[Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
+multitude of others.  They all do basically the same thing -- given a pre-defined or generated type, 
+the libaries can read from and write to the type in terms of JSON:
+
+```java
+Widget widget = new Widget(72, "prime");
+ObjectMapper mapper = new ObjectMapper();
+
+String jsonStr = mapper.writeValueAsString(widget);
+Widget result = mapper.readValue(jsonStr, Widget.class);
+```
+
+This isn't so bad, but it's pretty typical boilerplate code with the usual drawbacks.  
+
+The JSON type manifold takes a different approach.  Going back to first principles, the _JSON_ is the 
+metadata -- the metadata is defined by a JSON sample or a schema e.g., [JSON Schema](http://json-schema.org/).  
+Either way the JSON is the source of truth, as such we want to avoid introducing another system of record 
+in the form of a generated or hand-crafted Java file.  Toward that goal, the JSON manifold produces
+abstract types directly from your sample JSON or JSON Schema resource files:
+
+```java
+Widget widget = new Widget(72, "prime");
+
+String jsonStr = widget.toJson();
+Widget result = Widget.fromJson(jsonStr); 
+```
+
+This approach removes the library and connects your code directly to JSON metadata, with no generated
+files in between. Another advantage of this technique involves type identity.  The Widget type is just
+an interface directly on the JSON Bindings.  The interface both abstracts and preserves the underlying
+implementation details of the JSON data storage.  This is achieved via a Manifold [extension interface](#extension-interfaces) on 
+the `javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces)
+-- JSON types are structural interfaces. Essentially, the `widget` object _is_ the Bindings object; 
+changes you make to `widget` are changes directly on the Bindings. 
+ 
+
+:todo See Bindings extension
+
 
 ### JavaScript
 
@@ -495,7 +535,8 @@ your project no longer have to declare they implement it nominally.
 
 See _Structural Interfaces_ later in this guide for fuller coverage of structural interfaces.
 
-### Interface Extensions
+<a name="extension-interfaces"></a>
+### Extension Interfaces
 
 An extension class can add interfaces to its extended class.  This feature helps with a variety of 
 use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
@@ -515,7 +556,7 @@ public interface Hello {
 
 Although `Foo` does not implement `Hello` nominally, it defines the `sayHello()` method that otherwise 
 satisfies the interface.  Let's assume we don't control `Foo`'s implementation, but we need it to
-implement `Hello` nominally.  We can do that with an interface extension:
+implement `Hello` nominally.  We can do that with an extension interfaces:
 
 ```java
 @Extension
@@ -534,11 +575,11 @@ hello.sayHello();
 (see _Structural Interfaces_ later in this guide for fuller coverage of structural 
 interfaces) 
 
-Essentially interface extensions help improve architecture where you don't control the implementation of 
+Essentially extension interfaces help improve architecture where you don't control the implementation of 
 classes your project uses.  Another example of this involves _logical decoupling_.  For example, if you 
 have a class with two or more more logical traits mixed together as methods of the class, interface 
 extensions facilitate the definition of new interfaces to provide logical _views_ separating the class into
-cohesive traits.  Use interface extensions to add the new interfaces to the existing class' definition. 
+cohesive traits.  Use extension interfaces to add the new interfaces to the existing class' definition. 
 
 :todo maybe provide example involving List?
 
@@ -567,6 +608,7 @@ Manifold includes several extension libraries for commonly used classes.
 
     examples...
 
+<a name="structural-interfaces"></a>
 ## Structural Interfaces
 
 Java is a _nominally_ typed language -- types are assignable based on the names declared in their
