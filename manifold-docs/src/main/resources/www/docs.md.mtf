@@ -1,13 +1,12 @@
 ## Manifold in a Nutshell
 
-Manifold can be described succinctly as _static metaprogramming_.
+Manifold can be described succinctly as _type-safe metaprogramming_.
 
 At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
-
 Building on this core framework Manifold provides Java with constructive features 
 found in other languages and platforms like:
 
-* **Type-safe Metaprogramming**
+* **Metaprogramming**
 * **Extension Methods**
 * **Structural Typing**
 
