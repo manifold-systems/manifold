@@ -2,6 +2,7 @@ package manifold.ext;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
@@ -44,10 +45,11 @@ public class DynamicTypeProxyGenerator
     return new StringBuilder()
       .append( "package " ).append( getNamespace( ifaceType ) ).append( ";\n" )
       .append( "\n" )
-      .append( "public class " ).append( name ).append( " implements " ).append( ifaceType.getCanonicalName() ).append( " {\n" )
+      .append( "public class " ).append( name ).append( " extends " ).append( AbstractDynamicTypeProxy.class.getName() ).append( ' ' ).append( " implements " ).append( ifaceType.getCanonicalName() ).append( " {\n" )
       .append( "  private final " ).append( implType.getCanonicalName() ).append( " _root;\n" )
       .append( "  \n" )
       .append( "  public " ).append( name ).append( "(" ).append( implType.getCanonicalName() ).append( " root) {\n" )
+      .append( "    super(root);\n" )
       .append( "    _root = root;\n" )
       .append( "  }\n" )
       .append( "  \n" )

@@ -1,11 +1,15 @@
 package extensions.javax.script.Bindings;
 
+import extensions.java.net.URL.ManUrlExt;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.Json;
+import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.JsonUtil;
@@ -23,6 +27,16 @@ public class ManBindingsExt
     StringBuilder sb = new StringBuilder();
     toJson( thiz, sb, 0 );
     return sb.toString();
+  }
+
+  public static String toJson( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toJson( bindings );
+    }
+    return null;
   }
 
   /**
@@ -128,6 +142,26 @@ public class ManBindingsExt
     return sb.toString();
   }
 
+  public static String toXml( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings );
+    }
+    return null;
+  }
+
+  public static String toXml( Object obj, String name )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings, name );
+    }
+    return null;
+  }
+
   public static void toXml( @This Bindings thiz, String name, StringBuilder sb, int indent )
   {
     indent( sb, indent );
@@ -185,6 +219,62 @@ public class ManBindingsExt
     {
       sb.append( "/>\n" );
     }
+  }
+
+  /**
+   * Make a JSON-compatible URL with the arguments from the Bindings. URL encodes
+   * the arguments in UTF-8 and appends them to the list using standard URL query
+   * delimiters.
+   * <p/>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.
+   * Otherwise, the argument is coerced to a String and URL encoded.
+   */
+  public static URL makeUrl( @This Bindings thiz, String url )
+  {
+    return ManUrlExt.makeUrl( url, thiz );
+  }
+
+  /**
+   * Use http POST to pass JSON bindings to this URL and get the full content as a JSON object.
+   * <p>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
+   * the argument is coerced to a String.  All arguments are URL encoded.
+   *
+   * @return The full content of this URL's stream as a JSON object.
+   *
+   * @see ManUrlExt#postForTextContent(URL, Bindings)
+   */
+  @SuppressWarnings("unused")
+  public static Bindings postForJsonContent( @This Bindings thiz, String url )
+  {
+    try
+    {
+      return Json.fromJson( ManUrlExt.postForTextContent( new URL( url ), thiz ) );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Make a JSON-compatible URL with the arguments from the Bindings. URL encodes
+   * the arguments in UTF-8 and appends them to the list using standard URL query
+   * delimiters.
+   * <p/>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.
+   * Otherwise, the argument is coerced to a String and URL encoded.
+   *<p/>
+   * If the content of the resulting URL is a JSON document, returns a JSON bindings
+   * reflecting the document.
+   *
+   * @return JSON bindings reflecting the content of the URL.
+   *
+   * @see manifold.api.json.Json#fromJson(String)
+   */
+  public static Bindings getJsonContent( @This Bindings thiz, String url )
+  {
+    return Json.fromJson( ManUrlExt.getTextContent( makeUrl( thiz, url ) ) );
   }
 
   /**
@@ -278,5 +368,31 @@ public class ManBindingsExt
   public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
   {
     return Json.makeStructureTypes( nameForStructure, thiz, mutable );
+  }
+
+  private static Bindings getBindingsFrom( Object obj )
+  {
+    Bindings bindings = null;
+    if( obj instanceof Bindings )
+    {
+      bindings = (Bindings)obj;
+    }
+    else
+    {
+      while( obj instanceof AbstractDynamicTypeProxy )
+      {
+        final Object root = ((AbstractDynamicTypeProxy)obj).getRoot();
+        if( root instanceof Bindings )
+        {
+          bindings = (Bindings)root;
+          break;
+        }
+        else
+        {
+          obj = root;
+        }
+      }
+    }
+    return bindings;
   }
 }
