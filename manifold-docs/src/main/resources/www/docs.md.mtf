@@ -1,5 +1,7 @@
 ## Manifold in a Nutshell
 
+Manifold can be described succinctly as _static metaprogramming_.
+
 At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
 
 Building on this core framework Manifold provides Java with constructive features 
@@ -20,7 +22,7 @@ At a high level each of these features is classified as either a **Type Manifold
 
 A _type manifold_ transforms a data source into a data _type_ you can use directly in your Java code 
 without a code generation step or other build artifact. In essence with type manifolds a data source 
-**_is_** a data type -- data changes you make through a type manifold are _immediately_ available 
+**_is_** a data type -- data source changes you make through a type manifold are _immediately_ available 
 in your code.   
 
 For instance, normally you access Java properties resources like this:
@@ -120,7 +122,7 @@ processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- you can build your own Manifolds
 *   **No code generation build step**
-*   **Rich IDE experience** with IntelliJ IDEA
+*   **IDE** support with IntelliJ IDEA
 
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.
@@ -187,7 +189,7 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   JavaScript
 *   Template files
 
-The Manifold team is also working on direct support for more data sources including:
+The Manifold team is also working on support for more data sources including:
 *   Standard SQL and DDL
 *   CSV   
 
@@ -301,16 +303,29 @@ JSON types are structural interfaces. Essentially, the `widget` object _is_ the 
 changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
 manifolds, there are no generated files or other build steps involved. 
  
+Combining forces, Manifold extension libraries help a lot when working with JSON:
 
-:todo See Bindings extension
+```java
+WidgetQuery query = WidgetQuery.create();
+...
+WidgetResults result = (WidgetResults) query.postForJsonContent("http://acme.widgets/find");
+```
 
+This example uses the `postForJsonContent()` extension method to HTTP Post `query` JSON bindings to a `URL`
+and to transform the resulting document to JSON bindings, which is directly cast to the `WidgetResults` 
+structural interface. 
 
 ### JavaScript
 
+:todo
+
 ### Template Files
+
+:todo
 
 ### Build Your Own Manifold
 
+:todo
 
 ## Extension Classes
 
@@ -886,17 +901,58 @@ See `extensions.java.util.Map.MapStructExt.java` for details.
 
 
 ## IDE -- IntelliJ IDEA
-:todo
+
+Use the Manifold IntelliJ IDEA plugin to experience Manifold in its fullest.
+
+:todo link to the plugin after it's published to jetbrains repo
+
+The plugin currently supports most high-level IntelliJ features including:
+* Feature highlighting
+* Code completion
+* Go to declaration
+* Usage searching
+* Structural typing
+* Debugging
+
+IntelliJ exposes all of Manifold's features.  You can use code completion to discover and use extension
+methods, use and create structural interfaces, jump to extensions, etc.  All type manifolds including 
+JSON, images, properties, and templates reflect resource you add.  Changes you make to extensions or
+manifold resources are instantly available in your code.
+ 
+:todo insert screencast gif demonstrating some of this
 
 ## Use with other JVM Languages
-:todo
+
+Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java 
+compiler.  But since it's a JVM tool, it's possible for other JVM languages to work with Manifold. If 
+this interests you, you're in luck!  You can write a _plugin host_ to connect any JVM language with 
+Manifold.
+
+See _manifold.api.host.IManifoldHost_. 
 
 ## Commercial Usage
 :todo
 
 ## History
-:todo
+The idea for Manifold is rooted in the [Gosu](https://gosu-lang.github.io/) programming language. 
+Perhaps the most distinguishing feature of Gosu is its _Open Type System_.  The equivalent of Java's 
+`java.lang.Class` in Gosu is the _interface_ `gosu.lang.IType` -- Gosu's type system is fully 
+programmable. Gosu has built in support for XML, JSON, and other metadata via its type system API.  For 
+instance, `.xsd` files in Gosu behave as class files because `XsdType` directly reflects the 
+metadata represented in the file as type information to Gosu.  The performance alone with this strategy 
+is incredible, it entirely skips the code generation step otherwise involved with conventional XML 
+tooling resulting in significant development time savings.  The single system of record aspect is 
+attractive as well; there is no chance the code gen is out of sync with the .xsd because _there is no 
+code gen_! 
 
+There is a lot more to like about the open type system. Its API is inherently more flexible and powerful 
+than straight code gen. For instance, dynamic and structural typing is possible with it as well as class
+augmentation via _enhancements_. Alas, although Gosu proved extremely useful, it is out of reach for most
+Java shops; a new language is a tough pill to swallow.  But why should these features be exclusive to 
+Gosu?  
+
+This was the impetus for Manifold. 
+ 
 ## Philosophy
 :todo
 
