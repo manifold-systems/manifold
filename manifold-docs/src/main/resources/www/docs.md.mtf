@@ -103,8 +103,8 @@ the features they add in your IDE:
 ![echo method](images/echo_example.png)
 
 
-There's a lot more to extensions including **Structural Interfaces**, which are similar to interfaces in
-the [Go language](https://golang.org/). We'll cover more later in this guide.
+There's a lot more to extensions including [structural interfaces](#structural-interfaces), which are 
+similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
 ### Benefits
@@ -137,7 +137,8 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 ### IntelliJ 
 
-
+### Java Versions
+Manifold works with Java 8, support for Java 9 is on the way.
 
 ## Type Manifolds
 

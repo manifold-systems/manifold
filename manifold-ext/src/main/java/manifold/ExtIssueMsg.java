@@ -13,4 +13,5 @@ public class ExtIssueMsg
   public static final IssueMsg MSG_MUST_NOT_BE_PRIVATE = new IssueMsg( "Extension method {0} must not be declared 'private'" );
   public static final IssueMsg MSG_EXTENSION_DUPLICATION = new IssueMsg( "Illegal extension method. {0} from {1} duplicates another extension method from {2}" );
   public static final IssueMsg MSG_EXTENSION_SHADOWS = new IssueMsg( "Illegal extension method. {0} from {1} duplicates a method in the extended class {2}" );
+  public static final IssueMsg MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE = new IssueMsg( "Only structural interfaces allowed here: {0}" );
 }

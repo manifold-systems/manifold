@@ -37,6 +37,7 @@ import javax.tools.Diagnostic;
 import manifold.ExtIssueMsg;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
+import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
@@ -212,6 +213,42 @@ public class ExtensionTransformer extends TreeTranslator
     else
     {
       result = tree;
+    }
+  }
+
+  @Override
+  public void visitClassDef( JCTree.JCClassDecl tree )
+  {
+    super.visitClassDef( tree );
+
+    verifyExtensionInterfaces( tree );
+  }
+
+  private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )
+  {
+    if( !hasAnnotation( tree.getModifiers().getAnnotations(), Extension.class ) )
+    {
+      return;
+    }
+
+    outer:
+    for( JCExpression iface: tree.getImplementsClause() )
+    {
+      final Symbol.TypeSymbol ifaceSym = iface.type.tsym;
+      if( ifaceSym == _tp.getSymtab().objectType.tsym )
+      {
+        continue;
+      }
+
+      for( Attribute.Compound anno: ifaceSym.getAnnotationMirrors() )
+      {
+        if( anno.type.toString().equals( Structural.class.getName() ) )
+        {
+          continue outer;
+        }
+      }
+      // extension interfaces must be structural
+      _tp.report( iface, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE.get( iface.toString() ) );
     }
   }
 
