@@ -61,7 +61,7 @@ The _extension manifold_ is a special kind of type manifold that lets you augmen
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
 interfaces to any class your project uses.
 
-Let's say you want to make a new method for `String` so you can easily echo the string's value to the
+Let's say you want to make a new method on `String` so you can straightforwardly echo a String to the
 console. With plain Java you might write a "Util" library like this:
 
 ```java
