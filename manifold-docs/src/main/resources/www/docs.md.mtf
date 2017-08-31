@@ -92,7 +92,7 @@ public class MyStringExtension {
 Here we've added a new `echo()` method to `String`, so we use it like this:
 
 ```java
-"Manifold".ehco();
+"Manifold".echo();
 ```
 
 Extensions eliminate a lot of intermediate code in the form of "Util" libraries
@@ -936,15 +936,15 @@ Perhaps the most distinguishing feature of Gosu is its _Open Type System_.  The 
 `java.lang.Class` in Gosu is the _interface_ `gosu.lang.IType` -- Gosu's type system is fully 
 programmable. Gosu has built in support for XML, JSON, and other metadata via its type system API.  For 
 instance, `.xsd` files in Gosu behave as class files because `XsdType` directly reflects the 
-metadata represented in the file as type information to Gosu.  The performance alone with this strategy 
+metadata the file as type information to Gosu.  The performance alone with this strategy 
 is incredible, it entirely skips the code generation step otherwise involved with conventional XML 
-tooling resulting in significant development time savings.  The single system of record aspect is 
+tooling resulting in significant development time savings.  The single SoR aspect is 
 attractive as well; there is no chance the code gen is out of sync with the .xsd because _there is no 
 code gen_! 
 
-There is a lot more to like about the open type system. Its API is inherently more flexible and powerful 
+There is a lot more to like about the open type system. Its API is inherently more flexible and more powerful 
 than straight code gen. For instance, dynamic and structural typing is possible with it as well as class
-augmentation via _enhancements_. Alas, although Gosu proved extremely useful, it is out of reach for most
+augmentation via _enhancements_. Alas, although Gosu has proven extremely useful, it is out of reach for most
 Java shops; a new language is a tough pill to swallow.  But why should these features be exclusive to 
 Gosu?  
 
