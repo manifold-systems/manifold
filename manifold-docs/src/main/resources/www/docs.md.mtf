@@ -4,7 +4,7 @@ Manifold can be described succinctly as _type-safe metaprogramming_ for Java.
 
 At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
 Building on this core framework Manifold provides Java with constructive features 
-found in other languages and platforms like:
+found in other programming languages and platforms like:
 
 * **Metaprogramming**
 * **Extension Methods**
@@ -12,7 +12,7 @@ found in other languages and platforms like:
 
 Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
 integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
-runtime classes, and (comming soon) type-safe access to raw **SQL**.
+runtime classes, and (coming soon) type-safe access to raw **SQL**.
 
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
