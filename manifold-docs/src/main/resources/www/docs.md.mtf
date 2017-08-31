@@ -1,6 +1,6 @@
 ## Manifold in a Nutshell
 
-Manifold can be described succinctly as _type-safe metaprogramming_.
+Manifold can be described succinctly as _type-safe metaprogramming_ for Java.
 
 At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
 Building on this core framework Manifold provides Java with constructive features 
@@ -12,7 +12,7 @@ found in other languages and platforms like:
 
 Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
 integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
-runtime classes, and type-safe access to raw **SQL**.
+runtime classes, and (comming soon) type-safe access to raw **SQL**.
 
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
@@ -20,9 +20,9 @@ At a high level each of these features is classified as either a **Type Manifold
 ### Type Manifolds
 
 A _type manifold_ transforms a data source into a data _type_ you can use directly in your Java code 
-without a code generation step or other build artifact. In essence with type manifolds a data source 
-**_is_** a data type -- data source changes you make through a type manifold are _immediately_ available 
-in your code.   
+without a code generation build step or extra compilation artifacts. In essence a data source **_is_** 
+a data type -- data source changes you make via type manifolds are _immediately_ available in 
+your code.   
 
 For instance, normally you access Java properties resources like this:
 
