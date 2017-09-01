@@ -563,7 +563,7 @@ variety of use-cases.  For example, let's say we have a class `Foo` and interfac
 ```java
 public final class Foo {
   public String sayHello() {
-    return "hi";      
+    return "hello";      
   }
 }
 
@@ -589,6 +589,28 @@ Now the compiler believes `Foo` directly implements `Hello`:
 Hello hello = new Foo();
 hello.sayHello();
 ```
+Note `Hello` is structural, so even without the extension interface, instances of `Foo` are still 
+compatible with `Hello`. It's less convenient, though, because you have to cast `Foo` to `Hello` in 
+order to call `sayHello()`. Basically extension interfaces save you from having to cast.  This not only
+improves readability, it also prevents confusion in cases involving type inference where it may not be 
+obvious that casting is necessary.
+
+Sometimes a class _can't_ be cast because it doesn't structurally satisfy an interface. In this case you 
+can both add the interface _and_ implement the methods by extension:
+```java
+public final class Shy {
+}
+
+@Extension
+public abstract class MyShyExtension implements Hello {
+  public static String sayHello(@This Shy thiz) {
+    return "hi";    
+  }
+}
+```
+This example extends `Shy` to nominally implement `Hello` _and_ provides the `Hello` implementation. Note
+the abstract modifier on the extension class.  This is necessary because it doesn't really implement the
+interface, the extended class does.
 
 Basically extension interfaces help improve architecture where you don't control the implementation of 
 classes your project uses.  Another example of this involves _logical decoupling_.  For example, if you 
