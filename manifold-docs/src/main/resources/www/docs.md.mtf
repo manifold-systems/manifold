@@ -928,6 +928,7 @@ Use the Manifold IntelliJ IDEA plugin to experience Manifold in its fullest.
 
 The plugin currently supports most high-level IntelliJ features including:
 * Feature highlighting
+* Error reporting
 * Code completion
 * Go to declaration
 * Usage searching
@@ -938,6 +939,8 @@ IntelliJ exposes all of Manifold's features.  You can use code completion to dis
 methods, use and create structural interfaces, jump to extensions, etc.  All type manifolds including 
 JSON, images, properties, and templates reflect resource you add.  Changes you make to extensions or
 manifold resources are instantly available in your code.
+
+:todo put -Xplugin:Manifold in the Compiler settings
  
 :todo insert screencast gif demonstrating some of this
 
