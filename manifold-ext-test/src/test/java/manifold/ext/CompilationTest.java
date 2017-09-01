@@ -105,6 +105,8 @@ public class CompilationTest extends TestCase
                    new Pair<>( ExtIssueMsg.MSG_MUST_BE_STATIC, 26 ),
                    new Pair<>( ExtIssueMsg.MSG_MUST_BE_STATIC, 29 ),
                    new Pair<>( ExtIssueMsg.MSG_MUST_NOT_BE_PRIVATE, 33 ) );
+      compileFile( _javacTool, _fm, "/extensions/java/util/List/ListExt4_Test.java",
+                   new Pair<>( ExtIssueMsg.MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE, 13 ) );
     }
 
     private void initCompiler() throws IOException

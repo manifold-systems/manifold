@@ -26,7 +26,7 @@ import manifold.util.StreamUtil;
  */
 public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeProcessor
 {
-  static final String EXTENSIONS_PACKAGE = "extensions";
+  public static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
   public void init( ITypeLoader typeLoader )

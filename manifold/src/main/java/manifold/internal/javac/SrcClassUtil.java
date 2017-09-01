@@ -118,7 +118,7 @@ public class SrcClassUtil
     String fqn = type.toString();
     Type enclosingType = type.getEnclosingType();
     SrcType srcType;
-    if( enclosingType != null && !(enclosingType instanceof NoType) )
+    if( enclosingType != null && !(enclosingType instanceof NoType) && fqn.length() > enclosingType.toString().length() )
     {
       String simpleName = fqn.substring( enclosingType.toString().length() + 1 );
       srcType = new SrcType( simpleName );

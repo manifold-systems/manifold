@@ -227,6 +227,11 @@ class ExtCodeGen
 
   private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
   {
+    if( anno.getAnnotationType().equals( Extension.class.getName() ) )
+    {
+      return;
+    }
+
     if( extendedType.getAnnotations().stream().noneMatch( e -> e.getAnnotationType().equals( anno.getAnnotationType() ) ) )
     {
       extendedType.addAnnotation( anno.copy() );
