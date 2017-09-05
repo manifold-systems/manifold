@@ -2,17 +2,17 @@
 
 Manifold can be described succinctly as _type-safe metaprogramming_ for Java.
 
-At its core Manifold is a unique framework to dynamically and transparently extend Java's type system.
-Building on this core framework Manifold provides Java with constructive features 
-found in other programming languages and platforms like:
+At its core Manifold is a unique framework to dynamically and seamlessly extend Java's type system.
+Building on this core framework Manifold provides Java with modern features found in other 
+programming languages and platforms, these include:
 
 * **Metaprogramming**
 * **Extension Methods**
 * **Structural Typing**
 
 Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
-integration, transparent **JavaScript** accessibility, **Structural typing**, extensions to Java's
-runtime classes, and (coming soon) type-safe access to raw **SQL**.
+integration, **JavaScript** interop, **Structural typing**, seamless **extension libraries** to Java's
+runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
 
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
@@ -20,11 +20,10 @@ At a high level each of these features is classified as either a **Type Manifold
 ### Type Manifolds
 
 A _type manifold_ transforms a data source into a data _type_ you can use directly in your Java code 
-without a code generation build step or extra compilation artifacts. In essence a data source **_is_** 
-a data type -- data source changes you make via type manifolds are _immediately_ available in 
-your code.   
+without a code generation build step or extra compilation artifacts. In essence with Manifold a data 
+source **_is_** a data type.   
 
-For instance, normally you access Java properties resources like this:
+To illustrate, normally you access Java properties resources like this:
 
 ```java
 Properties myProperties = new Properties();
@@ -32,27 +31,29 @@ myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties")
 String myMessage = myProperties.getProperty("my.message");
 ```
 
-This is a lot of code, but since properties files are foreign to Java's type system there is no direct,
-type-safe access to them...
+As with any resource file a properties file is foreign to Java's type system -- there is no direct,
+type-safe access to it. Instead we access it indirectly using boilerplate library code sprinkled 
+with hard-coded strings.
 
-Until now:
+By contrast, the Properties type manifold lets you access a properties file directly as a type:
 
 ```java
 String myMessage = MyProperties.my.message;
 ```
 
-Concise and type-safe!
+Concise and type-safe!  With no code generation files or other build steps to engage.
 
 Any type of data source accessible to Java is a potential type manifold. These include resource files,
-schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. Currently
-Manifold supports:
+schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. 
+
+Currently Manifold provides type manifolds for:
 
 *   JSON and JSON Schema
 *   JavaScript
 *   Properties resource files
 *   Image resource files
-*   BareBones templates (coming soon)
-*   DDL and SQL (comming soon)
+*   Templates (work in progress)
+*   DDL and SQL (work in progress)
 
 
 ### The Extension Manifold
@@ -116,12 +117,12 @@ class loaders to engage at runtime.
 Benefits of this approach include:
 
 *   **Zero turnaround** -- live, type-safe access to data; make, discover, and use changes instantly
-*   **Lightweight**, direct integration with standard Java, requires no special compilers, annotation
+*   **Lightweight** -- direct integration with standard Java, requires no special compilers, annotation
 processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- you can build your own Manifolds
-*   **No code generation build step**
-*   **IDE** support with IntelliJ IDEA
+*   **No code generation build step** -- the Manifold framework renders code generators obsolete
+*   **IDE** support with IntelliJ IDEA -- all manifold types and extensions work with IntelliJ
 
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.
@@ -129,16 +130,54 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 ## Setup
 
+Using Manifold is simple:
+
+* Add the Manifold jar[s] to your classpath
+* Add '-Xplugin:Manifold' as an argument to Javac 
+
+That's all.
+
+Manifold currently works with Java 8.  Support for Java 9 is coming soon.
+
 ### Maven
+
+Add the following to your Maven pom.xml file:
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-all</artifactId>
+      <!--<version>${project.version}</version>-->
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+```
 
 ### Gradle
 
-### Ant
+Add the following to your build.gradle script:
+
+```gradle
+dependencies {
+  compile group: 'systems.manifold', name: 'manifold-all'
+}
+```
 
 ### IntelliJ 
-
-### Java Versions
-Manifold works with Java 8, support for Java 9 is on the way.
+:todo
 
 ## Type Manifolds
 
@@ -935,12 +974,12 @@ The plugin currently supports most high-level IntelliJ features including:
 * Structural typing
 * Debugging
 
-IntelliJ exposes all of Manifold's features.  You can use code completion to discover and use extension
-methods, use and create structural interfaces, jump to extensions, etc.  All type manifolds including 
-JSON, images, properties, and templates reflect resource you add.  Changes you make to extensions or
-manifold resources are instantly available in your code.
+IntelliJ exposes all of Manifold's features. Use code completion to discover and use extension 
+methods and structural interfaces. Jump directly from usages of extension methods to their declarations.  
+Watch your JSON, images, properties, templates, and custom type manifolds come alive as types. 
+Changes you make are instantly available in your code.
 
-:todo put -Xplugin:Manifold in the Compiler settings
+:todo screencast for New | Extension Class
  
 :todo insert screencast gif demonstrating some of this
 
