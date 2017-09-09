@@ -1,6 +1,6 @@
 ## Manifold in a Nutshell
 
-Manifold can be described succinctly as _type-safe metaprogramming_ for Java.
+Manifold can be described succinctly as _Type-safe Metaprogramming for Java_.
 
 At its core Manifold is a unique framework to dynamically and seamlessly extend Java's type system.
 Building on this core framework Manifold provides Java with modern features found in other 
@@ -35,13 +35,13 @@ As with any resource file a properties file is foreign to Java's type system -- 
 type-safe access to it. Instead we access it indirectly using boilerplate library code sprinkled 
 with hard-coded strings.
 
-By contrast, the Properties type manifold lets you access a properties file directly as a type:
+By contrast, with the Properties type manifold you access a properties file directly as a type:
 
 ```java
 String myMessage = MyProperties.my.message;
 ```
 
-Concise and type-safe!  With no code generation files or other build steps to engage.
+Concise and type-safe!  With no generated files or other build steps to engage.
 
 Any type of data source accessible to Java is a potential type manifold. These include resource files,
 schemas, queries, database definitions, templates, spreadsheets, programming languages, etc. 
@@ -62,12 +62,12 @@ The _extension manifold_ is a special kind of type manifold that lets you augmen
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
 interfaces to any class your project uses.
 
-Let's say you want to make a new method on `String` so you can straightforwardly echo a String to the
+Let's say you want to make a new method on `String` so you can straightforwardly print a String to the
 console. With plain Java you might write a "Util" library like this:
 
 ```java
 public class MyStringUtil {
-  public static void echo(String value) {
+  public static void print(String value) {
     System.out.println(value);
   }
 }
@@ -76,7 +76,7 @@ public class MyStringUtil {
 And you'd use it like this:
 
 ```java
-MyStringUtil.echo("Manifold");
+MyStringUtil.print("Manifold");
 ```
 
 Instead with Manifold you create an _**Extension Class**_:
@@ -84,16 +84,16 @@ Instead with Manifold you create an _**Extension Class**_:
 ```java
 @Extension
 public class MyStringExtension {
-  public static void echo(@This String thiz) {
+  public static void print(@This String thiz) {
     System.out.println(thiz);
   }
 }
 ```  
 
-Here we've added a new `echo()` method to `String`, so we use it like this:
+Here we've added a new `print()` method to `String`, so we use it like this:
 
 ```java
-"Manifold".echo();
+"Manifold".print();
 ```
 
 Extensions eliminate a lot of intermediate code in the form of "Util" libraries
@@ -101,7 +101,7 @@ and the like. They also clean up code by making it easier to read and write sinc
 oriented. Perhaps the most beneficial aspect of extensions is how much easier it is to discover and use
 the features they add in your IDE:
 
-![echo method](images/echo_example.png)
+![print method](images/echo_example.png)
 
 
 There's a lot more to extensions including [structural interfaces](#structural-interfaces), which are 
@@ -184,18 +184,17 @@ dependencies {
 As Java programmers we access and process a wide range of data sources.  These include properties files, 
 image files, JSON, XML, SQL, and JavaScript (and a lot more). There are several ways we go about
 accessing them.  For instance, we typically use utility libraries to access images and properties, we 
-run code generators to write classes for JSON and XML, and sometimes we use DSLs and ORMs to approximate 
-SQL and model relational schemas.  Fundamentally we resort to these tools because Java's type system 
-doesn't give us direct access to the data sources, right?
+run code generators and annotation processors to write classes for JSON and XML, and sometimes we use DSLs
+to approximate SQL and use ORMs to model relational schemas.  Fundamentally we resort to these tools because
+Java's type system doesn't provide direct access to the data sources, right?
 
-What if we didn't need libraries or code generators and instead we could access data sources directly?
+What if we didn't need libraries or code generators or DSLs and instead we could access metadata directly?
 This is essentially what type manifolds achieve.
 
-Basically a type manifold is a sort of type system _driver_ that provides direct access to a specific data 
-source as a set of types in Java.  There is no code generation step or Java class files to create.  You
-reference the structure of the data source (the metadata) directly in your code using types provided by the type manifold.
-Changes you make to the metadata are immediately available in your code, with no compilation or build step
-involved.  Essentially the data source _is_ the type.
+Basically a type manifold implements the `ITypeManifold` API to directly connect a specific kind of data source as
+a set of types in Java.  You reference the structure of the data source (the metadata) directly in your code using
+types provided by the type manifold. Changes you make to the metadata are immediately available in your code, with
+no compilation or build step involved. Essentially the data source _is_ the type.
 
 To illustrate, normally you access Java properties resources like this:
 
@@ -225,11 +224,11 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   Image files
 *   JSON and JSON Schema
 *   JavaScript
-*   Template files
 
 The Manifold team is also working on support for more data sources including:
+*   CSV
+*   Template files
 *   Standard SQL and DDL
-*   CSV   
 
 
 ### Properties Files
@@ -375,24 +374,18 @@ normal Java class you define as a container for features you want to apply to an
 one you can't modify directly, such as `java.lang.String`:
 
 ```java
-// package format: extensions.<qualified-name-of-extended-class>
 package extensions.java.lang.String;
 
 import manifold.ext.api.*;
 
-@Extension // identifies this class as an extension class
+@Extension
 public class MyStringExtension {
 
-  // Extension methods must be static and non-private
-  //
-  // For an instance method the receiver parameter must have the same
-  // type as the extended class and must be annotated with @This
-  //
-  public static void echo(@This String thiz) {
+  public static void print(@This String thiz) {
     System.out.println(thiz);
   }
 
-  @Extension // identifies a static extension method
+  @Extension
   public static String lineSeparator() {
     return System.lineSeparator();
   }
@@ -412,7 +405,7 @@ extension classes from other classes that may reside in the same package.
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
-`MyStringExtension` example illustrates this; the first parameter of instance method `echo` is
+`MyStringExtension` example illustrates this; the first parameter of instance method `print` is
 `java.lang.String`. Note the parameter name _thiz_ is conventional, you can use any name you like.
 Finally, the receiver parameter must be annotated with `manifold.ext.api.This` to distinguish it from 
 regular methods in the class.
@@ -421,7 +414,7 @@ That's all there is to it. You can use extensions just like normal methods on th
 
 ```java
 String name = "Manifold";
-name.echo();
+name.print();
 ```
 
 You can define `static` extension methods too. Since static methods don't have a receiver, the method
@@ -458,7 +451,7 @@ public static <T> T first(@This Iterable<T> thiz, Predicate<T> predicate) {
 ```
 
 Notice the extension is a generic method with the same type variable designation as the
-extended class: `T` from `Iterable<T>`. Since extension methods are static this is how we convey type 
+extended class: `T` from `Iterable<T>`. Since extension methods are static this is how we convey type
 variables from the extended class to the extension method. Note type variable names must match the 
 extended type's type variables and must be declared in the same order.
 
@@ -588,7 +581,7 @@ public class MyWidgetExtension {
 }
 ```
 
-This extension effectively changes the `abc.Widget` interface to a structural interface. In the context 
+This extension effectively changes the `abc.Widget` _nominal_ interface to a _structural_ interface. In the context
 of your project classes no longer have to declare they implement it nominally.  
 
 See [Structural Interfaces](#structural-interfaces) later in this guide for fuller coverage of the topic.
@@ -629,13 +622,14 @@ Hello hello = new Foo();
 hello.sayHello();
 ```
 Note `Hello` is structural, so even without the extension interface, instances of `Foo` are still 
-compatible with `Hello`. It's less convenient, though, because you have to cast `Foo` to `Hello` in 
-order to call `sayHello()`. Basically extension interfaces save you from having to cast.  This not only
+compatible with `Hello`. It's less convenient, though, because you have to explicitly cast `Foo` to `Hello` --
+a purely structural relationship in Manifold requires a cast. Basically extension interfaces save you 
+from casting. This not only
 improves readability, it also prevents confusion in cases involving type inference where it may not be 
 obvious that casting is necessary.
 
-Sometimes a class _can't_ be cast because it doesn't structurally satisfy an interface. In this case you 
-can both add the interface _and_ implement the methods by extension:
+It's worth pointing out you can both add an interface _and_ implement its methods 
+by extension:
 ```java
 public final class Shy {
 }
@@ -651,13 +645,12 @@ This example extends `Shy` to nominally implement `Hello` _and_ provides the `He
 the abstract modifier on the extension class.  This is necessary because it doesn't really implement the
 interface, the extended class does.
 
-Basically extension interfaces help improve architecture where you don't control the implementation of 
-classes your project uses.  Another example of this involves _logical decoupling_.  For example, if you 
-have a class with two or more more logical traits mixed together as methods of the class, interface 
-extensions facilitate the definition of new interfaces to provide logical _views_ separating the class into
-cohesive traits.  Use extension interfaces to add the new interfaces to the existing class' definition. 
+You can also use extension interfaces to extract interfaces from classes you don't
+control.  For example, if you want to provide an immutable view of a collection class
+such as `java.util.List`, you could use extension interfaces to extract immutable and 
+mutable interfaces from the class.  As such your code is better suited to control 
+where `List` mutations are allowed on otherwise mutable lists.
 
-:todo maybe provide example involving List?
 
 ### Extension Libraries
 
