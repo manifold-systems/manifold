@@ -1,14 +1,12 @@
 ## Manifold in a Nutshell
 
-Manifold can be described succinctly as _Type-safe Metaprogramming for Java_.
+At its core Manifold is a unique framework to dynamically and seamlessly extend 
+Java's type system. Building on this core framework Manifold provides Java with 
+modern features found in other programming languages and platforms, these include:
 
-At its core Manifold is a unique framework to dynamically and seamlessly extend Java's type system.
-Building on this core framework Manifold provides Java with modern features found in other 
-programming languages and platforms, these include:
-
-* **Metaprogramming**
-* **Extension Methods**
-* **Structural Typing**
+* **Type Providers** -- similar in concept to F#
+* **Extension Methods** -- comparable to the same feature in Kotlin and C#
+* **Structural Typing** -- much like intefaces in Go and TypeScript 
 
 Leveraging these features Manifold delivers a powerful set of Java extensions including **JSON**
 integration, **JavaScript** interop, **Structural typing**, seamless **extension libraries** to Java's
