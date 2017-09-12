@@ -17,8 +17,8 @@ At a high level each of these features is classified as either a **Type Manifold
 
 ### Type Manifolds
 
-Bridging the worlds of information and programming, a type manifold is 
-a Java projection of a specific source of data.  Essentially, a type manifold  
+Bridging the worlds of information and programming, type manifolds are 
+Java projections of specified sources of information.  More specifically, a type manifold  
 transforms a data source into a data _type_ directly accessible in your Java code 
 without a code generation build step or extra compilation artifacts. In essence with Manifold a data 
 source **_is_** a data type.   
