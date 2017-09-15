@@ -170,6 +170,26 @@ Add the following to your Maven pom.xml file:
       </plugin>
     </plugins>
   </build>
+  
+<profiles>
+  <profile>
+    <id>internal.tools-jar</id>
+    <activation>
+      <file>
+        <exists>${java.home}/../lib/tools.jar</exists>
+      </file>
+    </activation>
+    <dependencies>
+      <dependency>
+        <groupId>com.sun</groupId>
+        <artifactId>tools</artifactId>
+        <version>1.8.0</version>
+        <scope>system</scope>
+        <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      </dependency>
+    </dependencies>
+  </profile>
+</profiles>
 ```
 
 ### Gradle
@@ -179,6 +199,7 @@ Add the following to your build.gradle script:
 ```gradle
 dependencies {
   compile group: 'systems.manifold', name: 'manifold-all', version: '0.1-SNAPSHOT'
+  compile files("${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
 compileJava {
@@ -187,9 +208,11 @@ compileJava {
 ```
 
 ### IntelliJ 
-:todo
 
-get the plugin
+
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10000-manifold/update/38345) for IntelliJ IDEA.
+
+Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
 
 ## Type Manifolds
