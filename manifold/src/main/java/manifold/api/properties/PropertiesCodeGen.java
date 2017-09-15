@@ -78,7 +78,7 @@ public class PropertiesCodeGen
       SrcType type = new SrcType( childNode.isLeaf() ? "String" : childNode.getName() );
       SrcField propertyField = new SrcField( srcClass )
         .name( childNode.getName() )
-        .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+        .modifiers( Modifier.PUBLIC | Modifier.FINAL | (srcClass.getEnclosingClass() == null ? Modifier.STATIC : 0) )
         .type( type )
         .initializer( childNode.isLeaf()
                       ? new SrcRawExpression( String.class, childNode.getUserData() )
@@ -91,7 +91,7 @@ public class PropertiesCodeGen
       if( !childNode.isLeaf() )
       {
         SrcClass innerSrcClass = new SrcClass( childNode.getName(), srcClass, SrcClass.Kind.Class )
-          .modifiers( Modifier.PUBLIC | Modifier.STATIC );
+          .modifiers( Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL );
         srcClass.addInnerClass( make( innerSrcClass, childNode ) );
       }
     }

@@ -4,7 +4,7 @@ At its core [Manifold](https://manifold.systems/) is a unique framework to dynam
 Java's type system. Building on this core framework Manifold provides a set of
 key features found in other programming languages and platforms:
 
-* **Static Meta-programming** -- similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
+* **Type-safe Metaprogramming** -- similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
 * **Extension Methods** -- comparable to the same feature in [Kotlin](https://kotlinlang.org/docs/reference/extensions.html) and [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)
 * **Structural Typing** -- much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
 
@@ -329,9 +329,9 @@ Behind the scenes the properties type manifold creates a Java class projection o
 properties file, which reflects its hierarchy of properties.  As you develop your 
 application, changes you make in 
 the file are immediately available in your code with no user intervention in 
-between -- no code gen files, no compiling, no DSLs.
+between -- no code gen files and no compiling between changes:
 
-:todo screencast gif to demonstrate immediate access to changes in java
+<img src="images/man_properties.gif" alt="screencast" width=772 height=348/>
 
 ### Image Files
 
