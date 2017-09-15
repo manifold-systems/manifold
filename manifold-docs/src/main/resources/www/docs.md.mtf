@@ -49,10 +49,10 @@ spreadsheets, web services, and programming languages.
 
 Currently Manifold provides type manifolds for:
 
-*   JSON and JSON Schema
+*   JSON and [JSON Schema](http://json-schema.org/)
 *   JavaScript
-*   Properties resource files
-*   Image resource files
+*   Properties files
+*   Image files
 *   Templates (work in progress)
 *   DDL and SQL (work in progress)
 
