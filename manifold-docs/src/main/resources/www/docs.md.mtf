@@ -196,7 +196,7 @@ get the plugin
 
 Java application development has experienced a macro-evolutionary change over the
 last couple of decades. Essentially, applications have shifted from a more code-centric nature
-toward a more information-centric one. Applications access ever richer, ever larger, ever more 
+toward a more information-centric one. As this shift progresses applications access ever richer, ever larger, ever more 
 numerable sources of data. Despite this developers continue to use decades old 
 tooling, namely _type-bridge_ tooling, such as code generators and static 
 libraries, to connect Java code to a newer, larger world of information. Over time 
