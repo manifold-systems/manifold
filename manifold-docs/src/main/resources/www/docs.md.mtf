@@ -17,8 +17,8 @@ At a high level each of these features is classified as either a **Type Manifold
 
 ### Type Manifolds
 
-Bridging the worlds of information and programming, type manifolds are 
-Java projections of schematized data sources.  More specifically, a type manifold  
+Bridging the worlds of information and programming, type manifolds are Java 
+projections of schematized data sources.  More specifically, a type manifold 
 transforms a data source into a data _type_ directly accessible in your Java code 
 without a code generation build step or extra compilation artifacts. In essence with Manifold a data 
 source **_is_** a data type.   
@@ -218,11 +218,11 @@ Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repo
 ## Type Manifolds
 
 Java application development has experienced a macroevolutionary change over the
-last couple of decades. Essentially, applications have shifted from a more code-centric nature
+last couple of decades. Essentially, applications have shifted from a general code-centric nature
 toward a more information-centric one. As this shift progresses applications access ever richer, ever larger, ever more 
 numerable sources of data. Despite this developers continue to use decades old 
 tooling, namely _type-bridge_ tooling, such as code generators and static 
-libraries, to connect Java code to a newer, larger world of information. Over time 
+libraries, to connect their code to a newer, larger world of information. Over time 
 these tools incur a heavy cost to development productivity.
 
 Although the tooling is troublesome, it is symptomatic of a deeper problem with 
@@ -239,13 +239,13 @@ its use becomes less an inconvenience and more a liability.  Code generation, fo
 example, adds an expensive step to the build process, which not only interrupts a
 developer's concentration (perhaps the worst offense), it also creates a dependency 
 in automated builds on the code generator tool or its artifacts. Source control managers often don't cope well with the generated files and, when 
-large enough, generated files should be cached and shared, which requires yet more 
+large enough, the files should be cached and shared, which requires yet more 
 tooling. It's difficult to quantify their impact on productivity, but over time
 the use of these tools is sure to slow progress.
 
 What then is the alternative? Ideally if Java were to furnish a type-bridging API, 
 we could build type-bridging adapter components. Unfortunately, no such plans 
-appear to be in Java's future. Enter the type manifold API. 
+appear on Java's horizon. Enter the type manifold API. 
 
 Basically, a type manifold implements the `ITypeManifold` API and works behind the 
 scenes with the Java compiler to directly connect a specific data source as
@@ -331,7 +331,7 @@ application, changes you make in
 the file are immediately available in your code with no user intervention in 
 between -- no code gen files and no compiling between changes:
 
-<img src="images/man_properties.gif" alt="screencast" width=772 height=348/>
+<img src="images/man_properties.gif" alt="screencast" width=932 height=416/>
 
 ### Image Files
 
