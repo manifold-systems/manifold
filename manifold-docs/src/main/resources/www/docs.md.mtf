@@ -1062,13 +1062,13 @@ See _manifold.api.host.IManifoldHost_.
 :todo
 
 ## History
-The concept for Manifold is rooted in the [Gosu](https://gosu-lang.github.io/) programming language for the JVM. 
-Perhaps the most distinguishing feature of Gosu is its _Open Type System_;  it
+Manifold was heavily influenced by the [Gosu](https://gosu-lang.github.io/) programming language for the JVM. 
+Perhaps the most distinguishing feature of Gosu is its _Open Type System_; it
 abstracts the notion of a type as a set of published interfaces in its 
-reflection API.  Anyone can provide custom types for almost any kind of data
-source imaginable.  As witnessed firsthand, the overall performance improvements resulting from this strategy 
-are remarkable; it entirely skips the code generation step otherwise involved with conventional
-tooling resulting in significant gains in developer productivity. Build times are notably faster as well as development
+reflection API. So, unlike Java's frozen `java.lang.Class`, anyone can implement custom types for almost any kind of data
+source imaginable with first-class representation. As witnessed firsthand, the overall performance improvements resulting from this strategy 
+are remarkable; it eliminates the code generation step otherwise involved with conventional
+type-bridge tooling resulting in significant gains in developer productivity. Build times are notably faster as well as development
 turnaround -- developers can make schema changes and immediately use the changes in their code without 
 recompiling. As a consequence, there are no synchronization issues otherwise involved with multiple
 systems of record caused by generated files -- the data source is always the single SoR.  
@@ -1081,18 +1081,20 @@ Despite these advantages, Gosu has remained a fringe language in the Java commun
 the Open Type System is confined to the Gosu language -- there is no way to fully leverage it in a pure 
 Java language project. Additionally, the open API, while powerful, is elaborate and requires a significant investment in 
 time to master, as a result custom extensions are almost entirely implemented by the Gosu team. Thus, for many 
-who admire it the Open Type System is a bridge too far.
+who admire it the Open Type System remains a bridge too far.
 
-Manifold is a rethinking of the Open Type System.  It captures its spirit, but starts fresh with both feet in the Java
-ecosystem. Much of the Open Type System lives in Manifold, including type abstraction, extensions, and structural
+Manifold is a rethinking of the Open Type System.  It captures the spirit, but starts fresh with both feet in the Java
+ecosystem. Much of the Open Type System is reborn in Manifold, including type abstraction, extensions, and structural
 typing. All directly and seamlessly accessible from Java. 
 
 Importantly, the Manifold framework represents a new and unique approach to the type-bridging problem solved by the Open Type
 System. Type manifolds reduce the mountain of complexity otherwise involved with Gosu. They are easy to understand
 and implement and are inherently better performing because they represent Java class projections naturally.
+Above all, Manifold is designed for Java; it seamlessly blends in to any Java project and
+can be used incrementally.
  
-Of course Manifold would not exist if not for Gosu as a source of inspiration.  Perhaps one 
-day their paths will cross...
+Of course Manifold would not exist if not for Gosu. We owe a debt of gratitude to Gosu as 
+a source of inspiration.
  
 
 ## Philosophy
