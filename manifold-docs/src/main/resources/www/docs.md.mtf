@@ -1029,9 +1029,7 @@ See `extensions.java.util.Map.MapStructExt.java` for details.
 
 ## IDE -- IntelliJ IDEA
 
-Use the Manifold IntelliJ IDEA plugin to experience Manifold in its fullest.
-
-:todo link to the plugin after it's published to jetbrains repo
+Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10000-manifold) to experience Manifold in its fullest.
 
 The plugin currently supports most high-level IntelliJ features including:
 * Feature highlighting
@@ -1064,24 +1062,39 @@ See _manifold.api.host.IManifoldHost_.
 :todo
 
 ## History
-The idea for Manifold is rooted in the [Gosu](https://gosu-lang.github.io/) programming language. 
+The concept for Manifold is rooted in the [Gosu](https://gosu-lang.github.io/) programming language for the JVM. 
 Perhaps the most distinguishing feature of Gosu is its _Open Type System_;  it
-abstracts the notion of a type as a set of interfaces in its 
-reflection API.  As such anyone can provide custom types for almost any kind of data
-source imaginable.  The performance alone with this strategy 
-is incredible, it entirely skips the code generation step otherwise involved with conventional
-tooling resulting in significant development time savings.  The single SoR aspect is 
-attractive as well; there is no chance the code gen is out of sync with the schematic model because _there is no 
-code gen_!
+abstracts the notion of a type as a set of published interfaces in its 
+reflection API.  Anyone can provide custom types for almost any kind of data
+source imaginable.  As witnessed firsthand, the overall performance improvements resulting from this strategy 
+are remarkable; it entirely skips the code generation step otherwise involved with conventional
+tooling resulting in significant gains in developer productivity. Build times are notably faster as well as development
+turnaround -- developers can make schema changes and immediately use the changes in their code without 
+recompiling. As a consequence, there are no synchronization issues otherwise involved with multiple
+systems of record caused by generated files -- the data source is always the single SoR.  
 
 There is a lot more to like about the open type system. Its API is inherently more flexible and more powerful 
-than straight code gen. For instance, dynamic and structural typing is possible with it as well as class
-augmentation via _enhancements_. Alas, although Gosu has proven extremely useful, it is a bridge too far for 
-many Java shops; a new language is a tough pill to swallow.  But in our view these features are too useful to 
-ignore.
+than straight code gen. For instance, dynamic typing and structural interfaces are possible with it as well as class
+augmentation via _enhancements_ (similar to extensions). 
 
-This was the impetus for Manifold. 
+Despite these advantages, Gosu has remained a fringe language in the Java community. This is due in part because
+the Open Type System is confined to the Gosu language -- there is no way to fully leverage it in a pure 
+Java language project. Additionally, the open API, while powerful, is elaborate and requires a significant investment in 
+time to master, as a result custom extensions are almost entirely implemented by the Gosu team. Thus, for many 
+who admire it the Open Type System is a bridge too far.
+
+Manifold is a rethinking of the Open Type System.  It captures its spirit, but starts fresh with both feet in the Java
+ecosystem. Much of the Open Type System lives in Manifold, including type abstraction, extensions, and structural
+typing. All directly and seamlessly accessible from Java. 
+
+Importantly, the Manifold framework represents a new and unique approach to the type-bridging problem solved by the Open Type
+System. Type manifolds reduce the mountain of complexity otherwise involved with Gosu. They are easy to understand
+and implement and are inherently better performing because they represent Java class projections naturally.
  
+Of course Manifold would not exist if not for Gosu as a source of inspiration.  Perhaps one 
+day their paths will cross...
+ 
+
 ## Philosophy
 :todo
 
