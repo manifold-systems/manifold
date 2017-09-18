@@ -215,6 +215,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10000-manifold/up
 Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
 
+<a class="anchor" id="type-manifolds"></a>
 ## Type Manifolds
 
 In recent years Java applications have shifted from a primarily code-centric nature
@@ -302,6 +303,7 @@ We are working on support for more data sources including:
 *   Standard SQL and DDL
 
 
+<a class="anchor" id="properties-files"></a>
 ### Properties Files
 
 Many Java applications incorporate 
@@ -337,6 +339,7 @@ between -- no code gen files and no compiling between changes:
 
 <img src="images/man_properties.gif" alt="screencast" width=932 height=416/>
 
+<a class="anchor" id="image-files"></a>
 ### Image Files
 
 User interfaces frequently use image resource files for one purpose or another.  Java supports most of the
@@ -374,6 +377,7 @@ different types sharing a single name.  Additionally image classes are direct su
  `ImageIcon` class to conform with existing frameworks. As with all
   type manifolds there are no code gen files or other build steps involved.
 
+<a class="anchor" id="json"></a>
 ### JSON and JSON Schema
 [JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
 structured data format. There is no shortage of JSON libraries for Java, these include 
@@ -427,18 +431,22 @@ This example uses the `postForJsonContent()` extension method which performs an 
 JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the 
 `WidgetResults` structural interface. 
 
+<a class="anchor" id="javascript"></a>
 ### JavaScript
 
 :todo
 
+<a class="anchor" id="template-files"></a>
 ### Template Files
 
 :todo
 
+<a class="anchor" id="diy"></a>
 ### Build Your Own Manifold
 
 :todo
 
+<a class="anchor" id="extension-classes"></a>
 ## Extension Classes
 
 Similar to other languages such as 
@@ -476,7 +484,8 @@ alternative means such as annotation processors.
 Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
 extension classes from other classes that may reside in the same package.
 
-### <a class="anchor" id="extensions-basics"></a>Extension Method Basics
+<a class="anchor" id="extension-method-basics"></a>
+### Extension Method Basics
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
@@ -508,7 +517,8 @@ Call static extensions just as if they were on the extended class:
 String.lineSeparator()
 ```
 
-### <a class="anchor" id="extensions-generics"></a>Generics
+<a class="anchor" id="generics"></a>
+### Generics
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
 work with collections and other generic classes. For example, here is the `first()` extension method on
@@ -542,7 +552,8 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
 variable `E`.
 
-### <a class="anchor" id="extensions-static"></a>Static Dispatching
+<a class="anchor" id="static-dispatching"></a>
+### Static Dispatching
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
@@ -591,7 +602,8 @@ if (name.isNullOrEmpty()) {
 
 Here the example doesn't check for null and instead shifts the burden to the extension.
 
-### <a class="anchor" id="extensions-accessibility"></a>Accessibility and Scope
+<a class="anchor" id="accessibility"></a>
+### Accessibility and Scope
 
 An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:
@@ -635,6 +647,7 @@ if you're using Maven the scope of an extension matches the dependency relations
 pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as
 the module's.
 
+<a class="anchor" id="annotation-extensions"></a>
 ### Annotation Extensions
 
 In addition to adding new methods, extension classes can also add _annotations_ to a class. At present 
@@ -661,7 +674,7 @@ of your project classes no longer have to declare they implement it nominally.
 
 See [Structural Interfaces](#structural-interfaces) later in this guide for fuller coverage of the topic.
 
-<a name="extension-interfaces"></a>
+<a class="anchor" id="extension-interfaces"></a>
 ### Extension Interfaces
 
 An extension class can add structural interfaces to its extended class.  This feature helps with a 
@@ -727,6 +740,7 @@ mutable interfaces from the class.  As such your code is better suited to confin
 `List` operations on otherwise fully mutable lists.
 
 
+<a class="anchor" id="extension-libraries"></a>
 ### Extension Libraries
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
@@ -752,7 +766,7 @@ Manifold includes several extension libraries for commonly used classes.
 
     examples...
 
-<a name="structural-interfaces"></a>
+<a class="anchor" id="structural-interfaces"></a>
 ## Structural Interfaces
 
 Java is a _nominally_ typed language -- types are assignable based on the names declared in their
@@ -847,6 +861,7 @@ comprehend your code faster. The general idea is to use an interface structurall
 use it nominally or doing so overcomplicates your code.
 
 
+<a class="anchor" id="assignability"></a>
 ### Type Assignability and Variance
 
 A type is assignable to a structural interface if it provides compatible versions of all the
@@ -889,6 +904,7 @@ as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no lo
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.
 
+<a class="anchor" id="implementation-by-field"></a>
 ### Implementation by Field
 
 Another example where classes have wiggle room implementing structural interfaces involves property 
@@ -917,6 +933,7 @@ is/get/set prefixes and taking into account field naming conventions. For exampl
 and `_name` all match the `getName()` property method and are weighted in that order.
 
 
+<a class="anchor" id="implementation-by-extension"></a>
 ### Implementation by Extension
 
 It's possible to implement methods of a structural interface via extension methods.  Looking back at the
@@ -959,6 +976,7 @@ Generally _implementation by extension_ is a powerful technique to provide a com
 project does not control.
 
   
+<a class="anchor" id="dynamic-typing"></a>  
 ### Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
@@ -1027,6 +1045,7 @@ the map, otherwise `Map` behaves much like an expando object.
 See `extensions.java.util.Map.MapStructExt.java` for details.
 
 
+<a class="anchor" id="ide"></a>
 ## IDE -- IntelliJ IDEA
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10000-manifold) to experience Manifold in its fullest.
@@ -1050,6 +1069,7 @@ Changes you make are instantly available in your code.
  
 :todo insert screencast gif demonstrating some of this
 
+<a class="anchor" id="other-languages"></a>
 ## Use with other JVM Languages
 
 Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java 
@@ -1058,9 +1078,11 @@ implement this API to host Manifold from within another JVM language.
 
 See _manifold.api.host.IManifoldHost_. 
 
+<a class="anchor" id="commercial"></a>
 ## Commercial Usage
 :todo
 
+<a class="anchor" id="history"></a>
 ## History
 Manifold was heavily influenced by the [Gosu](https://gosu-lang.github.io/) programming language for the JVM. 
 Perhaps the most distinguishing feature of Gosu is its _Open Type System_; it
@@ -1094,12 +1116,13 @@ Above all, Manifold is designed for Java; it seamlessly blends in to any Java pr
 can be used incrementally.
  
 Of course Manifold would not exist if not for Gosu. We owe a debt of gratitude to Gosu as 
-a source of inspiration.
+a primary source of inspiration.
  
-
+<a class="anchor" id="philosophy"></a>
 ## Philosophy
 :todo
 
+<a class="anchor" id="conclusion"></a>
 ## Conclusion
 :todo
 
