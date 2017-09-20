@@ -96,6 +96,8 @@ class ExtCodeGen
     JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
     for( String fqn : allExtensions )
     {
+      //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
+      //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
       SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, null );
       if( srcExtension != null )
       {

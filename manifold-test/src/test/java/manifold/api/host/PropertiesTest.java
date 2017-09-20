@@ -10,6 +10,7 @@ public class PropertiesTest extends TestCase
 {
   public void testProperties()
   {
-    assertEquals( "Hello", MyProperties.MyProperty );
+    assertEquals( "Hello", MyProperties.MyProperty.toString() );
+    assertEquals( "Sub Property", MyProperties.MyProperty.Sub );
   }
 }
