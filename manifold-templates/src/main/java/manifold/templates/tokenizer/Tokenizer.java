@@ -128,12 +128,22 @@ public class Tokenizer {
                     } else if (quoteState == 0) {
                         quoteState = 2;
                     }
+                } else if (current == '\\' && type == STRING_CONTENT) {
+                    if (peekForward() == '$') {
+                        advancePosition();
+                    }
+                    if (peekForward() == '<' && peekForward(2) == '%') {
+                        advancePosition();
+                        advancePosition();
+                    }
                 } else if (quoteState == 0) {
                     if (termStart.contains(current)) {
                         if (checkIfTerminates(terminateConditions)) {
                             String currentTokenString = tokenString.substring(contentStartPos, index);
                             if (type != STRING_CONTENT) {
                                 currentTokenString = currentTokenString.trim();
+                            } else {
+                                currentTokenString = removeEscapesForStringContent(currentTokenString);
                             }
                             return new Token(type, currentTokenString, line, col, pos, index + toJump);
                         }
@@ -145,10 +155,14 @@ public class Tokenizer {
                 advancePosition();
             }
             if (type == STRING_CONTENT) {
-                return new Token(type, tokenString.substring(contentStartPos), line, col, pos, index);
+                return new Token(type, removeEscapesForStringContent(tokenString.substring(contentStartPos)), line, col, pos, index);
             }
             addError("Tokenization Error: " + type + " is not closed", line);
             return new Token(type, tokenString.substring(contentStartPos), line, col, pos, index);
+        }
+
+        private String removeEscapesForStringContent(String currentTokenString) {
+            return currentTokenString.replace("\\$", "$").replace("\\<%", "<%");
         }
 
         private boolean isModernExpressionSyntax() {

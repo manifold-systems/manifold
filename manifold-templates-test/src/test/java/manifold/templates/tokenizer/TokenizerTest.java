@@ -201,6 +201,38 @@ public class TokenizerTest {
     }
 
     @Test
+    public void escapingDirectivesWorks() {
+
+        Tokenizer tokenizer = new Tokenizer();
+        List<Token> tokenize = tokenizer.tokenize("\\${ foo }");
+        assertEquals(1, tokenize.size());
+        assertEquals("${ foo }", tokenize.get(0).getContent());
+
+        tokenize = tokenizer.tokenize("${1}\\${ foo }${2}");
+        assertEquals(3, tokenize.size());
+        assertEquals("${ foo }", tokenize.get(1).getContent());
+
+
+        tokenize = tokenizer.tokenize("${1}\\\\${ foo }${2}");
+        assertEquals(3, tokenize.size());
+        assertEquals("\\${ foo }", tokenize.get(1).getContent());
+
+        tokenize = tokenizer.tokenize("\\<%= foo %>");
+        assertEquals(1, tokenize.size());
+        assertEquals("<%= foo %>", tokenize.get(0).getContent());
+
+        tokenize = tokenizer.tokenize("<%=1%>\\<%= foo %><%=2%>");
+        assertEquals(3, tokenize.size());
+        assertEquals("<%= foo %>", tokenize.get(1).getContent());
+
+
+        tokenize = tokenizer.tokenize("<%=1%>\\\\<%= foo %><%=2%>");
+        assertEquals(3, tokenize.size());
+        assertEquals("\\<%= foo %>", tokenize.get(1).getContent());
+    }
+
+
+    @Test
     public void longerTest() {
         Tokenizer tokenizer = new Tokenizer();
         List<Token> tokens = tokenizer.tokenize("<html>\n" +
