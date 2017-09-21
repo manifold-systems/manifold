@@ -6,6 +6,7 @@ import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import junit.framework.TestCase;
 import abc.Product;
+import abc.Contact;
 import abc.Person;
 import static abc.Person.*;
 
@@ -35,6 +36,13 @@ public class JsonTest extends TestCase
     assertEquals( 2, h.size() );
     assertEquals( baseball, h.get( 0 ) );
     assertEquals( fishing, h.get( 1 ) );
+  }
+
+  public void testRef()
+  {
+    Contact contact = Contact.create();
+   // contact.setPrimaryAddress( (Contact.Address)new SimpleBindings() );
+    
   }
 
   public void testThing()

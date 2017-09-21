@@ -43,7 +43,23 @@ public class JsonStructureType extends JsonSchemaType
 
   public IJsonParentType findChild( String name )
   {
-    return _innerTypes.get( name );
+    IJsonParentType innerType = _innerTypes.get( name );
+    if( innerType == null )
+    {
+      List<IJsonType> definitions = getDefinitions();
+      if( definitions != null )
+      {
+        for( IJsonType child: definitions )
+        {
+          if( child.getName().equals( name ) )
+          {
+            innerType = (IJsonParentType)child;
+            break;
+          }
+        }
+      }
+    }
+    return innerType;
   }
 
   public Map<String, IJsonType> getMembers()
@@ -169,6 +185,17 @@ public class JsonStructureType extends JsonSchemaType
     for( IJsonParentType child : _innerTypes.values() )
     {
       child.render( sb, indent + 2, mutable );
+    }
+    List<IJsonType> definitions = getDefinitions();
+    if( definitions != null )
+    {
+      for( IJsonType child : definitions )
+      {
+        if( child instanceof IJsonParentType )
+        {
+          ((IJsonParentType)child).render( sb, indent + 2, mutable );
+        }
+      }
     }
     indent( sb, indent );
     sb.append( "}\n" );
