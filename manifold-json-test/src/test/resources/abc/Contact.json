@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type" : "object",
+  "id" : "urn:xyz:Contact:1.0",
+
+  "definitions": {
+    "Address": {
+      "type": "object",
+      "properties": {
+        "street_address": { "type": "string" },
+        "city":           { "type": "string" },
+        "state":          { "type": "string" }
+      },
+      "required": ["street_address", "city", "state"]
+    }
+  },
+
+  "properties" : {
+    "ContactAddresses" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "$ref" : "#/definitions/Address"
+      }
+    },
+    "DateOfBirth" : {
+      "type" : "string",
+      "format" : "timestamp"
+    },
+    "HomePhone" : {
+      "type" : "string"
+    },
+    "HomePhoneCountry" : {
+      "type" : "string",
+      "format" : "typekey.PhoneCountryCode"
+    },
+    "Name" : {
+      "type" : "string"
+    },
+    "NumDependents" : {
+      "type" : "integer",
+      "format" : "int32"
+    },
+    "PrimaryAddress" : {
+      "type" : "object",
+      "$ref" : "#/definitions/Address"
+    }
+  }
+}

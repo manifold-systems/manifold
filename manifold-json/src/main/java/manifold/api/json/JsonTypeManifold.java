@@ -40,7 +40,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
     {
       String childName = tokenizer.nextToken();
       IJsonParentType child = csr.findChild( childName );
-      if( child instanceof IJsonParentType )
+      if( child != null )
       {
         csr = child;
         continue;
