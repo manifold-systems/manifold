@@ -8,6 +8,8 @@ import manifold.util.StreamUtil;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.lesscss.LessCompiler;
+import org.lesscss.LessException;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,6 +17,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 public class Hyde {
@@ -60,7 +63,14 @@ public class Hyde {
     log("Copying Resources...");
     copyDirInto(wwwDir, outputDir, file -> !file.getName().endsWith(".mtf"));
 
+    log("Generating CSS from LESS...");
+    generateCSS(fileFromResourcePath("/www/css/site.less"), new File(outputDir, "css/site.css"));
+
     log("Done!");
+  }
+
+  private static void generateCSS(File lessFile, File outputFile) throws Exception {
+    new LessCompiler().compile(lessFile, outputFile);
   }
 
   private static void log(String s) {

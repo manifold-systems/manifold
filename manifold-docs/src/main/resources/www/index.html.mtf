@@ -1,9 +1,68 @@
-<div class="jumbotron">
-    <h1>Manifold</h1>
-    <p>A JVM Metaprogramming library</p>
+<div class="index-title text-center">
+    <h1>
+        <img src="./images/logo_512px.png"> Manifold
+    </h1>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <p>
+                Manifold is a unique framework that allowes developers dynamically and seamlessly extend
+                Java's type system, adding new types and modifying existing types. Building on this core framework
+                Manifold provides a set of utilities to make java development more pleasant for day to day
+                development.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="index-demo live-demo text-center">
+    <h4>Demo: Properties File Access</h4>
     <p>
-        <a href="docs.html" class="btn btn-primary btn-large">
-            Go To Guide
-        </a>
+        This demo shows type-safe access to a Properties file from within java
+        <br/>
+        <br/>
     </p>
+    <img src="./images/man_properties.gif">
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <hr/>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+
+        <div class="col-md-4">
+            <h2>Type Safe</h2>
+
+            <p>Manifold allows you to treat non-java resources as first class data sources in your development process
+                with transparent type-safe bindings: no more Maps of Strings, no more codegen.</p>
+
+        </div>
+
+        <div class="col-md-4">
+            <h2>Seamless</h2>
+
+            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and start
+                taking advantage of it, no additional build-system specific plugins are required.</p>
+
+        </div>
+
+        <div class="col-md-4">
+            <h2>Practical</h2>
+
+            <p>Manifold ships with support for practical development needs: templates, improved core collection and
+                I/O APIs,properties files, etc.</p>
+
+            <p>All available out of the box.</p>
+
+        </div>
+
+    </div>
 </div>
