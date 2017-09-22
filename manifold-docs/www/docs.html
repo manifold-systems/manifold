@@ -20,10 +20,10 @@
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,300,400italic,400,600italic,600,700italic,700,800italic,800"
           rel="stylesheet" type="text/css">
     <link href="css/site.css" rel="stylesheet" type="text/css">
-    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
-    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js?lang=java&skin=desert"></script>
+    <link href="css/prism.css" rel="stylesheet" type="text/css">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="js/prism.js"></script>
 </head>
 <body>
 <div class="container">
@@ -757,12 +757,12 @@ it is clear the methods are call-compatible from the perspective of <code>Capita
 <pre><code class="language-java">Capitalizer cap = (Capitalizer) new MyCapitalizer();
 CharSequence properName = cap.capitalize(&quot;tigers&quot;);
 </code></pre>
-<p><code>MyCapitalizer</code>’s method can be called with <code>Capitalizer</code>’s <code>String</code> parameter because <code>MyCapitalizer</code>’s
-<code>CharSequence</code> parameter is assignable from <code>String</code> – <em>contravariant</em> parameter types support
-call-compatibility. Similarly we can accept <code>MyCapitaizer</code>’s <code>String</code> return type because it is
-assignable to <code>Capitalizer</code>’s <code>CharSequence</code> return type – <em>covariant</em> return types support
-call-compatibility. Therefore, even though their method signatures aren’t identical, <code>MyCapitalizer</code> is
-structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>’s methods.</p>
+<p><code>MyCapitalizer</code>???s method can be called with <code>Capitalizer</code>???s <code>String</code> parameter because <code>MyCapitalizer</code>???s
+<code>CharSequence</code> parameter is assignable from <code>String</code> ??? <em>contravariant</em> parameter types support
+call-compatibility. Similarly we can accept <code>MyCapitaizer</code>???s <code>String</code> return type because it is
+assignable to <code>Capitalizer</code>???s <code>CharSequence</code> return type ??? <em>covariant</em> return types support
+call-compatibility. Therefore, even though their method signatures aren???t identical, <code>MyCapitalizer</code> is
+structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>???s methods.</p>
 <p>Signature variance also supports primitive types.  You may have spotted this in the <code>Component</code>
 class referenced earlier in the <code>Coordinate</code> example where <code>Component.getX()</code> returns <code>int</code>, not <code>double</code>
 as declared in <code>Coordinate.getX()</code>. Because <code>int</code> coerces to <code>double</code> with no loss of precision

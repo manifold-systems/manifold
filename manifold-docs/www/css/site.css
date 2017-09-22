@@ -10,7 +10,7 @@ body {
   font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
   background-color: rgba(252, 252, 252, 0.95);
 }
-pre {
+body pre[class*="language-"] {
   margin: 16px;
 }
 p {
@@ -30,6 +30,14 @@ h6 {
 .index-title {
   height: 128px;
   margin-top: 32px;
+}
+.index-title h1 {
+  font-size: 72px;
+}
+@media only screen and (max-width: 512px) {
+  .index-title h1 {
+    font-size: 42px;
+  }
 }
 .index-title img {
   width: 128px;
