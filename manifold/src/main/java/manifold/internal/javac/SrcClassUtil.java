@@ -1,10 +1,12 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
 import javax.lang.model.type.NoType;
@@ -19,6 +21,7 @@ import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
+import manifold.api.host.IModule;
 
 /**
  */
@@ -35,17 +38,17 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit )
+  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask )
   {
-    return makeStub( fqn, classSymbol, compilationUnit, true );
+    return makeStub( module, fqn, classSymbol, compilationUnit, javacTask, true );
   }
 
-  public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, boolean withMembers )
+  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask, boolean withMembers )
   {
-    return makeSrcClass( fqn, classSymbol, compilationUnit, withMembers );
+    return makeSrcClass( module, fqn, classSymbol, compilationUnit, javacTask, withMembers );
   }
 
-  private SrcClass makeSrcClass( String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, boolean withMembers )
+  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask, boolean withMembers )
   {
     SrcClass srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ) )
       .modifiers( classSymbol.getModifiers() );
@@ -89,7 +92,7 @@ public class SrcClassUtil
 
         if( sym instanceof Symbol.ClassSymbol )
         {
-          addInnerClass( srcClass, sym );
+          addInnerClass( module, srcClass, sym, javacTask );
         }
         else if( sym instanceof Symbol.VarSymbol )
         {
@@ -99,7 +102,7 @@ public class SrcClassUtil
         {
           if( !isEnumMethod( sym ) )
           {
-            addMethod( srcClass, (Symbol.MethodSymbol)sym );
+            addMethod( module, srcClass, (Symbol.MethodSymbol)sym, javacTask );
           }
         }
       }
@@ -131,9 +134,9 @@ public class SrcClassUtil
     return srcType;
   }
 
-  private void addInnerClass( SrcClass srcClass, Symbol sym )
+  private void addInnerClass( IModule module, SrcClass srcClass, Symbol sym, JavacTaskImpl javacTask )
   {
-    SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym, null, true );
+    SrcClass innerClass = makeSrcClass( module, sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym, null, javacTask, true );
     srcClass.addInnerClass( innerClass );
   }
 
@@ -156,7 +159,7 @@ public class SrcClassUtil
     srcClass.addField( srcField );
   }
 
-  private void addMethod( SrcClass srcClass, Symbol.MethodSymbol method )
+  private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, JavacTaskImpl javacTask )
   {
     SrcMethod srcMethod = new SrcMethod( srcClass );
     addAnnotations( srcMethod, method );
@@ -195,11 +198,118 @@ public class SrcClassUtil
     {
       srcMethod.addThrowType( new SrcType( throwType.toString() ) );
     }
+    String bodyStmt;
+    if( srcMethod.isConstructor() )
+    {
+      // Note we can't just throw an exception for the ctor body, the compiler will
+      // still complain about the missing super() cal if the super class does not have
+      // an accessible default ctor. To appease the compiler we generate a super(...)
+      // call to the first accessible constructor we can find in the super class.
+      bodyStmt = genSuperCtorCall( module, srcClass, javacTask );
+    }
+    else
+    {
+      bodyStmt = "throw new RuntimeException();";
+    }
     srcMethod.body( new SrcStatementBlock()
                       .addStatement(
                         new SrcRawStatement()
-                          .rawText( "throw new RuntimeException();" ) ) );
+                          .rawText( bodyStmt ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  private String genSuperCtorCall( IModule module, SrcClass srcClass, JavacTaskImpl javacTask )
+  {
+    String bodyStmt;SrcType superClass = srcClass.getSuperClass();
+    if( superClass == null )
+    {
+      bodyStmt = "";
+    }
+    else
+    {
+      Symbol.MethodSymbol superCtor = findConstructor( module, superClass.getFqName(), javacTask );
+      if( superCtor == null )
+      {
+        bodyStmt = "";
+      }
+      else
+      {
+        bodyStmt = genSuperCtorCall( superCtor );
+      }
+    }
+    return bodyStmt;
+  }
+
+  private String genSuperCtorCall( Symbol.MethodSymbol superCtor )
+  {
+    String bodyStmt;
+    StringBuilder sb = new StringBuilder( "super(" );
+    List<Symbol.VarSymbol> parameters = superCtor.getParameters();
+    for( int i = 0; i < parameters.size(); i++ )
+    {
+      Symbol.VarSymbol param = parameters.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      sb.append( getValueForType( param.type ) );
+    }
+    sb.append( ");" );
+    bodyStmt = sb.toString();
+    return bodyStmt;
+  }
+
+  private Symbol.MethodSymbol findConstructor( IModule module, String fqn, JavacTaskImpl javacTask )
+  {
+    manifold.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
+    Symbol.ClassSymbol cs = classSymbol.getFirst();
+    Symbol.MethodSymbol ctor = null;
+    for( Symbol sym : cs.getEnclosedElements() )
+    {
+      if( sym instanceof Symbol.MethodSymbol && sym.flatName().toString().equals( "<init>" ) )
+      {
+        if( ctor == null )
+        {
+          ctor = (Symbol.MethodSymbol)sym;
+        }
+        else
+        {
+          ctor = mostAccessible( ctor, (Symbol.MethodSymbol)sym );
+        }
+        if( Modifier.isPublic( (int)ctor.flags() ) )
+        {
+          return ctor;
+        }
+      }
+    }
+    return ctor;
+  }
+
+  private Symbol.MethodSymbol mostAccessible( Symbol.MethodSymbol ctor, Symbol.MethodSymbol sym )
+  {
+    int ctorMods = (int)ctor.flags();
+    int symMods = (int)sym.flags();
+    if( Modifier.isPublic( ctorMods ) )
+    {
+      return ctor;
+    }
+    if( Modifier.isPublic( symMods ) )
+    {
+      return sym;
+    }
+    if( Modifier.isProtected( ctorMods ) )
+    {
+      return ctor;
+    }
+    if( Modifier.isProtected( symMods ) )
+    {
+      return sym;
+    }
+    if( Modifier.isPrivate( ctorMods ) )
+    {
+      return Modifier.isPrivate( symMods ) ? ctor : sym;
+    }
+    return ctor;
   }
 
   private void addAnnotations( SrcAnnotated<?> srcAnnotated, Symbol symbol )

@@ -5,14 +5,12 @@ import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -129,7 +127,7 @@ public class ClassSymbols
     {
       javacTaskOut[0] = javacTask;
     }
-    return SrcClassUtil.instance().makeStub( fqn, pair.getFirst(), pair.getSecond() );
+    return SrcClassUtil.instance().makeStub( _module, fqn, pair.getFirst(), pair.getSecond(), javacTask );
   }
 
   private class CacheClearer implements ITypeLoaderListener
