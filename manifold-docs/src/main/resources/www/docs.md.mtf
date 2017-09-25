@@ -891,12 +891,12 @@ Capitalizer cap = (Capitalizer) new MyCapitalizer();
 CharSequence properName = cap.capitalize("tigers");
 ```
 
-`MyCapitalizer`’s method can be called with `Capitalizer`’s `String` parameter because `MyCapitalizer`’s
-`CharSequence` parameter is assignable from `String` – _contravariant_ parameter types support
-call-compatibility. Similarly we can accept `MyCapitaizer`’s `String` return type because it is
-assignable to `Capitalizer`’s `CharSequence` return type – _covariant_ return types support
-call-compatibility. Therefore, even though their method signatures aren’t identical, `MyCapitalizer` is
-structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`’s methods.
+`MyCapitalizer`???s method can be called with `Capitalizer`???s `String` parameter because `MyCapitalizer`???s
+`CharSequence` parameter is assignable from `String` ??? _contravariant_ parameter types support
+call-compatibility. Similarly we can accept `MyCapitaizer`???s `String` return type because it is
+assignable to `Capitalizer`???s `CharSequence` return type ??? _covariant_ return types support
+call-compatibility. Therefore, even though their method signatures aren???t identical, `MyCapitalizer` is
+structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`???s methods.
 
 Signature variance also supports primitive types.  You may have spotted this in the `Component`
 class referenced earlier in the `Coordinate` example where `Component.getX()` returns `int`, not `double`
