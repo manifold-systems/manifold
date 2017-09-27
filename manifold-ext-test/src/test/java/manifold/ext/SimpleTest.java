@@ -6,6 +6,7 @@ import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -82,6 +83,12 @@ public class SimpleTest extends TestCase
 
     // asserts object identity is not lost
     assertSame( itf, tf );
+  }
+
+  public void testHashMap()
+  {
+    HashMap<String, String> map = new HashMap<>();
+    map.fubar();
   }
 
   public void testStructuralOnExistingInterface()

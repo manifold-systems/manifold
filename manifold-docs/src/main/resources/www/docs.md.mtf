@@ -132,7 +132,7 @@ processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- you can build your own Manifolds
 *   **No code generation build step** -- no generated files, no special compilers
-*   **IntelliJ IDEA** support -- all manifold types and extensions work with IntelliJ
+*   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** support -- all manifold types and extensions work with IntelliJ
 
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.

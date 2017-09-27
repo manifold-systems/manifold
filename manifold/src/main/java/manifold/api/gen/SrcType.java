@@ -98,9 +98,19 @@ public class SrcType extends SrcElement
     _isAnnotation = isAnno;
   }
 
+  /**
+   * If the type is an inner type, this may be a simple name.
+   * Call getFqName() for a qualified name.
+   */
   public String getName()
   {
     return _fqn;
+  }
+  public String getFqName()
+  {
+    return _enclosingType != null
+           ? _enclosingType.getName() + '.' + _fqn
+           : _fqn;
   }
 
   public SrcType diamond()
