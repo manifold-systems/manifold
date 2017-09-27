@@ -4,6 +4,7 @@ import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
 import manifold.internal.host.ManifoldHost;
 import manifold.templates.ManifoldTemplates;
+import manifold.templates.runtime.BaseTemplate;
 import manifold.util.StreamUtil;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -110,6 +111,24 @@ public class Hyde {
     File site = new File("manifold-docs/www");
     site.mkdirs();
     return site;
+  }
+
+  // HTML utils
+  public static class BaseTemplate extends manifold.templates.runtime.BaseTemplate {
+
+    public String anchor(String content) {
+      return "<a class=\"toc_anchor\" name=\"" + anchorId(content) + "\">&nbsp;</a>" + content;
+    }
+
+    public String linkTo(String name) {
+      return "<a href=\"#" + anchorId(name) + "\">" + name + "</a>";
+    }
+
+    private String anchorId(String content) {
+      String strValue = content.replaceAll("[^A-Za-z0-9 ]", "").trim().toLowerCase();
+      return strValue.replace(" ", "_");
+    }
+
   }
 
 }

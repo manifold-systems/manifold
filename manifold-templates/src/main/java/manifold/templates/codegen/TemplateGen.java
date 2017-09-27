@@ -712,16 +712,16 @@ public class TemplateGen {
             assert(dir.dirType == INCLUDE);
             if (dir.conditional == null) {
                 if (dir.params != null) {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, ").reAppend(dir.params).reAppend(");\n");
+                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY,").reAppend(dir.params).reAppend(");\n");
                 } else {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer);\n");
+                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY);\n");
                 }
             } else {
                 sb.append("            if(").reAppend(dir.conditional).reAppend("){\n");
                 if (dir.params != null) {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, ").reAppend(dir.params).reAppend(");\n");
+                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY,").reAppend(dir.params).reAppend(");\n");
                 } else {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer);\n");
+                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY);\n");
                 }
                 sb.append("            ").reAppend("}\n");
             }

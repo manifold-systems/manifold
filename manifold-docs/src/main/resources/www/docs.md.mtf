@@ -1,4 +1,8 @@
-## Manifold in a Nutshell
+<%@ extends mr.Hyde.BaseTemplate %>
+
+<%@ include docs_index %>
+
+## ${anchor("Manifold in a Nutshell")}
 
 At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and seamlessly extend
 Java's type system. Building on this core framework Manifold provides a set of
@@ -15,7 +19,7 @@ runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
 
-### Type Manifolds
+### ${anchor("Type Manifolds")}
 
 Bridging the worlds of information and programming, type manifolds are Java
 projections of schematized data sources.  More specifically, a type manifold
@@ -1045,8 +1049,7 @@ the map, otherwise `Map` behaves much like an expando object.
 See `extensions.java.util.Map.MapStructExt.java` for details.
 
 
-<a class="anchor" id="ide"></a>
-## IDE -- IntelliJ IDEA
+## ${anchor("IDE -- IntelliJ IDEA")}
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10000-manifold) to experience Manifold in its fullest.
 
@@ -1118,8 +1121,7 @@ can be used incrementally.
 Of course Manifold would not exist if not for Gosu. We owe a debt of gratitude to Gosu as
 a primary source of inspiration.
 
-<a class="anchor" id="philosophy"></a>
-## Philosophy
+## ${anchor("Philosophy")}
 :todo
 
 <a class="anchor" id="conclusion"></a>

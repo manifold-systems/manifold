@@ -52,4 +52,24 @@ h6 {
 .icon-bar {
   background: darkgray;
 }
+.toc_anchor {
+  padding-top: 50px;
+}
+.docs-toc {
+  float: right;
+  margin: 15px;
+  font-size: 18px;
+  padding: 20px;
+  background: whitesmoke;
+}
+.docs-toc ul {
+  list-style: none;
+  padding: 0;
+}
+.docs-toc .toc-title {
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+  padding-bottom: 8px;
+}
 
