@@ -14,6 +14,14 @@ public class ExtIssueMsg
   public static final IssueMsg MSG_EXTENSION_DUPLICATION = new IssueMsg( "Illegal extension method. '{0}' from '{1}' duplicates another extension method from '{2}'" );
   public static final IssueMsg MSG_EXTENSION_SHADOWS = new IssueMsg( "Illegal extension method. '{0}' from '{1}' duplicates a method in the extended class '{2}'" );
   public static final IssueMsg MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE = new IssueMsg( "Only structural interfaces allowed here, '{0}' is not structural" );
+
+  //
+  // For now these are only used in the IntelliJ plugin
+  //
+  @SuppressWarnings("unused")
   public static final IssueMsg MSG_EXPECTING_EXTENSIONS_ROOT_PACKAGE = new IssueMsg( "Extension class must be rooted in 'extensions' package, found: '{0}'" );
+  @SuppressWarnings("unused")
   public static final IssueMsg MSG_EXPECTING_EXTENDED_CLASS_NAME = new IssueMsg( "Expecting extended class name, found, '{0}' is not a class" );
+  @SuppressWarnings("unused")
+  public static final IssueMsg MSG_NOT_IN_EXTENSION_CLASS = new IssueMsg( "'{0}' must be used inside an extension class" );
 }
