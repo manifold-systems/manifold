@@ -179,7 +179,49 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
-  private String deriveOutputPath()
+  private List<String> deriveOutputPath()
+  {
+    Set<String> paths = new HashSet<>();
+    String outputPath = deriveClassOutputPath();
+
+    String path = outputPath.replace( File.separatorChar, '/' );
+    if( path.endsWith( "/" ) )
+    {
+      path = path.substring( 0, path.length()-1 );
+    }
+    if( path.endsWith( "/java/main" ) )
+    {
+      String javaPath = path.substring( 0, path.lastIndexOf( "/main" ) );
+      File javaDir = new File( javaPath );
+      for( File file: javaDir.listFiles() )
+      {
+        if( file.isDirectory() )
+        {
+          paths.add( file.getAbsolutePath() );
+        }
+      }
+      path = path.substring( 0, path.lastIndexOf( "/java/main" ) );
+      if( path.endsWith( "/classes" ) )
+      {
+        String resources = path.substring( 0, path.lastIndexOf( "/classes" ) );
+        resources += "/resources/main";
+        File resourcesDir = new File( resources );
+        if( resourcesDir.isDirectory() )
+        {
+          paths.add( resourcesDir.getAbsolutePath() );
+        }
+      }
+    }
+
+    if( paths.isEmpty() )
+    {
+      paths.add( outputPath );
+    }
+
+    return new ArrayList<>( paths );
+  }
+
+  private String deriveClassOutputPath()
   {
     try
     {

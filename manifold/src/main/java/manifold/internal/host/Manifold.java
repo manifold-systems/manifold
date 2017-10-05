@@ -19,7 +19,6 @@ import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
 import manifold.util.BytecodeOptions;
 import manifold.util.concurrent.LocklessLazyVar;
-//import jdk.internal.loader.URLClassPath;
 
 /**
  */
@@ -32,6 +31,7 @@ public class Manifold
   private LocklessLazyVar<IFileSystem> _fileSystem = LocklessLazyVar.make(
     () ->
     {
+      //noinspection ConstantConditions
       if( BytecodeOptions.JDWP_ENABLED.get() )
       {
         return new FileSystemImpl( IFileSystem.CachingMode.NO_CACHING );
@@ -114,7 +114,7 @@ public class Manifold
       }
     }
 
-    initPaths( cp, all, null );
+    initDirPaths( cp, all, Collections.emptyList() );
   }
 
   public static boolean excludeFromSourcePath( String p )
@@ -138,9 +138,9 @@ public class Manifold
     }
   }
 
-  public void initPaths( List<IDirectory> classpath,
-                         List<IDirectory> sourcePath,
-                         IDirectory outputPath )
+  public void initDirPaths( List<IDirectory> classpath,
+                            List<IDirectory> sourcePath,
+                            List<IDirectory> outputPath )
   {
     DefaultSingleModule singleModule = new DefaultSingleModule( classpath, sourcePath, outputPath );
 
@@ -151,12 +151,13 @@ public class Manifold
     singleModule.initializeTypeManifolds();
   }
 
-  public void initPaths( List<String> classpath, List<String> sourcePath, String outputPath )
+  public void initPaths( List<String> classpath, List<String> sourcePath, List<String> outputPath )
   {
     IFileSystem fs = ManifoldHost.getFileSystem();
     List<IDirectory> cp = classpath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
     List<IDirectory> sp = sourcePath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
-    initPaths( cp, sp, fs.getIDirectory( new File( outputPath ) ) );
+    List<IDirectory> op = outputPath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
+    initDirPaths( cp, sp, op );
   }
 
   public List<File> getClasspath()

@@ -123,10 +123,21 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     operation.run();
   }
 
-  public void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
+  public void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
   {
     List<String> cp = classpath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
     Set<String> sp = sourcePath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );
+    List<String> op = outputPath.get();
+
+    int i = 0;
+    for( String p : op )
+    {
+      if( !cp.contains( p ) )
+      {
+        // ensure output path is in the classpath
+        cp.add( i++, p );
+      }
+    }
 
     List<String> all = new ArrayList<>();
     for( String p : sp )
@@ -143,7 +154,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
         all.add( p );
       }
     }
-    Manifold.instance().initPaths( cp, all, outputPath.get() );
+    Manifold.instance().initPaths( cp, all, op );
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )

@@ -151,7 +151,7 @@ public class ManifoldHost
     host().performLockedOperation( loader, operation );
   }
 
-  public static void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
+  public static void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
   {
     host().initializeAndCompileNonJavaFiles( fileManager, files, sourcePath, classpath, outputPath );
   }

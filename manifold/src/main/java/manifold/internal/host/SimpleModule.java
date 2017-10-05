@@ -32,10 +32,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
 {
   private List<IDirectory> _classpath;
   private List<IDirectory> _sourcePath;
-  private IDirectory _outputPath;
+  private List<IDirectory> _outputPath;
   private Set<ITypeManifold> _typeManifolds;
 
-  public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, IDirectory outputPath )
+  public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
     _classpath = classpath;
     _sourcePath = sourcePath;
@@ -61,7 +61,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   }
 
   @Override
-  public IDirectory getOutputPath()
+  public List<IDirectory> getOutputPath()
   {
     return _outputPath;
   }

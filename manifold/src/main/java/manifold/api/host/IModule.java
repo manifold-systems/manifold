@@ -22,7 +22,7 @@ public interface IModule
 
   List<IDirectory> getJavaClassPath();
 
-  IDirectory getOutputPath();
+  List<IDirectory> getOutputPath();
 
   IDirectory[] getExcludedPath();
 

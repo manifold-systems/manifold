@@ -452,10 +452,10 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
             if( lazyModel != null )
             {
               lazyModel.removeFile( request.file );
-            }
-            if( lazyModel.getFiles().size() == 0 )
-            {
-              _fqnToModel.get().remove( type );
+              if( lazyModel.getFiles().size() == 0 )
+              {
+                _fqnToModel.get().remove( type );
+              }
             }
           }
           break;
