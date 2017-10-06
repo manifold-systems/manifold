@@ -3,8 +3,8 @@
   <servers>
     <server>
       <id>ossrh</id>
-      <username>${env.SNAPSHOT_USER}</username>
-      <password>${env.SNAPSHOT_PASS}</password>
+      <username>${env.MANIFOLD_SNAPSHOT_USER}</username>
+      <password>${env.MANIFOLD_SNAPSHOT_PASS}</password>
     </server>
   </servers>
 </settings>
