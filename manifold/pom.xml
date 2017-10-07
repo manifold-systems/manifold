@@ -14,42 +14,17 @@
 
   <name>Manifold :: Core</name>
 
-  <properties>
-    <annotation.descriptor.file>${project.build.outputDirectory}/META-INF/services/javax.annotation.processing.Processor</annotation.descriptor.file>
-  </properties>
-  
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>generate-provider-configuration-file</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <customTaskPrefix>wut</customTaskPrefix>
-              <target name="pre-jar">
-                <echo message="Generating ${annotation.descriptor.file}"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>remove-provider-configuration-file</id>
-            <phase>package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target name="post-jar">
-                <delete file="${annotation.descriptor.file}"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <!-- undo default compiler configuration by unsetting -Xplugin argument -->
+            <arg>-Xplugin:</arg>
+          </compilerArgs>
+        </configuration>
       </plugin>
     </plugins>
   </build>

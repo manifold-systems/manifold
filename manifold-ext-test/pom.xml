@@ -26,21 +26,4 @@
       </dependency>
     </dependencies>
 
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <source>1.8</source>
-            <compilerArgs>
-              <arg>-Xplugin:Manifold</arg>
-              <!--<arg>-Xprefer:source</arg>-->
-            </compilerArgs>
-          </configuration>
-        </plugin>
-      </plugins>
-    </build>
-
-
 </project>
