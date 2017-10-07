@@ -39,11 +39,11 @@
               </goals>
               <configuration>
                 <testExcludes>
-                  <exclude>extensions/abc/benis_png/MyBenis_pngExt_Test.java</exclude>
-                  <exclude>extensions/java/util/List/ListExt_Test.java</exclude>
-                  <exclude>extensions/java/util/List/ListExt_Test2.java</exclude>
-                  <exclude>extensions/java/util/List/ListExt_Test3.java</exclude>
-                  <exclude>extensions/java/util/List/ListExt_Test4.java</exclude>
+                  <exclude>**/extensions/abc/benis_png/MyBenis_pngExt_Test.java</exclude>
+                  <exclude>**/extensions/java/util/List/ListExt_Test.java</exclude>
+                  <exclude>**/extensions/java/util/List/ListExt_Test2.java</exclude>
+                  <exclude>**/extensions/java/util/List/ListExt_Test3.java</exclude>
+                  <exclude>**/extensions/java/util/List/ListExt_Test4.java</exclude>
                 </testExcludes>
               </configuration>
             </execution>
