@@ -83,14 +83,6 @@
               <arg>-Xplugin:Manifold</arg>
             </compilerArgs>
           </configuration>
-          <executions>
-            <execution>
-              <id>default-compile</id>
-              <configuration>
-                <proc>none</proc>
-              </configuration>
-            </execution>
-          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
