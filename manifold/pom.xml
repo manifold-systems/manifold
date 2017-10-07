@@ -14,4 +14,19 @@
 
   <name>Manifold :: Core</name>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <!-- undo default compiler configuration by unsetting -Xplugin argument -->
+            <arg>-Xplugin:</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
 </project>
