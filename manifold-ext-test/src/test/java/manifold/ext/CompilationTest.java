@@ -39,6 +39,10 @@ public class CompilationTest extends TestCase
 {
   public void testCompilation() throws ClassNotFoundException, IllegalAccessException, InstantiationException
   {
+    System.out.println("CompilationTest#testCompilation()");
+    for(String k : System.getProperties().stringPropertyNames()) {
+      System.out.println(k + ":" + System.getProperty(k));
+    }
     List<IDirectory> sourcePath = new ArrayList<>( ManifoldHost.getGlobalModule().getSourcePath() );
     sourcePath.add( ManifoldHost.getFileSystem().getIDirectory( JavacTask.class.getProtectionDomain().getCodeSource().getLocation() ) );
     ClassLoader cl = new URLClassLoader( sourcePath.stream().map( e ->
