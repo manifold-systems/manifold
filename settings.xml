@@ -6,5 +6,15 @@
       <username>${env.MANIFOLD_SNAPSHOT_USER}</username>
       <password>${env.MANIFOLD_SNAPSHOT_PASS}</password>
     </server>
+    <server>
+      <id>snapshots</id>
+      <username>${env.BINTRAY_USER}</username>
+      <password>${env.BINTRAY_API_KEY}</password>
+    </server>
+    <server>
+      <id>bintray-${env.BINTRAY_USER}-manifold</id>
+      <username>${env.BINTRAY_USER}</username>
+      <password>${env.BINTRAY_API_KEY}</password>
+    </server>
   </servers>
 </settings>

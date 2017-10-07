@@ -62,10 +62,20 @@
       <id>ossrh</id>
       <url>${dist.man.snapshotrepo.url}</url>
     </snapshotRepository>
+    <!--<snapshotRepository>-->
+      <!--<id>snapshots</id>-->
+      <!--<name>oss-jfrog-artifactory-snapshots</name>-->
+      <!--<url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>-->
+    <!--</snapshotRepository>-->
     <repository>
       <id>ossrh</id>
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
+    <!--<repository>-->
+      <!--<id>bintray-${env.BINTRAY_USER}-manifold</id>-->
+      <!--<name>${env.BINTRAY_USER}-manifold</name>-->
+      <!--<url>https://api.bintray.com/maven/${env.BINTRAY_USER}/manifold/manifold/;publish=1</url>-->
+    <!--</repository>-->
   </distributionManagement>
 
   <build>
