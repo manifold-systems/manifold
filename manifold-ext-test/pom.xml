@@ -24,4 +24,32 @@
       </dependency>
     </dependencies>
 
+    <build>
+      <plugins>
+        <!-- exclude errant files used by manifold.ext.CompilationTest from test-compile -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>default-testCompile</id>
+              <phase>test-compile</phase>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
+              <configuration>
+                <testExcludes>
+                  <testExclude>extensions/abc/benis_png/MyBenis_pngExt_Test.java</testExclude>
+                  <testExclude>extensions/java/util/List/ListExt_Test.java</testExclude>
+                  <testExclude>extensions/java/util/List/ListExt_Test2.java</testExclude>
+                  <testExclude>extensions/java/util/List/ListExt_Test3.java</testExclude>
+                  <testExclude>extensions/java/util/List/ListExt_Test4.java</testExclude>
+                </testExcludes>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
+
 </project>
