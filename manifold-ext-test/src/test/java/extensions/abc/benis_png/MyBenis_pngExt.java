@@ -13,7 +13,7 @@ public abstract class MyBenis_pngExt implements IMyStructuralInterface
 {
   public static int width( @This abc.benis_png thiz )
   {
-    return thiz.get().getIconWidth();
+    return thiz.getIconWidth();
   }
 
   public static String myMethod( @This benis_png thiz, String stringParam )

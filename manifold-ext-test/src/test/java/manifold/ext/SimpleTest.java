@@ -27,9 +27,9 @@ public class SimpleTest extends TestCase
     ArrayList<String> list = new ArrayList<>();
     list.add( "hi" );
     list.add( "hello" );
-    assertEquals( 'h', list.first().charAt( 0 ) );
+    assertEquals( 'h', list.firstOne().charAt( 0 ) );
 
-    String found = list.first( e -> e.length() > 2 );
+    String found = list.firstOne( e -> e.length() > 2 );
     assertEquals( found, "hello" );
 
     assertEquals( "ok", list.stuff() );
