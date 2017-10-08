@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" 
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>systems.manifold</groupId>
@@ -14,42 +11,17 @@
 
   <name>Manifold :: Core</name>
 
-  <properties>
-    <annotation.descriptor.file>${project.build.outputDirectory}/META-INF/services/javax.annotation.processing.Processor</annotation.descriptor.file>
-  </properties>
-  
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>generate-provider-configuration-file</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <customTaskPrefix>wut</customTaskPrefix>
-              <target name="pre-jar">
-                <echo message="Generating ${annotation.descriptor.file}"/>
-              </target>
-            </configuration>
-          </execution>
-          <execution>
-            <id>remove-provider-configuration-file</id>
-            <phase>package</phase>
-            <goals>
-              <goal>run</goal>
-            </goals>
-            <configuration>
-              <target name="post-jar">
-                <delete file="${annotation.descriptor.file}"/>
-              </target>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <compilerArgs>
+            <!-- undo default compiler configuration by unsetting -Xplugin argument -->
+            <arg>-Xplugin:</arg>
+          </compilerArgs>
+        </configuration>
       </plugin>
     </plugins>
   </build>
