@@ -5,35 +5,29 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
-import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
-import com.sun.tools.javac.util.Name;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
@@ -42,6 +36,7 @@ import javax.tools.StandardLocation;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
+import manifold.util.Pair;
 
 /**
  */
@@ -52,14 +47,15 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private Context _ctx;
   private JavaFileManager _fileManager;
-  private JavacTaskImpl _javacTask;
-  private Set<JavaFileObject> _javaInputFiles;
+  private BasicJavacTask _javacTask;
+  private Set<Pair<String, JavaFileObject>> _javaInputFiles;
   private List<String> _gosuInputFiles;
   private TreeMaker _treeMaker;
   private JavacElements _javacElements;
   private TypeProcessor _typeProcessor;
   private IssueReporter _issueReporter;
   private ManifoldJavaFileManager _manFileManager;
+  private boolean _initialized;
 
   public static JavacPlugin instance()
   {
@@ -80,56 +76,66 @@ public class JavacPlugin implements Plugin, TaskListener
   @Override
   public void init( JavacTask task, String... args )
   {
-    _javacTask = (JavacTaskImpl)task;
+    _javacTask = (BasicJavacTask)task;
     hijackJavacFileManager();
     task.addTaskListener( this );
   }
 
+  @SuppressWarnings("WeakerAccess")
   public Context getContext()
   {
     return _ctx;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public JavaFileManager getJavaFileManager()
   {
     return _fileManager;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public ManifoldJavaFileManager getManifoldFileManager()
   {
     return _manFileManager;
   }
 
-  public JavacTaskImpl getJavacTask()
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  public BasicJavacTask getJavacTask()
   {
     return _javacTask;
   }
 
-  public Set<JavaFileObject> getJavaInputFiles()
+  @SuppressWarnings("unused")
+  public Set<Pair<String, JavaFileObject>> getJavaInputFiles()
   {
     return _javaInputFiles;
   }
 
+  @SuppressWarnings("unused")
   public List<String> getGosuInputFiles()
   {
     return _gosuInputFiles;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public TreeMaker getTreeMaker()
   {
     return _treeMaker;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public JavacElements getJavacElements()
   {
     return _javacElements;
   }
 
+  @SuppressWarnings("unused")
   public TypeProcessor getTypeProcessor()
   {
     return _typeProcessor;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public IssueReporter getIssueReporter()
   {
     return _issueReporter;
@@ -141,7 +147,7 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       _ctx = _javacTask.getContext();
       _fileManager = _ctx.get( JavaFileManager.class );
-      _javaInputFiles = fetchJavaInputFiles();
+      _javaInputFiles = new HashSet<>();
       _gosuInputFiles = fetchGosuInputFiles();
       _treeMaker = TreeMaker.instance( _ctx );
       _javacElements = JavacElements.instance( _ctx );
@@ -149,7 +155,6 @@ public class JavacPlugin implements Plugin, TaskListener
       _issueReporter = new IssueReporter( Log.instance( getContext() ) );
 
       injectManFileManager();
-      ManifoldHost.initializeAndCompileNonJavaFiles( _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
     }
   }
 
@@ -187,13 +192,14 @@ public class JavacPlugin implements Plugin, TaskListener
     String path = outputPath.replace( File.separatorChar, '/' );
     if( path.endsWith( "/" ) )
     {
-      path = path.substring( 0, path.length()-1 );
+      path = path.substring( 0, path.length() - 1 );
     }
     if( path.endsWith( "/java/main" ) )
     {
       String javaPath = path.substring( 0, path.lastIndexOf( "/main" ) );
       File javaDir = new File( javaPath );
-      for( File file: javaDir.listFiles() )
+      //noinspection ConstantConditions
+      for( File file : javaDir.listFiles() )
       {
         if( file.isDirectory() )
         {
@@ -296,27 +302,27 @@ public class JavacPlugin implements Plugin, TaskListener
     return sourcePath;
   }
 
-  private void deriveSourcePath( Set<JavaFileObject> inputFiles, Set<String> sourcePath )
+  private void deriveSourcePath( Set<Pair<String, JavaFileObject>> inputFiles, Set<String> sourcePath )
   {
     outer:
-    for( JavaFileObject inputFile : inputFiles )
+    for( Pair<String, JavaFileObject> inputFile : inputFiles )
     {
-      if( !isPhysicalFile( inputFile ) )
+      if( !isPhysicalFile( inputFile.getSecond() ) )
       {
         continue;
       }
 
       for( String sp : sourcePath )
       {
-        if( inputFile.getName().startsWith( sp + File.separatorChar ) )
+        if( inputFile.getSecond().getName().startsWith( sp + File.separatorChar ) )
         {
           continue outer;
         }
       }
-      String type = findType( inputFile );
+      String type = inputFile.getFirst();
       if( type != null )
       {
-        String path = derivePath( type, inputFile );
+        String path = derivePath( type, inputFile.getSecond() );
         sourcePath.add( path );
       }
       else
@@ -343,21 +349,6 @@ public class JavacPlugin implements Plugin, TaskListener
     return filename.substring( 0, filename.indexOf( pathRelativeFile ) - 1 );
   }
 
-  private String findType( JavaFileObject inputFile )
-  {
-    File file = new File( inputFile.toUri() );
-    String name = file.getName();
-    name = name.substring( 0, name.lastIndexOf( '.' ) );
-    Name pkg = findPackageInFile( inputFile );
-    if( pkg == null )
-    {
-      Log.instance( _ctx ).warning( "Failed to find package for: " + file );
-      return null;
-    }
-    String packageName = pkg.toString();
-    return packageName + '.' + name;
-  }
-
   private List<String> fetchGosuInputFiles()
   {
     String property = System.getProperty( GOSU_SOURCE_FILES, "" );
@@ -368,24 +359,19 @@ public class JavacPlugin implements Plugin, TaskListener
     return Collections.emptyList();
   }
 
-  private Set<JavaFileObject> fetchJavaInputFiles()
-  {
-    try
-    {
-      Field field = JavacTaskImpl.class.getDeclaredField( "fileObjects" );
-      field.setAccessible( true );
-      //noinspection unchecked
-      return new HashSet<>( (Collection<JavaFileObject>)field.get( _javacTask ) );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
   @Override
   public void started( TaskEvent e )
   {
+    switch( e.getKind() )
+    {
+      case ENTER:
+        if( !_initialized )
+        {
+          _initialized = true;
+          ManifoldHost.initializeAndCompileNonJavaFiles( _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
+        }
+        break;
+    }
   }
 
   @Override
@@ -393,13 +379,35 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     switch( e.getKind() )
     {
+      case PARSE:
+      {
+        addInputFile( e );
+        break;
+      }
+
       case ENTER:
         process( e );
         break;
+
     }
   }
 
-  private boolean process( TaskEvent e )
+  private void addInputFile( TaskEvent e )
+  {
+    if( !_initialized )
+    {
+      String packageName = e.getCompilationUnit().getPackageName().toString();
+      for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
+      {
+        if( classDecl instanceof JCTree.JCClassDecl )
+        {
+          _javaInputFiles.add( new Pair<>( packageName + '.' + ((JCTree.JCClassDecl)classDecl).getSimpleName(), e.getCompilationUnit().getSourceFile() ) );
+        }
+      }
+    }
+  }
+
+  private void process( TaskEvent e )
   {
     Set<String> typesToProcess = new HashSet<>();
     String packageName = e.getCompilationUnit().getPackageName().toString();
@@ -412,57 +420,11 @@ public class JavacPlugin implements Plugin, TaskListener
       }
     }
     _typeProcessor.addTypesToProcess( typesToProcess );
-
-    return false;
   }
 
   private void insertBootstrap( JCTree.JCClassDecl tree )
   {
     TreeTranslator visitor = new BootstrapInserter( this );
     tree.accept( visitor );
-  }
-
-  private Name findPackageInFile( JavaFileObject file )
-  {
-    return parseAndGetName( file, t -> t.getPackageName() != null
-                                       ? TreeInfo.fullName( t.getPackageName() )
-                                       : null );
-  }
-
-  private Name parseAndGetName( JavaFileObject file, Function<JCTree.JCCompilationUnit, Name> tree2Name )
-  {
-    Log.DiagnosticHandler dh = new Log.DiscardDiagnosticHandler( Log.instance( _ctx ) );
-    try
-    {
-      JCTree.JCCompilationUnit t = parse( file );
-      return tree2Name.apply( t );
-    }
-    catch( IOException e )
-    {
-      return null;
-    }
-    finally
-    {
-      Log.instance( _ctx ).popDiagnosticHandler( dh );
-    }
-  }
-
-  private JCTree.JCCompilationUnit parse( JavaFileObject file ) throws IOException
-  {
-    JavaFileObject prev = Log.instance( _ctx ).useSource( file );
-    try
-    {
-      Method parse = JavaCompiler.class.getDeclaredMethod( "parse", JavaFileObject.class, CharSequence.class );
-      parse.setAccessible( true );
-      return (JCTree.JCCompilationUnit)parse.invoke( JavaCompiler.instance( _ctx ), file, file.getCharContent( false ) );
-    }
-    catch( Exception e )
-    {
-      throw new IOException( e );
-    }
-    finally
-    {
-      Log.instance( _ctx ).useSource( prev );
-    }
   }
 }
