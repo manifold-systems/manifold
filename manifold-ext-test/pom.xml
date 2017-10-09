@@ -27,6 +27,7 @@
     <build>
       <plugins>
         <!-- exclude errant files used by manifold.ext.CompilationTest from test-compile -->
+        <!-- forking to javac is a workaround for this bug in Maven's incremental compiler: https://issues.apache.org/jira/browse/MCOMPILER-205?focusedCommentId=14428932&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-14428932-->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
@@ -38,9 +39,7 @@
                 <goal>testCompile</goal>
               </goals>
               <configuration>
-                <!--<verbose>true</verbose>-->
-                <!--<useIncrementalCompilation>false</useIncrementalCompilation>-->
-                <!--<fork>false</fork>-->
+                <fork>true</fork> <!-- When run with -X, dumps a javac script and arg file to target/test-classes.  Very useful for debugging. -->
                 <testExcludes>
                   <testExclude>**/extensions/abc/benis_png/MyBenis_pngExt_Test.java</testExclude>
                   <testExclude>**/extensions/java/util/List/ListExt_Test.java</testExclude>
