@@ -1,6 +1,6 @@
 package manifold.internal.javac;
 
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
@@ -38,17 +38,17 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask )
+  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask )
   {
     return makeStub( module, fqn, classSymbol, compilationUnit, javacTask, true );
   }
 
-  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask, boolean withMembers )
+  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask, boolean withMembers )
   {
     return makeSrcClass( module, fqn, classSymbol, compilationUnit, javacTask, withMembers );
   }
 
-  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, JavacTaskImpl javacTask, boolean withMembers )
+  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask, boolean withMembers )
   {
     SrcClass srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ) )
       .modifiers( classSymbol.getModifiers() );
@@ -134,7 +134,7 @@ public class SrcClassUtil
     return srcType;
   }
 
-  private void addInnerClass( IModule module, SrcClass srcClass, Symbol sym, JavacTaskImpl javacTask )
+  private void addInnerClass( IModule module, SrcClass srcClass, Symbol sym, BasicJavacTask javacTask )
   {
     SrcClass innerClass = makeSrcClass( module, sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym, null, javacTask, true );
     srcClass.addInnerClass( innerClass );
@@ -159,7 +159,7 @@ public class SrcClassUtil
     srcClass.addField( srcField );
   }
 
-  private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, JavacTaskImpl javacTask )
+  private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, BasicJavacTask javacTask )
   {
     SrcMethod srcMethod = new SrcMethod( srcClass );
     addAnnotations( srcMethod, method );
@@ -218,7 +218,7 @@ public class SrcClassUtil
     srcClass.addMethod( srcMethod );
   }
 
-  private String genSuperCtorCall( IModule module, SrcClass srcClass, JavacTaskImpl javacTask )
+  private String genSuperCtorCall( IModule module, SrcClass srcClass, BasicJavacTask javacTask )
   {
     String bodyStmt;SrcType superClass = srcClass.getSuperClass();
     if( superClass == null )
@@ -259,7 +259,7 @@ public class SrcClassUtil
     return bodyStmt;
   }
 
-  private Symbol.MethodSymbol findConstructor( IModule module, String fqn, JavacTaskImpl javacTask )
+  private Symbol.MethodSymbol findConstructor( IModule module, String fqn, BasicJavacTask javacTask )
   {
     manifold.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
     Symbol.ClassSymbol cs = classSymbol.getFirst();
