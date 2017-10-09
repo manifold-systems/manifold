@@ -19,7 +19,7 @@ runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
 
-### ${anchor("Type Manifolds")}
+### Type Manifolds
 
 Bridging the worlds of information and programming, type manifolds are Java
 projections of schematized data sources.  More specifically, a type manifold
@@ -61,7 +61,7 @@ Currently Manifold provides type manifolds for:
 *   DDL and SQL (work in progress)
 
 
-### The Extension Manifold
+### ${anchor("The Extension Manifold")}
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
@@ -118,7 +118,7 @@ There's a lot more to the extension manifold including [structural interfaces](#
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
-### Benefits
+### ${anchor("Benefits")}
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
 generation step in the build, no extra .class files or .java files to manage, no annotation processors, and no extra
@@ -138,7 +138,7 @@ Additionally, Manifold is just a JAR file you can drop into your existing projec
 it incrementally without having to rewrite classes or conform to a new way of doing things.
 
 
-## Setup
+## ${anchor("Setup")}
 
 Using Manifold in your Java project is simple:
 
@@ -149,7 +149,7 @@ That's all.
 
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
-### Maven
+### ${anchor("Maven")}
 
 Add the following to your Maven pom.xml file:
 ```xml
@@ -196,7 +196,7 @@ Add the following to your Maven pom.xml file:
 </profiles>
 ```
 
-### Gradle
+### ${anchor("Gradle")}
 
 Add the following to your build.gradle script:
 
@@ -220,7 +220,7 @@ Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repo
 
 
 <a class="anchor" id="type-manifolds"></a>
-## Type Manifolds
+## ${anchor("Type Manifolds")}
 
 In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
@@ -308,7 +308,7 @@ We are working on support for more data sources including:
 
 
 <a class="anchor" id="properties-files"></a>
-### Properties Files
+### ${anchor("Properties Files")}
 
 Many Java applications incorporate
 [properties resource files](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html)
@@ -344,7 +344,7 @@ between -- no code gen files and no compiling between changes:
 <img src="images/man_properties.gif" alt="screencast" width=932 height=416/>
 
 <a class="anchor" id="image-files"></a>
-### Image Files
+### ${anchor("Image Files")}
 
 User interfaces frequently use image resource files for one purpose or another.  Java supports most of the
 popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
@@ -382,7 +382,7 @@ different types sharing a single name.  Additionally image classes are direct su
   type manifolds there are no code gen files or other build steps involved.
 
 <a class="anchor" id="json"></a>
-### JSON and JSON Schema
+### ${anchor("JSON and JSON Schema")}
 [JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
 structured data format. There is no shortage of JSON libraries for Java, these include 
 [Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
@@ -450,8 +450,7 @@ JSON bindings and transforms the resulting document to JSON bindings, which is d
 
 :todo
 
-<a class="anchor" id="extension-classes"></a>
-## Extension Classes
+## ${anchor("Extension Classes")}
 
 Similar to other languages such as 
 [C#](https://docs.microsoft.com/en-us/dotnet/csharp/csharp), [Kotlin](https://kotlinlang.org/), and
@@ -489,7 +488,7 @@ Additionally, an extension class must be annotated with `manifold.ext.api.Extens
 extension classes from other classes that may reside in the same package.
 
 <a class="anchor" id="extension-method-basics"></a>
-### Extension Method Basics
+### ${anchor("Extension Method Basics")}
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
@@ -522,7 +521,7 @@ String.lineSeparator()
 ```
 
 <a class="anchor" id="generics"></a>
-### Generics
+### ${anchor("Generics")}
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
 work with collections and other generic classes. For example, here is the `first()` extension method on
@@ -557,7 +556,7 @@ Here `map` is a generic extension method having type variable `R` and conveying 
 variable `E`.
 
 <a class="anchor" id="static-dispatching"></a>
-### Static Dispatching
+### ${anchor("Static Dispatching")}
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
@@ -607,7 +606,7 @@ if (name.isNullOrEmpty()) {
 Here the example doesn't check for null and instead shifts the burden to the extension.
 
 <a class="anchor" id="accessibility"></a>
-### Accessibility and Scope
+### ${anchor("Accessibility and Scope")}
 
 An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:
@@ -654,7 +653,7 @@ the module's.
 <a class="anchor" id="annotation-extensions"></a>
 ### Annotation Extensions
 
-In addition to adding new methods, extension classes can also add _annotations_ to a class. At present 
+In additioXn to adding new methods, extension classes can also add _annotations_ to a class. At present
 annotation extensions are limited to the extended _class_; you can't yet add annotations to members of 
 the class.
 
