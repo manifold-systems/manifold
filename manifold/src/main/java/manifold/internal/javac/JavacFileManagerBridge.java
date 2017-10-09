@@ -30,19 +30,8 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
    */
   public JavacFileManagerBridge( M fileManager, Context context )
   {
-    super( null, false, Charset.defaultCharset() );
+    super( context, false, Charset.defaultCharset() );
     this.fileManager = fileManager;
-    log = Log.instance( context );
-  }
-
-  @Override
-  public void setContext( Context context )
-  {
-    if( context != null )
-    {
-      super.setContext( context );
-      log = Log.instance( context );
-    }
   }
 
   /**
