@@ -1,7 +1,7 @@
 package manifold.internal.javac;
 
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
@@ -84,15 +84,15 @@ public class ClassSymbols
     }
   }
 
-  public JavacTaskImpl getJavacTask()
+  public BasicJavacTask getJavacTask()
   {
     init();
 
     StringWriter errors = new StringWriter();
-    return (JavacTaskImpl)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+    return (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
   }
 
-  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( JavacTaskImpl javacTask, String fqn )
+  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, String fqn )
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
     Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
@@ -115,9 +115,9 @@ public class ClassSymbols
     return makeSrcClassStub( fqn, null, null );
   }
 
-  public SrcClass makeSrcClassStub( String fqn, JavacTaskImpl[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
+  public SrcClass makeSrcClassStub( String fqn, BasicJavacTask[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
   {
-    JavacTaskImpl javacTask = javacTaskOut != null && javacTaskOut[0] != null ? javacTaskOut[0] : getJavacTask();
+    BasicJavacTask javacTask = javacTaskOut != null && javacTaskOut[0] != null ? javacTaskOut[0] : getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
     if( compUnit != null )
     {

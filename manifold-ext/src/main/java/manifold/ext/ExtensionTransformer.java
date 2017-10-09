@@ -2,7 +2,7 @@ package manifold.ext;
 
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
@@ -505,7 +505,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression thisArg = m.selected;
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
-      JavacTaskImpl javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
+      BasicJavacTask javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
       Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
@@ -553,7 +553,7 @@ public class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          JavacTaskImpl javacTask = (JavacTaskImpl)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
+          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
           outer:
@@ -682,7 +682,7 @@ public class ExtensionTransformer extends TreeTranslator
   private static boolean hasCallHandlerMethod( Class rootClass )
   {
     String fqn = rootClass.getCanonicalName();
-    JavacTaskImpl javacTask = JavaParser.instance().getJavacTask();
+    BasicJavacTask javacTask = JavaParser.instance().getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
     if( Types.instance( javacTask.getContext() ).isAssignable( callHandlerSymbol.getFirst().asType(), classSymbol.getFirst().asType() ) )
@@ -694,7 +694,7 @@ public class ExtensionTransformer extends TreeTranslator
     return hasCallMethod( javacTask, classSymbol.getFirst() );
   }
 
-  private static boolean hasCallMethod( JavacTaskImpl javacTask, Symbol.ClassSymbol classSymbol )
+  private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
   {
     Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
     Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
