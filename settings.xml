@@ -3,8 +3,18 @@
   <servers>
     <server>
       <id>ossrh</id>
-      <username>${env.SNAPSHOT_USER}</username>
-      <password>${env.SNAPSHOT_PASS}</password>
+      <username>${env.MANIFOLD_SNAPSHOT_USER}</username>
+      <password>${env.MANIFOLD_SNAPSHOT_PASS}</password>
+    </server>
+    <server>
+      <id>manifold-snapshots</id>
+      <username>${env.MANIFOLD_BINTRAY_USER}</username>
+      <password>${env.MANIFOLD_BINTRAY_API_KEY}</password>
+    </server>
+    <server>
+      <id>bintray-manifold-systems-manifold</id>
+      <username>${env.MANIFOLD_BINTRAY_USER}</username>
+      <password>${env.MANIFOLD_BINTRAY_API_KEY}</password>
     </server>
   </servers>
 </settings>

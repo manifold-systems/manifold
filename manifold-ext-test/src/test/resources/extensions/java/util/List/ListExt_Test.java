@@ -11,5 +11,5 @@ import java.util.stream.Stream;
 @Extension
 public class ListExt_Test {
   // compile error, shadows method in super interface: Collectino#stream()
-  public static Stream stream(@This List list) { return null; }
+  public static <E> Stream<E> stream(@This List<E> list) { return null; }
 }

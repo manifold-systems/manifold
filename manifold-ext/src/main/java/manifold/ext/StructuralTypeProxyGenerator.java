@@ -1,6 +1,6 @@
 package manifold.ext;
 
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import java.lang.reflect.Field;
@@ -357,7 +357,7 @@ public class StructuralTypeProxyGenerator
     if( _rootClassSymbol == null )
     {
       ClassSymbols classSymbols = ClassSymbols.instance( ManifoldHost.getGlobalModule() );
-      JavacTaskImpl javacTask = classSymbols.getJavacTask();
+      BasicJavacTask javacTask = classSymbols.getJavacTask();
       _rootClassSymbol = classSymbols.getClassSymbol( javacTask, _rootClass.getCanonicalName() ).getFirst();
     }
     return _rootClassSymbol;

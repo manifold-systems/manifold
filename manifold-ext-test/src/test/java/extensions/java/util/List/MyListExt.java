@@ -10,11 +10,11 @@ import manifold.ext.api.This;
 @Extension
 public class MyListExt
 {
-  public static <E> E first( @This List<E> thiz )
+  public static <E> E firstOne( @This List<E> thiz )
   {
     return thiz.get( 0 );
   }
-  public static <E> E first( @This List<E> thiz, Predicate<E> filter )
+  public static <E> E firstOne( @This List<E> thiz, Predicate<E> filter )
   {
     for( E e: thiz )
     {

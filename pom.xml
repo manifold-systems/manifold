@@ -1,14 +1,30 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
-                             http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
+
   <name>Manifold :: Parent</name>
+  <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
+  <url>http://manifold.systems/</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Manifold Systems, LLC</name>
+      <email>admin@manifold.systems</email>
+      <organization>Manifold</organization>
+      <organizationUrl>http://manifold.systems/</organizationUrl>
+    </developer>
+  </developers>
 
   <modules>
     <module>manifold</module>
@@ -59,12 +75,13 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>ossrh</id>
-      <url>${dist.man.snapshotrepo.url}</url>
+      <id>manifold-snapshots</id>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
     </snapshotRepository>
     <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>bintray-manifold-systems-manifold</id>
+      <name>manifold-systems-manifold</name>
+      <url>https://api.bintray.com/maven/manifold-systems/manifold/manifold/;publish=1</url>
     </repository>
   </distributionManagement>
 
@@ -72,56 +89,31 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.6.1</version>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
         <configuration>
-          <compilerArgs>
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>-->
-          	<!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>-->
-          </compilerArgs>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <releaseProfiles>release</releaseProfiles>
+          <tagNameFormat>v@{project.version}</tagNameFormat>
+          <updateBranchVersions>false</updateBranchVersions>
+          <updateWorkingCopyVersions>false</updateWorkingCopyVersions>
         </configuration>
       </plugin>
     </plugins>
+
     <pluginManagement>
       <plugins>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.3</version>
+          <version>3.6.1</version>
           <configuration>
             <source>1.8</source>
             <target>1.8</target>
             <encoding>UTF-8</encoding>
-          </configuration>
-          <executions>
-            <execution>
-              <id>default-compile</id>
-              <configuration>
-                <proc>none</proc>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.2.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.9</version>
-          <configuration>
-            <encoding>UTF-8</encoding>
+            <compilerArgs>
+              <arg>-Xplugin:Manifold</arg>
+            </compilerArgs>
           </configuration>
         </plugin>
         <plugin>
@@ -145,11 +137,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
           <version>2.3.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>1.7</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -201,9 +188,23 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>2.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <version>2.9.1</version>
             <configuration>
+              <encoding>UTF-8</encoding>
               <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>
             <executions>
@@ -211,20 +212,6 @@
                 <id>attach-javadocs</id>
                 <goals>
                   <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
                 </goals>
               </execution>
             </executions>
