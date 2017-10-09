@@ -28,10 +28,11 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
    * Create a JavacFileManager using a given context, optionally registering
    * it as the JavaFileManager for that context.
    */
-  public JavacFileManagerBridge( M fileManager )
+  public JavacFileManagerBridge( M fileManager, Context context )
   {
     super( null, false, Charset.defaultCharset() );
     this.fileManager = fileManager;
+    log = Log.instance( context );
   }
 
   @Override
