@@ -2,6 +2,7 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Log;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Iterator;
@@ -39,6 +40,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     if( context != null )
     {
       super.setContext( context );
+      log = Log.instance( context );
     }
   }
 
