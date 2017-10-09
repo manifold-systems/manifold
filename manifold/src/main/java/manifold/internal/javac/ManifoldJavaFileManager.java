@@ -36,12 +36,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
   ManifoldJavaFileManager( JavaFileManager fileManager, Context ctx, boolean fromJavaC )
   {
-    super( fileManager );
+    super( fileManager, ctx == null ? ctx = new Context() : ctx );
     _fromJavaC = fromJavaC;
     _javacMgr = fileManager;
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
-    _issueLogger = ctx == null ? Log.instance( new Context() ) : Log.instance( ctx );
+    _issueLogger = Log.instance( ctx );
     ManifoldHost.addTypeLoaderListenerAsWeakRef( null, this );
   }
 
