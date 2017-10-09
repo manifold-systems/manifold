@@ -23,6 +23,16 @@ p {
   font-size: 20px;
 }
 
+ul {
+  margin: 16px;
+  overflow: hidden;
+}
+
+li {
+  font-family: "Open Sans", sans-serif;
+  font-size: 20px;
+}
+
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
@@ -61,20 +71,25 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .docs-toc {
-  float: right;
-  margin: 15px;
-  font-size: 18px;
-  padding: 20px;
-  background: whitesmoke;
+  float: left;
+  margin: 24px;
+  padding: 4px;
+  background: rgba(252, 252, 252, 0.95);
+  border-radius: 4px;
   ul {
     list-style: none;
     padding: 0;
+    li {
+      font-size: 18px;
+    }
+  }
+  .sub {
+    padding-left: 8px;
   }
   .toc-title {
     text-align: center;
     font-weight: bold;
     font-size: 20px;
-    padding-bottom: 8px;
   }
 }
 

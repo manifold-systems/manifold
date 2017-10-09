@@ -18,6 +18,14 @@ p {
   font-family: "Open Sans", sans-serif;
   font-size: 20px;
 }
+ul {
+  margin: 16px;
+  overflow: hidden;
+}
+li {
+  font-family: "Open Sans", sans-serif;
+  font-size: 20px;
+}
 h1,
 h2,
 h3,
@@ -56,20 +64,25 @@ h6 {
   padding-top: 50px;
 }
 .docs-toc {
-  float: right;
-  margin: 15px;
-  font-size: 18px;
-  padding: 20px;
-  background: whitesmoke;
+  float: left;
+  margin: 24px;
+  padding: 4px;
+  background: rgba(252, 252, 252, 0.95);
+  border-radius: 4px;
 }
 .docs-toc ul {
   list-style: none;
   padding: 0;
 }
+.docs-toc ul li {
+  font-size: 18px;
+}
+.docs-toc .sub {
+  padding-left: 8px;
+}
 .docs-toc .toc-title {
   text-align: center;
   font-weight: bold;
   font-size: 20px;
-  padding-bottom: 8px;
 }
 

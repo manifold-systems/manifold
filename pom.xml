@@ -5,7 +5,26 @@
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
+
   <name>Manifold :: Parent</name>
+  <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
+  <url>http://manifold.systems/</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Manifold Systems, LLC</name>
+      <email>admin@manifold.systems</email>
+      <organization>Manifold</organization>
+      <organizationUrl>http://manifold.systems/</organizationUrl>
+    </developer>
+  </developers>
 
   <modules>
     <module>manifold</module>
@@ -56,23 +75,14 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>ossrh</id>
-      <url>${dist.man.snapshotrepo.url}</url>
+      <id>manifold-snapshots</id>
+      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
     </snapshotRepository>
-    <!--<snapshotRepository>-->
-      <!--<id>snapshots</id>-->
-      <!--<name>oss-jfrog-artifactory-snapshots</name>-->
-      <!--<url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>-->
-    <!--</snapshotRepository>-->
     <repository>
-      <id>ossrh</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      <id>bintray-manifold-systems-manifold</id>
+      <name>manifold-systems-manifold</name>
+      <url>https://api.bintray.com/maven/manifold-systems/manifold/manifold/;publish=1</url>
     </repository>
-    <!--<repository>-->
-      <!--<id>bintray-${env.BINTRAY_USER}-manifold</id>-->
-      <!--<name>${env.BINTRAY_USER}-manifold</name>-->
-      <!--<url>https://api.bintray.com/maven/${env.BINTRAY_USER}/manifold/manifold/;publish=1</url>-->
-    <!--</repository>-->
   </distributionManagement>
 
   <build>
@@ -202,20 +212,6 @@
                 <id>attach-javadocs</id>
                 <goals>
                   <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-gpg-plugin</artifactId>
-            <version>1.5</version>
-            <executions>
-              <execution>
-                <id>sign-artifacts</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>sign</goal>
                 </goals>
               </execution>
             </executions>
