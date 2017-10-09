@@ -5,7 +5,26 @@
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-alpha-SNAPSHOT</version>
+
   <name>Manifold :: Parent</name>
+  <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
+  <url>http://manifold.systems/</url>
+
+  <licenses>
+    <license>
+      <name>The Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Manifold Systems, LLC</name>
+      <email>admin@manifold.systems</email>
+      <organization>Manifold</organization>
+      <organizationUrl>http://manifold.systems/</organizationUrl>
+    </developer>
+  </developers>
 
   <modules>
     <module>manifold</module>
