@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
@@ -27,7 +26,7 @@ import manifold.util.cache.FqnCacheNode;
 
 /**
  */
-class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> implements ITypeLoaderListener
+class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeLoaderListener
 {
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
