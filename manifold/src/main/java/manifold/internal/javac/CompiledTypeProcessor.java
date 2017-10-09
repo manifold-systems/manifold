@@ -5,7 +5,7 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
@@ -44,7 +44,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
   {
     _javacTask = javacTask;
     javacTask.addTaskListener( this );
-    Context context = ((JavacTaskImpl)javacTask).getContext();
+    Context context = ((BasicJavacTask)javacTask).getContext();
     JavaCompiler compiler = JavaCompiler.instance( context );
     compiler.shouldStopPolicyIfNoError = CompileState.max( compiler.shouldStopPolicyIfNoError, CompileState.FLOW );
     _issueReporter = new IssueReporter<>( Log.instance( context ) );
@@ -70,7 +70,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public Context getContext()
   {
-    return ((JavacTaskImpl)getJavacTask()).getContext();
+    return ((BasicJavacTask)getJavacTask()).getContext();
   }
 
   public JavacTask getJavacTask()
