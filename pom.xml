@@ -28,6 +28,7 @@
 
   <modules>
     <module>manifold</module>
+    <module>manifold-core</module>
     <module>manifold-test</module>
     <module>manifold-ext</module>
     <module>manifold-ext-test</module>

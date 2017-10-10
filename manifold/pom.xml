@@ -8,20 +8,73 @@
   </parent>
 
   <artifactId>manifold</artifactId>
+  <packaging>pom</packaging>
 
-  <name>Manifold :: Core</name>
+  <name>Manifold :: Distribution POM</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-collections</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-io</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-js</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-templates</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-text</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
         <configuration>
-          <compilerArgs>
-            <!-- undo default compiler configuration by unsetting -Xplugin argument -->
-            <arg>-Xplugin:</arg>
-          </compilerArgs>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
         </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

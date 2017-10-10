@@ -15,7 +15,7 @@
    <dependencies>
      <dependency>
        <groupId>systems.manifold</groupId>
-       <artifactId>manifold</artifactId>
+       <artifactId>manifold-core</artifactId>
        <version>${project.version}</version>
      </dependency>
    </dependencies>
