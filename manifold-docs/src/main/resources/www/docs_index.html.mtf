@@ -3,7 +3,7 @@
     <div class="toc-title">Contents</div>
     <ul>
         <li>${linkTo("Manifold in a Nutshell")}</li>
-        <li class="sub">${linkTo("Using Type Manifolds")}</li>
+        <li class="sub">${linkTo("Type Manifolds")}</li>
         <li class="sub">${linkTo("The Extension Manifold")}</li>
         <li class="sub">${linkTo("Benefits")}</li>
         <li>${linkTo("Setup")}</li>

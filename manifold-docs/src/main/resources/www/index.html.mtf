@@ -57,8 +57,8 @@
         <div class="col-md-4">
             <h2>Practical</h2>
 
-            <p>Manifold ships with support for practical development needs: templates, improved core collection and
-                I/O APIs,properties files, etc.</p>
+            <p>Manifold ships with support for practical development needs: Json, improved core collection and
+                I/O APIs, templates, etc.</p>
 
             <p>All available out of the box.</p>
 
