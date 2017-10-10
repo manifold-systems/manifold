@@ -10,13 +10,47 @@
             </h1>
             <p class="main-copy">
                 Manifold is a unique framework that allows developers to dynamically and seamlessly extend
-                Java's type system, adding new types and modifying existing types. Building on this core framework
-                Manifold provides features to make Java development more appealing and productive.
+                Java's type system. Building on this core framework Manifold provides features to make Java 
+                development more appealing and productive.
             </p>
             <p>
                 <a id="install-btn" href="/docs.html#setup" class="btn btn-primary btn-lg">Install Manifold</a>
             </p>
         </div>
+    </div>
+</div>
+
+<div class="container marketing-container">
+    <div class="row">
+
+        <div class="col-md-4">
+            <h2>Type Safe</h2>
+
+            <p>Manifold allows you to treat non-java rresources as first class data sources in your development
+                process
+                with transparent type-safe bindings: no more Maps of Strings, no more codegen.</p>
+
+        </div>
+
+        <div class="col-md-4">
+            <h2>Seamless</h2>
+
+            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and
+                start
+                taking advantage of it, no additional build-system specific plugins are required.</p>
+
+        </div>
+
+        <div class="col-md-4">
+            <h2>Practical</h2>
+
+            <p>Manifold ships with support for practical development needs: Json, improved core Java collections and
+                I/O APIs, templates, etc.</p>
+
+            <p>All available out of the box.</p>
+
+        </div>
+
     </div>
 </div>
 
