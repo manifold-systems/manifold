@@ -2,49 +2,49 @@
 
 <!--  close container-->
 
-<div class="container index-title text-center">
-    <h1>
-        <img src="./images/logo_512px.png"> Manifold
-    </h1>
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <p>
+<div class="container hero-container">
+    <div class="row index-title">
+        <div class="col-md-10 col-md-offset-1  text-center">
+            <h1>
+                <img src="./images/logo_512px.png"> Manifold
+            </h1>
+            <p class="main-copy">
                 Manifold is a unique framework that allows developers to dynamically and seamlessly extend
                 Java's type system, adding new types and modifying existing types. Building on this core framework
                 Manifold provides features to make Java development more appealing and productive.
+            </p>
+            <p>
+                <a id="install-btn" href="/docs.html#setup" class="btn btn-primary btn-lg">Install Manifold</a>
             </p>
         </div>
     </div>
 </div>
 
-<div class="container">
-</div>
-
-<div class="index-demo live-demo text-center">
-    <h4>Demo: Properties File Access</h4>
-    <p>
-        This demo shows type-safe access to a Properties file from within java
-        <br/>
-        <br/>
-    </p>
-    <img src="./images/man_properties.gif">
-</div>
-
-<div class="container">
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <hr/>
+<div class="container live-demo-container">
+    <div class="row ">
+        <div class="col-md-12">
+            <div class="index-demo live-demo text-center">
+                <h2>Demo: Properties File Access</h2>
+                <p>
+                    This demo shows type-safe access to a Properties file from within java
+                    <br/>
+                    <br/>
+                </p>
+                <img src="./images/man_properties.gif">
+            </div>
         </div>
     </div>
 </div>
 
-<div class="container">
+
+<div class="container marketing-container">
     <div class="row">
 
         <div class="col-md-4">
             <h2>Type Safe</h2>
 
-            <p>Manifold allows you to treat non-java rresources as first class data sources in your development process
+            <p>Manifold allows you to treat non-java rresources as first class data sources in your development
+                process
                 with transparent type-safe bindings: no more Maps of Strings, no more codegen.</p>
 
         </div>
@@ -52,7 +52,8 @@
         <div class="col-md-4">
             <h2>Seamless</h2>
 
-            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and start
+            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and
+                start
                 taking advantage of it, no additional build-system specific plugins are required.</p>
 
         </div>
@@ -60,13 +61,26 @@
         <div class="col-md-4">
             <h2>Practical</h2>
 
-            <p>Manifold ships with support for practical development needs: Json, improved core collection and
+            <p>Manifold ships with support for practical development needs: Json, improved core Java collections and
                 I/O APIs, templates, etc.</p>
 
             <p>All available out of the box.</p>
 
         </div>
 
+    </div>
+</div>
+
+<div class="container contact-container">
+    <div class="row ">
+        <div class="col-md-12">
+            <div class="index-demo live-demo text-center">
+                <h2>Contact Us</h2>
+                <p>
+                    <a href="mailto:info@manifold.systems">info@manifold.systems</a>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 

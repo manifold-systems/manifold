@@ -47,8 +47,7 @@ h6 {
   font-weight: 600;
 }
 .index-title {
-  height: 128px;
-  margin-top: 32px;
+  margin-top: 48px;
 }
 .index-title h1 {
   font-size: 72px;
@@ -75,7 +74,13 @@ h6 {
   padding-top: 50px;
 }
 .docs-toc {
+  position: fixed;
   padding-top: 4px;
+}
+@media only screen and (max-width: 991px) {
+  .docs-toc {
+    display: none;
+  }
 }
 .docs-toc ul {
   list-style: none;
@@ -86,5 +91,37 @@ h6 {
 }
 .docs-toc .sub {
   padding-left: 8px;
+}
+.live-demo-container {
+  box-shadow: 0px 0px 20px 3px #CCC;
+  width: 100%;
+  background-color: #393939;
+  color: #ffffff;
+  padding-bottom: 48px;
+}
+.hero-container {
+  padding-bottom: 28px;
+}
+.hero-container h1 {
+  margin-bottom: 42px;
+}
+#install-btn {
+  padding: 13px 57px;
+  font-size: 20px;
+  margin: 48px;
+}
+.marketing-container {
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+.contact-container {
+  box-shadow: 0px 0px 20px 3px #CCC;
+  width: 100%;
+  background-color: #393939;
+  color: #ffffff;
+  padding-bottom: 48px;
+}
+.contact-container a {
+  color: #ffffff;
 }
 
