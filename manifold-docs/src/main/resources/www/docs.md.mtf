@@ -639,7 +639,7 @@ the module's.
 
 ### ${anchor("Annotation Extensions")}
 
-In additioXn to adding new methods, extension classes can also add _annotations_ to a class. At present
+In addition to adding new methods, extension classes can also add _annotations_ to a class. At present
 annotation extensions are limited to the extended _class_; you can't yet add annotations to members of 
 the class.
 
@@ -1030,7 +1030,7 @@ See `extensions.java.util.Map.MapStructExt.java` for details.
 
 ## ${anchor("IDE -- IntelliJ IDEA")}
 
-Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold in its fullest.
+Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.
 
 The plugin currently supports most high-level IntelliJ features including:
 * Feature highlighting
