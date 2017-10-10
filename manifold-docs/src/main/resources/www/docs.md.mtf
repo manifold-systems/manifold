@@ -217,7 +217,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
 
-## ${anchor("Type Manifolds")}
+## ${anchor("What Is a Type Manifold?")}
 
 In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
@@ -293,9 +293,9 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
  
 Currently Manifold provides reference implementations for a few commonly used data sources:
 
+*   JSON and JSON Schema
 *   Properties files
 *   Image files
-*   JSON and JSON Schema
 *   JavaScript
 
 We are working on support for more data sources including:
@@ -303,6 +303,59 @@ We are working on support for more data sources including:
 *   Template files
 *   Standard SQL and DDL
 
+
+### ${anchor("JSON and JSON Schema")}
+[JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
+structured data format. There is no shortage of JSON libraries for Java, these include 
+[Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
+multitude of others.  They all do basically the same thing -- given a pre-defined or generated type, 
+the libraries can read from and write to the type in terms of JSON:
+
+```java
+Widget widget = new Widget(bindings);
+ObjectMapper mapper = new ObjectMapper();
+
+String jsonStr = mapper.writeValueAsString(widget);
+Widget result = mapper.readValue(jsonStr, Widget.class);
+```
+
+The JSON type manifold takes a different approach. Avoiding multiple systems of
+record, instead of generating classes or weaving annotations into hand crafted
+code the type manifold directly maps JSON sample files or JSON Schema files to
+Java's type system as abstract types.
+
+As this example illustrates, you work directly with a JSON bindings object as if it were a
+Java class:
+
+```java
+Widget widget = (Widget) bindings;
+
+String jsonStr = widget.toJson();
+Widget result = Widget.fromJson(jsonStr); 
+```
+
+This approach eliminates library usage and connects your code directly to JSON metadata.
+Another advantage involves object identity.  The `Widget` type is just
+an interface directly on the JSON bindings.  The interface both abstracts and preserves the 
+implementation details of the underlying JSON object -- the `Bindings` object isn't wrapped or proxied.
+The type manifold achieves this via [extension interfaces](#extension-interfaces) on the
+`javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces) -- 
+JSON types are structural interfaces. Essentially, the `widget` object _is_ the `Bindings` object; 
+changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
+manifolds, there are no generated files or other build steps involved. 
+ 
+Combining forces, Manifold [extension libraries](#extension-libraries) help reduce
+common remote API drudgery involving JSON:
+
+```java
+WidgetQuery query = WidgetQuery.create();
+...
+WidgetResults result = (WidgetResults) query.postForJsonContent("http://acme.widgets/find");
+```
+
+This example uses the `postForJsonContent()` extension method which performs an HTTP Post using `query` 
+JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the 
+`WidgetResults` structural interface. 
 
 ### ${anchor("Properties Files")}
 
@@ -375,59 +428,6 @@ including a suffix encoding the image extension, this helps distinguish between 
 different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
  `ImageIcon` class to conform with existing frameworks. As with all
   type manifolds there are no code gen files or other build steps involved.
-
-### ${anchor("JSON and JSON Schema")}
-[JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
-structured data format. There is no shortage of JSON libraries for Java, these include 
-[Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
-multitude of others.  They all do basically the same thing -- given a pre-defined or generated type, 
-the libraries can read from and write to the type in terms of JSON:
-
-```java
-Widget widget = new Widget(bindings);
-ObjectMapper mapper = new ObjectMapper();
-
-String jsonStr = mapper.writeValueAsString(widget);
-Widget result = mapper.readValue(jsonStr, Widget.class);
-```
-
-The JSON type manifold takes a different approach. Avoiding multiple systems of
-record, instead of generating classes or weaving annotations into hand crafted
-code the type manifold directly maps JSON sample files or JSON Schema files to
-Java's type system as abstract types.
-
-As this example illustrates, you work directly with a JSON bindings object as if it were a
-Java class:
-
-```java
-Widget widget = (Widget) bindings;
-
-String jsonStr = widget.toJson();
-Widget result = Widget.fromJson(jsonStr); 
-```
-
-This approach eliminates library usage and connects your code directly to JSON metadata.
-Another advantage involves object identity.  The `Widget` type is just
-an interface directly on the JSON bindings.  The interface both abstracts and preserves the 
-implementation details of the underlying JSON object -- the `Bindings` object isn't wrapped or proxied.
-The type manifold achieves this via [extension interfaces](#extension-interfaces) on the
-`javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces) -- 
-JSON types are structural interfaces. Essentially, the `widget` object _is_ the `Bindings` object; 
-changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
-manifolds, there are no generated files or other build steps involved. 
- 
-Combining forces, Manifold [extension libraries](#extension-libraries) help reduce
-common remote API drudgery involving JSON:
-
-```java
-WidgetQuery query = WidgetQuery.create();
-...
-WidgetResults result = (WidgetResults) query.postForJsonContent("http://acme.widgets/find");
-```
-
-This example uses the `postForJsonContent()` extension method which performs an HTTP Post using `query` 
-JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the 
-`WidgetResults` structural interface. 
 
 ### ${anchor("JavaScript")}
 
@@ -1002,7 +1002,7 @@ getter and setter calls work directly with values in the map:
 ```java
 Map<String,Object> map = new HashMap<>();
 Name person = (Name) map;
-perosn.setName("Manifold");
+person.setName("Manifold");
 println(person.getName());
 ```
  
@@ -1051,6 +1051,7 @@ Changes you make are instantly available in your code.
  
 :todo insert screencast gif demonstrating some of this
 
+Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
 ## ${anchor("Use with other JVM Languages")}
 
@@ -1064,8 +1065,8 @@ See _manifold.api.host.IManifoldHost_.
 ## ${anchor("License")}
 
 ### Open Source
-Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0).  Use
-Manifold freely with your favorite open source web servers, database servers, and tools.
+Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
+Use Manifold freely with your favorite open source web servers, database servers, and tools.
 
 ### Professional
 You're a small to medium-sized business using [Oracle's Web Tier](http://www.oracle.com/technetwork/middleware/webtier/overview/index.html) 

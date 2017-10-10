@@ -70,21 +70,36 @@
     <div class="toc-title">Contents</div>
     <ul>
         <li><a href="#manifold_in_a_nutshell">Manifold in a Nutshell</a></li>
-        <li><a href="#benefits">Benefits</a></li>
+        <li class="sub"><a href="#using_type_manifolds">Using Type Manifolds</a></li>
+        <li class="sub"><a href="#the_extension_manifold">The Extension Manifold</a></li>
+        <li class="sub"><a href="#benefits">Benefits</a></li>
         <li><a href="#setup">Setup</a></li>
         <li class="sub"><a href="#maven">Maven</a></li>
         <li class="sub"><a href="#gradel">Gradel</a></li>
         <li class="sub"><a href="#intellij">IntelliJ</a></li>
-        <li><a href="#type_manifolds">Type Manifolds</a></li>
-        <li class="sub"><a href="#property_files">Property Files</a></li>
-        <li class="sub"><a href="#image_files">Image Files</a></li>
+        <li><a href="#what_is_a_type_manifold">What Is a Type Manifold?</a></li>
         <li class="sub"><a href="#json_and_json_schema">JSON and JSON Schema</a></li>
+        <li class="sub"><a href="#properties_files">Properties Files</a></li>
+        <li class="sub"><a href="#image_files">Image Files</a></li>
+        <li class="sub"><a href="#javascript">JavaScript</a></li>
+        <li class="sub"><a href="#template_files">Template Files</a></li>
+        <li class="sub"><a href="#build_your_own_manifold">Build Your Own Manifold</a></li>
         <li><a href="#extension_classes">Extension Classes</a></li>
         <li class="sub"><a href="#extension_method_basics">Extension Method Basics</a></li>
         <li class="sub"><a href="#generics">Generics</a></li>
         <li class="sub"><a href="#static_dispatching">Static Dispatching</a></li>
         <li class="sub"><a href="#accessibility_and_scope">Accessibility and Scope</a></li>
-        <li><a href="#history">History</a></li>
+        <li class="sub"><a href="#annotation_extensions">Annotation Extensions</a></li>
+        <li class="sub"><a href="#extension_interfaces">Extension Interfaces</a></li>
+        <li class="sub"><a href="#extension_libraries">Extension Libraries</a></li>
+        <li><a href="#structural_interfaces">Structural Interfaces</a></li>
+        <li class="sub"><a href="#type_assignability_and_variance">Type Assignability and Variance</a></li>
+        <li class="sub"><a href="#implementation_by_field">Implementation by Field</a></li>
+        <li class="sub"><a href="#implementation_by_extension">Implementation by Extension</a></li>
+        <li class="sub"><a href="#dynamic_typing_with_icallhandler">Dynamic Typing with `ICallHandler`</a></li>
+        <li><a href="#ide__intellij_idea">IDE -- IntelliJ IDEA</a></li>
+        <li><a href="#use_with_other_jvm_languages">Use with other JVM Languages</a></li>
+        <li><a href="#license">License</a></li>
     </ul>
 </div>
 <h2><a class="toc_anchor" name="manifold_in_a_nutshell"> </a>Manifold in a Nutshell</h2>
@@ -249,7 +264,7 @@ compileJava {
 <h3><a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>
 <p>Get the <a href="https://plugins.jetbrains.com/plugin/10057-manifold">Manifold plugin</a> for IntelliJ IDEA.</p>
 <p>Install the plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
-<h2><a class="toc_anchor" name="type_manifolds"> </a>Type Manifolds</h2>
+<h2><a class="toc_anchor" name="what_is_a_type_manifold"> </a>What Is a Type Manifold?</h2>
 <p>In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
 ever richer, ever larger, ever more numerable sources of data. Despite this developers
@@ -309,9 +324,9 @@ types are created and loaded lazily and don't require special class loaders.</p>
 schemas, queries, database definitions, data services, templates, spreadsheets, programming languages, etc.</p>
 <p>Currently Manifold provides reference implementations for a few commonly used data sources:</p>
 <ul>
+<li>JSON and JSON Schema</li>
 <li>Properties files</li>
 <li>Image files</li>
-<li>JSON and JSON Schema</li>
 <li>JavaScript</li>
 </ul>
 <p>We are working on support for more data sources including:</p>
@@ -320,6 +335,47 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
 <li>Template files</li>
 <li>Standard SQL and DDL</li>
 </ul>
+<h3><a class="toc_anchor" name="json_and_json_schema"> </a>JSON and JSON Schema</h3>
+<p><a href="http://www.json.org/">JSON</a> has become the wire protocol of choice and, more generally, the preferred
+structured data format. There is no shortage of JSON libraries for Java, these include
+<a href="https://github.com/FasterXML/jackson-docs">Jackson</a>, <a href="https://github.com/google/gson">Gson</a>, and a
+multitude of others.  They all do basically the same thing -- given a pre-defined or generated type,
+the libraries can read from and write to the type in terms of JSON:</p>
+<pre><code class="language-java">Widget widget = new Widget(bindings);
+ObjectMapper mapper = new ObjectMapper();
+
+String jsonStr = mapper.writeValueAsString(widget);
+Widget result = mapper.readValue(jsonStr, Widget.class);
+</code></pre>
+<p>The JSON type manifold takes a different approach. Avoiding multiple systems of
+record, instead of generating classes or weaving annotations into hand crafted
+code the type manifold directly maps JSON sample files or JSON Schema files to
+Java's type system as abstract types.</p>
+<p>As this example illustrates, you work directly with a JSON bindings object as if it were a
+Java class:</p>
+<pre><code class="language-java">Widget widget = (Widget) bindings;
+
+String jsonStr = widget.toJson();
+Widget result = Widget.fromJson(jsonStr); 
+</code></pre>
+<p>This approach eliminates library usage and connects your code directly to JSON metadata.
+Another advantage involves object identity.  The <code>Widget</code> type is just
+an interface directly on the JSON bindings.  The interface both abstracts and preserves the
+implementation details of the underlying JSON object -- the <code>Bindings</code> object isn't wrapped or proxied.
+The type manifold achieves this via <a href="#extension-interfaces">extension interfaces</a> on the
+<code>javax.script.Bindings</code> object and through the use of <a href="#structural-interfaces">structural interfaces</a> --
+JSON types are structural interfaces. Essentially, the <code>widget</code> object <em>is</em> the <code>Bindings</code> object;
+changes you make to <code>widget</code> are changes directly on the Bindings.  Additionally, like all type
+manifolds, there are no generated files or other build steps involved.</p>
+<p>Combining forces, Manifold <a href="#extension-libraries">extension libraries</a> help reduce
+common remote API drudgery involving JSON:</p>
+<pre><code class="language-java">WidgetQuery query = WidgetQuery.create();
+...
+WidgetResults result = (WidgetResults) query.postForJsonContent(&quot;http://acme.widgets/find&quot;);
+</code></pre>
+<p>This example uses the <code>postForJsonContent()</code> extension method which performs an HTTP Post using <code>query</code>
+JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the
+<code>WidgetResults</code> structural interface.</p>
 <h3><a class="toc_anchor" name="properties_files"> </a>Properties Files</h3>
 <p>Many Java applications incorporate
 <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html">properties resource files</a>
@@ -372,47 +428,6 @@ including a suffix encoding the image extension, this helps distinguish between 
 different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
 <code>ImageIcon</code> class to conform with existing frameworks. As with all
 type manifolds there are no code gen files or other build steps involved.</p>
-<h3><a class="toc_anchor" name="json_and_json_schema"> </a>JSON and JSON Schema</h3>
-<p><a href="http://www.json.org/">JSON</a> has become the wire protocol of choice and, more generally, the preferred
-structured data format. There is no shortage of JSON libraries for Java, these include
-<a href="https://github.com/FasterXML/jackson-docs">Jackson</a>, <a href="https://github.com/google/gson">Gson</a>, and a
-multitude of others.  They all do basically the same thing -- given a pre-defined or generated type,
-the libraries can read from and write to the type in terms of JSON:</p>
-<pre><code class="language-java">Widget widget = new Widget(bindings);
-ObjectMapper mapper = new ObjectMapper();
-
-String jsonStr = mapper.writeValueAsString(widget);
-Widget result = mapper.readValue(jsonStr, Widget.class);
-</code></pre>
-<p>The JSON type manifold takes a different approach. Avoiding multiple systems of
-record, instead of generating classes or weaving annotations into hand crafted
-code the type manifold directly maps JSON sample files or JSON Schema files to
-Java's type system as abstract types.</p>
-<p>As this example illustrates, you work directly with a JSON bindings object as if it were a
-Java class:</p>
-<pre><code class="language-java">Widget widget = (Widget) bindings;
-
-String jsonStr = widget.toJson();
-Widget result = Widget.fromJson(jsonStr); 
-</code></pre>
-<p>This approach eliminates library usage and connects your code directly to JSON metadata.
-Another advantage involves object identity.  The <code>Widget</code> type is just
-an interface directly on the JSON bindings.  The interface both abstracts and preserves the
-implementation details of the underlying JSON object -- the <code>Bindings</code> object isn't wrapped or proxied.
-The type manifold achieves this via <a href="#extension-interfaces">extension interfaces</a> on the
-<code>javax.script.Bindings</code> object and through the use of <a href="#structural-interfaces">structural interfaces</a> --
-JSON types are structural interfaces. Essentially, the <code>widget</code> object <em>is</em> the <code>Bindings</code> object;
-changes you make to <code>widget</code> are changes directly on the Bindings.  Additionally, like all type
-manifolds, there are no generated files or other build steps involved.</p>
-<p>Combining forces, Manifold <a href="#extension-libraries">extension libraries</a> help reduce
-common remote API drudgery involving JSON:</p>
-<pre><code class="language-java">WidgetQuery query = WidgetQuery.create();
-...
-WidgetResults result = (WidgetResults) query.postForJsonContent(&quot;http://acme.widgets/find&quot;);
-</code></pre>
-<p>This example uses the <code>postForJsonContent()</code> extension method which performs an HTTP Post using <code>query</code>
-JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the
-<code>WidgetResults</code> structural interface.</p>
 <h3><a class="toc_anchor" name="javascript"> </a>JavaScript</h3>
 <p>:todo</p>
 <h3><a class="toc_anchor" name="template_files"> </a>Template Files</h3>
@@ -859,7 +874,7 @@ way it chooses.</p>
 getter and setter calls work directly with values in the map:</p>
 <pre><code class="language-java">Map&lt;String,Object&gt; map = new HashMap&lt;&gt;();
 Name person = (Name) map;
-perosn.setName(&quot;Manifold&quot;);
+person.setName(&quot;Manifold&quot;);
 println(person.getName());
 </code></pre>
 <p>Because <code>Map</code> is a <code>ICallHandler</code> instances of it can be cast to any structural interface, such as
@@ -896,6 +911,7 @@ Watch your JSON, images, properties, templates, and custom type manifolds come a
 Changes you make are instantly available in your code.</p>
 <p>:todo screencast for New | Extension Class</p>
 <p>:todo insert screencast gif demonstrating some of this</p>
+<p>Install the plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
 <h2><a class="toc_anchor" name="use_with_other_jvm_languages"> </a>Use with other JVM Languages</h2>
 <p>Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java
 compiler.  It's also designed for use within other JVM languages via the <em>plugin host</em> API. You can
@@ -903,8 +919,8 @@ implement this API to host Manifold from within another JVM language.</p>
 <p>See <em>manifold.api.host.IManifoldHost</em>.</p>
 <h2><a class="toc_anchor" name="license"> </a>License</h2>
 <h3>Open Source</h3>
-<p>Open source Manifold is free and licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Appache 2.0</a>.  Use
-Manifold freely with your favorite open source web servers, database servers, and tools.</p>
+<p>Open source Manifold is free and licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Appache 2.0</a> license.<br />
+Use Manifold freely with your favorite open source web servers, database servers, and tools.</p>
 <h3>Professional</h3>
 <p>You're a small to medium-sized business using <a href="http://www.oracle.com/technetwork/middleware/webtier/overview/index.html">Oracle's Web Tier</a>
 products or <a href="https://www.microsoft.com/web/platform/server.aspx">Microsoft/web</a> and you're looking for basic
