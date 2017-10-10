@@ -779,12 +779,12 @@ it is clear the methods are call-compatible from the perspective of <code>Capita
 <pre><code class="language-java">Capitalizer cap = (Capitalizer) new MyCapitalizer();
 CharSequence properName = cap.capitalize(&quot;tigers&quot;);
 </code></pre>
-<p><code>MyCapitalizer</code>???s method can be called with <code>Capitalizer</code>???s <code>String</code> parameter because <code>MyCapitalizer</code>???s
-<code>CharSequence</code> parameter is assignable from <code>String</code> ??? <em>contravariant</em> parameter types support
-call-compatibility. Similarly we can accept <code>MyCapitaizer</code>???s <code>String</code> return type because it is
-assignable to <code>Capitalizer</code>???s <code>CharSequence</code> return type ??? <em>covariant</em> return types support
-call-compatibility. Therefore, even though their method signatures aren???t identical, <code>MyCapitalizer</code> is
-structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>???s methods.</p>
+<p><code>MyCapitalizer</code>'s method can be called with <code>Capitalizer</code>'s <code>String</code> parameter because <code>MyCapitalizer</code>'s
+<code>CharSequence</code> parameter is assignable from <code>String</code> -- <em>contravariant</em> parameter types support
+call-compatibility. Similarly we can accept <code>MyCapitaizer</code>'s <code>String</code> return type because it is
+assignable to <code>Capitalizer</code>'s <code>CharSequence</code> return type -- <em>covariant</em> return types support
+call-compatibility. Therefore, even though their method signatures aren't identical, <code>MyCapitalizer</code> is
+structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>'s methods.</p>
 <p>Signature variance also supports primitive types.  You may have spotted this in the <code>Component</code>
 class referenced earlier in the <code>Coordinate</code> example where <code>Component.getX()</code> returns <code>int</code>, not <code>double</code>
 as declared in <code>Coordinate.getX()</code>. Because <code>int</code> coerces to <code>double</code> with no loss of precision
