@@ -7,7 +7,7 @@
         <li>${linkTo("Setup")}</li>
         <li class="sub">${linkTo("Maven")}</li>
         <li class="sub">${linkTo("Gradel")}</li>
-        <li>${linkTo("IDE -- IntelliJ IDEA")}</li>
+        <li class="sub">${linkTo("IntelliJ")}</li>
         <li>${linkTo("Type Manifolds")}</li>
         <li class="sub">${linkTo("Property Files")}</li>
         <li class="sub">${linkTo("Image Files")}</li>
@@ -17,6 +17,6 @@
         <li class="sub">${linkTo("Generics")}</li>
         <li class="sub">${linkTo("Static Dispatching")}</li>
         <li class="sub">${linkTo("Accessibility and Scope")}</li>
-        <li>${linkTo("Philosophy")}</li>
+        <li>${linkTo("History")}</li>
     </ul>
 </div>

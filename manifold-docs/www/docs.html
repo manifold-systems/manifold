@@ -74,7 +74,7 @@
         <li><a href="#setup">Setup</a></li>
         <li class="sub"><a href="#maven">Maven</a></li>
         <li class="sub"><a href="#gradel">Gradel</a></li>
-        <li><a href="#ide__intellij_idea">IDE -- IntelliJ IDEA</a></li>
+        <li class="sub"><a href="#intellij">IntelliJ</a></li>
         <li><a href="#type_manifolds">Type Manifolds</a></li>
         <li class="sub"><a href="#property_files">Property Files</a></li>
         <li class="sub"><a href="#image_files">Image Files</a></li>
@@ -84,7 +84,7 @@
         <li class="sub"><a href="#generics">Generics</a></li>
         <li class="sub"><a href="#static_dispatching">Static Dispatching</a></li>
         <li class="sub"><a href="#accessibility_and_scope">Accessibility and Scope</a></li>
-        <li><a href="#philosophy">Philosophy</a></li>
+        <li><a href="#history">History</a></li>
     </ul>
 </div>
 <h2><a class="toc_anchor" name="manifold_in_a_nutshell"> </a>Manifold in a Nutshell</h2>
@@ -101,7 +101,7 @@ integration, <strong>JavaScript</strong> interop, <strong>Structural typing</str
 runtime classes, and (coming soon) type-safe access to raw <strong>SQL</strong> and <strong>DDL</strong>.</p>
 <p>At a high level each of these features is classified as either a <strong>Type Manifold</strong> or an
 <strong>Extension</strong> via the <strong>Extension Manifold</strong>.</p>
-<h3>Type Manifolds</h3>
+<h3><a class="toc_anchor" name="type_manifolds"> </a>Type Manifolds</h3>
 <p>Bridging the worlds of information and programming, type manifolds are Java
 projections of schematized data sources.  More specifically, a type manifold
 transforms a data source into a data <em>type</em> directly accessible in your Java code
@@ -135,27 +135,27 @@ spreadsheets, web services, and programming languages.</p>
 <p>The extension manifold is a special kind of type manifold that lets you augment existing Java classes
 including Java's own runtime classes such as <code>String</code>. You can add new methods, annotations, and
 interfaces to any type your project uses.</p>
-<p>Let's say you want to make a new method on <code>String</code> so you can straightforwardly print a String to the
+<p>Let's say you want to make a new method on <code>String</code> so you can straightforwardly echo a String to the
 console. Normally with Java you might write a &quot;Util&quot; library like this:</p>
 <pre><code class="language-java">public class MyStringUtil {
-  public static void print(String value) {
+  public static void echo(String value) {
     System.out.println(value);
   }
 }
 </code></pre>
 <p>And you'd use it like this:</p>
-<pre><code class="language-java">MyStringUtil.print(&quot;Java&quot;);
+<pre><code class="language-java">MyStringUtil.echo(&quot;Java&quot;);
 </code></pre>
 <p>Instead with Manifold you create an <em><strong>Extension Class</strong></em>:</p>
 <pre><code class="language-java">@Extension
 public class MyStringExtension {
-  public static void print(@This String thiz) {
+  public static void echo(@This String thiz) {
     System.out.println(thiz);
   }
 }
 </code></pre>
-<p>Here we've added a new <code>print()</code> method to <code>String</code>, so we use it like this:</p>
-<pre><code class="language-java">&quot;Java&quot;.print();
+<p>Here we've added a new <code>echo()</code> method to <code>String</code>, so we use it like this:</p>
+<pre><code class="language-java">&quot;Java&quot;.echo();
 </code></pre>
 <p>Extensions eliminate a lot of intermediate code such as &quot;Util&quot; and &quot;Manager&quot;
 libraries as well as Factory classes. As a consequence extensions naturally
@@ -165,8 +165,6 @@ to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:</p>
 <p><img src="images/echo_example.png" alt="print method" /></p>
-<p>The discoverability improvements achieved through the combination of IDE tooling
-and extension methods can't be overstated.</p>
 <p>There's a lot more to the extension manifold including <a href="#structural-interfaces">structural interfaces</a>, which are
 similar to interfaces in the <a href="https://golang.org/">Go</a> language. We'll cover more later in this guide.</p>
 <h3><a class="toc_anchor" name="benefits"> </a>Benefits</h3>
@@ -248,10 +246,9 @@ compileJava {
   options.compilerArgs &lt;&lt; '-Xplugin:Manifold'
 }
 </code></pre>
-<h3>IntelliJ</h3>
-<p>Get the <a href="https://plugins.jetbrains.com/plugin/10000-manifold/update/38345">Manifold plugin</a> for IntelliJ IDEA.</p>
+<h3><a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>
+<p>Get the <a href="https://plugins.jetbrains.com/plugin/10057-manifold">Manifold plugin</a> for IntelliJ IDEA.</p>
 <p>Install the plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
-<p><a class="anchor" id="type-manifolds"></a></p>
 <h2><a class="toc_anchor" name="type_manifolds"> </a>Type Manifolds</h2>
 <p>In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
@@ -323,7 +320,6 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
 <li>Template files</li>
 <li>Standard SQL and DDL</li>
 </ul>
-<p><a class="anchor" id="properties-files"></a></p>
 <h3><a class="toc_anchor" name="properties_files"> </a>Properties Files</h3>
 <p>Many Java applications incorporate
 <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html">properties resource files</a>
@@ -349,7 +345,6 @@ application, changes you make in
 the file are immediately available in your code with no user intervention in
 between -- no code gen files and no compiling between changes:</p>
 <img src="images/man_properties.gif" alt="screencast" width=932 height=416/>
-<p><a class="anchor" id="image-files"></a></p>
 <h3><a class="toc_anchor" name="image_files"> </a>Image Files</h3>
 <p>User interfaces frequently use image resource files for one purpose or another.  Java supports most of the
 popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
@@ -377,7 +372,6 @@ including a suffix encoding the image extension, this helps distinguish between 
 different types sharing a single name.  Additionally image classes are direct subclasses of the familiar
 <code>ImageIcon</code> class to conform with existing frameworks. As with all
 type manifolds there are no code gen files or other build steps involved.</p>
-<p><a class="anchor" id="json"></a></p>
 <h3><a class="toc_anchor" name="json_and_json_schema"> </a>JSON and JSON Schema</h3>
 <p><a href="http://www.json.org/">JSON</a> has become the wire protocol of choice and, more generally, the preferred
 structured data format. There is no shortage of JSON libraries for Java, these include
@@ -419,14 +413,11 @@ WidgetResults result = (WidgetResults) query.postForJsonContent(&quot;http://acm
 <p>This example uses the <code>postForJsonContent()</code> extension method which performs an HTTP Post using <code>query</code>
 JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the
 <code>WidgetResults</code> structural interface.</p>
-<p><a class="anchor" id="javascript"></a></p>
-<h3>JavaScript</h3>
+<h3><a class="toc_anchor" name="javascript"> </a>JavaScript</h3>
 <p>:todo</p>
-<p><a class="anchor" id="template-files"></a></p>
-<h3>Template Files</h3>
+<h3><a class="toc_anchor" name="template_files"> </a>Template Files</h3>
 <p>:todo</p>
-<p><a class="anchor" id="diy"></a></p>
-<h3>Build Your Own Manifold</h3>
+<h3><a class="toc_anchor" name="build_your_own_manifold"> </a>Build Your Own Manifold</h3>
 <p>:todo</p>
 <h2><a class="toc_anchor" name="extension_classes"> </a>Extension Classes</h2>
 <p>Similar to other languages such as
@@ -459,7 +450,6 @@ convention facilitates the extension discovery process and avoids the overhead a
 alternative means such as annotation processors.</p>
 <p>Additionally, an extension class must be annotated with <code>manifold.ext.api.Extension</code>, which distinguishes
 extension classes from other classes that may reside in the same package.</p>
-<p><a class="anchor" id="extension-method-basics"></a></p>
 <h3><a class="toc_anchor" name="extension_method_basics"> </a>Extension Method Basics</h3>
 <p>An extension method must be declared <code>static</code> and non-<code>private</code>. As the receiver of the call, the first
 parameter of an extension <em>instance</em> method must have the same type as the extended class. The
@@ -481,7 +471,6 @@ public static String lineSeparator() {
 <p>Call static extensions just as if they were on the extended class:</p>
 <pre><code class="language-java">String.lineSeparator()
 </code></pre>
-<p><a class="anchor" id="generics"></a></p>
 <h3><a class="toc_anchor" name="generics"> </a>Generics</h3>
 <p>You can extend generic classes too and define generic methods. This is how Manifold extension libraries
 work with collections and other generic classes. For example, here is the <code>first()</code> extension method on
@@ -507,7 +496,6 @@ extended class' type variables. Manifold's <code>map()</code> extension illustra
 </code></pre>
 <p>Here <code>map</code> is a generic extension method having type variable <code>R</code> and conveying <code>Collection</code>'s type
 variable <code>E</code>.</p>
-<p><a class="anchor" id="static-dispatching"></a></p>
 <h3><a class="toc_anchor" name="static_dispatching"> </a>Static Dispatching</h3>
 <p>An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
@@ -547,7 +535,6 @@ if (name.isNullOrEmpty()) {
 }
 </code></pre>
 <p>Here the example doesn't check for null and instead shifts the burden to the extension.</p>
-<p><a class="anchor" id="accessibility"></a></p>
 <h3><a class="toc_anchor" name="accessibility_and_scope"> </a>Accessibility and Scope</h3>
 <p>An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:</p>
@@ -582,8 +569,7 @@ of an extension class simply by limiting the scope of the JAR file containing th
 if you're using Maven the scope of an extension matches the dependency relationship you assign in your
 pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as
 the module's.</p>
-<p><a class="anchor" id="annotation-extensions"></a></p>
-<h3>Annotation Extensions</h3>
+<h3><a class="toc_anchor" name="annotation_extensions"> </a>Annotation Extensions</h3>
 <p>In additioXn to adding new methods, extension classes can also add <em>annotations</em> to a class. At present
 annotation extensions are limited to the extended <em>class</em>; you can't yet add annotations to members of
 the class.</p>
@@ -601,8 +587,7 @@ public class MyWidgetExtension {
 <p>This extension effectively changes the <code>abc.Widget</code> <em>nominal</em> interface to a <em>structural</em> interface. In the context
 of your project classes no longer have to declare they implement it nominally.</p>
 <p>See <a href="#structural-interfaces">Structural Interfaces</a> later in this guide for fuller coverage of the topic.</p>
-<p><a class="anchor" id="extension-interfaces"></a></p>
-<h3>Extension Interfaces</h3>
+<h3><a class="toc_anchor" name="extension_interfaces"> </a>Extension Interfaces</h3>
 <p>An extension class can add structural interfaces to its extended class.  This feature helps with a
 variety of use-cases.  For example, let's say we have a class <code>Foo</code> and interface <code>Hello</code>:</p>
 <pre><code class="language-java">public final class Foo {
@@ -653,8 +638,7 @@ control.  For example, if you want to provide an immutable view of a collection 
 such as <code>java.util.List</code>, you could use extension interfaces to extract immutable and
 mutable interfaces from the class.  As such your code is better suited to confine
 <code>List</code> operations on otherwise fully mutable lists.</p>
-<p><a class="anchor" id="extension-libraries"></a></p>
-<h3>Extension Libraries</h3>
+<h3><a class="toc_anchor" name="extension_libraries"> </a>Extension Libraries</h3>
 <p>An extension library is a logical grouping of functionality defined by a set of extension classes.
 Manifold includes several extension libraries for commonly used classes.</p>
 <ul>
@@ -679,8 +663,7 @@ Manifold includes several extension libraries for commonly used classes.</p>
 <p>examples...</p>
 </li>
 </ul>
-<p><a class="anchor" id="structural-interfaces"></a></p>
-<h2>Structural Interfaces</h2>
+<h2><a class="toc_anchor" name="structural_interfaces"> </a>Structural Interfaces</h2>
 <p>Java is a <em>nominally</em> typed language -- types are assignable based on the names declared in their
 definitions. For example:</p>
 <pre><code class="language-java">public class Foo {
@@ -754,8 +737,7 @@ requires classes to implement it by name, only its methods must be implemented.<
 <p>Note a class can still implement a structural interface nominally. Doing so helps both people and tooling
 comprehend your code faster. The general idea is to use an interface structurally when you otherwise can't
 use it nominally or doing so overcomplicates your code.</p>
-<p><a class="anchor" id="assignability"></a></p>
-<h3>Type Assignability and Variance</h3>
+<h3><a class="toc_anchor" name="type_assignability_and_variance"> </a>Type Assignability and Variance</h3>
 <p>A type is assignable to a structural interface if it provides compatible versions of all the
 methods declared in the interface. The use of the term <em>compatible</em> here instead of <em>identical</em> is
 deliberate. The looser term concerns the notion that a structural interface method is variant with respect
@@ -788,8 +770,7 @@ class referenced earlier in the <code>Coordinate</code> example where <code>Comp
 as declared in <code>Coordinate.getX()</code>. Because <code>int</code> coerces to <code>double</code> with no loss of precision
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.</p>
-<p><a class="anchor" id="implementation-by-field"></a></p>
-<h3>Implementation by Field</h3>
+<h3><a class="toc_anchor" name="implementation_by_field"> </a>Implementation by Field</h3>
 <p>Another example where classes have wiggle room implementing structural interfaces involves property
 getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you
 can access and/or change. Since a field is basically the same thing a class can implement a getter and/or
@@ -811,8 +792,7 @@ String name = person.getName();
 <p>Basically a field implements a property method if its name matches the method's name minus the
 is/get/set prefixes and taking into account field naming conventions. For example, fields <code>Name</code>, <code>name</code>,
 and <code>_name</code> all match the <code>getName()</code> property method and are weighted in that order.</p>
-<p><a class="anchor" id="implementation-by-extension"></a></p>
-<h3>Implementation by Extension</h3>
+<h3><a class="toc_anchor" name="implementation_by_extension"> </a>Implementation by Extension</h3>
 <p>It's possible to implement methods of a structural interface via extension methods.  Looking back at the
 <code>Coordinate</code> example, consider this class:</p>
 <pre><code class="language-java">public class Vector {
@@ -844,8 +824,7 @@ public class MyVectorExtension {
 <p>Voila! <code>Vector</code> now structurally implements <code>Coordinate</code> and can be used with <code>coordSorter</code>.</p>
 <p>Generally <em>implementation by extension</em> is a powerful technique to provide a common API for classes your
 project does not control.</p>
-<p><a class="anchor" id="dynamic-typing"></a></p>
-<h3>Dynamic Typing with <code>ICallHandler</code></h3>
+<h3><a class="toc_anchor" name="dynamic_typing_with_icallhandler"> </a>Dynamic Typing with <code>ICallHandler</code></h3>
 <p>Manifold supports a form of dynamic typing via <code>manifold.ext.api.ICallHandler</code>:</p>
 <pre><code class="language-java">public interface ICallHandler {
   /**
@@ -899,7 +878,7 @@ main difference is that invocations must be made through structural interfaces a
 the map, otherwise <code>Map</code> behaves much like an expando object.</p>
 <p>See <code>extensions.java.util.Map.MapStructExt.java</code> for details.</p>
 <h2><a class="toc_anchor" name="ide__intellij_idea"> </a>IDE -- IntelliJ IDEA</h2>
-<p>Use the <a href="https://plugins.jetbrains.com/plugin/10000-manifold">Manifold IntelliJ IDEA plugin</a> to experience Manifold in its fullest.</p>
+<p>Use the <a href="https://plugins.jetbrains.com/plugin/10057-manifold">Manifold IntelliJ IDEA plugin</a> to experience Manifold in its fullest.</p>
 <p>The plugin currently supports most high-level IntelliJ features including:</p>
 <ul>
 <li>Feature highlighting</li>
@@ -917,17 +896,24 @@ Watch your JSON, images, properties, templates, and custom type manifolds come a
 Changes you make are instantly available in your code.</p>
 <p>:todo screencast for New | Extension Class</p>
 <p>:todo insert screencast gif demonstrating some of this</p>
-<p><a class="anchor" id="other-languages"></a></p>
-<h2>Use with other JVM Languages</h2>
+<h2><a class="toc_anchor" name="use_with_other_jvm_languages"> </a>Use with other JVM Languages</h2>
 <p>Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java
 compiler.  It's also designed for use within other JVM languages via the <em>plugin host</em> API. You can
 implement this API to host Manifold from within another JVM language.</p>
 <p>See <em>manifold.api.host.IManifoldHost</em>.</p>
-<p><a class="anchor" id="commercial"></a></p>
-<h2>Commercial Usage</h2>
-<p>:todo</p>
-<p><a class="anchor" id="history"></a></p>
-<h2>History</h2>
+<h2><a class="toc_anchor" name="license"> </a>License</h2>
+<h3>Open Source</h3>
+<p>Open source Manifold is free and licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Appache 2.0</a>.  Use
+Manifold freely with your favorite open source web servers, database servers, and tools.</p>
+<h3>Professional</h3>
+<p>You're a small to medium-sized business using <a href="http://www.oracle.com/technetwork/middleware/webtier/overview/index.html">Oracle's Web Tier</a>
+products or <a href="https://www.microsoft.com/web/platform/server.aspx">Microsoft/web</a> and you're looking for basic
+support?  You can try Manifold free for 30 days.  License: $99 per floating developer workstation and year.</p>
+<h3>Enterprise</h3>
+<p>You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
+you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating
+developer workstation and year.</p>
+<h2><a class="toc_anchor" name="history"> </a>History</h2>
 <p>Manifold was heavily influenced by the <a href="https://gosu-lang.github.io/">Gosu</a> programming language for the JVM.
 Perhaps the most distinguishing feature of Gosu is its <em>Open Type System</em>; it
 abstracts the notion of a type as a set of published interfaces in its
@@ -949,18 +935,10 @@ who admire it the Open Type System remains a bridge too far.</p>
 <p>Manifold is a rethinking of the Open Type System.  It captures the spirit, but starts fresh with both feet in the Java
 ecosystem. Much of the Open Type System is reborn in Manifold, including type abstraction, extensions, and structural
 typing. All directly and seamlessly accessible from Java.</p>
-<p>Importantly, the Manifold framework represents a new and unique approach to the type-bridging problem solved by the Open Type
-System. Type manifolds reduce the mountain of complexity otherwise involved with Gosu. They are easy to understand
-and implement and are inherently better performing because they represent Java class projections naturally.
-Above all, Manifold is designed for Java; it seamlessly blends in to any Java project and
-can be used incrementally.</p>
-<p>Of course Manifold would not exist if not for Gosu. We owe a debt of gratitude to Gosu as
-a primary source of inspiration.</p>
-<h2><a class="toc_anchor" name="philosophy"> </a>Philosophy</h2>
-<p>:todo</p>
-<p><a class="anchor" id="conclusion"></a></p>
-<h2>Conclusion</h2>
-<p>:todo</p>
+<p>Importantly, the Manifold framework represents a new and unique approach to the type-bridging problem originally solved
+by the Open Type System. It's easy to understand and implement and is inherently better performing because it represents
+Java class projections naturally. Above all, Manifold is designed for Java; it effortlessly blends in to any Java project
+and can be used incrementally.</p>
 </div>
 </body>
 </html>
