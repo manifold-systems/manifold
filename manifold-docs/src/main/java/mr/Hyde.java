@@ -104,7 +104,10 @@ public class Hyde {
   }
 
   private static String getNameFromFile(String fqn) {
-    return fqn.substring(4, fqn.lastIndexOf("_")).replace('.', File.separatorChar) + ".html";
+    int endIndex = fqn.lastIndexOf("_");
+    String stripPackage = fqn.substring(4, endIndex);
+    String noDots = stripPackage.replace(".", "" + File.separatorChar);
+    return noDots + ".html";
   }
 
   private static File makeOutputDir() {

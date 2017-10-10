@@ -1,6 +1,12 @@
 <%@ extends mr.Hyde.BaseTemplate %>
 
+<div class="row">
+<div class="col-md-3">
+
 <%@ include docs_index %>
+
+</div>
+<div class="col-md-9">
 
 ## ${anchor("Manifold in a Nutshell")}
 
@@ -1077,3 +1083,5 @@ support?  You can try Manifold free for 30 days.  License: $99 per floating deve
 You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
 you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating 
 developer workstation and year.
+
+</div>

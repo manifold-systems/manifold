@@ -1,6 +1,6 @@
 <%@ extends mr.Hyde.BaseTemplate %>
 <div class="docs-toc">
-    <div class="toc-title">Contents</div>
+    <h2>Contents</h2>
     <ul>
         <li>${linkTo("Manifold in a Nutshell")}</li>
         <li class="sub">${linkTo("Type Manifolds")}</li>
