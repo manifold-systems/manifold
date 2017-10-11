@@ -44,6 +44,7 @@
     <module>manifold-templates</module>
     <module>manifold-templates-test</module>
     <module>manifold-docs</module>
+    <module>manifold-all</module>
   </modules>
 
   <properties>
