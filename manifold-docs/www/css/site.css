@@ -74,7 +74,6 @@ h6 {
   padding-top: 50px;
 }
 .docs-toc {
-  position: fixed;
   padding-top: 4px;
 }
 @media only screen and (max-width: 991px) {
