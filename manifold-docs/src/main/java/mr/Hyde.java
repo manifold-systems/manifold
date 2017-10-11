@@ -5,6 +5,7 @@ import manifold.api.fs.cache.PathCache;
 import manifold.internal.host.ManifoldHost;
 import manifold.templates.ManifoldTemplates;
 import manifold.templates.runtime.BaseTemplate;
+import manifold.templates.runtime.ILayout;
 import manifold.util.StreamUtil;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -59,15 +60,31 @@ public class Hyde {
     }
 
     //==========================================================================================
+    //  External project docs non-template Resources
+    //==========================================================================================
+    log("Generating External Docs...");
+    renderExternalMarkdownTo(wwwDir, "manifold-templates.html", "manifold-templates/README.md");
+
+    //==========================================================================================
     //  Copy non-template Resources
     //==========================================================================================
     log("Copying Resources...");
-    copyDirInto(wwwDir, outputDir, file -> !file.getName().endsWith(".mtf"));
+    copyDirInto(wwwDir, outputDir, file -> !file.getName().endsWith(".mtf") && !file.getName().endsWith(".less"));
 
     log("Generating CSS from LESS...");
     generateCSS(fileFromResourcePath("/www/css/site.less"), new File(outputDir, "css/site.css"));
 
     log("Done!");
+  }
+
+  private static void renderExternalMarkdownTo(File wwwDir, String targetFileName, String inputFile) throws IOException {
+    File output = new File(wwwDir, targetFileName);
+    ILayout layout = www.layout.main.asLayout();
+    StringBuffer content = new StringBuffer();
+    layout.header(content);
+    content.append(mdToHtml(new String(Files.readAllBytes(new File(inputFile).toPath()))));
+    layout.footer(content);
+    Files.write(output.toPath(), content.toString().getBytes());
   }
 
   private static void generateCSS(File lessFile, File outputFile) throws Exception {

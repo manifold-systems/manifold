@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manifold - Simple, type-safe access to your data from Java</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Manifold - A JVM Metaprogramming Framework">
+    <meta name="author" content="Scott McKinney">
+    <meta property="og:title" content="Simple, type-safe access to your data from Java">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="http://manifold.io">
+    <meta property="og:site_name" content="Manifold">
+    <meta property="og:image" content="images/manifold_ico.png">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+    <link rel="shortcut icon" href="images/logo_square_64px.png">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Crete+Round:400italic,400" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,300,400italic,400,600italic,600,700italic,700,800italic,800"
+          rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Exo:600" rel="stylesheet">
+    <link href="/css/site.css" rel="stylesheet" type="text/css">
+    <link href="/css/prism.css" rel="stylesheet" type="text/css">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script src="/js/prism.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+<nav class="navbar navbar-fixed-top navbar-dark">
+    <div class="container">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand exo" href="/">
+                <img src="/images/logo_white_64px.png"> Manifold
+            </a>
+        </div>
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+                <li><a href="/docs.html">Docs</a></li>
+                <li><a href="https://gitter.im/manifold-io/Lobby#">Chat</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Projects <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <!--<li><a href="#">Core Enhancements</a></li>-->
+                        <!--<li><a href="#">I/O Enhancements</a></li>-->
+                        <!--<li role="separator" class="divider"></li>-->
+                        <li><a href="/manifold-templates.html">Manifold Templates</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="https://twitter.com/manifoldsystems"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                <li><a href="https://github.com/manifold-systems/manifold"><i class="fa fa-github" aria-hidden="true"></i></a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+</nav>
+</div>
+
+<div class="container">
+
+<h1>Manifold Templates</h1>
+<p>Manifold Templates is a lightweight &amp; type safe templating technology for the JVM.
+It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
+used in any application environment.</p>
+<p>Manifold Templates supports type safe arguments to templates, type safe inclusion of other templates,
+shared layouts for templates and custom base classes for application-specific logic, among other features.</p>
+<p>Manifold Templates have the suffix <code>mtf</code> (Manifold Template File), often optionally preceded by the language that the
+template is targeting (e.g. <code>index.html.mtf</code>).</p>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#basic-syntax">Basic Syntax</a>
+<ul>
+<li><a href="#statements">Statements</a></li>
+<li><a href="#expressions">Expressions</a></li>
+<li><a href="#directives">Directives</a></li>
+<li><a href="#comments">Comments</a></li>
+</ul>
+</li>
+<li><a href="#directive-keywords">Directive Keywords</a>
+<ul>
+<li><a href="#-import-"><code>import</code></a></li>
+<li><a href="#-extends-"><code>extends</code></a></li>
+<li><a href="#-include-"><code>include</code></a>
+<ul>
+<li><a href="#conditional-include">Conditional Include</a></li>
+</ul>
+</li>
+<li><a href="#-params-"><code>params</code></a></li>
+<li><a href="#-section-"><code>section</code></a></li>
+<li><a href="#-layouts-"><code>layouts</code></a></li>
+</ul>
+</li>
+<li><a href="#layouts">Layouts</a>
+<ul>
+<li><a href="#default-layouts">Default Layouts</a></li>
+</ul>
+</li>
+<li><a href="#Miscellaneous">Miscellaneous</a>
+<ul>
+<li><a href="#Tracing">Tracing</a></li>
+</ul>
+</li>
+</ul>
+<h1>Basic Syntax</h1>
+<p>As with JSPs, Manifold Templates consist of regular textual content with various scriptlets and
+directives interspersed in that content.</p>
+<h2>Statements</h2>
+<p>Statements are similar to JSP scriptlets: they can contain any number of Java
+language statements, including variable or method declarations.</p>
+<p>The syntax of a statement is as follows:</p>
+<pre><code class="language-jsp">&lt;% code fragment %&gt;
+</code></pre>
+<p>Note that any text within a statement <em>must be valid code in Java</em>. For example, the statement</p>
+<pre><code class="language-jsp">&lt;% System.out.println(&quot;Hello&quot;) %&gt;
+</code></pre>
+<p>will result in the following Java code being generated:</p>
+<pre><code class="language-java">System.out.println(&quot;Hello&quot;)
+</code></pre>
+<p>which will result in a compiler error, since there is no semicolon to end the line.</p>
+<h2>Expressions</h2>
+<p>Expressions are similar to JSP expressions. As explained in <a href="https://www.tutorialspoint.com/jsp/jsp_syntax.htm">this JSP guide:</a></p>
+<blockquote>
+<p>A JSP expression element contains a scripting language expression that is evaluated, converted to a String, and
+inserted where the expression appears in the JSP file.</p>
+</blockquote>
+<blockquote>
+<p>Because the value of an expression is converted to a String, you can use an expression within a line of text, whether or not it is tagged with HTML, in a JSP file.</p>
+</blockquote>
+<blockquote>
+<p>The expression element can contain any expression that is valid according to the Java Language Specification but you cannot use a semicolon to end an expression.</p>
+</blockquote>
+<p>The syntax of an expression is as follows:</p>
+<pre><code class="language-jsp">&lt;%= expression %&gt;
+</code></pre>
+<p>Additionally, the following shorthand syntax is also valid:</p>
+<pre><code class="language-jsp">${ expression }
+</code></pre>
+<p>For example, you can do the following with expressions:</p>
+<pre><code class="language-jsp">&lt;html&gt;
+  &lt;head&gt;&lt;title&gt;Expression Example&lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;% int y = 10; %&gt;
+    &lt;p style=&quot;font-size: ${y}&quot;&gt; The font size of this paragraph is ${y}. &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>The above code will instantiate an <code>int y</code>, assign the value of 10 to it,
+and evaluate <code>y</code> twice: once to give the paragraph <code>font-size: 10</code>, and again
+within the paragraph block. It will generate the following HTML:</p>
+<pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;&lt;title&gt;Expression Example &lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+      &lt;p style=&quot;font-size: 10&quot;&gt; The font size of this paragraph is 10. &lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2>Comments</h2>
+<p>Comments are blocks of code that the compiler will ignore. They will <strong>not</strong> be generated as comments in the generated Java code.</p>
+<p>The syntax of a comment is as follows:</p>
+<pre><code class="language-jsp">&lt;%-- This is a comment --%&gt;
+</code></pre>
+<h2>Directives</h2>
+<p>Directives are commands that are evaluated by the compiler, and will affect the overall page structure.</p>
+<p>The syntax of a directive is as follows:</p>
+<pre><code class="language-jsp">&lt;%@ directive %&gt;
+</code></pre>
+<p>Here are the valid types of directives:</p>
+<p>| Directive Type | Syntax                                      | Description                                                                         |
+|----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
+| Import         | <code>&lt;%@ import package %&gt;</code>                     | Imports Java packages into the generated Java file                                  |
+| Extends         | <code>&lt;%@ extends superclass %&gt;</code>                  | Extends a superclass in the generated Java file                                     |
+| Params         | <code>&lt;%@ params your-params-here %&gt;</code>            | Gives parameters for the template                                                   |
+| Include        | <code>&lt;%@ include otherTemplate %&gt;</code>              | Include a separate template in the template                                         |
+| Section        | <code>&lt;%@ section mySection(optional-params) %&gt;</code> | Creates a sub-template within the template, that can be called from other templates |</p>
+<p>A more detailed explanation of various directive types <a href="#directive-types">can be found
+below.</a></p>
+<h1>Directive Keywords</h1>
+<h2><code>import</code></h2>
+<p>The <code>import</code> keyword is used to import external packages into the generated Java file.</p>
+<p>The syntax of the import keyword is as follows:</p>
+<pre><code class="language-jsp">&lt;%@ import [package name] %&gt;
+</code></pre>
+<p>For example, you can use the <code>import</code> keyword to utilize useful Java packages:</p>
+<pre><code class="language-jsp">&lt;html&gt;
+&lt;%@ import java.util.HashSet %&gt;
+  &lt;head&gt;&lt;title&gt;Import Example&lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;% int y = 10;
+       HashSet&lt;Integer&gt; myHashSet = new HashSet&lt;&gt;();
+       myHashSet.add(y);
+       myHashSet.add(15);
+       for(Integer a: myHashSet) { %&gt;
+         &lt;p&gt; myHashSet contains ${a}. &lt;/p&gt;
+       &lt;% } %&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>The above code will result in the following HTML. Note that the import statements
+was necessary to be able to use <code>java.util.HashSet</code>.</p>
+<pre><code class="language-html">&lt;html&gt;
+  &lt;head&gt;&lt;title&gt;Import Example&lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;p&gt; myHashSet contains 10. &lt;/p&gt;
+    &lt;p&gt; myHashSet contains 15. &lt;/p
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>The location of import statements within the template file is irrelevant. Although it is idiomatic to include all imports
+at the beginning of the file, imports can be placed anywhere and will not affect the generated file.</p>
+<h2><code>extends</code></h2>
+<p>The <code>extends</code> keyword is used to make a template extend a different base class, which can be used to provide
+additional application specific functionality (e.g. Request and Response objects in a web application).</p>
+<p>Here is a practical example of the 'extends' keyword being used:</p>
+<pre><code class="language-java">package demo;
+
+import model.Contact;
+import manifold.templates.runtime.BaseTemplate;
+
+public class ExampleTemplate extends BaseTemplate {
+
+  public String displayContact(Contact c) {
+    if(c.hasName()) {
+      return c.getName();
+    } else {
+      return c.getEmail();
+    }
+  }
+
+}
+</code></pre>
+<p>This allows the developer to render a clean template:</p>
+<pre><code class="language-jsp">&lt;%@ import model.Contact %&gt;
+&lt;%@ extends demo.ExampleTemplate %&gt;
+&lt;%@ params(Contact c)%&gt;
+
+&lt;div&gt;
+    &lt;div&gt;
+      Contact
+    &lt;/div&gt;
+    &lt;div&gt;
+      ${displayContact(c)}
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+<p>And easily callable:</p>
+<pre><code class="language-jsp">    get(&quot;/contact/:id&quot;, (req, resp) -&gt; ShowContact.render(Contact.find(req.getParam(&quot;id&quot;)));
+</code></pre>
+<h2><code>include</code></h2>
+<p>The <code>include</code> keyword allows users to insert other templates inside of the given template in a type
+safe manner.</p>
+<p>The syntax of the include keyword is as follows:</p>
+<pre><code class="language-jsp">&lt;%@ include [template to include] %&gt;
+</code></pre>
+<p>For example, consider the following template, <code>myTemplate.html.mtf</code>:</p>
+<pre><code class="language-jsp">&lt;% int fontSize = 0; %&gt;
+&lt;html&gt;
+    &lt;head&gt;&lt;title&gt;WHILE LOOP Example&lt;/title&gt;&lt;/head&gt;
+    &lt;body&gt;
+        &lt;%while ( fontSize &lt;= 3){ %&gt;
+            &lt;font color = &quot;green&quot; size = &quot;&lt;%= fontSize %&gt;&quot;&gt;
+                JSP Tutorial
+            &lt;/font&gt;&lt;br /&gt;
+            &lt;%fontSize++;%&gt;
+        &lt;%}%&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>We can then include it from another template as such:</p>
+<pre><code class="language-jsp">&lt;%@ include myTemplate %&gt;
+</code></pre>
+<p>Both statements will result in the following HTML code:</p>
+<pre><code class="language-html">&lt;html&gt;
+    &lt;head&gt;&lt;title&gt;WHILE LOOP Example&lt;/title&gt;&lt;/head&gt;
+    &lt;body&gt;
+            &lt;font color = &quot;green&quot; size = &quot;0&quot;&gt;
+                JSP Tutorial
+            &lt;/font&gt;&lt;
+            &lt;font color = &quot;green&quot; size = &quot;1&quot;&gt;
+                JSP Tutorial
+            &lt;/font&gt;&lt;br /&gt;
+            &lt;font color = &quot;green&quot; size = &quot;2&quot;&gt;
+                JSP Tutorial
+            &lt;/font&gt;&lt;br /&gt;
+            &lt;font color = &quot;green&quot; size = &quot;3&quot;&gt;
+                JSP Tutorial
+            &lt;/font&gt;&lt;br /&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+
+</code></pre>
+<h3>Conditional Include</h3>
+<p>Manifold Templates supports shorthand for conditional inclusion of templates. The following syntax:</p>
+<pre><code class="language-jsp">  &lt;% if (condition) { %&gt;
+    &lt;%@ include myTemplate %&gt;
+  &lt;% } %&gt;
+</code></pre>
+<p>Can be condensed to the following:</p>
+<pre><code class="language-jsp">&lt;%@ include myTemplate if(condition) %&gt;
+</code></pre>
+<p>(Note: In the above, parentheses are optional.)</p>
+<h2><code>params</code></h2>
+<p>The <code>params</code> keyword is used to give parameters to a template. It is only allowed
+for the outermost class (not within sections) and is generally only useful when creating
+templates that are meant to be included in other templates.</p>
+<p>The syntax of the <code>params</code> command is as follows:</p>
+<pre><code class="language-jsp">&lt;%@ params(your-params-here) %&gt;
+</code></pre>
+<p>For example, I can create the template <code>NameDisplay.html.mtf</code> as the following:</p>
+<pre><code class="language-jsp">&lt;%@ params(String name) %&gt;
+&lt;p&gt;Your name is: ${myName}&lt;/p&gt;
+</code></pre>
+<p>You can then include it in another template as follows:</p>
+<pre><code class="language-jsp">&lt;html&gt;
+    &lt;head&gt;&lt;title&gt;PARAMS Example&lt;/title&gt;&lt;/head&gt;
+    &lt;body&gt;
+      &lt;%@ include NameDisplay(&quot;Sally&quot;) %&gt;
+      &lt;%@ include NameDisplay(&quot;Carson Gross&quot;) %&gt;
+      &lt;%@ include NameDisplay(&quot;Edward&quot;) %&gt;
+      &lt;%@ include NameDisplay(&quot;Harika&quot;) %&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>Then, the following HTML will be generated:</p>
+<pre><code class="language-html">&lt;html&gt;
+    &lt;head&gt;&lt;title&gt;PARAMS Example&lt;/title&gt;&lt;/head&gt;
+    &lt;body&gt;
+      &lt;p&gt;Your name is: Sally &lt;/p&gt;
+      &lt;p&gt;Your name is: Carson Gross &lt;/p&gt;
+      &lt;p&gt;Your name is: Edward &lt;/p&gt;
+      &lt;p&gt;Your name is: Harika &lt;/p&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2><code>section</code></h2>
+<p>The <code>section</code> keyword will create a subsection of the current template that can
+then be added via an <code>include</code> keyword in other templates.</p>
+<p>The syntax of a <code>section</code> block are as follows:</p>
+<pre><code class="language-jsp">  &lt;%@ section sectionName[(symbols-used-in-section)] %&gt;
+    SECTION CONTENT HERE
+  &lt;%@ end section %&gt;
+</code></pre>
+<p>Note that the corresponding <code>&lt;%@ end section %&gt;</code> directive must be used - a failure
+to do so will result in an error during code generation.</p>
+<p>Imports within sections are valid, and will be handled accordingly.</p>
+<p>For example, I can create the template <code>nestedImport.html.mtf</code> as the following:</p>
+<pre><code class="language-jsp">    &lt;h1&gt;This will make sure that nested imports are handled correctly.&lt;/h1&gt;
+    &lt;%@ section mySection %&gt;
+        &lt;%@ import java.util.* %&gt;
+        &lt;% HashSet&lt;Integer&gt; myHashSet = new HashSet&lt;&gt;();
+        myHashSet.add(1);
+        myHashSet.add(2);
+        myHashSet.add(3);
+        for(Integer a: myHashSet) { %&gt;
+        &lt;h2 style=&quot;font-size: ${a}&quot;&gt;Font size: ${a}&lt;/h2&gt;
+        &lt;% } %&gt;
+    &lt;%@ end section %&gt;
+        &lt;p&gt; The above section should work &lt;/p&gt;
+</code></pre>
+<p>The above code will generate the following HTML:</p>
+<pre><code class="language-html">    &lt;h1&gt;This will make sure that nested imports are handled correctly.&lt;/h1&gt;
+    &lt;h2 style=&quot;font-size: 1&quot;&gt;Font size: 1&lt;/h2&gt;
+    &lt;h2 style=&quot;font-size: 2&quot;&gt;Font size: 2&lt;/h2&gt;
+    &lt;h2 style=&quot;font-size: 3&quot;&gt;Font size: 3&lt;/h2&gt;
+    &lt;p&gt; The above section should work &lt;/p&gt;
+</code></pre>
+<p>Then, I can include <code>mySection</code> it in a separate template:</p>
+<pre><code class="language-jsp">    &lt;%@ include nestedImport.mySection %&gt;
+</code></pre>
+<p>Which will result in the following HTML:</p>
+<pre><code class="language-html">    &lt;h2 style=&quot;font-size: 1&quot;&gt;Font size: 1&lt;/h2&gt;
+    &lt;h2 style=&quot;font-size: 2&quot;&gt;Font size: 2&lt;/h2&gt;
+    &lt;h2 style=&quot;font-size: 3&quot;&gt;Font size: 3&lt;/h2&gt;
+</code></pre>
+<h2><code>layouts</code></h2>
+<p>See below.</p>
+<h1>Layouts</h1>
+<p>Layouts can be made and used with the <code>content</code> and <code>layouts</code> directives respectively.</p>
+<p>The <code>content</code> keyword will split the current template into the header and footer
+of a layout.</p>
+<p>The <code>layouts</code> keyword will make the header and footer of the layout frame the
+current template. The code from the current template will appear where the
+<code>content</code> keyword was originally.</p>
+<p>Both the <code>content</code> directive and <code>layouts</code> directive are only valid in the outermost class
+(not within sections) and can only appear once in a template.</p>
+<p>The <code>params</code> directive is not yet supported for a template that contains the <code>content</code> keyword.</p>
+<p>The syntax of a content template is as follows:</p>
+<pre><code class="language-jsp">  HEADER CONTENT HERE
+  &lt;%@ content %&gt;
+  FOOTER CONTENT HERE
+</code></pre>
+<p>For example, I can create the template <code>layoutEx.html.mtf</code> as the following:</p>
+<pre><code class="language-jsp">    &lt;/html&gt;
+        &lt;/body&gt;
+            &lt;%@ content %&gt;
+        &lt;/body&gt;
+    &lt;/html&gt;
+</code></pre>
+<p>And use the layout in the following template:</p>
+<pre><code class="language-jsp">    &lt;h1&gt;This is a template that uses a layout.&lt;/h1&gt;
+    &lt;%@ layout layoutEx %&gt;
+    &lt;h2&gt;The directive can appear anywhere in the template.&lt;/h2&gt;
+</code></pre>
+<p>The above code will generate the following HTML:</p>
+<pre><code class="language-html">    &lt;/html&gt;
+        &lt;/body&gt;
+            &lt;h1&gt;This is a template that uses a layout.&lt;/h1&gt;
+            &lt;h2&gt;The directive can appear anywhere in the template.&lt;/h2&gt;
+        &lt;/body&gt;
+    &lt;/html&gt;
+</code></pre>
+<h2>Default Layouts</h2>
+<p>Manifold Templates also supports the ability to set default layouts for templates via the
+<code>ManifoldTemplates.java</code> configuration class:</p>
+<pre><code class="language-java">  ManifoldTemplates.setDefaultLayout(myLayout); //Sets default template for all templates
+  ManifoldTemplates.setDefaultLayout(&quot;some.package&quot;, myLayout) //Sets default templates for all templates in &quot;some.package&quot;
+</code></pre>
+<p>By default, more specific layout declarations will take precedence over less
+specific ones. For example, templates with a declared layout (using the layout directive)
+will use the declared layout rather than any defualt layout.</p>
+<h1>Miscellaneous</h1>
+<h2>Tracing</h2>
+<p>Manifold Templates supports performance tracing via the following syntax:</p>
+<pre><code class="language-java">  ManifoldTemplates.trace();
+</code></pre>
+<p>After invoking the <code>trace()</code> method, every following <code>render()</code> call will print
+the following to console:</p>
+<pre><code>  - Template [templateName] rendered in [timeToRender] ms
+</code></pre>
+
+
+</div>
+
+</body>
+</html>

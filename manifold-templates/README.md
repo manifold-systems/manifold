@@ -1,3 +1,5 @@
+# Manifold Templates
+
 Manifold Templates is a lightweight & type safe templating technology for the JVM.
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.
@@ -8,7 +10,7 @@ shared layouts for templates and custom base classes for application-specific lo
 Manifold Templates have the suffix `mtf` (Manifold Template File), often optionally preceded by the language that the
 template is targeting (e.g. `index.html.mtf`).
 
-# Table of Contents
+## Table of Contents
 - [Basic Syntax](#basic-syntax)
   * [Statements](#statements)
   * [Expressions](#expressions)
@@ -457,3 +459,13 @@ the following to console:
 ```
   - Template [templateName] rendered in [timeToRender] ms
 ```
+
+
+
+
+
+
+
+
+
+
