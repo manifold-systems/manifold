@@ -21,7 +21,7 @@
     <div class="row">
 
         <div class="col-md-4">
-            <h2>Meta-programming.</h2>
+            <h2>Meta-programming</h2>
 
             <p>
               Type-safe, direct access to your data.  Eliminate code generators.  Minimize build time.
@@ -30,7 +30,7 @@
         </div>
 
         <div class="col-md-4">
-            <h2>Extensions.</h2>
+            <h2>Extensions</h2>
 
             <p>Add methods to existing Java classes such as String, List, and File. 
             Eliminate boilerplate code involving "Util" and "Manager" libraries.</p>
@@ -38,7 +38,7 @@
         </div>
 
         <div class="col-md-4">
-            <h2>Structural Typing.</h2>
+            <h2>Structural Typing</h2>
 
             <p>Unify disparate APIs.  Bridge software components you do not control.</p>
 
@@ -75,7 +75,7 @@
         <div class="col-md-4">
             <h2>Type Safe</h2>
 
-            <p>Manifold allows you to treat non-java rresources as first class data sources in your development
+            <p>Manifold allows you to treat non-java resources as first class data sources in your development
                 process
                 with transparent type-safe bindings: no more Maps of Strings, no more codegen.</p>
 
