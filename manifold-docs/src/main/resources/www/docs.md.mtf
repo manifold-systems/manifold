@@ -1067,6 +1067,13 @@ implement this API to host Manifold from within another JVM language.
 
 See _manifold.api.host.IManifoldHost_. 
 
+## ${anchor("Philosophy")}
+
+Our goal is to improve Java by working with it, not against it.  For instance, we're not out 
+to bolt on new features involving new keywords or new grammar -- Java should look like Java. 
+Rather Manifold is about empowering Java from the _outside_.  Thus, developers using
+Manifold don't need to learn a new way of using or declaring things, instead Manifold enables 
+them to access a whole new world of types and extensions using the Java they already know.
 
 ## ${anchor("License")}
 
