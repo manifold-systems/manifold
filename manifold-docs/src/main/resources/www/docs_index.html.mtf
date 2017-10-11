@@ -32,6 +32,7 @@
         <li class="sub">${linkTo("Dynamic Typing with `ICallHandler`")}</li>
         <li>${linkTo("IDE -- IntelliJ IDEA")}</li>
         <li>${linkTo("Use with other JVM Languages")}</li>
+        <li>${linkTo("Philosophy")}</li>
         <li>${linkTo("License")}</li>
     </ul>
 </div>
