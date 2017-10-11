@@ -50,15 +50,20 @@ h6 {
   margin-top: 48px;
 }
 .index-title h1 {
-  font-size: 72px;
+  font-size: 90px;
 }
-@media only screen and (max-width: 512px) {
+@media only screen and (max-width: 600px) {
   .index-title h1 {
-    font-size: 42px;
+    font-size: 54px;
   }
 }
 .index-title img {
   width: 128px;
+}
+@media only screen and (max-width: 600px) {
+  .index-title img {
+    width: 84px;
+  }
 }
 .index-demo {
   padding: 32px;
@@ -130,5 +135,8 @@ h6 {
 }
 .contact-container a {
   color: #ffffff;
+}
+.exo {
+  font-family: 'Exo', 'DejaVu Sans', Arial, Helvetica, sans-serif;
 }
 

@@ -5,7 +5,7 @@
 <div class="container hero-container">
     <div class="row index-title">
         <div class="col-md-10 col-md-offset-1  text-center">
-            <h1>
+            <h1 class="exo">
                 <img src="./images/logo_512px.png"> Manifold
             </h1>
             <p class="main-copy">
