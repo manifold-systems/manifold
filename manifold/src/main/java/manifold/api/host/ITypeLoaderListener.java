@@ -1,5 +1,6 @@
 package manifold.api.host;
 
+@SuppressWarnings("unused")
 public interface ITypeLoaderListener
 {
   /**
@@ -12,4 +13,11 @@ public interface ITypeLoaderListener
    */
   void refreshed();
 
+  /**
+   * Return true to hint you need to listen before other listeners, no guarantee of order.
+   */
+  default boolean notifyEarly()
+  {
+    return false;
+  }
 }
