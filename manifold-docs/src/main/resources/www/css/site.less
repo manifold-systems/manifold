@@ -2,15 +2,29 @@ body {
   padding-top: 50px;
 }
 
+.nav>li>a:focus, .nav>li>a:hover {
+    text-decoration: none;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 .navbar-brand img {
   height: 40px;
   margin-top: -10px;
+  margin-right: 8px;
   float: left;
 }
 
-.navbar {
-  font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
-  background-color: rgba(252,252,252,0.95);
+nav.navbar {
+  background-color: rgba(0,0,0,0.65);
+  box-shadow: 0px 0px 20px 3px #CCC;
+  .dropdown-menu {
+    background-color: rgba(0,0,0,0.65);
+  }
+  a {
+    color: rgb(240, 240, 240);
+    font-size: 20px;
+    font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
+  }
 }
 
 body pre[class*="language-"] {
@@ -25,7 +39,6 @@ p {
 
 ul {
   margin: 16px;
-  overflow: hidden;
 }
 
 li {
@@ -40,16 +53,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .index-title {
-  height: 128px;
-  margin-top: 32px;
+  margin-top: 48px;
   h1 {
-    font-size: 72px;
-    @media only screen and (max-width: 512px) {
-      font-size: 42px;
+    font-size: 90px;
+    @media only screen and (max-width: 600px) {
+      font-size: 54px;
     }
   }
   img {
     width: 128px;
+    @media only screen and (max-width: 600px) {
+      width: 84px;
+    }
   }
 
 }
@@ -71,25 +86,70 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .docs-toc {
-  float: left;
-  margin: 24px;
-  padding: 4px;
-  background: rgba(252, 252, 252, 0.95);
-  border-radius: 4px;
+  @media only screen and (max-width: 991px) {
+    display:none
+  }
+  padding-top: 4px;
   ul {
     list-style: none;
     padding: 0;
     li {
-      font-size: 18px;
+      font-size: 16px;
     }
   }
   .sub {
     padding-left: 8px;
   }
-  .toc-title {
-    text-align: center;
+}
+
+.live-demo-container {
+  width: 100%;
+  color: whitesmoke;
+  background-color: #389CFF;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAIAAAAmzuBxAAAAGXRFW…YWZhag9PefvxhwgD9//zLh0g0HTAyEwLBSAQw1/CoAAgwAba4SlNFFbukAAAAASUVORK5CYII=);
+  background-repeat: repeat;
+}
+
+.hero-container {
+  h1 {
+    margin-bottom: 42px;
+  }
+  .btn-primary {
+    background-color: #389CFF;
     font-weight: bold;
-    font-size: 20px;
   }
 }
 
+.wut-container {
+  padding: 32px;
+  width:100%;
+  background-color : rgb(57, 57, 57);
+  color: whitesmoke;
+  padding-bottom: 48px;
+}
+
+#install-btn {
+  padding: 13px 57px;
+  font-size: 20px;
+  margin:48px;
+}
+
+.marketing-container {
+  padding-top:24px;
+  padding-bottom: 48px;
+}
+
+.contact-container {
+  box-shadow: 0px 0px 20px 3px #CCC;
+  width:100%;
+  background-color : rgb(57, 57, 57);
+  color: rgb(255, 255, 255);
+  padding-bottom: 48px;
+  a {
+      color: rgb(255, 255, 255);
+  }
+}
+
+.exo {
+  font-family: 'Exo', 'DejaVu Sans', Arial, Helvetica, sans-serif;
+}

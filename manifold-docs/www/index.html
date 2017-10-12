@@ -19,17 +19,18 @@
     <link href="https://fonts.googleapis.com/css?family=Crete+Round:400italic,400" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,300,400italic,400,600italic,600,700italic,700,800italic,800"
           rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Exo:600" rel="stylesheet">
     <link href="/css/site.css" rel="stylesheet" type="text/css">
     <link href="/css/prism.css" rel="stylesheet" type="text/css">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src=".js/prism.js"></script>
+    <script src="/js/prism.js"></script>
 </head>
 
 <body>
 
 <div class="container">
-<nav class="navbar navbar-fixed-top">
+<nav class="navbar navbar-fixed-top navbar-dark">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -39,8 +40,8 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">
-                <img src="/images/logo_64px.png">
+            <a class="navbar-brand exo" href="/">
+                <img src="/images/logo_white_64px.png"> Manifold
             </a>
         </div>
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -48,20 +49,20 @@
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
                 <li><a href="/docs.html">Docs</a></li>
-                <!--<li class="dropdown">-->
-                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Projects <span class="caret"></span></a>-->
-                    <!--<ul class="dropdown-menu">-->
+                <li><a href="https://gitter.im/manifold-io/Lobby#">Chat</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Projects <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
                         <!--<li><a href="#">Core Enhancements</a></li>-->
                         <!--<li><a href="#">I/O Enhancements</a></li>-->
                         <!--<li role="separator" class="divider"></li>-->
-                        <!--<li><a href="#">Manifold Templates</a></li>-->
-                        <!--<li><a href="#">Manifold Templates</a></li>-->
-                    <!--</ul>-->
-                <!--</li>-->
-                <!--<li><a href="/docs.html">Chat</a></li>-->
+                        <li><a href="/manifold-templates.html">Manifold Templates</a></li>
+                    </ul>
+                </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://github.com/manifold-systems/manifold"><i class="fa fa-github" aria-hidden="true"></i> Github</a></li>
+                <li><a href="https://twitter.com/manifoldsystems"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                <li><a href="https://github.com/manifold-systems/manifold"><i class="fa fa-github" aria-hidden="true"></i></a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
@@ -70,65 +71,112 @@
 
 <div class="container">
 
-<div class="index-title text-center">
-    <h1>
-        <img src="./images/logo_512px.png"> Manifold
-    </h1>
 </div>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <p>
+<!--  close container-->
+
+<div class="container hero-container">
+    <div class="row index-title">
+        <div class="col-md-10 col-md-offset-1  text-center">
+            <h1 class="exo">
+                <img src="./images/logo_512px.png"> Manifold
+            </h1>
+            <p class="main-copy">
                 Manifold is a unique framework that allows developers to dynamically and seamlessly extend
-                Java's type system, adding new types and modifying existing types. Building on this core framework
-                Manifold provides features to make Java development more appealing and productive.
+                Java's type system. Building on this core framework Manifold provides features to make Java
+                development more appealing and productive.
             </p>
         </div>
     </div>
+
+    <div class="col-md-10 col-md-offset-1  text-center">
+        <p>
+            <a id="install-btn" href="/docs.html#setup" class="btn btn-primary btn-lg">Get Manifold</a>
+        </p>
+    </div>
+
 </div>
 
-<div class="index-demo live-demo text-center">
-    <h4>Demo: Properties File Access</h4>
-    <p>
-        This demo shows type-safe access to a Properties file from within java
-        <br/>
-        <br/>
-    </p>
-    <img src="./images/man_properties.gif">
-</div>
+<div class="wut-container">
+    <div class="container">
+        <div class="row text-center">
+            <h1>What Can Manifold Do?</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="text-center">Meta-programming</h2>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-10 col-md-offset-1">
-            <hr/>
+                <p>
+                    Type-safe, direct access to your data. Eliminate code generators. Minimize build time.
+                </p>
+
+            </div>
+
+            <div class="col-md-4">
+                <h2 class="text-center">Extensions</h2>
+
+                <p>Add methods to existing Java classes such as String, List, and File.
+                    Eliminate boilerplate code involving "Util" and "Manager" libraries.</p>
+
+            </div>
+
+            <div class="col-md-4">
+                <h2 class="text-center">Structural Typing</h2>
+
+                <p>Unify disparate APIs. Bridge software components you do not control.</p>
+
+            </div>
+
         </div>
     </div>
 </div>
 
-<div class="container">
+<div class="container live-demo-container">
+    <div class="row ">
+        <div class="col-md-12">
+            <div class="index-demo live-demo text-center">
+                <h1>Demo: Properties File Access</h1>
+                <p>
+                    This demo shows type-safe access to a Properties file from within java
+                    <br/>
+                    <br/>
+                </p>
+                <img src="./images/man_properties.gif">
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="container marketing-container">
+    <div class="row text-center">
+        <h1>Manifold Features</h1>
+    </div>
+
     <div class="row">
 
         <div class="col-md-4">
-            <h2>Type Safe</h2>
+            <h2 class="text-center">Type Safe</h2>
 
-            <p>Manifold allows you to treat non-java resources as first class data sources in your development process
+            <p>Manifold allows you to treat non-java resources as first class data sources in your development
+                process
                 with transparent type-safe bindings: no more Maps of Strings, no more codegen.</p>
 
         </div>
 
         <div class="col-md-4">
-            <h2>Seamless</h2>
+            <h2 class="text-center">Seamless</h2>
 
-            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and start
+            <p>Manifold is compatible with all java build systems. Simply add the manifold jar to your classpath and
+                start
                 taking advantage of it, no additional build-system specific plugins are required.</p>
 
         </div>
 
         <div class="col-md-4">
-            <h2>Practical</h2>
+            <h2 class="text-center">Practical</h2>
 
-            <p>Manifold ships with support for practical development needs: Json, improved core collection and
+            <p>Manifold ships with support for practical development needs: JSON, improved core Java collections and
                 I/O APIs, templates, etc.</p>
 
             <p>All available out of the box.</p>
@@ -137,6 +185,23 @@
 
     </div>
 </div>
+
+<div class="container contact-container">
+    <div class="row ">
+        <div class="col-md-12">
+            <div class="index-demo live-demo text-center">
+                <h2>Contact Us</h2>
+                <p>
+                    <a href="mailto:info@manifold.systems">info@manifold.systems</a> |
+                    <a href="https://twitter.com/manifoldsystems">@manifoldsystems</a> |
+                    <a href="https://gitter.im/manifold-io/Lobby#">gitter.im</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div>
 
 </div>
 

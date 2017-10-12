@@ -19,15 +19,16 @@
     <link href="https://fonts.googleapis.com/css?family=Crete+Round:400italic,400" rel="stylesheet" type="text/css">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,300,400italic,400,600italic,600,700italic,700,800italic,800"
           rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Exo:600" rel="stylesheet">
     <link href="/css/site.css" rel="stylesheet" type="text/css">
     <link href="/css/prism.css" rel="stylesheet" type="text/css">
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha256-k2WSCIexGzOj3Euiig+TlR8gA0EmPjuc79OEeY5L45g=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-    <script src=".js/prism.js"></script>
+    <script src="/js/prism.js"></script>
 </head>
 <body>
 <div class="container">
-<nav class="navbar navbar-fixed-top">
+<nav class="navbar navbar-fixed-top navbar-dark">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -37,8 +38,8 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="/">
-                <img src="/images/logo_64px.png">
+            <a class="navbar-brand exo" href="/">
+                <img src="/images/logo_white_64px.png"> Manifold
             </a>
         </div>
         <!-- Collect the nav links, forms, and other content for toggling -->
@@ -46,28 +47,30 @@
             <ul class="nav navbar-nav">
                 <li><a href="/">Home</a></li>
                 <li><a href="/docs.html">Docs</a></li>
-                <!--<li class="dropdown">-->
-                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Projects <span class="caret"></span></a>-->
-                    <!--<ul class="dropdown-menu">-->
+                <li><a href="https://gitter.im/manifold-io/Lobby#">Chat</a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Projects <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
                         <!--<li><a href="#">Core Enhancements</a></li>-->
                         <!--<li><a href="#">I/O Enhancements</a></li>-->
                         <!--<li role="separator" class="divider"></li>-->
-                        <!--<li><a href="#">Manifold Templates</a></li>-->
-                        <!--<li><a href="#">Manifold Templates</a></li>-->
-                    <!--</ul>-->
-                <!--</li>-->
-                <!--<li><a href="/docs.html">Chat</a></li>-->
+                        <li><a href="/manifold-templates.html">Manifold Templates</a></li>
+                    </ul>
+                </li>
             </ul>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="https://github.com/manifold-systems/manifold"><i class="fa fa-github" aria-hidden="true"></i> Github</a></li>
+                <li><a href="https://twitter.com/manifoldsystems"><i class="fa fa-twitter" aria-hidden="true"></i></a></li>
+                <li><a href="https://github.com/manifold-systems/manifold"><i class="fa fa-github" aria-hidden="true"></i></a></li>
             </ul>
         </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
 </nav>
 </div>
 <div class="container">
+<div class="row">
+<div class="col-md-3">
 <div class="docs-toc">
-    <div class="toc-title">Contents</div>
+    <h2>Contents</h2>
     <ul>
         <li><a href="#manifold_in_a_nutshell">Manifold in a Nutshell</a></li>
         <li class="sub"><a href="#type_manifolds">Type Manifolds</a></li>
@@ -99,9 +102,12 @@
         <li class="sub"><a href="#dynamic_typing_with_icallhandler">Dynamic Typing with `ICallHandler`</a></li>
         <li><a href="#ide__intellij_idea">IDE -- IntelliJ IDEA</a></li>
         <li><a href="#use_with_other_jvm_languages">Use with other JVM Languages</a></li>
+        <li><a href="#philosophy">Philosophy</a></li>
         <li><a href="#license">License</a></li>
     </ul>
 </div>
+</div>
+<div class="col-md-9">
 <h2><a class="toc_anchor" name="manifold_in_a_nutshell"> </a>Manifold in a Nutshell</h2>
 <p>At its core <a href="https://manifold.systems/">Manifold</a> is a unique framework to dynamically and seamlessly extend
 Java's type system. Building on this core framework Manifold provides a set of
@@ -774,12 +780,12 @@ it is clear the methods are call-compatible from the perspective of <code>Capita
 <pre><code class="language-java">Capitalizer cap = (Capitalizer) new MyCapitalizer();
 CharSequence properName = cap.capitalize(&quot;tigers&quot;);
 </code></pre>
-<p><code>MyCapitalizer</code>???s method can be called with <code>Capitalizer</code>???s <code>String</code> parameter because <code>MyCapitalizer</code>???s
-<code>CharSequence</code> parameter is assignable from <code>String</code> ??? <em>contravariant</em> parameter types support
-call-compatibility. Similarly we can accept <code>MyCapitaizer</code>???s <code>String</code> return type because it is
-assignable to <code>Capitalizer</code>???s <code>CharSequence</code> return type ??? <em>covariant</em> return types support
-call-compatibility. Therefore, even though their method signatures aren???t identical, <code>MyCapitalizer</code> is
-structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>???s methods.</p>
+<p><code>MyCapitalizer</code>'s method can be called with <code>Capitalizer</code>'s <code>String</code> parameter because <code>MyCapitalizer</code>'s
+<code>CharSequence</code> parameter is assignable from <code>String</code> -- <em>contravariant</em> parameter types support
+call-compatibility. Similarly we can accept <code>MyCapitaizer</code>'s <code>String</code> return type because it is
+assignable to <code>Capitalizer</code>'s <code>CharSequence</code> return type -- <em>covariant</em> return types support
+call-compatibility. Therefore, even though their method signatures aren't identical, <code>MyCapitalizer</code> is
+structurally assignable to <code>Capitalizer</code> because it is safe to use in terms of <code>Capitalizer</code>'s methods.</p>
 <p>Signature variance also supports primitive types.  You may have spotted this in the <code>Component</code>
 class referenced earlier in the <code>Coordinate</code> example where <code>Component.getX()</code> returns <code>int</code>, not <code>double</code>
 as declared in <code>Coordinate.getX()</code>. Because <code>int</code> coerces to <code>double</code> with no loss of precision
@@ -917,6 +923,12 @@ Changes you make are instantly available in your code.</p>
 compiler.  It's also designed for use within other JVM languages via the <em>plugin host</em> API. You can
 implement this API to host Manifold from within another JVM language.</p>
 <p>See <em>manifold.api.host.IManifoldHost</em>.</p>
+<h2><a class="toc_anchor" name="philosophy"> </a>Philosophy</h2>
+<p>Our goal is to improve Java by working with it, not against it.  For instance, we're not out
+to bolt on new features involving new keywords or new grammar -- Java should look like Java.
+Rather Manifold is about empowering Java from the <em>outside</em>.  Thus, developers using
+Manifold don't need to learn a new way of using or declaring things, instead Manifold enables
+them to access a whole new world of types and extensions using the Java they already know.</p>
 <h2><a class="toc_anchor" name="license"> </a>License</h2>
 <h3>Open Source</h3>
 <p>Open source Manifold is free and licensed under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Appache 2.0</a> license.<br />
@@ -929,6 +941,7 @@ support?  You can try Manifold free for 30 days.  License: $99 per floating deve
 <p>You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
 you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating
 developer workstation and year.</p>
+</div>
 </div>
 </body>
 </html>

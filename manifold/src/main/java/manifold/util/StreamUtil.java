@@ -322,7 +322,7 @@ public class StreamUtil
         copy.mkdir();
         for( File child : fileOrDirectory.listFiles() )
         {
-          copy( child, copy );
+          copy( child, copy, filter );
         }
       }
       else

@@ -1,6 +1,12 @@
 <%@ extends mr.Hyde.BaseTemplate %>
 
+<div class="row">
+<div class="col-md-3">
+
 <%@ include docs_index %>
+
+</div>
+<div class="col-md-9">
 
 ## ${anchor("Manifold in a Nutshell")}
 
@@ -877,12 +883,12 @@ Capitalizer cap = (Capitalizer) new MyCapitalizer();
 CharSequence properName = cap.capitalize("tigers");
 ```
 
-`MyCapitalizer`???s method can be called with `Capitalizer`???s `String` parameter because `MyCapitalizer`???s
-`CharSequence` parameter is assignable from `String` ??? _contravariant_ parameter types support
-call-compatibility. Similarly we can accept `MyCapitaizer`???s `String` return type because it is
-assignable to `Capitalizer`???s `CharSequence` return type ??? _covariant_ return types support
-call-compatibility. Therefore, even though their method signatures aren???t identical, `MyCapitalizer` is
-structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`???s methods.
+`MyCapitalizer`'s method can be called with `Capitalizer`'s `String` parameter because `MyCapitalizer`'s
+`CharSequence` parameter is assignable from `String` -- _contravariant_ parameter types support
+call-compatibility. Similarly we can accept `MyCapitaizer`'s `String` return type because it is
+assignable to `Capitalizer`'s `CharSequence` return type -- _covariant_ return types support
+call-compatibility. Therefore, even though their method signatures aren't identical, `MyCapitalizer` is
+structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`'s methods.
 
 Signature variance also supports primitive types.  You may have spotted this in the `Component`
 class referenced earlier in the `Coordinate` example where `Component.getX()` returns `int`, not `double`
@@ -1061,6 +1067,13 @@ implement this API to host Manifold from within another JVM language.
 
 See _manifold.api.host.IManifoldHost_. 
 
+## ${anchor("Philosophy")}
+
+Our goal is to improve Java by working with it, not against it.  For instance, we're not out 
+to bolt on new features involving new keywords or new grammar -- Java should look like Java. 
+Rather Manifold is about empowering Java from the _outside_.  Thus, developers using
+Manifold don't need to learn a new way of using or declaring things, instead Manifold enables 
+them to access a whole new world of types and extensions using the Java they already know.
 
 ## ${anchor("License")}
 
@@ -1077,3 +1090,5 @@ support?  You can try Manifold free for 30 days.  License: $99 per floating deve
 You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
 you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating 
 developer workstation and year.
+
+</div>
