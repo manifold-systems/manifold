@@ -1,6 +1,5 @@
 package manifold.ext;
 
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
