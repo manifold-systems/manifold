@@ -1,0 +1,16 @@
+
+description = 'Manifold :: Templates Test'
+dependencies {
+  compile project(':manifold-templates')
+  testCompile group: 'junit', name: 'junit', version:'4.12'
+  testCompile files(sourceSets.test.output.resourcesDir)
+}
+
+compileTestJava.dependsOn(processTestResources)
+
+compileTestJava {
+  doFirst {
+    logger.quiet 'Muh test classpath:'
+    classpath.files.each { File file -> logger.quiet(file.absolutePath) }
+  }
+}

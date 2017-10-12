@@ -1,0 +1,6 @@
+
+description = 'Manifold :: Templates'
+dependencies {
+  compile project(':manifold-ext')
+  compileOnly(group: 'com.sparkjava', name: 'spark-core', version:'2.6.0')
+}

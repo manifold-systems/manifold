@@ -1,0 +1,39 @@
+wrapper {
+  gradleVersion = '4.2.1'
+}
+
+allprojects  {
+  apply plugin: 'maven'
+
+  group = 'systems.manifold'
+  version = '0.1-alpha-1-SNAPSHOT'
+}
+
+subprojects {
+  apply plugin: 'java'
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+
+  
+  repositories {
+    mavenLocal()
+    
+    maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+    maven { url "http://repo.maven.apache.org/maven2" }
+  }
+ 
+  dependencies {
+    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
+  }
+
+  if(project.name != 'manifold') {
+//    compileJava.options.compilerArgs += '-Xplugin:Manifold'
+//    compileTestJava.options.compilerArgs += '-Xplugin:Manifold'
+    project.tasks.withType(JavaCompile) {
+      options.compilerArgs += '-Xplugin:Manifold'
+    }
+    //TODO add encoding
+
+  }
+  
+}

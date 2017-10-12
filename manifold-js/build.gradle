@@ -1,0 +1,5 @@
+
+description = 'Manifold :: Javascript'
+dependencies {
+  compile project(':manifold')
+}

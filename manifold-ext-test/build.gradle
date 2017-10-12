@@ -1,0 +1,39 @@
+
+description = 'Manifold :: ExtensionTest'
+dependencies {
+  compile project(':manifold-ext')
+  compile group: 'junit', name: 'junit', version:'4.12'
+  testCompile files(sourceSets.test.output.resourcesDir)
+}
+
+compileTestJava.dependsOn(processTestResources)
+
+compileTestJava {
+  doFirst {
+    logger.quiet 'Muh test classpath:'
+    classpath.files.each { File file -> logger.quiet(file.absolutePath) }
+  }
+}
+
+test {
+//  classpath = sourceSets.main.output.resourcesDir
+//  doLast {
+//    classpath.each { println it }
+//  }
+  // set JVM arguments for the test JVM(s)
+
+//  jvmArgs '-Xplugin:Manifold'
+
+  doFirst {
+    logger.quiet 'Muh test execution classpath:'
+    classpath.files.each { File file -> logger.quiet(file.absolutePath) }
+  }
+
+}
+
+//  task printClasspath {
+//    doLast {
+//      configurations.testCompile.each { println it }
+//      configurations.testRuntime.each { println it }
+//    }
+//  }

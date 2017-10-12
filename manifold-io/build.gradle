@@ -1,0 +1,14 @@
+
+description = 'Manifold :: IO'
+dependencies {
+  compile project(':manifold')
+  compile project(':manifold-ext')
+  compile project(':manifold-collections')
+  compile project(':manifold-text')
+}
+
+jar {
+  manifest {
+    attributes('Contains-Sources': 'java,class') // class files as source must be available for extension method classes
+  }
+}

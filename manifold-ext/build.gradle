@@ -1,0 +1,37 @@
+
+description = 'Manifold :: Extensions'
+dependencies {
+  compile project(':manifold')
+}
+
+//compileJava.options.verbose = true
+//compileJava.options.fork = true
+//compileJava.options.forkOptions
+compileJava {
+  doFirst {
+    logger.quiet 'Muh classpath:'
+    classpath.files.each { File file -> logger.quiet(file.absolutePath) }
+  }
+}
+
+jar {
+  manifest {
+    attributes('Contains-Sources': 'class') // class files as source must be available for MapStructExt
+  }
+}
+
+/*
+original MF:
+Implementation-Title: Manifold :: Extensions
+Implementation-Version: 0.1-alpha-1-SNAPSHOT
+Implementation-Vendor-Id: systems.manifold
+Contains-Sources: class
+
+maven stuff
+Implementation-Title: ${project.name}
+Implementation-Version: ${project.version}
+Implementation-Vendor-Id: ${project.groupId}
+Implementation-Vendor: ${project.organization.name}
+Implementation-URL: ${project.url}
+
+*/

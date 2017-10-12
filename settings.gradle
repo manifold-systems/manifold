@@ -1,0 +1,36 @@
+rootProject.name = 'manifold-parent'
+include ':manifold'
+include ':manifold-test'
+include ':manifold-ext'
+include ':manifold-ext-test'
+include ':manifold-io'
+include ':manifold-io-test'
+include ':manifold-json'
+include ':manifold-json-test'
+include ':manifold-js'
+include ':manifold-js-test'
+include ':manifold-text'
+include ':manifold-text-test'
+include ':manifold-collections'
+include ':manifold-collections-test'
+include ':manifold-templates'
+include ':manifold-templates-test'
+include ':manifold-docs'
+
+//project(':manifold').projectDir = "$rootDir/manifold" as File
+//project(':manifold-test').projectDir = "$rootDir/manifold-test" as File
+//project(':manifold-ext').projectDir = "$rootDir/manifold-ext" as File
+//project(':manifold-ext-test').projectDir = "$rootDir/manifold-ext-test" as File
+//project(':manifold-io').projectDir = "$rootDir/manifold-io" as File
+//project(':manifold-io-test').projectDir = "$rootDir/manifold-io-test" as File
+//project(':manifold-json').projectDir = "$rootDir/manifold-json" as File
+//project(':manifold-json-test').projectDir = "$rootDir/manifold-json-test" as File
+//project(':manifold-js').projectDir = "$rootDir/manifold-js" as File
+//project(':manifold-js-test').projectDir = "$rootDir/manifold-js-test" as File
+//project(':manifold-text').projectDir = "$rootDir/manifold-text" as File
+//project(':manifold-text-test').projectDir = "$rootDir/manifold-text-test" as File
+//project(':manifold-collections').projectDir = "$rootDir/manifold-collections" as File
+//project(':manifold-collections-test').projectDir = "$rootDir/manifold-collections-test" as File
+//project(':manifold-templates').projectDir = "$rootDir/manifold-templates" as File
+//project(':manifold-templates-test').projectDir = "$rootDir/manifold-templates-test" as File
+//project(':manifold-docs').projectDir = "$rootDir/manifold-docs" as File

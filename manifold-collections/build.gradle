@@ -1,0 +1,19 @@
+
+description = 'Manifold :: Collections'
+dependencies {
+  compile project(':manifold')
+  compile project(':manifold-ext')
+}
+
+compileJava {
+  doFirst {
+    logger.quiet 'Muh classpath:'
+    classpath.files.each { File file -> logger.quiet(file.absolutePath) }
+  }
+}
+
+jar {
+  manifest {
+    attributes('Contains-Sources': 'java,class') // class files as source must be available for extension method classes
+  }
+}
