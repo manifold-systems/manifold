@@ -434,9 +434,69 @@ different types sharing a single name.  Additionally image classes are direct su
 <code>ImageIcon</code> class to conform with existing frameworks. As with all
 type manifolds there are no code gen files or other build steps involved.</p>
 <h3><a class="toc_anchor" name="javascript"> </a>JavaScript</h3>
-<p>:todo</p>
+<p>The JavaScript type manifold provides direct, type-safe access to JavaScript files
+as if they were Java files.</p>
+<p>Here we have JavaScript resource file, <code>abc/JsProgram.js</code>:</p>
+<pre><code class="language-javascript">var x = 1;
+
+function nextNumber() {
+  return x++;
+}
+
+function exampleFunction(x) {
+  return x + &quot; from Javascript&quot;;
+}
+</code></pre>
+<p>The type manifold maps type information directly to Java's type system so that
+this JavaScript program is accessible as a Java class:</p>
+<pre><code class="language-java">import abc.JsProgram;
+
+...
+
+  String hello = JsProgram.exampleFunction(&quot;Hello&quot;);
+  System.out.println(hello); // prints 'Hello from JavaScript'
+  
+  double next = JsProgram.nextNumber();
+  System.out.println(next); // prints '1'
+  next = JsProgram.nextNumber();
+  System.out.println(next); // prints '2'
+</code></pre>
+<p>In addition to JavaScript programs you can also access JavaScript <em>classes</em> directly.</p>
+<p>This JavaScript defines class <code>Person</code> from file `abc/Person.js':</p>
+<pre><code class="language-javascript">class Person {
+  constructor(firstName, lastName) {
+    this._f = firstName
+    this._l = lastName
+  }
+
+  displayName() {
+    return this._f + &quot; &quot; + this._l
+  }
+
+  get firstName() {
+    return this._f
+  }
+  set firstName(s) {
+    this._f = s
+  }
+
+  get lastName() {
+    return this._l
+  }
+  set lastName(s) {
+    this._l = s
+  }
+}
+</code></pre>
+<p>You can access this JavaScript class file directly as a Java class:</p>
+<pre><code class="language-java">import abc.Person;
+
+Person person = new Person(&quot;Joe&quot;, &quot;Bloe&quot;);
+String first = person.getFirstName();
+System.out.println(first);
+</code></pre>
 <h3><a class="toc_anchor" name="template_files"> </a>Template Files</h3>
-<p>:todo</p>
+<p>See project <a href="http://manifold.systems/manifold-templates.html">Manifold Templates</a>.</p>
 <h3><a class="toc_anchor" name="build_your_own_manifold"> </a>Build Your Own Manifold</h3>
 <p>:todo</p>
 <h2><a class="toc_anchor" name="extension_classes"> </a>Extension Classes</h2>

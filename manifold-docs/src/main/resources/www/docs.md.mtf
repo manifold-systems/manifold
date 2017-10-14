@@ -435,11 +435,81 @@ different types sharing a single name.  Additionally image classes are direct su
 
 ### ${anchor("JavaScript")}
 
-:todo
+The JavaScript type manifold provides direct, type-safe access to JavaScript files
+as if they were Java files.
+
+Here we have JavaScript resource file, `abc/JsProgram.js`:
+```javascript
+var x = 1;
+
+function nextNumber() {
+  return x++;
+}
+
+function exampleFunction(x) {
+  return x + " from Javascript";
+}
+```
+
+The type manifold maps type information directly to Java's type system so that
+this JavaScript program is accessible as a Java class:
+
+```java
+import abc.JsProgram;
+
+...
+
+  String hello = JsProgram.exampleFunction("Hello");
+  System.out.println(hello); // prints 'Hello from JavaScript'
+  
+  double next = JsProgram.nextNumber();
+  System.out.println(next); // prints '1'
+  next = JsProgram.nextNumber();
+  System.out.println(next); // prints '2'
+```
+
+In addition to JavaScript programs you can also access JavaScript _classes_ directly.
+
+This JavaScript defines class `Person` from file `abc/Person.js':
+```javascript
+class Person {
+  constructor(firstName, lastName) {
+    this._f = firstName
+    this._l = lastName
+  }
+
+  displayName() {
+    return this._f + " " + this._l
+  }
+
+  get firstName() {
+    return this._f
+  }
+  set firstName(s) {
+    this._f = s
+  }
+
+  get lastName() {
+    return this._l
+  }
+  set lastName(s) {
+    this._l = s
+  }
+}
+```
+
+You can access this JavaScript class file directly as a Java class:
+```java
+import abc.Person;
+
+Person person = new Person("Joe", "Bloe");
+String first = person.getFirstName();
+System.out.println(first);
+```
 
 ### ${anchor("Template Files")}
 
-:todo
+See project [Manifold Templates](http://manifold.systems/manifold-templates.html).
 
 ### ${anchor("Build Your Own Manifold")}
 
