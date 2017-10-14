@@ -88,16 +88,25 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       Tree parent = _tp.getParent( tree );
+      JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
       if( parent instanceof JCTree.JCVariableDecl )
       {
         ((JCTree.JCVariableDecl)parent).type = objectSym.type;
+
+        long parameterModifier = 8589934592L; // Flag.Flag.PARAMETER.value
+        if( (((JCTree.JCVariableDecl)parent).mods.flags & parameterModifier) != 0 )
+        {
+          objIdent.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).sym.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).vartype = objIdent;
+        }
       }
       else if( parent instanceof JCTree.JCWildcard )
       {
         JCTree.JCWildcard wildcard = (JCTree.JCWildcard)parent;
         wildcard.type = new Type.WildcardType( objectSym.type, wildcard.kind.kind, wildcard.type.tsym );
       }
-      tree = _tp.getTreeMaker().Ident( objectSym );
+      tree = objIdent;
       tree.type = objectSym.type;
     }
     result = tree;
@@ -141,13 +150,17 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
-      objIdent.type = objectSym.type;
       Tree parent = _tp.getParent( tree );
       if( parent instanceof JCTree.JCVariableDecl )
       {
         ((JCTree.JCVariableDecl)parent).type = objectSym.type;
-        ((JCTree.JCVariableDecl)parent).sym.type = objectSym.type;
-        ((JCTree.JCVariableDecl)parent).vartype = objIdent;
+        long parameterModifier = 8589934592L; // Flag.Flag.PARAMETER.value
+        if( (((JCTree.JCVariableDecl)parent).mods.flags & parameterModifier) != 0 )
+        {
+          objIdent.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).sym.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).vartype = objIdent;
+        }
       }
       else if( parent instanceof JCTree.JCWildcard )
       {
@@ -685,7 +698,7 @@ public class ExtensionTransformer extends TreeTranslator
     BasicJavacTask javacTask = JavaParser.instance().getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
-    if( Types.instance( javacTask.getContext() ).isAssignable( callHandlerSymbol.getFirst().asType(), classSymbol.getFirst().asType() ) )
+    if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
     {
       // Nominally implements ICallHandler
       return true;
@@ -703,7 +716,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( s instanceof Symbol.MethodSymbol )
       {
         List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)s).getParameters();
-        if( parameters.size() != 5 )
+        if( parameters.size() != 6 )
         {
           return false;
         }
@@ -712,9 +725,10 @@ public class ExtensionTransformer extends TreeTranslator
         Types types = Types.instance( javacTask.getContext() );
         return types.erasure( parameters.get( 0 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
                parameters.get( 1 ).asType().equals( symbols.stringType ) &&
-               types.erasure( parameters.get( 2 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 3 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 3 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 4 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType().equals( symbols.objectType );
+               parameters.get( 2 ).asType().equals( symbols.stringType ) &&
+               types.erasure( parameters.get( 3 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 4 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 5 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 5 ).asType()).getComponentType().equals( symbols.objectType );
       }
     }
     Type superclass = classSymbol.getSuperclass();

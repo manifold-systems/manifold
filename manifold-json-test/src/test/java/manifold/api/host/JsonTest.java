@@ -50,6 +50,18 @@ public class JsonTest extends TestCase
     Product thing = Product.create();
     thing.setPrice( 1.55 );
     assertEquals( 1.55, thing.getPrice() );
+
+    Product.dimensions dims = Product.dimensions.create();
+    dims.setLength( 3.0 );
+    dims.setWidth( 4.0 );
+    dims.setHeight( 5.0 );
+    thing.setDimensions( dims );
+    Product.dimensions dims2 = thing.getDimensions();
+    assertSame( dims, dims2 );
+
+    Bindings bindings = (Bindings)thing;
+    dims2 = (Product.dimensions)bindings.get( "dimensions" );
+    assertSame( dims, dims2 );
   }
 
   public void testStructuralIntefaceCasting()

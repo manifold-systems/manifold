@@ -394,9 +394,7 @@ Behind the scenes the properties type manifold creates a Java class projection o
 properties file, which reflects its hierarchy of properties.  As you develop your
 application, changes you make in
 the file are immediately available in your code with no user intervention in
-between -- no code gen files and no compiling between changes:
-
-<img src="images/man_properties.gif" alt="screencast" width=932 height=416/>
+between -- no code gen files and no compiling between changes.
 
 ### ${anchor("Image Files")}
 

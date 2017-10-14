@@ -164,7 +164,7 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
 
     String name = getName();
-    String identifier = addActualNameAnnotation( sb, indent, name );
+    String identifier = addActualNameAnnotation( sb, indent, name, false );
 
     sb.append( "@Structural\n" );
     indent( sb, indent );
@@ -172,12 +172,13 @@ public class JsonStructureType extends JsonSchemaType
     renderTopLevelFactoryMethods( sb, indent + 2 );
     for( String key : _members.keySet() )
     {
-      String propertyType = _members.get( key ).getName();
-      identifier = ManStringUtil.capitalize( addActualNameAnnotation( sb, indent + 2, key ) );
+      String propertyType = _members.get( key ).getIdentifier();
+      identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
       sb.append( propertyType ).append( " get" ).append( identifier ).append( "();\n" );
       if( mutable )
       {
+        addActualNameAnnotation( sb, indent + 2, key, true );
         indent( sb, indent + 2 );
         sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
       }
@@ -210,14 +211,14 @@ public class JsonStructureType extends JsonSchemaType
       {
         sb.append( ", " );
       }
-      sb.append( superType.getName() );
+      sb.append( superType.getIdentifier() );
     }
     return "";
   }
 
-  private String addActualNameAnnotation( StringBuilder sb, int indent, String name )
+  private String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
   {
-    String identifier = JsonUtil.makeIdentifier( name );
+    String identifier = capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
     if( !identifier.equals( name ) )
     {
       indent( sb, indent );
@@ -229,9 +230,10 @@ public class JsonStructureType extends JsonSchemaType
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )
   {
     indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " create() {\n" );
+    String typeName = getIdentifier();
+    sb.append( "static " ).append( typeName ).append( " create() {\n" );
     indent( sb, indent );
-    sb.append( "  return (" ).append( getName() ).append( ")new javax.script.SimpleBindings();\n" );
+    sb.append( "  return (" ).append( typeName ).append( ")new javax.script.SimpleBindings();\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
@@ -264,43 +266,43 @@ public class JsonStructureType extends JsonSchemaType
     }
 
     indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " fromJson(String jsonText) {\n" );
+    sb.append( "static " ).append( typeName ).append( " fromJson(String jsonText) {\n" );
     indent( sb, indent );
-    sb.append( "  return (" ).append( getName() ).append( ")" ).append( Json.class.getName() ).append( ".fromJson(jsonText);\n" );
+    sb.append( "  return (" ).append( typeName ).append( ")" ).append( Json.class.getName() ).append( ".fromJson(jsonText);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
     indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(String url) {\n" );
+    sb.append( "static " ).append( typeName ).append( " fromJsonUrl(String url) {\n" );
     indent( sb, indent );
     sb.append( "  try {\n" );
     indent( sb, indent );
-    sb.append( "    return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(new java.net.URL(url));\n" );
+    sb.append( "    return (" ).append( typeName ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(new java.net.URL(url));\n" );
     indent( sb, indent );
     sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
     indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url) {\n" );
+    sb.append( "static " ).append( typeName ).append( " fromJsonUrl(java.net.URL url) {\n" );
     indent( sb, indent );
-    sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(url);\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
-
-    indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " fromJsonUrl(java.net.URL url, javax.script.Bindings json) {\n" );
-    indent( sb, indent );
-    sb.append( "  return (" ).append( getName() ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".postForJsonContent(url, json);\n" );
+    sb.append( "  return (" ).append( typeName ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".getJsonContent(url);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
     indent( sb, indent );
-    sb.append( "static " ).append( getName() ).append( " fromJsonFile(java.io.File file) {\n" );
+    sb.append( "static " ).append( typeName ).append( " fromJsonUrl(java.net.URL url, javax.script.Bindings json) {\n" );
+    indent( sb, indent );
+    sb.append( "  return (" ).append( typeName ).append( ")" ).append( ManUrlExt.class.getName() ).append( ".postForJsonContent(url, json);\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+
+    indent( sb, indent );
+    sb.append( "static " ).append( typeName ).append( " fromJsonFile(java.io.File file) {\n" );
     indent( sb, indent );
     sb.append( "  try {\n" );
     indent( sb, indent );
-    sb.append( "    return (" ).append( getName() ).append( ")fromJsonUrl(file.toURI().toURL());\n" );
+    sb.append( "    return (" ).append( typeName ).append( ")fromJsonUrl(file.toURI().toURL());\n" );
     indent( sb, indent );
     sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
     indent( sb, indent );

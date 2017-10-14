@@ -7,7 +7,7 @@ import manifold.ext.api.This;
 @Extension
 public class MyHashMapExt
 {
-  public static void fubar( @This HashMap thiz )
+  public static <K,V> void fubar( @This HashMap<K,V> thiz )
   {
   }
 }

@@ -21,4 +21,15 @@ public class MapStructTest extends TestCase
     assertEquals( 'q', mapStruct.charAt( 1 ) );
   }
 
+  public void testActualName()
+  {
+    HashMap<String, Object> map = new HashMap<>();
+    IMyStruct mapStruct = (IMyStruct)map;
+
+    mapStruct.setName( "fred" );
+    assertEquals( "fred", mapStruct.getName() );
+    assertEquals( "fred", map.get( "name" ) );
+    assertNull( map.get( "Name" ) );
+  }
+
 }

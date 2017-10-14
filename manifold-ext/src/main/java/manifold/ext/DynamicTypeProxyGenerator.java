@@ -2,6 +2,7 @@ package manifold.ext;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import manifold.api.type.ActualName;
 import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
@@ -94,6 +95,8 @@ public class DynamicTypeProxyGenerator
       return;
     }
 
+    ActualName anno = mi.getAnnotation( ActualName.class );
+    String actualName = anno == null ? "null" : "\""+anno.value()+"\"";
     Class returnType = mi.getReturnType();
     sb.append( "  public " )./*append( getTypeVarList( mi ) ).append( ' ' ).*/append( returnType.getCanonicalName() ).append( ' ' ).append( mi.getName() ).append( "(" );
     Class[] params = mi.getParameterTypes();
@@ -112,7 +115,7 @@ public class DynamicTypeProxyGenerator
                : "    return " )
       .append( maybeCastReturnType( returnType ) )
       //## todo: maybe we need to explicitly parameterize if the method is generic for some cases?
-      .append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
+      .append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( actualName ).append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
     Class<?>[] parameterTypes = mi.getParameterTypes();
     for( int i = 0; i < parameterTypes.length; i++ )
     {

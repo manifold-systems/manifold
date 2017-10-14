@@ -70,7 +70,7 @@ public class JsonImplCodeGen
       IJsonParentType type = e.getValue();
       if( type instanceof JsonStructureType )
       {
-        String simpleInnerIface = e.getValue().getName();
+        String simpleInnerIface = e.getValue().getIdentifier();
 
         String fqnInnerImpl = srcClass.getPackage() + '.' + srcClass.getSimpleName() + '.' + simpleInnerIface;
 
@@ -91,11 +91,9 @@ public class JsonImplCodeGen
       String key = e.getKey();
       String identifier = makePropertyName( key );
       IJsonType type = e.getValue();
-      String typeName = type.getName();
+      String implType = type.getIdentifier();
       if( type instanceof JsonStructureType )
       {
-        String implType = typeName;
-
         srcClass
           .addGetProperty( new SrcGetProperty( identifier, implType )
                              .body( new SrcStatementBlock()
@@ -110,11 +108,10 @@ public class JsonImplCodeGen
         IJsonType componentType = getComponentTypeSimple( type );
         if( type instanceof JsonListType && componentType instanceof JsonStructureType )
         {
-          String implType = typeName;
           srcClass
             .addGetProperty( new SrcGetProperty( identifier, implType )
                                .body( new SrcStatementBlock()
-                                        .addStatement( new SrcRawStatement().rawText( "return wrapList((List)_bindings.get(\"" + key + "\"), b ->  new " + componentType.getName() + "(b));" ) ) ) )
+                                        .addStatement( new SrcRawStatement().rawText( "return wrapList((List)_bindings.get(\"" + key + "\"), b ->  new " + componentType.getIdentifier() + "(b));" ) ) ) )
             .addSetProperty( new SrcSetProperty( identifier, List.class.getSimpleName() ) // Just List to be structurally assignable to the none impl structures
                                .body( new SrcStatementBlock()
                                         .addStatement( new SrcRawStatement().rawText( "_bindings.put(\"" + key + "\", unwrapList(" + SrcSetProperty.VALUE_PARAM + "));" ) ) ) );
@@ -125,14 +122,14 @@ public class JsonImplCodeGen
           if( type == DynamicType.instance() )
           {
             // No dynamic type, this is Java...  ¯\_(ツ)_/¯
-            typeName = Object.class.getSimpleName();
+            implType = Object.class.getSimpleName();
           }
 
           srcClass
-            .addGetProperty( new SrcGetProperty( identifier, typeName )
+            .addGetProperty( new SrcGetProperty( identifier, implType )
                                .body( new SrcStatementBlock()
-                                        .addStatement( new SrcRawStatement().rawText( "return (" + typeName + ")_bindings.get(\"" + key + "\");" ) ) ) )
-            .addSetProperty( new SrcSetProperty( identifier, typeName )
+                                        .addStatement( new SrcRawStatement().rawText( "return (" + implType + ")_bindings.get(\"" + key + "\");" ) ) ) )
+            .addSetProperty( new SrcSetProperty( identifier, implType )
                                .body( new SrcStatementBlock()
                                         .addStatement( new SrcRawStatement().rawText( "_bindings.put(\"" + key + "\", " + SrcSetProperty.VALUE_PARAM + ");" ) ) ) );
 

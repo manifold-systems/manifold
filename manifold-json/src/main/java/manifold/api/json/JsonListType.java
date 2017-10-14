@@ -24,7 +24,12 @@ public class JsonListType extends JsonSchemaType
 
   public String getName()
   {
-    return "java.util.List<" + _componentType.getName() + ">";
+    return "java.util.List<" + _componentType.getIdentifier() + ">";
+  }
+
+  public String getIdentifier()
+  {
+    return getName();
   }
 
   public void addChild( String name, IJsonParentType type )
@@ -51,7 +56,7 @@ public class JsonListType extends JsonSchemaType
   {
     if( _componentType != null && _componentType != compType )
     {
-      throw new IllegalStateException( "Component type already set to: " + _componentType.getName() + ", which is not the same as: " + compType.getName() );
+      throw new IllegalStateException( "Component type already set to: " + _componentType.getIdentifier() + ", which is not the same as: " + compType.getIdentifier() );
     }
     _componentType = compType;
   }

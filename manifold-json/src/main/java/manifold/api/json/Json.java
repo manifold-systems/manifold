@@ -225,6 +225,6 @@ public class Json
 
     // if the existing type is dynamic, override it with a more specific type,
     // otherwise the types disagree...
-    throw new RuntimeException( "Incompatible types: " + type1.getName() + " vs: " + type2.getName() );
+    throw new RuntimeException( "Incompatible types: " + type1.getIdentifier() + " vs: " + type2.getIdentifier() );
   }
 }

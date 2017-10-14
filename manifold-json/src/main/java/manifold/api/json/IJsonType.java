@@ -9,6 +9,8 @@ public interface IJsonType
 {
   String getName();
 
+  String getIdentifier();
+
   IJsonParentType getParent();
 
   default List<IJsonType> getDefinitions()

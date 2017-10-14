@@ -103,7 +103,7 @@ public class JsonSchemaTransformer
       result = makeFqn( type.getParent() );
       result += '.';
     }
-    return result + type.getLabel();
+    return result + JsonUtil.makeIdentifier( type.getLabel() );
   }
 
   private static void assertSchema( Bindings docObj )

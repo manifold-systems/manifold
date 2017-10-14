@@ -1,6 +1,7 @@
 package manifold.api.json;
 
 import java.util.List;
+import manifold.util.JsonUtil;
 
 /**
  */
@@ -25,6 +26,12 @@ public abstract class JsonSchemaType implements IJsonParentType
   public String getName()
   {
     return _name;
+  }
+
+  @Override
+  public String getIdentifier()
+  {
+    return JsonUtil.makeIdentifier( getName() );
   }
 
   @Override

@@ -17,20 +17,20 @@ import manifold.ext.api.This;
 public abstract class MapStructExt implements ICallHandler
 {
   @SuppressWarnings("unused")
-  public static Object call( @This Map thiz, Class iface, String name, Class returnType, Class[] paramTypes, Object[] args )
+  public static <K,V> Object call( @This Map<K,V> thiz, Class iface, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
   {
     assert paramTypes.length == args.length;
 
     Object value = ICallHandler.UNHANDLED;
     if( returnType != void.class && paramTypes.length == 0 )
     {
-      value = getValue( thiz, name, returnType, paramTypes, args );
+      value = getValue( thiz, name, actualName, returnType, paramTypes, args );
     }
     if( value == ICallHandler.UNHANDLED )
     {
       if( returnType == void.class )
       {
-        value = setValue( thiz, name, paramTypes, args );
+        value = setValue( thiz, name, actualName, paramTypes, args );
       }
       if( value == ICallHandler.UNHANDLED )
       {
@@ -48,18 +48,18 @@ public abstract class MapStructExt implements ICallHandler
     return value;
   }
 
-  private static Object getValue( Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object getValue( Map thiz, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
   {
     Object value;
-    value = getValue( thiz, name, "get", returnType, paramTypes, args );
+    value = getValue( thiz, name, actualName, "get", returnType, paramTypes, args );
     if( value == ICallHandler.UNHANDLED )
     {
-      value = getValue( thiz, name, "is", returnType, paramTypes, args );
+      value = getValue( thiz, name, actualName, "is", returnType, paramTypes, args );
     }
     return value;
   }
 
-  private static Object getValue( Map thiz, String name, String prefix, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object getValue( Map thiz, String name, String actualName, String prefix, Class returnType, Class[] paramTypes, Object[] args )
   {
     int getLen = prefix.length();
     if( name.length() > getLen && name.startsWith( prefix ) )
@@ -72,6 +72,11 @@ public abstract class MapStructExt implements ICallHandler
       }
       if( Character.isUpperCase( c ) )
       {
+        if( actualName != null )
+        {
+          return thiz.get( actualName );
+        }
+
         String key = name.substring( getLen );
         if( thiz.containsKey( key ) )
         {
@@ -88,7 +93,7 @@ public abstract class MapStructExt implements ICallHandler
     return ICallHandler.UNHANDLED;
   }
 
-  private static Object setValue( Map thiz, String name, Class[] paramTypes, Object[] args )
+  private static Object setValue( Map thiz, String name, String actualName, Class[] paramTypes, Object[] args )
   {
     int setLen = "set".length();
     if( paramTypes.length == 1 && name.length() > setLen && name.startsWith( "set" ) )
@@ -97,36 +102,39 @@ public abstract class MapStructExt implements ICallHandler
       if( c == '_' && name.length() > setLen + 1 )
       {
         setLen++;
-        c = name.charAt( setLen );
+        c = Character.toUpperCase( name.charAt( setLen ) );
       }
       String key;
       if( Character.isUpperCase( c ) )
       {
-        String upperKey = name.substring( setLen );
-        if( thiz.containsKey( upperKey ) )
+        if( actualName != null )
         {
-          key = upperKey;
+          key = actualName;
         }
         else
         {
-          String lowerKey = Character.toLowerCase( c ) + name.substring( 1 );
-          if( thiz.containsKey( lowerKey ) )
-          {
-            key = lowerKey;
-          }
-          else
+          String upperKey = name.substring( setLen );
+          if( thiz.containsKey( upperKey ) )
           {
             key = upperKey;
           }
+          else
+          {
+            String lowerKey = Character.toLowerCase( c ) + name.substring( 1 );
+            if( thiz.containsKey( lowerKey ) )
+            {
+              key = lowerKey;
+            }
+            else
+            {
+              key = upperKey;
+            }
+          }
         }
+        //noinspection unchecked
+        thiz.put( key, args[0] );
+        return null;
       }
-      else
-      {
-        key = name.substring( setLen );
-      }
-      //noinspection unchecked
-      thiz.put( key, args[0] );
-      return null;
     }
     return ICallHandler.UNHANDLED;
   }
