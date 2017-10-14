@@ -62,9 +62,9 @@
     <div class="row ">
         <div class="col-md-12">
             <div class="index-demo live-demo text-center">
-                <h1>Demo: Properties File Access</h1>
+                <h1>Demo: JSON Schema File Access</h1>
                 <p>
-                    This demo shows type-safe access to a Properties file from within java
+                    This demo shows type-safe access to a JSON Schema file from within Java
                     <br/>
                     <br/>
                 </p>
