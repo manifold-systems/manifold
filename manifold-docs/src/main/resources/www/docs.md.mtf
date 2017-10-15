@@ -115,7 +115,7 @@ to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:
 
-![print method](images/echo_example.png)
+![print method](images/ext_demo.png)
 
 
 There's a lot more to the extension manifold including [structural interfaces](#structural-interfaces), which are
@@ -805,27 +805,39 @@ mutable interfaces from the class.  As such your code is better suited to confin
 ### ${anchor("Extension Libraries")}
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
-Manifold includes several extension libraries for commonly used classes.
+Manifold includes several extension libraries for commonly used classe, many of which are adapted
+from Kotlin extensions.  Each library is available as a separate module or Jar file you can add 
+to your project separately depending on its needs.
 
 *   **Collections**
 
-    examples...
+    Defined in module `manifold-collections` this library extends:
+    - java.lang.Iterable
+    - java.util.Collection
+    - java.util.List
+    - java.util.stream.Stream
 
 *   **Text**
 
-    examples...
+    Defined in module `manifold-text` this library extends:
+    - java.lang.CharSequence
+    - java.lang.String
 
 *   **I/O**
 
-    examples...
+    Defined in module `manifold-io` this library extends:
+    - java.io.BufferedReader
+    - java.io.File
+    - java.io.InputStream
+    - java.io.OutputStream
+    - java.io.Reader
+    - java.io.Writer
 
-*   **Concurrent**
-
-    examples...
-
-*   **Web**
-
-    examples...
+*   **Web/Json**
+ 
+    Defined in module `manifold-json` this library extends:
+    - java.net.URL
+    - javax.script.Bindings
 
 
 ## ${anchor("Structural Interfaces")}
@@ -1119,11 +1131,7 @@ IntelliJ exposes all of Manifold's features. Use code completion to discover and
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
 Likewise, jump directly from references to data source elements and find usages of them in your code.
 Watch your JSON, images, properties, templates, and custom type manifolds come alive as types.
-Changes you make are instantly available in your code.
-
-:todo screencast for New | Extension Class
- 
-:todo insert screencast gif demonstrating some of this
+Changes you make are instantly available in your code:
 
 Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 

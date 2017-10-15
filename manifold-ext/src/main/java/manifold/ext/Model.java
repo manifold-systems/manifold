@@ -43,7 +43,10 @@ public class Model implements IModel
   {
     if( !getFiles().add( file ) )
     {
-      throw new IllegalStateException( "Model already contains " + file.getName() );
+      // do not throw here, file creation events sometimes come in late after the
+      // model is created with a newly created file e.g., the Create Extension Class dialog
+      //
+      // throw new IllegalStateException( "Model already contains " + file.getName() );
     }
   }
 

@@ -185,7 +185,7 @@ maintainable code. Perhaps the most beneficial aspect of extensions, however, re
 to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:</p>
-<p><img src="images/echo_example.png" alt="print method" /></p>
+<p><img src="images/ext_demo.png" alt="print method" /></p>
 <p>There's a lot more to the extension manifold including <a href="#structural-interfaces">structural interfaces</a>, which are
 similar to interfaces in the <a href="https://golang.org/">Go</a> language. We'll cover more later in this guide.</p>
 <h3><a class="toc_anchor" name="benefits"> </a>Benefits</h3>
@@ -720,27 +720,47 @@ mutable interfaces from the class.  As such your code is better suited to confin
 <code>List</code> operations on otherwise fully mutable lists.</p>
 <h3><a class="toc_anchor" name="extension_libraries"> </a>Extension Libraries</h3>
 <p>An extension library is a logical grouping of functionality defined by a set of extension classes.
-Manifold includes several extension libraries for commonly used classes.</p>
+Manifold includes several extension libraries for commonly used classe, many of which are adapted
+from Kotlin extensions.  Each library is available as a separate module or Jar file you can add
+to your project separately depending on its needs.</p>
 <ul>
 <li>
 <p><strong>Collections</strong></p>
-<p>examples...</p>
+<p>Defined in module <code>manifold-collections</code> this library extends:</p>
+<ul>
+<li>java.lang.Iterable</li>
+<li>java.util.Collection</li>
+<li>java.util.List</li>
+<li>java.util.stream.Stream</li>
+</ul>
 </li>
 <li>
 <p><strong>Text</strong></p>
-<p>examples...</p>
+<p>Defined in module <code>manifold-text</code> this library extends:</p>
+<ul>
+<li>java.lang.CharSequence</li>
+<li>java.lang.String</li>
+</ul>
 </li>
 <li>
 <p><strong>I/O</strong></p>
-<p>examples...</p>
+<p>Defined in module <code>manifold-io</code> this library extends:</p>
+<ul>
+<li>java.io.BufferedReader</li>
+<li>java.io.File</li>
+<li>java.io.InputStream</li>
+<li>java.io.OutputStream</li>
+<li>java.io.Reader</li>
+<li>java.io.Writer</li>
+</ul>
 </li>
 <li>
-<p><strong>Concurrent</strong></p>
-<p>examples...</p>
-</li>
-<li>
-<p><strong>Web</strong></p>
-<p>examples...</p>
+<p><strong>Web/Json</strong></p>
+<p>Defined in module <code>manifold-json</code> this library extends:</p>
+<ul>
+<li>java.net.URL</li>
+<li>javax.script.Bindings</li>
+</ul>
 </li>
 </ul>
 <h2><a class="toc_anchor" name="structural_interfaces"> </a>Structural Interfaces</h2>
@@ -973,9 +993,7 @@ the map, otherwise <code>Map</code> behaves much like an expando object.</p>
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
 Likewise, jump directly from references to data source elements and find usages of them in your code.
 Watch your JSON, images, properties, templates, and custom type manifolds come alive as types.
-Changes you make are instantly available in your code.</p>
-<p>:todo screencast for New | Extension Class</p>
-<p>:todo insert screencast gif demonstrating some of this</p>
+Changes you make are instantly available in your code:</p>
 <p>Install the plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
 <h2><a class="toc_anchor" name="use_with_other_jvm_languages"> </a>Use with other JVM Languages</h2>
 <p>Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java
