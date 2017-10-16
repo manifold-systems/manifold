@@ -4,7 +4,6 @@ import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.host.ITypeLoader;
-import manifold.api.type.ClassType;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Structural;
 import manifold.util.ManClassUtil;
@@ -59,11 +58,5 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
     model.report( errorHandler );
     model.getType().render( sb, 0, true );
     return sb.toString();
-  }
-
-  @Override
-  public ClassType getClassType( String fqn )
-  {
-    return ClassType.JavaClass;
   }
 }

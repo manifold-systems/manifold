@@ -8,7 +8,6 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.type.ClassType;
 import manifold.api.type.JavaTypeManifold;
 
 /**
@@ -46,11 +45,5 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
     SrcClass srcClass = new ImageCodeGen( model._url, topLevelFqn ).make();
     StringBuilder sb = srcClass.render( new StringBuilder(), 0 );
     return sb.toString();
-  }
-
-  @Override
-  public ClassType getClassType( String fqn )
-  {
-    return ClassType.Class;
   }
 }

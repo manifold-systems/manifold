@@ -13,7 +13,6 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.host.ITypeLoader;
-import manifold.api.type.ClassType;
 import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Extension;
@@ -25,6 +24,7 @@ import manifold.util.StreamUtil;
  */
 public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeProcessor
 {
+  @SuppressWarnings("WeakerAccess")
   public static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
@@ -126,12 +126,6 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   protected boolean isInnerType( String topLevel, String relativeInner )
   {
     return false;
-  }
-
-  @Override
-  public ClassType getClassType( String fqn )
-  {
-    return ClassType.Class;
   }
 
   @Override

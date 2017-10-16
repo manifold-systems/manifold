@@ -7,7 +7,6 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.type.ClassType;
 import manifold.api.type.JavaTypeManifold;
 
 /**
@@ -41,11 +40,5 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
     //## todo: use errorhandler(), look at JsonImplSourceProvider
     String str = srcClass.render(new StringBuilder(), 0).toString();
     return str;
-  }
-
-  @Override
-  public ClassType getClassType( String fqn )
-  {
-    return ClassType.Class;
   }
 }

@@ -8,7 +8,6 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.ITypeLoader;
-import manifold.api.type.ClassType;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.ManClassUtil;
 
@@ -83,11 +82,5 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
     model.report( errorHandler );
     srcClass.render( sb, 0 );
     return sb.toString();
-  }
-
-  @Override
-  public ClassType getClassType( String fqn )
-  {
-    return ClassType.Class;
   }
 }
