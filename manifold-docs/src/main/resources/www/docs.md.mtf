@@ -155,7 +155,10 @@ Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
 ### ${anchor("Maven")}
 
-Add the following to your Maven pom.xml file:
+Add manifold artifacts that suite your project's needs.  The minimum requirements are to 
+include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
+argument as a Java compiler argument:
+
 ```xml
   <dependencies>
     <!--Core Manifold support, includes properties and image manifolds-->
@@ -259,7 +262,9 @@ Add the following to your Maven pom.xml file:
 
 ### ${anchor("Gradle")}
 
-Add the following to your build.gradle script:
+Add manifold artifacts that suite your project's needs.  The minimum requirements are to 
+include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
+argument as a Java compiler argument:
 
 ```groovy
 dependencies {

@@ -213,7 +213,9 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <p>That's all.</p>
 <p>Manifold currently works with Java 8.  Support for Java 9 is coming soon.</p>
 <h3><a class="toc_anchor" name="maven"> </a>Maven</h3>
-<p>Add the following to your Maven pom.xml file:</p>
+<p>Add manifold artifacts that suite your project's needs.  The minimum requirements are to
+include the core <code>manifold</code> artifact and <code>tools.jar</code> and add the <code>-Xplugin:Manifold</code>
+argument as a Java compiler argument:</p>
 <pre><code class="language-xml">  &lt;dependencies&gt;
     &lt;!--Core Manifold support, includes properties and image manifolds--&gt;
     &lt;dependency&gt;
@@ -314,7 +316,9 @@ it incrementally without having to rewrite classes or conform to a new way of do
   &lt;/profiles&gt;
 </code></pre>
 <h3><a class="toc_anchor" name="gradle"> </a>Gradle</h3>
-<p>Add the following to your build.gradle script:</p>
+<p>Add manifold artifacts that suite your project's needs.  The minimum requirements are to
+include the core <code>manifold</code> artifact and <code>tools.jar</code> and add the <code>-Xplugin:Manifold</code>
+argument as a Java compiler argument:</p>
 <pre><code class="language-groovy">dependencies {
   // Core Manifold support, includes properties and image manifolds
   compile group: 'systems.manifold', name: 'manifold', version: '0.1-SNAPSHOT'
