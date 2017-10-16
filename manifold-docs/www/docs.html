@@ -215,11 +215,68 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <h3><a class="toc_anchor" name="maven"> </a>Maven</h3>
 <p>Add the following to your Maven pom.xml file:</p>
 <pre><code class="language-xml">  &lt;dependencies&gt;
+    &lt;!--Core Manifold support, includes properties and image manifolds--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
-      &lt;artifactId&gt;manifold-all&lt;/artifactId&gt;
+      &lt;artifactId&gt;manifold&lt;/artifactId&gt;
       &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
     &lt;/dependency&gt;
+    
+    &lt;!--Support for structural typing and extensions--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-ext&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--JSON and JSchema support--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-json&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--JavaScript support--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-js&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--Template support--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-templates&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--Collections extensions--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-collections&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--I/O extensions--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-io&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--I/O extensions--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-io&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;
+    
+    &lt;!--Text extensions--&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-text&lt;/artifactId&gt;
+      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+    &lt;/dependency&gt;    
   &lt;/dependencies&gt;
 
   &lt;build&gt;
@@ -236,35 +293,59 @@ it incrementally without having to rewrite classes or conform to a new way of do
     &lt;/plugins&gt;
   &lt;/build&gt;
 
-&lt;profiles&gt;
-  &lt;profile&gt;
-    &lt;id&gt;internal.tools-jar&lt;/id&gt;
-    &lt;activation&gt;
-      &lt;file&gt;
-        &lt;exists&gt;${java.home}/../lib/tools.jar&lt;/exists&gt;
-      &lt;/file&gt;
-    &lt;/activation&gt;
-    &lt;dependencies&gt;
-      &lt;dependency&gt;
-        &lt;groupId&gt;com.sun&lt;/groupId&gt;
-        &lt;artifactId&gt;tools&lt;/artifactId&gt;
-        &lt;version&gt;1.8.0&lt;/version&gt;
-        &lt;scope&gt;system&lt;/scope&gt;
-        &lt;systemPath&gt;${java.home}/../lib/tools.jar&lt;/systemPath&gt;
-      &lt;/dependency&gt;
-    &lt;/dependencies&gt;
-  &lt;/profile&gt;
-&lt;/profiles&gt;
+  &lt;profiles&gt;
+    &lt;profile&gt;
+      &lt;id&gt;internal.tools-jar&lt;/id&gt;
+      &lt;activation&gt;
+        &lt;file&gt;
+          &lt;exists&gt;${java.home}/../lib/tools.jar&lt;/exists&gt;
+        &lt;/file&gt;
+      &lt;/activation&gt;
+      &lt;dependencies&gt;
+        &lt;dependency&gt;
+          &lt;groupId&gt;com.sun&lt;/groupId&gt;
+          &lt;artifactId&gt;tools&lt;/artifactId&gt;
+          &lt;version&gt;1.8.0&lt;/version&gt;
+          &lt;scope&gt;system&lt;/scope&gt;
+          &lt;systemPath&gt;${java.home}/../lib/tools.jar&lt;/systemPath&gt;
+        &lt;/dependency&gt;
+      &lt;/dependencies&gt;
+    &lt;/profile&gt;
+  &lt;/profiles&gt;
 </code></pre>
 <h3><a class="toc_anchor" name="gradle"> </a>Gradle</h3>
 <p>Add the following to your build.gradle script:</p>
-<pre><code class="language-gradle">dependencies {
-  compile group: 'systems.manifold', name: 'manifold-all', version: '0.1-SNAPSHOT'
+<pre><code class="language-groovy">dependencies {
+  // Core Manifold support, includes properties and image manifolds
+  compile group: 'systems.manifold', name: 'manifold', version: '0.1-SNAPSHOT'
+  
+  // Support for structural typing and extensions
+  compile group: 'systems.manifold', name: 'manifold-ext', version: '0.1-SNAPSHOT'
+    
+  // JSON and JSchema support  
+  compile group: 'systems.manifold', name: 'manifold-json', version: '0.1-SNAPSHOT'
+  
+  // JavaScript support
+  compile group: 'systems.manifold', name: 'manifold-js', version: '0.1-SNAPSHOT'
+  
+  // Template support
+  compile group: 'systems.manifold', name: 'manifold-templates', version: '0.1-SNAPSHOT'
+  
+  // Collection extensions
+  compile group: 'systems.manifold', name: 'manifold-collections', version: '0.1-SNAPSHOT'
+  
+  // I/O extensions
+  compile group: 'systems.manifold', name: 'manifold-io', version: '0.1-SNAPSHOT'
+  
+  // Text extensions
+  compile group: 'systems.manifold', name: 'manifold-text', version: '0.1-SNAPSHOT'
+  
+  // tools.jar
   compile files(&quot;${System.getProperty('java.home')}/../lib/tools.jar&quot;)
 }
 
 compileJava {
-  options.compilerArgs &lt;&lt; '-Xplugin:Manifold'
+  options.compilerArgs += ['-Xplugin:Manifold']
 }
 </code></pre>
 <h3><a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>

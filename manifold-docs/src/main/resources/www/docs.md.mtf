@@ -158,11 +158,68 @@ Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 Add the following to your Maven pom.xml file:
 ```xml
   <dependencies>
+    <!--Core Manifold support, includes properties and image manifolds-->
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-all</artifactId>
+      <artifactId>manifold</artifactId>
       <!--<version>\${project.version}</version>-->
     </dependency>
+    
+    <!--Support for structural typing and extensions-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--JSON and JSchema support-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--JavaScript support-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-js</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--Template support-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-templates</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--Collections extensions-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-collections</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--I/O extensions-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-io</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--I/O extensions-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-io</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>
+    
+    <!--Text extensions-->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-text</artifactId>
+      <!--<version>\${project.version}</version>-->
+    </dependency>    
   </dependencies>
 
   <build>
@@ -179,39 +236,63 @@ Add the following to your Maven pom.xml file:
     </plugins>
   </build>
 
-<profiles>
-  <profile>
-    <id>internal.tools-jar</id>
-    <activation>
-      <file>
-        <exists>\${java.home}/../lib/tools.jar</exists>
-      </file>
-    </activation>
-    <dependencies>
-      <dependency>
-        <groupId>com.sun</groupId>
-        <artifactId>tools</artifactId>
-        <version>1.8.0</version>
-        <scope>system</scope>
-        <systemPath>\${java.home}/../lib/tools.jar</systemPath>
-      </dependency>
-    </dependencies>
-  </profile>
-</profiles>
+  <profiles>
+    <profile>
+      <id>internal.tools-jar</id>
+      <activation>
+        <file>
+          <exists>\${java.home}/../lib/tools.jar</exists>
+        </file>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>com.sun</groupId>
+          <artifactId>tools</artifactId>
+          <version>1.8.0</version>
+          <scope>system</scope>
+          <systemPath>\${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 ```
 
 ### ${anchor("Gradle")}
 
 Add the following to your build.gradle script:
 
-```gradle
+```groovy
 dependencies {
-  compile group: 'systems.manifold', name: 'manifold-all', version: '0.1-SNAPSHOT'
+  // Core Manifold support, includes properties and image manifolds
+  compile group: 'systems.manifold', name: 'manifold', version: '0.1-SNAPSHOT'
+  
+  // Support for structural typing and extensions
+  compile group: 'systems.manifold', name: 'manifold-ext', version: '0.1-SNAPSHOT'
+    
+  // JSON and JSchema support  
+  compile group: 'systems.manifold', name: 'manifold-json', version: '0.1-SNAPSHOT'
+  
+  // JavaScript support
+  compile group: 'systems.manifold', name: 'manifold-js', version: '0.1-SNAPSHOT'
+  
+  // Template support
+  compile group: 'systems.manifold', name: 'manifold-templates', version: '0.1-SNAPSHOT'
+  
+  // Collection extensions
+  compile group: 'systems.manifold', name: 'manifold-collections', version: '0.1-SNAPSHOT'
+  
+  // I/O extensions
+  compile group: 'systems.manifold', name: 'manifold-io', version: '0.1-SNAPSHOT'
+  
+  // Text extensions
+  compile group: 'systems.manifold', name: 'manifold-text', version: '0.1-SNAPSHOT'
+  
+  // tools.jar
   compile files("\${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
 compileJava {
-  options.compilerArgs << '-Xplugin:Manifold'
+  options.compilerArgs += ['-Xplugin:Manifold']
 }
 ```
 
