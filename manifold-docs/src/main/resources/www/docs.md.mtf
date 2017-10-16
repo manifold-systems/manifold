@@ -54,7 +54,7 @@ String myMessage = MyProperties.my.message;
 Concise and type-safe, with no generated files or other build steps to engage.
 
 Almost any type of data source imaginable is a potential type manifold. These
-include resource files, schemas, queries, database definitions, templates,
+include resource files, schemas, query languages, database definitions, templates,
 spreadsheets, web services, and programming languages.
 
 Currently Manifold provides type manifolds for:
@@ -513,7 +513,150 @@ See project [Manifold Templates](http://manifold.systems/manifold-templates.html
 
 ### ${anchor("Build Your Own Manifold")}
 
-:todo
+Almost any data source is a potential type manifold.  These include file schemas, query languages, database definitions, 
+data services, templates, spreadsheets, programming languages, and more.  So while the Manifold team provides several 
+type manifolds out of the box the domain of possible type manifolds is virtually unlimited.  Importantly, their is 
+nothing special about the ones we provide -- you can build type manifolds using the same public API with which ours
+are built.
+
+The API is comprehensive and aims to fulfill the 80/20 rule -- the common use-cases are a breeze to implement, but the API is 
+flexible enough to achieve almost any kind of type manifold.  For instance, since most type manifolds are resource
+file based the API foundation classes handle most of the tedium with respect to file management, caching, and modeling.
+Also, since the primary responsibility for a type manifold is to dynamically produce Java source, Manifold provides 
+a simple API for building and rendering Java classes. But the API is flexible so that you can use other tooling as you
+prefer.
+
+Most resource file-based type manifolds consist of three basic classes:
+* JavaTypeManifold subclass
+* Model subclass
+* A class to produce Java source 
+ 
+The Image manifold nicely illustrates this structure:
+```java
+public class ImageTypeManifold extends JavaTypeManifold<Model> {
+  private static final Set<String> FILE_EXTENSIONS = new HashSet<>(Arrays.asList("jpg", "png", "bmp", "wbmp", "gif"));
+
+  @Override
+  public void init(ITypeLoader typeLoader) {
+    init(typeLoader, Model::new);
+  }
+
+  @Override
+  public boolean handlesFileExtension(String fileExtension) {
+    return FILE_EXTENSIONS.contains(fileExtension.toLowerCase());
+  }
+
+  @Override
+  protected String aliasFqn(String fqn, IFile file) {
+    return fqn + '_' + file.getExtension();
+  }
+
+  @Override
+  protected boolean isInnerType(String topLevel, String relativeInner) {
+    return false;
+  }
+
+  @Override
+  protected String produce(String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler) {
+    SrcClass srcClass = new ImageCodeGen(model._url, topLevelFqn).make();
+    StringBuilder sb = srcClass.render(new StringBuilder(), 0);
+    return sb.toString();
+  }
+}
+```
+Like most type manifolds the image manifold is file extension based, specifically it handles the domain of files having 
+image extensions: jpg, png, etc.  As you'll see, the `JavaTypeManifold` base class is built to handle this use-case.
+First, `ImageTypeManifold` overrides the `init()` method to supply the base class with its `Model`.  We'll cover
+that shortly.  Next, it overrides `handlesFileExtension()` to tell the base class which file extensions it handles.
+Next, since the image manifold produces classes with a slightly different name than the base file name, it overrides 
+`aliasFqn()` to provide an alias for the qualified name of the form "<package>.<image-name>_<ext>".  The name must
+match the class name the image manifold produces. There are no inner classed produced by this manifold, therefore
+it overrides `isInnerType()` returning false; the base class must ask the subclass to resolve inner types.  Finally,
+the image manifold overrides `produce()`, this is where you produce Java source for a specified class name.
+
+Most often, you'll want to create a separate class to handle the production of Java source.  The image manifold does 
+that with `ImageCodeGen`:
+
+```java
+public class ImageCodeGen {
+  private final String _fqn;
+  private final String _url;
+
+  ImageCodeGen(String url, String topLevelFqn) {
+    _url = url;
+    _fqn = topLevelFqn;
+  }
+
+  public SrcClass make() {
+    String simpleName = ManClassUtil.getShortClassName(_fqn);
+    return new SrcClass(_fqn, SrcClass.Kind.Class).imports(URL.class, SourcePosition.class)
+      .superClass(new SrcType(ImageIcon.class))
+      .addField(new SrcField("INSTANCE", simpleName).modifiers(Modifier.STATIC))
+      .addConstructor(new SrcConstructor()
+        .addParam(new SrcParameter("url")
+          .type(URL.class))
+        .modifiers(Modifier.PRIVATE)
+        .body(new SrcStatementBlock()
+          .addStatement(new SrcRawStatement()
+            .rawText("super(url);"))
+          .addStatement(new SrcRawStatement()
+            .rawText("INSTANCE = this;"))))
+      .addMethod(new SrcMethod().modifiers(Modifier.STATIC)
+        .name("get")
+        .returns(simpleName)
+        .body(new SrcStatementBlock()
+          .addStatement(
+            new SrcRawStatement()
+              .rawText("try {")
+              .rawText("  return INSTANCE != null ? INSTANCE : new " + simpleName + 
+                "(new URL("\\" + ManEscapeUtil.escapeForGosuStringLiteral(_url) + "\\"));")
+              .rawText("} catch(Exception e) {")
+              .rawText("  throw new RuntimeException(e);")
+              .rawText("}"))));
+  }
+}
+```
+
+Here the image manifold utilizes `SrcClass` to build a Java source model of image classes.  `SrcClass` is a
+source code production utility in the Manifold API.  It's simple and handles basic code generation use-cases.
+Feel free to use other Java source code generation tooling if `SrcClass` does not suit your use-case, because
+ultimately you're only job here is to produce a `String` consisting of Java source for your class.
+
+The third and final class the image manifold provides is the `Model` class:
+
+```java
+class Model extends AbstractSingleFileModel {
+  String _url;
+
+  Model(String fqn, Set<IFile> files) {
+    super(fqn, files);
+    assignUrl();
+  }
+
+  private void assignUrl() {
+    try {
+      _url = getFile().toURI().toURL().toString();
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String getUrl() {
+    return _url;
+  }
+
+  @Override
+  public void updateFile(IFile file) {
+    super.updateFile(file);
+    assignUrl();
+  }
+}
+```
+
+This class models the image data necessary for `ImageCodeGen` to produce source. In this case the data is simply 
+the URL for the image. Additionally, `Model` overrides `updateFile()` to keep the URL up to date in environments
+where it can change, such as in an IDE.
+
 
 ## ${anchor("Extension Classes")}
 
