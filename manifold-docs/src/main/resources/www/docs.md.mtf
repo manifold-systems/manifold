@@ -153,6 +153,9 @@ That's all.
 
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
+`todo: links to latest jars`
+
+
 ### ${anchor("Maven")}
 
 Add manifold artifacts that suite your project's needs.  The minimum requirements are to 
