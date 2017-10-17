@@ -4,6 +4,13 @@ dependencies {
   compile project(':manifold-ext')
   compile group: 'junit', name: 'junit', version:'4.12'
   testCompile files(sourceSets.test.output.resourcesDir)
+//  testCompile fileTree(sourceSets.test.output.resourcesDir).matching {
+//    exclude 'extensions/abc/benis_png/MyBenis_pngExt_Test.java',
+//            'extensions/java/util/List/ListExt_Test.java',
+//            'extensions/java/util/List/ListExt2_Test.java',
+//            'extensions/java/util/List/ListExt3_Test.java',
+//            'extensions/java/util/List/ListExt4_Test.java'
+//  }
 }
 
 compileTestJava.dependsOn(processTestResources)
@@ -13,6 +20,8 @@ compileTestJava {
     logger.quiet 'Muh test classpath:'
     classpath.files.each { File file -> logger.quiet(file.absolutePath) }
   }
+//  options.fork = true
+//  options.forkOptions.jvmArgs += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,address=5005,server=y,suspend=y']
 }
 
 test {
