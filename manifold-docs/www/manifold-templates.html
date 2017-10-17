@@ -56,7 +56,8 @@
                         <!--<li><a href="#">Core Enhancements</a></li>-->
                         <!--<li><a href="#">I/O Enhancements</a></li>-->
                         <!--<li role="separator" class="divider"></li>-->
-                        <li><a href="/manifold-templates.html">Manifold Templates</a></li>
+                        <li><a href="/manifold-templates.html">The Template Manifold</a></li>
+                        <li><a href="/manifold-js.html">The Javascript Manifold</a></li>
                     </ul>
                 </li>
             </ul>
@@ -71,8 +72,8 @@
 
 <div class="container">
 
-<h1>Manifold Templates</h1>
-<p>Manifold Templates is a lightweight &amp; type safe templating technology for the JVM.
+<h1>The Template Manifold</h1>
+<p>The Template Manifold is a lightweight &amp; type safe templating technology for the JVM.
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.</p>
 <p>Manifold Templates supports type safe arguments to templates, type safe inclusion of other templates,
@@ -100,7 +101,7 @@ template is targeting (e.g. <code>index.html.mtf</code>).</p>
 </li>
 <li><a href="#-params-"><code>params</code></a></li>
 <li><a href="#-section-"><code>section</code></a></li>
-<li><a href="#-layouts-"><code>layouts</code></a></li>
+<li><a href="#-layout-"><code>layout</code></a></li>
 </ul>
 </li>
 <li><a href="#layouts">Layouts</a>
@@ -108,15 +109,17 @@ template is targeting (e.g. <code>index.html.mtf</code>).</p>
 <li><a href="#default-layouts">Default Layouts</a></li>
 </ul>
 </li>
-<li><a href="#Miscellaneous">Miscellaneous</a>
+<li>Miscellaneous
 <ul>
-<li><a href="#Tracing">Tracing</a></li>
+<li><a href="#tracing">Tracing</a></li>
 </ul>
 </li>
 </ul>
+<p><a id="basic-syntax" class="toc_anchor"></a></p>
 <h1>Basic Syntax</h1>
 <p>As with JSPs, Manifold Templates consist of regular textual content with various scriptlets and
 directives interspersed in that content.</p>
+<p><a id="statements" class="toc_anchor"></a></p>
 <h2>Statements</h2>
 <p>Statements are similar to JSP scriptlets: they can contain any number of Java
 language statements, including variable or method declarations.</p>
@@ -130,6 +133,7 @@ language statements, including variable or method declarations.</p>
 <pre><code class="language-java">System.out.println(&quot;Hello&quot;)
 </code></pre>
 <p>which will result in a compiler error, since there is no semicolon to end the line.</p>
+<p><a id="expressions" class="toc_anchor"></a></p>
 <h2>Expressions</h2>
 <p>Expressions are similar to JSP expressions. As explained in <a href="https://www.tutorialspoint.com/jsp/jsp_syntax.htm">this JSP guide:</a></p>
 <blockquote>
@@ -167,11 +171,13 @@ within the paragraph block. It will generate the following HTML:</p>
   &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<p><a id="comments" class="toc_anchor"></a></p>
 <h2>Comments</h2>
 <p>Comments are blocks of code that the compiler will ignore. They will <strong>not</strong> be generated as comments in the generated Java code.</p>
 <p>The syntax of a comment is as follows:</p>
 <pre><code class="language-jsp">&lt;%-- This is a comment --%&gt;
 </code></pre>
+<p><a id="directives" class="toc_anchor"></a></p>
 <h2>Directives</h2>
 <p>Directives are commands that are evaluated by the compiler, and will affect the overall page structure.</p>
 <p>The syntax of a directive is as follows:</p>
@@ -187,7 +193,9 @@ within the paragraph block. It will generate the following HTML:</p>
 | Section        | <code>&lt;%@ section mySection(optional-params) %&gt;</code> | Creates a sub-template within the template, that can be called from other templates |</p>
 <p>A more detailed explanation of various directive types <a href="#directive-types">can be found
 below.</a></p>
+<p><a id="directive-keywords" class="toc_anchor"></a></p>
 <h1>Directive Keywords</h1>
+<p><a id="-import-" class="toc_anchor"></a></p>
 <h2><code>import</code></h2>
 <p>The <code>import</code> keyword is used to import external packages into the generated Java file.</p>
 <p>The syntax of the import keyword is as follows:</p>
@@ -220,6 +228,7 @@ was necessary to be able to use <code>java.util.HashSet</code>.</p>
 </code></pre>
 <p>The location of import statements within the template file is irrelevant. Although it is idiomatic to include all imports
 at the beginning of the file, imports can be placed anywhere and will not affect the generated file.</p>
+<p><a id="-extends-" class="toc_anchor"></a></p>
 <h2><code>extends</code></h2>
 <p>The <code>extends</code> keyword is used to make a template extend a different base class, which can be used to provide
 additional application specific functionality (e.g. Request and Response objects in a web application).</p>
@@ -258,6 +267,7 @@ public class ExampleTemplate extends BaseTemplate {
 <p>And easily callable:</p>
 <pre><code class="language-jsp">    get(&quot;/contact/:id&quot;, (req, resp) -&gt; ShowContact.render(Contact.find(req.getParam(&quot;id&quot;)));
 </code></pre>
+<p><a id="-include-" class="toc_anchor"></a></p>
 <h2><code>include</code></h2>
 <p>The <code>include</code> keyword allows users to insert other templates inside of the given template in a type
 safe manner.</p>
@@ -301,6 +311,7 @@ safe manner.</p>
 &lt;/html&gt;
 
 </code></pre>
+<p><a id="conditional-include" class="toc_anchor"></a></p>
 <h3>Conditional Include</h3>
 <p>Manifold Templates supports shorthand for conditional inclusion of templates. The following syntax:</p>
 <pre><code class="language-jsp">  &lt;% if (condition) { %&gt;
@@ -311,6 +322,7 @@ safe manner.</p>
 <pre><code class="language-jsp">&lt;%@ include myTemplate if(condition) %&gt;
 </code></pre>
 <p>(Note: In the above, parentheses are optional.)</p>
+<p><a id="-params-" class="toc_anchor"></a></p>
 <h2><code>params</code></h2>
 <p>The <code>params</code> keyword is used to give parameters to a template. It is only allowed
 for the outermost class (not within sections) and is generally only useful when creating
@@ -344,6 +356,7 @@ templates that are meant to be included in other templates.</p>
     &lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
+<p><a id="-section-" class="toc_anchor"></a></p>
 <h2><code>section</code></h2>
 <p>The <code>section</code> keyword will create a subsection of the current template that can
 then be added via an <code>include</code> keyword in other templates.</p>
@@ -384,8 +397,10 @@ to do so will result in an error during code generation.</p>
     &lt;h2 style=&quot;font-size: 2&quot;&gt;Font size: 2&lt;/h2&gt;
     &lt;h2 style=&quot;font-size: 3&quot;&gt;Font size: 3&lt;/h2&gt;
 </code></pre>
-<h2><code>layouts</code></h2>
+<p><a id="-layout-" class="toc_anchor"></a></p>
+<h2><code>layout</code></h2>
 <p>See below.</p>
+<p><a id="layouts" class="toc_anchor"></a></p>
 <h1>Layouts</h1>
 <p>Layouts can be made and used with the <code>content</code> and <code>layouts</code> directives respectively.</p>
 <p>The <code>content</code> keyword will split the current template into the header and footer
@@ -421,6 +436,7 @@ current template. The code from the current template will appear where the
         &lt;/body&gt;
     &lt;/html&gt;
 </code></pre>
+<p><a id="default-layouts" class="toc_anchor"></a></p>
 <h2>Default Layouts</h2>
 <p>Manifold Templates also supports the ability to set default layouts for templates via the
 <code>ManifoldTemplates.java</code> configuration class:</p>
@@ -430,7 +446,7 @@ current template. The code from the current template will appear where the
 <p>By default, more specific layout declarations will take precedence over less
 specific ones. For example, templates with a declared layout (using the layout directive)
 will use the declared layout rather than any defualt layout.</p>
-<h1>Miscellaneous</h1>
+<p><a id="tracing" class="toc_anchor"></a></p>
 <h2>Tracing</h2>
 <p>Manifold Templates supports performance tracing via the following syntax:</p>
 <pre><code class="language-java">  ManifoldTemplates.trace();
