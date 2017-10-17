@@ -153,8 +153,23 @@ That's all.
 
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
-`todo: links to latest jars`
-
+For the convenience of non-maven users you can directly download Manifold binaries:
+* [manifold](http://repo1.maven.org/maven2/systems/manifold/manifold/0.1-alpha/manifold-0.1-alpha.jar):
+Core Manifold support, also includes properties and image manifolds
+* [manifold-ext](http://repo1.maven.org/maven2/systems/manifold/manifold-ext/0.1-alpha/manifold-ext-0.1-alpha.jar):
+Support for structural typing and extensions
+* [manifold-json](http://repo1.maven.org/maven2/systems/manifold/manifold-json/0.1-alpha/manifold-json-0.1-alpha.jar):
+JSON and JSchema support
+* [manifold-js](http://repo1.maven.org/maven2/systems/manifold/manifold-js/0.1-alpha/manifold-js-0.1-alpha.jar):
+JavaScript support
+* [manifold-collections](http://repo1.maven.org/maven2/systems/manifold/manifold-collections/0.1-alpha/manifold-collections-0.1-alpha.jar):
+Collections extensions
+* [manifold-io](http://repo1.maven.org/maven2/systems/manifold/manifold-io/0.1-alpha/manifold-io-0.1-alpha.jar):
+I/O extensions
+* [manifold-text](http://repo1.maven.org/maven2/systems/manifold/manifold-text/0.1-alpha/manifold-text-0.1-alpha.jar):
+Text extensions
+* [manifold-templates](http://repo1.maven.org/maven2/systems/manifold/manifold-templates/0.1-alpha/manifold-templates-0.1-alpha.jar):
+Integrated template support
 
 ### ${anchor("Maven")}
 
