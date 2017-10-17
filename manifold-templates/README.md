@@ -1,6 +1,6 @@
-# Manifold Templates
+# The Template Manifold
 
-Manifold Templates is a lightweight & type safe templating technology for the JVM.
+The Template Manifold is a lightweight & type safe templating technology for the JVM.
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.
 
@@ -23,15 +23,20 @@ template is targeting (e.g. `index.html.mtf`).
     * [Conditional Include](#conditional-include)
   * [`params`](#-params-)
   * [`section`](#-section-)
-  * [`layouts`](#-layouts-)
+  * [`layout`](#-layout-)
 - [Layouts](#layouts)
   * [Default Layouts](#default-layouts)
-- [Miscellaneous](#Miscellaneous)
-  * [Tracing](#Tracing)
+- Miscellaneous
+  * [Tracing](#tracing)
+  
+<a id="basic-syntax" class="toc_anchor"></a>
+
 # Basic Syntax #
 
 As with JSPs, Manifold Templates consist of regular textual content with various scriptlets and
 directives interspersed in that content.
+
+<a id="statements" class="toc_anchor"></a>
 
 ## Statements ##
 
@@ -53,6 +58,8 @@ will result in the following Java code being generated:
 System.out.println("Hello")
 ```
 which will result in a compiler error, since there is no semicolon to end the line.
+
+<a id="expressions" class="toc_anchor"></a>
 
 ## Expressions ##
 
@@ -96,6 +103,8 @@ within the paragraph block. It will generate the following HTML:
 </html>
 ```
 
+<a id="comments" class="toc_anchor"></a>
+
 ## Comments ##
 Comments are blocks of code that the compiler will ignore. They will **not** be generated as comments in the generated Java code.
 
@@ -103,6 +112,8 @@ The syntax of a comment is as follows:
 ```jsp
 <%-- This is a comment --%>
 ```
+
+<a id="directives" class="toc_anchor"></a>
 
 ## Directives ##
 
@@ -127,7 +138,11 @@ A more detailed explanation of various directive types [can be found
 below.](#directive-types)
 
 
+<a id="directive-keywords" class="toc_anchor"></a>
+
 # Directive Keywords #
+
+<a id="-import-" class="toc_anchor"></a>
 
 ## `import` ##
 The `import` keyword is used to import external packages into the generated Java file.
@@ -167,6 +182,8 @@ was necessary to be able to use `java.util.HashSet`.
 
 The location of import statements within the template file is irrelevant. Although it is idiomatic to include all imports
 at the beginning of the file, imports can be placed anywhere and will not affect the generated file.
+
+<a id="-extends-" class="toc_anchor"></a>
 
 ## `extends` ##
 The `extends` keyword is used to make a template extend a different base class, which can be used to provide
@@ -214,6 +231,8 @@ And easily callable:
     get("/contact/:id", (req, resp) -> ShowContact.render(Contact.find(req.getParam("id")));
 ```
 
+
+<a id="-include-" class="toc_anchor"></a>
 
 ## `include` ##
 
@@ -267,6 +286,8 @@ Both statements will result in the following HTML code:
 
 ```
 
+<a id="conditional-include" class="toc_anchor"></a>
+
 ### Conditional Include ###
 Manifold Templates supports shorthand for conditional inclusion of templates. The following syntax:
 ```jsp
@@ -279,6 +300,8 @@ Can be condensed to the following:
 <%@ include myTemplate if(condition) %>
 ```
 (Note: In the above, parentheses are optional.)
+
+<a id="-params-" class="toc_anchor"></a>
 
 ## `params` ##
 
@@ -324,6 +347,8 @@ Then, the following HTML will be generated:
     </body>
 </html>
 ```
+
+<a id="-section-" class="toc_anchor"></a>
 
 ## `section` ##
 
@@ -380,9 +405,13 @@ Which will result in the following HTML:
 ```
 
 
-## `layouts` ##
+<a id="-layout-" class="toc_anchor"></a>
+
+## `layout` ##
 
 See below.
+
+<a id="layouts" class="toc_anchor"></a>
 
 # Layouts #
 
@@ -436,6 +465,8 @@ The above code will generate the following HTML:
     </html>
 ```
 
+<a id="default-layouts" class="toc_anchor"></a>
+
 ## Default Layouts ##
 Manifold Templates also supports the ability to set default layouts for templates via the
 `ManifoldTemplates.java` configuration class:
@@ -447,7 +478,7 @@ By default, more specific layout declarations will take precedence over less
 specific ones. For example, templates with a declared layout (using the layout directive)
 will use the declared layout rather than any defualt layout.
 
-# Miscellaneous #
+<a id="tracing" class="toc_anchor"></a>
 
 ## Tracing ##
 Manifold Templates supports performance tracing via the following syntax:
