@@ -56,7 +56,7 @@
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <excludes>
-            <exclude>systems.manifold.Dummy</exclude>
+            <exclude>systems/manifold/Dummy.class</exclude>
           </excludes>
           <archive>
             <manifestEntries>
