@@ -280,6 +280,8 @@ include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manif
 argument as a Java compiler argument:
 
 ```groovy
+apply plugin: 'java'
+
 dependencies {
   // Core Manifold support, includes properties and image manifolds
   compile group: 'systems.manifold', name: 'manifold', version: '0.1-SNAPSHOT'
@@ -309,8 +311,8 @@ dependencies {
   compile files("\${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
-compileJava {
-  options.compilerArgs += ['-Xplugin:Manifold']
+tasks.withType(JavaCompile) {
+  options.compilerArgs += '-Xplugin:Manifold'
 }
 ```
 
