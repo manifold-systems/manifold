@@ -32,11 +32,17 @@ import manifold.internal.host.ManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.Pair;
 import manifold.util.StreamUtil;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import static org.junit.Assert.fail;
 
 /**
  */
-public class CompilationTest extends TestCase
+public class CompilationTest
 {
+  @Test
+  @Ignore("Causes problems with gradle test invocation")
   public void testCompilation() throws ClassNotFoundException, IllegalAccessException, InstantiationException
   {
     List<IDirectory> sourcePath = new ArrayList<>( ManifoldHost.getGlobalModule().getSourcePath() );
