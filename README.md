@@ -110,7 +110,7 @@ to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:
 
-<p><img src="images/ext_demo.gif" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="https://i.imgur.com/ttVAgHK.gifv" alt="echo method" width="100%" height="100%"/></p>
 
 
 There's a lot more to the extension manifold including [structural interfaces](#structural-interfaces), which are
