@@ -143,10 +143,6 @@
               <manifest>
                 <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               </manifest>
-              <manifestEntries>
-                <!--class files as source must be available for extension method classes-->
-                <Contains-Sources>java,class</Contains-Sources>
-              </manifestEntries>
             </archive>
           </configuration>
         </plugin>
