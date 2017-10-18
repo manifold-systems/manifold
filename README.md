@@ -237,4 +237,4 @@ The open source portion of this project is licensed under the [Apache 2.0](https
 
 Visit the [Manifold](http://manifold.systems) website to learn more about manifold.
 
-[![Join the chat at https://gitter.im/manifold-io/Lobby](https://badges.gitter.im/intercooler-js/Lobby.svg)](https://gitter.im/intercooler-js/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/manifold-io/Lobby](https://badges.gitter.im/manifold-io/Lobby.svg)](https://gitter.im/manifold-io/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
