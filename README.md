@@ -13,6 +13,130 @@ What does Manifold do for Java programmers?
 * **Extensions**: Add methods to existing Java classes such as `String`, `List`, and `File`. Eliminate boilerplate code involving "Util" and "Manager" libraries.
 * **Structural Typing**: Unify disparate APIs. Bridge software components you do not control.
 
+Leveraging these key features Manifold delivers a powerful set of Java extensions including **JSON**
+integration, **JavaScript** interop, **Structural typing**, seamless **extension libraries** to Java's
+runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
+
+At a high level each of these features is classified as either a **Type Manifold** or an
+**Extension** via the **Extension Manifold**.
+
+### Type Manifolds
+
+Bridging the worlds of information and programming, type manifolds are Java
+projections of schematized data sources.  More specifically, a type manifold
+transforms a data source into a data _type_ directly accessible in your Java code
+without a code generation build step or extra compilation artifacts. In essence with Manifold a data
+source **_is_** a data type.
+
+To illustrate, normally you access Java properties resources like this:
+
+```java
+Properties myProperties = new Properties();
+myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
+String myMessage = myProperties.getProperty("my.message");
+```
+
+As with any resource file a properties file is foreign to Java's type system -- there is no direct,
+type-safe access to it. Instead you access it indirectly using boilerplate library code sprinkled
+with hard-coded strings.
+
+By contrast, with the Properties type manifold you access a properties file directly as a type:
+
+```java
+String myMessage = MyProperties.my.message;
+```
+
+Concise and type-safe, with no generated files or other build steps to engage.
+
+Almost any type of data source imaginable is a potential type manifold. These
+include resource files, schemas, query languages, database definitions, templates,
+spreadsheets, web services, and programming languages.
+
+Currently Manifold provides type manifolds for:
+
+*   JSON and [JSON Schema](http://json-schema.org/)
+*   JavaScript
+*   Properties files
+*   Image files
+*   Manifold Templates (work in progress)
+*   DDL and SQL (work in progress)
+
+
+### The Extension Manifold
+
+The extension manifold is a special kind of type manifold that lets you augment existing Java classes
+including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
+interfaces to any type your project uses.
+
+Let's say you want to make a new method on `String` so you can straightforwardly echo a String to the
+console. Normally with Java you might write a "Util" library like this:
+
+```java
+public class MyStringUtil {
+  public static void echo(String value) {
+    System.out.println(value);
+  }
+}
+```
+
+And you'd use it like this:
+
+```java
+MyStringUtil.echo("Java");
+```
+
+Instead with Manifold you create an _**Extension Class**_:
+
+```java
+@Extension
+public class MyStringExtension {
+  public static void echo(@This String thiz) {
+    System.out.println(thiz);
+  }
+}
+```  
+
+Here we've added a new `echo()` method to `String`, so we use it like this:
+
+```java
+"Java".echo();
+```
+
+Extensions eliminate a lot of intermediate code such as "Util" and "Manager"
+libraries as well as Factory classes. As a consequence extensions naturally
+promote higher levels of object-orientation, which result in more readable and
+maintainable code. Perhaps the most beneficial aspect of extensions, however, relate more
+to your overall experience with your development environment.  For instance,
+code-completion conveniently presents all the extension methods available on an
+extended class:
+
+<p><img src="images/ext_demo.gif" alt="echo method" width="100%" height="100%"/></p>
+
+
+There's a lot more to the extension manifold including [structural interfaces](#structural-interfaces), which are
+similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
+
+
+### Benefits
+
+Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
+generation step in the build, no extra .class files or .java files to manage, no annotation processors, and no extra
+class loaders to engage at runtime.
+
+Benefits of this approach include:
+
+*   **Zero turnaround** -- live, type-safe access to data; make, discover, and use changes instantly
+*   **Lightweight** -- direct integration with standard Java, requires no special compilers, annotation
+processors, or runtime agents
+*   **Efficient, dynamic** -- Manifold only produces types as they are needed
+*   **Simple, open API** -- you can build your own Manifolds
+*   **No code generation build step** -- no generated files, no special compilers
+*   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** support -- all manifold types and extensions work with IntelliJ
+
+Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
+it incrementally without having to rewrite classes or conform to a new way of doing things.
+
+
 ## Getting Started
 
 Using Manifold in your Java project is simple:
