@@ -1,4 +1,6 @@
-Manifold.js is a [Manifold](http://manifold.io/) extension library that allows for seamless interaction with javascript
+# The Javascript Manifold
+
+The Javascript Manifold (Manifold.js) is a [Manifold](http://manifold.systems/) extension library that allows for seamless interaction with javascript
 resources from Java using the [Java Nashorn](http://openjdk.java.net/projects/nashorn/) project.
 
 The library supports the use of javascript programs from Java, the use of ES6-flavored javascript classes from
