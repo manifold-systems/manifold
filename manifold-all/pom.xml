@@ -53,6 +53,21 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>systems/manifold/Dummy.class</exclude>
+          </excludes>
+          <archive>
+            <manifestEntries>
+              <!--class files as source must be available for extension method classes-->
+              <Contains-Sources>java,class</Contains-Sources>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.1.0</version>
         <executions>

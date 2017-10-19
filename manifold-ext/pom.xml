@@ -27,9 +27,6 @@
          <artifactId>maven-jar-plugin</artifactId>
          <configuration>
            <archive>
-             <manifest>
-               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-             </manifest>
              <manifestEntries>
                <!--class files as source must be available for MapStructExt-->
                <Contains-Sources>class</Contains-Sources>
