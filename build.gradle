@@ -1,19 +1,16 @@
+plugins {
+  id 'maven'
+}
+
 wrapper {
   gradleVersion = '4.3-rc-1'
 }
 
-allprojects  {
-  apply plugin: 'maven'
-
-  group = 'systems.manifold'
-  version = '0.1-alpha-1-SNAPSHOT'
-}
-
 subprojects {
   apply plugin: 'java'
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-
+  
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
   
   repositories {
     mavenLocal()
@@ -27,13 +24,11 @@ subprojects {
   }
 
   if(project.name != 'manifold') {
-//    compileJava.options.compilerArgs += '-Xplugin:Manifold'
-//    compileTestJava.options.compilerArgs += '-Xplugin:Manifold'
     project.tasks.withType(JavaCompile) {
       options.compilerArgs += '-Xplugin:Manifold'
+      options.fork = true
     }
     //TODO add encoding
-
   }
-  
+
 }

@@ -16,6 +16,7 @@ include ':manifold-collections-test'
 include ':manifold-templates'
 include ':manifold-templates-test'
 include ':manifold-docs'
+include ':manifold-all'
 
 //project(':manifold').projectDir = "$rootDir/manifold" as File
 //project(':manifold-test').projectDir = "$rootDir/manifold-test" as File
