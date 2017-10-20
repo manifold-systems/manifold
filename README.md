@@ -275,7 +275,7 @@ argument as a Java compiler argument:
 
 ### Gradle
 
-Add manifold artifacts that suite your project's needs.  The minimum requirements are to 
+Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
 include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
 argument as a Java compiler argument:
 
@@ -313,6 +313,7 @@ dependencies {
 
 tasks.withType(JavaCompile) {
   options.compilerArgs += '-Xplugin:Manifold'
+  options.fork = true
 }
 ```
 
