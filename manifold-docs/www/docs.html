@@ -215,21 +215,23 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <p>Manifold currently works with Java 8.  Support for Java 9 is coming soon.</p>
 <p>For the convenience of non-maven users you can directly download Manifold binaries:</p>
 <ul>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold/0.2-alpha/manifold-0.2-alpha.jar">manifold</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-all&amp;v=RELEASE">manifold-all</a>:
+Über-jar containing all of the binaries below</li>
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold&amp;v=RELEASE">manifold</a>:
 Core Manifold support, also includes properties and image manifolds</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-ext/0.2-alpha/manifold-ext-0.2-alpha.jar">manifold-ext</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-ext&amp;v=RELEASE">manifold-ext</a>:
 Support for structural typing and extensions</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-json/0.2-alpha/manifold-json-0.2-alpha.jar">manifold-json</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-json&amp;v=RELEASE">manifold-json</a>:
 JSON and JSchema support</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-js/0.2-alpha/manifold-js-0.2-alpha.jar">manifold-js</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-js&amp;v=RELEASE">manifold-js</a>:
 JavaScript support</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-collections/0.2-alpha/manifold-collections-0.2-alpha.jar">manifold-collections</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-collections&amp;v=RELEASE">manifold-collections</a>:
 Collections extensions</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-io/0.2-alpha/manifold-io-0.2-alpha.jar">manifold-io</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-io&amp;v=RELEASE">manifold-io</a>:
 I/O extensions</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-text/0.2-alpha/manifold-text-0.2-alpha.jar">manifold-text</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-text&amp;v=RELEASE">manifold-text</a>:
 Text extensions</li>
-<li><a href="http://repo1.maven.org/maven2/systems/manifold/manifold-templates/0.2-alpha/manifold-templates-0.2-alpha.jar">manifold-templates</a>:
+<li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-templates&amp;v=RELEASE">manifold-templates</a>:
 Integrated template support</li>
 </ul>
 <h3><a class="toc_anchor" name="maven"> </a>Maven</h3>
@@ -336,7 +338,7 @@ argument as a Java compiler argument:</p>
   &lt;/profiles&gt;
 </code></pre>
 <h3><a class="toc_anchor" name="gradle"> </a>Gradle</h3>
-<p>Add manifold artifacts that suite your project's needs.  The minimum requirements are to
+<p>Add manifold artifacts that suit your project's needs.  The minimum requirements are to
 include the core <code>manifold</code> artifact and <code>tools.jar</code> and add the <code>-Xplugin:Manifold</code>
 argument as a Java compiler argument:</p>
 <pre><code class="language-groovy">apply plugin: 'java'
@@ -372,6 +374,7 @@ dependencies {
 
 tasks.withType(JavaCompile) {
   options.compilerArgs += '-Xplugin:Manifold'
+  options.fork = true
 }
 </code></pre>
 <h3><a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>
