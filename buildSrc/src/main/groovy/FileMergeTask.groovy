@@ -16,7 +16,7 @@ class FileMergeTask extends DefaultTask {
 
     @TaskAction
     void mergeFiles() {
-        Set<String> lines = new HashSet<>()
+        Set<String> lines = new TreeSet<>() //keep entries alphabetized
         inputFiles.each { lines.addAll(it.readLines()) }
         target.write(String.join('\n', lines), StandardCharsets.UTF_8.name())
     }

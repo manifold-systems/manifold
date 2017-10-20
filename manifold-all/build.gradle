@@ -12,7 +12,7 @@ dependencies {
 
 task mergeServiceResources(type: FileMergeTask) {
     String serviceResourceFile = 'META-INF/services/manifold.api.type.ITypeManifold'
-    inputFiles = files(rootProject.subprojects*.sourceSets.main.resources.findAll { it.matching { include serviceResourceFile }.files }.findAll { !it.empty })
+    inputFiles = files(rootProject.subprojects*.sourceSets.main.resources.collect { it.matching { include serviceResourceFile }.files })
     target = new File(sourceSets.main.output.resourcesDir, serviceResourceFile )
 }
 
