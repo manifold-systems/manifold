@@ -154,21 +154,23 @@ That's all.
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
 For the convenience of non-maven users you can directly download Manifold binaries:
-* [manifold](http://repo1.maven.org/maven2/systems/manifold/manifold/0.2-alpha/manifold-0.2-alpha.jar):
+* [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE)
+Über-jar containing all of the binaries below
+* [manifold](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE):
 Core Manifold support, also includes properties and image manifolds
-* [manifold-ext](http://repo1.maven.org/maven2/systems/manifold/manifold-ext/0.2-alpha/manifold-ext-0.2-alpha.jar):
+* [manifold-ext](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE):
 Support for structural typing and extensions
-* [manifold-json](http://repo1.maven.org/maven2/systems/manifold/manifold-json/0.2-alpha/manifold-json-0.2-alpha.jar):
+* [manifold-json](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE):
 JSON and JSchema support
-* [manifold-js](http://repo1.maven.org/maven2/systems/manifold/manifold-js/0.2-alpha/manifold-js-0.2-alpha.jar):
+* [manifold-js](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE):
 JavaScript support
-* [manifold-collections](http://repo1.maven.org/maven2/systems/manifold/manifold-collections/0.2-alpha/manifold-collections-0.2-alpha.jar):
+* [manifold-collections](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE):
 Collections extensions
-* [manifold-io](http://repo1.maven.org/maven2/systems/manifold/manifold-io/0.2-alpha/manifold-io-0.2-alpha.jar):
+* [manifold-io](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-io&v=RELEASE):
 I/O extensions
-* [manifold-text](http://repo1.maven.org/maven2/systems/manifold/manifold-text/0.2-alpha/manifold-text-0.2-alpha.jar):
+* [manifold-text](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-text&v=RELEASE):
 Text extensions
-* [manifold-templates](http://repo1.maven.org/maven2/systems/manifold/manifold-templates/0.2-alpha/manifold-templates-0.2-alpha.jar):
+* [manifold-templates](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-templates&v=RELEASE):
 Integrated template support
 
 ### ${anchor("Maven")}
