@@ -1,5 +1,9 @@
+**/out/
 .idea/
 **/*.iml
+*.iws
+*.ipr
+
 ### Maven template
 **/target/
 pom.xml.tag
@@ -10,7 +14,6 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-classes
 
 # gradle stuff
 **/build/

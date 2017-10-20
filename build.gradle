@@ -7,6 +7,7 @@ wrapper {
 }
 
 subprojects {
+  apply plugin: 'idea'
   apply plugin: 'java'
   
   sourceCompatibility = JavaVersion.VERSION_1_8
@@ -20,7 +21,9 @@ subprojects {
   }
  
   dependencies {
-    compile files("${System.getProperty('java.home')}/../lib/tools.jar")
+    compileOnly files("${System.getProperty('java.home')}/../lib/tools.jar")
+    testCompileOnly files("${System.getProperty('java.home')}/../lib/tools.jar")
+    testRuntime files("${System.getProperty('java.home')}/../lib/tools.jar")
   }
 
   if(project.name != 'manifold') {

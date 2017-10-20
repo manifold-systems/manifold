@@ -1,0 +1,31 @@
+description = 'Manifold :: Über-jar'
+
+dependencies {
+    compile project(':manifold')
+    compile project(':manifold-ext')
+    compile project(':manifold-collections')
+    compile project(':manifold-io')
+    compile project(':manifold-js')
+    compile project(':manifold-json')
+    compile project(':manifold-text')
+}
+
+task mergeServiceResources(type: FileMergeTask) {
+    String serviceResourceFile = 'META-INF/services/manifold.api.type.ITypeManifold'
+    inputFiles = files(rootProject.subprojects*.sourceSets.main.resources.findAll { it.matching { include serviceResourceFile }.files }.findAll { !it.empty })
+    target = new File(sourceSets.main.output.resourcesDir, serviceResourceFile )
+}
+
+processResources.dependsOn(mergeServiceResources)
+
+jar {
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    exclude 'systems/manifold/Dummy.class'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    filesMatching 'META-INF/services/*', {
+        if(!['com.sun.source.util.Plugin', 'manifold.api.type.ITypeManifold'].contains(it.name) ) {
+            it.exclude()
+        }
+    }
+    includeEmptyDirs = false
+}
