@@ -1,8 +1,20 @@
 
 description = 'Manifold :: Collections'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
   compile project(':manifold')
   compile project(':manifold-ext')
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-ext').files('out/production/resources')
+}
+
+idea.module {
+  scopes.COMPILE.plus += [configurations.jpsCompiler]
 }
 
 compileJava {

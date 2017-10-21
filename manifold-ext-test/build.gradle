@@ -1,9 +1,28 @@
+import org.gradle.plugins.ide.idea.model.Module
 
 description = 'Manifold :: ExtensionTest'
+
+configurations {
+  jpsCompiler
+}
+
+final FileTree errantTests = fileTree(sourceSets.test.output.resourcesDir).matching {
+  include 'extensions/abc/benis_png/MyBenis_pngExt_Test.java',
+          'extensions/java/util/List/ListExt_Test.java',
+          'extensions/java/util/List/ListExt2_Test.java',
+          'extensions/java/util/List/ListExt3_Test.java',
+          'extensions/java/util/List/ListExt4_Test.java'
+}
+
 dependencies {
   compile project(':manifold-ext')
   compile group: 'junit', name: 'junit', version:'4.12'
-  testCompile files(sourceSets.test.output.resourcesDir)
+  testCompile files(sourceSets.test.output.resourcesDir).minus(errantTests)
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-ext').files('out/production/resources')
+  jpsCompiler files('out/test/resources').minus(errantTests) //TODO this doesn't exclude files
+
 //  testCompile fileTree(sourceSets.test.output.resourcesDir).matching {
 //    exclude 'extensions/abc/benis_png/MyBenis_pngExt_Test.java',
 //            'extensions/java/util/List/ListExt_Test.java',
@@ -14,6 +33,26 @@ dependencies {
 }
 
 compileTestJava.dependsOn(processTestResources)
+
+idea.module {
+  scopes.TEST.plus += [configurations.jpsCompiler]
+//  excludeDirs += file('some-extra-exclude-dir')
+
+//  iml {
+//    withXml { XmlProvider xml ->
+//      final Node component = xml.asNode().component.find { it.'@name' == 'NewModuleRootManager' }
+//      List<Node> content = component.content
+//      Node excludePatternNode = content.first().find { it.name() == 'excludePattern' }
+//      if(!excludePatternNode) {
+//        content.first().appendNode('excludePattern', [pattern: String.join(';', errantTests)])
+//      } else {
+////        excludePatternNode. replaceNode { node -> excludePattern(pattern: 'pleasegodwhy') }
+//        excludePatternNode.attributes().remove('pattern')
+//        excludePatternNode.attributes().put('pattern', String.join(';', errantTests))
+//      }
+//    }
+//  }
+}
 
 compileTestJava {
   doFirst {
