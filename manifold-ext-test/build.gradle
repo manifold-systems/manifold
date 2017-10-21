@@ -26,6 +26,7 @@ dependencies {
   jpsCompiler project(':manifold').files('out/production/resources')
   jpsCompiler project(':manifold-ext').files('out/production/resources')
   jpsCompiler files('out/test/resources')//.minus(errantTests) //TODO this doesn't exclude files
+}
 
 compileTestJava.dependsOn(processTestResources)
 

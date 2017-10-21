@@ -42,7 +42,6 @@ import static org.junit.Assert.fail;
 public class CompilationTest
 {
   @Test
-  @Ignore("Causes problems with gradle test invocation")
   public void testCompilation() throws ClassNotFoundException, IllegalAccessException, InstantiationException
   {
     List<IDirectory> sourcePath = new ArrayList<>( ManifoldHost.getGlobalModule().getSourcePath() );
