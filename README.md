@@ -332,8 +332,7 @@ To contribute a change to Manifold:
 
 * Fork the main manifold repository
 * Create a new feature branch based on the `development` branch with a reasonably descriptive name (e.g. `fix_json_specific_thing`)
-* Implement your fix
-* Add a test to `/test/unit_tests.html`.  (It's pretty easy!)
+* Implement your fix and write tests
 * Create a pull request for that branch against `development` in the main repository
 
 ## Versioning
