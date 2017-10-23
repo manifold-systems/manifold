@@ -13,7 +13,7 @@ final List<String> errantTestPatterns =
          'extensions/java/util/List/ListExt4_Test.java'
         ]
 
-final FileTree errantTests = fileTree(sourceSets.test.output.resourcesDir).matching {
+final FileTree resourcesMinusErrantTests = fileTree(sourceSets.test.output.resourcesDir).matching {
   exclude errantTestPatterns
 }
 
@@ -22,7 +22,7 @@ dependencies {
 
   testCompile group: 'junit', name: 'junit', version:'4.12'
   testCompile project(':manifold-ext-test-api')
-  testCompile files(sourceSets.test.output.resourcesDir).minus(errantTests)
+  testCompile resourcesMinusErrantTests
 
   jpsCompiler project(':manifold').files('out/production/resources')
   jpsCompiler project(':manifold-ext').files('out/production/resources')
