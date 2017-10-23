@@ -1,7 +1,20 @@
 
 description = 'Manifold :: IoTest'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
-  compile project(':manifold-ext-test')
   compile project(':manifold-io')
+
+  testCompile project(':manifold-ext-test-api')
   testCompile group: 'junit', name: 'junit', version:'4.12'
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-ext').files('out/production/resources')
+}
+
+idea.module {
+  scopes.TEST.plus += [configurations.jpsCompiler]
 }

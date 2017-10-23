@@ -1,12 +1,26 @@
 
 description = 'Manifold :: JavascriptTest'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
   compile project(':manifold-js')
+
   testCompile group: 'junit', name: 'junit', version:'4.12'
   testCompile files(sourceSets.test.output.resourcesDir)
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-js').files('out/production/resources')
+  jpsCompiler files('out/test/resources')
 }
 
 compileTestJava.dependsOn(processTestResources)
+
+idea.module {
+  scopes.TEST.plus += [configurations.jpsCompiler]
+}
 
 compileTestJava {
   doFirst {

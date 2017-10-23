@@ -1,13 +1,28 @@
 
 description = 'Manifold :: JsonTest'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
-  compile project(':manifold-ext-test')
   compile project(':manifold-json')
+
   testCompile group: 'junit', name: 'junit', version:'4.12'
+  testCompile project(':manifold-ext-test-api')
   testCompile files(sourceSets.test.output.resourcesDir)
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-ext').files('out/production/resources')
+  jpsCompiler project(':manifold-json').files('out/production/resources')
+  jpsCompiler files('out/test/resources')
 }
 
 compileTestJava.dependsOn(processTestResources)
+
+idea.module {
+  scopes.TEST.plus += [configurations.jpsCompiler]
+}
 
 compileTestJava {
   doFirst {

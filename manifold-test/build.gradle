@@ -6,8 +6,10 @@ configurations {
 
 dependencies {
   compile project(':manifold')
+
   testCompile group: 'junit', name: 'junit', version:'4.12'
   testCompile files(sourceSets.test.output.resourcesDir)
+
   jpsCompiler project(':manifold').files('out/production/resources')
   jpsCompiler files('out/test/resources')
 }

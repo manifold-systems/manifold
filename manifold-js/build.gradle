@@ -1,5 +1,16 @@
 
 description = 'Manifold :: Javascript'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
   compile project(':manifold')
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+}
+
+idea.module {
+  scopes.COMPILE.plus += [configurations.jpsCompiler]
 }

@@ -1,10 +1,23 @@
 
 description = 'Manifold :: IO'
+
+configurations {
+  jpsCompiler
+}
+
 dependencies {
   compile project(':manifold')
   compile project(':manifold-ext')
   compile project(':manifold-collections')
   compile project(':manifold-text')
+
+  jpsCompiler project(':manifold').files('out/production/resources')
+  jpsCompiler project(':manifold-ext').files('out/production/resources')
+  jpsCompiler project(':manifold-collections').files('out/production/resources')
+}
+
+idea.module {
+  scopes.COMPILE.plus += [configurations.jpsCompiler]
 }
 
 jar {

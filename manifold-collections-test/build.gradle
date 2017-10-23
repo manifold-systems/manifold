@@ -8,9 +8,10 @@ configurations {
 dependencies {
   compile project(':manifold')
   compile project(':manifold-ext')
-  compile project(':manifold-ext-test') //TODO this smells
   compile project(':manifold-collections')
+
   testCompile group: 'junit', name: 'junit', version:'4.12'
+  testCompile project(':manifold-ext-test-api')
 
   jpsCompiler project(':manifold').files('out/production/resources')
   jpsCompiler project(':manifold-ext').files('out/production/resources')
