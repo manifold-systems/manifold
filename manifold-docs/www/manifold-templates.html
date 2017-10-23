@@ -56,7 +56,7 @@
                         <!--<li><a href="#">Core Enhancements</a></li>-->
                         <!--<li><a href="#">I/O Enhancements</a></li>-->
                         <!--<li role="separator" class="divider"></li>-->
-                        <li><a href="/manifold-templates.html">The Template Manifold</a></li>
+                        <li><a href="/manifold-templates.html">Manifold Templates</a></li>
                         <li><a href="/manifold-js.html">The Javascript Manifold</a></li>
                     </ul>
                 </li>
@@ -72,8 +72,8 @@
 
 <div class="container">
 
-<h1>The Template Manifold</h1>
-<p>The Template Manifold is a lightweight &amp; type safe templating technology for the JVM.
+<h1>Manifold Templates</h1>
+<p>Manifold Templates is a lightweight &amp; type safe templating technology for the JVM.
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.</p>
 <p>Manifold Templates supports type safe arguments to templates, type safe inclusion of other templates,
@@ -82,7 +82,9 @@ shared layouts for templates and custom base classes for application-specific lo
 template is targeting (e.g. <code>index.html.mtf</code>).</p>
 <h2>Table of Contents</h2>
 <ul>
-<li><a href="#basic-syntax">Basic Syntax</a>
+<li><a href="#installing">Installing</a></li>
+<li><a href="#usage">Usage</a></li>
+<li><a href="#basic-syntax">Template Syntax</a>
 <ul>
 <li><a href="#statements">Statements</a></li>
 <li><a href="#expressions">Expressions</a></li>
@@ -115,6 +117,50 @@ template is targeting (e.g. <code>index.html.mtf</code>).</p>
 </ul>
 </li>
 </ul>
+<p><a id="installing" class="toc_anchor"></a></p>
+<h1>Installing</h1>
+<p>Manifold Templates can be used by simply adding the following dependency to your project:</p>
+<pre><code class="language-xml">    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-templates&lt;/artifactId&gt;
+      &lt;version&gt;0.1-alpha&lt;/version&gt;
+    &lt;/dependency&gt;
+</code></pre>
+<h1>Usage</h1>
+<p>Once you have installed Manifold Templates, you can begin using them by placing a new file that
+a with the <code>mtf</code> suffic in your resources directory (nb: not in your source directory).  The file can have any sort of
+string content, as well as  <a href="#basic-syntax">dynamic content</a> and <a href="#directive-keywords">directives</a> that change how the
+template behaves.</p>
+<p>Consider the following Manifold Template named <code>HelloWorld.mft</code>, located in the <code>resources/templates</code> directory:</p>
+<pre><code class="language-jsp">Hello World!
+</code></pre>
+<p>This template could then be used directly from your java code like so:</p>
+<pre><code class="language-java">import templates.HelloWorld;
+
+...
+    public void demo() {
+      System.out.println(HelloWorld.render());
+    }
+...
+</code></pre>
+<p>This would have the effect of printing &quot;Hello World&quot; to standard out.</p>
+<p>If you wanted to add a parameter to the template, you can use the <a href="#-params-"><code>params</code></a> directive:</p>
+<pre><code class="language-jsp">&lt;%@ params(String name) %&gt;
+Hello ${name}!
+</code></pre>
+<p>You could then call the template like so:</p>
+<pre><code class="language-java">import templates.HelloWorld;
+
+...
+    public void demo() {
+      System.out.println(HelloWorld.render(&quot;Manifold Templates&quot;));
+    }
+...
+</code></pre>
+<p>Which would result in printing &quot;Hello Manifold Templates&quot; to standard out.</p>
+<p>If you do not wish to materialize the template as a string, you can use the <code>renderInto()</code> method to render templates
+into any <code>Appendable</code> object.  The <code>renderInto()</code> method will have the same parameters as <code>render()</code> but will take
+an additional <code>Appendable</code> object and return <code>void</code>.</p>
 <p><a id="basic-syntax" class="toc_anchor"></a></p>
 <h1>Basic Syntax</h1>
 <p>As with JSPs, Manifold Templates consist of regular textual content with various scriptlets and
