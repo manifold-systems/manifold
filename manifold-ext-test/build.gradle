@@ -47,29 +47,32 @@ idea.module {
 
     final File imlFile = new File(imlFolder, "${project.name}.iml")
 
-    lines.append('imlFile is' + imlFile.absolutePath).append('\n')
-
-    Node root = new XmlParser().parse(imlFile)
-
-    final Node component = root.component.find { it.'@name' == 'NewModuleRootManager' }
-    List<Node> content = component.content
-    Node excludePatternNode = content.first().find { it.name() == 'excludePattern' }
-    String excludePattern = String.join(';', errantTestPatterns)
-    lines.append('exclude pattern is: ' + excludePattern).append('\n')
-
-    if(!excludePatternNode) {
-      content.first().appendNode('excludePattern', [pattern: excludePattern])
-    } else {
-//        excludePatternNode. replaceNode { node -> excludePattern(pattern: 'pleasegodwhy') }
-      excludePatternNode.attributes().remove('pattern')
-      excludePatternNode.attributes().putAll([pattern: excludePattern])
+    if(imlFile.exists()) {
+      
+      lines.append('imlFile is' + imlFile.absolutePath).append('\n')
+  
+      Node root = new XmlParser().parse(imlFile)
+  
+      final Node component = root.component.find { it.'@name' == 'NewModuleRootManager' }
+      List<Node> content = component.content
+      Node excludePatternNode = content.first().find { it.name() == 'excludePattern' }
+      String excludePattern = String.join(';', errantTestPatterns)
+      lines.append('exclude pattern is: ' + excludePattern).append('\n')
+  
+      if(!excludePatternNode) {
+        content.first().appendNode('excludePattern', [pattern: excludePattern])
+      } else {
+  //        excludePatternNode. replaceNode { node -> excludePattern(pattern: 'pleasegodwhy') }
+        excludePatternNode.attributes().remove('pattern')
+        excludePatternNode.attributes().putAll([pattern: excludePattern])
+      }
+  
+      Writer writer = new StringWriter()
+      new XmlNodePrinter(new PrintWriter(writer)).print(root)
+      imlFile.write(writer.toString())
+  
+      lines.append('Done rewriting imlFile').append('\n')
     }
-
-    Writer writer = new StringWriter()
-    new XmlNodePrinter(new PrintWriter(writer)).print(root)
-    imlFile.write(writer.toString())
-
-    lines.append('Done rewriting imlFile').append('\n')
 
 //    withXml {
 //      def node = it.asNode()
