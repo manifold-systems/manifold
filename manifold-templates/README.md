@@ -1,6 +1,6 @@
-# The Template Manifold
+# Manifold Templates
 
-The Template Manifold is a lightweight & type safe templating technology for the JVM.
+Manifold Templates is a lightweight & type safe templating technology for the JVM.
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.
 
@@ -11,7 +11,9 @@ Manifold Templates have the suffix `mtf` (Manifold Template File), often optiona
 template is targeting (e.g. `index.html.mtf`).
 
 ## Table of Contents
-- [Basic Syntax](#basic-syntax)
+- [Installing](#installing)
+- [Usage](#usage)
+- [Template Syntax](#basic-syntax)
   * [Statements](#statements)
   * [Expressions](#expressions)
   * [Directives](#directives)
@@ -29,6 +31,72 @@ template is targeting (e.g. `index.html.mtf`).
 - Miscellaneous
   * [Tracing](#tracing)
   
+<a id="installing" class="toc_anchor"></a>
+
+# Installing #
+
+Manifold Templates can be used by simply adding the following dependency to your project:
+
+```xml
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-templates</artifactId>
+      <version>0.1-alpha</version>
+    </dependency>
+```
+
+# Usage #
+
+Once you have installed Manifold Templates, you can begin using them by placing a new file that
+a with the `mtf` suffic in your resources directory (nb: not in your source directory).  The file can have any sort of 
+string content, as well as  [dynamic content](#basic-syntax) and [directives](#directive-keywords) that change how the 
+template behaves.
+
+Consider the following Manifold Template named `HelloWorld.mft`, located in the `resources/templates` directory:
+
+```jsp
+Hello World!
+```
+
+This template could then be used directly from your java code like so:
+
+```java
+import templates.HelloWorld;
+
+...
+    public void demo() {
+      System.out.println(HelloWorld.render());
+    }
+...
+```
+
+This would have the effect of printing "Hello World" to standard out.
+
+If you wanted to add a parameter to the template, you can use the [`params`](#-params-) directive:
+
+```jsp
+<%@ params(String name) %>
+Hello ${name}!
+```
+
+You could then call the template like so:
+
+```java
+import templates.HelloWorld;
+
+...
+    public void demo() {
+      System.out.println(HelloWorld.render("Manifold Templates"));
+    }
+...
+```
+
+Which would result in printing "Hello Manifold Templates" to standard out.
+
+If you do not wish to materialize the template as a string, you can use the `renderInto()` method to render templates
+into any `Appendable` object.  The `renderInto()` method will have the same parameters as `render()` but will take
+an additional `Appendable` object and return `void`.
+
 <a id="basic-syntax" class="toc_anchor"></a>
 
 # Basic Syntax #
