@@ -111,9 +111,11 @@ template is targeting (e.g. <code>index.html.mtf</code>).</p>
 <li><a href="#default-layouts">Default Layouts</a></li>
 </ul>
 </li>
-<li>Miscellaneous
+<li><a href="#spark">Spark Java Support</a>
 <ul>
 <li><a href="#tracing">Tracing</a></li>
+<li><a href="#spark-template">Spark Template Base Class</a></li>
+<li><a href="#demo">Demo</a></li>
 </ul>
 </li>
 </ul>
@@ -492,8 +494,50 @@ current template. The code from the current template will appear where the
 <p>By default, more specific layout declarations will take precedence over less
 specific ones. For example, templates with a declared layout (using the layout directive)
 will use the declared layout rather than any defualt layout.</p>
+<p><a id="spark" class="toc_anchor"></a></p>
+<h2>Spark Java Support</h2>
+<p>Manifold Templates were designed to work with the <a href="http://sparkjava.com/">Spark java web framework</a>.</p>
+<p>Below is an example Spark application making use of Manifold Templates:</p>
+<pre><code class="language-java">package app;
+
+import manifold.templates.ManifoldTemplates;
+
+import static spark.Spark.*;
+
+import views.*;
+import views.layout.*;
+
+public class WebApp {
+
+  public static void main(String[] args) {
+
+    // Set up the default layout for the application
+    ManifoldTemplates.setDefaultLayout(DefaultLayout.asLayout());
+
+    // enable tracing
+    ManifoldTemplates.trace();
+
+    // Render the index template
+    get(&quot;/&quot;, (req, resp) -&gt; Index.render(&quot;Hello World&quot;));
+
+  }
+}
+</code></pre>
+<p>Where there are two templates in the <code>resources</code> directory: one at <code>views/Index.html.mtf</code> and one at
+<code>views/layouts/DefaultLayout.html.mtf</code>.  Note that the code takes advantage of the type safe parameters available
+in Manifold templates.</p>
+<p><a id="spark-template" class="toc_anchor"></a></p>
+<h3>SparkTemplate Base Class</h3>
+<p>Manifold provides a base class, <code>manifold.templates.sparkjava.SparkTemplate</code> that can be used via an <code>@extends</code> directive
+in your templates (or, more commonly, you would extend the class and add your own application functionality).  This
+base class provides various convenience methods to get the HTTP Request, Response, etc. and also automatically escapes
+all string content for HTML, to prevent malicious user input from causing a security issue in your application.</p>
+<p>If you wish you output raw HTML in a template that extends <code>manifold.templates.sparkjava.SparkTemplate</code>, you can use the
+<code>raw()</code> function to do so:</p>
+<pre><code class="language-jsp">  ${raw(&quot;&lt;h1&gt;Some Raw HTML&lt;/h1&gt;&quot;)}
+</code></pre>
 <p><a id="tracing" class="toc_anchor"></a></p>
-<h2>Tracing</h2>
+<h3>Tracing</h3>
 <p>Manifold Templates supports performance tracing via the following syntax:</p>
 <pre><code class="language-java">  ManifoldTemplates.trace();
 </code></pre>
@@ -501,6 +545,10 @@ will use the declared layout rather than any defualt layout.</p>
 the following to console:</p>
 <pre><code>  - Template [templateName] rendered in [timeToRender] ms
 </code></pre>
+<p><a id="demo" class="toc_anchor"></a></p>
+<h3>Demo</h3>
+<p>A demo spark application can be found here:</p>
+<p>https://github.com/manifold-systems/spark-java-demo</p>
 
 
 </div>
