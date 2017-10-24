@@ -240,7 +240,7 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   public String getName()
   {
-    return _package + '.' + getSimpleName();
+    return (_package.isEmpty() ? "" : (_package + '.')) + getSimpleName();
   }
 
   public boolean isInterface()
@@ -293,8 +293,11 @@ public class SrcClass extends SrcStatement<SrcClass>
 
   private void renderPackage( StringBuilder sb )
   {
-    sb.append( "/* Generated */\n" )
-      .append( "package " ).append( _package ).append( ";\n\n" );
+    sb.append( "/* Generated */\n" );
+    if( !_package.isEmpty() )
+    {
+      sb.append( "package " ).append( _package ).append( ";\n\n" );
+    }
     for( String u : _imports )
     {
       sb.append( "import " ).append( u ).append( ";\n" );

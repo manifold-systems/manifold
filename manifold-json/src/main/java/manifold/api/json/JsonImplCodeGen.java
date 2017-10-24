@@ -72,7 +72,8 @@ public class JsonImplCodeGen
       {
         String simpleInnerIface = e.getValue().getIdentifier();
 
-        String fqnInnerImpl = srcClass.getPackage() + '.' + srcClass.getSimpleName() + '.' + simpleInnerIface;
+        String pkg = srcClass.getPackage();
+        String fqnInnerImpl = (pkg.isEmpty() ? "" : (pkg + '.')) + srcClass.getSimpleName() + '.' + simpleInnerIface;
 
         srcClass.addInnerClass( genClass( fqnInnerImpl, (JsonStructureType)type ) );
       }
