@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
@@ -396,12 +397,13 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     if( !_initialized )
     {
-      String packageName = e.getCompilationUnit().getPackageName().toString();
+      ExpressionTree pkg = e.getCompilationUnit().getPackageName();
+      String packageQualifier = pkg == null ? "" : (pkg.toString() + '.');
       for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
       {
         if( classDecl instanceof JCTree.JCClassDecl )
         {
-          _javaInputFiles.add( new Pair<>( packageName + '.' + ((JCTree.JCClassDecl)classDecl).getSimpleName(), e.getCompilationUnit().getSourceFile() ) );
+          _javaInputFiles.add( new Pair<>( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName(), e.getCompilationUnit().getSourceFile() ) );
         }
       }
     }
@@ -410,12 +412,13 @@ public class JavacPlugin implements Plugin, TaskListener
   private void process( TaskEvent e )
   {
     Set<String> typesToProcess = new HashSet<>();
-    String packageName = e.getCompilationUnit().getPackageName().toString();
+    ExpressionTree pkg = e.getCompilationUnit().getPackageName();
+    String packageQualifier = pkg == null ? "" : (pkg.toString() + '.');
     for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
     {
       if( classDecl instanceof JCTree.JCClassDecl )
       {
-        typesToProcess.add( packageName + '.' + ((JCTree.JCClassDecl)classDecl).getSimpleName() );
+        typesToProcess.add( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName() );
         insertBootstrap( (JCTree.JCClassDecl)classDecl );
       }
     }
