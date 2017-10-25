@@ -1,17 +1,12 @@
 package manifold.internal.host;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
+import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
@@ -20,6 +15,7 @@ import manifold.api.properties.PropertiesTypeManifold;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
+import manifold.util.concurrent.LocklessLazyVar;
 
 
 import static manifold.api.type.ITypeManifold.ProducerKind.Partial;
@@ -34,12 +30,14 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   private List<IDirectory> _sourcePath;
   private List<IDirectory> _outputPath;
   private Set<ITypeManifold> _typeManifolds;
+  private LocklessLazyVar<PathCache> _pathCache;
 
   public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
     _classpath = classpath;
     _sourcePath = sourcePath;
     _outputPath = outputPath;
+    _pathCache = LocklessLazyVar.make( this::makePathCache );
   }
 
   @Override
@@ -88,6 +86,11 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public List<Dependency> getDependencies()
   {
     return Collections.emptyList();
+  }
+
+  public PathCache getPathCache()
+  {
+    return _pathCache.get();
   }
 
   public Set<ITypeManifold> getTypeManifolds()
@@ -250,5 +253,18 @@ public abstract class SimpleModule implements ITypeLoader, IModule
       children.addAll( typeNames );
     }
     return children;
+  }
+
+  private PathCache makePathCache()
+  {
+    return new PathCache( this, this::makeModuleSourcePath, () -> {} );
+  }
+
+  private List<IDirectory> makeModuleSourcePath()
+  {
+    return getSourcePath().stream()
+      .filter( dir -> Arrays.stream( getExcludedPath() )
+        .noneMatch( excludeDir -> excludeDir.equals( dir ) ) )
+      .collect( Collectors.toList() );
   }
 }

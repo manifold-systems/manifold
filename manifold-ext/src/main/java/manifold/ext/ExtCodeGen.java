@@ -17,7 +17,6 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
-import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -207,7 +206,7 @@ class ExtCodeGen
   {
     Set<String> fqns = new LinkedHashSet<>();
 
-    PathCache pathCache = ModulePathCache.instance().get( getModule() );
+    PathCache pathCache = getModule().getPathCache();
     for( IFile file : _model.getFiles() )
     {
       Set<String> fqn = pathCache.getFqnForFile( file );

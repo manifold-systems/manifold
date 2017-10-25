@@ -7,6 +7,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
+import manifold.api.fs.cache.PathCache;
 import manifold.api.type.ITypeManifold;
 
 /**
@@ -37,6 +38,8 @@ public interface IModule
    * The dependency graph must not have cycles.
    */
   List<Dependency> getDependencies();
+
+  PathCache getPathCache();
 
   Set<ITypeManifold> getTypeManifolds();
 

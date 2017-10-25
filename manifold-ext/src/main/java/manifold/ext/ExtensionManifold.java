@@ -11,7 +11,6 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.host.ITypeLoader;
 import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
@@ -64,7 +63,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   @Override
   public boolean handlesFile( IFile file )
   {
-    Set<String> fqns = ModulePathCache.instance().get( getModule() ).getFqnForFile( file );
+    Set<String> fqns = getModule().getPathCache().getFqnForFile( file );
     if( fqns == null )
     {
       return false;

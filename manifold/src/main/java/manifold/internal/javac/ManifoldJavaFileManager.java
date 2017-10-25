@@ -13,7 +13,7 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import manifold.api.fs.cache.ModulePathCache;
+
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
@@ -133,7 +133,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
       fqn = fqn.substring( 0, iDollar );
     }
-    PathCache pathCache = ModulePathCache.instance().get( ManifoldHost.getCurrentModule() );
+    PathCache pathCache = ManifoldHost.getCurrentModule().getPathCache();
     return pathCache.getExtensionCache( "class" ).get( fqn ) != null;
   }
 

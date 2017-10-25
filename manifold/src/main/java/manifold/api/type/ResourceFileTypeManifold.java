@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
@@ -72,7 +71,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
                                         {
                                           FqnCache<LocklessLazyVar<M>> fqnToModel = new FqnCache<>();
                                           Map<String, Set<IFile>> aliasFqnToFiles = new HashMap<>();
-                                          Map<String, FqnCache<IFile>> extensionCaches = ModulePathCache.instance().get( getModule() ).getExtensionCaches();
+                                          Map<String, FqnCache<IFile>> extensionCaches = getModule().getPathCache().getExtensionCaches();
                                           for( Map.Entry<String, FqnCache<IFile>> entry : extensionCaches.entrySet() )
                                           {
                                             String ext = entry.getKey();
@@ -131,10 +130,10 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
 
   protected boolean isDuplicate( IFile file, Set<IFile> files )
   {
-    Set<String> fqnForFile = ModulePathCache.instance().get( getModule() ).getFqnForFile( file );
+    Set<String> fqnForFile = getModule().getPathCache().getFqnForFile( file );
     for( IFile f : files )
     {
-      Set<String> fqn = ModulePathCache.instance().get( getModule() ).getFqnForFile( f );
+      Set<String> fqn = getModule().getPathCache().getFqnForFile( f );
       if( fqnForFile.equals( fqn ) )
       {
         return true;
@@ -206,7 +205,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
       return new String[0];
     }
 
-    Set<String> fqns = ModulePathCache.instance().get( getModule() ).getFqnForFile( file );
+    Set<String> fqns = getModule().getPathCache().getFqnForFile( file );
     Set<String> aliasedFqns = new HashSet<>();
     if( fqns != null )
     {
