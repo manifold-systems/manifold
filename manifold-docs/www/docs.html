@@ -187,7 +187,7 @@ to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:</p>
 <p><img src="images/ext_demo.gif" alt="echo method" width="100%" height="100%"/></p>
-<p>There's a lot more to the extension manifold including <a href="#structural-interfaces">structural interfaces</a>, which are
+<p>There's a lot more to the extension manifold including <a href="#structural_interfaces">structural interfaces</a>, which are
 similar to interfaces in the <a href="https://golang.org/">Go</a> language. We'll cover more later in this guide.</p>
 <h3><a class="toc_anchor" name="benefits"> </a>Benefits</h3>
 <p>Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
@@ -480,12 +480,12 @@ Widget result = Widget.fromJson(jsonStr);
 Another advantage involves object identity.  The <code>Widget</code> type is just
 an interface directly on the JSON bindings.  The interface both abstracts and preserves the
 implementation details of the underlying JSON object -- the <code>Bindings</code> object isn't wrapped or proxied.
-The type manifold achieves this via <a href="#extension-interfaces">extension interfaces</a> on the
-<code>javax.script.Bindings</code> object and through the use of <a href="#structural-interfaces">structural interfaces</a> --
+The type manifold achieves this via <a href="#extension_interfaces">extension interfaces</a> on the
+<code>javax.script.Bindings</code> object and through the use of <a href="#structural_interfaces">structural interfaces</a> --
 JSON types are structural interfaces. Essentially, the <code>widget</code> object <em>is</em> the <code>Bindings</code> object;
 changes you make to <code>widget</code> are changes directly on the Bindings.  Additionally, like all type
 manifolds, there are no generated files or other build steps involved.</p>
-<p>Combining forces, Manifold <a href="#extension-libraries">extension libraries</a> help reduce
+<p>Combining forces, Manifold <a href="#extension_libraries">extension libraries</a> help reduce
 common remote API drudgery involving JSON:</p>
 <pre><code class="language-java">WidgetQuery query = WidgetQuery.create();
 ...
@@ -915,7 +915,7 @@ public class MyWidgetExtension {
 </code></pre>
 <p>This extension effectively changes the <code>abc.Widget</code> <em>nominal</em> interface to a <em>structural</em> interface. In the context
 of your project classes no longer have to declare they implement it nominally.</p>
-<p>See <a href="#structural-interfaces">Structural Interfaces</a> later in this guide for fuller coverage of the topic.</p>
+<p>See <a href="#structural_interfaces">Structural Interfaces</a> later in this guide for fuller coverage of the topic.</p>
 <h3><a class="toc_anchor" name="extension_interfaces"> </a>Extension Interfaces</h3>
 <p>An extension class can add structural interfaces to its extended class.  This feature helps with a
 variety of use-cases.  For example, let's say we have a class <code>Foo</code> and interface <code>Hello</code>:</p>

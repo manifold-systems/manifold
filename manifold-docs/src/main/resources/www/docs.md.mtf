@@ -118,7 +118,7 @@ extended class:
 <p><img src="images/ext_demo.gif" alt="echo method" width="100%" height="100%"/></p>
 
 
-There's a lot more to the extension manifold including [structural interfaces](#structural-interfaces), which are
+There's a lot more to the extension manifold including [structural interfaces](#structural_interfaces), which are
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
@@ -456,13 +456,13 @@ This approach eliminates library usage and connects your code directly to JSON m
 Another advantage involves object identity.  The `Widget` type is just
 an interface directly on the JSON bindings.  The interface both abstracts and preserves the 
 implementation details of the underlying JSON object -- the `Bindings` object isn't wrapped or proxied.
-The type manifold achieves this via [extension interfaces](#extension-interfaces) on the
-`javax.script.Bindings` object and through the use of [structural interfaces](#structural-interfaces) -- 
+The type manifold achieves this via [extension interfaces](#extension_interfaces) on the
+`javax.script.Bindings` object and through the use of [structural interfaces](#structural_interfaces) -- 
 JSON types are structural interfaces. Essentially, the `widget` object _is_ the `Bindings` object; 
 changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
 manifolds, there are no generated files or other build steps involved. 
  
-Combining forces, Manifold [extension libraries](#extension-libraries) help reduce
+Combining forces, Manifold [extension libraries](#extension_libraries) help reduce
 common remote API drudgery involving JSON:
 
 ```java
@@ -996,7 +996,7 @@ public class MyWidgetExtension {
 This extension effectively changes the `abc.Widget` _nominal_ interface to a _structural_ interface. In the context
 of your project classes no longer have to declare they implement it nominally.  
 
-See [Structural Interfaces](#structural-interfaces) later in this guide for fuller coverage of the topic.
+See [Structural Interfaces](#structural_interfaces) later in this guide for fuller coverage of the topic.
 
 ### ${anchor("Extension Interfaces")}
 
