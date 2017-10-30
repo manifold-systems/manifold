@@ -1,29 +1,25 @@
 package manifold.internal.host;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ServiceConfigurationError;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
+import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
-import manifold.api.image.ImageSourceProducer;
-import manifold.api.properties.PropertiesSourceProducer;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.image.ImageTypeManifold;
+import manifold.api.properties.PropertiesTypeManifold;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
+import manifold.util.concurrent.LocklessLazyVar;
 
 
-import static manifold.api.sourceprod.ISourceProducer.ProducerKind.Partial;
-import static manifold.api.sourceprod.ISourceProducer.ProducerKind.Primary;
+import static manifold.api.type.ITypeManifold.ProducerKind.Partial;
+import static manifold.api.type.ITypeManifold.ProducerKind.Primary;
 
 /**
  */
@@ -32,14 +28,16 @@ public abstract class SimpleModule implements ITypeLoader, IModule
 {
   private List<IDirectory> _classpath;
   private List<IDirectory> _sourcePath;
-  private IDirectory _outputPath;
-  private Set<ISourceProducer> _sourceProducers;
+  private List<IDirectory> _outputPath;
+  private Set<ITypeManifold> _typeManifolds;
+  private LocklessLazyVar<PathCache> _pathCache;
 
-  public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, IDirectory outputPath )
+  public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
     _classpath = classpath;
     _sourcePath = sourcePath;
     _outputPath = outputPath;
+    _pathCache = LocklessLazyVar.make( this::makePathCache );
   }
 
   @Override
@@ -61,7 +59,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   }
 
   @Override
-  public IDirectory getOutputPath()
+  public List<IDirectory> getOutputPath()
   {
     return _outputPath;
   }
@@ -90,22 +88,27 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return Collections.emptyList();
   }
 
-  public Set<ISourceProducer> getSourceProducers()
+  public PathCache getPathCache()
   {
-    return _sourceProducers;
+    return _pathCache.get();
+  }
+
+  public Set<ITypeManifold> getTypeManifolds()
+  {
+    return _typeManifolds;
   }
 
   public JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    Set<ISourceProducer> sps = findSourceProducersFor( fqn );
+    Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
     return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, () -> compoundProduce( sps, fqn, errorHandler ) );
   }
 
-  private String compoundProduce( Set<ISourceProducer> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  private String compoundProduce( Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    ISourceProducer found = null;
+    ITypeManifold found = null;
     String result = "";
-    for( ISourceProducer sp : sps )
+    for( ITypeManifold sp : sps )
     {
       if( sp.getProducerKind() == Primary ||
           sp.getProducerKind() == Partial )
@@ -120,9 +123,9 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         result = sp.produce( fqn, result, errorHandler );
       }
     }
-    for( ISourceProducer sp : sps )
+    for( ITypeManifold sp : sps )
     {
-      if( sp.getProducerKind() == ISourceProducer.ProducerKind.Supplemental )
+      if( sp.getProducerKind() == ITypeManifold.ProducerKind.Supplemental )
       {
         result = sp.produce( fqn, result, errorHandler );
       }
@@ -130,10 +133,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return result;
   }
 
-  public Set<ISourceProducer> findSourceProducersFor( String fqn )
+  public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
   {
-    Set<ISourceProducer> sps = new HashSet<>( 2 );
-    for( ISourceProducer sp : getSourceProducers() )
+    Set<ITypeManifold> sps = new HashSet<>( 2 );
+    for( ITypeManifold sp : getTypeManifolds() )
     {
       if( sp.isType( fqn ) )
       {
@@ -143,10 +146,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return sps;
   }
 
-  public Set<ISourceProducer> findSourceProducersFor( IFile file )
+  public Set<ITypeManifold> findTypeManifoldsFor( IFile file )
   {
-    Set<ISourceProducer> sps = new HashSet<>( 2 );
-    for( ISourceProducer sp : getSourceProducers() )
+    Set<ITypeManifold> sps = new HashSet<>( 2 );
+    for( ITypeManifold sp : getTypeManifolds() )
     {
       if( sp.handlesFile( file ) )
       {
@@ -156,49 +159,49 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return sps;
   }
 
-  protected void initializeSourceProducers()
+  protected void initializeTypeManifolds()
   {
-    if( _sourceProducers != null )
+    if( _typeManifolds != null )
     {
       return;
     }
 
     synchronized( this )
     {
-      if( _sourceProducers != null )
+      if( _typeManifolds != null )
       {
         return;
       }
 
-      Set<ISourceProducer> sourceProducers = new HashSet<>();
-      addBuiltIn( sourceProducers );
-      addRegistered( sourceProducers );
-      _sourceProducers = sourceProducers;
+      Set<ITypeManifold> typeManifolds = new HashSet<>();
+      addBuiltIn( typeManifolds );
+      addRegistered( typeManifolds );
+      _typeManifolds = typeManifolds;
     }
   }
 
-  private void addBuiltIn( Set<ISourceProducer> sps )
+  private void addBuiltIn( Set<ITypeManifold> sps )
   {
-    ISourceProducer sp = new PropertiesSourceProducer();
+    ITypeManifold sp = new PropertiesTypeManifold();
     sp.init( this );
     sps.add( sp );
 
-    sp = new ImageSourceProducer();
+    sp = new ImageTypeManifold();
     sp.init( this );
     sps.add( sp );
   }
 
-  protected void addRegistered( Set<ISourceProducer> sps )
+  protected void addRegistered( Set<ITypeManifold> sps )
   {
     // Load from Thread Context Loader
     // (currently the IJ plugin creates loaders for accessing source producers from project classpath)
-    ServiceLoader<ISourceProducer> loader = ServiceLoader.load( ISourceProducer.class );
-    Iterator<ISourceProducer> iterator = loader.iterator();
+    ServiceLoader<ITypeManifold> loader = ServiceLoader.load( ITypeManifold.class );
+    Iterator<ITypeManifold> iterator = loader.iterator();
     if( iterator.hasNext() )
     {
       while( iterator.hasNext() )
       {
-        ISourceProducer sp = iterator.next();
+        ITypeManifold sp = iterator.next();
         sp.init( this );
         sps.add( sp );
       }
@@ -207,12 +210,12 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     if( Thread.currentThread().getContextClassLoader() != getClass().getClassLoader() )
     {
       // Also load from this loader
-      loader = ServiceLoader.load( ISourceProducer.class, getClass().getClassLoader() );
+      loader = ServiceLoader.load( ITypeManifold.class, getClass().getClassLoader() );
       for( iterator = loader.iterator(); iterator.hasNext(); )
       {
         try
         {
-          ISourceProducer sp = iterator.next();
+          ITypeManifold sp = iterator.next();
           sp.init( this );
           if( isAbsent( sps, sp ) )
           {
@@ -222,16 +225,16 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         catch( ServiceConfigurationError e )
         {
           // avoid chicken/egg errors from attempting to build a module that self-registers a source producer
-          // it's important to allow a source producer module to specify its xxx.ISourceProducer file in its META-INF
+          // it's important to allow a source producer module to specify its xxx.ITypeManifold file in its META-INF
           // directory so that users of the source producer don't have to
         }
       }
     }
   }
 
-  private boolean isAbsent( Set<ISourceProducer> sps, ISourceProducer sp )
+  private boolean isAbsent( Set<ITypeManifold> sps, ITypeManifold sp )
   {
-    for( ISourceProducer existingSp: sps )
+    for( ITypeManifold existingSp: sps )
     {
       if( existingSp.getClass().equals( sp.getClass() ) )
       {
@@ -244,11 +247,24 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public Set<TypeName> getChildrenOfNamespace( String packageName )
   {
     Set<TypeName> children = new HashSet<>();
-    for( ISourceProducer sp : getSourceProducers() )
+    for( ITypeManifold sp : getTypeManifolds() )
     {
       Collection<TypeName> typeNames = sp.getTypeNames( packageName );
       children.addAll( typeNames );
     }
     return children;
+  }
+
+  private PathCache makePathCache()
+  {
+    return new PathCache( this, this::makeModuleSourcePath, () -> {} );
+  }
+
+  private List<IDirectory> makeModuleSourcePath()
+  {
+    return getSourcePath().stream()
+      .filter( dir -> Arrays.stream( getExcludedPath() )
+        .noneMatch( excludeDir -> excludeDir.equals( dir ) ) )
+      .collect( Collectors.toList() );
   }
 }

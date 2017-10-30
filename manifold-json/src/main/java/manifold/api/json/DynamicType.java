@@ -22,6 +22,12 @@ public class DynamicType implements IJsonType
   }
 
   @Override
+  public String getIdentifier()
+  {
+    return getName();
+  }
+
+  @Override
   public IJsonParentType getParent()
   {
     return null;

@@ -26,6 +26,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 public class StreamUtil
 {
@@ -307,27 +308,35 @@ public class StreamUtil
    */
   public static void copy( File fileOrDirectory, File toDir )
   {
-    File copy = new File( toDir, fileOrDirectory.getName() );
-    if( fileOrDirectory.isDirectory() )
+    copy( fileOrDirectory, toDir, null );
+  }
+
+  public static void copy(File fileOrDirectory, File toDir, Predicate<File> filter)
+  {
+    if( filter == null || filter.test(fileOrDirectory) )
     {
-      //noinspection ResultOfMethodCallIgnored
-      copy.mkdir();
-      for( File child : fileOrDirectory.listFiles() )
+      File copy = new File( toDir, fileOrDirectory.getName() );
+      if( fileOrDirectory.isDirectory() )
       {
-        copy( child, copy );
+        //noinspection ResultOfMethodCallIgnored
+        copy.mkdir();
+        for( File child : fileOrDirectory.listFiles() )
+        {
+          copy( child, copy, filter );
+        }
       }
-    }
-    else
-    {
-      //noinspection ResultOfMethodCallIgnored
-      try( InputStream is = new BufferedInputStream( new FileInputStream( fileOrDirectory ) );
-           OutputStream os = new BufferedOutputStream( new FileOutputStream( copy ) ) )
+      else
       {
-        StreamUtil.copy( is, os );
-      }
-      catch( Exception e )
-      {
-        throw new RuntimeException( e );
+        //noinspection ResultOfMethodCallIgnored
+        try( InputStream is = new BufferedInputStream( new FileInputStream( fileOrDirectory ) );
+             OutputStream os = new BufferedOutputStream( new FileOutputStream( copy ) ) )
+        {
+          StreamUtil.copy( is, os );
+        }
+        catch( Exception e )
+        {
+          throw new RuntimeException( e );
+        }
       }
     }
   }

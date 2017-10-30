@@ -1,13 +1,14 @@
 package manifold.internal.javac;
 
 import com.sun.source.util.JavacTask;
-import com.sun.source.util.TreePath;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.ITypeProcessor;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.ITypeProcessor;
 import manifold.internal.host.ManifoldHost;
 
 /**
@@ -22,7 +23,7 @@ public class TypeProcessor extends CompiledTypeProcessor
 //  @Override
 //  public boolean filterError( Diagnostic diagnostic )
 //  {
-//    for( ISourceProducer sp: ManifoldHost.getCurrentModule().getSourceProducers() )
+//    for( ITypeManifold sp: ManifoldHost.getCurrentModule().getTypeManifolds() )
 //    {
 //      if( sp instanceof ITypeProcessor )
 //      {
@@ -36,16 +37,27 @@ public class TypeProcessor extends CompiledTypeProcessor
 //  }
 
   @Override
-  public void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter )
+  public void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter )
   {
-    String fqn = element.getQualifiedName().toString();
-    for( ISourceProducer sp : ManifoldHost.getCurrentModule().getSourceProducers() )
+    for( ITypeManifold sp : ManifoldHost.getCurrentModule().getTypeManifolds() )
     {
       if( sp instanceof ITypeProcessor )
       {
         JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing: " + element.getQualifiedName() );
 
-        ((ITypeProcessor)sp).process( fqn, this, issueReporter );
+        try
+        {
+          ((ITypeProcessor)sp).process( element, this, issueReporter );
+        }
+        catch( Throwable e )
+        {
+          StringWriter stackTrace = new StringWriter();
+          e.printStackTrace( new PrintWriter( stackTrace ) );
+          issueReporter.reportError( "Fatal error processing with Manifold type processor: " + sp.getClass().getName() +
+                                     "\non type: " + element.getQualifiedName() +
+                                     "\nPlease report the error with the accompanying stack trace.\n" + stackTrace );
+          throw e;
+        }
       }
     }
   }

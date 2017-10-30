@@ -2,8 +2,9 @@ package manifold.ext;
 
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
@@ -33,8 +34,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
+import manifold.ExtIssueMsg;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
+import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
@@ -52,13 +55,19 @@ public class ExtensionTransformer extends TreeTranslator
   private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
 
-  private final ExtSourceProducer _sp;
+  private final ExtensionManifold _sp;
   private final TypeProcessor _tp;
+  private boolean _bridgeMethod;
 
-  ExtensionTransformer( ExtSourceProducer sp, TypeProcessor typeProcessor )
+  ExtensionTransformer( ExtensionManifold sp, TypeProcessor typeProcessor )
   {
     _sp = sp;
     _tp = typeProcessor;
+  }
+
+  public TypeProcessor getTypeProcessor()
+  {
+    return _tp;
   }
 
   /**
@@ -68,13 +77,59 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
-    if( TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( tree.sym != null && TypeUtil.isStructuralInterface( _tp, tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
-      tree.sym = objectSym;
+      Tree parent = _tp.getParent( tree );
+      JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
+      if( parent instanceof JCTree.JCVariableDecl )
+      {
+        ((JCTree.JCVariableDecl)parent).type = objectSym.type;
+
+        long parameterModifier = 8589934592L; // Flag.Flag.PARAMETER.value
+        if( (((JCTree.JCVariableDecl)parent).mods.flags & parameterModifier) != 0 )
+        {
+          objIdent.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).sym.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).vartype = objIdent;
+        }
+      }
+      else if( parent instanceof JCTree.JCWildcard )
+      {
+        JCTree.JCWildcard wildcard = (JCTree.JCWildcard)parent;
+        wildcard.type = new Type.WildcardType( objectSym.type, wildcard.kind.kind, wildcard.type.tsym );
+      }
+      tree = objIdent;
       tree.type = objectSym.type;
     }
     result = tree;
+  }
+
+  @Override
+  public void visitLambda( JCTree.JCLambda tree )
+  {
+    super.visitLambda( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    tree.type = eraseStructureType( tree.type );
+    ArrayList<Type> types = new ArrayList<>();
+    for( Type target : tree.targets )
+    {
+      types.add( eraseStructureType( target ) );
+    }
+    tree.targets = List.from( types );
   }
 
   /**
@@ -84,20 +139,54 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitSelect( JCTree.JCFieldAccess tree )
   {
     super.visitSelect( tree );
-    if( TypeUtil.isStructuralInterface( tree.sym ) && !isReceiver( tree ) )
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( TypeUtil.isStructuralInterface( _tp, tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
-      tree.sym = objectSym;
-      tree.type = objectSym.type;
+      JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
+      Tree parent = _tp.getParent( tree );
+      if( parent instanceof JCTree.JCVariableDecl )
+      {
+        ((JCTree.JCVariableDecl)parent).type = objectSym.type;
+        long parameterModifier = 8589934592L; // Flag.Flag.PARAMETER.value
+        if( (((JCTree.JCVariableDecl)parent).mods.flags & parameterModifier) != 0 )
+        {
+          objIdent.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).sym.type = objectSym.type;
+          ((JCTree.JCVariableDecl)parent).vartype = objIdent;
+        }
+      }
+      else if( parent instanceof JCTree.JCWildcard )
+      {
+        JCTree.JCWildcard wildcard = (JCTree.JCWildcard)parent;
+        wildcard.type = new Type.WildcardType( objectSym.type, wildcard.kind.kind, wildcard.type.tsym );
+      }
+      result = objIdent;
     }
-    result = tree;
+    else
+    {
+      result = tree;
+    }
   }
 
   @Override
   public void visitTypeCast( JCTypeCast tree )
   {
     super.visitTypeCast( tree );
-    if( TypeUtil.isStructuralInterface( tree.type.tsym ) )
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) )
     {
       tree.expr = replaceCastExpression( tree.getExpression(), tree.type );
       tree.type = getObjectClass().type;
@@ -115,6 +204,12 @@ public class ExtensionTransformer extends TreeTranslator
     Symbol.MethodSymbol method = findExtMethod( tree );
 
     eraseGenericStructuralVarargs( tree );
+
+    if( _tp.isGenerate() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
 
     if( method != null )
     {
@@ -134,6 +229,58 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
+  @Override
+  public void visitClassDef( JCTree.JCClassDecl tree )
+  {
+    super.visitClassDef( tree );
+
+    verifyExtensionInterfaces( tree );
+  }
+
+  private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )
+  {
+    if( !hasAnnotation( tree.getModifiers().getAnnotations(), Extension.class ) )
+    {
+      return;
+    }
+
+    outer:
+    for( JCExpression iface: tree.getImplementsClause() )
+    {
+      final Symbol.TypeSymbol ifaceSym = iface.type.tsym;
+      if( ifaceSym == _tp.getSymtab().objectType.tsym )
+      {
+        continue;
+      }
+
+      for( Attribute.Compound anno: ifaceSym.getAnnotationMirrors() )
+      {
+        if( anno.type.toString().equals( Structural.class.getName() ) )
+        {
+          continue outer;
+        }
+      }
+      // extension interfaces must be structural
+      _tp.report( iface, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE.get( iface.toString() ) );
+    }
+  }
+
+  private boolean shouldProcessForGeneration()
+  {
+    return _bridgeMethod;
+  }
+
+  private boolean isBridgeMethod( JCTree.JCMethodDecl tree )
+  {
+    long modifiers = tree.getModifiers().flags;
+    return (Flags.BRIDGE & modifiers) != 0;
+  }
+
+  private Type eraseStructureType( Type type )
+  {
+    return new StructuralTypeEraser( this ).visit( type );
+  }
+
   private boolean isReceiver( JCTree tree )
   {
     Tree parent = _tp.getParent( tree );
@@ -144,7 +291,7 @@ public class ExtensionTransformer extends TreeTranslator
     return false;
   }
 
-  private Symbol.ClassSymbol getObjectClass()
+  Symbol.ClassSymbol getObjectClass()
   {
     Symtab symbols = Symtab.instance( _tp.getContext() );
     return (Symbol.ClassSymbol)symbols.objectType.tsym;
@@ -152,7 +299,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void eraseGenericStructuralVarargs( JCTree.JCMethodInvocation tree )
   {
-    if( tree.varargsElement instanceof Type.ClassType && TypeUtil.isStructuralInterface( tree.varargsElement.tsym ) )
+    if( tree.varargsElement instanceof Type.ClassType && TypeUtil.isStructuralInterface( _tp, tree.varargsElement.tsym ) )
     {
       tree.varargsElement = _tp.getSymtab().objectType;
     }
@@ -164,7 +311,33 @@ public class ExtensionTransformer extends TreeTranslator
   @Override
   public void visitMethodDef( JCTree.JCMethodDecl tree )
   {
-    super.visitMethodDef( tree );
+    if( isBridgeMethod( tree ) )
+    {
+      // we process bridge methods during Generation, since they don't exist prior to Generation
+      _bridgeMethod = true;
+    }
+    try
+    {
+      super.visitMethodDef( tree );
+    }
+    finally
+    {
+      _bridgeMethod = false;
+    }
+
+    if( _tp.isGenerate() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( tree.sym.owner.isAnonymous() )
+    {
+      // Keep track of anonymous classes so we can process any bridge methods added to them
+      JCTree.JCClassDecl anonymousClassDef = (JCTree.JCClassDecl)_tp.getTreeUtil().getTree( tree.sym.owner );
+      _tp.preserveInnerClassForGenerationPhase( anonymousClassDef );
+    }
+
     verifyExtensionMethod( tree );
     result = tree;
   }
@@ -176,21 +349,16 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    List<JCTree.JCVariableDecl> parameters = tree.getParameters();
-    if( parameters.length() == 0 )
-    {
-      return;
-    }
-
     String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
-    if( !extendedClassName.startsWith( ExtSourceProducer.EXTENSIONS_PACKAGE + '.' ) )
+    if( !extendedClassName.startsWith( ExtensionManifold.EXTENSIONS_PACKAGE + '.' ) )
     {
       return;
     }
 
-    extendedClassName = extendedClassName.substring( ExtSourceProducer.EXTENSIONS_PACKAGE.length() + 1 );
+    extendedClassName = extendedClassName.substring( ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
 
     boolean thisAnnoFound = false;
+    List<JCTree.JCVariableDecl> parameters = tree.getParameters();
     for( int i = 0; i < parameters.size(); i++ )
     {
       JCTree.JCVariableDecl param = parameters.get( i );
@@ -201,20 +369,24 @@ public class ExtensionTransformer extends TreeTranslator
 
         if( i != 0 )
         {
-          _tp.report( param, Diagnostic.Kind.ERROR, "@This must target only the first parameter of an extension method" );
+          _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_THIS_FIRST.get() );
         }
 
-        if( !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
+        if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
-          _tp.report( param, Diagnostic.Kind.ERROR, "Expecting type '" + extendedClassName + "' for @This parameter" );
+          Symbol.ClassSymbol extendClassSym = JavacElements.instance( _tp.getContext() ).getTypeElement( extendedClassName );
+          if( extendClassSym != null && !TypeUtil.isStructuralInterface( _tp, extendClassSym ) ) // an extended class could be made a structural interface which results in Object as @This param, ignore this
+          {
+            _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
+          }
         }
       }
       else if( i == 0 &&
                Modifier.isStatic( (int)methodModifiers ) &&
-               !Modifier.isPrivate( (int)methodModifiers ) &&
+               Modifier.isPublic( (int)methodModifiers ) &&
                param.type.toString().equals( extendedClassName ) )
       {
-        _tp.report( param, Diagnostic.Kind.WARNING, "Maybe missing @This to declare an instance extension method?" );
+        _tp.report( param, Diagnostic.Kind.WARNING, ExtIssueMsg.MSG_MAYBE_MISSING_THIS.get() );
       }
     }
 
@@ -223,12 +395,12 @@ public class ExtensionTransformer extends TreeTranslator
       long methodModifiers = tree.getModifiers().flags;
       if( !Modifier.isStatic( (int)methodModifiers ) )
       {
-        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must be declared 'static'" );
+        _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_MUST_BE_STATIC.get( tree.getName() ) );
       }
 
       if( Modifier.isPrivate( (int)methodModifiers ) )
       {
-        _tp.report( tree, Diagnostic.Kind.ERROR, "Extension method " + tree.getName() + " must not be declared 'private'" );
+        _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_MUST_NOT_BE_PRIVATE.get( tree.getName() ) );
       }
     }
   }
@@ -346,7 +518,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression thisArg = m.selected;
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
-      JavacTaskImpl javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
+      BasicJavacTask javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
       Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
@@ -394,7 +566,7 @@ public class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          JavacTaskImpl javacTask = (JavacTaskImpl)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
+          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
           outer:
@@ -437,7 +609,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
         JCExpression thisArg = m.selected;
-        if( TypeUtil.isStructuralInterface( thisArg.type.tsym ) )
+        if( TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym ) )
         {
           return true;
         }
@@ -473,7 +645,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     //## note: we'd like to avoid the operation if the obj not a ICallHandler,
     // but that is an expensive structural check, more expensive than this call...
-    //  if( obj instanceof ICallHandler )
+    //  if( obj is a ICallHandler )
     //  {
     Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
     ifaces.add( iface );
@@ -512,23 +684,21 @@ public class ExtensionTransformer extends TreeTranslator
 
   private static Class createProxy( Class iface, Class rootClass )
   {
+    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     if( hasCallHandlerMethod( rootClass ) )
     {
-      String relativeProxyName = rootClass.getSimpleName() + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
       return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
     }
-
-    String relativeProxyName = rootClass.getSimpleName() + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
   }
 
   private static boolean hasCallHandlerMethod( Class rootClass )
   {
     String fqn = rootClass.getCanonicalName();
-    JavacTaskImpl javacTask = JavaParser.instance().getJavacTask();
+    BasicJavacTask javacTask = JavaParser.instance().getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
-    if( Types.instance( javacTask.getContext() ).isAssignable( callHandlerSymbol.getFirst().asType(), classSymbol.getFirst().asType() ) )
+    if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
     {
       // Nominally implements ICallHandler
       return true;
@@ -537,7 +707,7 @@ public class ExtensionTransformer extends TreeTranslator
     return hasCallMethod( javacTask, classSymbol.getFirst() );
   }
 
-  private static boolean hasCallMethod( JavacTaskImpl javacTask, Symbol.ClassSymbol classSymbol )
+  private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
   {
     Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
     Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
@@ -546,7 +716,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( s instanceof Symbol.MethodSymbol )
       {
         List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)s).getParameters();
-        if( parameters.size() != 5 )
+        if( parameters.size() != 6 )
         {
           return false;
         }
@@ -555,9 +725,10 @@ public class ExtensionTransformer extends TreeTranslator
         Types types = Types.instance( javacTask.getContext() );
         return types.erasure( parameters.get( 0 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
                parameters.get( 1 ).asType().equals( symbols.stringType ) &&
-               types.erasure( parameters.get( 2 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 3 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 3 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 4 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType().equals( symbols.objectType );
+               parameters.get( 2 ).asType().equals( symbols.stringType ) &&
+               types.erasure( parameters.get( 3 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 4 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
+               parameters.get( 5 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 5 ).asType()).getComponentType().equals( symbols.objectType );
       }
     }
     Type superclass = classSymbol.getSuperclass();
@@ -596,11 +767,12 @@ public class ExtensionTransformer extends TreeTranslator
    * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
    * but the association of the structural interface with the receiver is lost.  For example:
    * <pre>
-   *   Person person = Person.create(); // Person is a JsonSourceProducer interface; the rumtime type of person here is really just a Map (or Binding)
+   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the runtime type of person here is really just a Map (or Binding)
    *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPerosnExt extension methods class
    *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
    * </pre>
    */
+  //## todo: this is inefficient, we should consider caching the methods by signature along with the interfaces
   public static Object invokeUnhandled( Object thiz, Class proxiedIface, String name, Class returnType, Class[] paramTypes, Object[] args )
   {
     Set<Class> ifaces = ID_MAP.get( thiz );
@@ -608,6 +780,11 @@ public class ExtensionTransformer extends TreeTranslator
     {
       for( Class iface : ifaces )
       {
+        if( iface == proxiedIface )
+        {
+          continue;
+        }
+
         Method m = findMethod( iface, name, paramTypes );
         if( m != null )
         {
@@ -650,7 +827,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     catch( Exception e )
     {
-      throw new RuntimeException( e );
+      return null;
     }
     return null;
   }

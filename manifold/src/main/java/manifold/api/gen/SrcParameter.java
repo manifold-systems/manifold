@@ -57,11 +57,17 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
   {
     return render( sb, indent, false );
   }
-
   public StringBuilder render( StringBuilder sb, int indent, boolean varArgs )
   {
-    renderAnnotations( sb, 0, true );
-    renderModifiers( sb, false, 0 );
+    return render( sb, indent, varArgs, false );
+  }
+  public StringBuilder render( StringBuilder sb, int indent, boolean varArgs, boolean forSignature )
+  {
+    if( !forSignature )
+    {
+      renderAnnotations( sb, 0, true );
+      renderModifiers( sb, false, 0 );
+    }
     if( varArgs )
     {
       _type.getComponentType().render( sb, 0 ).append( "..." );
@@ -70,7 +76,10 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
     {
       _type.render( sb, 0 );
     }
-    sb.append( ' ' ).append( getSimpleName() );
+    if( !forSignature )
+    {
+      sb.append( ' ' ).append( getSimpleName() );
+    }
     return sb;
   }
 }

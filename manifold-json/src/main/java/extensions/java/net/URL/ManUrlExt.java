@@ -2,6 +2,7 @@ package extensions.java.net.URL;
 
 import extensions.javax.script.Bindings.ManBindingsExt;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
@@ -32,17 +33,21 @@ public class ManUrlExt
    * Otherwise, the argument is coerced to a String and URL encoded.
    */
   @Extension
-  public static URL makeUrl( String url, Bindings arguments ) {
+  public static URL makeUrl( String url, Bindings arguments )
+  {
     StringBuilder sb = new StringBuilder();
-    for( Map.Entry entry : arguments.entrySet() ) {
+    for( Map.Entry entry : arguments.entrySet() )
+    {
       sb.append( sb.length() == 0 ? '?' : '&' )
-      .append( entry.getKey() )
-      .append( '=' );
+        .append( entry.getKey() )
+        .append( '=' );
       Object value = entry.getValue();
-      if( value instanceof Bindings ) {
+      if( value instanceof Bindings )
+      {
         value = ManBindingsExt.toJson( ((Bindings)value) );
       }
-      else if( value instanceof List ) {
+      else if( value instanceof List )
+      {
         value = ManBindingsExt.listToJson( (List)value );
       }
       try
@@ -79,7 +84,7 @@ public class ManUrlExt
   {
     try
     {
-      byte[] bytes = makeArguments( bindings ).getBytes( "UTF-8" );
+      byte[] bytes = bindings.makeArguments().getBytes( "UTF-8" );
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod( "POST" );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
@@ -116,29 +121,6 @@ public class ManUrlExt
     return Json.fromJson( postForTextContent( url, bindings ) );
   }
 
-  private static String makeArguments( Bindings arguments )
-  {
-    try
-    {
-      StringBuilder sb = new StringBuilder();
-      for( Map.Entry<String, Object> entry : arguments.entrySet() )
-      {
-        if( sb.length() != 0 )
-        {
-          sb.append( '&' );
-        }
-        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
-                .append( '=' )
-                .append( makeValue( entry.getValue() ) );
-      }
-      return sb.toString();
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
   private static String makeValue( Object value ) throws UnsupportedEncodingException
   {
     if( value instanceof Bindings )
@@ -153,11 +135,28 @@ public class ManUrlExt
   }
 
   /**
-   * @return The full content of this URL's stream coerced to a String.
+   * @return The full text content of this URL's stream.
    */
-  public static String getTextContent( @This URL thiz ) {
-    try( Reader reader = StreamUtil.getInputStreamReader( thiz.openStream() ) ) {
+  public static String getTextContent( @This URL thiz )
+  {
+    try( Reader reader = StreamUtil.getInputStreamReader( thiz.openStream() ) )
+    {
       return StreamUtil.getContent( reader );
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * @return The full binary content of this URL's stream.
+   */
+  public static byte[] getBinaryContent( @This URL thiz )
+  {
+    try( InputStream stream = thiz.openStream() )
+    {
+      return StreamUtil.getContent( stream );
     }
     catch( IOException e )
     {
@@ -170,7 +169,8 @@ public class ManUrlExt
    *
    * @see manifold.api.json.Json#fromJson(String)
    */
-  public static Bindings getJsonContent( @This URL thiz ) {
+  public static Bindings getJsonContent( @This URL thiz )
+  {
     return Json.fromJson( getTextContent( thiz ) );
   }
 }

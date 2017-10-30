@@ -2,7 +2,6 @@ package manifold.util;
 
 public class Pair<F, S>
 {
-
   final F _first;
   final S _second;
 
@@ -24,7 +23,7 @@ public class Pair<F, S>
 
   public static <T, V> Pair<T, V> make( T f, V s )
   {
-    return new Pair<T, V>( f, s );
+    return new Pair<>( f, s );
   }
 
   public boolean equals( Object o )
@@ -44,12 +43,7 @@ public class Pair<F, S>
     {
       return false;
     }
-    if( _second != null ? !_second.equals( pair._second ) : pair._second != null )
-    {
-      return false;
-    }
-
-    return true;
+    return _second != null ? _second.equals( pair._second ) : pair._second == null;
   }
 
   public int hashCode()

@@ -148,7 +148,7 @@ public class ManClassesUrlConnection extends URLConnection
         // may load, if a source-based one hasn't already loaded.
         try
         {
-          Pair<JavaFileObject, String> pair = JavaParser.instance().findJavaSource( fqn, null );
+          Pair<JavaFileObject, String> pair = JavaParser.instance().findJavaSource( fqn, new DiagnosticCollector<>() );
           if( pair != null )
           {
             _javaSrcFile = pair.getFirst();
@@ -259,7 +259,7 @@ public class ManClassesUrlConnection extends URLConnection
     private byte[] compileJavaClass()
     {
       DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( _javaFqn, Arrays.asList( "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
       if( cls != null )
       {
         return cls.getBytes();
@@ -271,7 +271,7 @@ public class ManClassesUrlConnection extends URLConnection
     {
       DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
       StringJavaFileObject fileObj = new StringJavaFileObject( _javaFqn, source );
-      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( fileObj, _javaFqn, Arrays.asList( "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
       if( cls != null )
       {
         return cls.getBytes();

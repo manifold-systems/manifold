@@ -7,11 +7,12 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import manifold.api.host.NoBootstrap;
 import manifold.internal.runtime.Bootstrap;
 
 
 /**
- * Add a static block to top-level classes to bootstrap Manifold:
+ * Add a static block to top-level classes to demo Manifold:
  * <pre>
  *   static {
  *     Bootstrap.init();
@@ -21,9 +22,9 @@ import manifold.internal.runtime.Bootstrap;
  */
 class BootstrapInserter extends TreeTranslator
 {
-  private JavacHook _javacJacker;
+  private JavacPlugin _javacJacker;
 
-  public BootstrapInserter( JavacHook javacJacker )
+  public BootstrapInserter( JavacPlugin javacJacker )
   {
     _javacJacker = javacJacker;
   }
@@ -34,12 +35,27 @@ class BootstrapInserter extends TreeTranslator
     super.visitClassDef( tree );
     if( tree.sym != null && !tree.sym.isInner() )
     {
-      JCTree.JCStatement newNode = buildBootstrapStaticBlock();
-      ArrayList<JCTree> newDefs = new ArrayList<>( tree.defs );
-      newDefs.add( 0, newNode );
-      tree.defs = List.from( newDefs );
+      if( !hasNoBootstrap( tree.getModifiers().getAnnotations() ) )
+      {
+        JCTree.JCStatement newNode = buildBootstrapStaticBlock();
+        ArrayList<JCTree> newDefs = new ArrayList<>( tree.defs );
+        newDefs.add( 0, newNode );
+        tree.defs = List.from( newDefs );
+      }
     }
     result = tree;
+  }
+
+  private boolean hasNoBootstrap( List<JCTree.JCAnnotation> annotations )
+  {
+    for( JCTree.JCAnnotation anno : annotations )
+    {
+      if( anno.getAnnotationType().toString().endsWith( NoBootstrap.class.getSimpleName() ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   private JCTree.JCStatement buildBootstrapStaticBlock()

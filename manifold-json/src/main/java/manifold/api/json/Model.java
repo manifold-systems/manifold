@@ -8,8 +8,8 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.AbstractSingleFileModel;
-import manifold.api.sourceprod.ResourceFileSourceProducer;
+import manifold.api.type.AbstractSingleFileModel;
+import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.util.JavacDiagnostic;
@@ -32,7 +32,7 @@ class Model extends AbstractSingleFileModel
     Bindings bindings;
     try
     {
-      bindings = Json.fromJson( ResourceFileSourceProducer.getContent( getFile() ) );
+      bindings = Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ) );
     }
     catch( Exception e )
     {

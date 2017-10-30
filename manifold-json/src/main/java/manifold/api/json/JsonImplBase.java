@@ -1,20 +1,14 @@
 package manifold.api.json;
 
-import java.io.OutputStream;
 import java.io.Reader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
-import manifold.util.JsonUtil;
 import manifold.util.StreamUtil;
 
 /**
@@ -130,7 +124,7 @@ public class JsonImplBase implements IJsonIO
     }
     try
     {
-      return new URL( url + makeArguments( _bindings ) );
+      return new URL( url + _bindings.makeArguments() );
     }
     catch( MalformedURLException e )
     {
@@ -184,27 +178,7 @@ public class JsonImplBase implements IJsonIO
    */
   public String postForTextContent( URL url )
   {
-    try
-    {
-      byte[] bytes = makeArguments( _bindings ).getBytes( "UTF-8" );
-      HttpURLConnection conn = (HttpURLConnection)url.openConnection();
-      conn.setRequestMethod( "POST" );
-      conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
-      conn.setRequestProperty( "Content-Length", String.valueOf( bytes.length ) );
-      conn.setDoOutput( true );
-      try( OutputStream out = conn.getOutputStream() )
-      {
-        out.write( bytes );
-      }
-      try( Reader in = StreamUtil.getInputStreamReader( conn.getInputStream() ) )
-      {
-        return StreamUtil.getContent( in );
-      }
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
+    return url.postForTextContent( _bindings );
   }
 
   /**
@@ -222,42 +196,6 @@ public class JsonImplBase implements IJsonIO
   public Bindings postForJsonContent( URL url )
   {
     return Json.fromJson( postForTextContent( url ) );
-  }
-
-  private static String makeArguments( Bindings arguments )
-  {
-    try
-    {
-      StringBuilder sb = new StringBuilder();
-      for( Map.Entry<String, Object> entry : arguments.entrySet() )
-      {
-        if( sb.length() != 0 )
-        {
-          sb.append( '&' );
-        }
-        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
-          .append( '=' )
-          .append( makeValue( entry.getValue() ) );
-      }
-      return sb.toString();
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  private static String makeValue( Object value ) throws UnsupportedEncodingException
-  {
-    if( value instanceof Bindings )
-    {
-      value = JsonUtil.toJson( (Bindings)value );
-    }
-    else if( value instanceof List )
-    {
-      value = JsonUtil.listToJson( (List)value );
-    }
-    return URLEncoder.encode( value.toString(), "UTF-8" );
   }
 
   @Override

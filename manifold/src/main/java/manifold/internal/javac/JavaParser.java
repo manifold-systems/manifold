@@ -13,6 +13,7 @@ import java.io.StringWriter;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -67,13 +68,18 @@ public class JavaParser implements IJavaParser
     {
       _javac = JavacTool.create();
 
-      JavacHook javacHook = JavacHook.instance();
+      JavacPlugin javacHook = JavacPlugin.instance();
       if( javacHook != null )
       {
         // Share our existing Manifold file manager from Javac
 
         _fileManager = javacHook.getJavaFileManager();
-        _gfm = javacHook.getManFileManager();
+        _gfm = javacHook.getManifoldFileManager();
+      }
+      else if( JavacPlugin.instance() != null )
+      {
+        _fileManager = JavacPlugin.instance().getJavaFileManager();
+        _gfm = JavacPlugin.instance().getManifoldFileManager();
       }
       else
       {
@@ -287,7 +293,7 @@ public class JavaParser implements IJavaParser
     init();
 
     StringWriter errors = new StringWriter();
-    return (JavacTaskImpl)_javac.getTask( errors, _gfm, null, Collections.singletonList( "-proc:none" ), null, null );
+    return (JavacTaskImpl)_javac.getTask( errors, _gfm, null, Arrays.asList( "-proc:none", "-source", "8" ), null, null );
   }
 
   @Override

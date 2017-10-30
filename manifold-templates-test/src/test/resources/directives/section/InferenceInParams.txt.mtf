@@ -1,0 +1,1 @@
+<%@ params(String name, int age) %>Infer in Params Test <%@ section mySection(name, age) %>(${name} is ${age} years old)<%@end section %>

@@ -1,0 +1,1 @@
+Section with Params <% String name = "Carson"; int age = 9001; %><%@ section mySection(String name, int age) %>(${name} is ${age} years old)<%@ end section %>

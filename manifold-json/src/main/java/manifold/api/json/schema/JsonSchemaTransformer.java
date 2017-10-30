@@ -103,7 +103,7 @@ public class JsonSchemaTransformer
       result = makeFqn( type.getParent() );
       result += '.';
     }
-    return result + type.getLabel();
+    return result + JsonUtil.makeIdentifier( type.getLabel() );
   }
 
   private static void assertSchema( Bindings docObj )
@@ -120,22 +120,7 @@ public class JsonSchemaTransformer
     String type = (String)jsonObj.get( JSCH_TYPE );
     if( type == null )
     {
-      result = findReference( jsonObj );
-      if( result == null )
-      {
-        result = transformCombination( parent, name, jsonObj );
-        if( result == null )
-        {
-          result = deriveTypeFromEnum( jsonObj );
-          if( result == null )
-          {
-            // No type or other means of deriving a type could be found.
-            // Default type is Dynamic (in Java this is a Bindings Object)
-            result = DynamicType.instance();
-          }
-        }
-      }
-      return result;
+      return findReferenceType( parent, name, jsonObj );
     }
 
     if( jsonObj.get( JSCH_ONE_OF ) != null )
@@ -150,7 +135,14 @@ public class JsonSchemaTransformer
     switch( Type.fromName( type ) )
     {
       case Object:
-        result = ObjectTransformer.transform( this, name, parent, jsonObj );
+        if( jsonObj.get( JSCH_REF ) != null )
+        {
+          result = findReferenceType( parent, name, jsonObj );
+        }
+        else
+        {
+          result = ObjectTransformer.transform( this, name, parent, jsonObj );
+        }
         break;
       case Array:
         result = ArrayTransformer.transform( this, name, parent, jsonObj );
@@ -173,6 +165,27 @@ public class JsonSchemaTransformer
         break;
       default:
         throw new IllegalStateException( "Unhandled type: " + type );
+    }
+    return result;
+  }
+
+  private IJsonType findReferenceType( JsonSchemaType parent, String name, Bindings jsonObj )
+  {
+    IJsonType result;
+    result = findReference( jsonObj );
+    if( result == null )
+    {
+      result = transformCombination( parent, name, jsonObj );
+      if( result == null )
+      {
+        result = deriveTypeFromEnum( jsonObj );
+        if( result == null )
+        {
+          // No type or other means of deriving a type could be found.
+          // Default type is Dynamic (in Java this is a Bindings Object)
+          result = DynamicType.instance();
+        }
+      }
     }
     return result;
   }

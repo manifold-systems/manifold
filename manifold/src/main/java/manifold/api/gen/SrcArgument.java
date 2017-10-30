@@ -29,6 +29,11 @@ public class SrcArgument extends SrcAnnotated<SrcArgument>
     return new SrcArgument( _value.copy() );
   }
 
+  public SrcExpression getValue()
+  {
+    return _value;
+  }
+
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {

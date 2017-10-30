@@ -1,8 +1,15 @@
 package extensions.javax.script.Bindings;
 
+import extensions.java.net.URL.ManUrlExt;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.Json;
+import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.JsonUtil;
@@ -13,27 +20,6 @@ import manifold.util.JsonUtil;
 public class ManBindingsExt
 {
   /**
-   * Generates a static type corresponding with this Bindings object.  The generated type is a nesting of structure types.
-   * This nesting of types is intended to be placed in a .gs file as a top-level structure, or embedded as an inner type.
-   * <p>
-   * A structure type is a direct mapping of property members to name/value pairs in a Bindings.  A property has the same name as the key and follows these rules:
-   * <ul>
-   * <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
-   * <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
-   * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type where the component type is the structural union inferred from the values of the List recursively following these rules for each value
-   * </ul>
-   */
-  public static String toStructure( @This Bindings thiz, String nameForStructure )
-  {
-    return toStructure( thiz, nameForStructure, true );
-  }
-
-  public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
-  {
-    return Json.makeStructureTypes( nameForStructure, thiz, mutable );
-  }
-
-  /**
    * Serializes this Bindings instance to a JSON formatted String
    */
   public static String toJson( @This Bindings thiz )
@@ -41,6 +27,16 @@ public class ManBindingsExt
     StringBuilder sb = new StringBuilder();
     toJson( thiz, sb, 0 );
     return sb.toString();
+  }
+
+  public static String toJson( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toJson( bindings );
+    }
+    return null;
   }
 
   /**
@@ -146,6 +142,26 @@ public class ManBindingsExt
     return sb.toString();
   }
 
+  public static String toXml( Object obj )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings );
+    }
+    return null;
+  }
+
+  public static String toXml( Object obj, String name )
+  {
+    Bindings bindings = getBindingsFrom( obj );
+    if( bindings != null )
+    {
+      return toXml( bindings, name );
+    }
+    return null;
+  }
+
   public static void toXml( @This Bindings thiz, String name, StringBuilder sb, int indent )
   {
     indent( sb, indent );
@@ -205,6 +221,115 @@ public class ManBindingsExt
     }
   }
 
+  /**
+   * Make a JSON-compatible URL with the arguments from the Bindings. URL encodes
+   * the arguments in UTF-8 and appends them to the list using standard URL query
+   * delimiters.
+   * <p/>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.
+   * Otherwise, the argument is coerced to a String and URL encoded.
+   */
+  public static URL makeUrl( @This Bindings thiz, String url )
+  {
+    return ManUrlExt.makeUrl( url, thiz );
+  }
+
+  /**
+   * Use http POST to pass JSON bindings to this URL and get the full content as a JSON object.
+   * <p>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
+   * the argument is coerced to a String.  All arguments are URL encoded.
+   *
+   * @return The full content of this URL's stream as a JSON object.
+   *
+   * @see ManUrlExt#postForTextContent(URL, Bindings)
+   */
+  @SuppressWarnings("unused")
+  public static Bindings postForJsonContent( @This Bindings thiz, String url )
+  {
+    try
+    {
+      return Json.fromJson( ManUrlExt.postForTextContent( new URL( url ), thiz ) );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Make a JSON-compatible URL with the arguments from the Bindings. URL encodes
+   * the arguments in UTF-8 and appends them to the list using standard URL query
+   * delimiters.
+   * <p/>
+   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.
+   * Otherwise, the argument is coerced to a String and URL encoded.
+   *<p/>
+   * If the content of the resulting URL is a JSON document, returns a JSON bindings
+   * reflecting the document.
+   *
+   * @return JSON bindings reflecting the content of the URL.
+   *
+   * @see manifold.api.json.Json#fromJson(String)
+   */
+  public static Bindings getJsonContent( @This Bindings thiz, String url )
+  {
+    return Json.fromJson( ManUrlExt.getTextContent( makeUrl( thiz, url ) ) );
+  }
+
+  /**
+   * Convert this Json Bindings to an arguments String suitable for a Json Url.
+   */
+  public static String makeArguments( @This Bindings arguments )
+  {
+    try
+    {
+      StringBuilder sb = new StringBuilder();
+      for( Map.Entry<String, Object> entry : arguments.entrySet() )
+      {
+        if( sb.length() != 0 )
+        {
+          sb.append( '&' );
+        }
+        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
+          .append( '=' )
+          .append( makeValue( entry.getValue() ) );
+      }
+      return sb.toString();
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Convert the Object to a String value suitable for a Json Url argument.
+   * @param value A Json value.  On of: Bindings, List, or simple value.
+   * @return Json formatted value String.
+   */
+  @Extension
+  public static String makeValue( Object value )
+  {
+    if( value instanceof Bindings )
+    {
+      value = JsonUtil.toJson( (Bindings)value );
+    }
+    else if( value instanceof List )
+    {
+      value = JsonUtil.listToJson( (List)value );
+    }
+
+    try
+    {
+      return URLEncoder.encode( value.toString(), "UTF-8" );
+    }
+    catch( UnsupportedEncodingException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
   private static void appendCommaNewLine( StringBuilder sb, boolean bComma )
   {
     if( bComma )
@@ -222,5 +347,52 @@ public class ManBindingsExt
       sb.append( ' ' );
       i++;
     }
+  }
+
+  /**
+   * Generates a static type corresponding with this Bindings object.  The generated type is a nesting of structure types.
+   * This nesting of types is intended to be placed in a .gs file as a top-level structure, or embedded as an inner type.
+   * <p>
+   * A structure type is a direct mapping of property members to name/value pairs in a Bindings.  A property has the same name as the key and follows these rules:
+   * <ul>
+   * <li> If the type of the value is a "simple" type, such as a String or Integer, the type of the property matches the simple type exactly
+   * <li> Otherwise, if the value is a Bindings type, the property type is that of a child structure with the same name as the property and recursively follows these rules
+   * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type where the component type is the structural union inferred from the values of the List recursively following these rules for each value
+   * </ul>
+   */
+  public static String toStructure( @This Bindings thiz, String nameForStructure )
+  {
+    return toStructure( thiz, nameForStructure, true );
+  }
+
+  public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
+  {
+    return Json.makeStructureTypes( nameForStructure, thiz, mutable );
+  }
+
+  private static Bindings getBindingsFrom( Object obj )
+  {
+    Bindings bindings = null;
+    if( obj instanceof Bindings )
+    {
+      bindings = (Bindings)obj;
+    }
+    else
+    {
+      while( obj instanceof AbstractDynamicTypeProxy )
+      {
+        final Object root = ((AbstractDynamicTypeProxy)obj).getRoot();
+        if( root instanceof Bindings )
+        {
+          bindings = (Bindings)root;
+          break;
+        }
+        else
+        {
+          obj = root;
+        }
+      }
+    }
+    return bindings;
   }
 }

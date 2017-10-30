@@ -4,11 +4,12 @@ import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
-import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.comp.CompileStates.CompileState;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
@@ -16,9 +17,12 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
@@ -29,29 +33,34 @@ public abstract class CompiledTypeProcessor implements TaskListener
 {
   private final JavacTask _javacTask;
   private JCTree.JCCompilationUnit _compilationUnit;
-  private final Set<String> _typesToProcess;
+  private final Types _types;
+  private final Map<String, Boolean> _typesToProcess;
   private final IssueReporter<JavaFileObject> _issueReporter;
+  private Map<String, JCTree.JCClassDecl> _innerClassForGeneration;
+  private JCTree.JCClassDecl _tree;
+  private boolean _generate;
 
   CompiledTypeProcessor( JavacTask javacTask )
   {
     _javacTask = javacTask;
     javacTask.addTaskListener( this );
-    Context context = ((JavacTaskImpl)javacTask).getContext();
+    Context context = ((BasicJavacTask)javacTask).getContext();
     JavaCompiler compiler = JavaCompiler.instance( context );
     compiler.shouldStopPolicyIfNoError = CompileState.max( compiler.shouldStopPolicyIfNoError, CompileState.FLOW );
     _issueReporter = new IssueReporter<>( Log.instance( context ) );
-
+    _types = Types.instance( context );
 //    DiagnosticListener dl = context.get( DiagnosticListener.class );
 //    context.put( DiagnosticListener.class, (DiagnosticListener)null );
 //    context.put( DiagnosticListener.class, new WrappedDiagnosticListener( dl ) );
 
-    _typesToProcess = new HashSet<>();
+    _typesToProcess = new HashMap<>();
+    _innerClassForGeneration = new HashMap<>();
   }
 
   /**
    * Subclasses override to process a compiled type.
    */
-  public abstract void process( TypeElement element, TreePath tree, IssueReporter<JavaFileObject> issueReporter );
+  public abstract void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter );
 
 //  /**
 //   * Subclasses override to filter javac compile errors / warnings.
@@ -61,7 +70,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public Context getContext()
   {
-    return ((JavacTaskImpl)getJavacTask()).getContext();
+    return ((BasicJavacTask)getJavacTask()).getContext();
   }
 
   public JavacTask getJavacTask()
@@ -69,9 +78,24 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return _javacTask;
   }
 
+  public JCTree.JCClassDecl getTree()
+  {
+    return _tree;
+  }
+
+  public boolean isGenerate()
+  {
+    return _generate;
+  }
+
   public JCTree.JCCompilationUnit getCompilationUnit()
   {
     return _compilationUnit;
+  }
+
+  public Types getTypes()
+  {
+    return _types;
   }
 
   public JavacElements getElementUtil()
@@ -94,14 +118,21 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return Symtab.instance( getContext() );
   }
 
-  public TreePath getPath( Tree node )
+  public TreePath2 getPath( Tree node )
   {
-    return getTreeUtil().getPath( getCompilationUnit(), node );
+    return TreePath2.getPath( getCompilationUnit(), node );
   }
 
   public Tree getParent( Tree node )
   {
-    TreePath parentPath = getTreeUtil().getPath( getCompilationUnit(), node ).getParentPath();
+    TreePath2 path = TreePath2.getPath( getCompilationUnit(), node );
+    if( path == null )
+    {
+      // null is indiciative of Generation phase where trees are no longer attached to symobls so the comp unit is detached
+      // use the root tree instead, which is mostly ok, mostly
+      path = TreePath2.getPath( _tree, node );
+    }
+    TreePath2 parentPath = path.getParentPath();
     return parentPath == null ? null : parentPath.getLeaf();
   }
 
@@ -142,14 +173,49 @@ public abstract class CompiledTypeProcessor implements TaskListener
   {
     for( TypeElement elem : ElementFilter.typesIn( roundEnv.getRootElements() ) )
     {
-      _typesToProcess.add( elem.getQualifiedName().toString() );
+      _typesToProcess.put( elem.getQualifiedName().toString(), false );
     }
     return false;
   }
 
   public void addTypesToProcess( Set<String> types )
   {
-    _typesToProcess.addAll( types );
+    types.forEach( e -> _typesToProcess.put( e, false ) );
+  }
+
+  @Override
+  public void started( TaskEvent e )
+  {
+    if( e.getKind() != TaskEvent.Kind.GENERATE )
+    {
+      return;
+    }
+
+    //
+    // Process trees that were generated and therefore not available during ANALYZE
+    // For instance, we must process bridge methods
+    //
+
+    TypeElement elem = e.getTypeElement();
+
+    if( elem instanceof Symbol.ClassSymbol )
+    {
+      if( _typesToProcess.containsKey( elem.getQualifiedName().toString() ) )
+      {
+        _tree = findTopLevel( (Symbol.ClassSymbol)elem, e.getCompilationUnit().getTypeDecls() );
+      }
+      else
+      {
+        _tree = _innerClassForGeneration.get( ((Symbol.ClassSymbol)elem).flatName().toString() );
+      }
+
+      if( _tree != null )
+      {
+        _compilationUnit = (JCTree.JCCompilationUnit)e.getCompilationUnit();
+        _generate = true;
+        process( elem, _issueReporter );
+      }
+    }
   }
 
   @Override
@@ -160,22 +226,106 @@ public abstract class CompiledTypeProcessor implements TaskListener
       return;
     }
 
-    if( !_typesToProcess.remove( e.getTypeElement().getQualifiedName().toString() ) )
+    //
+    // Process fully analyzed trees (full type information is in the trees)
+    //
+
+    _generate = false;
+
+    String fqn = e.getTypeElement().getQualifiedName().toString();
+    Boolean visited = _typesToProcess.get( fqn );
+    if( visited == Boolean.TRUE )
     {
+      // already processed
       return;
     }
+    if( visited == null && !isNested( e.getTypeElement().getEnclosingElement() ) )
+    {
+      // also process inner types of types to process
+      return;
+    }
+
+    // mark processed
+    _typesToProcess.put( fqn, true );
 
     _compilationUnit = (JCTree.JCCompilationUnit)e.getCompilationUnit();
 
     TypeElement elem = e.getTypeElement();
-    TreePath path = Trees.instance( _javacTask ).getPath( elem );
+    _tree = (JCTree.JCClassDecl)getTreeUtil().getTree( elem );
+    preserveInnerClassesForGeneration( _tree );
 
-    process( elem, path, _issueReporter );
+    process( elem, _issueReporter );
   }
 
-  @Override
-  public void started( TaskEvent e )
+  private JCTree.JCClassDecl findTopLevel( Symbol.ClassSymbol type, List<? extends Tree> typeDecls )
   {
+    for( Tree tree: typeDecls )
+    {
+      if( tree instanceof JCTree.JCClassDecl && ((JCTree.JCClassDecl)tree).sym == type )
+      {
+        return (JCTree.JCClassDecl)tree;
+      }
+    }
+    return null;
+  }
+
+  private void preserveInnerClassesForGeneration( JCTree.JCClassDecl tree )
+  {
+    for( JCTree def: tree.defs )
+    {
+      if( def instanceof JCTree.JCClassDecl )
+      {
+        JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)def;
+
+        preserveInnerClassForGenerationPhase( classDecl );
+        preserveInnerClassesForGeneration( classDecl );
+      }
+    }
+  }
+
+  public void preserveInnerClassForGenerationPhase( JCTree.JCClassDecl def )
+  {
+    _innerClassForGeneration.put( def.sym.flatName().toString(), def );
+  }
+
+  private boolean isNested( Element elem )
+  {
+    if( !(elem instanceof TypeElement) )
+    {
+      return false;
+    }
+    TypeElement typeElem = (TypeElement)elem;
+    String fqn = typeElem.getQualifiedName().toString();
+    if( _typesToProcess.containsKey( fqn ) )
+    {
+      return true;
+    }
+    return isNested( typeElem.getEnclosingElement() );
+  }
+
+  private class AnonymousClassListener implements Scope.ScopeListener
+  {
+    JCTree.JCClassDecl _tree;
+
+    public AnonymousClassListener( JCTree.JCClassDecl tree )
+    {
+      _tree = tree;
+    }
+
+    @Override
+    public void symbolAdded( Symbol sym, Scope s )
+    {
+      if( sym instanceof Symbol.ClassSymbol && sym.isAnonymous() )
+      {
+        System.out.println( sym.getQualifiedName() );
+      }
+    }
+
+    @Override
+    public void symbolRemoved( Symbol sym, Scope s )
+    {
+
+    }
   }
 
 //  private class WrappedDiagnosticListener implements DiagnosticListener

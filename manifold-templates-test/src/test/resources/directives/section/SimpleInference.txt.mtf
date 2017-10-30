@@ -1,0 +1,1 @@
+Inference Test <% String name = "Carson"; int age = 9001; %><%@ section mySection(name, age) %>(${name} is ${age} years old)<%@ end section %>

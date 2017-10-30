@@ -1,6 +1,5 @@
 package manifold.internal.host;
 
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.File;
 import java.net.URL;
 import java.util.Collections;
@@ -20,7 +19,7 @@ import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.type.TypeName;
 
 /**
  */
@@ -152,9 +151,9 @@ public class ManifoldHost
     host().performLockedOperation( loader, operation );
   }
 
-  public static void initializeAndCompileNonJavaFiles( JavacProcessingEnvironment jpe, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
+  public static void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
   {
-    host().initializeAndCompileNonJavaFiles( jpe, fileManager, files, sourcePath, classpath, outputPath );
+    host().initializeAndCompileNonJavaFiles( fileManager, files, sourcePath, classpath, outputPath );
   }
 
   public static Set<TypeName> getChildrenOfNamespace( String packageName )

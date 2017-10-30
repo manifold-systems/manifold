@@ -107,6 +107,13 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     return "";
   }
 
+  public String signature()
+  {
+    StringBuilder sb = new StringBuilder();
+    sb.append( getSimpleName() ).append( renderParameters( sb, true ) );
+    return sb.toString();
+  }
+
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {

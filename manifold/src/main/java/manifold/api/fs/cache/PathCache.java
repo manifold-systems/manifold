@@ -183,6 +183,12 @@ public class PathCache
   private class CacheClearer extends AbstractTypeSystemListener
   {
     @Override
+    public boolean notifyEarly()
+    {
+      return true;
+    }
+
+    @Override
     public void refreshed()
     {
       clear();

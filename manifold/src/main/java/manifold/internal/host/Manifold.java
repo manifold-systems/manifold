@@ -1,16 +1,11 @@
 package manifold.internal.host;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
@@ -21,7 +16,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFileSystem;
-import sun.misc.URLClassPath;
+import manifold.api.fs.def.FileSystemImpl;
+import manifold.util.BytecodeOptions;
+import manifold.util.concurrent.LocklessLazyVar;
 
 /**
  */
@@ -31,6 +28,17 @@ public class Manifold
 
   private List<File> _classpath;
   private DefaultSingleModule _module;
+  private LocklessLazyVar<IFileSystem> _fileSystem = LocklessLazyVar.make(
+    () ->
+    {
+      //noinspection ConstantConditions
+      if( BytecodeOptions.JDWP_ENABLED.get() )
+      {
+        return new FileSystemImpl( IFileSystem.CachingMode.NO_CACHING );
+      }
+      return new FileSystemImpl( IFileSystem.CachingMode.FULL_CACHING );
+    }
+  );
 
   public static Manifold instance()
   {
@@ -106,20 +114,48 @@ public class Manifold
       }
     }
 
-    initPaths( cp, all, null );
+    initDirPaths( cp, all, Collections.emptyList() );
   }
 
   public static boolean excludeFromSourcePath( String p )
   {
     warnIfRoot( p );
     String path = p.replace( File.separatorChar, '/' ).toLowerCase();
-    return path.contains( "/java/" ) ||
+    return isJrePath(path) ||
            path.contains( "/idea_rt.jar" );
+  }
+
+  private static boolean isJrePath( String path ) 
+  {
+    if( path.endsWith( "tools.jar" ) )
+    {
+      return true;
+    }
+
+    String extDirs = System.getProperty("java.ext.dirs");
+    if( extDirs != null && extDirs.contains( path ) )
+    {
+      return true;
+    }
+    
+    String bootPath = System.getProperty("sun.boot.class.path");
+    if( bootPath != null && bootPath.contains( path ) )
+    {
+      return true;
+    }
+    
+    String javaHome = System.getProperty("java.home");
+    if( javaHome == null )
+    {
+      return false;
+    }
+    
+    return path.startsWith( javaHome );
   }
 
   private static void warnIfRoot( String p )
   {
-    for( File root: File.listRoots() )
+    for( File root : File.listRoots() )
     {
       if( new File( p ).equals( root ) )
       {
@@ -130,25 +166,26 @@ public class Manifold
     }
   }
 
-  public void initPaths( List<IDirectory> classpath,
-                         List<IDirectory> sourcePath,
-                         IDirectory outputPath )
+  public void initDirPaths( List<IDirectory> classpath,
+                            List<IDirectory> sourcePath,
+                            List<IDirectory> outputPath )
   {
     DefaultSingleModule singleModule = new DefaultSingleModule( classpath, sourcePath, outputPath );
 
-    // Must assign _module BEFORE we initializeSourceProducers() to prevent double bootstrapping
-    // stemming from an embedded bootstrap() call in a source producer class
+    // Must assign _module BEFORE we initializeTypeManifolds() to prevent double bootstrapping
+    // stemming from an embedded demo() call in a source producer class
     _module = singleModule;
 
-    singleModule.initializeSourceProducers();
+    singleModule.initializeTypeManifolds();
   }
 
-  public void initPaths( List<String> classpath, List<String> sourcePath, String outputPath )
+  public void initPaths( List<String> classpath, List<String> sourcePath, List<String> outputPath )
   {
     IFileSystem fs = ManifoldHost.getFileSystem();
     List<IDirectory> cp = classpath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
     List<IDirectory> sp = sourcePath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
-    initPaths( cp, sp, fs.getIDirectory( new File( outputPath ) ) );
+    List<IDirectory> op = outputPath.stream().map( path -> fs.getIDirectory( new File( path ) ) ).collect( Collectors.toList() );
+    initDirPaths( cp, sp, op );
   }
 
   public List<File> getClasspath()
@@ -242,105 +279,105 @@ public class Manifold
       }
       loader = loader.getParent();
     }
-    addBootstrapClasses( ll );
+//    addBootstrapClasses( ll );
     return ll;
   }
 
-  private void addBootstrapClasses( List<File> ll )
-  {
-    try
-    {
-      Method m;
-      try
-      {
-        m = ClassLoader.class.getDeclaredMethod( "getBootstrapClassPath" );
-      }
-      catch( NoSuchMethodException nsme )
-      {
-        // The VM that does not define getBootstrapClassPath() seems to be the IBM VM (v. 8).
-        getBootstrapForIbm( ll );
-        return;
-      }
-      m.setAccessible( true );
-      URLClassPath bootstrapClassPath = (URLClassPath)m.invoke( null );
-      for( URL url : bootstrapClassPath.getURLs() )
-      {
-        try
-        {
-          File file = new File( url.toURI() );
-          if( file.exists() && !ll.contains( file ) )
-          {
-            ll.add( file );
-          }
-        }
-        catch( Exception e )
-        {
-          //ignore
-        }
-      }
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  private void getBootstrapForIbm( List<File> ll )
-  {
-    List<String> ibmClasspath = getJreJars();
-    ibmClasspath.forEach( e -> ll.add( new File( e ) ) );
-  }
-
-  /**
-   * Get all JARs from the lib directory of the System's java.home property
-   *
-   * @return List of absolute paths to all JRE libraries
-   */
-  public List<String> getJreJars()
-  {
-    String javaHome = System.getProperty( "java.home" );
-    Path libsDir = FileSystems.getDefault().getPath( javaHome, "/lib" );
-    List<String> retval = getIbmClasspath();
-    try
-    {
-      retval.addAll( Files.walk( libsDir )
-                       .filter( path -> path.toFile().isFile() )
-                       .filter( path -> path.toString().endsWith( ".jar" ) )
-                       .map( Path::toString )
-                       .collect( Collectors.toList() ) );
-    }
-    catch( SecurityException | IOException e )
-    {
-      e.printStackTrace();
-      throw new RuntimeException( e );
-    }
-    return retval;
-  }
-
-  /**
-   * Special handling for the unusual structure of the IBM JDK.
-   *
-   * @return A list containing the special 'vm.jar' absolute path if we are using an IBM JDK; otherwise an empty list is returned.
-   */
-  protected static List<String> getIbmClasspath()
-  {
-    List<String> retval = new ArrayList<>();
-    if( System.getProperty( "java.vendor" ).equals( "IBM Corporation" ) )
-    {
-      String fileSeparator = System.getProperty( "file.separator" );
-      String classpathSeparator = System.getProperty( "path.separator" );
-      String[] bootClasspath = System.getProperty( "sun.boot.class.path" ).split( classpathSeparator );
-      for( String entry : bootClasspath )
-      {
-        if( entry.endsWith( fileSeparator + "vm.jar" ) )
-        {
-          retval.add( entry );
-          break;
-        }
-      }
-    }
-    return retval;
-  }
+//  private void addBootstrapClasses( List<File> ll )
+//  {
+//    try
+//    {
+//      Method m;
+//      try
+//      {
+//        m = ClassLoader.class.getDeclaredMethod( "getBootstrapClassPath" );
+//      }
+//      catch( NoSuchMethodException nsme )
+//      {
+//        // The VM that does not define getBootstrapClassPath() seems to be the IBM VM (v. 8).
+//        getBootstrapForIbm( ll );
+//        return;
+//      }
+//      m.setAccessible( true );
+//      URLClassPath bootstrapClassPath = (URLClassPath)m.invoke( null );
+//      for( URL url : bootstrapClassPath.getURLs() )
+//      {
+//        try
+//        {
+//          File file = new File( url.toURI() );
+//          if( file.exists() && !ll.contains( file ) )
+//          {
+//            ll.add( file );
+//          }
+//        }
+//        catch( Exception e )
+//        {
+//          //ignore
+//        }
+//      }
+//    }
+//    catch( Exception e )
+//    {
+//      throw new RuntimeException( e );
+//    }
+//  }
+//
+//  private void getBootstrapForIbm( List<File> ll )
+//  {
+//    List<String> ibmClasspath = getJreJars();
+//    ibmClasspath.forEach( e -> ll.add( new File( e ) ) );
+//  }
+//
+//  /**
+//   * Get all JARs from the lib directory of the System's java.home property
+//   *
+//   * @return List of absolute paths to all JRE libraries
+//   */
+//  public List<String> getJreJars()
+//  {
+//    String javaHome = System.getProperty( "java.home" );
+//    Path libsDir = FileSystems.getDefault().getPath( javaHome, "/lib" );
+//    List<String> retval = getIbmClasspath();
+//    try
+//    {
+//      retval.addAll( Files.walk( libsDir )
+//                       .filter( path -> path.toFile().isFile() )
+//                       .filter( path -> path.toString().endsWith( ".jar" ) )
+//                       .map( Path::toString )
+//                       .collect( Collectors.toList() ) );
+//    }
+//    catch( SecurityException | IOException e )
+//    {
+//      e.printStackTrace();
+//      throw new RuntimeException( e );
+//    }
+//    return retval;
+//  }
+//
+//  /**
+//   * Special handling for the unusual structure of the IBM JDK.
+//   *
+//   * @return A list containing the special 'vm.jar' absolute path if we are using an IBM JDK; otherwise an empty list is returned.
+//   */
+//  protected static List<String> getIbmClasspath()
+//  {
+//    List<String> retval = new ArrayList<>();
+//    if( System.getProperty( "java.vendor" ).equals( "IBM Corporation" ) )
+//    {
+//      String fileSeparator = System.getProperty( "file.separator" );
+//      String classpathSeparator = System.getProperty( "path.separator" );
+//      String[] bootClasspath = System.getProperty( "sun.boot.class.path" ).split( classpathSeparator );
+//      for( String entry : bootClasspath )
+//      {
+//        if( entry.endsWith( fileSeparator + "vm.jar" ) )
+//        {
+//          retval.add( entry );
+//          break;
+//        }
+//      }
+//    }
+//    return retval;
+//  }
 
   public List<String> getManifoldBootstrapJars() throws ClassNotFoundException
   {
@@ -375,5 +412,10 @@ public class Manifold
     {
       throw new ClassNotFoundException( "Cannot find the location of the requested className <" + className + "> in classpath." );
     }
+  }
+
+  public IFileSystem getFileSystem()
+  {
+    return _fileSystem.get();
   }
 }

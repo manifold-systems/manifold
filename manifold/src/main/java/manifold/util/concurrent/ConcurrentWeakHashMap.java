@@ -116,7 +116,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Constants -------------- */
 
   /**
-   * The default initial capacity for this table,
+   * The default demo capacity for this table,
    * used when not otherwise specified in a constructor.
    */
   static final int DEFAULT_INITIAL_CAPACITY = 16;
@@ -232,7 +232,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
    * <p>
    * Because the value field is volatile, not final, it is legal wrt
    * the Java Memory Model for an unsynchronized reader to see null
-   * instead of initial value when read via a data race.  Although a
+   * instead of demo value when read via a data race.  Although a
    * reordering leading to this is not likely to ever actually
    * occur, the Segment.readValueUnderLock method is used as a
    * backup in case a null (pre-initialized) value is ever seen in
@@ -745,10 +745,10 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
     /* ---------------- Public operations -------------- */
 
   /**
-   * Creates a new, empty map with the specified initial
+   * Creates a new, empty map with the specified demo
    * capacity, load factor and concurrency level.
    *
-   * @param initialCapacity  the initial capacity. The implementation
+   * @param initialCapacity  the demo capacity. The implementation
    *                         performs internal sizing to accommodate this many elements.
    * @param loadFactor       the load factor threshold, used to control resizing.
    *                         Resizing may be performed when the average number of elements per
@@ -757,7 +757,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
    *                         updating threads. The implementation performs internal sizing
    *                         to try to accommodate this many threads.
    *
-   * @throws IllegalArgumentException if the initial capacity is
+   * @throws IllegalArgumentException if the demo capacity is
    *                                  negative or the load factor or concurrencyLevel are
    *                                  nonpositive.
    */
@@ -807,7 +807,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
   }
 
   /**
-   * Creates a new, empty map with the specified initial capacity
+   * Creates a new, empty map with the specified demo capacity
    * and load factor and with the default concurrencyLevel (16).
    *
    * @param initialCapacity The implementation performs internal
@@ -816,7 +816,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
    *                        Resizing may be performed when the average number of elements per
    *                        bin exceeds this threshold.
    *
-   * @throws IllegalArgumentException if the initial capacity of
+   * @throws IllegalArgumentException if the demo capacity of
    *                                  elements is negative or the load factor is nonpositive
    * @since 1.6
    */
@@ -826,13 +826,13 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
   }
 
   /**
-   * Creates a new, empty map with the specified initial capacity,
+   * Creates a new, empty map with the specified demo capacity,
    * and with default load factor (0.75) and concurrencyLevel (16).
    *
-   * @param initialCapacity the initial capacity. The implementation
+   * @param initialCapacity the demo capacity. The implementation
    *                        performs internal sizing to accommodate this many elements.
    *
-   * @throws IllegalArgumentException if the initial capacity of
+   * @throws IllegalArgumentException if the demo capacity of
    *                                  elements is negative.
    */
   public ConcurrentWeakHashMap( int initialCapacity )
@@ -841,7 +841,7 @@ public class ConcurrentWeakHashMap<K, V> extends AbstractMap<K, V>
   }
 
   /**
-   * Creates a new, empty map with a default initial capacity (16),
+   * Creates a new, empty map with a default demo capacity (16),
    * load factor (0.75) and concurrencyLevel (16).
    */
   public ConcurrentWeakHashMap()

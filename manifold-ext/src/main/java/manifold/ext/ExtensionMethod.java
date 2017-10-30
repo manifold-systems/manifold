@@ -18,6 +18,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface ExtensionMethod
 {
+  String extensionClass = "extensionClass";
   String extensionClass();
+
+  String isStatic = "isStatic";
   boolean isStatic();
 }

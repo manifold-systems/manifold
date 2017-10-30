@@ -1,10 +1,8 @@
 package manifold.internal.host;
 
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -17,15 +15,13 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
-import manifold.api.fs.def.FileSystemImpl;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.service.BaseService;
-import manifold.api.sourceprod.ISourceProducer;
-import manifold.api.sourceprod.TypeName;
-import manifold.util.BytecodeOptions;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.TypeName;
 
 /**
  */
@@ -50,11 +46,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
 
   public IFileSystem getFileSystem()
   {
-    if( BytecodeOptions.JDWP_ENABLED.get() )
-    {
-      return new FileSystemImpl( IFileSystem.CachingMode.NO_CACHING );
-    }
-    return new FileSystemImpl( IFileSystem.CachingMode.FULL_CACHING );
+    return Manifold.instance().getFileSystem();
   }
 
   public ClassLoader getActualClassLoader()
@@ -119,7 +111,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
   @Override
   public void maybeAssignManifoldType( ClassLoader loader, String fqn, URL url, BiConsumer<String, Supplier<byte[]>> assigner )
   {
-    Set<ISourceProducer> sps = getCurrentModule().findSourceProducersFor( fqn );
+    Set<ITypeManifold> sps = getCurrentModule().findTypeManifoldsFor( fqn );
     if( !sps.isEmpty() )
     {
       assigner.accept( fqn, null );
@@ -131,10 +123,21 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     operation.run();
   }
 
-  public void initializeAndCompileNonJavaFiles( JavacProcessingEnvironment jpe, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<String> outputPath )
+  public void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
   {
     List<String> cp = classpath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
     Set<String> sp = sourcePath.get().stream().filter( e -> !Manifold.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );
+    List<String> op = outputPath.get();
+
+    int i = 0;
+    for( String p : op )
+    {
+      if( !cp.contains( p ) )
+      {
+        // ensure output path is in the classpath
+        cp.add( i++, p );
+      }
+    }
 
     List<String> all = new ArrayList<>();
     for( String p : sp )
@@ -151,7 +154,7 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
         all.add( p );
       }
     }
-    Manifold.instance().initPaths( cp, all, outputPath.get() );
+    Manifold.instance().initPaths( cp, all, op );
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )

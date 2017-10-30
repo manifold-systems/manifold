@@ -2,20 +2,31 @@
 class Person {
 
   constructor(firstName, lastName) {
-    this._firstName = firstName
-    this._lastName = lastName
+    this._f = firstName
+    this._l = lastName
   }
 
   displayName() {
-    return this._firstName + " " + this._lastName
+    return this._f + " " + this._l
   }
 
   get firstName() {
-    return this._firstName
+    java.lang.System.out.println("Here")
+    return this._f
   }
 
   get lastName() {
-    return this._lastName
+    return this._l
+  }
+
+  set firstName(s) {
+    java.lang.System.out.println("Here2")
+    this._f = s
+  }
+
+  set lastName(s) {
+    java.lang.System.out.println("Here3")
+    this._l = s
   }
 
 }

@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
 import java.io.File;
 import java.io.IOException;
@@ -9,16 +10,15 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import manifold.api.fs.cache.ModulePathCache;
+
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
-import manifold.api.sourceprod.TypeName;
+import manifold.api.type.TypeName;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.cache.FqnCache;
@@ -26,7 +26,7 @@ import manifold.util.cache.FqnCacheNode;
 
 /**
  */
-class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> implements ITypeLoaderListener
+class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeLoaderListener
 {
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
@@ -34,14 +34,14 @@ class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
   private JavaFileManager _javacMgr;
   private Log _issueLogger;
 
-  ManifoldJavaFileManager( JavaFileManager fileManager, Log issueLogger, boolean fromJavaC )
+  ManifoldJavaFileManager( JavaFileManager fileManager, Context ctx, boolean fromJavaC )
   {
-    super( fileManager );
+    super( fileManager, ctx == null ? ctx = new Context() : ctx );
     _fromJavaC = fromJavaC;
     _javacMgr = fileManager;
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
-    _issueLogger = issueLogger;
+    _issueLogger = Log.instance( ctx );
     ManifoldHost.addTypeLoaderListenerAsWeakRef( null, this );
   }
 
@@ -133,7 +133,7 @@ class ManifoldJavaFileManager extends ForwardingJavaFileManager<JavaFileManager>
     {
       fqn = fqn.substring( 0, iDollar );
     }
-    PathCache pathCache = ModulePathCache.instance().get( ManifoldHost.getCurrentModule() );
+    PathCache pathCache = ManifoldHost.getCurrentModule().getPathCache();
     return pathCache.getExtensionCache( "class" ).get( fqn ) != null;
   }
 

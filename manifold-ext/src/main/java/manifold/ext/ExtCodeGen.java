@@ -9,14 +9,14 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
-import manifold.api.fs.cache.ModulePathCache;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -51,7 +51,7 @@ class ExtCodeGen
 
   private IModule getModule()
   {
-    return _model.getSourceProducer().getTypeLoader().getModule();
+    return _model.getTypeManifold().getTypeLoader().getModule();
   }
 
   String make( DiagnosticListener<JavaFileObject> errorHandler )
@@ -92,24 +92,12 @@ class ExtCodeGen
     boolean interfaceExtensions = false;
     boolean annotationExtensions = false;
     Set<String> allExtensions = findAllExtensions();
+    JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
     for( String fqn : allExtensions )
     {
-      JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
+      //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
+      //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
       SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, null );
-
-//      JavacTaskImpl[] javacTask = {null};
-//      JCTree.JCCompilationUnit[] compUnit = {null};
-//      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, compUnit );
-//
-//      Context ctx = javacTask[0].getContext();
-//      JavacElements elementUtils = JavacElements.instance( ctx );
-//      Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
-//      Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( ctx,
-//                                                                    Trees.instance( javacTask[0] ).getTree( reflectMethodClassSym ),
-//                                                                    Names.instance( ctx ).fromString( "constructProxy" ), reflectMethodClassSym.type,
-//                                                                    com.sun.tools.javac.util.List.from( new Type[]{symbols.objectType, symbols.classType} ) );
-
-
       if( srcExtension != null )
       {
         for( AbstractSrcMethod method : srcExtension.getMethods() )
@@ -216,9 +204,9 @@ class ExtCodeGen
 
   private Set<String> findAllExtensions()
   {
-    Set<String> fqns = new HashSet<>();
+    Set<String> fqns = new LinkedHashSet<>();
 
-    PathCache pathCache = ModulePathCache.instance().get( getModule() );
+    PathCache pathCache = getModule().getPathCache();
     for( IFile file : _model.getFiles() )
     {
       Set<String> fqn = pathCache.getFqnForFile( file );
@@ -240,6 +228,11 @@ class ExtCodeGen
 
   private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
   {
+    if( anno.getAnnotationType().equals( Extension.class.getName() ) )
+    {
+      return;
+    }
+
     if( extendedType.getAnnotations().stream().noneMatch( e -> e.getAnnotationType().equals( anno.getAnnotationType() ) ) )
     {
       extendedType.addAnnotation( anno.copy() );
@@ -253,13 +246,7 @@ class ExtCodeGen
       return;
     }
 
-//    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> extendedClassSym = ClassSymbols.instance( getModule() ).getClassSymbol( javacTask, extendedType.getName() );
-//    if( !verifyExtensionMethod( method, extendedClassSym.getFirst(), srcExtension, errorHandler, javacTask ) )
-//    {
-//      return;
-//    }
-
-    if( reportError( method, extendedType, errorHandler, javacTask ) )
+    if( warnIfDuplicate( method, extendedType, errorHandler, javacTask ) )
     {
       return;
     }
@@ -334,31 +321,7 @@ class ExtCodeGen
     {
       // delegate to the extension method
 
-      StringBuilder call = new StringBuilder();
-      SrcType returnType = srcMethod.getReturnType();
-      if( returnType != null && !returnType.getName().equals( void.class.getName() ) )
-      {
-        call.append( "return " );
-      }
-      String extClassName = ((SrcClass)method.getOwner()).getName();
-      call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( '(' );
-      if( isInstanceExtensionMethod )
-      {
-        call.append( "this" );
-      }
-      for( SrcParameter param : srcMethod.getParameters() )
-      {
-        if( call.charAt( call.length()-1 ) != '(' )
-        {
-          call.append( ", " );
-        }
-        call.append( param.getSimpleName() );
-      }
-      call.append( ");\n" );
-      srcMethod.body( new SrcStatementBlock()
-                        .addStatement(
-                          new SrcRawStatement()
-                            .rawText( call.toString() ) ) );
+      delegateCall( method, isInstanceExtensionMethod, srcMethod );
     }
     else
     {
@@ -373,9 +336,64 @@ class ExtCodeGen
     extendedType.addMethod( srcMethod );
   }
 
-  private boolean reportError( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  private void delegateCall( AbstractSrcMethod method, boolean isInstanceExtensionMethod, SrcMethod srcMethod )
   {
-    boolean duplicate = false;
+    StringBuilder call = new StringBuilder();
+    SrcType returnType = srcMethod.getReturnType();
+    if( returnType != null && !returnType.getName().equals( void.class.getName() ) )
+    {
+      call.append( "return " );
+    }
+    String extClassName = ((SrcClass)method.getOwner()).getName();
+    call.append( extClassName ).append( '.' ).append( srcMethod.getSimpleName() ).append( '(' );
+    if( isInstanceExtensionMethod )
+    {
+      call.append( "this" );
+    }
+    for( SrcParameter param : srcMethod.getParameters() )
+    {
+      if( call.charAt( call.length()-1 ) != '(' )
+      {
+        call.append( ", " );
+      }
+      call.append( param.getSimpleName() );
+    }
+    call.append( ");\n" );
+    srcMethod.body( new SrcStatementBlock()
+                      .addStatement(
+                        new SrcRawStatement()
+                          .rawText( call.toString() ) ) );
+  }
+
+  private boolean warnIfDuplicate( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  {
+    AbstractSrcMethod duplicate = findMethod( method, extendedType, new JavacTaskImpl[]{javacTask} );
+
+    if( duplicate == null )
+    {
+      return false;
+    }
+
+    JavacElements elems = JavacElements.instance( javacTask.getContext() );
+    Symbol.ClassSymbol sym = elems.getTypeElement( ((SrcClass)method.getOwner()).getName() );
+    JavaFileObject file = sym.sourcefile;
+    SrcAnnotationExpression anno = duplicate.getAnnotation( ExtensionMethod.class );
+    if( anno != null )
+    {
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
+                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_DUPLICATION.get( method.signature(), ((SrcClass)method.getOwner()).getName(), anno.getArgument( ExtensionMethod.extensionClass ).getValue()) ) );
+    }
+    else
+    {
+      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
+                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_SHADOWS.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
+    }
+    return true;
+  }
+
+  private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType, JavacTaskImpl[] javacTask )
+  {
+    AbstractSrcMethod duplicate = null;
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
     {
@@ -392,23 +410,37 @@ class ExtCodeGen
             continue outer;
           }
         }
-        duplicate = true;
+        duplicate = m;
         break;
       }
     }
-
-    if( !duplicate )
+    if( duplicate == null )
     {
-      return false;
+      if( !extendedType.isInterface() )
+      {
+        SrcType superClass = extendedType.getSuperClass();
+        if( superClass != null && superClass.getName().equals( Object.class.getName() ) )
+        {
+          SrcClass superSrcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( superClass.getName(), javacTask, null );
+          duplicate = findMethod( method, superSrcClass, javacTask );
+        }
+      }
+      if( duplicate == null )
+      {
+        //## note: we are checking interfaces even for a non-abstract class because it could be
+        //## inheriting default interface methods, which must not be shadowed by an extension.
+        for( SrcType iface: extendedType.getInterfaces() )
+        {
+          SrcClass superIface = ClassSymbols.instance( getModule() ).makeSrcClassStub( iface.getName(), javacTask, null );
+          duplicate = findMethod( method, superIface, javacTask );
+          if( duplicate != null )
+          {
+            break;
+          }
+        }
+      }
     }
-
-    JavacElements elems = JavacElements.instance( javacTask.getContext() );
-    Symbol.ClassSymbol sym = elems.getTypeElement( ((SrcClass)method.getOwner()).getName() );
-    JavaFileObject file = sym.sourcefile;
-    errorHandler.report( new JavacDiagnostic( new SourceJavaFileObject( file.toUri() ), Diagnostic.Kind.ERROR, 0, 0, 0,
-                                              "Illegal extension method. '" + method.getSimpleName() +
-                                              "' duplicates a method in the extended class" ) );
-    return true;
+    return duplicate;
   }
 
   private boolean isExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
@@ -458,16 +490,5 @@ class ExtCodeGen
 //    Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
 //    env.toplevel = _tp.getCompilationUnit();
 //    return rs.resolveInternalMethod( pos, env, qual, name, args, null );
-//  }
-
-//  private boolean verifyExtensionMethod( AbstractSrcMethod method, Symbol.ClassSymbol extendedType, SrcClass extensionType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
-//  {
-//    // warn if method with same signature exists in extended type hierarchy
-//    /////JCDiagnostic.DiagnosticPosition position = ((JCTree)Trees.instance( javacTask ).getTree( extensionType )).pos();
-////
-////    errorHandler.report( new JavacDiagnostic( new SourceJavaFileObject( findFile( extensionType.getName(), _model ) ), Diagnostic.Kind.WARNING, methodOffset, 0, 0,
-////                                              "Illegal extension method. '" + method.getSimpleName() +
-////                                              "' overloads or shadows a method in the extended class" ) );
-//    return true;
 //  }
 }
