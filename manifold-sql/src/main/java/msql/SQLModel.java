@@ -1,8 +1,7 @@
 package msql;
 
 import manifold.api.fs.IFile;
-import manifold.api.sourceprod.AbstractSingleFileModel;
-import manifold.api.sourceprod.IModel;
+import manifold.api.type.AbstractSingleFileModel;
 
 import java.util.Set;
 

@@ -1,11 +1,12 @@
 package msql;
 
-import manifold.api.sourceprod.JavaSourceProducer;
+
+import manifold.api.type.JavaTypeManifold;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
-public class SQLSourceProducer extends JavaSourceProducer<SQLModel> {
+public class SQLSourceProducer extends JavaTypeManifold<SQLModel> {
 
     @Override
     public boolean handlesFileExtension(String fileExtension) {
