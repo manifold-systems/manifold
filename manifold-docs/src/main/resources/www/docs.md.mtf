@@ -1417,6 +1417,8 @@ The plugin currently supports most high-level IntelliJ features including:
 * Code completion
 * Go to declaration
 * Usage searching
+* Rename/Move refactoring
+* Quick navigation
 * Structural typing
 * Debugging
 
