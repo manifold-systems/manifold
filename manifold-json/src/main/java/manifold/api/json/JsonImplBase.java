@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import manifold.util.Pair;
 import manifold.util.StreamUtil;
 
 /**
@@ -37,6 +38,10 @@ public class JsonImplBase implements IJsonIO
   @SuppressWarnings("unused")
   protected Bindings getBindings( Object value )
   {
+    if( value instanceof Pair )
+    {
+      return getBindings( ((Pair)value).getSecond() );
+    }
     if( value instanceof Bindings )
     {
       return (Bindings)value;
@@ -55,6 +60,11 @@ public class JsonImplBase implements IJsonIO
     for( Object e : list )
     {
       Object elem;
+      if( e instanceof Pair )
+      {
+        e = ((Pair)e).getSecond();
+      }
+
       if( e instanceof List )
       {
         elem = wrapList( (List)e, ctor );

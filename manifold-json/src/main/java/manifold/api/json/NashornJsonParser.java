@@ -24,8 +24,14 @@ public class NashornJsonParser implements IJsonParser
   {
   }
 
-  public Bindings parseJson( String jsonText ) throws ScriptException
+  @Override
+  public Bindings parseJson( String jsonText, boolean withBigNumbers, boolean withTokens ) throws ScriptException
   {
+    if( withBigNumbers || withTokens )
+    {
+      throw new UnsupportedOperationException( "Nashorn json parser does not support Big numbers or tokens" );
+    }
+
     if( _engine == null )
     {
       _engine = new ScriptEngineManager().getEngineByName( "javascript" );

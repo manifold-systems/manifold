@@ -5,29 +5,30 @@ import java.io.Reader;
 
 final class Tokenizer
 {
-  private Reader source;
-  private char ch;
-  int line;
-  int column;
-  int offset;
+  private Reader _source;
+  private char _ch;
+  private int _line;
+  private int _column;
+  private int _offset;
 
-  public Tokenizer( Reader source )
+  Tokenizer( Reader source )
   {
-    this.source = source;
-    line = 1;
-    column = 0;
+    _source = source;
+    _offset = 0;
+    _line = 1;
+    _column = 0;
     nextChar();
   }
 
-  public Token next()
+  Token next()
   {
     Token T;
     eatWhiteSpace();
-    switch( ch )
+    switch( _ch )
     {
       case '"':
       case '\'':
-        T = consumeString( ch );
+        T = consumeString( _ch );
         break;
       case '-':
       case '0':
@@ -43,27 +44,27 @@ final class Tokenizer
         T = consumeNumber();
         break;
       case '{':
-        T = new Token( TokenType.LCURLY, "{", line, column );
+        T = new Token( TokenType.LCURLY, "{", _offset, _line, _column );
         nextChar();
         break;
       case '}':
-        T = new Token( TokenType.RCURLY, "}", line, column );
+        T = new Token( TokenType.RCURLY, "}", _offset, _line, _column );
         nextChar();
         break;
       case '[':
-        T = new Token( TokenType.LSQUARE, "[", line, column );
+        T = new Token( TokenType.LSQUARE, "[", _offset, _line, _column );
         nextChar();
         break;
       case ']':
-        T = new Token( TokenType.RSQUARE, "]", line, column );
+        T = new Token( TokenType.RSQUARE, "]", _offset, _line, _column );
         nextChar();
         break;
       case ',':
-        T = new Token( TokenType.COMMA, ",", line, column );
+        T = new Token( TokenType.COMMA, ",", _offset, _line, _column );
         nextChar();
         break;
       case ':':
-        T = new Token( TokenType.COLON, ":", line, column );
+        T = new Token( TokenType.COLON, ":", _offset, _line, _column );
         nextChar();
         break;
       case 'a':
@@ -121,10 +122,10 @@ final class Tokenizer
         T = consumeConstant();
         break;
       case '\0':
-        T = new Token( TokenType.EOF, "EOF", line, column );
+        T = new Token( TokenType.EOF, "EOF", _offset, _line, _column );
         break;
       default:
-        T = new Token( TokenType.ERROR, String.valueOf( ch ), line, column );
+        T = new Token( TokenType.ERROR, String.valueOf( _ch ), _offset, _line, _column );
         nextChar();
     }
     return T;
@@ -138,21 +139,22 @@ final class Tokenizer
   private Token consumeString( char quote )
   {
     StringBuilder sb = new StringBuilder();
-    int l = line;
-    int c = column;
+    int line = _line;
+    int column = _column;
+    int offset = _offset;
     Token T;
     nextChar();
-    while( moreChars() && ch != quote )
+    while( moreChars() && _ch != quote )
     {
-      if( ch == '\\' )
+      if( _ch == '\\' )
       {
         nextChar();
-        switch( ch )
+        switch( _ch )
         {
           case '"':
           case '\\':
           case '/':
-            sb.append( ch );
+            sb.append( _ch );
             nextChar();
             break;
           case 'b':
@@ -180,17 +182,17 @@ final class Tokenizer
             int u = 0;
             for( int i = 0; i < 4; i++ )
             {
-              if( isHexDigit( ch ) )
+              if( isHexDigit( _ch ) )
               {
-                u = u * 16 + ch - '0';
-                if( ch >= 'A' )
+                u = u * 16 + _ch - '0';
+                if( _ch >= 'A' )
                 { // handle hex numbers: 'A' = 65, '0' = 48. 'A'-'0' = 17, 17 - 7 = 10
                   u = u - 7;
                 }
               }
               else
               {
-                T = new Token( TokenType.ERROR, sb.toString(), line, column );
+                T = new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
                 nextChar();
                 return T;
               }
@@ -199,24 +201,24 @@ final class Tokenizer
             sb.append( (char)u );
             break;
           default:
-            T = new Token( TokenType.ERROR, sb.toString(), line, column );
+            T = new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
             nextChar();
             return T;
         }
       }
       else
       {
-        sb.append( ch );
+        sb.append( _ch );
         nextChar();
       }
     }
-    if( ch == quote )
+    if( _ch == quote )
     {
-      T = new Token( TokenType.STRING, sb.toString(), l, c );
+      T = new Token( TokenType.STRING, sb.toString(), offset, line, column );
     }
     else
     {
-      T = new Token( TokenType.ERROR, sb.toString(), line, column );
+      T = new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
     }
     nextChar();
     return T;
@@ -233,68 +235,69 @@ final class Tokenizer
   private Token consumeNumber()
   {
     StringBuilder sb = new StringBuilder();
-    int l = line;
-    int c = column;
+    int line = _line;
+    int column = _column;
+    int offset = _offset;
     Token T;
     boolean err;
     boolean isDouble = false;
-    if( ch == '-' )
+    if( _ch == '-' )
     {
-      sb.append( ch );
+      sb.append( _ch );
       nextChar();
     }
-    if( ch != '0' )
+    if( _ch != '0' )
     {
       err = consumeDigits( sb );
       if( err )
       {
-        return new Token( TokenType.ERROR, sb.toString(), line, column );
+        return new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
       }
     }
     else
     {
-      sb.append( ch );
+      sb.append( _ch );
       nextChar();
     }
-    if( ch == '.' )
+    if( _ch == '.' )
     {
       isDouble = true;
-      sb.append( ch );
+      sb.append( _ch );
       nextChar();
       err = consumeDigits( sb );
       if( err )
       {
-        return new Token( TokenType.ERROR, sb.toString(), line, column );
+        return new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
       }
     }
-    if( ch == 'E' || ch == 'e' )
+    if( _ch == 'E' || _ch == 'e' )
     {
       isDouble = true;
-      sb.append( ch );
+      sb.append( _ch );
       nextChar();
-      if( ch == '-' )
+      if( _ch == '-' )
       {
-        sb.append( ch );
+        sb.append( _ch );
         nextChar();
       }
-      else if( ch == '+' )
+      else if( _ch == '+' )
       {
-        sb.append( ch );
+        sb.append( _ch );
         nextChar();
       }
       err = consumeDigits( sb );
       if( err )
       {
-        return new Token( TokenType.ERROR, sb.toString(), line, column );
+        return new Token( TokenType.ERROR, sb.toString(), _offset, _line, _column );
       }
     }
     if( isDouble )
     {
-      T = new Token( TokenType.DOUBLE, sb.toString(), l, c );
+      T = new Token( TokenType.DOUBLE, sb.toString(), offset, line, column );
     }
     else
     {
-      T = new Token( TokenType.INTEGER, sb.toString(), l, c );
+      T = new Token( TokenType.INTEGER, sb.toString(), offset, line, column );
     }
     return T;
   }
@@ -302,11 +305,11 @@ final class Tokenizer
   private boolean consumeDigits( StringBuilder sb )
   {
     boolean err = false;
-    if( isDigit( ch ) )
+    if( isDigit( _ch ) )
     {
-      while( moreChars() && isDigit( ch ) )
+      while( moreChars() && isDigit( _ch ) )
       {
-        sb.append( ch );
+        sb.append( _ch );
         nextChar();
       }
     }
@@ -331,29 +334,29 @@ final class Tokenizer
   {
     StringBuilder sb = new StringBuilder();
     Token T;
-    int l = line;
-    int c = column;
+    int l = _line;
+    int c = _column;
     do
     {
-      sb.append( ch );
+      sb.append( _ch );
       nextChar();
-    } while( moreChars() && (ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z') );
+    } while( moreChars() && (_ch >= 'a' && _ch <= 'z' || _ch >= 'A' && _ch <= 'Z') );
     String str = sb.toString();
-    TokenType type = Token.constants.get( str );
+    TokenType type = Token.Constants.get( str );
     if( type == null )
     {
-      T = new Token( TokenType.ERROR, str, l, c );
+      T = new Token( TokenType.ERROR, str, _offset, l, c );
     }
     else
     {
-      T = new Token( type, str, l, c );
+      T = new Token( type, str, _offset, l, c );
     }
     return T;
   }
 
   private void eatWhiteSpace()
   {
-    while( moreChars() && (ch == '\t' || ch == '\n' || ch == '\r' || ch == ' ') )
+    while( moreChars() && (_ch == '\t' || _ch == '\n' || _ch == '\r' || _ch == ' ') )
     {
       nextChar();
     }
@@ -365,8 +368,8 @@ final class Tokenizer
 
     try
     {
-      c = source.read();
-      offset++;
+      c = _source.read();
+      _offset++;
     }
     catch( IOException e )
     {
@@ -374,22 +377,22 @@ final class Tokenizer
     }
     if( c == '\n' )
     {
-      column = 0;
-      line++;
+      _column = 0;
+      _line++;
     }
     else if( c != -1 )
     {
-      column++;
+      _column++;
     }
     else
     {
       c = '\0';
     }
-    ch = (char)c;
+    _ch = (char)c;
   }
 
   private boolean moreChars()
   {
-    return ch != '\0';
+    return _ch != '\0';
   }
 }

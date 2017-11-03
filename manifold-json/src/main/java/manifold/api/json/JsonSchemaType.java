@@ -1,5 +1,6 @@
 package manifold.api.json;
 
+import java.net.URL;
 import java.util.List;
 import manifold.util.JsonUtil;
 
@@ -10,11 +11,21 @@ public abstract class JsonSchemaType implements IJsonParentType
   private final String _name;
   private final JsonSchemaType _parent;
   private List<IJsonType> _definitions;
+  private URL _file;
 
   JsonSchemaType( String name, JsonSchemaType parent )
   {
     _name = name;
     _parent = parent;
+  }
+
+  public URL getFile()
+  {
+    return _file != null ? _file : _parent.getFile();
+  }
+  public void setFile( URL file )
+  {
+    _file = file;
   }
 
   public String getLabel()

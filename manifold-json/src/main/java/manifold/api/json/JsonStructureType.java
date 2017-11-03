@@ -6,7 +6,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import manifold.api.gen.SrcAnnotationExpression;
+import manifold.api.gen.SrcArgument;
+import manifold.api.gen.SrcMemberAccessExpression;
 import manifold.api.type.ActualName;
+import manifold.api.type.SourcePosition;
 import manifold.util.JsonUtil;
 import manifold.util.ManStringUtil;
 
@@ -14,14 +18,17 @@ import manifold.util.ManStringUtil;
  */
 public class JsonStructureType extends JsonSchemaType
 {
+  private static final String FIELD_FILE_URL = "__FILE_URL_";
   private List<IJsonParentType> _superTypes;
   private Map<String, IJsonType> _members;
+  private Map<String, Token> _memberLocations;
   private Map<String, IJsonParentType> _innerTypes;
 
   public JsonStructureType( JsonSchemaType parent, String name )
   {
     super( name, parent );
     _members = new HashMap<>();
+    _memberLocations = new HashMap<>();
     _innerTypes = new HashMap<>();
     _superTypes = new ArrayList<>();
   }
@@ -72,7 +79,7 @@ public class JsonStructureType extends JsonSchemaType
     return _innerTypes;
   }
 
-  public void addMember( String name, IJsonType type )
+  public void addMember( String name, IJsonType type, Token token )
   {
     IJsonType existingType = _members.get( name );
     if( existingType != null && existingType != type )
@@ -94,6 +101,7 @@ public class JsonStructureType extends JsonSchemaType
       }
     }
     _members.put( name, type );
+    _memberLocations.put( name, token );
   }
 
   public IJsonType findMemberType( String name )
@@ -125,7 +133,7 @@ public class JsonStructureType extends JsonSchemaType
 
       if( memberType != null )
       {
-        mergedType.addMember( memberName, memberType );
+        mergedType.addMember( memberName, memberType, _memberLocations.get( memberName ) );
       }
       else
       {
@@ -169,15 +177,18 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "@Structural\n" );
     indent( sb, indent );
     sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb ) ).append( " {\n" );
+    renderFileField( sb, indent + 2 );
     renderTopLevelFactoryMethods( sb, indent + 2 );
     for( String key : _members.keySet() )
     {
       String propertyType = _members.get( key ).getIdentifier();
+      addSourcePositionAnnotation( sb, indent + 2, key );
       identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
       sb.append( propertyType ).append( " get" ).append( identifier ).append( "();\n" );
       if( mutable )
       {
+        addSourcePositionAnnotation( sb, indent + 2, key );
         addActualNameAnnotation( sb, indent + 2, key, true );
         indent( sb, indent + 2 );
         sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
@@ -200,6 +211,12 @@ public class JsonStructureType extends JsonSchemaType
     }
     indent( sb, indent );
     sb.append( "}\n" );
+  }
+
+  private void renderFileField( StringBuilder sb, int indent )
+  {
+    indent( sb, indent );
+    sb.append( "String " + FIELD_FILE_URL + " = \"" ).append( getFile().toString() ).append( "\";\n" );
   }
 
   private String addSuperTypes( StringBuilder sb )
@@ -225,6 +242,23 @@ public class JsonStructureType extends JsonSchemaType
       sb.append( "@" ).append( ActualName.class.getName() ).append( "( \"" ).append( name ).append( "\" )\n" );
     }
     return identifier;
+  }
+
+  private void addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
+  {
+    Token token = _memberLocations.get( name );
+    if( token == null )
+    {
+      return;
+    }
+    indent( sb, indent );
+    SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
+      .addArgument( new SrcArgument( new SrcMemberAccessExpression( getName(), FIELD_FILE_URL ) ).name( "url" ) )
+      .addArgument( "feature", String.class, name )
+      .addArgument( "offset", int.class, token.getOffset() )
+      .addArgument( "length", int.class, name.length() );
+    annotation.render( sb, indent );
+    sb.append( '\n' );
   }
 
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )

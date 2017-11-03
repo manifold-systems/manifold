@@ -1,6 +1,7 @@
 package manifold.api.json.schema;
 
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,7 @@ import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
 import manifold.util.JsonUtil;
+import manifold.util.Pair;
 import manifold.util.cache.FqnCache;
 
 /**
@@ -46,21 +48,140 @@ public class JsonSchemaTransformer
 
   public static IJsonType transform( String name, Bindings docObj )
   {
+    return transform( name, null, docObj );
+  }
+  public static IJsonType transform( String name, URL source, Bindings docObj )
+  {
     assertSchema( docObj );
 
     JsonSchemaTransformer transformer = new JsonSchemaTransformer();
 
     List<IJsonType> definitions = transformer.transformDefinitions( docObj );
+    if( definitions != null )
+    {
+      for( IJsonType def : definitions )
+      {
+        if( def instanceof JsonSchemaType )
+        {
+          ((JsonSchemaType)def).setFile( source );
+        }
+      }
+    }
 
-    name = name == null || name.isEmpty() ? (String)docObj.get( JSCH_NAME ) : name;
+    name = name == null || name.isEmpty() ? getJSchema_Name( docObj ) : name;
     IJsonType type = transformer.transformType( null, name, docObj );
     type.setDefinitions( definitions );
+    if( type instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)type).setFile( source );
+    }
     return type;
+  }
+
+  private static String getJSchema_Name( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_NAME );
+    String name;
+    if( value instanceof Pair )
+    {
+      name = (String)((Pair)value).getSecond();
+    }
+    else
+    {
+      name = (String)value;
+    }
+    return name;
+  }
+
+  private static String getJSchema_Type( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_TYPE );
+    String name;
+    if( value instanceof Pair )
+    {
+      name = (String)((Pair)value).getSecond();
+    }
+    else
+    {
+      name = (String)value;
+    }
+    return name;
+  }
+
+  private static String getJSchema_Ref( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_REF );
+    String name;
+    if( value instanceof Pair )
+    {
+      name = (String)((Pair)value).getSecond();
+    }
+    else
+    {
+      name = (String)value;
+    }
+    return name;
+  }
+
+  private static Bindings getJSchema_Definitions( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_DEFINITIONS );
+    return getBindings( value );
+  }
+
+  private static Bindings getBindings( Object value )
+  {
+    Bindings bindings;
+    if( value instanceof Pair )
+    {
+      bindings = (Bindings)((Pair)value).getSecond();
+    }
+    else
+    {
+      bindings = (Bindings)value;
+    }
+    return bindings;
+  }
+
+  private static Bindings getJSchema_Properties( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_PROPERTIES );
+    return getBindings( value );
+  }
+
+  private static List getJSchema_Enum( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_ENUM );
+    List list;
+    if( value instanceof Pair )
+    {
+      list = (List)((Pair)value).getSecond();
+    }
+    else
+    {
+      list = (List)value;
+    }
+    return list;
+  }
+
+  private static List getJSchema_AllOf( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_ALL_OF );
+    List list;
+    if( value instanceof Pair )
+    {
+      list = (List)((Pair)value).getSecond();
+    }
+    else
+    {
+      list = (List)value;
+    }
+    return list;
   }
 
   private List<IJsonType> transformDefinitions( Bindings docObj )
   {
-    Bindings definitions = (Bindings)docObj.get( JSCH_DEFINITIONS );
+    Bindings definitions = getJSchema_Definitions( docObj );
     if( definitions == null )
     {
       return null;
@@ -72,7 +193,7 @@ public class JsonSchemaTransformer
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
     {
       String name = entry.getKey();
-      Bindings value = (Bindings)entry.getValue();
+      Bindings value = getBindings( entry.getValue() );
       IJsonType type = transformType( definitionsHolder, name, value );
       result.add( type );
     }
@@ -117,7 +238,7 @@ public class JsonSchemaTransformer
   IJsonType transformType( JsonSchemaType parent, String name, Bindings jsonObj )
   {
     IJsonType result;
-    String type = (String)jsonObj.get( JSCH_TYPE );
+    String type = getJSchema_Type( jsonObj );
     if( type == null )
     {
       return findReferenceType( parent, name, jsonObj );
@@ -192,7 +313,7 @@ public class JsonSchemaTransformer
 
   private IJsonType deriveTypeFromEnum( Bindings bindings )
   {
-    List list = (List)bindings.get( JSCH_ENUM );
+    List list = getJSchema_Enum( bindings );
     if( list == null )
     {
       return null;
@@ -217,7 +338,7 @@ public class JsonSchemaTransformer
 
   private IJsonType transformCombination( JsonSchemaType parent, String name, Bindings jsonObj )
   {
-    List list = (List)jsonObj.get( JSCH_ALL_OF );
+    List list = getJSchema_AllOf( jsonObj );
     if( list == null )
     {
       return null;
@@ -228,10 +349,14 @@ public class JsonSchemaTransformer
     {
       for( Object elem : list )
       {
+        if( elem instanceof Pair )
+        {
+          elem = ((Pair)elem).getSecond();
+        }
         if( elem instanceof Bindings )
         {
           Bindings elemBindings = (Bindings)elem;
-          Bindings properties = (Bindings)elemBindings.get( JSCH_PROPERTIES );
+          Bindings properties = getJSchema_Properties( elemBindings );
           if( properties != null )
           {
             ObjectTransformer.transform( this, type, elemBindings );
@@ -249,6 +374,10 @@ public class JsonSchemaTransformer
     JsonStructureType type = null;
     for( Object elem : list )
     {
+      if( elem instanceof Pair )
+      {
+        elem = ((Pair)elem).getSecond();
+      }
       if( elem instanceof Bindings )
       {
         Bindings elemBindings = (Bindings)elem;
@@ -268,7 +397,7 @@ public class JsonSchemaTransformer
 
   private IJsonType findReference( Bindings jsonObj )
   {
-    String ref = (String)jsonObj.get( JSCH_REF );
+    String ref = getJSchema_Ref( jsonObj );
     if( ref == null )
     {
       return null;

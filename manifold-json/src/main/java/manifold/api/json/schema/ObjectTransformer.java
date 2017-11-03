@@ -6,6 +6,8 @@ import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonStructureType;
+import manifold.api.json.Token;
+import manifold.util.Pair;
 
 /**
  */
@@ -62,18 +64,41 @@ class ObjectTransformer
 
   private void addProperties()
   {
-    Bindings properties = (Bindings)_jsonObj.get( "properties" );
-    if( properties == null )
+    Object props = _jsonObj.get( "properties" );
+    if( props == null )
     {
       return;
+    }
+
+    Bindings properties;
+    if( props instanceof Pair )
+    {
+      properties = (Bindings)((Pair)props).getSecond();
+    }
+    else
+    {
+      properties = (Bindings)props;
     }
 
     for( Map.Entry<String, Object> entry : properties.entrySet() )
     {
       String name = entry.getKey();
-      Bindings value = (Bindings)entry.getValue();
-      IJsonType type = _schemaTx.transformType( _type, name, value );
-      _type.addMember( name, type );
+      Object value = entry.getValue();
+      Bindings bindings;
+      Token token;
+      if( value instanceof Pair )
+      {
+        token = (Token)((Pair)value).getFirst();
+        bindings = (Bindings)((Pair)value).getSecond();
+      }
+      else
+      {
+        token = null;
+        bindings = (Bindings)value;
+      }
+
+      IJsonType type = _schemaTx.transformType( _type, name, bindings );
+      _type.addMember( name, type, token );
     }
   }
 }

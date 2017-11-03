@@ -1,5 +1,6 @@
 package manifold.api.json;
 
+import java.net.MalformedURLException;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.script.ScriptException;
@@ -32,7 +33,7 @@ class JsonModel extends AbstractSingleFileModel
     Bindings bindings;
     try
     {
-      bindings = Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ) );
+      bindings = Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ), false, true );
     }
     catch( Exception e )
     {
@@ -44,7 +45,14 @@ class JsonModel extends AbstractSingleFileModel
       bindings = new SimpleBindings();
     }
 
-    _type = (IJsonParentType)Json.transformJsonObject( getFile().getBaseName(), null, bindings );
+    try
+    {
+      _type = (IJsonParentType)Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   public IJsonParentType getType()

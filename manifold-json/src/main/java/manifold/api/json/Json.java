@@ -1,10 +1,12 @@
 package manifold.api.json;
 
 
+import java.net.URL;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.api.json.schema.JsonSchemaTransformer;
+import manifold.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -59,9 +61,13 @@ public class Json
   @SuppressWarnings("UnusedDeclaration")
   public static Bindings fromJson( String json )
   {
+    return fromJson( json, false, false );
+  }
+  public static Bindings fromJson( String json, boolean withBigNumbers, boolean withTokens )
+  {
     try
     {
-      return PARSER.get().parseJson( json );
+      return PARSER.get().parseJson( json, withBigNumbers, withTokens );
     }
     catch( ScriptException e )
     {
@@ -94,11 +100,20 @@ public class Json
 
   public static IJsonType transformJsonObject( String name, JsonSchemaType parent, Object jsonObj )
   {
+    return transformJsonObject( name, null, parent, jsonObj );
+  }
+  public static IJsonType transformJsonObject( String name, URL source, JsonSchemaType parent, Object jsonObj )
+  {
     IJsonType type = null;
 
     if( parent != null )
     {
       type = parent.findChild( name );
+    }
+
+    if( jsonObj instanceof Pair )
+    {
+      jsonObj = ((Pair)jsonObj).getSecond();
     }
 
     if( jsonObj == null )
@@ -109,22 +124,28 @@ public class Json
     {
       if( JsonSchemaTransformer.isSchema( (Bindings)jsonObj ) )
       {
-        type = JsonSchemaTransformer.transform( name, (Bindings)jsonObj );
+        type = JsonSchemaTransformer.transform( name, source, (Bindings)jsonObj );
       }
       else
       {
         if( type == null )
         {
           type = new JsonStructureType( parent, name );
+          ((JsonSchemaType)type).setFile( source );
         }
         for( Object k : ((Bindings)jsonObj).keySet() )
         {
           String key = (String)k;
           Object value = ((Bindings)jsonObj).get( key );
+          Token token = null;
+          if( value instanceof Pair )
+          {
+            token = (Token)((Pair)value).getFirst();
+          }
           IJsonType memberType = transformJsonObject( key, (JsonSchemaType)type, value );
           if( memberType != null )
           {
-            ((JsonStructureType)type).addMember( key, memberType );
+            ((JsonStructureType)type).addMember( key, memberType, token );
           }
         }
         if( parent != null )
@@ -138,6 +159,7 @@ public class Json
       if( type == null )
       {
         type = new JsonListType( name, parent );
+        ((JsonListType)type).setFile( source );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )

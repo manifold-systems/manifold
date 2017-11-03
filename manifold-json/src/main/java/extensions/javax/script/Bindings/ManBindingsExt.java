@@ -13,6 +13,7 @@ import manifold.ext.api.AbstractDynamicTypeProxy;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.JsonUtil;
+import manifold.util.Pair;
 
 /**
  */
@@ -57,6 +58,10 @@ public class ManBindingsExt
         indent( sb, indent + 2 );
         sb.append( '\"' ).append( key ).append( '\"' ).append( ": " );
         Object value = thiz.get( key );
+        if( value instanceof Pair )
+        {
+          value = ((Pair)value).getSecond();
+        }
         if( value instanceof Bindings )
         {
           toJson( ((Bindings)value), sb, indent + 2 );
@@ -93,6 +98,10 @@ public class ManBindingsExt
       while( i < iSize )
       {
         Object comp = value.get( i );
+        if( comp instanceof Pair )
+        {
+          comp = ((Pair)comp).getSecond();
+        }
         if( comp instanceof Bindings )
         {
           toJson( ((Bindings)comp), sb, indent + 4 );
@@ -172,6 +181,10 @@ public class ManBindingsExt
       for( String key : thiz.keySet() )
       {
         Object value = thiz.get( key );
+        if( value instanceof Pair )
+        {
+          value = ((Pair)value).getSecond();
+        }
         if( value instanceof Bindings )
         {
           toXml( ((Bindings)value), key, sb, indent + 2 );
@@ -186,6 +199,11 @@ public class ManBindingsExt
             sb.append( ">\n" );
             for( Object comp : (List)value )
             {
+              if( comp instanceof Pair )
+              {
+                comp = ((Pair)comp).getSecond();
+              }
+
               if( comp instanceof Bindings )
               {
                 toXml( ((Bindings)comp), "li", sb, indent + 4 );

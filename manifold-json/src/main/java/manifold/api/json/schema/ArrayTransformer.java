@@ -6,6 +6,7 @@ import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonListType;
 import manifold.api.json.JsonSchemaType;
+import manifold.util.Pair;
 
 /**
  */
@@ -54,7 +55,16 @@ class ArrayTransformer
   private void assignComponentType()
   {
     IJsonType componentType = null;
-    Object items = _jsonObj.get( JSCH_ITEMS );
+    Object value = _jsonObj.get( JSCH_ITEMS );
+    Object items;
+    if( value instanceof Pair )
+    {
+      items = ((Pair)value).getSecond();
+    }
+    else
+    {
+      items = value;
+    }
     if( items instanceof List )
     {
       for( Object elem : (List)items )

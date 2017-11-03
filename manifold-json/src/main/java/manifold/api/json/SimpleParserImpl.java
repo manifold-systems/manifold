@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import javax.script.Bindings;
 import javax.script.SimpleBindings;
+import manifold.util.Pair;
 
 /*
   http://tools.ietf.org/html/rfc7159
@@ -30,39 +31,30 @@ import javax.script.SimpleBindings;
 
 final class SimpleParserImpl
 {
-  private final Tokenizer tokenizer;
-  private Token T;
-  private final List<String> errors;
-  private boolean useBig;
+  private final Tokenizer _tokenizer;
+  private Token _token;
+  private final List<String> _errors;
+  private boolean _useBig;
+  private boolean _withTokens;
 
-  public SimpleParserImpl( Tokenizer tokenizer, boolean useBig )
+  SimpleParserImpl( Tokenizer tokenizer, boolean useBig )
   {
-    this.tokenizer = tokenizer;
-    this.useBig = useBig;
-    errors = new ArrayList<String>();
+    _tokenizer = tokenizer;
+    _useBig = useBig;
+    _errors = new ArrayList<>();
     advance();
   }
 
-  public void advance()
-  {
-    T = tokenizer.next();
-  }
-
-  public boolean hasMore()
-  {
-    return T.getType() != TokenType.EOF;
-  }
-
-  public Token currentToken()
-  {
-    return T;
-  }
-
   // jsonText = value.
-  public Object parse()
+  Object parse()
   {
+    return parse( false );
+  }
+  Object parse( boolean withTokens )
+  {
+    _withTokens = withTokens;
     Object val = null;
-    if( T.isValueType() )
+    if( _token.isValueType() )
     {
       val = parseValue();
     }
@@ -73,15 +65,20 @@ final class SimpleParserImpl
     return val;
   }
 
-  // array = "[" [ value { "," value } ] "]".
-  public Object parseArray()
+  private void advance()
   {
-    ArrayList arr = new ArrayList();
+    _token = _tokenizer.next();
+  }
+
+  // array = "[" [ value { "," value } ] "]".
+  private Object parseArray()
+  {
+    ArrayList<Object> arr = new ArrayList<>();
     advance();
-    if( T.isValueType() )
+    if( _token.isValueType() )
     {
       arr.add( parseValue() );
-      while( T.getType() == TokenType.COMMA )
+      while( _token.getType() == TokenType.COMMA )
       {
         advance();
         arr.add( parseValue() );
@@ -90,31 +87,16 @@ final class SimpleParserImpl
     checkAndSkip( TokenType.RSQUARE, "]" );
     return arr;
   }
-
-  public void skipArray()
-  {
-    advance();
-    if( T.isValueType() )
-    {
-      skipValue();
-      while( T.getType() == TokenType.COMMA )
-      {
-        advance();
-        skipValue();
-      }
-    }
-    checkAndSkip( TokenType.RSQUARE, "]" );
-  }
-
+  
   // object = "{" [ member { "," member } ] "}".
-  public Object parseObject()
+  private Object parseObject()
   {
-    Map map = new SimpleBindings();
+    Bindings map = new SimpleBindings();
     advance();
-    if( T.getType() == TokenType.STRING )
+    if( _token.getType() == TokenType.STRING )
     {
       parseMember( map );
-      while( T.getType() == TokenType.COMMA )
+      while( _token.getType() == TokenType.COMMA )
       {
         advance();
         parseMember( map );
@@ -124,43 +106,22 @@ final class SimpleParserImpl
     return map;
   }
 
-  public void skipObject()
-  {
-    advance();
-    if( T.getType() == TokenType.STRING )
-    {
-      skipMember();
-      while( T.getType() == TokenType.COMMA )
-      {
-        advance();
-        skipMember();
-      }
-    }
-    checkAndSkip( TokenType.RCURLY, "}" );
-  }
-
   // member = string ":" value.
-  public void parseMember( Map map )
+  private void parseMember( Bindings map )
   {
-    String key = T.getString();
+    Token token = _token;
+    String key = _token.getString();
     check( TokenType.STRING, "a string" );
     check( TokenType.COLON, ":" );
     Object val = parseValue();
-    map.put( key, val );
-  }
-
-  public void skipMember()
-  {
-    check( TokenType.STRING, "a string" );
-    check( TokenType.COLON, ":" );
-    skipValue();
+    map.put( key, _withTokens ? new Pair<>( token, val ) : val );
   }
 
   // value = object | array | number | string | "true" | "false" | "null" .
-  public Object parseValue()
+  private Object parseValue()
   {
     Object val;
-    switch( T.getType() )
+    switch( _token.getType() )
     {
       case LCURLY:
         val = parseObject();
@@ -169,22 +130,22 @@ final class SimpleParserImpl
         val = parseArray();
         break;
       case INTEGER:
-        if( useBig )
+        if( _useBig )
         {
-          val = new BigInteger( T.getString() );
+          val = new BigInteger( _token.getString() );
         }
         else
         {
           try
           {
-            val = Integer.parseInt( T.getString() );
+            val = Integer.parseInt( _token.getString() );
           }
           catch( NumberFormatException e0 )
           {
             // we have an overflow, the tokenizer guarantees the format is correct
             try
             {
-              val = Long.parseLong( T.getString() );
+              val = Long.parseLong( _token.getString() );
             }
             catch( NumberFormatException e1 )
             {
@@ -195,18 +156,18 @@ final class SimpleParserImpl
         advance();
         break;
       case DOUBLE:
-        if( useBig )
+        if( _useBig )
         {
-          val = new BigDecimal( T.getString() );
+          val = new BigDecimal( _token.getString() );
         }
         else
         {
-          val = Double.parseDouble( T.getString() );
+          val = Double.parseDouble( _token.getString() );
         }
         advance();
         break;
       case STRING:
-        val = T.getString();
+        val = _token.getString();
         advance();
         break;
       case TRUE:
@@ -227,52 +188,29 @@ final class SimpleParserImpl
     }
     return val;
   }
-
-  public void skipValue()
-  {
-    switch( T.getType() )
-    {
-      case LCURLY:
-        skipObject();
-        break;
-      case LSQUARE:
-        skipArray();
-        break;
-      case INTEGER:
-      case DOUBLE:
-      case STRING:
-      case TRUE:
-      case FALSE:
-      case NULL:
-        advance();
-        break;
-      default:
-        addError();
-    }
-  }
-
+  
   private void addError()
   {
-    errors.add( "[" + T.getLineNumber() + ":" + T.getColumn() + "] Unexpected token '" + T.getString() + "'" );
+    _errors.add( "[" + _token.getLineNumber() + ":" + _token.getColumn() + "] Unexpected token '" + _token.getString() + "'" );
     advance();
   }
 
   private void check( TokenType type, String s )
   {
-    if( T.getType() != type )
+    if( _token.getType() != type )
     {
-      errors.add( "[" + T.getLineNumber() + ":" + T.getColumn() + "] expecting '" + s + "', found '" + T.getString() + "'" );
+      _errors.add( "[" + _token.getLineNumber() + ":" + _token.getColumn() + "] expecting '" + s + "', found '" + _token.getString() + "'" );
     }
     advance();
   }
 
   private void checkAndSkip( TokenType type, String s )
   {
-    if( T.getType() != type )
+    if( _token.getType() != type )
     {
-      errors.add( "[" + T.getLineNumber() + ":" + T.getColumn() + "] expecting '" + s + "', found '" + T.getString() + "'" );
-      while( T.getType() != TokenType.EOF &&
-             T.getType() != type )
+      _errors.add( "[" + _token.getLineNumber() + ":" + _token.getColumn() + "] expecting '" + s + "', found '" + _token.getString() + "'" );
+      while( _token.getType() != TokenType.EOF &&
+             _token.getType() != type )
       {
         advance();
       }
@@ -280,8 +218,8 @@ final class SimpleParserImpl
     advance();
   }
 
-  public List<String> getErrors()
+  List<String> getErrors()
   {
-    return errors;
+    return _errors;
   }
 }

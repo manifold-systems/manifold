@@ -4,25 +4,28 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-final class Token
+public final class Token
 {
-  private final TokenType type;
-  private final String string;
-  private final int line;
-  private final int column;
-  static final Map<String, TokenType> constants = initializeConstants();
+  static final Map<String, TokenType> Constants = initializeConstants();
 
-  public Token( TokenType type, String string, int line, int column )
+  private final TokenType _type;
+  private final String _string;
+  private final int _offset;
+  private final int _line;
+  private final int _column;
+
+  Token( TokenType type, String string, int offset, int line, int column )
   {
-    this.type = type;
-    this.string = string;
-    this.line = line;
-    this.column = column;
+    _type = type;
+    _string = string;
+    _offset = offset;
+    _line = line;
+    _column = column;
   }
 
   private static Map<String, TokenType> initializeConstants()
   {
-    HashMap<String, TokenType> map = new HashMap<String, TokenType>();
+    HashMap<String, TokenType> map = new HashMap<>();
     map.put( "true", TokenType.TRUE );
     map.put( "false", TokenType.FALSE );
     map.put( "null", TokenType.NULL );
@@ -31,35 +34,40 @@ final class Token
 
   public String getString()
   {
-    return string;
+    return _string;
   }
 
   public TokenType getType()
   {
-    return type;
+    return _type;
   }
 
-  public int getLineNumber()
+  public int getOffset()
   {
-    return line;
+    return _offset;
   }
 
-  public int getColumn()
+  int getLineNumber()
   {
-    return column;
+    return _line;
+  }
+
+  int getColumn()
+  {
+    return _column;
   }
 
   @Override
   public String toString()
   {
-    return string + " : " + type;
+    return _string + " : " + _type;
   }
 
-  public boolean isValueType()
+  boolean isValueType()
   {
-    return type == TokenType.LCURLY || type == TokenType.LSQUARE ||
-           type == TokenType.INTEGER || type == TokenType.DOUBLE ||
-           type == TokenType.STRING || type == TokenType.TRUE ||
-           type == TokenType.FALSE || type == TokenType.NULL;
+    return _type == TokenType.LCURLY || _type == TokenType.LSQUARE ||
+           _type == TokenType.INTEGER || _type == TokenType.DOUBLE ||
+           _type == TokenType.STRING || _type == TokenType.TRUE ||
+           _type == TokenType.FALSE || _type == TokenType.NULL;
   }
 }
