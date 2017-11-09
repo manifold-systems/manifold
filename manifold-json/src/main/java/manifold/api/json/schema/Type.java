@@ -11,13 +11,19 @@ public enum Type
   Integer( "integer" ),
   Boolean( "boolean" ),
   Dynamic( "dynamic" ),
-  Null( "null" );
+  Null( "null" ),
+  Invalid( "invalid" );
 
   private final String _schemaName;
 
   Type( String name )
   {
     _schemaName = name;
+  }
+
+  public String getName()
+  {
+    return _schemaName;
   }
 
   public static Type fromName( String schemaName )
@@ -41,6 +47,6 @@ public enum Type
       case "null":
         return Null;
     }
-    throw new IllegalArgumentException( schemaName + " is not a valid schema type" );
+    return Invalid;
   }
 }

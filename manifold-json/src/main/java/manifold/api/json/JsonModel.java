@@ -9,6 +9,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.json.schema.IllegalSchemaTypeName;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
@@ -22,7 +23,7 @@ class JsonModel extends AbstractSingleFileModel
   private IJsonParentType _type;
   private JsonIssueContainer _issues;
 
-  public JsonModel( String fqn, Set<IFile> files )
+  JsonModel( String fqn, Set<IFile> files )
   {
     super( fqn, files );
     init();
@@ -47,7 +48,19 @@ class JsonModel extends AbstractSingleFileModel
 
     try
     {
-      _type = (IJsonParentType)Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+      try
+      {
+        _type = (IJsonParentType)Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+      }
+      catch( IllegalSchemaTypeName e )
+      {
+        _type = new ErrantType( getFile().toURI().toURL(), e.getTypeName() );
+        if( _issues == null )
+        {
+          _issues = new JsonIssueContainer( getFile() );
+        }
+        _issues.addIssues( e );
+      }
     }
     catch( MalformedURLException e )
     {

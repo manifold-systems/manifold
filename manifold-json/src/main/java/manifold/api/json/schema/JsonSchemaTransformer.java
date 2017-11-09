@@ -14,6 +14,7 @@ import manifold.api.json.Json;
 import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
+import manifold.api.json.Token;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
 import manifold.util.cache.FqnCache;
@@ -81,21 +82,6 @@ public class JsonSchemaTransformer
   private static String getJSchema_Name( Bindings docObj )
   {
     Object value = docObj.get( JSCH_NAME );
-    String name;
-    if( value instanceof Pair )
-    {
-      name = (String)((Pair)value).getSecond();
-    }
-    else
-    {
-      name = (String)value;
-    }
-    return name;
-  }
-
-  private static String getJSchema_Type( Bindings docObj )
-  {
-    Object value = docObj.get( JSCH_TYPE );
     String name;
     if( value instanceof Pair )
     {
@@ -238,7 +224,19 @@ public class JsonSchemaTransformer
   IJsonType transformType( JsonSchemaType parent, String name, Bindings jsonObj )
   {
     IJsonType result;
-    String type = getJSchema_Type( jsonObj );
+    Object value = jsonObj.get( JSCH_TYPE );
+    String type;
+    Token token = null;
+    if( value instanceof Pair )
+    {
+      type = (String)((Pair)value).getSecond();
+      token = (Token)((Pair)value).getFirst();
+    }
+    else
+    {
+      type = (String)value;
+    }
+
     if( type == null )
     {
       return findReferenceType( parent, name, jsonObj );
@@ -284,8 +282,10 @@ public class JsonSchemaTransformer
       case Null:
         result = DynamicType.instance();
         break;
+      case Invalid:
       default:
-        throw new IllegalStateException( "Unhandled type: " + type );
+        throw new IllegalSchemaTypeName( type, token );
+
     }
     return result;
   }
