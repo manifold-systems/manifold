@@ -174,6 +174,12 @@ public class JsonStructureType extends JsonSchemaType
     String name = getName();
     String identifier = addActualNameAnnotation( sb, indent, name, false );
 
+    indent( sb, indent );
+    if( getParent() instanceof JsonStructureType )
+    {
+      ((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent + 2, identifier );
+    }
+    indent( sb, indent );
     sb.append( "@Structural\n" );
     indent( sb, indent );
     sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb ) ).append( " {\n" );
