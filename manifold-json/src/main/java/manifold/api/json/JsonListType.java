@@ -66,7 +66,7 @@ public class JsonListType extends JsonSchemaType
     return _innerTypes;
   }
 
-  public IJsonType merge( JsonListType other )
+  IJsonType merge( JsonListType other )
   {
     JsonListType mergedType = new JsonListType( getLabel(), getParent() );
 
@@ -83,27 +83,9 @@ public class JsonListType extends JsonSchemaType
       }
     }
 
-    for( Map.Entry<String, IJsonParentType> e : _innerTypes.entrySet() )
+    if( !mergeInnerTypes( other, mergedType, _innerTypes ) )
     {
-      String name = e.getKey();
-      IJsonType innerType = other.findChild( name );
-      if( innerType != null )
-      {
-        innerType = Json.mergeTypes( e.getValue(), innerType );
-      }
-      else
-      {
-        innerType = e.getValue();
-      }
-
-      if( innerType != null )
-      {
-        mergedType.addChild( name, (IJsonParentType)innerType );
-      }
-      else
-      {
-        return null;
-      }
+      return null;
     }
 
     return mergedType;
@@ -135,12 +117,7 @@ public class JsonListType extends JsonSchemaType
     {
       return false;
     }
-    if( !_innerTypes.equals( that._innerTypes ) )
-    {
-      return false;
-    }
-
-    return true;
+    return _innerTypes.equals( that._innerTypes );
   }
 
   @Override

@@ -179,8 +179,23 @@ public class JsonSchemaTransformer
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
     {
       String name = entry.getKey();
-      Bindings value = getBindings( entry.getValue() );
-      IJsonType type = transformType( definitionsHolder, name, value );
+      Object value = entry.getValue();
+      Bindings bindings;
+      Token token = null;
+      if( value instanceof Pair )
+      {
+        bindings = (Bindings)((Pair)value).getSecond();
+        token = (Token)((Pair)value).getFirst();
+      }
+      else
+      {
+        bindings = (Bindings)value;
+      }
+      IJsonType type = transformType( definitionsHolder, name, bindings );
+      if( token != null && type instanceof JsonStructureType )
+      {
+        ((JsonStructureType)type).setToken( token );
+      }
       result.add( type );
     }
     return result;

@@ -23,6 +23,7 @@ public class JsonStructureType extends JsonSchemaType
   private Map<String, IJsonType> _members;
   private Map<String, Token> _memberLocations;
   private Map<String, IJsonParentType> _innerTypes;
+  private Token _token;
 
   public JsonStructureType( JsonSchemaType parent, String name )
   {
@@ -109,6 +110,15 @@ public class JsonStructureType extends JsonSchemaType
     return _members.get( name );
   }
 
+  public Token getToken()
+  {
+    return _token;
+  }
+  public void setToken( Token token )
+  {
+    _token = token;
+  }
+
   JsonStructureType merge( JsonStructureType other )
   {
     if( !getName().equals( other.getName() ) )
@@ -141,27 +151,9 @@ public class JsonStructureType extends JsonSchemaType
       }
     }
 
-    for( Map.Entry<String, IJsonParentType> e : _innerTypes.entrySet() )
+    if( !mergeInnerTypes( other, mergedType, _innerTypes ) )
     {
-      String name = e.getKey();
-      IJsonType innerType = other.findChild( name );
-      if( innerType != null )
-      {
-        innerType = Json.mergeTypes( e.getValue(), innerType );
-      }
-      else
-      {
-        innerType = e.getValue();
-      }
-
-      if( innerType != null )
-      {
-        mergedType.addChild( name, (IJsonParentType)innerType );
-      }
-      else
-      {
-        return null;
-      }
+      return null;
     }
 
     return mergedType;
@@ -174,10 +166,14 @@ public class JsonStructureType extends JsonSchemaType
     String name = getName();
     String identifier = addActualNameAnnotation( sb, indent, name, false );
 
-    indent( sb, indent );
-    if( getParent() instanceof JsonStructureType )
+    if( !(getParent() instanceof JsonStructureType) ||
+        !((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent + 2, identifier ) )
     {
-      ((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent + 2, identifier );
+      if( getToken() != null )
+      {
+        // this is most likely a "definitions" inner class
+        addSourcePositionAnnotation( sb, indent + 2, identifier, getToken() );
+      }
     }
     indent( sb, indent );
     sb.append( "@Structural\n" );
@@ -250,13 +246,17 @@ public class JsonStructureType extends JsonSchemaType
     return identifier;
   }
 
-  private void addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
+  private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
   {
     Token token = _memberLocations.get( name );
     if( token == null )
     {
-      return;
+      return false;
     }
+    return addSourcePositionAnnotation( sb, indent, name, token );
+  }
+  private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
+  {
     indent( sb, indent );
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( getName(), FIELD_FILE_URL ) ).name( "url" ) )
@@ -265,6 +265,7 @@ public class JsonStructureType extends JsonSchemaType
       .addArgument( "length", int.class, name.length() );
     annotation.render( sb, indent );
     sb.append( '\n' );
+    return true;
   }
 
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )

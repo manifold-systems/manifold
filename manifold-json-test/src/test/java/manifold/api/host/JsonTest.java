@@ -41,8 +41,20 @@ public class JsonTest extends TestCase
   public void testRef()
   {
     Contact contact = Contact.create();
-   // contact.setPrimaryAddress( (Contact.Address)new SimpleBindings() );
-    
+    contact.getDateOfBirth();
+    contact.setPrimaryAddress( Contact.Address.create() );
+    Contact.Address primaryAddress = contact.getPrimaryAddress();
+    primaryAddress.setStreet_address( "111 Foo Dr" );
+    primaryAddress.setCity( "Cupertino" );
+    primaryAddress.setState( "CA" );
+    assertEquals( "111 Foo Dr", primaryAddress.getStreet_address() );
+    assertEquals( "Cupertino", primaryAddress.getCity() );
+    assertEquals( "CA", primaryAddress.getState() );
+    assertEquals( "{\n" +
+                  "  \"street_address\": \"111 Foo Dr\",\n" +
+                  "  \"city\": \"Cupertino\",\n" +
+                  "  \"state\": \"CA\"\n" +
+                  "}", primaryAddress.toJson() );
   }
 
   public void testThing()

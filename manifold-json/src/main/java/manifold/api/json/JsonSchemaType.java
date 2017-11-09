@@ -2,6 +2,7 @@ package manifold.api.json;
 
 import java.net.URL;
 import java.util.List;
+import java.util.Map;
 import manifold.util.JsonUtil;
 
 /**
@@ -60,6 +61,33 @@ public abstract class JsonSchemaType implements IJsonParentType
   public void setDefinitions( List<IJsonType> definitions )
   {
     _definitions = definitions;
+  }
+
+  boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )
+  {
+    for( Map.Entry<String, IJsonParentType> e : innerTypes.entrySet() )
+    {
+      String name = e.getKey();
+      IJsonType innerType = other.findChild( name );
+      if( innerType != null )
+      {
+        innerType = Json.mergeTypes( e.getValue(), innerType );
+      }
+      else
+      {
+        innerType = e.getValue();
+      }
+
+      if( innerType != null )
+      {
+        mergedType.addChild( name, (IJsonParentType)innerType );
+      }
+      else
+      {
+        return false;
+      }
+    }
+    return true;
   }
 
   @Override
