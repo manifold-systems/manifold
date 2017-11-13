@@ -3,7 +3,7 @@ plugins {
 }
 
 wrapper {
-  gradleVersion = '4.3-rc-1'
+  gradleVersion = '4.4-20171112235945+0000'
 }
 
 subprojects {
