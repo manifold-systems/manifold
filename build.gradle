@@ -29,7 +29,6 @@ subprojects {
   if(project.name != 'manifold') {
     project.tasks.withType(JavaCompile) {
       options.compilerArgs += '-Xplugin:Manifold'
-      options.fork = true
     }
     //TODO add encoding
   }
