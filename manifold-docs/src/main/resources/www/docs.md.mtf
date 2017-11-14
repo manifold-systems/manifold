@@ -156,7 +156,7 @@ That's all.
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
 
-### Working with ${anchor("IntelliJ")}
+### ${anchor("Working with IntelliJ")}
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
 
