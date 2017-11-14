@@ -144,6 +144,8 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 ## ${anchor("Setup")}
 
+### ${anchor("Basics")}
+
 Using Manifold in your Java project is simple:
 
 * Add the Manifold jar[s] and tools.jar to your classpath
@@ -153,8 +155,41 @@ That's all.
 
 Manifold currently works with Java 8.  Support for Java 9 is coming soon.
 
-Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).  
-Install the Manifold plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
+
+### Working with ${anchor("IntelliJ")}
+
+Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+
+**Install**
+
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
+`Settings | Plugins | Browse Repositories | Manifold`
+
+<p><img src="images/ManifoldPlugin.png" alt="echo method" width="100%" height="100%"/></p>
+
+
+**New Project**
+
+Creating a new project with Manifold support is easy.  
+
+<p><img src="images/NewProject.gif" alt="echo method" width="100%" height="100%"/></p>
+
+
+**Add Manifold to Existing Module**
+
+
+
+**Sample Project**
+
+Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
+`File | New | Project from Version Control | Git`
+
+<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="100%" height="100%"/></p>
+
+<p><img src="images/OpenSampleProject.png" alt="echo method" width="100%" height="100%"/></p>
+
+
+### ${anchor("Binaries")}
 
 For the convenience of non-maven users you can directly download Manifold binaries:
 * [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
@@ -175,6 +210,7 @@ I/O extensions
 Text extensions
 * [manifold-templates](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-templates&v=RELEASE):
 Integrated template support
+
 
 ### ${anchor("Maven")}
 
@@ -326,14 +362,6 @@ tasks.withType(JavaCompile) {
   options.fork = true
 }
 ```
-
-### ${anchor("IntelliJ")}
-
-
-Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA.
-
-Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
-
 
 ## ${anchor("What Is a Type Manifold?")}
 

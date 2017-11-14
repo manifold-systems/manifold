@@ -206,6 +206,7 @@ processors, or runtime agents</li>
 <p>Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.</p>
 <h2><a class="toc_anchor" name="setup"> </a>Setup</h2>
+<h3><a class="toc_anchor" name="basics"> </a>Basics</h3>
 <p>Using Manifold in your Java project is simple:</p>
 <ul>
 <li>Add the Manifold jar[s] and tools.jar to your classpath</li>
@@ -213,8 +214,22 @@ it incrementally without having to rewrite classes or conform to a new way of do
 </ul>
 <p>That's all.</p>
 <p>Manifold currently works with Java 8.  Support for Java 9 is coming soon.</p>
-<p>Manifold is best experienced using <a href="https://www.jetbrains.com/idea/download">IntelliJ IDEA</a>.<br />
-Install the Manifold plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
+<h3>Working with <a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>
+<p>Manifold is best experienced using <a href="https://www.jetbrains.com/idea/download">IntelliJ IDEA</a>.</p>
+<p><strong>Install</strong></p>
+<p>Get the <a href="https://plugins.jetbrains.com/plugin/10057-manifold">Manifold plugin</a> for IntelliJ IDEA directly from IntelliJ via:
+<code>Settings | Plugins | Browse Repositories | Manifold</code></p>
+<p><img src="images/ManifoldPlugin.png" alt="echo method" width="100%" height="100%"/></p>
+<p><strong>New Project</strong></p>
+<p>Creating a new project with Manifold support is easy.</p>
+<p><img src="images/NewProject.gif" alt="echo method" width="100%" height="100%"/></p>
+<p><strong>Add Manifold to Existing Module</strong></p>
+<p><strong>Sample Project</strong></p>
+<p>Experiment with the <a href="https://github.com/manifold-systems/manifold-sample-project">Manifold Sample Project</a> via:
+<code>File | New | Project from Version Control | Git</code></p>
+<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="images/OpenSampleProject.png" alt="echo method" width="100%" height="100%"/></p>
+<h3><a class="toc_anchor" name="binaries"> </a>Binaries</h3>
 <p>For the convenience of non-maven users you can directly download Manifold binaries:</p>
 <ul>
 <li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-all&amp;v=RELEASE">manifold-all</a>:
@@ -379,9 +394,6 @@ tasks.withType(JavaCompile) {
   options.fork = true
 }
 </code></pre>
-<h3><a class="toc_anchor" name="intellij"> </a>IntelliJ</h3>
-<p>Get the <a href="https://plugins.jetbrains.com/plugin/10057-manifold">Manifold plugin</a> for IntelliJ IDEA.</p>
-<p>Install the plugin directly from IntelliJ via: <code>Settings | Plugins | Browse Repositories | Manifold</code></p>
 <h2><a class="toc_anchor" name="what_is_a_type_manifold"> </a>What Is a Type Manifold?</h2>
 <p>In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
