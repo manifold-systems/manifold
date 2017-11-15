@@ -223,9 +223,11 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <p><code>Settings | Plugins | Browse Repositories | Manifold</code></p>
 <p><img src="images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 <p><strong>New Project</strong></p>
-<p>Creating a new project with Manifold support is easy.</p>
+<p>Creating a new project with Manifold support is easy:</p>
 <p><img src="images/NewProject.gif" alt="echo method" width="60%" height="60%"/></p>
 <p><strong>Add Manifold to Existing Module</strong></p>
+<p>Adding manifold to module[s] of an existing project is easy:</p>
+<p><img src="images/ManifoldModule.gif" alt="echo method" width="60%" height="60%"/></p>
 <p><strong>Sample Project</strong></p>
 <p>Experiment with the <a href="https://github.com/manifold-systems/manifold-sample-project">Manifold Sample Project</a> via:</p>
 <p><code>File | New | Project from Version Control | Git</code></p>
@@ -235,7 +237,7 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <p>For the convenience of non-maven users you can directly download Manifold binaries:</p>
 <ul>
 <li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-all&amp;v=RELEASE">manifold-all</a>:
-Über-jar containing all of the binaries below</li>
+Über-jar containing all of the binaries below (recommended)</li>
 <li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold&amp;v=RELEASE">manifold</a>:
 Core Manifold support, also includes properties and image manifolds</li>
 <li><a href="https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&amp;g=systems.manifold&amp;a=manifold-ext&amp;v=RELEASE">manifold-ext</a>:
@@ -256,69 +258,78 @@ Integrated template support</li>
 <h3><a class="toc_anchor" name="maven"> </a>Maven</h3>
 <p>Add manifold artifacts that suit your project's needs.  The minimum requirements are to
 include the core <code>manifold</code> artifact and <code>tools.jar</code> and add the <code>-Xplugin:Manifold</code>
-argument as a Java compiler argument:</p>
+argument as a Java compiler argument.  Note you can use the <code>manifold-all</code> dependency
+to use all basic manifold features, this is the recommended setup.</p>
+<p><strong>Settings</strong></p>
 <pre><code class="language-xml">  &lt;dependencies&gt;
+    &lt;!--Includes all basic dependencies (recommended) --&gt;
+    &lt;dependency&gt;
+      &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
+      &lt;artifactId&gt;manifold-all&lt;/artifactId&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
+    &lt;/dependency&gt;
+
     &lt;!--Core Manifold support, includes properties and image manifolds--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--Support for structural typing and extensions--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-ext&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--JSON and JSchema support--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-json&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--JavaScript support--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-js&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--Template support--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-templates&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--Collections extensions--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-collections&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--I/O extensions--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-io&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--I/O extensions--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-io&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;
     
     &lt;!--Text extensions--&gt;
     &lt;dependency&gt;
       &lt;groupId&gt;systems.manifold&lt;/groupId&gt;
       &lt;artifactId&gt;manifold-text&lt;/artifactId&gt;
-      &lt;!--&lt;version&gt;${project.version}&lt;/version&gt;--&gt;
+      &lt;version&gt;RELEASE&lt;/version&gt;
     &lt;/dependency&gt;    
   &lt;/dependencies&gt;
 
@@ -356,6 +367,10 @@ argument as a Java compiler argument:</p>
     &lt;/profile&gt;
   &lt;/profiles&gt;
 </code></pre>
+<p><strong>Archetype</strong></p>
+<p>A Maven archetype facilitates new project creation.  Use the Manifold <a href="https://github.com/manifold-systems/archetype">archetype</a> to quickly
+create a new Manifold project.  This is an easy process from IntelliJ:</p>
+<p><img src="images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
 <h3><a class="toc_anchor" name="gradle"> </a>Gradle</h3>
 <p>Add manifold artifacts that suit your project's needs.  The minimum requirements are to
 include the core <code>manifold</code> artifact and <code>tools.jar</code> and add the <code>-Xplugin:Manifold</code>
@@ -363,29 +378,32 @@ argument as a Java compiler argument:</p>
 <pre><code class="language-groovy">apply plugin: 'java'
 
 dependencies {
+  // All manifold, includes all other dependencies listed here
+  compile group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+
   // Core Manifold support, includes properties and image manifolds
-  compile group: 'systems.manifold', name: 'manifold', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold', version: 'RELASE'
   
   // Support for structural typing and extensions
-  compile group: 'systems.manifold', name: 'manifold-ext', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-ext', version: 'RELASE'
     
   // JSON and JSchema support  
-  compile group: 'systems.manifold', name: 'manifold-json', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
   
   // JavaScript support
-  compile group: 'systems.manifold', name: 'manifold-js', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
   
   // Template support
-  compile group: 'systems.manifold', name: 'manifold-templates', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELASE'
   
   // Collection extensions
-  compile group: 'systems.manifold', name: 'manifold-collections', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-collections', version: 'RELASE'
   
   // I/O extensions
-  compile group: 'systems.manifold', name: 'manifold-io', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-io', version: 'RELASE'
   
   // Text extensions
-  compile group: 'systems.manifold', name: 'manifold-text', version: '0.1-SNAPSHOT'
+  compile group: 'systems.manifold', name: 'manifold-text', version: 'RELASE'
   
   // tools.jar
   compile files(&quot;${System.getProperty('java.home')}/../lib/tools.jar&quot;)
