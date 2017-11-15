@@ -1,6 +1,8 @@
 package manifold.internal.runtime.protocols;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,6 +25,8 @@ import manifold.util.Pair;
  */
 public class ManClassesUrlConnection extends URLConnection
 {
+  private static final boolean DUMP_CLASSFILES = false;
+
   private static final String[] JAVA_NAMESPACES_TO_IGNORE = {
     "java/", "javax/", "sun/"
   };
@@ -235,7 +239,48 @@ public class ManClassesUrlConnection extends URLConnection
           }
           _pos = 0;
           _count = _buf.length;
+          writeClassFile_Debug();
         } );
+      }
+    }
+
+    private void writeClassFile_Debug()
+    {
+      if( !DUMP_CLASSFILES )
+      {
+        return;
+      }
+
+      File tmpDir = new File( System.getProperty( "java.io.tmpdir" ) );
+      File classesDir = new File( tmpDir, "manifold" + File.separator + "classes" );
+      //noinspection ResultOfMethodCallIgnored
+      classesDir.mkdirs();
+      int iLastDot = _javaFqn.lastIndexOf( '.' );
+      String fileName;
+
+      if( iLastDot > 0 )
+      {
+        classesDir = new File( classesDir, _javaFqn.substring( 0, iLastDot ).replace( '.', File.separatorChar ) );
+        //noinspection ResultOfMethodCallIgnored
+        classesDir.mkdirs();
+        fileName = _javaFqn.substring( iLastDot + 1 ) + ".class";
+      }
+      else
+      {
+        fileName = _javaFqn + ".class";
+      }
+      File classFile = new File( classesDir, fileName );
+      try
+      {
+        //noinspection ResultOfMethodCallIgnored
+        classFile.createNewFile();
+        FileOutputStream os = new FileOutputStream( classFile );
+        os.write( _buf );
+        os.close();
+      }
+      catch( IOException e )
+      {
+        throw new RuntimeException( e );
       }
     }
 

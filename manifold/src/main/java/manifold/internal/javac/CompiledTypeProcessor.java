@@ -239,12 +239,17 @@ public abstract class CompiledTypeProcessor implements TaskListener
       // already processed
       return;
     }
-    if( visited == null && !isNested( e.getTypeElement().getEnclosingElement() ) )
+//    if( visited == null && !isNested( e.getTypeElement().getEnclosingElement() ) && !isOuter( fqn ) )
+//    {
+//      // also process inner types of types to process and (outer type if processing inner type first)
+//      return;
+//    }
+
+    if( fqn.isEmpty() )
     {
-      // also process inner types of types to process
       return;
     }
-
+    
     // mark processed
     _typesToProcess.put( fqn, true );
 
@@ -300,7 +305,29 @@ public abstract class CompiledTypeProcessor implements TaskListener
     {
       return true;
     }
+    for( String t: _typesToProcess.keySet() )
+    {
+      if( t.contains( fqn + '.' ) )
+      {
+        return true;
+      }
+    }
     return isNested( typeElem.getEnclosingElement() );
+  }
+  private boolean isOuter( String fqn )
+  {
+    if( fqn.isEmpty() )
+    {
+      return false;
+    }
+    for( String t: _typesToProcess.keySet() )
+    {
+      if( t.contains( fqn + '.' ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   private class AnonymousClassListener implements Scope.ScopeListener

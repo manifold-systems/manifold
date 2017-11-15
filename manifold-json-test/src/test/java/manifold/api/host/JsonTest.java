@@ -9,6 +9,7 @@ import abc.Product;
 import abc.Contact;
 import abc.Person;
 import static abc.Person.*;
+import static abc.Person.Address.*;
 
 /**
  */
@@ -26,6 +27,9 @@ public class JsonTest extends TestCase
     person.setAddress( address );
     assertEquals( "Dunedin", person.getAddress().getCity() );
 
+    Planet planet = Planet.create();
+    address.setPlanet( planet );
+    
     Hobby baseball = Hobby.create();
     baseball.setCategory( "Sport" );
     Hobby fishing = Hobby.create();

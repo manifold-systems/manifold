@@ -5,7 +5,10 @@
     "Number": 9604,
     "Street": "Donald Court",
     "City": "Golden Shores",
-    "State": "FL"
+    "State": "FL",
+    "Planet" : {
+      "Name": "Earth"
+    }
   },
   "Hobby": [
     {
