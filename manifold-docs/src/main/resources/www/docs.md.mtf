@@ -165,14 +165,14 @@ Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/ide
 Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
 `Settings | Plugins | Browse Repositories | Manifold`
 
-<p><img src="images/ManifoldPlugin.png" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="images/ManifoldPlugin.png" alt="echo method" width="50%" height="50%"/></p>
 
 
 **New Project**
 
 Creating a new project with Manifold support is easy.  
 
-<p><img src="images/NewProject.gif" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="images/NewProject.gif" alt="echo method" width="50%" height="50%"/></p>
 
 
 **Add Manifold to Existing Module**
@@ -184,9 +184,9 @@ Creating a new project with Manifold support is easy.
 Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
 `File | New | Project from Version Control | Git`
 
-<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="50%" height="50%"/></p>
 
-<p><img src="images/OpenSampleProject.png" alt="echo method" width="100%" height="100%"/></p>
+<p><img src="images/OpenSampleProject.png" alt="echo method" width="50%" height="50%"/></p>
 
 
 ### ${anchor("Binaries")}
