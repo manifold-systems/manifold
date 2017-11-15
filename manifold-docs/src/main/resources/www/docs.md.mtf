@@ -163,6 +163,7 @@ Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/ide
 **Install**
 
 Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
+
 ```Settings | Plugins | Browse Repositories | Manifold```
 
 <p><img src="images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
@@ -182,7 +183,8 @@ Creating a new project with Manifold support is easy.
 **Sample Project**
 
 Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
-````File | New | Project from Version Control | Git```
+
+```File | New | Project from Version Control | Git```
 
 <p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
