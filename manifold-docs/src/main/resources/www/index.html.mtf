@@ -68,9 +68,8 @@
                     <br/>
                     <br/>
                 </p>
-                <img class="gif" src="./images/JsonDemo.png" height="90%">
-                $('.gif').gifplayer();
-            </div> 
+                <img class="lazygif" src="./images/JsonDemo.png">
+            </div>
         </div>
     </div>
 </div>
