@@ -68,7 +68,11 @@
                     <br/>
                     <br/>
                 </p>
-                <img src="./images/JsonDemo.gif">
+                <p>
+                <video height="auto" controls="controls" preload="none" onclick="this.paused ? this.play() : this.pause();">
+                  <source type="video/mp4" src="./images/JsonDemo.mp4" poster="./images/JsonDemo.png">
+                </video>
+                </p>
             </div>
         </div>
     </div>
