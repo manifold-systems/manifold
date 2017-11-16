@@ -36,26 +36,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-      <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <version>1.6.0</version>
-          <executions>
-            <execution>
-              <goals>
-                <goal>java</goal>
-              </goals>
-              <phase>compile</phase>
-              <configuration>
-                <mainClass>mr.Hyde</mainClass>
-                <classpathScope>compile</classpathScope>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </build>
-
 </project>
