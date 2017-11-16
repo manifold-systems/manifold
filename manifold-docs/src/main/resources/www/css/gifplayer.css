@@ -4,16 +4,17 @@ ins.play-gif{
 	font-family: Arial, sans serif;
 	width: 50px;
 	height: 50px;
-	line-height: 52px;
+	line-height: 43px;
 	text-align: center;
 	background: #222;
-	font-size: 18px;
+	font-size: 32px;
 	color: #fff;
 	border-radius: 50%;
 	opacity: .9;
 	border: 4px solid #fff;
 	cursor:pointer;
 	text-decoration: none;
+	padding-left: 6px;
 }
 
 ins.play-gif:hover{

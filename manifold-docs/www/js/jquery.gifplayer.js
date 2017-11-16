@@ -352,7 +352,7 @@
 	};
 
 	$.fn.gifplayer.defaults = {
-		label: 'GIF',
+		label: '&#9658;',
 		playOn: 'click',
 		mode: 'gif',
 		gif: '',

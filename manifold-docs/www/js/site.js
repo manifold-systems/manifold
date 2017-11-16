@@ -1,4 +1,4 @@
 $(function(){
   // init gif player
-  $('.lazygif').gifplayer();
+  $('.lazygif').gifplayer({ label: '►' });
 })
