@@ -115,8 +115,11 @@ to your overall experience with your development environment.  For instance,
 code-completion conveniently presents all the extension methods available on an
 extended class:
 
-<p><img src="images/ExtensionMethod.gif" alt="echo method" width="60%" height="60%"/></p>
-
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="./images/ExtensionMethod.mp4">
+  </video>
+</p>
 
 There's a lot more to the extension manifold including [structural interfaces](#structural_interfaces), which are
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
@@ -173,7 +176,11 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 Creating a new project with Manifold support is easy:
 
-<p><img src="images/NewProject.gif" alt="echo method" width="60%" height="60%"/></p>
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="./images/NewProject.mp4">
+  </video>
+</p>
 
 
 **Add Manifold to Existing Module**
