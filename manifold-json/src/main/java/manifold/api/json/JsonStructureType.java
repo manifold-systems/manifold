@@ -226,6 +226,12 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addSuperTypes( StringBuilder sb )
   {
+    if( _superTypes.isEmpty() )
+    {
+      return "";
+    }
+
+    sb.append( " extends " );
     for( int i = 0; i < _superTypes.size(); i++ )
     {
       IJsonParentType superType = _superTypes.get( i );

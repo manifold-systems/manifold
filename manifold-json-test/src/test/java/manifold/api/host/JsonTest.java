@@ -6,6 +6,7 @@ import abc.Outside;
 import abc.Person;
 import abc.Product;
 import abc.Tree;
+import abc.AllOf_Hierarchy;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,6 +22,18 @@ import static abc.Person.Address.*;
  */
 public class JsonTest extends TestCase
 {
+  public void testAllOf()
+  {
+    AllOf_Hierarchy all = AllOf_Hierarchy.create();
+    AllOf_Hierarchy.address address = AllOf_Hierarchy.address.create();
+    address.setCity("Cupertino");
+    all.setBilling_address(address);
+    AllOf_Hierarchy.shipping_address shipping_address = AllOf_Hierarchy.shipping_address.create();
+    shipping_address.setType("lol");
+    all.setShipping_address(shipping_address);
+    assertSame( shipping_address, all.getShipping_address() );
+  }
+
   public void testRef( String[] args )
   {
     Junk junk = Junk.create();

@@ -395,8 +395,8 @@ public class JsonSchemaTransformer
       else
       {
         transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-        result = findReferenceType( refParent, enclosing, name, jsonObj );
-        transferIssuesFromErrantType( refParent, result, jsonObj );
+        result = findReferenceType( parent, enclosing, name, jsonObj );
+        transferIssuesFromErrantType( parent, result, jsonObj );
       }
     }
     else if( jsonObj.get( JSCH_ONE_OF ) != null )
@@ -564,7 +564,6 @@ public class JsonSchemaTransformer
           {
             ObjectTransformer.transform( this, type, elemBindings );
           }
-          break;
         }
       }
     }
