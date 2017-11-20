@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://example.com/root.json",
+  "definitions": {
+    "A": {
+      "$id": "#foo",
+      "type": "object",
+      "properties": {
+        "Foo": {
+          "type": "string"
+        }
+      }
+    },
+    "B": {
+      "$id": "#blah",
+      "definitions" : {
+        "InnerDef": {
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/definitions/A"
+        },
+        "y": {
+          "$ref": "#/definitions/B/definitions/InnerDef"
+        }
+      }
+    },
+    "C": {
+      "$id": "#boo",
+      "type": "string"
+    },
+    "D": {
+      "$id": "urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f"
+    }
+  },
+  "title": "Stuff",
+  "type": "object",
+  "properties": {
+    "Elem": {
+      "type": "array",
+      "items": {
+        "$ref": "#foo"
+      }
+    },
+    "Ding": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/B"
+      }
+    },
+    "outside": {
+      "$ref": "Outside.json"
+    }
+  }
+}

@@ -4,7 +4,6 @@ import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
-import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.util.Pair;
@@ -17,23 +16,9 @@ class ObjectTransformer
   private final JsonStructureType _type;
   private final Bindings _jsonObj;
 
-  static JsonStructureType transform( JsonSchemaTransformer schemaTx, String name, JsonSchemaType parent, Bindings jsonObj )
+  static void transform( JsonSchemaTransformer schemaTx, JsonStructureType type, Bindings jsonObj )
   {
-    ObjectTransformer objectTx = new ObjectTransformer( schemaTx, name, parent, jsonObj );
-    return objectTx.transform();
-  }
-
-  static JsonStructureType transform( JsonSchemaTransformer schemaTx, JsonStructureType type, Bindings jsonObj )
-  {
-    ObjectTransformer objectTx = new ObjectTransformer( schemaTx, type, jsonObj );
-    return objectTx.transform();
-  }
-
-  private ObjectTransformer( JsonSchemaTransformer schemaTx, String name, JsonSchemaType parent, Bindings jsonObj )
-  {
-    _schemaTx = schemaTx;
-    _jsonObj = jsonObj;
-    _type = new JsonStructureType( parent, name );
+    new ObjectTransformer( schemaTx, type, jsonObj ).transform();
   }
 
   private ObjectTransformer( JsonSchemaTransformer schemaTx, JsonStructureType type, Bindings jsonObj )
@@ -48,23 +33,21 @@ class ObjectTransformer
     return _type;
   }
 
-  private JsonStructureType transform()
+  private void transform()
   {
     IJsonParentType parent = _type.getParent();
     if( parent != null )
     {
       parent.addChild( _type.getLabel(), _type );
     }
-    _schemaTx.cache( _type ); // must cache now to handle recursive refs
+    _schemaTx.cacheByFqn( _type ); // must cache now to handle recursive refs
 
     addProperties();
-
-    return _type;
   }
 
   private void addProperties()
   {
-    Object props = _jsonObj.get( "properties" );
+    Object props = _jsonObj.get( JsonSchemaTransformer.JSCH_PROPERTIES );
     if( props == null )
     {
       return;
@@ -97,7 +80,7 @@ class ObjectTransformer
         bindings = (Bindings)value;
       }
 
-      IJsonType type = _schemaTx.transformType( _type, name, bindings );
+      IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings );
       _type.addMember( name, type, token );
     }
   }

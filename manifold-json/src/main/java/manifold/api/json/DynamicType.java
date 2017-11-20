@@ -24,7 +24,7 @@ public class DynamicType implements IJsonType
   @Override
   public String getIdentifier()
   {
-    return getName();
+    return "Object";
   }
 
   @Override

@@ -1,13 +1,19 @@
 package manifold.api.host;
 
+import abc.Contact;
+import abc.Junk;
+import abc.Outside;
+import abc.Person;
+import abc.Product;
+import abc.Tree;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import junit.framework.TestCase;
-import abc.Product;
-import abc.Contact;
-import abc.Person;
+
+
 import static abc.Person.*;
 import static abc.Person.Address.*;
 
@@ -15,6 +21,44 @@ import static abc.Person.Address.*;
  */
 public class JsonTest extends TestCase
 {
+  public void testRef( String[] args )
+  {
+    Junk junk = Junk.create();
+    junk.setElem( Collections.singletonList( Junk.A.create() ) );
+    Junk.A a = junk.getElem().get( 0 );
+    assertNotNull( a );
+
+    Junk.B b = Junk.B.create();
+    b.setX( Junk.A.create() );
+    b.getX().setFoo( "hi" );
+    junk.setDing( Collections.singletonList( b ) );
+    assertEquals( "hi", junk.getDing() );
+
+    Outside.Alpha alpha = Outside.Alpha.create();
+    Outside outside = Outside.create();
+    outside.setGamma( Collections.singletonList( alpha ) );
+    junk.setOutside( outside );
+    Outside result = junk.getOutside();
+    assertSame( result, outside );
+  }
+
+  public void testRecursion()
+  {
+    Tree tree = Tree.create();
+    tree.setNode( Tree.node.create() );
+    tree.getNode().setInfo( "root" );
+
+    Tree child1 = Tree.create();
+    child1.setNode( Tree.node.create() );
+    child1.getNode().setInfo( "child1" );
+
+    Tree child2 = Tree.create();
+    child2.setNode( Tree.node.create() );
+    child2.getNode().setInfo( "child2" );
+
+    tree.setChildren( Arrays.asList( child1, child2 ) );
+  }
+
   public void testJson()
   {
     Person person = Person.create();
@@ -29,7 +73,7 @@ public class JsonTest extends TestCase
 
     Planet planet = Planet.create();
     address.setPlanet( planet );
-    
+
     Hobby baseball = Hobby.create();
     baseball.setCategory( "Sport" );
     Hobby fishing = Hobby.create();
@@ -107,8 +151,9 @@ public class JsonTest extends TestCase
 
 
   @SuppressWarnings("varargs")
-  public static <T> List<T> asList(T... a) {
-      return Arrays.asList( a );
+  public static <T> List<T> asList( T... a )
+  {
+    return Arrays.asList( a );
   }
 
 }

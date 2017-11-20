@@ -1,5 +1,6 @@
 package manifold.api.json;
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -10,9 +11,9 @@ public class JsonListType extends JsonSchemaType
   private IJsonType _componentType;
   private Map<String, IJsonParentType> _innerTypes;
 
-  public JsonListType( String label, JsonSchemaType parent )
+  public JsonListType( String label, URL source, JsonSchemaType parent )
   {
-    super( label, parent );
+    super( label, source, parent );
     _innerTypes = new HashMap<>();
   }
 
@@ -37,9 +38,9 @@ public class JsonListType extends JsonSchemaType
     _innerTypes.put( name, type );
   }
 
-  public IJsonParentType findChild( String name )
+  public IJsonType findChild( String name )
   {
-    IJsonParentType inner = _innerTypes.get( name );
+    IJsonType inner = _innerTypes.get( name );
     if( inner == null && _componentType instanceof IJsonParentType )
     {
       inner = ((IJsonParentType)_componentType).findChild( name );
@@ -68,7 +69,7 @@ public class JsonListType extends JsonSchemaType
 
   IJsonType merge( JsonListType other )
   {
-    JsonListType mergedType = new JsonListType( getLabel(), getParent() );
+    JsonListType mergedType = new JsonListType( getLabel(), getFile(), getParent() );
 
     if( !getComponentType().equals( other.getComponentType() ) )
     {

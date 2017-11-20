@@ -1,7 +1,6 @@
 package manifold.api.json;
 
 import java.net.URL;
-import manifold.api.fs.IFile;
 
 /**
  */
@@ -11,8 +10,13 @@ public class ErrantType extends JsonStructureType
 
   public ErrantType( URL file, String errantTypeName )
   {
-    super( null, errantTypeName );
-    setFile( file );
+    super( null, file, errantTypeName );
+  }
+
+  @Override
+  public String getIdentifier()
+  {
+    return "Object";
   }
 
   public int getOffset()

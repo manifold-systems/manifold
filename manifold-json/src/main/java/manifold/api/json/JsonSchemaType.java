@@ -1,6 +1,8 @@
 package manifold.api.json;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import manifold.util.JsonUtil;
@@ -13,20 +15,19 @@ public abstract class JsonSchemaType implements IJsonParentType
   private final JsonSchemaType _parent;
   private List<IJsonType> _definitions;
   private URL _file;
+  private List<JsonIssue> _issues;
 
-  JsonSchemaType( String name, JsonSchemaType parent )
+  JsonSchemaType( String name, URL source, JsonSchemaType parent )
   {
     _name = name;
     _parent = parent;
+    _file = source;
+    _issues = Collections.emptyList();
   }
 
   public URL getFile()
   {
     return _file != null ? _file : _parent.getFile();
-  }
-  public void setFile( URL file )
-  {
-    _file = file;
   }
 
   public String getLabel()
@@ -88,6 +89,33 @@ public abstract class JsonSchemaType implements IJsonParentType
       }
     }
     return true;
+  }
+
+  @Override
+  public List<JsonIssue> getIssues()
+  {
+    if( getParent() != null )
+    {
+      return getParent().getIssues();
+    }
+
+    return _issues;
+  }
+
+  @Override
+  public void addIssue( JsonIssue issue )
+  {
+    if( getParent() != null )
+    {
+      getParent().addIssue( issue );
+      return;
+    }
+
+    if( _issues.isEmpty() )
+    {
+      _issues = new ArrayList<>();
+    }
+    _issues.add( issue );
   }
 
   @Override

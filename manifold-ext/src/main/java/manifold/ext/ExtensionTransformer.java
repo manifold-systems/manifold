@@ -643,18 +643,26 @@ public class ExtensionTransformer extends TreeTranslator
   @SuppressWarnings("UnusedDeclaration")
   public static Object assignStructuralIdentity( Object obj, Class iface )
   {
-    //## note: we'd like to avoid the operation if the obj not a ICallHandler,
-    // but that is an expensive structural check, more expensive than this call...
-    //  if( obj is a ICallHandler )
-    //  {
-    Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
-    ifaces.add( iface );
-   //   }
+    if( obj != null )
+    {
+      //## note: we'd like to avoid the operation if the obj not a ICallHandler,
+      // but that is an expensive structural check, more expensive than this call...
+      //  if( obj is a ICallHandler )
+      //  {
+      Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
+      ifaces.add( iface );
+      //   }
+    }
     return obj;
   }
 
   private static Object createNewProxy( Object root, Class<?> iface )
   {
+    if( root == null )
+    {
+      return null;
+    }
+    
     Class rootClass = root.getClass();
     if( iface.isAssignableFrom( rootClass ) )
     {

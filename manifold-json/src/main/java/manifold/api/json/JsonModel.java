@@ -1,6 +1,8 @@
 package manifold.api.json;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.script.ScriptException;
@@ -50,7 +52,15 @@ class JsonModel extends AbstractSingleFileModel
     {
       try
       {
-        _type = (IJsonParentType)Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+        IJsonType type = Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+        if( type instanceof IJsonParentType )
+        {
+          _type = (IJsonParentType)type;
+        }
+        else
+        {
+          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName() );
+        }
       }
       catch( IllegalSchemaTypeName e )
       {
@@ -82,16 +92,36 @@ class JsonModel extends AbstractSingleFileModel
 
   void report( DiagnosticListener<JavaFileObject> errorHandler )
   {
-    if( _issues == null || errorHandler == null )
+    if( errorHandler == null )
+    {
+      return;
+    }
+
+    List<IIssue> issues = getIssues();
+    if( issues.isEmpty() )
     {
       return;
     }
 
     JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
-    for( IIssue issue : _issues.getIssues() )
+    for( IIssue issue : issues )
     {
       Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
       errorHandler.report( new JavacDiagnostic( file, kind, issue.getStartOffset(), issue.getLine(), issue.getColumn(), issue.getMessage() ) );
     }
+  }
+
+  private List<IIssue> getIssues()
+  {
+    List<IIssue> allIssues = new ArrayList<>();
+    if( _issues != null )
+    {
+      allIssues.addAll( _issues.getIssues() );
+    }
+    if( _type != null )
+    {
+      allIssues.addAll( _type.getIssues() );
+    }
+    return allIssues;
   }
 }

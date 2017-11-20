@@ -54,7 +54,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
     for( StringTokenizer tokenizer = new StringTokenizer( relativeInner, "." ); tokenizer.hasMoreTokens(); )
     {
       String childName = tokenizer.nextToken();
-      IJsonParentType child = csr.findChild( childName );
+      IJsonType child = csr.findChild( childName );
       if( child instanceof JsonStructureType )
       {
         csr = (JsonStructureType)child;

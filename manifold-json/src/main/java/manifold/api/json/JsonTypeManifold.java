@@ -38,10 +38,10 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
     for( StringTokenizer tokenizer = new StringTokenizer( relativeInner, "." ); tokenizer.hasMoreTokens(); )
     {
       String childName = tokenizer.nextToken();
-      IJsonParentType child = csr.findChild( childName );
-      if( child != null )
+      IJsonType child = csr.findChild( childName );
+      if( child instanceof IJsonParentType )
       {
-        csr = child;
+        csr = (IJsonParentType)child;
         continue;
       }
       return false;

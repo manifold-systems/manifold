@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://example.com/outside.json",
+  "definitions": {
+    "Alpha": {
+      "$id": "#bar",
+      "type": "object",
+      "properties": {
+        "Foo": {
+          "type": "integer"
+        }
+      }
+    },
+    "Beta": {
+      "$id": "#blah",
+      "definitions" : {
+        "InnerDef": {
+          "type": "integer"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "x": {
+          "$ref": "#/definitions/Alpha"
+        },
+        "y": {
+          "$ref": "#/definitions/Beta/definitions/InnerDef"
+        }
+      }
+    }
+  },
+  "title": "Thingz",
+  "type": "object",
+  "properties": {
+    "Gamma": {
+      "type": "array",
+      "items": {
+        "$ref": "#bar"
+      }
+    }
+  }
+}

@@ -19,18 +19,18 @@ class ArrayTransformer
   private final JsonListType _type;
   private final Bindings _jsonObj;
 
-  static JsonListType transform( JsonSchemaTransformer schemaTx, String name, JsonSchemaType parent, Bindings jsonObj )
+  static JsonListType transform( JsonSchemaTransformer schemaTx, String name, JsonListType type, Bindings jsonObj )
   {
-    ArrayTransformer arrayTx = new ArrayTransformer( schemaTx, name, parent, jsonObj );
+    ArrayTransformer arrayTx = new ArrayTransformer( schemaTx, name, type, jsonObj );
     return arrayTx.transform();
   }
 
-  private ArrayTransformer( JsonSchemaTransformer schemaTx, String name, JsonSchemaType parent, Bindings jsonObj )
+  private ArrayTransformer( JsonSchemaTransformer schemaTx, String name, JsonListType type, Bindings jsonObj )
   {
     _schemaTx = schemaTx;
     _name = name;
     _jsonObj = jsonObj;
-    _type = new JsonListType( name, parent );
+    _type = type;
   }
 
   JsonListType getType()
@@ -45,7 +45,7 @@ class ArrayTransformer
     {
       parent.addChild( _type.getLabel(), _type );
     }
-    _schemaTx.cache( _type ); // must cache now to handle recursive refs
+    _schemaTx.cacheByFqn( _type ); // must cache now to handle recursive refs
 
     assignComponentType();
 
@@ -69,7 +69,7 @@ class ArrayTransformer
     {
       for( Object elem : (List)items )
       {
-        IJsonType csr = _schemaTx.transformType( _type, _name, (Bindings)elem );
+        IJsonType csr = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)elem );
         if( componentType == null )
         {
           componentType = csr;
@@ -83,7 +83,7 @@ class ArrayTransformer
     }
     else
     {
-      componentType = _schemaTx.transformType( _type, _name, (Bindings)items );
+      componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items );
     }
     _type.setComponentType( componentType );
   }

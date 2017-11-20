@@ -2,6 +2,7 @@ package manifold.api.json;
 
 import extensions.java.net.URL.ManUrlExt;
 import extensions.javax.script.Bindings.ManBindingsExt;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +21,17 @@ public class JsonStructureType extends JsonSchemaType
 {
   private static final String FIELD_FILE_URL = "__FILE_URL_";
   private List<IJsonParentType> _superTypes;
-  private Map<String, IJsonType> _members;
+  private Map<String, IJsonType> _membersByName;
+  private Map<String, IJsonType> _membersById;
   private Map<String, Token> _memberLocations;
   private Map<String, IJsonParentType> _innerTypes;
   private Token _token;
 
-  public JsonStructureType( JsonSchemaType parent, String name )
+  public JsonStructureType( JsonSchemaType parent, URL source, String name )
   {
-    super( name, parent );
-    _members = new HashMap<>();
+    super( name, source, parent );
+    _membersByName = new HashMap<>();
+    _membersById = new HashMap<>();
     _memberLocations = new HashMap<>();
     _innerTypes = new HashMap<>();
     _superTypes = new ArrayList<>();
@@ -49,7 +52,7 @@ public class JsonStructureType extends JsonSchemaType
     _innerTypes.put( name, type );
   }
 
-  public IJsonParentType findChild( String name )
+  public IJsonType findChild( String name )
   {
     IJsonParentType innerType = _innerTypes.get( name );
     if( innerType == null )
@@ -72,7 +75,7 @@ public class JsonStructureType extends JsonSchemaType
 
   public Map<String, IJsonType> getMembers()
   {
-    return _members;
+    return _membersByName;
   }
 
   public Map<String, IJsonParentType> getInnerTypes()
@@ -82,7 +85,7 @@ public class JsonStructureType extends JsonSchemaType
 
   public void addMember( String name, IJsonType type, Token token )
   {
-    IJsonType existingType = _members.get( name );
+    IJsonType existingType = _membersByName.get( name );
     if( existingType != null && existingType != type )
     {
       if( type == DynamicType.instance() )
@@ -101,13 +104,13 @@ public class JsonStructureType extends JsonSchemaType
         }
       }
     }
-    _members.put( name, type );
+    _membersByName.put( name, type );
     _memberLocations.put( name, token );
   }
 
   public IJsonType findMemberType( String name )
   {
-    return _members.get( name );
+    return _membersByName.get( name );
   }
 
   public Token getToken()
@@ -126,9 +129,9 @@ public class JsonStructureType extends JsonSchemaType
       return null;
     }
 
-    JsonStructureType mergedType = new JsonStructureType( getParent(), getName() );
+    JsonStructureType mergedType = new JsonStructureType( getParent(), getFile(), getName() );
 
-    for( Map.Entry<String, IJsonType> e : _members.entrySet() )
+    for( Map.Entry<String, IJsonType> e : _membersByName.entrySet() )
     {
       String memberName = e.getKey();
       IJsonType memberType = other.findMemberType( memberName );
@@ -181,9 +184,9 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb ) ).append( " {\n" );
     renderFileField( sb, indent + 2 );
     renderTopLevelFactoryMethods( sb, indent + 2 );
-    for( String key : _members.keySet() )
+    for( String key : _membersByName.keySet() )
     {
-      String propertyType = _members.get( key ).getIdentifier();
+      String propertyType = _membersByName.get( key ).getIdentifier();
       addSourcePositionAnnotation( sb, indent + 2, key );
       identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
@@ -396,7 +399,7 @@ public class JsonStructureType extends JsonSchemaType
     {
       return false;
     }
-    if( !_members.equals( type._members ) )
+    if( !_membersByName.equals( type._membersByName ) )
     {
       return false;
     }
@@ -408,7 +411,7 @@ public class JsonStructureType extends JsonSchemaType
   {
     int result = super.hashCode();
     result = 31 * result + _superTypes.hashCode();
-    result = 31 * result + _members.hashCode();
+    result = 31 * result + _membersByName.hashCode();
     result = 31 * result + _innerTypes.hashCode();
     return result;
   }

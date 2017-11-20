@@ -216,7 +216,7 @@ public class PropertiesCodeGen
     {
       try( InputStream inputStream = _file.openInputStream() )
       {
-        return StreamUtil.getContent( new InputStreamReader( inputStream ) ).replace( "\r\n", "\n" );
+        return StreamUtil.getContent( new InputStreamReader( inputStream ) ); //.replace( "\r\n", "\n" );
       }
       catch( Exception e )
       {

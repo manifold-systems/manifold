@@ -130,8 +130,7 @@ public class Json
       {
         if( type == null )
         {
-          type = new JsonStructureType( parent, name );
-          ((JsonSchemaType)type).setFile( source );
+          type = new JsonStructureType( parent, source, name );
         }
         for( Object k : ((Bindings)jsonObj).keySet() )
         {
@@ -158,8 +157,7 @@ public class Json
     {
       if( type == null )
       {
-        type = new JsonListType( name, parent );
-        ((JsonListType)type).setFile( source );
+        type = new JsonListType( name, source, parent );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
