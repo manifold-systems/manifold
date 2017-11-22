@@ -39,11 +39,13 @@ public class JsonSchemaTransformer
   private static final String JSCH_NAME = "name";
   private static final String JSCH_ID = "$id";
   private static final String JSCH_REF = "$ref";
-  private static final String JSCH_DEFINITIONS = "definitions";
-          static final String JSCH_PROPERTIES = "properties";
+  public static final String JSCH_DEFINITIONS = "definitions";
+  static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
+  private static final String JSCH_ANY_OF = "anyOf";
+  private static final String JSCH_REQUIRED = "required";
 
   private FqnCache<IJsonType> _typeByFqn;
 
@@ -56,8 +58,12 @@ public class JsonSchemaTransformer
   {
            // Ideally the "$schema" element would be required, but JSchema does not require it.
     return bindings.get( JsonSchemaTransformer.JSCH_SCHEMA ) != null ||
-           // As a fallback check for "$id" as this is pretty uniquely JSchema
-           bindings.get( JsonSchemaTransformer.JSCH_ID ) != null;
+           // As a fallback check for "$id" as this is pretty uniquely Json Schema
+           bindings.get( JsonSchemaTransformer.JSCH_ID ) != null ||
+           // As a fallback to the fallback, check for: "type": "object" or "type": "array"
+           bindings.get( JsonSchemaTransformer.JSCH_TYPE ) != null &&
+           (bindings.get( JsonSchemaTransformer.JSCH_TYPE ).equals( Type.Object.getName() ) ||
+            bindings.get( JsonSchemaTransformer.JSCH_TYPE ).equals( Type.Array.getName() ));
   }
 
   @SuppressWarnings("unused")
@@ -216,6 +222,34 @@ public class JsonSchemaTransformer
     }
     return list;
   }
+  private static List getJSchema_AnyOf( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_ANY_OF );
+    List list;
+    if( value instanceof Pair )
+    {
+      list = (List)((Pair)value).getSecond();
+    }
+    else
+    {
+      list = (List)value;
+    }
+    return list;
+  }
+  private static List getJSchema_OneOf( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_ONE_OF );
+    List list;
+    if( value instanceof Pair )
+    {
+      list = (List)((Pair)value).getSecond();
+    }
+    else
+    {
+      list = (List)value;
+    }
+    return list;
+  }
 
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, URL enclosing, Bindings jsonObj )
   {
@@ -234,25 +268,32 @@ public class JsonSchemaTransformer
     cacheByFqn( definitionsHolder );
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
     {
-      String name = entry.getKey();
-      Object value = entry.getValue();
-      Bindings bindings;
       Token token = null;
-      if( value instanceof Pair )
+      try
       {
-        bindings = (Bindings)((Pair)value).getSecond();
-        token = (Token)((Pair)value).getFirst();
+        String name = entry.getKey();
+        Object value = entry.getValue();
+        Bindings bindings;
+        if( value instanceof Pair )
+        {
+          bindings = (Bindings)((Pair)value).getSecond();
+          token = (Token)((Pair)value).getFirst();
+        }
+        else
+        {
+          bindings = (Bindings)value;
+        }
+        IJsonType type = transformType( definitionsHolder, enclosing, name, bindings );
+        if( token != null && type instanceof JsonStructureType )
+        {
+          ((JsonStructureType)type).setToken( token );
+        }
+        result.add( type );
       }
-      else
+      catch( Exception e )
       {
-        bindings = (Bindings)value;
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, e.getMessage() ) );
       }
-      IJsonType type = transformType( definitionsHolder, enclosing, name, bindings );
-      if( token != null && type instanceof JsonStructureType )
-      {
-        ((JsonStructureType)type).setToken( token );
-      }
-      result.add( type );
     }
     return result;
   }
@@ -292,7 +333,7 @@ public class JsonSchemaTransformer
   {
     _typeByFqn.add( makeFqn( type ), type );
   }
-  void cacheSimpleByFqn( JsonSchemaType definitionsHolder, String definitionName, IJsonType type )
+  private void cacheSimpleByFqn( JsonSchemaType definitionsHolder, String definitionName, IJsonType type )
   {
     _typeByFqn.add( makeFqn( definitionsHolder ) + '.' + definitionName, type );
   }
@@ -376,10 +417,15 @@ public class JsonSchemaTransformer
       type = (String)value;
     }
 
+    if( type == null && isPropertiesDefined( jsonObj ) )
+    {
+      type = Type.Object.getName();
+    }
+
     Runnable transform = null;
 
-    boolean bRef = jsonObj.get( JSCH_REF ) != null;
-    if( type == null || bRef )
+    boolean bRef = jsonObj.containsKey( JSCH_REF );
+    if( type == null || bRef || isCombination( jsonObj ) )
     {
       JsonStructureType refParent = new JsonStructureType( parent, enclosing, name );
       if( bRef && parent == null )
@@ -395,17 +441,12 @@ public class JsonSchemaTransformer
       else
       {
         transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-        result = findReferenceType( parent, enclosing, name, jsonObj );
-        transferIssuesFromErrantType( parent, result, jsonObj );
+        result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+        if( result != parent )
+        {
+          transferIssuesFromErrantType( parent, result, jsonObj );
+        }
       }
-    }
-    else if( jsonObj.get( JSCH_ONE_OF ) != null )
-    {
-      // "oneOf" is difficult to handle for Java's type system,
-      // especially with $ref it basically implies union types, which Java does not support.
-      // So for now we punt and deal with it as a dynamic type, which Java does not support,
-      // but we will approximate it with Bindings (a map)
-      result = DynamicType.instance();
     }
     else
     {
@@ -461,6 +502,20 @@ public class JsonSchemaTransformer
     return result;
   }
 
+  private boolean isCombination( Bindings jsonObj )
+  {
+    return (jsonObj.containsKey( JSCH_ALL_OF ) ||
+            jsonObj.containsKey( JSCH_ONE_OF ) ||
+            jsonObj.containsKey( JSCH_ANY_OF )) &&
+           !isPropertiesDefined( jsonObj );
+  }
+
+  private boolean isPropertiesDefined( Bindings jsonObj )
+  {
+    return (jsonObj.get( JSCH_PROPERTIES ) instanceof Bindings) ||
+           jsonObj.get( JSCH_PROPERTIES ) instanceof Pair && ((Pair)jsonObj.get( JSCH_PROPERTIES )).getSecond() instanceof Bindings;
+  }
+
   private void transformDefinitions( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, IJsonType result )
   {
     List<IJsonType> definitions;
@@ -493,7 +548,7 @@ public class JsonSchemaTransformer
     }
   }
 
-  private IJsonType findReferenceType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
     IJsonType result;
     result = findReference( parent, enclosing, jsonObj );
@@ -506,7 +561,7 @@ public class JsonSchemaTransformer
         if( result == null )
         {
           // No type or other means of deriving a type could be found.
-          // Default type is Dynamic (in Java this is a Bindings Object)
+          // Default type is Dynamic (in Java this is Object)
           result = DynamicType.instance();
         }
       }
@@ -541,6 +596,23 @@ public class JsonSchemaTransformer
 
   private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
+    IJsonType type = transformAllOf( parent, enclosing, name, jsonObj );
+    if( type != null && !(type instanceof JsonStructureType) )
+    {
+      return type;
+    }
+
+    type = transformAnyOf( parent, (JsonStructureType)type, enclosing, name, jsonObj );
+    if( type != null && !(type instanceof JsonStructureType) )
+    {
+      return type;
+    }
+
+    return transformOneOf( parent, (JsonStructureType)type, enclosing, name, jsonObj );
+  }
+
+  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  {
     List list = getJSchema_AllOf( jsonObj );
     if( list == null )
     {
@@ -571,6 +643,25 @@ public class JsonSchemaTransformer
     return type;
   }
 
+  private IJsonType transformAnyOf( JsonSchemaType parent, JsonStructureType owner, URL enclosing, String name, Bindings jsonObj )
+  {
+    List list = getJSchema_AnyOf( jsonObj );
+    if( list == null )
+    {
+      return null;
+    }
+    return buildUnion( parent, owner, enclosing, name, list );
+  }
+  private IJsonType transformOneOf( JsonSchemaType parent, JsonStructureType owner, URL enclosing, String name, Bindings jsonObj )
+  {
+    List list = getJSchema_OneOf( jsonObj );
+    if( list == null )
+    {
+      return null;
+    }
+    return buildUnion( parent, owner, enclosing, name, list );
+  }
+
   private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list )
   {
     JsonStructureType type = null;
@@ -582,6 +673,11 @@ public class JsonSchemaTransformer
       }
       if( elem instanceof Bindings )
       {
+        if( !isTypeDescriptor( (Bindings)elem ) )
+        {
+          continue;
+        }
+
         Bindings elemBindings = (Bindings)elem;
         IJsonType ref = findReference( parent, enclosing, elemBindings );
         if( ref != null )
@@ -595,6 +691,107 @@ public class JsonSchemaTransformer
       }
     }
     return type;
+  }
+
+  private IJsonType buildUnion( JsonSchemaType parent, JsonStructureType owner, URL enclosing, String name, List list )
+  {
+    if( owner == null )
+    {
+      IJsonType oneType = getAllSameType( parent, enclosing, name, list );
+      if( oneType != null )
+      {
+        return oneType;
+      }
+    }
+
+    IJsonType result = null;
+    int i = 0;
+    for( Object elem : list )
+    {
+      Token token = null;
+      if( elem instanceof Pair )
+      {
+        elem = ((Pair)elem).getSecond();
+        token = (Token)((Pair)elem).getFirst();
+      }
+
+      if( elem instanceof Bindings )
+      {
+        if( !isTypeDescriptor( (Bindings)elem ) )
+        {
+          continue;
+        }
+
+        result = DynamicType.instance();
+
+        Bindings elemBindings = (Bindings)elem;
+        String simpleName = name + "Option" + (i++);
+        IJsonType type = transformType( parent, enclosing, simpleName, elemBindings );
+        if( !type.getName().equals( simpleName ) )
+        {
+          i--;
+        }
+        if( type != null )
+        {
+          if( owner == null )
+          {
+            owner = (JsonStructureType)parent;
+            if( owner == null )
+            {
+              // union is at root level, this is not supported
+              owner = new JsonStructureType( parent, enclosing, name );
+              owner.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Union types declared with 'oneOf' and 'anyOf' are not supported at the root level" ) );
+              return owner;
+            }
+          }
+          owner.addUnionMemberAccess( name, type, token );
+        }
+      }
+    }
+    return result;
+  }
+
+  private IJsonType getAllSameType( JsonSchemaType parent, URL enclosing, String name, List list )
+  {
+    IJsonType sameType = null;
+    int i = 0;
+    for( Object elem : list )
+    {
+      if( elem instanceof Pair )
+      {
+        elem = ((Pair)elem).getSecond();
+      }
+
+      if( elem instanceof Bindings )
+      {
+        if( !isTypeDescriptor( (Bindings)elem ) )
+        {
+          continue;
+        }
+
+        Bindings elemBindings = (Bindings)elem;
+        String simpleName = "ComponentOf_" + name + (i++);
+        IJsonType type = transformType( parent, enclosing, simpleName, elemBindings );
+        if( type != null )
+        {
+          if( sameType == null )
+          {
+            sameType = type;
+          }
+          else if( !sameType.equals( type ) )
+          {
+            return null;
+          }
+        }
+      }
+    }
+
+    return sameType;
+  }
+
+  private boolean isTypeDescriptor( Bindings elem )
+  {
+    return !(elem.size() == 1 && elem.containsKey( JSCH_REQUIRED ));
   }
 
   private IJsonType findReference( JsonSchemaType parent, URL enclosing, Bindings jsonObj )
@@ -611,6 +808,7 @@ public class JsonSchemaTransformer
     {
       ref = (String)value;
     }
+
     if( ref == null )
     {
       return null;

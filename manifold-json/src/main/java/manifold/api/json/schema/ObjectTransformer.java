@@ -4,8 +4,10 @@ import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
+import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
+import manifold.internal.javac.IIssue;
 import manifold.util.Pair;
 
 /**
@@ -53,35 +55,42 @@ class ObjectTransformer
       return;
     }
 
-    Bindings properties;
-    if( props instanceof Pair )
+    Token token = null;
+    try
     {
-      properties = (Bindings)((Pair)props).getSecond();
-    }
-    else
-    {
-      properties = (Bindings)props;
-    }
-
-    for( Map.Entry<String, Object> entry : properties.entrySet() )
-    {
-      String name = entry.getKey();
-      Object value = entry.getValue();
-      Bindings bindings;
-      Token token;
-      if( value instanceof Pair )
+      Bindings properties;
+      if( props instanceof Pair )
       {
-        token = (Token)((Pair)value).getFirst();
-        bindings = (Bindings)((Pair)value).getSecond();
+        properties = (Bindings)((Pair)props).getSecond();
       }
       else
       {
-        token = null;
-        bindings = (Bindings)value;
+        properties = (Bindings)props;
       }
 
-      IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings );
-      _type.addMember( name, type, token );
+      for( Map.Entry<String, Object> entry : properties.entrySet() )
+      {
+        String name = entry.getKey();
+        Object value = entry.getValue();
+        Bindings bindings;
+        if( value instanceof Pair )
+        {
+          token = (Token)((Pair)value).getFirst();
+          bindings = (Bindings)((Pair)value).getSecond();
+        }
+        else
+        {
+          token = null;
+          bindings = (Bindings)value;
+        }
+
+        IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings );
+        _type.addMember( name, type, token );
+      }
+    }
+    catch( Exception e )
+    {
+      _type.addIssue( new JsonIssue( IIssue.Kind.Error, token, e.getMessage() ) );
     }
   }
 }

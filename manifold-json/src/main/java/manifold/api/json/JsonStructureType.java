@@ -4,12 +4,16 @@ import extensions.java.net.URL.ManUrlExt;
 import extensions.javax.script.Bindings.ManBindingsExt;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
+import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.util.JsonUtil;
@@ -22,7 +26,7 @@ public class JsonStructureType extends JsonSchemaType
   private static final String FIELD_FILE_URL = "__FILE_URL_";
   private List<IJsonParentType> _superTypes;
   private Map<String, IJsonType> _membersByName;
-  private Map<String, IJsonType> _membersById;
+  private Map<String, Set<IJsonType>> _unionMembers;
   private Map<String, Token> _memberLocations;
   private Map<String, IJsonParentType> _innerTypes;
   private Token _token;
@@ -31,17 +35,20 @@ public class JsonStructureType extends JsonSchemaType
   {
     super( name, source, parent );
     _membersByName = new HashMap<>();
-    _membersById = new HashMap<>();
     _memberLocations = new HashMap<>();
-    _innerTypes = new HashMap<>();
-    _superTypes = new ArrayList<>();
+    _innerTypes = Collections.emptyMap();
+    _unionMembers = Collections.emptyMap();
+    _superTypes = Collections.emptyList();
   }
 
   public void addSuper( IJsonParentType superType )
   {
+    if( _superTypes.isEmpty() )
+    {
+      _superTypes = new ArrayList<>();
+    }
     _superTypes.add( superType );
   }
-
   public List<IJsonParentType> getSuperTypes()
   {
     return _superTypes;
@@ -49,6 +56,10 @@ public class JsonStructureType extends JsonSchemaType
 
   public void addChild( String name, IJsonParentType type )
   {
+    if( _innerTypes.isEmpty() )
+    {
+      _innerTypes = new HashMap<>();
+    }
     _innerTypes.put( name, type );
   }
 
@@ -106,6 +117,34 @@ public class JsonStructureType extends JsonSchemaType
     }
     _membersByName.put( name, type );
     _memberLocations.put( name, token );
+  }
+
+  public void addUnionMemberAccess( String memberName, IJsonType type, Token token )
+  {
+    if( _unionMembers.isEmpty() )
+    {
+      _unionMembers = new HashMap<>();
+    }
+
+    IJsonType member = _membersByName.get( memberName );
+    if( member == null )
+    {
+      addMember( memberName, DynamicType.instance(), token );
+    }
+
+    if( type instanceof IJsonParentType && !isDefinition( type ) )
+    {
+      addChild( type.getName(), (IJsonParentType)type );
+    }
+
+    Set<IJsonType> union = _unionMembers.computeIfAbsent( memberName, k -> new HashSet<>() );
+    union.add( type );
+  }
+
+  private boolean isDefinition( IJsonType type )
+  {
+    return type.getParent() != null &&
+           type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
   }
 
   public IJsonType findMemberType( String name )
@@ -198,6 +237,27 @@ public class JsonStructureType extends JsonSchemaType
         indent( sb, indent + 2 );
         sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
       }
+      Set<IJsonType> union = _unionMembers.get( key );
+      if( union != null )
+      {
+        for( IJsonType constituentType : union )
+        {
+          propertyType = constituentType.getIdentifier();
+          addSourcePositionAnnotation( sb, indent + 2, key );
+          identifier = addActualNameAnnotation( sb, indent + 2, key, true );
+          indent( sb, indent + 2 );
+          String unionName = makeIdentifier( constituentType.getName(), false );
+          String suffix = makeUnionSuffix( unionName, key );
+          sb.append( propertyType ).append( " get" ).append( identifier ).append( "As" ).append( suffix ).append( "();\n" );
+          if( mutable )
+          {
+            addSourcePositionAnnotation( sb, indent + 2, key );
+            addActualNameAnnotation( sb, indent + 2, key, true );
+            indent( sb, indent + 2 );
+            sb.append( "void set" ).append( identifier ).append( "As" ).append( suffix ).append( "(" ).append( propertyType ).append( " $value);\n" );
+          }
+        }
+      }
     }
     for( IJsonParentType child : _innerTypes.values() )
     {
@@ -218,6 +278,17 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "}\n" );
   }
 
+  private String makeUnionSuffix( String unionName, String propertyName )
+  {
+    String fullName = propertyName + "Option";
+    int i = unionName.lastIndexOf( fullName );
+    if( i < 0 )
+    {
+      return unionName;
+    }
+    return "Option" + unionName.substring( i + fullName.length() );
+  }
+
   private void renderFileField( StringBuilder sb, int indent )
   {
     indent( sb, indent );
@@ -226,15 +297,16 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addSuperTypes( StringBuilder sb )
   {
-    if( _superTypes.isEmpty() )
+    List<IJsonParentType> superTypes = getSuperTypes();
+    if( superTypes.isEmpty() )
     {
       return "";
     }
 
     sb.append( " extends " );
-    for( int i = 0; i < _superTypes.size(); i++ )
+    for( int i = 0; i < superTypes.size(); i++ )
     {
-      IJsonParentType superType = _superTypes.get( i );
+      IJsonParentType superType = superTypes.get( i );
       if( i > 0 )
       {
         sb.append( ", " );
@@ -246,13 +318,18 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
   {
-    String identifier = capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
+    String identifier = makeIdentifier( name, capitalize );
     if( !identifier.equals( name ) )
     {
       indent( sb, indent );
       sb.append( "@" ).append( ActualName.class.getName() ).append( "( \"" ).append( name ).append( "\" )\n" );
     }
     return identifier;
+  }
+
+  private String makeIdentifier( String name, boolean capitalize )
+  {
+    return capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
   }
 
   private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
@@ -409,6 +486,10 @@ public class JsonStructureType extends JsonSchemaType
     {
       return false;
     }
+    if( !_unionMembers.equals( type._unionMembers ) )
+    {
+      return false;
+    }
     return _innerTypes.equals( type._innerTypes );
   }
 
@@ -418,7 +499,13 @@ public class JsonStructureType extends JsonSchemaType
     int result = super.hashCode();
     result = 31 * result + _superTypes.hashCode();
     result = 31 * result + _membersByName.hashCode();
+    result = 31 * result + _unionMembers.hashCode();
     result = 31 * result + _innerTypes.hashCode();
     return result;
+  }
+
+  public String toString()
+  {
+    return getName();
   }
 }

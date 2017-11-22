@@ -7,6 +7,7 @@ import abc.Person;
 import abc.Product;
 import abc.Tree;
 import abc.AllOf_Hierarchy;
+import abc.OneOf;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,6 +23,34 @@ import static abc.Person.Address.*;
  */
 public class JsonTest extends TestCase
 {
+  public void testOneOf()
+  {
+    OneOf oneOf = OneOf.create();
+
+    oneOf.setThingAsBoolean( Boolean.TRUE );
+    assertTrue( oneOf.getThingAsBoolean() );
+
+    OneOf.MyDef myDef = OneOf.MyDef.create();
+    oneOf.setThingAsMyDef(myDef);
+    OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
+    assertSame( myDef, myDefRes );
+
+    OneOf.thingOption0 thingOption0 = OneOf.thingOption0.create();
+    thingOption0.setFirstName("fred");
+    thingOption0.setLastName("flintstone");
+    thingOption0.setSport("bowling");
+    oneOf.setThingAsOption0(thingOption0);
+    OneOf.thingOption0 resThingOption0 = oneOf.getThingAsOption0();
+    assertSame( thingOption0, resThingOption0 );
+
+    OneOf.thingOption1 thingOption1 = OneOf.thingOption1.create();
+    thingOption1.setPrice(5);
+    thingOption1.setVehicle("ferrari");
+    oneOf.setThingAsOption1(thingOption1);
+    OneOf.thingOption1 resThingOption1 = oneOf.getThingAsOption1();
+    assertSame( thingOption1, resThingOption1 );
+  }
+
   public void testAllOf()
   {
     AllOf_Hierarchy all = AllOf_Hierarchy.create();

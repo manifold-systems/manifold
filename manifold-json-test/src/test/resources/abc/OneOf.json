@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "schema validating people and vehicles",
+  "type": "object",
+  "definitions": {
+    "MyDef": {
+      "type": "object",
+      "properties": {
+        "chocolate": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "thing": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/definitions/MyDef"
+        },
+        {
+          "properties": {
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            },
+            "sport": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "firstName"
+          ]
+        },
+        {
+          "properties": {
+            "vehicle": {
+              "type": "string"
+            },
+            "price": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "thing"
+      ]
+    },
+    {
+      "required": [
+        "thing"
+      ]
+    }
+  ]
+}

@@ -3,9 +3,13 @@ package manifold.api.json.schema;
 import java.util.List;
 import javax.script.Bindings;
 import manifold.api.json.DynamicType;
+import manifold.api.json.ErrantType;
 import manifold.api.json.IJsonType;
+import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
 import manifold.api.json.JsonSchemaType;
+import manifold.api.json.Token;
+import manifold.internal.javac.IIssue;
 import manifold.util.Pair;
 
 /**
@@ -57,9 +61,11 @@ class ArrayTransformer
     IJsonType componentType = null;
     Object value = _jsonObj.get( JSCH_ITEMS );
     Object items;
+    Token token = null;
     if( value instanceof Pair )
     {
       items = ((Pair)value).getSecond();
+      token = (Token)((Pair)value).getFirst();
     }
     else
     {
@@ -81,9 +87,14 @@ class ArrayTransformer
         }
       }
     }
-    else
+    else if( items instanceof Bindings )
     {
       componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items );
+    }
+    else
+    {
+      _type.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Expecting '{' or '[' for object or array to contain array component type" ) );
+      componentType = new ErrantType( _type.getFile(), "Errant" );
     }
     _type.setComponentType( componentType );
   }
