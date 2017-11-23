@@ -1,10 +1,14 @@
-package manifold.api.json;
+package manifold.api.json.schema;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import manifold.api.json.IJsonParentType;
+import manifold.api.json.IJsonType;
+import manifold.api.json.Json;
+import manifold.api.json.JsonIssue;
 import manifold.util.JsonUtil;
 
 /**
@@ -17,7 +21,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   private URL _file;
   private List<JsonIssue> _issues;
 
-  JsonSchemaType( String name, URL source, JsonSchemaType parent )
+  protected JsonSchemaType( String name, URL source, JsonSchemaType parent )
   {
     _name = name;
     _parent = parent;
@@ -64,7 +68,7 @@ public abstract class JsonSchemaType implements IJsonParentType
     _definitions = definitions;
   }
 
-  boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )
+  protected boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )
   {
     for( Map.Entry<String, IJsonParentType> e : innerTypes.entrySet() )
     {

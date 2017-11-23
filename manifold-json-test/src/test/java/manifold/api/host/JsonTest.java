@@ -8,7 +8,8 @@ import abc.Product;
 import abc.Tree;
 import abc.AllOf_Hierarchy;
 import abc.OneOf;
-import java.util.ArrayList;
+import abc.OneOf_TopLevel;
+import abc.OneOf_TopLevel_Array;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,20 +36,44 @@ public class JsonTest extends TestCase
     OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
     assertSame( myDef, myDefRes );
 
-    OneOf.thingOption0 thingOption0 = OneOf.thingOption0.create();
+    OneOf.thing.Option0 thingOption0 = OneOf.thing.Option0.create();
     thingOption0.setFirstName("fred");
     thingOption0.setLastName("flintstone");
     thingOption0.setSport("bowling");
     oneOf.setThingAsOption0(thingOption0);
-    OneOf.thingOption0 resThingOption0 = oneOf.getThingAsOption0();
+    OneOf.thing.Option0 resThingOption0 = oneOf.getThingAsOption0();
     assertSame( thingOption0, resThingOption0 );
 
-    OneOf.thingOption1 thingOption1 = OneOf.thingOption1.create();
+    OneOf.thing.Option1 thingOption1 = OneOf.thing.Option1.create();
     thingOption1.setPrice(5);
     thingOption1.setVehicle("ferrari");
     oneOf.setThingAsOption1(thingOption1);
-    OneOf.thingOption1 resThingOption1 = oneOf.getThingAsOption1();
+    OneOf.thing.Option1 resThingOption1 = oneOf.getThingAsOption1();
     assertSame( thingOption1, resThingOption1 );
+
+    OneOf_TopLevel.Option0 topLevelOption0 = OneOf_TopLevel.Option0.create();
+    oneOf.setTopLevelAsOption0( topLevelOption0 );
+    OneOf_TopLevel.Option0 resTopLevelOption0 = oneOf.getTopLevelAsOption0();
+    assertSame( topLevelOption0, resTopLevelOption0 );
+    assertSame( topLevelOption0, oneOf.getTopLevel() );
+
+    OneOf_TopLevel.Option1 topLevelOption1 = OneOf_TopLevel.Option1.create();
+    oneOf.setTopLevelAsOption1( topLevelOption1 );
+    OneOf_TopLevel.Option1 resTopLevelOption1 = oneOf.getTopLevelAsOption1();
+    assertSame( topLevelOption1, resTopLevelOption1 );
+    assertSame( topLevelOption1, oneOf.getTopLevel() );
+
+    List<OneOf_TopLevel_Array.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.Option0.create() );
+    oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
+    List<OneOf_TopLevel_Array.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
+    assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
+    assertSame( topLevelArrayOption0, oneOf.getTopLevelArray() );
+    
+    List<OneOf_TopLevel_Array.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.Option1.create() );
+    oneOf.setTopLevelArrayAsOption1( topLevelArrayOption1 );
+    List<OneOf_TopLevel_Array.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
+    assertSame( topLevelArrayOption1, resTopLevelArrayOption1 );
+    assertSame( topLevelArrayOption1, oneOf.getTopLevelArray() );
   }
 
   public void testAllOf()

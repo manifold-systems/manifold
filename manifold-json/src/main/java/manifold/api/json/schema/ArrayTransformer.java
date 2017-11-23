@@ -7,7 +7,6 @@ import manifold.api.json.ErrantType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
-import manifold.api.json.JsonSchemaType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
 import manifold.util.Pair;

@@ -6,6 +6,7 @@ import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.api.json.schema.JsonSchemaTransformer;
+import manifold.api.json.schema.JsonSchemaType;
 import manifold.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 

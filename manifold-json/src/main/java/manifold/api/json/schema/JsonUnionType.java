@@ -1,0 +1,46 @@
+package manifold.api.json.schema;
+
+import java.net.URL;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import manifold.api.json.IJsonParentType;
+import manifold.api.json.IJsonType;
+import manifold.api.json.JsonStructureType;
+
+/**
+ */
+public class JsonUnionType extends JsonStructureType
+{
+  private Map<String, IJsonType> _constituentTypes;
+
+  JsonUnionType( JsonSchemaType parent, URL source, String name )
+  {
+    super( parent, source, name );
+    _constituentTypes = Collections.emptyMap();
+  }
+
+  public Collection<? extends IJsonType> getConstituents()
+  {
+    return _constituentTypes.values();
+  }
+
+  void addConstituent( String name, IJsonType type )
+  {
+    if( _constituentTypes.isEmpty() )
+    {
+      _constituentTypes = new HashMap<>();
+    }
+    _constituentTypes.put( name, type );
+    if( type instanceof IJsonParentType && !isDefinition( type ) )
+    {
+      super.addChild( name, (IJsonParentType)type );
+    }
+  }
+
+  private boolean isDefinition( IJsonType type )
+  {
+    return type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
+  }
+}

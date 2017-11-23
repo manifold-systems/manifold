@@ -19,7 +19,6 @@ import manifold.api.json.IJsonType;
 import manifold.api.json.Json;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
-import manifold.api.json.JsonSchemaType;
 import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
@@ -39,7 +38,7 @@ public class JsonSchemaTransformer
   private static final String JSCH_NAME = "name";
   private static final String JSCH_ID = "$id";
   private static final String JSCH_REF = "$ref";
-  public static final String JSCH_DEFINITIONS = "definitions";
+  static final String JSCH_DEFINITIONS = "definitions";
   static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_ALL_OF = "allOf";
@@ -597,13 +596,13 @@ public class JsonSchemaTransformer
   private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
     IJsonType type = transformAllOf( parent, enclosing, name, jsonObj );
-    if( type != null && !(type instanceof JsonStructureType) )
+    if( type != null )
     {
       return type;
     }
 
     type = transformAnyOf( parent, (JsonStructureType)type, enclosing, name, jsonObj );
-    if( type != null && !(type instanceof JsonStructureType) )
+    if( type != null )
     {
       return type;
     }
@@ -695,24 +694,13 @@ public class JsonSchemaTransformer
 
   private IJsonType buildUnion( JsonSchemaType parent, JsonStructureType owner, URL enclosing, String name, List list )
   {
-    if( owner == null )
-    {
-      IJsonType oneType = getAllSameType( parent, enclosing, name, list );
-      if( oneType != null )
-      {
-        return oneType;
-      }
-    }
-
-    IJsonType result = null;
+    JsonUnionType type = new JsonUnionType( parent, enclosing, name );
     int i = 0;
     for( Object elem : list )
     {
-      Token token = null;
       if( elem instanceof Pair )
       {
         elem = ((Pair)elem).getSecond();
-        token = (Token)((Pair)elem).getFirst();
       }
 
       if( elem instanceof Bindings )
@@ -722,71 +710,28 @@ public class JsonSchemaTransformer
           continue;
         }
 
-        result = DynamicType.instance();
-
         Bindings elemBindings = (Bindings)elem;
-        String simpleName = name + "Option" + (i++);
-        IJsonType type = transformType( parent, enclosing, simpleName, elemBindings );
-        if( !type.getName().equals( simpleName ) )
+        String simpleName = "Option" + (i++);
+        IJsonType ref = transformType( type, enclosing, simpleName, elemBindings );
+        if( !ref.getName().equals( simpleName ) )
         {
           i--;
         }
-        if( type != null )
+        if( ref != null )
         {
-          if( owner == null )
-          {
-            owner = (JsonStructureType)parent;
-            if( owner == null )
-            {
-              // union is at root level, this is not supported
-              owner = new JsonStructureType( parent, enclosing, name );
-              owner.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Union types declared with 'oneOf' and 'anyOf' are not supported at the root level" ) );
-              return owner;
-            }
-          }
-          owner.addUnionMemberAccess( name, type, token );
+          type.addConstituent( ref.getName(), ref );
         }
       }
     }
-    return result;
-  }
-
-  private IJsonType getAllSameType( JsonSchemaType parent, URL enclosing, String name, List list )
-  {
-    IJsonType sameType = null;
-    int i = 0;
-    for( Object elem : list )
+    if( !type.getConstituents().isEmpty() )
     {
-      if( elem instanceof Pair )
+      if( parent != null )
       {
-        elem = ((Pair)elem).getSecond();
+        parent.addChild( type.getLabel(), type );
       }
-
-      if( elem instanceof Bindings )
-      {
-        if( !isTypeDescriptor( (Bindings)elem ) )
-        {
-          continue;
-        }
-
-        Bindings elemBindings = (Bindings)elem;
-        String simpleName = "ComponentOf_" + name + (i++);
-        IJsonType type = transformType( parent, enclosing, simpleName, elemBindings );
-        if( type != null )
-        {
-          if( sameType == null )
-          {
-            sameType = type;
-          }
-          else if( !sameType.equals( type ) )
-          {
-            return null;
-          }
-        }
-      }
+      return type;
     }
-
-    return sameType;
+    return null;
   }
 
   private boolean isTypeDescriptor( Bindings elem )

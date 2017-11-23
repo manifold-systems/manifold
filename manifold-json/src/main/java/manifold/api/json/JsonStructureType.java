@@ -13,7 +13,8 @@ import java.util.Set;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
-import manifold.api.json.schema.JsonSchemaTransformer;
+import manifold.api.json.schema.JsonSchemaType;
+import manifold.api.json.schema.JsonUnionType;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.util.JsonUtil;
@@ -101,7 +102,7 @@ public class JsonStructureType extends JsonSchemaType
     {
       if( type == DynamicType.instance() )
       {
-        // Keep the more specific type (the dynamic type was inferred form a 'null' value, which should not override a static type)
+        // Keep the more specific type (the dynamic type was inferred from a 'null' value, which should not override a static type)
         return;
       }
       if( existingType != DynamicType.instance() )
@@ -117,34 +118,28 @@ public class JsonStructureType extends JsonSchemaType
     }
     _membersByName.put( name, type );
     _memberLocations.put( name, token );
+    addUnionMemberAccess( name, type );
   }
 
-  public void addUnionMemberAccess( String memberName, IJsonType type, Token token )
+  private void addUnionMemberAccess( String name, IJsonType type )
   {
-    if( _unionMembers.isEmpty() )
+    if( type instanceof JsonUnionType )
     {
-      _unionMembers = new HashMap<>();
-    }
+      for( IJsonType constituent : ((JsonUnionType)type).getConstituents() )
+      {
+        if( _unionMembers.isEmpty() )
+        {
+          _unionMembers = new HashMap<>();
+        }
 
-    IJsonType member = _membersByName.get( memberName );
-    if( member == null )
+        Set<IJsonType> union = _unionMembers.computeIfAbsent( name, k -> new HashSet<>() );
+        union.add( constituent );
+      }
+    }
+    else if( type instanceof JsonListType )
     {
-      addMember( memberName, DynamicType.instance(), token );
+      addUnionMemberAccess( name, ((JsonListType)type).getComponentType() );
     }
-
-    if( type instanceof IJsonParentType && !isDefinition( type ) )
-    {
-      addChild( type.getName(), (IJsonParentType)type );
-    }
-
-    Set<IJsonType> union = _unionMembers.computeIfAbsent( memberName, k -> new HashSet<>() );
-    union.add( type );
-  }
-
-  private boolean isDefinition( IJsonType type )
-  {
-    return type.getParent() != null &&
-           type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
   }
 
   public IJsonType findMemberType( String name )
@@ -203,18 +198,21 @@ public class JsonStructureType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
-    indent( sb, indent );
+    if( getParent() instanceof IJsonParentType )
+    {
+      sb.append( '\n' );
+    }
 
     String name = getName();
     String identifier = addActualNameAnnotation( sb, indent, name, false );
 
     if( !(getParent() instanceof JsonStructureType) ||
-        !((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent + 2, identifier ) )
+        !((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent, identifier ) )
     {
       if( getToken() != null )
       {
         // this is most likely a "definitions" inner class
-        addSourcePositionAnnotation( sb, indent + 2, identifier, getToken() );
+        addSourcePositionAnnotation( sb, indent, identifier, getToken() );
       }
     }
     indent( sb, indent );
@@ -225,7 +223,9 @@ public class JsonStructureType extends JsonSchemaType
     renderTopLevelFactoryMethods( sb, indent + 2 );
     for( String key : _membersByName.keySet() )
     {
-      String propertyType = _membersByName.get( key ).getIdentifier();
+      sb.append( '\n' );
+      IJsonType type = _membersByName.get( key );
+      String propertyType = type instanceof JsonUnionType ? "Object" : type.getIdentifier();
       addSourcePositionAnnotation( sb, indent + 2, key );
       identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
@@ -242,19 +242,19 @@ public class JsonStructureType extends JsonSchemaType
       {
         for( IJsonType constituentType : union )
         {
-          propertyType = constituentType.getIdentifier();
+          sb.append( '\n' );
+          String specificPropertyType = getConstituentQn( constituentType, type );
           addSourcePositionAnnotation( sb, indent + 2, key );
           identifier = addActualNameAnnotation( sb, indent + 2, key, true );
           indent( sb, indent + 2 );
           String unionName = makeIdentifier( constituentType.getName(), false );
-          String suffix = makeUnionSuffix( unionName, key );
-          sb.append( propertyType ).append( " get" ).append( identifier ).append( "As" ).append( suffix ).append( "();\n" );
+          sb.append( specificPropertyType ).append( " get" ).append( identifier ).append( "As" ).append( unionName ).append( "();\n" );
           if( mutable )
           {
             addSourcePositionAnnotation( sb, indent + 2, key );
             addActualNameAnnotation( sb, indent + 2, key, true );
             indent( sb, indent + 2 );
-            sb.append( "void set" ).append( identifier ).append( "As" ).append( suffix ).append( "(" ).append( propertyType ).append( " $value);\n" );
+            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " $value);\n" );
           }
         }
       }
@@ -278,15 +278,25 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "}\n" );
   }
 
-  private String makeUnionSuffix( String unionName, String propertyName )
+  private String getConstituentQn( IJsonType constituentType, IJsonType propertyType )
   {
-    String fullName = propertyName + "Option";
-    int i = unionName.lastIndexOf( fullName );
-    if( i < 0 )
+    String qn = getConstituentQn( constituentType );
+    while( propertyType instanceof JsonListType )
     {
-      return unionName;
+      //noinspection StringConcatenationInLoop
+      qn = "java.util.List<" + qn + ">";
+      propertyType = ((JsonListType)propertyType).getComponentType();
     }
-    return "Option" + unionName.substring( i + fullName.length() );
+    return qn;
+  }
+  private String getConstituentQn( IJsonType constituentType )
+  {
+    String qn = "";
+    if( constituentType.getParent() instanceof JsonUnionType )
+    {
+      qn = getConstituentQn( constituentType.getParent() ) + '.';
+    }
+    return qn + constituentType.getIdentifier();
   }
 
   private void renderFileField( StringBuilder sb, int indent )
@@ -343,14 +353,12 @@ public class JsonStructureType extends JsonSchemaType
   }
   private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
   {
-    indent( sb, indent );
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( getName(), FIELD_FILE_URL ) ).name( "url" ) )
       .addArgument( "feature", String.class, name )
       .addArgument( "offset", int.class, token.getOffset() )
       .addArgument( "length", int.class, name.length() );
     annotation.render( sb, indent );
-    sb.append( '\n' );
     return true;
   }
 
@@ -370,21 +378,21 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toJson(this);\n" );
     indent( sb, indent );
-    sb.append( "};\n");
+    sb.append( "}\n");
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml() {\n" );
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this);\n" );
     indent( sb, indent );
-    sb.append( "};\n");
+    sb.append( "}\n");
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml(String name) {\n" );
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this, name);\n" );
     indent( sb, indent );
-    sb.append( "};\n");
+    sb.append( "}\n");
 
     if( !shouldRenderTopLevel( this ) )
     {

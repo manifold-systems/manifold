@@ -50,6 +50,12 @@
           "additionalProperties": false
         }
       ]
+    },
+    "topLevel": {
+      "$ref": "OneOf_TopLevel.json"
+    },
+    "topLevelArray": {
+      "$ref": "OneOf_TopLevel_Array.json"
     }
   },
   "oneOf": [

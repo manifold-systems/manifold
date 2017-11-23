@@ -1,8 +1,12 @@
 package manifold.api.json;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import manifold.api.json.schema.JsonSchemaType;
+import manifold.api.json.schema.JsonUnionType;
 
 /**
  */
@@ -14,7 +18,7 @@ public class JsonListType extends JsonSchemaType
   public JsonListType( String label, URL source, JsonSchemaType parent )
   {
     super( label, source, parent );
-    _innerTypes = new HashMap<>();
+    _innerTypes = Collections.emptyMap();
   }
 
   @Override
@@ -25,7 +29,12 @@ public class JsonListType extends JsonSchemaType
 
   public String getName()
   {
-    return "java.util.List<" + _componentType.getIdentifier() + ">";
+    return "java.util.List<" + getComponentTypeName() + ">";
+  }
+
+  private String getComponentTypeName()
+  {
+    return _componentType instanceof JsonUnionType ? "Object" : _componentType.getIdentifier();
   }
 
   public String getIdentifier()
@@ -35,17 +44,39 @@ public class JsonListType extends JsonSchemaType
 
   public void addChild( String name, IJsonParentType type )
   {
+    if( _innerTypes.isEmpty() )
+    {
+      _innerTypes = new HashMap<>();
+    }
     _innerTypes.put( name, type );
   }
 
   public IJsonType findChild( String name )
   {
-    IJsonType inner = _innerTypes.get( name );
-    if( inner == null && _componentType instanceof IJsonParentType )
+    IJsonType innerType = _innerTypes.get( name );
+    if( innerType == null )
     {
-      inner = ((IJsonParentType)_componentType).findChild( name );
+      if( _componentType instanceof IJsonParentType )
+      {
+        innerType = ((IJsonParentType)_componentType).findChild( name );
+      }
+      if( innerType == null )
+      {
+        List<IJsonType> definitions = getDefinitions();
+        if( definitions != null )
+        {
+          for( IJsonType child : definitions )
+          {
+            if( child.getName().equals( name ) )
+            {
+              innerType = child;
+              break;
+            }
+          }
+        }
+      }
     }
-    return inner;
+    return innerType;
   }
 
   public IJsonType getComponentType()
