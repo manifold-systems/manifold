@@ -42,6 +42,14 @@ public class JsonListType extends JsonSchemaType
     return getName();
   }
 
+  @Override
+  public String getFqn()
+  {
+    return "java.util.List<" + (getComponentType() instanceof JsonSchemaType
+                                ? ((JsonSchemaType)getComponentType()).getFqn()
+                                : getComponentTypeName()) + ">";
+  }
+
   public void addChild( String name, IJsonParentType type )
   {
     if( _innerTypes.isEmpty() )

@@ -10,6 +10,7 @@ import abc.AllOf_Hierarchy;
 import abc.OneOf;
 import abc.OneOf_TopLevel;
 import abc.OneOf_TopLevel_Array;
+import abc.StrangeUriFormats;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -24,6 +25,24 @@ import static abc.Person.Address.*;
  */
 public class JsonTest extends TestCase
 {
+  public void testDefinitionsWithInvalidIdentifierCharacters()
+  {
+    StrangeUriFormats uriFormats = StrangeUriFormats.create();
+    StrangeUriFormats.nc_VehicleType vt = StrangeUriFormats.nc_VehicleType.create();
+    uriFormats.setNc_Vehicle( vt );
+    StrangeUriFormats.nc_VehicleType resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_Vehicle();
+    assertSame( resVt, vt );
+
+    uriFormats.setNc_VehicleAsnc_VehicleType( vt );
+    resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
+    assertSame( resVt, vt );
+
+    List<StrangeUriFormats.nc_VehicleType> lvt = Collections.singletonList( vt );
+    uriFormats.setNc_VehicleAsListOfnc_VehicleType( lvt );
+    StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsListOfnc_VehicleType();
+    assertSame( resLvt, lvt );
+  }
+
   public void testOneOf()
   {
     OneOf oneOf = OneOf.create();

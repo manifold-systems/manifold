@@ -42,6 +42,18 @@ public class JsonStructureType extends JsonSchemaType
     _superTypes = Collections.emptyList();
   }
 
+  @Override
+  public String getFqn()
+  {
+    String result = "";
+    if( !isParentRoot() )
+    {
+      result = getParent().getFqn();
+      result += '.';
+    }
+    return result + JsonUtil.makeIdentifier( getLabel() );
+  }
+
   public void addSuper( IJsonParentType superType )
   {
     if( _superTypes.isEmpty() )
@@ -74,7 +86,7 @@ public class JsonStructureType extends JsonSchemaType
       {
         for( IJsonType child: definitions )
         {
-          if( child.getName().equals( name ) )
+          if( child.getIdentifier().equals( name ) )
           {
             innerType = (IJsonParentType)child;
             break;
@@ -247,7 +259,7 @@ public class JsonStructureType extends JsonSchemaType
           addSourcePositionAnnotation( sb, indent + 2, key );
           identifier = addActualNameAnnotation( sb, indent + 2, key, true );
           indent( sb, indent + 2 );
-          String unionName = makeIdentifier( constituentType.getName(), false );
+          String unionName = makeMemberIdentifier( constituentType );
           sb.append( specificPropertyType ).append( " get" ).append( identifier ).append( "As" ).append( unionName ).append( "();\n" );
           if( mutable )
           {
@@ -289,8 +301,14 @@ public class JsonStructureType extends JsonSchemaType
     }
     return qn;
   }
+
   private String getConstituentQn( IJsonType constituentType )
   {
+    if( constituentType instanceof JsonListType )
+    {
+      return "java.util.List<" + getConstituentQn( ((JsonListType)constituentType).getComponentType() ) + ">";
+    }
+
     String qn = "";
     if( constituentType.getParent() instanceof JsonUnionType )
     {
@@ -337,6 +355,14 @@ public class JsonStructureType extends JsonSchemaType
     return identifier;
   }
 
+  private String makeMemberIdentifier( IJsonType type )
+  {
+    if( type instanceof JsonListType )
+    {
+      return "ListOf" + makeMemberIdentifier( ((JsonListType)type).getComponentType() );
+    }
+    return makeIdentifier( type.getName(), false );
+  }
   private String makeIdentifier( String name, boolean capitalize )
   {
     return capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
@@ -354,7 +380,7 @@ public class JsonStructureType extends JsonSchemaType
   private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
   {
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
-      .addArgument( new SrcArgument( new SrcMemberAccessExpression( getName(), FIELD_FILE_URL ) ).name( "url" ) )
+      .addArgument( new SrcArgument( new SrcMemberAccessExpression( getIdentifier(), FIELD_FILE_URL ) ).name( "url" ) )
       .addArgument( "feature", String.class, name )
       .addArgument( "offset", int.class, token.getOffset() )
       .addArgument( "length", int.class, name.length() );
@@ -514,6 +540,6 @@ public class JsonStructureType extends JsonSchemaType
 
   public String toString()
   {
-    return getName();
+    return getFqn();
   }
 }

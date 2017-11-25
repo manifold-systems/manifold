@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "nc:Vehicle": {
+      "description": "A conveyance designed to carry an operator, passengers and/or cargo, over land.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/nc:VehicleType"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/nc:VehicleType"
+          }
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "nc:VehicleType": {
+      "description": "A data type for a conveyance designed to carry an operator, passengers and/or cargo, over land.",
+      "allOf": [
+        {
+          "type": "object",
+          "properties": {
+
+          }
+        }
+      ]
+    }
+  }
+}

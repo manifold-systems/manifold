@@ -48,9 +48,8 @@ class ArrayTransformer
     {
       parent.addChild( _type.getLabel(), _type );
     }
-    _schemaTx.cacheByFqn( _type ); // must cache now to handle recursive refs
-
     assignComponentType();
+    _schemaTx.cacheByFqn( _type );
 
     return _type;
   }

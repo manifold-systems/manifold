@@ -9,6 +9,7 @@ import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.Json;
 import manifold.api.json.JsonIssue;
+import manifold.api.json.JsonListType;
 import manifold.util.JsonUtil;
 
 /**
@@ -27,6 +28,15 @@ public abstract class JsonSchemaType implements IJsonParentType
     _parent = parent;
     _file = source;
     _issues = Collections.emptyList();
+  }
+
+  public abstract String getFqn();
+
+  protected boolean isParentRoot()
+  {
+    return getParent() == null ||
+           getParent().getParent() == null && (getParent() instanceof JsonListType ||
+                                               !getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS ));
   }
 
   public URL getFile()
