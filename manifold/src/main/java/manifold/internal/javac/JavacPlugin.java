@@ -300,7 +300,34 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     Set<String> sourcePath = new HashSet<>();
     deriveSourcePath( _javaInputFiles, sourcePath );
+    maybeAddResourcePath( sourcePath );
     return sourcePath;
+  }
+
+  /**
+   * Add the Maven resource path from the conventional place.  This is not necessary because
+   * resources are copied to the output directory, which is also part of the source path for
+   * compilation.  However, having the resources directory in the path facilitates error
+   * reporting in IDEs such as IntelliJ where there are hyper links directly to the errant
+   * source file in the compilation results. Without the resources path, this link leads to
+   * the output dir, which is confusing.
+   */
+  private void maybeAddResourcePath( Set<String> sourcePath )
+  {
+    String resourcePath = null;
+    for( String path: sourcePath )
+    {
+      int i = path.lastIndexOf( "/src/main/java".replace( '/', File.separatorChar ) );
+      if( i >= 0 )
+      {
+        resourcePath = path.substring( 0, i ) + "/src/main/resources".replace( '/', File.separatorChar );
+        break;
+      }
+    }
+    if( resourcePath != null && new File( resourcePath ).isDirectory() )
+    {
+      sourcePath.add( resourcePath );
+    }
   }
 
   private void deriveSourcePath( Set<Pair<String, JavaFileObject>> inputFiles, Set<String> sourcePath )
