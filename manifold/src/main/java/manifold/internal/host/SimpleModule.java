@@ -2,6 +2,7 @@ package manifold.internal.host;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
@@ -15,6 +16,8 @@ import manifold.api.properties.PropertiesTypeManifold;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
+import manifold.internal.javac.SourceJavaFileObject;
+import manifold.util.JavacDiagnostic;
 import manifold.util.concurrent.LocklessLazyVar;
 
 
@@ -115,12 +118,20 @@ public abstract class SimpleModule implements ITypeLoader, IModule
       {
         if( found != null && (found.getProducerKind() == Primary || sp.getProducerKind() == Primary) )
         {
-          //## todo: how better to handle this?
-          throw new UnsupportedOperationException( "The type, " + fqn + ", has conflicting source producers: '" +
-                                                   found.getClass().getName() + "' and '" + sp.getClass().getName() + "'" );
+          List<IFile> files = sp.findFilesForType( fqn );
+          JavaFileObject file = new SourceJavaFileObject( files.get( 0 ).toURI() );
+          errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, 0, 1, 1,
+                                                    "The type, " + fqn + ", has conflicting type manifolds:\n" +
+                                                    "'" + found.getClass().getName() + "' and '" + sp.getClass().getName() + "'.\n" +
+                                                    "Either two or more resource files have the same base name or the project depends on two or more type manifolds that target the same resource type.\n" +
+                                                    "If the former, consider renaming one or more of the resource files.\n" +
+                                                    "If the latter, you must remove one or more of the type manifold libraries." ) );
         }
-        found = sp;
-        result = sp.produce( fqn, result, errorHandler );
+        else
+        {
+          found = sp;
+          result = sp.produce( fqn, result, errorHandler );
+        }
       }
     }
     for( ITypeManifold sp : sps )
