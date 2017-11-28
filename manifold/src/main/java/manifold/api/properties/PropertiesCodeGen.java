@@ -207,7 +207,41 @@ public class PropertiesCodeGen
       fqn = fqn.substring( prefix.length() );
     }
     // this is a crappy way to approximate the offset, we really need to parse the file ourselves and store the offsets
-    return _content.indexOf( fqn );
+    int fullFqn = findFqn( fqn, false );
+    if( fullFqn >= 0 )
+    {
+      return fullFqn;
+    }
+    return findFqn( fqn, true );
+  }
+
+  private int findFqn( String fqn, boolean bPartialMatch )
+  {
+    String content = _content;
+    int index = 0;
+    while( true )
+    {
+      index = content.indexOf( fqn, index );
+      if( index < 0 )
+      {
+        break;
+      }
+      if( (index == 0 || content.charAt( index-1 ) == '\n') &&
+          content.charAt( index + fqn.length() ) == '=' ||
+          content.charAt( index + fqn.length() ) == ' ' ||
+          (bPartialMatch && content.charAt( index + fqn.length() ) == '.') )
+      {
+        break;
+      }
+
+      index += fqn.length();
+      if( index >= content.length() )
+      {
+        index = -1;
+        break;
+      }
+    }
+    return index;
   }
 
   private String assignContent()
