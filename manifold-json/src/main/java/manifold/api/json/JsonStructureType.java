@@ -17,6 +17,7 @@ import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
+import manifold.api.type.TypeReference;
 import manifold.util.JsonUtil;
 import manifold.util.ManStringUtil;
 
@@ -257,6 +258,10 @@ public class JsonStructureType extends JsonSchemaType
           sb.append( '\n' );
           String specificPropertyType = getConstituentQn( constituentType, type );
           addSourcePositionAnnotation( sb, indent + 2, key );
+          if( constituentType instanceof JsonSchemaType )
+          {
+            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+          }
           identifier = addActualNameAnnotation( sb, indent + 2, key, true );
           indent( sb, indent + 2 );
           String unionName = makeMemberIdentifier( constituentType );
@@ -264,6 +269,10 @@ public class JsonStructureType extends JsonSchemaType
           if( mutable )
           {
             addSourcePositionAnnotation( sb, indent + 2, key );
+            if( constituentType instanceof JsonSchemaType )
+            {
+              addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+            }
             addActualNameAnnotation( sb, indent + 2, key, true );
             indent( sb, indent + 2 );
             sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " $value);\n" );
@@ -315,6 +324,14 @@ public class JsonStructureType extends JsonSchemaType
       qn = getConstituentQn( constituentType.getParent() ) + '.';
     }
     return qn + constituentType.getIdentifier();
+  }
+  private IJsonType getConstituentQnComponent( IJsonType constituentType )
+  {
+    if( constituentType instanceof JsonListType )
+    {
+      return getConstituentQnComponent( ((JsonListType)constituentType).getComponentType() );
+    }
+    return constituentType;
   }
 
   private void renderFileField( StringBuilder sb, int indent )
@@ -386,6 +403,13 @@ public class JsonStructureType extends JsonSchemaType
       .addArgument( "length", int.class, name.length() );
     annotation.render( sb, indent );
     return true;
+  }
+
+  private void addTypeReferenceAnnotation( StringBuilder sb, int indent, JsonSchemaType type )
+  {
+    SrcAnnotationExpression annotation = new SrcAnnotationExpression( TypeReference.class.getName() )
+      .addArgument( "value", String.class, type.getIdentifier() );
+    annotation.render( sb, indent );
   }
 
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )
