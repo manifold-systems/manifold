@@ -34,11 +34,9 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errrorHandler )
+  protected String produce( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make();
-    //## todo: use errorhandler(), look at JsonImplSourceProvider
-    String str = srcClass.render(new StringBuilder(), 0).toString();
-    return str;
+    SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make( errorHandler );
+    return srcClass.render( new StringBuilder(), 0).toString();
   }
 }

@@ -351,7 +351,7 @@ public class Parser
   }
 
   private void error(String errorMsg) {
-    _programNode.addError(new Error(errorMsg));
+    _programNode.addError(errorMsg, currToken());
   }
 
   /*Match single character punctuation*/

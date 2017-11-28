@@ -3,26 +3,21 @@ package manifold.js.parser.tree;
 
 import java.util.LinkedList;
 import java.util.List;
+import manifold.js.parser.Tokenizer;
 
 public class ProgramNode extends Node
 {
-  private List<Error> _errorList;
+  private List<ParseError> _errorList;
 
-  public void addError(Error error) {
-    _errorList.add(error);
+  public void addError( String msg, Tokenizer.Token token ) {
+    _errorList.add(new ParseError(msg, token));
   }
 
   public int errorCount() {
     return _errorList.size();
   }
 
-  public List<Error> getErrorList() { return _errorList; }
-
-  public void printErrors() {
-    for (Error error : _errorList) {
-      System.out.println(error.toString());
-    }
-  }
+  public List<ParseError> getErrorList() { return _errorList; }
 
   public ProgramNode()
   {
