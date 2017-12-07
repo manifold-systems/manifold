@@ -59,11 +59,11 @@ class ArrayTransformer
     IJsonType componentType = null;
     Object value = _jsonObj.get( JSCH_ITEMS );
     Object items;
-    Token token = null;
+    Token[] tokens = null;
     if( value instanceof Pair )
     {
       items = ((Pair)value).getSecond();
-      token = (Token)((Pair)value).getFirst();
+      tokens = (Token[])((Pair)value).getFirst();
     }
     else
     {
@@ -91,7 +91,7 @@ class ArrayTransformer
     }
     else
     {
-      _type.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Expecting '{' or '[' for object or array to contain array component type" ) );
+      _type.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null, "Expecting '{' or '[' for object or array to contain array component type" ) );
       componentType = new ErrantType( _type.getFile(), "Errant" );
     }
     _type.setComponentType( componentType );

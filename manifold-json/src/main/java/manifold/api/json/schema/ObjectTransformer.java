@@ -75,7 +75,7 @@ class ObjectTransformer
         Bindings bindings;
         if( value instanceof Pair )
         {
-          token = (Token)((Pair)value).getFirst();
+          token = ((Token[])((Pair)value).getFirst())[0];
           bindings = (Bindings)((Pair)value).getSecond();
         }
         else

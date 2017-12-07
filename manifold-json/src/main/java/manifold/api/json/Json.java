@@ -140,7 +140,7 @@ public class Json
           Token token = null;
           if( value instanceof Pair )
           {
-            token = (Token)((Pair)value).getFirst();
+            token = ((Token[])((Pair)value).getFirst())[0];
           }
           IJsonType memberType = transformJsonObject( key, (JsonSchemaType)type, value );
           if( memberType != null )

@@ -11,7 +11,7 @@ public class IllegalSchemaTypeName extends IllegalArgumentException
 
   IllegalSchemaTypeName( String typeName, Token token )
   {
-    super( typeName );
+    super( "Unrecognized type: " + typeName );
     _typeName = typeName;
     _token = token;
   }

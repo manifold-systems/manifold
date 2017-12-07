@@ -122,7 +122,7 @@ public class JsonSchemaTransformer
     if( value instanceof Pair )
     {
       id = (String)((Pair)value).getSecond();
-      token = (Token)((Pair)value).getFirst();
+      token = ((Token[])((Pair)value).getFirst())[1];
     }
     else
     {
@@ -268,7 +268,7 @@ public class JsonSchemaTransformer
     cacheByFqn( definitionsHolder );
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
     {
-      Token token = null;
+      Token[] tokens = null;
       try
       {
         String name = entry.getKey();
@@ -277,22 +277,22 @@ public class JsonSchemaTransformer
         if( value instanceof Pair )
         {
           bindings = (Bindings)((Pair)value).getSecond();
-          token = (Token)((Pair)value).getFirst();
+          tokens = (Token[])((Pair)value).getFirst();
         }
         else
         {
           bindings = (Bindings)value;
         }
         IJsonType type = transformType( definitionsHolder, enclosing, name, bindings );
-        if( token != null && type instanceof JsonStructureType )
+        if( tokens != null && type instanceof JsonStructureType )
         {
-          ((JsonStructureType)type).setToken( token );
+          ((JsonStructureType)type).setToken( tokens[0] );
         }
         result.add( type );
       }
       catch( Exception e )
       {
-        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, e.getMessage() ) );
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null, e.getMessage() ) );
       }
     }
     return result;
@@ -361,17 +361,17 @@ public class JsonSchemaTransformer
     }
 
     String id;
-    Token token = null;
+    Token[] tokens = null;
     if( value instanceof Pair )
     {
       id = (String)((Pair)value).getSecond();
-      token = (Token)((Pair)value).getFirst();
+      tokens = (Token[])((Pair)value).getFirst();
     }
     else
     {
       id = (String)value;
     }
-    cacheById( parent, type, id, token );
+    cacheById( parent, type, id, tokens != null ? tokens[1] : null );
   }
   private void cacheById( IJsonParentType parent, IJsonType type, String id, Token token )
   {
@@ -408,7 +408,7 @@ public class JsonSchemaTransformer
     if( value instanceof Pair )
     {
       type = (String)((Pair)value).getSecond();
-      token = (Token)((Pair)value).getFirst();
+      token = ((Token[])((Pair)value).getFirst())[1];
     }
     else
     {
@@ -431,7 +431,7 @@ public class JsonSchemaTransformer
         Object refValue = jsonObj.get( JSCH_REF );
         if( refValue instanceof Pair )
         {
-          token = (Token)((Pair)refValue).getFirst();
+          token = ((Token[])((Pair)refValue).getFirst())[0];
         }
         refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'$ref' not allowed at root level" ) );
         result = refParent;
@@ -536,7 +536,7 @@ public class JsonSchemaTransformer
       Token token = null;
       if( value instanceof Pair )
       {
-        token = (Token)((Pair)value).getFirst();
+        token = ((Token[])((Pair)value).getFirst())[1];
       }
 
       for( JsonIssue issue: ((ErrantType)result).getIssues() )
@@ -752,7 +752,7 @@ public class JsonSchemaTransformer
     if( value instanceof Pair )
     {
       ref = (String)((Pair)value).getSecond();
-      token = (Token)((Pair)value).getFirst();
+      token = ((Token[])((Pair)value).getFirst())[1];
     }
     else
     {

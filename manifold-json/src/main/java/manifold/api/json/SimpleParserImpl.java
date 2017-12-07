@@ -109,12 +109,13 @@ final class SimpleParserImpl
   // member = string ":" value.
   private void parseMember( Bindings map )
   {
-    Token token = _token;
+    Token keyToken = _token;
     String key = _token.getString();
     check( TokenType.STRING, "a string" );
     check( TokenType.COLON, ":" );
+    Token valueToken = _token;
     Object val = parseValue();
-    map.put( key, _withTokens ? new Pair<>( token, val ) : val );
+    map.put( key, _withTokens ? new Pair<>( new Token[] {keyToken, valueToken}, val ) : val );
   }
 
   // value = object | array | number | string | "true" | "false" | "null" .

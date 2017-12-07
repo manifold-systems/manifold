@@ -33,6 +33,7 @@ class JsonModel extends AbstractSingleFileModel
 
   private void init()
   {
+    _issues = null;
     Bindings bindings;
     try
     {
