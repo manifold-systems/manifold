@@ -1,0 +1,45 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk
+      
+    environment:
+      MAVEN_OPTS: -Xmx1g
+      TERM: dumb
+      TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+    branches:
+      ignore:
+        - /rel\/.*/
+    
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "pom.xml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: 
+          name: Run tests
+          command: mvn test -B
+      - run:
+          name: Create test metadata folder
+          command: sudo mkdir -p ~/junit/
+      - run:
+          name: Collect test metadata
+          command: sudo find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+      - run:
+          name: Collect test stdout
+          command: sudo find . -type f -regex ".*/target/surefire-reports/.*-output.txt" -exec cp {} ~/junit/ \;
+      - deploy:
+          command: ./ci_scripts/deploy_snapshot.sh
+      - store_artifacts:
+          path: ~/junit
+      - store_test_results:
+          path: ~/junit
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: v1-dependencies-{{ checksum "pom.xml" }}
