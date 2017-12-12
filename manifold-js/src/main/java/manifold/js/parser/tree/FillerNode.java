@@ -1,7 +1,7 @@
 package manifold.js.parser.tree;
 
+import manifold.js.parser.Token;
 import manifold.js.parser.TokenType;
-import manifold.js.parser.Tokenizer;
 
 import java.util.LinkedList;
 
@@ -10,7 +10,7 @@ public class FillerNode extends Node
 {
 
   /*Either consists of a list of tokens or just a string of concatenated tokens*/
-  private LinkedList<Tokenizer.Token> _tokens;
+  private LinkedList<Token> _tokens;
   private String _content;
   boolean _inOverrideFunction;
 
@@ -33,16 +33,16 @@ public class FillerNode extends Node
     _content = content;
   }
 
-  public void concatToken(Tokenizer.Token token) {
+  public void concatToken(Token token) {
     _tokens.add(token);
   }
 
-  public Tokenizer.Token removeLastToken() {
+  public Token removeLastToken() {
     return _tokens.removeLast();
   }
 
-  public Tokenizer.Token removeLastNonWhitespaceToken() {
-    Tokenizer.Token toke = _tokens.removeLast();
+  public Token removeLastNonWhitespaceToken() {
+    Token toke = _tokens.removeLast();
     while (toke.getType().equals(TokenType.WHITESPACE)) {
       toke = _tokens.removeLast();
     }
@@ -54,7 +54,7 @@ public class FillerNode extends Node
   {
     if (_content != null) return _content;
     StringBuilder code = new StringBuilder();
-    for (Tokenizer.Token token : _tokens) {
+    for (Token token : _tokens) {
       //Replace super with Java.super(_superClassObject) to support java-style super
       if (token.getType() == TokenType.KEYWORD && token.getValue().equals("super")) {
         //needs "this._superClassObject" to reference super if not function does not override

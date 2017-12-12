@@ -26,6 +26,12 @@ public class JavascriptClass {
         ClassNode classNode = programNode.getFirstChild(ClassNode.class);
 
         SrcClass clazz = new SrcClass(fqn, SrcClass.Kind.Class);
+        clazz.addAnnotation(
+          new SrcAnnotationExpression( SourcePosition.class )
+            .addArgument( "url", String.class, programNode.getUrl().toString() )
+            .addArgument( "feature", String.class, ManClassUtil.getShortClassName( fqn ) )
+            .addArgument( "offset", int.class, classNode.getStart().getOffset() )
+            .addArgument( "length", int.class, classNode.getEnd().getOffset() - classNode.getStart().getOffset() ) );
 
         String superClass = classNode.getSuperClass();
         if (superClass != null) {
@@ -63,7 +69,15 @@ public class JavascriptClass {
                 ctor.addParam(srcParameter);
             }
             srcParameters = parameters.toParamList();
+
+            ctor.addAnnotation(
+              new SrcAnnotationExpression( SourcePosition.class )
+                .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
+                .addArgument( "feature", String.class, "constructor" )
+                .addArgument( "offset", int.class, constructor.getStart().getOffset() )
+                .addArgument( "length", int.class, constructor.getEnd().getOffset() - constructor.getStart().getOffset() ) );
         }
+
 
         //impl
         ctor.body(new SrcStatementBlock()
@@ -80,6 +94,12 @@ public class JavascriptClass {
                     .name(node.getName())
                     .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
                     .returns(node.getReturnType());
+            srcMethod.addAnnotation(
+              new SrcAnnotationExpression( SourcePosition.class )
+                .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
+                .addArgument( "feature", String.class, node.getName() )
+                .addArgument( "offset", int.class, node.getStart().getOffset() )
+                .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
 
             // params
             ParameterNode parameters = node.getFirstChild(ParameterNode.class);
@@ -113,6 +133,13 @@ public class JavascriptClass {
                   .addParam("val", Object.class)
                   .returns("void");
 
+                setter.addAnnotation(
+                  new SrcAnnotationExpression( SourcePosition.class )
+                    .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
+                    .addArgument( "feature", String.class, node.getName() )
+                    .addArgument( "offset", int.class, node.getStart().getOffset() )
+                    .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
+
                 //impl
                 if (node.isStatic()) setter.body(new SrcStatementBlock()
                   .addStatement(
@@ -128,6 +155,13 @@ public class JavascriptClass {
                   .name("get" + capitalizedName)
                   .modifiers(Modifier.PUBLIC | (node.isStatic() ? Modifier.STATIC : 0))
                   .returns(node.getReturnType());
+
+                getter.addAnnotation(
+                  new SrcAnnotationExpression( SourcePosition.class )
+                    .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
+                    .addArgument( "feature", String.class, node.getName() )
+                    .addArgument( "offset", int.class, node.getStart().getOffset() )
+                    .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
 
                 //impl
                 if (node.isStatic()) getter.body(new SrcStatementBlock()

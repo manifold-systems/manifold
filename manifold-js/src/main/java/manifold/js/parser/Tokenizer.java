@@ -1,89 +1,42 @@
 package manifold.js.parser;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
+import manifold.api.fs.IFile;
+import manifold.api.type.ResourceFileTypeManifold;
+
 
 public class Tokenizer
 {
-  public static class Token {
-    private int _lineNumber;
-    private int _col;
-    private int _offset;
-    private TokenType _type;
-    private String _val;
-    private String _errorMsg;
-
-    public Token(TokenType type, String val) {
-      _type = type;
-      _val = val;
-    }
-
-    public Token(TokenType type, String val, String errorMsg) {
-      _type = type;
-      _val = val;
-      _errorMsg = errorMsg;
-    }
-
-    public Token(TokenType type, String val, int lineNumber, int col, int offset) {
-      _type = type;
-      _val = val;
-      _lineNumber = lineNumber;
-      _col = col;
-      _offset = offset;
-    }
-
-    public TokenType getType() {
-      return _type;
-    }
-
-    public String getValue() {
-      return _val;
-    }
-
-    public String getErrorMsg() {
-      return _errorMsg;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof Token)) return false;
-      Token token = (Token) obj;
-      return _type == token.getType() && _val.equals(token.getValue());
-    }
-
-    @Override
-    public String toString() {
-      return String.format("type: %s val: %s pos: %d:%d:%d\n", _type, _val, _lineNumber, _col, _offset) ;
-    }
-
-    public int getLineNumber() {
-      return _lineNumber;
-    }
-
-    public int getOffset() {
-      return _offset;
-    }
-
-    public int getCol() {
-      return _col;
-    }
-  }
-
+  private URL _url;
   private int _bLineNumber, _bCol, _bOffset; //Keeps track of beginning position of tokens
   private int _lineNumber, _col, _offset; //Keeps track of current position of tokenizer
-  private BufferedReader _reader;
+  private String _content;
   private char _ch;
 
-
-  public Tokenizer(String text) {
-    this(new BufferedReader(new StringReader(text)));
+  public Tokenizer( IFile file )
+  {
+    try
+    {
+      _url = file.toURI().toURL();
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    String content = ResourceFileTypeManifold.getContent( file );
+    init( content );
   }
 
-  public Tokenizer(BufferedReader reader) {
-    _reader = reader;
+  Tokenizer( String subtext )
+  {
+    init( subtext );
+  }
+
+  private void init( String content ) {
+    _content = content.replace( "\r\n", "\n" );
     //Line number and col are 1 indexed; offset is 0 indexed (nextchar increments col and offset)
     _lineNumber = 1;
     _col = 0;
@@ -91,7 +44,12 @@ public class Tokenizer
     nextChar();
   }
 
-  public Token nextNonWhiteSpace() {
+  URL getUrl()
+  {
+    return _url;
+  }
+
+  Token nextNonWhiteSpace() {
     Token tok = next();
     while (tok.getType() == TokenType.WHITESPACE) {
       tok = next();
@@ -385,26 +343,20 @@ public class Tokenizer
   //========================================================================================
 
   //Returns the next character in the stream without updating _ch
-  protected char peek() {
-    char ahead = '\0';
-    try {
-      _reader.mark(1);
-      ahead = (char) _reader.read();
-      _reader.reset();
-    } catch (IOException e) {
-      _ch = (char)-1; //go to EOF on exception
-    }
-    return ahead;
+  char peek() {
+    int next = 1 + _offset;
+    return next >= _content.length() ? '\0' : _content.charAt( next );
   }
 
-  protected void nextChar() {
-    try {
-      _ch = (char) _reader.read();
-    } catch (IOException e){
-      _ch = (char) -1; //go to EOF on exception
+  void nextChar() {
+    if( _offset+1 >= _content.length() )
+    {
+      _offset = _content.length();
+      _ch = (char)-1;
+      return;
     }
 
-    _offset++;
+    _ch = _content.charAt( ++_offset );
     _col++;
     if (_ch == '\n') {
       _col = 0;
@@ -420,11 +372,11 @@ public class Tokenizer
   }
 
 
-  protected char currChar() {
+  char currChar() {
     return _ch;
   }
 
-  protected Token newToken(TokenType type, String val) {
+  Token newToken(TokenType type, String val) {
     return new Token(type, val, _bLineNumber, _bCol, _bOffset);
   }
 
@@ -433,7 +385,7 @@ public class Tokenizer
   }
 
 
-  protected boolean reachedEOF() {
+  boolean reachedEOF() {
     return _ch == (char) -1;
   }
 

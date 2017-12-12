@@ -7,7 +7,7 @@ public class ClassFunctionNode extends FunctionNode
   private String _className;
   private Boolean _isStatic = false;
   private Boolean _isOverride = false;
-  private String _returnType = "dynamic.Dynamic";
+  private String _returnType = "Object";
 
   public ClassFunctionNode(String name )
   {

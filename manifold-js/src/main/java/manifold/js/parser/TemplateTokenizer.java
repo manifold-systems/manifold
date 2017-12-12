@@ -2,6 +2,7 @@ package manifold.js.parser;
 
 import java.util.HashMap;
 import java.util.Stack;
+import manifold.api.fs.IFile;
 
 public class TemplateTokenizer extends Tokenizer {
 
@@ -12,8 +13,18 @@ public class TemplateTokenizer extends Tokenizer {
   private HashMap <String, String> puncEnterExitMap; //maps enter punctuation to exit punctuation (ex: "${" : "}")
   private Stack<String> curlyStack; //used to match curlies when exiting an expression
 
-  public TemplateTokenizer(String source, boolean isJST) {
-    super(source);
+  public TemplateTokenizer( IFile file, boolean isJST ) {
+    super(file);
+    init( isJST );
+  }
+
+  TemplateTokenizer( String subtext, boolean isJST ) {
+    super( subtext );
+    init( isJST );
+  }
+
+  private void init( boolean isJST )
+  {
     _isJST = isJST;
     inRawString = true;
     inStatementOrExpression = false;

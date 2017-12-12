@@ -1,6 +1,6 @@
 package manifold.js.parser.tree;
 
-import manifold.js.parser.Tokenizer;
+import manifold.js.parser.Token;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -12,14 +12,25 @@ import java.util.List;
 public class Node
 {
   private String _name;
-  Tokenizer.Token _start;
-  Tokenizer.Token _end;
-  List<Node> _children;
+  private Token _start;
+  private Token _end;
+  private List<Node> _children;
+  private Node _parent;
 
   public Node( String name)
   {
     _name = name;
     _children = new ArrayList<>();
+  }
+
+  public Node getParent()
+  {
+    return _parent;
+  }
+
+  public ProgramNode getProgramNode()
+  {
+    return _parent.getProgramNode();
   }
 
   public List<Node> getChildren() {
@@ -51,10 +62,12 @@ public class Node
 
   public void addChild(Node n) {
     _children.add( n );
+    n._parent = this;
   }
 
   public Node withChild(Node n) {
     _children.add( n );
+    n._parent = this;
     return this;
   }
 
@@ -63,18 +76,18 @@ public class Node
     return _name;
   }
 
-  public void setTokens( Tokenizer.Token start, Tokenizer.Token end )
+  public void setTokens( Token start, Token end )
   {
     _start = start;
     _end = end;
   }
 
-  public Tokenizer.Token getStart()
+  public Token getStart()
   {
     return _start;
   }
 
-  public Tokenizer.Token getEnd()
+  public Token getEnd()
   {
     return _end;
   }

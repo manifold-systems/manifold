@@ -1,6 +1,8 @@
 package manifold.js;
 
+import manifold.api.fs.IFile;
 import manifold.api.gen.*;
+import manifold.internal.host.ManifoldHost;
 import manifold.js.parser.TemplateParser;
 import manifold.js.parser.TemplateTokenizer;
 import manifold.js.parser.tree.ParameterNode;
@@ -10,7 +12,6 @@ import manifold.js.parser.tree.template.RawStringNode;
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.InputStream;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
@@ -85,10 +86,9 @@ public class JavascriptTemplate {
     return (JSTNode) parser.parse();
   }
 
-  public static String loadJSTForName(String name) {
+  private static IFile loadJSTForName( String name ) {
     String file = "/" + name.replace(".", "/") + ".jst";
-    InputStream resourceAsStream = JavascriptCodeGen.class.getResourceAsStream(file);
-    return Util.loadContent(resourceAsStream);
+    return ManifoldHost.getFileSystem().getIFile( JavascriptCodeGen.class.getResource(file) );
   }
 
 }

@@ -1,16 +1,36 @@
 package manifold.js.parser.tree;
 
 
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
-import manifold.js.parser.Tokenizer;
+import manifold.js.parser.Token;
 
 public class ProgramNode extends Node
 {
   private List<ParseError> _errorList;
+  private URL _url;
 
-  public void addError( String msg, Tokenizer.Token token ) {
+  public ProgramNode( URL url )
+  {
+    super( null );
+    _url = url;
+    _errorList = new LinkedList<>();
+  }
+
+  public void addError( String msg, Token token ) {
     _errorList.add(new ParseError(msg, token));
+  }
+
+  @Override
+  public ProgramNode getProgramNode()
+  {
+    return this;
+  }
+
+  public URL getUrl()
+  {
+    return _url;
   }
 
   public int errorCount() {
@@ -18,12 +38,6 @@ public class ProgramNode extends Node
   }
 
   public List<ParseError> getErrorList() { return _errorList; }
-
-  public ProgramNode()
-  {
-    super( null );
-    _errorList = new LinkedList<>();
-  }
 
   /*Returns the full package name of imported class (ex. java.util.ArrayList)
    *from class name (ex. ArrayList)*/
@@ -40,5 +54,4 @@ public class ProgramNode extends Node
     String code = super.genCode();
     return code;
   }
-
 }

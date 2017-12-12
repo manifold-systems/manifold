@@ -34,7 +34,7 @@ public class TemplateParser extends Parser
 
   private Node parseTemplateStatement() {
     StatementNode statementNode = new StatementNode();
-    Tokenizer.Token startToken = currToken();
+    Token startToken = currToken();
     skip(matchTemplatePunc( "<%"));
     statementNode.addChild(parseFillerUntil(() -> matchTemplatePunc("%>")));
     expect(matchTemplatePunc("%>"));
@@ -45,7 +45,7 @@ public class TemplateParser extends Parser
 
   private Node parseTemplateExpression() {
     ExpressionNode expressionNode = new ExpressionNode();
-    Tokenizer.Token startToken = currToken();
+    Token startToken = currToken();
     //Expressions either start with <% and and with %>; or start with ${ and end with }
     String exitString = matchTemplatePunc( "<%=") ? "%>" : "}";
     skip(matchTemplatePunc( "<%=") || matchTemplatePunc( "${"));

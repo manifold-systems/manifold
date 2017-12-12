@@ -1,7 +1,9 @@
 package manifold.js;
 
+import manifold.api.fs.IFile;
 import manifold.api.gen.*;
 import manifold.api.type.SourcePosition;
+import manifold.internal.host.ManifoldHost;
 import manifold.js.parser.Parser;
 import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.FunctionNode;
@@ -13,7 +15,6 @@ import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import java.io.InputStream;
 import java.lang.reflect.Modifier;
 
 import static manifold.js.Util.safe;
@@ -81,9 +82,8 @@ public class JavascriptProgram {
     return nashorn;
   }
 
-  static String loadSrcForName(String name) {
+  static IFile loadSrcForName( String name ) {
     String file = "/" + name.replace(".", "/") + ".js";
-    InputStream resourceAsStream = JavascriptCodeGen.class.getResourceAsStream(file);
-    return Util.loadContent(resourceAsStream);
+    return ManifoldHost.getFileSystem().getIFile( JavascriptCodeGen.class.getResource(file) );
   }
 }

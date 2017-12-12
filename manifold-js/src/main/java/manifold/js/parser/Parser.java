@@ -7,13 +7,13 @@ public class Parser
   private ClassNode _classNode;
   private ProgramNode _programNode;
   private Tokenizer _tokenizer;
-  private Tokenizer.Token _currentToken, _nextToken;
+  private Token _currentToken, _nextToken;
   private ParseContext _context;
 
   //Constructor sets the src from which the parser reads
   public Parser(Tokenizer tokenizer){
     _tokenizer = tokenizer;
-    _programNode = new ProgramNode();
+    _programNode = new ProgramNode(tokenizer.getUrl());
     _context = new ParseContext();
   }
 
@@ -41,7 +41,7 @@ public class Parser
     {
       //parse class name
       nextToken();
-      Tokenizer.Token className = _currentToken;
+      Token className = _currentToken;
       skip(match(TokenType.IDENTIFIER));
       _classNode = new ClassNode( className.getValue() );
       _programNode.addChild(_classNode);
@@ -65,7 +65,7 @@ public class Parser
       skip(match('{'));
       parseClassBody(className.getValue());
       skip(match('}'));
-      Tokenizer.Token end = _currentToken;
+      Token end = _currentToken;
       _classNode.setTokens(className, end);
     }
   }
@@ -79,7 +79,7 @@ public class Parser
 
 
   protected ImportNode parseImport() {
-    Tokenizer.Token start = _currentToken;
+    Token start = _currentToken;
     skip(matchKeyword("import"));
     StringBuilder packageName = new StringBuilder();
     Matcher matcher = () -> match(TokenType.IDENTIFIER);
@@ -100,7 +100,7 @@ public class Parser
       if (matchClassKeyword("constructor")) {
         _classNode.addChild(parseConstructor(className));
       } else if (matchClassKeyword("static")) { //properties and functions can both be static
-        Tokenizer.Token staticToken = _currentToken;
+        Token staticToken = _currentToken;
         nextToken();
         if (matchClassKeyword("get") || matchClassKeyword("set")) {
           _classNode.addChild(parseStaticProperty(className, staticToken));
@@ -120,7 +120,7 @@ public class Parser
   }
 
   private ConstructorNode parseConstructor(String className) {
-    Tokenizer.Token start = _currentToken; //'constructor'
+    Token start = _currentToken; //'constructor'
     skip(matchClassKeyword("constructor"));
 
     ConstructorNode constructorNode = new ConstructorNode(className);
@@ -131,7 +131,7 @@ public class Parser
     return constructorNode;
   }
 
-  private ClassFunctionNode parseStaticFunction(String className, Tokenizer.Token staticToken) {
+  private ClassFunctionNode parseStaticFunction(String className, Token staticToken) {
     ClassFunctionNode functionNode = (ClassFunctionNode) parseFunction(className);
     functionNode.setTokens(staticToken, functionNode.getEnd());
     functionNode.setStatic(true);
@@ -148,7 +148,7 @@ public class Parser
   }
 
   private FunctionNode parseFunction(String className) {
-    Tokenizer.Token start = _currentToken; //Name of function
+    Token start = _currentToken; //Name of function
     String functionName = start.getValue();
     skip(match(TokenType.IDENTIFIER));
 
@@ -167,7 +167,7 @@ public class Parser
 
   }
 
-  private PropertyNode parseStaticProperty(String className, Tokenizer.Token staticToken) {
+  private PropertyNode parseStaticProperty(String className, Token staticToken) {
     PropertyNode propertyNode = parseProperty(className);
     propertyNode.setTokens(staticToken, propertyNode.getEnd());
     propertyNode.setStatic(true);
@@ -176,9 +176,9 @@ public class Parser
 
 
   private PropertyNode parseProperty(String className) {
-    Tokenizer.Token start = _currentToken; //'get' or 'set'
     boolean isSetter = matchClassKeyword("set");
     skip(matchClassKeyword("get") || matchClassKeyword("set"));
+    Token start = _currentToken; // property identifier
     String functionName = _currentToken.getValue();
     skip(match(TokenType.IDENTIFIER));
 
@@ -394,14 +394,14 @@ public class Parser
   }
 
 
-  private Tokenizer.Token peekToken() {
+  private Token peekToken() {
     if (_nextToken == null || _nextToken.getOffset() <= _currentToken.getOffset()) {
       _nextToken = _tokenizer.nextNonWhiteSpace();
     }
     return _nextToken;
   }
 
-  protected Tokenizer.Token currToken() {
+  protected Token currToken() {
     return _currentToken;
   }
 

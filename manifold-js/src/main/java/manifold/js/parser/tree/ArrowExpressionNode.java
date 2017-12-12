@@ -1,6 +1,6 @@
 package manifold.js.parser.tree;
 
-import manifold.js.parser.Tokenizer;
+import manifold.js.parser.Token;
 
 public class ArrowExpressionNode extends Node
 {
@@ -12,7 +12,7 @@ public class ArrowExpressionNode extends Node
   }
 
   public void extractParams(FillerNode fillerNode) {
-    Tokenizer.Token backToke = fillerNode.removeLastNonWhitespaceToken();
+    Token backToke = fillerNode.removeLastNonWhitespaceToken();
     //If prev token is not ')', then there is only one parameter
     if (!backToke.getValue().equals(")")) {
       _params = backToke.getValue();
