@@ -170,7 +170,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return sps;
   }
 
-  protected void initializeTypeManifolds()
+  public void initializeTypeManifolds()
   {
     if( _typeManifolds != null )
     {
