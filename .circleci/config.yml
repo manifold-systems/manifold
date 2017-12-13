@@ -39,6 +39,9 @@ jobs:
           path: ~/junit
       - store_test_results:
           path: ~/junit
+      - run:
+          name: Trigger IDE tests
+          command: curl -X POST https://circleci.com/api/v1.1/project/github/manifold-systems/manifold-ij?circle-token=${MANIFOLD_IJ_API_TOKEN}
 
       - save_cache:
           paths:
