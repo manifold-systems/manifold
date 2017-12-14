@@ -42,8 +42,11 @@ jobs:
       - run:
           name: Trigger IDE tests
           command: curl -X POST https://circleci.com/api/v1.1/project/github/manifold-systems/manifold-ij?circle-token=${MANIFOLD_IJ_API_TOKEN}
-
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-{{ checksum "pom.xml" }}
+
+notify:
+  webhooks:
+    - url: $TEST_NOTIFICATION_URL
