@@ -87,7 +87,7 @@ public class JsonTest extends TestCase
     List<OneOf_TopLevel_Array.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
     assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
     assertSame( topLevelArrayOption0, oneOf.getTopLevelArray() );
-    
+
     List<OneOf_TopLevel_Array.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.Option1.create() );
     oneOf.setTopLevelArrayAsOption1( topLevelArrayOption1 );
     List<OneOf_TopLevel_Array.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
@@ -107,18 +107,19 @@ public class JsonTest extends TestCase
     assertSame( shipping_address, all.getShipping_address() );
   }
 
-  public void testRef( String[] args )
+  public void testAllRef()
   {
     Junk junk = Junk.create();
     junk.setElem( Collections.singletonList( Junk.A.create() ) );
     Junk.A a = junk.getElem().get( 0 );
-    assertNotNull( a );
+    //assertNotNull( a );
 
     Junk.B b = Junk.B.create();
     b.setX( Junk.A.create() );
     b.getX().setFoo( "hi" );
     junk.setDing( Collections.singletonList( b ) );
-    assertEquals( "hi", junk.getDing() );
+    System.out.println( junk.getDing() );
+    assertEquals( "hi", junk.getDing().get( 0 ).getX().getFoo() );
 
     Outside.Alpha alpha = Outside.Alpha.create();
     Outside outside = Outside.create();

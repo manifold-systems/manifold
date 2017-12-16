@@ -182,6 +182,8 @@ public class ExtensionTransformer extends TreeTranslator
 
     if( _tp.isGenerate() && !shouldProcessForGeneration() )
     {
+      eraseCompilerGeneratedCast( tree );
+
       // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
       return;
     }
@@ -192,6 +194,30 @@ public class ExtensionTransformer extends TreeTranslator
       tree.type = getObjectClass().type;
     }
     result = tree;
+  }
+
+  private void eraseCompilerGeneratedCast( JCTypeCast tree )
+  {
+    // the javac compiler generates casts e.g., for a generic call such as List#get()
+
+    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) && !isConstructProxyCall( tree.getExpression() ) )
+    {
+      tree.type = getObjectClass().type;
+      TreeMaker make = _tp.getTreeMaker();
+      tree.clazz = make.Type( getObjectClass().type );
+    }
+  }
+
+  private boolean isConstructProxyCall( JCExpression expression )
+  {
+    if( expression instanceof JCTree.JCMethodInvocation )
+    {
+      // don't erase cast if we generated it here e.g.., for structural call cast on constructProxy
+
+      JCExpression meth = ((JCTree.JCMethodInvocation)expression).meth;
+      return meth instanceof JCTree.JCFieldAccess && ((JCTree.JCFieldAccess)meth).getIdentifier().toString().equals( "constructProxy" );
+    }
+    return expression instanceof JCTypeCast && isConstructProxyCall( ((JCTypeCast)expression).getExpression() );
   }
 
   /**

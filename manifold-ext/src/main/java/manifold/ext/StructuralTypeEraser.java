@@ -102,6 +102,34 @@ class StructuralTypeEraser extends Types.UnaryVisitor<Type>
     return t;
   }
 
+//  @Override
+//  public Type visitMethodType( Type.MethodType mt, Void aVoid )
+//  {
+//    boolean erased = false;
+//    ArrayList<Type> paramTypes = new ArrayList<>();
+//    for( Type paramType: mt.getParameterTypes() )
+//    {
+//      Type param = visit( paramType );
+//      if( param != paramType )
+//      {
+//        erased = true;
+//      }
+//      paramTypes.add( param );
+//    }
+//    Type returnType = visit( mt.getReturnType() );
+//
+//    if( returnType != mt.getReturnType() )
+//    {
+//      erased = true;
+//    }
+//    if( erased )
+//    {
+//      List<Type> pt = List.from( paramTypes );
+//      mt = new Type.MethodType( pt, returnType, mt.getThrownTypes(), mt.asElement() );
+//    }
+//    return mt;
+//  }
+
   private Type eraseBound( Type t, Type bound )
   {
     if( bound == null || bound instanceof NoType )
