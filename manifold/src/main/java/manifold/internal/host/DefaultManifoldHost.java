@@ -159,7 +159,6 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )
   {
-    return Manifold.instance().getModule().getChildrenOfNamespace( packageName );
+    return ((SimpleModule)getCurrentModule()).getChildrenOfNamespace( packageName );
   }
-
 }

@@ -76,6 +76,11 @@ public class ManifoldHost
     return HOST;
   }
 
+  public static IManifoldHost instance()
+  {
+    return host();
+  }
+
   public static IFileSystem getFileSystem()
   {
     return host().getFileSystem();

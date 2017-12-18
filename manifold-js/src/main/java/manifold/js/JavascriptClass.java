@@ -41,13 +41,18 @@ public class JavascriptClass {
           .imports( SourcePosition.class );
 
         clazz.addField(new SrcField("ENGINE", ScriptEngine.class)
-                .modifiers(Modifier.STATIC)
-                .initializer(new SrcRawExpression(("JavascriptClass.init(\"" + fqn + "\")"))));
+                .modifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.VOLATILE)
+                .initializer(new SrcRawExpression(("null"))));
+
+        clazz.addField(new SrcField("TIMESTAMP", long.class)
+                .modifiers(Modifier.PRIVATE | Modifier.STATIC | Modifier.VOLATILE)
+                .initializer(new SrcRawExpression(("0"))));
 
 
         clazz.addField(new SrcField("_context", ScriptObjectMirror.class));
 
         addConstructor(clazz, classNode);
+        addUtilityMethods( clazz, classNode, fqn );
         addMethods(fqn, clazz, classNode);
         addProperties(fqn, clazz, classNode);
 
@@ -83,12 +88,45 @@ public class JavascriptClass {
         ctor.body(new SrcStatementBlock()
           .addStatement(
             new SrcRawStatement()
-              .rawText("_context = JavascriptClass.initInstance(ENGINE, \"" + classNode.getName() + "\"" + generateArgList(srcParameters) + ");")));
+              .rawText("_context = JavascriptClass.initInstance(getEngine(), \"" + classNode.getName() + "\"" + generateArgList(srcParameters) + ");")));
 
         clazz.addConstructor(ctor);
     }
 
-    private static void addMethods(String fqn, SrcClass clazz, ClassNode classNode) {
+  private static ThreadLocal<Long> uid = new ThreadLocal<>();
+  private static void addUtilityMethods( SrcClass clazz, ClassNode classNode, String fqn ) {
+    long timestamp = incUid();
+     SrcMethod m = new SrcMethod()
+      .name("getEngine")
+      .modifiers(Modifier.PRIVATE | Modifier.STATIC)
+      .returns( ScriptEngine.class )
+      .body( new SrcStatementBlock()
+        .addStatement(
+          new SrcRawStatement()
+            .rawText("if( " + timestamp + "L != TIMESTAMP ) {\n" +
+                     "      synchronized( " + classNode.getName() + ".class ) {\n" +
+                     "        if( " + timestamp + "L != TIMESTAMP ) {\n" +
+                     "          TIMESTAMP = " + timestamp + "L;\n" +
+                     "          ENGINE = JavascriptClass.init(\"" + fqn + "\");\n" +
+                     "        }\n" +
+                     "      }\n" +
+                     "    }\n" +
+                     "    return ENGINE;")));
+      clazz.addMethod(m);
+  }
+
+  private static long incUid()
+  {
+    Long id = uid.get();
+    if( id == null )
+    {
+      uid.set( id = 1L );
+    }
+    uid.set( ++id );
+    return id;
+  }
+
+  private static void addMethods(String fqn, SrcClass clazz, ClassNode classNode) {
         for (ClassFunctionNode node : classNode.getChildren(ClassFunctionNode.class)) {
             AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
                     .name(node.getName())
@@ -111,7 +149,7 @@ public class JavascriptClass {
             if (node.isStatic()) srcMethod.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
-                  .rawText( "return JavascriptClass.invokeStatic(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" + generateArgList( parameters.toParamList()) + ");")));
+                  .rawText( "return JavascriptClass.invokeStatic(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" + generateArgList( parameters.toParamList()) + ");")));
             else srcMethod.body(new SrcStatementBlock()
               .addStatement(
                 new SrcRawStatement()
@@ -144,7 +182,7 @@ public class JavascriptClass {
                 if (node.isStatic()) setter.body(new SrcStatementBlock()
                   .addStatement(
                     new SrcRawStatement()
-                      .rawText( "JavascriptClass.setStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
+                      .rawText( "JavascriptClass.setStaticProp(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);")));
                 else setter.body(new SrcStatementBlock()
                   .addStatement(
                     new SrcRawStatement()
@@ -167,7 +205,7 @@ public class JavascriptClass {
                 if (node.isStatic()) getter.body(new SrcStatementBlock()
                   .addStatement(
                     new SrcRawStatement()
-                      .rawText( "return JavascriptClass.getStaticProp(ENGINE, \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
+                      .rawText( "return JavascriptClass.getStaticProp(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");")));
                 else getter.body(new SrcStatementBlock()
                   .addStatement(
                     new SrcRawStatement()
