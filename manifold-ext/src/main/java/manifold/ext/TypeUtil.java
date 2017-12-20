@@ -12,7 +12,7 @@ public class TypeUtil
 {
   public static boolean isStructuralInterface( TypeProcessor tp, Symbol sym )
   {
-    if( !sym.isInterface() || !sym.hasAnnotations() )
+    if( sym == null || !sym.isInterface() || !sym.hasAnnotations() )
     {
       return false;
     }
