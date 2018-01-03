@@ -41,6 +41,7 @@ import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
+import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.Pair;
@@ -596,7 +597,7 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
           Types types = Types.instance( javacTask.getContext() );
           outer:
-          for( Symbol elem : extClassSym.members().getElements() )
+          for( Symbol elem : IDynamicJdk.instance().getMembers( extClassSym ) )
           {
             if( elem instanceof Symbol.MethodSymbol && elem.flatName().toString().equals( meth.sym.name.toString() ) )
             {
@@ -744,7 +745,7 @@ public class ExtensionTransformer extends TreeTranslator
   private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
   {
     Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
-    Iterable<Symbol> elems = classSymbol.members().getElementsByName( call );
+    Iterable<Symbol> elems = IDynamicJdk.instance().getMembersByName( classSymbol, call );
     for( Symbol s : elems )
     {
       if( s instanceof Symbol.MethodSymbol )
@@ -785,7 +786,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
-    return resolveMethod( pos, _tp.getContext(), _tp.getCompilationUnit(), name, qual, args );
+    return resolveMethod( pos, _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), name, qual, args );
   }
 
   private static Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Context ctx, JCTree.JCCompilationUnit compUnit, Name name, Type qual, List<Type> args )

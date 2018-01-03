@@ -166,7 +166,7 @@ public class UrlClassLoaderWrapper
 
     try
     {
-      Object urls = _getURLs._method.invoke( _getURLs._receiver );
+      Object urls = _getURLs._receiver == null ? null : _getURLs._method.invoke( _getURLs._receiver );
       urls = urls == null
              ? Collections.<URL>emptyList()
              : urls.getClass().isArray()

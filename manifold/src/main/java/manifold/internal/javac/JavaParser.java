@@ -145,6 +145,10 @@ public class JavaParser implements IJavaParser
     {
       initTypeProcessing( javacTask, Collections.singleton( "sample" ) );
       Iterable<? extends CompilationUnitTree> iterable = javacTask.parse();
+      if( errors.getBuffer().length() > 0 )
+      {
+        System.err.println( errors.getBuffer() );
+      }
       for( CompilationUnitTree x : iterable )
       {
         trees.add( x );

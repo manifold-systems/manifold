@@ -11,6 +11,7 @@ import java.util.Arrays;
 import javax.lang.model.type.NoType;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
+import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
@@ -330,7 +331,7 @@ public class StructuralTypeProxyGenerator
       return false;
     }
 
-    for( Symbol member : rootClassSymbol.members().getElements( e -> e.flatName().toString().equals( name ) ) )
+    for( Symbol member : IDynamicJdk.instance().getMembers( rootClassSymbol, e -> e.flatName().toString().equals( name ) ) )
     {
       Symbol.MethodSymbol methodSym = (Symbol.MethodSymbol)member;
       if( methodSym.getParameters().size() == paramCount )

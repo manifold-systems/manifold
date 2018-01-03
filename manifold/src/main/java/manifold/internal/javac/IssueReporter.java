@@ -4,10 +4,8 @@ import com.sun.tools.javac.tree.EndPosTable;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
-import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
-import javax.tools.JavaFileObject;
 import manifold.util.JavacDiagnostic;
 
 /**
@@ -26,10 +24,12 @@ public class IssueReporter<T> implements DiagnosticListener<T>
   {
     report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.NOTE, 0, 0, 0, msg ) );
   }
+
   public void reportWarning( String msg )
   {
     report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, msg ) );
   }
+
   public void reportError( String msg )
   {
     report( (Diagnostic<? extends T>)new JavacDiagnostic( null, Diagnostic.Kind.ERROR, 0, 0, 0, msg ) );
@@ -37,35 +37,7 @@ public class IssueReporter<T> implements DiagnosticListener<T>
 
   public void report( Diagnostic<? extends T> diagnostic )
   {
-    // Adapted from JavacMessager.printMessage.  Following same basic routine regarding use of Log
-
-    JavaFileObject oldSource = _issueLogger.useSource( (JavaFileObject)diagnostic.getSource() );
-    boolean oldMultipleErrors = _issueLogger.multipleErrors;
-    _issueLogger.multipleErrors = true;
-    try
-    {
-      switch( diagnostic.getKind() )
-      {
-        case ERROR:
-          _issueLogger.error( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
-          break;
-        case WARNING:
-          _issueLogger.warning( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
-          break;
-        case MANDATORY_WARNING:
-          _issueLogger.mandatoryWarning( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
-          break;
-        case NOTE:
-        case OTHER:
-          _issueLogger.note( new Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
-          break;
-      }
-    }
-    finally
-    {
-      _issueLogger.useSource( oldSource );
-      _issueLogger.multipleErrors = oldMultipleErrors;
-    }
+    IDynamicJdk.instance().report( _issueLogger, diagnostic );
   }
 
   static class Position implements JCDiagnostic.DiagnosticPosition

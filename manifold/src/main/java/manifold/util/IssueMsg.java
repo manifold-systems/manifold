@@ -12,13 +12,14 @@ public class IssueMsg
   private final String _msg;
 
   public IssueMsg( String msg )
-  {
+  {                              
     _msg = msg;
   }
 
   public String get( Object... args )
   {
     String msg = _msg;
+    
     for( int i = 0; i < args.length; i++ )
     {
       Object arg = args[i];

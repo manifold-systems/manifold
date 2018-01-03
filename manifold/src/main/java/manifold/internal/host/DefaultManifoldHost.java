@@ -22,6 +22,7 @@ import manifold.api.host.ITypeLoaderListener;
 import manifold.api.service.BaseService;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
+import manifold.internal.javac.JavacPlugin;
 
 /**
  */
@@ -51,7 +52,13 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
 
   public ClassLoader getActualClassLoader()
   {
-    return Thread.currentThread().getContextClassLoader();
+    if( JavacPlugin.instance() == null )
+    {
+      // runtime
+      return Thread.currentThread().getContextClassLoader();
+    }
+    // compile-time
+    return ManifoldHost.class.getClassLoader();
   }
 
   public void bootstrap( List<File> sourcepath, List<File> classpath )

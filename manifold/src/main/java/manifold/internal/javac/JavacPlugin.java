@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
@@ -11,6 +12,7 @@ import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -38,12 +40,27 @@ import manifold.internal.host.ManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
 import manifold.util.Pair;
+import sun.misc.Unsafe;
 
 /**
  */
 public class JavacPlugin implements Plugin, TaskListener
 {
   private static final String GOSU_SOURCE_FILES = "gosu.source.files";
+  private static Class<?> CLASSFINDER_CLASS = null;
+  public static final boolean IS_JAVA_8;
+  static {
+    try
+    {
+      // ClassFinder is new in Java 9, its presence indicates Java 9 or later
+      CLASSFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ClassFinder", false, ClassReader.class.getClassLoader() );
+      disableJava9IllegalAccessWarning();
+    }
+    catch( Throwable ignore )
+    {
+    }
+    IS_JAVA_8 = CLASSFINDER_CLASS == null;
+  }
   private static JavacPlugin INSTANCE;
 
   private Context _ctx;
@@ -78,8 +95,23 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (BasicJavacTask)task;
+    if( isCompilingCore() )
+    {
+      // Do not apply the plugin on Manifold core itself
+      // Note this can only happen during incremental compile when JavacPlugin.class was previously compiled and in
+      // the classpath but other parts of core manifold were changed and need compilation (the placeholder plugin is'nt
+      // used in this case).
+      JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Bypassing JavacPlugin during incremental compilation of Manifold core" );
+      return;
+    }
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  private boolean isCompilingCore()
+  {
+    String outputPath = deriveClassOutputPath();
+    return outputPath.contains( File.separatorChar + "manifold" + File.separatorChar + "target" + File.separatorChar );
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -167,9 +199,23 @@ public class JavacPlugin implements Plugin, TaskListener
 
     try
     {
-      Field field = ClassReader.class.getDeclaredField( "fileManager" );
-      field.setAccessible( true );
-      field.set( ClassReader.instance( getContext() ), _manFileManager );
+      Field field;
+      if( IS_JAVA_8 )
+      {
+        field = ClassReader.class.getDeclaredField( "fileManager" );
+        field.setAccessible( true );
+        field.set( ClassReader.instance( getContext() ), _manFileManager );
+      }
+      else
+      {
+        field = CLASSFINDER_CLASS.getDeclaredField( "fileManager" );
+        field.setAccessible( true );
+        field.set( CLASSFINDER_CLASS.getMethod( "instance", Context.class ).invoke( null, getContext() ), _manFileManager );
+
+        field = CLASSFINDER_CLASS.getDeclaredField( "preferSource" );
+        field.setAccessible( true );
+        field.set( CLASSFINDER_CLASS.getMethod( "instance", Context.class ).invoke( null, getContext() ), true );
+      }
 
       field = ClassWriter.class.getDeclaredField( "fileManager" );
       field.setAccessible( true );
@@ -234,7 +280,7 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       String ping = "__dummy__";
       //JavaFileObject classFile = _jpe.getFiler().createClassFile( ping );
-      JavaFileObject classFile = _fileManager.getJavaFileForOutput( StandardLocation.CLASS_OUTPUT, ping, JavaFileObject.Kind.CLASS, null );
+      JavaFileObject classFile = _javacTask.getContext().get( JavaFileManager.class ).getJavaFileForOutput( StandardLocation.CLASS_OUTPUT, ping, JavaFileObject.Kind.CLASS, null );
       if( !isPhysicalFile( classFile ) )
       {
         return "";
@@ -424,13 +470,14 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     if( !_initialized )
     {
-      ExpressionTree pkg = e.getCompilationUnit().getPackageName();
+      CompilationUnitTree compilationUnit = e.getCompilationUnit();
+      ExpressionTree pkg = compilationUnit.getPackageName();
       String packageQualifier = pkg == null ? "" : (pkg.toString() + '.');
-      for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
+      for( Tree classDecl : compilationUnit.getTypeDecls() )
       {
         if( classDecl instanceof JCTree.JCClassDecl )
         {
-          _javaInputFiles.add( new Pair<>( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName(), e.getCompilationUnit().getSourceFile() ) );
+          _javaInputFiles.add( new Pair<>( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName(), compilationUnit.getSourceFile() ) );
         }
       }
     }
@@ -456,5 +503,31 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     TreeTranslator visitor = new BootstrapInserter( this );
     tree.accept( visitor );
+  }
+
+  // Disable Java 9 warnings re "An illegal reflective access operation has occurred"
+  private static void disableJava9IllegalAccessWarning()
+  {
+    // runtime
+    disableJava9IllegalAccessWarning( JavacPlugin.class.getClassLoader() );
+    // compile-time
+    disableJava9IllegalAccessWarning( Thread.currentThread().getContextClassLoader() );
+  }
+  private static void disableJava9IllegalAccessWarning( ClassLoader cl )
+  {
+    try
+    {
+      Field theUnsafe = Unsafe.class.getDeclaredField( "theUnsafe" );
+      theUnsafe.setAccessible( true );
+      Unsafe u = (Unsafe)theUnsafe.get( null );
+
+      Class cls = Class.forName( "jdk.internal.module.IllegalAccessLogger", false, cl );
+      Field logger = cls.getDeclaredField( "logger" );
+      u.putObjectVolatile( cls, u.staticFieldOffset( logger ), null );
+    }
+    catch( Throwable e )
+    {
+      // ignore
+    }
   }
 }

@@ -2,8 +2,8 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Log;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Set;
@@ -77,11 +77,36 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     return fileManager.handleOption(current, remaining);
   }
 
-  public boolean hasLocation(Location location) {
-    return fileManager.hasLocation(location);
+  public boolean hasLocation(Location location)
+  {
+    if( JavacPlugin.IS_JAVA_8 )
+    {
+      return fileManager.hasLocation( location );
+    }
+
+    // Java 9 introduces JavacFileManager#getLocationAsPaths() for validation, but there is a bug in their code
+    // where it does not check for empty iterable, which is what we do here
+    boolean hasLocation = fileManager.hasLocation( location );
+    if( hasLocation )
+    {
+      try
+      {
+        Method getLocationAsPaths = JavacFileManager.class.getDeclaredMethod( "getLocationAsPaths", Location.class );
+        Iterable iter = (Iterable)getLocationAsPaths.invoke( this, location );
+        if( iter == null || !iter.iterator().hasNext() )
+        {
+          hasLocation = false;
+        }
+      }
+      catch( Exception e )
+      {
+        throw new RuntimeException( e );
+      }
+    }
+    return hasLocation;
   }
 
-  public int isSupportedOption(String option) {
+  public int isSupportedOption( String option) {
     return fileManager.isSupportedOption(option);
   }
 

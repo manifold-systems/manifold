@@ -39,13 +39,19 @@ public class TypeProcessor extends CompiledTypeProcessor
   @Override
   public void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter )
   {
+    if( IDynamicJdk.isInitializing() )
+    {
+      // avoid re-entry of dynamic jdk construction
+      return;
+    }
+
     for( ITypeManifold sp : ManifoldHost.getCurrentModule().getTypeManifolds() )
     {
       if( sp instanceof ITypeProcessor )
       {
         JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing: " + element.getQualifiedName() );
 
-        try
+        try  
         {
           ((ITypeProcessor)sp).process( element, this, issueReporter );
         }

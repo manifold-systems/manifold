@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
@@ -32,7 +33,7 @@ import manifold.util.JavacDiagnostic;
 public abstract class CompiledTypeProcessor implements TaskListener
 {
   private final JavacTask _javacTask;
-  private JCTree.JCCompilationUnit _compilationUnit;
+  private CompilationUnitTree _compilationUnit;
   private final Types _types;
   private final Map<String, Boolean> _typesToProcess;
   private final IssueReporter<JavaFileObject> _issueReporter;
@@ -88,7 +89,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return _generate;
   }
 
-  public JCTree.JCCompilationUnit getCompilationUnit()
+  public CompilationUnitTree getCompilationUnit()
   {
     return _compilationUnit;
   }
@@ -211,7 +212,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
       if( _tree != null )
       {
-        _compilationUnit = (JCTree.JCCompilationUnit)e.getCompilationUnit();
+        _compilationUnit = e.getCompilationUnit();
         _generate = true;
         process( elem, _issueReporter );
       }
@@ -253,7 +254,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
     // mark processed
     _typesToProcess.put( fqn, true );
 
-    _compilationUnit = (JCTree.JCCompilationUnit)e.getCompilationUnit();
+    _compilationUnit = e.getCompilationUnit();
 
     TypeElement elem = e.getTypeElement();
     _tree = (JCTree.JCClassDecl)getTreeUtil().getTree( elem );

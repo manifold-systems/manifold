@@ -61,9 +61,9 @@ public class BasicProgramTest {
 
   @Test
   public void testStateIsPreservedInPrograms() {
-    assertEquals(10d, program_1.incrementAndGet());
-    assertEquals(11d, program_1.incrementAndGet());
-    assertEquals(12d, program_1.incrementAndGet());
+    assertEquals(10d, asDouble( program_1.incrementAndGet()), 0);
+    assertEquals(11d, asDouble( program_1.incrementAndGet()), 0);
+    assertEquals(12d, asDouble( program_1.incrementAndGet()), 0);
   }
 
   @Test
@@ -79,4 +79,15 @@ public class BasicProgramTest {
     assertEquals(2, program_1.threeArgs(1, 2, false));
   }
 
+  /**
+   * needed for testing with Java 8 and Java 9 (nashorn changed behavior between those versions)
+   */
+  private double asDouble( Object n )
+  {
+    if( n instanceof Number )
+    {
+      return ((Number)n).doubleValue();
+    }
+    throw new RuntimeException( "Expecting Number, but found: " + n.getClass().getName() );
+  }
 }

@@ -66,10 +66,16 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
   public JavaFileObject getSourceFileForInput( Location location, String fqn, JavaFileObject.Kind kind, DiagnosticListener<JavaFileObject> errorHandler ) throws IOException
   {
-    JavaFileObject file = super.getJavaFileForInput( location, fqn, kind );
-    if( file != null )
+    try
     {
-      return file;
+      JavaFileObject file = super.getJavaFileForInput( location, fqn, kind );
+      if( file != null )
+      {
+        return file;
+      }
+    }
+    catch( IOException ignore )
+    {
     }
 
     return findGeneratedFile( fqn.replace( '$', '.' ), ManifoldHost.getCurrentModule(), errorHandler );

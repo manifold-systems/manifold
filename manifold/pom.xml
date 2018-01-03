@@ -11,16 +11,26 @@
 
   <name>Manifold :: Core</name>
 
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-plugin-placeholder</artifactId>
+      <version>0.1-alpha</version>
+    </dependency>
+  </dependencies>
+  
   <build>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <artifactId>maven-jar-plugin</artifactId>
         <configuration>
-          <compilerArgs>
-            <!-- undo default compiler configuration by unsetting -Xplugin argument -->
-            <arg>-Xplugin:</arg>
-          </compilerArgs>
+          <archive>
+            <manifestEntries>
+              <!--darkj files as source must be available for error handling-->
+              <Contains-Sources>darkj</Contains-Sources>
+            </manifestEntries>
+          </archive>
         </configuration>
       </plugin>
     </plugins>

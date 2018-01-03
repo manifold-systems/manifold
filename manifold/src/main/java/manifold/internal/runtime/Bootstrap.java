@@ -79,19 +79,19 @@ public class Bootstrap
     int loaderAddress = System.identityHashCode( loader );
     String spec = MAN_CLASS_PROTOCOL + "://" + loaderAddress + "/";
     URL url;
-    try
-    {
-      url = new URL( null, spec );
-    }
-    catch( Exception e )
-    {
-      // If our Handler class is not in the system loader and not accessible within the Caller's
-      // classloader from the URL constructor (3 activation records deep), then our Handler class
-      // is not loadable by the URL class, so we do this...
+//    try
+//    {
+//      url = new URL( null, spec );
+//    }
+//    catch( Exception e )
+//    {
+    // If our Handler class is not in the system loader and not accessible within the Caller's
+    // classloader from the URL constructor (3 activation records deep), then our Handler class
+    // is not loadable by the URL class, so we do this...
 
-      addOurProtocolHandler();
-      url = new URL( null, spec );
-    }
+    addOurProtocolHandler();
+    url = new URL( null, spec );
+//    }
     return url;
   }
 
@@ -104,7 +104,7 @@ public class Bootstrap
       Method put = Hashtable.class.getMethod( "put", Object.class, Object.class );
       Field instanceField = Class.forName( "manifold.internal.runtime.protocols.Handler" ).getField( "INSTANCE" );
       Object handler = instanceField.get( null );
-      put.invoke( field.get( null ), MAN_CLASS_PROTOCOL , handler );
+      put.invoke( field.get( null ), MAN_CLASS_PROTOCOL, handler );
     }
     catch( Exception e )
     {
@@ -119,7 +119,7 @@ public class Bootstrap
       Field field = URL.class.getDeclaredField( "handlers" );
       field.setAccessible( true );
       Method remove = Hashtable.class.getMethod( "remove", Object.class );
-      remove.invoke( field.get( null ), MAN_CLASS_PROTOCOL  );
+      remove.invoke( field.get( null ), MAN_CLASS_PROTOCOL );
     }
     catch( Exception e )
     {

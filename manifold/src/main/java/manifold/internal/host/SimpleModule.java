@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
@@ -198,6 +199,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     sps.add( sp );
 
     sp = new ImageTypeManifold();
+    sp.init( this );
+    sps.add( sp );
+
+    sp = new DarkJavaTypeManifold();
     sp.init( this );
     sps.add( sp );
   }

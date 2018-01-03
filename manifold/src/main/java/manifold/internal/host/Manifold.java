@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
+import manifold.internal.runtime.UrlClassLoaderWrapper;
 import manifold.util.BytecodeOptions;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -259,9 +260,10 @@ public class Manifold
     ClassLoader loader = clazz.getClassLoader();
     while( loader != null )
     {
-      if( loader instanceof URLClassLoader )
+      UrlClassLoaderWrapper wrap = UrlClassLoaderWrapper.wrap( loader );
+      if( wrap != null )
       {
-        for( URL url : ((URLClassLoader)loader).getURLs() )
+        for( URL url : wrap.getURLs() )
         {
           try
           {
