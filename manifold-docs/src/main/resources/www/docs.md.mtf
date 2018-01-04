@@ -707,8 +707,8 @@ multiple compilers and jar files etc.
 Dark Java provides this capability by avoiding static compilation altogether.  A Dark Java file is the same as a normal 
 Java file with the extension, `.darkj`, as the only difference.  The basic properties of a type manifold are what makes
 Dark Java work for multi-release:
-* you can reference a Dark Java class as a normal Java class directly from any Java file in your project 
-* a Dark Java class is compiled and loaded dynamically at runtime only if and when it is first used, otherwise it is never compiled  
+* You can reference a Dark Java class as a normal Java class directly from any Java file in your project 
+* The JRE compiles and loads a Dark Java class dynamically at runtime only if and when it is first used, otherwise it is ignored  
 
 To illustrate, the following example is statically compiled with Java 8.  It can be run with Java 8 or Java 9.  
 It demonstrates how you can target these JREs dynamically -- Java 8 with `Foo8` and Java 9 with `Foo9` using an interface 
