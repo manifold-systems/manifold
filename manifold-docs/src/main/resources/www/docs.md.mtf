@@ -63,6 +63,7 @@ Currently Manifold provides type manifolds for:
 *   JavaScript
 *   Properties files
 *   Image files
+*   Dark Java
 *   Manifold Templates (work in progress)
 *   DDL and SQL (work in progress)
 
@@ -476,6 +477,7 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   Properties files
 *   Image files
 *   JavaScript
+*   Dark Java
 
 We are working on support for more data sources including:
 *   CSV
@@ -680,6 +682,86 @@ String first = person.getFirstName();
 System.out.println(first);
 ```
 
+### ${anchor("Dark Java")}
+
+Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
+can be executed -- the JVM cannot execute .java files directly.  Although the advantages of static compilation usually
+outweigh other means, there are times when it can be a burden.  One example involves targeting multiple runtime 
+environments a.k.a. multi-release distributions.  This is basically about releasing software for use with different Java
+runtime environments (JREs), like targeting both Java 8 and Java 9.  The main idea is for a product to function in two or
+more JREs, and if possible use new features in the latest Java release while still supporting older releases.  Multi-release is notoriously complicated in part 
+because Java's static compiler is version-specific -- either you compile with Java 8 or Java 9, conditional compilation is not directly supported.  As a consequence 
+many software vendors resort to reflection or deploy separate libraries for different JREs, neither of which is 
+desirable.  
+
+Java 9 attempts to mitigate the multi-release dilemma with a new feature: [Multi-release Jar files](http://openjdk.java.net/jeps/238). 
+What this feature does, essentially, is let you provide different versions of a .class file per JRE version in a single Jar file; 
+the Java 9 classloader knows how to find the proper class.  While this is a welcome improvement, much of the multi-release
+burden remains.  The general problem involves tooling -- how are you going to build your product?  Are you using Maven? 
+Gradle?  Ant??  What IDE do you use?  Can your IDE and your build tooling work with multiple compilers and target 
+multi-release Jars?  Even if your tooling can manage all of this, working with it tends to be overly complicated. Ideally 
+a complete multi-release solution would involve source code and nothing else; You should be able to conditionally access 
+classes based on the JRE version (or other runtime state) and not be concerned about building separate classes using 
+multiple compilers and jar files etc. 
+
+Dark Java provides this capability by avoiding static compilation altogether.  A Dark Java file is the same as a normal 
+Java file with the extension, `.darkj`, as the only difference.  The basic properties of a type manifold are what makes
+Dark Java work a means for multi-release:
+* you can reference a Dark Java class as a normal Java class directly from any Java file in your project 
+* a Dark Java class is compiled and loaded dynamically at runtime only if and when it is first used, otherwise it is never compiled  
+
+To illustrate, the following example is statically compiled with Java 8.  It can be run with Java 8 or Java 9.  
+It demonstrates how you can target these JREs dynamically -- Java 8 with `Foo8` and Java 9 with `Foo9` using an interface 
+to abstract their use:
+
+```java
+public interface Foo {
+  Set<Integer> makeSet();
+  
+  static Foo create() {
+    if(JreUtil.isJava8()) {
+      return new Foo8();
+    }
+    return new Foo9();
+  }
+}
+
+// File: Foo8.darkj
+public class Foo8 implements Foo {
+  @Override
+  public Set<Integer> makeSet() {
+    Set<Integer> set = new HashSet<>();
+    set.add(1);
+    set.add(2);
+    set.add(3);
+    return Collections.unmodifiableSet(set);
+  }
+}
+
+// File: Foo9.darkj
+public class Foo9 implements Foo {
+  @Override
+  public Set<Integer> makeSet() {
+    return Set.of(1, 2, 3);
+  }
+}
+```
+
+When run in Java 8 the `Main` class uses `Foo8`, when run in Java 9 or later it uses `Foo9`:
+
+```java
+public class Main {
+  public static void main( String[] args ) {
+    Foo foo = Foo.create();
+    Set<Integer> set = foo.makeSet();
+  }
+}
+```
+
+This basic interface factory pattern can be used anywhere you need to use a Dark Java class for any dynamic 
+compilation use-case.  
+ 
+ 
 ### ${anchor("Template Files")}
 
 See project [Manifold Templates](http://manifold.systems/manifold-templates.html).

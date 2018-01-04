@@ -92,6 +92,7 @@
         <li class="sub"><a href="#properties_files">Properties Files</a></li>
         <li class="sub"><a href="#image_files">Image Files</a></li>
         <li class="sub"><a href="#javascript">JavaScript</a></li>
+        <li class="sub"><a href="#dark_java">Dark Java</a></li>
         <li class="sub"><a href="#template_files">Template Files</a></li>
         <li class="sub"><a href="#build_your_own_manifold">Build Your Own Manifold</a></li>
         <li><a href="#extension_classes">Extension Classes</a></li>
@@ -156,6 +157,7 @@ spreadsheets, web services, and programming languages.</p>
 <li>JavaScript</li>
 <li>Properties files</li>
 <li>Image files</li>
+<li>Dark Java</li>
 <li>Manifold Templates (work in progress)</li>
 <li>DDL and SQL (work in progress)</li>
 </ul>
@@ -490,6 +492,7 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
 <li>Properties files</li>
 <li>Image files</li>
 <li>JavaScript</li>
+<li>Dark Java</li>
 </ul>
 <p>We are working on support for more data sources including:</p>
 <ul>
@@ -651,6 +654,76 @@ Person person = new Person(&quot;Joe&quot;, &quot;Bloe&quot;);
 String first = person.getFirstName();
 System.out.println(first);
 </code></pre>
+<h3><a class="toc_anchor" name="dark_java"> </a>Dark Java</h3>
+<p>Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
+can be executed -- the JVM cannot execute .java files directly.  Although the advantages of static compilation usually
+outweigh other means, there are times when it can be a burden.  One example involves targeting multiple runtime
+environments a.k.a. multi-release distributions.  This is basically about releasing software for use with different Java
+runtime environments (JREs), like targeting both Java 8 and Java 9.  The main idea is for a product to function in two or
+more JREs, and if possible use new features in the latest Java release while still supporting older releases.  Multi-release is notoriously complicated in part
+because Java's static compiler is version-specific -- either you compile with Java 8 or Java 9, conditional compilation is not directly supported.  As a consequence
+many software vendors resort to reflection or deploy separate libraries for different JREs, neither of which is
+desirable.</p>
+<p>Java 9 attempts to mitigate the multi-release dilemma with a new feature: <a href="http://openjdk.java.net/jeps/238">Multi-release Jar files</a>.
+What this feature does, essentially, is let you provide different versions of a .class file per JRE version in a single Jar file;
+the Java 9 classloader knows how to find the proper class.  While this is a welcome improvement, much of the multi-release
+burden remains.  The general problem involves tooling -- how are you going to build your product?  Are you using Maven?
+Gradle?  Ant??  What IDE do you use?  Can your IDE and your build tooling work with multiple compilers and target
+multi-release Jars?  Even if your tooling can manage all of this, working with it tends to be overly complicated. Ideally
+a complete multi-release solution would involve source code and nothing else; You should be able to conditionally access
+classes based on the JRE version (or other runtime state) and not be concerned about building separate classes using
+multiple compilers and jar files etc.</p>
+<p>Dark Java provides this capability by avoiding static compilation altogether.  A Dark Java file is the same as a normal
+Java file with the extension, <code>.darkj</code>, as the only difference.  The basic properties of a type manifold are what makes
+Dark Java work a means for multi-release:</p>
+<ul>
+<li>you can reference a Dark Java class as a normal Java class directly from any Java file in your project</li>
+<li>a Dark Java class is compiled and loaded dynamically at runtime only if and when it is first used, otherwise it is never compiled</li>
+</ul>
+<p>To illustrate, the following example is statically compiled with Java 8.  It can be run with Java 8 or Java 9.<br />
+It demonstrates how you can target these JREs dynamically -- Java 8 with <code>Foo8</code> and Java 9 with <code>Foo9</code> using an interface
+to abstract their use:</p>
+<pre><code class="language-java">public interface Foo {
+  Set&lt;Integer&gt; makeSet();
+  
+  static Foo create() {
+    if(JreUtil.isJava8()) {
+      return new Foo8();
+    }
+    return new Foo9();
+  }
+}
+
+// File: Foo8.darkj
+public class Foo8 implements Foo {
+  @Override
+  public Set&lt;Integer&gt; makeSet() {
+    Set&lt;Integer&gt; set = new HashSet&lt;&gt;();
+    set.add(1);
+    set.add(2);
+    set.add(3);
+    return Collections.unmodifiableSet(set);
+  }
+}
+
+// File: Foo9.darkj
+public class Foo9 implements Foo {
+  @Override
+  public Set&lt;Integer&gt; makeSet() {
+    return Set.of(1, 2, 3);
+  }
+}
+</code></pre>
+<p>When run in Java 8 the <code>Main</code> class uses <code>Foo8</code>, when run in Java 9 or later it uses <code>Foo9</code>:</p>
+<pre><code class="language-java">public class Main {
+  public static void main( String[] args ) {
+    Foo foo = Foo.create();
+    Set&lt;Integer&gt; set = foo.makeSet();
+  }
+}
+</code></pre>
+<p>This basic interface factory pattern can be used anywhere you need to use a Dark Java class for any dynamic
+compilation use-case.</p>
 <h3><a class="toc_anchor" name="template_files"> </a>Template Files</h3>
 <p>See project <a href="http://manifold.systems/manifold-templates.html">Manifold Templates</a>.</p>
 <h3><a class="toc_anchor" name="build_your_own_manifold"> </a>Build Your Own Manifold</h3>

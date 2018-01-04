@@ -17,6 +17,7 @@
         <li class="sub">${linkTo("Properties Files")}</li>
         <li class="sub">${linkTo("Image Files")}</li>
         <li class="sub">${linkTo("JavaScript")}</li>
+        <li class="sub">${linkTo("Dark Java")}</li>
         <li class="sub">${linkTo("Template Files")}</li>
         <li class="sub">${linkTo("Build Your Own Manifold")}</li>
         <li>${linkTo("Extension Classes")}</li>
