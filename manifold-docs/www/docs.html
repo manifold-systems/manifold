@@ -688,9 +688,9 @@ to abstract their use:</p>
   
   static Foo create() {
     if(JreUtil.isJava8()) {
-      return new Foo8();
+      return (Foo)Class.forName(&quot;abc.Foo8&quot;).newInstance();
     }
-    return new Foo9();
+    return (Foo)Class.forName(&quot;abc.Foo9&quot;).newInstance();
   }
 }
 

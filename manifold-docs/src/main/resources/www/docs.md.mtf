@@ -720,9 +720,9 @@ public interface Foo {
   
   static Foo create() {
     if(JreUtil.isJava8()) {
-      return new Foo8();
+      return (Foo)Class.forName("abc.Foo8").newInstance();
     }
-    return new Foo9();
+    return (Foo)Class.forName("abc.Foo9").newInstance();
   }
 }
 
