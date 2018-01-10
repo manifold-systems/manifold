@@ -8,7 +8,10 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+//import com.sun.tools.javac.code.Directive;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Enter;
+//import com.sun.tools.javac.comp.Modules;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.model.JavacElements;
@@ -27,8 +30,11 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -40,6 +46,7 @@ import manifold.internal.host.ManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
 import manifold.util.Pair;
+import manifold.util.ReflectUtil;
 import sun.misc.Unsafe;
 
 /**
@@ -48,12 +55,18 @@ public class JavacPlugin implements Plugin, TaskListener
 {
   private static final String GOSU_SOURCE_FILES = "gosu.source.files";
   private static Class<?> CLASSFINDER_CLASS = null;
+  private static Class<?> MODULES_CLASS = null;
+  private static Class<?> MODULEFINDER_CLASS = null;
   public static final boolean IS_JAVA_8;
-  static {
+
+  static
+  {
     try
     {
       // ClassFinder is new in Java 9, its presence indicates Java 9 or later
       CLASSFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ClassFinder", false, ClassReader.class.getClassLoader() );
+      MODULES_CLASS = Class.forName( "com.sun.tools.javac.comp.Modules", false, ClassReader.class.getClassLoader() );
+      MODULEFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ModuleFinder", false, ClassReader.class.getClassLoader() );
       disableJava9IllegalAccessWarning();
     }
     catch( Throwable ignore )
@@ -61,6 +74,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
     IS_JAVA_8 = CLASSFINDER_CLASS == null;
   }
+
   private static JavacPlugin INSTANCE;
 
   private Context _ctx;
@@ -74,6 +88,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private IssueReporter _issueReporter;
   private ManifoldJavaFileManager _manFileManager;
   private boolean _initialized;
+  private Set<Symbol> _seenModules;
 
   public static JavacPlugin instance()
   {
@@ -186,9 +201,123 @@ public class JavacPlugin implements Plugin, TaskListener
       _javacElements = JavacElements.instance( _ctx );
       _typeProcessor = new TypeProcessor( _javacTask );
       _issueReporter = new IssueReporter( Log.instance( getContext() ) );
+      _seenModules = new LinkedHashSet<>();
 
       injectManFileManager();
     }
+  }
+
+  private void exportExtensionModuleToReachableModules( TaskEvent te )
+  {
+    if( IS_JAVA_8 )
+    {
+      return;
+    }
+
+    CompilationUnitTree compilationUnit = te.getCompilationUnit();
+    if( !(compilationUnit instanceof JCTree.JCCompilationUnit) )
+    {
+      return;
+    }
+
+    Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
+    if( module == null || _seenModules.contains( module ) )
+    {
+      return;
+    }
+
+    _seenModules.add( module );
+
+    Set<Symbol> reachableModules = findReachableModules( module, new HashSet<>() );
+    reachableModules.remove( module );
+
+    // Export all packages of current module to reachable modules (unnamed modules are exported by default)
+    if( !(boolean)ReflectUtil.method( module, "isUnnamed" ).invoke() )
+    {
+      //noinspection unchecked
+      List<Object>/*<Directive.ExportsDirective>*/ exports = new ArrayList( (Collection)ReflectUtil.field( module, "exports" ).get() );
+      for( Object pkg : (Iterable)ReflectUtil.field( module, "enclosedPackages" ).get() )
+      {
+        if( pkg instanceof Symbol.PackageSymbol )
+        {
+          Object/*Directive.ExportsDirective*/ exp = ReflectUtil.constructor( "com.sun.tools.javac.code.Directive$ExportsDirective", Symbol.PackageSymbol.class, com.sun.tools.javac.util.List.class )
+            .newInstance( pkg, com.sun.tools.javac.util.List.from( reachableModules ) );
+          exports.add( exp );
+        }
+      }
+      ReflectUtil.field( module, "exports" ).set( com.sun.tools.javac.util.List.from( exports ) );
+      
+//    //## todo: change from open, to a bunch of explicit exports to specific modules
+//    try
+//    {
+//      Field flagsField = module.getClass().getField( "flags" );
+//      Field modifiersField = Field.class.getDeclaredField( "modifiers" );
+//      modifiersField.setAccessible( true );
+//      modifiersField.setInt( flagsField, flagsField.getModifiers() & ~Modifier.FINAL );
+//      EnumSet<Symbol.ModuleFlags> withOpen = EnumSet.copyOf( module.flags );
+//      withOpen.add( Symbol.ModuleFlags.OPEN );
+//      flagsField.set( module,  withOpen );
+//    }
+//    catch( Exception e )
+//    {
+//      throw new RuntimeException( e );
+//    }
+    }
+
+
+    // Add a dependency to the current compiling module from other reachable modules
+    for( Symbol m : reachableModules )
+    {
+      Object /*Directive.RequiresDirective*/ req = ReflectUtil.constructor( "com.sun.tools.javac.code.Directive$RequiresDirective", ReflectUtil.type("com.sun.tools.javac.code.Symbol$ModuleSymbol"), Set.class )
+        .newInstance( module, EnumSet.of( (Enum)ReflectUtil.field( ReflectUtil.type("com.sun.tools.javac.code.Directive$RequiresFlag"), "SYNTHETIC" ).getStatic() ) );
+      ReflectUtil.LiveFieldRef requiresField = ReflectUtil.field( m, "requires" );
+      Collection oldRequires = (Collection)requiresField.get();
+      ArrayList<Object>/*<Directive.RequiresDirective>*/ l = oldRequires == null ? new ArrayList<>() : new ArrayList<Object>( oldRequires );
+      l.add( req );
+      com.sun.tools.javac.util.List/*<Directive.RequiresDirective>*/ newRequires = com.sun.tools.javac.util.List.from( l );
+      requiresField.set( newRequires );
+    }
+  }
+
+  private Set<Symbol> findReachableModules( Symbol module, Set<Symbol> set )
+  {
+    if( (boolean)ReflectUtil.method( module, "isUnnamed" ).invoke() )
+    {
+      set.addAll( getAllModules() );
+      return set;
+    }
+    
+    if( set.contains( module ) )
+    {
+      return set;
+    }
+    set.add( module );
+    Iterable requires = (Iterable)ReflectUtil.field( module, "requires" ).get();
+    if( requires != null )
+    {
+      for( Object /*Directive.RequiresDirective*/ req: requires )
+      {
+        Symbol dep = (Symbol)ReflectUtil.method( req, "getDependency" ).invoke();
+        if( (boolean)ReflectUtil.method( req, "isTransitive" ).invoke() )
+        {
+          findReachableModules( dep, set );
+        }
+        else
+        {
+          set.add( dep );
+        }
+      }
+    }
+    return set;
+  }
+
+  private Collection<? extends Symbol> getAllModules()
+  {
+    //noinspection unchecked
+    return (Collection<? extends Symbol>)
+      ReflectUtil.method(
+        ReflectUtil.method(
+          ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( _ctx ), "allModules" ).invoke();
   }
 
   private void injectManFileManager()
@@ -215,6 +344,14 @@ public class JavacPlugin implements Plugin, TaskListener
         field = CLASSFINDER_CLASS.getDeclaredField( "preferSource" );
         field.setAccessible( true );
         field.set( CLASSFINDER_CLASS.getMethod( "instance", Context.class ).invoke( null, getContext() ), true );
+
+        field = MODULES_CLASS.getDeclaredField( "fileManager" );
+        field.setAccessible( true );
+        field.set( MODULES_CLASS.getMethod( "instance", Context.class ).invoke( null, getContext() ), _manFileManager );
+
+        field = MODULEFINDER_CLASS.getDeclaredField( "fileManager" );
+        field.setAccessible( true );
+        field.set( MODULEFINDER_CLASS.getMethod( "instance", Context.class ).invoke( null, getContext() ), _manFileManager );
       }
 
       field = ClassWriter.class.getDeclaredField( "fileManager" );
@@ -407,6 +544,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean isPhysicalFile( JavaFileObject inputFile )
   {
     URI uri = inputFile.toUri();
@@ -436,6 +574,8 @@ public class JavacPlugin implements Plugin, TaskListener
   @Override
   public void started( TaskEvent e )
   {
+    exportExtensionModuleToReachableModules( e );
+
     switch( e.getKind() )
     {
       case ENTER:
@@ -513,6 +653,7 @@ public class JavacPlugin implements Plugin, TaskListener
     // compile-time
     disableJava9IllegalAccessWarning( Thread.currentThread().getContextClassLoader() );
   }
+
   private static void disableJava9IllegalAccessWarning( ClassLoader cl )
   {
     try

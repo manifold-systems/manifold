@@ -106,13 +106,24 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
-          <version>3.6.1</version>
+          <version>3.7.0</version>
           <configuration>
             <source>1.8</source>
             <target>1.8</target>
             <encoding>UTF-8</encoding>
             <compilerArgs>
               <arg>-Xplugin:Manifold</arg>
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>-->
             </compilerArgs>
           </configuration>
         </plugin>
@@ -129,7 +140,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.20</version>
           <configuration>
-            <!--<argLine>&#45;&#45;illegal-access=permit &#45;&#45;add-opens=java.base/jdk.internal.loader=ALL-UNNAMED</argLine>-->
+            <argLine>--illegal-access=permit --add-opens=java.base/jdk.internal.loader=ALL-UNNAMED</argLine>
             <useManifestOnlyJar>false</useManifestOnlyJar>
           </configuration>
         </plugin>

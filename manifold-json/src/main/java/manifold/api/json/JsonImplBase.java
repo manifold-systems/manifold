@@ -1,5 +1,7 @@
 package manifold.api.json;
 
+import extensions.java.net.URL.ManUrlExt;
+import extensions.javax.script.Bindings.ManBindingsExt;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -134,7 +136,7 @@ public class JsonImplBase implements IJsonIO
     }
     try
     {
-      return new URL( url + _bindings.makeArguments() );
+      return new URL( url + ManBindingsExt.makeArguments( _bindings ) );
     }
     catch( MalformedURLException e )
     {
@@ -188,7 +190,7 @@ public class JsonImplBase implements IJsonIO
    */
   public String postForTextContent( URL url )
   {
-    return url.postForTextContent( _bindings );
+    return ManUrlExt.postForTextContent( url, _bindings );
   }
 
   /**

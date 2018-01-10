@@ -268,27 +268,20 @@ public class JavaParser implements IJavaParser
       return null;
     }
 
-    try
+    JavaFileObject fileObj = _gfm.getSourceFileForInput( StandardLocation.SOURCE_PATH, fqn, JavaFileObject.Kind.SOURCE, errorHandler );
+    if( fileObj == null )
     {
-      JavaFileObject fileObj = _gfm.getSourceFileForInput( StandardLocation.SOURCE_PATH, fqn, JavaFileObject.Kind.SOURCE, errorHandler );
-      if( fileObj == null )
+      int iDot = fqn.lastIndexOf( '.' );
+      if( iDot > 0 )
       {
-        int iDot = fqn.lastIndexOf( '.' );
-        if( iDot > 0 )
-        {
-          String enclosingFqn = fqn.substring( 0, iDot );
-          return findJavaSource( enclosingFqn, errorHandler );
-        }
-        return null;
+        String enclosingFqn = fqn.substring( 0, iDot );
+        return findJavaSource( enclosingFqn, errorHandler );
       }
-      else
-      {
-        return new Pair<>( fileObj, fqn );
-      }
+      return null;
     }
-    catch( IOException e )
+    else
     {
-      throw new RuntimeException( e );
+      return new Pair<>( fileObj, fqn );
     }
   }
 

@@ -5,11 +5,14 @@ import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.ServiceLoader;
 import java.util.Set;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import manifold.util.ReflectUtil;
 
 /**
  * The purpose of this class is to make our ManifoldJavaFileManager a JavacFileManager, which is necessary for
@@ -22,62 +25,58 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
   /**
    * The file manager which all methods are delegated to.
    */
-  protected final M fileManager;
+  private final M fileManager;
 
   /**
    * Create a JavacFileManager using a given context, optionally registering
    * it as the JavaFileManager for that context.
    */
-  public JavacFileManagerBridge( M fileManager, Context context )
+  JavacFileManagerBridge( M fileManager, Context context )
   {
     super( context, false, Charset.defaultCharset() );
     this.fileManager = fileManager;
   }
 
   /**
-   * @throws SecurityException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public ClassLoader getClassLoader(Location location) {
-    return fileManager.getClassLoader(location);
+  public ClassLoader getClassLoader( Location location )
+  {
+    return fileManager.getClassLoader( location );
   }
 
   /**
-   * @throws IOException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
   public Iterable<JavaFileObject> list( Location location,
                                         String packageName,
                                         Set<JavaFileObject.Kind> kinds,
-                                        boolean recurse)
+                                        boolean recurse )
     throws IOException
   {
-    return fileManager.list(location, packageName, kinds, recurse);
+    return fileManager.list( location, packageName, kinds, recurse );
   }
 
   /**
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public String inferBinaryName(Location location, JavaFileObject file) {
-    return fileManager.inferBinaryName(location, file);
+  public String inferBinaryName( Location location, JavaFileObject file )
+  {
+    return fileManager.inferBinaryName( location, file );
   }
 
   /**
-   * @throws IllegalArgumentException {@inheritDoc}
    */
-  public boolean isSameFile( FileObject a, FileObject b) {
-    return fileManager.isSameFile(a, b);
+  public boolean isSameFile( FileObject a, FileObject b )
+  {
+    return fileManager.isSameFile( a, b );
   }
 
   /**
-   * @throws IllegalArgumentException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public boolean handleOption(String current, Iterator<String> remaining) {
-    return fileManager.handleOption(current, remaining);
+  public boolean handleOption( String current, Iterator<String> remaining )
+  {
+    return fileManager.handleOption( current, remaining );
   }
 
-  public boolean hasLocation(Location location)
+  public boolean hasLocation( Location location )
   {
     if( JavacPlugin.IS_JAVA_8 )
     {
@@ -89,78 +88,78 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     boolean hasLocation = fileManager.hasLocation( location );
     if( hasLocation )
     {
-      try
+      Iterable iter = getLocationAsPaths( location );
+      if( iter == null || !iter.iterator().hasNext() )
       {
-        Method getLocationAsPaths = JavacFileManager.class.getDeclaredMethod( "getLocationAsPaths", Location.class );
-        Iterable iter = (Iterable)getLocationAsPaths.invoke( this, location );
-        if( iter == null || !iter.iterator().hasNext() )
-        {
-          hasLocation = false;
-        }
-      }
-      catch( Exception e )
-      {
-        throw new RuntimeException( e );
+        hasLocation = false;
       }
     }
     return hasLocation;
   }
 
-  public int isSupportedOption( String option) {
-    return fileManager.isSupportedOption(option);
-  }
-
-  /**
-   * @throws IllegalArgumentException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
-   */
-  public JavaFileObject getJavaFileForInput(Location location,
-                                            String className,
-                                            JavaFileObject.Kind kind)
-    throws IOException
+  // exclusive to Java 9
+  public Iterable<? extends Path> getLocationAsPaths( Location location )
   {
-    return fileManager.getJavaFileForInput(location, className, kind);
+    try
+    {
+      //noinspection unchecked
+      return (Iterable)ReflectUtil.method( fileManager, "getLocationAsPaths", Location.class ).invoke( location );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public int isSupportedOption( String option )
+  {
+    return fileManager.isSupportedOption( option );
   }
 
   /**
-   * @throws IllegalArgumentException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public JavaFileObject getJavaFileForOutput(Location location,
+  public JavaFileObject getJavaFileForInput( Location location,
                                              String className,
-                                             JavaFileObject.Kind kind,
-                                             FileObject sibling)
+                                             JavaFileObject.Kind kind )
     throws IOException
   {
-    return fileManager.getJavaFileForOutput(location, className, kind, sibling);
+    return fileManager.getJavaFileForInput( location, className, kind );
   }
 
   /**
-   * @throws IllegalArgumentException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public FileObject getFileForInput(Location location,
-                                    String packageName,
-                                    String relativeName)
+  public JavaFileObject getJavaFileForOutput( Location location,
+                                              String className,
+                                              JavaFileObject.Kind kind,
+                                              FileObject sibling )
     throws IOException
   {
-    return fileManager.getFileForInput(location, packageName, relativeName);
+    return fileManager.getJavaFileForOutput( location, className, kind, sibling );
   }
 
   /**
-   * @throws IllegalArgumentException {@inheritDoc}
-   * @throws IllegalStateException {@inheritDoc}
    */
-  public FileObject getFileForOutput(Location location,
+  public FileObject getFileForInput( Location location,
                                      String packageName,
-                                     String relativeName,
-                                     FileObject sibling)
+                                     String relativeName )
     throws IOException
   {
-    return fileManager.getFileForOutput(location, packageName, relativeName, sibling);
+    return fileManager.getFileForInput( location, packageName, relativeName );
   }
 
-  public void flush() {
+  /**
+   */
+  public FileObject getFileForOutput( Location location,
+                                      String packageName,
+                                      String relativeName,
+                                      FileObject sibling )
+    throws IOException
+  {
+    return fileManager.getFileForOutput( location, packageName, relativeName, sibling );
+  }
+
+  public void flush()
+  {
     try
     {
       fileManager.flush();
@@ -171,7 +170,8 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     }
   }
 
-  public void close(){
+  public void close()
+  {
     try
     {
       fileManager.close();
@@ -182,4 +182,108 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     }
   }
 
+  /**
+   * @since 9
+   */
+  public Location getLocationForModule( Location location, String moduleName ) throws IOException
+  {
+    //return fileManager.getLocationForModule(location, moduleName);
+    try
+    {
+      Method getLocationForModule = JavacFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, String.class );
+      return (Location)getLocationForModule.invoke( fileManager, location, moduleName );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * @since 9
+   */
+  public Location getLocationForModule( Location location, JavaFileObject fo ) throws IOException
+  {
+    //return fileManager.getLocationForModule(location, fo);
+    try
+    {
+      Method getLocationForModule = JavacFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, JavaFileObject.class );
+      return (Location)getLocationForModule.invoke( fileManager, location, fo );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * @since 9
+   */
+  public <S> ServiceLoader<S> getServiceLoader( Location location, Class<S> service ) throws IOException
+  {
+    //return fileManager.getServiceLoader(location, service);
+    try
+    {
+      Method getServiceLoader = JavacFileManager.class.getDeclaredMethod( "getServiceLoader", Location.class, Class.class );
+      //noinspection unchecked
+      return (ServiceLoader)getServiceLoader.invoke( fileManager, location, service );
+    }
+    catch( Exception e )
+    {
+      throw new IOException( e );
+    }
+  }
+
+  /**
+   * @since 9
+   */
+  public String inferModuleName( Location location )
+  {
+    //return fileManager.inferModuleName( location );
+    try
+    {
+      Method inferModuleName = JavacFileManager.class.getDeclaredMethod( "inferModuleName", Location.class );
+      return (String)inferModuleName.invoke( fileManager, location );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * @since 9
+   */
+  public Iterable<Set<Location>> listLocationsForModules( Location location ) throws IOException
+  {
+    //return fileManager.listLocationsForModules( location );
+    try
+    {
+      Method listLocationsForModules = JavacFileManager.class.getDeclaredMethod( "listLocationsForModules", Location.class );
+      //noinspection unchecked
+      return (Iterable)listLocationsForModules.invoke( fileManager, location );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * @since 9
+   */
+  public boolean contains( Location location, FileObject fo ) throws IOException
+  {
+    //return fileManager.contains( location, fo );
+    try
+    {
+      Method contains = JavacFileManager.class.getDeclaredMethod( "contains", Location.class, FileObject.class );
+      //noinspection unchecked
+      return (boolean)contains.invoke( fileManager, location, fo );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
 }
