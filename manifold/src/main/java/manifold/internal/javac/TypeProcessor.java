@@ -1,11 +1,11 @@
 package manifold.internal.javac;
 
 import com.sun.source.util.JavacTask;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+//import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
+//import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
@@ -49,7 +49,7 @@ public class TypeProcessor extends CompiledTypeProcessor
     {
       if( sp instanceof ITypeProcessor )
       {
-        JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing: " + element.getQualifiedName() );
+        //JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Processing: " + element.getQualifiedName() );
 
         try  
         {

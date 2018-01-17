@@ -89,7 +89,13 @@ public class ClassSymbols
     init();
 
     StringWriter errors = new StringWriter();
-    return (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+    BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+    if( errors.getBuffer().length() > 0 )
+    {
+      // report errors to console
+      System.err.println( errors.getBuffer() );
+    }
+    return task;
   }
 
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, String fqn )

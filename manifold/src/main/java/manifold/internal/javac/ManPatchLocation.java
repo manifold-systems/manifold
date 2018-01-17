@@ -52,7 +52,7 @@ public class ManPatchLocation implements JavaFileManager.Location
       if( ms.getClass().getSimpleName().equals( "ModuleSymbol" ) )
       {
         //noinspection unchecked
-        for( Symbol pkg : (Iterable<Symbol>)ReflectUtil.method( ms, "getEnclosedElements" ).invoke() )
+        for( Symbol pkg : (Iterable<Symbol>)ReflectUtil.field( ms, "enclosedPackages" ).get() )
         {
           if( !(pkg instanceof Symbol.PackageSymbol) )
           {

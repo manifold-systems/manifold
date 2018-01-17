@@ -1,14 +1,22 @@
 package manifold.internal.runtime;
 
+import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 
 /**
  */
@@ -149,10 +157,38 @@ public class UrlClassLoaderWrapper
     try
     {
       _addUrl._method.invoke( _addUrl._receiver, url );
+      if( JreUtil.isJava9Modular_runtime() )
+      {
+        wrapReaders();
+      }
     }
     catch( Exception e )
     {
       throw new RuntimeException( e );
+    }
+  }
+
+  private void wrapReaders()
+  {
+    Map/*<ModuleReference, ModuleReader>*/ moduleToReader = (Map)ReflectUtil.field( _loader, "moduleToReader" ).get();
+    for( Object mr: moduleToReader.keySet() )
+    {
+      //noinspection unchecked
+      Optional<URI> location = (Optional<URI>)ReflectUtil.method( mr, "location" ).invoke();
+      URI uri = location.orElse( null );
+      if( uri == null )
+      {
+        continue;
+      }
+
+      //## note: "jmod" files are not supported here because they are currently (2018) supported exclusively at compiler/linker time
+      String scheme = uri.getScheme();
+      if( scheme.equalsIgnoreCase( "file" ) || scheme.equalsIgnoreCase( "jar" ) )
+      {
+        Object reader = moduleToReader.get( mr );
+        Object/*ManModuleReader*/ wrapper = ReflectUtil.constructor( "manifold.internal.runtime.ManModuleReader", ReflectUtil.type( "java.lang.module.ModuleReader" ), ReflectUtil.type( "jdk.internal.loader.URLClassPath" ) ).newInstance( reader, ReflectUtil.field( _loader, "ucp" ).get() );
+        moduleToReader.put( mr, wrapper );
+      }
     }
   }
 
@@ -164,6 +200,60 @@ public class UrlClassLoaderWrapper
       return urls == null ? Collections.emptyList() : Arrays.asList( urls );
     }
 
+    List<URL> allUrls = new ArrayList<>( getClasspathUrls() );
+    if( JreUtil.isJava9Modular_runtime() )
+    {
+      allUrls.addAll( getModularUrls() );
+    }
+
+    return Collections.unmodifiableList( allUrls );
+  }
+
+  private Set<URL> getModularUrls()
+  {
+    //## todo: look at other JRE impls (IBM) to see if they provide a different class loader / field name (other than Oracle's BuiltinClassLoader)
+
+    ReflectUtil.LiveFieldRef nameToModuleField;
+    try
+    {
+      nameToModuleField = ReflectUtil.field( _loader, "nameToModule" );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+
+    Set<URL> modulePath = new HashSet<>();
+    Map/*<String, ModuleReference>*/nameToModule = (Map)nameToModuleField.get();
+    for( Object mr: nameToModule.values() )
+    {
+      //noinspection unchecked
+      Optional<URI> location = (Optional<URI>)ReflectUtil.method( mr, "location" ).invoke();
+      URI uri = location.orElse( null );
+      if( uri == null )
+      {
+        continue;
+      }
+
+      //## note: "jmod" files are not supported here because they are currently (2018) supported exclusively at compiler/linker time
+      String scheme = uri.getScheme();
+      if( scheme.equalsIgnoreCase( "file" ) || scheme.equalsIgnoreCase( "jar" ) )
+      {
+        try
+        {
+          modulePath.add( new File( uri ).toURI().toURL() );
+        }
+        catch( MalformedURLException e )
+        {
+          throw new RuntimeException( e );
+        }
+      }
+    }
+    return modulePath;
+  }
+
+  private List<URL> getClasspathUrls()
+  {
     try
     {
       Object urls = _getURLs._receiver == null ? null : _getURLs._method.invoke( _getURLs._receiver );
@@ -186,7 +276,7 @@ public class UrlClassLoaderWrapper
     Method _method;
     Object _receiver;
 
-    public MethodAndReceiver( Method method, Object receiver )
+    MethodAndReceiver( Method method, Object receiver )
     {
       _method = method;
       _receiver = receiver;

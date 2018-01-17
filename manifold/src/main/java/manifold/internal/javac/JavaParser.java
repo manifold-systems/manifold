@@ -33,6 +33,7 @@ import manifold.api.fs.IResource;
 import manifold.api.host.IModule;
 import manifold.internal.host.Manifold;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.JreUtil;
 import manifold.util.Pair;
 
 /**
@@ -69,17 +70,12 @@ public class JavaParser implements IJavaParser
       _javac = JavacTool.create();
 
       JavacPlugin javacHook = JavacPlugin.instance();
-      if( javacHook != null )
+      if( javacHook != null && !JreUtil.isJava9Modular_compiler( javacHook.getContext() ) )
       {
         // Share our existing Manifold file manager from Javac
 
         _fileManager = javacHook.getJavaFileManager();
         _gfm = javacHook.getManifoldFileManager();
-      }
-      else if( JavacPlugin.instance() != null )
-      {
-        _fileManager = JavacPlugin.instance().getJavaFileManager();
-        _gfm = JavacPlugin.instance().getManifoldFileManager();
       }
       else
       {

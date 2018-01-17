@@ -1,7 +1,9 @@
 package manifold.util;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 public class ReflectUtil
@@ -112,6 +114,21 @@ public class ReflectUtil
     }
   }
 
+
+  public static void setAccessible( Member m )
+  {
+    try
+    {
+
+      Field overrideField = AccessibleObject.class.getDeclaredField( "override" );
+      NecessaryEvilUtil.UNSAFE.putObjectVolatile( m, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
   public static class MethodRef
   {
     private final Method _method;
@@ -119,7 +136,7 @@ public class ReflectUtil
     private MethodRef( Method m )
     {
       _method = m;
-      _method.setAccessible( true );
+      setAccessible( _method );
     }
 
     public Object invoke( Object receiver, Object... args )
@@ -156,7 +173,7 @@ public class ReflectUtil
     private LiveMethodRef( Method m, Object receiver )
     {
       _method = m;
-      _method.setAccessible( true );
+      setAccessible( _method );
       _receiver = receiver;
     }
 
@@ -180,7 +197,7 @@ public class ReflectUtil
     private FieldRef( Field f )
     {
       _field = f;
-      _field.setAccessible( true );
+      setAccessible( _field );
     }
 
     public Object get( Object receiver )
@@ -240,7 +257,7 @@ public class ReflectUtil
     private LiveFieldRef( Field f, Object receiver )
     {
       _field = f;
-      _field.setAccessible( true );
+      setAccessible( _field );
       _receiver = receiver;
     }
 

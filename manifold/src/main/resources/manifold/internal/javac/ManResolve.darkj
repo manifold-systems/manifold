@@ -1,0 +1,76 @@
+package manifold.internal.javac;
+
+import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.comp.Annotate;
+import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.AttrContext;
+import com.sun.tools.javac.comp.Check;
+import com.sun.tools.javac.comp.DeferredAttr;
+import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Flow;
+import com.sun.tools.javac.comp.Infer;
+import com.sun.tools.javac.comp.LambdaToMethod;
+import com.sun.tools.javac.comp.Lower;
+import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.jvm.Gen;
+import com.sun.tools.javac.jvm.StringConcat;
+import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.util.Context;
+import javax.tools.JavaFileObject;
+import manifold.util.ReflectUtil;
+
+public class ManResolve extends Resolve
+{
+  public static Resolve instance( Context ctx )
+  {
+    Resolve resolve = ctx.get( resolveKey );
+    if( !(resolve instanceof ManResolve) )
+    {
+      ctx.put( resolveKey, (Resolve)null );
+      resolve = new ManResolve( ctx );
+    }
+
+    return resolve;
+  }
+
+  private ManResolve( Context context )
+  {
+    super( context );
+
+    ReflectUtil.field( Attr.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( DeferredAttr.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( Check.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( Infer.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( Flow.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( LambdaToMethod.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( Lower.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( Gen.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( StringConcat.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( JavacTrees.instance( context ), "resolve" ).set( this );
+    ReflectUtil.field( Annotate.instance( context ), "resolve" ).set( this );
+    ReflectUtil.field( TransTypes.instance( context ), "resolve" ).set( this );
+    ReflectUtil.field( JavacElements.instance( context ), "resolve" ).set( this );
+  }
+
+  @Override
+  public boolean isAccessible( Env<AttrContext> env, Symbol.TypeSymbol typeSymbol, boolean checkInner )
+  {
+    boolean accessible = super.isAccessible( env, typeSymbol, checkInner );
+    if( accessible || JavacPlugin.IS_JAVA_8 )
+    {
+      return accessible;
+    }
+
+    JavaFileObject sourceFile = env.toplevel.getSourceFile();
+    if( sourceFile instanceof GeneratedJavaStubFileObject )
+    {
+      // Allow augmented classes to access modules as if defined in both the extended class' module and
+      // the extension class' module.
+      accessible = true;
+    }
+
+    return accessible;
+  }
+}

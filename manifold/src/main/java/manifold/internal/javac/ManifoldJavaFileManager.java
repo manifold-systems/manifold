@@ -1,11 +1,16 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.file.RelativePath;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.Name;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,12 +23,17 @@ import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
+import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.JreUtil;
 import manifold.util.ManClassUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
+
+
+import static manifold.api.type.ITypeManifold.ProducerKind.Primary;
 
 /**
  */
@@ -43,6 +53,10 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
     _issueLogger = Log.instance( ctx );
+    if( ctx.get(JavaFileManager.class) == null )
+    {
+      ctx.put( JavaFileManager.class, fileManager );
+    }
     ManifoldHost.addTypeLoaderListenerAsWeakRef( null, this );
   }
 
@@ -147,6 +161,19 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       list.forEach( newList::add );
       Set<String> names = makeNames( list );
 
+      Iterable<JavaFileObject> patchableFiles = null;
+      if( location instanceof ManPatchModuleLocation )
+      {
+        Set<JavaFileObject.Kind> classesAndSource = new HashSet<>( Arrays.asList( JavaFileObject.Kind.CLASS, JavaFileObject.Kind.SOURCE ) );
+        Location modulePatchLocation = makeModuleLocation( (ManPatchModuleLocation)location );
+        if( modulePatchLocation == null )
+        {
+          return list;
+        }
+        // Get a list of class files from the patch module location; these are patch candidates
+        patchableFiles = super.list( modulePatchLocation, packageName, classesAndSource, recurse );
+      }
+
       for( TypeName tn : children )
       {
         if( names.contains( ManClassUtil.getShortClassName( tn.name ) ) )
@@ -171,8 +198,9 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
         else
         {
           IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( _issueLogger );
-          JavaFileObject file = findGeneratedFile( tn.name.replace( '$', '.' ), tn.getModule(), issueReporter );
-          if( file != null )
+          String fqn = tn.name.replace( '$', '.' );
+          JavaFileObject file = findGeneratedFile( fqn, tn.getModule(), issueReporter );
+          if( file != null && isCorrectModule( location, patchableFiles, file, fqn ) )
           {
             newList.add( file );
           }
@@ -181,6 +209,56 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       list = newList;
     }
     return list;
+  }
+
+  private boolean isCorrectModule( Location location, Iterable<JavaFileObject> patchableFiles, JavaFileObject file, String fqn )
+  {
+    if( !(location instanceof ManPatchModuleLocation) )
+    {
+      // not a ManPatchModuleLocation means not an extended class
+
+      if( !JreUtil.isJava9Modular_compiler( _ctx ) )
+      {
+        return true;
+      }
+
+      // true if type is not exclusively an extended type
+      Set<ITypeManifold> typeManifoldsFor = ManifoldHost.getCurrentModule().findTypeManifoldsFor( fqn );
+      return typeManifoldsFor.stream().anyMatch( tm -> tm.getProducerKind() == Primary );
+    }
+
+    if( patchableFiles == null )
+    {
+      return true;
+    }
+
+    String cname = inferBinaryName( location, file );
+
+    for( JavaFileObject f: patchableFiles )
+    {
+      String name = inferBinaryName( location, f );
+      
+      if( cname.equals( name) )
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private Location makeModuleLocation( ManPatchModuleLocation location )
+  {
+    // Module module = Modules.instance( _ctx ).getObservableModule( Names.instance( _ctx ).fromString( location.getName() ) );
+    // return module.classLocation;
+
+    Symbol moduleElement = (Symbol)ReflectUtil.method( Symtab.instance( _ctx ), "getModule", Name.class )
+      .invoke( Names.instance( _ctx ).fromString( location.getName() ) );
+    if( moduleElement == null )
+    {
+      return null;
+    }
+    return (Location)ReflectUtil.field( moduleElement, "classLocation" ).get();
   }
 
   private boolean isClassFile( TypeName tn )
@@ -275,33 +353,19 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     }
     if( location instanceof ManPatchModuleLocation )
     {
-      if( fileObj.getClass().getSimpleName().equals( "PathFileObject" ) )
+      if( fileObj.getClass().getSimpleName().equals( "DirectoryFileObject" ) )
       {
-        try
-        {
-          // a DirectoryFileObject?
-
           RelativePath relativePath = (RelativePath)ReflectUtil.field( fileObj, "relativePath" ).get();
           return removeExtension( relativePath.getPath() ).replace( File.separatorChar, '.' ).replace( '/', '.' );
-        }
-        catch( Exception e )
+      }
+      else if( fileObj.getClass().getSimpleName().equals( "JarFileObject" ) )
+      {
+        String relativePath = ReflectUtil.method( fileObj, "getPath" ).invoke().toString();
+        if( relativePath.startsWith( "/" ) )
         {
-          try
-          {
-            // a JarFileObject?
-
-            String relativePath = ReflectUtil.method( fileObj, "getPath" ).invoke().toString();
-            if( relativePath.startsWith( "/" ) )
-            {
-              relativePath = relativePath.substring( 1 );
-            }
-            return removeExtension( relativePath ).replace( File.separatorChar, '.' ).replace( '/', '.' );
-          }
-          catch( Exception ee )
-          {
-            throw new RuntimeException( ee );
-          }
+          relativePath = relativePath.substring( 1 );
         }
+        return removeExtension( relativePath ).replace( File.separatorChar, '.' ).replace( '/', '.' );
       }
     }
     return super.inferBinaryName( location, fileObj );

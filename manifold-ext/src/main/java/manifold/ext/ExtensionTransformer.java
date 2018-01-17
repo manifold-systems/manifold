@@ -45,6 +45,7 @@ import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.Pair;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
@@ -377,12 +378,13 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
-    if( !extendedClassName.startsWith( ExtensionManifold.EXTENSIONS_PACKAGE + '.' ) )
+    int iExt = extendedClassName.indexOf( ExtensionManifold.EXTENSIONS_PACKAGE + '.' );
+    if( iExt < 0 )
     {
       return;
     }
 
-    extendedClassName = extendedClassName.substring( ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
+    extendedClassName = extendedClassName.substring( iExt + ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
 
     boolean thisAnnoFound = false;
     List<JCTree.JCVariableDecl> parameters = tree.getParameters();
@@ -583,7 +585,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( methodSelect instanceof MemberSelectTree )
     {
       JCTree.JCFieldAccess meth = (JCTree.JCFieldAccess)tree.meth;
-      if( !meth.sym.hasAnnotations() )
+      if( meth.sym == null || !meth.sym.hasAnnotations() )
       {
         return null;
       }
@@ -595,6 +597,13 @@ public class ExtensionTransformer extends TreeTranslator
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
           BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
           Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
+          if( extClassSym == null )
+          {
+            // This can happen during bootstrapping with Dark Java classes from Manifold itself
+            // e.g., ManResolve is a darkj class Manifold uses, ManResolve uses String, which may have an extension class which needs ManResole...
+            // So we short-circuit that here (ManResolve or any other darkj class used during bootstrapping doesn't really need to use extensions)
+            return null;
+          }
           Types types = Types.instance( javacTask.getContext() );
           outer:
           for( Symbol elem : IDynamicJdk.instance().getMembers( extClassSym ) )
@@ -633,7 +642,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
-      if( !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
+      if( m.sym != null && !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
         JCExpression thisArg = m.selected;
         if( TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym ) )
@@ -709,6 +718,10 @@ public class ExtensionTransformer extends TreeTranslator
     }
     try
     {
+      // in Java 9 in modular mode the proxy class belongs to the owner's module,
+      // therefore we need to make it accessible from the manifold module before
+      // calling newInstance()
+      ReflectUtil.setAccessible( proxyClassCtor );
       return proxyClassCtor.newInstance( root );
     }
     catch( Exception e )

@@ -190,7 +190,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getLocationForModule(location, moduleName);
     try
     {
-      Method getLocationForModule = JavacFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, String.class );
+      Method getLocationForModule = JavaFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, String.class );
       return (Location)getLocationForModule.invoke( fileManager, location, moduleName );
     }
     catch( Exception e )
@@ -207,7 +207,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getLocationForModule(location, fo);
     try
     {
-      Method getLocationForModule = JavacFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, JavaFileObject.class );
+      Method getLocationForModule = JavaFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, JavaFileObject.class );
       return (Location)getLocationForModule.invoke( fileManager, location, fo );
     }
     catch( Exception e )
@@ -224,7 +224,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getServiceLoader(location, service);
     try
     {
-      Method getServiceLoader = JavacFileManager.class.getDeclaredMethod( "getServiceLoader", Location.class, Class.class );
+      Method getServiceLoader = JavaFileManager.class.getDeclaredMethod( "getServiceLoader", Location.class, Class.class );
       //noinspection unchecked
       return (ServiceLoader)getServiceLoader.invoke( fileManager, location, service );
     }
@@ -242,7 +242,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.inferModuleName( location );
     try
     {
-      Method inferModuleName = JavacFileManager.class.getDeclaredMethod( "inferModuleName", Location.class );
+      Method inferModuleName = JavaFileManager.class.getDeclaredMethod( "inferModuleName", Location.class );
       return (String)inferModuleName.invoke( fileManager, location );
     }
     catch( Exception e )
@@ -259,7 +259,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.listLocationsForModules( location );
     try
     {
-      Method listLocationsForModules = JavacFileManager.class.getDeclaredMethod( "listLocationsForModules", Location.class );
+      Method listLocationsForModules = JavaFileManager.class.getDeclaredMethod( "listLocationsForModules", Location.class );
       //noinspection unchecked
       return (Iterable)listLocationsForModules.invoke( fileManager, location );
     }
@@ -277,7 +277,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.contains( location, fo );
     try
     {
-      Method contains = JavacFileManager.class.getDeclaredMethod( "contains", Location.class, FileObject.class );
+      Method contains = JavaFileManager.class.getDeclaredMethod( "contains", Location.class, FileObject.class );
       //noinspection unchecked
       return (boolean)contains.invoke( fileManager, location, fo );
     }

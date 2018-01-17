@@ -47,14 +47,19 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   @Override
   protected String aliasFqn( String fqn, IFile file )
   {
-    if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 && fqn.startsWith( EXTENSIONS_PACKAGE + '.' ) )
+    if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 )
     {
-      String extendedType = fqn.substring( EXTENSIONS_PACKAGE.length() + 1 );
+      int iExt = fqn.indexOf( EXTENSIONS_PACKAGE + '.' );
 
-      int iDot = extendedType.lastIndexOf( '.' );
-      if( iDot > 0 )
+      if( iExt >= 0 )
       {
-        return extendedType.substring( 0, iDot );
+        String extendedType = fqn.substring( iExt + EXTENSIONS_PACKAGE.length() + 1 );
+
+        int iDot = extendedType.lastIndexOf( '.' );
+        if( iDot > 0 )
+        {
+          return extendedType.substring( 0, iDot );
+        }
       }
     }
     return null;
@@ -71,54 +76,40 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
 
     for( String fqn : fqns )
     {
-      if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 && fqn.startsWith( EXTENSIONS_PACKAGE + '.' ) )
+      if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 )
       {
-        String extendedType = fqn.substring( EXTENSIONS_PACKAGE.length() + 1 );
-
-        int iDot = extendedType.lastIndexOf( '.' );
-        if( iDot > 0 )
+        int iExt = fqn.indexOf( EXTENSIONS_PACKAGE + '.' );
+        if( iExt >= 0 )
         {
-          try
-          {
-            //## note: this is pretty sloppy science here, but we don't want to parse java or use asm at this point
+          String extendedType = fqn.substring( iExt + EXTENSIONS_PACKAGE.length() + 1 );
 
-            if( file.getExtension().equalsIgnoreCase( "java" ) )
-            {
-              String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() );
-            }
-            else // .class file
-            {
-              String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-              return content.contains( Extension.class.getName().replace( '.', '/' ) );
-            }
-          }
-          catch( IOException e )
+          int iDot = extendedType.lastIndexOf( '.' );
+          if( iDot > 0 )
           {
-            // eat
+            try
+            {
+              //## note: this is pretty sloppy science here, but we don't want to parse java or use asm at this point
+
+              if( file.getExtension().equalsIgnoreCase( "java" ) )
+              {
+                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+                return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() );
+              }
+              else // .class file
+              {
+                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+                return content.contains( Extension.class.getName().replace( '.', '/' ) );
+              }
+            }
+            catch( IOException e )
+            {
+              // eat
+            }
           }
         }
       }
     }
     return false;
-  }
-
-  @Override
-  public String[] getTypesForFile( IFile file )
-  {
-    String[] typesForFile = super.getTypesForFile( file );
-    if( typesForFile != null && typesForFile.length > 0 )
-    {
-      String fqn = typesForFile[0];
-      if( fqn.startsWith( EXTENSIONS_PACKAGE ) )
-      {
-        fqn = fqn.substring( EXTENSIONS_PACKAGE.length() + 1 );
-        int iDot = fqn.lastIndexOf( '.' );
-        fqn = iDot == -1 ? fqn : fqn.substring( 0, iDot );
-        return new String[]{fqn};
-      }
-    }
-    return typesForFile;
   }
 
   @Override

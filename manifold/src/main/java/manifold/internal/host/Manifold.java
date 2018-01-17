@@ -3,7 +3,6 @@ package manifold.internal.host;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
@@ -19,6 +18,7 @@ import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
 import manifold.internal.runtime.UrlClassLoaderWrapper;
 import manifold.util.BytecodeOptions;
+import manifold.util.NecessaryEvilUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -75,6 +75,7 @@ public class Manifold
     {
       combined.addAll( classpath );
     }
+    NecessaryEvilUtil.bypassJava9Security();
     combined.addAll( deriveClasspathFrom( Manifold.class ) );
     setPaths( sourcepath, combined );
   }
