@@ -143,6 +143,7 @@
           <configuration>
             <!--<argLine>&#45;&#45;illegal-access=permit &#45;&#45;add-opens=java.base/jdk.internal.loader=ALL-UNNAMED</argLine>-->
             <useManifestOnlyJar>false</useManifestOnlyJar>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
           </configuration>
         </plugin>
         <plugin>
