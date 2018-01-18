@@ -15,7 +15,7 @@
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-plugin-placeholder</artifactId>
-      <version>0.1.1-alpha</version>
+      <version>0.1.2-alpha-SNAPSHOT</version>
     </dependency>
   </dependencies>
   

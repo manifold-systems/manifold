@@ -146,7 +146,7 @@ Using Manifold in your Java project is simple:
 
 That's all.
 
-Manifold currently works with [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html).  Support for Java 9 is coming soon.
+Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) and [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html).
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).  
 Install the Manifold plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`

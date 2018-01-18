@@ -225,7 +225,7 @@ it incrementally without having to rewrite classes or conform to a new way of do
 <li>Add '-Xplugin:Manifold' as an argument to Javac</li>
 </ul>
 <p>That's all.</p>
-<p>Manifold currently works with Java 8.  Support for Java 9 is coming soon.</p>
+<p>Manifold fully supports both <strong>Java 8</strong> and <strong>Java 9</strong>.</p>
 <h3><a class="toc_anchor" name="working_with_intellij"> </a>Working with IntelliJ</h3>
 <p>Manifold is best experienced using <a href="https://www.jetbrains.com/idea/download">IntelliJ IDEA</a>.</p>
 <p><strong>Install</strong></p>
@@ -910,11 +910,16 @@ public class MyStringExtension {
   }
 }
 </code></pre>
-<p>All extension classes must be rooted in the <code>extensions</code> package where the remainder of the package
+<p>All extension classes must be sub-rooted in the <code>extensions</code> package where the remainder of the package
 must be the qualified name of the extended class. As the example illustrates, an extension
-class on <code>java.lang.String</code> must reside directly in package <code>extensions.java.lang.String</code>. Note this
+class on <code>java.lang.String</code> must reside directly in a package equal to or ending with <code>extensions.java.lang.String</code>. Note this
 convention facilitates the extension discovery process and avoids the overhead and ceremony of
 alternative means such as annotation processors.</p>
+<p>In <strong>Java 9</strong> because a package must reside in a single module, you should prepend your module name to the extension package
+name to avoid illegal sharing of packages between modules.  For example, if your module were named <code>foo.widget</code> you
+should define your extension class as <code>foo.widget.extensions.java.lang.String</code>.  In Java 8 all extension classes can be
+directly rooted in the <code>extensions</code> package, however it is still best to qualify extension classes with your project
+or module name to prevent naming collisions.</p>
 <p>Additionally, an extension class must be annotated with <code>manifold.ext.api.Extension</code>, which distinguishes
 extension classes from other classes that may reside in the same package.</p>
 <h3><a class="toc_anchor" name="extension_method_basics"> </a>Extension Method Basics</h3>
