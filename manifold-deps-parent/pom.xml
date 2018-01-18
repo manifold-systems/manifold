@@ -1,8 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>systems.manifold</groupId>
-  <artifactId>manifold-parent</artifactId>
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-parent</artifactId>
+    <version>0.8-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-deps-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.8-SNAPSHOT</version>
 
@@ -27,15 +32,25 @@
   </developers>
 
   <modules>
-    <module>manifold-core-parent</module>
-    <module>manifold-deps-parent</module>
-    <module>manifold-plugin-placeholder</module>
-    <module>manifold-all</module>
+    <module>manifold-test</module>
+    <module>manifold-ext</module>
+    <module>manifold-ext-test</module>
+    <module>manifold-io</module>
+    <module>manifold-io-test</module>
+    <module>manifold-json</module>
+    <module>manifold-json-test</module>
+    <module>manifold-js</module>
+    <module>manifold-js-test</module>
+    <module>manifold-text</module>
+    <module>manifold-text-test</module>
+    <module>manifold-collections</module>
+    <module>manifold-collections-test</module>
+    <module>manifold-templates</module>
+    <module>manifold-templates-test</module>
+    <module>manifold-docs</module>
   </modules>
 
   <properties>
-    <java-source-ver>8</java-source-ver>
-    <java-target-ver>8</java-target-ver>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scm.root>scm:git:git@github.com:manifold-systems</scm.root>
   </properties>
@@ -91,6 +106,31 @@
 
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.7.0</version>
+          <configuration>
+            <source>${java-source-ver}</source>
+            <target>${java-target-ver}</target>
+            <encoding>UTF-8</encoding>
+            <compilerArgs>
+              <arg>-Xplugin:Manifold</arg>
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>-->
+              <!--<arg>&#45;&#45;add-exports=java.base/jdk.internal.loader=ALL-UNNAMED</arg>-->
+            </compilerArgs>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>

@@ -1,12 +1,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>systems.manifold</groupId>
-  <artifactId>manifold-parent</artifactId>
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-parent</artifactId>
+    <version>0.8-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-core-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.8-SNAPSHOT</version>
 
-  <name>Manifold :: Parent</name>
+  <name>Manifold :: CoreParent</name>
   <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
   <url>http://manifold.systems/</url>
 
@@ -27,15 +32,10 @@
   </developers>
 
   <modules>
-    <module>manifold-core-parent</module>
-    <module>manifold-deps-parent</module>
-    <module>manifold-plugin-placeholder</module>
-    <module>manifold-all</module>
+    <module>manifold</module>
   </modules>
 
   <properties>
-    <java-source-ver>8</java-source-ver>
-    <java-target-ver>8</java-target-ver>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scm.root>scm:git:git@github.com:manifold-systems</scm.root>
   </properties>
@@ -91,6 +91,19 @@
 
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.7.0</version>
+          <configuration>
+            <source>${java-source-ver}</source>
+            <target>${java-target-ver}</target>
+            <encoding>UTF-8</encoding>
+            <compilerArgs>
+              <arg>-Xplugin:BootstrapPlugin</arg>
+            </compilerArgs>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-deploy-plugin</artifactId>
