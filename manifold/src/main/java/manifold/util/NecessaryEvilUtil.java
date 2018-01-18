@@ -16,8 +16,7 @@ public class NecessaryEvilUtil
     }
     catch( Throwable t )
     {
-      System.err.println( "The 'Unsafe' class is not accessible" );
-      return null;
+      throw new RuntimeException( "The 'Unsafe' class is not accessible" );
     }
   }
 

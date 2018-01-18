@@ -5,9 +5,16 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import manifold.util.concurrent.ConcurrentHashSet;
+import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 public class ReflectUtil
 {
+  private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
+  private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
+  
   public static Class<?> type( String fqn )
   {
     try
@@ -42,6 +49,12 @@ public class ReflectUtil
   }
   public static MethodRef method( Class cls, String name, Class... params )
   {
+    MethodRef mr = getMethodFromCache( cls, name, params );
+    if( mr != null ) 
+    {
+      return mr;
+    }
+    
     outer:
     for( Method m: cls.getDeclaredMethods() )
     {
@@ -59,7 +72,7 @@ public class ReflectUtil
               continue outer;
             }
           }
-          return new MethodRef( m );
+          return addMethodToCache( cls, m );
         }
       }
     }
@@ -67,11 +80,14 @@ public class ReflectUtil
     Class superclass = cls.getSuperclass();
     if( superclass != null )
     {
-      return method( superclass, name, params );
+      mr = method( superclass, name, params );
+      addMethodToCache( cls, mr._method );
+      return mr;
     }
 
     throw new RuntimeException( "Method '" + name + "' not found" );
   }
+
 
   public static LiveFieldRef field( Object receiver, String name )
   {
@@ -84,18 +100,26 @@ public class ReflectUtil
   }
   public static FieldRef field( Class cls, String name )
   {
+    FieldRef fr = getFieldFromCache( cls, name );
+    if( fr != null )
+    {
+      return fr;
+    }
+
     for( Field f: cls.getDeclaredFields() )
     {
       if( f.getName().equals( name ) )
       {
-        return new FieldRef( f );
+        return addFieldToCache( cls, f );
       }
     }
 
     Class superclass = cls.getSuperclass();
     if( superclass != null )
     {
-      return field( superclass, name );
+      fr = field( superclass, name );
+      addFieldToCache( cls, fr._field );
+      return fr;
     }
 
     throw new RuntimeException( "Field '" + name + "' not found" );
@@ -114,12 +138,10 @@ public class ReflectUtil
     }
   }
 
-
   public static void setAccessible( Member m )
   {
     try
     {
-
       Field overrideField = AccessibleObject.class.getDeclaredField( "override" );
       NecessaryEvilUtil.UNSAFE.putObjectVolatile( m, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
     }
@@ -307,4 +329,79 @@ public class ReflectUtil
       }
     }
   }
+
+  private static MethodRef addMethodToCache( Class cls, Method m )
+  {
+    ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
+    if( methodsByName == null )
+    {
+      _methodsByName.put( cls, methodsByName = new ConcurrentHashMap<>() );
+    }
+    ConcurrentHashSet<Method> methods = methodsByName.get( m.getName() );
+    if( methods == null )
+    {
+      methodsByName.put( m.getName(), methods = new ConcurrentHashSet<>( 2 ) );
+    }
+    methods.add( m );
+
+    return new MethodRef( m );
+  }
+
+  private static MethodRef getMethodFromCache( Class cls, String name, Class[] params )
+  {
+    ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
+    if( methodsByName != null )
+    {
+      ConcurrentHashSet<Method> methods = methodsByName.get( name );
+      if( methods != null )
+      {
+        outer:
+        for( Method m: methods )
+        {
+          Class<?>[] mparams = m.getParameterTypes();
+          int paramsLen = params == null ? 0 : params.length;
+          if( mparams.length == paramsLen )
+          {
+            for( int i = 0; i < mparams.length; i++ )
+            {
+              Class<?> mparam = mparams[i];
+              if( !mparam.equals( params[i] ) )
+              {
+                continue outer;
+              }
+            }
+            return new MethodRef( m );
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private static FieldRef addFieldToCache( Class cls, Field f )
+  {
+    ConcurrentMap<String, Field> fieldsByName = _fieldsByName.get( cls );
+    if( fieldsByName == null )
+    {
+      _fieldsByName.put( cls, fieldsByName = new ConcurrentHashMap<>() );
+    }
+    fieldsByName.put( f.getName(), f );
+
+    return new FieldRef( f );
+  }
+
+  private static FieldRef getFieldFromCache( Class cls, String name )
+  {
+    ConcurrentMap<String, Field> fieldsByName = _fieldsByName.get( cls );
+    if( fieldsByName != null )
+    {
+      Field f = fieldsByName.get( name );
+      if( f != null )
+      {
+        return new FieldRef( f );
+      }
+    }
+    return null;
+  }
+
 }
