@@ -1,8 +1,7 @@
 package manifold.io;
 
-import extensions.java.io.File.ManFileExt;
+import manifold.io.extensions.java.io.File.ManFileExt;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 /**

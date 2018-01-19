@@ -1,7 +1,7 @@
 package manifold.api.json;
 
-import extensions.java.net.URL.ManUrlExt;
-import extensions.javax.script.Bindings.ManBindingsExt;
+import manifold.json.extensions.java.net.URL.ManUrlExt;
+import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;

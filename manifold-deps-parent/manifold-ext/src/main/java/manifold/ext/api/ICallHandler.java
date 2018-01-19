@@ -1,5 +1,7 @@
 package manifold.ext.api;
 
+import manifold.ext.extensions.java.util.Map.MapStructExt;
+
 /**
  * Facilitates dynamic interface method invocation.
  * <p/>
@@ -13,7 +15,7 @@ package manifold.ext.api;
  * doesn't wrap anything, therefore it doesn't lose its identity in the process
  * of making calls.
  *
- * @see extensions.java.util.Map.MapStructExt
+ * @see MapStructExt
  */
 @Structural
 public interface ICallHandler

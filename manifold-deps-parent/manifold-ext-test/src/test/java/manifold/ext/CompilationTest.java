@@ -25,7 +25,6 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardLocation;
-import junit.framework.TestCase;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IDirectory;
 import manifold.internal.host.ManifoldHost;
@@ -97,21 +96,21 @@ public class CompilationTest
 
     private void runTests() throws IOException, URISyntaxException
     {
-      compileFile( _javacTool, _fm, "/extensions/abc/benis_png/MyBenis_pngExt_Test.java",
+      compileFile( _javacTool, _fm, "/manifold/ext/extensions/abc/benis_png/MyBenis_pngExt_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_EXTENSION_SHADOWS, 1 ),
                    new Pair<>( ExtIssueMsg.MSG_MAYBE_MISSING_THIS, 19 ) );
-      compileFile( _javacTool, _fm, "/extensions/java/util/List/ListExt_Test.java",
+      compileFile( _javacTool, _fm, "/manifold/ext/extensions/java/util/List/ListExt_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_EXTENSION_SHADOWS, 1 ) );
-      compileFile( _javacTool, _fm, "/extensions/java/util/List/ListExt2_Test.java",
+      compileFile( _javacTool, _fm, "/manifold/ext/extensions/java/util/List/ListExt2_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_EXTENSION_SHADOWS, 1 ) );
-      compileFile( _javacTool, _fm, "/extensions/java/util/List/ListExt3_Test.java",
+      compileFile( _javacTool, _fm, "/manifold/ext/extensions/java/util/List/ListExt3_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_THIS_FIRST, 17 ),
                    new Pair<>( ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS, 20 ),
                    new Pair<>( ExtIssueMsg.MSG_MAYBE_MISSING_THIS, 23 ),
                    new Pair<>( ExtIssueMsg.MSG_MUST_BE_STATIC, 26 ),
                    new Pair<>( ExtIssueMsg.MSG_MUST_BE_STATIC, 29 ),
                    new Pair<>( ExtIssueMsg.MSG_MUST_NOT_BE_PRIVATE, 33 ) );
-      compileFile( _javacTool, _fm, "/extensions/java/util/List/ListExt4_Test.java",
+      compileFile( _javacTool, _fm, "/manifold/ext/extensions/java/util/List/ListExt4_Test.java",
                    new Pair<>( ExtIssueMsg.MSG_ONLY_STRUCTURAL_INTERFACE_ALLOWED_HERE, 13 ) );
     }
 

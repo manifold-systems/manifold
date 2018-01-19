@@ -1553,7 +1553,7 @@ Note the similarity of this functionality on `Map` with _expando_ types in dynam
 main difference is that invocations must be made through structural interfaces and not directly on 
 the map, otherwise `Map` behaves much like an expando object.
 
-See `extensions.java.util.Map.MapStructExt.java` for details.
+See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
 
 ## ${anchor("IDE -- IntelliJ IDEA")}
