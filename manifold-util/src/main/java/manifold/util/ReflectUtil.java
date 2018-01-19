@@ -14,7 +14,7 @@ public class ReflectUtil
 {
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
-  
+
   public static Class<?> type( String fqn )
   {
     try
@@ -47,7 +47,7 @@ public class ReflectUtil
     }
     return new LiveMethodRef( ref._method, receiver );
   }
-  public static MethodRef method( Class cls, String name, Class... params )
+  public static MethodRef method( Class<?> cls, String name, Class... params )
   {
     MethodRef mr = getMethodFromCache( cls, name, params );
     if( mr != null ) 
@@ -55,45 +55,31 @@ public class ReflectUtil
       return mr;
     }
     
-    outer:
-    for( Method m: cls.getDeclaredMethods() )
+    try
     {
-      if( m.getName().equals( name ) )
+      Method method = cls.getDeclaredMethod( name, params );
+      return addMethodToCache( cls, method );
+    }
+    catch( Exception e )
+    {
+      Class superclass = cls.getSuperclass();
+      if( superclass != null )
       {
-        Class<?>[] mparams = m.getParameterTypes();
-        int paramsLen = params == null ? 0 : params.length;
-        if( mparams.length == paramsLen )
+        mr = method( superclass, name, params );
+        if( mr != null )
         {
-          for( int i = 0; i < mparams.length; i++ )
-          {
-            Class<?> mparam = mparams[i];
-            if( !mparam.equals( params[i] ) )
-            {
-              continue outer;
-            }
-          }
-          return addMethodToCache( cls, m );
+          return mr;
         }
       }
-    }
 
-    Class superclass = cls.getSuperclass();
-    if( superclass != null )
-    {
-      mr = method( superclass, name, params );
-      if( mr != null )
+      for( Class iface : cls.getInterfaces() )
       {
-        return mr;
-      }
-    }
-
-    for( Class iface: cls.getInterfaces() )
-    {
-      mr = method( iface, name, params );
-      if( mr != null )
-      {
-        addMethodToCache( cls, mr._method );
-        return mr;
+        mr = method( iface, name, params );
+        if( mr != null )
+        {
+          addMethodToCache( cls, mr._method );
+          return mr;
+        }
       }
     }
 
@@ -109,7 +95,7 @@ public class ReflectUtil
     }
     return new LiveFieldRef( ref._field, receiver );
   }
-  public static FieldRef field( Class cls, String name )
+  public static FieldRef field( Class<?> cls, String name )
   {
     FieldRef fr = getFieldFromCache( cls, name );
     if( fr != null )
@@ -117,31 +103,32 @@ public class ReflectUtil
       return fr;
     }
 
-    for( Field f: cls.getDeclaredFields() )
+    try
     {
-      if( f.getName().equals( name ) )
-      {
-        return addFieldToCache( cls, f );
-      }
+      Field field = cls.getDeclaredField( name );
+      return addFieldToCache( cls, field );
     }
-
-    Class superclass = cls.getSuperclass();
-    if( superclass != null )
+    catch( Exception e )
     {
-      fr = field( superclass, name );
-      if( fr != null )
+      Class superclass = cls.getSuperclass();
+      if( superclass != null )
       {
-        return fr;
+        fr = field( superclass, name );
+        if( fr != null )
+        {
+          addFieldToCache( cls, fr._field );
+          return fr;
+        }
       }
-    }
 
-    for( Class iface: cls.getInterfaces() )
-    {
-      fr = field( iface, name );
-      if( fr != null )
+      for( Class iface : cls.getInterfaces() )
       {
-        addFieldToCache( cls, fr._field );
-        return fr;
+        fr = field( iface, name );
+        if( fr != null )
+        {
+          addFieldToCache( cls, fr._field );
+          return fr;
+        }
       }
     }
 
