@@ -1,6 +1,5 @@
 package manifold.util;
 
-import com.sun.tools.javac.code.Source;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.util.Context;
 

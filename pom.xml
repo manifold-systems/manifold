@@ -30,6 +30,7 @@
     <module>manifold-core-parent</module>
     <module>manifold-deps-parent</module>
     <module>manifold-bootstrap-plugin</module>
+    <module>manifold-util</module>
     <module>manifold-all</module>
   </modules>
 

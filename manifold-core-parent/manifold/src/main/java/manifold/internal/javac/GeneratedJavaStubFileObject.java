@@ -6,9 +6,7 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 

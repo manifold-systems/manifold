@@ -9,19 +9,10 @@
     <version>0.8-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-bootstrap-plugin</artifactId>
+  <artifactId>manifold-util</artifactId>
 
-  <name>Manifold Bootstrap Plugin</name>
-  <url>http://manifold.systems</url>
+  <name>Manifold :: Util</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-util</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-  </dependencies>
-  
   <build>
     <pluginManagement>
       <plugins>
