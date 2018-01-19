@@ -81,13 +81,24 @@ public class ReflectUtil
     if( superclass != null )
     {
       mr = method( superclass, name, params );
-      addMethodToCache( cls, mr._method );
-      return mr;
+      if( mr != null )
+      {
+        return mr;
+      }
     }
 
-    throw new RuntimeException( "Method '" + name + "' not found" );
-  }
+    for( Class iface: cls.getInterfaces() )
+    {
+      mr = method( iface, name, params );
+      if( mr != null )
+      {
+        addMethodToCache( cls, mr._method );
+        return mr;
+      }
+    }
 
+    return null;
+  }
 
   public static LiveFieldRef field( Object receiver, String name )
   {
@@ -118,11 +129,23 @@ public class ReflectUtil
     if( superclass != null )
     {
       fr = field( superclass, name );
-      addFieldToCache( cls, fr._field );
-      return fr;
+      if( fr != null )
+      {
+        return fr;
+      }
     }
 
-    throw new RuntimeException( "Field '" + name + "' not found" );
+    for( Class iface: cls.getInterfaces() )
+    {
+      fr = field( iface, name );
+      if( fr != null )
+      {
+        addFieldToCache( cls, fr._field );
+        return fr;
+      }
+    }
+
+    return null;
   }
 
   public static ConstructorRef constructor( String fqn, Class<?>... params )

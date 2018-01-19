@@ -2,7 +2,9 @@ package manifold.internal.runtime;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -186,9 +188,29 @@ public class UrlClassLoaderWrapper
       if( scheme.equalsIgnoreCase( "file" ) || scheme.equalsIgnoreCase( "jar" ) )
       {
         Object reader = moduleToReader.get( mr );
-        Object/*ManModuleReader*/ wrapper = ReflectUtil.constructor( "manifold.internal.runtime.ManModuleReader", ReflectUtil.type( "java.lang.module.ModuleReader" ), ReflectUtil.type( "jdk.internal.loader.URLClassPath" ) ).newInstance( reader, ReflectUtil.field( _loader, "ucp" ).get() );
-        moduleToReader.put( mr, wrapper );
+        Class<?> moduleReaderClass = ReflectUtil.type( "java.lang.module.ModuleReader" );
+        ManModuleReader wrapper = new ManModuleReader( reader, ReflectUtil.field( _loader, "ucp" ).get() );
+        Object/*ModuleReader*/ proxy = Proxy.newProxyInstance( moduleReaderClass.getClassLoader(), new Class<?>[]{moduleReaderClass},
+          new ManModuleReaderInvocationHandler( wrapper ) );
+        //noinspection unchecked
+        moduleToReader.put( mr, proxy );
       }
+    }
+  }
+
+  private static class ManModuleReaderInvocationHandler implements InvocationHandler
+  {
+    private final Object /*ManModuleReader*/ _wrapper;
+
+    private ManModuleReaderInvocationHandler( Object /*ManModuleReader*/ wrapper )
+    {
+      _wrapper = wrapper;
+    }
+
+    @Override
+    public Object invoke( Object proxy, Method method, Object[] args )
+    {
+      return ReflectUtil.method( _wrapper, method.getName(), method.getParameterTypes() ).invoke( args );
     }
   }
 
