@@ -59,8 +59,8 @@ public class Hyde {
     //  External project docs non-template Resources
     //==========================================================================================
     log("Generating External Docs...");
-    renderExternalMarkdownTo(wwwDir, "manifold-templates.html", "manifold-templates/README.md");
-    renderExternalMarkdownTo(wwwDir, "manifold-js.html", "manifold-js/README.md");
+    renderExternalMarkdownTo(wwwDir, "manifold-templates.html", "manifold-deps-parent/manifold-templates/README.md");
+    renderExternalMarkdownTo(wwwDir, "manifold-js.html", "manifold-deps-parent/manifold-js/README.md");
 
     //==========================================================================================
     //  Copy non-template Resources
