@@ -105,7 +105,7 @@ public class BootstrapPlugin implements Plugin, TaskListener
         {
           if( pkg instanceof Symbol.PackageSymbol )
           {
-            System.err.println( "PACKAGE: " + pkg );
+            //System.err.println( "PACKAGE: " + pkg );
             Object exp = ReflectUtil.constructor( "com.sun.tools.javac.code.Directive$ExportsDirective", Symbol.PackageSymbol.class, com.sun.tools.javac.util.List.class ).newInstance( pkg,
               com.sun.tools.javac.util.List.of( rootModule ) );
             exports.add( exp );

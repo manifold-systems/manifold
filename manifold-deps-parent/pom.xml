@@ -4,12 +4,12 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>0.8-SNAPSHOT</version>
+    <version>${manifold-ver}</version>
   </parent>
 
   <artifactId>manifold-deps-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.8-SNAPSHOT</version>
+  <version>${manifold-ver}</version>
 
   <name>Manifold :: Parent</name>
   <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>

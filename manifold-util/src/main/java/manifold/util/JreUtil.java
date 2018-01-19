@@ -1,8 +1,5 @@
 package manifold.util;
 
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.util.Context;
-
 public class JreUtil
 {
   private static final boolean JAVA_8 = System.getProperty( "java.version" ).startsWith( "1.8" );
@@ -20,7 +17,7 @@ public class JreUtil
     return !JAVA_8;
   }
 
-  public static boolean isJava9Modular_compiler( Context ctx )
+  public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
   {
     if( _modular == null )
     {
@@ -30,8 +27,9 @@ public class JreUtil
       }
       else
       {
-        Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( ctx );
-        Symbol defModule = (Symbol)ReflectUtil.method( modulesUtil, "getDefaultModule" ).invoke();
+        //noinspection ConstantConditions
+        Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", ReflectUtil.type( "com.sun.tools.javac.util.Context" ) ).invokeStatic( ctx );
+        Object defModule = ReflectUtil.method( modulesUtil, "getDefaultModule" ).invoke();
         _modular = defModule != null && !(boolean)ReflectUtil.method( defModule, "isNoModule" ).invoke() && !(boolean)ReflectUtil.method( defModule, "isUnnamed" ).invoke();
       }
     }
@@ -48,6 +46,7 @@ public class JreUtil
       }
       else
       {
+        //noinspection ConstantConditions
         Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( JreUtil.class );
         _modularRuntime = (boolean)ReflectUtil.method( manifoldModule, "isNamed" ).invoke();
       }

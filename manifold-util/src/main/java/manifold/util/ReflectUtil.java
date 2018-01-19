@@ -148,23 +148,49 @@ public class ReflectUtil
     }
   }
 
+  public static void setAccessible( Field f )
+  {
+    try
+    {
+      f.setAccessible( true );
+    }
+    catch( Exception e )
+    {
+      setAccessible( (Member)f );
+    }
+  }
+  public static void setAccessible( Method m )
+  {
+    try
+    {
+      m.setAccessible( true );
+    }
+    catch( Exception e )
+    {
+      setAccessible( (Member)m );
+    }
+  }
+  public static void setAccessible( Constructor c )
+  {
+    try
+    {
+      c.setAccessible( true );
+    }
+    catch( Exception e )
+    {
+      setAccessible( (Member)c );
+    }
+  }
   public static void setAccessible( Member m )
   {
     Field overrideField = getOverrideField();
     try
     {
-      overrideField.set( m, true );
+      NecessaryEvilUtil.UNSAFE.putObjectVolatile( m, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
     }
     catch( Exception e )
     {
-      try
-      {
-        NecessaryEvilUtil.UNSAFE.putObjectVolatile( m, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
-      }
-      catch( Exception ee )
-      {
-        throw new RuntimeException( e );
-      }
+      throw new RuntimeException( e );
     }
   }
 
@@ -176,7 +202,6 @@ public class ReflectUtil
       try
       {
         overrideField = AccessibleObject.class.getDeclaredField( "override" );
-        NecessaryEvilUtil.UNSAFE.putObjectVolatile( overrideField, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
         addRawFieldToCache( AccessibleObject.class, overrideField );
       }
       catch( Exception e )
