@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>${manifold-ver}</version>
+  <version>0.8-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
@@ -35,7 +35,6 @@
   </modules>
 
   <properties>
-    <manifold-ver>0.8-SNAPSHOT</manifold-ver>
     <java-source-ver>8</java-source-ver>
     <java-target-ver>8</java-target-ver>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
