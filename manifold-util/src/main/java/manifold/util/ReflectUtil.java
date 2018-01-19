@@ -160,19 +160,21 @@ public class ReflectUtil
 
   private static Field getOverrideField()
   {
-    Field accessible = getRawFieldFromCache( AccessibleObject.class, "override" );
-    if( accessible == null )
+    Field overrideField = getRawFieldFromCache( AccessibleObject.class, "override" );
+    if( overrideField == null )
     {
       try
       {
-        addRawFieldToCache( AccessibleObject.class, accessible = AccessibleObject.class.getDeclaredField( "override" ) );
+        overrideField = AccessibleObject.class.getDeclaredField( "override" );
+        NecessaryEvilUtil.UNSAFE.putObjectVolatile( overrideField, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
+        addRawFieldToCache( AccessibleObject.class, overrideField );
       }
       catch( Exception e )
       {
         throw new RuntimeException( e );
       }
     }
-    return accessible;
+    return overrideField;
   }
 
   public static class MethodRef
@@ -353,6 +355,12 @@ public class ReflectUtil
   private static MethodRef addMethodToCache( Class cls, Method m )
   {
     setAccessible( m );
+    addRawMethodToCache( cls, m );
+    return new MethodRef( m );
+  }
+
+  private static void addRawMethodToCache( Class cls, Method m )
+  {
     ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
     if( methodsByName == null )
     {
@@ -364,11 +372,19 @@ public class ReflectUtil
       methodsByName.put( m.getName(), methods = new ConcurrentHashSet<>( 2 ) );
     }
     methods.add( m );
-
-    return new MethodRef( m );
   }
 
-  private static MethodRef getMethodFromCache( Class cls, String name, Class[] params )
+  private static MethodRef getMethodFromCache( Class cls, String name, Class... params )
+  {
+    Method m = getRawMethodFromCache( cls, name, params );
+    if( m != null )
+    {
+      return new MethodRef( m );
+    }
+    return null;
+  }
+
+  private static Method getRawMethodFromCache( Class cls, String name, Class... params )
   {
     ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
     if( methodsByName != null )
@@ -391,7 +407,7 @@ public class ReflectUtil
                 continue outer;
               }
             }
-            return new MethodRef( m );
+            return m;
           }
         }
       }

@@ -40,7 +40,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import manifold.internal.PluginPlaceholder;
+import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.runtime.Bootstrap;
 import manifold.util.IssueMsg;
@@ -229,7 +229,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     _seenModules.add( module );
 
-    PluginPlaceholder.openModule( _ctx, "jdk.compiler" );
+    BootstrapPlugin.openModule( _ctx, "jdk.compiler" );
 
     // Override javac's Resolve (lol)
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManResolve" ), "instance", Context.class ).invokeStatic( _ctx );

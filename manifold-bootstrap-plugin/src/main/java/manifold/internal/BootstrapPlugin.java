@@ -21,11 +21,9 @@ import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 /**
- * This class serves as a placeholder for the Manifold JavacPlugin so that the Java 9 compiler will not produce an error
- * because the manifold parent pom.xml automatically applies the <code>-Xplugin:Manifold</code> compiler argument to all
- * manifold child modules, including the core manifold module, which fails because the the JavacPlugin is defined there.
+ * Opens jdk.compiler module programmatically. For use with Java 9+, does nothing when used with Java 8.
  */
-public class PluginPlaceholder implements Plugin, TaskListener
+public class BootstrapPlugin implements Plugin, TaskListener
 {
   private Context _ctx;
   private boolean _done;
