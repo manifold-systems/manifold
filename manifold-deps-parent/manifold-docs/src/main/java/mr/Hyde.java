@@ -125,7 +125,7 @@ public class Hyde {
   }
 
   private static File makeOutputDir() {
-    File site = new File("manifold-docs/www");
+    File site = new File("manifold-deps-parent/manifold-docs/www");
     site.mkdirs();
     return site;
   }
