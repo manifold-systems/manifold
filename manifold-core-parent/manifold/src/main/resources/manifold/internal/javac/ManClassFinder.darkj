@@ -7,6 +7,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Modules;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
@@ -97,11 +98,26 @@ public class ManClassFinder extends ClassFinder
     // added to the extended class -- Manifold rewrites the the bytecode at the call site to
     // call the extension class methods directly.
 
-    Set<Symbol.ModuleSymbol> recoverableModules = new HashSet<>( _symtab.getAllModules() );
+    Modules modules = Modules.instance( _ctx );
+    Set<Symbol.ModuleSymbol> recoverableModules = new HashSet<>( modules.allModules() );
 
     recoverableModules.remove( msym );
+
     recoverableModules.add( _symtab.unnamedModule );
-    addJavaSeModule( recoverableModules );
+
+    Symtab symtab = Symtab.instance( _ctx );
+
+//
+//## note: The user's module must 'require' any modules used by code generated from a type manifold, so adding it here too
+//##       makes little difference -- the call to modules.allModules() is the transitive closure, which contains these.
+//##       Basically, we want to avoid extra modules here because searching for classes in them unnecessarily affects performance.
+//
+//    //## manifold-json depends on java.scripting, which it gets for free in Java 8, but needs explicit "reqiures" in Java 9
+//    recoverableModules.add( symtab.getModule( Names.instance( _ctx ).fromString( "java.scripting" ) ) );
+//    //## manifold image support depends on java.desktop for ImageIcon, which it gets for free in Java 8, but needs explicit "reqiures" in Java 9
+//    recoverableModules.add( symtab.getModule( Names.instance( _ctx ).fromString( "java.desktop" ) ) );
+
+    //addJavaSeModule( recoverableModules );
 
     for( Symbol.ModuleSymbol ms : recoverableModules )
     {

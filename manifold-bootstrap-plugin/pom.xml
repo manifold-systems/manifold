@@ -11,7 +11,7 @@
 
   <artifactId>manifold-bootstrap-plugin</artifactId>
 
-  <name>Manifold Bootstrap Plugin</name>
+  <name>Manifold :: Bootstrap Plugin</name>
   <url>http://manifold.systems</url>
 
   <dependencies>
