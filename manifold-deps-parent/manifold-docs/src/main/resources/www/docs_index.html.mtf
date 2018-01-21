@@ -11,7 +11,7 @@
         <li class="sub">${linkTo("Working with IntelliJ")}</li>
         <li class="sub">${linkTo("Binaries")}</li>
         <li class="sub">${linkTo("Maven")}</li>
-        <li class="sub">${linkTo("Gradel")}</li>
+        <li class="sub">${linkTo("Gradle")}</li>
         <li>${linkTo("What Is a Type Manifold?")}</li>
         <li class="sub">${linkTo("JSON and JSON Schema")}</li>
         <li class="sub">${linkTo("Properties Files")}</li>
