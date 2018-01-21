@@ -115,6 +115,10 @@ h6 {
   background-color: #389CFF;
   font-weight: bold;
 }
+.hero-container .btn-primary-green {
+  background-color: #38FF9C;
+  font-weight: bold;
+}
 .wut-container {
   padding: 32px;
   width: 100%;

@@ -115,6 +115,12 @@
         </div>
 
     </div>
+
+        <div class="col-md-10 col-md-offset-1  text-center">
+            <p>
+                <a id="docs-btn" href="/docs.html" class="btn btn-primary-green btn-lg">Learn More</a>
+            </p>
+        </div>
 </div>
 
 <div class="container contact-container">
