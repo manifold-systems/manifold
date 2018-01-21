@@ -131,6 +131,11 @@ h6 {
   font-size: 20px;
   margin: 48px;
 }
+#docs-btn {
+  padding: 13px 57px;
+  font-size: 20px;
+  margin: 48px;
+}
 .marketing-container {
   padding-top: 24px;
   padding-bottom: 48px;
