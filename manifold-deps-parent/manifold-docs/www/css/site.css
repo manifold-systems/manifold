@@ -115,10 +115,6 @@ h6 {
   background-color: #389CFF;
   font-weight: bold;
 }
-.hero-container .btn-primary-green {
-  background-color: #38FF9C;
-  font-weight: bold;
-}
 .wut-container {
   padding: 32px;
   width: 100%;
@@ -139,6 +135,10 @@ h6 {
 .marketing-container {
   padding-top: 24px;
   padding-bottom: 48px;
+}
+.marketing-container .btn-primary {
+  background-color: #38FF9C;
+  font-weight: bold;
 }
 .contact-container {
   box-shadow: 0px 0px 20px 3px #CCC;
