@@ -342,6 +342,16 @@ To contribute a change to Manifold:
 
 For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags). 
 
+## Building
+
+To execute tests:
+
+    mvn test
+
+To change the version number:
+
+    mvn -B release:update-versions -DdevelopmentVersion=0.x-SNAPSHOT
+
 ## Authors
 
 * **Scott McKinney** - *Manifold creator, principal engineer, and founder of [Manifold Systems, LLC](http://manifold.systems)*
