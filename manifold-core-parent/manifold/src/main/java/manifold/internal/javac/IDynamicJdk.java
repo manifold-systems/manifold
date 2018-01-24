@@ -1,9 +1,11 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Context;
 import javax.tools.Diagnostic;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -20,6 +22,7 @@ public interface IDynamicJdk
 
   Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call );
 
+  Symbol.ClassSymbol getTypeElement(Context ctx, JCTree.JCCompilationUnit cu, String fqn );
 
   class Instance
   {

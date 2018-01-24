@@ -403,7 +403,7 @@ public class ExtensionTransformer extends TreeTranslator
 
         if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
-          Symbol.ClassSymbol extendClassSym = JavacElements.instance( _tp.getContext() ).getTypeElement( extendedClassName );
+          Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null && !TypeUtil.isStructuralInterface( _tp, extendClassSym ) ) // an extended class could be made a structural interface which results in Object as @This param, ignore this
           {
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
@@ -466,8 +466,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Symtab symbols = _tp.getSymtab();
       Names names = Names.instance( _tp.getContext() );
-      JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
-      Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
+      Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), getClass().getName() );
       Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
                                                                     List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
@@ -506,8 +505,7 @@ public class ExtensionTransformer extends TreeTranslator
     TreeMaker make = _tp.getTreeMaker();
     Symtab symbols = _tp.getSymtab();
     Names names = Names.instance( _tp.getContext() );
-    JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
-    Symbol.ClassSymbol reflectMethodClassSym = elementUtils.getTypeElement( getClass().getName() );
+    Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), getClass().getName() );
 
     Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( expression.pos(), names.fromString( "assignStructuralIdentity" ), reflectMethodClassSym.type,
                                                                   List.from( new Type[]{symbols.objectType, symbols.classType} ) );

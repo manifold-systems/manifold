@@ -158,11 +158,6 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return classDecl == null ? null : classDecl.sym.sourcefile;
   }
 
-  public Symbol.ClassSymbol getClassSymbol( String fqn )
-  {
-    return getElementUtil().getTypeElement( fqn );
-  }
-
   public void report( JCTree tree, Diagnostic.Kind kind, String msg )
   {
     IssueReporter<JavaFileObject> reporter = new IssueReporter<>( Log.instance( getContext() ) );
