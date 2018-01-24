@@ -61,6 +61,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   {
     return _classpath;
   }
+  protected void setJavaClassPath( List<IDirectory> cp )
+  {
+    _classpath = cp;
+  }
 
   @Override
   public List<IDirectory> getOutputPath()
