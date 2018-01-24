@@ -15,3 +15,5 @@ classes
 # gradle stuff
 **/build/
 .gradle/
+_site
+.DS_Store
