@@ -7,6 +7,7 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Context;
 import javax.tools.Diagnostic;
+import manifold.util.PerfLogUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -32,16 +33,24 @@ public interface IDynamicJdk
       INITIALIZING = true;
       try
       {
-        String fqnIssueReporter;
-        if( JavacPlugin.IS_JAVA_8 )
+        long before = System.nanoTime();
+        try
         {
-          fqnIssueReporter = "manifold.internal.javac.Java8DynamicJdk";
+          String fqnIssueReporter;
+          if( JavacPlugin.IS_JAVA_8 )
+          {
+            fqnIssueReporter = "manifold.internal.javac.Java8DynamicJdk";
+          }
+          else
+          {
+            fqnIssueReporter = "manifold.internal.javac.Java9DynamicJdk";
+          }
+          return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }
-        else
+        finally
         {
-          fqnIssueReporter = "manifold.internal.javac.Java9DynamicJdk";
+          PerfLogUtil.log( "Dynamic JDK Time", before );
         }
-        return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
       }
       catch( Exception e )
       {

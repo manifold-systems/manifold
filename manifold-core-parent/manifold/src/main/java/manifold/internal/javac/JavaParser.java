@@ -5,7 +5,7 @@ import com.sun.source.util.DocTrees;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.Trees;
-import com.sun.tools.javac.api.JavacTaskImpl;
+import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import java.io.File;
 import java.io.IOException;
@@ -186,7 +186,7 @@ public class JavaParser implements IJavaParser
     }
 
     StringWriter errors = new StringWriter();
-    JavacTaskImpl javacTask = (JavacTaskImpl)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
+    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
     initTypeProcessing( javacTask, Collections.singleton( fqn ) );
     javacTask.call();
     return _gfm.findCompiledFile( fileObj.getSecond() );
@@ -200,7 +200,7 @@ public class JavaParser implements IJavaParser
     init();
 
     StringWriter errors = new StringWriter();
-    JavacTaskImpl javacTask = (JavacTaskImpl)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( jfo ) );
+    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( jfo ) );
     initTypeProcessing( javacTask, Collections.singleton( fqn ) );
     javacTask.call();
     return _gfm.findCompiledFile( fqn );
@@ -214,7 +214,7 @@ public class JavaParser implements IJavaParser
     init();
 
     StringWriter errors = new StringWriter();
-    JavacTaskImpl javacTask = (JavacTaskImpl)_javac.getTask( errors, _gfm, errorHandler, options, null, files );
+    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, files );
     initTypeProcessing( javacTask, files.stream().map( this::getTypeForFile ).collect( Collectors.toSet() ) );
     javacTask.call();
     return _gfm.getCompiledFiles();
@@ -281,12 +281,12 @@ public class JavaParser implements IJavaParser
     }
   }
 
-  public JavacTaskImpl getJavacTask()
+  public BasicJavacTask getJavacTask()
   {
     init();
 
     StringWriter errors = new StringWriter();
-    return (JavacTaskImpl)_javac.getTask( errors, _gfm, null, Arrays.asList( "-proc:none", "-source", "8" ), null, null );
+    return (BasicJavacTask)_javac.getTask( errors, _gfm, null, Arrays.asList( "-proc:none", "-source", "8" ), null, null );
   }
 
   @Override

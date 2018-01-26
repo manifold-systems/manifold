@@ -45,6 +45,7 @@ import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.Pair;
+import manifold.util.PerfLogUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
@@ -372,6 +373,12 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void verifyExtensionMethod( JCTree.JCMethodDecl tree )
   {
+//    if( JavacPlugin.instance() == null )
+//    {
+//      // don't perform verification at runtime, slow
+//      return;
+//    }
+
     if( !isFromExtensionClass( tree ) )
     {
       return;

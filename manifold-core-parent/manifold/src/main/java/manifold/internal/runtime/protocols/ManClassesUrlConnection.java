@@ -20,6 +20,7 @@ import manifold.internal.javac.JavaCompileIssuesException;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.StringJavaFileObject;
 import manifold.util.Pair;
+import manifold.util.PerfLogUtil;
 
 /**
  */
@@ -303,25 +304,41 @@ public class ManClassesUrlConnection extends URLConnection
 
     private byte[] compileJavaClass()
     {
-      DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
-      if( cls != null )
+      long before = System.nanoTime();
+      try
       {
-        return cls.getBytes();
+        DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
+        InMemoryClassJavaFileObject cls = JavaParser.instance().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+        if( cls != null )
+        {
+          return cls.getBytes();
+        }
+        throw new JavaCompileIssuesException( _javaFqn, errorHandler );
       }
-      throw new JavaCompileIssuesException( _javaFqn, errorHandler );
+      finally
+      {
+        PerfLogUtil.log( "compileJavaClass() " + _javaFqn, before );
+      }
     }
 
     private byte[] compileProxyClass( String source )
     {
-      DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-      StringJavaFileObject fileObj = new StringJavaFileObject( _javaFqn, source );
-      InMemoryClassJavaFileObject cls = JavaParser.instance().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
-      if( cls != null )
+      long before = System.nanoTime();
+      try
       {
-        return cls.getBytes();
+        DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
+        StringJavaFileObject fileObj = new StringJavaFileObject( _javaFqn, source );
+        InMemoryClassJavaFileObject cls = JavaParser.instance().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+        if( cls != null )
+        {
+          return cls.getBytes();
+        }
+        throw new JavaCompileIssuesException( _javaFqn, errorHandler );
       }
-      throw new JavaCompileIssuesException( _javaFqn, errorHandler );
+      finally
+      {
+        PerfLogUtil.log( "compileProxyClass() " + _javaFqn, before );
+      }
     }
 
     public int read()

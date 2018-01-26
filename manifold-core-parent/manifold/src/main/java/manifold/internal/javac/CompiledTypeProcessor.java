@@ -36,6 +36,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
   private CompilationUnitTree _compilationUnit;
   private final Types _types;
   private final Map<String, Boolean> _typesToProcess;
+  private ParentMap _parents;
   private final IssueReporter<JavaFileObject> _issueReporter;
   private Map<String, JCTree.JCClassDecl> _innerClassForGeneration;
   private JCTree.JCClassDecl _tree;
@@ -56,6 +57,8 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
     _typesToProcess = new HashMap<>();
     _innerClassForGeneration = new HashMap<>();
+
+    _parents = new ParentMap();
   }
 
   /**
@@ -119,22 +122,9 @@ public abstract class CompiledTypeProcessor implements TaskListener
     return Symtab.instance( getContext() );
   }
 
-  public TreePath2 getPath( Tree node )
-  {
-    return TreePath2.getPath( getCompilationUnit(), node );
-  }
-
   public Tree getParent( Tree node )
   {
-    TreePath2 path = TreePath2.getPath( getCompilationUnit(), node );
-    if( path == null )
-    {
-      // null is indiciative of Generation phase where trees are no longer attached to symobls so the comp unit is detached
-      // use the root tree instead, which is mostly ok, mostly
-      path = TreePath2.getPath( _tree, node );
-    }
-    TreePath2 parentPath = path.getParentPath();
-    return parentPath == null ? null : parentPath.getLeaf();
+    return _parents.getParent( node );
   }
 
   public JCTree.JCClassDecl getClassDecl( Tree node )
@@ -348,6 +338,26 @@ public abstract class CompiledTypeProcessor implements TaskListener
     public void symbolRemoved( Symbol sym, Scope s )
     {
 
+    }
+  }
+
+  private class ParentMap
+  {
+    private Map<CompilationUnitTree, Map<Tree, Tree>> _parents;
+
+    private ParentMap()
+    {
+      _parents = new HashMap<>();
+    }
+
+    private Tree getParent( Tree child )
+    {
+      Map<Tree, Tree> parents = _parents.computeIfAbsent( _compilationUnit, cu -> {
+        Map<Tree, Tree> map = new HashMap<>();
+        new ParentTreePathScanner( map ).scan( cu, null );
+        return map;
+      } );
+      return parents.get( child );
     }
   }
 
