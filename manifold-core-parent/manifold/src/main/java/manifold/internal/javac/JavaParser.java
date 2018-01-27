@@ -185,11 +185,19 @@ public class JavaParser implements IJavaParser
       return null;
     }
 
-    StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
-    initTypeProcessing( javacTask, Collections.singleton( fqn ) );
-    javacTask.call();
-    return _gfm.findCompiledFile( fileObj.getSecond() );
+    int check = _gfm.pushRuntimeMode();
+    try
+    {
+      StringWriter errors = new StringWriter();
+      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
+      initTypeProcessing( javacTask, Collections.singleton( fqn ) );
+      javacTask.call();
+      return _gfm.findCompiledFile( fileObj.getSecond() );
+    }
+    finally
+    {
+      _gfm.popRuntimeMode( check );
+    }
   }
 
   /**
@@ -199,11 +207,20 @@ public class JavaParser implements IJavaParser
   {
     init();
 
-    StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( jfo ) );
-    initTypeProcessing( javacTask, Collections.singleton( fqn ) );
-    javacTask.call();
-    return _gfm.findCompiledFile( fqn );
+
+    int check = _gfm.pushRuntimeMode();
+    try
+    {
+      StringWriter errors = new StringWriter();
+      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, Collections.singletonList( jfo ) );
+      initTypeProcessing( javacTask, Collections.singleton( fqn ) );
+      javacTask.call();
+      return _gfm.findCompiledFile( fqn );
+    }
+    finally
+    {
+      _gfm.popRuntimeMode( check );
+    }
   }
 
   /**
@@ -213,11 +230,19 @@ public class JavaParser implements IJavaParser
   {
     init();
 
-    StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, files );
-    initTypeProcessing( javacTask, files.stream().map( this::getTypeForFile ).collect( Collectors.toSet() ) );
-    javacTask.call();
-    return _gfm.getCompiledFiles();
+    int check = _gfm.pushRuntimeMode();
+    try
+    {
+      StringWriter errors = new StringWriter();
+      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, options, null, files );
+      initTypeProcessing( javacTask, files.stream().map( this::getTypeForFile ).collect( Collectors.toSet() ) );
+      javacTask.call();
+      return _gfm.getCompiledFiles();
+    }
+    finally
+    {
+      _gfm.popRuntimeMode( check );
+    }
   }
 
   private String getTypeForFile( JavaFileObject file )

@@ -18,6 +18,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
 import manifold.internal.javac.SourceJavaFileObject;
+import manifold.internal.javac.SourceSupplier;
 import manifold.util.JavacDiagnostic;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -109,7 +110,7 @@ public abstract class SimpleModule implements ITypeLoader, IModule
   public JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
     Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
-    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, () -> compoundProduce( sps, fqn, errorHandler ) );
+    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( sps, fqn, errorHandler ) ) );
   }
 
   private String compoundProduce( Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )

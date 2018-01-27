@@ -44,6 +44,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   private FqnCache<JavaFileObject> _generatedFiles;
   private Log _issueLogger;
   private Context _ctx;
+  private int _runtimeMode;
 
   ManifoldJavaFileManager( JavaFileManager fileManager, Context ctx, boolean fromJavaC )
   {
@@ -113,7 +114,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   @Override
   public JavaFileObject getJavaFileForOutput( Location location, String className, JavaFileObject.Kind kind, FileObject sibling ) throws IOException
   {
-    if( !_fromJavaC || kind == JavaFileObject.Kind.CLASS && sibling instanceof GeneratedJavaStubFileObject )
+    if( !okToWriteClassFile( kind, sibling ) )
     {
       InMemoryClassJavaFileObject file = new InMemoryClassJavaFileObject( className, kind );
       _classFiles.add( className, file );
@@ -122,6 +123,16 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       return file;
     }
     return super.getJavaFileForOutput( location, className, kind, sibling );
+  }
+
+  private boolean okToWriteClassFile( JavaFileObject.Kind kind, FileObject fo )
+  {
+    // it's ok to write a type manifold class to disk if we're running javac and the class is not an extended java class
+
+    return _fromJavaC &&
+           (kind != JavaFileObject.Kind.CLASS ||
+            !(fo instanceof GeneratedJavaStubFileObject) ||
+            (JavacPlugin.instance().isStaticCompile() && !isRuntimeMode() && ((GeneratedJavaStubFileObject)fo).isPrimary()));
   }
 
   public InMemoryClassJavaFileObject findCompiledFile( String fqn )
@@ -237,7 +248,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     for( JavaFileObject f: patchableFiles )
     {
       String name = inferBinaryName( location, f );
-      
+
       if( cname.equals( name) )
       {
         return true;
@@ -385,5 +396,21 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   {
     int iDot = fileName.lastIndexOf( "." );
     return iDot == -1 ? fileName : fileName.substring( 0, iDot );
+  }
+
+  public int pushRuntimeMode()
+  {
+    return _runtimeMode++;
+  }
+  public void popRuntimeMode( int check )
+  {
+    if( --_runtimeMode != check )
+    {
+      throw new IllegalStateException( "runtime mode unbalanced" );
+    }
+  }
+  public boolean isRuntimeMode()
+  {
+    return _runtimeMode > 0;
   }
 }

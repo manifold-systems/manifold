@@ -89,6 +89,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private ManifoldJavaFileManager _manFileManager;
   private boolean _initialized;
   private Set<Symbol> _seenModules;
+  private boolean _staticCompile;
 
   public static JavacPlugin instance()
   {
@@ -110,6 +111,7 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (BasicJavacTask)task;
+    _staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
     if( isCompilingCore() )
     {
       // Do not apply the plugin on Manifold core itself
@@ -590,5 +592,10 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     TreeTranslator visitor = new BootstrapInserter( this );
     tree.accept( visitor );
+  }
+
+  public boolean isStaticCompile()
+  {
+    return _staticCompile;
   }
 }

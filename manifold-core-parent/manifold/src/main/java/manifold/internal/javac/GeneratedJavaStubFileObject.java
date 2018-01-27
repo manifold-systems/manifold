@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
-import java.util.function.Supplier;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -18,10 +17,10 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
 {
   private String _name;
   private long _timestamp;
-  private Supplier<String> _sourceSupplier;
-  private LocklessLazyVar<String> _src = LocklessLazyVar.make( () -> _sourceSupplier.get() );
+  private SourceSupplier _sourceSupplier;
+  private LocklessLazyVar<String> _src = LocklessLazyVar.make( () -> _sourceSupplier.getSource() );
 
-  public GeneratedJavaStubFileObject( String name, Supplier<String> sourceSupplier )
+  public GeneratedJavaStubFileObject( String name, SourceSupplier sourceSupplier )
   {
     super( URI.create( "genstub:///" + name.replace( '.', '/' ) + Kind.SOURCE.extension ), Kind.SOURCE );
     _name = name.replace( '.', '/' ) + Kind.SOURCE.extension;
@@ -39,6 +38,11 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
   public String getName()
   {
     return _name;
+  }
+
+  public boolean isPrimary()
+  {
+    return _sourceSupplier.isPrimary();
   }
 
   @Override
