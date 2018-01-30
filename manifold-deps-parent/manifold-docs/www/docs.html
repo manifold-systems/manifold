@@ -233,6 +233,9 @@ it incrementally without having to rewrite classes or conform to a new way of do
   requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
 }
 </code></pre>
+<p>Additionally <strong>Java 9</strong> modular projects must include the processor path for the manifold jar file along with the <code>-Xplugin:Manifold</code> argument to javac:</p>
+<pre><code>javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
+</code></pre>
 <h3><a class="toc_anchor" name="working_with_intellij"> </a>Working with IntelliJ</h3>
 <p>Manifold is best experienced using <a href="https://www.jetbrains.com/idea/download">IntelliJ IDEA</a>.</p>
 <p><strong>Install</strong></p>
