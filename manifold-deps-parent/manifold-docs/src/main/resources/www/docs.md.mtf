@@ -167,7 +167,11 @@ module your.module.name {
   requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
 }
 ```
-
+Additionally **Java 9** modular projects must include the processor path for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
+```
+javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
+```
+ 
 ### ${anchor("Working with IntelliJ")}
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).

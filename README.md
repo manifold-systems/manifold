@@ -151,6 +151,19 @@ That's all.
 
 Manifold fully supports both [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) and [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html).
 
+If you are using **Java 9** with `module-info` files you must declare dependencies to the manifold jars you are using.  For example, if you are using `manifold-all.jar`:
+```java
+module your.module.name {
+  requires manifold.all;    // the manifold-all jar file
+  requires java.scripting;  // if using Json manifold: for javax.script.Bindings
+  requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
+}
+```
+Additionally **Java 9** modular projects must include the processor path for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
+```
+javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
+```
+
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).  
 Install the Manifold plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
