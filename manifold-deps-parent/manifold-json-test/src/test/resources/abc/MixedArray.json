@@ -1,0 +1,23 @@
+[
+  {
+    "page": 1,
+    "pages": 7,
+    "per_page": "50",
+    "total": 304
+  },
+  [
+    {
+      "id": "ABW",
+      "iso2Code": "AW",
+      "name": "Aruba",
+      "region": {
+        "id": "LCN",
+        "iso2code": "ZJ",
+        "value": "Latin America & Caribbean "
+      },
+      "capitalCity": "Oranjestad",
+      "longitude": "-70.0167",
+      "latitude": "12.5167"
+    }
+  ]
+]

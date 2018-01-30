@@ -7,6 +7,7 @@ import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaType;
+import manifold.api.json.schema.JsonUnionType;
 import manifold.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -129,7 +130,9 @@ public class Json
       }
       else
       {
-        if( type == null )
+        if( type == null ||
+            // handle case for mixed array where component types are different (object and array)
+            !(type instanceof JsonStructureType) )
         {
           type = new JsonStructureType( parent, source, name );
         }
@@ -156,16 +159,20 @@ public class Json
     }
     else if( jsonObj instanceof List )
     {
-      if( type == null )
+      if( type == null ||
+          // handle case for mixed array where component types are different (object and array)
+          !(type instanceof JsonListType) )
       {
         type = new JsonListType( name, source, parent );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
       {
+        int i = 0;
+        boolean isDissimilar = isDissimilar( (List)jsonObj );
         for( Object elem : (List)jsonObj )
         {
-          IJsonType csr = transformJsonObject( name, (JsonSchemaType)type, elem );
+          IJsonType csr = transformJsonObject( name + (isDissimilar ? i++ : ""), (JsonSchemaType)type, elem );
           if( compType != null && csr != compType && compType != DynamicType.instance() )
           {
             csr = mergeTypes( compType, csr );
@@ -193,7 +200,52 @@ public class Json
     return type;
   }
 
+  private static boolean isDissimilar( List jsonObj )
+  {
+    Class type = null;
+    for( Object o: jsonObj )
+    {
+      if( type == null )
+      {
+        type = o == null ? null : o.getClass();
+      }
+      else
+      {
+        Class csr = o == null ? null : o.getClass();
+        if( csr != null && csr != type )
+        {
+          return true;
+        }
+        type = csr;
+      }
+    }
+    return false;
+  }
+
   public static IJsonType mergeTypes( IJsonType type1, IJsonType type2 )
+  {
+    IJsonType mergedType = mergeTypesNoUnion( type1, type2 );
+
+    if( mergedType == null && type1.getParent() instanceof JsonListType )
+    {
+      JsonListType listType = (JsonListType)type1.getParent();
+      JsonUnionType unionType = new JsonUnionType( listType, listType.getFile(), "UnionType" );
+      unionType.merge( type1 );
+      unionType.merge( type2 );
+      mergedType = unionType;
+    }
+
+    if( mergedType != null )
+    {
+      return mergedType;
+    }
+
+    // if the existing type is dynamic, override it with a more specific type,
+    // otherwise the types disagree...
+    throw new RuntimeException( "Incompatible types: " + type1.getIdentifier() + " vs: " + type2.getIdentifier() );
+  }
+
+  public static IJsonType mergeTypesNoUnion( IJsonType type1, IJsonType type2 )
   {
     if( type1 == null && type2 != null )
     {
@@ -228,24 +280,22 @@ public class Json
     {
       mergedType = ((JsonSimpleType)type1).merge( (JsonSimpleType)type2 );
     }
-
-    if( type1 instanceof JsonStructureType && type2 instanceof JsonStructureType )
+    else if( type1 instanceof JsonStructureType && type2 instanceof JsonStructureType )
     {
       mergedType = ((JsonStructureType)type1).merge( (JsonStructureType)type2 );
     }
-
-    if( type1 instanceof JsonListType && type2 instanceof JsonListType )
+    else if( type1 instanceof JsonListType && type2 instanceof JsonListType )
     {
       mergedType = ((JsonListType)type1).merge( (JsonListType)type2 );
     }
-
-    if( mergedType != null )
+    else if( type1 instanceof JsonUnionType )
     {
-      return mergedType;
+      mergedType = ((JsonUnionType)type1).merge( type2 );
     }
-
-    // if the existing type is dynamic, override it with a more specific type,
-    // otherwise the types disagree...
-    throw new RuntimeException( "Incompatible types: " + type1.getIdentifier() + " vs: " + type2.getIdentifier() );
+    else if( type2 instanceof JsonUnionType )
+    {
+      mergedType = ((JsonUnionType)type2).merge( type1 );
+    }
+    return mergedType;
   }
 }

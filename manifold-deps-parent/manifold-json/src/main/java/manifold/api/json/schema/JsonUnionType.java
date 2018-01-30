@@ -5,8 +5,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
+import manifold.api.json.Json;
 import manifold.api.json.JsonStructureType;
 
 /**
@@ -15,7 +17,7 @@ public class JsonUnionType extends JsonStructureType
 {
   private Map<String, IJsonType> _constituentTypes;
 
-  JsonUnionType( JsonSchemaType parent, URL source, String name )
+  public JsonUnionType( JsonSchemaType parent, URL source, String name )
   {
     super( parent, source, name );
     _constituentTypes = Collections.emptyMap();
@@ -26,7 +28,7 @@ public class JsonUnionType extends JsonStructureType
     return _constituentTypes.values();
   }
 
-  void addConstituent( String name, IJsonType type )
+  public void addConstituent( String name, IJsonType type )
   {
     if( _constituentTypes.isEmpty() )
     {
@@ -42,5 +44,25 @@ public class JsonUnionType extends JsonStructureType
   private boolean isDefinition( IJsonType type )
   {
     return type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
+  }
+
+  public IJsonType merge( IJsonType type )
+  {
+    IJsonType mergedType = null;
+    for( IJsonType c: getConstituents() )
+    {
+      mergedType = Json.mergeTypesNoUnion( c, type );
+      if( mergedType != null && mergedType != DynamicType.instance() )
+      {
+        break;
+      }
+    }
+
+    if( mergedType == null )
+    {
+      mergedType = type;
+    }
+    addConstituent( mergedType.getName(), mergedType );
+    return this;
   }
 }

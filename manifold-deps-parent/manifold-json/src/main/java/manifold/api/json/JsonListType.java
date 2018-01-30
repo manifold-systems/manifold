@@ -34,6 +34,12 @@ public class JsonListType extends JsonSchemaType
 
   private String getComponentTypeName()
   {
+    if( _componentType == null )
+    {
+      // can happen if asked before this list type is fully configured
+      return "<undefined>";
+    }
+
     return _componentType instanceof JsonUnionType ? "Object" : _componentType.getIdentifier();
   }
 
@@ -45,9 +51,7 @@ public class JsonListType extends JsonSchemaType
   @Override
   public String getFqn()
   {
-    return "java.util.List<" + (getComponentType() instanceof JsonSchemaType
-                                ? ((JsonSchemaType)getComponentType()).getFqn()
-                                : getComponentTypeName()) + ">";
+    return "java.util.List<" + getComponentTypeName() + ">";
   }
 
   public void addChild( String name, IJsonParentType type )

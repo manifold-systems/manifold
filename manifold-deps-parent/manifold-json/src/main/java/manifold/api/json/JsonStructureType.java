@@ -79,7 +79,10 @@ public class JsonStructureType extends JsonSchemaType
 
   public IJsonType findChild( String name )
   {
+    // look in inner types
     IJsonParentType innerType = _innerTypes.get( name );
+
+    // look in definitions (json schema)
     if( innerType == null )
     {
       List<IJsonType> definitions = getDefinitions();
@@ -91,6 +94,32 @@ public class JsonStructureType extends JsonSchemaType
           {
             innerType = (IJsonParentType)child;
             break;
+          }
+        }
+      }
+    }
+
+    // look in union types
+    if( innerType == null )
+    {
+      for( Set<IJsonType> constituents: _unionMembers.values() )
+      {
+        for( IJsonType c: constituents )
+        {
+          if( c.getIdentifier().equals( name ) )
+          {
+            innerType = (IJsonParentType)c;
+          }
+          else
+          {
+            while( c instanceof JsonListType )
+            {
+              c = ((JsonListType)c).getComponentType();
+            }
+            if( c.getIdentifier().equals( name ) )
+            {
+              innerType = (IJsonParentType)c;
+            }
           }
         }
       }

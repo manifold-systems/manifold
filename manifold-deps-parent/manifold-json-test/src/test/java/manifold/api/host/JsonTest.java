@@ -11,6 +11,7 @@ import abc.OneOf;
 import abc.OneOf_TopLevel;
 import abc.OneOf_TopLevel_Array;
 import abc.StrangeUriFormats;
+import abc.MixedArray;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -236,6 +237,38 @@ public class JsonTest extends TestCase
                   "</person>\n", person.toXml( "person" ) );
   }
 
+  // root array with dissimilar component types (object and array)
+  public void testMixedArray()
+  {
+    MixedArray mixedArray = MixedArray.fromJson(
+      "[\n" +
+      "  {\n" +
+      "    \"page\": 1,\n" +
+      "    \"pages\": 7,\n" +
+      "    \"per_page\": \"50\",\n" +
+      "    \"total\": 304\n" +
+      "  },\n" +
+      "  [\n" +
+      "    {\n" +
+      "      \"id\": \"ABW\",\n" +
+      "      \"iso2Code\": \"AW\",\n" +
+      "      \"name\": \"Aruba\",\n" +
+      "      \"region\": {\n" +
+      "        \"id\": \"LCN\",\n" +
+      "        \"iso2code\": \"ZJ\",\n" +
+      "        \"value\": \"Latin America & Caribbean \"\n" +
+      "      },\n" +
+      "      \"capitalCity\": \"Oranjestad\",\n" +
+      "      \"longitude\": \"-70.0167\",\n" +
+      "      \"latitude\": \"12.5167\"\n" +
+      "    }\n" +
+      "  ]\n" +
+      "]" );
+    assertEquals( 1, (int)mixedArray.getValueAsvalue0().get(0).getPage() );
+    List<MixedArray.value1> countries = mixedArray.getValueAsListOfvalue1().get(1);
+    assertEquals( "Aruba", countries.get( 0 ).getName() );
+    assertEquals( "ZJ", countries.get( 0 ).getRegion().getIso2code() );
+  }
 
   @SuppressWarnings("varargs")
   public static <T> List<T> asList( T... a )
