@@ -135,7 +135,14 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     else
     {
-      _body.render( sb, indent );
+      if( _body != null )
+      {
+        _body.render( sb, indent );
+      }
+      else
+      {
+        throw new IllegalStateException( "Body of method is null" );
+      }
     }
     return sb;
   }

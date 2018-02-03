@@ -129,10 +129,10 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   {
     // it's ok to write a type manifold class to disk if we're running javac and the class is not an extended java class
 
-    return _fromJavaC &&
+    return !isRuntimeMode() && _fromJavaC &&
            (kind != JavaFileObject.Kind.CLASS ||
             !(fo instanceof GeneratedJavaStubFileObject) ||
-            (JavacPlugin.instance().isStaticCompile() && !isRuntimeMode() && ((GeneratedJavaStubFileObject)fo).isPrimary()));
+            (JavacPlugin.instance().isStaticCompile() && ((GeneratedJavaStubFileObject)fo).isPrimary()));
   }
 
   public InMemoryClassJavaFileObject findCompiledFile( String fqn )

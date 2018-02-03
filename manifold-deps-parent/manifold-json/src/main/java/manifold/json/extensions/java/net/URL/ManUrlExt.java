@@ -50,14 +50,7 @@ public class ManUrlExt
       {
         value = ManBindingsExt.listToJson( (List)value );
       }
-      try
-      {
-        value = URLEncoder.encode( (String)value, "UTF-8" );
-      }
-      catch( UnsupportedEncodingException e )
-      {
-        throw new RuntimeException( e );
-      }
+      value = encode( (String)value );
       sb.append( value );
     }
     try
@@ -65,6 +58,23 @@ public class ManUrlExt
       return new URL( url + sb );
     }
     catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Convenience method to encode a URL string and not have to handle the
+   * UnsupportedEncodingException.
+   */
+  @Extension
+  public static String encode( String urlPart )
+  {
+    try
+    {
+      return URLEncoder.encode( urlPart, "UTF-8" );
+    }
+    catch( UnsupportedEncodingException e )
     {
       throw new RuntimeException( e );
     }
@@ -121,7 +131,7 @@ public class ManUrlExt
     return Json.fromJson( postForTextContent( url, bindings ) );
   }
 
-  private static String makeValue( Object value ) throws UnsupportedEncodingException
+  private static String makeValue( Object value )
   {
     if( value instanceof Bindings )
     {
@@ -131,7 +141,7 @@ public class ManUrlExt
     {
       value = JsonUtil.listToJson( (List)value );
     }
-    return URLEncoder.encode( value.toString(), "UTF-8" );
+    return encode( value.toString() );
   }
 
   /**

@@ -111,7 +111,8 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (BasicJavacTask)task;
-    _staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
+    decideIfStatic( args );
+
     if( isCompilingCore() )
     {
       // Do not apply the plugin on Manifold core itself
@@ -123,6 +124,24 @@ public class JavacPlugin implements Plugin, TaskListener
     }
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  private void decideIfStatic( String[] args )
+  {
+    _staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
+
+    if( !_staticCompile )
+    {
+      // maven doesn't like the -Xplugin:"Manifold static", it doesn't parse "Manifold static" as plugin name and argument, so we do it here:
+      try
+      {
+        String[] rawArgs = (String[])ReflectUtil.field( _javacTask, "args" ).get();
+        _staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( "static" ) );
+      }
+      catch( Exception ignore )
+      {
+      }
+    }
   }
 
   private boolean isCompilingCore()
