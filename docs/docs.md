@@ -112,7 +112,7 @@ extended class:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="./images/ExtensionMethod.mp4">
+    <source type="video/mp4" src="/images/ExtensionMethod.mp4">
   </video>
 </p>
 
@@ -161,6 +161,10 @@ module your.module.name {
   requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
 }
 ```
+Additionally **Java 9** modular projects must include the processor path for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
+```
+javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
+```
 
 ### Working with IntelliJ
 
@@ -172,7 +176,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 ```Settings | Plugins | Browse Repositories | Manifold```
 
-<p><img src="images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **New Project**
@@ -181,7 +185,7 @@ Creating a new project with Manifold support is easy:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="./images/NewProject.mp4">
+    <source type="video/mp4" src="/images/NewProject.mp4">
   </video>
 </p>
 
@@ -190,7 +194,7 @@ Creating a new project with Manifold support is easy:
 
 Adding manifold to module[s] of an existing project is easy:
 
-<p><img src="images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **Sample Project**
@@ -199,9 +203,9 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 ```File | New | Project from Version Control | Git```
 
-<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-<p><img src="images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 ### Binaries
@@ -349,7 +353,7 @@ to use all basic manifold features, this is the recommended setup.
 A Maven archetype facilitates new project creation.  Use the Manifold [archetype](https://github.com/manifold-systems/archetype) to quickly
 create a new Manifold project.  This is an easy process from IntelliJ:
 
-<p><img src="images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 ### Gradle
