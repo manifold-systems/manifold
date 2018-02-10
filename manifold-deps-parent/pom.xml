@@ -30,7 +30,6 @@
     <module>manifold-collections-test</module>
     <module>manifold-templates</module>
     <module>manifold-templates-test</module>
-    <module>manifold-docs</module>
   </modules>
 
   <build>

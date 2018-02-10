@@ -1,10 +1,8 @@
 ---
-layout: default
+layout: docs_layout
 ---
 
-{{ include docs_index }}
-
-## ${anchor("Manifold in a Nutshell")}
+## Manifold in a Nutshell
 
 At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and seamlessly extend
 Java's type system. Building on this core framework Manifold provides a set of
@@ -21,7 +19,7 @@ runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
 
-### ${anchor("Type Manifolds")}
+### Type Manifolds
 
 Bridging the worlds of information and programming, type manifolds are Java
 projections of schematized data sources.  More specifically, a type manifold
@@ -64,7 +62,7 @@ Currently Manifold provides type manifolds for:
 *   DDL and SQL (work in progress)
 
 
-### ${anchor("The Extension Manifold")}
+### The Extension Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
@@ -114,7 +112,7 @@ extended class:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="./images/ExtensionMethod.mp4">
+    <source type="video/mp4" src="/images/ExtensionMethod.mp4">
   </video>
 </p>
 
@@ -122,7 +120,7 @@ There's a lot more to the extension manifold including [structural interfaces](#
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
-### ${anchor("Benefits")}
+### Benefits
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
 generation step in the build, no extra .class files or .java files to manage, no annotation processors, and no extra
@@ -142,9 +140,9 @@ Additionally, Manifold is just a JAR file you can drop into your existing projec
 it incrementally without having to rewrite classes or conform to a new way of doing things.
 
 
-## ${anchor("Setup")}
+## Setup
 
-### ${anchor("Basics")}
+### Basics
 
 Using Manifold in your Java project is simple:
 
@@ -163,8 +161,12 @@ module your.module.name {
   requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
 }
 ```
+Additionally **Java 9** modular projects must include the processor path for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
+```
+javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
+```
 
-### ${anchor("Working with IntelliJ")}
+### Working with IntelliJ
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
 
@@ -174,7 +176,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 ```Settings | Plugins | Browse Repositories | Manifold```
 
-<p><img src="images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **New Project**
@@ -183,7 +185,7 @@ Creating a new project with Manifold support is easy:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="./images/NewProject.mp4">
+    <source type="video/mp4" src="/images/NewProject.mp4">
   </video>
 </p>
 
@@ -192,7 +194,7 @@ Creating a new project with Manifold support is easy:
 
 Adding manifold to module[s] of an existing project is easy:
 
-<p><img src="images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **Sample Project**
@@ -201,12 +203,12 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 ```File | New | Project from Version Control | Git```
 
-<p><img src="images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-<p><img src="images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
 
-### ${anchor("Binaries")}
+### Binaries
 
 For the convenience of non-maven users you can directly download Manifold binaries:
 * [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
@@ -229,7 +231,7 @@ Text extensions
 Integrated template support
 
 
-### ${anchor("Maven")}
+### Maven
 
 Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
 include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
@@ -351,10 +353,10 @@ to use all basic manifold features, this is the recommended setup.
 A Maven archetype facilitates new project creation.  Use the Manifold [archetype](https://github.com/manifold-systems/archetype) to quickly
 create a new Manifold project.  This is an easy process from IntelliJ:
 
-<p><img src="images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
 
 
-### ${anchor("Gradle")}
+### Gradle
 
 Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
 include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
@@ -401,7 +403,7 @@ tasks.withType(JavaCompile) {
 }
 ```
 
-## ${anchor("What Is a Type Manifold?")}
+## What Is a Type Manifold?
 
 In recent years Java applications have shifted from a primarily code-centric nature
 toward a more information-centric one. As the shift progresses applications depend on
@@ -489,7 +491,7 @@ We are working on support for more data sources including:
 *   Standard SQL and DDL
 
 
-### ${anchor("JSON and JSON Schema")}
+### JSON and JSON Schema
 [JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
 structured data format. There is no shortage of JSON libraries for Java, these include 
 [Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
@@ -542,7 +544,7 @@ This example uses the `postForJsonContent()` extension method which performs an 
 JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the 
 `WidgetResults` structural interface. 
 
-### ${anchor("Properties Files")}
+### Properties Files
 
 Many Java applications incorporate
 [properties resource files](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html)
@@ -575,7 +577,7 @@ application, changes you make in
 the file are immediately available in your code with no user intervention in
 between -- no code gen files and no compiling between changes.
 
-### ${anchor("Image Files")}
+### Image Files
 
 User interfaces frequently use image resource files for one purpose or another.  Java supports most of the
 popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
@@ -612,7 +614,7 @@ different types sharing a single name.  Additionally image classes are direct su
  `ImageIcon` class to conform with existing frameworks. As with all
   type manifolds there are no code gen files or other build steps involved.
 
-### ${anchor("JavaScript")}
+### JavaScript
 
 The JavaScript type manifold provides direct, type-safe access to JavaScript files
 as if they were Java files.
@@ -686,7 +688,7 @@ String first = person.getFirstName();
 System.out.println(first);
 ```
 
-### ${anchor("Dark Java")}
+### Dark Java
 
 Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
 can be executed -- the JVM cannot execute .java files directly.  Although the advantages of static compilation usually
@@ -766,11 +768,11 @@ This basic interface factory pattern can be used anywhere you need to use a Dark
 compilation use-case.  
  
  
-### ${anchor("Template Files")}
+### Template Files
 
 See project [Manifold Templates](http://manifold.systems/manifold-templates.html).
 
-### ${anchor("Build Your Own Manifold")}
+### Build Your Own Manifold
 
 Almost any data source is a potential type manifold.  These include file schemas, query languages, database definitions, 
 data services, templates, spreadsheets, programming languages, and more.  So while the Manifold team provides several 
@@ -955,7 +957,7 @@ serve as decent reference implementations for wrapping existing code generators 
 respectively.
 
 
-## ${anchor("Extension Classes")}
+## Extension Classes
 
 Similar to other languages such as 
 [C#](https://docs.microsoft.com/en-us/dotnet/csharp/csharp), [Kotlin](https://kotlinlang.org/), and
@@ -998,7 +1000,7 @@ or module name to prevent naming collisions.
 Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
 extension classes from other classes that may reside in the same package.
 
-### ${anchor("Extension Method Basics")}
+### Extension Method Basics
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
@@ -1030,7 +1032,7 @@ Call static extensions just as if they were on the extended class:
 String.lineSeparator()
 ```
 
-### ${anchor("Generics")}
+### Generics
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
 work with collections and other generic classes. For example, here is the `first()` extension method on
@@ -1064,7 +1066,7 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
 variable `E`.
 
-### ${anchor("Static Dispatching")}
+### Static Dispatching
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
@@ -1113,7 +1115,7 @@ if (name.isNullOrEmpty()) {
 
 Here the example doesn't check for null and instead shifts the burden to the extension.
 
-### ${anchor("Accessibility and Scope")}
+### Accessibility and Scope
 
 An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:
@@ -1157,7 +1159,7 @@ if you're using Maven the scope of an extension matches the dependency relations
 pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as
 the module's.
 
-### ${anchor("Annotation Extensions")}
+### Annotation Extensions
 
 In addition to adding new methods, extension classes can also add _annotations_ to a class. At present
 annotation extensions are limited to the extended _class_; you can't yet add annotations to members of 
@@ -1183,7 +1185,7 @@ of your project classes no longer have to declare they implement it nominally.
 
 See [Structural Interfaces](#structural_interfaces) later in this guide for fuller coverage of the topic.
 
-### ${anchor("Extension Interfaces")}
+### Extension Interfaces
 
 An extension class can add structural interfaces to its extended class.  This feature helps with a 
 variety of use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
@@ -1248,7 +1250,7 @@ mutable interfaces from the class.  As such your code is better suited to confin
 `List` operations on otherwise fully mutable lists.
 
 
-### ${anchor("Extension Libraries")}
+### Extension Libraries
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
 Manifold includes several extension libraries for commonly used classe, many of which are adapted
@@ -1286,7 +1288,7 @@ to your project separately depending on its needs.
     - javax.script.Bindings
 
 
-## ${anchor("Structural Interfaces")}
+## Structural Interfaces
 
 Java is a _nominally_ typed language -- types are assignable based on the names declared in their
 definitions. For example:
@@ -1380,7 +1382,7 @@ comprehend your code faster. The general idea is to use an interface structurall
 use it nominally or doing so overcomplicates your code.
 
 
-### ${anchor("Type Assignability and Variance")}
+### Type Assignability and Variance
 
 A type is assignable to a structural interface if it provides compatible versions of all the
 methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
@@ -1422,7 +1424,7 @@ as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no lo
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.
 
-### ${anchor("Implementation by Field")}
+### Implementation by Field
 
 Another example where classes have wiggle room implementing structural interfaces involves property 
 getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
@@ -1450,7 +1452,7 @@ is/get/set prefixes and taking into account field naming conventions. For exampl
 and `_name` all match the `getName()` property method and are weighted in that order.
 
 
-### ${anchor("Implementation by Extension")}
+### Implementation by Extension
 
 It's possible to implement methods of a structural interface via extension methods.  Looking back at the
 `Coordinate` example, consider this class:
@@ -1492,7 +1494,7 @@ Generally _implementation by extension_ is a powerful technique to provide a com
 project does not control.
 
   
-### ${anchor("Dynamic Typing with `ICallHandler`")}
+### Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
 
@@ -1560,7 +1562,7 @@ the map, otherwise `Map` behaves much like an expando object.
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
 
-## ${anchor("IDE -- IntelliJ IDEA")}
+## IDE -- IntelliJ IDEA
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.
 
@@ -1583,7 +1585,7 @@ Changes you make are instantly available in your code:
 
 Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
 
-## ${anchor("Use with other JVM Languages")}
+## Use with other JVM Languages
 
 Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java 
 compiler.  It's also designed for use within other JVM languages via the _plugin host_ API. You can
@@ -1591,7 +1593,7 @@ implement this API to host Manifold from within another JVM language.
 
 See _manifold.api.host.IManifoldHost_. 
 
-## ${anchor("Philosophy")}
+## Philosophy
 
 Our goal is to improve Java by working with it, not against it.  For instance, we're not out 
 to bolt on new features involving new keywords, new grammar, or DSLs -- Java should look like Java. 
@@ -1599,7 +1601,7 @@ Rather Manifold is about empowering Java from the _outside_.  Thus, developers u
 Manifold don't need to learn a new way of using or declaring things, instead Manifold enables 
 them to access a whole new world of types and extensions using the Java they already know.
 
-## ${anchor("License")}
+## License
 
 ### Open Source
 Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
