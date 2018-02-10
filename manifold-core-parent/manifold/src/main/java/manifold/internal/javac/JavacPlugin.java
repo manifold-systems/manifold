@@ -111,7 +111,7 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (BasicJavacTask)task;
-    decideIfStatic( args );
+    _staticCompile = decideIfStatic( args );
 
     if( isCompilingCore() )
     {
@@ -126,9 +126,9 @@ public class JavacPlugin implements Plugin, TaskListener
     task.addTaskListener( this );
   }
 
-  private void decideIfStatic( String[] args )
+  protected boolean decideIfStatic( String[] args )
   {
-    _staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
+    boolean staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
 
     if( !_staticCompile )
     {
@@ -136,12 +136,18 @@ public class JavacPlugin implements Plugin, TaskListener
       try
       {
         String[] rawArgs = (String[])ReflectUtil.field( _javacTask, "args" ).get();
-        _staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( "static" ) );
+        staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( "static" ) );
       }
       catch( Exception ignore )
       {
       }
     }
+    return staticCompile;
+  }
+
+  protected boolean decideIfNoBootstrapping()
+  {
+    return false;
   }
 
   private boolean isCompilingCore()
@@ -544,7 +550,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
           // Note there are no "non-java" files to compile in default Manifold,
           // only other languages implementing their own IManifoldHost might compile their language files at this time
-          ManifoldHost.initializeAndCompileNonJavaFiles( _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
+          ManifoldHost.initializeAndCompileNonJavaFiles( JavacProcessingEnvironment.instance( getContext() ), _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
 
           // Need to bootstap for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder
           Bootstrap.init();
@@ -616,5 +622,10 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isStaticCompile()
   {
     return _staticCompile;
+  }
+
+  public boolean isNoBootstrapping()
+  {
+    return decideIfNoBootstrapping();
   }
 }

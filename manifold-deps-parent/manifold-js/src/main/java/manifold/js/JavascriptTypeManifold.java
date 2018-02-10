@@ -28,7 +28,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
     return false;
   }

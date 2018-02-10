@@ -6,14 +6,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.script.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.service.IService;
 import manifold.api.type.TypeName;
+import manifold.util.NecessaryEvilUtil;
 
 /**
  * Implement this interface to host and drive Manifold in custom way.  For instance
@@ -26,6 +27,10 @@ public interface IManifoldHost extends IService
   ClassLoader getActualClassLoader();
 
   boolean isBootstrapped();
+  default void preBootstrap()
+  {
+    NecessaryEvilUtil.bypassJava9Security();
+  }
   void bootstrap( List<File> sourcepath, List<File> classpath );
 
   IModule getGlobalModule();
@@ -33,8 +38,6 @@ public interface IManifoldHost extends IService
   void resetLanguageLevel();
 
   boolean isPathIgnored( String path );
-
-  ITypeLoader getLoader( IFile file, IModule module );
 
   String[] getAllReservedWords();
 
@@ -48,7 +51,7 @@ public interface IManifoldHost extends IService
 
   void performLockedOperation( ClassLoader loader, Runnable operation );
 
-  void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath );
+  void initializeAndCompileNonJavaFiles( ProcessingEnvironment procEnv, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath );
 
   Set<TypeName> getChildrenOfNamespace( String packageName );
 

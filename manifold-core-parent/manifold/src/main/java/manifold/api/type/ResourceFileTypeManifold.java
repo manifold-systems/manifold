@@ -174,7 +174,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    *
    * @return true if relativeInner is an inner class of topLevel
    */
-  protected abstract boolean isInnerType( String topLevelFqn, String relativeInner );
+  public abstract boolean isInnerType( String topLevelFqn, String relativeInner );
 
   /**
    * Generate Source code for the named model.

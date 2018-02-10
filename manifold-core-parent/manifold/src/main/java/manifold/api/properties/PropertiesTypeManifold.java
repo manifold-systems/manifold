@@ -36,7 +36,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
     Model model = getModel( topLevel );
     FqnCache<String> cache = model == null ? null : model.getCache();

@@ -12,6 +12,11 @@ public class SrcSwitchCase extends SrcStatement<SrcSwitchCase>
     _expr = new SrcRawExpression( type, valueExpr );
   }
 
+  public SrcSwitchCase( SrcType type, Object valueExpr )
+  {
+    _expr = new SrcRawExpression( type, valueExpr );
+  }
+
   public SrcSwitchCase statement( SrcStatement stmt )
   {
     _stmt = stmt;

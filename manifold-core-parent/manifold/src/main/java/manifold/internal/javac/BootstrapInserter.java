@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -35,7 +36,7 @@ class BootstrapInserter extends TreeTranslator
     super.visitClassDef( tree );
     if( tree.sym != null && !tree.sym.isInner() )
     {
-      if( !hasNoBootstrap( tree.getModifiers().getAnnotations() ) )
+      if( okToInsertBootstrap( tree ) )
       {
         JCTree.JCStatement newNode = buildBootstrapStaticBlock();
         ArrayList<JCTree> newDefs = new ArrayList<>( tree.defs );
@@ -46,7 +47,25 @@ class BootstrapInserter extends TreeTranslator
     result = tree;
   }
 
-  private boolean hasNoBootstrap( List<JCTree.JCAnnotation> annotations )
+  private boolean okToInsertBootstrap( JCTree.JCClassDecl tree )
+  {
+    return !annotatedWith_NoBootstrap( tree.getModifiers().getAnnotations() ) &&
+           !JavacPlugin.instance().isNoBootstrapping() &&
+           !skipForOtherReasons( tree );
+  }
+
+  private boolean skipForOtherReasons( JCTree.JCClassDecl tree )
+  {
+    if( (tree.getModifiers().flags & Flags.ANNOTATION) != 0 )
+    {
+      // don't bootstrap from an annotation class,
+      // many tools do not handle the presence of the <clinit> method well
+      return true;
+    }
+    return false;
+  }
+
+  private boolean annotatedWith_NoBootstrap( List<JCTree.JCAnnotation> annotations )
   {
     for( JCTree.JCAnnotation anno : annotations )
     {

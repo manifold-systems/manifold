@@ -9,20 +9,33 @@ public class SourceSupplier
   private Supplier<String> _supplier;
   private final Set<ITypeManifold> _sps;
 
-  public SourceSupplier( Set<ITypeManifold> sps, Supplier<String> supplier )
+  /**
+   * @param tms The set of type manifolds responsible for producing the source.  An
+   *            empty or null set implies no type manifolds are involved.
+   * @param supplier Supplier of the source code.
+   */
+  public SourceSupplier( Set<ITypeManifold> tms, Supplier<String> supplier )
   {
     _supplier = supplier;
-    _sps = sps;
+    _sps = tms;
   }
 
+  /**
+   * Produce the source.
+   */
   public String getSource()
   {
     return _supplier.get();
   }
 
+  /**
+   * Is this source supplier the primary or core producer of the source?  As opposed to a
+   * supplementary or partial producer.
+   */
   public boolean isPrimary()
   {
-    return _sps.stream().anyMatch( e -> e.getProducerKind() == ITypeManifold.ProducerKind.Primary ||
+    return _sps == null || _sps.isEmpty() ||
+           _sps.stream().anyMatch( e -> e.getProducerKind() == ITypeManifold.ProducerKind.Primary ||
                                         e.getProducerKind() == ITypeManifold.ProducerKind.Partial );
   }
 }

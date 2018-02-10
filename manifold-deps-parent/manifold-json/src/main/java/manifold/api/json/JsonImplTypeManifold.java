@@ -42,7 +42,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
     Model model = getModel( topLevel );
     JsonStructureType type = model == null ? null : model.getType();

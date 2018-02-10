@@ -5,15 +5,12 @@ import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoader;
-import manifold.api.image.ImageTypeManifold;
-import manifold.api.properties.PropertiesTypeManifold;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
@@ -150,32 +147,6 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     return result;
   }
 
-  public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
-  {
-    Set<ITypeManifold> sps = new HashSet<>( 2 );
-    for( ITypeManifold sp : getTypeManifolds() )
-    {
-      if( sp.isType( fqn ) )
-      {
-        sps.add( sp );
-      }
-    }
-    return sps;
-  }
-
-  public Set<ITypeManifold> findTypeManifoldsFor( IFile file )
-  {
-    Set<ITypeManifold> sps = new HashSet<>( 2 );
-    for( ITypeManifold sp : getTypeManifolds() )
-    {
-      if( sp.handlesFile( file ) )
-      {
-        sps.add( sp );
-      }
-    }
-    return sps;
-  }
-
   public void initializeTypeManifolds()
   {
     if( _typeManifolds != null )
@@ -190,79 +161,20 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         return;
       }
 
-      Set<ITypeManifold> typeManifolds = new HashSet<>();
-      addBuiltIn( typeManifolds );
-      addRegistered( typeManifolds );
-      _typeManifolds = typeManifolds;
+      _typeManifolds = ITypeLoader.super.loadTypeManifolds();
+      _typeManifolds.forEach( tm -> tm.init( this ) );
     }
   }
 
-  private void addBuiltIn( Set<ITypeManifold> sps )
+  public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
   {
-    ITypeManifold sp = new PropertiesTypeManifold();
-    sp.init( this );
-    sps.add( sp );
-
-    sp = new ImageTypeManifold();
-    sp.init( this );
-    sps.add( sp );
-
-    sp = new DarkJavaTypeManifold();
-    sp.init( this );
-    sps.add( sp );
+    return ITypeLoader.super.findTypeManifoldsFor( fqn );
   }
 
-  protected void addRegistered( Set<ITypeManifold> sps )
+  @Override
+  public Set<ITypeManifold> findTypeManifoldsFor( IFile file )
   {
-    // Load from Thread Context Loader
-    // (currently the IJ plugin creates loaders for accessing source producers from project classpath)
-    ServiceLoader<ITypeManifold> loader = ServiceLoader.load( ITypeManifold.class );
-    Iterator<ITypeManifold> iterator = loader.iterator();
-    if( iterator.hasNext() )
-    {
-      while( iterator.hasNext() )
-      {
-        ITypeManifold sp = iterator.next();
-        sp.init( this );
-        sps.add( sp );
-      }
-    }
-
-    if( Thread.currentThread().getContextClassLoader() != getClass().getClassLoader() )
-    {
-      // Also load from this loader
-      loader = ServiceLoader.load( ITypeManifold.class, getClass().getClassLoader() );
-      for( iterator = loader.iterator(); iterator.hasNext(); )
-      {
-        try
-        {
-          ITypeManifold sp = iterator.next();
-          sp.init( this );
-          if( isAbsent( sps, sp ) )
-          {
-            sps.add( sp );
-          }
-        }
-        catch( ServiceConfigurationError e )
-        {
-          // avoid chicken/egg errors from attempting to build a module that self-registers a source producer
-          // it's important to allow a source producer module to specify its xxx.ITypeManifold file in its META-INF
-          // directory so that users of the source producer don't have to
-        }
-      }
-    }
-  }
-
-  private boolean isAbsent( Set<ITypeManifold> sps, ITypeManifold sp )
-  {
-    for( ITypeManifold existingSp: sps )
-    {
-      if( existingSp.getClass().equals( sp.getClass() ) )
-      {
-        return false;
-      }
-    }
-    return true;
+    return ITypeLoader.super.findTypeManifoldsFor( file );
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )

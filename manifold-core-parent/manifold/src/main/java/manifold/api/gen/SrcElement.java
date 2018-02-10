@@ -61,7 +61,8 @@ public abstract class SrcElement
     }
     else if( value instanceof String )
     {
-      if( String.class.getName().equals( type.getName() ) )
+      if( String.class.getName().equals( type.getName() ) ||
+          String.class.getSimpleName().equals( type.getName() ) )
       {
         result = "\"" + ManEscapeUtil.escapeForJava( value.toString() ) + "\"";
       }

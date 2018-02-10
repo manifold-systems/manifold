@@ -67,7 +67,7 @@ public class PropertiesCodeGen
       new SrcField( srcClass )
         .name( FIELD_FILE_URL )
         .modifiers( Modifier.STATIC | Modifier.FINAL )
-        .type( String.class )
+        .type( "String" )
         .initializer( getFile() ) );
   }
 
@@ -81,7 +81,7 @@ public class PropertiesCodeGen
         .modifiers( Modifier.PUBLIC | Modifier.FINAL | (srcClass.getEnclosingClass() == null ? Modifier.STATIC : 0) )
         .type( type )
         .initializer( childNode.isLeaf()
-                      ? new SrcRawExpression( String.class, childNode.getUserData() )
+                      ? new SrcRawExpression( new SrcType( "String" ), childNode.getUserData() )
                       : new SrcRawExpression( "new " + type + "()" ) );
       if( _file != null )
       {
@@ -104,7 +104,7 @@ public class PropertiesCodeGen
   {
     try
     {
-      return new SrcRawExpression( String.class, _file.toURI().toURL().toString() );
+      return new SrcRawExpression( new SrcType( "String" ), _file.toURI().toURL().toString() );
     }
     catch( MalformedURLException e )
     {
@@ -116,7 +116,7 @@ public class PropertiesCodeGen
   {
     return new SrcAnnotationExpression( SourcePosition.class.getSimpleName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( _fqn, FIELD_FILE_URL ) ).name( "url" ) )
-      .addArgument( "feature", String.class, node.getFqn() )
+      .addArgument( "feature", new SrcType( "String" ), node.getFqn() )
       .addArgument( "offset", int.class, findOffsetOf( node ) )
       .addArgument( "length", int.class, node.getName() == null ? 0 : node.getName().length() );
   }
@@ -142,7 +142,7 @@ public class PropertiesCodeGen
       new SrcMethod( srcClass )
         .name( "toString" )
         .modifiers( Modifier.PUBLIC )
-        .returns( String.class )
+        .returns( new SrcType( "String" ) )
         .body(
           new SrcStatementBlock()
             .addStatement(
@@ -157,8 +157,8 @@ public class PropertiesCodeGen
       new SrcMethod( srcClass )
         .name( "getValueByName" )
         .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
-        .returns( String.class )
-        .addParam( new SrcParameter( "propertyName" ).type( String.class ) )
+        .returns( new SrcType( "String" ) )
+        .addParam( new SrcParameter( "propertyName" ).type( "String" ) )
         .body(
           new SrcStatementBlock()
             .addStatement( makeGetValueBynameSwitch( node ) )
@@ -180,7 +180,7 @@ public class PropertiesCodeGen
     for( FqnCacheNode<String> childNode : node.getChildren() )
     {
       stmt.addCase(
-        new SrcSwitchCase( String.class, childNode.getName() )
+        new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
           .statement( new SrcReturnStatement( String.class, childNode.getUserData() ) ) );
     }
     return stmt;
@@ -192,7 +192,7 @@ public class PropertiesCodeGen
       new SrcMethod( srcClass )
         .name( "getValue" )
         .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
-        .returns( String.class )
+        .returns( new SrcType( "String" ) )
         .body(
           new SrcStatementBlock()
             .addStatement( new SrcReturnStatement( String.class, node.getUserData() ) ) ) );

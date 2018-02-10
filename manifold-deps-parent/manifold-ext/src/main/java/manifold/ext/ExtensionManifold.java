@@ -1,5 +1,6 @@
 package manifold.ext;
 
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,9 +13,12 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.ITypeLoader;
+import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
+import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.api.Extension;
+import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.StreamUtil;
@@ -113,8 +117,84 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
+    if( !isType( topLevel ) )
+    {
+      return false;
+    }
+
+    return delegateToPrimaryManifold( topLevel, relativeInner ) ||
+           delegateToJavaClass( topLevel, relativeInner );
+  }
+
+  private boolean delegateToJavaClass( String topLevel, String relativeInner )
+  {
+    try
+    {
+      Class<?> cls = Class.forName( topLevel, false, ManifoldHost.instance().getActualClassLoader() );
+      for( Class<?> inner: cls.getDeclaredClasses() )
+      {
+        if( isInnerClass( inner, relativeInner ) )
+        {
+          return true;
+        }
+      }
+    }
+    catch( ClassNotFoundException ignore )
+    {
+    }
+    return false;
+  }
+
+  private boolean delegateToPrimaryManifold( String topLevel, String relativeInner )
+  {
+    Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel );
+    if( tms != null )
+    {
+      for( ITypeManifold tm : tms )
+      {
+        if( tm.getProducerKind() == ProducerKind.Primary && tm instanceof ResourceFileTypeManifold )
+        {
+          return ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner );
+        }
+      }
+    }
+    return false;
+  }
+
+  private boolean isInnerClass( Class<?> cls, String relativeInner )
+  {
+    String name;
+    String remainder;
+    int iDot = relativeInner.indexOf( '.' );
+    if( iDot > 0 )
+    {
+      name = relativeInner.substring( 0, iDot );
+      remainder = relativeInner.substring( iDot+1 );
+    }
+    else
+    {
+      name = relativeInner;
+      remainder = null;
+    }
+    if( cls.getSimpleName().equals( name ) )
+    {
+      if( remainder != null )
+      {
+        for( Class<?> m: cls.getDeclaredClasses() )
+        {
+          if( isInnerClass( m, remainder ) )
+          {
+            return true;
+          }
+        }
+      }
+      else
+      {
+        return true;
+      }
+    }
     return false;
   }
 

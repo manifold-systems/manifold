@@ -26,7 +26,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel> {
     }
 
     @Override
-    protected boolean isInnerType(String topLevelFqn, String relativeInner) {
+    public boolean isInnerType( String topLevelFqn, String relativeInner ) {
         return true;
     }
 

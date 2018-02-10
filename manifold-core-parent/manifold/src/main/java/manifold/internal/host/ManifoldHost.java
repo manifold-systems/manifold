@@ -5,19 +5,19 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.script.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoader;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.type.TypeName;
 
@@ -38,22 +38,10 @@ public class ManifoldHost
           return HOST;
         }
 
-        ServiceLoader<IManifoldHost> loader = ServiceLoader.load( IManifoldHost.class, ManifoldHost.class.getClassLoader() );
-        Iterator<IManifoldHost> iterator = loader.iterator();
-        if( iterator.hasNext() )
+        try
         {
-          // ⚔ there can be only one ⚔
-          HOST = iterator.next();
-
-          if( iterator.hasNext() )
-          {
-            System.out.println( "WARNING: Found multiple Manifold hosts, using first encountered: " + HOST.getClass().getName() );
-          }
-        }
-        else
-        {
-          loader = ServiceLoader.load( IManifoldHost.class );
-          iterator = loader.iterator();
+          ServiceLoader<IManifoldHost> loader = ServiceLoader.load( IManifoldHost.class, ManifoldHost.class.getClassLoader() );
+          Iterator<IManifoldHost> iterator = loader.iterator();
           if( iterator.hasNext() )
           {
             // ⚔ there can be only one ⚔
@@ -64,6 +52,27 @@ public class ManifoldHost
               System.out.println( "WARNING: Found multiple Manifold hosts, using first encountered: " + HOST.getClass().getName() );
             }
           }
+          else
+          {
+            loader = ServiceLoader.load( IManifoldHost.class );
+            iterator = loader.iterator();
+            if( iterator.hasNext() )
+            {
+              // ⚔ there can be only one ⚔
+              HOST = iterator.next();
+
+              if( iterator.hasNext() )
+              {
+                System.out.println( "WARNING: Found multiple Manifold hosts, using first encountered: " + HOST.getClass().getName() );
+              }
+            }
+          }
+        }
+        catch( ServiceConfigurationError e )
+        {
+          // let a module declare it's own service, avoid having to add a separate module just to declare
+          // your Manifold host service or saves users from having to know to add META-INF services bullshit
+          e.printStackTrace();
         }
 
         if( HOST == null )
@@ -121,11 +130,6 @@ public class ManifoldHost
     return host().isPathIgnored( path );
   }
 
-  public static ITypeLoader getLoader( IFile file, IModule module )
-  {
-    return host().getLoader( file, module );
-  }
-
   public static String[] getAllReservedWords()
   {
     return host().getAllReservedWords();
@@ -156,9 +160,9 @@ public class ManifoldHost
     host().performLockedOperation( loader, operation );
   }
 
-  public static void initializeAndCompileNonJavaFiles( JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
+  public static void initializeAndCompileNonJavaFiles( ProcessingEnvironment procEnv, JavaFileManager fileManager, List<String> files, Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
   {
-    host().initializeAndCompileNonJavaFiles( fileManager, files, sourcePath, classpath, outputPath );
+    host().initializeAndCompileNonJavaFiles( procEnv, fileManager, files, sourcePath, classpath, outputPath );
   }
 
   public static Set<TypeName> getChildrenOfNamespace( String packageName )

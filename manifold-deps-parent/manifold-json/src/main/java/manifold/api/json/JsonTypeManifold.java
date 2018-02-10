@@ -26,7 +26,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
     JsonModel model = getModel( topLevel );
     IJsonParentType type = model == null ? null : model.getType();

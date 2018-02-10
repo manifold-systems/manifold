@@ -35,7 +35,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected boolean isInnerType( String topLevel, String relativeInner )
+  public boolean isInnerType( String topLevel, String relativeInner )
   {
     if( isAnonymous( relativeInner ) )
     {
@@ -126,7 +126,10 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
         {
           if( m instanceof JCTree.JCClassDecl )
           {
-            return isInnerClass( (JCTree.JCClassDecl)m, remainder );
+            if( isInnerClass( (JCTree.JCClassDecl)m, remainder ) )
+            {
+              return true;
+            }
           }
         }
       }

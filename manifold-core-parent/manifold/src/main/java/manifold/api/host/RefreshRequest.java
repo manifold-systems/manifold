@@ -31,11 +31,6 @@ public class RefreshRequest
     this( request.file, allTypes, typeLoader, request.kind );
   }
 
-  public RefreshRequest( IFile file, String[] types, IModule module, RefreshKind kind )
-  {
-    this( file, types, ManifoldHost.getLoader( file, module ), kind );
-  }
-
   private static IModule getModule( ITypeLoader typeLoader )
   {
     if( typeLoader == null )
