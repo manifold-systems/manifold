@@ -41,7 +41,11 @@ public abstract class JsonSchemaType implements IJsonParentType
 
   public URL getFile()
   {
-    return _file != null ? _file : _parent.getFile();
+    return _file != null
+           ? _file
+           : _parent != null
+             ? _parent.getFile()
+             : null;
   }
 
   public String getLabel()

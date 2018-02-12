@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * An extension class must be tagged with this annotation.
  */
-@Retention(RetentionPolicy.CLASS)
+@Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Structural
 {

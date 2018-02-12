@@ -366,7 +366,7 @@ public class JsonStructureType extends JsonSchemaType
   private void renderFileField( StringBuilder sb, int indent )
   {
     indent( sb, indent );
-    sb.append( "String " + FIELD_FILE_URL + " = \"" ).append( getFile().toString() ).append( "\";\n" );
+    sb.append( "String " + FIELD_FILE_URL + " = \"" ).append( getFile() == null ? "null" : getFile().toString() ).append( "\";\n" );
   }
 
   private String addSuperTypes( StringBuilder sb )

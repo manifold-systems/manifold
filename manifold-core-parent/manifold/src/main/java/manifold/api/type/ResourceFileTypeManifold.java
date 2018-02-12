@@ -242,6 +242,8 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   @Override
   public boolean isType( String fqn )
   {
+    fqn = fqn.replace( '$', '.' );
+    
     String topLevel = findTopLevelFqn( fqn );
     if( topLevel == null )
     {
@@ -265,7 +267,8 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   /**
    * This method avoids initializing all the files
    */
-  protected String findTopLevelFqn( String fqn )
+  @SuppressWarnings("WeakerAccess")
+  public String findTopLevelFqn( String fqn )
   {
     while( true )
     {
