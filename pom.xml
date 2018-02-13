@@ -167,7 +167,7 @@
       <id>internal.tools-jar</id>
       <activation>
         <file>
-          <exists>${java.home}/../lib/tools.jar</exists>
+          <missing>src/main/java/systems/manifold/Dummy.java</missing>
         </file>
       </activation>
       <dependencies>
