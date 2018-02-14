@@ -347,6 +347,55 @@ to use all basic manifold features, this is the recommended setup.
     </profile>
   </profiles>
 ```
+***Surefire***
+
+For Java 8, executing tests of classes leveraging Manifold will also require `tools.jar` at test execution time.
+
+Here is a simple project layout demonstrating use of the `manifold-all` dependency and including `tools.jar` with Surefire:
+
+```xml
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.7.0</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+          <compilerArgs>
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.20.1</version>
+        <configuration>
+          <additionalClasspathElements>
+            <additionalClasspathElement>${java.home}/../lib/tools.jar</additionalClasspathElement>
+          </additionalClasspathElements>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-all</artifactId>
+      <version>RELEASE</version> <!-- there were known issues with manifold-all 0.9-alpha and earlier -->
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+    </dependency>
+  </dependencies>
+```
+
+Note the above snippet should work with `manifold-all` release `0.10-alpha` and beyond.
 
 **Archetype**
 
