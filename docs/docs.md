@@ -191,7 +191,7 @@ The mode you use largely depends on your use-case and personal preference. As a 
 dynamic mode is usually better for development and static mode is usually better for production, 
 however you can use either mode in any situation you like. Things to consider:
 
-* Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.  
+* Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.
 For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
 in your code will be processed and compiled.
 
