@@ -2,17 +2,6 @@
 layout: docs_layout
 ---
 
-## TLDR;
-
-Manifold:Java => Spinach:Popeye
- 
-**If you are:** 
-* tired of **Utils, Helpers, Managers** and the like, **STOP** what you are doing and use [Extension Classes](#extension-classes) instead
-* using a **Json** library, **STOP** what you are doing and use the [Json Manifold](#json-and-json-schema) instead
-* _using_ a **code generator**, **STOP** what you are doing and write a [Type Manifold](#type-manifolds) to wrap the code generator 
-* _writing_ a **code generator**, **STOP** what you are doing right now and write a [Type Manifold](#type-manifolds) instead
-* **jealous** of languages like _TypeScript_ and _Go_ because they have structural typing, **STOP!** You can have it too with [Structural Interfaces](#structural-interfaces)
-
 ## Manifold in a Nutshell
 
 At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and seamlessly extend
