@@ -4,7 +4,7 @@ layout: docs_layout
 
 ## TLDR;
 
-Manifold:Java &#2192 Spinach:Popeye
+Manifold:Java &#2192; Spinach:Popeye
  
 **If you are:** 
 * tired of **Utils, Helpers, Managers** and the like, **STOP** what you are doing and use [Extension Classes](#extension-classes) instead
