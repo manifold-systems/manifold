@@ -14,7 +14,9 @@ import manifold.api.type.JavaTypeManifold;
  */
 public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
 {
-  private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "js", "jst" ) );
+  public static final String JS = "js";
+  public static final String JST = "jst";
+  private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( JS, JST ) );
 
   public void init( ITypeLoader typeLoader )
   {
