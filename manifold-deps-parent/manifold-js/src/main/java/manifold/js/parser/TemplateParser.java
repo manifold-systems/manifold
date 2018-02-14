@@ -1,76 +1,102 @@
 package manifold.js.parser;
 
-import manifold.js.parser.tree.*;
-import manifold.js.parser.tree.template.*;
+import manifold.js.parser.tree.Node;
+import manifold.js.parser.tree.template.ExpressionNode;
+import manifold.js.parser.tree.template.JSTNode;
+import manifold.js.parser.tree.template.RawStringNode;
+import manifold.js.parser.tree.template.StatementNode;
+import manifold.js.parser.tree.template.TemplateLiteralNode;
 
 public class TemplateParser extends Parser
 {
   private Node _templateNode;
 
-  public TemplateParser(TemplateTokenizer tokenizer) {
-    super(tokenizer);
-    if (tokenizer.isJST()) _templateNode = new JSTNode();
-    else _templateNode = new TemplateLiteralNode();
+  public TemplateParser( TemplateTokenizer tokenizer )
+  {
+    super( tokenizer );
+    if( tokenizer.isJST() )
+    {
+      _templateNode = new JSTNode();
+    }
+    else
+    {
+      _templateNode = new TemplateLiteralNode();
+    }
   }
 
   @Override
-  public Node parse() {
+  public Node parse()
+  {
     nextToken();
-    while (!match(TokenType.EOF)) {
-      if (match(TokenType.RAWSTRING)) {
-        _templateNode.addChild(new RawStringNode(currToken().getValue()));
+    while( !match( TokenType.EOF ) )
+    {
+      if( match( TokenType.RAWSTRING ) )
+      {
+        _templateNode.addChild( new RawStringNode( currToken().getValue() ) );
         nextToken();
-      } else if (matchTemplatePunc( "<%@")) {
-        _templateNode.addChild(parseTemplateParams());
+      }
+      else if( matchTemplatePunc( "<%@" ) )
+      {
+        _templateNode.addChild( parseTemplateParams() );
         nextToken();
-      } else if (matchTemplatePunc( "<%=") || matchTemplatePunc( "${")) {
-        _templateNode.addChild(parseTemplateExpression());
-      } else if (matchTemplatePunc( "<%")) {
-        _templateNode.addChild(parseTemplateStatement());
+      }
+      else if( matchTemplatePunc( "<%=" ) || matchTemplatePunc( "${" ) )
+      {
+        _templateNode.addChild( parseTemplateExpression() );
+      }
+      else if( matchTemplatePunc( "<%" ) )
+      {
+        _templateNode.addChild( parseTemplateStatement() );
       }
     }
     return _templateNode;
   }
 
-  private Node parseTemplateStatement() {
+  private Node parseTemplateStatement()
+  {
     StatementNode statementNode = new StatementNode();
     Token startToken = currToken();
-    skip(matchTemplatePunc( "<%"));
-    statementNode.addChild(parseFillerUntil(() -> matchTemplatePunc("%>")));
-    expect(matchTemplatePunc("%>"));
-    statementNode.setTokens(startToken, currToken());
+    skip( matchTemplatePunc( "<%" ) );
+    statementNode.addChild( parseFillerUntil( () -> matchTemplatePunc( "%>" ) ) );
+    expect( matchTemplatePunc( "%>" ) );
+    statementNode.setTokens( startToken, currToken() );
     nextToken();
     return statementNode;
   }
 
-  private Node parseTemplateExpression() {
+  private Node parseTemplateExpression()
+  {
     ExpressionNode expressionNode = new ExpressionNode();
     Token startToken = currToken();
     //Expressions either start with <% and and with %>; or start with ${ and end with }
-    String exitString = matchTemplatePunc( "<%=") ? "%>" : "}";
-    skip(matchTemplatePunc( "<%=") || matchTemplatePunc( "${"));
-    expressionNode.addChild(parseFillerUntil(() -> matchTemplatePunc( exitString)));
-    expect(matchTemplatePunc( "%>"));
-    expressionNode.setTokens(startToken, currToken());
+    String exitString = matchTemplatePunc( "<%=" ) ? "%>" : "}";
+    skip( matchTemplatePunc( "<%=" ) || matchTemplatePunc( "${" ) );
+    expressionNode.addChild( parseFillerUntil( () -> matchTemplatePunc( exitString ) ) );
+    expect( matchTemplatePunc( "%>" ) );
+    expressionNode.setTokens( startToken, currToken() );
     nextToken();
     return expressionNode;
   }
 
-  private Node parseTemplateParams() {
-    skip(match(TokenType.TEMPLATEPUNC));
-    if (match(TokenType.IDENTIFIER, "params")) {
+  private Node parseTemplateParams()
+  {
+    skip( match( TokenType.TEMPLATEPUNC ) );
+    if( match( TokenType.IDENTIFIER, "params" ) )
+    {
       nextToken();
       return parseParams();
-    } else if (match(TokenType.KEYWORD, "import")) {
+    }
+    else if( match( TokenType.KEYWORD, "import" ) )
+    {
       return parseImport();
     }
     return null;
   }
 
   /*Match template specific punctuation only*/
-  private boolean matchTemplatePunc(String val)
+  private boolean matchTemplatePunc( String val )
   {
-    return match(TokenType.TEMPLATEPUNC, val);
+    return matchIgnoreWhitespace( TokenType.TEMPLATEPUNC, val );
   }
 
 }

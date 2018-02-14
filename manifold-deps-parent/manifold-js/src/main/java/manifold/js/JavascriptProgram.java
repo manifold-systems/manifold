@@ -1,6 +1,7 @@
 package manifold.js;
 
 import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.List;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
@@ -8,6 +9,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import manifold.api.fs.IFile;
 import manifold.api.gen.AbstractSrcMethod;
+import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
@@ -25,6 +27,7 @@ import manifold.js.parser.tree.FunctionNode;
 import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
+import manifold.js.parser.tree.template.JSTNode;
 
 
 import static manifold.js.Util.safe;
@@ -51,25 +54,29 @@ public class JavascriptProgram
         .modifiers( Modifier.STATIC | Modifier.PUBLIC )
         .returns( node.getReturnType() );
 
-      // params
-      ParameterNode firstChild = node.getFirstChild( ParameterNode.class );
-      for( SrcParameter srcParameter : firstChild.toParamList() )
-      {
-        srcMethod.addParam( srcParameter );
-      }
-
-      //impl
+      List<SrcParameter> srcParameters = makeSrcParameters( node, srcMethod );
       srcMethod.body( new SrcStatementBlock()
         .addStatement(
           new SrcRawStatement()
-            .rawText( "return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList( firstChild.toParamList() ) + ");" ) ) );
+            .rawText( "return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList( srcParameters ) + ");" ) ) );
       clazz.addMethod( srcMethod );
 
     }
     return clazz;
   }
 
-  static String generateArgList( SrcParameter[] srcParameters )
+  static List<SrcParameter> makeSrcParameters( Node node, SrcAnnotated srcMethod )
+  {
+    ParameterNode paramNode = node.getFirstChild( ParameterNode.class );
+    List<SrcParameter> srcParameters = paramNode != null ? paramNode.toParamList() : Collections.emptyList();
+    for( SrcParameter srcParameter : srcParameters )
+    {
+      srcMethod.addParam( srcParameter );
+    }
+    return srcParameters;
+  }
+
+  static String generateArgList( List<SrcParameter> srcParameters )
   {
     StringBuilder sb = new StringBuilder();
     for( SrcParameter srcParameter : srcParameters )
@@ -97,36 +104,36 @@ public class JavascriptProgram
   {
     ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
     nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
-    Parser parser = new Parser( new Tokenizer( loadSrcForName( programName ) ) );
+    Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
     Node programNode = parser.parse();
     safe( () -> nashorn.eval( programNode.genCode() ) );
     return nashorn;
   }
 
-  static IFile loadSrcForName( String fqn )
+  static IFile loadSrcForName( String fqn, String fileExt )
   {
-    List<IFile> filesForType = findJavascriptManifold().findFilesForType( fqn );
+    List<IFile> filesForType = findJavascriptManifold( fileExt ).findFilesForType( fqn );
     if( filesForType.isEmpty() )
     {
-      throw new IllegalStateException( "Could not find a .js file for type: " + fqn );
+      throw new IllegalStateException( "Could not find a ." + fileExt + " file for type: " + fqn );
     }
     if( filesForType.size() > 1 )
     {
-      System.err.println( "===\nWARNING: more than one .js file corresponds with type: '" + fqn + "':\n");
+      System.err.println( "===\nWARNING: more than one ." + fileExt + " file corresponds with type: '" + fqn + "':\n");
       filesForType.forEach( file -> System.err.println( file.toString() ) );
       System.err.println( "using the first one: " + filesForType.get( 0 ) + "\n===" );
     }
-    return filesForType.get( 0 ); // as
+    return filesForType.get( 0 );
   }
 
-  private static ITypeManifold findJavascriptManifold()
+  private static ITypeManifold findJavascriptManifold( String fileExt )
   {
     ITypeManifold tm = ManifoldHost.instance().getCurrentModule().getTypeManifolds().stream()
-      .filter( e -> e.handlesFileExtension( JavascriptTypeManifold.JS ) )
+      .filter( e -> e.handlesFileExtension( fileExt ) )
       .findFirst().orElse( null );
     if( tm == null )
     {
-      throw new IllegalStateException( "Could not find type manifold for extension: " + JavascriptTypeManifold.JS );
+      throw new IllegalStateException( "Could not find type manifold for extension: " + fileExt );
     }
     return tm;
   }
