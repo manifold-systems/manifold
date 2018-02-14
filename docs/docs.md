@@ -153,6 +153,8 @@ That's all.
 
 Manifold fully supports both [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) and [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html).
 
+**Java 9 Notes**
+
 If you are using **Java 9** with `module-info` files you must declare dependencies to the manifold jars you are using.  For example, if you are using `manifold-all.jar`:
 ```java
 module your.module.name {
@@ -165,6 +167,49 @@ Additionally **Java 9** modular projects must include the processor path for the
 ```
 javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
 ```
+
+**Java 8 Notes**
+
+If you are using **Java 8** you may need to include `tools.jar` in your classpath (runtime only).
+Your application requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to 
+*static* mode. See [Modes](#Modes) for details.
+
+
+### Modes
+
+You can use Manifold in one of two ways: **dynamically** or **statically**.  The mode 
+determines whether or not Manifold compiles class projections to disk at compile-time, and in 
+turn whether or not Manifold dynamically compiles and loads the classes at runtime.  The mode is
+controlled using the `-Xplugin` javac argument:
+
+**Dynamic**: `-Xplugin:Manifold` (default, compiles class projections dynamically at runtime)
+
+**Static**: `-Xplugin:Manifold static` (compiles class projections statically at compile-time)
+(alternatively `-Xplugin:"Manifold static"`, some tools may require quotes)
+
+The mode you use largely depends on your use-case and personal preference. As a general rule
+dynamic mode is usually better for development and static mode is usually better for production, 
+however you can use either mode in any situation you like. Things to consider:
+
+* Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.  
+For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
+in your code will be processed and compiled.
+
+* Even if you use static mode, you can still reference type manifold classes dynamically e.g., _reflectively_.
+In such a case Manifold will dynamically compile the referenced class as if you were operating in 
+dynamic mode.  In general, your code will work regardless of the mode you're using; Manifold will
+figure out what needs to be done. 
+
+* Dynamic mode requires `tools.jar` at runtime for Java 8.  Note tools.jar may still be required with 
+static mode, depending on the Manifold features you use.  For example, [structural interfaces](#structural-interfaces)
+requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
+files as structural interfaces.
+
+* Static mode is generally faster at runtime since it pre-compiles all the type manifold projection when you 
+build your project
+
+* Static mode automatically supports incremental compilation of class projections in IntelliJ (coming in version 0.10-alpha)
+   
 
 ### Working with IntelliJ
 
