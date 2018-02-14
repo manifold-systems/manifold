@@ -88,6 +88,26 @@
           <updateWorkingCopyVersions>false</updateWorkingCopyVersions>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>3.0.0-M1</version>
+        <executions>
+          <execution>
+            <id>enforce-versions</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireMavenVersion>
+                  <version>[3.2.2,)</version> <!-- https://stackoverflow.com/a/4629269/4750893 -->
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
 
     <pluginManagement>
@@ -166,6 +186,7 @@
     <profile>
       <id>internal.tools-jar</id>
       <activation>
+        <jdk>1.8</jdk>
         <file>
           <missing>src/main/java/systems/manifold/Dummy.java</missing>
         </file>
