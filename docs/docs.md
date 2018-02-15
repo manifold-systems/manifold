@@ -782,6 +782,39 @@ String first = person.getFirstName();
 System.out.println(first);
 ```
 
+You can also create simple, type-safe Javascript _templates_.  Javascript template files have a `.jst` extension
+and work very similar to JSP syntax. To illustrate:
+
+File `com/foo/MyTemplate.jst`:
+```
+<%@ params(names) %>
+This template lists each name provided in the 'names' parameter
+Names:
+<%for (var i = 0; i < names.length; i++) {%>
+-${names[i]}
+<% } %>
+The end
+```
+From Java we can use this template in a type-safe manner:
+```java
+import com.foo.MyTemplate;
+...
+String reuslts = MyTemplate.renderToString(Arrays.asList("Orax", "Dynatron", "Lazerhawk", "FM-84"));
+System.out.println(results);
+``` 
+This prints the following to the console:
+```
+This template lists each name provided in the 'names' parameter
+Names:
+-Orax
+-Dynatron
+-Lazerhawk
+-FM-84
+The end
+```
+
+For full-featured template functionality see project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+
 ### Dark Java
 
 Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
