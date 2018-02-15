@@ -786,11 +786,11 @@ You can also create simple, type-safe Javascript _templates_.  Javascript templa
 and work very similar to JSP syntax. To illustrate:
 
 File `com/foo/MyTemplate.jst`:
-```html
+```
 <%@ params(names) %>
 This template lists each name provided in the 'names' parameter
 Names:
-<%for (var i = 0; i < names.length; i++) {%>
+<%for (var i = 0; i < names.length; i++) { %>
 -${names[i]}
 <% } %>
 The end
