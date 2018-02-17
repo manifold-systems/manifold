@@ -62,6 +62,19 @@ class BootstrapInserter extends TreeTranslator
       // many tools do not handle the presence of the <clinit> method well
       return true;
     }
+
+    if( tree.implementing != null )
+    {
+      for( JCTree.JCExpression iface : tree.implementing )
+      {
+        if( iface.toString().contains( "IManifoldHost" ) )
+        {
+          // Don't insert bootstrap in a IManifoldHost impl
+          return true;
+        }
+      }
+    }
+
     return false;
   }
 

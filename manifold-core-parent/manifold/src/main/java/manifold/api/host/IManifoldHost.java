@@ -14,6 +14,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFileSystem;
 import manifold.api.service.IService;
 import manifold.api.type.TypeName;
+import manifold.internal.javac.JavacPlugin;
 import manifold.util.NecessaryEvilUtil;
 
 /**
@@ -24,6 +25,29 @@ import manifold.util.NecessaryEvilUtil;
  */
 public interface IManifoldHost extends IService
 {
+  /** should this host be used considering the environment e.g., the JavacPlugin context etc.? */
+  default boolean accept()
+  {
+    // Avoid using a host while incrementally compiling the host's own module...
+
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin != null )
+    {
+      List<String> outputPath = javacPlugin.deriveOutputPath();
+      for( String path : outputPath )
+      {
+        String fqn = getClass().getName();
+        fqn = fqn.replace( '.', File.separatorChar ) + ".class";
+        File classFile = new File( path, fqn );
+        if( classFile.isFile() )
+        {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   ClassLoader getActualClassLoader();
 
   boolean isBootstrapped();

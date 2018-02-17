@@ -45,8 +45,12 @@ public class ManifoldHost
           if( iterator.hasNext() )
           {
             // ⚔ there can be only one ⚔
-            HOST = iterator.next();
-
+            IManifoldHost host = iterator.next();
+            while( host != null && !host.accept() )
+            {
+              host = iterator.hasNext() ? iterator.next() : null;
+            }
+            HOST = host;
             if( iterator.hasNext() )
             {
               System.out.println( "WARNING: Found multiple Manifold hosts, using first encountered: " + HOST.getClass().getName() );
@@ -59,7 +63,12 @@ public class ManifoldHost
             if( iterator.hasNext() )
             {
               // ⚔ there can be only one ⚔
-              HOST = iterator.next();
+              IManifoldHost host = iterator.next();
+              while( host != null && !host.accept() )
+              {
+                host = iterator.hasNext() ? iterator.next() : null;
+              }
+              HOST = host;
 
               if( iterator.hasNext() )
               {
@@ -77,7 +86,11 @@ public class ManifoldHost
 
         if( HOST == null )
         {
-          HOST = new DefaultManifoldHost();
+          IManifoldHost host = new DefaultManifoldHost();
+          if( host.accept() )
+          {
+            HOST = host;
+          }
         }
       }
     }

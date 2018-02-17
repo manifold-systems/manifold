@@ -112,13 +112,9 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     _javacTask = (BasicJavacTask)task;
     _staticCompile = decideIfStatic( args );
-
-    if( isCompilingCore() )
+    if( ManifoldHost.instance() == null )
     {
-      // Do not apply the plugin on Manifold core itself
-      // Note this can only happen during incremental compile when JavacPlugin.class was previously compiled and in
-      // the classpath but other parts of core manifold were changed and need compilation (the placeholder plugin is'nt
-      // used in this case).
+      // the absence of a host indicates incremental compilation of Manifold itself
       JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Bypassing JavacPlugin during incremental compilation of Manifold core" );
       return;
     }
@@ -148,12 +144,6 @@ public class JavacPlugin implements Plugin, TaskListener
   protected boolean decideIfNoBootstrapping()
   {
     return false;
-  }
-
-  private boolean isCompilingCore()
-  {
-    String outputPath = deriveClassOutputPath();
-    return outputPath.contains( File.separatorChar + "manifold" + File.separatorChar + "target" + File.separatorChar );
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -300,7 +290,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
-  private List<String> deriveOutputPath()
+  public List<String> deriveOutputPath()
   {
     Set<String> paths = new HashSet<>();
     String outputPath = deriveClassOutputPath();

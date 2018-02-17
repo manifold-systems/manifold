@@ -59,7 +59,16 @@ class JavascriptCodeGen
   {
     if( programNode.errorCount() > 0 )
     {
-      JavaFileObject file = new SourceJavaFileObject( _file.toURI() );
+      JavaFileObject file;
+      try
+      {
+        file = new SourceJavaFileObject( _file.toURI() );
+      }
+      catch( Exception e )
+      {
+        file = null;
+      }
+
       for( ParseError error : programNode.getErrorList() )
       {
         Token token = error.getToken();

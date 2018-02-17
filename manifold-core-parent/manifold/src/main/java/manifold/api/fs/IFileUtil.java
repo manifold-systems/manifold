@@ -64,7 +64,10 @@ public class IFileUtil
 
     return !Extensions.containsManifest( root ) ||
            !Extensions.getExtensions( root, Extensions.CONTAINS_SOURCES ).isEmpty() ||
-           !Extensions.getExtensions( root, "Main-Class" ).isEmpty() ||
+
+           // this check is too aggressive eg., including jars like nashorn.jar
+           //!Extensions.getExtensions( root, "Main-Class" ).isEmpty() ||
+
            // Weblogic packages all WEB-INF/classes content into this JAR
            // http://middlewaremagic.com/weblogic/?p=408
            // http://www.coderanch.com/t/69641/BEA-Weblogic/wl-cls-gen-jar-coming

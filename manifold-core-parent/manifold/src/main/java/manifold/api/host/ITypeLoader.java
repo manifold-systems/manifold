@@ -67,15 +67,22 @@ public interface ITypeLoader
   {
     // Load from Thread Context Loader
     // (currently the IJ plugin creates loaders for accessing source producers from project classpath)
+
     ServiceLoader<ITypeManifold> loader = ServiceLoader.load( ITypeManifold.class );
     Iterator<ITypeManifold> iterator = loader.iterator();
     if( iterator.hasNext() )
     {
       while( iterator.hasNext() )
       {
-        ITypeManifold sp = iterator.next();
-        sp.init( this );
-        sps.add( sp );
+        try
+        {
+          ITypeManifold sp = iterator.next();
+          sps.add( sp );
+        }
+        catch( ServiceConfigurationError e )
+        {
+          // not in the loader, check thread ctx loader next
+        }
       }
     }
 
