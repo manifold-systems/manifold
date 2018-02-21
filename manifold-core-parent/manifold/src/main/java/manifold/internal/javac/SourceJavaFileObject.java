@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import javax.tools.JavaFileManager;
 import javax.tools.SimpleJavaFileObject;
 import manifold.util.PathUtil;
 import manifold.util.StreamUtil;
@@ -13,6 +14,7 @@ import manifold.util.StreamUtil;
 public class SourceJavaFileObject extends SimpleJavaFileObject
 {
   private CharSequence _content;
+  private String _fqn;
 
   public SourceJavaFileObject( URI uri )
   {
@@ -42,6 +44,15 @@ public class SourceJavaFileObject extends SimpleJavaFileObject
     super( PathUtil.create( filename ).toUri(), Kind.SOURCE );
   }
 
+  public String getFqn()
+  {
+    return _fqn;
+  }
+  public void setFqn( String fqn )
+  {
+    _fqn = fqn;
+  }
+
   @Override
   public CharSequence getCharContent( boolean ignoreEncodingErrors ) throws IOException
   {
@@ -55,5 +66,15 @@ public class SourceJavaFileObject extends SimpleJavaFileObject
     {
       return _content = StreamUtil.getContent( reader );
     }
+  }
+
+  @SuppressWarnings("WeakerAccess")
+  public String inferBinaryName( JavaFileManager.Location location )
+  {
+    if( _fqn == null )
+    {
+      throw new IllegalStateException( "Null class name" );
+    }
+    return _fqn;
   }
 }

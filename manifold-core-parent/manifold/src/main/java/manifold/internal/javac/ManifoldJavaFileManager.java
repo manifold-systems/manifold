@@ -117,9 +117,14 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     if( !okToWriteClassFile( kind, sibling ) )
     {
       InMemoryClassJavaFileObject file = new InMemoryClassJavaFileObject( className, kind );
-      _classFiles.add( className, file );
-      className = className.replace( '$', '.' );
-      _classFiles.add( className, file );
+      if( !(sibling instanceof GeneratedJavaStubFileObject) || ((GeneratedJavaStubFileObject)sibling).isPrimary() )
+      {
+        // only retain primary class files e.g., don't keep stubbed class files from extension classes
+
+        _classFiles.add( className, file );
+        className = className.replace( '$', '.' );
+        _classFiles.add( className, file );
+      }
       return file;
     }
     return super.getJavaFileForOutput( location, className, kind, sibling );
@@ -362,6 +367,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
       return removeExtension( fileObj.getName() ).replace( File.separatorChar, '.' ).replace( '/', '.' );
     }
+
+    if( fileObj instanceof SourceJavaFileObject )
+    {
+      return ((SourceJavaFileObject)fileObj).inferBinaryName( location );
+    }
+
     if( location instanceof ManPatchModuleLocation )
     {
       if( fileObj.getClass().getSimpleName().equals( "DirectoryFileObject" ) )
