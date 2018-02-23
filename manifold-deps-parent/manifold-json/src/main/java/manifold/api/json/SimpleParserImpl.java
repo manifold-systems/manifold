@@ -3,6 +3,7 @@ package manifold.api.json;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.SimpleBindings;
@@ -91,7 +92,9 @@ final class SimpleParserImpl
   // object = "{" [ member { "," member } ] "}".
   private Object parseObject()
   {
-    Bindings map = new SimpleBindings();
+    // using a LinkedHashMap to preserve insertion order, necessary for IJ plugin
+    Bindings map = new SimpleBindings( new LinkedHashMap<>() );
+
     advance();
     if( _token.getType() == TokenType.STRING )
     {

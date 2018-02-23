@@ -1,5 +1,6 @@
 package manifold.api.json;
 
+import java.util.LinkedHashMap;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.net.URL;
@@ -36,8 +37,8 @@ public class JsonStructureType extends JsonSchemaType
   public JsonStructureType( JsonSchemaType parent, URL source, String name )
   {
     super( name, source, parent );
-    _membersByName = new HashMap<>();
-    _memberLocations = new HashMap<>();
+    _membersByName = new LinkedHashMap<>();
+    _memberLocations = new LinkedHashMap<>();
     _innerTypes = Collections.emptyMap();
     _unionMembers = Collections.emptyMap();
     _superTypes = Collections.emptyList();

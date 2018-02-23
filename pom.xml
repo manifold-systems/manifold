@@ -88,26 +88,27 @@
           <updateWorkingCopyVersions>false</updateWorkingCopyVersions>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>3.0.0-M1</version>
-        <executions>
-          <execution>
-            <id>enforce-versions</id>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireMavenVersion>
-                  <version>[3.2.2,)</version> <!-- https://stackoverflow.com/a/4629269/4750893 -->
-                </requireMavenVersion>
-              </rules>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
+      <!-- Disabled because the error message is confusing and because Java 8 is likely the dominant platform for now -->
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-enforcer-plugin</artifactId>-->
+        <!--<version>3.0.0-M1</version>-->
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<id>enforce-versions</id>-->
+            <!--<goals>-->
+              <!--<goal>enforce</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+              <!--<rules>-->
+                <!--<requireMavenVersion>-->
+                  <!--<version>[3.2.2,)</version> &lt;!&ndash; https://stackoverflow.com/a/4629269/4750893 &ndash;&gt;-->
+                <!--</requireMavenVersion>-->
+              <!--</rules>-->
+            <!--</configuration>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      <!--</plugin>-->
     </plugins>
 
     <pluginManagement>
