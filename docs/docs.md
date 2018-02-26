@@ -505,7 +505,7 @@ Despite this transformation the means by which our software consumes structured 
 Whether it's Json, Xml, Rdf, Csv, Ddl, Sql, Javascript, or any one of a multitude of other metadata sources, most modern 
 languages, including Java, do very little to connect them with your code.
 
-We've bridged this gap with the same old solutions, notably code generators and static libraries. 
+Developers bridge this gap with the same old solutions, notably code generators and static libraries. 
 These are collectively referred to as _type-bridging_ tools because they essentially provide types and methods to
 connect Java code to structured information.  But because type-bridging is not an integral part of the
 Java compiler or JVM, it has a long history of frustrating developers and ultimately impeding progress. 
