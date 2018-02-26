@@ -499,49 +499,58 @@ tasks.withType(JavaCompile) {
 
 ## What Is a Type Manifold?
 
-In recent years Java applications have shifted from a primarily code-centric nature
-toward a more information-centric one. As the shift progresses applications depend on
-ever richer, ever larger, ever more numerable sources of data. Despite this developers
-continue to use decades old tooling, namely _type-bridge_ tooling, such as code
-generators and static libraries, to connect their software to a newer, larger world of
-information.
+Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
+As a consequence the software industry has become much less code-centric and much more information-centric.  
+Despite this transformation the means by which our software consumes structured information has remained unchanged for decades.
+Whether it's Json, Xml, Rdf, Csv, Ddl, Sql, Javascript, or one of a multitude of other metadata sources, most modern 
+languages, including Java, do very little to connect them with your code.
 
-Conventional type-bridge tooling is symptomatic of a deeper problem, however.
-Essentially, these tools serve as a crutch to shore up deficiencies in Java's type system.
-For instance, a JSON object resulting
-from a web-based API call has a logical type. The type may be inferred programmatically
-or it may be provided directly via a schema such as a JSON Schema document. In
-either case Java does not provide any direct means to project the JSON metadata
-onto Java's type system as a first class type.  Thus we resort to code generators and
-static libraries to bridge the gap.
+We've bridged this gap with the same old solutions, notably code generators and static libraries. 
+These are collectively referred to as _type-bridging_ tools because they essentially provide types and methods to
+connect Java code to structured information.  But because type-bridging is not an integral part of the
+Java compiler or JVM, it has a long history of frustrating developers and ultimately impeding progress. 
 
-As an application's dependency on this tooling grows, the clumsiness inherent
-in its use becomes less an inconvenience and more a liability.  Code generators, for
-example, add an expensive step to the build process, which not only breaks a
-developer's concentration (perhaps the worst offense), it also creates a dependency
-in automated builds on the code generator tool or its artifacts. Source control managers
-often don't cope well with the generated files and, when large enough, the files should
-be cached and shared, which requires yet more tooling. It's difficult to quantify their
-impact on productivity, but over time the use of these tools is sure to slow progress.
+This is where the Type Manifold API steps in, it redefines code generation as we know it.
 
-What then is the alternative? Ideally if Java were to furnish a type-bridging API,
-we could build type-bridging adapter components. Unfortunately, no such plans
-appear on Java's horizon.  The JDK does, however, provide a compiler API and runtime hooks so that,
-in theory, a 3rd party could develop such a framework independently.
+Conventional code generators necessarily implement a _push_ architecture.  A typical code generator processes its full domain of types from
+ structured data sources, generates source files, and writes them to disk so that dependent code can compile
+ in a later build step. This disconnect is the root cause of a host of complications. These include:
+* stale generated classes
+* long build times
+* the domain graph of metadata is too large to generate, code bloat
+* changes to structured data don't invalidate generated code
+* no support for incremental compilation, all or nothing
+* can't navigate from code reference to corresponding element in the structured data
+* can't find code usages of elements from the structured data  
+* can't refactor / rename structured data elements 
+* complicated custom class loader issues, generated classes loaded in separate loader
+* concurrency problems with the shared thread context loader
+* the generated code is large and needs to be cached and shared
+* customers often need to change metadata and run code generators
 
-Enter the _type manifold_ API.
+Conversely, the Type Manifold API naturally promotes a _pull_ architecture.  The API plugs into the Java compiler so that 
+a type manifold implementation resolves and _projects_ types only as needed. In other words the compiler _drives_ a type manifold by 
+asking it to resolve types as the compiler encounters them.  As such your code can reference structured data sources 
+directly as Java types as defined by the type manifolds your project uses.  
 
-Put simply, the type manifold API is a foundation of classes that works behind the
-scenes with the Java compiler and runtime to directly connect your Java code to a specified data source.
-A _type manifold component_, or just _type manifold_, implements the API to expose
-the data source as a set of Java class projections. Class projections are real Java classes produced
-on-demand by a type manifold, they are never compiled to disk, instead they serve as type
-information bridges during compilation and executable code at runtime.  As such via class
-projections a type manifold enables you to access data sources directly and type-safely in
-your code. Above all, a type manifold represents a _live_ connection to information.
-Changes you make to the structure of a data source are immediately available in your code,
-with no compilation or build steps in-between. For all intents and purposes the data
-source _is_ the type.
+This changes everything.
+* Structured data sources are Java types!
+* Your build process is now free of code generation management
+* Using a type manifold is simply a matter of adding a Jar file to your project
+* You can perform incremental compilation based on changes to structured data
+* You can add/remove/modify a structured data source in your project and immediately use and see the change in your code
+* You can compile projected classes to disk as normal class files or use them dynamically at runtime
+* There are no customer class loaders involved and no thread context loaders to manage
+* You can navigate from a code reference to a structured data source in your IDE
+* You can perform usage searches on elements in structured data sources to find code references
+* You can rename / refactor elements in structured data sources
+
+Further, the Type Manifold API unifies code generation architecture by providing much needed structure and consistency 
+for developers writing code generators. It puts an end to "lone wolf" code gen projects only one developer fully understands.
+Moreover, you don't have to invest in one-off IDE integration projects; the Manifold plugin for IntelliJ handles everything 
+for you, from incremental compilation to usage searching to refactoring.  Finally, even if you've already invested in an 
+existing code generator, you can still recycle it as a wrapped type manifold -- the wrapper can delegate 
+source production to your existing framework.
 
 To illustrate, consider this simple example. Normally you access Java properties
 resources like this:
@@ -578,10 +587,11 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   Image files
 *   JavaScript
 *   Dark Java
+*   Template files
 
 We are working on support for more data sources including:
+*   RDF
 *   CSV
-*   Template files
 *   Standard SQL and DDL
 
 
