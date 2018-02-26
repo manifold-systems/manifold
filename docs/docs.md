@@ -500,8 +500,8 @@ tasks.withType(JavaCompile) {
 ## What Is a Type Manifold?
 
 Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
-As a consequence the software industry has become much less code-centric and much more information-centric.  
-Despite this transformation the means by which our software consumes structured information has remained unchanged for decades.
+As a consequence the software industry has become much less code-centric and much more information-centric. Despite 
+this transformation the means by which our software consumes structured information has remained unchanged for decades.
 Whether it's Json, Xml, Rdf, Csv, Ddl, Sql, Javascript, or any one of a multitude of other metadata sources, most modern 
 languages, including Java, do very little to connect them with your code.
 
