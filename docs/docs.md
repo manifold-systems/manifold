@@ -8,9 +8,9 @@ At its core [Manifold](https://manifold.systems/) is a unique framework to dynam
 Java's type system. Building on this core framework Manifold provides a set of
 key features found in other programming languages and platforms:
 
-* **Type-safe Metaprogramming** -- similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
-* **Extension Methods** -- comparable to the same feature in [Kotlin](https://kotlinlang.org/docs/reference/extensions.html) and [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)
-* **Structural Typing** -- much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
+* **Type-safe Metaprogramming** -- renders code generators obsolete, similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
+* **Extension Methods** -- add methods to classes you don't own, comparable to the same feature in [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods) and [Kotlin](https://kotlinlang.org/docs/reference/extensions.html)
+* **Structural Typing** -- type-safe duck typing, much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
 
 Leveraging these key features Manifold delivers a powerful set of Java extensions including **JSON**
 integration, **JavaScript** interop, **Structural typing**, seamless **extension libraries** to Java's
