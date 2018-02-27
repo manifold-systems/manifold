@@ -32,12 +32,21 @@ transforms a data source into a data _type_ directly accessible in your Java cod
 without a code generation build step or extra compilation artifacts. In essence with Manifold a data
 source **_is_** a data type.
 
-To illustrate, normally you access Java properties resources like this:
+To illustrate, consider this properties resource file:
+
+`/abc/MyProperties.properties`
+```properties
+chocolate = Chocolate
+chocolate.milk = Milk chocolate
+chocolate.dark = Dark chocolate
+``` 
+
+Normally in Java you access a properties resources like this:
 
 ```java
 Properties myProperties = new Properties();
 myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
-String myMessage = myProperties.getProperty("my.message");
+String myMessage = myProperties.getProperty("chocolate.milk");
 ```
 
 As with any resource file a properties file is foreign to Java's type system -- there is no direct,
@@ -47,7 +56,7 @@ with hard-coded strings.
 By contrast, with the Properties type manifold you access a properties file directly as a type:
 
 ```java
-String myMessage = MyProperties.my.message;
+String myMessage = MyProperties.chocolate.milk;
 ```
 
 Concise and type-safe, with no generated files or other build steps to engage.
