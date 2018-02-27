@@ -505,16 +505,12 @@ this transformation the means by which our software consumes structured informat
 Whether it's JSON, XSD/XML, RDF, CSV, DDL, SQL, Javascript, or any one of a multitude of other metadata sources, most modern 
 languages, including Java, do very little to connect them with your code.
 
-Developers bridge this gap with the same old solutions, notably code generators and static libraries. 
-These are collectively referred to as _type-bridging_ tools because they essentially provide types and methods to
-connect Java code to structured information.  But because type-bridging is not an integral part of the
-Java compiler or JVM, it has a long history of frustrating developers and ultimately impeding progress. 
-
-This is where the Type Manifold API steps in, it redefines code generation as we know it.
-
-Conventional code generators necessarily implement a _push_ architecture.  A typical code generator processes its full domain of types from
- structured data sources, generates source files, and writes them to disk so that dependent code can compile
- in a later build step. This disconnect is the root cause of a host of complications. These include:
+Developers are conditioned to reach for code generators and static libraries as a means to bridge the gap. 
+Collectively these are referred to as _type-bridging_ tools because they provide types and methods to
+bridge or map Java code to structured information.  But because type-bridging is not an integral part of the
+Java compiler or JVM, code generators necessarily implement a **_push_** architecture -- the compiler can't ask for
+a class to be generated, instead the generator processes its full domain of types ahead of time and writes them to disk 
+so that the compiler can use them in a later build step.  This disconnect is the source of a host of problems:
 * stale generated classes
 * long build times
 * the domain graph of metadata is too large to generate, code bloat
@@ -525,16 +521,14 @@ Conventional code generators necessarily implement a _push_ architecture.  A typ
 * can't refactor / rename structured data elements 
 * complicated custom class loader issues, generated classes loaded in separate loader
 * concurrency problems with the shared thread context loader
-* the generated code is large and needs to be cached and shared
-* customers often need to change metadata and run code generators
+* generated code is often cached and shared, which leads to stale cache issues
+* customers often need to change metadata, which requires access to code generators
 
-Conversely, the Type Manifold API naturally promotes a _pull_ architecture.  The API plugs into the Java compiler so that 
-a type manifold implementation resolves and _projects_ types only as needed. In other words the compiler _drives_ a type manifold by 
+In stark contrast to code generators, the _Type Manifold API_ naturally promotes a **_pull_** architecture.  The API plugs into the Java compiler so that 
+a type manifold implementing the API resolves and produces types only as needed. In other words the compiler **_drives_** a type manifold by 
 asking it to resolve types as the compiler encounters them.  As such your code can reference structured data sources 
-directly as Java types as defined by the type manifolds your project uses.  
-
-This changes everything.
-* Structured data sources are Java types!
+directly as Java types as defined by the type manifolds your project uses.  In essence the Type Manifold API reinvents code generation:
+* Structured data sources are virtual Java types!
 * Your build process is now free of code generation management
 * Using a type manifold is simply a matter of adding a Jar file to your project
 * You can perform incremental compilation based on changes to structured data
