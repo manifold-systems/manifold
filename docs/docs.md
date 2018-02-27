@@ -147,7 +147,7 @@ it incrementally without having to rewrite classes or conform to a new way of do
 Using Manifold in your Java project is simple:
 
 * Add the Manifold jar[s] to your classpath (and tools.jar if you're using Java 8)
-* Add '-Xplugin:Manifold' as an argument to java**c** (for compilation only)
+* Add `-Xplugin:Manifold` as an argument to java**c** (for compilation only)
 
 That's all.
 
