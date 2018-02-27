@@ -4,17 +4,22 @@ layout: docs_layout
 
 ## Manifold in a Nutshell
 
-At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and seamlessly extend
-Java's type system. Building on this core framework Manifold provides a set of
-key features found in other programming languages and platforms:
+At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
+Java. Building on this core framework Manifold supplements Java with new features you can use in your applications:
 
 * **Type-safe Metaprogramming** -- renders code generators obsolete, similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
 * **Extension Methods** -- add methods to classes you don't own, comparable to the same feature in [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods) and [Kotlin](https://kotlinlang.org/docs/reference/extensions.html)
 * **Structural Typing** -- type-safe duck typing, much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
 
-Leveraging these key features Manifold delivers a powerful set of Java extensions including **JSON**
-integration, **JavaScript** interop, **Structural typing**, seamless **extension libraries** to Java's
-runtime classes, and (coming soon) type-safe access to raw **SQL** and **DDL**.
+Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
+include:
+* **JSON** and **JSON Schema** integration
+* **JavaScript** interop
+* Type-safe **Templating** 
+* **Structural interfaces** and **Expando** objects
+* **Extension libraries** for collections, I/O, and text
+* **SQL** and **DDL** interop (coming soon)
+* Lots more
 
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
