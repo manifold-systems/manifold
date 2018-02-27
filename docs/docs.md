@@ -1082,8 +1082,8 @@ com.abc.MyTypeManifold
 ```
 
 As you can see building a type manifold can be relatively simple. The image manifold illustrates the basic structure of
-most file-based manifolds. Of course there's much more to the API. Examine the source code for other manifolds such as the JSON manifold ([manifold-json](https://github.com/manifold-systems/manifold/tree/master/manifold-json))
-and the JavaScript manifold ([manifold-js](https://github.com/manifold-systems/manifold/tree/master/manifold-js)).  These
+most file-based manifolds. Of course there's much more to the API. Examine the source code for other manifolds such as the JSON manifold ([manifold-json](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json))
+and the JavaScript manifold ([manifold-js](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)).  These
 serve as decent reference implementations for wrapping existing code generators and binding to existing languages, 
 respectively.
 
