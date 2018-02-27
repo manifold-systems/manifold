@@ -548,7 +548,7 @@ directly as Java types as defined by the type manifolds your project uses.  In e
 * You can perform incremental compilation based on changes to structured data
 * You can add/remove/modify a structured data source in your project and immediately use and see the change in your code
 * You can compile projected classes to disk as normal class files or use them dynamically at runtime
-* There are no customer class loaders involved and no thread context loaders to manage
+* There are no custom class loaders involved and no thread context loaders to manage
 * You can navigate from a code reference to a structured data source in your IDE
 * You can perform usage searches on elements in structured data sources to find code references
 * You can rename / refactor elements in structured data sources
