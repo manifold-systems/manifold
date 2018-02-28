@@ -30,21 +30,29 @@ public interface IManifoldHost extends IService
   {
     // Avoid using a host while incrementally compiling the host's own module...
 
-    JavacPlugin javacPlugin = JavacPlugin.instance();
-    if( javacPlugin != null )
+    try
     {
-      List<String> outputPath = javacPlugin.deriveOutputPath();
-      for( String path : outputPath )
+      JavacPlugin javacPlugin = JavacPlugin.instance();
+      if( javacPlugin != null )
       {
-        String fqn = getClass().getName();
-        fqn = fqn.replace( '.', File.separatorChar ) + ".class";
-        File classFile = new File( path, fqn );
-        if( classFile.isFile() )
+        List<String> outputPath = javacPlugin.deriveOutputPath();
+        for( String path : outputPath )
         {
-          return false;
+          String fqn = getClass().getName();
+          fqn = fqn.replace( '.', File.separatorChar ) + ".class";
+          File classFile = new File( path, fqn );
+          if( classFile.isFile() )
+          {
+            return false;
+          }
         }
       }
     }
+    catch( IllegalAccessError ignore )
+    {
+      // this can happend in Java 9 at runtime, we don't care, accept() applies to compilation
+    }
+    
     return true;
   }
 
