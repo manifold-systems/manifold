@@ -5,6 +5,9 @@ import java.util.Set;
 import manifold.api.fs.IFile;
 
 /**
+ * For use with {@link ResourceFileTypeManifold}.  Models the common use-case where
+ * a type is backed by a single resource file e.g.,
+ * a <a href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> file.
  */
 public abstract class AbstractSingleFileModel implements IModel
 {

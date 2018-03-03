@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 import manifold.internal.javac.JavaParser;
 import manifold.util.StreamUtil;
@@ -23,7 +23,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   public static final Set<String> FILE_EXTENSIONS = Collections.singleton( "darkj" );
 
   @Override
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, Model::new );
   }
@@ -154,7 +154,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     return getSource( model );
   }

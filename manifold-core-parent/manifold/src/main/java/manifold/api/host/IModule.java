@@ -11,6 +11,15 @@ import manifold.api.fs.cache.PathCache;
 import manifold.api.type.ITypeManifold;
 
 /**
+ * Java projects are typically organized according to a hierarchy of modules where each module defines
+ * packages of Java classes and resources and other modules on which it depends. {@link IModule} abstracts
+ * this concept as a set of paths defining source, class, and output locations, a list of dependencies on
+ * other modules, and the set of {@link ITypeManifold}s managed by the module.
+ * <p/>
+ * The use of modules for the purposes of the Manifold API is mostly applicable to IDE integration such
+ * as with the <a href="http://manifold.systems/docs.html#working-with-intellij">IntelliJ plugin</a>.
+ * Otherwise, because compilation is not intermodular and because runtime is flattened, modules consist
+ * of a single "default" module.
  */
 public interface IModule
 {

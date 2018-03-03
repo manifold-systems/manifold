@@ -17,7 +17,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.service.BaseService;
@@ -29,13 +29,13 @@ import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
- * A base class for a source producer that is based on a resource file of a specific extension.
+ * A base class for a type manifold that is based on a resource file of a specific extension.
  *
- * @param <M> The model you derive backing production of source code.
+ * @param <M> The model you derive backing contributions of source code.
  */
 public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseService implements ITypeManifold
 {
-  private ITypeLoader _typeLoader;
+  private IModuleComponent _typeLoader;
   private LocklessLazyVar<FqnCache<LocklessLazyVar<M>>> _fqnToModel;
   private String _typeFactoryFqn;
   private BiFunction<String, Set<IFile>, M> _modelMapper;
@@ -43,7 +43,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   private CacheClearer _cacheClearer;
 
   @Override
-  public void init( ITypeLoader tl )
+  public void init( IModuleComponent tl )
   {
     _typeLoader = tl;
   }
@@ -52,7 +52,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    * @param typeLoader  The typeloader passed into the ISourceProvider implementation constructor
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
-  protected void init( ITypeLoader typeLoader, BiFunction<String, Set<IFile>, M> modelMapper )
+  protected void init( IModuleComponent typeLoader, BiFunction<String, Set<IFile>, M> modelMapper )
   {
     init( typeLoader, modelMapper, null );
   }
@@ -62,7 +62,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    * @param modelMapper    A function to provide a model given a qualified name and resource file
    * @param typeFactoryFqn For Gosu Lab.  Optional.
    */
-  protected void init( ITypeLoader typeLoader, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
+  protected void init( IModuleComponent typeLoader, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
   {
     _typeLoader = typeLoader;
     _typeFactoryFqn = typeFactoryFqn;
@@ -177,13 +177,14 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   public abstract boolean isInnerType( String topLevelFqn, String relativeInner );
 
   /**
-   * Generate Source code for the named model.
+   * Contribute source code for the specified type and model.
    *
-   * @param topLevelFqn The qualified name of the top-level type to produce.
-   * @param existing    The source produced from other producers so far; if not empty, this producer must not be a Primary producer.
-   * @param model       The model your source code provider uses to generate the source.  @return The source code for the specified top-level type.
+   * @param topLevelFqn The qualified name of the top-level type to contribute.
+   * @param existing    The source produced from other manifolds so far; if not empty, this manifold must not be a {@link ContributorKind#Primary} contributor.
+   * @param model       The model your manifold uses to generate the source.
+   * @return The combined source code for the specified top-level type.
    */
-  protected abstract String produce( String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
+  protected abstract String contribute( String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
 
   protected M getModel( String topLevel )
   {
@@ -234,7 +235,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   }
 
   @Override
-  public ITypeLoader getTypeLoader()
+  public IModuleComponent getTypeLoader()
   {
     return _typeLoader;
   }
@@ -300,12 +301,12 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   }
 
   @Override
-  public String produce( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
+  public String contribute( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
   {
     String topLevel = findTopLevelFqn( fqn );
     LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( topLevel );
 
-    String source = produce( topLevel, existing, lazyModel.get(), errorHandler );
+    String source = contribute( topLevel, existing, lazyModel.get(), errorHandler );
 
     // Now remove the model since we don't need it anymore
     lazyModel.clear();

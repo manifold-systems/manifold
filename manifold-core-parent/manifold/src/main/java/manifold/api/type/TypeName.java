@@ -1,16 +1,16 @@
 package manifold.api.type;
 
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 
 public class TypeName implements Comparable
 {
   public final String name;
   public final Kind kind;
   public final Visibility visibility;
-  public final ITypeLoader loader;
+  public final IModuleComponent loader;
 
-  public TypeName( String name, ITypeLoader loader, Kind kind, Visibility visibility )
+  public TypeName( String name, IModuleComponent loader, Kind kind, Visibility visibility )
   {
     this.name = name;
     this.loader = loader;

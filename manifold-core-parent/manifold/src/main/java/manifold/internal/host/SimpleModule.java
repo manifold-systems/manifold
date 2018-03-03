@@ -10,7 +10,8 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
@@ -20,13 +21,13 @@ import manifold.util.JavacDiagnostic;
 import manifold.util.concurrent.LocklessLazyVar;
 
 
-import static manifold.api.type.ITypeManifold.ProducerKind.Partial;
-import static manifold.api.type.ITypeManifold.ProducerKind.Primary;
+import static manifold.api.type.ContributorKind.Partial;
+import static manifold.api.type.ContributorKind.Primary;
 
 /**
  */
 @SuppressWarnings("WeakerAccess")
-public abstract class SimpleModule implements ITypeLoader, IModule
+public abstract class SimpleModule implements IModuleComponent, IModule
 {
   private List<IDirectory> _classpath;
   private List<IDirectory> _sourcePath;
@@ -116,10 +117,10 @@ public abstract class SimpleModule implements ITypeLoader, IModule
     String result = "";
     for( ITypeManifold sp : sps )
     {
-      if( sp.getProducerKind() == Primary ||
-          sp.getProducerKind() == Partial )
+      if( sp.getContributorKind() == Primary ||
+          sp.getContributorKind() == Partial )
       {
-        if( found != null && (found.getProducerKind() == Primary || sp.getProducerKind() == Primary) )
+        if( found != null && (found.getContributorKind() == Primary || sp.getContributorKind() == Primary) )
         {
           List<IFile> files = sp.findFilesForType( fqn );
           JavaFileObject file = new SourceJavaFileObject( files.get( 0 ).toURI() );
@@ -133,15 +134,15 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         else
         {
           found = sp;
-          result = sp.produce( fqn, result, errorHandler );
+          result = sp.contribute( fqn, result, errorHandler );
         }
       }
     }
     for( ITypeManifold sp : sps )
     {
-      if( sp.getProducerKind() == ITypeManifold.ProducerKind.Supplemental )
+      if( sp.getContributorKind() == ContributorKind.Supplemental )
       {
-        result = sp.produce( fqn, result, errorHandler );
+        result = sp.contribute( fqn, result, errorHandler );
       }
     }
     return result;
@@ -161,20 +162,20 @@ public abstract class SimpleModule implements ITypeLoader, IModule
         return;
       }
 
-      _typeManifolds = ITypeLoader.super.loadTypeManifolds();
+      _typeManifolds = IModuleComponent.super.loadTypeManifolds();
       _typeManifolds.forEach( tm -> tm.init( this ) );
     }
   }
 
   public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
   {
-    return ITypeLoader.super.findTypeManifoldsFor( fqn );
+    return IModuleComponent.super.findTypeManifoldsFor( fqn );
   }
 
   @Override
   public Set<ITypeManifold> findTypeManifoldsFor( IFile file )
   {
-    return ITypeLoader.super.findTypeManifoldsFor( file );
+    return IModuleComponent.super.findTypeManifoldsFor( file );
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )

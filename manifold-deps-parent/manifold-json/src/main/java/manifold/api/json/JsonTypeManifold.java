@@ -3,7 +3,7 @@ package manifold.api.json;
 import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Structural;
 import manifold.util.ManClassUtil;
@@ -14,7 +14,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
 {
   public static final String FILE_EXTENSION = "json";
 
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, JsonModel::new, "editor.plugin.typeloader.json.JsonTypeFactory" );
   }
@@ -50,7 +50,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, JsonModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, JsonModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )

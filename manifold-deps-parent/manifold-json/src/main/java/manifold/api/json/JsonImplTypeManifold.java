@@ -7,7 +7,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.ManClassUtil;
 
@@ -19,7 +19,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( FILE_EXTENSION );
   private static final String IMPL = "impl";
 
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, Model::new );
   }
@@ -75,7 +75,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     SrcClass srcClass = new JsonImplCodeGen( model.getType(), topLevelFqn ).make();

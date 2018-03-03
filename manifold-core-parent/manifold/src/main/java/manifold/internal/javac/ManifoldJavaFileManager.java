@@ -33,7 +33,7 @@ import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
 
 
-import static manifold.api.type.ITypeManifold.ProducerKind.Primary;
+import static manifold.api.type.ContributorKind.Primary;
 
 /**
  */
@@ -240,7 +240,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
       // true if type is not exclusively an extended type
       Set<ITypeManifold> typeManifoldsFor = ManifoldHost.getCurrentModule().findTypeManifoldsFor( fqn );
-      return typeManifoldsFor.stream().anyMatch( tm -> tm.getProducerKind() == Primary );
+      return typeManifoldsFor.stream().anyMatch( tm -> tm.getContributorKind() == Primary );
     }
 
     if( patchableFiles == null )

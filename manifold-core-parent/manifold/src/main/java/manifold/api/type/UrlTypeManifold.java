@@ -3,36 +3,41 @@ package manifold.api.type;
 import java.util.Collections;
 import java.util.List;
 import manifold.api.fs.IFile;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.host.RefreshKind;
 import manifold.api.service.BaseService;
 
+/**
+ * A base class for non-resource based type manifolds.  For instance, a type
+ * manifold for a subset of <a href="https://www.w3.org/RDF/">RDF</a> could
+ * subclass {@link UrlTypeManifold}.
+ */
 public abstract class UrlTypeManifold extends BaseService implements ITypeManifold
 {
-  private ITypeLoader _typeLoader;
+  private IModuleComponent _typeLoader;
 
   @Override
-  public void init( ITypeLoader tl )
+  public void init( IModuleComponent tl )
   {
     _typeLoader = tl;
   }
 
   @Override
-  public ITypeLoader getTypeLoader()
+  public IModuleComponent getTypeLoader()
   {
     return _typeLoader;
   }
 
   @Override
-  public SourceKind getSourceKind()
+  public ISourceKind getSourceKind()
   {
-    return SourceKind.Java;
+    return ISourceKind.Java;
   }
 
   @Override
-  public ProducerKind getProducerKind()
+  public ContributorKind getContributorKind()
   {
-    return ProducerKind.Primary;
+    return ContributorKind.Primary;
   }
 
   @Override

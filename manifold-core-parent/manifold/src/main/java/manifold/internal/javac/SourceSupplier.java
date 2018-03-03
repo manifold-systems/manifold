@@ -2,6 +2,7 @@ package manifold.internal.javac;
 
 import java.util.Set;
 import java.util.function.Supplier;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 
 public class SourceSupplier
@@ -35,7 +36,7 @@ public class SourceSupplier
   public boolean isPrimary()
   {
     return _sps == null || _sps.isEmpty() ||
-           _sps.stream().anyMatch( e -> e.getProducerKind() == ITypeManifold.ProducerKind.Primary ||
-                                        e.getProducerKind() == ITypeManifold.ProducerKind.Partial );
+           _sps.stream().anyMatch( e -> e.getContributorKind() == ContributorKind.Primary ||
+                                        e.getContributorKind() == ContributorKind.Partial );
   }
 }

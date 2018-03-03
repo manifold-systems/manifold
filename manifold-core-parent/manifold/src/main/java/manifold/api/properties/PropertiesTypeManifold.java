@@ -8,7 +8,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
@@ -18,7 +18,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, Model::new, "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
   }
@@ -49,7 +49,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
     SrcClass srcClass = new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get( 0 ), topLevelFqn ).make();

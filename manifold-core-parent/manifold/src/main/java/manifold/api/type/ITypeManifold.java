@@ -5,9 +5,20 @@ import java.util.List;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 
 /**
+ * A {@link ITypeManifold} is a fundamental component of the Manifold API. Implementors of this interface
+ * work together to dynamically provide the Java compiler with type information as it requests it.
+ * <p/>
+ * Its primary duties include:
+ * <lu>
+ *   <li>Define a domain of types via {@link #getTypeNames(String)}</li>
+ *   <li>Resolve types in that domain via {@link #isType(String)}, {@link #isTopLevelType(String)}, and {@link #isPackage(String)}</li>
+ *   <li>Contribute source toward a given type projection via {@link #contribute(String, String, DiagnosticListener)}</li>
+ * </lu>
+ * <p/>
+ * Separate instances of a given implementation of this interface exist per {@link manifold.api.host.IModule}.
  */
 public interface ITypeManifold extends IFileConnected
 {
@@ -17,56 +28,26 @@ public interface ITypeManifold extends IFileConnected
   String ARG_DUMP_SOURCE = "manifold.dump.source";
 
   /**
-   * Supported kinds of source.
+   * Initialize this type manifold.  Avoid defining types in the scope of this method.
+   *
+   * @param tl The module to which this type manifold belongs
    */
-  enum SourceKind
-  {
-    Java,
-    Gosu
-  }
-
-  /**
-   * Specifies the involvement of this producer wrt the completeness of the source
-   */
-  enum ProducerKind
-  {
-    /**
-     * Produces complete valid source and does not depend on contributions from other producers
-     */
-    Primary,
-
-    /**
-     * Supplements the source produced from a Primary producer or set of Partial producers
-     */
-    Supplemental,
-
-    /**
-     * Cooperates with other producers to collectively provide complete valid source
-     */
-    Partial,
-
-    /**
-     * Does not directly contribute source
-     */
-    None
-  }
-
-  void init( ITypeLoader tl );
+  void init( IModuleComponent tl );
 
   /**
    * The TypeLoader to which this producer is scoped
    */
-  ITypeLoader getTypeLoader();
+  IModuleComponent getTypeLoader();
 
   /**
    * What kind of source is produced?  Java or Gosu?
    */
-  SourceKind getSourceKind();
+  ISourceKind getSourceKind();
 
   /**
    * How does this producer contribute toward the source file produced
    */
-  ProducerKind getProducerKind();
+  ContributorKind getContributorKind();
 
   /**
    * Does this producer supply source for the specified fqn?
@@ -91,9 +72,9 @@ public interface ITypeManifold extends IFileConnected
   String getPackage( String fqn );
 
   /**
-   * Produce source corresponding with the fqn.
+   * Contribute source corresponding with the fqn.
    */
-  String produce( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
+  String contribute( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
 
   Collection<String> getAllTypeNames();
 

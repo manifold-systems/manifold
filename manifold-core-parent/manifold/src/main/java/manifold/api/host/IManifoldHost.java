@@ -18,10 +18,10 @@ import manifold.internal.javac.JavacPlugin;
 import manifold.util.NecessaryEvilUtil;
 
 /**
- * Implement this interface to host and drive Manifold in custom way.  For instance
+ * Implement this interface to host and drive Manifold in a custom way.  For instance
  * another JVM language can implement this to expose Manifold types directly to its
  * type system.  Other implementations include IDE plugins for Manifold e.g., the
- * IntelliJ plugin implements this to use Intellij's file system.
+ * IntelliJ plugin implements this to integrate with Intellij's type system and file system.
  */
 public interface IManifoldHost extends IService
 {

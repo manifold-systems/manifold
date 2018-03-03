@@ -4,11 +4,18 @@ import manifold.api.fs.IFile;
 import manifold.api.host.RefreshKind;
 
 /**
+ * An abstraction representing a connection between a types and files.
  */
 public interface IFileConnected
 {
+  /**
+   * @return True if this type manifold handles files having the given {@code fileExtension}
+   */
   boolean handlesFileExtension( String fileExtension );
 
+  /**
+   * @return True if the type manifold handles the given {@code file}
+   */
   boolean handlesFile( IFile file );
 
   /**
@@ -23,8 +30,7 @@ public interface IFileConnected
   String[] getTypesForFile( IFile file );
 
   /**
-   * l
-   * Notifies the type loader that a file has been refreshed.  The type loader should return all
+   * Notifies that a file has been refreshed.  The implementor should return all
    * types that it knows need to be refreshed based on the given file.
    *
    * @param file The file that was refreshed

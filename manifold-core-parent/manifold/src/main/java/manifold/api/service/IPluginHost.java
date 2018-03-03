@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * This simple interface provides the core foundation for component architecture in Gosu.
+ * This simple interface provides the core foundation for component architecture.
  */
 public interface IPluginHost
 {

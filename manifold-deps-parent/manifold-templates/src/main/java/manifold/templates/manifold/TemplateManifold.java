@@ -1,7 +1,7 @@
 package manifold.templates.manifold;
 
 import manifold.api.fs.IFile;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 
 import javax.tools.DiagnosticListener;
@@ -9,7 +9,7 @@ import javax.tools.JavaFileObject;
 
 public class TemplateManifold extends JavaTypeManifold<TemplateModel> {
 
-    public void init( ITypeLoader typeLoader )
+    public void init( IModuleComponent typeLoader )
     {
         init(typeLoader, TemplateModel::new);
     }
@@ -41,7 +41,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel> {
     }
 
     @Override
-    protected String produce(String topLevelFqn, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler) {
+    protected String contribute( String topLevelFqn, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler) {
         String source = model.getSource();
         model.report( errorHandler );
         return source;

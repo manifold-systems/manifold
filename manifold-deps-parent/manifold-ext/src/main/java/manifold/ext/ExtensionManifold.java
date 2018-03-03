@@ -1,6 +1,5 @@
 package manifold.ext;
 
-import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,7 +11,8 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
@@ -31,7 +31,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   public static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, ( fqn, files ) -> new Model( fqn, files, this ) );
   }
@@ -43,9 +43,9 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  public ProducerKind getProducerKind()
+  public ContributorKind getContributorKind()
   {
-    return ProducerKind.Supplemental;
+    return ContributorKind.Supplemental;
   }
 
   @Override
@@ -154,7 +154,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     {
       for( ITypeManifold tm : tms )
       {
-        if( tm.getProducerKind() == ProducerKind.Primary && tm instanceof ResourceFileTypeManifold )
+        if( tm.getContributorKind() == ContributorKind.Primary && tm instanceof ResourceFileTypeManifold )
         {
           return ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner );
         }
@@ -205,7 +205,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     return new ExtCodeGen( model, topLevelFqn, existing ).make( errorHandler );
   }

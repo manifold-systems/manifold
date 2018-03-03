@@ -7,7 +7,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 
 /**
@@ -17,7 +17,7 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "jpg", "png", "bmp", "wbmp", "gif" ) );
 
   @Override
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, Model::new );
   }
@@ -41,7 +41,7 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new ImageCodeGen( model._url, topLevelFqn ).make();
     StringBuilder sb = srcClass.render( new StringBuilder(), 0 );

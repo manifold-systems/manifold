@@ -8,15 +8,15 @@ package manifold.api.type;
 public abstract class JavaTypeManifold<M extends IModel> extends ResourceFileTypeManifold<M>
 {
   @Override
-  public SourceKind getSourceKind()
+  public ISourceKind getSourceKind()
   {
-    return SourceKind.Java;
+    return ISourceKind.Java;
   }
 
   @Override
-  public ProducerKind getProducerKind()
+  public ContributorKind getContributorKind()
   {
-    return ProducerKind.Primary;
+    return ContributorKind.Primary;
   }
 
   @Override

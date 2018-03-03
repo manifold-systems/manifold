@@ -6,7 +6,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.ITypeLoader;
+import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
 
 /**
@@ -18,7 +18,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   public static final String JST = "jst";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( JS, JST ) );
 
-  public void init( ITypeLoader typeLoader )
+  public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, JavascriptModel::new );
   }
@@ -36,7 +36,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   }
 
   @Override
-  protected String produce( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make( errorHandler );
     return srcClass.render( new StringBuilder(), 0).toString();
