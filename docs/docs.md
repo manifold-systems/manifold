@@ -1752,12 +1752,5 @@ them to access a whole new world of types and extensions using the Java they alr
 Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
 Use Manifold freely with your favorite open source web servers, database servers, and tools.
 
-### Professional
-You're a small to medium-sized business using [Oracle's Web Tier](http://www.oracle.com/technetwork/middleware/webtier/overview/index.html) 
-products or [Microsoft/web](https://www.microsoft.com/web/platform/server.aspx) and you're looking for basic
-support?  You can try Manifold free for 30 days.  License: $99 per floating developer workstation and year.
-
-### Enterprise
-You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
-you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating 
-developer workstation and year.
+### Commercial
+Commercial licensing and other arrangments are available.  Contact admin@manifold.systems.

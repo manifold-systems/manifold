@@ -4,7 +4,10 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
@@ -12,6 +15,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModuleComponent;
+import manifold.api.host.RefreshRequest;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
@@ -22,6 +26,7 @@ import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.StreamUtil;
+import manifold.util.concurrent.LocklessLazyVar;
 
 /**
  */
@@ -49,7 +54,13 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected String aliasFqn( String fqn, IFile file )
+  protected CacheClearer createCacheClearer()
+  {
+    return new ExtensionCacheHandler();
+  }
+
+  @Override
+  protected String getTypeNameForFile( String fqn, IFile file )
   {
     if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 )
     {
@@ -117,37 +128,33 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  public boolean isInnerType( String topLevel, String relativeInner )
+  protected Map<String, LocklessLazyVar<Model>> getPeripheralTypes()
   {
-    if( !isType( topLevel ) )
-    {
-      return false;
-    }
+    // Include types extended by dynamically provided extension classes from IExtensionClassProducers
 
-    return delegateToPrimaryManifold( topLevel, relativeInner ) ||
-           delegateToJavaClass( topLevel, relativeInner );
-  }
-
-  private boolean delegateToJavaClass( String topLevel, String relativeInner )
-  {
-    try
+    Map<String, LocklessLazyVar<Model>> map = new HashMap<>();
+    for( ITypeManifold tm : getModule().getTypeManifolds() )
     {
-      Class<?> cls = Class.forName( topLevel, false, ManifoldHost.instance().getActualClassLoader() );
-      for( Class<?> inner: cls.getDeclaredClasses() )
+      if( tm instanceof IExtensionClassProducer )
       {
-        if( isInnerClass( inner, relativeInner ) )
+        for( String extended : ((IExtensionClassProducer)tm).getExtendedTypes() )
         {
-          return true;
+          map.put( extended, LocklessLazyVar.make( () -> new Model( extended, Collections.emptySet(), this ) ) );
         }
       }
     }
-    catch( ClassNotFoundException ignore )
-    {
-    }
-    return false;
+    return map;
   }
 
-  private boolean delegateToPrimaryManifold( String topLevel, String relativeInner )
+  @Override
+  public boolean isInnerType( String topLevel, String relativeInner )
+  {
+    return isType( topLevel ) &&
+           (isInnerToPrimaryManifold( topLevel, relativeInner ) ||
+            isInnerToJavaClass( topLevel, relativeInner ));
+  }
+
+  private boolean isInnerToPrimaryManifold( String topLevel, String relativeInner )
   {
     Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel );
     if( tms != null )
@@ -159,6 +166,25 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
           return ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner );
         }
       }
+    }
+    return false;
+  }
+
+  private boolean isInnerToJavaClass( String topLevel, String relativeInner )
+  {
+    try
+    {
+      Class<?> cls = Class.forName( topLevel, false, ManifoldHost.instance().getActualClassLoader() );
+      for( Class<?> inner : cls.getDeclaredClasses() )
+      {
+        if( isInnerClass( inner, relativeInner ) )
+        {
+          return true;
+        }
+      }
+    }
+    catch( ClassNotFoundException ignore )
+    {
     }
     return false;
   }
@@ -199,12 +225,6 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  public void clear()
-  {
-    super.clear();
-  }
-
-  @Override
   protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     return new ExtCodeGen( model, topLevelFqn, existing ).make( errorHandler );
@@ -217,6 +237,42 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     {
       TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor );
       typeProcessor.getTree().accept( visitor );
+    }
+  }
+
+  private class ExtensionCacheHandler extends CacheClearer
+  {
+    @Override
+    public void refreshedTypes( RefreshRequest request )
+    {
+      super.refreshedTypes( request );
+
+      for( ITypeManifold tm: getTypeLoader().findTypeManifoldsFor( request.file ) )
+      {
+        if( tm instanceof IExtensionClassProducer )
+        {
+          for( String extended: ((IExtensionClassProducer)tm).getExtendedTypesForFile( request.file ) )
+          {
+            refreshedType( extended, request );
+          }
+        }
+      }
+    }
+
+    private void refreshedType( String extended, RefreshRequest request )
+    {
+      switch( request.kind )
+      {
+        case CREATION:
+          createdType( Collections.emptySet(), extended );
+          break;
+        case MODIFICATION:
+          modifiedType( Collections.emptySet(), extended );
+          break;
+        case DELETION:
+          deletedType( Collections.emptySet(), extended );
+          break;
+      }
     }
   }
 

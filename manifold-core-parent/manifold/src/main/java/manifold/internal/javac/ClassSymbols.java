@@ -11,9 +11,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import javax.lang.model.element.Element;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import manifold.api.fs.IResource;
@@ -22,6 +25,7 @@ import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
 import manifold.internal.host.ManifoldHost;
+import manifold.util.ManClassUtil;
 import manifold.util.Pair;
 
 /**
@@ -102,6 +106,13 @@ public class ClassSymbols
   {
     JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
     Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
+
+    if( typeElement == null )
+    {
+      // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
+      return getClassSymbolForProducedClass( fqn, new BasicJavacTask[1] );
+    }
+
     JavacTrees trees = JavacTrees.instance( javacTask.getContext() );
     TreePath path = trees.getPath( typeElement );
     if( path != null )
@@ -133,7 +144,78 @@ public class ClassSymbols
     {
       javacTaskOut[0] = javacTask;
     }
-    return SrcClassUtil.instance().makeStub( _module, fqn, pair.getFirst(), pair.getSecond(), javacTask );
+
+    Symbol.ClassSymbol classSymbol = pair.getFirst();
+    if( classSymbol == null )
+    {
+      // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
+      return makeSrcClassStubFromProducedClass( fqn, compUnit );
+    }
+
+    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), javacTask );
+  }
+
+  private SrcClass makeSrcClassStubFromProducedClass( String fqn, JCTree.JCCompilationUnit[] compUnit )
+  {
+    BasicJavacTask[] task = new BasicJavacTask[1];
+    final Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbolForProducedClass( fqn, task );
+
+    if( compUnit != null )
+    {
+      compUnit[0] = pair.getSecond();
+    }
+
+    Symbol.ClassSymbol classSymbol = pair.getFirst();
+
+    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), task[0] );
+  }
+
+  private Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbolForProducedClass( String fqn, BasicJavacTask[] task )
+  {
+    init();
+
+    Pair<JavaFileObject, String> fileObj = JavaParser.instance().findJavaSource( fqn, null );
+    if( fileObj == null )
+    {
+      return null;
+    }
+
+    StringWriter errors = new StringWriter();
+    task[0] = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, Collections.singleton( fileObj.getFirst() ) );
+    try
+    {
+      Iterable<? extends Element> elements = task[0].analyze();
+      for( Element e: elements )
+      {
+        if( e instanceof Symbol.ClassSymbol && e.getSimpleName().contentEquals( ManClassUtil.getShortClassName( fqn ) ) )
+        {
+          JavacTrees trees = JavacTrees.instance( task[0].getContext() );
+          TreePath path = trees.getPath( e );
+          if( path != null )
+          {
+            return new Pair<>( (Symbol.ClassSymbol)e, (JCTree.JCCompilationUnit)path.getCompilationUnit() );
+          }
+          else
+          {
+            // TreePath is only applicable to a source file;
+            // if fqn is not a source file, there is no compilation unit available
+            return new Pair<>( (Symbol.ClassSymbol)e, null );
+          }
+        }
+      }
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+
+    StringBuffer errorText = errors.getBuffer();
+    if( errorText.length() > 0  )
+    {
+      throw new RuntimeException( "Compile errors:\n" + errorText );
+    }
+
+    return null;
   }
 
   private class CacheClearer implements ITypeLoaderListener

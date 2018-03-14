@@ -37,8 +37,13 @@ public class JsonStructureType extends JsonSchemaType
   public JsonStructureType( JsonSchemaType parent, URL source, String name )
   {
     super( name, source, parent );
+
+    // Using LinkedHashMap to preserve insertion order, an impl detail currently required by the IJ plugin for rename
+    // refactoring i.e., renaming a json property should result in a source file that differs only in the naming
+    // difference -- there should be no difference in ordering of methods etc.
     _membersByName = new LinkedHashMap<>();
     _memberLocations = new LinkedHashMap<>();
+
     _innerTypes = Collections.emptyMap();
     _unionMembers = Collections.emptyMap();
     _superTypes = Collections.emptyList();

@@ -27,6 +27,7 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
+import manifold.api.type.ITypeManifold;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
@@ -93,11 +94,11 @@ class ExtCodeGen
     boolean annotationExtensions = false;
     Set<String> allExtensions = findAllExtensions();
     JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
-    for( String fqn : allExtensions )
+    for( String extensionFqn : allExtensions )
     {
       //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
       //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
-      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( fqn, javacTask, null );
+      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, javacTask, null );
       if( srcExtension != null )
       {
         for( AbstractSrcMethod method : srcExtension.getMethods() )
@@ -205,7 +206,13 @@ class ExtCodeGen
   private Set<String> findAllExtensions()
   {
     Set<String> fqns = new LinkedHashSet<>();
+    findExtensionsOnDisk( fqns );
+    findExtensionsFromExtensionClassProviders( fqns );
+    return fqns;
+  }
 
+  private void findExtensionsOnDisk( Set<String> fqns )
+  {
     PathCache pathCache = getModule().getPathCache();
     for( IFile file : _model.getFiles() )
     {
@@ -218,7 +225,20 @@ class ExtCodeGen
         }
       }
     }
-    return fqns;
+  }
+
+  private void findExtensionsFromExtensionClassProviders( Set<String> fqns )
+  {
+    ExtensionManifold extensionManifold = _model.getTypeManifold();
+    for( ITypeManifold tm: extensionManifold.getModule().getTypeManifolds() )
+    {
+      if( tm != extensionManifold &&
+          tm instanceof IExtensionClassProducer )
+      {
+        Set<String> extensionClasses = ((IExtensionClassProducer)tm).getExtensionClasses( _model.getFqn() );
+        fqns.addAll( extensionClasses );
+      }
+    }
   }
 
   private void addExtensionInteface( SrcType iface, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )

@@ -263,6 +263,14 @@ public class SrcClass extends SrcStatement<SrcClass>
     return _typeVars;
   }
 
+  public StringBuilder render()
+  {
+    return render( 0 );
+  }
+  public StringBuilder render( int indent )
+  {
+    return render( new StringBuilder(), indent );
+  }
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {

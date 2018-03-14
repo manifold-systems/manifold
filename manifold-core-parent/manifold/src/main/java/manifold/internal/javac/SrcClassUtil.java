@@ -1,5 +1,7 @@
 package manifold.internal.javac;
 
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ImportTree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
@@ -38,25 +40,25 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask )
+  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask )
   {
     return makeStub( module, fqn, classSymbol, compilationUnit, javacTask, true );
   }
 
-  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask, boolean withMembers )
+  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, boolean withMembers )
   {
     return makeSrcClass( module, fqn, classSymbol, compilationUnit, javacTask, withMembers );
   }
 
-  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, JCTree.JCCompilationUnit compilationUnit, BasicJavacTask javacTask, boolean withMembers )
+  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, boolean withMembers )
   {
     SrcClass srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ) )
       .modifiers( classSymbol.getModifiers() );
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
     {
-      for( JCTree.JCImport imp : compilationUnit.getImports() )
+      for( ImportTree imp : compilationUnit.getImports() )
       {
-        if( imp.staticImport )
+        if( imp.isStatic() )
         {
           srcClass.addStaticImport( imp.getQualifiedIdentifier().toString() );
         }
@@ -202,7 +204,7 @@ public class SrcClassUtil
     if( srcMethod.isConstructor() )
     {
       // Note we can't just throw an exception for the ctor body, the compiler will
-      // still complain about the missing super() cal if the super class does not have
+      // still complain about the missing super() call if the super class does not have
       // an accessible default ctor. To appease the compiler we generate a super(...)
       // call to the first accessible constructor we can find in the super class.
       bodyStmt = genSuperCtorCall( module, srcClass, javacTask );

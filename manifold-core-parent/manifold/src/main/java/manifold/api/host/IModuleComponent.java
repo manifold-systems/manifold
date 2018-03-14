@@ -1,14 +1,18 @@
 package manifold.api.host;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IFile;
 import manifold.api.image.ImageTypeManifold;
 import manifold.api.properties.PropertiesTypeManifold;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 
 /**
@@ -69,19 +73,31 @@ public interface IModuleComponent
    *
    * @return The complete set of type manifolds this module container manages.
    */
-  default Set<ITypeManifold> loadTypeManifolds()
+  default SortedSet<ITypeManifold> loadTypeManifolds()
   {
-    Set<ITypeManifold> typeManifolds = new HashSet<>();
+    // note type manifolds are sorted via getTypeManifoldSorter(), hence the use of TreeSet
+    SortedSet<ITypeManifold> typeManifolds = new TreeSet<>( getTypeManifoldSorter() );
     loadBuiltIn( typeManifolds );
     loadRegistered( typeManifolds );
     return typeManifolds;
   }
 
   /**
+   * Supplemental type manifolds must follow others, this is so that a Supplemental
+   * manifold in response to changes can be sure that side effects stemming from
+   * Primary or Partial manifolds are deterministic and complete beforehand.
+   * <p/>
+   * Implementors <b>must</b> maintain this as the primary sort.
+   */
+  default Comparator<ITypeManifold> getTypeManifoldSorter()
+  {
+    //noinspection ComparatorMethodParameterNotUsed
+    return (tm1, tm2) -> tm1.getContributorKind() == ContributorKind.Supplemental ? 1 : -1;
+  }
+
+  /**
    * Loads, but does not initialize, all <i>built-in</i> type manifolds managed by this module container.
    * A built-in type manifold is not registered as a Java service, instead it is constructed directly.
-   *
-   * @return The built-in type manifolds this module container manages.
    */
   default void loadBuiltIn( Set<ITypeManifold> tms )
   {
@@ -98,8 +114,6 @@ public interface IModuleComponent
   /**
    * Loads, but does not initialize, all <i>registered</i>type manifolds managed by this module container.
    * A registered type manifold is discoverable in the META-INF/ directory as specified by {@link ServiceLoader}.
-   *
-   * @return The registered type manifolds this module container manages.
    */
   default void loadRegistered( Set<ITypeManifold> tms )
   {

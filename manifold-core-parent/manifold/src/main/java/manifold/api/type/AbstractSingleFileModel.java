@@ -11,8 +11,8 @@ import manifold.api.fs.IFile;
  */
 public abstract class AbstractSingleFileModel implements IModel
 {
-  private String _fqn;
-  private Set<IFile> _files;
+  final private String _fqn;
+  final private Set<IFile> _files;
 
   public AbstractSingleFileModel( String fqn, Set<IFile> files )
   {
