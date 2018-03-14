@@ -31,7 +31,7 @@ import static manifold.ext.producer.sample.Model.makeExtensionClassName;
  * <p/>
  * Handles the contrived ".favs" file extension having the following format:
  * <pre>
- *   (<qualified-type-name> | <favorite-name> | <favorite-value> [new line])*
+ *   (&lt;qualified-type-name&gt; | &lt;favorite-name&gt; | &lt;favorite-value&gt; [new line])*
  * </pre>
  * For example:
  * <pre>
