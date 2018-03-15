@@ -25,7 +25,6 @@ nav.navbar a {
   font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif;
 }
 body pre[class*="language-"] {
-  padding-top: 40px;
   margin: 16px;
 }
 p {
