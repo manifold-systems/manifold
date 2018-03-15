@@ -29,7 +29,7 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String aliasFqn( String fqn, IFile file )
+  protected String getTypeNameForFile( String fqn, IFile file )
   {
     return fqn + '_' + file.getExtension();
   }

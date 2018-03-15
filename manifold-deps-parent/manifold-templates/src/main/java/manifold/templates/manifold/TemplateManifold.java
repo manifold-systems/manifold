@@ -15,7 +15,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel> {
     }
 
     @Override
-    protected String aliasFqn(String fqn, IFile file) {
+    protected String getTypeNameForFile( String fqn, IFile file) {
         String extention;
         if (file.getBaseName().split("\\.").length == 2) {
             extention = "_" + file.getBaseName().split("\\.")[1];

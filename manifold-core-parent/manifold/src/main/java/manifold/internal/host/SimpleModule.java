@@ -32,7 +32,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
   private List<IDirectory> _classpath;
   private List<IDirectory> _sourcePath;
   private List<IDirectory> _outputPath;
-  private Set<ITypeManifold> _typeManifolds;
+  private SortedSet<ITypeManifold> _typeManifolds;
   private LocklessLazyVar<PathCache> _pathCache;
 
   public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
@@ -60,6 +60,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
   {
     return _classpath;
   }
+  @SuppressWarnings("unused")
   protected void setJavaClassPath( List<IDirectory> cp )
   {
     _classpath = cp;

@@ -1432,6 +1432,16 @@ to your project separately depending on its needs.
     - java.net.URL
     - javax.script.Bindings
 
+### Generating Extension Classes
+
+Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
+than painstakingly writing such classes by hand it's easier and less error prone to produce them via 
+type manifold.  To facilitate this use-case, your type manifold must implement the `IExtensionClassProducer`
+interface so that the `ExtensionManifold` can discover information about the classes your type
+manifold produces.
+
+See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
+
 
 ## Structural Interfaces
 
@@ -1749,15 +1759,13 @@ them to access a whole new world of types and extensions using the Java they alr
 ## License
 
 ### Open Source
-Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
-Use Manifold freely with your favorite open source web servers, database servers, and tools.
+Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
+Use Manifold freely with your favorite _open source_ application servers, database servers, and tools.
 
-### Professional
-You're a small to medium-sized business using [Oracle's Web Tier](http://www.oracle.com/technetwork/middleware/webtier/overview/index.html) 
-products or [Microsoft/web](https://www.microsoft.com/web/platform/server.aspx) and you're looking for basic
-support?  You can try Manifold free for 30 days.  License: $99 per floating developer workstation and year.
+### Commercial
+Commercial licenses for this work are available. These replace the above ASL 2.0 and offer 
+limited warranties, support, maintenance, and commercial server integrations.
 
-### Enterprise
-You're a large company working with many types of enterprise servers (Oracle, Microsoft, IBM, OSGi, etc.) and
-you're looking for premium support?  You can try Manifold free for 30 days.  License: $299 per floating 
-developer workstation and year.
+For more information, please visit: http://manifold.systems//licenses
+
+Contact admin@manifold.systems
