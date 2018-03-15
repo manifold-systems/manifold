@@ -1749,8 +1749,13 @@ them to access a whole new world of types and extensions using the Java they alr
 ## License
 
 ### Open Source
-Open source Manifold is free and licensed under the [Appache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
-Use Manifold freely with your favorite open source web servers, database servers, and tools.
+Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
+Use Manifold freely with your favorite _open source_ application servers, database servers, and tools.
 
 ### Commercial
-Commercial licensing and other arrangments are available.  Contact admin@manifold.systems.
+Commercial licenses for this work are available. These replace the above ASL 2.0 and offer 
+limited warranties, support, maintenance, and commercial server integrations.
+
+For more information, please visit: http://manifold.systems//licenses
+
+Contact admin@manifold.systems
