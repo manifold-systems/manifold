@@ -1437,7 +1437,7 @@ to your project separately depending on its needs.
 Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
 than painstakingly writing such classes by hand it's easier and less error prone to produce them via 
 type manifold.  To facilitate this use-case, your type manifold must implement the `IExtensionClassProducer`
-interface so that the `ExtensionManifold` can discover information about the the classes your type
+interface so that the `ExtensionManifold` can discover information about the classes your type
 manifold produces.
 
 See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
