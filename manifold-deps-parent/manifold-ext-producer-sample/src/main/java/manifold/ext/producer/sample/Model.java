@@ -257,6 +257,7 @@ public class Model implements IModel
     return new SrcAnnotationExpression( SourcePosition.class.getName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( ManClassUtil.getShortClassName( _extensionFqn ), FIELD_FILE_URL + i ) ).name( "url" ) )
       .addArgument( "feature", String.class, token._value.toString() )
+      .addArgument( "kind", String.class, "favorite" )
       .addArgument( "offset", int.class, token._pos )
       .addArgument( "length", int.class, token._value.length() );
   }
