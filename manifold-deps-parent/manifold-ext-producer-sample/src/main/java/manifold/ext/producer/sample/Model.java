@@ -1,16 +1,11 @@
 package manifold.ext.producer.sample;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
@@ -27,8 +22,6 @@ import manifold.api.type.SourcePosition;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.ManClassUtil;
-import manifold.util.StreamUtil;
-import manifold.util.concurrent.LocklessLazyVar;
 
 public class Model implements IModel
 {
@@ -37,136 +30,11 @@ public class Model implements IModel
 
   final private String _extensionFqn;
   final private Set<IFile> _favsFiles;
-  final private LocklessLazyVar<Map<Token, Token>> _mapFavToValue;
 
   Model( String extensionFqn, Set<IFile> favsFiles )
   {
     _extensionFqn = extensionFqn;
     _favsFiles = new HashSet<>( favsFiles );
-    _mapFavToValue = LocklessLazyVar.make( this::buildFavsMap );
-  }
-
-  private Map<Token, Token> buildFavsMap()
-  {
-    // Using LinkedHashMap to preserve insertion order, an impl detail currently required by the IJ plugin for rename
-    // refactoring i.e., renaming a json property should result in a source file that differs only in the naming
-    // difference -- there should be no difference in ordering of methods etc.
-    Map<Token, Token> mapFavToValue = new LinkedHashMap<>();
-
-    for( IFile file : _favsFiles )
-    {
-      Objects.requireNonNull( file );
-      List<List<Token>> rows = tokenize( file, "|" );
-
-      for( List<Token> line : rows )
-      {
-        Iterator<Token> tokens = line.iterator();
-        if( !tokens.hasNext() )
-        {
-          //## todo: error
-          break;
-        }
-        Token fqn = tokens.next();
-        String extensionFqn = makeExtensionClassName( fqn.toString() );
-        if( extensionFqn.equals( _extensionFqn ) )
-        {
-          if( !tokens.hasNext() )
-          {
-            //## todo: error
-            break;
-          }
-          Token fav = tokens.next();
-
-          if( !tokens.hasNext() )
-          {
-            //## todo: error
-            break;
-          }
-          Token value = tokens.next();
-
-          mapFavToValue.put( fav, value );
-        }
-      }
-    }
-    return mapFavToValue;
-  }
-
-  static class Token
-  {
-    int _pos;
-    StringBuilder _value;
-    IFile _file;
-
-    Token( int pos, IFile file )
-    {
-      _value = new StringBuilder();
-      _pos = pos;
-      _file = file;
-    }
-
-    private void append( char c )
-    {
-      _value.append( c );
-    }
-
-    public String toString()
-    {
-      return _value.toString();
-    }
-  }
-
-  static class Line
-  {
-    List<Token> _tokens;
-  }
-
-  private static List<List<Token>> tokenize( IFile file, String separatorChars )
-  {
-    String content;
-    try
-    {
-      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-    }
-    catch( IOException e )
-    {
-      throw new RuntimeException( e );
-    }
-
-    List<List<Token>> rows = new ArrayList<>();
-    List<Token> row = null;
-    Token token = null;
-    for( int pos = 0; pos <= content.length(); pos++ )
-    {
-      char c = pos == content.length() ? 0 : content.charAt( pos );
-      if( separatorChars.indexOf( c ) >= 0 ||
-          c == '\n' ||
-          c == 0 )
-      {
-        if( token == null )
-        {
-          // eof
-          break;
-        }
-
-        row = row == null ? new ArrayList<>() : row;
-        row.add( token );
-        token = null;
-
-        if( c == '\n' ||
-            c == 0 )
-        {
-          rows.add( row );
-          row = null;
-        }
-      }
-      else if( c != '\r' )
-      {
-        token = token == null ? new Token( pos, file ) : token;
-        token.append( c );
-      }
-    }
-
-    return rows;
   }
 
   @Override
@@ -185,14 +53,12 @@ public class Model implements IModel
   public void addFile( IFile file )
   {
     _favsFiles.add( file );
-    _mapFavToValue.clear();
   }
 
   @Override
   public void removeFile( IFile file )
   {
     _favsFiles.remove( file );
-    _mapFavToValue.clear();
   }
 
   @Override
@@ -200,7 +66,6 @@ public class Model implements IModel
   {
     _favsFiles.remove( file );
     _favsFiles.add( file );
-    _mapFavToValue.clear();
   }
 
   static String makeExtensionClassName( String extendedClassname )
@@ -220,7 +85,7 @@ public class Model implements IModel
     return null;
   }
 
-  public String makeSource( String extensionClassFqn )
+  public String makeSource( String extensionClassFqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new SrcClass( extensionClassFqn, SrcClass.Kind.Class )
       .addAnnotation( new SrcAnnotationExpression( Extension.class ) )
@@ -233,7 +98,8 @@ public class Model implements IModel
           .initializer( new SrcRawExpression( String.class, file.getPath().getFileSystemPathString() ) )
           .modifiers( Modifier.STATIC | Modifier.FINAL ) );
     }
-    for( Map.Entry<Token, Token> entry : _mapFavToValue.get().entrySet() )
+    //noinspection ConstantConditions
+    for( Map.Entry<Token, Token> entry : FavsParser.instance().parseFavsForType( _favsFiles, _extensionFqn, errorHandler ).entrySet() )
     {
       SrcMethod method = new SrcMethod()
         .modifiers( Modifier.PUBLIC | Modifier.STATIC )
