@@ -80,13 +80,16 @@ h6 {
 .toc_anchor {
   padding-top: 50px;
 }
+
 .docs-toc {
   position:fixed;
+  display:block;
   margin-top: 16px;
   overflow-y: auto;
   overflow-x: hidden;
-  max-width: 18%;
-  height: calc( 100vh - 90px - 2em );
+  width:250px;
+  z-index:1;
+  height: calc( 100vh - 60px - 2em );
 }
 
 .docs-toc h2 {
@@ -97,17 +100,19 @@ h6 {
  font-weight:bold;
 }
 
+.docs-content {
+    padding-left: 265px;
+}
+
 @media only screen and (max-width: 991px) {
   .docs-toc {
     display: none;
   }
-}
-
-@media only screen and (min-width: 1400px) {
-  .docs-toc {
-    max-width: 252px;
+  .docs-content {
+    padding-left: 15px;
   }
 }
+
 
 .docs-toc ul {
   list-style: none;
