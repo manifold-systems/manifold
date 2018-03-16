@@ -81,13 +81,34 @@ h6 {
   padding-top: 50px;
 }
 .docs-toc {
-  padding-top: 4px;
+  position:fixed;
+  margin-top: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 18%;
+  height: calc( 100vh - 90px - 2em );
 }
+
+.docs-toc h2 {
+  margin-top:0px;
+}
+
+.docs-toc .active {
+ font-weight:bold;
+}
+
 @media only screen and (max-width: 991px) {
   .docs-toc {
     display: none;
   }
 }
+
+@media only screen and (min-width: 1400px) {
+  .docs-toc {
+    max-width: 252px;
+  }
+}
+
 .docs-toc ul {
   list-style: none;
   padding: 0;
