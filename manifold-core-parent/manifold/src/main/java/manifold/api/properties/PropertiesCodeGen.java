@@ -227,9 +227,10 @@ public class PropertiesCodeGen
         break;
       }
       if( (index == 0 || content.charAt( index-1 ) == '\n') &&
-          content.charAt( index + fqn.length() ) == '=' ||
-          content.charAt( index + fqn.length() ) == ' ' ||
-          (bPartialMatch && content.charAt( index + fqn.length() ) == '.') )
+          content.length() > index + fqn.length() &&
+          (content.charAt( index + fqn.length() ) == '=' ||
+           content.charAt( index + fqn.length() ) == ' ' ||
+           (bPartialMatch && content.charAt( index + fqn.length() ) == '.')) )
       {
         break;
       }
