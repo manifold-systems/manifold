@@ -3,6 +3,8 @@ package manifold.ext.producer.sample;
 import java.util.ArrayList;
 import junit.framework.TestCase;
 
+// import abc.stuff.Person;
+
 public class SampleTest extends TestCase
 {
   public void testSample()
@@ -17,4 +19,10 @@ public class SampleTest extends TestCase
     assertEquals( "Pasta", list.favoriteFood() );
     assertEquals( "Redline", list.favoriteSong() );
   }
+
+//  public void testWithLocalJson()
+//  {
+//    Person person = Person.create();
+//    assertEquals( "Chinese", person.favoriteFood() );
+//  }
 }
