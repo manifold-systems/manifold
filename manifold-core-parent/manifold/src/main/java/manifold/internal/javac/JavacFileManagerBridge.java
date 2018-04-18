@@ -2,6 +2,7 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.util.Context;
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
@@ -95,6 +96,17 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
       }
     }
     return hasLocation;
+  }
+
+  @Override
+  public Iterable<? extends File> getLocation( Location location )
+  {
+    if( fileManager instanceof JavacFileManager )
+    {
+      return ((JavacFileManager)fileManager).getLocation( location );
+    }
+
+    return super.getLocation( location );
   }
 
   // exclusive to Java 9

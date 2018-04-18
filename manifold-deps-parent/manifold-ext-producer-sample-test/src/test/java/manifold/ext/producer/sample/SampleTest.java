@@ -3,7 +3,7 @@ package manifold.ext.producer.sample;
 import java.util.ArrayList;
 import junit.framework.TestCase;
 
-// import abc.stuff.Person;
+import abc.stuff.Person;
 
 public class SampleTest extends TestCase
 {
@@ -20,9 +20,11 @@ public class SampleTest extends TestCase
     assertEquals( "Redline", list.favoriteSong() );
   }
 
-//  public void testWithLocalJson()
-//  {
-//    Person person = Person.create();
-//    assertEquals( "Chinese", person.favoriteFood() );
-//  }
+  // this test exercises ext-producer on a manifold type
+  public void testWithLocalJson()
+  {
+    Person person = Person.create();
+    assertEquals( "Chinese", person.favoriteFood() );
+    assertEquals( "foobar", person.aMethod() );
+  }
 }

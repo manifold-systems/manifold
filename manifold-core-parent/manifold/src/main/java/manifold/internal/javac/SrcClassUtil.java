@@ -40,7 +40,7 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask )
+  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask )
   {
     return makeStub( module, fqn, classSymbol, compilationUnit, javacTask, true );
   }

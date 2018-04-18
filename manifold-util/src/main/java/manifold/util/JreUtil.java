@@ -21,7 +21,7 @@ public class JreUtil
   {
     if( _modular == null )
     {
-      if( isJava8()  )
+      if( isJava8() )
       {
         _modular = false;
       }

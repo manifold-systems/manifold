@@ -31,10 +31,10 @@ import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IResource;
 import manifold.api.host.IModule;
-import manifold.util.SourcePathUtil;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.JreUtil;
 import manifold.util.Pair;
+import manifold.util.SourcePathUtil;
 
 /**
  * A tool for parsing and compiling Java source.
@@ -88,8 +88,8 @@ public class JavaParser implements IJavaParser
           IModule globalModule = ManifoldHost.getGlobalModule();
           if( globalModule != null )
           {
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile )/*.filter( f -> SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) )*/.collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
           }
           _gfm = new ManifoldJavaFileManager( _fileManager, null, false );
         }

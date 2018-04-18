@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.lang.model.element.Element;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
@@ -27,6 +28,7 @@ import manifold.api.host.RefreshRequest;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.Pair;
+import manifold.util.SourcePathUtil;
 
 /**
  * Utility to get ClassSymbol for a given type name.
@@ -41,6 +43,7 @@ public class ClassSymbols
   private final IModule _module;
   private JavacTool _javacTool;
   private volatile StandardJavaFileManager _fm;
+  private JavaFileManager _wfm;
 
   public static ClassSymbols instance( IModule module )
   {
@@ -77,8 +80,8 @@ public class ClassSymbols
 
       try
       {
-        fm.setLocation( StandardLocation.SOURCE_PATH, _module.getCollectiveSourcePath().stream().map( IResource::toJavaFile ).collect( Collectors.toList() ) );
-        fm.setLocation( StandardLocation.CLASS_PATH, _module.getCollectiveJavaClassPath().stream().map( IResource::toJavaFile ).collect( Collectors.toList() ) );
+        fm.setLocation( StandardLocation.SOURCE_PATH, _module.getCollectiveSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
+        fm.setLocation( StandardLocation.CLASS_PATH, _module.getCollectiveJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
         _fm = fm;
       }
       catch( IOException e )
@@ -158,8 +161,12 @@ public class ClassSymbols
   private SrcClass makeSrcClassStubFromProducedClass( String fqn, JCTree.JCCompilationUnit[] compUnit )
   {
     BasicJavacTask[] task = new BasicJavacTask[1];
-    final Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbolForProducedClass( fqn, task );
-
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbolForProducedClass( fqn, task );
+    if( pair == null )
+    {
+      throw new NullPointerException( "Could not find ClassSymbol for: " + fqn );
+    }
+    
     if( compUnit != null )
     {
       compUnit[0] = pair.getSecond();
@@ -181,7 +188,11 @@ public class ClassSymbols
     }
 
     StringWriter errors = new StringWriter();
-    task[0] = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, Collections.singleton( fileObj.getFirst() ) );
+    if( _wfm == null )
+    {
+      _wfm = new ManifoldJavaFileManager( _fm, null, false );
+    }
+    task[0] = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, Collections.singleton( fileObj.getFirst() ) );
     try
     {
       Iterable<? extends Element> elements = task[0].analyze();

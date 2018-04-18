@@ -35,6 +35,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -111,11 +112,15 @@ public class JavacPlugin implements Plugin, TaskListener
   public void init( JavacTask task, String... args )
   {
     _javacTask = (BasicJavacTask)task;
+
+    JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
+    IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
+
     _staticCompile = decideIfStatic( args );
     if( ManifoldHost.instance() == null )
     {
       // the absence of a host indicates incremental compilation of Manifold itself
-      JavacProcessingEnvironment.instance( getContext() ).getMessager().printMessage( Diagnostic.Kind.NOTE, "Bypassing JavacPlugin during incremental compilation of Manifold core" );
+      jpe.getMessager().printMessage( Diagnostic.Kind.NOTE, "Bypassing JavacPlugin during incremental compilation of Manifold core" );
       return;
     }
     hijackJavacFileManager();
@@ -279,6 +284,23 @@ public class JavacPlugin implements Plugin, TaskListener
 
         Object moduleFinder = ReflectUtil.method( MODULEFINDER_CLASS, "instance", Context.class ).invokeStatic( getContext() );
         ReflectUtil.field( moduleFinder, "fileManager" ).set( _manFileManager );
+      }
+
+      // Hack for using "-source 8" with Java 9
+      try
+      {
+        Object classFinder = ReflectUtil.method( CLASSFINDER_CLASS, "instance", Context.class ).invokeStatic( getContext() );
+        ReflectUtil.field( classFinder, "fileManager" ).set( _manFileManager );
+
+        Object modules = ReflectUtil.method( MODULES_CLASS, "instance", Context.class ).invokeStatic( getContext() );
+        ReflectUtil.field( modules, "fileManager" ).set( _manFileManager );
+
+        Object moduleFinder = ReflectUtil.method( MODULEFINDER_CLASS, "instance", Context.class ).invokeStatic( getContext() );
+        ReflectUtil.field( moduleFinder, "fileManager" ).set( _manFileManager );
+      }
+      catch( Throwable t )
+      {
+
       }
 
       ReflectUtil.field( ClassWriter.instance( getContext() ), "fileManager" ).set( _manFileManager );

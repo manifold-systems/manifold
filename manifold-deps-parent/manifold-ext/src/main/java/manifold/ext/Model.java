@@ -14,6 +14,8 @@ public class Model implements IModel
   private final ExtensionManifold _sp;
   private final String _fqnExtended;
   private Set<IFile> _files;
+  private int _processing;
+
 
   Model( String extendedFqn, Set<IFile> files, ExtensionManifold sp )
   {
@@ -69,6 +71,19 @@ public class Model implements IModel
   ExtensionManifold getTypeManifold()
   {
     return _sp;
+  }
+
+  public boolean isProcessing()
+  {
+    return _processing > 0;
+  }
+  void pushProcessing()
+  {
+    _processing++;
+  }
+  void popProcessing()
+  {
+    _processing--;
   }
 
   void report( DiagnosticListener<JavaFileObject> errorHandler )
