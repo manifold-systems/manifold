@@ -1,5 +1,6 @@
 package manifold.templates.tokenizer;
 
+import manifold.api.type.DisableStringLiteralTemplates;
 import manifold.templates.tokenizer.Token.TokenType;
 import org.junit.Test;
 
@@ -9,8 +10,8 @@ import java.util.List;
 
 import static manifold.templates.tokenizer.Token.TokenType.*;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
+@DisableStringLiteralTemplates
 public class TokenizerTest {
 
     @Test

@@ -34,11 +34,11 @@ import manifold.util.cache.FqnCache;
  */
 public class JsonSchemaTransformer
 {
-  private static final String JSCH_SCHEMA = "$schema";
+  private static final String JSCH_SCHEMA = "${'$'}schema";
   private static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
-  private static final String JSCH_ID = "$id";
-  private static final String JSCH_REF = "$ref";
+  private static final String JSCH_ID = "${'$'}id";
+  private static final String JSCH_REF = "${'$'}ref";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
@@ -76,7 +76,7 @@ public class JsonSchemaTransformer
     if( !isSchema( docObj ) )
     {
       ErrantType errant = new ErrantType( source, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '" + source + "' does not contain a '$schema' element." ) );
+      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '$source' does not contain a '${'$'}schema' element." ) );
       return errant;
     }
 
@@ -146,7 +146,7 @@ public class JsonSchemaTransformer
     catch( MalformedURLException e )
     {
       ErrantType errant = new ErrantType( null, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Malformed URL id: " + id ) );
+      errant.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Malformed URL id: $id" ) );
       return errant;
     }
     return null;
@@ -384,14 +384,14 @@ public class JsonSchemaTransformer
     String localRef = makeLocalRef( id );
     if( localRef.isEmpty() )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Relative 'id' is invalid: " + id ) );
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Relative 'id' is invalid: $id" ) );
       return;
     }
 
     IJsonType existing = findLocalRef( id, null );
     if( existing != null )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Id '" + id + "' already assigned to type '" + existing.getName() + "'" ) );
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Id '" + id + "' already assigned to type '${existing.getName()}'" ) );
     }
     else
     {
@@ -433,7 +433,7 @@ public class JsonSchemaTransformer
         {
           token = ((Token[])((Pair)refValue).getFirst())[0];
         }
-        refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'$ref' not allowed at root level" ) );
+        refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'${'$'}ref' not allowed at root level" ) );
         result = refParent;
       }
       else
@@ -771,7 +771,7 @@ public class JsonSchemaTransformer
     }
     catch( URISyntaxException e )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI syntax: " + ref ) );
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI syntax: $ref" ) );
       return null;
     }
 
@@ -783,7 +783,7 @@ public class JsonSchemaTransformer
       IJsonType definition = pair == null ? null : findFragmentType( enclosing, uri, pair );
       if( definition == null )
       {
-        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI: " + uri ) );
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI: $uri" ) );
       }
       return definition;
     }
@@ -797,14 +797,14 @@ public class JsonSchemaTransformer
         IJsonType localRef = findLocalRef( fragment, enclosing );
         if( localRef == null )
         {
-          parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: " + fragment ) );
+          parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
           localRef = new ErrantType( enclosing, fragment );
         }
         return localRef;
       }
     }
 
-    throw new UnsupportedOperationException( "Unhandled URI: " + ref );
+    throw new UnsupportedOperationException( "Unhandled URI: $ref" );
   }
 
   private IJsonType findFragmentType( URL enclosing, URI uri, Pair<IJsonType, JsonSchemaTransformer> pair )
@@ -839,7 +839,7 @@ public class JsonSchemaTransformer
     }
     catch( MalformedURLException e )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Malformed URL: " + uri ) );
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Malformed URL: $uri" ) );
       return null;
     }
 
@@ -880,7 +880,7 @@ public class JsonSchemaTransformer
       }
       catch( Exception e )
       {
-        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Error: " + e.getMessage() ) );
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Error: ${e.getMessage()}" ) );
         return null;
       }
 

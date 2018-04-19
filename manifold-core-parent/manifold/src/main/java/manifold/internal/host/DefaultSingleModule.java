@@ -9,7 +9,7 @@ import manifold.api.host.IModule;
  */
 public class DefaultSingleModule extends SimpleModule
 {
-  private static final String DEFAULT_NAME = "$default";
+  private static final String DEFAULT_NAME = "${'$'}default";
 
   DefaultSingleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {

@@ -125,6 +125,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
     hijackJavacFileManager();
     task.addTaskListener( this );
+    StringLiteralTemplateProcessor.register( task );
   }
 
   protected boolean decideIfStatic( String[] args )
