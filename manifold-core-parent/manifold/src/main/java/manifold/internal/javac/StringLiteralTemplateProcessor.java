@@ -8,6 +8,8 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Log;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +74,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
     }
 
     String stringValue = (String)value;
-    List<JCTree.JCExpression> exprs = new TemplateParser( stringValue ).parse();
+    List<JCTree.JCExpression> exprs = new TemplateParser( stringValue ).parse( jcLiteral.getPreferredPosition() );
     JCTree.JCBinary concat = null;
     while( !exprs.isEmpty() )
     {
@@ -100,7 +102,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       _stringValue = stringValue;
     }
 
-    public List<JCTree.JCExpression> parse()
+    public List<JCTree.JCExpression> parse( int literalOffset )
     {
       List<Expr> comps = split();
       if( comps.isEmpty() )
@@ -129,10 +131,14 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
           expr = JavaParser.instance().parseExpr( comp._expr, errorHandler );
           if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
           {
-            //## todo: add errors reported in the expr as warnings in the source
+            //## todo: add errors reported in the expr
+            //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
+            errorHandler.getDiagnostics()
+              .forEach( e -> Log.instance( _javacTask.getContext() )
+                .warning( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), e.toString() ) );
             return Collections.emptyList();
           }
-          replaceNames( expr );
+          replaceNames( expr, literalOffset + 1 + comp._offset );
         }
         prev = comp;
         exprs.add( expr );
@@ -147,9 +153,9 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       return exprs;
     }
 
-    private void replaceNames( JCTree.JCExpression expr )
+    private void replaceNames( JCTree.JCExpression expr, int offset )
     {
-      expr.accept( new NameReplacer( _javacTask ) );
+      expr.accept( new NameReplacer( _javacTask, offset ) );
     }
 
     private List<Expr> split()
@@ -157,21 +163,23 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       List<Expr> comps = new ArrayList<>();
       _contentExpr = new StringBuilder();
       int length = _stringValue.length();
+      int offset = 0;
       for( _index = 0; _index < length; _index++ )
       {
         char c = _stringValue.charAt( _index );
         if( c == '$' )
         {
-          String expr = parseExpr();
-          if( expr != null && !expr.isEmpty() )
+          Expr expr = parseExpr();
+          if( expr != null )
           {
             if( _contentExpr.length() > 0 )
             {
               // add
-              comps.add( new Expr( _contentExpr.toString(), true ) );
+              comps.add( new Expr( _contentExpr.toString(), offset, true ) );
               _contentExpr = new StringBuilder();
+              offset = _index+1;
             }
-            comps.add( new Expr( expr, false ) );
+            comps.add( expr );
             continue;
           }
         }
@@ -180,13 +188,13 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
 
       if( !comps.isEmpty() && _contentExpr.length() > 0 )
       {
-        comps.add( new Expr( _contentExpr.toString(), true ) );
+        comps.add( new Expr( _contentExpr.toString(), offset, true ) );
       }
 
       return comps;
     }
 
-    private String parseExpr()
+    private Expr parseExpr()
     {
       if( _index + 1 == _stringValue.length() )
       {
@@ -198,11 +206,13 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
              : parseSimpleExpr();
     }
 
-    private String parseBraceExpr()
+    private Expr parseBraceExpr()
     {
       int length = _stringValue.length();
       StringBuilder expr = new StringBuilder();
-      for( int index = _index+2; index < length; index++ )
+      int index = _index+2;
+      int offset = index;
+      for( ; index < length; index++ )
       {
         char c = _stringValue.charAt( index );
         if( c != '}' )
@@ -211,19 +221,24 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
         }
         else
         {
-          _index = index;
-          return expr.length() > 0 ? expr.toString() : null;
+          if( expr.length() > 0  )
+          {
+            _index = index;
+            return new Expr( expr.toString(), offset, false );
+          }
+          break;
         }
       }
       return null;
     }
 
-    private String parseSimpleExpr()
+    private Expr parseSimpleExpr()
     {
       int length = _stringValue.length();
+      int index = _index+1;
+      int offset = index;
       StringBuilder expr = new StringBuilder();
-      int index;
-      for( index = _index+1; index < length; index++ )
+      for( ; index < length; index++ )
       {
         char c = _stringValue.charAt( index );
         if( expr.length() == 0 )
@@ -247,17 +262,19 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
         }
         _index = index;
       }
-      return expr.length() > 0 ? expr.toString() : null;
+      return expr.length() > 0 ? new Expr( expr.toString(), offset, false ) : null;
     }
 
     class Expr
     {
       String _expr;
+      int _offset;
       boolean _literal;
 
-      Expr( String expr, boolean literal )
+      Expr( String expr, int offset, boolean literal )
       {
         _expr = expr;
+        _offset = offset;
         _literal = literal;
       }
     }
