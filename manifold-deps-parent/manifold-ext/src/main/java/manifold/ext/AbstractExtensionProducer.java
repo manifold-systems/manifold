@@ -95,7 +95,11 @@ public abstract class AbstractExtensionProducer<M extends IModel> extends JavaTy
       //noinspection ConstantConditions
       Set<IFile> files = _extensionToFiles.get().computeIfAbsent( extension, e -> new HashSet<>() );
       files.add( file );
-      extensionToModel.putIfAbsent( extension, LocklessLazyVar.make( () -> createModel( extension, files ) ) );
+      LocklessLazyVar<M> lazyModel = extensionToModel.putIfAbsent( extension, LocklessLazyVar.make( () -> createModel( extension, files ) ) );
+      if( lazyModel != null )
+      {
+        Objects.requireNonNull( lazyModel.get() ).addFile( file );
+      }
     }
   }
 
