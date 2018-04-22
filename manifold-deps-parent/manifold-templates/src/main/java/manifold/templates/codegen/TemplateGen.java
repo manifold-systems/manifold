@@ -1,5 +1,6 @@
 package manifold.templates.codegen;
 
+import manifold.api.type.DisableStringLiteralTemplates;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Tokenizer;
@@ -539,6 +540,7 @@ public class TemplateGen {
 
         private void addFileHeader() {
             sb.append("\n");
+            sb.append("@${DisableStringLiteralTemplates.class.getName()}\n");
             if (currClass.depth == 0) {
                 if (currClass.isLayout) {
                     sb.append("public class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" implements ").reAppend(LAYOUT_INTERFACE).reAppend(" {\n");

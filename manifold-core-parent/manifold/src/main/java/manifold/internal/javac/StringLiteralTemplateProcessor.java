@@ -5,11 +5,13 @@ import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.api.ClientCodeWrapper;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.Names;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -22,6 +24,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
 {
   private final BasicJavacTask _javacTask;
   private final TreeMaker _maker;
+  private final Names _names;
 
   public static void register( JavacTask task )
   {
@@ -32,6 +35,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
   {
     _javacTask = (BasicJavacTask)task;
     _maker = TreeMaker.instance( _javacTask.getContext() );
+    _names = Names.instance( _javacTask.getContext() );
   }
 
   @Override
@@ -50,6 +54,11 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
 
     for( Tree tree : e.getCompilationUnit().getTypeDecls() )
     {
+      if( !(tree instanceof JCTree.JCClassDecl) )
+      {
+        continue;
+      }
+      
       JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)tree;
       for( JCTree.JCAnnotation anno: classDecl.getModifiers().getAnnotations() )
       {
@@ -115,30 +124,36 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       for( Expr comp: comps )
       {
         JCTree.JCExpression expr;
-        if( comp._literal )
+        if( comp.isVerbatim() )
         {
           expr = _maker.Literal( comp._expr );
         }
         else
         {
-          if( prev != null && !prev._literal )
+          if( prev != null && !prev.isVerbatim() )
           {
             // force concatenation
             exprs.add( _maker.Literal( "" ) );
           }
 
-          DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-          expr = JavaParser.instance().parseExpr( comp._expr, errorHandler );
-          if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
+          int exprPos = literalOffset + 1 + comp._offset;
+
+          if( comp.isIdentifier() )
           {
-            //## todo: add errors reported in the expr
-            //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
-            errorHandler.getDiagnostics()
-              .forEach( e -> Log.instance( _javacTask.getContext() )
-                .warning( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), e.toString() ) );
-            return Collections.emptyList();
+             JCTree.JCIdent ident = _maker.Ident( _names.fromString( comp.getExpr() ) );
+             ident.pos = exprPos;
+             expr = ident;
           }
-          replaceNames( expr, literalOffset + 1 + comp._offset );
+          else
+          {
+            DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
+            expr = JavaParser.instance().parseExpr( comp._expr, errorHandler );
+            if( transferParseErrors( literalOffset, comp, expr, errorHandler ) )
+            {
+              return Collections.emptyList();
+            }
+            replaceNames( expr, exprPos );
+          }
         }
         prev = comp;
         exprs.add( expr );
@@ -151,6 +166,28 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       }
 
       return exprs;
+    }
+
+    private boolean transferParseErrors( int literalOffset, Expr comp, JCTree.JCExpression expr, DiagnosticCollector<JavaFileObject> errorHandler )
+    {
+      if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
+      {
+        //## todo: add errors reported in the expr
+        //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
+        for( Diagnostic<? extends JavaFileObject> diag: errorHandler.getDiagnostics() )
+        {
+          if( diag.getKind() == Diagnostic.Kind.ERROR )
+          {
+            JCDiagnostic jcDiag = ((ClientCodeWrapper.DiagnosticSourceUnwrapper)diag).d;
+//                JCDiagnostic.Factory.instance( _javacTask.getContext() ).error(
+//                  Log.instance( _javacTask.getContext() ).currentSource(),
+//                  new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), diag.getCode(), jcDiag.getArgs() );
+            Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), diag.getCode(), jcDiag.getArgs() );
+          }
+        }
+        return true;
+      }
+      return false;
     }
 
     private void replaceNames( JCTree.JCExpression expr, int offset )
@@ -175,7 +212,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
             if( _contentExpr.length() > 0 )
             {
               // add
-              comps.add( new Expr( _contentExpr.toString(), offset, true ) );
+              comps.add( new Expr( _contentExpr.toString(), offset, ExprKind.Verbatim ) );
               _contentExpr = new StringBuilder();
               offset = _index+1;
             }
@@ -188,7 +225,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
 
       if( !comps.isEmpty() && _contentExpr.length() > 0 )
       {
-        comps.add( new Expr( _contentExpr.toString(), offset, true ) );
+        comps.add( new Expr( _contentExpr.toString(), offset, ExprKind.Verbatim ) );
       }
 
       return comps;
@@ -224,7 +261,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
           if( expr.length() > 0  )
           {
             _index = index;
-            return new Expr( expr.toString(), offset, false );
+            return new Expr( expr.toString(), offset, ExprKind.Complex );
           }
           break;
         }
@@ -262,21 +299,48 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
         }
         _index = index;
       }
-      return expr.length() > 0 ? new Expr( expr.toString(), offset, false ) : null;
+      return expr.length() > 0 ? new Expr( expr.toString(), offset, ExprKind.Identifier ) : null;
     }
 
     class Expr
     {
-      String _expr;
-      int _offset;
-      boolean _literal;
+      private String _expr;
+      private ExprKind _kind;
+      private int _offset;
 
-      Expr( String expr, int offset, boolean literal )
+      Expr( String expr, int offset, ExprKind kind )
       {
         _expr = expr;
         _offset = offset;
-        _literal = literal;
+        _kind = kind;
+      }
+
+      String getExpr()
+      {
+        return _expr;
+      }
+
+      int getOffset()
+      {
+        return _offset;
+      }
+
+      boolean isVerbatim()
+      {
+        return _kind == ExprKind.Verbatim;
+      }
+
+      boolean isIdentifier()
+      {
+        return _kind == ExprKind.Identifier;
       }
     }
+  }
+
+  enum ExprKind
+  {
+    Verbatim,
+    Identifier,
+    Complex
   }
 }
