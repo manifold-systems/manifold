@@ -83,7 +83,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
     }
 
     String stringValue = (String)value;
-    List<JCTree.JCExpression> exprs = new TemplateParser( stringValue ).parse( jcLiteral.getPreferredPosition() );
+    List<JCTree.JCExpression> exprs = parse( stringValue, jcLiteral.getPreferredPosition() );
     JCTree.JCBinary concat = null;
     while( !exprs.isEmpty() )
     {
@@ -100,247 +100,87 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
     result = concat == null ? result : concat;
   }
 
-  class TemplateParser
+  public List<JCTree.JCExpression> parse( String stringValue, int literalOffset )
   {
-    private String _stringValue;
-    private int _index;
-    private StringBuilder _contentExpr;
-
-    TemplateParser( String stringValue )
+    List<StringLiteralTemplateParser.Expr> comps = StringLiteralTemplateParser.parse( stringValue );
+    if( comps.isEmpty() )
     {
-      _stringValue = stringValue;
+      return Collections.emptyList();
     }
 
-    public List<JCTree.JCExpression> parse( int literalOffset )
+    List<JCTree.JCExpression> exprs = new ArrayList<>();
+    StringLiteralTemplateParser.Expr prev = null;
+    for( StringLiteralTemplateParser.Expr comp : comps )
     {
-      List<Expr> comps = split();
-      if( comps.isEmpty() )
+      JCTree.JCExpression expr;
+      if( comp.isVerbatim() )
       {
-        return Collections.emptyList();
+        expr = _maker.Literal( comp.getExpr() );
       }
-
-      List<JCTree.JCExpression> exprs = new ArrayList<>();
-      Expr prev = null;
-      for( Expr comp: comps )
+      else
       {
-        JCTree.JCExpression expr;
-        if( comp.isVerbatim() )
+        if( prev != null && !prev.isVerbatim() )
         {
-          expr = _maker.Literal( comp._expr );
+          // force concatenation
+          exprs.add( _maker.Literal( "" ) );
+        }
+
+        int exprPos = literalOffset + 1 + comp.getOffset();
+
+        if( comp.isIdentifier() )
+        {
+          JCTree.JCIdent ident = _maker.Ident( _names.fromString( comp.getExpr() ) );
+          ident.pos = exprPos;
+          expr = ident;
         }
         else
         {
-          if( prev != null && !prev.isVerbatim() )
+          DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
+          expr = JavaParser.instance().parseExpr( comp.getExpr(), errorHandler );
+          if( transferParseErrors( literalOffset, comp, expr, errorHandler ) )
           {
-            // force concatenation
-            exprs.add( _maker.Literal( "" ) );
+            return Collections.emptyList();
           }
-
-          int exprPos = literalOffset + 1 + comp._offset;
-
-          if( comp.isIdentifier() )
-          {
-             JCTree.JCIdent ident = _maker.Ident( _names.fromString( comp.getExpr() ) );
-             ident.pos = exprPos;
-             expr = ident;
-          }
-          else
-          {
-            DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-            expr = JavaParser.instance().parseExpr( comp._expr, errorHandler );
-            if( transferParseErrors( literalOffset, comp, expr, errorHandler ) )
-            {
-              return Collections.emptyList();
-            }
-            replaceNames( expr, exprPos );
-          }
+          replaceNames( expr, exprPos );
         }
-        prev = comp;
-        exprs.add( expr );
       }
-
-      if( exprs.size() == 1 )
-      {
-        // insert an empty string so concat will make the expr a string
-        exprs.add( 0, _maker.Literal( "" ) );
-      }
-
-      return exprs;
+      prev = comp;
+      exprs.add( expr );
     }
 
-    private boolean transferParseErrors( int literalOffset, Expr comp, JCTree.JCExpression expr, DiagnosticCollector<JavaFileObject> errorHandler )
+    if( exprs.size() == 1 )
     {
-      if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
+      // insert an empty string so concat will make the expr a string
+      exprs.add( 0, _maker.Literal( "" ) );
+    }
+
+    return exprs;
+  }
+
+  private boolean transferParseErrors( int literalOffset, StringLiteralTemplateParser.Expr comp, JCTree.JCExpression expr, DiagnosticCollector<JavaFileObject> errorHandler )
+  {
+    if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
+    {
+      //## todo: add errors reported in the expr
+      //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
+      for( Diagnostic<? extends JavaFileObject> diag : errorHandler.getDiagnostics() )
       {
-        //## todo: add errors reported in the expr
-        //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
-        for( Diagnostic<? extends JavaFileObject> diag: errorHandler.getDiagnostics() )
+        if( diag.getKind() == Diagnostic.Kind.ERROR )
         {
-          if( diag.getKind() == Diagnostic.Kind.ERROR )
-          {
-            JCDiagnostic jcDiag = ((ClientCodeWrapper.DiagnosticSourceUnwrapper)diag).d;
+          JCDiagnostic jcDiag = ((ClientCodeWrapper.DiagnosticSourceUnwrapper)diag).d;
 //                JCDiagnostic.Factory.instance( _javacTask.getContext() ).error(
 //                  Log.instance( _javacTask.getContext() ).currentSource(),
 //                  new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), diag.getCode(), jcDiag.getArgs() );
-            Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), diag.getCode(), jcDiag.getArgs() );
-          }
-        }
-        return true;
-      }
-      return false;
-    }
-
-    private void replaceNames( JCTree.JCExpression expr, int offset )
-    {
-      expr.accept( new NameReplacer( _javacTask, offset ) );
-    }
-
-    private List<Expr> split()
-    {
-      List<Expr> comps = new ArrayList<>();
-      _contentExpr = new StringBuilder();
-      int length = _stringValue.length();
-      int offset = 0;
-      for( _index = 0; _index < length; _index++ )
-      {
-        char c = _stringValue.charAt( _index );
-        if( c == '$' )
-        {
-          Expr expr = parseExpr();
-          if( expr != null )
-          {
-            if( _contentExpr.length() > 0 )
-            {
-              // add
-              comps.add( new Expr( _contentExpr.toString(), offset, ExprKind.Verbatim ) );
-              _contentExpr = new StringBuilder();
-              offset = _index+1;
-            }
-            comps.add( expr );
-            continue;
-          }
-        }
-        _contentExpr.append( c );
-      }
-
-      if( !comps.isEmpty() && _contentExpr.length() > 0 )
-      {
-        comps.add( new Expr( _contentExpr.toString(), offset, ExprKind.Verbatim ) );
-      }
-
-      return comps;
-    }
-
-    private Expr parseExpr()
-    {
-      if( _index + 1 == _stringValue.length() )
-      {
-        return null;
-      }
-
-      return _stringValue.charAt( _index + 1 ) == '{'
-             ? parseBraceExpr()
-             : parseSimpleExpr();
-    }
-
-    private Expr parseBraceExpr()
-    {
-      int length = _stringValue.length();
-      StringBuilder expr = new StringBuilder();
-      int index = _index+2;
-      int offset = index;
-      for( ; index < length; index++ )
-      {
-        char c = _stringValue.charAt( index );
-        if( c != '}' )
-        {
-          expr.append( c );
-        }
-        else
-        {
-          if( expr.length() > 0  )
-          {
-            _index = index;
-            return new Expr( expr.toString(), offset, ExprKind.Complex );
-          }
-          break;
+          Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp.getOffset() ), diag.getCode(), jcDiag.getArgs() );
         }
       }
-      return null;
+      return true;
     }
-
-    private Expr parseSimpleExpr()
-    {
-      int length = _stringValue.length();
-      int index = _index+1;
-      int offset = index;
-      StringBuilder expr = new StringBuilder();
-      for( ; index < length; index++ )
-      {
-        char c = _stringValue.charAt( index );
-        if( expr.length() == 0 )
-        {
-          if( c != '$' && Character.isJavaIdentifierStart( c ) )
-          {
-            expr.append( c );
-          }
-          else
-          {
-            return null;
-          }
-        }
-        else if( c != '$' && Character.isJavaIdentifierPart( c ) )
-        {
-          expr.append( c );
-        }
-        else
-        {
-          break;
-        }
-        _index = index;
-      }
-      return expr.length() > 0 ? new Expr( expr.toString(), offset, ExprKind.Identifier ) : null;
-    }
-
-    class Expr
-    {
-      private String _expr;
-      private ExprKind _kind;
-      private int _offset;
-
-      Expr( String expr, int offset, ExprKind kind )
-      {
-        _expr = expr;
-        _offset = offset;
-        _kind = kind;
-      }
-
-      String getExpr()
-      {
-        return _expr;
-      }
-
-      int getOffset()
-      {
-        return _offset;
-      }
-
-      boolean isVerbatim()
-      {
-        return _kind == ExprKind.Verbatim;
-      }
-
-      boolean isIdentifier()
-      {
-        return _kind == ExprKind.Identifier;
-      }
-    }
+    return false;
   }
 
-  enum ExprKind
+  private void replaceNames( JCTree.JCExpression expr, int offset )
   {
-    Verbatim,
-    Identifier,
-    Complex
+    expr.accept( new NameReplacer( _javacTask, offset ) );
   }
 }
