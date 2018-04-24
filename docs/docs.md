@@ -595,7 +595,7 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   Image files
 *   JavaScript
 *   Dark Java
-*   Template files
+*   Templating
 
 We are working on support for more data sources including:
 *   RDF
@@ -913,7 +913,7 @@ This basic interface factory pattern can be used anywhere you need to use a Dark
 compilation use-case.  
  
  
-### Template Files
+### Templating
 
 See project [Manifold Templates](http://manifold.systems/manifold-templates.html).
 
