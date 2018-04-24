@@ -931,6 +931,33 @@ LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
 ```
 
+By default String templates are _always_ enabled in any String anywhere in your project.  However, if you need to turn 
+the feature off for any reason, you can use the `@DisableStringLiteralTemplates` annotation to control its use.  You 
+can annotate a class, method, field, or local variable to turn it on or off in that scope:
+```java
+@DisableStringLiteralTemplates // turns off String templating inside this class
+public class MyClass
+{
+  void foo() {
+    int hour = 8;
+    String time = "It is $hour o'clock";  // prints "It is $hour o'clock"
+  }
+  
+  @DisableStringLiteralTemplates(false) // turns on String templating inside this method
+  void bar() {
+    int hour = 8;
+    String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
+  }
+}
+```
+
+Finally, if you need to escape the `$` and use it as a plain `$` when adjacent to a valid Java identifier word, you 
+can do this:
+```java
+int hour = 8;
+String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
+``` 
+
 **Template files** are much more powerful and are documented in project [Manifold Templates](http://manifold.systems/manifold-templates.html).
 
 
