@@ -14,10 +14,10 @@ Java. Building on this core framework Manifold supplements Java with new feature
 Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
 include:
 * **JSON** and **JSON Schema** integration
-* **JavaScript** interop
 * Type-safe **Templating** 
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
+* **JavaScript** interop (experimental)
 * **SQL** and **DDL** interop (coming soon)
 * Lots more
 
@@ -68,11 +68,11 @@ spreadsheets, web services, and programming languages.
 Currently Manifold provides type manifolds for:
 
 *   JSON and [JSON Schema](http://json-schema.org/)
-*   JavaScript
 *   Properties files
 *   Image files
 *   Dark Java
-*   Manifold Templates (work in progress)
+*   Manifold Templates
+*   JavaScript (experimental)
 *   DDL and SQL (work in progress)
 
 
@@ -279,7 +279,7 @@ Support for structural typing and extensions
 * [manifold-json](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE):
 JSON and JSchema support
 * [manifold-js](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE):
-JavaScript support
+JavaScript support (experimental)
 * [manifold-collections](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE):
 Collections extensions
 * [manifold-io](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-io&v=RELEASE):
@@ -329,7 +329,7 @@ to use all basic manifold features, this is the recommended setup.
       <version>RELEASE</version>
     </dependency>
     
-    <!--JavaScript support-->
+    <!--JavaScript support (experimental)-->
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-js</artifactId>
@@ -486,7 +486,7 @@ dependencies {
   // JSON and JSchema support  
   compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
   
-  // JavaScript support
+  // JavaScript support (experimental)
   compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
   
   // Template support
@@ -593,13 +593,13 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   JSON and JSON Schema
 *   Properties files
 *   Image files
-*   JavaScript
 *   Dark Java
 *   Templating
 
 We are working on support for more data sources including:
 *   RDF
 *   CSV
+*   JavaScript
 *   Standard SQL and DDL
 
 
@@ -727,6 +727,8 @@ different types sharing a single name.  Additionally image classes are direct su
   type manifolds there are no code gen files or other build steps involved.
 
 ### JavaScript
+
+** Warning: Javascript support is experimental and incomplete **
 
 The JavaScript type manifold provides direct, type-safe access to JavaScript files
 as if they were Java files.
