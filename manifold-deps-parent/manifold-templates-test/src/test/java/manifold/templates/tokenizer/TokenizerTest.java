@@ -1,6 +1,6 @@
 package manifold.templates.tokenizer;
 
-import manifold.api.type.DisableStringLiteralTemplates;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.templates.tokenizer.Token.TokenType;
 import org.junit.Test;
 

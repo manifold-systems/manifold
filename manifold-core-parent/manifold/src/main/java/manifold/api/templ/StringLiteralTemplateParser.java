@@ -1,4 +1,4 @@
-package manifold.internal.javac;
+package manifold.api.templ;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,11 +1,11 @@
 package manifold.templates.codegen;
 
-import manifold.api.type.DisableStringLiteralTemplates;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Tokenizer;
 import manifold.templates.tokenizer.Token;
 import manifold.internal.javac.IIssue;
+import manifold.api.templ.DisableStringLiteralTemplates;
 
 import java.util.*;
 import java.util.List;

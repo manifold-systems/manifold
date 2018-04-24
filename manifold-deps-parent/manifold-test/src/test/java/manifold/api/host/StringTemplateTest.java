@@ -3,6 +3,10 @@ package manifold.api.host;
 import java.util.Arrays;
 import java.util.List;
 import junit.framework.TestCase;
+import manifold.api.templ.DisableStringLiteralTemplates;
+
+
+import static org.junit.Assert.assertNotEquals;
 
 public class StringTemplateTest extends TestCase
 {
@@ -123,6 +127,80 @@ public class StringTemplateTest extends TestCase
 
     value = "${classes.size() + classes.size() + 2}";
     assertEquals( "6", value );
+  }
+
+  @DisableStringLiteralTemplates
+  public void testDisableStringLiteralTemplates_Method()
+  {
+    String value = "${\"hi\"}";
+    assertNotEquals( "hi", value );
+
+    @DisableStringLiteralTemplates(false)
+    String value2 = "${\"hi\"}";
+    assertEquals( "hi", value2 );
+  }
+
+  public void testDisableStringLiteralTemplates_Statement()
+  {
+    String value = "${\"hi\"}";
+    assertEquals( "hi", value );
+
+    @DisableStringLiteralTemplates
+    String value2 = "${\"hi\"}";
+    assertNotEquals( "hi", value2 );
+
+    String value3 = "${\"hi\"}";
+    assertEquals( "hi", value3 );
+  }
+
+  public void testInner()
+  {
+    assertEquals( "hi", new TestInner().testMe() );
+    assertNotEquals( "hi", new TestInnerDisabled().testMe() );
+    assertEquals( "hi", new TestInnerDisabled().testMeEnabled() );
+    assertNotEquals( "hi", new TestInnerDisabled_Method().testMe() );
+  }
+
+  static class TestInner
+  {
+    String testMe()
+    {
+      return "${\"hi\"}";
+    }
+  }
+
+  @DisableStringLiteralTemplates
+  static class TestInnerDisabled
+  {
+    String testMe()
+    {
+      return "${\"hi\"}";
+    }
+
+    @DisableStringLiteralTemplates(false)
+    String testMeEnabled()
+    {
+      return "${\"hi\"}";
+    }
+  }
+
+  static class TestInnerDisabled_Method
+  {
+    @DisableStringLiteralTemplates
+    String testMe()
+    {
+      return "${\"hi\"}";
+    }
+  }
+
+  @DisableStringLiteralTemplates
+  static class TestDisableInner
+  {
+    public void testDisableStringLiteralTemplates_Method()
+    {
+      String value = "${\"hi\"}";
+      assertNotEquals( "hi", value );
+    }
   }
 
   public String toString()

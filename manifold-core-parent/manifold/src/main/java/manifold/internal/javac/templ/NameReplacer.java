@@ -1,4 +1,4 @@
-package manifold.internal.javac;
+package manifold.internal.javac.templ;
 
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.tree.JCTree;

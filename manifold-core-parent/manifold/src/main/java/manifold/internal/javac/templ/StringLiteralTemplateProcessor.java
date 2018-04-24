@@ -1,4 +1,4 @@
-package manifold.internal.javac;
+package manifold.internal.javac.templ;
 
 import com.sun.source.tree.Tree;
 import com.sun.source.util.JavacTask;
@@ -18,13 +18,17 @@ import java.util.List;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
-import manifold.api.type.DisableStringLiteralTemplates;
+import manifold.api.templ.StringLiteralTemplateParser;
+import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.internal.javac.JavaParser;
+import manifold.util.Stack;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements TaskListener
 {
   private final BasicJavacTask _javacTask;
   private final TreeMaker _maker;
   private final Names _names;
+  private Stack<Boolean> _disabled;
 
   public static void register( JavacTask task )
   {
@@ -36,6 +40,8 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
     _javacTask = (BasicJavacTask)task;
     _maker = TreeMaker.instance( _javacTask.getContext() );
     _names = Names.instance( _javacTask.getContext() );
+    _disabled = new Stack<>();
+    _disabled.push( false );
   }
 
   @Override
@@ -60,14 +66,103 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       }
       
       JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)tree;
-      for( JCTree.JCAnnotation anno: classDecl.getModifiers().getAnnotations() )
+      classDecl.accept( this );
+    }
+  }
+
+  @Override
+  public void visitClassDef( JCTree.JCClassDecl classDef )
+  {
+    process( classDef.getModifiers(), () -> super.visitClassDef( classDef ) );
+  }
+
+  @Override
+  public void visitMethodDef( JCTree.JCMethodDecl methodDecl )
+  {
+    process( methodDecl.getModifiers(), () -> super.visitMethodDef( methodDecl ) );
+  }
+
+  @Override
+  public void visitVarDef( JCTree.JCVariableDecl varDecl )
+  {
+    process( varDecl.getModifiers(), () -> super.visitVarDef( varDecl ) );
+  }
+
+  private void process( JCTree.JCModifiers modifiers, Runnable processor )
+  {
+    Boolean disable = getDisableAnnotationValue( modifiers );
+    if( disable != null )
+    {
+      pushDisabled( disable );
+    }
+
+    try
+    {
+      // processor
+      processor.run();
+    }
+    finally
+    {
+      if( disable != null )
       {
-        if( anno.annotationType.toString().contains( DisableStringLiteralTemplates.class.getSimpleName() ) )
+        popDisabled( disable );
+      }
+    }
+  }
+
+  private Boolean getDisableAnnotationValue( JCTree.JCModifiers modifiers )
+  {
+    Boolean disable = null;
+    for( JCTree.JCAnnotation anno: modifiers.getAnnotations() )
+    {
+      if( anno.annotationType.toString().contains( DisableStringLiteralTemplates.class.getSimpleName() ) )
+      {
+        try
         {
-          return;
+          com.sun.tools.javac.util.List<JCTree.JCExpression> args = anno.getArguments();
+          if( args.isEmpty() )
+          {
+            disable = true;
+          }
+          else
+          {
+            JCTree.JCExpression argExpr = args.get( 0 );
+            Object value;
+            if( argExpr instanceof JCTree.JCLiteral &&
+                (value = ((JCTree.JCLiteral)argExpr).getValue()) instanceof Boolean )
+            {
+              disable = (boolean)value;
+            }
+            else
+            {
+              Log.instance( _javacTask.getContext() ).error( argExpr.pos(),
+                "proc.messager", "Only boolean literal values 'true' and 'false' allowed here" );
+              disable = true;
+            }
+          }
+        }
+        catch( Exception e )
+        {
+          disable = true;
         }
       }
-      classDecl.accept( this );
+    }
+    return disable;
+  }
+
+  private boolean isDisabled()
+  {
+    return _disabled.peek();
+  }
+  private void pushDisabled( boolean disabled )
+  {
+    _disabled.push( disabled );
+  }
+  private void popDisabled( boolean disabled )
+  {
+    if( disabled != _disabled.pop() )
+    {
+      throw new IllegalStateException();
     }
   }
 
@@ -78,6 +173,11 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
 
     Object value = jcLiteral.getValue();
     if( !(value instanceof String) )
+    {
+      return;
+    }
+
+    if( isDisabled() )
     {
       return;
     }
@@ -121,7 +221,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
       {
         if( prev != null && !prev.isVerbatim() )
         {
-          // force concatenation
+          // enforce concatenation
           exprs.add( _maker.Literal( "" ) );
         }
 
@@ -161,22 +261,29 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements Ta
   {
     if( expr == null || errorHandler.getDiagnostics().stream().anyMatch( e -> e.getKind() == Diagnostic.Kind.ERROR ) )
     {
-      //## todo: add errors reported in the expr
-      //Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ),  );
       for( Diagnostic<? extends JavaFileObject> diag : errorHandler.getDiagnostics() )
       {
         if( diag.getKind() == Diagnostic.Kind.ERROR )
         {
           JCDiagnostic jcDiag = ((ClientCodeWrapper.DiagnosticSourceUnwrapper)diag).d;
-//                JCDiagnostic.Factory.instance( _javacTask.getContext() ).error(
-//                  Log.instance( _javacTask.getContext() ).currentSource(),
-//                  new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp._offset ), diag.getCode(), jcDiag.getArgs() );
-          Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp.getOffset() ), diag.getCode(), jcDiag.getArgs() );
+          String code = debaseMsgCode( diag );
+          Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp.getOffset() ), code, jcDiag.getArgs() );
         }
       }
       return true;
     }
     return false;
+  }
+
+  private String debaseMsgCode( Diagnostic<? extends JavaFileObject> diag )
+  {
+    // Log#error() will prepend "compiler.err", so we must remove it to avoid double-basing the message
+    String code = diag.getCode();
+    if( code != null && code.startsWith( "compiler.err" ) )
+    {
+      code = code.substring( "compiler.err".length() + 1 );
+    }
+    return code;
   }
 
   private void replaceNames( JCTree.JCExpression expr, int offset )

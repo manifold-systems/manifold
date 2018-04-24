@@ -42,6 +42,7 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.ManifoldHost;
+import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
 import manifold.internal.runtime.Bootstrap;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;

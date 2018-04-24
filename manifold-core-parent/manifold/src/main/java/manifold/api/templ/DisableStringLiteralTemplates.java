@@ -1,4 +1,4 @@
-package manifold.api.type;
+package manifold.api.templ;
 
 public @interface DisableStringLiteralTemplates
 {

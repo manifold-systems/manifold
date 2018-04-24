@@ -1,6 +1,6 @@
 package manifold.templates.statements;
 
-import manifold.api.type.DisableStringLiteralTemplates;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
 import statements.*;
 
