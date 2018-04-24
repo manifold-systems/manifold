@@ -915,7 +915,24 @@ compilation use-case.
  
 ### Templating
 
-See project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+Manifold provides two forms of templating:
+* String Templates
+* Template Files
+
+A **String template** lets you use the `$` character to embed a Java expression directly into a String literal. You can 
+use `$` embed a simple identifier:
+```java
+int hour = 8;
+String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
+```
+Or you can embed an expression of any complexity in curly braces:
+```java
+LocalTime localTime = LocalTime.now();
+String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
+```
+
+**Template files** are much more powerful and are documented in project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+
 
 ### Build Your Own Manifold
 
