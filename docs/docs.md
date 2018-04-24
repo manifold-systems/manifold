@@ -919,8 +919,8 @@ Manifold provides two forms of templating:
 * String Templates
 * Template Files
 
-A **String template** lets you use the `$` character to embed a Java expression directly into a String literal. You can 
-use `$` embed a simple identifier:
+A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
+use `$` to embed a simple variable:
 ```java
 int hour = 8;
 String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
