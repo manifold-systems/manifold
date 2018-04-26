@@ -8,18 +8,18 @@ _Type Manifolds_.
 
 # ☠ Death to Code Generators ☠
 
-While Manifold provides a host of varying high-level features, its primary focus is to eliminate the gap separating source 
-code from metadata. For decades code generators have served to bridged this gap, albeit with the efficiency of a restroom hand 
-dryer. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on 
-for a more productive alternative.
+While Manifold provides a broad host of high-level features, its primary focus is to eliminate the gap separating source 
+code from metadata. For decades code generators have served to bridged this gap, but not without sometimes debilitating
+drawbacks. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on or a 
+more productive alternative.
 
 ## The Metadata Disconnect
 
 Our modern lives are replete with structured information, or metadata.  It is _everywhere_ and it is produced by near 
 everything with a power cord. As a consequence the software industry has become much less code-centric and much more 
 information-centric. Despite this transformation the means by which our software consumes metadata has remained 
-virtually unchanged for half a century. Whether it's JSON, XSD/XML, WSDL, CSV, DDL, SQL, JavaScript, XLS, or any one of a multitude of 
-other metadata sources, most modern languages, including Java, do very little to connect them with your code:
+virtually unchanged for half a century. Whether it's JSON, XSD/XML, WSDL, CSV, DDL, SQL, JavaScript, XLS, or any one of 
+a multitude of other metadata sources, most modern languages, including Java, do very little to connect them with your code:
 
 **../abc/Tree.json**
 ```json
@@ -73,8 +73,8 @@ change, number and size of metadata files, density of usage in project, number o
 
 ## The Manifold Framework
 
-The Manifold framework represents a rethinking of code generators.  It altogether avoids the many disadvantages of 
-conventional code generators by directly integrating with the Java compiler via the [javac plug-in mechanism](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html). 
+The Manifold framework represents a rethinking of code generators.  It altogether avoids the many disadvantages often
+involved with them by directly integrating with the Java compiler via the [javac plug-in mechanism](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html). 
 Implementors of the Type Manifold API, called _type manifolds_, establish a type supplier relationship with the Java 
 compiler -- the Manifold framework hooks into the compiler so that as the compiler encounters type names the type 
 manifolds contribute toward resolving them, generating code in memory as needed.  As such your application code 
@@ -85,10 +85,10 @@ class Foo {
 }
 ```
 
-Think of a type manifold as a new domain of types for the compiler to access.  As such the Manifold framework serves as a gateway between 
-javac and type manifolds effectively expanding Java's type system to include whole new domains of types.  Any number of type 
-manifolds can operate in concert; they can also cooperate so that the code contributed from one can feed into the next and so on, forming a 
-type building pipeline. 
+Think of a type manifold as a new domain of types for the compiler to access.  As such the Manifold framework serves as 
+a gateway between javac and type manifolds, effectively expanding Java's type system to include whole new domains of 
+types.  Any number of type manifolds can operate in concert; they can also cooperate so that the types contributed from 
+one can feed into the next and so on, forming a type building pipeline. 
 
 <p><img src="http://manifold.systems/images/manifold_diagram.png" alt="echo method" width="60%" height="60%"/></p>
 
@@ -98,9 +98,9 @@ often a type manifold registers as a `primary` contributor -- it supplies the ma
 is a primary contributor because it supplies the full type definition according to a JSON Schema file or JSON sample file.  
 Alternatively, a type manifold can be a `partial` or `supplementary` contributor.  The Extension type manifold, for instance, 
 is a supplementary contributor because it augments an existing type with methods, interfaces, and other features.  Thus 
-following the pipleline metaphor both the JSON and Extension type manifolds can contribute to the same type, where the 
-JSON manifold prodcues the main body of the type and the Extension type manifold contributes methods provided by extension 
-classes (I'll cover Extensions in a later article).   
+both the JSON and Extension type manifolds can contribute to the same type, where the JSON manifold supplies the main 
+body of the type and the Extension type manifold contributes methods and other features provided by extension classes 
+(I'll cover Extensions in a later article).   
 
 Altogether this strategy eliminates many problems plaguing conventional code generation and metadata access in general.  
 In essence the Type Manifold API redefines what it means to be a code generator:
@@ -127,10 +127,10 @@ source production to your existing framework.  Learn more about implementing typ
 
 Perhaps the most refreshing benefit from using Manifold is the synergy resulting from its presence.  With Manifold a
 developer can define and use metadata that best suits the needs of a project without having to worry about build
-implications or IDE integration; he can create a metadata file, use it directly as a type, modify it, and realize the
+implications or IDE integration; he can create a metadata file, use it directly as a type, modify it, and access the
 changes immediately in his code.  No compilation necessary, no build steps to invoke.  With comprehensive IDE support,
 he can readily navigate to and from metadata elements, find usages from metadata, refactor, etc.  Finally metadata
-has first-class representation in our development lifecycle!
+has first-class representation in the Java development lifecycle!
 
 [todo: link to JSON usage in IDE]
 
@@ -188,20 +188,17 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 As a long time Java developer I've personally worked on several projects involving heavy code generation.  I've seen
 the sometimes devastating effects of its use: build times measured in hours at customer sites, dev lifecycle demoralization, 
-code generator development and bugs consuming precious time, etc.  It's about time for a better solution and I think Manifold
-makes good progress toward that goal. Type Manifolds offer a more inviting and productive development experience.  There are no 
-code generators to invoke and no separate build steps to integrate; metadata just works.
+code generator development and maintenance consuming precious time, etc.  It's about time for a better solution and I think Manifold
+makes good progress toward that goal. Type Manifolds offer an inviting and productive development experience. With no 
+code generators to invoke and no separate build steps to integrate, metadata just works.
 
-There'a a ton more to cover, I've only scratched the surface with the Type Manifold API.  In future articles I'll 
-cover specific features including:
+There'a much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
+will cover:
 * Using the JSON type manifold
-* Properties files, Image files, and other useful manifolds
 * The Extension Manifold and writing Extension Classes
 * Structural Typing
-* Dynamic Typing
-* Manifold Templating
+* Manifold Templates
 * The SQL type manifold
-* Dark Java 
 
 As a bonus for reading this far, I'll touch on one of Manifold's latest features...
 
