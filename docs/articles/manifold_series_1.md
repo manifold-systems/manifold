@@ -9,7 +9,7 @@ _Type Manifolds_.
 # ☠ Death to Code Generators ☠
 
 While Manifold provides a broad host of high-level features, its primary focus is to eliminate the gap separating source 
-code from metadata. For decades code generators have served to bridged this gap, but not without sometimes debilitating
+code from metadata. For decades code generators have served to bridge this gap, but not without sometimes debilitating
 drawbacks. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on for a 
 more productive alternative.
 
@@ -90,11 +90,11 @@ one can feed into the next and so on, forming a type building pipeline.
 
 <p><img src="http://manifold.systems/images/manifold_diagram.png" alt="echo method" width="60%" height="60%"/></p>
 
-As the diagram illustrates a type manifold contributes to the definition of types in its domain. For example, the JSON
-type manifold produces types defined in JSON files.  A type manifold can contribute toward a type in different ways. Most
+As the diagram illustrates a type manifold contributes to the definition of types in its domain. For example, the [JSON
+type manifold](http://manifold.systems/docs.html#json-and-json-schema) produces types defined in JSON files.  A type manifold can contribute toward a type in different ways. Most
 often a type manifold registers as a `primary` contributor -- it supplies the main body of the type.  The JSON type manifold 
 is a primary contributor because it supplies the full type definition according to a JSON Schema file or JSON sample file.  
-Alternatively, a type manifold can be a `partial` or `supplementary` contributor.  The Extension type manifold, for instance, 
+Alternatively, a type manifold can be a `partial` or `supplementary` contributor.  The [Extension type manifold](http://manifold.systems/docs.html#the-extension-manifold), for instance, 
 is a supplementary contributor because it augments an existing type with methods, interfaces, and other features.  Thus 
 both the JSON and Extension type manifolds can contribute to the same type, where the JSON manifold supplies the main 
 body of the type and the Extension type manifold contributes methods and other features provided by extension classes 
@@ -128,11 +128,7 @@ developer can define and use metadata that best suits the needs of a project wit
 implications or IDE integration; he can create a metadata file, use it directly as a type, modify it, and access the
 changes immediately in his code.  No compilation necessary, no build steps to invoke.  With comprehensive IDE support,
 he can readily navigate to and from metadata elements, find usages from metadata, refactor, etc.  Finally metadata
-has first-class representation in the Java development lifecycle!
-
-<video height="auto" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-  <source type="video/mp4" src="http://manifold.systems/images/JsonDemo.mp4">
-</video>
+has first-class representation in the Java development lifecycle!  [View it in action](http://manifold.systems/images/JsonDemo.mp4).
 
 ## Using Manifold
 
@@ -164,20 +160,11 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 **New Project**
 
-Creating a new project with Manifold support is easy:
-
-<p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="http://manifold.systems/images/NewProject.mp4">
-  </video>
-</p>
-
+Creating a new project with Manifold support is easy.  [Check it out](http://manifold.systems/images/NewProject.mp4).
 
 **Add Manifold to Existing Module**
 
-Adding manifold to module[s] of an existing project is easy:
-
-<p><img src="http://manifold.systems/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
+You can add manifold to module[s] of an existing project too. [Check it out](http://manifold.systems/images/ManifoldModule.png).
 
 **Sample Project**
 
@@ -194,10 +181,10 @@ code generators to invoke and no separate build steps to integrate, metadata jus
 
 There'a much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
 will cover:
-* Using the JSON type manifold
-* The Extension Manifold and writing Extension Classes
-* Structural Typing
-* Manifold Templates
+* Using the [JSON type manifold](http://manifold.systems/docs.html#json-and-json-schema)
+* The Extension Manifold and writing [Extension Classes](http://manifold.systems/docs.html#extension-classes)
+* [Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces)
+* [Templates](http://manifold.systems/docs.html#templating)
 * The SQL type manifold
 
 As a bonus for reading this far, I'll touch on one of Manifold's latest features...
