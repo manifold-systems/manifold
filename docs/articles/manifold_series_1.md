@@ -10,7 +10,7 @@ _Type Manifolds_.
 
 While Manifold provides a broad host of high-level features, its primary focus is to eliminate the gap separating source 
 code from metadata. For decades code generators have served to bridged this gap, but not without sometimes debilitating
-drawbacks. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on or a 
+drawbacks. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on for a 
 more productive alternative.
 
 ## The Metadata Disconnect
@@ -132,7 +132,9 @@ changes immediately in his code.  No compilation necessary, no build steps to in
 he can readily navigate to and from metadata elements, find usages from metadata, refactor, etc.  Finally metadata
 has first-class representation in the Java development lifecycle!
 
-[todo: link to JSON usage in IDE]
+<video height="auto" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+  <source type="video/mp4" src="http://manifold.systems/images/JsonDemo.mp4">
+</video>
 
 ## Using Manifold
 
