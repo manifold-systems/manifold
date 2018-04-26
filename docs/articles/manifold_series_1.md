@@ -179,7 +179,7 @@ code generator development and maintenance consuming precious time, etc.  It's a
 makes good progress toward that goal. Type Manifolds offer an inviting and productive development experience. With no 
 code generators to invoke and no separate build steps to integrate, metadata just works.
 
-There'a much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
+There's much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
 will cover:
 * Using the [JSON type manifold](http://manifold.systems/docs.html#json-and-json-schema)
 * The Extension Manifold and writing [Extension Classes](http://manifold.systems/docs.html#extension-classes)
