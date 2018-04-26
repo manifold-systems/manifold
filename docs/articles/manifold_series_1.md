@@ -101,17 +101,13 @@ body of the type and the Extension type manifold contributes methods and other f
 (I'll cover Extensions in a later article).   
 
 Altogether this strategy eliminates many problems plaguing conventional code generation and metadata access in general.  
-In essence the Type Manifold API redefines what it means to be a code generator:
-* Structured data sources are virtual Java types!
-* Your build process is now free of code generation management
-* Using a type manifold is simply a matter of adding a Jar file to your project
-* You can perform incremental compilation based on changes to structured data
-* You can add/remove/modify a structured data source in your project and immediately see and use the change in your code
-* You can compile projected classes to disk as normal class files or use them dynamically at runtime
-* There are no custom class loaders involved and no thread context loaders to manage
-* You can navigate from a code reference to a structured data source in your IDE
-* You can perform usage searches on elements in structured data sources to find code references
-* You can rename / refactor elements in structured data sources
+In essence the Type Manifold API redefines what it means to be a code generator.  Benefits include:
+* **Zero turnaround** – live, type-safe access to metadata; make, discover, and use changes instantly
+* **Lightweight** – direct integration with standard Java, requires no special compilers, annotation processors, class loaders, or runtime agents
+* **Efficient, dynamic** – Manifold only produces types as they are needed by the compiler
+* **Simple, open API** – you can build your own type manifolds
+* **No code generation build step** – eliminates code generators from your development build process 
+* **IntelliJ IDEA** – comprehensive IDE support: code completion, navigation, usage searching, refactoring, debugging, etc.
 
 Further, the Type Manifold API unifies code generation architecture by providing much needed structure and consistency 
 for developers writing code generators. It puts an end to "lone wolf" code generator projects only one developer fully understands.
