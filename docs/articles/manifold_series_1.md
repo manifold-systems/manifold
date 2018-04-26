@@ -21,40 +21,38 @@ information-centric. Despite this transformation the means by which our software
 virtually unchanged for half a century. Whether it's JSON, XSD/XML, WSDL, CSV, DDL, SQL, JavaScript, XLS, or any one of 
 a multitude of other metadata sources, most modern languages, including Java, do very little to connect them with your code:
 
-**../abc/Tree.json**
+**../abc/Person.json**
 ```json
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Person",
   "type": "object",
   "properties": {
-    "node": {
-      "type": "object",
-      "properties": {
-        "info": {
-          "type": "string"
-        }
-      }
+    "firstName": {
+      "type": "string"
     },
-    "children": {
-      "type": "array",
-      "items": {
-        "$ref": "#"
-      }
+    "lastName": {
+      "type": "string"
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 0
     }
-  }
+  },
+  "required": ["firstName", "lastName"]
 }
 ```
                                            
-As Java developers we want to use metadata in a type-safe manner -- we want to use the `Tree` JSON schema file as a 
-`Tree` Java class:
+As Java developers we want to use metadata in a type-safe manner -- we want to use the `Person` JSON schema file as a 
+`Person` Java class:
 
 ```java
 class Foo {
-  private abc.Tree tree; // ERROR: Cannot resolve symbol 'abc.Tree'
+  private abc.Person person; // ERROR: Cannot resolve symbol 'abc.Person'
 }
 ```  
 
-Of course the Java compiler has no idea what to do with `abc.Tree`, so we resort to running a code generator in a 
+Of course the Java compiler has no idea what to do with `abc.Person`, so we resort to running a code generator in a 
 separate build step to generate _all_ our JSON classes beforehand so the compiler can readily use them. The effects of 
 this build step on the development lifecycle range from mild irritation to utter devastation, depending on the rate of metadata
 change, number and size of metadata files, density of usage in project, number of developers, etc. The problems include:
@@ -81,7 +79,7 @@ manifolds contribute toward resolving them, generating code in memory as needed.
 can reference metadata sources directly by name as Java types, effectively enabling the prior example to work:
 ```java
 class Foo {
-  private abc.Tree tree; // OK :)
+  private abc.Person person; // OK :)
 }
 ```
 
