@@ -9,9 +9,10 @@ _Type Manifolds_.
 # ☠ Death to Code Generators ☠
 
 While Manifold provides a broad host of high-level features, its primary focus is to eliminate the gap separating source 
-code from metadata. Although code generators have become the reflexive solution to bridge this gap, this decades-old 
+code from metadata. Software applications overwhelmingly use code generators to bridge this gap, however this decades-old 
 solution is not a stranger to criticism and is not well suited for contemporary software architecture. If a project you 
-develop involves one or more code generators, perhaps you know what I mean. Read on for a more productive alternative.
+develop involves one or more code generators, perhaps you are familiar with the disadvantages. Read on for a more 
+appealing and productive alternative.
 
 ## The Metadata Disconnect
 
