@@ -9,9 +9,9 @@ _Type Manifolds_.
 # ☠ Death to Code Generators ☠
 
 While Manifold provides a broad host of high-level features, its primary focus is to eliminate the gap separating source 
-code from metadata. For decades code generators have served to bridge this gap, but not without sometimes debilitating
-drawbacks. If a project you develop involves one or more code generators, perhaps you know what I mean.  Read on for a 
-more productive alternative.
+code from metadata. Although code generators have become the reflexive solution to bridge this gap, this decades-old 
+solution is not a stranger to criticism and is not well suited for contemporary software architecture. If a project you 
+develop involves one or more code generators, perhaps you know what I mean. Read on for a more productive alternative.
 
 ## The Metadata Disconnect
 
@@ -93,15 +93,15 @@ one can feed into the next and so on, forming a type building pipeline.
 As the diagram illustrates a type manifold contributes to the definition of types in its domain. For example, the [JSON
 type manifold](http://manifold.systems/docs.html#json-and-json-schema) produces types defined in JSON files.  A type manifold can contribute toward a type in different ways. Most
 often a type manifold registers as a `primary` contributor -- it supplies the main body of the type.  The JSON type manifold 
-is a primary contributor because it supplies the full type definition according to a JSON Schema file or JSON sample file.  
+is a primary contributor because it supplies the full type definition according to a JSON Schema file or JSON sample file.
 Alternatively, a type manifold can be a `partial` or `supplementary` contributor.  The [Extension type manifold](http://manifold.systems/docs.html#the-extension-manifold), for instance, 
 is a supplementary contributor because it augments an existing type with methods, interfaces, and other features.  Thus 
 both the JSON and Extension type manifolds can contribute to the same type, where the JSON manifold supplies the main 
 body of the type and the Extension type manifold contributes methods and other features provided by extension classes 
 (I'll cover Extensions in a later article).   
 
-Altogether this strategy eliminates many problems plaguing conventional code generation and metadata access in general.  
-In essence the Type Manifold API redefines what it means to be a code generator.  Benefits include:
+Altogether this strategy eliminates many problems plaguing conventional code generation and metadata access in general.
+In essence the Type Manifold API redefines what it means to be a code generator. Benefits include:
 * **Zero turnaround** – live, type-safe access to metadata; make, discover, and use changes instantly
 * **Lightweight** – direct integration with standard Java, requires no special compilers, annotation processors, class loaders, or runtime agents
 * **Efficient, dynamic** – Manifold only produces types as they are needed by the compiler
