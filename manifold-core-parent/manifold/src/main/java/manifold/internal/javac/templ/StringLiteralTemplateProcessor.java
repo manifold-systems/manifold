@@ -1,7 +1,6 @@
 package manifold.internal.javac.templ;
 
 import com.sun.source.tree.Tree;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
@@ -20,28 +19,27 @@ import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 import manifold.api.templ.StringLiteralTemplateParser;
 import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.api.type.ICompilerComponent;
 import manifold.internal.javac.JavaParser;
 import manifold.util.Stack;
 
-public class StringLiteralTemplateProcessor extends TreeTranslator implements TaskListener
+public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
-  private final BasicJavacTask _javacTask;
-  private final TreeMaker _maker;
-  private final Names _names;
+  private BasicJavacTask _javacTask;
+  private TreeMaker _maker;
+  private Names _names;
   private Stack<Boolean> _disabled;
 
-  public static void register( JavacTask task )
+  @Override
+  public void init( BasicJavacTask javacTask )
   {
-    task.addTaskListener( new StringLiteralTemplateProcessor( task ) );
-  }
-
-  private StringLiteralTemplateProcessor( JavacTask task )
-  {
-    _javacTask = (BasicJavacTask)task;
+    _javacTask = javacTask;
     _maker = TreeMaker.instance( _javacTask.getContext() );
     _names = Names.instance( _javacTask.getContext() );
     _disabled = new Stack<>();
     _disabled.push( false );
+
+    javacTask.addTaskListener( this );
   }
 
   @Override

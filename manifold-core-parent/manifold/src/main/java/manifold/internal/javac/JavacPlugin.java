@@ -30,16 +30,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import manifold.api.type.ICompilerComponent;
 import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
@@ -50,6 +54,7 @@ import manifold.util.JreUtil;
 import manifold.util.NecessaryEvilUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
+import manifold.util.ServiceUtil;
 
 /**
  */
@@ -126,7 +131,20 @@ public class JavacPlugin implements Plugin, TaskListener
     }
     hijackJavacFileManager();
     task.addTaskListener( this );
-    StringLiteralTemplateProcessor.register( task );
+    loadCompilerComponents();
+  }
+
+  private void loadCompilerComponents()
+  {
+    SortedSet<ICompilerComponent> compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
+    loadBuiltin( compilerComponents );
+    ServiceUtil.loadRegisteredServices( compilerComponents, ICompilerComponent.class, getClass().getClassLoader() );
+    compilerComponents.forEach( cc -> cc.init( _javacTask ) );
+  }
+
+  private void loadBuiltin( SortedSet<ICompilerComponent> compilerComponents )
+  {
+    compilerComponents.add( new StringLiteralTemplateProcessor() );
   }
 
   protected boolean decideIfStatic( String[] args )
