@@ -51,7 +51,7 @@ public enum ClassType
     {
       return Template;
     }
-    if( name.endsWith( ".gs" ) )
+    if( name.endsWith( ".gs" ) || name.endsWith( ".gr" ) || name.endsWith( ".grs" ) )
     {
       return Class;
     }
