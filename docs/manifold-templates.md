@@ -2,17 +2,17 @@
 layout: default
 ---
 
-# Manifold Templates
+# ManTL (Manifold Template Language)
 
-Manifold Templates is a lightweight & type safe templating technology for the JVM.
+ManTL is a lightweight & _type-safe_ template engine for the JVM using [Manifold](http://manifold.systems/).
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.
 
-Manifold Templates supports type safe arguments to templates, type safe inclusion of other templates,
+ManTL supports the full Java language, type-safe arguments to templates, type safe inclusion of other templates,
 shared layouts for templates and custom base classes for application-specific logic, among other features.
 
-Manifold Templates have the suffix `mtf` (Manifold Template File), often optionally preceded by the language that the
-template is targeting (e.g. `index.html.mtf`).
+ManTL files have the suffix `mtl`, often optionally preceded by the language that the template is targeting 
+(e.g. `index.html.mtl`).
 
 ## Table of Contents
 - [Installing](#installing)
@@ -41,7 +41,7 @@ template is targeting (e.g. `index.html.mtf`).
 
 # Installing #
 
-Manifold Templates can be used by simply adding the following dependency to your project:
+ManTL can be used by simply adding the following dependency to your project:
 
 ```xml
     <dependency>
@@ -53,12 +53,12 @@ Manifold Templates can be used by simply adding the following dependency to your
 
 # Usage #
 
-Once you have installed Manifold Templates, you can begin using them by placing a new file that
-a with the `mtf` suffic in your resources directory (nb: not in your source directory).  The file can have any sort of 
-string content, as well as  [dynamic content](#basic-syntax) and [directives](#directive-keywords) that change how the 
+Once you have installed ManTL, you can begin using it by placing a new file that ends
+a with the `mtl` suffix in your resources directory (nb: not in your source directory).  The file can have any sort of 
+string content, as well as [dynamic content](#basic-syntax) and [directives](#directive-keywords) that change how the 
 template behaves.
 
-Consider the following Manifold Template named `HelloWorld.mft`, located in the `resources/templates` directory:
+Consider the following Manifold Template named `HelloWorld.mtl`, located in the `resources/templates` directory:
 
 ```jsp
 Hello World!
@@ -92,12 +92,12 @@ import templates.HelloWorld;
 
 ...
     public void demo() {
-      System.out.println(HelloWorld.render("Manifold Templates"));
+      System.out.println(HelloWorld.render("ManTL"));
     }
 ...
 ```
 
-Which would result in printing "Hello Manifold Templates" to standard out.
+Which would result in printing "Hello ManTL" to standard out.
 
 If you do not wish to materialize the template as a string, you can use the `renderInto()` method to render templates
 into any `Appendable` object.  The `renderInto()` method will have the same parameters as `render()` but will take
@@ -107,15 +107,14 @@ an additional `Appendable` object and return `void`.
 
 # Basic Syntax #
 
-As with JSPs, Manifold Templates consist of regular textual content with various scriptlets and
+As with most template engines, a ManTL consist of regular textual content with various scriptlets and
 directives interspersed in that content.
 
 <a id="statements" class="toc_anchor"></a>
 
 ## Statements ##
 
-Statements are similar to JSP scriptlets: they can contain any number of Java
-language statements, including variable or method declarations.
+ManTL Statements can contain any number of Java language statements, including variable or method declarations.
 
 The syntax of a statement is as follows:
 ```jsp
@@ -137,9 +136,8 @@ which will result in a compiler error, since there is no semicolon to end the li
 
 ## Expressions ##
 
-Expressions are similar to JSP expressions. As explained in [this JSP guide:](https://www.tutorialspoint.com/jsp/jsp_syntax.htm)
->A JSP expression element contains a scripting language expression that is evaluated, converted to a String, and
-inserted where the expression appears in the JSP file.
+A ManTL expression contains a Java language expression that is evaluated, converted to a String, and
+inserted where the expression appears in the ManTL file.
 
 >Because the value of an expression is converted to a String, you can use an expression within a line of text, whether or not it is tagged with HTML, in a JSP file.
 
@@ -318,7 +316,7 @@ The syntax of the include keyword is as follows:
 <%@ include [template to include] %>
 ```
 
-For example, consider the following template, `myTemplate.html.mtf`:
+For example, consider the following template, `myTemplate.html.mtl`:
 ```jsp
 <% int fontSize = 0; %>
 <html>
@@ -344,16 +342,16 @@ Both statements will result in the following HTML code:
     <head><title>WHILE LOOP Example</title></head>
     <body>
             <font color = "green" size = "0">
-                JSP Tutorial
+                ManTL Tutorial
             </font><
             <font color = "green" size = "1">
-                JSP Tutorial
+                ManTL Tutorial
             </font><br />
             <font color = "green" size = "2">
-                JSP Tutorial
+                ManTL Tutorial
             </font><br />
             <font color = "green" size = "3">
-                JSP Tutorial
+                ManTL Tutorial
             </font><br />
     </body>
 </html>
@@ -363,7 +361,7 @@ Both statements will result in the following HTML code:
 <a id="conditional-include" class="toc_anchor"></a>
 
 ### Conditional Include ###
-Manifold Templates supports shorthand for conditional inclusion of templates. The following syntax:
+ManTL supports shorthand for conditional inclusion of templates. The following syntax:
 ```jsp
   <% if (condition) { %>
     <%@ include myTemplate %>
@@ -388,7 +386,7 @@ The syntax of the `params` command is as follows:
 <%@ params(your-params-here) %>
 ```
 
-For example, I can create the template `NameDisplay.html.mtf` as the following:
+For example, I can create the template `NameDisplay.html.mtl` as the following:
 
 ```jsp
 <%@ params(String name) %>
@@ -440,7 +438,7 @@ to do so will result in an error during code generation.
 
 Imports within sections are valid, and will be handled accordingly.
 
-For example, I can create the template `nestedImport.html.mtf` as the following:
+For example, I can create the template `nestedImport.html.mtl` as the following:
 
 ```jsp
     <h1>This will make sure that nested imports are handled correctly.</h1>
@@ -512,7 +510,7 @@ The syntax of a content template is as follows:
 
 
 
-For example, I can create the template `layoutEx.html.mtf` as the following:
+For example, I can create the template `layoutEx.html.mtl` as the following:
 ```jsp
     </html>
         </body>
@@ -543,7 +541,7 @@ The above code will generate the following HTML:
 
 ## Default Layouts ##
 
-Manifold Templates also supports the ability to set default layouts for templates via the
+ManTL also supports the ability to set default layouts for templates via the
 `ManifoldTemplates.java` configuration class:
 ```java
   ManifoldTemplates.setDefaultLayout(myLayout); //Sets default template for all templates
@@ -557,9 +555,9 @@ will use the declared layout rather than any defualt layout.
 
 ## Spark Java Support ##
 
-Manifold Templates were designed to work with the [Spark java web framework](http://sparkjava.com/).
+ManTL was designed with web frameworks like [Spark](http://sparkjava.com/) in mind.
 
-Below is an example Spark application making use of Manifold Templates:
+Below is an example Spark application making use of ManTL:
 
 
 ```java
@@ -589,9 +587,9 @@ public class WebApp {
 }
 ```
 
-Where there are two templates in the `resources` directory: one at `views/Index.html.mtf` and one at 
-`views/layouts/DefaultLayout.html.mtf`.  Note that the code takes advantage of the type safe parameters available
-in Manifold templates.
+Where there are two templates in the `resources` directory: one at `views/Index.html.mtl` and one at 
+`views/layouts/DefaultLayout.html.mtl`.  Note that the code takes advantage of the type-safe parameters available
+in ManTL.
 
 <a id="spark-template" class="toc_anchor"></a>
 
@@ -612,7 +610,7 @@ If you wish you output raw HTML in a template that extends `manifold.templates.s
 
 ### Tracing ###
 
-Manifold Templates supports performance tracing via the following syntax:
+ManTL supports performance tracing via the following syntax:
 ```java
   ManifoldTemplates.trace();
 ```

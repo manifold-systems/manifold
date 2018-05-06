@@ -8,7 +8,7 @@ public class FileExtensionsTest {
 
     @Test
     public void variousExtensionsWork() {
-        assertEquals("mtf", ExtensionTest1.render());
+        assertEquals("mtl", ExtensionTest1.render());
         assertEquals("html", ExtensionTest2.render());
         assertEquals("sql", ExtensionTest3.render());
     }

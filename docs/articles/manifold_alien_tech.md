@@ -103,7 +103,7 @@ Currently Manifold provides type manifolds for:
 *   Properties files
 *   Image files
 *   Dark Java
-*   Manifold Templates
+*   ManTL (Manifold Template Language)
 *   DDL and SQL (work in progress)
 
 Discover more about type manifolds here: http://manifold.systems/docs.html#what_is_a_type_manifold

@@ -71,7 +71,7 @@ Currently Manifold provides type manifolds for:
 *   Properties files
 *   Image files
 *   Dark Java
-*   Manifold Templates
+*   ManTL (Manifold Template Language)
 *   JavaScript (experimental)
 *   DDL and SQL (work in progress)
 
@@ -833,7 +833,7 @@ Names:
 The end
 ```
 
-For full-featured template functionality see project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+For full-featured template engine functionality see project [ManTL](http://manifold.systems/manifold-templates.html).
 
 ### Dark Java
 
@@ -960,7 +960,7 @@ int hour = 8;
 String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
 ``` 
 
-**Template files** are much more powerful and are documented in project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+**Template files** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
 
 
 ### Build Your Own Manifold
