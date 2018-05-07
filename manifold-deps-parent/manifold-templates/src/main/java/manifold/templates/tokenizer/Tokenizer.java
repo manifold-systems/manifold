@@ -1,266 +1,305 @@
 package manifold.templates.tokenizer;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
+import java.util.List;
 
-import manifold.templates.manifold.TemplateIssue;
-import manifold.internal.javac.IIssue;
-import manifold.templates.tokenizer.Token.TokenType;
 
 import static manifold.templates.tokenizer.Token.TokenType.*;
 
-public class Tokenizer {
+public class Tokenizer
+{
+  private int _index;
+  private List<Token> _tokens;
+  private CharSequence _text;
+  private StringBuilder _stuff;
 
-    private List<TemplateIssue> _issues = new ArrayList<>();
+  private int _tokenIndex;
+  private int _stuffLine;
+  private int _stuffColumn;
+  private boolean _isParsingString;
+  private boolean _isParsingCharLiteral;
 
-    class TokenBuilder implements Iterator<Token> {
-        String tokenString;
-        int line, col;
-        int index;
-        int toJump = 0;
+  public Tokenizer()
+  {
+  }
 
-        TokenBuilder(String str) {
-            this.tokenString = str;
-            line = 1;
-            col = 1;
-            index = 0;
-        }
+  public List<Token> tokenize( CharSequence text )
+  {
+    _tokens = new ArrayList<>();
+    _tokenIndex = -1;
+    _index = 0;
+    _text = text;
+    _isParsingString = false;
+    _isParsingCharLiteral = false;
+    _stuff = new StringBuilder();
 
-        private Character peekBehind() {
-            return peekBehind(1);
-        }
+    int line = 1;
+    int column = 1;
+    int index = _index;
+    boolean escaped = false;
 
-        private Character peekBehind(int distance) {
-            if (index - distance < 0) {
-                return null;
+    nextToken();
+
+    while( true )
+    {
+      if( index >= _text.length() )
+      {
+        break;
+      }
+
+      int before = index;
+      char c = _text.charAt( index );
+
+      if( c == '\n' )
+      {
+        line++;
+        column = 1;
+      }
+
+      if( !escaped && c == '\\' && !isInCode() && _text.length() > index+1 &&
+          (_text.charAt( index+1 ) == '<' || _text.charAt( index+1 ) == '$') )
+      {
+        escaped = true;
+        index++;
+        continue;
+      }
+
+      if( isTop( COMMENT_BEGIN ) )
+      {
+        if( c == '-' )
+        {
+          index++;
+          if( charIs( index, '-' ) )
+          {
+            index++;
+            if( charIs( index, '%' ) )
+            {
+              index++;
+              if( charIs( index, '>' ) )
+              {
+                pushStuff();
+                pushToken( COMMENT_END, ++index, line, column );
+                continue;
+              }
             }
-            return tokenString.charAt(index - distance);
+          }
         }
-
-        private Character peekForward() {
-            return peekForward(1);
+      }
+      else
+      {
+        if( c == '$' && !isInCode() && !isParsingString() && !escaped )
+        {
+          index++;
+          if( charIs( index, '{' ) )
+          {
+            pushStuff();
+            pushToken( EXPR_BRACE_BEGIN, ++index, line, column );
+            continue;
+          }
         }
-
-        private Character peekForward(int distance) {
-            if (index + distance < tokenString.length()) {
-                return tokenString.charAt(index + distance);
+        else if( c == '<' && !isInCode() && !escaped )
+        {
+          index++;
+          if( charIs( index, '%' ) )
+          {
+            pushStuff();
+            index++;
+            if( _text.charAt( index ) == '=' )
+            {
+              pushToken( EXPR_ANGLE_BEGIN, ++index, line, column );
+              continue;
             }
-            return null;
+            else if( charIs( index, '@' ) )
+            {
+              pushToken( DIR_ANGLE_BEGIN, ++index, line, column );
+              continue;
+            }
+            else if( charIs( index, '-' ) )
+            {
+              if( charIs( index + 1, '-' ) )
+              {
+                pushToken( COMMENT_BEGIN, index += 2, line, column );
+                continue;
+              }
+            }
+
+            pushToken( STMT_ANGLE_BEGIN, index, line, column );
+            continue;
+          }
         }
-
-        public boolean hasNext() {
-            if (tokenString == null) {
-                return false;
-            }
-            return index < tokenString.length();
+        else if( c == '}' && isTop( EXPR_BRACE_BEGIN ) && isInCode() && !isParsingString() && !isParsingCharLiteral() )
+        {
+          pushStuff();
+          pushToken( EXPR_BRACE_END, ++index, line, column );
+          continue;
         }
-
-        public Token next() {
-            if (index >= tokenString.length()) {
-                throw new NoSuchElementException();
-            }
-            TokenType nextType = getNextTokenType();
-            int pos = this.index;
-            int col = this.col;
-            int line = this.line;
-            Token toReturn;
-            if (nextType == STATEMENT) {
-                advancePosition(2);
-                toJump = 2;
-                toReturn = next(nextType, true, line, col, pos,"%>");
-                advancePosition(2);
-            } else if (nextType == EXPRESSION) {
-                if (isModernExpressionSyntax()) {
-                    advancePosition(2);
-                    toJump = 1;
-                    toReturn = next(nextType, true, line, col, pos, "}");
-                    advancePosition();
-                } else {
-                    advancePosition(3);
-                    toJump = 2;
-                    toReturn = next(nextType, true, line, col, pos, "%>");
-                    advancePosition(2);
-                }
-
-            } else if (nextType == DIRECTIVE) {
-                advancePosition(3);
-                toJump = 2;
-                toReturn = next(nextType, true, line, col, pos,"%>");
-                advancePosition(2);
-            } else if (nextType == COMMENT) {
-                advancePosition(4);
-                toJump = 4;
-                toReturn = next(nextType, false, line, col, pos,"--%>");
-                advancePosition(4);
-            } else { //String Content
-                toJump = 0;
-                toReturn = next(nextType, false, line, col, pos,"<%", "${");
-            }
-            return toReturn;
+        else if( c == '%' && isInCode() && !isParsingString() )
+        {
+          index++;
+          if( charIs( index, '>' ) )
+          {
+            pushStuff();
+            pushToken( ANGLE_END, ++index, line, column );
+            continue;
+          }
         }
-
-        public void remove() {
-            throw new UnsupportedOperationException("remove");
-        }
-
-
-        private Token next(TokenType type, boolean quoteSensitive, int line, int col, int pos, String... terminateConditions) {
-            int contentStartPos = index;
-            int length = tokenString.length();
-            List<Character> termStart = new ArrayList<Character>();
-            for (String s: terminateConditions) {
-                termStart.add(s.charAt(0));
-            }
-            int quoteState = 0;
-            while (index < length) {
-                char current = tokenString.charAt(index);
-                if (current == '"' && quoteSensitive) {
-                    if (quoteState == 1 && peekBehind() != '\\') {
-                        quoteState = 0;
-                    } else if (quoteState == 0) {
-                        quoteState = 1;
-                    }
-                } else if (current == '\'' && quoteSensitive) {
-                    if (quoteState == 2 && peekBehind() != '\\') {
-                        quoteState = 0;
-                    } else if (quoteState == 0) {
-                        quoteState = 2;
-                    }
-                } else if (current == '\\' && type == STRING_CONTENT) {
-                    if (peekForward() == '$') {
-                        advancePosition();
-                    }
-                    if (peekForward() == '<' && peekForward(2) == '%') {
-                        advancePosition();
-                        advancePosition();
-                    }
-                } else if (quoteState == 0) {
-                    if (termStart.contains(current)) {
-                        if (checkIfTerminates(terminateConditions)) {
-                            String currentTokenString = tokenString.substring(contentStartPos, index);
-                            if (type != STRING_CONTENT) {
-                                currentTokenString = currentTokenString.trim();
-                            } else {
-                                currentTokenString = removeEscapesForStringContent(currentTokenString);
-                            }
-                            return new Token(type, currentTokenString, line, col, pos, index + toJump);
-                        }
-                    }
-                    if (type != COMMENT) {
-                        checkIllegalOpenings(type);
-                    }
-                }
-                advancePosition();
-            }
-            if (type == STRING_CONTENT) {
-                return new Token(type, removeEscapesForStringContent(tokenString.substring(contentStartPos)), line, col, pos, index);
-            }
-            addError("Tokenization Error: " + type + " is not closed", line);
-            return new Token(type, tokenString.substring(contentStartPos), line, col, pos, index);
-        }
-
-        private String removeEscapesForStringContent(String currentTokenString) {
-            return currentTokenString.replace("\\$", "$").replace("\\<%", "<%");
-        }
-
-        private boolean isModernExpressionSyntax() {
-            if (tokenString.charAt(index) == '$') {
-                return true;
-            }
-            return false;
-        }
-
-        private boolean checkIfTerminates(String[] terminateConditions) {
-            for (String cond: terminateConditions) {
-                boolean terminates = true;
-                for (int i = 0; i < cond.length(); i += 1) {
-                    Character c = peekForward(i);
-                    if (c == null || cond.charAt(i) != c) {
-                        terminates = false;
-                    }
-                }
-                if (terminates) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private void checkIllegalOpenings(TokenType type) {
-            if (tokenString.charAt(index) == '<' && peekForward() == '%') {
-                if (peekForward(2) == '@') {
-                    addError("Attempted to open new directive within " + type, line);
-                } else if (peekForward(2) == '=') {
-                    addError("Attempted to open new expression within " + type, line);
-                } else {
-                    addError("Attempted to open new statement within " + type, line);
-                }
-                next();
-            }
-            if (tokenString.charAt(index) == '$' && peekForward() == '{') {
-                addError("Attempted to open new expression within " + type, line);
-                next();
-            }
-        }
-
-        /** Returns the correct token type to be parsed. */
-        private TokenType getNextTokenType() {
-            Character next = peekForward();
-            if (tokenString.charAt(index) == '<' && next == '%') {
-                if (peekForward(2) != null && peekForward(2) == '@') {
-                    return DIRECTIVE;
-                }
-                if (peekForward(2) != null && peekForward(2) == '=') {
-                    return EXPRESSION;
-                }
-                if (peekForward(2) != null && peekForward(2) == '-' && peekForward(3) != null && peekForward(3) == '-') {
-                    return COMMENT;
-                }
-                return STATEMENT;
-            } else if (tokenString.charAt(index) == '$' && next == '{') {
-                return EXPRESSION;
-            } else {
-                return STRING_CONTENT;
-            }
-        }
-
-        private void advancePosition() {
-            if (index < this.tokenString.length()) {
-                char current = tokenString.charAt(index);
-                if (current == 10) {
-                    this.line += 1;
-                    this.col = 0;
-                }
-                this.col += 1;
-                index += 1;
-            }
-        }
-
-        private void advancePosition(int i) {
-            for (int x = 0; x < i; x += 1) {
-                advancePosition();
-            }
-        }
-
+      }
+      if( _stuff.length() == 0 )
+      {
+        _stuffLine = line;
+        _stuffColumn = column;
+      }
+      _stuff.append( c );
+      index = before + 1;
+      setParsingString( c, before );
+      setParsingCharLiteral( c, before );
+      escaped = false;
     }
 
-    public List<Token> tokenize(String str) {
-        ArrayList<Token> tokens = new ArrayList<Token>();
-        TokenBuilder builder = new TokenBuilder(str);
-        while (builder.hasNext()) {
-            tokens.add(builder.next());
-        }
-        return tokens;
+    pushStuff();
+
+    try
+    {
+      return _tokens;
+    }
+    finally
+    {
+      clear();
+    }
+  }
+
+  private void nextToken()
+  {
+    if( _tokenIndex + 1 < _tokens.size() )
+    {
+      _tokenIndex++;
+    }
+    else
+    {
+      _tokenIndex = -1;
+    }
+  }
+
+  private boolean charIs( int index, char c )
+  {
+    return _text.length() > index && _text.charAt( index ) == c;
+  }
+
+  private void pushStuff()
+  {
+    if( _stuff == null || _stuff.length() == 0 )
+    {
+      return;
     }
 
-    private void addError(String message, int line) {
-        TemplateIssue error = new TemplateIssue(IIssue.Kind.Error, 0, line, 0, message);
-        _issues.add( error );
+    Token.TokenType beginType = _tokens.size() == 0 ? null : peek().getType();
+    Token.TokenType stuffType;
+    if( beginType == EXPR_BRACE_BEGIN ||
+        beginType == EXPR_ANGLE_BEGIN )
+    {
+      stuffType = EXPR;
+    }
+    else if( beginType == STMT_ANGLE_BEGIN )
+    {
+      stuffType = STMT;
+    }
+    else if( beginType == DIR_ANGLE_BEGIN )
+    {
+      stuffType = DIRECTIVE;
+    }
+    else if( beginType == COMMENT_BEGIN )
+    {
+      stuffType = COMMENT;
+    }
+    else
+    {
+      stuffType = CONTENT;
+    }
+    _tokens.add( new Token( stuffType, _index, _stuff.toString(), _stuffLine, _stuffColumn ) );
+    _index += _stuff.length();
+    _stuff = new StringBuilder();
+  }
+
+  private void pushToken( Token.TokenType tokenType, int index, int line, int column )
+  {
+    String token = tokenType.getToken();
+    if( token == null )
+    {
+      throw new IllegalStateException( "Expected static token, but found: " + tokenType.name() );
+    }
+    _tokens.add( new Token( tokenType, _index, token, line, column ) );
+    _index = index;
+  }
+
+  private boolean isInCode()
+  {
+    return isTop( EXPR_ANGLE_BEGIN ) ||
+           isTop( EXPR_BRACE_BEGIN ) ||
+           isTop( STMT_ANGLE_BEGIN ) ||
+           isTop( DIR_ANGLE_BEGIN ) ||
+           isTop( COMMENT_BEGIN );
+  }
+
+  private boolean isTop( Token.TokenType tokenType )
+  {
+    return !_tokens.isEmpty() && peek().getType() == tokenType;
+  }
+
+  private void setParsingString( char c, int index )
+  {
+    if( !isInCode() || c != '"' )
+    {
+      return;
     }
 
-    public List<TemplateIssue> getIssues() {
-        return  _issues;
+    if( !isParsingString() )
+    {
+      _isParsingString = true;
     }
+    else if( _text.charAt( index -1 ) != '\\' )
+    {
+      _isParsingString = false;
+    }
+  }
+
+  private boolean isParsingString()
+  {
+    return _isParsingString;
+  }
+
+  private void setParsingCharLiteral( char c, int index )
+  {
+    if( !isInCode() || c != '\'' || isParsingString() )
+    {
+      return;
+    }
+
+    if( !isParsingCharLiteral() )
+    {
+      _isParsingCharLiteral = true;
+    }
+    else if( _text.charAt( index -1 ) != '\\' )
+    {
+      _isParsingCharLiteral = false;
+    }
+  }
+
+  private boolean isParsingCharLiteral()
+  {
+    return _isParsingCharLiteral;
+  }
+
+  private Token peek()
+  {
+    return _tokens.get( _tokens.size()-1 );
+  }
+
+  private void clear()
+  {
+    _text = null;
+    _tokens = null;
+    _stuff = null;
+    _index = -1;
+  }
 }
+

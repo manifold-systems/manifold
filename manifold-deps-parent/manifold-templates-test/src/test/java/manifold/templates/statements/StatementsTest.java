@@ -1,12 +1,10 @@
 package manifold.templates.statements;
 
-import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
 import statements.*;
 
 import static org.junit.Assert.assertEquals;
 
-@DisableStringLiteralTemplates
 public class StatementsTest {
 
     @Test
@@ -33,7 +31,7 @@ public class StatementsTest {
      */
     @Test
     public void stringsWork() {
-        assertEquals("<%= expression syntax %>${ expression syntax }", StringStatement1.render());
+        assertEquals("<%= bwah %>lol", StringStatement1.render());
         assertEquals("<%@ directive syntax %><% statement syntax %>", StringStatement2.render());
         assertEquals("<%-- comment syntax --%>", StringStatement3.render());
     }

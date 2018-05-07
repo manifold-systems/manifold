@@ -189,23 +189,24 @@ public class TemplateGen {
         }
 
         private void identifyType() {
-            String content = token.getContent();
-
-            if (content.matches("import.*")) {
+            String text = token.getText();
+            text = text.trim();
+            
+            if (text.startsWith("import")) {
                 dirType = IMPORT;
-            } else if (content.matches("extends.*")) {
+            } else if (text.startsWith("extends")) {
                 dirType = EXTENDS;
-            } else if (content.matches("params.*")) {
+            } else if (text.startsWith("params")) {
                 dirType = PARAMS;
-            } else if (content.matches("include.*")) {
+            } else if (text.startsWith("include")) {
                 dirType = INCLUDE;
-            } else if (content.matches("section.*")) {
+            } else if (text.startsWith("section")) {
                 dirType = SECTION;
-            } else if (content.trim().matches("end section")) {
+            } else if (text.startsWith("end section")) {
                 dirType = END_SECTION;
-            } else if (content.trim().matches("content")) {
+            } else if (text.startsWith("content")) {
                 dirType = CONTENT;
-            } else if (content.trim().matches("layout.*")) {
+            } else if (text.startsWith("layout")) {
                 dirType = LAYOUT;
             } else {
                 addError("Unsupported Directive Type", token.getLine());
@@ -214,15 +215,17 @@ public class TemplateGen {
         }
 
         private void fillVars(List<Token> tokens) {
+            String text = token.getText();
+            text = text.trim();
             switch (dirType) {
                 case IMPORT:
-                    className = token.getContent().substring(6).trim();
+                    className = text.substring(6).trim();
                     break;
                 case EXTENDS:
-                    className = token.getContent().substring(7).trim();
+                    className = text.substring(7).trim();
                     break;
                 case PARAMS:
-                    String content = token.getContent().substring(6).trim();
+                    String content = text.substring(6).trim();
                     params = content.substring(1, content.length() - 1);
                     paramsList = splitParamsList(params);
                     break;
@@ -230,7 +233,7 @@ public class TemplateGen {
                     fillIncludeVars();
                     break;
                 case SECTION:
-                    String[] temp = token.getContent().substring(7).trim().split("\\(", 2);
+                    String[] temp = text.substring(7).trim().split("\\(", 2);
                     className = temp[0].trim();
                     if (temp.length == 2 && !temp[1].equals(")")) {
                         params = temp[1].substring(0, temp[1].length() - 1).trim();
@@ -244,7 +247,7 @@ public class TemplateGen {
                 case CONTENT:
                     break;
                 case LAYOUT:
-                    className = token.getContent().substring(6).trim();
+                    className = text.substring(6).trim();
                     break;
                 case ERRANT:
                     break;
@@ -258,7 +261,9 @@ public class TemplateGen {
          * Note that in the if statement, parentheses around the conditional are optional.
          */
         private void fillIncludeVars() {
-            String content = token.getContent().substring(8).trim();
+            String text = token.getText();
+            text = text.trim();
+            String content = text.substring(8).trim();
             int index = 0;
             while (index < content.length()) {
                 if (content.charAt(index) == '(') {
@@ -300,6 +305,7 @@ public class TemplateGen {
          * or just the name if both aren't given
          */
         private String[][] splitParamsList(String params) {
+            params = params.trim();
             params = params.replaceAll(" ,", ",").replace(", ", ",");
             String[] parameters = params.split(",");
             String[][] paramsList = new String[parameters.length][2];
@@ -346,8 +352,10 @@ public class TemplateGen {
             Pattern argumentRegex = Pattern.compile(pattern);
             for (int i = tokenPos - 1; i >= 0; i -= 1) {
                 Token currentToken = tokens.get(i);
-                if (currentToken.getType() == Token.TokenType.STATEMENT) {
-                    Matcher argumentMatcher = argumentRegex.matcher(currentToken.getContent());
+                if (currentToken.getType() == Token.TokenType.STMT) {
+                    String text = currentToken.getText();
+                    text = text.trim();
+                    Matcher argumentMatcher = argumentRegex.matcher( text );
                     String toReturn = null;
                     while (argumentMatcher.find()) {
                         if (argumentMatcher.group(1) != null) {
@@ -415,7 +423,6 @@ public class TemplateGen {
 
             Tokenizer tokenizer = new Tokenizer();
             this.tokens = tokenizer.tokenize(source);
-            _issues.addAll(tokenizer.getIssues());
 
             List<Directive> dirList = getDirectivesList(tokens);
             this.dirMap = getDirectivesMap(dirList);
@@ -444,7 +451,7 @@ public class TemplateGen {
             for (int i = start; i <= end; i++) {
                 Token token = tokens.get(i);
                 Token.TokenType tokenType = token.getType();
-                if (tokenType == Token.TokenType.STRING_CONTENT || tokenType == Token.TokenType.EXPRESSION) {
+                if (tokenType == Token.TokenType.CONTENT || tokenType == Token.TokenType.EXPR) {
                     return true;
                 }
             }
@@ -540,7 +547,7 @@ public class TemplateGen {
 
         private void addFileHeader() {
             sb.append("\n");
-            sb.append("@${DisableStringLiteralTemplates.class.getName()}\n");
+           // sb.append("@${DisableStringLiteralTemplates.class.getName()}\n");
             if (currClass.depth == 0) {
                 if (currClass.isLayout) {
                     sb.append("public class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" implements ").reAppend(LAYOUT_INTERFACE).reAppend(" {\n");
@@ -664,20 +671,20 @@ public class TemplateGen {
             for (int i = startPos; i <= endPos; i++) {
                 Token token = tokens.get(i);
                 switch (token.getType()) {
-                    case STRING_CONTENT:
-                        sb.append("                buffer.append(\"").reAppend(token.getContent().replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n") + "\");\n");
+                    case CONTENT:
+                        sb.append("                buffer.append(\"").reAppend(token.getText().replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n") + "\");\n");
                         bbLineNumbers.add(token.getLine());
                         break;
-                    case STATEMENT:
-                        String[] statementList = token.getContent().split("\n");
+                    case STMT:
+                        String[] statementList = token.getText().split("\n");
                         for (int j = 0; j < statementList.length; j++) {
                             String statement = statementList[j].trim().replaceAll("\r", "");
                             sb.append("                ").reAppend(statement).reAppend("\n");
                             bbLineNumbers.add(token.getLine() + j);
                         }
                         break;
-                    case EXPRESSION:
-                        sb.append("                buffer.append(toS(").reAppend(token.getContent()).reAppend("));\n");
+                    case EXPR:
+                        sb.append("                buffer.append(toS(").reAppend(token.getText()).reAppend("));\n");
                         bbLineNumbers.add(token.getLine());
                         break;
                     case COMMENT:

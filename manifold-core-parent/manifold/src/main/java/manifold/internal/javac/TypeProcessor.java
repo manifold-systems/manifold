@@ -2,14 +2,21 @@ package manifold.internal.javac;
 
 import com.sun.source.util.JavacTask;
 //import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.api.BasicJavacTask;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Comparator;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import javax.lang.model.element.TypeElement;
 //import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.internal.host.ManifoldHost;
+import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
+import manifold.util.ServiceUtil;
 
 /**
  */
@@ -18,6 +25,7 @@ public class TypeProcessor extends CompiledTypeProcessor
   TypeProcessor( JavacTask javacTask )
   {
     super( javacTask );
+    loadCompilerComponents( (BasicJavacTask)javacTask );
   }
 
 //  @Override
@@ -35,6 +43,19 @@ public class TypeProcessor extends CompiledTypeProcessor
 //    }
 //    return false;
 //  }
+
+  private void loadCompilerComponents( BasicJavacTask javacTask )
+  {
+    SortedSet<ICompilerComponent> compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
+    loadBuiltin( compilerComponents );
+    ServiceUtil.loadRegisteredServices( compilerComponents, ICompilerComponent.class, getClass().getClassLoader() );
+    compilerComponents.forEach( cc -> cc.init( javacTask ) );
+  }
+
+  private void loadBuiltin( SortedSet<ICompilerComponent> compilerComponents )
+  {
+    compilerComponents.add( new StringLiteralTemplateProcessor() );
+  }
 
   @Override
   public void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter )
