@@ -118,7 +118,13 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     Map<String, LocklessLazyVar<M>> peripheralTypes = getPeripheralTypes();
     if( peripheralTypes != null )
     {
-      fqnToModel.addAll( peripheralTypes );
+      for( Map.Entry<String, LocklessLazyVar<M>> entry: peripheralTypes.entrySet() )
+      {
+        if( fqnToModel.get( entry.getKey() ) == null )
+        {
+          fqnToModel.add( entry.getKey(), entry.getValue() );
+        }
+      }
     }
     
     return fqnToModel;
@@ -350,10 +356,14 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     String topLevel = findTopLevelFqn( fqn );
     LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( topLevel );
 
-    String source = contribute( topLevel, existing, lazyModel.get(), errorHandler );
+    M model = lazyModel.get();
+    String source = contribute( topLevel, existing, model, errorHandler );
 
-    // Now remove the model since we don't need it anymore
-    lazyModel.clear();
+    if( !model.isProcessing() )
+    {
+      // Now remove the model since we don't need it anymore
+      lazyModel.clear();
+    }
 
     return source;
   }

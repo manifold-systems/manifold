@@ -12,7 +12,7 @@ import manifold.internal.host.ManifoldHost;
  */
 public interface IJsonIO
 {
-  String TYPE = "$construct_type";
+  String TYPE = "${'$'}construct_type";
 
   static <E extends IJsonIO> E read( Bindings bindings )
   {
@@ -183,7 +183,7 @@ public interface IJsonIO
         }
         else if( !isSimpleType( f.getType() ) )
         {
-          throw new UnsupportedOperationException( "Unsupported Json type: " + f.getType() );
+          throw new UnsupportedOperationException( "Unsupported Json type: ${f.getType()}" );
         }
         f.set( obj, value );
       }
@@ -254,7 +254,7 @@ public interface IJsonIO
         }
         else
         {
-          throw new UnsupportedOperationException( "Type: " + value.getClass() + " does not implement " + IJsonIO.class.getName() );
+          throw new UnsupportedOperationException( "Type: ${value.getClass()} does not implement " + IJsonIO.class.getName() );
         }
       }
       catch( IllegalAccessException e )

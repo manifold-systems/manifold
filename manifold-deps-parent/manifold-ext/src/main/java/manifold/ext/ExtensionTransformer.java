@@ -29,12 +29,17 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
 import manifold.ExtIssueMsg;
+import manifold.api.type.ITypeManifold;
+import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.Structural;
@@ -45,7 +50,6 @@ import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.Pair;
-import manifold.util.PerfLogUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
@@ -264,6 +268,84 @@ public class ExtensionTransformer extends TreeTranslator
     super.visitClassDef( tree );
 
     verifyExtensionInterfaces( tree );
+
+    precompileClasses( tree );
+  }
+
+  private void precompileClasses( JCTree.JCClassDecl tree )
+  {
+    Map<String, Set<String>> typeNames = new HashMap<>();
+    for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
+    {
+      if( anno.getAnnotationType().type.toString().equals( Precompile.class.getCanonicalName() ) )
+      {
+        getTypesToCompile( anno, typeNames );
+      }
+    }
+
+    precompile( typeNames );
+  }
+
+  private void getTypesToCompile( JCTree.JCAnnotation precompileAnno, Map<String, Set<String>> typeNames )
+  {
+    Attribute.Compound attribute = precompileAnno.attribute;
+    if( attribute == null )
+    {
+      return;
+    }
+
+    String typeManifoldClassName = null;
+    String regex = ".*";
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "typeManifold" ) )
+      {
+        typeManifoldClassName = pair.snd.getValue().toString();
+      }
+      else if( argName.toString().equals( "typeNames" ) )
+      {
+        regex = pair.snd.getValue().toString();
+      }
+    }
+
+    Set<String> regexes = typeNames.computeIfAbsent( typeManifoldClassName, tm -> new HashSet<>() );
+    regexes.add( regex );
+  }
+
+  private void precompile( Map<String, Set<String>> typeNames )
+  {
+    for( ITypeManifold tm: ManifoldHost.instance().getCurrentModule().getTypeManifolds() )
+    {
+      for( Map.Entry<String, Set<String>> entry: typeNames.entrySet() )
+      {
+        String typeManifoldClassName = entry.getKey();
+        if( tm.getClass().getName().equals( typeManifoldClassName ) )
+        {
+          Collection<String> namesToPrecompile = computeNamesToPrecompile( tm.getAllTypeNames(), entry.getValue() );
+          for( String fqn : namesToPrecompile )
+          {
+            JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
+            // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
+            // the type will be compiled to disk.
+            elementUtils.getTypeElement( fqn );
+          }
+        }
+      }
+    }
+  }
+
+  private Collection<String> computeNamesToPrecompile( Collection<String> allTypeNames, Set<String> regexes )
+  {
+    Set<String> matchingTypes = new HashSet<>();
+    for( String fqn: allTypeNames )
+    {
+      if( regexes.stream().anyMatch( fqn::matches ) )
+      {
+        matchingTypes.add( fqn );
+      }
+    }
+    return matchingTypes;
   }
 
   private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )
@@ -710,13 +792,25 @@ public class ExtensionTransformer extends TreeTranslator
       return root;
     }
 
+//    final Field classRedefinedCount;
+//    try
+//    {
+//      classRedefinedCount = Class.class.getDeclaredField( "classRedefinedCount" );
+//      classRedefinedCount.setAccessible( true );
+//      System.out.println( "### " + iface.getSimpleName() + ": " + classRedefinedCount.getInt( iface ) );
+//    }
+//    catch( Exception e )
+//    {
+//      throw new RuntimeException( e );
+//    }
+
     Map<Class, Constructor> proxyByClass = PROXY_CACHE.get( iface );
     if( proxyByClass == null )
     {
       PROXY_CACHE.put( iface, proxyByClass = new ConcurrentHashMap<>() );
     }
     Constructor proxyClassCtor = proxyByClass.get( rootClass );
-    if( proxyClassCtor == null )
+    if( proxyClassCtor == null ) //|| BytecodeOptions.JDWP_ENABLED.get() )
     {
       Class proxyClass = createProxy( iface, rootClass );
       proxyByClass.put( rootClass, proxyClassCtor = proxyClass.getConstructors()[0] );

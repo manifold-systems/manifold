@@ -9,6 +9,7 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -93,38 +94,48 @@ class ExtCodeGen
     boolean interfaceExtensions = false;
     boolean annotationExtensions = false;
     Set<String> allExtensions = findAllExtensions();
-    JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
-    for( String extensionFqn : allExtensions )
+    _model.pushProcessing();
+    try
     {
-      //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
-      //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
-      SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, javacTask, null );
-      if( srcExtension != null )
+
+      JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
+      for( String extensionFqn : allExtensions )
       {
-        for( AbstractSrcMethod method : srcExtension.getMethods() )
+        //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
+        //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
+        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, javacTask, null );
+        if( srcExtension != null )
         {
-          addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
-          methodExtensions = true;
-        }
-        for( SrcType iface : srcExtension.getInterfaces() )
-        {
-          addExtensionInteface( iface, extendedClass, errorHandler, javacTask[0] );
-          interfaceExtensions = true;
-        }
-        for( SrcAnnotationExpression anno : srcExtension.getAnnotations() )
-        {
-          addExtensionAnnotation( anno, extendedClass, errorHandler, javacTask[0] );
-          annotationExtensions = true;
+          for( AbstractSrcMethod method : srcExtension.getMethods() )
+          {
+            addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
+            methodExtensions = true;
+          }
+          for( SrcType iface : srcExtension.getInterfaces() )
+          {
+            addExtensionInteface( iface, extendedClass );
+            interfaceExtensions = true;
+          }
+          for( SrcAnnotationExpression anno : srcExtension.getAnnotations() )
+          {
+            addExtensionAnnotation( anno, extendedClass );
+            annotationExtensions = true;
+          }
         }
       }
-    }
-    if( !_existingSource.isEmpty() )
-    {
-      return addExtensionsToExistingClass( extendedClass, methodExtensions, interfaceExtensions, annotationExtensions );
-    }
-    else
-    {
+      if( !_existingSource.isEmpty() )
+      {
+        if( allExtensions.isEmpty() )
+        {
+          return _existingSource;
+        }
+        return addExtensionsToExistingClass( extendedClass, methodExtensions, interfaceExtensions, annotationExtensions );
+      }
       return extendedClass.render( new StringBuilder(), 0 ).toString();
+    }
+    finally
+    {
+      _model.popProcessing();
     }
   }
 
@@ -205,6 +216,12 @@ class ExtCodeGen
 
   private Set<String> findAllExtensions()
   {
+    if( _model.isProcessing() )
+    {
+      // short-circuit e.g., extension producers
+      return Collections.emptySet();
+    }
+    
     Set<String> fqns = new LinkedHashSet<>();
     findExtensionsOnDisk( fqns );
     findExtensionsFromExtensionClassProviders( fqns );
@@ -241,12 +258,12 @@ class ExtCodeGen
     }
   }
 
-  private void addExtensionInteface( SrcType iface, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  private void addExtensionInteface( SrcType iface, SrcClass extendedType )
   {
     extendedType.addInterface( iface );
   }
 
-  private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  private void addExtensionAnnotation( SrcAnnotationExpression anno, SrcClass extendedType )
   {
     if( anno.getAnnotationType().equals( Extension.class.getName() ) )
     {
@@ -470,6 +487,7 @@ class ExtCodeGen
       return false;
     }
 
+    //noinspection SimplifiableIfStatement
     if( method.hasAnnotation( Extension.class ) )
     {
       return true;
@@ -479,6 +497,7 @@ class ExtCodeGen
   }
   private boolean isInstanceExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
   {
+    //noinspection SimplifiableIfStatement
     if( !Modifier.isStatic( (int)method.getModifiers() ) || Modifier.isPrivate( (int)method.getModifiers() ) )
     {
       return false;

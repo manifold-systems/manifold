@@ -32,12 +32,12 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel> {
 
     @Override
     public boolean handlesFileExtension(String fileExtension) {
-        return fileExtension.equals("mtf");
+        return fileExtension.equals("mtl");
     }
 
     @Override
     public boolean handlesFile(IFile file) {
-        return file.getExtension().equals("mtf");
+        return file.getExtension().equals("mtl");
     }
 
     @Override

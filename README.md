@@ -72,7 +72,7 @@ Currently Manifold provides type manifolds for:
 *   Properties files
 *   Image files
 *   Dark Java
-*   Manifold Templates (work in progress)
+*   ManTL (Manifold Template Language)
 *   DDL and SQL (work in progress)
 
 
@@ -546,7 +546,7 @@ To change the version number:
 * **Scott McKinney** - *Manifold creator, principal engineer, and founder of [Manifold Systems, LLC](http://manifold.systems)*
 </p>
 
-* **Carson Gross** - *Contributor, Manifold Templates author*
+* **Carson Gross** - *Contributor, ManTL (Manifold Template Language)*
 * **Kyle Moore** - *Contributor, build system hero*
 * **Natalie McKinney** - *Contributor, CSV and FASTA parsers*
 * **Luca Boasso** - *Contributor*

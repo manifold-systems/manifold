@@ -5,6 +5,7 @@ import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Tokenizer;
 import manifold.templates.tokenizer.Token;
 import manifold.internal.javac.IIssue;
+import manifold.api.templ.DisableStringLiteralTemplates;
 
 import java.util.*;
 import java.util.List;
@@ -539,6 +540,7 @@ public class TemplateGen {
 
         private void addFileHeader() {
             sb.append("\n");
+            sb.append("@${DisableStringLiteralTemplates.class.getName()}\n");
             if (currClass.depth == 0) {
                 if (currClass.isLayout) {
                     sb.append("public class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" implements ").reAppend(LAYOUT_INTERFACE).reAppend(" {\n");

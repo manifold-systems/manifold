@@ -143,7 +143,7 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
         {
           if( theRest.charAt( theRest.length() - 1 ) != '>' )
           {
-            throw new RuntimeException( "\"" + theRest + "\" does not end with '>'" );
+            throw new IllegalTypeNameException( "\"" + theRest + "\" does not end with '>'" );
           }
           part = theRest;
           theRest = null;

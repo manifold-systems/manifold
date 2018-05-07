@@ -1,12 +1,14 @@
 package manifold.internal.javac;
 
 import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.DocTrees;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
+import com.sun.tools.javac.tree.JCTree;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -31,10 +33,10 @@ import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IResource;
 import manifold.api.host.IModule;
-import manifold.util.SourcePathUtil;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.JreUtil;
 import manifold.util.Pair;
+import manifold.util.SourcePathUtil;
 
 /**
  * A tool for parsing and compiling Java source.
@@ -88,8 +90,8 @@ public class JavaParser implements IJavaParser
           IModule globalModule = ManifoldHost.getGlobalModule();
           if( globalModule != null )
           {
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile )/*.filter( f -> SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) )*/.collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
           }
           _gfm = new ManifoldJavaFileManager( _fileManager, null, false );
         }
@@ -162,6 +164,44 @@ public class JavaParser implements IJavaParser
     catch( Exception e )
     {
       return false;
+    }
+  }
+
+  public JCTree.JCExpression parseExpr( String expr, DiagnosticCollector<JavaFileObject> errorHandler )
+  {
+    init();
+
+    ArrayList<JavaFileObject> javaStringObjects = new ArrayList<>();
+    String src =
+      "class Sample {\n" +
+      "  Object foo = " + expr + ";\n" +
+      "}\n";
+    javaStringObjects.add( new StringJavaFileObject( "sample", src ) );
+    StringWriter errors = new StringWriter();
+    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _gfm, errorHandler, Collections.singletonList( "-proc:none" ), null, javaStringObjects );
+    try
+    {
+      initTypeProcessing( javacTask, Collections.singleton( "sample" ) );
+      Iterable<? extends CompilationUnitTree> iterable = javacTask.parse();
+      if( errors.getBuffer().length() > 0 )
+      {
+        System.err.println( errors.getBuffer() );
+      }
+      for( CompilationUnitTree x : iterable )
+      {
+        List<? extends Tree> typeDecls = x.getTypeDecls();
+        if( !typeDecls.isEmpty() )
+        {
+          JCTree.JCClassDecl tree = (JCTree.JCClassDecl)typeDecls.get( 0 );
+          JCTree.JCVariableDecl field = (JCTree.JCVariableDecl)tree.getMembers().get( 0 );
+          return field.getInitializer();
+        }
+      }
+      return null;
+    }
+    catch( Exception e )
+    {
+      return null;
     }
   }
 

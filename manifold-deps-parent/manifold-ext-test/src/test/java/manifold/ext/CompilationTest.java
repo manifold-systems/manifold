@@ -30,6 +30,7 @@ import manifold.api.fs.IDirectory;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.Pair;
+import manifold.util.SourcePathUtil;
 import manifold.util.StreamUtil;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -130,7 +131,7 @@ public class CompilationTest
                                                                       {
                                                                         throw new RuntimeException( e );
                                                                       }
-                                                                    } ).collect( Collectors.toList() );
+                                                                    } ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() );
       _fm.setLocation( StandardLocation.SOURCE_PATH, classpath );
       _fm.setLocation( StandardLocation.CLASS_PATH, classpath );
 

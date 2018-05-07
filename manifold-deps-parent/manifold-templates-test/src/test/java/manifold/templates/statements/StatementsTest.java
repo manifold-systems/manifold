@@ -1,10 +1,12 @@
 package manifold.templates.statements;
 
+import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
 import statements.*;
 
 import static org.junit.Assert.assertEquals;
 
+@DisableStringLiteralTemplates
 public class StatementsTest {
 
     @Test

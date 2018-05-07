@@ -129,6 +129,6 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
   @Override
   public boolean isNameCompatible( String simpleName, Kind kind )
   {
-    return !simpleName.equals( "module-info" );
+    return !simpleName.equals( "module-info" ) && !simpleName.equals( "package-info" );
   }
 }

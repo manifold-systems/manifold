@@ -34,4 +34,12 @@ public interface IModel
    * Updates {@code file} in the set of files this model uses
    */
   void updateFile( IFile file );
+
+  /**
+   * @return True if the model is processing or otherwise in an unsettled state
+   */
+  default boolean isProcessing()
+  {
+    return false;
+  }
 }

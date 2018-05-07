@@ -1,28 +1,10 @@
 package manifold.ext.producer.sample;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.host.IModuleComponent;
-import manifold.api.host.RefreshKind;
-import manifold.api.host.RefreshRequest;
-import manifold.api.type.JavaTypeManifold;
-import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.AbstractExtensionProducer;
-import manifold.ext.IExtensionClassProducer;
-import manifold.util.StreamUtil;
-import manifold.util.cache.FqnCache;
-import manifold.util.concurrent.LocklessLazyVar;
 
 
 /**

@@ -116,7 +116,7 @@ public class PropertiesCodeGen
   {
     return new SrcAnnotationExpression( SourcePosition.class.getSimpleName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( _fqn, FIELD_FILE_URL ) ).name( "url" ) )
-      .addArgument( "feature", new SrcType( "String" ), node.getFqn() )
+      .addArgument( "feature", new SrcType( "String" ), node.getName() )
       .addArgument( "offset", int.class, findOffsetOf( node ) )
       .addArgument( "length", int.class, node.getName() == null ? 0 : node.getName().length() );
   }
@@ -210,9 +210,25 @@ public class PropertiesCodeGen
     int fullFqn = findFqn( fqn, false );
     if( fullFqn >= 0 )
     {
-      return fullFqn;
+      return useOffsetOfLastMember( fqn, fullFqn );
     }
-    return findFqn( fqn, true );
+    int offset = findFqn( fqn, true );
+    return useOffsetOfLastMember( fqn, offset );
+  }
+
+  private int useOffsetOfLastMember( String fqn, int offset )
+  {
+    if( offset < 0 )
+    {
+      return offset;
+    }
+
+    int iDot = fqn.lastIndexOf( '.' );
+    if( iDot > 0 )
+    {
+      offset += iDot + 1;
+    }
+    return offset;
   }
 
   private int findFqn( String fqn, boolean bPartialMatch )
@@ -227,9 +243,10 @@ public class PropertiesCodeGen
         break;
       }
       if( (index == 0 || content.charAt( index-1 ) == '\n') &&
-          content.charAt( index + fqn.length() ) == '=' ||
-          content.charAt( index + fqn.length() ) == ' ' ||
-          (bPartialMatch && content.charAt( index + fqn.length() ) == '.') )
+          content.length() > index + fqn.length() &&
+          (content.charAt( index + fqn.length() ) == '=' ||
+           content.charAt( index + fqn.length() ) == ' ' ||
+           (bPartialMatch && content.charAt( index + fqn.length() ) == '.')) )
       {
         break;
       }

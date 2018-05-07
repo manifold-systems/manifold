@@ -283,7 +283,7 @@ public class JsonStructureType extends JsonSchemaType
         addSourcePositionAnnotation( sb, indent + 2, key );
         addActualNameAnnotation( sb, indent + 2, key, true );
         indent( sb, indent + 2 );
-        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
+        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " ${'$'}value);\n" );
       }
       Set<IJsonType> union = _unionMembers.get( key );
       if( union != null )
@@ -310,7 +310,7 @@ public class JsonStructureType extends JsonSchemaType
             }
             addActualNameAnnotation( sb, indent + 2, key, true );
             indent( sb, indent + 2 );
-            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " $value);\n" );
+            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value);\n" );
           }
         }
       }

@@ -14,10 +14,10 @@ Java. Building on this core framework Manifold supplements Java with new feature
 Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
 include:
 * **JSON** and **JSON Schema** integration
-* **JavaScript** interop
 * Type-safe **Templating** 
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
+* **JavaScript** interop (experimental)
 * **SQL** and **DDL** interop (coming soon)
 * Lots more
 
@@ -68,11 +68,11 @@ spreadsheets, web services, and programming languages.
 Currently Manifold provides type manifolds for:
 
 *   JSON and [JSON Schema](http://json-schema.org/)
-*   JavaScript
 *   Properties files
 *   Image files
 *   Dark Java
-*   Manifold Templates (work in progress)
+*   ManTL (Manifold Template Language)
+*   JavaScript (experimental)
 *   DDL and SQL (work in progress)
 
 
@@ -279,7 +279,7 @@ Support for structural typing and extensions
 * [manifold-json](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE):
 JSON and JSchema support
 * [manifold-js](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE):
-JavaScript support
+JavaScript support (experimental)
 * [manifold-collections](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE):
 Collections extensions
 * [manifold-io](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-io&v=RELEASE):
@@ -329,7 +329,7 @@ to use all basic manifold features, this is the recommended setup.
       <version>RELEASE</version>
     </dependency>
     
-    <!--JavaScript support-->
+    <!--JavaScript support (experimental)-->
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-js</artifactId>
@@ -486,7 +486,7 @@ dependencies {
   // JSON and JSchema support  
   compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
   
-  // JavaScript support
+  // JavaScript support (experimental)
   compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
   
   // Template support
@@ -593,13 +593,13 @@ Currently Manifold provides reference implementations for a few commonly used da
 *   JSON and JSON Schema
 *   Properties files
 *   Image files
-*   JavaScript
 *   Dark Java
-*   Template files
+*   Templating
 
 We are working on support for more data sources including:
 *   RDF
 *   CSV
+*   JavaScript
 *   Standard SQL and DDL
 
 
@@ -728,6 +728,8 @@ different types sharing a single name.  Additionally image classes are direct su
 
 ### JavaScript
 
+** Warning: Javascript support is experimental and incomplete **
+
 The JavaScript type manifold provides direct, type-safe access to JavaScript files
 as if they were Java files.
 
@@ -831,7 +833,7 @@ Names:
 The end
 ```
 
-For full-featured template functionality see project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+For full-featured template engine functionality see project [ManTL](http://manifold.systems/manifold-templates.html).
 
 ### Dark Java
 
@@ -913,9 +915,53 @@ This basic interface factory pattern can be used anywhere you need to use a Dark
 compilation use-case.  
  
  
-### Template Files
+### Templating
 
-See project [Manifold Templates](http://manifold.systems/manifold-templates.html).
+Manifold provides two forms of templating:
+* String Templates
+* Template Files
+
+A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
+use `$` to embed a simple variable:
+```java
+int hour = 8;
+String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
+```
+Or you can embed an expression of any complexity in curly braces:
+```java
+LocalTime localTime = LocalTime.now();
+String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
+```
+
+By default String templates are _always_ enabled in any String anywhere in your project.  However, if you need to turn 
+the feature off for any reason, you can use the `@DisableStringLiteralTemplates` annotation to control its use.  You 
+can annotate a class, method, field, or local variable to turn it on or off in that scope:
+```java
+@DisableStringLiteralTemplates // turns off String templating inside this class
+public class MyClass
+{
+  void foo() {
+    int hour = 8;
+    String time = "It is $hour o'clock";  // prints "It is $hour o'clock"
+  }
+  
+  @DisableStringLiteralTemplates(false) // turns on String templating inside this method
+  void bar() {
+    int hour = 8;
+    String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
+  }
+}
+```
+
+Finally, if you need to escape the `$` and use it as a plain `$` when adjacent to a valid Java identifier word, you 
+can do this:
+```java
+int hour = 8;
+String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
+``` 
+
+**Template files** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
+
 
 ### Build Your Own Manifold
 
