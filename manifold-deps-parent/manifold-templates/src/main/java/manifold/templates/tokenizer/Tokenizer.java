@@ -57,7 +57,7 @@ public class Tokenizer
       }
 
       if( !escaped && c == '\\' && !isInCode() && _text.length() > index+1 &&
-          (_text.charAt( index+1 ) == '<' || _text.charAt( index+1 ) == '$') )
+          (charIs( index+1, '<' ) || charIs( index+1, '$' )) )
       {
         escaped = true;
         index++;
@@ -87,7 +87,7 @@ public class Tokenizer
       }
       else
       {
-        if( c == '$' && !isInCode() && !isParsingString() && !escaped )
+        if( c == '$' && !isInCode() && !escaped )
         {
           index++;
           if( charIs( index, '{' ) )
@@ -104,7 +104,7 @@ public class Tokenizer
           {
             pushStuff();
             index++;
-            if( _text.charAt( index ) == '=' )
+            if( charIs( index, '=' ) )
             {
               pushToken( EXPR_ANGLE_BEGIN, ++index, line, column );
               continue;
@@ -256,7 +256,7 @@ public class Tokenizer
     {
       _isParsingString = true;
     }
-    else if( _text.charAt( index -1 ) != '\\' )
+    else if( !charIs( index-1, '\\' ) )
     {
       _isParsingString = false;
     }
@@ -278,7 +278,7 @@ public class Tokenizer
     {
       _isParsingCharLiteral = true;
     }
-    else if( _text.charAt( index -1 ) != '\\' )
+    else if( !charIs( index-1, '\\' ) )
     {
       _isParsingCharLiteral = false;
     }
