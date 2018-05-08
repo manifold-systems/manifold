@@ -1,53 +1,76 @@
 package manifold.templates.tokenizer;
 
 
-public class Token {
+public class Token
+{
+  public enum TokenType
+  {
+    CONTENT,
+    COMMENT,
+    EXPR,
+    STMT,
+    DIRECTIVE,
+    EXPR_BRACE_BEGIN( "${" ),
+    EXPR_BRACE_END( "}" ),
+    EXPR_ANGLE_BEGIN( "<%=" ),
+    STMT_ANGLE_BEGIN( "<%" ),
+    DIR_ANGLE_BEGIN( "<%@" ),
+    ANGLE_END( "%>" ),
+    COMMENT_BEGIN( "<%--" ),
+    COMMENT_END( "--%>" );
 
-    public enum TokenType {
-        STRING_CONTENT,
-        EXPRESSION,
-        STATEMENT,
-        DIRECTIVE,
-        COMMENT
+    private String _staticToken;
+    TokenType(){}
+
+    TokenType( String staticToken )
+    {
+      _staticToken = staticToken;
     }
 
-    private TokenType _type;
-    private String _content;
-    private int _offset;
-    private int _line;
-    private int _position;
-    private int _endPos;
-
-    public Token(TokenType type, String content, int line, int column, int position, int endPos) {
-        _type = type;
-        _content = content;
-        _offset = column;
-        _line = line;
-        _position = position;
-        _endPos = endPos;
+    public String getToken()
+    {
+      return _staticToken;
     }
 
-    public TokenType getType() {
-        return _type;
-    }
+  }
 
-    public String getContent() {
-        return _content;
-    }
+  private TokenType _type;
+  private int _offset;
+  private String _value;
+  private int _line;
+  private int _column;
 
-    public int getOffset() {
-        return _offset;
-    }
+  Token( TokenType type, int offset, String value, int line, int column )
+  {
+    _type = type;
+    _offset = offset;
+    _value = value;
+    _line = line;
+    _column = column;
+  }
 
-    public int getLine() {
-        return _line;
-    }
+  public TokenType getType()
+  {
+    return _type;
+  }
 
-    public int getPosition() {
-        return _position;
-    }
+  public String getText()
+  {
+    return _value;
+  }
 
-    public int getEndPosition() {
-        return _endPos;
-    }
+  public int getOffset()
+  {
+    return _offset;
+  }
+
+  public int getLine()
+  {
+    return _line;
+  }
+
+  public int getColumn()
+  {
+    return _column;
+  }
 }
