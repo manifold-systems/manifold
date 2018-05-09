@@ -1,0 +1,6 @@
+<%@ params(todoapp.model.ToDo todo) %>
+<li class="editing">
+    <form id="edit-form" ic-put-to="/todos/${todo.getId()}">
+        <input id="todo-edit" ic-get-from="/" ic-trigger-on="resetEscape" name="todo-title" class="edit" value="${todo.getTitle()}" autofocus>
+    </form>
+</li>

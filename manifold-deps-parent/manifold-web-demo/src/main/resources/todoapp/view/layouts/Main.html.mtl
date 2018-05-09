@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-framework="intercoolerjs">
+
+    <head>
+        <meta charset="utf-8">
+        <title>Manifold Demo Application</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/css/styles.css">
+    </head>
+
+    <body>
+        <section id="todoapp" ic-target="this">
+          <%@ content %>
+        </section>
+        <div id="info">
+            <p>Double-click to edit a todo</p>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+        <script src="https://intercoolerreleases-leaddynocom.netdna-ssl.com/intercooler-1.2.1.min.js"></script>
+        <script src="/js/app.js"></script>
+    </body>
+
+</html>

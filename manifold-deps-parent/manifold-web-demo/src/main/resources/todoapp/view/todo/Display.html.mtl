@@ -1,0 +1,39 @@
+<%@ params(java.util.List<todoapp.model.ToDo> todos, String filter, int activeCount, boolean anyComplete, boolean allComplete) %>
+
+<header ic-include='{"status":"${filter}"}'>
+    <h1>todos</h1>
+    <form id="todo-form" ic-post-to="/todos">
+        <input id="new-todo" placeholder="What needs to be done?" name="todo-title" pattern=".{4,}" required title="> 3 chars" autofocus>
+    </form>
+</header>
+
+<section id="main" ic-include='{"status":"${filter}"}'>
+    <input type="checkbox" name="toggle-all" ic-put-to="/todos/toggle_status" id="toggle-all" ${allComplete ? "checked" : ""}>
+    <ul id="todo-list">
+        <% for(todoapp.model.ToDo todo : todos) { %>
+            <li class="#if($todo.complete)completed#end">
+                <div class="view">
+                    <input type="checkbox" class="toggle" ic-put-to="/todos/${todo.getId()}/toggle_status" ${todo.isComplete() ? "checked" : ""}>
+                    <label ic-get-from="/todos/${todo.getId()}/edit" ic-target="closest li" ic-trigger-on="dblclick" ic-replace-target="true">${todo.getTitle()}</label>
+                    <button class="destroy" ic-delete-from="/todos/${todo.getId()}"></button>
+                </div>
+            </li>
+        <% } %>
+    </ul>
+</section>
+
+<footer>
+    <span id="todo-count">
+        <strong>${activeCount}</strong> items left
+    </span>
+
+    <ul id="filters" ic-push-url="true">
+        <li <% if(filter.equals(""))         { %> class="selected" <% } %> ic-get-from="/">All</li>
+        <li <% if(filter.equals("active"))   { %> class="selected" <% } %> ic-get-from="/?status=active">Active</li>
+        <li <% if(filter.equals("complete")) { %> class="selected" <% } %> ic-get-from="/?status=complete">Completed</li>
+    </ul>
+
+    <% if(anyComplete) { %>
+        <button id="clear-completed" ic-delete-from="/todos/completed" ic-include='{"status":"${filter}"}'>Clear completed</button>
+    <% } %>
+</footer>

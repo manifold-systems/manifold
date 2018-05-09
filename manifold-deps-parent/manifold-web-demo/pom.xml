@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>systems.manifold</groupId>
+        <artifactId>manifold-deps-parent</artifactId>
+        <version>0.13-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>manifold-web-demo</artifactId>
+
+    <name>Manifold :: Demo Web Application</name>
+
+    <dependencies>
+
+        <!-- Manifold Imports -->
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-templates</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
+        <!--Spark Java Imports -->
+        <dependency>
+            <groupId>com.sparkjava</groupId>
+            <artifactId>spark-core</artifactId>
+            <version>2.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.13</version>
+        </dependency>
+
+    </dependencies>
+
+</project>
