@@ -5,7 +5,6 @@ import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Tokenizer;
 import manifold.templates.tokenizer.Token;
 import manifold.internal.javac.IIssue;
-import manifold.api.templ.DisableStringLiteralTemplates;
 
 import java.util.*;
 import java.util.List;
@@ -64,7 +63,7 @@ public class TemplateGen {
             outerLoop:
             while (dirIterator.hasNext()) {
                 Directive dir = dirIterator.next();
-                switch (dir.dirType) {
+                switch (dir._dirType ) {
                     case IMPORT:
                         break;
                     case INCLUDE:
@@ -144,15 +143,28 @@ public class TemplateGen {
     }
 
     protected enum DirType {
-        IMPORT,     //className
-        EXTENDS,    //className
-        PARAMS,     //           params, paramsList
-        INCLUDE,    //className, params,            conditional
-        SECTION,    //className, params, paramsList
-        END_SECTION,//
-        CONTENT,    //
-        LAYOUT,      //className
-        ERRANT      //the directive is invalid
+        IMPORT("import"),     //className
+        EXTENDS("extends"),    //className
+        PARAMS("params"),     //           params, paramsList
+        INCLUDE("include"),    //className, params,            conditional
+        SECTION("section"),    //className, params, paramsList
+        END_SECTION("end"),//
+        CONTENT("content"),    //
+        LAYOUT("layout"),      //className
+        ERRANT("#errant")      //the directive is invalid
+        ;
+
+        private String _keyword;
+
+        DirType( String keyword )
+        {
+            _keyword = keyword;
+        }
+
+        public String keyword()
+        {
+            return _keyword;
+        }
     }
 
     class Directive {
@@ -160,7 +172,7 @@ public class TemplateGen {
 
         Token token;
 
-        DirType dirType;
+        DirType _dirType;
 
         //imports "[class_name]"
         //extends "[class_name]"
@@ -189,51 +201,38 @@ public class TemplateGen {
         }
 
         private void identifyType() {
-            String text = token.getText();
-            text = text.trim();
-            
-            if (text.startsWith("import")) {
-                dirType = IMPORT;
-            } else if (text.startsWith("extends")) {
-                dirType = EXTENDS;
-            } else if (text.startsWith("params")) {
-                dirType = PARAMS;
-            } else if (text.startsWith("include")) {
-                dirType = INCLUDE;
-            } else if (text.startsWith("section")) {
-                dirType = SECTION;
-            } else if (text.startsWith("end section")) {
-                dirType = END_SECTION;
-            } else if (text.startsWith("content")) {
-                dirType = CONTENT;
-            } else if (text.startsWith("layout")) {
-                dirType = LAYOUT;
-            } else {
-                addError("Unsupported Directive Type", token.getLine());
-                dirType = ERRANT;
+            String text = token.getText().trim();
+            Optional<DirType> dirType = Arrays.stream( DirType.values() ).filter( dt -> text.startsWith( dt.keyword() ) ).findFirst();
+            _dirType = dirType.orElse( ERRANT );
+            if( _dirType == ERRANT )
+            {
+                addError( "Unsupported Directive Type", token.getLine() );
             }
         }
 
         private void fillVars(List<Token> tokens) {
             String text = token.getText();
             text = text.trim();
-            switch (dirType) {
+            switch (_dirType) {
                 case IMPORT:
-                    className = text.substring(6).trim();
+                    className = text.substring(IMPORT.keyword().length()).trim();
                     break;
                 case EXTENDS:
-                    className = text.substring(7).trim();
+                    className = text.substring(EXTENDS.keyword().length()).trim();
                     break;
                 case PARAMS:
-                    String content = text.substring(6).trim();
-                    params = content.substring(1, content.length() - 1);
-                    paramsList = splitParamsList(params);
+                    String content = text.substring(PARAMS.keyword().length()).trim();
+                    if( content.length() > 1 )
+                    {
+                        params = content.substring( 1, content.length() - 1 );
+                        paramsList = splitParamsList( params );
+                    }
                     break;
                 case INCLUDE:
                     fillIncludeVars();
                     break;
                 case SECTION:
-                    String[] temp = text.substring(7).trim().split("\\(", 2);
+                    String[] temp = text.substring(SECTION.keyword().length()).trim().split("\\(", 2);
                     className = temp[0].trim();
                     if (temp.length == 2 && !temp[1].equals(")")) {
                         params = temp[1].substring(0, temp[1].length() - 1).trim();
@@ -247,7 +246,7 @@ public class TemplateGen {
                 case CONTENT:
                     break;
                 case LAYOUT:
-                    className = text.substring(6).trim();
+                    className = text.substring(LAYOUT.keyword().length()).trim();
                     break;
                 case ERRANT:
                     break;
@@ -263,7 +262,7 @@ public class TemplateGen {
         private void fillIncludeVars() {
             String text = token.getText();
             text = text.trim();
-            String content = text.substring(8).trim();
+            String content = text.substring(INCLUDE.keyword().length()).trim();
             int index = 0;
             while (index < content.length()) {
                 if (content.charAt(index) == '(') {
@@ -367,7 +366,7 @@ public class TemplateGen {
                     }
                 } else if (currentToken.getType() == Token.TokenType.DIRECTIVE) {
                     Directive cur = new Directive(i, currentToken, tokens);
-                    if (cur.dirType == PARAMS) {
+                    if ( cur._dirType == PARAMS) {
                         String[][] outerClassParameters = cur.paramsList;
                         for(String[] currentParams: outerClassParameters) {
                             String parameter = currentParams[1];
@@ -525,8 +524,8 @@ public class TemplateGen {
                         .append("    public static String render(").reAppend(currClass.params + ") {\n")
                         .append("        StringBuilder sb = new StringBuilder();\n")
                         .append("        renderInto(sb");
-                for (String[] p : currClass.paramsList) {
-                    sb.reAppend(", ").reAppend(p[1]);
+                for (String[] param : currClass.paramsList) {
+                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
                 }
                 sb.reAppend(");\n")
                         .append("        return sb.toString();\n")
@@ -536,8 +535,8 @@ public class TemplateGen {
                         .append("    public static String render(ILayout overrideLayout, ").reAppend(currClass.params + ") {\n")
                         .append("        StringBuilder sb = new StringBuilder();\n")
                         .append("        renderInto(sb, overrideLayout");
-                for (String[] p : currClass.paramsList) {
-                    sb.reAppend(", ").reAppend(p[1]);
+                for (String[] param : currClass.paramsList) {
+                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
                 }
                 sb.reAppend(");\n")
                         .append("        return sb.toString();\n")
@@ -579,7 +578,7 @@ public class TemplateGen {
                 sb.append("    public static void renderInto(Appendable buffer, ").reAppend(currClass.params).reAppend(") {\n")
                         .append("        INSTANCE.renderImpl(buffer, null");
                 for (String[] param: currClass.paramsList) {
-                    sb.reAppend(", ").reAppend(param[1]);
+                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
                 }
                 sb.reAppend(");\n")
                         .append("    }\n\n");
@@ -587,7 +586,7 @@ public class TemplateGen {
                 sb.append("    public static void renderInto(Appendable buffer, ILayout overrideLayout, ").reAppend(currClass.params).reAppend(") {\n")
                         .append("        INSTANCE.renderImpl(buffer, overrideLayout");
                 for (String[] param: currClass.paramsList) {
-                    sb.reAppend(", ").reAppend(param[1]);
+                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
                 }
                 sb.reAppend(");\n")
                         .append("    }\n\n");
@@ -653,7 +652,7 @@ public class TemplateGen {
 
         private void addImports(List<Directive> dirList) {
             for (Directive dir: dirList) {
-                if (dir.dirType == IMPORT) {
+                if (dir._dirType == IMPORT) {
                     sb.append("import " + dir.className + ";\n");
                 }
             }
@@ -691,7 +690,7 @@ public class TemplateGen {
                         break;
                     case DIRECTIVE:
                         Directive dir = dirMap.get(i);
-                        if (dir.dirType == SECTION) {
+                        if (dir._dirType == SECTION) {
                             ClassInfo classToSkipOver = currClass.nestedClasses.get(i + 1);
                             if (classToSkipOver.endTokenPos == null) {
                                 i = endPos;
@@ -699,11 +698,11 @@ public class TemplateGen {
                                 i = classToSkipOver.endTokenPos;
                             }
                             addSection(dir);
-                        } else if (dir.dirType == END_SECTION) {
+                        } else if (dir._dirType == END_SECTION) {
                             break outerLoop;
-                        } else if (dir.dirType == INCLUDE) {
+                        } else if (dir._dirType == INCLUDE) {
                             addInclude(dir);
-                        } else if (dir.dirType == CONTENT) {
+                        } else if (dir._dirType == CONTENT) {
                             break;
                         }
                         break;
@@ -718,7 +717,7 @@ public class TemplateGen {
 
 
         private void addInclude(Directive dir) {
-            assert(dir.dirType == INCLUDE);
+            assert(dir._dirType == INCLUDE);
             if (dir.conditional == null) {
                 if (dir.params != null) {
                     sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY,").reAppend(dir.params).reAppend(");\n");
@@ -737,7 +736,7 @@ public class TemplateGen {
         }
 
         private void addSection(Directive dir) {
-            assert(dir.dirType == SECTION);
+            assert(dir._dirType == SECTION);
             if (dir.params != null) {
                 String paramsWithoutTypes = dir.makeParamsStringWithoutTypes(dir.paramsList);
                 sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, ").reAppend(paramsWithoutTypes).reAppend(");\n");
