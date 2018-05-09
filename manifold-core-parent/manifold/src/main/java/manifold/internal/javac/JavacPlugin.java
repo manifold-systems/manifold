@@ -19,29 +19,6 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Log;
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.lang.model.SourceVersion;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
 import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.runtime.Bootstrap;
@@ -52,11 +29,39 @@ import manifold.util.NecessaryEvilUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 
+import javax.lang.model.SourceVersion;
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
+import java.io.File;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 /**
  */
 public class JavacPlugin implements Plugin, TaskListener
 {
-  private static final String GOSU_SOURCE_FILES = "gosu.source.files";
+  private static final String GOSU_SOURCE_FILES = "gosu.source.files"; //TODO refactor to something language-agnostic
+  private static final String GOSU_SOURCE_LIST = "gosu.source.list"; //TODO refactor to something language-agnostic
   private static Class<?> CLASSFINDER_CLASS = null;
   private static Class<?> MODULES_CLASS = null;
   private static Class<?> MODULEFINDER_CLASS = null;
@@ -489,8 +494,58 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     Set<String> sourcePath = new HashSet<>();
     deriveSourcePath( _javaInputFiles, sourcePath );
+    //TODO remove me - hack to compile Gosu sources
+    sourcePath.addAll(guessGosuSourcePaths(sourcePath));
+    //TODO end hack
+    //deriveAdditionalSourcePath( _gosuInputFiles, sourcePath );
     maybeAddResourcePath( sourcePath );
     return sourcePath;
+  }
+
+  /**
+   * TODO this isn't useful without minimal parsing to determine source files' package
+   * @param inputFiles
+   * @param sourcePath
+   */
+  private void deriveAdditionalSourcePath(List<String> inputFiles, Set<String> sourcePath) {
+    outer:
+    for (String file : inputFiles) {
+      String path = file + File.separator;
+      Iterator<String> rootsIterator = sourcePath.iterator();
+
+      while (rootsIterator.hasNext()) {
+        String root = rootsIterator.next();
+        String rootPath = Paths.get(root) + File.separator;
+        if (path.startsWith(rootPath)) { // is lower than root
+          continue outer;
+        }
+
+        if (rootPath.startsWith(path)) { // is higher than root
+          rootsIterator.remove();
+        }
+      }
+
+      sourcePath.add(path);
+    }
+  }
+
+  private Set<String> guessGosuSourcePaths(Set<String> sourcePaths) {
+    Set<String> retval = new HashSet<>();
+
+    for(String sourcePath : sourcePaths) {
+      if(sourcePath.endsWith("src/main/java") || sourcePath.endsWith("src/test/java)") ) { //convention
+        retval.add(sourcePath.substring(0, sourcePath.length() - 4) + "gosu");
+      } else if(sourcePath.endsWith("/src")) { // guhwuh
+        Path guidewireModuleRoot = Paths.get(sourcePath).getParent();
+        retval.add(guidewireModuleRoot.resolve("generated").toString());
+        retval.add(guidewireModuleRoot.resolve("gsrc").toString());
+        retval.add(guidewireModuleRoot.resolve("gtest").toString());
+        retval.add(guidewireModuleRoot.resolve("config").toString());
+      }
+
+    }
+
+    return retval;
   }
 
   /**
@@ -567,14 +622,32 @@ public class JavacPlugin implements Plugin, TaskListener
     return filename.substring( 0, filename.indexOf( pathRelativeFile ) - 1 );
   }
 
-  private List<String> fetchGosuInputFiles()
+  private List<String> fetchGosuInputFiles() //TODO rename to something language-agnostic
   {
-    String property = System.getProperty( GOSU_SOURCE_FILES, "" );
-    if( !property.isEmpty() )
-    {
-      return Arrays.asList( property.split( " " ) );
+    if( System.getProperty(GOSU_SOURCE_FILES) != null && System.getProperty(GOSU_SOURCE_LIST) != null ) {
+      throw new IllegalArgumentException( String.format( "Properties %s and %s may not be set simultaneously; please choose one or the other.", GOSU_SOURCE_FILES, GOSU_SOURCE_LIST ));
     }
-    return Collections.emptyList();
+
+    List<String> files = Collections.emptyList();
+
+    String property = System.getProperty( GOSU_SOURCE_FILES, "" );
+    if( !property.isEmpty() ) {
+      files = Arrays.asList( property.split( " " ) );
+    }
+
+    String filepath = System.getProperty( GOSU_SOURCE_LIST, "" );
+    if( !filepath.isEmpty() ) {
+      try {
+        files = Files.readAllLines(new File(filepath).toPath())
+                .stream()
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+      } catch (IOException e) {
+        throw new IllegalStateException(String.format("Unable to read source list from %s", filepath), e);
+      }
+    }
+
+    return files;
   }
 
   @Override
