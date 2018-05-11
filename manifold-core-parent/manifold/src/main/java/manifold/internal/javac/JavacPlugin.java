@@ -535,7 +535,7 @@ public class JavacPlugin implements Plugin, TaskListener
     for(String sourcePath : sourcePaths) {
       if(sourcePath.endsWith("src/main/java") || sourcePath.endsWith("src/test/java)") ) { //convention
         retval.add(sourcePath.substring(0, sourcePath.length() - 4) + "gosu");
-      } else if(sourcePath.endsWith("/src")) { // guhwuh
+      } else if(sourcePath.endsWith("/src") || sourcePath.endsWith("/generated")) { // guhwuh
         Path guidewireModuleRoot = Paths.get(sourcePath).getParent();
         retval.add(guidewireModuleRoot.resolve("generated").toString());
         retval.add(guidewireModuleRoot.resolve("gsrc").toString());
