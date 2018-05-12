@@ -66,7 +66,7 @@ public class ToDo {
     }
 
     public static ToDo find(String id) {
-      return DATA.stream().filter(t -> t.getId().equals(id)).findFirst().orElse(null);
+      return DATA.first(t -> t.getId().equals(id));
     }
 
     public static void update(String id, String title) {
@@ -78,7 +78,7 @@ public class ToDo {
     }
 
     public static List<ToDo> ofStatus(Status status) {
-      return DATA.stream().filter(t -> t.getStatus().equals(status)).collect(Collectors.toList());
+      return DATA.filterToList(t -> t.getStatus().equals(status));
     }
 
     public static void remove(String id) {

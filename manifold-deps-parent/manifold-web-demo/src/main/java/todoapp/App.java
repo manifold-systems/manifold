@@ -1,6 +1,5 @@
 package todoapp;
 
-import manifold.templates.ManifoldTemplates;
 import manifold.templates.runtime.ILayout;
 import spark.Request;
 import todoapp.model.ToDo;
