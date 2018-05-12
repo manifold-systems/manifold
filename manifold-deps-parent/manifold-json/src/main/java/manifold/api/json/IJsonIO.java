@@ -6,13 +6,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.script.Bindings;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.internal.host.ManifoldHost;
 
 /**
  */
+@DisableStringLiteralTemplates
 public interface IJsonIO
 {
-  String TYPE = "${'$'}construct_type";
+  String TYPE = "$construct_type";
 
   static <E extends IJsonIO> E read( Bindings bindings )
   {

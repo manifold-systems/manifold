@@ -1,6 +1,7 @@
 package manifold.api.json;
 
 import java.util.LinkedHashMap;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.net.URL;
@@ -24,6 +25,7 @@ import manifold.util.ManStringUtil;
 
 /**
  */
+@DisableStringLiteralTemplates
 public class JsonStructureType extends JsonSchemaType
 {
   private static final String FIELD_FILE_URL = "__FILE_URL_";
@@ -283,7 +285,7 @@ public class JsonStructureType extends JsonSchemaType
         addSourcePositionAnnotation( sb, indent + 2, key );
         addActualNameAnnotation( sb, indent + 2, key, true );
         indent( sb, indent + 2 );
-        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " ${'$'}value);\n" );
+        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
       }
       Set<IJsonType> union = _unionMembers.get( key );
       if( union != null )
@@ -310,7 +312,7 @@ public class JsonStructureType extends JsonSchemaType
             }
             addActualNameAnnotation( sb, indent + 2, key, true );
             indent( sb, indent + 2 );
-            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value);\n" );
+            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " $value);\n" );
           }
         }
       }

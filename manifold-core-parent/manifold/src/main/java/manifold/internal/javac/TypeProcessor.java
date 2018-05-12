@@ -54,7 +54,12 @@ public class TypeProcessor extends CompiledTypeProcessor
 
   private void loadBuiltin( SortedSet<ICompilerComponent> compilerComponents )
   {
-    compilerComponents.add( new StringLiteralTemplateProcessor() );
+    if( JavacPlugin.instance() == null || JavacPlugin.instance().isStringTemplatesEnabled() )
+    {
+      // string templates are Disabled by default, enable feature with "-Xplugin:Manifold strings"
+      // note, string templates are Enabled by default if compiling dynamically
+      compilerComponents.add( new StringLiteralTemplateProcessor() );
+    }
   }
 
   @Override

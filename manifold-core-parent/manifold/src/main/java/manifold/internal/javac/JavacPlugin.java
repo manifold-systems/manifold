@@ -91,6 +91,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private boolean _initialized;
   private Set<Symbol> _seenModules;
   private boolean _staticCompile;
+  private boolean _stringTemplates;
 
   public static JavacPlugin instance()
   {
@@ -116,7 +117,8 @@ public class JavacPlugin implements Plugin, TaskListener
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
     IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
 
-    _staticCompile = decideIfStatic( args );
+    _stringTemplates = testForArg( "strings", args );
+    _staticCompile = testForArg( "static", args );
     if( ManifoldHost.instance() == null )
     {
       // the absence of a host indicates incremental compilation of Manifold itself
@@ -127,23 +129,39 @@ public class JavacPlugin implements Plugin, TaskListener
     task.addTaskListener( this );
   }
 
-  protected boolean decideIfStatic( String[] args )
+  protected boolean testForArg( String name, String[] args )
   {
-    boolean staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
+    boolean staticCompile = isArgPresent( name, args );
 
     if( !_staticCompile )
     {
-      // maven doesn't like the -Xplugin:"Manifold static", it doesn't parse "Manifold static" as plugin name and argument, so we do it here:
+      // maven doesn't like the -Xplugin:"Manifold strings", it doesn't parse "Manifold string" as plugin name and argument, so we do it here:
       try
       {
         String[] rawArgs = (String[])ReflectUtil.field( _javacTask, "args" ).get();
-        staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( "static" ) );
+        staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( name ) );
       }
       catch( Exception ignore )
       {
       }
     }
     return staticCompile;
+  }
+
+  private boolean isArgPresent( String name, String[] args )
+  {
+    if( args == null )
+    {
+      return false;
+    }
+    for( String arg: args )
+    {
+      if( arg != null && arg.equalsIgnoreCase( name ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   protected boolean decideIfNoBootstrapping()
@@ -634,6 +652,11 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isStaticCompile()
   {
     return _staticCompile;
+  }
+
+  public boolean isStringTemplatesEnabled()
+  {
+    return _stringTemplates;
   }
 
   public boolean isNoBootstrapping()
