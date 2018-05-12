@@ -11,9 +11,9 @@ import manifold.internal.host.ManifoldHost;
 
 /**
  */
-@DisableStringLiteralTemplates
 public interface IJsonIO
 {
+  @DisableStringLiteralTemplates
   String TYPE = "$construct_type";
 
   static <E extends IJsonIO> E read( Bindings bindings )

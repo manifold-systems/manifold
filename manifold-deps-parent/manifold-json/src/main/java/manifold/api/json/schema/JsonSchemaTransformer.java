@@ -33,13 +33,15 @@ import manifold.util.cache.FqnCache;
 
 /**
  */
-@DisableStringLiteralTemplates
 public class JsonSchemaTransformer
 {
+  @DisableStringLiteralTemplates
   private static final String JSCH_SCHEMA = "$schema";
   private static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
+  @DisableStringLiteralTemplates
   private static final String JSCH_ID = "$id";
+  @DisableStringLiteralTemplates
   private static final String JSCH_REF = "$ref";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_ALL_OF = "allOf";
@@ -73,6 +75,7 @@ public class JsonSchemaTransformer
   {
     return transform( name, null, docObj );
   }
+  @DisableStringLiteralTemplates
   public static IJsonType transform( String name, URL source, Bindings docObj )
   {
     if( !isSchema( docObj ) )
@@ -401,6 +404,7 @@ public class JsonSchemaTransformer
     }
   }
 
+  @DisableStringLiteralTemplates
   IJsonType transformType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
     IJsonType result;
