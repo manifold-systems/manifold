@@ -533,7 +533,10 @@ public class JavacPlugin implements Plugin, TaskListener
     Set<String> retval = new HashSet<>();
 
     for(String sourcePath : sourcePaths) {
-      if(sourcePath.endsWith("src/main/java") || sourcePath.endsWith("src/test/java)") ) { //convention
+      if(sourcePath.endsWith("gosu-core-api-precompiled/src/main/java")) {
+        retval.add(sourcePath.replace("gosu-core-api-precompiled/src/main/java", "gosu-core-api/src/main/gosu")); //facepalm
+      }
+      else if(sourcePath.endsWith("src/main/java") || sourcePath.endsWith("src/test/java") ) { //convention
         retval.add(sourcePath.substring(0, sourcePath.length() - 4) + "gosu");
       } else if(sourcePath.endsWith("/src") || sourcePath.endsWith("/generated")) { // guhwuh
         Path guidewireModuleRoot = Paths.get(sourcePath).getParent();
