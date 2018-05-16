@@ -200,7 +200,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    * @return A valid type name corresponding with the type or {@code null} if there is no primary type for {@code file}
    * but there may be additional types via {@link #getAdditionalTypes(String, IFile)}
    */
-  protected String getTypeNameForFile( String defaultFqn, IFile file )
+  public String getTypeNameForFile( String defaultFqn, IFile file )
   {
     return defaultFqn;
   }

@@ -29,9 +29,13 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String getTypeNameForFile( String fqn, IFile file )
+  public String getTypeNameForFile( String fqn, IFile file )
   {
-    return fqn + '_' + file.getExtension();
+    if( !(fqn.endsWith( file.getBaseName() + '_' + file.getExtension() )) )
+    {
+      fqn = fqn + '_' + file.getExtension();
+    }
+    return fqn;
   }
 
   @Override

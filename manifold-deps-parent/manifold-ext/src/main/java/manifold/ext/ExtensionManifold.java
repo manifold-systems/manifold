@@ -60,7 +60,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected String getTypeNameForFile( String fqn, IFile file )
+  public String getTypeNameForFile( String fqn, IFile file )
   {
     if( fqn.length() > EXTENSIONS_PACKAGE.length() + 2 )
     {
