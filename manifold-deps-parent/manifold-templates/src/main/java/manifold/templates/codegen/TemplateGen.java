@@ -666,13 +666,18 @@ public class TemplateGen {
             sb.append("            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;\n");
 
             sb.append("            try {\n");
+            Token.TokenType lastTokenType = null;
             outerLoop:
             for (int i = startPos; i <= endPos; i++) {
                 Token token = tokens.get(i);
                 switch (token.getType()) {
                     case CONTENT:
-                        sb.append("                buffer.append(\"").reAppend(token.getText().replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n") + "\");\n");
-                        bbLineNumbers.add(token.getLine());
+                        String text = makeText( lastTokenType, token.getText() );
+                        if( text.length() > 0 )
+                        {
+                            sb.append( "                buffer.append(\"" ).reAppend( text.replaceAll( "\"", "\\\\\"" ).replaceAll( "\r", "" ).replaceAll( "\n", "\\\\n" ) + "\");\n" );
+                            bbLineNumbers.add( token.getLine() );
+                        }
                         break;
                     case STMT:
                         String[] statementList = token.getText().split("\n");
@@ -706,13 +711,37 @@ public class TemplateGen {
                             break;
                         }
                         break;
+                    default:
+                        continue;
                 }
+                lastTokenType = token.getType();
             }
             String nums = bbLineNumbers.toString().substring(1, bbLineNumbers.toString().length() - 1);
 
             sb.append("            } catch (RuntimeException e) {\n");
             sb.append("                int[] bbLineNumbers = new int[]{").reAppend(nums).reAppend("};\n");
             sb.append("                handleException(e, \"").reAppend(this.currClass.fileName).reAppend("\", lineStart, bbLineNumbers);\n            }\n");
+        }
+
+        private String makeText( Token.TokenType lastTokenType, String text )
+        {
+            if( text != null &&
+                lastTokenType != Token.TokenType.CONTENT &&
+                lastTokenType != Token.TokenType.EXPR )
+            {
+                if( text.length() > 0 )
+                {
+                    if( text.charAt( 0 ) == '\n' )
+                    {
+                        text = text.substring( 1 );
+                    }
+                    else if( text.length() > 1 && text.charAt( 0 ) == '\r' && text.charAt( 1 ) == '\n' )
+                    {
+                        text = text.substring( 2 );
+                    }
+                }
+            }
+            return text;
         }
 
 
