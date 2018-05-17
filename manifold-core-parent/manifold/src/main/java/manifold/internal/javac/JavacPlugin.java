@@ -30,9 +30,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
@@ -90,7 +92,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private ManifoldJavaFileManager _manFileManager;
   private boolean _initialized;
   private Set<Symbol> _seenModules;
-  private boolean _staticCompile;
+  private Map<String,Boolean> _argPresent;
 
   public static JavacPlugin instance()
   {
@@ -116,7 +118,9 @@ public class JavacPlugin implements Plugin, TaskListener
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
     IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
 
-    _staticCompile = decideIfStatic( args );
+    _argPresent = new HashMap<>();
+    _argPresent.put( "strings", testForArg( "strings", args ) );
+    _argPresent.put( "static", testForArg( "static", args ) );
     if( ManifoldHost.instance() == null )
     {
       // the absence of a host indicates incremental compilation of Manifold itself
@@ -127,23 +131,39 @@ public class JavacPlugin implements Plugin, TaskListener
     task.addTaskListener( this );
   }
 
-  protected boolean decideIfStatic( String[] args )
+  protected boolean testForArg( String name, String[] args )
   {
-    boolean staticCompile = args != null && args.length > 0 && args[0] != null && args[0].equalsIgnoreCase( "static" );
+    boolean isPresent = isArgPresent( name, args );
 
-    if( !_staticCompile )
+    if( !isPresent )
     {
-      // maven doesn't like the -Xplugin:"Manifold static", it doesn't parse "Manifold static" as plugin name and argument, so we do it here:
+      // maven doesn't like the -Xplugin:"Manifold strings", it doesn't parse "Manifold string" as plugin name and argument, so we do it here:
       try
       {
         String[] rawArgs = (String[])ReflectUtil.field( _javacTask, "args" ).get();
-        staticCompile = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( "static" ) );
+        isPresent = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( name ) );
       }
       catch( Exception ignore )
       {
       }
     }
-    return staticCompile;
+    return isPresent;
+  }
+
+  private boolean isArgPresent( String name, String[] args )
+  {
+    if( args == null )
+    {
+      return false;
+    }
+    for( String arg: args )
+    {
+      if( arg != null && arg.equalsIgnoreCase( name ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   protected boolean decideIfNoBootstrapping()
@@ -633,7 +653,12 @@ public class JavacPlugin implements Plugin, TaskListener
 
   public boolean isStaticCompile()
   {
-    return _staticCompile;
+    return _argPresent.get( "static" );
+  }
+
+  public boolean isStringTemplatesEnabled()
+  {
+    return _argPresent.get( "strings" );
   }
 
   public boolean isNoBootstrapping()

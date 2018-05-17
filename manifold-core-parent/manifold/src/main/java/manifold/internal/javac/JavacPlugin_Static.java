@@ -11,8 +11,12 @@ public class JavacPlugin_Static extends JavacPlugin
   }
 
   @Override
-  protected boolean decideIfStatic( String[] args )
+  protected boolean testForArg( String name, String[] args )
   {
-    return true;
+    if( name.equals( "static" ) )
+    {
+      return true;
+    }
+    return super.testForArg( name, args );
   }
 }

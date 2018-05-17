@@ -1,0 +1,28 @@
+<%@ import java.util.ArrayList %>
+<%-- ManTL file --%>
+<%@ params(String param1) %>
+This is a ManTL (Manifold Template Language) file.
+
+You can render this template type-safely from Java like this:
+
+TemplateName.render("Hello World!");
+
+You can declare any number of parameters in the 'params' directive, import
+types and packages using the 'import' directive, extend a special template
+class using the 'extends' directive, include content from other templates,
+define sections, and many other useful features.
+
+You can use Java statements:
+
+<% if(param1 != null) { %>
+The value of 'param1' is: ${param1}
+<% } else { %>
+'param1' is null
+<% } %>
+
+And you can use Java expressions:
+
+${ param1 == null ? '\0' : param1.charAt(0) }
+<%= param1 == null ? '\0' : param1.charAt(0) %>
+
+Learn more: http://manifold.systems/manifold-templates.html

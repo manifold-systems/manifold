@@ -933,9 +933,13 @@ LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
 ```
 
-By default String templates are _always_ enabled in any String anywhere in your project.  However, if you need to turn 
-the feature off for any reason, you can use the `@DisableStringLiteralTemplates` annotation to control its use.  You 
-can annotate a class, method, field, or local variable to turn it on or off in that scope:
+By default String templates are _disabled_.  Enable the feature via the `strings` Manifold plugin argument:
+```
+-Xplugin:Manifold strings
+```  
+The argument enables templates in any String anywhere in your project. If you need to turn the feature off in specific
+areas in your code, you can use the `@DisableStringLiteralTemplates` annotation to control its use.  You can annotate a
+class, method, field, or local variable declaration to turn it on or off in that scope:
 ```java
 @DisableStringLiteralTemplates // turns off String templating inside this class
 public class MyClass

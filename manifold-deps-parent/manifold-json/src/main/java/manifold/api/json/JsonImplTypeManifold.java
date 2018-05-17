@@ -31,7 +31,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String getTypeNameForFile( String fqn, IFile file )
+  public String getTypeNameForFile( String fqn, IFile file )
   {
     return makeImplName( fqn );
   }

@@ -1,4 +1,6 @@
-<%@ params(java.util.List<todoapp.model.ToDo> todos, String filter, int activeCount, boolean anyComplete, boolean allComplete) %>
+<%@ import todoapp.model.ToDo %>
+<%@ import java.util.List %>
+<%@ params(List<ToDo> todos, String filter, int activeCount, boolean anyComplete, boolean allComplete) %>
 
 <header ic-include='{"status":"${filter}"}'>
     <h1>todos</h1>
@@ -10,7 +12,7 @@
 <section id="main" ic-include='{"status":"${filter}"}'>
     <input type="checkbox" name="toggle-all" ic-put-to="/todos/toggle_status" id="toggle-all" ${allComplete ? "checked" : ""}>
     <ul id="todo-list">
-        <% for(todoapp.model.ToDo todo : todos) { %>
+        <% for(ToDo todo : todos) { %>
             <li class="#if($todo.complete)completed#end">
                 <div class="view">
                     <input type="checkbox" class="toggle" ic-put-to="/todos/${todo.getId()}/toggle_status" ${todo.isComplete() ? "checked" : ""}>

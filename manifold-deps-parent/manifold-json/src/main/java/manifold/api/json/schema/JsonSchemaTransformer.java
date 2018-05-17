@@ -23,6 +23,7 @@ import manifold.api.json.JsonListType;
 import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.IIssue;
 import manifold.util.JsonUtil;
@@ -34,11 +35,14 @@ import manifold.util.cache.FqnCache;
  */
 public class JsonSchemaTransformer
 {
-  private static final String JSCH_SCHEMA = "${'$'}schema";
+  @DisableStringLiteralTemplates
+  private static final String JSCH_SCHEMA = "$schema";
   private static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
-  private static final String JSCH_ID = "${'$'}id";
-  private static final String JSCH_REF = "${'$'}ref";
+  @DisableStringLiteralTemplates
+  private static final String JSCH_ID = "$id";
+  @DisableStringLiteralTemplates
+  private static final String JSCH_REF = "$ref";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
@@ -71,12 +75,13 @@ public class JsonSchemaTransformer
   {
     return transform( name, null, docObj );
   }
+  @DisableStringLiteralTemplates
   public static IJsonType transform( String name, URL source, Bindings docObj )
   {
     if( !isSchema( docObj ) )
     {
       ErrantType errant = new ErrantType( source, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '$source' does not contain a '${'$'}schema' element." ) );
+      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '$source' does not contain a '$schema' element." ) );
       return errant;
     }
 
@@ -399,6 +404,7 @@ public class JsonSchemaTransformer
     }
   }
 
+  @DisableStringLiteralTemplates
   IJsonType transformType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
     IJsonType result;
@@ -433,7 +439,7 @@ public class JsonSchemaTransformer
         {
           token = ((Token[])((Pair)refValue).getFirst())[0];
         }
-        refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'${'$'}ref' not allowed at root level" ) );
+        refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'$ref' not allowed at root level" ) );
         result = refParent;
       }
       else

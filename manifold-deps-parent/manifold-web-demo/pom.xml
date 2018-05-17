@@ -16,7 +16,7 @@
         <!-- Manifold Imports -->
         <dependency>
             <groupId>systems.manifold</groupId>
-            <artifactId>manifold-templates</artifactId>
+            <artifactId>manifold-all</artifactId>
             <version>${project.version}</version>
         </dependency>
 
