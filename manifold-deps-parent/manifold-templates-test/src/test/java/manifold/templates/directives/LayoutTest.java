@@ -24,14 +24,18 @@ public class LayoutTest {
     }
 
     @Test
-    public void NestedLayoutTestWithContent() {
-        assertEquals("HeaderH2ContentF2Footer", HasNestedLayout.render());
+    public void rawLayoutTestWithContent() {
+        assertEquals("Content", HasLayoutAndContent1.raw().render());
     }
 
     @Test
-    public void PlainOverrideLayoutTest() {
-        ILayout lo = IsLayout.asLayout();
-        assertEquals("HeaderPlainFooter", PlainFile.render(lo));
+    public void overrideLayoutTest() {
+        assertEquals("HeaderPlainFooter", PlainFile.withLayout(IsLayout.asLayout()).render());
+    }
+
+    @Test
+    public void NestedLayoutTestWithContent() {
+        assertEquals("HeaderH2ContentF2Footer", HasNestedLayout.render());
     }
 
     @Test

@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 
 public class BaseTemplate {
+
     private static Unsafe unsafe;
+
     static {
         try {
             Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
@@ -39,15 +41,15 @@ public class BaseTemplate {
         return _explicitLayout;
     }
 
-    protected void beforeRender(Appendable buffer, ILayout override, boolean outerTemplate) throws IOException {
-        if (outerTemplate) {
+    protected void beforeRender(Appendable buffer, ILayout override, boolean topLevelTemplate) throws IOException {
+        if (topLevelTemplate) {
             ILayout templateLayout = override == null ? getTemplateLayout() : override;
             templateLayout.header(buffer);
         }
     }
 
-    protected void afterRender(Appendable buffer, ILayout override, boolean outerTemplate, long renderTime) throws IOException {
-        if (outerTemplate) {
+    protected void afterRender(Appendable buffer, ILayout override, boolean topLevelTemplate, long renderTime) throws IOException {
+        if (topLevelTemplate) {
             ILayout templateLayout = override == null ? getTemplateLayout() : override;
             templateLayout.footer(buffer);
         }

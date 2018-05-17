@@ -393,7 +393,8 @@ public class TemplateGen {
             private final String INDENT = "    ";
             private StringBuilder sb = new StringBuilder();
 
-            TemplateStringBuilder append(String content) {
+            TemplateStringBuilder newLine(String content) {
+                sb.append("\n");
                 for (int i = 0; i < currClass.depth; i++) {
                     sb.append(INDENT);
                 }
@@ -401,7 +402,7 @@ public class TemplateGen {
                 return this;
             }
 
-            TemplateStringBuilder reAppend(String content) {
+            TemplateStringBuilder append(String content) {
                 sb.append(content);
                 return this;
             }
@@ -435,10 +436,10 @@ public class TemplateGen {
         }
 
         private void buildFile(String packageName, List<Directive> dirList) {
-            sb.append("package ").reAppend(packageName + ";\n\n")
-                    .append("import java.io.IOException;\n")
-                    .append("import manifold.templates.ManifoldTemplates;\n")
-                    .append("import manifold.templates.runtime.*;\n\n");
+            sb.append("package ").append(packageName + ";\n")
+                    .newLine("import java.io.IOException;")
+                    .newLine("import manifold.templates.ManifoldTemplates;")
+                    .newLine("import manifold.templates.runtime.*;\n");
             addImports(dirList);
             makeClassContent();
         }
@@ -458,12 +459,7 @@ public class TemplateGen {
         }
 
         private void addRenderImpl() {
-
-            if (currClass.paramsList == null) {
-                sb.append("    public void renderImpl(Appendable buffer, ILayout overrideLayout) {\n");
-            } else {
-                sb.append("    public void renderImpl(Appendable buffer, ILayout overrideLayout, ").reAppend(currClass.params).reAppend(") {\n");
-            }
+            sb.newLine("    public void renderImpl(Appendable buffer, ILayout overrideLayout").append(safeTrailingString(currClass.params)).append(") {");
 
             boolean needsToCatchIO = currClass.depth == 0;
 
@@ -472,133 +468,152 @@ public class TemplateGen {
             }
 
             if (needsToCatchIO) {
-                sb.append("        try {\n");
+                sb.newLine("        try {");
             }
 
             if (currClass.isLayout) {
-                sb.append("            INSTANCE.header(buffer);\n")
-                        .append("            INSTANCE.footer(buffer);\n");
+                sb.newLine("            INSTANCE.header(buffer);")
+                  .newLine("            INSTANCE.footer(buffer);");
             } else {
-                sb.append("            beforeRender(buffer, overrideLayout, ").reAppend(String.valueOf(currClass.depth == 0)).reAppend(");\n");
-
-                sb.append("            long startTime = System.nanoTime();\n");
-
+                String isOuterTemplate = String.valueOf(currClass.depth == 0);
+                sb.newLine("            beforeRender(buffer, overrideLayout, ").append(isOuterTemplate).append(");\n");
+                sb.newLine("            long startTime = System.nanoTime();\n");
                 makeFuncContent(currClass.startTokenPos, currClass.endTokenPos);
-
-                sb.append("            long endTime = System.nanoTime();\n");
-                sb.append("            long duration = (endTime - startTime)/1000000;\n");
-
-                sb.append("            afterRender(buffer, overrideLayout, ").reAppend(String.valueOf(currClass.depth == 0)).reAppend(", duration);\n");
-
+                sb.newLine("            long endTime = System.nanoTime();\n");
+                sb.newLine("            long duration = (endTime - startTime)/1000000;\n");
+                sb.newLine("            afterRender(buffer, overrideLayout, ").append(isOuterTemplate).append(", duration);\n");
             }
 
             if (needsToCatchIO) {
-                sb.append("        } catch (IOException e) {\n")
-                        .append("            throw new RuntimeException(e);\n")
-                        .append("        }\n");
+                sb.newLine("        } catch (IOException e) {\n")
+                  .newLine("            throw new RuntimeException(e);\n")
+                  .newLine("        }\n");
             }
 
-            //close the renderImpl
-            sb.append("    }\n\n");
+            sb.newLine("    }\n\n");
         }
 
         private void addRender() {
-            if (currClass.paramsList == null) {
-                //without layout
-                sb.append("\n")
-                        .append("    public static String render() {\n")
-                        .append("        StringBuilder sb = new StringBuilder();\n")
-                        .append("        renderInto(sb);\n")
-                        .append("        return sb.toString();\n")
-                        .append("    }\n\n");
-                //with layout
-                sb.append("\n")
-                        .append("    public static String render(ILayout overrideLayout) {\n")
-                        .append("        StringBuilder sb = new StringBuilder();\n")
-                        .append("        renderInto(sb, overrideLayout);\n")
-                        .append("        return sb.toString();\n")
-                        .append("    }\n\n");
-            } else {
-                //without layout
-                sb.append("\n")
-                        .append("    public static String render(").reAppend(currClass.params + ") {\n")
-                        .append("        StringBuilder sb = new StringBuilder();\n")
-                        .append("        renderInto(sb");
-                for (String[] param : currClass.paramsList) {
-                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
-                }
-                sb.reAppend(");\n")
-                        .append("        return sb.toString();\n")
-                        .append("    }\n\n");
-                //with Layout
-                sb.append("\n")
-                        .append("    public static String render(ILayout overrideLayout, ").reAppend(currClass.params + ") {\n")
-                        .append("        StringBuilder sb = new StringBuilder();\n")
-                        .append("        renderInto(sb, overrideLayout");
-                for (String[] param : currClass.paramsList) {
-                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
-                }
-                sb.reAppend(");\n")
-                        .append("        return sb.toString();\n")
-                        .append("    }\n\n");
+            sb.newLine("")
+              .newLine("    public static String render(").append(safeString(currClass.params)).append(") {")
+              .newLine("      StringBuilder sb = new StringBuilder();")
+              .newLine("      renderInto(sb");
+            for (String[] param : safeParamsList()) {
+                sb.append(", ").append(param[1]);
             }
+            sb.append(");")
+              .newLine("        return sb.toString();")
+              .newLine("    }\n");
+        }
+
+        private void addRenderInto() {
+            sb.newLine("    public static void renderInto(Appendable buffer").append(safeTrailingString(currClass.params)).append(") {\n")
+              .newLine("      INSTANCE.renderImpl(buffer, null");
+            for (String[] param : safeParamsList()) {
+                sb.append(", ").append(param[1]);
+            }
+            sb.append(");\n")
+              .newLine("    }\n\n");
+        }
+
+        private void addRaw() {
+            sb.newLine("    public static LayoutOverride raw() {")
+              .newLine("        return withLayout(ILayout.EMPTY);")
+              .newLine("    }\n\n");
+        }
+
+
+        private void addWithLayout() {
+            sb.newLine("    public static LayoutOverride withLayout(ILayout layout) {")
+              .newLine("        return new LayoutOverride(layout);")
+              .newLine("    }\n\n");
+        }
+
+
+        private void addLayoutOverrideClass() {
+            sb.newLine("    public static class LayoutOverride extends BaseLayoutOverride {")
+              // constructor
+              .newLine("       public LayoutOverride(ILayout override) {")
+              .newLine("         super(override);")
+              .newLine("       }\n")
+              .newLine("")
+              // render
+              .newLine("    public String render(").append(safeString(currClass.params)).append(") {")
+              .newLine("      StringBuilder sb = new StringBuilder();")
+              .newLine("      INSTANCE.renderImpl(sb, getOverride()");
+            for (String[] param : safeParamsList()) {
+                sb.append(", ").append(param[1]);
+            }
+            sb.append(");")
+              .newLine("        return sb.toString();")
+              .newLine("    }\n")
+              // renderInto
+              .newLine("    public void renderInto(Appendable sb").append(safeTrailingString(currClass.params)).append(") {")
+              .newLine("      INSTANCE.renderImpl(sb, getOverride()");
+            for (String[] param : safeParamsList()) {
+                sb.append(", ").append(param[1]);
+            }
+            sb.append(");")
+              .newLine("    }\n")
+              // close class
+              .newLine("    }\n");
+
+
+        }
+
+      private String safeTrailingString(String string) {
+        if (string != null && string.length() > 0) {
+            return ", " + string;
+        } else {
+            return "";
+        }
+      }
+
+      private String safeString(String string) {
+        if (string != null && string.length() > 0) {
+            return string;
+        } else {
+            return "";
+        }
+      }
+
+      private String[][] safeParamsList() {
+            String[][] paramsList = currClass.paramsList;
+            if (paramsList == null) {
+                paramsList = new String[0][0];
+            }
+            return paramsList;
         }
 
         private void addFileHeader() {
-            sb.append("\n");
-           // sb.append("@${DisableStringLiteralTemplates.class.getName()}\n");
+            sb.newLine("\n");
             if (currClass.depth == 0) {
                 if (currClass.isLayout) {
-                    sb.append("public class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" implements ").reAppend(LAYOUT_INTERFACE).reAppend(" {\n");
+                    sb.newLine("public class ").append(currClass.name).append(" extends ").append(currClass.superClass).append(" implements ").append(LAYOUT_INTERFACE).append(" {");
                 } else {
-                    sb.append("public class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" {\n");
+                    sb.newLine("public class ").append(currClass.name).append(" extends ").append(currClass.superClass).append(" {");
                 }
             } else {
-                sb.append("public static class ").reAppend(currClass.name).reAppend(" extends ").reAppend(currClass.superClass).reAppend(" {\n");
+                sb.newLine("public static class ").append(currClass.name).append(" extends ").append(currClass.superClass).append(" {");
             }
-            sb.append("    private static ").reAppend(currClass.name).reAppend(" INSTANCE = new ").reAppend(currClass.name).reAppend("();\n");
-            sb.append("    private ").reAppend(currClass.name).reAppend("(){\n");
+            sb.newLine("    private static ").append(currClass.name).append(" INSTANCE = new ").append(currClass.name).append("();");
+            sb.newLine("    private ").append(currClass.name).append("(){");
             if (currClass.hasLayout) {
-                sb.append("        setLayout(").reAppend(currClass.layoutDir.className).reAppend(".asLayout());\n");
+                sb.newLine("        setLayout(").append(currClass.layoutDir.className).append(".asLayout());");
             }
-            sb.append("}\n\n");
-        }
-        private void addRenderInto() {
-            if (currClass.paramsList == null) {
-                //without Layout
-                sb.append("    public static void renderInto(Appendable buffer) {\n")
-                        .append("        INSTANCE.renderImpl(buffer, null);\n")
-                        .append("    }\n\n");
-                //with Layout
-                sb.append("    public static void renderInto(Appendable buffer, ILayout overrideLayout) {\n")
-                        .append("        INSTANCE.renderImpl(buffer, overrideLayout);\n")
-                        .append("    }\n\n");
-            } else {
-                //without Layout
-                sb.append("    public static void renderInto(Appendable buffer, ").reAppend(currClass.params).reAppend(") {\n")
-                        .append("        INSTANCE.renderImpl(buffer, null");
-                for (String[] param: currClass.paramsList) {
-                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
-                }
-                sb.reAppend(");\n")
-                        .append("    }\n\n");
-                //with Layout
-                sb.append("    public static void renderInto(Appendable buffer, ILayout overrideLayout, ").reAppend(currClass.params).reAppend(") {\n")
-                        .append("        INSTANCE.renderImpl(buffer, overrideLayout");
-                for (String[] param: currClass.paramsList) {
-                    if( param.length > 1 ) sb.reAppend(", ").reAppend(param[1]);
-                }
-                sb.reAppend(");\n")
-                        .append("    }\n\n");
-            }
+            sb.newLine("    }\n");
         }
 
 
         private void makeClassContent() {
             addFileHeader();
             addRender();
+            addLayoutOverrideClass();
+            addRaw();
+            addWithLayout();
             addRenderInto();
             addRenderImpl();
+
             if (currClass.isLayout) {
                 addHeaderAndFooter();
             }
@@ -607,27 +622,27 @@ public class TemplateGen {
                 makeClassContent();
             }
             //close class
-            sb.append("}\n");
+            sb.newLine("}\n");
         }
 
         private void addHeaderAndFooter() {
-            sb.append("    public static ").reAppend(LAYOUT_INTERFACE).reAppend(" asLayout() {\n")
-                    .append("        return INSTANCE;\n")
-                    .append("    }\n\n")
-                    .append("    @Override\n")
-                    .append("    public void header(Appendable buffer) throws IOException {\n")
-                    .append("        if (getExplicitLayout() != null) {\n")
-                    .append("            getExplicitLayout().header(buffer);\n")
-                    .append("        }\n");
+            sb.newLine("    public static ").append(LAYOUT_INTERFACE).append(" asLayout() {")
+                    .newLine("        return INSTANCE;")
+                    .newLine("    }\n")
+                    .newLine("    @Override")
+                    .newLine("    public void header(Appendable buffer) throws IOException {")
+                    .newLine("        if (getExplicitLayout() != null) {")
+                    .newLine("            getExplicitLayout().header(buffer);")
+                    .newLine("        }");
             assert(currClass.depth == 0);
             makeFuncContent(currClass.startTokenPos, currClass.contentPos);
-            sb.append("    }\n")
-                    .append("    @Override\n")
-                    .append("    public void footer(Appendable buffer) throws IOException {\n");
+            sb.newLine("    }")
+                    .newLine("    @Override")
+                    .newLine("    public void footer(Appendable buffer) throws IOException {");
             makeFuncContent(currClass.contentPos, currClass.endTokenPos);
-            sb.append("        if (getExplicitLayout() != null) {\n")
-                    .append("            getExplicitLayout().footer(buffer);\n")
-                    .append("    }\n}\n");
+            sb.newLine("        if (getExplicitLayout() != null) {")
+                    .newLine("            getExplicitLayout().footer(buffer);")
+                    .newLine("    }\n}");
         }
 
         private List<Directive> getDirectivesList(List<Token> tokens) {
@@ -653,7 +668,7 @@ public class TemplateGen {
         private void addImports(List<Directive> dirList) {
             for (Directive dir: dirList) {
                 if (dir._dirType == IMPORT) {
-                    sb.append("import " + dir.className + ";\n");
+                    sb.newLine("import " + dir.className + ";");
                 }
             }
         }
@@ -663,27 +678,26 @@ public class TemplateGen {
             if (endPos == null) {
                 endPos = tokens.size() - 1;
             }
-            sb.append("            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;\n");
-
-            sb.append("            try {\n");
+            sb.newLine("            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;");
+            sb.newLine("            try {");
             outerLoop:
             for (int i = startPos; i <= endPos; i++) {
                 Token token = tokens.get(i);
                 switch (token.getType()) {
                     case CONTENT:
-                        sb.append("                buffer.append(\"").reAppend(token.getText().replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n") + "\");\n");
+                        sb.newLine("                buffer.append(\"").append(token.getText().replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n") + "\");");
                         bbLineNumbers.add(token.getLine());
                         break;
                     case STMT:
                         String[] statementList = token.getText().split("\n");
                         for (int j = 0; j < statementList.length; j++) {
                             String statement = statementList[j].trim().replaceAll("\r", "");
-                            sb.append("                ").reAppend(statement).reAppend("\n");
+                            sb.append("                ").append(statement).append("\n");
                             bbLineNumbers.add(token.getLine() + j);
                         }
                         break;
                     case EXPR:
-                        sb.append("                buffer.append(toS(").reAppend(token.getText()).reAppend("));\n");
+                        sb.newLine("                buffer.append(toS(").append(token.getText()).append("));");
                         bbLineNumbers.add(token.getLine());
                         break;
                     case COMMENT:
@@ -710,38 +724,30 @@ public class TemplateGen {
             }
             String nums = bbLineNumbers.toString().substring(1, bbLineNumbers.toString().length() - 1);
 
-            sb.append("            } catch (RuntimeException e) {\n");
-            sb.append("                int[] bbLineNumbers = new int[]{").reAppend(nums).reAppend("};\n");
-            sb.append("                handleException(e, \"").reAppend(this.currClass.fileName).reAppend("\", lineStart, bbLineNumbers);\n            }\n");
+            sb.newLine("            } catch (RuntimeException e) {");
+            sb.newLine("                int[] bbLineNumbers = new int[]{").append(nums).append("};");
+            sb.newLine("                handleException(e, \"").append(this.currClass.fileName).append("\", lineStart, bbLineNumbers);\n            }");
         }
 
 
-        private void addInclude(Directive dir) {
-            assert(dir._dirType == INCLUDE);
-            if (dir.conditional == null) {
-                if (dir.params != null) {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY,").reAppend(dir.params).reAppend(");\n");
-                } else {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY);\n");
-                }
-            } else {
-                sb.append("            if(").reAppend(dir.conditional).reAppend("){\n");
-                if (dir.params != null) {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY,").reAppend(dir.params).reAppend(");\n");
-                } else {
-                    sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, manifold.templates.runtime.ILayout.EMPTY);\n");
-                }
-                sb.append("            ").reAppend("}\n");
-            }
+      private void addInclude(Directive dir) {
+        assert (dir._dirType == INCLUDE);
+        if (dir.conditional != null) {
+          sb.newLine("            if(").append(dir.conditional).append("){");
         }
+        sb.newLine("            ").append(dir.className).append(".raw().renderInto(buffer").append(safeTrailingString(dir.params)).append(");");
+        if (dir.conditional != null) {
+          sb.newLine("            ").append("}");
+        }
+      }
 
         private void addSection(Directive dir) {
             assert(dir._dirType == SECTION);
             if (dir.params != null) {
                 String paramsWithoutTypes = dir.makeParamsStringWithoutTypes(dir.paramsList);
-                sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer, ").reAppend(paramsWithoutTypes).reAppend(");\n");
+                sb.newLine("            ").append(dir.className).append(".renderInto(buffer, ").append(paramsWithoutTypes).append(");");
             } else {
-                sb.append("            ").reAppend(dir.className).reAppend(".renderInto(buffer);\n");
+                sb.newLine("            ").append(dir.className).append(".renderInto(buffer);");
             }
         }
 

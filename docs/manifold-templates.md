@@ -32,6 +32,7 @@ ManTL files have the suffix `mtl`, often optionally preceded by the language tha
   * [`layout`](#-layout-)
 - [Layouts](#layouts)
   * [Default Layouts](#default-layouts)
+  * [Layout Overrides](#layout-overrides)
 - [Spark Java Support](#spark)
   * [Tracing](#tracing)
   * [Spark Template Base Class](#spark-template)
@@ -163,9 +164,11 @@ For example, you can do the following with expressions:
   </body>
 </html>
 ```
+
 The above code will instantiate an `int y`, assign the value of 10 to it,
 and evaluate `y` twice: once to give the paragraph `font-size: 10`, and again
 within the paragraph block. It will generate the following HTML:
+
 ```html
 <html>
   <head><title>Expression Example </title></head>
@@ -508,8 +511,6 @@ The syntax of a content template is as follows:
   FOOTER CONTENT HERE
 ```
 
-
-
 For example, I can create the template `layoutEx.html.mtl` as the following:
 ```jsp
     </html>
@@ -521,9 +522,9 @@ For example, I can create the template `layoutEx.html.mtl` as the following:
 
 And use the layout in the following template:
 ```jsp
-    <h1>This is a template that uses a layout.</h1>
     <%@ layout layoutEx %>
-    <h2>The directive can appear anywhere in the template.</h2>
+    <h1>This is a template that uses a layout.</h1>
+    <h2>The layout directive can appear anywhere in the template.</h2>
 ```
 
 
@@ -541,15 +542,34 @@ The above code will generate the following HTML:
 
 ## Default Layouts ##
 
-ManTL also supports the ability to set default layouts for templates via the
+ManTL also supports the ability to set default layouts for templates in a given package via the
 `ManifoldTemplates.java` configuration class:
+
 ```java
-  ManifoldTemplates.setDefaultLayout(myLayout); //Sets default template for all templates
-  ManifoldTemplates.setDefaultLayout("some.package", myLayout) //Sets default templates for all templates in "some.package"
+  ManifoldTemplates.setDefaultLayout(MyLayout.asLayout()); //Sets default template for all templates
+  ManifoldTemplates.setDefaultLayout("some.package", AnotherLayout.asLayout()) //Sets default templates for all templates in "some.package"
 ```
+
 By default, more specific layout declarations will take precedence over less
 specific ones. For example, templates with a declared layout (using the layout directive)
-will use the declared layout rather than any defualt layout.
+will use the declared layout rather than any default layout.
+
+Note that we use the generated `asLayout()` static method on layout template
+classes.  This can also be useful when you are overriding layouts, as specified below.
+
+<a id="layout-overrides" class="toc_anchor"></a>
+
+## Layout Overrides ##
+
+Sometimes you may want to manually override the layout of a given template in code,
+or render a template with no layout.  ManTL classes include two helper methods:
+`raw` and `withLayout(ILayout)` to assist in these cases:
+
+```java
+  MyTemplate.raw().render(); //Renders the template with no layout, regardless of the configuration
+  MyTemplate.withLayout(MyLayout.asLayout()).render(); //Renders MyTemplate with the MyLayout layout, regardless of other configuration
+```
+
 
 <a id="spark" class="toc_anchor"></a>
 
