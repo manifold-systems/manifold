@@ -50,7 +50,7 @@ public class ManifoldTemplates {
     }
 
     public interface TraceCallback {
-        public void trace(Class template, long timeToRender);
+         void trace(Class template, long timeToRender);
     }
 
 }
