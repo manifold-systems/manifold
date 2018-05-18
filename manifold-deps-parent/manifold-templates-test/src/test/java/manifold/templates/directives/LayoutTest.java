@@ -24,8 +24,8 @@ public class LayoutTest {
     }
 
     @Test
-    public void rawLayoutTestWithContent() {
-        assertEquals("Content", HasLayoutAndContent1.raw().render());
+    public void withoutLayoutTestWithContent() {
+        assertEquals("Content", HasLayoutAndContent1.withoutLayout().render());
     }
 
     @Test

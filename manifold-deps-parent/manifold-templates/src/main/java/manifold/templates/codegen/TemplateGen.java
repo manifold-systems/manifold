@@ -516,8 +516,8 @@ public class TemplateGen {
               .newLine("    }\n\n");
         }
 
-        private void addRaw() {
-            sb.newLine("    public static LayoutOverride raw() {")
+        private void addWithoutLayout() {
+            sb.newLine("    public static LayoutOverride withoutLayout() {")
               .newLine("        return withLayout(ILayout.EMPTY);")
               .newLine("    }\n\n");
         }
@@ -609,7 +609,7 @@ public class TemplateGen {
             addFileHeader();
             addRender();
             addLayoutOverrideClass();
-            addRaw();
+            addWithoutLayout();
             addWithLayout();
             addRenderInto();
             addRenderImpl();
@@ -762,7 +762,7 @@ public class TemplateGen {
         if (dir.conditional != null) {
           sb.newLine("            if(").append(dir.conditional).append("){");
         }
-        sb.newLine("            ").append(dir.className).append(".raw().renderInto(buffer").append(safeTrailingString(dir.params)).append(");");
+        sb.newLine("            ").append(dir.className).append(".withoutLayout().renderInto(buffer").append(safeTrailingString(dir.params)).append(");");
         if (dir.conditional != null) {
           sb.newLine("            ").append("}");
         }

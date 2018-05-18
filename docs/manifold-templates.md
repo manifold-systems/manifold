@@ -563,10 +563,10 @@ classes.  This can also be useful when you are overriding layouts, as specified 
 
 Sometimes you may want to manually override the layout of a given template in code,
 or render a template with no layout.  ManTL classes include two helper methods:
-`raw` and `withLayout(ILayout)` to assist in these cases:
+`withoutLayout` and `withLayout(ILayout)` to assist in these cases:
 
 ```java
-  MyTemplate.raw().render(); //Renders the template with no layout, regardless of the configuration
+  MyTemplate.withoutLayout().render(); //Renders the template with no layout, regardless of the configuration
   MyTemplate.withLayout(MyLayout.asLayout()).render(); //Renders MyTemplate with the MyLayout layout, regardless of other configuration
 ```
 
