@@ -21,7 +21,7 @@ public interface IFileSystem extends IService
 
 //  IFile getFakeFile( URL url, IModule module );
 
-  public enum CachingMode
+  enum CachingMode
   {
     NO_CACHING,
     CHECK_TIMESTAMPS,

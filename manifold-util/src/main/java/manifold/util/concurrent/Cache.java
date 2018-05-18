@@ -174,7 +174,7 @@ public class Cache<K, V>
 
   public interface MissHandler<L, W>
   {
-    public W load( L key );
+    W load( L key );
   }
 
   public void clear()

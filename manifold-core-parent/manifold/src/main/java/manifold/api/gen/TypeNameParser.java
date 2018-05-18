@@ -15,6 +15,7 @@ public class TypeNameParser
   private String _token;
 
 
+  @SuppressWarnings("WeakerAccess")
   public TypeNameParser( String typeName )
   {
     _tokenizer = new StringTokenizer( typeName, TOKENS, true );
@@ -102,7 +103,7 @@ public class TypeNameParser
 
   private void verifySuperOrExtends( String superOrExtends )
   {
-    if( superOrExtends.equals( "super" ) && superOrExtends.equals( "extends" ) )
+    if( !superOrExtends.equals( "super" ) && !superOrExtends.equals( "extends" ) )
     {
       throw new RuntimeException( "expecting 'extends' or 'super'" );
     }

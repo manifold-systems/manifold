@@ -113,9 +113,9 @@ public abstract class LockingLazyVar<T>
    * A simple init interface to make LockingLazyVar's easier to construct
    * from gosu.
    */
-  public static interface LazyVarInit<Q>
+  public interface LazyVarInit<Q>
   {
-    public Q init();
+    Q init();
   }
 
   /**

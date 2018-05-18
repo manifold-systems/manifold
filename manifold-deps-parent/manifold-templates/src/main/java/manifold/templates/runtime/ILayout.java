@@ -5,12 +5,12 @@ import java.lang.reflect.InvocationTargetException;
 
 public interface ILayout {
 
-    public static final ILayout EMPTY = new ILayout() {
+    ILayout EMPTY = new ILayout() {
         @Override
-        public void header(Appendable buffer) throws IOException { return; }
+        public void header(Appendable buffer) {}
 
         @Override
-        public void footer(Appendable buffer) throws IOException { return; }
+        public void footer(Appendable buffer) {}
     };
 
     void header(Appendable buffer) throws IOException;

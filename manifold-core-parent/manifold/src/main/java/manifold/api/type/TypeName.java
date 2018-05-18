@@ -73,13 +73,13 @@ public class TypeName implements Comparable
     return loader.getModule();
   }
 
-  public static enum Kind
+  public enum Kind
   {
     TYPE,
     NAMESPACE
   }
 
-  public static enum Visibility
+  public enum Visibility
   {
     PUBLIC,
     PROTECTED,

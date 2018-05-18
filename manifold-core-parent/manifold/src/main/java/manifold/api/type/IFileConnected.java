@@ -4,7 +4,7 @@ import manifold.api.fs.IFile;
 import manifold.api.host.RefreshKind;
 
 /**
- * An abstraction representing a connection between a types and files.
+ * An abstraction representing a connection between types and files.
  */
 public interface IFileConnected
 {
