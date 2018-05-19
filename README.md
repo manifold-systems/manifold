@@ -1,5 +1,5 @@
 <center>
-  <img src="https://i.imgur.com/No1RPUf.png" width=80% height=80%/>
+  <img src="https://i.imgur.com/No1RPUf.png" width="80%"/>
 </center>
 
 # Introduction
@@ -15,7 +15,7 @@ Leveraging these key features Manifold delivers a set of high-level components y
 include:
 * **JSON** and **JSON Schema** integration
 * **JavaScript** interop
-* Type-safe **Templating** 
+* Type-safe **Templating**
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
 * **SQL** and **DDL** interop (coming soon)
@@ -39,7 +39,7 @@ To illustrate, consider this properties resource file:
 chocolate = Chocolate
 chocolate.milk = Milk chocolate
 chocolate.dark = Dark chocolate
-``` 
+```
 
 Normally in Java you access a properties resources like this:
 
@@ -79,7 +79,7 @@ Currently Manifold provides type manifolds for:
 ### The Extension Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes
-including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
+including Java's own runtime classes such as `String`. You can add new methods, annotations, and
 interfaces to any type your project uses.
 
 Let's say you want to make a new method on `String` so you can straightforwardly echo a String to the
@@ -108,7 +108,7 @@ public class MyStringExtension {
     System.out.println(thiz);
   }
 }
-```  
+```
 
 Here we've added a new `echo()` method to `String`, so we use it like this:
 
@@ -126,11 +126,11 @@ extended class:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="/images/ExtensionMethod.mp4">
+    <source type="video/mp4" src="/docs/images/ExtensionMethod.mp4">
   </video>
 </p>
 
-There's a lot more to the extension manifold including [structural interfaces](#structural_interfaces), which are
+There's a lot more to the extension manifold including [structural interfaces](http://manifold.systems/docs.html#structural-interfaces), which are
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
@@ -160,7 +160,7 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 Using Manifold in your Java project is simple:
 
-* Add the Manifold jar[s] to your classpath (and tools.jar if you're using Java 8)
+* Add the Manifold jar(s) to your classpath (and tools.jar if you're using Java 8)
 * Add `-Xplugin:Manifold` as an argument to java**c** (for compilation only)
 
 That's all.
@@ -185,14 +185,14 @@ javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
 **Java 8 Notes**
 
 If you are using **Java 8** you may need to include `tools.jar` in your classpath (runtime only).
-Your application requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to 
-*static* mode. See [Modes](#Modes) for details.
+Your application requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to
+*static* mode. See [Modes](#modes) for details.
 
 
 ### Modes
 
-You can use Manifold in one of two ways: **dynamically** or **statically**.  The mode 
-determines whether or not Manifold compiles class projections to disk at compile-time, and in 
+You can use Manifold in one of two ways: **dynamically** or **statically**.  The mode
+determines whether or not Manifold compiles class projections to disk at compile-time, and in
 turn whether or not Manifold dynamically compiles and loads the classes at runtime.  The mode is
 controlled using the `-Xplugin` javac argument:
 
@@ -202,28 +202,28 @@ controlled using the `-Xplugin` javac argument:
 (alternatively `-Xplugin:"Manifold static"`, some tools may require quotes)
 
 The mode you use largely depends on your use-case and personal preference. As a general rule
-dynamic mode is usually better for development and static mode is usually better for production, 
+dynamic mode is usually better for development and static mode is usually better for production,
 however you can use either mode in any situation you like. Things to consider:
 
 * Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.
-For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
+For example, if you are using the [Json manifold](http://manifold.systems/docs.html#json-and-json-schema), only the Json files you reference
 in your code will be processed and compiled.
 
 * Even if you use static mode, you can still reference type manifold classes dynamically e.g., _reflectively_.
-In such a case Manifold will dynamically compile the referenced class as if you were operating in 
+In such a case Manifold will dynamically compile the referenced class as if you were operating in
 dynamic mode.  In general, your code will work regardless of the mode you're using; Manifold will
-figure out what needs to be done. 
+figure out what needs to be done.
 
-* Dynamic mode requires `tools.jar` at runtime for Java 8.  Note tools.jar may still be required with 
-static mode, depending on the Manifold features you use.  For example, [structural interfaces](#structural-interfaces)
-requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
+* Dynamic mode requires `tools.jar` at runtime for Java 8.  Note tools.jar may still be required with
+static mode, depending on the Manifold features you use.  For example, [structural interfaces](http://manifold.systems/docs.html#structural-interfaces)
+requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/)
 files as structural interfaces.
 
-* Static mode is generally faster at runtime since it pre-compiles all the type manifold projection when you 
+* Static mode is generally faster at runtime since it pre-compiles all the type manifold projection when you
 build your project
 
 * Static mode automatically supports incremental compilation of class projections in IntelliJ (coming in version 0.10-alpha)
-   
+
 
 ### Working with IntelliJ
 
@@ -235,7 +235,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 ```Settings | Plugins | Browse Repositories | Manifold```
 
-<p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/docs/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **New Project**
@@ -244,16 +244,16 @@ Creating a new project with Manifold support is easy:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="/images/NewProject.mp4">
+    <source type="video/mp4" src="/docs/images/NewProject.mp4">
   </video>
 </p>
 
 
 **Add Manifold to Existing Module**
 
-Adding manifold to module[s] of an existing project is easy:
+Adding manifold to module(s) of an existing project is easy:
 
-<p><img src="/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/docs/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 **Sample Project**
@@ -262,9 +262,9 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 ```File | New | Project from Version Control | Git```
 
-<p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/docs/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-<p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/docs/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 ### Binaries
@@ -292,7 +292,7 @@ Integrated template support
 
 ### Maven
 
-Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
+Add manifold artifacts that suit your project's needs.  The minimum requirements are to
 include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
 argument as a Java compiler argument.  Note you can use the `manifold-all` dependency
 to use all basic manifold features, this is the recommended setup.
@@ -461,12 +461,12 @@ Note the above snippet should work with `manifold-all` release `0.10-alpha` and 
 A Maven archetype facilitates new project creation.  Use the Manifold [archetype](https://github.com/manifold-systems/archetype) to quickly
 create a new Manifold project.  This is an easy process from IntelliJ:
 
-<p><img src="/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="/docs/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
 
 
 ### Gradle
 
-Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
+Add manifold artifacts that suit your project's needs.  The minimum requirements are to
 include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
 argument as a Java compiler argument:
 
@@ -529,7 +529,7 @@ To contribute a change to Manifold:
 
 ## Versioning
 
-For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags). 
+For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags).
 
 ## Building
 
