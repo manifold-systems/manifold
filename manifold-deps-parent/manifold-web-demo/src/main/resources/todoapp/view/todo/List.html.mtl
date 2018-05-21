@@ -1,0 +1,35 @@
+<header ic-include='{"status":"$status"}'>
+    <h1>todos</h1>
+    <form id="todo-form" ic-post-to="/todos">
+        <input id="new-todo" placeholder="What needs to be done?" name="todo-title" pattern=".{4,}" required title="> 3 chars" autofocus>
+    </form>
+</header>
+
+<section id="main" ic-include='{"status":"$status"}'>
+    <input type="checkbox" name="toggle-all" ic-put-to="/todos/toggle_status" id="toggle-all" #if($allComplete) checked #end>
+    <ul id="todo-list">
+        #foreach($todo in $todos)
+            <li class="#if($todo.complete)completed#end">
+                <div class="view">
+                    <input type="checkbox" class="toggle" ic-put-to="/todos/$todo.id/toggle_status" #if($todo.complete)checked#end>
+                    <label ic-get-from="/todos/$todo.id/edit" ic-target="closest li" ic-trigger-on="dblclick" ic-replace-target="true">$todo.title</label>
+                    <button class="destroy" ic-delete-from="/todos/$todo.id"></button>
+                </div>
+            </li>
+        #end
+    </ul>
+</section>
+
+<footer>
+    <span id="todo-count">
+        <strong>$activeCount</strong> items left
+    </span>
+    <ul id="filters" ic-push-url="true"> ##maintains history
+        <li #if($filter == "")        class="selected"#end ic-get-from="/">All</li>
+        <li #if($filter == "active")  class="selected"#end ic-get-from="/?status=active">Active</li>
+        <li #if($filter == "complete")class="selected"#end ic-get-from="/?status=complete">Completed</li>
+    </ul>
+    #if($anyCompleteTodos)
+        <button id="clear-completed" ic-delete-from="/todos/completed" ic-include='{"status":"$status"}'>Clear completed</button>
+    #end
+</footer>
