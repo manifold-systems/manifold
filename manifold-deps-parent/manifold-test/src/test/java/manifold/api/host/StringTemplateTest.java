@@ -129,6 +129,36 @@ public class StringTemplateTest extends TestCase
     assertEquals( "6", value );
   }
 
+  public void testEscape()
+  {
+    String value = "\$5"; 
+    assertEquals( "${'$'}5", value );
+    
+    value = "\${6}"; 
+    assertEquals( "${'$'}{6}", value );
+
+    value = "\${7}\${8}";
+    assertEquals( "${'$'}{7}${'$'}{8}", value );
+
+    value = "${7}\${8}";
+    assertEquals( "7${'$'}{8}", value );
+
+    value = "\${7}${8}";
+    assertEquals( "${'$'}{7}8", value );
+    
+    int num1 = 7;
+    int num2 = 8;
+
+    value = "\$num1\$num2";
+    assertEquals( "${'$'}num1${'$'}num2", value );
+
+    value = "$num1\$num2";
+    assertEquals( "7${'$'}num2", value );
+
+    value = "\$num1$num2";
+    assertEquals( "${'$'}num18", value );
+  }
+  
   @DisableStringLiteralTemplates
   public void testDisableStringLiteralTemplates_Method()
   {

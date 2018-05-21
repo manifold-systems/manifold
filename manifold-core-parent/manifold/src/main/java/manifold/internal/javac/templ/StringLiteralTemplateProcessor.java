@@ -21,6 +21,7 @@ import manifold.api.templ.StringLiteralTemplateParser;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.api.type.ICompilerComponent;
 import manifold.internal.javac.JavaParser;
+import manifold.internal.javac.ManDiagnosticHandler;
 import manifold.util.Stack;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
@@ -29,6 +30,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   private TreeMaker _maker;
   private Names _names;
   private Stack<Boolean> _disabled;
+  private ManDiagnosticHandler _manDiagnosticHandler;
 
   @Override
   public void init( BasicJavacTask javacTask )
@@ -43,9 +45,15 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   }
 
   @Override
-  public void started( TaskEvent taskEvent )
+  public void started( TaskEvent e )
   {
-    // nothing to do
+    if( e.getKind() != TaskEvent.Kind.PARSE )
+    {
+      return;
+    }
+
+    // Install the handler so we can filter the 'illegal escape character' errors for \$
+    _manDiagnosticHandler = new ManDiagnosticHandler( _javacTask.getContext() );
   }
 
   @Override
@@ -55,6 +63,13 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     {
       return;
     }
+
+    try
+    {
+      // Uninstall the handler after the file parses (we create new handler for each file)
+      Log.instance( _javacTask.getContext() ).popDiagnosticHandler( _manDiagnosticHandler );
+    }
+    catch( Throwable ignore ) {}
 
     for( Tree tree : e.getCompilationUnit().getTypeDecls() )
     {
@@ -200,7 +215,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 
   public List<JCTree.JCExpression> parse( String stringValue, int literalOffset )
   {
-    List<StringLiteralTemplateParser.Expr> comps = StringLiteralTemplateParser.parse( stringValue );
+    List<StringLiteralTemplateParser.Expr> comps = StringLiteralTemplateParser.parse( _manDiagnosticHandler, literalOffset+1, stringValue );
     if( comps.isEmpty() )
     {
       return Collections.emptyList();

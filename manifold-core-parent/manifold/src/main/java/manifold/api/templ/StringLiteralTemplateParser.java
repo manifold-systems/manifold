@@ -2,20 +2,25 @@ package manifold.api.templ;
 
 import java.util.ArrayList;
 import java.util.List;
+import manifold.internal.javac.ManDiagnosticHandler;
 
 public class StringLiteralTemplateParser
 {
   private String _stringValue;
   private int _index;
+  private  ManDiagnosticHandler _manDiagnosticHandler;
+  private final int _offsetOfLiteral;
 
-  public static List<Expr> parse( String stringValue )
+  public static List<Expr> parse( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral, String stringValue )
   {
-    return new StringLiteralTemplateParser( stringValue ).parse();
+    return new StringLiteralTemplateParser( manDiagnosticHandler, offsetOfLiteral, stringValue ).parse();
   }
 
-  private StringLiteralTemplateParser( String stringValue )
+  private StringLiteralTemplateParser( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral, String stringValue )
   {
+    _manDiagnosticHandler = manDiagnosticHandler;
     _stringValue = stringValue;
+    _offsetOfLiteral = offsetOfLiteral;
   }
 
   private List<Expr> parse()
@@ -24,23 +29,31 @@ public class StringLiteralTemplateParser
     StringBuilder contentExpr = new StringBuilder();
     int length = _stringValue.length();
     int offset = 0;
+    int escapedCount = 0;
     for( _index = 0; _index < length; _index++ )
     {
       char c = _stringValue.charAt( _index );
       if( c == '$' )
       {
-        Expr expr = parseExpr();
-        if( expr != null )
+        if( isEscaped( _index, escapedCount ) )
         {
-          if( contentExpr.length() > 0 )
+          escapedCount++;
+        }
+        else
+        {
+          Expr expr = parseExpr();
+          if( expr != null )
           {
-            // add
-            comps.add( new Expr( contentExpr.toString(), offset, ExprKind.Verbatim ) );
-            contentExpr = new StringBuilder();
-            offset = _index + 1;
+            if( contentExpr.length() > 0 )
+            {
+              // add
+              comps.add( new Expr( contentExpr.toString(), offset, ExprKind.Verbatim ) );
+              contentExpr = new StringBuilder();
+              offset = _index + 1;
+            }
+            comps.add( expr );
+            continue;
           }
-          comps.add( expr );
-          continue;
         }
       }
       contentExpr.append( c );
@@ -52,6 +65,11 @@ public class StringLiteralTemplateParser
     }
 
     return comps;
+  }
+
+  private boolean isEscaped( int index, int escapedCount )
+  {
+    return _manDiagnosticHandler.isEscapedPos( _offsetOfLiteral + index + (escapedCount+1) );
   }
 
   private Expr parseExpr()
