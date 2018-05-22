@@ -12,6 +12,7 @@ import manifold.util.StreamUtil;
 public class ManDiagnosticHandler extends Log.DiagnosticHandler
 {
   private Set<Integer> _escapedPos;
+  private String _source;
 
   public ManDiagnosticHandler( Context ctx )
   {
@@ -29,23 +30,33 @@ public class ManDiagnosticHandler extends Log.DiagnosticHandler
   {
     if( jcDiagnostic. getCode().equals( "compiler.err.illegal.esc.char" ) )
     {
+      String source = getSource( jcDiagnostic );
+      int pos = (int)jcDiagnostic.getPosition();
+      char escaped = source.charAt( pos );
+      if( escaped == '$' )
+      {
+        _escapedPos.add( pos );
+        return;
+      }
+    }
+
+    prev.report( jcDiagnostic );
+  }
+
+  private String getSource( JCDiagnostic jcDiagnostic )
+  {
+    if( _source == null )
+    {
       try
       {
         Reader reader = jcDiagnostic.getSource().openReader( true );
-        int pos = (int)jcDiagnostic.getPosition();
-        char escaped = StreamUtil.getContent( reader ).charAt( pos );
-        if( escaped == '$' )
-        {
-          _escapedPos.add( pos );
-          return;
-        }
+        _source = StreamUtil.getContent( reader );
       }
       catch( IOException e )
       {
         throw new RuntimeException( e );
       }
     }
-
-    prev.report( jcDiagnostic );
+    return _source;
   }
 }

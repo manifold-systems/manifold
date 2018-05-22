@@ -2,25 +2,34 @@ package manifold.api.templ;
 
 import java.util.ArrayList;
 import java.util.List;
-import manifold.internal.javac.ManDiagnosticHandler;
+import java.util.function.IntPredicate;
 
 public class StringLiteralTemplateParser
 {
   private String _stringValue;
+  private final IntPredicate _escapeMatcher;
   private int _index;
-  private  ManDiagnosticHandler _manDiagnosticHandler;
-  private final int _offsetOfLiteral;
 
-  public static List<Expr> parse( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral, String stringValue )
+  /**
+   * Parse a string from a string literal using standard template delimiters e.g., "$foo" and "${foo.bar()}",
+   * and return the list of expressions.
+   *
+   * @param $escapeMatcher Given the index of a '$' returns whether or not the '$' is escaped. Command line
+   *                       compilers filter out the '\' char in the string, so the caller must keep track.
+   *                       Other parsers, like many IDE parsers, preserve the '\' chars in the string, so
+   *                       they have a different (and simpler) way of determining escaped '$' chars.
+   * @param stringValue The value of the string literal as returned by the tokenizer.
+   * @return The list of expressions from the String
+   */
+  public static List<Expr> parse( IntPredicate $escapeMatcher, String stringValue )
   {
-    return new StringLiteralTemplateParser( manDiagnosticHandler, offsetOfLiteral, stringValue ).parse();
+    return new StringLiteralTemplateParser( $escapeMatcher, stringValue ).parse();
   }
 
-  private StringLiteralTemplateParser( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral, String stringValue )
+  private StringLiteralTemplateParser( IntPredicate $escapeMatcher, String stringValue )
   {
-    _manDiagnosticHandler = manDiagnosticHandler;
     _stringValue = stringValue;
-    _offsetOfLiteral = offsetOfLiteral;
+    _escapeMatcher = $escapeMatcher;
   }
 
   private List<Expr> parse()
@@ -29,17 +38,12 @@ public class StringLiteralTemplateParser
     StringBuilder contentExpr = new StringBuilder();
     int length = _stringValue.length();
     int offset = 0;
-    int escapedCount = 0;
     for( _index = 0; _index < length; _index++ )
     {
       char c = _stringValue.charAt( _index );
       if( c == '$' )
       {
-        if( isEscaped( _index, escapedCount ) )
-        {
-          escapedCount++;
-        }
-        else
+        if( !_escapeMatcher.test( _index ) )
         {
           Expr expr = parseExpr();
           if( expr != null )
@@ -65,11 +69,6 @@ public class StringLiteralTemplateParser
     }
 
     return comps;
-  }
-
-  private boolean isEscaped( int index, int escapedCount )
-  {
-    return _manDiagnosticHandler.isEscapedPos( _offsetOfLiteral + index + (escapedCount+1) );
   }
 
   private Expr parseExpr()

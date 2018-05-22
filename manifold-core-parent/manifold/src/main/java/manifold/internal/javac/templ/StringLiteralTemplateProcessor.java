@@ -14,6 +14,7 @@ import com.sun.tools.javac.util.Names;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.IntPredicate;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
@@ -215,7 +216,8 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 
   public List<JCTree.JCExpression> parse( String stringValue, int literalOffset )
   {
-    List<StringLiteralTemplateParser.Expr> comps = StringLiteralTemplateParser.parse( _manDiagnosticHandler, literalOffset+1, stringValue );
+    List<StringLiteralTemplateParser.Expr> comps =
+      StringLiteralTemplateParser.parse( new EscapeMatcher( _manDiagnosticHandler, literalOffset+1 ), stringValue );
     if( comps.isEmpty() )
     {
       return Collections.emptyList();
@@ -302,5 +304,29 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   private void replaceNames( JCTree.JCExpression expr, int offset )
   {
     expr.accept( new NameReplacer( _javacTask, offset ) );
+  }
+
+  private static class EscapeMatcher implements IntPredicate
+  {
+    private final ManDiagnosticHandler _manDiagnosticHandler;
+    private final int _offsetOfLiteral;
+    private int _escapedCount;
+
+    private EscapeMatcher( ManDiagnosticHandler manDiagnosticHandler, int offsetOfLiteral )
+    {
+      _manDiagnosticHandler = manDiagnosticHandler;
+      _offsetOfLiteral = offsetOfLiteral;
+    }
+
+    @Override
+    public boolean test( int index )
+    {
+      if( _manDiagnosticHandler.isEscapedPos( _offsetOfLiteral + index + (_escapedCount+1) ) )
+      {
+        _escapedCount++;
+        return true;
+      }
+      return false;
+    }
   }
 }
