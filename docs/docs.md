@@ -933,13 +933,15 @@ LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
 ```
 
-By default String templates are _disabled_.  Enable the feature via the `strings` Manifold plugin argument:
+By default String templates are _disabled_.  Enable the feature with the `strings` Manifold plugin argument:
 ```
 -Xplugin:Manifold strings
 ```  
-The argument enables templates in any String anywhere in your project. If you need to turn the feature off in specific
-areas in your code, you can use the `@DisableStringLiteralTemplates` annotation to control its use.  You can annotate a
-class, method, field, or local variable declaration to turn it on or off in that scope:
+The argument enables templates in any String anywhere in your project. 
+
+If you need to turn the feature off in specific areas in your code, you can use the `@DisableStringLiteralTemplates` 
+annotation to control its use.  You can annotate a class, method, field, or local variable declaration to turn it on 
+or off in that scope:
 ```java
 @DisableStringLiteralTemplates // turns off String templating inside this class
 public class MyClass
@@ -957,14 +959,16 @@ public class MyClass
 }
 ```
 
-Finally, if you need to escape the `$` and use it as a plain `$` when adjacent to a valid Java identifier word, you 
-can do this:
+Finally, you can use the `$` literally and bypass string templates using standard Java character escape syntax (since ver 0.14-alpha):
 ```java
-int hour = 8;
+String verbatim = "It is \$hour o'clock"; // prints "It is $hour o'clock"
+```
+Or, if you prefer, you can use template syntax:
+```java
 String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
 ``` 
 
-**Template files** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
+Template **_files_** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
 
 
 ### Build Your Own Manifold
