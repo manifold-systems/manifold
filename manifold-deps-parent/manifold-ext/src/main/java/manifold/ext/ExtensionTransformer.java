@@ -25,8 +25,6 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,34 +32,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import javax.lang.model.type.NoType;
 import javax.tools.Diagnostic;
 import manifold.ExtIssueMsg;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
-import manifold.ext.api.ICallHandler;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.TypeProcessor;
-import manifold.util.Pair;
-import manifold.util.ReflectUtil;
-import manifold.util.concurrent.ConcurrentHashSet;
-import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 /**
  */
 public class ExtensionTransformer extends TreeTranslator
 {
-  private static final String STRUCTURAL_PROXY = "_structuralproxy_";
-  private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
-  private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
-
   private final ExtensionManifold _sp;
   private final TypeProcessor _tp;
   private boolean _bridgeMethod;
@@ -555,7 +541,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Symtab symbols = _tp.getSymtab();
       Names names = Names.instance( _tp.getContext() );
-      Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), getClass().getName() );
+      Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), RuntimeMethods.class.getName() );
       Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
                                                                     List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
@@ -572,7 +558,7 @@ public class ExtensionTransformer extends TreeTranslator
       assignTypes( ifaceClassExpr.selected, thisArg.type.tsym );
       newArgs.add( ifaceClassExpr );
 
-      JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, ExtensionTransformer.class.getName() + ".constructProxy" ), List.from( newArgs ) );
+      JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".constructProxy" ), List.from( newArgs ) );
       makeProxyCall.setPos( theCall.pos );
       makeProxyCall.type = thisArg.type;
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
@@ -594,10 +580,10 @@ public class ExtensionTransformer extends TreeTranslator
     TreeMaker make = _tp.getTreeMaker();
     Symtab symbols = _tp.getSymtab();
     Names names = Names.instance( _tp.getContext() );
-    Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), getClass().getName() );
+    Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), RuntimeMethods.class.getName() );
 
     Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( expression.pos(), names.fromString( "assignStructuralIdentity" ), reflectMethodClassSym.type,
-                                                                  List.from( new Type[]{symbols.objectType, symbols.classType} ) );
+      List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
     JavacElements javacElems = _tp.getElementUtil();
     ArrayList<JCExpression> newArgs = new ArrayList<>();
@@ -608,7 +594,7 @@ public class ExtensionTransformer extends TreeTranslator
     assignTypes( ifaceClassExpr.selected, type.tsym );
     newArgs.add( ifaceClassExpr );
 
-    JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, ExtensionTransformer.class.getName() + ".assignStructuralIdentity" ), List.from( newArgs ) );
+    JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".assignStructuralIdentity" ), List.from( newArgs ) );
     makeProxyCall.type = symbols.objectType;
     JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
     newMethodSelect.sym = makeInterfaceProxyMethod;
@@ -756,146 +742,6 @@ public class ExtensionTransformer extends TreeTranslator
     return expr;
   }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public static Object constructProxy( Object root, Class iface )
-  {
-    // return findCachedProxy( root, iface ); // this is only beneficial when structural invocation happens in a loop, otherwise too costly
-    return createNewProxy( root, iface );
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public static Object assignStructuralIdentity( Object obj, Class iface )
-  {
-    if( obj != null )
-    {
-      //## note: we'd like to avoid the operation if the obj not a ICallHandler,
-      // but that is an expensive structural check, more expensive than this call...
-      //  if( obj is a ICallHandler )
-      //  {
-      Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
-      ifaces.add( iface );
-      //   }
-    }
-    return obj;
-  }
-
-  private static Object createNewProxy( Object root, Class<?> iface )
-  {
-    if( root == null )
-    {
-      return null;
-    }
-    
-    Class rootClass = root.getClass();
-    if( iface.isAssignableFrom( rootClass ) )
-    {
-      return root;
-    }
-
-//    final Field classRedefinedCount;
-//    try
-//    {
-//      classRedefinedCount = Class.class.getDeclaredField( "classRedefinedCount" );
-//      classRedefinedCount.setAccessible( true );
-//      System.out.println( "### " + iface.getSimpleName() + ": " + classRedefinedCount.getInt( iface ) );
-//    }
-//    catch( Exception e )
-//    {
-//      throw new RuntimeException( e );
-//    }
-
-    Map<Class, Constructor> proxyByClass = PROXY_CACHE.get( iface );
-    if( proxyByClass == null )
-    {
-      PROXY_CACHE.put( iface, proxyByClass = new ConcurrentHashMap<>() );
-    }
-    Constructor proxyClassCtor = proxyByClass.get( rootClass );
-    if( proxyClassCtor == null ) //|| BytecodeOptions.JDWP_ENABLED.get() )
-    {
-      Class proxyClass = createProxy( iface, rootClass );
-      proxyByClass.put( rootClass, proxyClassCtor = proxyClass.getConstructors()[0] );
-    }
-    try
-    {
-      // in Java 9 in modular mode the proxy class belongs to the owner's module,
-      // therefore we need to make it accessible from the manifold module before
-      // calling newInstance()
-      ReflectUtil.setAccessible( proxyClassCtor );
-      return proxyClassCtor.newInstance( root );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  private static Class createProxy( Class iface, Class rootClass )
-  {
-    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
-    if( hasCallHandlerMethod( rootClass ) )
-    {
-      return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
-    }
-    return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
-  }
-
-  private static boolean hasCallHandlerMethod( Class rootClass )
-  {
-    String fqn = rootClass.getCanonicalName();
-    BasicJavacTask javacTask = JavaParser.instance().getJavacTask();
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
-    if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
-    {
-      // Nominally implements ICallHandler
-      return true;
-    }
-
-    return hasCallMethod( javacTask, classSymbol.getFirst() );
-  }
-
-  private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
-  {
-    Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
-    Iterable<Symbol> elems = IDynamicJdk.instance().getMembersByName( classSymbol, call );
-    for( Symbol s : elems )
-    {
-      if( s instanceof Symbol.MethodSymbol )
-      {
-        List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)s).getParameters();
-        if( parameters.size() != 6 )
-        {
-          return false;
-        }
-
-        Symtab symbols = Symtab.instance( javacTask.getContext() );
-        Types types = Types.instance( javacTask.getContext() );
-        return types.erasure( parameters.get( 0 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 1 ).asType().equals( symbols.stringType ) &&
-               parameters.get( 2 ).asType().equals( symbols.stringType ) &&
-               types.erasure( parameters.get( 3 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 4 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 5 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 5 ).asType()).getComponentType().equals( symbols.objectType );
-      }
-    }
-    Type superclass = classSymbol.getSuperclass();
-    if( !(superclass instanceof NoType) )
-    {
-      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)superclass.tsym ) )
-      {
-        return true;
-      }
-    }
-    for( Type iface : classSymbol.getInterfaces() )
-    {
-      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)iface.tsym ) )
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
   private Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
     return resolveMethod( pos, _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), name, qual, args );
@@ -908,74 +754,5 @@ public class ExtensionTransformer extends TreeTranslator
     Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
     env.toplevel = compUnit;
     return rs.resolveInternalMethod( pos, env, qual, name, args, null );
-  }
-
-  /**
-   * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
-   * but the association of the structural interface with the receiver is lost.  For example:
-   * <pre>
-   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the runtime type of person here is really just a Map (or Binding)
-   *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPerosnExt extension methods class
-   *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
-   * </pre>
-   */
-  //## todo: this is inefficient, we should consider caching the methods by signature along with the interfaces
-  public static Object invokeUnhandled( Object thiz, Class proxiedIface, String name, Class returnType, Class[] paramTypes, Object[] args )
-  {
-    Set<Class> ifaces = ID_MAP.get( thiz );
-    if( ifaces != null )
-    {
-      for( Class iface : ifaces )
-      {
-        if( iface == proxiedIface )
-        {
-          continue;
-        }
-
-        Method m = findMethod( iface, name, paramTypes );
-        if( m != null )
-        {
-          try
-          {
-            Object result = m.invoke( constructProxy( thiz, iface ), args );
-            //## todo: maybe coerce result if return types are not directly assignable?  e.g., Integer vs. Double
-            return result;
-          }
-          catch( Exception e )
-          {
-            throw new RuntimeException( e );
-          }
-        }
-      }
-    }
-    return ICallHandler.UNHANDLED;
-  }
-
-  private static Method findMethod( Class<?> iface, String name, Class[] paramTypes )
-  {
-    try
-    {
-      Method m = iface.getDeclaredMethod( name, paramTypes );
-      if( m == null )
-      {
-        for( Class superIface : iface.getInterfaces() )
-        {
-          m = findMethod( superIface, name, paramTypes );
-          if( m != null )
-          {
-            break;
-          }
-        }
-      }
-      if( m != null )
-      {
-        return m;
-      }
-    }
-    catch( Exception e )
-    {
-      return null;
-    }
-    return null;
   }
 }

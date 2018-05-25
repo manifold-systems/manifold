@@ -318,7 +318,13 @@ public class SrcClassUtil
   {
     for( Attribute.Compound annotationMirror : symbol.getAnnotationMirrors() )
     {
-      SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( annotationMirror.getAnnotationType().toString() );
+      String fqn = annotationMirror.getAnnotationType().toString();
+      if( fqn.equals( "jdk.internal.HotSpotIntrinsicCandidate" ) )
+      {
+        // Since java 10 we have to keep these out of stubbed java source
+        continue;
+      }
+      SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
       for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
       {
         annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.snd.type.toString() ), value.snd.getValue() );

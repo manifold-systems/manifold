@@ -380,6 +380,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
           RelativePath relativePath = (RelativePath)ReflectUtil.field( fileObj, "relativePath" ).get();
           return removeExtension( relativePath.getPath() ).replace( File.separatorChar, '.' ).replace( '/', '.' );
       }
+      else if( fileObj.getClass().getSimpleName().equals( "SigJavaFileObject" ) )
+      {
+        // Since Java 10 javac uses .sig files...
+        FileObject fileObject = (FileObject)ReflectUtil.field( fileObj, "fileObject" ).get();
+        return fileObject instanceof JavaFileObject ? inferBinaryName( location, (JavaFileObject)fileObject ) : null;
+      }
       else if( fileObj.getClass().getSimpleName().equals( "JarFileObject" ) )
       {
         String relativePath = ReflectUtil.method( fileObj, "getPath" ).invoke().toString();

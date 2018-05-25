@@ -4,7 +4,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
-import manifold.ext.ExtensionTransformer;
+import manifold.ext.RuntimeMethods;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.This;
@@ -39,7 +39,7 @@ public abstract class MapStructExt implements ICallHandler
     }
     if( value == ICallHandler.UNHANDLED )
     {
-      value = ExtensionTransformer.invokeUnhandled( thiz, iface, name, returnType, paramTypes, args );
+      value = RuntimeMethods.invokeUnhandled( thiz, iface, name, returnType, paramTypes, args );
     }
     if( value == ICallHandler.UNHANDLED )
     {

@@ -427,7 +427,14 @@ public class JavacPlugin implements Plugin, TaskListener
           String scheme = uri.getScheme();
           if( scheme.equalsIgnoreCase( "file" ) || scheme.equalsIgnoreCase( "jar" ) )
           {
-            pathsFromModules.add( new File( uri ).getAbsolutePath() );
+            try
+            {
+              pathsFromModules.add( new File( uri ).getAbsolutePath() );
+            }
+            catch( IllegalArgumentException iae )
+            {
+              System.out.println( iae.getMessage() );
+            }
           }
         }
       }
