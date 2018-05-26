@@ -42,6 +42,7 @@ import manifold.ext.api.This;
 import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
+import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
 
 /**
@@ -255,6 +256,8 @@ public class ExtensionTransformer extends TreeTranslator
 
     verifyExtensionInterfaces( tree );
 
+    checkExtensionClassError( tree );
+
     precompileClasses( tree );
   }
 
@@ -439,6 +442,26 @@ public class ExtensionTransformer extends TreeTranslator
     result = tree;
   }
 
+  private void checkExtensionClassError( JCTree.JCClassDecl typeDecl )
+  {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin == null )
+    {
+      return;
+    }
+
+    if( !isExtensionClass( typeDecl ) )
+    {
+      return;
+    }
+
+    String extendedFqn = getExtendedClassName();
+    if( javacPlugin.getJavaInputFiles().stream().anyMatch( pair -> pair.getFirst().equals( extendedFqn ) ) )
+    {
+      _tp.report( typeDecl, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_CANNOT_EXTEND_SOURCE_FILE.get( extendedFqn ) );
+    }
+  }
+
   private void verifyExtensionMethod( JCTree.JCMethodDecl tree )
   {
 //    if( JavacPlugin.instance() == null )
@@ -447,19 +470,16 @@ public class ExtensionTransformer extends TreeTranslator
 //      return;
 //    }
 
-    if( !isFromExtensionClass( tree ) )
+    if( !isExtensionClass( _tp.getParent( tree ) ) )
     {
       return;
     }
 
-    String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
-    int iExt = extendedClassName.indexOf( ExtensionManifold.EXTENSIONS_PACKAGE + '.' );
-    if( iExt < 0 )
+    String extendedClassName = getExtendedClassName();
+    if( extendedClassName == null )
     {
       return;
     }
-
-    extendedClassName = extendedClassName.substring( iExt + ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
 
     boolean thisAnnoFound = false;
     List<JCTree.JCVariableDecl> parameters = tree.getParameters();
@@ -509,9 +529,21 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private boolean isFromExtensionClass( JCTree.JCMethodDecl tree )
+  private String getExtendedClassName()
   {
-    Tree parent = _tp.getParent( tree );
+    String extendedClassName = _tp.getCompilationUnit().getPackageName().toString();
+    int iExt = extendedClassName.indexOf( ExtensionManifold.EXTENSIONS_PACKAGE + '.' );
+    if( iExt < 0 )
+    {
+      return null;
+    }
+
+    extendedClassName = extendedClassName.substring( iExt + ExtensionManifold.EXTENSIONS_PACKAGE.length() + 1 );
+    return extendedClassName;
+  }
+
+  private boolean isExtensionClass( Tree parent )
+  {
     if( parent instanceof JCTree.JCClassDecl )
     {
       if( hasAnnotation( ((JCTree.JCClassDecl)parent).getModifiers().getAnnotations(), Extension.class ) )
