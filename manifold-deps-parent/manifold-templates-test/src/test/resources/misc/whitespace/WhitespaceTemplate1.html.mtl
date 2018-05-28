@@ -1,0 +1,28 @@
+<%@import java.util.ArrayList%>
+<%@ import java.time.LocalDate %>
+<%@params(String param1)%>
+<html>
+  hello <% String text; %> bye
+  hello ${ true } asfds
+  hello
+  <%
+    text = "high";
+    char ff = text.charAt(2);
+  %>
+  hello
+
+  hello  ${'}'} bye
+  <% for( int i = 0; i < 4; i++ ) {%>
+    hello
+  <%}%>
+  <%LocalDate date = LocalDate.now();%>
+  The date is ${date.getMonth()}/${date.getDayOfMonth()}/${date.getYear()}
+  hello <%=param1%><%=param1%> bye
+  hello
+
+  <% String a = "<%= expression syntax %>"; %><% String b = "$text"; %>${a}${b}
+
+  <%--
+    comment <% %>
+  --%> bye
+</html>

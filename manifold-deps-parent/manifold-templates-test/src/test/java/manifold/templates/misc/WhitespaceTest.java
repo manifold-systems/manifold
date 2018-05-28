@@ -1,11 +1,12 @@
 package manifold.templates.misc;
 
+import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
 
 
 import static org.junit.Assert.assertEquals;
 
-public class NewLineTest
+public class WhitespaceTest
 {
   @Test
   public void testForNewLines()
@@ -32,5 +33,31 @@ public class NewLineTest
                   "\n" +
                   "Learn more: http://manifold.systems/manifold-templates.html",
       misc.TestNewLines.render( "Hello World!!!" ) );
+  }
+
+  @DisableStringLiteralTemplates
+  public void testWhitespace()
+  {
+    assertEquals(
+      "<html>\n" +
+      "  hello bye\n" +
+      "  hello true asfds\n" +
+      "  hello\n" +
+      "  hello\n" +
+      "\n" +
+      "  hello  } bye\n" +
+      "    hello\n" +
+      "    hello\n" +
+      "    hello\n" +
+      "    hello\n" +
+      "    The date is MAY/27/2018\n" +
+      "  hello hullohullo bye\n" +
+      "  hello\n" +
+      "\n" +
+      "<%= expression syntax %>high\n" +
+      "\n" +
+      " bye\n" +
+      "</html>",
+      misc.whitespace.WhitespaceTemplate1.render( "hullo" ) );
   }
 }

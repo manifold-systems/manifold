@@ -686,7 +686,7 @@ public class TemplateGen {
                 Token token = tokens.get(i);
                 switch (token.getType()) {
                     case CONTENT:
-                        String text = makeText( lastTokenType, token.getText() );
+                        String text = makeText( lastTokenType, nextTokenType( i+1, endPos ), token.getText() );
                         if( text.length() > 0 )
                         {sb.newLine("                buffer.append(\"").append(text.replaceAll("\"", "\\\\\"").replaceAll("\r", "").replaceAll("\n", "\\\\n")+ "\");");
                         bbLineNumbers.add(token.getLine());}
@@ -735,21 +735,57 @@ public class TemplateGen {
             sb.newLine("                handleException(e, \"").append(this.currClass.fileName).append("\", lineStart, bbLineNumbers);\n            }");
         }
 
-        private String makeText( Token.TokenType lastTokenType, String text )
+        private Token.TokenType nextTokenType( int index, Integer endPos )
         {
-            if( text != null &&
-                lastTokenType != Token.TokenType.CONTENT &&
-                lastTokenType != Token.TokenType.EXPR )
+            if( index <= endPos )
             {
-                if( text.length() > 0 )
+                return tokens.get( index ).getType();
+            }
+            return null;
+        }
+
+        private String makeText( Token.TokenType lastTokenType, Token.TokenType nextTokenType, String text )
+        {
+            if( text != null && text.length() > 0 )
+            {
+                if( lastTokenType != Token.TokenType.CONTENT &&
+                    lastTokenType != Token.TokenType.EXPR )
                 {
                     if( text.charAt( 0 ) == '\n' )
                     {
+                        // remove leading new line (which follows the preceding non-content token)
                         text = text.substring( 1 );
                     }
                     else if( text.length() > 1 && text.charAt( 0 ) == '\r' && text.charAt( 1 ) == '\n' )
                     {
+                        // remove leading new line (which follows the preceding non-content token)
                         text = text.substring( 2 );
+                    }
+                }
+                // remove trailing indentation (which precedes the following non-content token)
+                text = removeTrailingIndentation( text, nextTokenType );
+            }
+            return text;
+        }
+
+        private String removeTrailingIndentation( String text, Token.TokenType nextTokenType )
+        {
+            if( text.length() > 0 &&
+                nextTokenType != Token.TokenType.CONTENT &&
+                nextTokenType != Token.TokenType.EXPR_ANGLE_BEGIN &&
+                nextTokenType != Token.TokenType.EXPR_BRACE_BEGIN )
+            {
+                int iEol = text.lastIndexOf( '\n' );
+                if( iEol >= 0 )
+                {
+                    for( int i = text.length()-1; i >= iEol; i-- )
+                    {
+                        char c = text.charAt( i );
+                        if( c != ' ' && c != '\t' )
+                        {
+                            text = text.substring( 0, i+1 );
+                            break;
+                        }
                     }
                 }
             }
