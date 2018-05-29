@@ -14,6 +14,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
 {
   public static final String FILE_EXTENSION = "json";
 
+  @Override
   public void init( IModuleComponent typeLoader )
   {
     init( typeLoader, JsonModel::new, "editor.plugin.typeloader.json.JsonTypeFactory" );
