@@ -24,17 +24,22 @@ import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import manifold.ExtIssueMsg;
+import manifold.api.fs.IFile;
 import manifold.api.type.ITypeManifold;
+import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
 import manifold.ext.api.Structural;
@@ -44,6 +49,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.ReflectUtil;
 
 /**
  */
@@ -259,6 +265,8 @@ public class ExtensionTransformer extends TreeTranslator
     checkExtensionClassError( tree );
 
     precompileClasses( tree );
+
+    incrementalCompileClasses( tree );
   }
 
   private void precompileClasses( JCTree.JCClassDecl tree )
@@ -335,6 +343,85 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     return matchingTypes;
+  }
+
+  private void incrementalCompileClasses( JCTree.JCClassDecl tree )
+  {
+    Set<Object> drivers = new HashSet<>();
+    for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
+    {
+      if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
+      {
+        getIncrementalCompileDrivers( anno, drivers );
+      }
+    }
+
+    incrementalCompile( drivers );
+  }
+
+  private void getIncrementalCompileDrivers( JCTree.JCAnnotation anno, Set<Object> drivers )
+  {
+    Attribute.Compound attribute = anno.attribute;
+    if( attribute == null )
+    {
+      return;
+    }
+
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "driverClass" ) )
+      {
+        String fqnDriver = (String)pair.snd.getValue();
+        try
+        {
+          //noinspection unchecked
+          Class<?> cls;
+          try
+          {
+            cls = Class.forName( fqnDriver );
+          }
+          catch( Exception e )
+          {
+            cls = Class.forName( fqnDriver, false, Thread.currentThread().getContextClassLoader() );
+          }
+          Object driver = cls.getConstructor().newInstance();
+          drivers.add( driver );
+        }
+        catch( Exception e )
+        {
+          _tp.report( anno, Diagnostic.Kind.ERROR, e.getClass().getTypeName() + " : " + e.getMessage() );
+        }
+      }
+    }
+  }
+
+  private void incrementalCompile( Set<Object> drivers )
+  {
+    JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
+    for( Object driver: drivers )
+    {
+      //noinspection unchecked
+      Set<IFile> files = ((Collection<File>)ReflectUtil.method( driver, "getResourceFiles" ).invoke() ).stream().map( (File f) -> ManifoldHost.getFileSystem().getIFile( f ) )
+        .collect( Collectors.toSet() );
+      for( ITypeManifold tm : ManifoldHost.instance().getCurrentModule().getTypeManifolds() )
+      {
+        for( IFile file: files )
+        {
+          Set<String> types = Arrays.stream( tm.getTypesForFile( file ) ).collect( Collectors.toSet() );
+          if( types.size() > 0 )
+          {
+            ReflectUtil.method( driver, "mapTypesToFile", Set.class, File.class ).invoke( types, file.toJavaFile() );
+            for( String fqn : types )
+            {
+              // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
+              // the type will be compiled to disk.
+              elementUtils.getTypeElement( fqn );
+            }
+          }
+        }
+      }
+    }
   }
 
   private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )

@@ -148,6 +148,10 @@ public class ClassSymbols
       javacTaskOut[0] = javacTask;
     }
 
+    if( pair == null )
+    {
+      throw new IllegalStateException( "Failed to find class, '" + fqn + "'" );
+    }
     Symbol.ClassSymbol classSymbol = pair.getFirst();
     if( classSymbol == null )
     {
