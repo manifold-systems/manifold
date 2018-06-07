@@ -1,9 +1,13 @@
 package manifold.ext.producer.sample;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
@@ -22,6 +26,7 @@ import manifold.api.type.SourcePosition;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.util.ManClassUtil;
+import manifold.util.StreamUtil;
 
 public class Model implements IModel
 {
@@ -66,6 +71,30 @@ public class Model implements IModel
   {
     _favsFiles.remove( file );
     _favsFiles.add( file );
+  }
+
+  static Set<String> getExtendedTypes( IFile file )
+  {
+    Objects.requireNonNull( file );
+    String content;
+    try
+    {
+      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+
+    Set<String> extendedTypes = new HashSet<>();
+    for( StringTokenizer tokenizer = new StringTokenizer( content, "\r\n" ); tokenizer.hasMoreTokens(); )
+    {
+      String line = tokenizer.nextToken();
+      StringTokenizer lineTokenizer = new StringTokenizer( line, "|" );
+      String extended = lineTokenizer.nextToken();
+      extendedTypes.add( extended );
+    }
+    return extendedTypes;
   }
 
   static String makeExtensionClassName( String extendedClassname )

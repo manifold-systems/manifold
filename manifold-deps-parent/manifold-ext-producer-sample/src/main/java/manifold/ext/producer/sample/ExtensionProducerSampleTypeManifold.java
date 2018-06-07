@@ -39,6 +39,11 @@ public class ExtensionProducerSampleTypeManifold extends AbstractExtensionProduc
     return FILE_EXT;
   }
 
+  protected Set<String> getExtendedTypes( IFile file )
+  {
+    return Model.getExtendedTypes( file );
+  }
+
   @Override
   protected String makeExtensionClassName( String extendedClassFqn )
   {

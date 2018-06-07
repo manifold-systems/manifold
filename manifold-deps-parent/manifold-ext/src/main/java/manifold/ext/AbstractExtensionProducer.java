@@ -1,14 +1,11 @@
 package manifold.ext;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModuleComponent;
@@ -16,10 +13,8 @@ import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.IModel;
 import manifold.api.type.JavaTypeManifold;
-import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.LocklessLazyVar;
-
 
 /**
  * An abstraction for a type manifold that produces Extension Classes to be processed by the {@link ExtensionManifold}.
@@ -88,7 +83,7 @@ public abstract class AbstractExtensionProducer<M extends IModel> extends JavaTy
 
   private void addFile( Map<String, LocklessLazyVar<M>> extensionToModel, IFile file )
   {
-    Set<String> extendedTypes = readExtendedTypes( file );
+    Set<String> extendedTypes = getExtendedTypes( file );
     for( String extended : extendedTypes )
     {
       String extension = makeExtensionClassName( extended );
@@ -226,30 +221,7 @@ public abstract class AbstractExtensionProducer<M extends IModel> extends JavaTy
     return types;
   }
 
-  private Set<String> readExtendedTypes( IFile file )
-  {
-    Objects.requireNonNull( file );
-    String content;
-    try
-    {
-      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
-    }
-    catch( IOException e )
-    {
-      throw new RuntimeException( e );
-    }
-
-
-    Set<String> extendedTypes = new HashSet<>();
-    for( StringTokenizer tokenizer = new StringTokenizer( content, "\r\n" ); tokenizer.hasMoreTokens(); )
-    {
-      String line = tokenizer.nextToken();
-      StringTokenizer lineTokenizer = new StringTokenizer( line, "|" );
-      String extended = lineTokenizer.nextToken();
-      extendedTypes.add( extended );
-    }
-    return extendedTypes;
-  }
+  protected abstract Set<String> getExtendedTypes( IFile file );
 
   private class MyCacheClearer extends CacheClearer
   {
