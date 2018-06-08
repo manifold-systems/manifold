@@ -48,7 +48,7 @@ public abstract class AbstractSingleFileModel implements IModel
   @Override
   public void removeFile( IFile file )
   {
-    // tolerate adding a file even though this is a sisngle file model
+    // tolerate adding a file even though this is a single file model
     // the idea is to issue a warning during compilation if this model has more than one file
     _files.remove( file );
   }
