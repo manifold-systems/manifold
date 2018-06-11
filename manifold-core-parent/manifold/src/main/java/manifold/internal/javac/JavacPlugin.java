@@ -513,7 +513,10 @@ public class JavacPlugin implements Plugin, TaskListener
       String pkg = extractPackageName( inputFile );
       if( pkg != null )
       {
+        int iDot = inputFile.lastIndexOf( '.' );
+        String ext = iDot > 0 ? inputFile.substring( iDot ) : "";
         String fqn = pkg + '.' + new File( inputFile ).getName();
+        fqn = fqn.substring( 0, fqn.length() - ext.length() );
         String path = derivePath( fqn, inputFile );
         sourcePath.add( path );
       }
