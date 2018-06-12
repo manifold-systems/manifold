@@ -163,25 +163,19 @@ public class SrcClassUtil
 
   private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, BasicJavacTask javacTask )
   {
-    SrcMethod srcMethod = new SrcMethod( srcClass );
+    String name = method.flatName().toString();
+    SrcMethod srcMethod = new SrcMethod( srcClass, name.equals( "<init>" ) );
     addAnnotations( srcMethod, method );
     srcMethod.modifiers( method.getModifiers() );
     if( (method.flags() & Flags.VARARGS) != 0 )
     {
       srcMethod.modifiers( srcMethod.getModifiers() | 0x00000080 ); // Modifier.VARARGS
     }
-    String name = method.flatName().toString();
     if( name.equals( "<clinit>" ) )
     {
       return;
     }
-    boolean isConstructor = name.equals( "<init>" );
-    if( isConstructor )
-    {
-      srcMethod.name( srcClass.getSimpleName() );
-      srcMethod.setConstructor( true );
-    }
-    else
+    if( !srcMethod.isConstructor() )
     {
       srcMethod.name( name );
       srcMethod.returns( new SrcType( method.getReturnType().toString() ) );
