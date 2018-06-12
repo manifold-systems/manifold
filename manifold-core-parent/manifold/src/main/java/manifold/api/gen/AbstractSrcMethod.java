@@ -127,7 +127,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     else if( isConstructor() )
     {
-      sb.append( getSimpleName() ).append( renderParameters( sb ) ).append( renderThrowTypes( sb ) );
+      sb.append( getOwner().getSimpleName() ).append( renderParameters( sb ) ).append( renderThrowTypes( sb ) );
     }
     if( isAbstractMethod() )
     {
