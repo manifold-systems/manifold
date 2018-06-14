@@ -1,6 +1,7 @@
 package manifold.internal.host;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -168,9 +169,9 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     }
   }
 
-  public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
+  public Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
   {
-    return IModuleComponent.super.findTypeManifoldsFor( fqn );
+    return IModuleComponent.super.findTypeManifoldsFor( fqn, predicates );
   }
 
   @Override

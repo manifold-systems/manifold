@@ -2,6 +2,7 @@ package manifold.api.host;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
@@ -52,7 +53,8 @@ public interface IModule
 
   Set<ITypeManifold> getTypeManifolds();
 
-  Set<ITypeManifold> findTypeManifoldsFor( String fqn );
+  @SuppressWarnings("unchecked")
+  Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... prediates );
 
   Set<ITypeManifold> findTypeManifoldsFor( IFile file );
 
