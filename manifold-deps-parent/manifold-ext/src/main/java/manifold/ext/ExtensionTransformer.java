@@ -322,10 +322,9 @@ public class ExtensionTransformer extends TreeTranslator
           Collection<String> namesToPrecompile = computeNamesToPrecompile( tm.getAllTypeNames(), entry.getValue() );
           for( String fqn : namesToPrecompile )
           {
-            JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
             // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
             // the type will be compiled to disk.
-            elementUtils.getTypeElement( fqn );
+            IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
           }
         }
       }
@@ -398,7 +397,6 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void incrementalCompile( Set<Object> drivers )
   {
-    JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
     for( Object driver: drivers )
     {
       //noinspection unchecked
@@ -416,7 +414,7 @@ public class ExtensionTransformer extends TreeTranslator
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
               // the type will be compiled to disk.
-              elementUtils.getTypeElement( fqn );
+              IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
             }
           }
         }

@@ -575,7 +575,10 @@ public class JavacPlugin implements Plugin, TaskListener
       if( type != null )
       {
         String path = derivePath( type, inputFile.getSecond().getName() );
-        sourcePath.add( path );
+        if( path != null )
+        {
+          sourcePath.add( path );
+        }
       }
       else
       {
@@ -598,7 +601,8 @@ public class JavacPlugin implements Plugin, TaskListener
     String ext = iDot > 0 ? sourceFile.substring( iDot ) : "";
     String pathRelativeFile = type.replace( '.', File.separatorChar ) + ext;
     assert sourceFile.endsWith( pathRelativeFile );
-    return sourceFile.substring( 0, sourceFile.indexOf( pathRelativeFile ) - 1 );
+    int typeIndex = sourceFile.indexOf( pathRelativeFile );
+    return typeIndex >= 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
   private List<String> fetchGosuInputFiles() //TODO rename to something language-agnostic
