@@ -49,6 +49,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 
 /**
@@ -786,7 +787,15 @@ public class ExtensionTransformer extends TreeTranslator
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
           BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass ).getFirst();
+          Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
+          if( classSymbol == null )
+          {
+            // In module mode if a package in another module is not exported, classes in the package
+            // will not be accessible to other modules, hence the null classSymbol
+            continue;
+          }
+
+          Symbol.ClassSymbol extClassSym = classSymbol.getFirst();
           if( extClassSym == null )
           {
             // This can happen during bootstrapping with Dark Java classes from Manifold itself
