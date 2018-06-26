@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
@@ -45,7 +46,7 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new ImageCodeGen( model._url, topLevelFqn ).make();
     StringBuilder sb = srcClass.render( new StringBuilder(), 0 );

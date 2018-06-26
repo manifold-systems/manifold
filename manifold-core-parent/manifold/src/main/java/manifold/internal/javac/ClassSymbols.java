@@ -7,6 +7,7 @@ import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
@@ -15,7 +16,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import javax.lang.model.element.Element;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -29,6 +29,7 @@ import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.Pair;
 import manifold.util.SourcePathUtil;
+import manifold.util.concurrent.LocklessLazyVar;
 
 /**
  * Utility to get ClassSymbol for a given type name.
@@ -41,6 +42,7 @@ public class ClassSymbols
   private static final Map<IModule, ClassSymbols> INSTANCES = new ConcurrentHashMap<>();
 
   private final IModule _module;
+  private LocklessLazyVar<BasicJavacTask> _altJavacTask;
   private JavacTool _javacTool;
   private volatile StandardJavaFileManager _fm;
   private JavaFileManager _wfm;
@@ -59,6 +61,18 @@ public class ClassSymbols
   {
     _module = module;
     ManifoldHost.addTypeLoaderListenerAsWeakRef( module, new CacheClearer() );
+    _altJavacTask = LocklessLazyVar.make( () -> {
+      init();
+
+      StringWriter errors = new StringWriter();
+      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+      if( errors.getBuffer().length() > 0 )
+      {
+        // report errors to console
+        System.err.println( errors.getBuffer() );
+      }
+      return task;
+    } );
   }
 
   private void init()
@@ -93,30 +107,36 @@ public class ClassSymbols
 
   public BasicJavacTask getJavacTask()
   {
-    init();
-
-    StringWriter errors = new StringWriter();
-    BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
-    if( errors.getBuffer().length() > 0 )
-    {
-      // report errors to console
-      System.err.println( errors.getBuffer() );
-    }
-    return task;
+    return _altJavacTask.get();
   }
 
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, String fqn )
   {
-    JavacElements elementUtils = JavacElements.instance( javacTask.getContext() );
-    Symbol.ClassSymbol typeElement = elementUtils.getTypeElement( fqn );
+    return getClassSymbol( javacTask, (TypeProcessor)null, fqn );
+  }
 
+  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, JavaFileManager.Location location, String fqn )
+  {
+    return getClassSymbol( javacTask.getContext(), location, fqn );
+  }
+
+  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, TypeProcessor tp, String fqn )
+  {
+    Context ctx = tp == null ? javacTask.getContext() : tp.getContext();
+    JCTree.JCCompilationUnit cu = tp == null ? null : (JCTree.JCCompilationUnit)tp.getCompilationUnit();
+    return getClassSymbol( ctx, cu, fqn );
+  }
+
+  private Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( Context ctx, Object moduleCtx, String fqn )
+  {
+    Symbol.ClassSymbol typeElement = IDynamicJdk.instance().getTypeElement( ctx, moduleCtx, fqn );
     if( typeElement == null )
     {
       // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
       return getClassSymbolForProducedClass( fqn, new BasicJavacTask[1] );
     }
 
-    JavacTrees trees = JavacTrees.instance( javacTask.getContext() );
+    JavacTrees trees = JavacTrees.instance( ctx );
     TreePath path = trees.getPath( typeElement );
     if( path != null )
     {
@@ -132,22 +152,13 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn )
   {
-    return makeSrcClassStub( fqn, null, null );
+    return makeSrcClassStub( fqn, null );
   }
 
-  public SrcClass makeSrcClassStub( String fqn, BasicJavacTask[] javacTaskOut, JCTree.JCCompilationUnit[] compUnit )
+  public SrcClass makeSrcClassStub( String fqn, JavaFileManager.Location location )
   {
-    BasicJavacTask javacTask = javacTaskOut != null && javacTaskOut[0] != null ? javacTaskOut[0] : getJavacTask();
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, fqn );
-    if( compUnit != null )
-    {
-      compUnit[0] = pair.getSecond();
-    }
-    if( javacTaskOut != null )
-    {
-      javacTaskOut[0] = javacTask;
-    }
-
+    BasicJavacTask javacTask = location != null ? JavacPlugin.instance().getJavacTask() : getJavacTask();
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, location, fqn );
     if( pair == null )
     {
       throw new IllegalStateException( "Failed to find class, '" + fqn + "'" );
@@ -156,24 +167,19 @@ public class ClassSymbols
     if( classSymbol == null )
     {
       // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
-      return makeSrcClassStubFromProducedClass( fqn, compUnit );
+      return makeSrcClassStubFromProducedClass( fqn, location );
     }
 
-    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), javacTask );
+    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), getJavacTask() );
   }
 
-  private SrcClass makeSrcClassStubFromProducedClass( String fqn, JCTree.JCCompilationUnit[] compUnit )
+  private SrcClass makeSrcClassStubFromProducedClass( String fqn, JavaFileManager.Location location )
   {
     BasicJavacTask[] task = new BasicJavacTask[1];
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbolForProducedClass( fqn, task );
     if( pair == null )
     {
       throw new NullPointerException( "Could not find ClassSymbol for: " + fqn );
-    }
-    
-    if( compUnit != null )
-    {
-      compUnit[0] = pair.getSecond();
     }
 
     Symbol.ClassSymbol classSymbol = pair.getFirst();
@@ -197,35 +203,29 @@ public class ClassSymbols
       _wfm = new ManifoldJavaFileManager( _fm, null, false );
     }
     task[0] = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, Collections.singleton( fileObj.getFirst() ) );
-    try
+
+    // note, ok to call getTypeElement() directly here and not via IDynamicJdk because always in context of 1.8 (no module)
+    JavacElements elementUtils = JavacElements.instance( task[0].getContext() );
+    Symbol.ClassSymbol e = elementUtils.getTypeElement( fqn );
+
+    if( e != null && e.getSimpleName().contentEquals( ManClassUtil.getShortClassName( fqn ) ) )
     {
-      Iterable<? extends Element> elements = task[0].analyze();
-      for( Element e: elements )
+      JavacTrees trees = JavacTrees.instance( task[0].getContext() );
+      TreePath path = trees.getPath( e );
+      if( path != null )
       {
-        if( e instanceof Symbol.ClassSymbol && e.getSimpleName().contentEquals( ManClassUtil.getShortClassName( fqn ) ) )
-        {
-          JavacTrees trees = JavacTrees.instance( task[0].getContext() );
-          TreePath path = trees.getPath( e );
-          if( path != null )
-          {
-            return new Pair<>( (Symbol.ClassSymbol)e, (JCTree.JCCompilationUnit)path.getCompilationUnit() );
-          }
-          else
-          {
-            // TreePath is only applicable to a source file;
-            // if fqn is not a source file, there is no compilation unit available
-            return new Pair<>( (Symbol.ClassSymbol)e, null );
-          }
-        }
+        return new Pair<>( e, (JCTree.JCCompilationUnit)path.getCompilationUnit() );
       }
-    }
-    catch( IOException e )
-    {
-      throw new RuntimeException( e );
+      else
+      {
+        // TreePath is only applicable to a source file;
+        // if fqn is not a source file, there is no compilation unit available
+        return new Pair<>( e, null );
+      }
     }
 
     StringBuffer errorText = errors.getBuffer();
-    if( errorText.length() > 0  )
+    if( errorText.length() > 0 )
     {
       throw new RuntimeException( "Compile errors:\n" + errorText );
     }

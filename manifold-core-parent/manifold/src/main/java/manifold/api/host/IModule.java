@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
@@ -58,5 +59,5 @@ public interface IModule
 
   Set<ITypeManifold> findTypeManifoldsFor( IFile file );
 
-  JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler );
+  JavaFileObject produceFile( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler );
 }

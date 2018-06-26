@@ -6,7 +6,7 @@ import manifold.api.fs.IFile;
 
 /**
  * For use with {@link ResourceFileTypeManifold}. Implementors of {@link IModel} store and manage
- * state necessary to generate source code in the context of {@link ResourceFileTypeManifold#contribute(String, String, IModel, DiagnosticListener)}
+ * state necessary to generate source code in the context of {@link ResourceFileTypeManifold#contribute(javax.tools.JavaFileManager.Location, String, String, IModel, DiagnosticListener)}
  */
 public interface IModel
 {

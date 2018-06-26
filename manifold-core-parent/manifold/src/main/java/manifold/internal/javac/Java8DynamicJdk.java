@@ -1,12 +1,14 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -67,8 +69,15 @@ public class Java8DynamicJdk implements IDynamicJdk
   }
 
   @Override
-  public Symbol.ClassSymbol getTypeElement( Context ctx, JCTree.JCCompilationUnit ignore, String fqn )
+  public Symbol.ClassSymbol getTypeElement( Context ctx, Object ignore, String fqn )
   {
     return JavacElements.instance( ctx ).getTypeElement( fqn );
+  }
+
+  @Override
+  public Symbol.ClassSymbol getLoadedClass( Context ctx, String fqn )
+  {
+    Name name = Names.instance( ctx ).fromString( fqn );
+    return Symtab.instance( ctx ).classes.get( name );
   }
 }

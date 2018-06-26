@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.AbstractTypeSystemListener;
@@ -229,12 +230,14 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   /**
    * Contribute source code for the specified type and model.
    *
+   *
+   * @param location (Experimental) The location of the use-site in the Java compiler.  Provides javac module context.  Optional and only relevant at compile-time when executed within a Javac compiler.
    * @param topLevelFqn The qualified name of the top-level type to contribute.
    * @param existing    The source produced from other manifolds so far; if not empty, this manifold must not be a {@link ContributorKind#Primary} contributor.
    * @param model       The model your manifold uses to generate the source.
    * @return The combined source code for the specified top-level type.
    */
-  protected abstract String contribute( String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
+  protected abstract String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
 
   protected M getModel( String topLevel )
   {
@@ -351,13 +354,13 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   }
 
   @Override
-  public String contribute( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
+  public String contribute( JavaFileManager.Location location, String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
   {
     String topLevel = findTopLevelFqn( fqn );
     LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( topLevel );
 
     M model = lazyModel.get();
-    String source = contribute( topLevel, existing, model, errorHandler );
+    String source = contribute( location, topLevel, existing, model, errorHandler );
 
     if( !model.isProcessing() )
     {

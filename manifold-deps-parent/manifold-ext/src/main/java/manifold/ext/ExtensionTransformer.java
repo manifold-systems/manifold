@@ -737,8 +737,8 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression thisArg = m.selected;
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
-      BasicJavacTask javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn ).getFirst();
+      BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
+      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
       m.type = method.type;
@@ -786,7 +786,7 @@ public class ExtensionTransformer extends TreeTranslator
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
           BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
+          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass ).getFirst();
           if( extClassSym == null )
           {
             // This can happen during bootstrapping with Dark Java classes from Manifold itself

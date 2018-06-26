@@ -3,6 +3,7 @@ package manifold.api.type;
 import java.util.Collection;
 import java.util.List;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModuleComponent;
@@ -15,7 +16,7 @@ import manifold.api.host.IModuleComponent;
  * <lu>
  *   <li>Define a domain of types via {@link #getTypeNames(String)}</li>
  *   <li>Resolve types in that domain via {@link #isType(String)}, {@link #isTopLevelType(String)}, and {@link #isPackage(String)}</li>
- *   <li>Contribute source toward a given type projection via {@link #contribute(String, String, DiagnosticListener)}</li>
+ *   <li>Contribute source toward a given type projection via {@link #contribute(JavaFileManager.Location, String, String, DiagnosticListener)}</li>
  * </lu>
  * <p/>
  * Separate instances of a given implementation of this interface exist per {@link manifold.api.host.IModule}.
@@ -74,7 +75,7 @@ public interface ITypeManifold extends IFileConnected
   /**
    * Contribute source corresponding with the fqn.
    */
-  String contribute( String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
+  String contribute( JavaFileManager.Location location, String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
 
   Collection<String> getAllTypeNames();
 

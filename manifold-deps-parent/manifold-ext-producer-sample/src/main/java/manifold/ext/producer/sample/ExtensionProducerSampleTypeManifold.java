@@ -2,6 +2,7 @@ package manifold.ext.producer.sample;
 
 import java.util.Set;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.ext.AbstractExtensionProducer;
@@ -57,7 +58,7 @@ public class ExtensionProducerSampleTypeManifold extends AbstractExtensionProduc
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, Model model,
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model,
                                DiagnosticListener<JavaFileObject> errorHandler )
   {
     return model.makeSource( topLevelFqn, errorHandler );

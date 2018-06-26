@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
@@ -107,13 +108,13 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     return _typeManifolds;
   }
 
-  public JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  public JavaFileObject produceFile( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
-    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( sps, fqn, errorHandler ) ) );
+    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( location, sps, fqn, errorHandler ) ) );
   }
 
-  private String compoundProduce( Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  private String compoundProduce( JavaFileManager.Location location, Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
     ITypeManifold found = null;
     String result = "";
@@ -124,6 +125,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
       {
         if( found != null && (found.getContributorKind() == Primary || sp.getContributorKind() == Primary) )
         {
+          //## todo: use location to select more specifically (in Java 9+ with the location's module)
           List<IFile> files = sp.findFilesForType( fqn );
           JavaFileObject file = new SourceJavaFileObject( files.get( 0 ).toURI() );
           errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, 0, 1, 1,
@@ -136,7 +138,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
         else
         {
           found = sp;
-          result = sp.contribute( fqn, result, errorHandler );
+          result = sp.contribute( location, fqn, result, errorHandler );
         }
       }
     }
@@ -144,7 +146,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     {
       if( sp.getContributorKind() == ContributorKind.Supplemental )
       {
-        result = sp.contribute( fqn, result, errorHandler );
+        result = sp.contribute( location, fqn, result, errorHandler );
       }
     }
     return result;
