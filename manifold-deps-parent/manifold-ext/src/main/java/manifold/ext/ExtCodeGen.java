@@ -49,7 +49,7 @@ class ExtCodeGen
 
   ExtCodeGen( JavaFileManager.Location location, Model model, String topLevelFqn, String existingSource )
   {
-    //_location = location;
+    _location = location;
     _model = model;
     _fqn = topLevelFqn;
     _existingSource = existingSource;
@@ -103,9 +103,9 @@ class ExtCodeGen
     {
       for( String extensionFqn : allExtensions )
       {
-        //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
+        //## todo: if fqn (the extension class) is source file, delegate the call to makeSrcClassStub() to the host somehow
         //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
-        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, null ); //_location );
+        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, null ); // _location );
         if( srcExtension != null )
         {
           for( AbstractSrcMethod method : srcExtension.getMethods() )

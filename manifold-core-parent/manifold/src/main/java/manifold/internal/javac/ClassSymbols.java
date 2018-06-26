@@ -134,6 +134,13 @@ public class ClassSymbols
     {
       // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
       return getClassSymbolForProducedClass( fqn, new BasicJavacTask[1] );
+
+//## want this instead, but the typeElement is not complete in this case, investigate this
+//      if( JavacPlugin.instance() != null )
+//      {
+//        typeElement = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), moduleCtx, fqn );
+//        typeElement.complete();
+//      }
     }
 
     JavacTrees trees = JavacTrees.instance( ctx );
@@ -157,7 +164,7 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn, JavaFileManager.Location location )
   {
-    BasicJavacTask javacTask = location != null ? JavacPlugin.instance().getJavacTask() : getJavacTask();
+    BasicJavacTask javacTask = location != null && JavacPlugin.instance() != null ? JavacPlugin.instance().getJavacTask() : getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, location, fqn );
     if( pair == null )
     {
