@@ -786,7 +786,7 @@ public class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
+          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask_PlainFileMgr();
           Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
           if( classSymbol == null )
           {

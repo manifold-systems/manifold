@@ -285,10 +285,15 @@ class ExtCodeGen
       return;
     }
 
-    if( warnIfDuplicate( method, extendedType, errorHandler ) )
-    {
-      return;
-    }
+//## todo: This is disabled because it involves calls to ClassSymbols#getClassSymbol() where another javac compiler task
+//## todo: is spawned which can lead to perf problems because the same graph of types is recompiled over and over.
+//## todo: Instead find a different way to get the type information e.g., ASM, dumb AST trees, etc.
+//## todo: -- or ---
+//## todo: Instead of checking for duplicates at this time, wait and do it during type processing i.e.,
+//    if( warnIfDuplicate( method, extendedType, errorHandler ) )
+//    {
+//      return;
+//    }
 
     // the class is a produced class, therefore we must delegate the calls since calls are not replaced
     boolean delegateCalls = !_existingSource.isEmpty();
@@ -414,7 +419,7 @@ class ExtCodeGen
     }
 
     ClassSymbols classSymbols = ClassSymbols.instance( getModule() );
-    Context ctx = JavacPlugin.instance() == null ? classSymbols.getJavacTask().getContext() : JavacPlugin.instance().getContext();
+    Context ctx = JavacPlugin.instance() == null ? classSymbols.getJavacTask_PlainFileMgr().getContext() : JavacPlugin.instance().getContext();
     Symbol.ClassSymbol sym = IDynamicJdk.instance().getLoadedClass( ctx, ((SrcClass)method.getOwner()).getName() );
     if( sym == null )
     {

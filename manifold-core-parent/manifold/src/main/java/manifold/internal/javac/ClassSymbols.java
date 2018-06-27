@@ -5,19 +5,16 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import manifold.api.fs.IResource;
@@ -42,7 +39,8 @@ public class ClassSymbols
   private static final Map<IModule, ClassSymbols> INSTANCES = new ConcurrentHashMap<>();
 
   private final IModule _module;
-  private LocklessLazyVar<BasicJavacTask> _altJavacTask;
+  private LocklessLazyVar<BasicJavacTask> _altJavacTask_PlainFileMgr;
+  private LocklessLazyVar<BasicJavacTask> _altJavacTask_ManFileMgr;
   private JavacTool _javacTool;
   private volatile StandardJavaFileManager _fm;
   private JavaFileManager _wfm;
@@ -61,11 +59,26 @@ public class ClassSymbols
   {
     _module = module;
     ManifoldHost.addTypeLoaderListenerAsWeakRef( module, new CacheClearer() );
-    _altJavacTask = LocklessLazyVar.make( () -> {
+    _altJavacTask_PlainFileMgr = LocklessLazyVar.make( () -> {
       init();
 
       StringWriter errors = new StringWriter();
       BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+      if( errors.getBuffer().length() > 0 )
+      {
+        // report errors to console
+        System.err.println( errors.getBuffer() );
+      }
+      return task;
+    } );
+    _altJavacTask_ManFileMgr = LocklessLazyVar.make( () -> {
+      init();
+      if( _wfm == null )
+      {
+        _wfm = new ManifoldJavaFileManager( _fm, null, false );
+      }
+      StringWriter errors = new StringWriter();
+      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
       if( errors.getBuffer().length() > 0 )
       {
         // report errors to console
@@ -105,9 +118,13 @@ public class ClassSymbols
     }
   }
 
-  public BasicJavacTask getJavacTask()
+  public BasicJavacTask getJavacTask_PlainFileMgr()
   {
-    return _altJavacTask.get();
+    return _altJavacTask_PlainFileMgr.get();
+  }
+  public BasicJavacTask getJavacTask_ManFileMgr()
+  {
+    return _altJavacTask_ManFileMgr.get();
   }
 
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, String fqn )
@@ -164,7 +181,7 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn, JavaFileManager.Location location )
   {
-    BasicJavacTask javacTask = location != null && JavacPlugin.instance() != null ? JavacPlugin.instance().getJavacTask() : getJavacTask();
+    BasicJavacTask javacTask = location != null && JavacPlugin.instance() != null ? JavacPlugin.instance().getJavacTask() : getJavacTask_PlainFileMgr();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, location, fqn );
     if( pair == null )
     {
@@ -177,7 +194,7 @@ public class ClassSymbols
       return makeSrcClassStubFromProducedClass( fqn, location );
     }
 
-    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), getJavacTask() );
+    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), getJavacTask_PlainFileMgr() );
   }
 
   private SrcClass makeSrcClassStubFromProducedClass( String fqn, JavaFileManager.Location location )
@@ -196,24 +213,12 @@ public class ClassSymbols
 
   private Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbolForProducedClass( String fqn, BasicJavacTask[] task )
   {
-    init();
-
-    Pair<JavaFileObject, String> fileObj = JavaParser.instance().findJavaSource( fqn, null );
-    if( fileObj == null )
-    {
-      return null;
-    }
-
     StringWriter errors = new StringWriter();
-    if( _wfm == null )
-    {
-      _wfm = new ManifoldJavaFileManager( _fm, null, false );
-    }
-    task[0] = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, Collections.singleton( fileObj.getFirst() ) );
 
-    // note, ok to call getTypeElement() directly here and not via IDynamicJdk because always in context of 1.8 (no module)
-    JavacElements elementUtils = JavacElements.instance( task[0].getContext() );
-    Symbol.ClassSymbol e = elementUtils.getTypeElement( fqn );
+    // need javac with ManifoldJavaFileManager because the produced class must come from manifold
+    task[0] = getJavacTask_ManFileMgr();
+
+    Symbol.ClassSymbol e = IDynamicJdk.instance().getTypeElement( task[0].getContext(), null, fqn );
 
     if( e != null && e.getSimpleName().contentEquals( ManClassUtil.getShortClassName( fqn ) ) )
     {
