@@ -247,6 +247,10 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     public void refreshedTypes( RefreshRequest request )
     {
       super.refreshedTypes( request );
+      if( request.file == null )
+      {
+        return;
+      }
 
       for( ITypeManifold tm: getTypeLoader().findTypeManifoldsFor( request.file ) )
       {

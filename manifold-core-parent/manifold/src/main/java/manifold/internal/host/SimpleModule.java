@@ -17,6 +17,7 @@ import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
+import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.internal.javac.SourceSupplier;
 import manifold.util.JavacDiagnostic;
@@ -149,7 +150,26 @@ public abstract class SimpleModule implements IModuleComponent, IModule
         result = sp.contribute( location, fqn, result, errorHandler );
       }
     }
+
+    if( result != null && !result.isEmpty() )
+    {
+      addToJavac( location, fqn );
+    }
+
     return result;
+  }
+
+
+  /**
+   * Ensure the class is compiled to disk if running within Javac via JavacPlugin in {@code static} mode.
+   */
+  private void addToJavac( JavaFileManager.Location location, String fqn )
+  {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin != null && javacPlugin.isStaticCompile() )
+    {
+      javacPlugin.addClassForCompilation( location, fqn );
+    }
   }
 
   public void initializeTypeManifolds()

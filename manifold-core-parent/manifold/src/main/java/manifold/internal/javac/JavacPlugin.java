@@ -55,6 +55,7 @@ import manifold.util.NecessaryEvilUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.StreamUtil;
+import manifold.util.concurrent.ConcurrentHashSet;
 
 /**
  */
@@ -98,6 +99,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private boolean _initialized;
   private Set<Symbol> _seenModules;
   private Map<String, Boolean> _argPresent;
+  private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
 
   public static JavacPlugin instance()
   {
@@ -249,7 +251,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _typeProcessor = new TypeProcessor( _javacTask );
       _issueReporter = new IssueReporter( Log.instance( getContext() ) );
       _seenModules = new LinkedHashSet<>();
-
+      _extraClasses = new ConcurrentHashSet<>();
       injectManFileManager();
     }
   }
@@ -678,7 +680,16 @@ public class JavacPlugin implements Plugin, TaskListener
         process( e );
         break;
 
+      case GENERATE:
+        addExtraClasses();
+        break;
     }
+  }
+
+  private void addExtraClasses()
+  {
+    // getTypeElement() enters the class into the main Javac for compilation
+    _extraClasses.forEach( pair -> IDynamicJdk.instance().getTypeElement( _ctx, pair.getSecond(), pair.getFirst() ) );
   }
 
   private void addInputFile( TaskEvent e )
@@ -788,5 +799,14 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isNoBootstrapping()
   {
     return decideIfNoBootstrapping();
+  }
+
+  public void addClassForCompilation( JavaFileManager.Location location, String fqn )
+  {
+    Symbol.ClassSymbol loadedClass = IDynamicJdk.instance().getLoadedClass( _ctx, fqn );
+    if( loadedClass == null )
+    {
+      _extraClasses.add( new Pair<>( fqn, location ) );
+    }
   }
 }
