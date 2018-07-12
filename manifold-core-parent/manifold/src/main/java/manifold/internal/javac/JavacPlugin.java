@@ -662,6 +662,10 @@ public class JavacPlugin implements Plugin, TaskListener
           hijackJavacCompilerForJava9( e );
         }
         break;
+
+      case GENERATE:
+        addExtraClasses();
+        break;
     }
   }
 
@@ -678,10 +682,6 @@ public class JavacPlugin implements Plugin, TaskListener
 
       case ENTER:
         process( e );
-        break;
-
-      case GENERATE:
-        addExtraClasses();
         break;
     }
   }

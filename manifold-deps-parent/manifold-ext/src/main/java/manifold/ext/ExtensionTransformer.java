@@ -415,7 +415,8 @@ public class ExtensionTransformer extends TreeTranslator
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
               // the type will be compiled to disk.
-              IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
+              Symbol.ClassSymbol classSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
+              assert classSym != null;
             }
           }
         }
