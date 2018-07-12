@@ -49,6 +49,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 
 /**
@@ -322,10 +323,9 @@ public class ExtensionTransformer extends TreeTranslator
           Collection<String> namesToPrecompile = computeNamesToPrecompile( tm.getAllTypeNames(), entry.getValue() );
           for( String fqn : namesToPrecompile )
           {
-            JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
             // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
             // the type will be compiled to disk.
-            elementUtils.getTypeElement( fqn );
+            IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
           }
         }
       }
@@ -398,7 +398,6 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void incrementalCompile( Set<Object> drivers )
   {
-    JavacElements elementUtils = JavacElements.instance( _tp.getContext() );
     for( Object driver: drivers )
     {
       //noinspection unchecked
@@ -416,7 +415,8 @@ public class ExtensionTransformer extends TreeTranslator
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
               // the type will be compiled to disk.
-              elementUtils.getTypeElement( fqn );
+              Symbol.ClassSymbol classSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), fqn );
+              assert classSym != null;
             }
           }
         }
@@ -739,8 +739,8 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression thisArg = m.selected;
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
-      BasicJavacTask javacTask = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionFqn ).getFirst();
+      BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
+      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
       m.type = method.type;
@@ -787,8 +787,16 @@ public class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask();
-          Symbol.ClassSymbol extClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, extensionClass ).getFirst();
+          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask_PlainFileMgr();
+          Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
+          if( classSymbol == null )
+          {
+            // In module mode if a package in another module is not exported, classes in the package
+            // will not be accessible to other modules, hence the null classSymbol
+            continue;
+          }
+
+          Symbol.ClassSymbol extClassSym = classSymbol.getFirst();
           if( extClassSym == null )
           {
             // This can happen during bootstrapping with Dark Java classes from Manifold itself

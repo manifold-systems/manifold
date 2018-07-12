@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.IModuleComponent;
@@ -36,7 +37,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make( errorHandler );
     return srcClass.render( new StringBuilder(), 0).toString();

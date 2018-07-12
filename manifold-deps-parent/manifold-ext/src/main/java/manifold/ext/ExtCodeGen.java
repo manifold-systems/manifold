@@ -2,11 +2,10 @@ package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +14,7 @@ import java.util.List;
 import java.util.Set;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
@@ -32,7 +32,9 @@ import manifold.api.type.ITypeManifold;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
+import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
+import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.util.JavacDiagnostic;
 
@@ -40,12 +42,14 @@ import manifold.util.JavacDiagnostic;
  */
 class ExtCodeGen
 {
+  private JavaFileManager.Location _location;
   private final Model _model;
   private final String _fqn;
   private String _existingSource;
 
-  ExtCodeGen( Model model, String topLevelFqn, String existingSource )
+  ExtCodeGen( JavaFileManager.Location location, Model model, String topLevelFqn, String existingSource )
   {
+    _location = location;
     _model = model;
     _fqn = topLevelFqn;
     _existingSource = existingSource;
@@ -97,18 +101,16 @@ class ExtCodeGen
     _model.pushProcessing();
     try
     {
-
-      JavacTaskImpl[] javacTask = new JavacTaskImpl[1];
       for( String extensionFqn : allExtensions )
       {
-        //## todo: if fqn (the extension class) is source file delegate the call to makeSrcClassStub() to the host somehow
+        //## todo: if fqn (the extension class) is source file, delegate the call to makeSrcClassStub() to the host somehow
         //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
-        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, javacTask, null );
+        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, null ); // _location );
         if( srcExtension != null )
         {
           for( AbstractSrcMethod method : srcExtension.getMethods() )
           {
-            addExtensionMethod( method, extendedClass, errorHandler, javacTask[0] );
+            addExtensionMethod( method, extendedClass, errorHandler );
             methodExtensions = true;
           }
           for( SrcType iface : srcExtension.getInterfaces() )
@@ -206,7 +208,7 @@ class ExtCodeGen
   private void addExtensionMethodsToExistingClass( SrcClass srcClass, StringBuilder sb )
   {
     int iBrace = _existingSource.lastIndexOf( '}' );
-    sb.append( _existingSource.substring( 0, iBrace ) );
+    sb.append( _existingSource, 0, iBrace );
     for( AbstractSrcMethod method : srcClass.getMethods() )
     {
       method.render( sb, 2 );
@@ -276,17 +278,22 @@ class ExtCodeGen
     }
   }
 
-  private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  private void addExtensionMethod( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
   {
     if( !isExtensionMethod( method, extendedType ) )
     {
       return;
     }
 
-    if( warnIfDuplicate( method, extendedType, errorHandler, javacTask ) )
-    {
-      return;
-    }
+//## todo: This is disabled because it involves calls to ClassSymbols#getClassSymbol() where another javac compiler task
+//## todo: is spawned which can lead to perf problems because the same graph of types is recompiled over and over.
+//## todo: Instead find a different way to get the type information e.g., ASM, dumb AST trees, etc.
+//## todo: -- or ---
+//## todo: Instead of checking for duplicates at this time, wait and do it during type processing i.e.,
+//    if( warnIfDuplicate( method, extendedType, errorHandler ) )
+//    {
+//      return;
+//    }
 
     // the class is a produced class, therefore we must delegate the calls since calls are not replaced
     boolean delegateCalls = !_existingSource.isEmpty();
@@ -402,17 +409,23 @@ class ExtCodeGen
                           .rawText( call.toString() ) ) );
   }
 
-  private boolean warnIfDuplicate( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler, JavacTaskImpl javacTask )
+  private boolean warnIfDuplicate( AbstractSrcMethod method, SrcClass extendedType, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    AbstractSrcMethod duplicate = findMethod( method, extendedType, new JavacTaskImpl[]{javacTask} );
+    AbstractSrcMethod duplicate = findMethod( method, extendedType );
 
     if( duplicate == null )
     {
       return false;
     }
 
-    JavacElements elems = JavacElements.instance( javacTask.getContext() );
-    Symbol.ClassSymbol sym = elems.getTypeElement( ((SrcClass)method.getOwner()).getName() );
+    ClassSymbols classSymbols = ClassSymbols.instance( getModule() );
+    Context ctx = JavacPlugin.instance() == null ? classSymbols.getJavacTask_PlainFileMgr().getContext() : JavacPlugin.instance().getContext();
+    Symbol.ClassSymbol sym = IDynamicJdk.instance().getLoadedClass( ctx, ((SrcClass)method.getOwner()).getName() );
+    if( sym == null )
+    {
+      return false;
+    }
+
     JavaFileObject file = sym.sourcefile;
     SrcAnnotationExpression anno = duplicate.getAnnotation( ExtensionMethod.class );
     if( anno != null )
@@ -428,7 +441,7 @@ class ExtCodeGen
     return true;
   }
 
-  private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType, JavacTaskImpl[] javacTask )
+  private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType )
   {
     AbstractSrcMethod duplicate = null;
     outer:
@@ -458,8 +471,8 @@ class ExtCodeGen
         SrcType superClass = extendedType.getSuperClass();
         if( superClass != null && superClass.getName().equals( Object.class.getName() ) )
         {
-          SrcClass superSrcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( superClass.getName(), javacTask, null );
-          duplicate = findMethod( method, superSrcClass, javacTask );
+          SrcClass superSrcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( superClass.getName(), null );
+          duplicate = findMethod( method, superSrcClass );
         }
       }
       if( duplicate == null )
@@ -468,8 +481,8 @@ class ExtCodeGen
         //## inheriting default interface methods, which must not be shadowed by an extension.
         for( SrcType iface: extendedType.getInterfaces() )
         {
-          SrcClass superIface = ClassSymbols.instance( getModule() ).makeSrcClassStub( iface.getName(), javacTask, null );
-          duplicate = findMethod( method, superIface, javacTask );
+          SrcClass superIface = ClassSymbols.instance( getModule() ).makeSrcClassStub( iface.getName(), null );
+          duplicate = findMethod( method, superIface );
           if( duplicate != null )
           {
             break;

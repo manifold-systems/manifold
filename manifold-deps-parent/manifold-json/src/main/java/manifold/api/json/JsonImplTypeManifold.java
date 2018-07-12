@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
@@ -75,7 +76,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     SrcClass srcClass = new JsonImplCodeGen( model.getType(), topLevelFqn ).make();

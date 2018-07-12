@@ -1,36 +1,36 @@
 package manifold.api.gen;
 
-import java.lang.reflect.Modifier;
-
 /**
  */
-public class SrcConstructor extends SrcStatement<SrcConstructor>
+public class SrcConstructor extends AbstractSrcMethod<SrcConstructor>
 {
-  private SrcStatementBlock _body;
-
   public SrcConstructor( SrcClass owner )
   {
     super( owner );
+    if( owner != null )
+    {
+      name( owner.getSimpleName() );
+    }
   }
 
   public SrcConstructor()
   {
-  }
-
-  public SrcConstructor body( SrcStatementBlock body )
-  {
-    _body = body;
-    return this;
+    this( null );
   }
 
   @Override
-  public StringBuilder render( StringBuilder sb, int indent )
+  public boolean isConstructor()
   {
-    renderAnnotations( sb, indent, false );
-    indent( sb, indent );
-    renderModifiers( sb, false, Modifier.PUBLIC );
-    sb.append( getOwner().getSimpleName() ).append( renderParameters( sb ) );
-    _body.render( sb, indent );
-    return sb;
+    return true;
+  }
+
+  @Override
+  public void setOwner( SrcAnnotated owner )
+  {
+    super.setOwner( owner );
+    if( owner != null )
+    {
+      name( owner.getSimpleName() );
+    }
   }
 }

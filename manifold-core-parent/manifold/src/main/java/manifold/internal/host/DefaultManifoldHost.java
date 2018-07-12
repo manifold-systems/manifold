@@ -136,9 +136,9 @@ public class DefaultManifoldHost extends BaseService implements IManifoldHost
     // assumed runtime (as opposed to compile-time), thus no changes to listen to
   }
 
-  public JavaFileObject produceFile( String fqn, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  public JavaFileObject produceFile( String fqn, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return module.produceFile( fqn, errorHandler );
+    return module.produceFile( fqn, location, errorHandler );
   }
 
   @Override

@@ -1,9 +1,11 @@
 package manifold.internal.host;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
@@ -15,6 +17,7 @@ import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
+import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.internal.javac.SourceSupplier;
 import manifold.util.JavacDiagnostic;
@@ -106,13 +109,13 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     return _typeManifolds;
   }
 
-  public JavaFileObject produceFile( String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  public JavaFileObject produceFile( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
-    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( sps, fqn, errorHandler ) ) );
+    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( location, sps, fqn, errorHandler ) ) );
   }
 
-  private String compoundProduce( Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
+  private String compoundProduce( JavaFileManager.Location location, Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )
   {
     ITypeManifold found = null;
     String result = "";
@@ -123,6 +126,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
       {
         if( found != null && (found.getContributorKind() == Primary || sp.getContributorKind() == Primary) )
         {
+          //## todo: use location to select more specifically (in Java 9+ with the location's module)
           List<IFile> files = sp.findFilesForType( fqn );
           JavaFileObject file = new SourceJavaFileObject( files.get( 0 ).toURI() );
           errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, 0, 1, 1,
@@ -135,7 +139,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
         else
         {
           found = sp;
-          result = sp.contribute( fqn, result, errorHandler );
+          result = sp.contribute( location, fqn, result, errorHandler );
         }
       }
     }
@@ -143,10 +147,29 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     {
       if( sp.getContributorKind() == ContributorKind.Supplemental )
       {
-        result = sp.contribute( fqn, result, errorHandler );
+        result = sp.contribute( location, fqn, result, errorHandler );
       }
     }
+
+    if( result != null && !result.isEmpty() )
+    {
+      addToJavac( location, fqn );
+    }
+
     return result;
+  }
+
+
+  /**
+   * Ensure the class is compiled to disk if running within Javac via JavacPlugin in {@code static} mode.
+   */
+  private void addToJavac( JavaFileManager.Location location, String fqn )
+  {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin != null && javacPlugin.isStaticCompile() )
+    {
+      javacPlugin.addClassForCompilation( location, fqn );
+    }
   }
 
   public void initializeTypeManifolds()
@@ -168,9 +191,9 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     }
   }
 
-  public Set<ITypeManifold> findTypeManifoldsFor( String fqn )
+  public Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
   {
-    return IModuleComponent.super.findTypeManifoldsFor( fqn );
+    return IModuleComponent.super.findTypeManifoldsFor( fqn, predicates );
   }
 
   @Override

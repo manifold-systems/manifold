@@ -77,7 +77,7 @@ public interface IManifoldHost extends IService
 
   void addTypeLoaderListenerAsWeakRef( Object ctx, ITypeLoaderListener listener );
 
-  JavaFileObject produceFile( String fqn, IModule module, DiagnosticListener<JavaFileObject> errorHandler );
+  JavaFileObject produceFile( String fqn, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler );
 
   void maybeAssignManifoldType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner );
 

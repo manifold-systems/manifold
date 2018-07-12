@@ -159,7 +159,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
     }
 
-    return findGeneratedFile( fqn.replace( '$', '.' ), ManifoldHost.getCurrentModule(), errorHandler );
+    return findGeneratedFile( fqn.replace( '$', '.' ), location, ManifoldHost.getCurrentModule(), errorHandler );
   }
 
   public Iterable<JavaFileObject> list( Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse ) throws IOException
@@ -215,7 +215,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
         {
           IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( _issueLogger );
           String fqn = tn.name.replace( '$', '.' );
-          JavaFileObject file = findGeneratedFile( fqn, tn.getModule(), issueReporter );
+          JavaFileObject file = findGeneratedFile( fqn, location, tn.getModule(), issueReporter );
           if( file != null && isCorrectModule( location, patchableFiles, file, fqn ) )
           {
             newList.add( file );
@@ -289,7 +289,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     return pathCache.getExtensionCache( "class" ).get( fqn ) != null;
   }
 
-  private JavaFileObject findGeneratedFile( String fqn, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  private JavaFileObject findGeneratedFile( String fqn, Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
     FqnCacheNode<JavaFileObject> node = _generatedFiles.getNode( fqn );
     if( node != null )
@@ -297,7 +297,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       return node.getUserData();
     }
 
-    JavaFileObject file = ManifoldHost.produceFile( fqn, module, errorHandler );
+    JavaFileObject file = ManifoldHost.produceFile( fqn, location, module, errorHandler );
     // note we cache even if file is null, fqn cache is also a miss cache
     _generatedFiles.add( fqn, file );
 

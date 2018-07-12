@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModuleComponent;
@@ -225,9 +226,9 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return new ExtCodeGen( model, topLevelFqn, existing ).make( errorHandler );
+    return new ExtCodeGen( location, model, topLevelFqn, existing ).make( errorHandler );
   }
 
   @Override
@@ -246,6 +247,10 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     public void refreshedTypes( RefreshRequest request )
     {
       super.refreshedTypes( request );
+      if( request.file == null )
+      {
+        return;
+      }
 
       for( ITypeManifold tm: getTypeLoader().findTypeManifoldsFor( request.file ) )
       {

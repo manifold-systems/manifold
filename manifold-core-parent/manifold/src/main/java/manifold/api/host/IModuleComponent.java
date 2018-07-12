@@ -1,10 +1,13 @@
 package manifold.api.host;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IFile;
 import manifold.api.image.ImageTypeManifold;
@@ -32,12 +35,21 @@ public interface IModuleComponent
    * Finds the set of type manifolds that contribute toward the definition of a given type.
    *
    * @param fqn A fully qualified type name
+   * @param predicates Zero or more predicates to filter the set of type manifolds available
    * @return The set of type manifolds that contribute toward the definition of {@code fqn}
    */
-  default Set<ITypeManifold> findTypeManifoldsFor( String fqn )
+  default Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
   {
     Set<ITypeManifold> tms = new HashSet<>( 2 );
-    for( ITypeManifold tm : getModule().getTypeManifolds() )
+    Set<ITypeManifold> typeManifolds = getModule().getTypeManifolds();
+    if( predicates != null && predicates.length > 0 )
+    {
+      typeManifolds = typeManifolds.stream()
+        .filter( e -> Arrays.stream( predicates )
+          .anyMatch( p -> p.test( e ) ) )
+        .collect( Collectors.toSet() );
+    }
+    for( ITypeManifold tm : typeManifolds )
     {
       if( tm.isType( fqn ) )
       {

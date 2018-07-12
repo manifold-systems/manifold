@@ -358,7 +358,7 @@ public class StructuralTypeProxyGenerator
     if( _rootClassSymbol == null )
     {
       ClassSymbols classSymbols = ClassSymbols.instance( ManifoldHost.getGlobalModule() );
-      BasicJavacTask javacTask = classSymbols.getJavacTask();
+      BasicJavacTask javacTask = classSymbols.getJavacTask_PlainFileMgr();
       _rootClassSymbol = classSymbols.getClassSymbol( javacTask, _rootClass.getCanonicalName() ).getFirst();
     }
     return _rootClassSymbol;

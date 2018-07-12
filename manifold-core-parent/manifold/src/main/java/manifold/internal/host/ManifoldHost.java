@@ -158,9 +158,9 @@ public class ManifoldHost
     host().addTypeLoaderListenerAsWeakRef( ctx, listener );
   }
 
-  public static JavaFileObject produceFile( String fqn, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  public static JavaFileObject produceFile( String fqn, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return host().produceFile( fqn, module, errorHandler );
+    return host().produceFile( fqn, location, module, errorHandler );
   }
 
   public static void maybeAssignType( ClassLoader loader, String strType, URL url, BiConsumer<String, Supplier<byte[]>> assigner )

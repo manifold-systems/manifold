@@ -2,6 +2,7 @@ package manifold.api.json;
 
 import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
@@ -51,7 +52,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, JsonModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, JsonModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )

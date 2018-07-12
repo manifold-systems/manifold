@@ -1,6 +1,7 @@
 package manifold.templates.manifold;
 
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModuleComponent;
@@ -53,7 +54,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     String source = model.getSource();
     model.report( errorHandler );

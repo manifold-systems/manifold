@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
@@ -154,7 +155,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String contribute( String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     return getSource( model );
   }

@@ -127,9 +127,9 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     else if( isConstructor() )
     {
-      sb.append( getSimpleName() ).append( renderParameters( sb ) ).append( renderThrowTypes( sb ) );
+      sb.append( getOwner().getSimpleName() ).append( renderParameters( sb ) ).append( renderThrowTypes( sb ) );
     }
-    if( Modifier.isAbstract( (int)getModifiers() ) )
+    if( isAbstractMethod() )
     {
       sb.append( ";\n" );
     }
@@ -145,5 +145,19 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
       }
     }
     return sb;
+  }
+
+  private boolean isAbstractMethod()
+  {
+    return Modifier.isAbstract( (int)getModifiers() ) ||
+           isNonDefaultNonStaticInterfaceMethod();
+  }
+
+  private boolean isNonDefaultNonStaticInterfaceMethod()
+  {
+    return getOwner() instanceof SrcClass &&
+           ((SrcClass)getOwner()).isInterface() &&
+           (getModifiers() & Flags.DEFAULT) == 0 &&
+           (getModifiers() & Flags.STATIC) == 0;
   }
 }
