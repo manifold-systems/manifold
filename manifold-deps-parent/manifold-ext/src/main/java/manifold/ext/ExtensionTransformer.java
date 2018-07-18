@@ -545,7 +545,7 @@ public class ExtensionTransformer extends TreeTranslator
     String extendedFqn = getExtendedClassName();
     if( javacPlugin.getJavaInputFiles().stream().anyMatch( pair -> pair.getFirst().equals( extendedFqn ) ) )
     {
-      _tp.report( typeDecl, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_CANNOT_EXTEND_SOURCE_FILE.get( extendedFqn ) );
+      _tp.report( typeDecl, Diagnostic.Kind.WARNING, ExtIssueMsg.MSG_CANNOT_EXTEND_SOURCE_FILE.get( extendedFqn ) );
     }
   }
 
