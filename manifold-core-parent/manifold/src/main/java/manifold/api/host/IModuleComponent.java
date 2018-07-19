@@ -1,8 +1,10 @@
 package manifold.api.host;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -111,18 +113,37 @@ public interface IModuleComponent
    */
   default void loadBuiltIn( Set<ITypeManifold> tms )
   {
-    ITypeManifold tm = new PropertiesTypeManifold();
-    tms.add( tm );
+    List<String> excludedTypeManifolds = getExludedTypeManifolds();
+    if( !excludedTypeManifolds.contains( PropertiesTypeManifold.class.getTypeName() ) ) {
+      ITypeManifold tm = new PropertiesTypeManifold();
+      tms.add(tm);
+    }
 
-    tm = new ImageTypeManifold();
-    tms.add( tm );
+    if( !excludedTypeManifolds.contains( ImageTypeManifold.class.getTypeName() ) ) {
+      ITypeManifold tm = new ImageTypeManifold();
+      tms.add(tm);
+    }
 
-    tm = new DarkJavaTypeManifold();
-    tms.add( tm );
+    if( !excludedTypeManifolds.contains( DarkJavaTypeManifold.class.getTypeName() ) ) {
+      ITypeManifold tm = new DarkJavaTypeManifold();
+      tms.add(tm);
+    }
+  }
+
+  default List<String> getExludedTypeManifolds()
+  {
+    String exclude = System.getProperty("manifold.exclude");
+    if( exclude != null && !exclude.isEmpty() )
+    {
+      //## todo: implement code to parse a comma separated list or use a file for plugin args
+      return Collections.singletonList( exclude );
+    }
+    return Collections.emptyList();
   }
 
   default void loadRegistered( Set<ITypeManifold> tms )
   {
+    //## todo: also filter excluded type manifolds here (see loadBuiltIn() above)
     ServiceUtil.loadRegisteredServices( tms, ITypeManifold.class, getClass().getClassLoader() );
   }
 }

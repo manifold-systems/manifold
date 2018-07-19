@@ -151,10 +151,10 @@ public abstract class SimpleModule implements IModuleComponent, IModule
       }
     }
 
-    if( result != null && !result.isEmpty() )
-    {
-      addToJavac( location, fqn );
-    }
+//    if( result != null && !result.isEmpty() )
+//    {
+//      addToJavac( location, fqn );
+//    }
 
     return result;
   }

@@ -18,6 +18,11 @@ public class Bootstrap
 
   private static void setupLoaderChainWithManifoldUrl( ClassLoader loader )
   {
+    if( !canWrapChain( loader ) )
+    {
+      return;
+    }
+
     UrlClassLoaderWrapper wrapped = UrlClassLoaderWrapper.wrapIfNotAlreadyVisited( loader );
     if( wrapped == null )
     {
