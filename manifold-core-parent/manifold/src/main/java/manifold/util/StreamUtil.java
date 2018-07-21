@@ -1,7 +1,5 @@
 package manifold.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -30,6 +28,9 @@ import java.util.function.Predicate;
 
 public class StreamUtil
 {
+  // Using a relatively large block size to reduce the number of (very slow)
+  // native calls into the file system
+  private static final int BLOCK_SIZE = 8192;
 
   private StreamUtil()
   {
@@ -239,7 +240,13 @@ public class StreamUtil
    */
   public static void copy( InputStream in, OutputStream out ) throws IOException
   {
-    byte[] buf = new byte[1024];
+//    if( in instanceof FileInputStream && out instanceof FileOutputStream )
+//    {
+//      copy( (FileInputStream)in, (FileOutputStream)out );
+//    }
+//    else
+//    {
+    byte[] buf = new byte[BLOCK_SIZE];
     while( true )
     {
       int count = in.read( buf );
@@ -250,6 +257,7 @@ public class StreamUtil
       out.write( buf, 0, count );
     }
     out.flush();
+//    }
   }
 
   /**
@@ -290,7 +298,7 @@ public class StreamUtil
    */
   public static void copy( Reader in, Writer out ) throws IOException
   {
-    char[] buf = new char[1024];
+    char[] buf = new char[BLOCK_SIZE];
     while( true )
     {
       int count = in.read( buf );
@@ -311,9 +319,9 @@ public class StreamUtil
     copy( fileOrDirectory, toDir, null );
   }
 
-  public static void copy(File fileOrDirectory, File toDir, Predicate<File> filter)
+  public static void copy( File fileOrDirectory, File toDir, Predicate<File> filter )
   {
-    if( filter == null || filter.test(fileOrDirectory) )
+    if( filter == null || filter.test( fileOrDirectory ) )
     {
       File copy = new File( toDir, fileOrDirectory.getName() );
       if( fileOrDirectory.isDirectory() )
@@ -328,8 +336,8 @@ public class StreamUtil
       else
       {
         //noinspection ResultOfMethodCallIgnored
-        try( InputStream is = new BufferedInputStream( new FileInputStream( fileOrDirectory ) );
-             OutputStream os = new BufferedOutputStream( new FileOutputStream( copy ) ) )
+        try (InputStream is = new FileInputStream( fileOrDirectory );
+             OutputStream os = new FileOutputStream( copy ))
         {
           StreamUtil.copy( is, os );
         }
@@ -363,8 +371,8 @@ public class StreamUtil
     else
     {
       //noinspection ResultOfMethodCallIgnored
-      try( InputStream is = new BufferedInputStream( Files.newInputStream( fileOrDirectory ) );
-           OutputStream os = new BufferedOutputStream( Files.newOutputStream( copy ) ) )
+      try (InputStream is = Files.newInputStream( fileOrDirectory );
+           OutputStream os = Files.newOutputStream( copy ))
       {
         StreamUtil.copy( is, os );
       }
@@ -439,4 +447,84 @@ public class StreamUtil
     }
   }
 
+//  /**
+//   * Recursively copy a file or directory to a directory.
+//   */
+//  public static void copy( File fileOrDirectory, File toDir )
+//  {
+//    copy( fileOrDirectory, toDir, null );
+//  }
+//  /**
+//   * Recursively copy a file or directory to a directory.
+//   */
+//  public static void copy( File fileOrDirectory, File toDir, Predicate<Path> filter )
+//  {
+//    copy( fileOrDirectory.toPath(), toDir.toPath(), filter );
+//  }
+//
+//  /**
+//   * Recursively copy a file or directory to a directory.
+//   */
+//  public static void copy( Path fileOrDirectory, Path toDir )
+//  {
+//    copy( fileOrDirectory, toDir, null );
+//  }
+//  /**
+//   * Recursively copy a file or directory to a directory.
+//   */
+//  public static void copy( Path fileOrDirectory, Path toDir, Predicate<Path> filter )
+//  {
+//    try
+//    {
+//      Files.walkFileTree( fileOrDirectory,
+//                          EnumSet.of( FileVisitOption.FOLLOW_LINKS ), Integer.MAX_VALUE,
+//                          new CopyFileVisitor( toDir, filter ) );
+//    }
+//    catch( IOException ioe )
+//    {
+//      throw new RuntimeException( ioe );
+//    }
+//  }
+//
+//  private static class CopyFileVisitor extends SimpleFileVisitor<Path>
+//  {
+//    private Path _from;
+//    private Path _to;
+//    private Predicate<Path> _filter;
+//
+//    CopyFileVisitor( Path to, Predicate<Path> filter )
+//    {
+//      _to = to;
+//      _filter = filter;
+//    }
+//
+//    @Override
+//    public FileVisitResult preVisitDirectory( Path dir, BasicFileAttributes attrs ) throws IOException
+//    {
+//      if( _filter != null && !_filter.test( dir ) )
+//      {
+//        return FileVisitResult.SKIP_SUBTREE;
+//      }
+//
+//      if( _from == null )
+//      {
+//        _from = dir;
+//      }
+//      else
+//      {
+//        Files.createDirectories( _to.resolve( _from.relativize( dir ) ) );
+//      }
+//      return FileVisitResult.CONTINUE;
+//    }
+//
+//    @Override
+//    public FileVisitResult visitFile( Path file, BasicFileAttributes attrs ) throws IOException
+//    {
+//      if( _filter == null || _filter.test( file ) )
+//      {
+//        Files.copy( file, _to.resolve( _from.relativize( file ) ) );
+//      }
+//      return FileVisitResult.CONTINUE;
+//    }
+//  }
 }
