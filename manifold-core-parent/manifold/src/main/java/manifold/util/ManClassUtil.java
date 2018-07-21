@@ -128,4 +128,28 @@ public class ManClassUtil
     }
     return hashSet;
   }
+
+  public static boolean isJavaIdentifier( String part )
+  {
+    if( part.length() == 0 )
+    {
+      return false;
+    }
+    else if( !Character.isJavaIdentifierStart( part.charAt( 0 ) ) )
+    {
+      return false;
+    }
+    else
+    {
+      for( int i = 1; i < part.length(); ++i )
+      {
+        if( !Character.isJavaIdentifierPart( part.charAt( i ) ) )
+        {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  }
 }
