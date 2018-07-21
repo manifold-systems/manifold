@@ -16,6 +16,7 @@ import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
 import manifold.internal.host.ManifoldHost;
 import manifold.util.JsonUtil;
+import manifold.util.ManClassUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
 
@@ -110,10 +111,20 @@ public class PathCache
       }
       for( IDirectory subdir : dir.listDirs() )
       {
-        String fqn = appendResourceNameToPath( relativePath, subdir.getName() );
-        addFilesInDir( fqn, subdir, filesByExtension );
+        if( isValidPackage( subdir ) )
+        {
+          String fqn = appendResourceNameToPath( relativePath, subdir.getName() );
+          addFilesInDir( fqn, subdir, filesByExtension );
+        }
       }
     }
+  }
+
+  private boolean isValidPackage( IDirectory subdir )
+  {
+    // Exclude directories that are not actual packages such as META-INF that exist in jar files
+    //## todo: also consider excluding a user-defined list of directories e.g., the ../config directories for XCenter
+    return ManClassUtil.isJavaIdentifier( subdir.getName() );
   }
 
   private void addToExtension( String fqn, IFile file, Map<String, FqnCache<IFile>> filesByExtension )
