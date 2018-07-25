@@ -52,6 +52,7 @@ import manifold.internal.runtime.Bootstrap;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
 import manifold.util.JreUtil;
+import manifold.util.ManClassUtil;
 import manifold.util.NecessaryEvilUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
@@ -759,7 +760,7 @@ public class JavacPlugin implements Plugin, TaskListener
           for( StringTokenizer tokenizer = new StringTokenizer( pkg, "." ); tokenizer.hasMoreTokens(); )
           {
             String part = tokenizer.nextToken();
-            if( !isJavaIdentifier( part ) )
+            if( !ManClassUtil.isJavaIdentifier( part ) )
             {
               return null;
             }
@@ -772,30 +773,6 @@ public class JavacPlugin implements Plugin, TaskListener
     catch( IOException e )
     {
       throw new RuntimeException( e );
-    }
-  }
-
-  private static boolean isJavaIdentifier( String part )
-  {
-    if( part.length() == 0 )
-    {
-      return false;
-    }
-    else if( !Character.isJavaIdentifierStart( part.charAt( 0 ) ) )
-    {
-      return false;
-    }
-    else
-    {
-      for( int i = 1; i < part.length(); ++i )
-      {
-        if( !Character.isJavaIdentifierPart( part.charAt( i ) ) )
-        {
-          return false;
-        }
-      }
-
-      return true;
     }
   }
 
