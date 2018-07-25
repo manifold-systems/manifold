@@ -670,19 +670,6 @@ public class JavacPlugin implements Plugin, TaskListener
   @Override
   public void finished( TaskEvent e )
   {
-    CompilationUnitTree compilationUnit = e.getCompilationUnit();
-    if( compilationUnit != null && compilationUnit.getPackageName() != null )
-    {
-      for( Tree classDecl : compilationUnit.getTypeDecls() )
-      {
-        if( classDecl instanceof JCTree.JCClassDecl && ((JCTree.JCClassDecl) classDecl).getSimpleName().toString().contains( "GLLine" ) )
-        {
-          System.out.println( "delete me");
-        }
-        break;
-      }
-    }
-
     switch( e.getKind() )
     {
       case PARSE:
@@ -695,37 +682,6 @@ public class JavacPlugin implements Plugin, TaskListener
         process( e );
         break;
     }
-
-    addExtraClasses();
-  }
-
-  private boolean _entered;
-  private void addExtraClasses()
-  {
-    // getTypeElement() enters the class into the main Javac for compilation
-
-    if( _entered )
-    {
-      return;
-    }
-
-    _entered = true;
-    for (Iterator<Pair<String, JavaFileManager.Location>> iterator = _extraClasses.iterator(); iterator.hasNext(); ) {
-      Pair<String, JavaFileManager.Location> pair = iterator.next();
-      String fqn = pair.getFirst();
-      if (fqn.contains("GLLine")) {
-        System.out.println("delete me");
-      }
-      try {
-        Symbol.ClassSymbol cls = IDynamicJdk.instance().getTypeElement(_ctx, pair.getSecond(), fqn);
-        if( cls != null )
-        {
-          iterator.remove();
-        }
-      } catch (Exception ignore) {
-      }
-    }
-    _entered = false;
   }
 
   private void addInputFile( TaskEvent e )
@@ -811,18 +767,5 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isNoBootstrapping()
   {
     return decideIfNoBootstrapping();
-  }
-
-  public void addClassForCompilation( JavaFileManager.Location location, String fqn )
-  {
-    try {
-      Symbol.ClassSymbol loadedClass = IDynamicJdk.instance().getLoadedClass(_ctx, fqn);
-      if (loadedClass == null) {
-        _extraClasses.add(new Pair<>(fqn, location));
-      }
-    }
-    catch( Exception ignore ) {
-
-    }
   }
 }

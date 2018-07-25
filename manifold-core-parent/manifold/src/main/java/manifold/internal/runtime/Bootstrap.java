@@ -20,6 +20,7 @@ public class Bootstrap
   {
     if( !canWrapChain( loader ) )
     {
+      System.out.println( "WARNING: Can't wrap loader: " + loader.getClass().getTypeName() );
       return;
     }
 
