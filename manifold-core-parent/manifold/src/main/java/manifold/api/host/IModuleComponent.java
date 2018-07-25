@@ -1,15 +1,5 @@
 package manifold.api.host;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IFile;
 import manifold.api.image.ImageTypeManifold;
@@ -17,6 +7,20 @@ import manifold.api.properties.PropertiesTypeManifold;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.util.ServiceUtil;
+
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * A component of a {@link IModule}.  Normally a module is itself a module component, however some
@@ -36,8 +40,9 @@ public interface IModuleComponent
   /**
    * Finds the set of type manifolds that contribute toward the definition of a given type.
    *
-   * @param fqn A fully qualified type name
+   * @param fqn        A fully qualified type name
    * @param predicates Zero or more predicates to filter the set of type manifolds available
+   *
    * @return The set of type manifolds that contribute toward the definition of {@code fqn}
    */
   default Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
@@ -65,6 +70,7 @@ public interface IModuleComponent
    * Finds the set of type manifolds that handle a given resource file.
    *
    * @param file A resource file
+   *
    * @return The set of type manifolds that handle {@code file}
    */
   default Set<ITypeManifold> findTypeManifoldsFor( IFile file )
@@ -113,37 +119,58 @@ public interface IModuleComponent
    */
   default void loadBuiltIn( Set<ITypeManifold> tms )
   {
-    List<String> excludedTypeManifolds = getExludedTypeManifolds();
-    if( !excludedTypeManifolds.contains( PropertiesTypeManifold.class.getTypeName() ) ) {
-      ITypeManifold tm = new PropertiesTypeManifold();
-      tms.add(tm);
-    }
+    List<String> excludedTypeManifolds = getExcludedTypeManifolds();
+    addBuiltIn( PropertiesTypeManifold.class, tms, excludedTypeManifolds );
+    addBuiltIn( ImageTypeManifold.class, tms, excludedTypeManifolds );
+    addBuiltIn( DarkJavaTypeManifold.class, tms, excludedTypeManifolds );
+  }
 
-    if( !excludedTypeManifolds.contains( ImageTypeManifold.class.getTypeName() ) ) {
-      ITypeManifold tm = new ImageTypeManifold();
-      tms.add(tm);
-    }
-
-    if( !excludedTypeManifolds.contains( DarkJavaTypeManifold.class.getTypeName() ) ) {
-      ITypeManifold tm = new DarkJavaTypeManifold();
-      tms.add(tm);
+  default void addBuiltIn( Class<? extends ITypeManifold> tmClass, Set<ITypeManifold> tms, List<String> excludedTypeManifolds )
+  {
+    if( !excludedTypeManifolds.contains( tmClass.getTypeName() ) )
+    {
+      try
+      {
+        Constructor<? extends ITypeManifold> declaredConstructor = tmClass.getDeclaredConstructor();
+        if( declaredConstructor == null )
+        {
+          throw new IllegalStateException( "Type manifold class '" + tmClass.getTypeName() + "' does not define an accessible default constructor" );
+        }
+        ITypeManifold tm = declaredConstructor.newInstance();
+        tms.add( tm );
+      }
+      catch( Exception e )
+      {
+        throw new RuntimeException( e );
+      }
     }
   }
 
-  default List<String> getExludedTypeManifolds()
+  default List<String> getExcludedTypeManifolds()
   {
-    String exclude = System.getProperty("manifold.exclude");
+    String exclude = System.getProperty( "manifold.exclude" );
     if( exclude != null && !exclude.isEmpty() )
     {
-      //## todo: implement code to parse a comma separated list or use a file for plugin args
-      return Collections.singletonList( exclude );
+      List<String> excluded = new ArrayList<>();
+      for( StringTokenizer tokenizer = new StringTokenizer( exclude, "," ); tokenizer.hasMoreTokens(); )
+      {
+        String excludedTypeManifold = tokenizer.nextToken().trim();
+        excluded.add( excludedTypeManifold );
+      }
+      return excluded;
     }
     return Collections.emptyList();
   }
 
   default void loadRegistered( Set<ITypeManifold> tms )
   {
-    //## todo: also filter excluded type manifolds here (see loadBuiltIn() above)
-    ServiceUtil.loadRegisteredServices( tms, ITypeManifold.class, getClass().getClassLoader() );
+    Set<ITypeManifold> registeredTms = new HashSet<>();
+    ServiceUtil.loadRegisteredServices( registeredTms, ITypeManifold.class, getClass().getClassLoader() );
+
+    // Exclude type manifolds listed in the "manifold.exclude" sys property
+    List<String> excludedTypeManifolds = getExcludedTypeManifolds();
+    tms.addAll( registeredTms.stream()
+                  .filter( tm -> !excludedTypeManifolds.contains( tm.getClass().getTypeName() ) )
+                  .collect( Collectors.toSet() ) );
   }
 }

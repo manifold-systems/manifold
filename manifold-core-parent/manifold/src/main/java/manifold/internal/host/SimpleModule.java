@@ -151,25 +151,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
       }
     }
 
-//    if( result != null && !result.isEmpty() )
-//    {
-//      addToJavac( location, fqn );
-//    }
-
     return result;
-  }
-
-
-  /**
-   * Ensure the class is compiled to disk if running within Javac via JavacPlugin in {@code static} mode.
-   */
-  private void addToJavac( JavaFileManager.Location location, String fqn )
-  {
-    JavacPlugin javacPlugin = JavacPlugin.instance();
-    if( javacPlugin != null && javacPlugin.isStaticCompile() )
-    {
-      javacPlugin.addClassForCompilation( location, fqn );
-    }
   }
 
   public void initializeTypeManifolds()

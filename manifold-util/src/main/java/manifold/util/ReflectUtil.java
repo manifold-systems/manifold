@@ -221,6 +221,11 @@ public class ReflectUtil
       _method = m;
     }
 
+    public Method getMethod()
+    {
+      return _method;
+    }
+
     public Object invoke( Object receiver, Object... args )
     {
       try
@@ -256,6 +261,11 @@ public class ReflectUtil
     {
       _method = m;
       _receiver = receiver;
+    }
+
+    public Method getMethod()
+    {
+      return _method;
     }
 
     public Object invoke( Object... args )
