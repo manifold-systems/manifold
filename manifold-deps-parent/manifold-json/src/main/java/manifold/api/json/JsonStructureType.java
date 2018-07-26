@@ -562,6 +562,13 @@ public class JsonStructureType extends JsonSchemaType
     {
       return true;
     }
+
+    if( isSchemaType() )
+    {
+      // Json Schema types must be identity compared
+      return this == o;
+    }
+
     if( o == null || getClass() != o.getClass() )
     {
       return false;
@@ -591,6 +598,12 @@ public class JsonStructureType extends JsonSchemaType
   @Override
   public int hashCode()
   {
+    if( isSchemaType() )
+    {
+      // Json Schema types must be identity compared
+      return System.identityHashCode( this );
+    }
+
     int result = super.hashCode();
     result = 31 * result + _superTypes.hashCode();
     result = 31 * result + _membersByName.hashCode();

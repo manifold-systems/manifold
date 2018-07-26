@@ -503,6 +503,10 @@ public class JsonSchemaTransformer
       transform.run();
     }
 
+    if( result instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)result).setJsonSchema();
+    }
     return result;
   }
 
@@ -745,6 +749,7 @@ public class JsonSchemaTransformer
     return null;
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private boolean isTypeDescriptor( Bindings elem )
   {
     return !(elem.size() == 1 && elem.containsKey( JSCH_REQUIRED ));
