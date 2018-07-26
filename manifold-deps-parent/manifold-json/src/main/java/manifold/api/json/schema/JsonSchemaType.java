@@ -21,6 +21,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   private List<IJsonType> _definitions;
   private URL _file;
   private List<JsonIssue> _issues;
+  private boolean _bSchemaType;
 
   protected JsonSchemaType( String name, URL source, JsonSchemaType parent )
   {
@@ -80,6 +81,15 @@ public abstract class JsonSchemaType implements IJsonParentType
   public void setDefinitions( List<IJsonType> definitions )
   {
     _definitions = definitions;
+  }
+
+  public boolean isSchemaType()
+  {
+    return _bSchemaType;
+  }
+  protected void setJsonSchema()
+  {
+    _bSchemaType = true;
   }
 
   protected boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )
