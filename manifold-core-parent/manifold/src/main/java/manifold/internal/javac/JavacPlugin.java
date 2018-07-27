@@ -606,7 +606,7 @@ public class JavacPlugin implements Plugin, TaskListener
     String pathRelativeFile = type.replace( '.', File.separatorChar ) + ext;
     assert sourceFile.endsWith( pathRelativeFile );
     int typeIndex = sourceFile.indexOf( pathRelativeFile );
-    return typeIndex >= 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
+    return typeIndex > 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
   private List<String> fetchGosuInputFiles() //TODO rename to something language-agnostic
