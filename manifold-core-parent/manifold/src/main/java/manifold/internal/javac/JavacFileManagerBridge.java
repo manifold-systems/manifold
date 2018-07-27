@@ -34,7 +34,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
    */
   JavacFileManagerBridge( M fileManager, Context context )
   {
-    super( context, false, Charset.defaultCharset() );
+    super( context, false, Charset.forName( "UTF-8" ) );
     this.fileManager = fileManager;
   }
 
