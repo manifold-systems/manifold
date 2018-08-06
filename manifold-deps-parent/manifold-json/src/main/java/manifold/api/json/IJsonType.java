@@ -21,4 +21,14 @@ public interface IJsonType
   default void setDefinitions( List<IJsonType> definitions )
   {
   }
+
+  /**
+   * JSon Schema types normally compare by identity, however for
+   * some use-cases we still need to compare them structurally e.g.,
+   * for merging types.
+   */
+  default boolean equalsStructurally( IJsonType type2 )
+  {
+    return equals( type2 );
+  }
 }

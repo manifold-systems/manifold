@@ -1,5 +1,6 @@
 package manifold.api.json;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
@@ -556,6 +557,69 @@ public class JsonStructureType extends JsonSchemaType
   }
 
   @Override
+  public boolean equalsStructurally( IJsonType o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
+    if( !super.equals( o ) )
+    {
+      return false;
+    }
+
+    JsonStructureType that = (JsonStructureType)o;
+
+    int[] i = {0};
+    if( _superTypes.size() != that._superTypes.size() ||
+        !_superTypes.stream().allMatch( t -> that._superTypes.get( i[0]++ ).equalsStructurally( t ) ) )
+    {
+      return false;
+    }
+    if( !(_membersByName.size() == that._membersByName.size() &&
+          _membersByName.keySet().stream().allMatch(
+            key -> that._membersByName.containsKey( key ) &&
+                   _membersByName.get( key ).equalsStructurally( that._membersByName.get( key ) ) )) )
+    {
+      return false;
+    }
+    if( !(_unionMembers.size() == that._unionMembers.size() &&
+          _unionMembers.keySet().stream().allMatch(
+            key -> that._unionMembers.containsKey( key ) &&
+                   typeSetsSame( _unionMembers.get( key ), that._unionMembers.get( key ) ) )) )
+    {
+      return false;
+    }
+    return _innerTypes.size() == that._innerTypes.size() &&
+           _innerTypes.keySet().stream().allMatch(
+             key -> that._innerTypes.containsKey( key ) &&
+                    _innerTypes.get( key ).equalsStructurally( that._innerTypes.get( key ) ) );
+  }
+
+  private boolean typeSetsSame( Set<IJsonType> t1, Set<IJsonType> t2 )
+  {
+    if( t1.size() != t2.size() )
+    {
+      return false;
+    }
+    Iterator<IJsonType> iter1 = t1.iterator();
+    Iterator<IJsonType> iter2 = t2.iterator();
+    while( iter1.hasNext() && iter2.hasNext() )
+    {
+      if( !iter1.next().equalsStructurally( iter2.next() ) )
+      {
+        return false;
+      }
+    }
+    return !iter1.hasNext() && !iter2.hasNext();
+  }
+
+  @Override
   public boolean equals( Object o )
   {
     if( this == o )
@@ -598,12 +662,6 @@ public class JsonStructureType extends JsonSchemaType
   @Override
   public int hashCode()
   {
-    if( isSchemaType() )
-    {
-      // Json Schema types must be identity compared
-      return System.identityHashCode( this );
-    }
-
     int result = super.hashCode();
     result = 31 * result + _superTypes.hashCode();
     result = 31 * result + _membersByName.hashCode();

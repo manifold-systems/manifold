@@ -114,7 +114,7 @@ public class JsonListType extends JsonSchemaType
   {
     JsonListType mergedType = new JsonListType( getLabel(), getFile(), getParent() );
 
-    if( !getComponentType().equals( other.getComponentType() ) )
+    if( !getComponentType().equalsStructurally( other.getComponentType() ) )
     {
       IJsonType componentType = Json.mergeTypes( getComponentType(), other.getComponentType() );
       if( componentType != null )
@@ -141,6 +141,31 @@ public class JsonListType extends JsonSchemaType
     {
       child.render( sb, indent, mutable );
     }
+  }
+
+  @Override
+  public boolean equalsStructurally( IJsonType o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
+
+    JsonListType that = (JsonListType)o;
+
+    if( !_componentType.equalsStructurally( that._componentType ) )
+    {
+      return false;
+    }
+    return _innerTypes.size() == that._innerTypes.size() &&
+           _innerTypes.keySet().stream().allMatch(
+             key -> that._innerTypes.containsKey( key ) &&
+                    _innerTypes.get( key ).equalsStructurally( that._innerTypes.get( key ) ) );
   }
 
   @Override
@@ -174,12 +199,6 @@ public class JsonListType extends JsonSchemaType
   @Override
   public int hashCode()
   {
-    if( isSchemaType() )
-    {
-      // Json Schema types must be identity compared
-      return System.identityHashCode( this );
-    }
-
     int result = _componentType.hashCode();
     result = 31 * result + _innerTypes.hashCode();
     return result;

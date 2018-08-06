@@ -257,7 +257,7 @@ public class Json
       return type1;
     }
 
-    if( type1.equals( type2 ) )
+    if( type1.equalsStructurally( type2 ) )
     {
       return type1;
     }
