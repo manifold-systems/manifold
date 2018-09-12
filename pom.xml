@@ -45,7 +45,7 @@
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
     <url>https://github.com/manifold-systems/manifold</url>
-    <tag>HEAD</tag>
+    <tag>0.13-SNAPSHOT</tag>
   </scm>
 
   <repositories>
