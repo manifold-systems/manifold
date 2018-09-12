@@ -53,6 +53,15 @@ public abstract class AbstractExtensionProducer<M extends IModel> extends JavaTy
   protected abstract String deriveExtendedClassFrom( String extensionClassFqn );
 
   /**
+   * The type name[s] produced from a file from an extension producer are the names of the extension classes
+   */
+  @Override
+  public String getTypeNameForFile( String defaultFqn, IFile file )
+  {
+    return null;
+  }
+
+  /**
    * Overridden because the file's fqn isn't really a type for this type manifold,
    * only the extension classes derived from the files are types this manifold produces.
    */
