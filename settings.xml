@@ -1,15 +1,22 @@
-<settings xmlns="http://maven.apache.org/SETTINGS/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.1.0 http://maven.apache.org/xsd/settings-1.1.0.xsd">
+<settings>
   <servers>
     <server>
-      <id>manifold-snapshots</id>
-      <username>${env.MANIFOLD_BINTRAY_USER}</username>
-      <password>${env.MANIFOLD_BINTRAY_API_KEY}</password>
-    </server>
-    <server>
-      <id>bintray-manifold-systems-manifold</id>
-      <username>${env.MANIFOLD_BINTRAY_USER}</username>
-      <password>${env.MANIFOLD_BINTRAY_API_KEY}</password>
+      <id>ossrh</id>
+      <username>scott@manifold.systems</username>
+      <password>${env.MAN_PASS_PHRASE}</password>
     </server>
   </servers>
+
+  <profiles>
+    <profile>
+      <id>ossrh</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <gpg.passphrase>${env.MAN_PASS_PHRASE}</gpg.passphrase>
+      </properties>
+    </profile>
+  </profiles>
+
 </settings>

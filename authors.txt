@@ -1,3 +1,1 @@
 rsmckinney = Scott McKinney <scott@manifold.systems>
-carson = <carson@manifold.systems>
-dpukyle = <kyle@manifold.systems>

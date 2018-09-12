@@ -41,41 +41,85 @@
     <scm.root>scm:git:git@github.com:manifold-systems</scm.root>
   </properties>
 
+  <!--<scm>-->
+    <!--<connection>${scm.root}/manifold.git</connection>-->
+    <!--<developerConnection>${scm.root}/manifold.git</developerConnection>-->
+    <!--<url>https://github.com/manifold-systems/manifold</url>-->
+    <!--<tag>HEAD</tag>-->
+  <!--</scm>-->
+
   <scm>
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
     <url>https://github.com/manifold-systems/manifold</url>
-    <tag>0.13-SNAPSHOT</tag>
+    <tag>HEAD</tag>
   </scm>
+  
+  <!--<repositories>-->
+    <!--<repository>-->
+      <!--<id>snapshots</id>-->
+      <!--<name>libs-snapshot</name>-->
+      <!--<url>https://oss.jfrog.org/artifactory/libs-snapshot</url>      -->
+      <!--<releases>-->
+        <!--<enabled>false</enabled>-->
+      <!--</releases>-->
+      <!--<snapshots>-->
+        <!--<enabled>true</enabled>-->
+      <!--</snapshots>-->
+    <!--</repository>-->
+  <!--</repositories>-->
 
-  <repositories>
-    <repository>
-      <id>snapshots</id>
-      <name>libs-snapshot</name>
-      <url>https://oss.jfrog.org/artifactory/libs-snapshot</url>      
-      <releases>
-        <enabled>false</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
+  <!--<distributionManagement>-->
+    <!--<snapshotRepository>-->
+      <!--<id>manifold-snapshots</id>-->
+      <!--<url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>-->
+    <!--</snapshotRepository>-->
+    <!--<repository>-->
+      <!--<id>bintray-manifold-systems-manifold</id>-->
+      <!--<name>manifold-systems-manifold</name>-->
+      <!--<url>https://api.bintray.com/maven/manifold-systems/manifold/manifold/;publish=1</url>-->
+    <!--</repository>-->
+  <!--</distributionManagement>-->
+
 
   <distributionManagement>
     <snapshotRepository>
-      <id>manifold-snapshots</id>
-      <url>https://oss.jfrog.org/artifactory/oss-snapshot-local</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <repository>
-      <id>bintray-manifold-systems-manifold</id>
-      <name>manifold-systems-manifold</name>
-      <url>https://api.bintray.com/maven/manifold-systems/manifold/manifold/;publish=1</url>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
-
+  
   <build>
     <plugins>
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-release-plugin</artifactId>-->
+        <!--<version>2.5.3</version>-->
+        <!--<configuration>-->
+          <!--<autoVersionSubmodules>true</autoVersionSubmodules>-->
+          <!--<releaseProfiles>release</releaseProfiles>-->
+          <!--<tagNameFormat>v@{project.version}</tagNameFormat>-->
+          <!--<updateBranchVersions>false</updateBranchVersions>-->
+          <!--<updateWorkingCopyVersions>false</updateWorkingCopyVersions>-->
+        <!--</configuration>-->
+      <!--</plugin>-->
+
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.8</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+      
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-release-plugin</artifactId>
@@ -84,9 +128,18 @@
           <autoVersionSubmodules>true</autoVersionSubmodules>
           <releaseProfiles>release</releaseProfiles>
           <tagNameFormat>v@{project.version}</tagNameFormat>
-          <updateBranchVersions>false</updateBranchVersions>
-          <updateWorkingCopyVersions>false</updateWorkingCopyVersions>
+          <localCheckout>true</localCheckout>
+          <pushChanges>false</pushChanges>
+          <mavenExecutorId>forked-path</mavenExecutorId>
+          <arguments>-Dgpg.passphrase=${env.MAN_PASS_PHRASE}</arguments>
         </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.maven.scm</groupId>
+            <artifactId>maven-scm-provider-gitexe</artifactId>
+            <version>1.9.4</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <!-- Disabled because the error message is confusing and because Java 8 is likely the dominant platform for now -->
       <!--<plugin>-->
@@ -130,6 +183,15 @@
           <configuration>
             <deployAtEnd>true</deployAtEnd>
           </configuration>
+          <executions>
+            <execution>
+              <id>default-deploy</id>
+              <phase>deploy</phase>
+              <goals>
+                <goal>deploy</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
