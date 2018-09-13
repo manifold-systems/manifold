@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.15-SNAPSHOT</version>
+  <version>0.15</version>
 
   <name>Manifold :: Parent</name>
   <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
@@ -52,7 +52,7 @@
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
     <url>https://github.com/manifold-systems/manifold</url>
-    <tag>v0.15-SNAPSHOT</tag>
+    <tag>0.15-alpha</tag>
   </scm>
   
   <!--<repositories>-->
