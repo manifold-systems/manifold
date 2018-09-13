@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.14-SNAPSHOT</version>
+  <version>0.15-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
@@ -52,7 +52,7 @@
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
     <url>https://github.com/manifold-systems/manifold</url>
-    <tag>v0.14-SNAPSHOT</tag>
+    <tag>v0.15-SNAPSHOT</tag>
   </scm>
   
   <!--<repositories>-->
@@ -246,6 +246,36 @@
   </dependencyManagement>
 
   <profiles>
+    
+    <!-- GPG Signature on release -->
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.6</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
     <profile>
       <id>internal.tools-jar</id>
       <activation>
