@@ -653,6 +653,9 @@ public class JavacPlugin implements Plugin, TaskListener
         {
           _initialized = true;
 
+          // Must perform shenanigans early
+          NecessaryEvilUtil.bypassJava9Security();
+
           // Note there are no "non-java" files to compile in default Manifold,
           // only other languages implementing their own IManifoldHost might compile their language files at this time
           ManifoldHost.initializeAndCompileNonJavaFiles( JavacProcessingEnvironment.instance( getContext() ), _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
