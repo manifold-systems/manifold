@@ -2,7 +2,7 @@
 Bootstrap for core manifold
 
 ## Release instructions
-Deploying snapshots OR releases requires environment variables `MANIFOLD_BINTRAY_USER` and `MANIFOLD_BINTRAY_API_KEY`.
+Deploying snapshots OR releases requires environment variable `MAN_PASS_PHRASE`.
 
 **Deploy a snapshot:** 
 1. `./mvnw deploy -s settings.xml`
