@@ -34,7 +34,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +62,23 @@ import manifold.util.concurrent.ConcurrentHashSet;
  */
 public class JavacPlugin implements Plugin, TaskListener
 {
-  private static final String GOSU_SOURCE_FILES = "gosu.source.files"; //TODO refactor to something language-agnostic
-  private static final String GOSU_SOURCE_LIST = "gosu.source.list"; //TODO refactor to something language-agnostic
+  /** plugin argument for dynamic compilation mode */
+  private static final String ARG_DYNAMIC = "dynamic";
+  /** plugin argument enabling string literal templating */
+  private static final String ARG_STRINGS = "strings";
+  /** plugin argument for static mode (deprecated, now the default) */
+  private static final String ARG_STATIC = "static";
+  /** all plugin args */
+  private static final String[] ARGS =
+  {
+    ARG_DYNAMIC,
+    ARG_STRINGS,
+    ARG_STATIC,
+  };
+
+  private static final String GOSU_SOURCE_FILES = "gosu.source.files";
+  private static final String GOSU_SOURCE_LIST = "gosu.source.list";
+
   private static Class<?> CLASSFINDER_CLASS = null;
   private static Class<?> MODULES_CLASS = null;
   private static Class<?> MODULEFINDER_CLASS = null;
@@ -128,8 +142,9 @@ public class JavacPlugin implements Plugin, TaskListener
     IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
 
     _argPresent = new HashMap<>();
-    _argPresent.put( "strings", testForArg( "strings", args ) );
-    _argPresent.put( "static", testForArg( "static", args ) );
+    _argPresent.put( ARG_STRINGS, testForArg( ARG_STRINGS, args ) );
+    _argPresent.put( ARG_DYNAMIC, testForArg( ARG_DYNAMIC, args ) );
+    notifyOfInvalidArgs( args, jpe );
     if( ManifoldHost.instance() == null )
     {
       // the absence of a host indicates incremental compilation of Manifold itself
@@ -138,6 +153,17 @@ public class JavacPlugin implements Plugin, TaskListener
     }
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  private void notifyOfInvalidArgs( String[] args, JavacProcessingEnvironment jpe )
+  {
+    for( String arg: args )
+    {
+      if( Arrays.stream( ARGS ).noneMatch( validArg -> validArg.equals( arg ) ) )
+      {
+        jpe.getMessager().printMessage( Diagnostic.Kind.WARNING, "Unrecognized Manifold plugin argument '" + arg + "'" );
+      }
+    }
   }
 
   protected boolean testForArg( String name, String[] args )
@@ -759,12 +785,12 @@ public class JavacPlugin implements Plugin, TaskListener
 
   public boolean isStaticCompile()
   {
-    return _argPresent.get( "static" );
+    return !_argPresent.get( ARG_DYNAMIC );
   }
 
   public boolean isStringTemplatesEnabled()
   {
-    return _argPresent.get( "strings" );
+    return _argPresent.get( ARG_STRINGS );
   }
 
   public boolean isNoBootstrapping()
