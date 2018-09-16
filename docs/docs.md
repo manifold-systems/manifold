@@ -196,14 +196,12 @@ determines whether or not Manifold compiles class projections to disk at compile
 turn whether or not Manifold dynamically compiles and loads the classes at runtime.  The mode is
 controlled using the `-Xplugin` javac argument:
 
-**Dynamic**: `-Xplugin:Manifold` (default, compiles class projections dynamically at runtime)
+**Static**: `-Xplugin:Manifold` (default, compiles class projections statically at compile-time)
 
-**Static**: `-Xplugin:Manifold static` (compiles class projections statically at compile-time)
-(alternatively `-Xplugin:"Manifold static"`, some tools may require quotes)
+**Dynamic**: `-Xplugin:Manifold dynamic` (compiles class projections dynamically at runtime)
+(alternatively `-Xplugin:"Manifold dynamic"`, some tools may require quotes)
 
-The mode you use largely depends on your use-case and personal preference. As a general rule
-dynamic mode is usually better for development and static mode is usually better for production, 
-however you can use either mode in any situation you like. Things to consider:
+The mode you use largely depends on your use-case and personal preference. Things to consider:
 
 * Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.
 For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
@@ -219,10 +217,10 @@ static mode, depending on the Manifold features you use.  For example, [structur
 requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
 files as structural interfaces.
 
-* Static mode is generally faster at runtime since it pre-compiles all the type manifold projection when you 
+* Static mode is generally faster at runtime since it pre-compiles all the type manifold projections when you 
 build your project
 
-* Static mode automatically supports incremental compilation of class projections in IntelliJ (coming in version 0.10-alpha)
+* Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
 
 ### Working with IntelliJ
@@ -937,7 +935,11 @@ By default String templates are _disabled_.  Enable the feature with the `string
 ```
 -Xplugin:Manifold strings
 ```  
-The argument enables templates in any String anywhere in your project. 
+or
+```
+-Xplugin:"Manifold strings"  // some tools require quotes)
+```
+The argument enables templates in any String literal anywhere in your project. 
 
 If you need to turn the feature off in specific areas in your code, you can use the `@DisableStringLiteralTemplates` 
 annotation to control its use.  You can annotate a class, method, field, or local variable declaration to turn it on 

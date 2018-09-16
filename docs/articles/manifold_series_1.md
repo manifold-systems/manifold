@@ -173,8 +173,7 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 As a long time Java developer I've personally worked on several projects involving heavy code generation.  I've seen
 the sometimes devastating effects of its use: build times measured in hours at customer sites, dev lifecycle demoralization, 
 code generator development and maintenance consuming precious time, etc.  It's about time for a better solution and I think Manifold
-makes good progress toward that goal. Type Manifolds offer an inviting and productive development experience. With no 
-code generators to invoke and no separate build steps to integrate, metadata just works.
+makes good progress toward that goal.
 
 There's much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
 will cover:
