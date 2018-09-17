@@ -16,7 +16,7 @@ import manifold.util.ReflectUtil;
 /**
  * The purpose of this class is to make our ManifoldJavaFileManager a JavacFileManager, which is necessary for
  * straight usage of javac.exe on the command line; other javac usage such as via Maven, Gradle, and more generally
- * via the Java Compilar API do not require our file manager to extend JavacFileManager.  Otherwise, we'd extend
+ * via the Java Compiler API do not require our file manager to extend JavacFileManager.  Otherwise, we'd extend
  * ForwardingJavaFileManager.
  */
 public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFileManager
