@@ -6,14 +6,13 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
 import manifold.util.ReflectUtil;
 
 public class ManPatchLocation implements JavaFileManager.Location
 {
-  private final JavaFileObject _fo;
+  private final GeneratedJavaStubFileObject _fo;
 
-  ManPatchLocation( JavaFileObject fo )
+  ManPatchLocation( GeneratedJavaStubFileObject fo )
   {
     _fo = fo;
   }
@@ -32,13 +31,8 @@ public class ManPatchLocation implements JavaFileManager.Location
 
   public String inferModuleName( Context ctx )
   {
-    if( !(_fo instanceof GeneratedJavaStubFileObject) )
-    {
-      return null;
-    }
-
     Names names = Names.instance( ctx );
-    GeneratedJavaStubFileObject fo = (GeneratedJavaStubFileObject)_fo;
+    GeneratedJavaStubFileObject fo = _fo;
     String packageName = getPackageName( fo );
 
     JavacElements elementUtils = JavacElements.instance( ctx );

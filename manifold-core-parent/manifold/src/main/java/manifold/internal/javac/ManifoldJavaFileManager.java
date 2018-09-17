@@ -103,10 +103,11 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   @Override
   public Location getLocationForModule( Location location, JavaFileObject fo ) throws IOException
   {
-    if( location == ReflectUtil.field( StandardLocation.class, "PATCH_MODULE_PATH" ).getStatic() )
+    if( fo instanceof GeneratedJavaStubFileObject &&
+        location == ReflectUtil.field( StandardLocation.class, "PATCH_MODULE_PATH" ).getStatic() )
     {
       //System.err.println( "PATCH: " + fo.getName() );
-      return new ManPatchLocation( fo );
+      return new ManPatchLocation( (GeneratedJavaStubFileObject)fo );
     }
     return super.getLocationForModule( location, fo );
   }
