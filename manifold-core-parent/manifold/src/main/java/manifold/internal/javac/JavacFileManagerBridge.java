@@ -4,8 +4,6 @@ import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.util.Context;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.ServiceLoader;
@@ -202,8 +200,8 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getLocationForModule(location, moduleName);
     try
     {
-      Method getLocationForModule = JavaFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, String.class );
-      return (Location)getLocationForModule.invoke( fileManager, location, moduleName );
+      ReflectUtil.LiveMethodRef getLocationForModule = ReflectUtil.method( fileManager, "getLocationForModule", Location.class, String.class );
+      return (Location)getLocationForModule.invoke( location, moduleName );
     }
     catch( Exception e )
     {
@@ -219,8 +217,8 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getLocationForModule(location, fo);
     try
     {
-      Method getLocationForModule = JavaFileManager.class.getDeclaredMethod( "getLocationForModule", Location.class, JavaFileObject.class );
-      return (Location)getLocationForModule.invoke( fileManager, location, fo );
+      ReflectUtil.LiveMethodRef getLocationForModule = ReflectUtil.method( fileManager, "getLocationForModule", Location.class, JavaFileObject.class );
+      return (Location)getLocationForModule.invoke( location, fo );
     }
     catch( Exception e )
     {
@@ -236,9 +234,9 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.getServiceLoader(location, service);
     try
     {
-      Method getServiceLoader = JavaFileManager.class.getDeclaredMethod( "getServiceLoader", Location.class, Class.class );
+      ReflectUtil.LiveMethodRef getServiceLoader = ReflectUtil.method( fileManager, "getServiceLoader", Location.class, Class.class );
       //noinspection unchecked
-      return (ServiceLoader)getServiceLoader.invoke( fileManager, location, service );
+      return (ServiceLoader)getServiceLoader.invoke( location, service );
     }
     catch( Exception e )
     {
@@ -254,8 +252,8 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.inferModuleName( location );
     try
     {
-      Method inferModuleName = JavaFileManager.class.getDeclaredMethod( "inferModuleName", Location.class );
-      return (String)inferModuleName.invoke( fileManager, location );
+      ReflectUtil.LiveMethodRef inferModuleName = ReflectUtil.method( fileManager, "inferModuleName", Location.class );
+      return (String)inferModuleName.invoke( location );
     }
     catch( Exception e )
     {
@@ -271,13 +269,13 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.listLocationsForModules( location );
     try
     {
-      Method listLocationsForModules = JavaFileManager.class.getDeclaredMethod( "listLocationsForModules", Location.class );
+      ReflectUtil.LiveMethodRef listLocationsForModules = ReflectUtil.method( fileManager, "listLocationsForModules", Location.class );
       //noinspection unchecked
-      return (Iterable)listLocationsForModules.invoke( fileManager, location );
+      return (Iterable)listLocationsForModules.invoke( location );
     }
     catch( Exception e )
     {
-      throw new RuntimeException( e );
+      throw new IOException( e );
     }
   }
 
@@ -289,13 +287,18 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     //return fileManager.contains( location, fo );
     try
     {
-      Method contains = JavaFileManager.class.getDeclaredMethod( "contains", Location.class, FileObject.class );
+      ReflectUtil.LiveMethodRef contains = ReflectUtil.method( fileManager, "contains", Location.class, FileObject.class );
       //noinspection unchecked
-      return (boolean)contains.invoke( fileManager, location, fo );
+      return (boolean)contains.invoke( location, fo );
     }
     catch( Exception e )
     {
-      throw new RuntimeException( e );
+      if( fo instanceof GeneratedJavaStubFileObject )
+      {
+        //## todo: ...
+        return true;
+      }
+      throw new IOException( e );
     }
   }
 }
