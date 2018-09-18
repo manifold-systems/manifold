@@ -4,7 +4,7 @@ layout: docs_layout
 
 ## Manifold in a Nutshell
 
-At its core [Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
+[Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
 Java. Building on this core framework Manifold supplements Java with new features you can use in your applications:
 
 * **Type-safe Metaprogramming** -- renders code generators obsolete, similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
@@ -1915,14 +1915,6 @@ implement this API to host Manifold from within another JVM language.
 
 See _manifold.api.host.IManifoldHost_. 
 
-## Philosophy
-
-Our goal is to improve Java by working with it, not against it.  For instance, we're not out 
-to bolt on new features involving new keywords, new grammar, or DSLs -- Java should look like Java. 
-Rather Manifold is about empowering Java from the _outside_.  Thus, developers using
-Manifold don't need to learn a new way of using or declaring things, instead Manifold enables 
-them to access a whole new world of types and extensions using the Java they already know.
-
 ## License
 
 ### Open Source
@@ -1936,3 +1928,30 @@ limited warranties, support, maintenance, and commercial server integrations.
 For more information, please visit: http://manifold.systems//licenses
 
 Contact admin@manifold.systems
+
+## Contributing
+
+To contribute a change to Manifold [open source](https://github.com/manifold-systems/manifold):
+
+* Fork the main manifold repository
+* Create a new feature branch based on the `development` branch with a reasonably descriptive name (e.g. `fix_json_specific_thing`)
+* Implement your fix and write tests
+* Create a pull request for that branch against `development` in the main repository
+
+## Versioning
+
+For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags).
+
+## Building
+
+To build:
+
+    mvn clean compile 
+    
+To execute tests:
+
+    mvn test
+
+## Author
+
+* [Scott McKinney](https://www.linkedin.com/in/scott-mckinney-52295625/) - *Manifold creator, principal engineer, and founder of [Manifold Systems, LLC](http://manifold.systems)*
