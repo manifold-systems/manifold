@@ -74,7 +74,7 @@ change, number and size of metadata files, density of usage in project, number o
 
 The Manifold framework represents a rethinking of code generators.  It altogether avoids the many disadvantages often
 involved with them by directly integrating with the Java compiler via the [javac plug-in mechanism](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html). 
-Implementors of the Type Manifold API, called _type manifolds_, establish a type supplier relationship with the Java 
+Implementations of the Type Manifold API, called _type manifolds_, establish a type supplier relationship with the Java 
 compiler -- the Manifold framework hooks into the compiler so that as the compiler encounters type names the type 
 manifolds contribute toward resolving them, generating code in memory as needed.  As such your application code 
 can reference metadata sources directly by name as Java types, effectively enabling the prior example to work:
@@ -107,8 +107,8 @@ In essence the Type Manifold API redefines what it means to be a code generator.
 * **Lightweight** – direct integration with standard Java, requires no special compilers, annotation processors, class loaders, or runtime agents
 * **Efficient, dynamic** – Manifold only produces types as they are needed by the compiler
 * **Simple, open API** – you can build your own type manifolds
-* **No code generation build step** – eliminates code generators from your development build process 
-* **IntelliJ IDEA** – comprehensive IDE support: code completion, navigation, usage searching, refactoring, debugging, etc.
+* **No code generation build step** – eliminates code generators from your development build process (when dynamic mode is used) 
+* **IntelliJ IDEA** – comprehensive IDE support: incremental compilation, code completion, navigation, usage searching, refactoring, debugging, etc.
 
 Further, the Type Manifold API unifies code generator architecture by providing much needed structure and consistency 
 for developers writing code generators. It puts an end to "lone wolf" code generator projects only one developer fully understands.
@@ -120,12 +120,12 @@ source production to your existing framework.  Learn more about implementing typ
 
 ## Synergy
 
-Perhaps the most refreshing benefit from using Manifold is the synergy resulting from its presence.  With Manifold a
-developer can define and use metadata that best suits the needs of a project without having to worry about build
-implications or IDE integration; he can create a metadata file, use it directly as a type, modify it, and access the
-changes immediately in his code.  No compilation necessary, no build steps to invoke.  With comprehensive IDE support,
-he can readily navigate to and from metadata elements, find usages from metadata, refactor, etc.  Finally metadata
-has first-class representation in the Java development lifecycle!  [View it in action](http://manifold.systems/images/JsonDemo.mp4).
+Perhaps the most refreshing benefit from using Manifold is the synergy resulting from its presence in all stages of development.  With Manifold you
+can define and use metadata that best suits your needs without having to concern yourself with build implications or 
+IDE integration; you can create a metadata file, use it directly as a type, modify it, and access the changes 
+immediately in your code; no awkward build/compilation steps involved, no caches to update.  With comprehensive IDE 
+support, you can readily navigate to and from metadata elements, find usages from metadata, refactor, etc.  
+Finally metadata has first-class representation in the Java development lifecycle!  [View it in action](http://manifold.systems/images/JsonDemo.mp4).
 
 ## Using Manifold
 
@@ -133,8 +133,8 @@ has first-class representation in the Java development lifecycle!  [View it in a
 
 Using Manifold in your Java project is easy:
 
-* Add the Manifold jar[s] to your classpath (and tools.jar if you're using Java 8)
-* Add `-Xplugin:Manifold` as an argument to java**c** (for compilation only)
+* Add the Manifold jar as a plugin argument to java**c**
+* Add the Manifold jar to your java classpath (optional)
 
 That's all.
 
@@ -175,8 +175,7 @@ the sometimes devastating effects of its use: build times measured in hours at c
 code generator development and maintenance consuming precious time, etc.  It's about time for a better solution and I think Manifold
 makes good progress toward that goal.
 
-There's much more to cover, I've only scratched the surface with the Type Manifold API.  Future articles in this series
-will cover:
+There's much more to cover.  Future articles in this series will address:
 * Using the [JSON type manifold](http://manifold.systems/docs.html#json-and-json-schema)
 * The Extension Manifold and writing [Extension Classes](http://manifold.systems/docs.html#extension-classes)
 * [Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces)

@@ -160,16 +160,19 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 Using Manifold in your Java project is simple:
 
-* Add the Manifold jar[s] to your classpath (and tools.jar if you're using Java 8)
-* Add `-Xplugin:Manifold` as an argument to java**c** (for compilation only)
+* Add the Manifold jar as a plugin argument to java**c**
+* Add the Manifold jar to your java classpath (optional)
 
 That's all.
 
-Manifold fully supports both [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html) and [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html).
+Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), 
+[Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html), 
+[Java 10](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html), and 
+[Java 11 Early-Access](http://jdk.java.net/11/).  
 
-**Java 9 Notes**
+**Java 9 or later Notes**
 
-If you are using **Java 9** with `module-info` files you must declare dependencies to the manifold jars you are using.  For example, if you are using `manifold-all.jar`:
+If you are using **Java 9 or later** with `module-info` files you must declare dependencies to the manifold jars you are using.  For example, if you are using `manifold-all.jar`:
 ```java
 module your.module.name {
   requires manifold.all;    // the manifold-all jar file
@@ -177,7 +180,7 @@ module your.module.name {
   requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
 }
 ```
-Additionally **Java 9** modular projects must include the processor path for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
+Additionally **Java 9 or later** projects must include the `-processorpath` for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
 ```
 javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
 ```
@@ -187,7 +190,13 @@ javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
 If you are using **Java 8** you may need to include `tools.jar` in your classpath (runtime only).
 Your application requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to 
 *static* mode. See [Modes](#Modes) for details.
-
+```java
+java -classpath <your-classpath>;/path/to/jdk/tools.jar ...
+```
+As a minor note, the `-processorpath` argument for **Java 8** `javac` may be omitted:
+```
+javac -Xplugin:Manifold ...
+```
 
 ### Modes
 
@@ -291,100 +300,212 @@ Integrated template support
 ### Maven
 
 Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
-include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
-argument as a Java compiler argument.  Note you can use the `manifold-all` dependency
-to use all basic manifold features, this is the recommended setup.
+include the core `manifold` artifact(s) and add the `-Xplugin:Manifold` argument as a Java 
+compiler argument.  Note you can use the `manifold-all` dependency to use all basic manifold 
+features, this is the recommended setup.
 
-**Settings**
+**Dependencies**
+
+Use the `manifold-all` dependency as a simple way to use all of Manifold's basic features.  This is the 
+recommended setup.
 
 ```xml
-  <dependencies>
-    <!--Includes all basic dependencies (recommended) -->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-all</artifactId>
-      <version>RELEASE</version>
-    </dependency>
+  <!--Includes ALL basic dependencies (recommended) -->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-all</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+```
 
-    <!--Core Manifold support, includes properties and image manifolds-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--Support for structural typing and extensions-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--JSON and JSchema support-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-json</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--JavaScript support (experimental)-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-js</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--Template support-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-templates</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--Collections extensions-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-collections</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--I/O extensions-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-io</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--I/O extensions-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-io</artifactId>
-      <version>RELEASE</version>
-    </dependency>
-    
-    <!--Text extensions-->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-text</artifactId>
-      <version>RELEASE</version>
-    </dependency>    
-  </dependencies>
+*Or* choose from the list of individual dependencies:
 
+```xml
+  <!--Core Manifold support, includes properties and image manifolds-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Support for structural typing and extensions-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-ext</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--JSON and JSchema support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-json</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--JavaScript support (experimental)-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-js</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Template support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-templates</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Collections extensions-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-collections</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--I/O extensions-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-io</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Text extensions-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-text</artifactId>
+    <version>RELEASE</version>
+  </dependency>    
+```
+
+**The Maven compiler plugin**
+
+You setup the `maven-compiler-plugin` according to the version of Java your project uses.
+
+`Java 9 or later` using *modules* mode -- project defines at least one `module-info.java` file
+```xml
   <build>
     <plugins>
+      <!--
+        *** JAVA 9+ MULTI-MODULE MODE ***
+         (project defines module-info.java file)
+        
+        Configure the maven-compiler-plugin to use Manifold.
+        - add the manifold-all module to -add-modules arg
+        - add the -Xplugin:Manifold argument for the javac compiler
+        - add the manifold-all module to javac -processorpath arg
+      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+  
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+  
         <configuration>
+          <encoding>UTF-8</encoding>
           <compilerArgs>
-            <arg>-Xplugin:Manifold</arg>
+  
+            <!--Add the manifold-all module-->
+            <arg>--add-modules</arg>
+            <arg>manifold.all</arg>
+  
+            <!--Add the Manifold plugin, with string templates enabled-->
+            <arg>-Xplugin:Manifold strings</arg>
+  
           </compilerArgs>
+  
+          <!-- Add the processor path for the plugin (required for Java 9+ -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-all</artifactId>
+              <version>${manifold-version}</version>
+            </path>
+          </annotationProcessorPaths>
+  
         </configuration>
       </plugin>
     </plugins>
   </build>
+``` 
 
+`Java 9 or later` using *default* mode -- project does **NOT** defines a `module-info.java` file
+```xml
+  <build>
+    <plugins>  
+      <!--
+       *** JAVA 9+ DEFAULT MODULE MODE***
+        (project does *NOT* define module-info.java file)
+  
+       Configure the maven-compiler-plugin use Manifold.
+       - add the -Xplugin:Manifold argument for the javac compiler
+       - add the manifold-all module to javac -processorpath arg
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+  
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+  
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+  
+            <!-- Add the Manifold plugin, with string templates enabled -->
+            <arg>-Xplugin:Manifold strings</arg>
+  
+          </compilerArgs>
+  
+          <!-- Add the processor path for the plugin (required for Java 9+ -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-all</artifactId>
+              <version>${manifold-version}</version>
+            </path>
+          </annotationProcessorPaths>
+  
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+```
+
+`Java 8`
+```xml
+  <build>
+    <plugins>     
+      <!--
+       *** JAVA 8 ***
+  
+       Configure the maven-compiler-plugin use Manifold.
+       - add the -Xplugin:Manifold argument for the javac compiler
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+  
+            <!-- Add the Manifold plugin, with string templates enabled -->
+            <arg>-Xplugin:Manifold strings</arg>
+  
+          </compilerArgs>
+        </configuration>
+      </plugin>
+    
+    </plugins>
+  </build>
+```
+
+```xml
   <profiles>
+  
+    <!-- Java 8 only, for tools.jar  -->
     <profile>
       <id>internal.tools-jar</id>
       <activation>
@@ -402,57 +523,35 @@ to use all basic manifold features, this is the recommended setup.
         </dependency>
       </dependencies>
     </profile>
+    
   </profiles>
 ```
+
 ***Surefire***
 
-For Java 8, executing tests of classes leveraging Manifold will also require `tools.jar` at test execution time.
-
-Here is a simple project layout demonstrating use of the `manifold-all` dependency and including `tools.jar` with Surefire:
+Here is a simple project layout demonstrating use of the `manifold-all` with Surefire:
 
 ```xml
   <build>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.7.0</version>
-        <configuration>
-          <source>1.8</source>
-          <target>1.8</target>
-          <compilerArgs>
-            <arg>-Xplugin:Manifold</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.20.1</version>
         <configuration>
+        
+          <!-- Java 8 only -->
           <additionalClasspathElements>
             <additionalClasspathElement>${java.home}/../lib/tools.jar</additionalClasspathElement>
           </additionalClasspathElements>
+          
         </configuration>
       </plugin>
     </plugins>
   </build>
 
-  <dependencies>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-all</artifactId>
-      <version>RELEASE</version> <!-- there were known issues with manifold-all 0.9-alpha and earlier -->
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.12</version>
-    </dependency>
-  </dependencies>
 ```
-
-Note the above snippet should work with `manifold-all` release `0.10-alpha` and beyond.
 
 **Archetype**
 
@@ -465,16 +564,19 @@ create a new Manifold project.  This is an easy process from IntelliJ:
 ### Gradle
 
 Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
-include the core `manifold` artifact and `tools.jar` and add the `-Xplugin:Manifold`
-argument as a Java compiler argument:
+include the core `manifold` artifact(s) and the `-Xplugin:Manifold` argument as a Java 
+compiler argument:
 
 ```groovy
 apply plugin: 'java'
 
 dependencies {
-  // All manifold, includes all other dependencies listed here
+  // -- All manifold, includes all other dependencies listed here --
   compile group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
 
+
+  // -- Or individual dependencies --
+  
   // Core Manifold support, includes properties and image manifolds
   compile group: 'systems.manifold', name: 'manifold', version: 'RELASE'
   
@@ -499,7 +601,16 @@ dependencies {
   // Text extensions
   compile group: 'systems.manifold', name: 'manifold-text', version: 'RELASE'
   
-  // tools.jar
+  
+  // -- For Java 9 or later ==
+  
+  // Add manifold-all to -processorpath for javac
+  annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+  
+  
+  // -- For Java 8 only --
+  
+  // tools.jar dependency
   compile files("\${System.getProperty('java.home')}/../lib/tools.jar")
 }
 
