@@ -298,11 +298,9 @@ Integrated template support
 
 
 ### Maven
-
-Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
-include the core `manifold` artifact(s) and add the `-Xplugin:Manifold` argument as a Java 
-compiler argument.  Note you can use the `manifold-all` dependency to use all basic manifold 
-features, this is the recommended setup.
+To setup a Maven project with Manifold you must:
+* specify the Manifold dependencies you need
+* configure the `maven-compiler-plugin`
 
 **Dependencies**
 
@@ -378,9 +376,13 @@ recommended setup.
   </dependency>    
 ```
 
-**The Maven compiler plugin**
+**Configure the maven-compiler-plugin**
 
 You setup the `maven-compiler-plugin` according to the version of Java your project uses.
+Use one of the following configurations depending on whether you use:
+* Java 9 or later with modules
+* Java 9 or later without modules
+* Java 8
 
 `Java 9 or later` using *modules* mode -- project defines at least one `module-info.java` file
 ```xml
