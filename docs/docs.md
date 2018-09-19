@@ -162,7 +162,7 @@ modules, or Java 9 or later without modules.  Please keep this in mind and read 
 
 ### I don't want to read all this
 
-If you simply want to experiment, grab the Manifold sample application and go nuts:
+If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and go nuts:
 
 * `git clone https://github.com/manifold-systems/manifold-sample-project.git`
 * Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
@@ -213,7 +213,7 @@ Details concerning `-processorpath` configuration in **Maven** and **Gradle** ar
 **Java 8 Notes**
 
 If you are using **Java 8** you may need to include `tools.jar` in your classpath (runtime only).
-Your application requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to 
+Your project requires tools.jar if you are using Manifold in *dynamic* mode, as opposed to 
 *static* mode. See [Modes](#Modes) for details.
 ```java
 java -classpath <your-classpath>;/path/to/jdk/tools.jar ...
