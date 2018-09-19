@@ -1924,9 +1924,10 @@ The plugin currently supports most high-level IntelliJ features including:
 * Rename/Move refactoring
 * Quick navigation
 * Structural typing
-* Debugging
+* Incremental compilation
+* Hotswap debugging
 
-IntelliJ exposes all of Manifold's features. Use code completion to discover and use type manifolds, extension
+The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds, extension
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
 Likewise, jump directly from references to data source elements and find usages of them in your code.
 Watch your JSON, images, properties, templates, and custom type manifolds come alive as types.
