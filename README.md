@@ -20,6 +20,6 @@ include:
 * **SQL** and **DDL** interop (coming soon)
 * Lots more
 
-All with comprehensive support int [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+All with comprehensive support in [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
 
 # Visit the [Manifold docs](http://manifold.systems/docs.html) to learn more.
