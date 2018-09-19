@@ -156,6 +156,28 @@ it incrementally without having to rewrite classes or conform to a new way of do
 
 ## Setup
 
+Using Manifold in your project is easy, but there are configuration details you should understand before you get going.
+Your project's configuration of Manifold largely depends on which version of Java it uses, namely Java 8, Java 9 or later with 
+modules, or Java 9 or later without modules.  Please keep this in mind and read this section carefully.
+
+### I don't want to read all this
+
+If you simply want to experiment, grab the Manifold sample application and go nuts:
+
+* `git clone https://github.com/manifold-systems/manifold-sample-project.git`
+* Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
+* Install the **Manifold plugin** from within IntelliJ: `Settings | Plugins | Browse Repositories | Manifold`
+* Restart IntelliJ to use the plugin
+* Open the project you just cloned (open the root directory or the pom.xml file)
+* Add the [Java 10 JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html?): `File | Project Structure | SDKs | + | path-to-your-Jdk10`
+* Set the project JDK and language level: `File | Project Structure | Project` select `10` for both `Project JDK` and `Project language level`
+* Build the project
+* Go nuts
+  
+Note you can change the JDK to Java 8, 9, 10 or 11.  But you need to make changes in the `pom.xml` file to make that
+work.  There are notes in the `pom.xml` file to help with that.  Read them carefully and maybe read the rest of this 
+Setup section too.
+
 ### Basics
 
 Using Manifold in your Java project is simple:
@@ -163,7 +185,8 @@ Using Manifold in your Java project is simple:
 * Add the Manifold jar as a plugin argument to java**c**
 * Add the Manifold jar to your java classpath (optional)
 
-That's all.
+That's basically it, however there are nuances with Java, Maven, Gradle, etc. to consider depending on the version of
+Java your project uses.
 
 Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), 
 [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html), 
@@ -172,7 +195,8 @@ Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/d
 
 **Java 9 or later Notes**
 
-If you are using **Java 9 or later** with `module-info` files you must declare dependencies to the manifold jars you are using.  For example, if you are using `manifold-all.jar`:
+If you are using **Java 9 or later** with `module-info` files you must declare dependencies to the manifold jars you are using.  
+For example, if you are using `manifold-all.jar`, your `module-info.java` file should have the following `requires`:
 ```java
 module your.module.name {
   requires manifold.all;    // the manifold-all jar file
@@ -184,7 +208,8 @@ Additionally **Java 9 or later** projects must include the `-processorpath` for 
 ```
 javac -Xplugin:Manifold -processorpath /path/to/your/manifold-all.jar ...
 ```
-
+Details concerning `-processorpath` configuration in **Maven** and **Gradle** are covered later in this section.
+ 
 **Java 8 Notes**
 
 If you are using **Java 8** you may need to include `tools.jar` in your classpath (runtime only).
