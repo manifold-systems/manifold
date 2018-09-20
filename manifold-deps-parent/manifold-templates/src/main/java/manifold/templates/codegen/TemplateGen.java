@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.internal.javac.IIssue;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
@@ -712,6 +713,7 @@ public class TemplateGen
       sb.newLine( "\n" );
       if( currClass.depth == 0 )
       {
+ //       sb.newLine( '@'+DisableStringLiteralTemplates.class.getTypeName() );
         if( currClass.isLayout )
         {
           sb.newLine( "public class " ).append( currClass.name ).append( " extends " ).append( currClass.superClass ).append( " implements " ).append( LAYOUT_INTERFACE ).append( " {" );

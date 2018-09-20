@@ -136,9 +136,17 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     // it's ok to write a type manifold class to disk if we're running javac and the class is not an extended java class
 
     return !isRuntimeMode() && _fromJavaC &&
+           !isIntellijPluginTemporaryFile( kind, fo ) &&
            (kind != JavaFileObject.Kind.CLASS ||
             !(fo instanceof GeneratedJavaStubFileObject) ||
             (JavacPlugin.instance().isStaticCompile() && ((GeneratedJavaStubFileObject)fo).isPrimary()));
+  }
+
+  // ManChangedResourceBuilder from IJ plugin
+  private boolean isIntellijPluginTemporaryFile( JavaFileObject.Kind kind, FileObject fo )
+  {
+    String name = fo == null ? null : fo.getName();
+    return name != null && name.contains( "_Manifold_Temp_Main_" );
   }
 
   public InMemoryClassJavaFileObject findCompiledFile( String fqn )

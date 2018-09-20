@@ -88,7 +88,7 @@ public class XmlParser
       if( _attribute != null )
       {
         throw new IllegalStateException( "Error processing attribute '" + ctx.Name().getText() + "'," +
-                                         " there is already an attribute processing: '" + _attribute.getName().getText() );
+                                         " there is already an attribute processing: '" + _attribute.getName().getRawText() );
       }
       XmlElement parent = _elements.peek().getSecond();
       _attribute = new XmlAttribute( ctx, parent );
@@ -113,7 +113,7 @@ public class XmlParser
       {
         if( symbol.getType() == XMLLexer.STRING )
         {
-          _attribute.setValue( new XmlTerminal( symbol, _attribute ) );
+          _attribute.setRawValue( new XmlTerminal( symbol, _attribute ) );
         }
       }
       else if( !_elements.isEmpty() )
@@ -123,7 +123,7 @@ public class XmlParser
             symbol.getType() == XMLLexer.CDATA )
         {
           XmlElement second = _elements.peek().getSecond();
-          second.setContent( new XmlTerminal( symbol, second ) );
+          second.setRawContent( new XmlTerminal( symbol, second ) );
         }
       }
     }

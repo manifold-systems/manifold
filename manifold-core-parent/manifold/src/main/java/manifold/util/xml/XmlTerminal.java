@@ -12,7 +12,7 @@ public class XmlTerminal extends XmlPart
     _text = t.getText();
   }
 
-  public String getText()
+  public String getRawText()
   {
     return _text;
   }

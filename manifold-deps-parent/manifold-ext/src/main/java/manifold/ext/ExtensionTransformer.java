@@ -401,7 +401,13 @@ public class ExtensionTransformer extends TreeTranslator
     for( Object driver: drivers )
     {
       //noinspection unchecked
-      Set<IFile> files = ((Collection<File>)ReflectUtil.method( driver, "getResourceFiles" ).invoke() ).stream().map( (File f) -> ManifoldHost.getFileSystem().getIFile( f ) )
+      Collection<File> resourceFiles = (Collection<File>)ReflectUtil.method( driver, "getResourceFiles" ).invoke();
+      if( resourceFiles == null || resourceFiles.isEmpty() )
+      {
+        return;
+      }
+
+      Set<IFile> files = resourceFiles.stream().map( ( File f) -> ManifoldHost.getFileSystem().getIFile( f ) )
         .collect( Collectors.toSet() );
       for( ITypeManifold tm : ManifoldHost.instance().getCurrentModule().getTypeManifolds() )
       {

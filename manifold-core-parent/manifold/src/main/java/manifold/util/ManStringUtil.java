@@ -6861,4 +6861,21 @@ public class ManStringUtil
     }
     return result.toString();
   }
+
+  public static String unquote( String text )
+  {
+    if( text.length() > 1 )
+    {
+      char start = text.charAt( 0 );
+      if( start == '\'' || start == '"' )
+      {
+        char end = text.charAt( text.length() - 1 );
+        if( start == end )
+        {
+          return text.substring( 1, text.length()-1 );
+        }
+      }
+    }
+    return text;
+  }
 }

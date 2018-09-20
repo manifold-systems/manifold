@@ -9,6 +9,9 @@ import manifold.util.xml.gen.XMLParser;
 
 public class XmlElement extends XmlNamedPart
 {
+  private static final String CDATA_START = "<![CDATA[";
+  private static final String CDATA_END = "]]>";
+
   private List<XmlElement> _children;
   private Map<String, XmlAttribute> _attributes;
   private XmlTerminal _content;
@@ -47,14 +50,45 @@ public class XmlElement extends XmlNamedPart
     {
       _attributes = new LinkedHashMap<>();
     }
-    _attributes.put( attr.getName().getText(), attr );
+    _attributes.put( attr.getName().getRawText(), attr );
   }
 
-  public XmlTerminal getContent()
+  public String getContent()
+  {
+    return _content == null ? null : getActualValue( _content.getRawText() );
+  }
+
+  private String getActualValue( String rawText )
+  {
+    if( rawText == null )
+    {
+      return null;
+    }
+
+    rawText = rawText.trim();
+    rawText = removeCDATA( rawText );
+    rawText = rawText.trim();
+    return rawText;
+  }
+
+  private String removeCDATA( String rawText )
+  {
+    if( rawText.startsWith( CDATA_START ) )
+    {
+      rawText = rawText.substring( CDATA_START.length() );
+      if( rawText.endsWith( CDATA_END ) )
+      {
+        rawText = rawText.substring( 0, rawText.length() - CDATA_END.length() );
+      }
+    }
+    return rawText;
+  }
+
+  public XmlTerminal getRawContent()
   {
     return _content;
   }
-  void setContent( XmlTerminal content )
+  void setRawContent( XmlTerminal content )
   {
     _content = content;
     if( content.getParent() != this )
