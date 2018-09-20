@@ -1,11 +1,16 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Filter;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import javax.tools.Diagnostic;
+import manifold.util.JreUtil;
 import manifold.util.PerfLogUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -26,6 +31,10 @@ public interface IDynamicJdk
 
   Symbol.ClassSymbol getLoadedClass( Context ctx, String fqn );
 
+  List<Type> getTargets( JCTree.JCLambda tree );
+  void setTargets( JCTree.JCLambda tree, List<Type> targets );
+
+  void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
 
   class Instance
   {
@@ -43,9 +52,13 @@ public interface IDynamicJdk
           {
             fqnIssueReporter = "manifold.internal.javac.Java8DynamicJdk";
           }
-          else
+          else if( JreUtil.JAVA_VERSION < 11 ) // Java 9 & 10
           {
             fqnIssueReporter = "manifold.internal.javac.Java9DynamicJdk";
+          }
+          else // Java 11 or later
+          {
+            fqnIssueReporter = "manifold.internal.javac.Java11DynamicJdk";
           }
           return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }

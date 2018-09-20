@@ -21,6 +21,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.templ.StringLiteralTemplateParser;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.api.type.ICompilerComponent;
+import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.ManDiagnosticHandler;
 import manifold.util.Stack;
@@ -149,7 +150,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
             }
             else
             {
-              Log.instance( _javacTask.getContext() ).error( argExpr.pos(),
+              IDynamicJdk.instance().logError( Log.instance( _javacTask.getContext() ), argExpr.pos(),
                 "proc.messager", "Only boolean literal values 'true' and 'false' allowed here" );
               disable = true;
             }
@@ -282,7 +283,8 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
         {
           JCDiagnostic jcDiag = ((ClientCodeWrapper.DiagnosticSourceUnwrapper)diag).d;
           String code = debaseMsgCode( diag );
-          Log.instance( _javacTask.getContext() ).error( new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp.getOffset() ), code, jcDiag.getArgs() );
+          IDynamicJdk.instance().logError(
+            Log.instance( _javacTask.getContext() ), new JCDiagnostic.SimpleDiagnosticPosition( literalOffset + 1 + comp.getOffset() ), code, jcDiag.getArgs() );
         }
       }
       return true;

@@ -2,19 +2,45 @@ package manifold.util;
 
 public class JreUtil
 {
-  private static final boolean JAVA_8 = System.getProperty( "java.version" ).startsWith( "1.8" );
+  public static final int JAVA_VERSION = getJavaVersion();
   private static Boolean _modular;
   private static Boolean _modularRuntime;
 
+  private static int getJavaVersion()
+  {
+    String version = System.getProperty( "java.version" );
+    StringBuilder sb = new StringBuilder();
+    for( int i = 0; i < version.length(); i++ )
+    {
+      char c = version.charAt( i );
+      if( Character.isDigit( c ) )
+      {
+        sb.append( c );
+      }
+      else
+      {
+        break;
+      }
+    }
+    int major = Integer.parseInt( sb.toString() );
+    major = major == 1 ? 8 : major;
+    return major;
+  }
+
   public static boolean isJava8()
   {
-    return JAVA_8;
+    return JAVA_VERSION == 8;
+  }
+
+  public static boolean isJava9()
+  {
+    return JAVA_VERSION == 9;
   }
 
   @SuppressWarnings("unused")
   public static boolean isJava9orLater()
   {
-    return !JAVA_8;
+    return !isJava8();
   }
 
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )

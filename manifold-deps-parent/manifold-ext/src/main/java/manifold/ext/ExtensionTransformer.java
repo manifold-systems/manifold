@@ -126,11 +126,11 @@ public class ExtensionTransformer extends TreeTranslator
 
     tree.type = eraseStructureType( tree.type );
     ArrayList<Type> types = new ArrayList<>();
-    for( Type target : tree.targets )
+    for( Type target : IDynamicJdk.instance().getTargets( tree ) )
     {
       types.add( eraseStructureType( target ) );
     }
-    tree.targets = List.from( types );
+    IDynamicJdk.instance().setTargets( tree, List.from( types ) );
   }
 
   /**

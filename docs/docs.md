@@ -196,12 +196,17 @@ Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/d
 **Java 9 or later Notes**
 
 If you are using **Java 9 or later** with `module-info` files you must declare dependencies to the manifold jars you are using.  
-For example, if you are using `manifold-all.jar`, your `module-info.java` file should have the following `requires`:
+For example, if you are using `manifold-all.jar`, ensure your `module-info.java` declares `requires` statements corresponding
+with Manifold usage:
 ```java
 module your.module.name {
-  requires manifold.all;    // the manifold-all jar file
+  // Mandatory
+  requires manifold.all;  // the manifold-all jar file (or a set of constituent core Manifold jars)
+  
+  // Optional
   requires java.scripting;  // if using Json manifold: for javax.script.Bindings
-  requires java.desktop;    // if using Image manifold: for javax.swing.ImageIcon
+  requires java.desktop;  // if using Image manifold: for javax.swing.ImageIcon
+  requires jdk.scripting.nashorn;  // if using Javascript manifold
 }
 ```
 Additionally **Java 9 or later** projects must include the `-processorpath` for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:
@@ -303,7 +308,7 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 For the convenience of non-maven users you can directly download Manifold binaries:
 * [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
-??ber-jar containing all of the binaries below (recommended)
+Uber-jar containing all of the binaries below (recommended)
 * [manifold](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE):
 Core Manifold support, also includes properties and image manifolds
 * [manifold-ext](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE):

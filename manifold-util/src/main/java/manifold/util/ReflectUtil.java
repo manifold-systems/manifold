@@ -53,6 +53,11 @@ public class ReflectUtil
     return new LiveMethodRef( ref._method, receiver );
   }
 
+  public static MethodRef method( String fqn, String name, Class... params )
+  {
+    return method( type( fqn ), name, params );
+  }
+
   public static MethodRef method( Class<?> cls, String name, Class... params )
   {
     MethodRef mr = getMethodFromCache( cls, name, params );
@@ -100,6 +105,11 @@ public class ReflectUtil
       throw new RuntimeException( "Field '" + name + "' not found" );
     }
     return new LiveFieldRef( ref._field, receiver );
+  }
+
+  public static FieldRef field( String fqn, String name )
+  {
+    return field( type( fqn ), name );
   }
 
   public static FieldRef field( Class<?> cls, String name )

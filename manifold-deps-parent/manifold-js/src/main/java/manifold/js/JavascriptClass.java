@@ -34,6 +34,7 @@ import manifold.util.ManClassUtil;
 
 import static manifold.js.JavascriptProgram.*;
 
+//## todo: replace nashorn with something else (it will be removed jdk11+ time frame)
 public class JavascriptClass
 {
   static SrcClass genClass( String fqn, ProgramNode programNode )

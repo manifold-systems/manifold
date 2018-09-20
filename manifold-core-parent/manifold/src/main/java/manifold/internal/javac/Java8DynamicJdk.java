@@ -2,10 +2,13 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Filter;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
@@ -79,5 +82,22 @@ public class Java8DynamicJdk implements IDynamicJdk
   {
     Name name = Names.instance( ctx ).fromString( fqn );
     return Symtab.instance( ctx ).classes.get( name );
+  }
+
+  @Override
+  public List<Type> getTargets( JCTree.JCLambda tree )
+  {
+    return tree.targets;
+  }
+  @Override
+  public void setTargets( JCTree.JCLambda tree, List<Type> targets )
+  {
+    tree.targets = targets;
+  }
+
+  @Override
+  public void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
+  {
+    logger.error( pos, key, args );
   }
 }
