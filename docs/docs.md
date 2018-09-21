@@ -165,7 +165,7 @@ modules, or Java 9 or later without modules.  Please keep this in mind and read 
 If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and go nuts:
 
 * `git clone https://github.com/manifold-systems/manifold-sample-project.git`
-* Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download) (version **2018.2** or later)
+* Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
 * Install the **Manifold plugin** from within IntelliJ: `Settings | Plugins | Browse Repositories | Manifold`
 * Restart IntelliJ to use the plugin
 * Open the project you just cloned (open the root directory or the pom.xml file)
