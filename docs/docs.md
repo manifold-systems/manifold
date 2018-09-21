@@ -165,7 +165,7 @@ modules, or Java 9 or later without modules.  Please keep this in mind and read 
 If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and go nuts:
 
 * `git clone https://github.com/manifold-systems/manifold-sample-project.git`
-* Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
+* Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download) (version **2018.2** or later)
 * Install the **Manifold plugin** from within IntelliJ: `Settings | Plugins | Browse Repositories | Manifold`
 * Restart IntelliJ to use the plugin
 * Open the project you just cloned (open the root directory or the pom.xml file)
@@ -202,7 +202,10 @@ with Manifold usage:
 module your.module.name {
   // Mandatory
   requires manifold.all;  // the manifold-all jar file (or a set of constituent core Manifold jars)
-  
+
+  // Mandatory for **Java 11** or later in MULTI-MODULE MODE
+  requires jdk.unsupported; // As a convenience Manifold uses internal Java APIs to make module setup easier for you
+
   // Optional
   requires java.scripting;  // if using Json manifold: for javax.script.Bindings
   requires java.desktop;  // if using Image manifold: for javax.swing.ImageIcon

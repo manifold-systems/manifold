@@ -246,7 +246,7 @@ public class ReflectUtil
     Field overrideField = getOverrideField();
     try
     {
-      NecessaryEvilUtil.UNSAFE.putObjectVolatile( m, NecessaryEvilUtil.UNSAFE.objectFieldOffset( overrideField ), true );
+      NecessaryEvilUtil.getUnsafe().putObjectVolatile( m, NecessaryEvilUtil.getUnsafe().objectFieldOffset( overrideField ), true );
     }
     catch( Exception e )
     {

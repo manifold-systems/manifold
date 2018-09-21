@@ -5,14 +5,20 @@ import sun.misc.Unsafe;
 
 public class NecessaryEvilUtil
 {
-  static final Unsafe UNSAFE = getUnsafe();
-  private static Unsafe getUnsafe()
+  private static Unsafe UNSAFE = null;
+
+  static Unsafe getUnsafe()
   {
+    if( UNSAFE != null )
+    {
+      return UNSAFE;
+    }
+
     try
     {
       Field theUnsafe = Unsafe.class.getDeclaredField( "theUnsafe" );
       theUnsafe.setAccessible( true );
-      return (Unsafe)theUnsafe.get( null );
+      return UNSAFE = (Unsafe)theUnsafe.get( null );
     }
     catch( Throwable t )
     {
@@ -46,7 +52,7 @@ public class NecessaryEvilUtil
     {
       Class cls = Class.forName( "jdk.internal.module.IllegalAccessLogger", false, cl );
       Field logger = cls.getDeclaredField( "logger" );
-      UNSAFE.putObjectVolatile( cls, UNSAFE.staticFieldOffset( logger ), null );
+      getUnsafe().putObjectVolatile( cls, getUnsafe().staticFieldOffset( logger ), null );
     }
     catch( Throwable ignore )
     {
@@ -91,7 +97,8 @@ public class NecessaryEvilUtil
     }
     catch( Throwable e )
     {
-      System.err.println( "Failed to automatically configure Java 9 module accesss, you must explicitly add the following arguments to java.exe:\n" +
+      System.err.println( "Error initializing Manifold\n:" +
+                          "Failed to automatically configure Java module access, you must add the following arguments to java.exe:\n" +
                           "--add-opens=java.base/jdk.internal.loader=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=java.base/java.net=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=jdk.compiler/com.sun.tools.javac.api=<ALL-UNNAMED or manifold-all>\n" +
