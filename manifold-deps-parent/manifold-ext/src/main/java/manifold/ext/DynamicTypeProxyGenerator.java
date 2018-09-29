@@ -113,9 +113,27 @@ public class DynamicTypeProxyGenerator
       .append( returnType == void.class
                ? "    "
                : "    return " )
-      .append( maybeCastReturnType( returnType ) )
+      .append( maybeCastReturnType( returnType ) );
       //## todo: maybe we need to explicitly parameterize if the method is generic for some cases?
-      .append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( actualName ).append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
+    if( returnType != void.class )
+    {
+      sb.append( RuntimeMethods.class.getTypeName() ).append( ".coerce(" );
+    }
+    handleCall( sb, mi, ifaceType, actualName, params );
+    if( returnType != void.class )
+    {
+      sb.append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class);\n" );
+    }
+    else
+    {
+      sb.append( ";\n" );
+    }
+    sb.append( "  }\n" );
+  }
+
+  private void handleCall( StringBuilder sb, Method mi, Class ifaceType, String actualName, Class[] params )
+  {
+    sb.append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( actualName ).append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
     Class<?>[] parameterTypes = mi.getParameterTypes();
     for( int i = 0; i < parameterTypes.length; i++ )
     {
@@ -136,8 +154,7 @@ public class DynamicTypeProxyGenerator
       }
       sb.append( " p" ).append( i );
     }
-    sb.append( "});\n" );
-    sb.append( "  }\n" );
+    sb.append( "})" );
   }
 
   private String maybeCastReturnType( Class returnType )

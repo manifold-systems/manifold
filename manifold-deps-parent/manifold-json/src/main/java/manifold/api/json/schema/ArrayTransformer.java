@@ -49,7 +49,14 @@ class ArrayTransformer
       parent.addChild( _type.getLabel(), _type );
     }
     assignComponentType();
-    _schemaTx.cacheByFqn( _type );
+    if( parent != null )
+    {
+      _schemaTx.cacheSimpleByFqn( parent, _type.getLabel(), _type );
+    }
+    else
+    {
+      _schemaTx.cacheByFqn( _type );
+    }
 
     return _type;
   }
@@ -88,6 +95,10 @@ class ArrayTransformer
     else if( items instanceof Bindings )
     {
       componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items );
+    }
+    else if( items == null )
+    {
+      componentType = DynamicType.instance();
     }
     else
     {

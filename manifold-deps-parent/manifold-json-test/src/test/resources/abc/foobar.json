@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "properties": {"foo": {"$ref": "#/definitions/foo"}},
+  "definitions": {
+    "foo": {"properties": {"bar": {"$ref": "#/definitions/bar"}}},
+    "bar": {"properties": {"foo": {"$ref": "#/definitions/foo"}}}
+  }
+}

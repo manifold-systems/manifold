@@ -2,6 +2,7 @@ package manifold.api.json;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import manifold.api.json.schema.LazyRefJsonType;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
@@ -30,7 +31,7 @@ import manifold.util.ManStringUtil;
 public class JsonStructureType extends JsonSchemaType
 {
   private static final String FIELD_FILE_URL = "__FILE_URL_";
-  private List<IJsonParentType> _superTypes;
+  private List<IJsonType> _superTypes;
   private Map<String, IJsonType> _membersByName;
   private Map<String, Set<IJsonType>> _unionMembers;
   private Map<String, Token> _memberLocations;
@@ -53,6 +54,55 @@ public class JsonStructureType extends JsonSchemaType
   }
 
   @Override
+  protected void resolveRefsImpl()
+  {
+    super.resolveRefsImpl();
+    for( Map.Entry<String, IJsonType> entry: new HashSet<>( _membersByName.entrySet() ) )
+    {
+      IJsonType type = entry.getValue();
+
+      if( type instanceof JsonSchemaType )
+      {
+        ((JsonSchemaType)type).resolveRefs();
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        _membersByName.put( entry.getKey(), ((LazyRefJsonType)type).resolve() );
+      }
+    }
+    for( Map.Entry<String, Set<IJsonType>> entry: new HashSet<>( _unionMembers.entrySet() ) )
+    {
+      Set<IJsonType> types = new HashSet<>();
+      for( IJsonType type: entry.getValue() )
+      {
+        if( type instanceof JsonSchemaType )
+        {
+          ((JsonSchemaType)type).resolveRefs();
+        }
+        else if( type instanceof LazyRefJsonType )
+        {
+          type = ((LazyRefJsonType)type).resolve();
+        }
+        types.add( type );
+      }
+      _unionMembers.put( entry.getKey(), types );
+    }
+    for( Map.Entry<String, IJsonParentType> entry: new HashSet<>( _innerTypes.entrySet() ) )
+    {
+      IJsonType type = entry.getValue();
+      if( type instanceof JsonSchemaType )
+      {
+        ((JsonSchemaType)type).resolveRefs();
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        type = ((LazyRefJsonType)type).resolve();
+        _innerTypes.put( entry.getKey(), (IJsonParentType)type );
+      }
+    }
+  }
+
+  @Override
   public String getFqn()
   {
     String result = "";
@@ -64,7 +114,7 @@ public class JsonStructureType extends JsonSchemaType
     return result + JsonUtil.makeIdentifier( getLabel() );
   }
 
-  public void addSuper( IJsonParentType superType )
+  public void addSuper( IJsonType superType )
   {
     if( _superTypes.isEmpty() )
     {
@@ -72,8 +122,24 @@ public class JsonStructureType extends JsonSchemaType
     }
     _superTypes.add( superType );
   }
-  public List<IJsonParentType> getSuperTypes()
+  public List<IJsonType> getSuperTypes()
   {
+    if( !_superTypes.isEmpty() )
+    {
+      if( _superTypes.stream().anyMatch( e -> e instanceof LazyRefJsonType ) )
+      {
+        List<IJsonType> resolved = new ArrayList<>();
+        for( IJsonType type: _superTypes )
+        {
+          if( type instanceof LazyRefJsonType )
+          {
+            type = ((LazyRefJsonType)type).resolve();
+          }
+          resolved.add( type );
+        }
+        _superTypes = resolved;
+      }
+    }
     return _superTypes;
   }
 
@@ -249,7 +315,7 @@ public class JsonStructureType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
-    if( getParent() instanceof IJsonParentType )
+    if( getParent() != null )
     {
       sb.append( '\n' );
     }
@@ -276,7 +342,7 @@ public class JsonStructureType extends JsonSchemaType
     {
       sb.append( '\n' );
       IJsonType type = _membersByName.get( key );
-      String propertyType = type instanceof JsonUnionType ? "Object" : type.getIdentifier();
+      String propertyType = getPropertyType( type );
       addSourcePositionAnnotation( sb, indent + 2, key );
       identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
@@ -343,17 +409,30 @@ public class JsonStructureType extends JsonSchemaType
     while( propertyType instanceof JsonListType )
     {
       //noinspection StringConcatenationInLoop
-      qn = "java.util.List<" + qn + ">";
+      qn = List.class.getTypeName() + '<' + qn + '>';
       propertyType = ((JsonListType)propertyType).getComponentType();
     }
     return qn;
+  }
+
+  private String getPropertyType( IJsonType propertyType )
+  {
+    if( propertyType instanceof JsonListType )
+    {
+      return List.class.getTypeName() + '<' + getPropertyType( ((JsonListType)propertyType).getComponentType() ) + '>';
+    }
+    if( propertyType instanceof JsonUnionType )
+    {
+      return Object.class.getSimpleName();
+    }
+    return propertyType.getIdentifier();
   }
 
   private String getConstituentQn( IJsonType constituentType )
   {
     if( constituentType instanceof JsonListType )
     {
-      return "java.util.List<" + getConstituentQn( ((JsonListType)constituentType).getComponentType() ) + ">";
+      return List.class.getTypeName() + '<' + getConstituentQn( ((JsonListType)constituentType).getComponentType() ) + '>';
     }
 
     String qn = "";
@@ -380,7 +459,7 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addSuperTypes( StringBuilder sb )
   {
-    List<IJsonParentType> superTypes = getSuperTypes();
+    List<IJsonType> superTypes = getSuperTypes();
     if( superTypes.isEmpty() )
     {
       return "";
@@ -389,7 +468,7 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( " extends " );
     for( int i = 0; i < superTypes.size(); i++ )
     {
-      IJsonParentType superType = superTypes.get( i );
+      IJsonType superType = superTypes.get( i );
       if( i > 0 )
       {
         sb.append( ", " );
@@ -412,10 +491,6 @@ public class JsonStructureType extends JsonSchemaType
 
   private String makeMemberIdentifier( IJsonType type )
   {
-    if( type instanceof JsonListType )
-    {
-      return "ListOf" + makeMemberIdentifier( ((JsonListType)type).getComponentType() );
-    }
     return makeIdentifier( type.getName(), false );
   }
   private String makeIdentifier( String name, boolean capitalize )
@@ -446,7 +521,7 @@ public class JsonStructureType extends JsonSchemaType
   private void addTypeReferenceAnnotation( StringBuilder sb, int indent, JsonSchemaType type )
   {
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( TypeReference.class.getName() )
-      .addArgument( "value", String.class, type.getIdentifier() );
+      .addArgument( "value", String.class, getPropertyType( type ) );
     annotation.render( sb, indent );
   }
 
@@ -630,6 +705,7 @@ public class JsonStructureType extends JsonSchemaType
     if( isSchemaType() )
     {
       // Json Schema types must be identity compared
+      //noinspection ConstantConditions
       return this == o;
     }
 
@@ -664,9 +740,8 @@ public class JsonStructureType extends JsonSchemaType
   {
     int result = super.hashCode();
     result = 31 * result + _superTypes.hashCode();
-    result = 31 * result + _membersByName.hashCode();
-    result = 31 * result + _unionMembers.hashCode();
-    result = 31 * result + _innerTypes.hashCode();
+    result = 31 * result + _membersByName.keySet().hashCode();
+    result = 31 * result + _unionMembers.keySet().hashCode();
     return result;
   }
 

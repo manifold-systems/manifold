@@ -4,6 +4,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
@@ -21,6 +22,25 @@ public class JsonUnionType extends JsonStructureType
   {
     super( parent, source, name );
     _constituentTypes = Collections.emptyMap();
+  }
+
+  @Override
+  protected void resolveRefsImpl()
+  {
+    super.resolveRefsImpl();
+    for( Map.Entry<String, IJsonType> entry: new HashSet<>( _constituentTypes.entrySet() ) )
+    {
+      IJsonType type = entry.getValue();
+      if( type instanceof JsonSchemaType )
+      {
+        ((JsonSchemaType)type).resolveRefs();
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        type = ((LazyRefJsonType)type).resolve();
+        _constituentTypes.put( entry.getKey(), type );
+      }
+    }
   }
 
   public Collection<? extends IJsonType> getConstituents()
@@ -43,7 +63,8 @@ public class JsonUnionType extends JsonStructureType
 
   private boolean isDefinition( IJsonType type )
   {
-    return type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
+    return type.getParent() != null &&
+           type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
   }
 
   public IJsonType merge( IJsonType type )

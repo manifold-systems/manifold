@@ -42,6 +42,15 @@ public class FqnCacheNode<K>
   public void clear()
   {
     _children = null;
+    invalidate();
+  }
+
+  protected void invalidate()
+  {
+    if( _parent != null )
+    {
+      _parent.invalidate();
+    }
   }
 
   public FqnCacheNode<K> getOrCreateChild( String segment )
@@ -55,6 +64,7 @@ public class FqnCacheNode<K>
     {
       node = new FqnCacheNode<>( segment, this );
       _children.put( segment, node );
+      invalidate();
     }
     return node;
   }
@@ -73,6 +83,7 @@ public class FqnCacheNode<K>
       {
         // update reverse cache
         removed.setUserData( null );
+        invalidate();
       }
       if( _children.isEmpty() )
       {
@@ -106,7 +117,7 @@ public class FqnCacheNode<K>
     return _children == null || _children.isEmpty();
   }
 
-  public void collectNames( Set<String> names, String s )
+  protected void collectNames( Set<String> names, String s )
   {
     if( _children != null )
     {

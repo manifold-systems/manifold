@@ -22,6 +22,12 @@ public abstract class JsonSchemaType implements IJsonParentType
   private URL _file;
   private List<JsonIssue> _issues;
   private boolean _bSchemaType;
+  private ResolveState _resolveState;
+
+  enum ResolveState
+  {
+    Unresolved, Resolving, Resolved
+  }
 
   protected JsonSchemaType( String name, URL source, JsonSchemaType parent )
   {
@@ -29,9 +35,50 @@ public abstract class JsonSchemaType implements IJsonParentType
     _parent = parent;
     _file = source;
     _issues = Collections.emptyList();
+    _resolveState = ResolveState.Unresolved;
   }
 
   public abstract String getFqn();
+
+  final public void resolveRefs()
+  {
+    if( _resolveState != ResolveState.Unresolved )
+    {
+      return;
+    }
+
+    _resolveState = ResolveState.Resolving;
+    try
+    {
+      resolveRefsImpl();
+    }
+    finally
+    {
+      _resolveState = ResolveState.Resolved;
+    }
+  }
+
+  protected void resolveRefsImpl()
+  {
+    List<IJsonType> definitions = getDefinitions();
+    if( definitions != null && !definitions.isEmpty() )
+    {
+      List<IJsonType> resolved = new ArrayList<>();
+      for( IJsonType type : definitions )
+      {
+        if( type instanceof JsonSchemaType )
+        {
+          ((JsonSchemaType)type).resolveRefs();
+        }
+        else if( type instanceof LazyRefJsonType )
+        {
+          type = ((LazyRefJsonType)type).resolve();
+        }
+        resolved.add( type );
+      }
+      _definitions = resolved;
+    }
+  }
 
   protected boolean isParentRoot()
   {
@@ -87,6 +134,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   {
     return _bSchemaType;
   }
+
   protected void setJsonSchema()
   {
     _bSchemaType = true;

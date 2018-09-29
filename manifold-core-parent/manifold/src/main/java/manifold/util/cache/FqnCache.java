@@ -1,5 +1,6 @@
 package manifold.util.cache;
 
+import java.lang.ref.SoftReference;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -14,7 +15,7 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
   private final Validator _validator;
   private final Cache<String, String[]> _validatorCache;
   private final boolean _rootVisible;
-
+  private SoftReference<Set<String>> _allNames;
 
   public FqnCache()
   {
@@ -26,7 +27,9 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
     super( name, null );
     _rootVisible = rootVisible;
     _validator = validator;
-    _validatorCache = validator == null ? null : Cache.make( "FqnCache Parts", 10000, e -> FqnCache.split( e, _validator ) );
+    _validatorCache = validator == null
+                      ? null
+                      : Cache.make( "FqnCache Parts", 10000, s -> FqnCache.split( s, _validator ) );
   }
 
   @Override
@@ -115,10 +118,20 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
   }
 
   @Override
+  protected void invalidate()
+  {
+    _allNames = null;
+  }
+
+  @Override
   public Set<String> getFqns()
   {
-    Set<String> names = new HashSet<>();
-    collectNames( names, "" );
+    Set<String> names = _allNames == null ? null : _allNames.get();
+    if( names == null )
+    {
+      collectNames( names = new HashSet<>(), "" );
+      _allNames = new SoftReference<>( names );
+    }
     return names;
   }
 
@@ -188,7 +201,7 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
       parts.add( StringCache.get( part ) );
     }
 
-    return parts.toArray( new String[parts.size()] );
+    return parts.toArray( new String[0] );
   }
 
   private String[] getParts( String fqn, Validator validator )

@@ -18,4 +18,9 @@ public @interface IncrementalCompile
    * class is likely not in the classpath of the compiler.
    */
   String driverClass();
+
+  /**
+   * The identity hash of the driver
+   */
+  int driverInstance();
 }

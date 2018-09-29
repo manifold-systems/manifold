@@ -65,9 +65,26 @@ public class JsonSchemaTransformer
            // As a fallback check for "$id" as this is pretty uniquely Json Schema
            bindings.get( JsonSchemaTransformer.JSCH_ID ) != null ||
            // As a fallback to the fallback, check for: "type": "object" or "type": "array"
-           bindings.get( JsonSchemaTransformer.JSCH_TYPE ) != null &&
-           (bindings.get( JsonSchemaTransformer.JSCH_TYPE ).equals( Type.Object.getName() ) ||
-            bindings.get( JsonSchemaTransformer.JSCH_TYPE ).equals( Type.Array.getName() ));
+           typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array );
+  }
+
+  private static boolean typeMatches( Bindings bindings, Type testType )
+  {
+    Object type = bindings.get( JsonSchemaTransformer.JSCH_TYPE );
+    if( type == null )
+    {
+      return false;
+    }
+    String typeName;
+    if( type instanceof Pair )
+    {
+      typeName = (String)((Pair)type).getSecond();
+    }
+    else
+    {
+      typeName = (String)type;
+    }
+    return typeName.equals( testType.getName() );
   }
 
   @SuppressWarnings("unused")
@@ -349,7 +366,7 @@ public class JsonSchemaTransformer
   {
     _typeByFqn.add( type.getFqn(), type );
   }
-  private void cacheSimpleByFqn( JsonSchemaType parent, String name, IJsonType type )
+  void cacheSimpleByFqn( JsonSchemaType parent, String name, IJsonType type )
   {
     if( parent instanceof JsonListType )
     {
@@ -357,11 +374,19 @@ public class JsonSchemaTransformer
     }
     _typeByFqn.add( parent.getFqn() + '.' + name, type );
   }
-  private void cacheById( IJsonParentType parent, IJsonType type, Bindings jsonObj )
+  private void cacheType( IJsonParentType parent, String name, IJsonType type, Bindings jsonObj )
   {
     Object value = jsonObj.get( JSCH_ID );
     if( value == null )
     {
+      if( type instanceof JsonSchemaType )
+      {
+        cacheByFqn( (JsonSchemaType)type );
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        cacheSimpleByFqn( (JsonSchemaType)parent, name, type );
+      }
       return;
     }
 
@@ -376,9 +401,9 @@ public class JsonSchemaTransformer
     {
       id = (String)value;
     }
-    cacheById( parent, type, id, tokens != null ? tokens[1] : null );
+    cacheTypeById( parent, type, id, tokens != null ? tokens[1] : null );
   }
-  private void cacheById( IJsonParentType parent, IJsonType type, String id, Token token )
+  private void cacheTypeById( IJsonParentType parent, IJsonType type, String id, Token token )
   {
     if( id.isEmpty() )
     {
@@ -493,7 +518,7 @@ public class JsonSchemaTransformer
     }
 
 
-    cacheById( parent, result, jsonObj );
+    cacheType( parent, name, result, jsonObj );
     if( parent == null && enclosing != null )
     {
       JsonSchemaTransformerSession.instance().cacheBaseType( enclosing, new Pair<>( result, this ) );
@@ -692,7 +717,7 @@ public class JsonSchemaTransformer
         if( ref != null )
         {
           type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
-          type.addSuper( (IJsonParentType)ref );
+          type.addSuper( ref );
         }
         else
         {
@@ -728,13 +753,18 @@ public class JsonSchemaTransformer
 
         String simpleName = "Option" + (i++);
         IJsonType typePart = transformType( type, enclosing, simpleName, (Bindings)elem );
-        if( typePart == null || !typePart.getName().equals( simpleName ) )
+        String actualName = typePart == null
+                            ? null
+                            : typePart instanceof LazyRefJsonType
+                              ? "Lazy" + System.identityHashCode( typePart )
+                              : typePart.getName();
+        if( actualName == null || !actualName.equals( simpleName ) )
         {
           i--;
         }
         if( typePart != null )
         {
-          type.addConstituent( typePart.getName(), typePart );
+          type.addConstituent( actualName, typePart );
         }
       }
     }
@@ -759,7 +789,7 @@ public class JsonSchemaTransformer
   {
     Object value = jsonObj.get( JSCH_REF );
     String ref;
-    Token token = null;
+    Token token;
     if( value instanceof Pair )
     {
       ref = (String)((Pair)value).getSecond();
@@ -768,6 +798,7 @@ public class JsonSchemaTransformer
     else
     {
       ref = (String)value;
+      token = null;
     }
 
     if( ref == null )
@@ -783,6 +814,13 @@ public class JsonSchemaTransformer
     catch( URISyntaxException e )
     {
       parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI syntax: $ref" ) );
+      return null;
+    }
+
+    String scheme = uri.getScheme();
+    if( scheme != null && !scheme.isEmpty() && !scheme.equalsIgnoreCase( "file" ) )
+    {
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Unsupported URI scheme: '$scheme'. A reference must be local to a resource file." ) );
       return null;
     }
 
@@ -805,13 +843,15 @@ public class JsonSchemaTransformer
       String fragment = uri.getFragment();
       if( fragment != null )
       {
-        IJsonType localRef = findLocalRef( fragment, enclosing );
-        if( localRef == null )
-        {
-          parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
-          localRef = new ErrantType( enclosing, fragment );
-        }
-        return localRef;
+        return new LazyRefJsonType( () -> {
+          IJsonType localRef = findLocalRef( fragment, enclosing );
+          if( localRef == null )
+          {
+            parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
+            localRef = new ErrantType( enclosing, fragment );
+          }
+          return localRef;
+        } );
       }
     }
 

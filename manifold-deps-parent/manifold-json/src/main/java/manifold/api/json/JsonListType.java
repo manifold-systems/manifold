@@ -3,10 +3,12 @@ package manifold.api.json;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
+import manifold.api.json.schema.LazyRefJsonType;
 
 /**
  */
@@ -22,6 +24,32 @@ public class JsonListType extends JsonSchemaType
   }
 
   @Override
+  protected void resolveRefsImpl()
+  {
+    super.resolveRefsImpl();
+    if( _componentType instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)_componentType).resolveRefs();
+    }
+    else if( _componentType instanceof LazyRefJsonType )
+    {
+      _componentType = ((LazyRefJsonType)_componentType).resolve();
+    }
+    for( Map.Entry<String, IJsonParentType> entry : new HashSet<>( _innerTypes.entrySet() ) )
+    {
+      IJsonType type = entry.getValue();
+      if( type instanceof JsonSchemaType )
+      {
+        ((JsonSchemaType)type).resolveRefs();
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        _innerTypes.put( entry.getKey(), (IJsonParentType)((LazyRefJsonType)type).resolve() );
+      }
+    }
+  }
+
+  @Override
   public String getLabel()
   {
     return super.getName();
@@ -29,15 +57,15 @@ public class JsonListType extends JsonSchemaType
 
   public String getName()
   {
-    return "java.util.List<" + getComponentTypeName() + ">";
+    return "ListOf" + getComponentTypeName();
   }
 
   private String getComponentTypeName()
   {
-    if( _componentType == null )
+    if( _componentType == null || _componentType instanceof LazyRefJsonType )
     {
       // can happen if asked before this list type is fully configured
-      return "<undefined>";
+      return "_undefined_";
     }
 
     return _componentType instanceof JsonUnionType ? "Object" : _componentType.getIdentifier();
@@ -51,7 +79,7 @@ public class JsonListType extends JsonSchemaType
   @Override
   public String getFqn()
   {
-    return "java.util.List<" + getComponentTypeName() + ">";
+    return getName();
   }
 
   public void addChild( String name, IJsonParentType type )

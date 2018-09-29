@@ -25,6 +25,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -37,7 +38,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import manifold.ExtIssueMsg;
+import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
+import manifold.api.fs.cache.PathCache;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
@@ -49,6 +52,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.ManClassUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 
@@ -347,6 +351,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void incrementalCompileClasses( JCTree.JCClassDecl tree )
   {
+    if( _tp.isGenerate() )
+    {
+      return;
+    }
+
     Set<Object> drivers = new HashSet<>();
     for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
     {
@@ -367,32 +376,25 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
+    String fqnDriver = null;
+    Integer driverId = null;
     for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
-      if( argName.toString().equals( "driverClass" ) )
+      if( argName.toString().equals( "driverInstance" ) )
       {
-        String fqnDriver = (String)pair.snd.getValue();
-        try
-        {
-          //noinspection unchecked
-          Class<?> cls;
-          try
-          {
-            cls = Class.forName( fqnDriver );
-          }
-          catch( Exception e )
-          {
-            cls = Class.forName( fqnDriver, false, Thread.currentThread().getContextClassLoader() );
-          }
-          Object driver = cls.getConstructor().newInstance();
-          drivers.add( driver );
-        }
-        catch( Exception e )
-        {
-          _tp.report( anno, Diagnostic.Kind.ERROR, e.getClass().getTypeName() + " : " + e.getMessage() );
-        }
+        driverId = (int)pair.snd.getValue();
       }
+      else if( argName.toString().equals( "driverClass" ) )
+      {
+        fqnDriver = (String)pair.snd.getValue();
+      }
+    }
+
+    if( driverId != null )
+    {
+      Object driver = ReflectUtil.method( fqnDriver, "getInstance", int.class ).invokeStatic( driverId );
+      drivers.add( driver );
     }
   }
 
@@ -416,6 +418,7 @@ public class ExtensionTransformer extends TreeTranslator
           Set<String> types = Arrays.stream( tm.getTypesForFile( file ) ).collect( Collectors.toSet() );
           if( types.size() > 0 )
           {
+            //eraseExistingClassFiles( file, types );
             ReflectUtil.method( driver, "mapTypesToFile", Set.class, File.class ).invoke( types, file.toJavaFile() );
             for( String fqn : types )
             {
@@ -425,6 +428,39 @@ public class ExtensionTransformer extends TreeTranslator
               assert classSym != null;
             }
           }
+        }
+      }
+    }
+  }
+
+  private void eraseExistingClassFiles( IFile file, Set<String> types )
+  {
+    for( String fqn: types )
+    {
+      IDirectory parent = file.getParent();
+      String name = ManClassUtil.getShortClassName( fqn );
+      IFile classFile = parent.file( name + ".class" );
+      if( classFile.isJavaFile() )
+      {
+        try
+        {
+          classFile.delete();
+
+          // also remove from cache
+          PathCache pathCache = ManifoldHost.getCurrentModule().getPathCache();
+          pathCache.getExtensionCache( "class" ).remove( fqn );
+
+          // and remove inner class files
+          for( IFile f: parent.listFiles() )
+          {
+            if( f.getName().startsWith( name + '$' ) )
+            {
+              f.delete();
+            }
+          }
+        }
+        catch( IOException ignore )
+        {
         }
       }
     }

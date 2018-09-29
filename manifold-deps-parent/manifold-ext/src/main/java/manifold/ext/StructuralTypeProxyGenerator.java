@@ -121,9 +121,21 @@ public class StructuralTypeProxyGenerator
                ? "    "
                : "    return " )
       .append( maybeCastReturnType( mi, returnType, rootType ) );
+    if( !returnType.isPrimitive() )
+    {
+      sb.append( RuntimeMethods.class.getTypeName() ).append( ".coerce(" );
+    }
     if( !handleField( sb, mi ) )
     {
       handleMethod( sb, mi, params );
+    }
+    if( !returnType.isPrimitive() )
+    {
+      sb.append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class);\n" );
+    }
+    else
+    {
+      sb.append( ";\n" );
     }
     sb.append( "  }\n" );
   }
@@ -136,7 +148,7 @@ public class StructuralTypeProxyGenerator
     {
       sb.append( ' ' ).append( "p" ).append( i ).append( i < params.length - 1 ? ',' : ' ' );
     }
-    sb.append( ");\n" );
+    sb.append( ")" );
   }
 
   private boolean handleField( StringBuilder sb, Method method )
@@ -147,7 +159,7 @@ public class StructuralTypeProxyGenerator
       Field field = findField( propertyName, _rootClass, method.getReturnType(), Variance.Covariant );
       if( field != null )
       {
-        sb.append( "_root" ).append( '.' ).append( field.getName() ).append( ";\n" );
+        sb.append( "_root" ).append( '.' ).append( field.getName() );
         return true;
       }
     }

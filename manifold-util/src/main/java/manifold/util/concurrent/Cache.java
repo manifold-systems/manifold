@@ -1,12 +1,13 @@
 package manifold.util.concurrent;
 
-import java.math.BigDecimal;
-import java.util.concurrent.ConcurrentSkipListMap;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import manifold.util.ILogger;
 
 /**
@@ -14,48 +15,34 @@ import manifold.util.ILogger;
  */
 public class Cache<K, V>
 {
-  private ConcurrentSkipListMap<K, V> _cacheImlp;
-  private final MissHandler<K, V> _missHandler;
   private final String _name;
   private final int _size;
-
-  //statistics
-  private final AtomicInteger _requests = new AtomicInteger();
-  private final AtomicInteger _misses = new AtomicInteger();
-  private final AtomicInteger _hits = new AtomicInteger();
+  private final CacheLoader<K, V> _loader;
+  private LoadingCache<K, V> _cacheImpl;
 
   private ScheduledFuture<?> _loggingTask;
 
-  /**
-   * This will create a new cache
-   *
-   * @param name        the name of the cache for logging
-   * @param size        the maximum size of the log
-   * @param missHandler how to handle misses, this is required not to be null
-   */
-  public Cache( String name, int size, MissHandler<K, V> missHandler )
+  public Cache( String name, int size, CacheLoader<K, V> loader )
   {
     _name = name;
     _size = size;
+    _loader = loader;
     clearCacheImpl();
-    _missHandler = missHandler;
   }
 
   private void clearCacheImpl()
   {
-    _cacheImlp = new ConcurrentSkipListMap<>();
+    _cacheImpl = Caffeine.newBuilder().maximumSize( _size ).build( _loader );
   }
 
   /**
    * This will evict a specific key from the cache.
    *
    * @param key the key to evict
-   *
-   * @return the current value for that key
    */
-  public V evict( K key )
+  public void evict( K key )
   {
-    return _cacheImlp.remove( key );
+    _cacheImpl.invalidate( key );
   }
 
   /**
@@ -66,9 +53,9 @@ public class Cache<K, V>
    *
    * @return the old value for this key
    */
-  public V put( K key, V value )
+  public void put( K key, V value )
   {
-    return _cacheImlp.put( key, value );
+    _cacheImpl.put( key, value );
   }
 
   /**
@@ -80,64 +67,17 @@ public class Cache<K, V>
    */
   public V get( K key )
   {
-    V value = _cacheImlp.get( key );
-    _requests.incrementAndGet();
-    if( value == null )
-    {
-      value = _missHandler.load( key );
-      _cacheImlp.put( key, value );
-      _misses.incrementAndGet();
-    }
-    else
-    {
-      _hits.incrementAndGet();
-    }
-    return value;
+    return _cacheImpl.get( key );
   }
 
-  public int getConfiguredSize()
+  public CacheStats getStats()
   {
-    return _size;
-  }
-
-  public int getUtilizedSize()
-  {
-    return _cacheImlp.size();
-  }
-
-  public int getRequests()
-  {
-    return _requests.get();
-  }
-
-  public int getMisses()
-  {
-    return _misses.get();
-  }
-
-  public int getHits()
-  {
-    return _hits.get();
-  }
-
-  public double getHitRate()
-  {
-    int requests = getRequests();
-    int hits = getHits();
-    if( requests == 0 )
-    {
-      return 0.0;
-    }
-    else
-    {
-      return ((double)hits) / requests;
-    }
+    return _cacheImpl.stats();
   }
 
   /**
    * Sets up a recurring task every n seconds to report on the status of this cache.  This can be useful
    * if you are doing exploratory caching and wish to monitor the performance of this cache with minimal fuss.
-   * Consider
    *
    * @param seconds how often to log the entry
    * @param logger  the logger to use
@@ -149,13 +89,7 @@ public class Cache<K, V>
     if( _loggingTask == null )
     {
       ScheduledExecutorService service = Executors.newScheduledThreadPool( 1 );
-      _loggingTask = service.scheduleAtFixedRate( new Runnable()
-      {
-        public void run()
-        {
-          logger.info( Cache.this );
-        }
-      }, seconds, seconds, TimeUnit.SECONDS );
+      _loggingTask = service.scheduleAtFixedRate( () -> logger.info( Cache.this ), seconds, seconds, TimeUnit.SECONDS );
     }
     else
     {
@@ -172,27 +106,19 @@ public class Cache<K, V>
     }
   }
 
-  public interface MissHandler<L, W>
-  {
-    W load( L key );
-  }
-
   public void clear()
   {
     clearCacheImpl();
-    _hits.set( 0 );
-    _misses.set( 0 );
-    _requests.set( 0 );
   }
 
   @Override
   public String toString()
   {
-    return "Cache \"" + _name + "\"( Hits:" + getHits() + ", Misses:" + getMisses() + ", Requests:" + getRequests() + ", Hit rate:" + BigDecimal.valueOf( getHitRate() * 100.0 ).setScale( 2, BigDecimal.ROUND_DOWN ) + "% )";
+    return getStats().toString();
   }
 
-  public static <K, V> Cache<K, V> make( String name, int size, MissHandler<K, V> handler )
+  public static <KK, VV> Cache<KK, VV> make( String name, int size, CacheLoader<KK, VV> loader )
   {
-    return new Cache<K, V>( name, size, handler );
+    return new Cache<>( name, size, loader );
   }
 }

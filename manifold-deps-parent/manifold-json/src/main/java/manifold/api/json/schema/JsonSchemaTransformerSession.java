@@ -46,10 +46,6 @@ public class JsonSchemaTransformerSession
       throw new IllegalStateException( "Unbalanced transformer pop" );
     }
     _transformers.pop();
-    if( _transformers.size() == 0 )
-    {
-      _baseTypeByUrl.clear();
-    }
   }
 
   Pair<IJsonType, JsonSchemaTransformer> getCachedBaseType( URL url )
@@ -59,5 +55,13 @@ public class JsonSchemaTransformerSession
   void cacheBaseType( URL url, Pair<IJsonType, JsonSchemaTransformer> pair )
   {
     _baseTypeByUrl.put( url, pair );
+  }
+
+  public void maybeClear()
+  {
+    if( _transformers.size() == 0 )
+    {
+      _baseTypeByUrl.clear();
+    }
   }
 }

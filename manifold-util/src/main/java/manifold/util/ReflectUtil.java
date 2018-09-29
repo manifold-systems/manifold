@@ -27,7 +27,7 @@ public class ReflectUtil
     }
     catch( ClassNotFoundException e )
     {
-      throw new RuntimeException( e );
+      return type( fqn, Thread.currentThread().getContextClassLoader() );
     }
   }
 
@@ -154,17 +154,7 @@ public class ReflectUtil
 
   public static ConstructorRef constructor( String fqn, Class<?>... params )
   {
-    Class<?> cls;
-    try
-    {
-      cls = Class.forName( fqn );
-    }
-    catch( ClassNotFoundException e )
-    {
-      throw new RuntimeException( e );
-    }
-
-    return constructor( cls, params );
+    return constructor( type( fqn ), params );
   }
   public static ConstructorRef constructor( Class<?> cls, Class<?>... params )
   {

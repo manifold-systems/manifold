@@ -1,5 +1,6 @@
 package manifold.util.cache;
 
+import com.github.benmanes.caffeine.cache.CacheLoader;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.RefreshRequest;
 import manifold.internal.host.ManifoldHost;
@@ -10,14 +11,14 @@ public class TypeSystemAwareCache<K, V> extends Cache<K, V>
   @SuppressWarnings({"FieldCanBeLocal"})
   private final AbstractTypeSystemListener _cacheClearer = new CacheClearer( this );
 
-  public static <K, V> TypeSystemAwareCache<K, V> make( String name, int size, MissHandler<K, V> handler )
+  public static <K, V> TypeSystemAwareCache<K, V> make( String name, int size, CacheLoader<K, V> loader )
   {
-    return new TypeSystemAwareCache<>( name, size, handler );
+    return new TypeSystemAwareCache<>( name, size, loader );
   }
 
-  public TypeSystemAwareCache( String name, int size, MissHandler<K, V> kvMissHandler )
+  public TypeSystemAwareCache( String name, int size, CacheLoader<K, V> loader )
   {
-    super( name, size, kvMissHandler );
+    super( name, size, loader );
     ManifoldHost.addTypeLoaderListenerAsWeakRef( null, _cacheClearer );
   }
 

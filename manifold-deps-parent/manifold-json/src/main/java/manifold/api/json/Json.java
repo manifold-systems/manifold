@@ -6,6 +6,7 @@ import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.api.json.schema.JsonSchemaTransformer;
+import manifold.api.json.schema.JsonSchemaTransformerSession;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.util.Pair;
@@ -104,7 +105,7 @@ public class Json
   {
     return transformJsonObject( name, null, parent, jsonObj );
   }
-  public static IJsonType transformJsonObject( String name, URL source, JsonSchemaType parent, Object jsonObj )
+  public static IJsonType transformJsonObject( String name, URL source, final JsonSchemaType parent, Object jsonObj )
   {
     IJsonType type = null;
 
@@ -196,6 +197,11 @@ public class Json
     else
     {
       type = JsonSimpleType.get( jsonObj );
+    }
+    if( parent == null && type instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)type).resolveRefs();
+      JsonSchemaTransformerSession.instance().maybeClear();
     }
     return type;
   }

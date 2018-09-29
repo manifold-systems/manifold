@@ -524,7 +524,7 @@ public class JavacPlugin implements Plugin, TaskListener
     Set<String> sourcePath = new HashSet<>();
     deriveSourcePath( _javaInputFiles, sourcePath );
     deriveAdditionalSourcePath( _gosuInputFiles, sourcePath );
-    maybeAddResourcePath( sourcePath );
+    maybeAddResourcePath( _javaInputFiles, sourcePath );
     return sourcePath;
   }
 
@@ -559,22 +559,29 @@ public class JavacPlugin implements Plugin, TaskListener
   }
 
   /**
-   * Add the Maven resource path from the conventional place.  This is not necessary because
+   * Add the 'resources' path from the conventional place.  This is not necessary because
    * resources are copied to the output directory, which is also part of the source path for
    * compilation.  However, having the resources directory in the path facilitates error
    * reporting in IDEs such as IntelliJ where there are hyper links directly to the errant
    * source file in the compilation results. Without the resources path, this link leads to
    * the output dir, which is confusing.
+   * <p/>
+   * Note incremental compilation from IntelliJ is another benefit of adding the resource path.
+   * Our JPS plugin makes available the *resource files* that have changed.  Since we derive
+   * the manifold types to compile from the resource files, we need to the 'resources' path,
+   * otherwise we don't find any types and incremental compilation won't work.  Therefore,
+   * we provide the resource paths definitively via a comment in the _Manifold_Temp_Main_.java
+   * file provided by our JPS plugin.
    */
-  private void maybeAddResourcePath( Set<String> sourcePath )
+  private void maybeAddResourcePath( Set<Pair<String, JavaFileObject>> javaInputFiles, Set<String> sourcePath )
   {
     String resourcePath = null;
     for( String path : sourcePath )
     {
-      int i = path.lastIndexOf( "/src/main/java".replace( '/', File.separatorChar ) );
+      int i = path.lastIndexOf( "/".replace( '/', File.separatorChar ) );
       if( i >= 0 )
       {
-        resourcePath = path.substring( 0, i ) + "/src/main/resources".replace( '/', File.separatorChar );
+        resourcePath = path.substring( 0, i ) + "/resources".replace( '/', File.separatorChar );
         break;
       }
     }
@@ -582,6 +589,10 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       sourcePath.add( resourcePath );
     }
+
+    // If compiling from IntelliJ, we provide the resource paths definitively via a comment in
+    // the _Manifold_Temp_Main_.java file provided by our JPS plugin.
+    deriveResourcePath( javaInputFiles, sourcePath );
   }
 
   private void deriveSourcePath( Set<Pair<String, JavaFileObject>> inputFiles, Set<String> sourcePath )
@@ -615,6 +626,60 @@ public class JavacPlugin implements Plugin, TaskListener
         //noinspection unchecked
         getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, IssueMsg.MSG_COULD_NOT_FIND_TYPE_FOR_FILE.get( inputFile ) ) );
       }
+    }
+  }
+
+  /**
+   * Add resource paths more precisely via our JPS plugin in IntelliJ
+   */
+  private void deriveResourcePath( Set<Pair<String, JavaFileObject>> inputFiles, Set<String> resourcePath )
+  {
+    for( Pair<String, JavaFileObject> inputFile : inputFiles )
+    {
+      JavaFileObject fo = inputFile.getSecond();
+      if( !isPhysicalFile( fo ) )
+      {
+        continue;
+      }
+
+      String filename = fo.getName();
+      if( filename.contains( "_Manifold_Temp_Main_"  ) )
+      {
+        File file = new File( filename );
+        if( file.isFile() )
+        {
+          addResourcePaths( file, resourcePath );
+        }
+      }
+    }
+  }
+
+  private static final String RESOURCE_ROOTS = "//## ResourceRoots:";
+  private void addResourcePaths( File file, Set<String> resourcePath )
+  {
+    try
+    {
+      String content = StreamUtil.getContent( new FileReader( file ) );
+      int index = content.indexOf( RESOURCE_ROOTS );
+      if( index >= 0 )
+      {
+        int iEol = content.indexOf( '\n', index );
+        String paths = content.substring( index + RESOURCE_ROOTS.length(), iEol );
+        paths = paths.trim();
+        for( StringTokenizer tokenizer = new StringTokenizer( paths, File.pathSeparator );
+             tokenizer.hasMoreTokens(); )
+        {
+          String path = tokenizer.nextToken();
+          if( new File( path ).isDirectory() )
+          {
+            resourcePath.add( path );
+          }
+        }
+      }
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
     }
   }
 

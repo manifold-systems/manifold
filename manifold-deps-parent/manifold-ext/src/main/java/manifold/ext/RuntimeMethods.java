@@ -9,8 +9,11 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,7 +85,7 @@ public class RuntimeMethods
           try
           {
             Object result = m.invoke( constructProxy( thiz, iface ), args );
-            //## todo: maybe coerce result if return types are not directly assignable?  e.g., Integer vs. Double
+            result = coerce( result, returnType );
             return result;
           }
           catch( Exception e )
@@ -93,6 +96,201 @@ public class RuntimeMethods
       }
     }
     return ICallHandler.UNHANDLED;
+  }
+
+  public static Object coerce( Object value, Class<?> type )
+  {
+    if( value == null )
+    {
+      return null;
+    }
+
+    if( type.isPrimitive() )
+    {
+      type = box( type );
+    }
+
+    Class<?> valueClass = value.getClass();
+    if( valueClass == type || type.isAssignableFrom( valueClass ) )
+    {
+      return value;
+    }
+
+    if( type == Boolean.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).intValue() != 0;
+      }
+      return Boolean.parseBoolean( value.toString() );
+    }
+
+    if( type == Byte.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).byteValue() != 0;
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? (byte)1: (byte)0;
+      }
+      return Byte.parseByte( value.toString() );
+    }
+
+    if( type == Character.class )
+    {
+      if( value instanceof Number )
+      {
+        return (char)((Number)value).intValue();
+      }
+      String s = value.toString();
+      return s.isEmpty() ? (char)0 : s.charAt( 0 );
+    }
+
+    if( type == Short.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).shortValue();
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? (short)1: (short)0;
+      }
+      return Short.parseShort( value.toString() );
+    }
+
+    if( type == Integer.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).intValue();
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? 1: 0;
+      }
+      return Integer.parseInt( value.toString() );
+    }
+
+    if( type == Long.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).longValue();
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? 1L: 0L;
+      }
+      return Long.parseLong( value.toString() );
+    }
+
+    if( type == Float.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).floatValue();
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? 1f: 0f;
+      }
+      return Float.parseFloat( value.toString() );
+    }
+
+    if( type == Double.class )
+    {
+      if( value instanceof Number )
+      {
+        return ((Number)value).doubleValue();
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? 1d : 0d;
+      }
+      return Double.parseDouble( value.toString() );
+    }
+
+    if( type == BigInteger.class )
+    {
+      if( value instanceof Number )
+      {
+        return BigInteger.valueOf( ((Number)value).longValue() );
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? BigInteger.ONE: BigInteger.ZERO;
+      }
+      return new BigInteger( value.toString() );
+    }
+
+    if( type == BigDecimal.class )
+    {
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? BigDecimal.ONE: BigDecimal.ZERO;
+      }
+      return new BigDecimal( value.toString() );
+    }
+
+    if( type == String.class )
+    {
+      return String.valueOf( value );
+    }
+
+    if( type.isArray() && valueClass.isArray() )
+    {
+      int length = Array.getLength( value );
+      Class<?> componentType = type.getComponentType();
+      Object array = Array.newInstance( componentType, length );
+      for( int i = 0; i < length; i++ )
+      {
+        Array.set( array, i, coerce( Array.get( value, i ), componentType ) );
+      }
+      return array;
+    }
+
+    // oh well, let the ClassCastException loose
+    return value;
+  }
+
+  private static Class<?> box( Class<?> type )
+  {
+    if( type == boolean.class )
+    {
+      return Boolean.class;
+    }
+    if( type == byte.class )
+    {
+      return Byte.class;
+    }
+    if( type == char.class )
+    {
+      return Character.class;
+    }
+    if( type == short.class )
+    {
+      return Short.class;
+    }
+    if( type == int.class )
+    {
+      return Integer.class;
+    }
+    if( type == long.class )
+    {
+      return Long.class;
+    }
+    if( type == float.class )
+    {
+      return Float.class;
+    }
+    if( type == double.class )
+    {
+      return Double.class;
+    }
+    throw new IllegalStateException();
   }
 
   private static Method findMethod( Class<?> iface, String name, Class[] paramTypes )
