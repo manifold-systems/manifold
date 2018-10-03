@@ -21,7 +21,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, Model::new, "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
+    init( typeLoader, (fqn,files) -> new Model( getModule().getHost(), fqn, files ), "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
   }
 
   @Override
@@ -33,7 +33,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   @Override
   protected Map<String, LocklessLazyVar<Model>> getPeripheralTypes()
   {
-    return SystemProperties.make();
+    return SystemProperties.make( getModule().getHost() );
   }
 
   @Override

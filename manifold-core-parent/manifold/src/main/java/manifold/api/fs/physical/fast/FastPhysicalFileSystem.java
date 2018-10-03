@@ -14,7 +14,7 @@ public class FastPhysicalFileSystem implements IPhysicalFileSystem
   {
     File file = toJavaFile( directoryPath );
     File[] files = file.listFiles();
-    List<FastFileMetadata> fileInfos = new ArrayList<FastFileMetadata>();
+    List<FastFileMetadata> fileInfos = new ArrayList<>();
     if( files != null )
     {
       for( File f : files )

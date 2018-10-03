@@ -5,6 +5,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.IModel;
 
 /**
@@ -22,6 +23,12 @@ public class Model implements IModel
     _fqnExtended = extendedFqn;
     _files = new HashSet<>( files );
     _sp = sp;
+  }
+
+  @Override
+  public IManifoldHost getHost()
+  {
+    return getTypeManifold().getModule().getHost();
   }
 
   @Override

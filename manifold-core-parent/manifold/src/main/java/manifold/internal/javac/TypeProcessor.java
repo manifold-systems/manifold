@@ -11,10 +11,10 @@ import java.util.TreeSet;
 import javax.lang.model.element.TypeElement;
 //import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
-import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
 import manifold.util.ServiceUtil;
 
@@ -22,16 +22,16 @@ import manifold.util.ServiceUtil;
  */
 public class TypeProcessor extends CompiledTypeProcessor
 {
-  TypeProcessor( JavacTask javacTask )
+  TypeProcessor( IManifoldHost host, JavacTask javacTask )
   {
-    super( javacTask );
+    super( host, javacTask );
     loadCompilerComponents( (BasicJavacTask)javacTask );
   }
 
 //  @Override
 //  public boolean filterError( Diagnostic diagnostic )
 //  {
-//    for( ITypeManifold sp: ManifoldHost.getCurrentModule().getTypeManifolds() )
+//    for( ITypeManifold sp: RuntimeManifoldHost.get().getSingleModule().getTypeManifolds() )
 //    {
 //      if( sp instanceof ITypeProcessor )
 //      {
@@ -58,7 +58,7 @@ public class TypeProcessor extends CompiledTypeProcessor
     {
       // string templates are Disabled by default, enable feature with "-Xplugin:Manifold strings"
       // note, string templates are Enabled by default if compiling dynamically
-      compilerComponents.add( new StringLiteralTemplateProcessor() );
+      compilerComponents.add( new StringLiteralTemplateProcessor( this ) );
     }
   }
 
@@ -71,7 +71,7 @@ public class TypeProcessor extends CompiledTypeProcessor
       return;
     }
 
-    for( ITypeManifold sp : ManifoldHost.getCurrentModule().getTypeManifolds() )
+    for( ITypeManifold sp: getHost().getSingleModule().getTypeManifolds() )
     {
       if( sp instanceof ITypeProcessor )
       {

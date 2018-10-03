@@ -13,52 +13,52 @@ import manifold.api.fs.physical.fast.FastPhysicalFileSystem;
 
 public class FileFactory
 {
-  private static final FileFactory INSTANCE = new FileFactory();
-
+  private IFileSystem _fs;
   private IPhysicalFileSystem _defaultPhysicalFileSystem;
 
-  private FileFactory()
+  public FileFactory( IFileSystem fs )
   {
+    _fs = fs;
     _defaultPhysicalFileSystem = createDefaultPhysicalFileSystem();
   }
 
-  public static FileFactory instance()
+  public IFileSystem getFileSystem()
   {
-    return INSTANCE;
+    return _fs;
   }
 
   public IDirectory getIDirectory( File f )
   {
     if( f.getName().endsWith( ".jar" ) && f.isFile() )
     {
-      return new JarFileDirectoryImpl( f );
+      return new JarFileDirectoryImpl( getFileSystem(), f );
     }
     else
     {
-      return new PhysicalDirectoryImpl( ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
+      return new PhysicalDirectoryImpl( getFileSystem(), ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
     }
   }
 
   public IFile getIFile( File f )
   {
-    return new PhysicalFileImpl( ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
+    return new PhysicalFileImpl( getFileSystem(), ResourcePath.parse( f.getAbsolutePath() ), _defaultPhysicalFileSystem );
   }
 
   public IDirectory getIDirectory( String absolutePath )
   {
     if( absolutePath.endsWith( ".jar" ) && new File( absolutePath ).isFile() )
     {
-      return new JarFileDirectoryImpl( new File( absolutePath ) );
+      return new JarFileDirectoryImpl( _fs, new File( absolutePath ) );
     }
     else
     {
-      return new PhysicalDirectoryImpl( ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
+      return new PhysicalDirectoryImpl( getFileSystem(), ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
     }
   }
 
   public IFile getIFile( String absolutePath )
   {
-    return new PhysicalFileImpl( ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
+    return new PhysicalFileImpl( getFileSystem(), ResourcePath.parse( absolutePath ), _defaultPhysicalFileSystem );
   }
 
   public IFile getIFile( URL url )
@@ -128,7 +128,7 @@ public class FileFactory
       {
         throw new RuntimeException( e );
       }
-      JarFileDirectoryImpl jarFileDirectory = new JarFileDirectoryImpl( jarFile );
+      JarFileDirectoryImpl jarFileDirectory = new JarFileDirectoryImpl( _fs, jarFile );
 
       if( bCreateIfNotExists )
       {

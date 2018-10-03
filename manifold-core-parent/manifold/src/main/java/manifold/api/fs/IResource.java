@@ -6,6 +6,10 @@ import java.net.URI;
 
 public interface IResource
 {
+  /**
+   * The file system supporting this resource
+   */
+  IFileSystem getFileSystem();
 
   /**
    * Gets this file's our directory's parent directory.

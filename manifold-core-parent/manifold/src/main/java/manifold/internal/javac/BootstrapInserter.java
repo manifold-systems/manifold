@@ -67,7 +67,7 @@ class BootstrapInserter extends TreeTranslator
     {
       for( JCTree.JCExpression iface : tree.implementing )
       {
-        if( iface.toString().contains( "IManifoldHost" ) )
+        if( iface.toString().contains( "ManifoldHost" ) )
         {
           // Don't insert bootstrap in a IManifoldHost impl
           return true;

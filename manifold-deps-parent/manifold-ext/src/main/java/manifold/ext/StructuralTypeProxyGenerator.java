@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import javax.lang.model.type.NoType;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
@@ -369,7 +369,7 @@ public class StructuralTypeProxyGenerator
   {
     if( _rootClassSymbol == null )
     {
-      ClassSymbols classSymbols = ClassSymbols.instance( ManifoldHost.getGlobalModule() );
+      ClassSymbols classSymbols = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() );
       BasicJavacTask javacTask = classSymbols.getJavacTask_PlainFileMgr();
       _rootClassSymbol = classSymbols.getClassSymbol( javacTask, _rootClass.getCanonicalName() ).getFirst();
     }

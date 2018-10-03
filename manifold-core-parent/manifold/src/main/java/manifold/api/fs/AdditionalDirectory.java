@@ -7,10 +7,9 @@ import java.util.List;
  */
 public class AdditionalDirectory extends DelegateDirectory
 {
-
-  public AdditionalDirectory( IDirectory delegate )
+  public AdditionalDirectory( IFileSystem fs, IDirectory delegate )
   {
-    super( delegate );
+    super( fs, delegate );
   }
 
   @Override
@@ -19,7 +18,7 @@ public class AdditionalDirectory extends DelegateDirectory
     List<IDirectory> result = new ArrayList<IDirectory>();
     for( IDirectory dir : getDelegate().listDirs() )
     {
-      result.add( new AdditionalDirectory( dir ) );
+      result.add( new AdditionalDirectory( getFileSystem(), dir ) );
     }
     return result;
   }

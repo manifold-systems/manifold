@@ -41,13 +41,13 @@ import manifold.ExtIssueMsg;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
-import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
@@ -317,7 +317,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void precompile( Map<String, Set<String>> typeNames )
   {
-    for( ITypeManifold tm: ManifoldHost.instance().getCurrentModule().getTypeManifolds() )
+    for( ITypeManifold tm: _tp.getHost().getSingleModule().getTypeManifolds() )
     {
       for( Map.Entry<String, Set<String>> entry: typeNames.entrySet() )
       {
@@ -409,9 +409,10 @@ public class ExtensionTransformer extends TreeTranslator
         return;
       }
 
-      Set<IFile> files = resourceFiles.stream().map( ( File f) -> ManifoldHost.getFileSystem().getIFile( f ) )
+      IManifoldHost host = _tp.getHost();
+      Set<IFile> files = resourceFiles.stream().map( ( File f) -> host.getFileSystem().getIFile( f ) )
         .collect( Collectors.toSet() );
-      for( ITypeManifold tm : ManifoldHost.instance().getCurrentModule().getTypeManifolds() )
+      for( ITypeManifold tm : host.getSingleModule().getTypeManifolds() )
       {
         for( IFile file: files )
         {
@@ -447,7 +448,7 @@ public class ExtensionTransformer extends TreeTranslator
           classFile.delete();
 
           // also remove from cache
-          PathCache pathCache = ManifoldHost.getCurrentModule().getPathCache();
+          PathCache pathCache = _tp.getHost().getSingleModule().getPathCache();
           pathCache.getExtensionCache( "class" ).remove( fqn );
 
           // and remove inner class files

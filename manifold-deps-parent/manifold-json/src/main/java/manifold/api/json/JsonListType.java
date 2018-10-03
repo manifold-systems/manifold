@@ -207,7 +207,7 @@ public class JsonListType extends JsonSchemaType
     if( isSchemaType() )
     {
       // Json Schema types must be identity compared
-      return this == o;
+      return false;
     }
 
     if( o == null || getClass() != o.getClass() )

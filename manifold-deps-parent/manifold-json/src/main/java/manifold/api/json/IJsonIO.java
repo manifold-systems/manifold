@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.script.Bindings;
 import manifold.api.templ.DisableStringLiteralTemplates;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.RuntimeManifoldHost;
 
 /**
  */
@@ -64,7 +64,7 @@ public interface IJsonIO
     {
       if( tag != null && !tag.isEmpty() )
       {
-        Bindings objBindings = ManifoldHost.createBindings();
+        Bindings objBindings = RuntimeManifoldHost.get().createBindings();
         obj.save( objBindings );
         bindings.put( tag, objBindings );
       }
@@ -112,7 +112,7 @@ public interface IJsonIO
       List<Bindings> blist = new ArrayList<>();
       for( E e : list )
       {
-        Bindings b = ManifoldHost.createBindings();
+        Bindings b = RuntimeManifoldHost.get().createBindings();
         e.save( b );
         blist.add( b );
       }

@@ -46,7 +46,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.internal.BootstrapPlugin;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.JavacManifoldHost;
 import manifold.internal.runtime.Bootstrap;
 import manifold.util.IssueMsg;
 import manifold.util.JavacDiagnostic;
@@ -102,6 +102,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private static JavacPlugin INSTANCE;
 
+  private JavacManifoldHost _host;
   private Context _ctx;
   private JavaFileManager _fileManager;
   private BasicJavacTask _javacTask;
@@ -145,14 +146,15 @@ public class JavacPlugin implements Plugin, TaskListener
     _argPresent.put( ARG_STRINGS, testForArg( ARG_STRINGS, args ) );
     _argPresent.put( ARG_DYNAMIC, testForArg( ARG_DYNAMIC, args ) );
     notifyOfInvalidArgs( args, jpe );
-    if( ManifoldHost.instance() == null )
-    {
-      // the absence of a host indicates incremental compilation of Manifold itself
-      jpe.getMessager().printMessage( Diagnostic.Kind.NOTE, "Bypassing JavacPlugin during incremental compilation of Manifold core" );
-      return;
-    }
+
+    _host = new JavacManifoldHost();
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  public JavacManifoldHost getHost()
+  {
+    return _host;
   }
 
   private void notifyOfInvalidArgs( String[] args, JavacProcessingEnvironment jpe )
@@ -161,7 +163,7 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       if( Arrays.stream( ARGS ).noneMatch( validArg -> validArg.equals( arg ) ) )
       {
-        jpe.getMessager().printMessage( Diagnostic.Kind.WARNING, "Unrecognized Manifold plugin argument '" + arg + "'" );
+        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "Unrecognized Manifold plugin argument '" + arg + "'" );
       }
     }
   }
@@ -276,7 +278,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _gosuInputFiles = fetchGosuInputFiles();
       _treeMaker = TreeMaker.instance( _ctx );
       _javacElements = JavacElements.instance( _ctx );
-      _typeProcessor = new TypeProcessor( _javacTask );
+      _typeProcessor = new TypeProcessor( getHost(), _javacTask );
       _issueReporter = new IssueReporter( Log.instance( getContext() ) );
       _seenModules = new LinkedHashSet<>();
       _extraClasses = new ConcurrentHashSet<>();
@@ -317,7 +319,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private void injectManFileManager()
   {
     // Override javac's JavaFileManager
-    _manFileManager = new ManifoldJavaFileManager( _fileManager, _ctx, true );
+    _manFileManager = new ManifoldJavaFileManager( getHost(), _fileManager, _ctx, true );
     _ctx.put( JavaFileManager.class, (JavaFileManager)null );
     _ctx.put( JavaFileManager.class, _manFileManager );
 
@@ -749,7 +751,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
           // Note there are no "non-java" files to compile in default Manifold,
           // only other languages implementing their own IManifoldHost might compile their language files at this time
-          ManifoldHost.initializeAndCompileNonJavaFiles( JavacProcessingEnvironment.instance( getContext() ), _fileManager, _gosuInputFiles, this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
+          getHost().initializeAndCompileNonJavaFiles( this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
 
           // Need to bootstap for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder
           Bootstrap.init();

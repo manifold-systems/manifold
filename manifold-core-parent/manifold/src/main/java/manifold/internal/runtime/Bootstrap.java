@@ -5,13 +5,17 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Hashtable;
-import manifold.internal.host.ManifoldHost;
+import java.util.Map;
+import manifold.internal.host.RuntimeManifoldHost;
+import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 /**
  */
 public class Bootstrap
 {
-  public static final String MAN_CLASS_PROTOCOL = "manifoldclass";
+  private static final Map<ClassLoader, Boolean> LOADER_TO_CAN_WRAP = new ConcurrentWeakHashMap<>();
+
+  private static final String MAN_CLASS_PROTOCOL = "manifoldclass";
   private static final String PROTOCOL_PACKAGE = "manifold.internal.runtime.protocols";
 
   private static Boolean CAN_WRAP = Boolean.FALSE; //= null;
@@ -54,14 +58,27 @@ public class Bootstrap
     {
       return false;
     }
+
+    Boolean canWrap = LOADER_TO_CAN_WRAP.get( loader );
+    if( canWrap != null )
+    {
+      return canWrap;
+    }
+
     UrlClassLoaderWrapper wrapped = UrlClassLoaderWrapper.wrap( loader );
     boolean bSysLoader = loader == ClassLoader.getSystemClassLoader();
     if( bSysLoader )
     {
-      return wrapped != null;
+      canWrap = wrapped != null;
     }
-    loader = loader.getParent();
-    return wrapped != null && canWrapChain( loader );
+    else
+    {
+      ClassLoader parent = loader.getParent();
+      canWrap = wrapped != null && (parent == null || canWrapChain( parent ));
+    }
+
+    LOADER_TO_CAN_WRAP.put( loader, canWrap );
+    return canWrap;
   }
 
   private static void addManifoldClassUrl( UrlClassLoaderWrapper urlLoader )
@@ -101,7 +118,7 @@ public class Bootstrap
     return url;
   }
 
-  public static void addOurProtocolHandler()
+  private static void addOurProtocolHandler()
   {
     try
     {
@@ -179,9 +196,9 @@ public class Bootstrap
     {
       if( addOurProtocolPackage() )
       {
-        ManifoldHost.bootstrap();
+        RuntimeManifoldHost.bootstrap();
       }
-      ClassLoader loader = ManifoldHost.getActualClassLoader();
+      ClassLoader loader = RuntimeManifoldHost.get().getActualClassLoader();
       if( loader != null )
       {
         setupLoaderChainWithManifoldUrl( loader );
@@ -195,9 +212,9 @@ public class Bootstrap
     }
   }
 
-  public static boolean canWrapChain()
+  private static boolean canWrapChain()
   {
-    return CAN_WRAP == null ? CAN_WRAP = canWrapChain( ManifoldHost.getActualClassLoader() ) : CAN_WRAP;
+    return CAN_WRAP == null ? CAN_WRAP = canWrapChain( RuntimeManifoldHost.get().getActualClassLoader() ) : CAN_WRAP;
   }
 
   @SuppressWarnings("unused")

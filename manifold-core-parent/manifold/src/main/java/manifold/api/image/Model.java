@@ -3,6 +3,7 @@ package manifold.api.image;
 import java.net.MalformedURLException;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 
 /**
@@ -11,9 +12,9 @@ class Model extends AbstractSingleFileModel
 {
   String _url;
 
-  Model( String fqn, Set<IFile> files )
+  Model( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     assignUrl();
   }
 

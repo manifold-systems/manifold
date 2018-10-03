@@ -11,13 +11,13 @@ import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
+import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.IModuleComponent;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
-import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.internal.javac.SourceSupplier;
 import manifold.util.JavacDiagnostic;
@@ -32,18 +32,26 @@ import static manifold.api.type.ContributorKind.Primary;
 @SuppressWarnings("WeakerAccess")
 public abstract class SimpleModule implements IModuleComponent, IModule
 {
+  private IManifoldHost _host;
   private List<IDirectory> _classpath;
   private List<IDirectory> _sourcePath;
   private List<IDirectory> _outputPath;
   private SortedSet<ITypeManifold> _typeManifolds;
   private LocklessLazyVar<PathCache> _pathCache;
 
-  public SimpleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
+  public SimpleModule( IManifoldHost host, List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
+    _host = host;
     _classpath = classpath;
     _sourcePath = sourcePath;
     _outputPath = outputPath;
     _pathCache = LocklessLazyVar.make( this::makePathCache );
+  }
+
+  @Override
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   @Override
@@ -111,6 +119,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
 
   public JavaFileObject produceFile( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
+    //noinspection unchecked
     Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
     return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( location, sps, fqn, errorHandler ) ) );
   }
@@ -173,6 +182,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
     }
   }
 
+  @SuppressWarnings("unchecked")
   public Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
   {
     return IModuleComponent.super.findTypeManifoldsFor( fqn, predicates );

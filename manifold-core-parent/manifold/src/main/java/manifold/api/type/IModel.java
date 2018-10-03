@@ -3,6 +3,7 @@ package manifold.api.type;
 import java.util.Set;
 import javax.tools.DiagnosticListener;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 
 /**
  * For use with {@link ResourceFileTypeManifold}. Implementors of {@link IModel} store and manage
@@ -10,6 +11,11 @@ import manifold.api.fs.IFile;
  */
 public interface IModel
 {
+  /**
+   * @return The Manifold host within which this model operates
+   */
+  IManifoldHost getHost();
+
   /**
    * @return The fully qualified type name to which code will be contributed
    */

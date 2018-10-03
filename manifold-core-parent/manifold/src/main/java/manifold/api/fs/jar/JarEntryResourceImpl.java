@@ -6,23 +6,30 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.jar.JarEntry;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
 
 public abstract class JarEntryResourceImpl implements IResource
 {
-
+  private IFileSystem _fs;
   protected JarEntry _entry;
   protected IJarFileDirectory _parent;
   protected JarFileDirectoryImpl _jarFile;
   protected String _name;
   private boolean _exists = false;
 
-  protected JarEntryResourceImpl( String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
+  protected JarEntryResourceImpl( IFileSystem fs, String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
   {
+    _fs = fs;
     _name = name;
     _parent = parent;
     _jarFile = jarFile;
+  }
+
+  public IFileSystem getFileSystem()
+  {
+    return _fs;
   }
 
   public void setEntry( JarEntry entry )

@@ -1,20 +1,19 @@
 package manifold.api.fs.physical;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IDirectoryUtil;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
 
 public class PhysicalDirectoryImpl extends PhysicalResourceImpl implements IDirectory
 {
-
-  public PhysicalDirectoryImpl( ResourcePath path, IPhysicalFileSystem backingFileSystem )
+  public PhysicalDirectoryImpl( IFileSystem fs, ResourcePath path, IPhysicalFileSystem backingFileSystem )
   {
-    super( path, backingFileSystem );
+    super( fs, path, backingFileSystem );
   }
 
   @Override
@@ -27,18 +26,18 @@ public class PhysicalDirectoryImpl extends PhysicalResourceImpl implements IDire
   public IDirectory dir( String relativePath )
   {
     ResourcePath absolutePath = _path.join( relativePath );
-    return new PhysicalDirectoryImpl( absolutePath, _backingFileSystem );
+    return new PhysicalDirectoryImpl( getFileSystem(), absolutePath, _backingFileSystem );
   }
 
   @Override
   public IFile file( String path )
   {
     ResourcePath absolutePath = _path.join( path );
-    return new PhysicalFileImpl( absolutePath, _backingFileSystem );
+    return new PhysicalFileImpl( getFileSystem(), absolutePath, _backingFileSystem );
   }
 
   @Override
-  public boolean mkdir() throws IOException
+  public boolean mkdir()
   {
     return _backingFileSystem.mkdir( _path );
   }
@@ -46,12 +45,12 @@ public class PhysicalDirectoryImpl extends PhysicalResourceImpl implements IDire
   @Override
   public List<? extends IDirectory> listDirs()
   {
-    List<IDirectory> dirs = new ArrayList<IDirectory>();
+    List<IDirectory> dirs = new ArrayList<>();
     for( IFileMetadata fm : _backingFileSystem.listFiles( _path ) )
     {
       if( fm.isDir() )
       {
-        dirs.add( new PhysicalDirectoryImpl( _path.join( fm.name() ), _backingFileSystem ) );
+        dirs.add( new PhysicalDirectoryImpl( getFileSystem(), _path.join( fm.name() ), _backingFileSystem ) );
       }
     }
 
@@ -61,12 +60,12 @@ public class PhysicalDirectoryImpl extends PhysicalResourceImpl implements IDire
   @Override
   public List<? extends IFile> listFiles()
   {
-    List<IFile> files = new ArrayList<IFile>();
+    List<IFile> files = new ArrayList<>();
     for( IFileMetadata fm : _backingFileSystem.listFiles( _path ) )
     {
       if( fm.isFile() )
       {
-        files.add( new PhysicalFileImpl( _path.join( fm.name() ), _backingFileSystem ) );
+        files.add( new PhysicalFileImpl( getFileSystem(), _path.join( fm.name() ), _backingFileSystem ) );
       }
     }
 

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import javax.script.Bindings;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.json.DynamicType;
 import manifold.api.json.ErrantType;
 import manifold.api.json.IJsonParentType;
@@ -24,7 +25,6 @@ import manifold.api.json.JsonSimpleType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.api.templ.DisableStringLiteralTemplates;
-import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.IIssue;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
@@ -50,12 +50,14 @@ public class JsonSchemaTransformer
   private static final String JSCH_REQUIRED = "required";
   static final String JSCH_DEFINITIONS = "definitions";
   static final String JSCH_PROPERTIES = "properties";
+  private final IManifoldHost _host;
 
   private FqnCache<IJsonType> _typeByFqn;
 
-  private JsonSchemaTransformer()
+  private JsonSchemaTransformer( IManifoldHost host )
   {
     _typeByFqn = new FqnCache<>( "doc", true, JsonUtil::makeIdentifier );
+    _host = host;
   }
 
   public static boolean isSchema( Bindings bindings )
@@ -88,12 +90,12 @@ public class JsonSchemaTransformer
   }
 
   @SuppressWarnings("unused")
-  public static IJsonType transform( String name, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, Bindings docObj )
   {
-    return transform( name, null, docObj );
+    return transform( host, name, null, docObj );
   }
   @DisableStringLiteralTemplates
-  public static IJsonType transform( String name, URL source, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, URL source, Bindings docObj )
   {
     if( !isSchema( docObj ) )
     {
@@ -102,7 +104,7 @@ public class JsonSchemaTransformer
       return errant;
     }
 
-    JsonSchemaTransformer transformer = new JsonSchemaTransformer();
+    JsonSchemaTransformer transformer = new JsonSchemaTransformer( host );
     JsonSchemaTransformerSession session = JsonSchemaTransformerSession.instance();
     session.pushTransformer( transformer );
     try
@@ -613,7 +615,7 @@ public class JsonSchemaTransformer
     IJsonType type = null;
     for( Object elem : list )
     {
-      IJsonType csr = Json.transformJsonObject( "", null, elem );
+      IJsonType csr = Json.transformJsonObject( _host, "", null, elem );
       if( type == null )
       {
         type = csr;
@@ -906,7 +908,7 @@ public class JsonSchemaTransformer
         if( protocol != null && protocol.equals( "file" ) )
         {
           // use use IFile if url is a file e.g., IDE file system change caching
-          IFile file = ManifoldHost.getFileSystem().getIFile( url );
+          IFile file = _host.getFileSystem().getIFile( url );
           input = file.openInputStream();
         }
         else
@@ -941,7 +943,7 @@ public class JsonSchemaTransformer
       {
         name = name.substring( 0, iDot );
       }
-      baseType = transform( name, url, bindings );
+      baseType = transform( _host, name, url, bindings );
       pair = new Pair<>( baseType, this );
       JsonSchemaTransformerSession.instance().cacheBaseType( url, pair );
     }

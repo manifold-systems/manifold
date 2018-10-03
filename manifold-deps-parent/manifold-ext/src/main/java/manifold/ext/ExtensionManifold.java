@@ -23,7 +23,6 @@ import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.api.Extension;
-import manifold.internal.host.ManifoldHost;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.StreamUtil;
@@ -171,11 +170,13 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     return false;
   }
 
+  //## todo: This applies only to precompiled Java class files.
+  //## todo: Need to move this method to IManifoldHost for different use-cases (class files, javac symbols, and IJ psi)
   private boolean isInnerToJavaClass( String topLevel, String relativeInner )
   {
     try
     {
-      Class<?> cls = Class.forName( topLevel, false, ManifoldHost.instance().getActualClassLoader() );
+      Class<?> cls = Class.forName( topLevel, false, getModule().getHost().getActualClassLoader() );
       for( Class<?> inner : cls.getDeclaredClasses() )
       {
         if( isInnerClass( inner, relativeInner ) )

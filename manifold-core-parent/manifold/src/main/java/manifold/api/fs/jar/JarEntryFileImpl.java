@@ -4,13 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 
 public class JarEntryFileImpl extends JarEntryResourceImpl implements IFile
 {
 
-  public JarEntryFileImpl( String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
+  public JarEntryFileImpl( IFileSystem fs, String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
   {
-    super( name, parent, jarFile );
+    super( fs, name, parent, jarFile );
   }
 
   @Override
@@ -24,13 +25,13 @@ public class JarEntryFileImpl extends JarEntryResourceImpl implements IFile
   }
 
   @Override
-  public OutputStream openOutputStream() throws IOException
+  public OutputStream openOutputStream()
   {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public OutputStream openOutputStreamForAppend() throws IOException
+  public OutputStream openOutputStreamForAppend()
   {
     throw new UnsupportedOperationException();
   }

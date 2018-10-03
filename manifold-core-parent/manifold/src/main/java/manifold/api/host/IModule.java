@@ -25,6 +25,8 @@ import manifold.api.type.ITypeManifold;
  */
 public interface IModule
 {
+  IManifoldHost getHost();
+
   String getName();
 
   /**
@@ -42,7 +44,10 @@ public interface IModule
 
   List<IDirectory> getCollectiveJavaClassPath();
 
-  IFileSystem getFileSystem();
+  default IFileSystem getFileSystem()
+  {
+    return getHost().getFileSystem();
+  }
 
   /**
    * @return A list of dependency modules.

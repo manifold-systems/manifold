@@ -20,14 +20,13 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.SourcePosition;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.js.parser.Parser;
 import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.FunctionNode;
 import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
-import manifold.js.parser.tree.template.JSTNode;
 
 
 import static manifold.js.Util.safe;
@@ -128,7 +127,7 @@ public class JavascriptProgram
 
   private static ITypeManifold findJavascriptManifold( String fileExt )
   {
-    ITypeManifold tm = ManifoldHost.instance().getCurrentModule().getTypeManifolds().stream()
+    ITypeManifold tm = RuntimeManifoldHost.get().getSingleModule().getTypeManifolds().stream()
       .filter( e -> e.handlesFileExtension( fileExt ) )
       .findFirst().orElse( null );
     if( tm == null )

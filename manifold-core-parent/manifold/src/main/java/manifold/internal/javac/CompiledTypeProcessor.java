@@ -28,10 +28,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
+import manifold.api.host.IManifoldHost;
 import manifold.util.JavacDiagnostic;
 
 public abstract class CompiledTypeProcessor implements TaskListener
 {
+  private final IManifoldHost _host;
   private final JavacTask _javacTask;
   private CompilationUnitTree _compilationUnit;
   private final Types _types;
@@ -42,8 +44,9 @@ public abstract class CompiledTypeProcessor implements TaskListener
   private JCTree.JCClassDecl _tree;
   private boolean _generate;
 
-  CompiledTypeProcessor( JavacTask javacTask )
+  CompiledTypeProcessor( IManifoldHost host, JavacTask javacTask )
   {
+    _host = host;
     _javacTask = javacTask;
     javacTask.addTaskListener( this );
     Context context = ((BasicJavacTask)javacTask).getContext();
@@ -75,6 +78,11 @@ public abstract class CompiledTypeProcessor implements TaskListener
   public Context getContext()
   {
     return ((BasicJavacTask)getJavacTask()).getContext();
+  }
+
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   public JavacTask getJavacTask()

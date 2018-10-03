@@ -33,7 +33,6 @@ import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.util.JavacDiagnostic;
@@ -77,7 +76,7 @@ class ExtCodeGen
   private SrcClass makeStubFromSource()
   {
     List<CompilationUnitTree> trees = new ArrayList<>();
-    JavaParser.instance().parseText( _existingSource, trees, null, null, null );
+    _model.getHost().getJavaParser().parseText( _existingSource, trees, null, null, null );
     JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)trees.get( 0 ).getTypeDecls().get( 0 );
     SrcClass srcExtended = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
       .modifiers( classDecl.getModifiers().getFlags() );

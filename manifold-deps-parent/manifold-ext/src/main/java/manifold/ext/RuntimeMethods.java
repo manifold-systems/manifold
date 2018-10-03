@@ -19,10 +19,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import manifold.ext.api.ICallHandler;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavaParser;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
@@ -384,9 +383,9 @@ public class RuntimeMethods
   private static boolean hasCallHandlerMethod( Class rootClass )
   {
     String fqn = rootClass.getCanonicalName();
-    BasicJavacTask javacTask = JavaParser.instance().getJavacTask();
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, fqn );
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( ManifoldHost.getGlobalModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
+    BasicJavacTask javacTask = RuntimeManifoldHost.get().getJavaParser().getJavacTask();
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).getClassSymbol( javacTask, fqn );
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
     if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
     {
       // Nominally implements ICallHandler

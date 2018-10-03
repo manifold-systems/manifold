@@ -3,6 +3,7 @@ package manifold.js;
 import java.net.MalformedURLException;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 
 /**
@@ -12,9 +13,9 @@ public class JavascriptModel extends AbstractSingleFileModel
 {
   private String _url;
 
-  JavascriptModel( String fqn, Set<IFile> files )
+  JavascriptModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     assignUrl();
   }
 

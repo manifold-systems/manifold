@@ -13,7 +13,6 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IModuleComponent;
 import manifold.api.type.JavaTypeManifold;
-import manifold.internal.javac.JavaParser;
 import manifold.util.StreamUtil;
 
 /**
@@ -26,7 +25,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   @Override
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, Model::new );
+    init( typeLoader, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
   }
 
   @Override
@@ -75,7 +74,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
     }
 
     List<CompilationUnitTree> trees = new ArrayList<>();
-    JavaParser.instance().parseText( getSource( model ), trees, null, null, null );
+    getModule().getHost().getJavaParser().parseText( getSource( model ), trees, null, null, null );
     if( trees.isEmpty() )
     {
       return null;

@@ -14,7 +14,6 @@ import manifold.api.fs.IFileUtil;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.JsonUtil;
 import manifold.util.ManClassUtil;
 import manifold.util.cache.FqnCache;
@@ -39,7 +38,7 @@ public class PathCache
     _clearHandler = clearHandler;
     _reverseMap = new ConcurrentHashMap<>();
     init();
-    ManifoldHost.addTypeLoaderListenerAsWeakRef( module, _clearer = new CacheClearer() );
+    _module.getHost().addTypeLoaderListenerAsWeakRef( module, _clearer = new CacheClearer() );
   }
 
   private void init()
@@ -55,6 +54,7 @@ public class PathCache
     _filesByExtension = filesByExtension;
   }
 
+  @SuppressWarnings("unused")
   public Set<IFile> findFiles( String fqn )
   {
     Set<IFile> result = Collections.emptySet();
@@ -95,7 +95,7 @@ public class PathCache
 
   private void addFilesInDir( String relativePath, IDirectory dir, Map<String, FqnCache<IFile>> filesByExtension )
   {
-    if( !ManifoldHost.isPathIgnored( relativePath ) )
+    if( !_module.getHost().isPathIgnored( relativePath ) )
     {
       for( IFile file : dir.listFiles() )
       {
@@ -152,7 +152,7 @@ public class PathCache
     }
   }
 
-  private static String appendResourceNameToPath( String relativePath, String resourceName )
+  private String appendResourceNameToPath( String relativePath, String resourceName )
   {
     String path;
     if( relativePath.length() > 0 )

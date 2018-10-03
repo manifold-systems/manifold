@@ -20,7 +20,7 @@ public class ImageTypeManifold extends JavaTypeManifold<Model>
   @Override
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, Model::new );
+    init( typeLoader, (host, fqn) -> new Model( getModule().getHost(), host, fqn ) );
   }
 
   @Override

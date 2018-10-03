@@ -22,17 +22,23 @@ import manifold.api.templ.StringLiteralTemplateParser;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.api.type.ICompilerComponent;
 import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.ManDiagnosticHandler;
+import manifold.internal.javac.TypeProcessor;
 import manifold.util.Stack;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
+  private final TypeProcessor _tp;
   private BasicJavacTask _javacTask;
   private TreeMaker _maker;
   private Names _names;
   private Stack<Boolean> _disabled;
   private ManDiagnosticHandler _manDiagnosticHandler;
+
+  public StringLiteralTemplateProcessor( TypeProcessor typeProcessor )
+  {
+    _tp = typeProcessor;
+  }
 
   @Override
   public void init( BasicJavacTask javacTask )
@@ -252,7 +258,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
         else
         {
           DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-          expr = JavaParser.instance().parseExpr( comp.getExpr(), errorHandler );
+          expr = _tp.getHost().getJavaParser().parseExpr( comp.getExpr(), errorHandler );
           if( transferParseErrors( literalOffset, comp, expr, errorHandler ) )
           {
             return Collections.emptyList();

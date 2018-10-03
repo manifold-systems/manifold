@@ -1,5 +1,6 @@
 package manifold.templates.manifold;
 
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.templates.codegen.TemplateGen;
 import manifold.api.fs.IFile;
@@ -19,8 +20,8 @@ class TemplateModel extends AbstractSingleFileModel  {
     private String _source;
     private TemplateIssueContainer _issues;
 
-    TemplateModel(String fqn, Set<IFile> files) {
-        super(fqn, files);
+    TemplateModel( IManifoldHost host, String fqn, Set<IFile> files) {
+        super(host, fqn, files);
         init();
     }
 

@@ -9,8 +9,8 @@ import manifold.util.concurrent.Cache;
 
 public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
 {
-  private static final TypeSystemAwareCache<String, String[]> PARTS_CACHE =
-    TypeSystemAwareCache.make( "Fqn Parts Cache", 10000, e -> FqnCache.split( e, null ) );
+  private static final Cache<String, String[]> PARTS_CACHE =
+    Cache.make( "Fqn Parts Cache", 10000, e -> FqnCache.split( e, null ) );
 
   private final Validator _validator;
   private final Cache<String, String[]> _validatorCache;

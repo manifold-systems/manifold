@@ -14,24 +14,25 @@ import java.util.jar.JarFile;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IDirectoryUtil;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
-import manifold.internal.host.ManifoldHost;
 
 public class JarFileDirectoryImpl implements IJarFileDirectory
 {
-
+  private IFileSystem _fileSystem;
   private File _file;
   private JarFile _jarFile;
   private Map<String, IResource> _resources;
   private List<IDirectory> _childDirs;
   private List<IFile> _childFiles;
 
-  public JarFileDirectoryImpl( File file )
+  public JarFileDirectoryImpl( IFileSystem fileSystem, File file )
   {
-    _resources = new HashMap<String, IResource>();
-    _childFiles = new ArrayList<IFile>();
-    _childDirs = new ArrayList<IDirectory>();
+    _fileSystem = fileSystem;
+    _resources = new HashMap<>();
+    _childFiles = new ArrayList<>();
+    _childDirs = new ArrayList<>();
     _file = file;
 
     if( file.exists() )
@@ -51,6 +52,12 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
         throw new RuntimeException( e );
       }
     }
+  }
+
+  @Override
+  public IFileSystem getFileSystem()
+  {
+    return _fileSystem;
   }
 
   private void processJarEntry( JarEntry e )
@@ -113,7 +120,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
     JarEntryDirectoryImpl result = (JarEntryDirectoryImpl)resource;
     if( result == null )
     {
-      result = new JarEntryDirectoryImpl( relativeName, this, this );
+      result = new JarEntryDirectoryImpl( getFileSystem(), relativeName, this, this );
       _resources.put( relativeName, result );
       _childDirs.add( result );
     }
@@ -131,7 +138,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
     JarEntryFileImpl result = (JarEntryFileImpl)resource;
     if( result == null )
     {
-      result = new JarEntryFileImpl( relativeName, this, this );
+      result = new JarEntryFileImpl( getFileSystem(), relativeName, this, this );
       _resources.put( relativeName, result );
       _childFiles.add( result );
     }
@@ -153,7 +160,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   }
 
   @Override
-  public boolean mkdir() throws IOException
+  public boolean mkdir()
   {
     throw new UnsupportedOperationException();
   }
@@ -161,7 +168,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   @Override
   public List<? extends IDirectory> listDirs()
   {
-    List<IDirectory> results = new ArrayList<IDirectory>();
+    List<IDirectory> results = new ArrayList<>();
     for( IDirectory child : _childDirs )
     {
       if( child.exists() )
@@ -175,7 +182,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   @Override
   public List<? extends IFile> listFiles()
   {
-    List<IFile> results = new ArrayList<IFile>();
+    List<IFile> results = new ArrayList<>();
     for( IFile child : _childFiles )
     {
       if( child.exists() )
@@ -198,7 +205,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
     File parentFile = _file.getParentFile();
     if( parentFile != null )
     {
-      return ManifoldHost.getFileSystem().getIDirectory( parentFile );
+      return getFileSystem().getIDirectory( parentFile );
     }
     else
     {
@@ -219,7 +226,7 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   }
 
   @Override
-  public boolean delete() throws IOException
+  public boolean delete()
   {
     return _file.delete();
   }

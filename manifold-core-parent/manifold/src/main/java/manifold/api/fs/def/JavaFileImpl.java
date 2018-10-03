@@ -7,14 +7,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IFileUtil;
 
 public class JavaFileImpl extends JavaResourceImpl implements IFile
 {
-
-  public JavaFileImpl( File file )
+  public JavaFileImpl( IFileSystem fs, File file )
   {
-    super( file );
+    super( fs, file );
   }
 
   @Override

@@ -10,7 +10,7 @@ public class DefaultSingleModuleTest extends TestCase
 {
   public void testMakeSrcClassStub()
   {
-    SrcClass srcClass = ClassSymbols.instance( ManifoldHost.getCurrentModule() ).makeSrcClassStub( "java.lang.String" );
+    SrcClass srcClass = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).makeSrcClassStub( "java.lang.String" );
     StringBuilder sb = new StringBuilder();
     srcClass.render( sb, 0 );
   }

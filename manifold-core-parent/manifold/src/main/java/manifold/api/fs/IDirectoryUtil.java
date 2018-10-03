@@ -2,31 +2,10 @@ package manifold.api.fs;
 
 import java.util.List;
 import manifold.api.fs.jar.IJarFileDirectory;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.DynamicArray;
 
 public class IDirectoryUtil
 {
-
-  public static DynamicArray<? extends IFile> allContainedFilesExcludingIgnored( IDirectory dir )
-  {
-    DynamicArray<IFile> files = new DynamicArray<IFile>();
-    allContainedFilesExcludingIgnored( dir, dir, files );
-    return files;
-  }
-
-  private static void allContainedFilesExcludingIgnored( IDirectory root, IDirectory dir, DynamicArray<IFile> files )
-  {
-    files.addAll( dir.listFiles() );
-    for( IDirectory subDir : dir.listDirs() )
-    {
-      if( !ManifoldHost.isPathIgnored( root.relativePath( subDir ) ) )
-      {
-        allContainedFilesExcludingIgnored( root, subDir, files );
-      }
-    }
-  }
-
   public static DynamicArray<String> splitPath( String relativePath )
   {
     DynamicArray<String> results = new DynamicArray<String>();

@@ -5,7 +5,6 @@ import manifold.api.fs.ResourcePath;
 
 public interface IPhysicalFileSystem
 {
-
   List<? extends IFileMetadata> listFiles( ResourcePath directoryPath );
 
   IFileMetadata getFileMetadata( ResourcePath filePath );

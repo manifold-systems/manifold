@@ -23,12 +23,14 @@ import manifold.api.fs.IProtocolAdapter;
 import manifold.api.fs.IResource;
 import manifold.api.fs.jar.JarFileDirectoryImpl;
 import manifold.api.fs.url.URLFileImpl;
+import manifold.api.host.IManifoldHost;
 import manifold.api.service.BaseService;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.ManStringUtil;
 
 public class FileSystemImpl extends BaseService implements IFileSystem
 {
+  private final IManifoldHost _host;
+  private final FileFactory _fileFactory;
   private Map<File, IDirectory> _cachedDirInfo;
   private CachingMode _cachingMode;
 
@@ -43,8 +45,10 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   // turn into a perf issue
   static final Object CACHED_FILE_SYSTEM_LOCK = new Object();
 
-  public FileSystemImpl( CachingMode cachingMode )
+  public FileSystemImpl( IManifoldHost host, CachingMode cachingMode )
   {
+    _host = host;
+    _fileFactory = new FileFactory( this );
     _cachedDirInfo = new HashMap<File, IDirectory>();
     _cachingMode = cachingMode;
     _iDirectoryResourceExtractor = new IDirectoryResourceExtractor();
@@ -53,12 +57,23 @@ public class FileSystemImpl extends BaseService implements IFileSystem
     loadProtocolAdapters();
   }
 
+  public IManifoldHost getHost()
+  {
+    return _host;
+  }
+
+  @Override
+  public FileFactory getFileFactory()
+  {
+    return _fileFactory;
+  }
+
   @Override
   public IDirectory getIDirectory( File dir )
   {
     if( USE_NEW_API )
     {
-      return FileFactory.instance().getIDirectory( dir );
+      return _fileFactory.getIDirectory( dir );
     }
 
     if( dir == null )
@@ -85,7 +100,7 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   {
     if( USE_NEW_API )
     {
-      return FileFactory.instance().getIFile( file );
+      return _fileFactory.getIFile( file );
     }
 
     if( file == null )
@@ -94,7 +109,7 @@ public class FileSystemImpl extends BaseService implements IFileSystem
     }
     else
     {
-      return new JavaFileImpl( normalizeFile( file ) );
+      return new JavaFileImpl( this, normalizeFile( file ) );
     }
   }
 
@@ -169,11 +184,11 @@ public class FileSystemImpl extends BaseService implements IFileSystem
     // PL-21817 in OSGi/Equinox JAR could be named as "bundlefile"
     if( (dir.getName().toLowerCase().endsWith( ".jar" ) || dir.getName().toLowerCase().endsWith( ".zip" ) || dir.getName().equals( "bundlefile" )) && dir.isFile() )
     {
-      return new JarFileDirectoryImpl( dir );
+      return new JarFileDirectoryImpl( this, dir );
     }
     else
     {
-      return new JavaDirectoryImpl( dir, _cachingMode );
+      return new JavaDirectoryImpl( this, dir, _cachingMode );
     }
   }
 
@@ -181,7 +196,7 @@ public class FileSystemImpl extends BaseService implements IFileSystem
   {
     if( USE_NEW_API )
     {
-      FileFactory.instance().getDefaultPhysicalFileSystem().clearAllCaches();
+      _fileFactory.getDefaultPhysicalFileSystem().clearAllCaches();
       return;
     }
     synchronized( CACHED_FILE_SYSTEM_LOCK )
@@ -252,7 +267,7 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
     if( USE_NEW_API )
     {
-      return FileFactory.instance().getIFile( url );
+      return _fileFactory.getIFile( url );
     }
     return _iFileResourceExtractor.getClassResource( url );
   }
@@ -389,13 +404,13 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
     IFile getIResourceFromJavaFile( URL location )
     {
-      return ManifoldHost.getFileSystem().getIFile( getFileFromURL( location ) );
+      return getHost().getFileSystem().getIFile( getFileFromURL( location ) );
     }
 
     @Override
     IFile getIResourceFromURL( URL location )
     {
-      return new URLFileImpl( location );
+      return new URLFileImpl( FileSystemImpl.this, location );
     }
   }
 
@@ -409,7 +424,7 @@ public class FileSystemImpl extends BaseService implements IFileSystem
 
     protected IDirectory getIResourceFromJavaFile( URL location )
     {
-      return ManifoldHost.getFileSystem().getIDirectory( getFileFromURL( location ) );
+      return getHost().getFileSystem().getIDirectory( getFileFromURL( location ) );
     }
 
     @Override

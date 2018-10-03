@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import manifold.api.host.IManifoldHost;
 import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -17,7 +18,7 @@ public class SystemProperties
 {
   private static final String FQN = "gw.lang.SystemProperties";
 
-  public static Map<String, LocklessLazyVar<Model>> make()
+  public static Map<String, LocklessLazyVar<Model>> make( IManifoldHost host )
   {
     Map<String, LocklessLazyVar<Model>> systemProps = new HashMap<>( 2 );
     systemProps.put( FQN,
@@ -26,7 +27,7 @@ public class SystemProperties
                        {
                          FqnCache<String> cache = new FqnCache<>( FQN, true, JsonUtil::makeIdentifier );
                          _keys.forEach( key -> cache.add( key, System.getProperty( key ) ) );
-                         return new Model( FQN, cache );
+                         return new Model( host, FQN, cache );
                        } ) );
     return systemProps;
   }

@@ -26,8 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-import manifold.api.fs.FileFactory;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 
 /**
  */
@@ -261,9 +261,9 @@ public class PathUtil
     }
   }
 
-  public static IFile getIFile( Path classFile )
+  public static IFile getIFile( IFileSystem fs, Path classFile )
   {
-    return FileFactory.instance().getIFile( classFile.toUri() );
+    return fs.getFileFactory().getIFile( classFile.toUri() );
   }
 
   public static void delete( Path path )

@@ -22,7 +22,7 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
 
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, Model::new );
+    init( typeLoader, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
   }
 
   @Override

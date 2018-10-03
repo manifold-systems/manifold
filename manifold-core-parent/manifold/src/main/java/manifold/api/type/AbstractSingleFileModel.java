@@ -3,6 +3,7 @@ package manifold.api.type;
 import java.util.HashSet;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 
 /**
  * For use with {@link ResourceFileTypeManifold}.  Models the common use-case where
@@ -11,13 +12,21 @@ import manifold.api.fs.IFile;
  */
 public abstract class AbstractSingleFileModel implements IModel
 {
+  final private IManifoldHost _host;
   final private String _fqn;
   final private Set<IFile> _files;
 
-  public AbstractSingleFileModel( String fqn, Set<IFile> files )
+  public AbstractSingleFileModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
+    _host = host;
     _fqn = fqn;
     _files = new HashSet<>( files );
+  }
+
+  @Override
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   @Override

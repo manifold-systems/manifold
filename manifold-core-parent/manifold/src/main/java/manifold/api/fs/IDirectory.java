@@ -5,7 +5,6 @@ import java.util.List;
 
 public interface IDirectory extends IResource
 {
-
   IDirectory dir( String relativePath );
 
   /**

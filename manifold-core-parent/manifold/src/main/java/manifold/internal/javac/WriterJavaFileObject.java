@@ -9,7 +9,7 @@ import java.io.OutputStream;
 import java.net.URI;
 import javax.tools.SimpleJavaFileObject;
 import manifold.api.fs.IDirectory;
-import manifold.internal.host.ManifoldHost;
+import manifold.api.host.IManifoldHost;
 
 /**
  * A utility for other compilers hosting Manifold, primarily for exposing class files as JavaFileObjects
@@ -19,28 +19,28 @@ public class WriterJavaFileObject extends SimpleJavaFileObject
 {
   private OutputStream _outputStream;
 
-  public WriterJavaFileObject( String fqn )
+  public WriterJavaFileObject( IManifoldHost host, String fqn )
   {
-    super( getUriFrom( fqn ), Kind.CLASS );
+    super( getUriFrom( host, fqn ), Kind.CLASS );
   }
 
-  public WriterJavaFileObject( String pkg, String filename )
+  public WriterJavaFileObject( IManifoldHost host, String pkg, String filename )
   {
-    super( getUriFrom( pkg, filename ), Kind.OTHER );
+    super( getUriFrom( host, pkg, filename ), Kind.OTHER );
   }
 
-  private static URI getUriFrom( String fqn )
+  private static URI getUriFrom( IManifoldHost host, String fqn )
   {
     final String outRelativePath = fqn.replace( '.', File.separatorChar ) + ".class";
-    IDirectory outputPath = ManifoldHost.getGlobalModule().getOutputPath().stream().findFirst().orElse( null );
+    IDirectory outputPath = host.getSingleModule().getOutputPath().stream().findFirst().orElse( null );
     File file = new File( outputPath.getPath().getFileSystemPathString(), outRelativePath );
     return file.toURI();
   }
 
-  private static URI getUriFrom( String fqn, String filename )
+  private static URI getUriFrom( IManifoldHost host, String fqn, String filename )
   {
     final String outRelativePath = fqn.replace( '.', File.separatorChar ) + File.separatorChar + filename;
-    IDirectory outputPath = ManifoldHost.getGlobalModule().getOutputPath().stream().findFirst().orElse( null );
+    IDirectory outputPath = host.getSingleModule().getOutputPath().stream().findFirst().orElse( null );
     File file = new File( outputPath.getPath().getFileSystemPathString(), outRelativePath );
     return file.toURI();
   }

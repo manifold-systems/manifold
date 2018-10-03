@@ -5,18 +5,25 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
-import manifold.internal.host.ManifoldHost;
 
 public abstract class JavaResourceImpl implements IResource, Serializable
 {
-
+  private final IFileSystem _fileSystem;
   protected File _file;
 
-  protected JavaResourceImpl( File file )
+  protected JavaResourceImpl( IFileSystem fileSystem, File file )
   {
+    _fileSystem = fileSystem;
     _file = file.getAbsoluteFile();
+  }
+
+  @Override
+  public IFileSystem getFileSystem()
+  {
+    return _fileSystem;
   }
 
   @Override
@@ -29,7 +36,7 @@ public abstract class JavaResourceImpl implements IResource, Serializable
     }
     else
     {
-      return ManifoldHost.getFileSystem().getIDirectory( parentFile );
+      return getFileSystem().getIDirectory( parentFile );
     }
   }
 

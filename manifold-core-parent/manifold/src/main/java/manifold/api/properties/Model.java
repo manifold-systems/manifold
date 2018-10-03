@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Properties;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.util.JsonUtil;
 import manifold.util.cache.FqnCache;
@@ -16,15 +17,15 @@ class Model extends AbstractSingleFileModel
 {
   private FqnCache<String> _cache;
 
-  public Model( String fqn, Set<IFile> files )
+  public Model( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     buildCache( fqn, getFile() );
   }
 
-  public Model( String fqn, FqnCache<String> cache )
+  public Model( IManifoldHost host, String fqn, FqnCache<String> cache )
   {
-    super( fqn, Collections.emptySet() );
+    super( host, fqn, Collections.emptySet() );
     _cache = cache;
   }
 

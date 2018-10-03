@@ -21,6 +21,7 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.IModel;
 import manifold.api.type.SourcePosition;
 import manifold.ext.api.Extension;
@@ -35,11 +36,19 @@ public class Model implements IModel
 
   final private String _extensionFqn;
   final private Set<IFile> _favsFiles;
+  private final IManifoldHost _host;
 
-  Model( String extensionFqn, Set<IFile> favsFiles )
+  Model( IManifoldHost host, String extensionFqn, Set<IFile> favsFiles )
   {
+    _host = host;
     _extensionFqn = extensionFqn;
     _favsFiles = new HashSet<>( favsFiles );
+  }
+
+  @Override
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   @Override

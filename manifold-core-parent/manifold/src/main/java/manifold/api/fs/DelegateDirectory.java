@@ -8,12 +8,19 @@ import java.util.List;
 
 public abstract class DelegateDirectory implements IDirectory
 {
-
+  private final IFileSystem _fileSystem;
   private final IDirectory _delegate;
 
-  public DelegateDirectory( IDirectory delegate )
+  public DelegateDirectory( IFileSystem fs, IDirectory delegate )
   {
+    _fileSystem = fs;
     _delegate = delegate;
+  }
+
+  @Override
+  public IFileSystem getFileSystem()
+  {
+    return _fileSystem;
   }
 
   public IDirectory getDelegate()

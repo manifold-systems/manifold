@@ -22,7 +22,6 @@ import manifold.api.host.IModuleComponent;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.service.BaseService;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
@@ -69,7 +68,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     _typeFactoryFqn = typeFactoryFqn;
     _modelMapper = modelMapper;
     _fqnToModel = LocklessLazyVar.make( this::buildFqnToModelCache );
-    ManifoldHost.addTypeLoaderListenerAsWeakRef( getModule(), _cacheClearer = createCacheClearer() );
+    getModule().getHost().addTypeLoaderListenerAsWeakRef( getModule(), _cacheClearer = createCacheClearer() );
   }
 
   protected CacheClearer createCacheClearer()

@@ -6,13 +6,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.ResourcePath;
 
 public class PhysicalFileImpl extends PhysicalResourceImpl implements IFile
 {
-  public PhysicalFileImpl( ResourcePath path, IPhysicalFileSystem backingFileSystem )
+  public PhysicalFileImpl( IFileSystem fs, ResourcePath path, IPhysicalFileSystem backingFileSystem )
   {
-    super( path, backingFileSystem );
+    super( fs, path, backingFileSystem );
   }
 
   @Override

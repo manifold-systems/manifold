@@ -11,13 +11,14 @@ import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Supplier;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
-import manifold.internal.host.ManifoldHost;
+import manifold.api.type.ITypeManifold;
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.InMemoryClassJavaFileObject;
 import manifold.internal.javac.JavaCompileIssuesException;
-import manifold.internal.javac.JavaParser;
 import manifold.internal.javac.StringJavaFileObject;
 import manifold.util.Pair;
 import manifold.util.PerfLogUtil;
@@ -49,12 +50,10 @@ public class ManClassesUrlConnection extends URLConnection
     _proxySupplierByFqn.get().remove( fqnProxy );
   }
 
-  private Supplier<byte[]> _bytecodeSupplier;
   private JavaFileObject _javaSrcFile;
   private Supplier<String> _proxySupplier;
   private String _javaFqn;
 
-  private ClassLoader _loader;
   private boolean _bDirectory;
   private boolean _bInvalid;
 
@@ -83,7 +82,7 @@ public class ManClassesUrlConnection extends URLConnection
     {
       return false;
     }
-    if( _bytecodeSupplier == null && _javaSrcFile == null && _proxySupplier == null && !_bDirectory )
+    if( _javaSrcFile == null && _proxySupplier == null && !_bDirectory )
     {
       //noinspection deprecation
       String strPath = URLDecoder.decode( getURL().getPath() );
@@ -107,7 +106,7 @@ public class ManClassesUrlConnection extends URLConnection
           _bDirectory = true;
         }
       }
-      _bInvalid = _bytecodeSupplier == null && _javaSrcFile == null && _proxySupplier == null && !_bDirectory;
+      _bInvalid = _javaSrcFile == null && _proxySupplier == null && !_bDirectory;
     }
     return !_bInvalid;
   }
@@ -120,7 +119,7 @@ public class ManClassesUrlConnection extends URLConnection
   private ClassLoader findClassLoader( String host )
   {
     int identityHash = Integer.parseInt( host );
-    ClassLoader loader = ManifoldHost.getActualClassLoader();
+    ClassLoader loader = RuntimeManifoldHost.get().getActualClassLoader();
     while( loader != null )
     {
       if( System.identityHashCode( loader ) == identityHash )
@@ -140,25 +139,24 @@ public class ManClassesUrlConnection extends URLConnection
       removeProxySupplier( strType );
       _proxySupplier = proxySupplier;
       _javaFqn = strType;
-      _loader = loader;
       return;
     }
 
-    ManifoldHost.maybeAssignType( loader, strType, getURL(), ( fqn, type ) ->
+    Set<ITypeManifold> sps = RuntimeManifoldHost.get().getSingleModule().findTypeManifoldsFor( strType );
+    if( !sps.isEmpty() )
     {
-      if( fqn != null )
+      if( strType != null )
       {
-        // If there were a class file for the Java type on disk, it would have loaded by now (the manclass protocol is last).
+        // If there were a class file for the Java type on disk, it would have loaded by now (the manifoldclass protocol is last).
         // Therefore we compile and load the java class from the Java source file, eventually a JavaType based on the resulting class
         // may load, if a source-based one hasn't already loaded.
         try
         {
-          Pair<JavaFileObject, String> pair = JavaParser.instance().findJavaSource( fqn, new DiagnosticCollector<>() );
+          Pair<JavaFileObject, String> pair = RuntimeManifoldHost.get().getJavaParser().findJavaSource( strType, new DiagnosticCollector<>() );
           if( pair != null )
           {
             _javaSrcFile = pair.getFirst();
-            _javaFqn = fqn;
-            _loader = loader;
+            _javaFqn = strType;
           }
         }
         catch( NoClassDefFoundError e )
@@ -167,12 +165,7 @@ public class ManClassesUrlConnection extends URLConnection
           System.out.println( "\n!!! Unable to dynamically compile Java from source.  tools.jar is likely missing from classpath.\n" );
         }
       }
-      else if( type != null )
-      {
-        _bytecodeSupplier = type;
-        _loader = loader;
-      }
-    } );
+    }
   }
 
   private boolean ignoreJavaClass( String strClass )
@@ -190,7 +183,7 @@ public class ManClassesUrlConnection extends URLConnection
   @Override
   public InputStream getInputStream() throws IOException
   {
-    if( _bytecodeSupplier != null || _javaSrcFile != null || _proxySupplier != null )
+    if( _javaSrcFile != null || _proxySupplier != null )
     {
       // Avoid compiling until the bytes are actually requested;
       // sun.misc.URLClassPath grabs the inputstream twice, the first time is for practice :)
@@ -223,25 +216,26 @@ public class ManClassesUrlConnection extends URLConnection
     {
       if( _buf == null )
       {
-        ManifoldHost.performLockedOperation( _loader, () ->
+        //System.out.println( "Compiling: " + _type.getName() );
+//        if( _bytecodeSupplier != null )
+//        {
+//          _buf = _bytecodeSupplier.get();
+//        }
+        if( _javaSrcFile != null )
         {
-          //System.out.println( "Compiling: " + _type.getName() );
-          if( _bytecodeSupplier != null )
-          {
-            _buf = _bytecodeSupplier.get();
-          }
-          else if( _javaSrcFile != null )
-          {
-            _buf = compileJavaClass();
-          }
-          else if( _proxySupplier != null )
-          {
-            _buf = compileProxyClass( _proxySupplier.get() );
-          }
-          _pos = 0;
-          _count = _buf.length;
-          writeClassFile_Debug();
-        } );
+          _buf = compileJavaClass();
+        }
+        else if( _proxySupplier != null )
+        {
+          _buf = compileProxyClass( _proxySupplier.get() );
+        }
+        else
+        {
+          throw new IllegalStateException();
+        }
+        _pos = 0;
+        _count = _buf.length;
+        writeClassFile_Debug();
       }
     }
 
@@ -308,7 +302,7 @@ public class ManClassesUrlConnection extends URLConnection
       try
       {
         DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-        InMemoryClassJavaFileObject cls = JavaParser.instance().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+        InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
         if( cls != null )
         {
           return cls.getBytes();
@@ -328,7 +322,7 @@ public class ManClassesUrlConnection extends URLConnection
       {
         DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
         StringJavaFileObject fileObj = new StringJavaFileObject( _javaFqn, source );
-        InMemoryClassJavaFileObject cls = JavaParser.instance().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+        InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
         if( cls != null )
         {
           return cls.getBytes();
@@ -417,7 +411,7 @@ public class ManClassesUrlConnection extends URLConnection
       _pos = _mark;
     }
 
-    public void close() throws IOException
+    public void close()
     {
     }
   }

@@ -11,6 +11,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.json.schema.IllegalSchemaTypeName;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
@@ -25,9 +26,9 @@ class JsonModel extends AbstractSingleFileModel
   private IJsonParentType _type;
   private JsonIssueContainer _issues;
 
-  JsonModel( String fqn, Set<IFile> files )
+  JsonModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     init();
   }
 
@@ -53,7 +54,7 @@ class JsonModel extends AbstractSingleFileModel
     {
       try
       {
-        IJsonType type = Json.transformJsonObject( getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+        IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
         if( type instanceof IJsonParentType )
         {
           _type = (IJsonParentType)type;

@@ -11,7 +11,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel>
 {
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, TemplateModel::new );
+    init( typeLoader, (fqn, files) -> new TemplateModel( typeLoader.getModule().getHost(), fqn, files ) );
   }
 
   /**

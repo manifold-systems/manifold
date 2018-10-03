@@ -9,6 +9,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.ResourcePath;
 
 /**
@@ -16,11 +17,19 @@ import manifold.api.fs.ResourcePath;
  */
 public class URLFileImpl implements IFile
 {
+  private final IFileSystem _fileSystem;
   private URL _url;
 
-  public URLFileImpl( URL url )
+  public URLFileImpl( IFileSystem fs, URL url )
   {
+    _fileSystem = fs;
     _url = url;
+  }
+
+  @Override
+  public IFileSystem getFileSystem()
+  {
+    return _fileSystem;
   }
 
   @Override

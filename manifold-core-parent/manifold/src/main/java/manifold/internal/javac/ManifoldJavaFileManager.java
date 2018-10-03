@@ -20,12 +20,13 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.api.fs.cache.PathCache;
+import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.SimpleModule;
 import manifold.util.JreUtil;
 import manifold.util.ManClassUtil;
 import manifold.util.ReflectUtil;
@@ -39,6 +40,7 @@ import static manifold.api.type.ContributorKind.Primary;
  */
 class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeLoaderListener
 {
+  private final IManifoldHost _host;
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
   private FqnCache<JavaFileObject> _generatedFiles;
@@ -46,9 +48,10 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   private Context _ctx;
   private int _runtimeMode;
 
-  ManifoldJavaFileManager( JavaFileManager fileManager, Context ctx, boolean fromJavaC )
+  ManifoldJavaFileManager( IManifoldHost host, JavaFileManager fileManager, Context ctx, boolean fromJavaC )
   {
     super( fileManager, ctx == null ? ctx = new Context() : ctx );
+    _host = host;
     _ctx = ctx;
     _fromJavaC = fromJavaC;
     _classFiles = new FqnCache<>();
@@ -58,7 +61,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
       ctx.put( JavaFileManager.class, fileManager );
     }
-    ManifoldHost.addTypeLoaderListenerAsWeakRef( null, this );
+    _host.addTypeLoaderListenerAsWeakRef( null, this );
+  }
+
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   /**
@@ -168,7 +176,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
     }
 
-    return findGeneratedFile( fqn.replace( '$', '.' ), location, ManifoldHost.getCurrentModule(), errorHandler );
+    return findGeneratedFile( fqn.replace( '$', '.' ), location, getHost().getSingleModule(), errorHandler );
   }
 
   public Iterable<JavaFileObject> list( Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse ) throws IOException
@@ -176,7 +184,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     Iterable<JavaFileObject> list = super.list( location, packageName, kinds, recurse );
     if( kinds.contains( JavaFileObject.Kind.SOURCE ) && (location == StandardLocation.SOURCE_PATH || location == StandardLocation.CLASS_PATH || location instanceof ManPatchModuleLocation) )
     {
-      Set<TypeName> children = ManifoldHost.getChildrenOfNamespace( packageName );
+      Set<TypeName> children =((SimpleModule)getHost().getSingleModule()).getChildrenOfNamespace( packageName );
       if( children == null || children.isEmpty() )
       {
         return list;
@@ -248,7 +256,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       }
 
       // true if type is not exclusively an extended type
-      Set<ITypeManifold> typeManifoldsFor = ManifoldHost.getCurrentModule().findTypeManifoldsFor( fqn );
+      Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn );
       return typeManifoldsFor.stream().anyMatch( tm -> tm.getContributorKind() == Primary );
     }
 
@@ -294,7 +302,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
       fqn = fqn.substring( 0, iDollar );
     }
-    PathCache pathCache = ManifoldHost.getCurrentModule().getPathCache();
+    PathCache pathCache = getHost().getSingleModule().getPathCache();
     return pathCache.getExtensionCache( "class" ).get( fqn ) != null;
   }
 
@@ -306,7 +314,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       return node.getUserData();
     }
 
-    JavaFileObject file = ManifoldHost.produceFile( fqn, location, module, errorHandler );
+    JavaFileObject file = module.produceFile( fqn, location, errorHandler );
     // note we cache even if file is null, fqn cache is also a miss cache
     _generatedFiles.add( fqn, file );
 

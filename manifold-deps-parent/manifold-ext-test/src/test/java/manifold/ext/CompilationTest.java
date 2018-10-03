@@ -27,7 +27,7 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardLocation;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IDirectory;
-import manifold.internal.host.ManifoldHost;
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.util.IssueMsg;
 import manifold.util.Pair;
 import manifold.util.SourcePathUtil;
@@ -45,8 +45,8 @@ public class CompilationTest
   @Ignore("Causes problems with gradle test invocation")
   public void testCompilation() throws ClassNotFoundException, IllegalAccessException, InstantiationException
   {
-    List<IDirectory> sourcePath = new ArrayList<>( ManifoldHost.getGlobalModule().getSourcePath() );
-    sourcePath.add( ManifoldHost.getFileSystem().getIDirectory( JavacTask.class.getProtectionDomain().getCodeSource().getLocation() ) );
+    List<IDirectory> sourcePath = new ArrayList<>( RuntimeManifoldHost.get().getSingleModule().getSourcePath() );
+    sourcePath.add( RuntimeManifoldHost.get().getFileSystem().getIDirectory( JavacTask.class.getProtectionDomain().getCodeSource().getLocation() ) );
     ClassLoader cl = new URLClassLoader( sourcePath.stream().map( e ->
                                                                   {
                                                                     try

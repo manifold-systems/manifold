@@ -31,7 +31,7 @@ public class ExtensionProducerSampleTypeManifold extends AbstractExtensionProduc
   @Override
   protected Model createModel( String extensionFqn, Set<IFile> files )
   {
-    return new Model( extensionFqn, files );
+    return new Model( getModule().getHost(), extensionFqn, files );
   }
 
   @Override

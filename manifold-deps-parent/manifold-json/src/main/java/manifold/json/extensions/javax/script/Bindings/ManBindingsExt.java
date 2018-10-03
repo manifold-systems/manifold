@@ -1,5 +1,6 @@
 package manifold.json.extensions.javax.script.Bindings;
 
+import manifold.internal.host.RuntimeManifoldHost;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -385,7 +386,7 @@ public class ManBindingsExt
 
   public static String toStructure( @This Bindings thiz, String nameForStructure, boolean mutable )
   {
-    return Json.makeStructureTypes( nameForStructure, thiz, mutable );
+    return Json.makeStructureTypes( RuntimeManifoldHost.get(), nameForStructure, thiz, mutable );
   }
 
   private static Bindings getBindingsFrom( Object obj )

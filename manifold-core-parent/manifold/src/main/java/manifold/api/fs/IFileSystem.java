@@ -2,10 +2,14 @@ package manifold.api.fs;
 
 import java.io.File;
 import java.net.URL;
+import manifold.api.host.IManifoldHost;
 import manifold.api.service.IService;
 
 public interface IFileSystem extends IService
 {
+  IManifoldHost getHost();
+
+  FileFactory getFileFactory();
 
   IDirectory getIDirectory( File dir );
 

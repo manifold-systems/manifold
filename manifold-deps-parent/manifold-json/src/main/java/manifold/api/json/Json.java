@@ -5,6 +5,7 @@ import java.net.URL;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
+import manifold.api.host.IManifoldHost;
 import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaTransformerSession;
 import manifold.api.json.schema.JsonSchemaType;
@@ -93,19 +94,19 @@ public class Json
    * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type, and the component type recursively follows these rules
    * </ul>
    */
-  public static String makeStructureTypes( String nameForStructure, Bindings bindings, boolean mutable )
+  public static String makeStructureTypes( IManifoldHost host, String nameForStructure, Bindings bindings, boolean mutable )
   {
-    JsonStructureType type = (JsonStructureType)transformJsonObject( nameForStructure, null, bindings );
+    JsonStructureType type = (JsonStructureType)transformJsonObject( host, nameForStructure, null, bindings );
     StringBuilder sb = new StringBuilder();
     type.render( sb, 0, mutable );
     return sb.toString();
   }
 
-  public static IJsonType transformJsonObject( String name, JsonSchemaType parent, Object jsonObj )
+  public static IJsonType transformJsonObject( IManifoldHost host, String name, JsonSchemaType parent, Object jsonObj )
   {
-    return transformJsonObject( name, null, parent, jsonObj );
+    return transformJsonObject( host, name, null, parent, jsonObj );
   }
-  public static IJsonType transformJsonObject( String name, URL source, final JsonSchemaType parent, Object jsonObj )
+  public static IJsonType transformJsonObject( IManifoldHost host, String name, URL source, final JsonSchemaType parent, Object jsonObj )
   {
     IJsonType type = null;
 
@@ -127,14 +128,13 @@ public class Json
     {
       if( JsonSchemaTransformer.isSchema( (Bindings)jsonObj ) )
       {
-        type = JsonSchemaTransformer.transform( name, source, (Bindings)jsonObj );
+        type = JsonSchemaTransformer.transform( host, name, source, (Bindings)jsonObj );
       }
       else
       {
-        if( type == null ||
-            // handle case for mixed array where component types are different (object and array)
-            !(type instanceof JsonStructureType) )
+        if( !(type instanceof JsonStructureType) )
         {
+          // handle case for mixed array where component types are different (object and array)
           type = new JsonStructureType( parent, source, name );
         }
         for( Object k : ((Bindings)jsonObj).keySet() )
@@ -146,7 +146,7 @@ public class Json
           {
             token = ((Token[])((Pair)value).getFirst())[0];
           }
-          IJsonType memberType = transformJsonObject( key, (JsonSchemaType)type, value );
+          IJsonType memberType = transformJsonObject( host, key, (JsonSchemaType)type, value );
           if( memberType != null )
           {
             ((JsonStructureType)type).addMember( key, memberType, token );
@@ -160,10 +160,9 @@ public class Json
     }
     else if( jsonObj instanceof List )
     {
-      if( type == null ||
-          // handle case for mixed array where component types are different (object and array)
-          !(type instanceof JsonListType) )
+      if( !(type instanceof JsonListType) )
       {
+        // handle case for mixed array where component types are different (object and array)
         type = new JsonListType( name, source, parent );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
@@ -173,7 +172,7 @@ public class Json
         boolean isDissimilar = isDissimilar( (List)jsonObj );
         for( Object elem : (List)jsonObj )
         {
-          IJsonType csr = transformJsonObject( name + (isDissimilar ? i++ : ""), (JsonSchemaType)type, elem );
+          IJsonType csr = transformJsonObject( host, name + (isDissimilar ? i++ : ""), (JsonSchemaType)type, elem );
           if( compType != null && csr != compType && compType != DynamicType.instance() )
           {
             csr = mergeTypes( compType, csr );

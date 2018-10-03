@@ -33,8 +33,8 @@ import javax.tools.StandardLocation;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IResource;
+import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.JreUtil;
 import manifold.util.Pair;
 import manifold.util.SourcePathUtil;
@@ -48,24 +48,18 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public class JavaParser implements IJavaParser
 {
-  private static final ThreadLocal<JavaParser> INSTANCE = new ThreadLocal<>();
-
-  public static JavaParser instance()
-  {
-    if( INSTANCE.get() == null )
-    {
-      INSTANCE.set( new JavaParser() );
-    }
-    return INSTANCE.get();
-  }
-
+  private final IManifoldHost _host;
   private JavaCompiler _javac;
   private JavaFileManager _fileManager;
   private ManifoldJavaFileManager _mfm;
   private LocklessLazyVar<JavaCompiler> _parserJavac;
 
-  private JavaParser()
+  /**
+   * For internal use only.  Usea {@link IManifoldHost#getJavaParser()}
+   */
+  public JavaParser( IManifoldHost host )
   {
+    _host = host;
     _parserJavac = LocklessLazyVar.make( JavacTool::create );
   }
 
@@ -91,13 +85,13 @@ public class JavaParser implements IJavaParser
 
         try
         {
-          IModule globalModule = ManifoldHost.getGlobalModule();
+          IModule globalModule = getHost().getSingleModule();
           if( globalModule != null )
           {
             ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
             ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
           }
-          _mfm = new ManifoldJavaFileManager( _fileManager, null, false );
+          _mfm = new ManifoldJavaFileManager( getHost(), _fileManager, null, false );
         }
         catch( IOException e )
         {
@@ -105,6 +99,11 @@ public class JavaParser implements IJavaParser
         }
       }
     }
+  }
+
+  public IManifoldHost getHost()
+  {
+    return _host;
   }
 
   public boolean parseType( String fqn, List<CompilationUnitTree> trees, DiagnosticCollector<JavaFileObject> errorHandler )
@@ -302,8 +301,8 @@ public class JavaParser implements IJavaParser
     {
       return makeTypeName( file.getName() );
     }
-    IFile iFile = ManifoldHost.getFileSystem().getIFile( new File( file.getName() ) );
-    List<IDirectory> sourcePath = ManifoldHost.getGlobalModule().getSourcePath();
+    IFile iFile = getHost().getFileSystem().getIFile( new File( file.getName() ) );
+    List<IDirectory> sourcePath = getHost().getSingleModule().getSourcePath();
     for( IDirectory dir : sourcePath )
     {
       if( iFile.isDescendantOf( dir ) )
@@ -324,7 +323,7 @@ public class JavaParser implements IJavaParser
 
   private void initTypeProcessing( JavacTask javacTask, Set<String> types )
   {
-    TypeProcessor typeProcessor = new TypeProcessor( javacTask );
+    TypeProcessor typeProcessor = new TypeProcessor( getHost(), javacTask );
     typeProcessor.addTypesToProcess( types );
   }
 

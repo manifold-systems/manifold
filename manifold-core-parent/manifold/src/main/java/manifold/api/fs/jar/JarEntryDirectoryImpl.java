@@ -1,6 +1,5 @@
 package manifold.api.fs.jar;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,18 +7,18 @@ import java.util.Map;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IDirectoryUtil;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 
 public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarFileDirectory
 {
+  private Map<String, IResource> _resources = new HashMap<>();
+  private List<IDirectory> _childDirs = new ArrayList<>();
+  private List<IFile> _childFiles = new ArrayList<>();
 
-  private Map<String, IResource> _resources = new HashMap<String, IResource>();
-  private List<IDirectory> _childDirs = new ArrayList<IDirectory>();
-  private List<IFile> _childFiles = new ArrayList<IFile>();
-
-  public JarEntryDirectoryImpl( String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
+  public JarEntryDirectoryImpl( IFileSystem fs, String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
   {
-    super( name, parent, jarFile );
+    super( fs, name, parent, jarFile );
   }
 
   @Override
@@ -28,7 +27,7 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
     JarEntryDirectoryImpl result = (JarEntryDirectoryImpl)_resources.get( relativeName );
     if( result == null )
     {
-      result = new JarEntryDirectoryImpl( relativeName, this, _jarFile );
+      result = new JarEntryDirectoryImpl( getFileSystem(), relativeName, this, _jarFile );
       _resources.put( relativeName, result );
       _childDirs.add( result );
     }
@@ -41,7 +40,7 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
     JarEntryFileImpl result = (JarEntryFileImpl)_resources.get( relativeName );
     if( result == null )
     {
-      result = new JarEntryFileImpl( relativeName, this, _jarFile );
+      result = new JarEntryFileImpl( getFileSystem(), relativeName, this, _jarFile );
       _resources.put( relativeName, result );
       _childFiles.add( result );
     }
@@ -61,7 +60,7 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
   }
 
   @Override
-  public boolean mkdir() throws IOException
+  public boolean mkdir()
   {
     throw new UnsupportedOperationException();
   }
@@ -69,7 +68,7 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
   @Override
   public List<? extends IDirectory> listDirs()
   {
-    List<IDirectory> results = new ArrayList<IDirectory>();
+    List<IDirectory> results = new ArrayList<>();
     for( IDirectory child : _childDirs )
     {
       if( child.exists() )
@@ -83,7 +82,7 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
   @Override
   public List<? extends IFile> listFiles()
   {
-    List<IFile> results = new ArrayList<IFile>();
+    List<IFile> results = new ArrayList<>();
     for( IFile child : _childFiles )
     {
       if( child.exists() )

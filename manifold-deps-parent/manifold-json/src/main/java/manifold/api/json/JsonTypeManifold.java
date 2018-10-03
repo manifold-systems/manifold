@@ -18,7 +18,8 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   @Override
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, JsonModel::new, "editor.plugin.typeloader.json.JsonTypeFactory" );
+    init( typeLoader, (fqn, files) -> new JsonModel( getModule().getHost(), fqn, files ),
+      "editor.plugin.typeloader.json.JsonTypeFactory" );
   }
 
   @Override

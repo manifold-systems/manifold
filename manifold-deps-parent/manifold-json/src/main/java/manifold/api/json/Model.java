@@ -8,6 +8,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
@@ -21,9 +22,9 @@ class Model extends AbstractSingleFileModel
   private JsonStructureType _type;
   private JsonIssueContainer _issues;
 
-  Model( String fqn, Set<IFile> files )
+  Model( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     init();
   }
 
@@ -44,7 +45,7 @@ class Model extends AbstractSingleFileModel
       bindings = new SimpleBindings();
     }
 
-    IJsonType type = Json.transformJsonObject( getFile().getBaseName(), null, bindings );
+    IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), null, bindings );
     _type = getStructureType( type );
   }
 

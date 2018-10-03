@@ -4,6 +4,7 @@ import com.sun.tools.javac.tree.JCTree;
 import java.net.MalformedURLException;
 import java.util.Set;
 import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 
 /**
@@ -13,9 +14,9 @@ class Model extends AbstractSingleFileModel
   private String _url;
   private JCTree.JCClassDecl _classDecl;
 
-  Model( String fqn, Set<IFile> files )
+  Model( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    super( fqn, files );
+    super( host, fqn, files );
     assignUrl();
   }
 

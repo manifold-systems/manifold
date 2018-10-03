@@ -10,16 +10,14 @@ import manifold.api.fs.IDirectoryUtil;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
-import manifold.internal.host.ManifoldHost;
 
 public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
 {
-
   private FileRetrievalStrategy _fileRetrievalStrategy;
 
-  public JavaDirectoryImpl( File file, IFileSystem.CachingMode cachingMode )
+  public JavaDirectoryImpl( IFileSystem fileSystem, File file, IFileSystem.CachingMode cachingMode )
   {
-    super( file );
+    super( fileSystem, file );
     setCachingMode( cachingMode );
   }
 
@@ -61,7 +59,7 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
   {
 //    try {
     File subDir = new File( this._file, relativePath )/*.getCanonicalFile()*/;
-    return ManifoldHost.getFileSystem().getIDirectory( subDir );
+    return getFileSystem().getIDirectory( subDir );
 //    } catch (IOException e) {
 //      throw new RuntimeException(e);
 //    }
@@ -72,7 +70,7 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
   {
 //    try {
     File subFile = new File( this._file, path )/*.getCanonicalFile()*/;
-    return ManifoldHost.getFileSystem().getIFile( subFile );
+    return getFileSystem().getIFile( subFile );
 //    } catch (IOException e) {
 //      throw new RuntimeException(e);
 //    }
@@ -156,7 +154,7 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
         {
           if( FileSystemImpl.isDirectory( f ) )
           {
-            results.add( ManifoldHost.getFileSystem().getIDirectory( f ) );
+            results.add( getFileSystem().getIDirectory( f ) );
           }
         }
       }
@@ -174,7 +172,7 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
         {
           if( !FileSystemImpl.isDirectory( f ) )
           {
-            results.add( ManifoldHost.getFileSystem().getIFile( f ) );
+            results.add( getFileSystem().getIFile( f ) );
           }
         }
       }
@@ -228,11 +226,11 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
         {
           if( FileSystemImpl.isDirectory( f ) )
           {
-            _directories.add( ManifoldHost.getFileSystem().getIDirectory( f ) );
+            _directories.add( getFileSystem().getIDirectory( f ) );
           }
           else
           {
-            _files.add( ManifoldHost.getFileSystem().getIFile( f ) );
+            _files.add( getFileSystem().getIFile( f ) );
           }
         }
       }

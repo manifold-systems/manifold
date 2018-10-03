@@ -22,7 +22,6 @@ import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeLoaderListener;
 import manifold.api.host.RefreshRequest;
-import manifold.internal.host.ManifoldHost;
 import manifold.util.ManClassUtil;
 import manifold.util.Pair;
 import manifold.util.SourcePathUtil;
@@ -58,7 +57,7 @@ public class ClassSymbols
   private ClassSymbols( IModule module )
   {
     _module = module;
-    ManifoldHost.addTypeLoaderListenerAsWeakRef( module, new CacheClearer() );
+    _module.getHost().addTypeLoaderListenerAsWeakRef( module, new CacheClearer() );
     _altJavacTask_PlainFileMgr = LocklessLazyVar.make( () -> {
       init();
 
@@ -75,7 +74,7 @@ public class ClassSymbols
       init();
       if( _wfm == null )
       {
-        _wfm = new ManifoldJavaFileManager( _fm, null, false );
+        _wfm = new ManifoldJavaFileManager( _module.getHost(), _fm, null, false );
       }
       StringWriter errors = new StringWriter();
       BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );

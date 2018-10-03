@@ -21,7 +21,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
 
   public void init( IModuleComponent typeLoader )
   {
-    init( typeLoader, JavascriptModel::new );
+    init( typeLoader, (fqn, files) -> new JavascriptModel( getModule().getHost(), fqn, files ) );
   }
 
   @Override

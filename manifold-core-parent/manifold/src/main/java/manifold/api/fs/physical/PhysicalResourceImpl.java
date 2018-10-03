@@ -1,9 +1,9 @@
 package manifold.api.fs.physical;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFileSystem;
 import manifold.api.fs.IResource;
 import manifold.api.fs.ResourcePath;
 
@@ -11,11 +11,19 @@ public class PhysicalResourceImpl implements IResource
 {
   protected final ResourcePath _path;
   protected final IPhysicalFileSystem _backingFileSystem;
+  private final IFileSystem _fs;
 
-  protected PhysicalResourceImpl( ResourcePath path, IPhysicalFileSystem backingFileSystem )
+  protected PhysicalResourceImpl( IFileSystem fs, ResourcePath path, IPhysicalFileSystem backingFileSystem )
   {
+    _fs = fs;
     _path = path;
     _backingFileSystem = backingFileSystem;
+  }
+
+  @Override
+  public IFileSystem getFileSystem()
+  {
+    return _fs;
   }
 
   @Override
@@ -27,7 +35,7 @@ public class PhysicalResourceImpl implements IResource
     }
     else
     {
-      return new PhysicalDirectoryImpl( _path.getParent(), _backingFileSystem );
+      return new PhysicalDirectoryImpl( getFileSystem(), _path.getParent(), _backingFileSystem );
     }
   }
 
@@ -44,7 +52,7 @@ public class PhysicalResourceImpl implements IResource
   }
 
   @Override
-  public boolean delete() throws IOException
+  public boolean delete()
   {
     return _backingFileSystem.delete( _path );
   }
