@@ -62,18 +62,21 @@ import manifold.util.concurrent.ConcurrentHashSet;
  */
 public class JavacPlugin implements Plugin, TaskListener
 {
-  /** plugin argument for dynamic compilation mode */
+  /** dynamic compilation mode */
   private static final String ARG_DYNAMIC = "dynamic";
-  /** plugin argument enabling string literal templating */
-  private static final String ARG_STRINGS = "strings";
-  /** plugin argument for static mode (deprecated, now the default) */
+  /** static mode (deprecated, now the default) */
   private static final String ARG_STATIC = "static";
+  /** enables string literal templating */
+  private static final String ARG_STRINGS = "strings";
+  /** disables &lt;clinit&gt; bootstap */
+  private static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
   /** all plugin args */
   private static final String[] ARGS =
   {
     ARG_DYNAMIC,
-    ARG_STRINGS,
     ARG_STATIC,
+    ARG_STRINGS,
+    ARG_NO_BOOTSTRAP,
   };
 
   private static final String GOSU_SOURCE_FILES = "gosu.source.files";
@@ -142,14 +145,18 @@ public class JavacPlugin implements Plugin, TaskListener
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
     IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
 
-    _argPresent = new HashMap<>();
-    _argPresent.put( ARG_STRINGS, testForArg( ARG_STRINGS, args ) );
-    _argPresent.put( ARG_DYNAMIC, testForArg( ARG_DYNAMIC, args ) );
-    notifyOfInvalidArgs( args, jpe );
+    processArgs( jpe, args );
 
     _host = new JavacManifoldHost();
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  private void processArgs( JavacProcessingEnvironment jpe, String[] args )
+  {
+    _argPresent = new HashMap<>();
+    Arrays.stream( ARGS ).forEach( arg -> _argPresent.put( arg, testForArg( arg, args ) ) );
+    notifyOfInvalidArgs( args, jpe );
   }
 
   public JavacManifoldHost getHost()
@@ -200,11 +207,6 @@ public class JavacPlugin implements Plugin, TaskListener
         return true;
       }
     }
-    return false;
-  }
-
-  protected boolean decideIfNoBootstrapping()
-  {
     return false;
   }
 
@@ -323,7 +325,7 @@ public class JavacPlugin implements Plugin, TaskListener
     _ctx.put( JavaFileManager.class, (JavaFileManager)null );
     _ctx.put( JavaFileManager.class, _manFileManager );
 
-    // Assign our file maanger to javac's various components
+    // Assign our file manager to javac's various components
     try
     {
       if( IS_JAVA_8 )
@@ -368,7 +370,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
-  public List<String> deriveOutputPath()
+  private List<String> deriveOutputPath()
   {
     Set<String> paths = new HashSet<>();
     String outputPath = deriveClassOutputPath();
@@ -862,6 +864,6 @@ public class JavacPlugin implements Plugin, TaskListener
 
   public boolean isNoBootstrapping()
   {
-    return decideIfNoBootstrapping();
+    return _argPresent.get( ARG_NO_BOOTSTRAP );
   }
 }

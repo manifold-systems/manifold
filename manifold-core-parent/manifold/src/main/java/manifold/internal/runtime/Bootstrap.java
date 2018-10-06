@@ -10,6 +10,11 @@ import manifold.internal.host.RuntimeManifoldHost;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 /**
+ * Loads Manifold <b>runtime</b> services:
+ * <ul>
+ *   <li>Integrates manifold into application class loader</li>
+ *   <li>Initializes the RuntimeManifoldHost</li>
+ * </ul>
  */
 public class Bootstrap
 {

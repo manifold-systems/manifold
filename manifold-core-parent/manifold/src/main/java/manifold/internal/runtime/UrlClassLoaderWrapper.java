@@ -1,7 +1,6 @@
 package manifold.internal.runtime;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -19,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
+import manifold.util.ReflectUtil.LiveMethodRef;
 
 /**
  */
@@ -27,8 +27,8 @@ public class UrlClassLoaderWrapper
   private static final Set<Integer> VISITED_LOADER_IDS = new HashSet<>();
   private final ClassLoader _loader;
 
-  private final MethodAndReceiver _getURLs;
-  private final MethodAndReceiver _addUrl;
+  private final LiveMethodRef _getURLs;
+  private final LiveMethodRef _addUrl;
 
   static UrlClassLoaderWrapper wrapIfNotAlreadyVisited( ClassLoader loader )
   {
@@ -49,10 +49,10 @@ public class UrlClassLoaderWrapper
 
   public static UrlClassLoaderWrapper wrap( ClassLoader loader )
   {
-    MethodAndReceiver getURLs = findLoaderMethod( loader, "getURLs", new Class[0], List.class, URL[].class );
+    LiveMethodRef getURLs = getURLsMethod( loader );
     if( getURLs != null )
     {
-      MethodAndReceiver addUrl = findLoaderMethod( loader, "addUrl", new Class[] {URL.class}, (Class[])null );
+      LiveMethodRef addUrl = ReflectUtil.WithNull.method( getURLs.getReceiver(), "addURL|addUrl", URL.class );
       if( addUrl != null )
       {
         return new UrlClassLoaderWrapper( loader, getURLs, addUrl );
@@ -61,88 +61,29 @@ public class UrlClassLoaderWrapper
     return null;
   }
 
-  private static MethodAndReceiver findLoaderMethod( ClassLoader cls, String methodName, Class[] paramTypes, Class... returnType )
+  private static LiveMethodRef getURLsMethod( Object receiver )
   {
-    Object receiver = cls;
-    Method method = findMethod( cls.getClass(), methodName, paramTypes, returnType );
-    if( method == null )
+    LiveMethodRef getURLs = ReflectUtil.WithNull.methodWithReturn( receiver, "getURLs|getUrls", URL[].class );
+    if( getURLs == null )
     {
-      Field ucpField = findField( cls.getClass(), "ucp" );
-      if( ucpField != null )
+      getURLs = ReflectUtil.WithNull.methodWithReturn( receiver, "getURLs|getUrls", List.class );
+      if( getURLs == null && receiver instanceof ClassLoader )
       {
-        method = findMethod( ucpField.getType(), methodName, paramTypes, returnType );
-        if( method != null )
+        ReflectUtil.LiveFieldRef ucpField = ReflectUtil.WithNull.field( receiver, "ucp" );
+        if( ucpField != null )
         {
-          try
+          Object ucp = ucpField.get();
+          if( ucp != null )
           {
-            ucpField.setAccessible( true );
-            receiver = ucpField.get( cls );
-          }
-          catch( IllegalAccessException e )
-          {
-            throw new RuntimeException( e );
+            getURLs = getURLsMethod( ucp );
           }
         }
       }
     }
-    if( method != null )
-    {
-      method.setAccessible( true );
-      return new MethodAndReceiver( method, receiver );
-    }
-    return null;
+    return getURLs;
   }
 
-  private static Method findMethod( Class cls, String methodName, Class[] paramTypes, Class[] returnTypes )
-  {
-    outer:
-    for( Method m : cls.getDeclaredMethods() )
-    {
-      if( m.getName().equalsIgnoreCase( methodName ) )
-      {
-        Class<?>[] types = m.getParameterTypes();
-        if( types.length == paramTypes.length )
-        {
-          for( int i = 0; i < paramTypes.length; i++ )
-          {
-            if( !paramTypes[i].equals( types[i] ) )
-            {
-              continue outer;
-            }
-          }
-          if( returnTypes == null )
-          {
-            return m;
-          }
-          for( Class<?> t : returnTypes )
-          {
-            if( t.isAssignableFrom( m.getReturnType() ) )
-            {
-              m.setAccessible( true );
-              return m;
-            }
-          }
-        }
-      }
-    }
-    return cls.getSuperclass() != null ? findMethod( cls.getSuperclass(), methodName, paramTypes, returnTypes ) : null;
-  }
-
-  private static Field findField( Class<?> cls, String fieldName )
-  {
-    for( Field f : cls.getDeclaredFields() )
-    {
-      if( f.getName().equalsIgnoreCase( fieldName ) )
-      {
-        return f;
-      }
-    }
-    return cls.getSuperclass() != null
-           ? findField( cls.getSuperclass(), fieldName )
-           : null;
-  }
-
-  private UrlClassLoaderWrapper( ClassLoader loader, MethodAndReceiver getURLs, MethodAndReceiver addUrl )
+  private UrlClassLoaderWrapper( ClassLoader loader, LiveMethodRef getURLs, LiveMethodRef addUrl )
   {
     _loader = loader;
     _getURLs = getURLs;
@@ -154,15 +95,16 @@ public class UrlClassLoaderWrapper
     return _loader;
   }
 
-  public void addURL( URL url )
+  void addURL( URL url )
   {
     try
     {
-      _addUrl._method.invoke( _addUrl._receiver, url );
+      _addUrl.invoke( url );
       if( JreUtil.isJava9Modular_runtime() )
       {
         wrapReaders();
       }
+      IjPluginIntegration.addUrlToIntelliJPluginClassLoader( _loader, url );
     }
     catch( Exception e )
     {
@@ -278,7 +220,7 @@ public class UrlClassLoaderWrapper
   {
     try
     {
-      Object urls = _getURLs._receiver == null ? null : _getURLs._method.invoke( _getURLs._receiver );
+      Object urls = _getURLs.invoke();
       urls = urls == null
              ? Collections.<URL>emptyList()
              : urls.getClass().isArray()
@@ -290,18 +232,6 @@ public class UrlClassLoaderWrapper
     catch( Exception e )
     {
       throw new RuntimeException( e );
-    }
-  }
-
-  private static class MethodAndReceiver
-  {
-    Method _method;
-    Object _receiver;
-
-    MethodAndReceiver( Method method, Object receiver )
-    {
-      _method = method;
-      _receiver = receiver;
     }
   }
 }

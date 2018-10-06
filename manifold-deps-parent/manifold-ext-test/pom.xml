@@ -39,6 +39,11 @@
                 <goal>testCompile</goal>
               </goals>
               <configuration>
+                <compilerArgs>
+                  <!--Allow for bootstrapping, needed to enable runtime features of Manifold:
+                      structural typing used in the MapStruct extensions-->
+                  <arg>-Xplugin:Manifold strings</arg>
+                </compilerArgs>
                 <forceJavacCompilerUse>true</forceJavacCompilerUse> <!-- release plugin needs this -->
                 <fork>true</fork> <!-- When run with -X, dumps a javac script and arg file to target/test-classes.  Very useful for debugging. -->
                 <testExcludes>

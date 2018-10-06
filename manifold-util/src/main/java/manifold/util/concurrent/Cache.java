@@ -59,7 +59,7 @@ public class Cache<K, V>
   }
 
   /**
-   * This will get a specific entry, it will call the missHandler if it is not found.
+   * Gets a specific entry, calling the loader if no entry exists
    *
    * @param key the object to find
    *
@@ -73,6 +73,11 @@ public class Cache<K, V>
   public CacheStats getStats()
   {
     return _cacheImpl.stats();
+  }
+
+  public String getName()
+  {
+    return _name;
   }
 
   /**

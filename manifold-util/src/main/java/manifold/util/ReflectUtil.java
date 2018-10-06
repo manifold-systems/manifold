@@ -1,5 +1,6 @@
 package manifold.util;
 
+import java.util.StringTokenizer;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
@@ -45,12 +46,12 @@ public class ReflectUtil
 
   public static LiveMethodRef method( Object receiver, String name, Class... params )
   {
-    MethodRef ref = method( receiver.getClass(), name, params );
-    if( ref == null )
+    LiveMethodRef liveRef = WithNull.method( receiver, name, params );
+    if( liveRef == null )
     {
       throw new RuntimeException( "Method '" + name + "' not found" );
     }
-    return new LiveMethodRef( ref._method, receiver );
+    return liveRef;
   }
 
   public static MethodRef method( String fqn, String name, Class... params )
@@ -60,6 +61,12 @@ public class ReflectUtil
 
   public static MethodRef method( Class<?> cls, String name, Class... params )
   {
+    MethodRef match = matchFirstMethod( cls, name, params );
+    if( match != null )
+    {
+      return match;
+    }
+
     MethodRef mr = getMethodFromCache( cls, name, params );
     if( mr != null )
     {
@@ -97,14 +104,31 @@ public class ReflectUtil
     return null;
   }
 
+  private static MethodRef matchFirstMethod( Class<?> cls, String name, Class[] params )
+  {
+    if( name.indexOf( '|' ) >= 0 )
+    {
+      for( StringTokenizer tokenizer = new StringTokenizer( name, "|" ); tokenizer.hasMoreTokens(); )
+      {
+        String token = tokenizer.nextToken();
+        MethodRef method = method( cls, token, params );
+        if( method != null )
+        {
+          return method;
+        }
+      }
+    }
+    return null;
+  }
+
   public static LiveFieldRef field( Object receiver, String name )
   {
-    FieldRef ref = field( receiver.getClass(), name );
-    if( ref == null )
+    LiveFieldRef liveRef = WithNull.field( receiver, name );
+    if( liveRef == null )
     {
       throw new RuntimeException( "Field '" + name + "' not found" );
     }
-    return new LiveFieldRef( ref._field, receiver );
+    return liveRef;
   }
 
   public static FieldRef field( String fqn, String name )
@@ -114,6 +138,12 @@ public class ReflectUtil
 
   public static FieldRef field( Class<?> cls, String name )
   {
+    FieldRef match = matchFirstField( cls, name );
+    if( match != null )
+    {
+      return match;
+    }
+
     FieldRef fr = getFieldFromCache( cls, name );
     if( fr != null )
     {
@@ -149,6 +179,23 @@ public class ReflectUtil
       }
     }
 
+    return null;
+  }
+
+  private static FieldRef matchFirstField( Class<?> cls, String name )
+  {
+    if( name.indexOf( '|' ) >= 0 )
+    {
+      for( StringTokenizer tokenizer = new StringTokenizer( name, "|" ); tokenizer.hasMoreTokens(); )
+      {
+        String token = tokenizer.nextToken();
+        FieldRef field = field( cls, token );
+        if( field != null )
+        {
+          return field;
+        }
+      }
+    }
     return null;
   }
 
@@ -318,6 +365,11 @@ public class ReflectUtil
       return _method;
     }
 
+    public Object getReceiver()
+    {
+      return _receiver;
+    }
+
     public Object invoke( Object... args )
     {
       try
@@ -407,6 +459,16 @@ public class ReflectUtil
     {
       _field = f;
       _receiver = receiver;
+    }
+
+    public Field getField()
+    {
+      return _field;
+    }
+
+    public Object getReceiver()
+    {
+      return _receiver;
     }
 
     public Object get()
@@ -660,5 +722,41 @@ public class ReflectUtil
       return fieldsByName.get( name );
     }
     return null;
+  }
+
+  /**
+   * Utility to access live methods and fields with possible null return value if not found
+   */
+  public static class WithNull
+  {
+    public static LiveMethodRef method( Object receiver, String name, Class... params )
+    {
+      MethodRef ref = ReflectUtil.method( receiver.getClass(), name, params );
+      if( ref == null )
+      {
+        return null;
+      }
+      return new LiveMethodRef( ref._method, receiver );
+    }
+
+    public static LiveFieldRef field( Object receiver, String name )
+    {
+      FieldRef ref = ReflectUtil.field( receiver.getClass(), name );
+      if( ref == null )
+      {
+        return null;
+      }
+      return new LiveFieldRef( ref._field, receiver );
+    }
+
+    public static LiveMethodRef methodWithReturn( Object receiver, String name, Class<?> returnType, Class... params )
+    {
+      LiveMethodRef ref = method( receiver, name, params );
+      if( ref != null && !returnType.isAssignableFrom( ref.getMethod().getReturnType() ) )
+      {
+        ref = null;
+      }
+      return ref;
+    }
   }
 }
