@@ -144,12 +144,11 @@ class loaders to engage at runtime.
 
 Benefits of this approach include:
 
-*   **Zero turnaround** -- live, type-safe access to data; make, discover, and use changes instantly
-*   **Lightweight** -- direct integration with standard Java, requires no special compilers, annotation
-processors, or runtime agents
+*   **Zero turnaround** -- direct, type-safe access to structured data
+*   **Lightweight** -- requires no special compilers, annotation processors, or runtime agents
 *   **Efficient, dynamic** -- Manifold only produces types as they are needed
-*   **Simple, open API** -- you can build your own Manifolds
-*   **No code generation build step** -- no generated files, no special compilers
+*   **Simple, open API** -- use the Manifold API to build your own components and extensions
+*   **No code generation build step** -- integrates directly with the Java compiler, incremental
 *   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** support -- all manifold types and extensions work with IntelliJ
 
 Additionally, Manifold is just a JAR file you can drop into your existing project -- you can begin using
