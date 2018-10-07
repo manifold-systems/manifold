@@ -192,7 +192,7 @@ Java your project uses.
 Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), 
 [Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html), 
 [Java 10](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html), and 
-[Java 11 Early-Access](http://jdk.java.net/11/).  
+[Java 11](http://jdk.java.net/11/).  
 
 **Java 9 or later Notes**
 
