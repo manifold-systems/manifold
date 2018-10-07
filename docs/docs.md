@@ -26,11 +26,13 @@ At a high level each of these features is classified as either a **Type Manifold
 
 ### Type Manifolds
 
-Bridging the worlds of information and programming, type manifolds are Java
-projections of schematized data sources.  More specifically, a type manifold
-transforms a data source into a data _type_ directly accessible in your Java code
-without a code generation build step or extra compilation artifacts. In essence with Manifold a data
-source **_is_** a data type.
+Bridging the worlds of information and programming, *type manifolds* act as adapters 
+to automatically connect schematized data sources with Java.  More specifically, 
+a type manifold transforms a data source into a data _type_ directly accessible in 
+your Java code eliminating code generation build steps involved with conventional tools. 
+Additionally Manifold provides IDE integration to automatically keep types in sync with 
+data sources as you make changes, again with no addtitional build steps. In essence with 
+Manifold a data source **_is_** a data type.
 
 To illustrate, consider this properties resource file:
 
@@ -59,7 +61,7 @@ By contrast, with the Properties type manifold you access a properties file dire
 String myMessage = MyProperties.chocolate.milk;
 ```
 
-Concise and type-safe, with no generated files or other build steps to engage.
+Concise and type-safe, with no additional build steps to engage.
 
 Almost any type of data source imaginable is a potential type manifold. These
 include resource files, schemas, query languages, database definitions, templates,
@@ -234,18 +236,18 @@ javac -Xplugin:Manifold ...
 ### Modes
 
 You can use Manifold in one of two ways: **dynamically** or **statically**.  The mode 
-determines whether or not Manifold compiles class projections to disk at compile-time, and in 
+determines whether or not Manifold compiles resource types to disk at compile-time, and in 
 turn whether or not Manifold dynamically compiles and loads the classes at runtime.  The mode is
 controlled using the `-Xplugin` javac argument:
 
-**Static**: `-Xplugin:Manifold` (default, compiles class projections statically at compile-time)
+**Static**: `-Xplugin:Manifold` (default, compiles resource types statically at compile-time)
 
-**Dynamic**: `-Xplugin:Manifold dynamic` (compiles class projections dynamically at runtime)
+**Dynamic**: `-Xplugin:Manifold dynamic` (compiles resource types dynamically at runtime)
 (alternatively `-Xplugin:"Manifold dynamic"`, some tools may require quotes)
 
 The mode you use largely depends on your use-case and personal preference. Things to consider:
 
-* Both modes operate _lazily_ -- regardless of mode, a class projection is not compiled unless it is used.
+* When compiling from the command line both modes operate _lazily_, a type is not compiled unless it is used.
 For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
 in your code will be processed and compiled.
 
@@ -259,7 +261,7 @@ static mode, depending on the Manifold features you use.  For example, [structur
 requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
 files as structural interfaces.
 
-* Static mode is generally faster at runtime since it pre-compiles all the type manifold projections when you 
+* Static mode is generally faster at runtime since it pre-compiles all the type manifold resources when you 
 build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
@@ -718,7 +720,7 @@ system there is no direct, type-safe access to them.
 
 With the properties type manifold, however, Java escapes the confinements of its
 conventional type system.  The properties type manifold provides
-a Java class projection of properties files, eliminating the need for the
+a Java class projection of properties resource files, eliminating the need for the
 `Properties` library:
 
 ```java
@@ -827,7 +829,7 @@ With the Properties type manifold we can access properties directly using simple
 println(abc.MyProperties.my.dark.chocolate);
 ```
 
-Behind the scenes the properties type manifold creates a Java class projection of the
+Behind the scenes the properties type manifold creates a Java class for the
 properties file, which reflects its hierarchy of properties.  As you develop your
 application, changes you make in
 the file are immediately available in your code with no user intervention in

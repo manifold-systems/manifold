@@ -66,11 +66,12 @@ presents a challenge for programmers using it because there is no design-time ty
 The allure of Manifold is squarely centered on its ability to perform _compile-time_ as well as runtime 
 metaprogramming.  This capability is achieved via _Type Manifolds_.
  
-Bridging the worlds of information and programming, type manifolds are Java
-_projections_ of schematized data sources.  More specifically, a type manifold
-transforms a data source into a data _type_ directly accessible in your Java code
-without a code generation build step or extra compilation artifacts. In essence with Manifold a data
-source **_is_** a data type.
+Bridging the worlds of information and programming, type manifolds act as adapters 
+to automatically connect schematized data sources with Java.  More specifically, 
+a type manifold transforms a data source into a data _type_ directly accessible in 
+your Java code eliminating code generation build steps involved with conventional tools. 
+Manifold automatically keeps types in sync with data sources as you make changes.
+In essence with Manifold a data source **_is_** a data type.
 
 To illustrate, normally you access Java properties resources like this:
 

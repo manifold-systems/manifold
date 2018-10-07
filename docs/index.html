@@ -13,8 +13,9 @@ layout: default
                 <img src="/images/logo_512px.png"> Manifold
             </h1>
             <p class="main-copy">
-                Manifold is a unique framework that allows developers to dynamically and <i>seamlessly</i> extend Java.
-                Building on this core framework Manifold provides features to make Java development more appealing and productive.
+                Manifold is a revolutionary new breed of Java tooling. It provides powerful features to make Java
+                development more appealing and productive. Simply add the Manifold jar to your project and begin taking
+                advantage of it.
             </p>
         </div>
     </div>
@@ -37,27 +38,88 @@ layout: default
                 <h2 class="text-center">Meta-programming</h2>
 
                 <p>
-                    Type-safe, direct access to your data. Eliminate code generators. Minimize build time.
+                    Gain direct, type-safe access to structured data. Eliminate code generators. Minimize build time.
                 </p>
+                <code>
+                    &nbsp;&nbsp;<i>//&nbsp;JSON files are types!</i><br>
+                    &nbsp;&nbsp;<b>Person</b>&nbsp;person&nbsp;=&nbsp;<b>Person</b>.fromJsonUrl(url);<br>
+                    &nbsp;&nbsp;person.setFirstName("Scott");
+                </code>
 
             </div>
 
             <div class="col-md-4">
                 <h2 class="text-center">Extensions</h2>
 
-                <p>Add methods to existing Java classes such as String, List, and File.
-                    Eliminate boilerplate code involving "Util" and "Manager" libraries.</p>
+                <p>
+                    Add extension methods and interfaces to existing Java classes, even String, List, and File.
+                    Eliminate boilerplate code.
+                </p>
+                <code>
+                    &nbsp;&nbsp;<b>String</b>&nbsp;greeting&nbsp;=&nbsp;"hello";<br>
+                    &nbsp;&nbsp;greeting.myMethod();&nbsp;<i>//&nbsp;augment&nbsp;any&nbsp;type</i>
+                </code>
 
             </div>
 
             <div class="col-md-4">
                 <h2 class="text-center">Structural Typing</h2>
 
-                <p>Unify disparate APIs. Bridge software components you do not control.</p>
+                <p>
+                    Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe
+                    interfaces.
+                </p>
+                <code>
+                    &nbsp;&nbsp;<b>MyInterface</b>&nbsp;thing&nbsp;=&nbsp;(<b>MyInterface</b>)notMyInterface;<br>
+                    &nbsp;&nbsp;thing.myMethod();&nbsp;<i>//&nbsp;treat&nbsp;as&nbsp;your&nbsp;interface</i>
+                </code>
 
             </div>
 
         </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="text-center">Templates</h2>
+
+                <p>
+                    Make type-safe, templatized data files using pure Java. Use the same template expressions in Java strings.
+                </p>
+                <code>
+                    &nbsp;&nbsp;<b>int</b>&nbsp;hour&nbsp;=&nbsp;<i>8</i>;<br>
+                    &nbsp;&nbsp;<i>//&nbsp;"It&nbsp;is&nbsp;8&nbsp;o'clock"</i><br>
+                    &nbsp;&nbsp;<b>String</b>&nbsp;time&nbsp;=&nbsp;"It&nbsp;is&nbsp;<b>$</b><i>hour</i>&nbsp;o'clock";&nbsp;
+                </code>
+
+            </div>
+
+            <div class="col-md-4">
+                <h2 class="text-center">Libraries</h2>
+
+                <p>
+                    Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
+                </p>
+                <code>
+                    &nbsp;&nbsp;<b>File</b>&nbsp;file&nbsp;=&nbsp;new <b>File</b>(path);<br>
+                    &nbsp;&nbsp;<i>//&nbsp;Use refreshing extensions to File</i><br>
+                    &nbsp;&nbsp;<b>String</b>&nbsp;content&nbsp;=&nbsp;file.readText();&nbsp;
+                </code>
+
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <h2 class="text-center">IntelliJ</h2>
+
+                <p>
+                    Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides
+                    comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring,
+                    incremental compilation, hotswap debugging, full-featured template editing, and more.
+                </p>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -65,9 +127,9 @@ layout: default
     <div class="row ">
         <div class="col-md-12">
             <div class="index-demo live-demo text-center">
-                <h1>Demo: JSON Schema File Access</h1>
+                <h1>JSON Schema File Access in IntelliJ:</h1>
                 <p>
-                    This demo shows type-safe access to a JSON Schema file from within Java
+                    Demonstrates type-safe access to a JSON Schema file from within Java
                     <br/>
                     <br/>
                 </p>
