@@ -7,47 +7,31 @@ public class RefreshRequest
 {
   public final IFile file;
   public final IModule module;
-  public final IModuleComponent typeLoader;
   public final RefreshKind kind;
   public final String[] types;
 
-  public RefreshRequest( IFile file, String[] types, IModule module, IModuleComponent typeLoader, RefreshKind kind )
+  public RefreshRequest( IFile file, String[] types, IModule module, RefreshKind kind )
   {
     this.file = file;
     this.kind = kind;
     this.types = types;
     this.module = module;
-    this.typeLoader = typeLoader;
   }
 
-  public RefreshRequest( IFile file, String[] types, IModuleComponent typeLoader, RefreshKind kind )
+  public RefreshRequest( String[] allTypes, RefreshRequest request, IModule module )
   {
-    this( file, types, getModule( typeLoader ), typeLoader, kind );
-  }
-
-  public RefreshRequest( String[] allTypes, RefreshRequest request, IModuleComponent typeLoader )
-  {
-    this( request.file, allTypes, typeLoader, request.kind );
-  }
-
-  private static IModule getModule( IModuleComponent typeLoader )
-  {
-    if( typeLoader == null )
-    {
-      throw new RuntimeException( "A refresh request must have a valid typeloader" );
-    }
-    return typeLoader.getModule();
+    this( request.file, allTypes, module, request.kind );
   }
 
   @Override
   public String toString()
   {
-    String s = kind + " of ";
+    StringBuilder s = new StringBuilder( kind + " with " );
     for( String type : types )
     {
-      s += type + ", ";
+      s.append( type ).append( ", " );
     }
-    s += "from " + (typeLoader != null ? typeLoader : module);
-    return s;
+    s.append( "module: " ).append( module );
+    return s.toString();
   }
 }

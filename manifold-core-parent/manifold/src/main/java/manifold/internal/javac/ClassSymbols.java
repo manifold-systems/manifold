@@ -20,7 +20,7 @@ import javax.tools.StandardLocation;
 import manifold.api.fs.IResource;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoaderListener;
+import manifold.api.host.ITypeSystemListener;
 import manifold.api.host.RefreshRequest;
 import manifold.util.ManClassUtil;
 import manifold.util.Pair;
@@ -57,7 +57,7 @@ public class ClassSymbols
   private ClassSymbols( IModule module )
   {
     _module = module;
-    _module.getHost().addTypeLoaderListenerAsWeakRef( module, new CacheClearer() );
+    _module.getHost().addTypeSystemListenerAsWeakRef( module, new CacheClearer() );
     _altJavacTask_PlainFileMgr = LocklessLazyVar.make( () -> {
       init();
 
@@ -244,7 +244,7 @@ public class ClassSymbols
     return null;
   }
 
-  private class CacheClearer implements ITypeLoaderListener
+  private class CacheClearer implements ITypeSystemListener
   {
     @Override
     public void refreshedTypes( RefreshRequest request )

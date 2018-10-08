@@ -4,7 +4,7 @@ import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.api.Structural;
 import manifold.util.ManClassUtil;
@@ -16,10 +16,9 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   public static final String FILE_EXTENSION = "json";
 
   @Override
-  public void init( IModuleComponent typeLoader )
+  public void init( IModule module )
   {
-    init( typeLoader, (fqn, files) -> new JsonModel( getModule().getHost(), fqn, files ),
-      "editor.plugin.typeloader.json.JsonTypeFactory" );
+    init( module, (fqn, files) -> new JsonModel( getModule().getHost(), fqn, files ) );
   }
 
   @Override

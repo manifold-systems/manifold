@@ -751,11 +751,10 @@ public class JavacPlugin implements Plugin, TaskListener
           // Must perform shenanigans early
           NecessaryEvilUtil.bypassJava9Security();
 
-          // Note there are no "non-java" files to compile in default Manifold,
-          // only other languages implementing their own IManifoldHost might compile their language files at this time
-          getHost().initializeAndCompileNonJavaFiles( this::deriveSourcePath, this::deriveClasspath, this::deriveOutputPath );
+          // Initialize the Javac host environment
+          getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );
 
-          // Need to bootstap for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder
+          // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder
           Bootstrap.init();
 
           // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes

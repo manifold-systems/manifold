@@ -1,7 +1,12 @@
 package manifold.internal.host;
 
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -13,7 +18,6 @@ import manifold.api.fs.cache.PathCache;
 import manifold.api.host.Dependency;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
-import manifold.api.host.IModuleComponent;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
@@ -30,7 +34,7 @@ import static manifold.api.type.ContributorKind.Primary;
 /**
  */
 @SuppressWarnings("WeakerAccess")
-public abstract class SimpleModule implements IModuleComponent, IModule
+public abstract class SimpleModule implements IModule
 {
   private IManifoldHost _host;
   private List<IDirectory> _classpath;
@@ -55,12 +59,6 @@ public abstract class SimpleModule implements IModuleComponent, IModule
   }
 
   @Override
-  public IModule getModule()
-  {
-    return this;
-  }
-
-  @Override
   public List<IDirectory> getSourcePath()
   {
     return _sourcePath;
@@ -71,6 +69,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
   {
     return _classpath;
   }
+
   @SuppressWarnings("unused")
   protected void setJavaClassPath( List<IDirectory> cp )
   {
@@ -128,7 +127,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
   {
     ITypeManifold found = null;
     String result = "";
-    for( ITypeManifold sp : sps )
+    for( ITypeManifold sp: sps )
     {
       if( sp.getContributorKind() == Primary ||
           sp.getContributorKind() == Partial )
@@ -139,11 +138,11 @@ public abstract class SimpleModule implements IModuleComponent, IModule
           List<IFile> files = sp.findFilesForType( fqn );
           JavaFileObject file = new SourceJavaFileObject( files.get( 0 ).toURI() );
           errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, 0, 1, 1,
-                                                    "The type, " + fqn + ", has conflicting type manifolds:\n" +
-                                                    "'" + found.getClass().getName() + "' and '" + sp.getClass().getName() + "'.\n" +
-                                                    "Either two or more resource files have the same base name or the project depends on two or more type manifolds that target the same resource type.\n" +
-                                                    "If the former, consider renaming one or more of the resource files.\n" +
-                                                    "If the latter, you must remove one or more of the type manifold libraries." ) );
+            "The type, " + fqn + ", has conflicting type manifolds:\n" +
+            "'" + found.getClass().getName() + "' and '" + sp.getClass().getName() + "'.\n" +
+            "Either two or more resource files have the same base name or the project depends on two or more type manifolds that target the same resource type.\n" +
+            "If the former, consider renaming one or more of the resource files.\n" +
+            "If the latter, you must remove one or more of the type manifold libraries." ) );
         }
         else
         {
@@ -152,7 +151,7 @@ public abstract class SimpleModule implements IModuleComponent, IModule
         }
       }
     }
-    for( ITypeManifold sp : sps )
+    for( ITypeManifold sp: sps )
     {
       if( sp.getContributorKind() == ContributorKind.Supplemental )
       {
@@ -177,27 +176,15 @@ public abstract class SimpleModule implements IModuleComponent, IModule
         return;
       }
 
-      _typeManifolds = IModuleComponent.super.loadTypeManifolds();
+      _typeManifolds = loadTypeManifolds();
       _typeManifolds.forEach( tm -> tm.init( this ) );
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  public Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
-  {
-    return IModuleComponent.super.findTypeManifoldsFor( fqn, predicates );
-  }
-
-  @Override
-  public Set<ITypeManifold> findTypeManifoldsFor( IFile file )
-  {
-    return IModuleComponent.super.findTypeManifoldsFor( file );
   }
 
   public Set<TypeName> getChildrenOfNamespace( String packageName )
   {
     Set<TypeName> children = new HashSet<>();
-    for( ITypeManifold sp : getTypeManifolds() )
+    for( ITypeManifold sp: getTypeManifolds() )
     {
       Collection<TypeName> typeNames = sp.getTypeNames( packageName );
       children.addAll( typeNames );

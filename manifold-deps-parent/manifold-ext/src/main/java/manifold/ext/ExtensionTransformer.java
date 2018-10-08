@@ -784,7 +784,7 @@ public class ExtensionTransformer extends TreeTranslator
       String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
       m.selected = memberAccess( make, javacElems, extensionFqn );
       BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
-      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionFqn ).getFirst();
+      Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
       m.sym = method;
       m.type = method.type;
@@ -831,8 +831,8 @@ public class ExtensionTransformer extends TreeTranslator
         {
           String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
           boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getJavacTask_PlainFileMgr();
-          Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getTypeLoader().getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
+          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
+          Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
           if( classSymbol == null )
           {
             // In module mode if a package in another module is not exported, classes in the package

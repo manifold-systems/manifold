@@ -279,23 +279,6 @@ public class ManClassesUrlConnection extends URLConnection
       }
     }
 
-//    private void logExceptionForFailedCompilation( Throwable e )
-//    {
-//      // Log the exception, it tends to get swallowed esp. if the class doesn't parse.
-//      //
-//      // Note this is sometimes OK because the failure is recoverable. For example,
-//      // a Manifold class references a Java class which in turn extends the Manifold class.
-//      // Due the the circular reference at the header level, the Java compiler will
-//      // fail to compile the Manifold class via this Url loader (because the Manifold class
-//      // needs the Java class, which is compiling). In this case the DefaultTypeLoader
-//      // catches the exception and generates a Java stub for the Manifold class and returns
-//      // that as the definitive JavaClassInfo.  Thus, we don't really want to log
-//      // a nasty message here or print the stack trace, if it's recoverable.
-//
-//      //System.out.println( "!! Failed to compile: " + _type.getName() + " (don't worry, these are mostly recoverable, mostly)" );
-//      //e.printStackTrace();
-//    }
-
     private byte[] compileJavaClass()
     {
       long before = System.nanoTime();

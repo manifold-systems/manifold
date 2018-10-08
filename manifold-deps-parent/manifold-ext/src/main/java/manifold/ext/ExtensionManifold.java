@@ -15,7 +15,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
@@ -36,9 +36,9 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   public static final String EXTENSIONS_PACKAGE = "extensions";
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>( Arrays.asList( "java", "class" ) );
 
-  public void init( IModuleComponent typeLoader )
+  public void init( IModule module )
   {
-    init( typeLoader, ( fqn, files ) -> new Model( fqn, files, this ) );
+    init( module, ( fqn, files ) -> new Model( fqn, files, this ) );
   }
 
   @Override
@@ -253,7 +253,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
         return;
       }
 
-      for( ITypeManifold tm: getTypeLoader().findTypeManifoldsFor( request.file ) )
+      for( ITypeManifold tm: ExtensionManifold.this.getModule().findTypeManifoldsFor( request.file ) )
       {
         if( tm instanceof IExtensionClassProducer )
         {

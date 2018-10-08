@@ -1,6 +1,6 @@
 package manifold.api.host;
 
-public abstract class AbstractTypeSystemListener implements ITypeLoaderListener
+public abstract class AbstractTypeSystemListener implements ITypeSystemListener
 {
   @Override
   public void refreshedTypes( RefreshRequest request )

@@ -3,7 +3,7 @@ package manifold.api.type;
 import java.util.Collections;
 import java.util.List;
 import manifold.api.fs.IFile;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.host.RefreshKind;
 import manifold.api.service.BaseService;
 
@@ -12,20 +12,21 @@ import manifold.api.service.BaseService;
  * manifold for a subset of <a href="https://www.w3.org/RDF/">RDF</a> could
  * subclass {@link UrlTypeManifold}.
  */
+@SuppressWarnings("unused")
 public abstract class UrlTypeManifold extends BaseService implements ITypeManifold
 {
-  private IModuleComponent _typeLoader;
+  private IModule _module;
 
   @Override
-  public void init( IModuleComponent tl )
+  public void init( IModule module )
   {
-    _typeLoader = tl;
+    _module = module;
   }
 
   @Override
-  public IModuleComponent getTypeLoader()
+  public IModule getModule()
   {
-    return _typeLoader;
+    return _module;
   }
 
   @Override

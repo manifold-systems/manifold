@@ -4,25 +4,30 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFileSystem;
+import manifold.api.host.IManifoldHost;
+import manifold.internal.javac.JavacPlugin;
 import manifold.util.SourcePathUtil;
 
 /**
- * A Manifold host exclusive to the javac plugin.
+ * {@link JavacManifoldHost} is exclusive to an instance of {@link JavacPlugin}. There can be multiple JavacTasks,
+ * therefore multiple JavacPlugins, therefore multiple JavacManifoldHosts per process. Moreover, instances of
+ * {@link JavacManifoldHost} can coexist with the {@link RuntimeManifoldHost} instance.  Likewise, instances of
+ * {@code IjManifoldHost} can coexist with instanceof {@link JavacManifoldHost} and the {@link RuntimeManifoldHost}.
+ * More generally, any two host instances must not share state that contributes to the {@link IManifoldHost} semantic
+ * contract.
  */
 public class JavacManifoldHost extends SingleModuleManifoldHost
 {
-  public void initializeAndCompileNonJavaFiles( Supplier<Set<String>> sourcePath, Supplier<List<String>> classpath, Supplier<List<String>> outputPath )
+  public void initialize( Set<String> sourcePath, List<String> classpath, List<String> outputPath )
   {
-    List<String> cp = classpath.get().stream().filter( e -> !SourcePathUtil.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
-    Set<String> sp = sourcePath.get().stream().filter( e -> !SourcePathUtil.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );
-    List<String> op = outputPath.get();
+    List<String> cp = classpath.stream().filter( e -> !SourcePathUtil.excludeFromSourcePath( e ) ).collect( Collectors.toList() );
+    Set<String> sp = sourcePath.stream().filter( e -> !SourcePathUtil.excludeFromSourcePath( e ) ).collect( Collectors.toSet() );
 
     int i = 0;
-    for( String p : op )
+    for( String p: outputPath )
     {
       if( !cp.contains( p ) )
       {
@@ -32,21 +37,21 @@ public class JavacManifoldHost extends SingleModuleManifoldHost
     }
 
     List<String> all = new ArrayList<>();
-    for( String p : sp )
+    for( String p: sp )
     {
       if( !all.contains( p ) )
       {
         all.add( p );
       }
     }
-    for( String p : cp )
+    for( String p: cp )
     {
       if( !all.contains( p ) )
       {
         all.add( p );
       }
     }
-    initPaths( cp, all, op );
+    initPaths( cp, all, outputPath );
   }
 
   private void initPaths( List<String> classpath, List<String> sourcePath, List<String> outputPath )

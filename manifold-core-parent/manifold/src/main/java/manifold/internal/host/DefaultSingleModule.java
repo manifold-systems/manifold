@@ -3,7 +3,6 @@ package manifold.internal.host;
 import java.util.List;
 import manifold.api.fs.IDirectory;
 import manifold.api.host.IManifoldHost;
-import manifold.api.host.IModule;
 
 /**
  */
@@ -20,11 +19,5 @@ public class DefaultSingleModule extends SimpleModule
   public String getName()
   {
     return DEFAULT_NAME;
-  }
-
-  @Override
-  public IModule getModule()
-  {
-    return this;
   }
 }

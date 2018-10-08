@@ -38,7 +38,7 @@ public class PathCache
     _clearHandler = clearHandler;
     _reverseMap = new ConcurrentHashMap<>();
     init();
-    _module.getHost().addTypeLoaderListenerAsWeakRef( module, _clearer = new CacheClearer() );
+    _module.getHost().addTypeSystemListenerAsWeakRef( module, _clearer = new CacheClearer() );
   }
 
   private void init()

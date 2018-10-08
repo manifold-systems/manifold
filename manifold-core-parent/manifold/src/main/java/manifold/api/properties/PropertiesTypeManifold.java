@@ -9,7 +9,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.cache.FqnCache;
 import manifold.util.cache.FqnCacheNode;
@@ -19,9 +19,9 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 
-  public void init( IModuleComponent typeLoader )
+  public void init( IModule module )
   {
-    init( typeLoader, (fqn,files) -> new Model( getModule().getHost(), fqn, files ), "editor.plugin.typeloader.properties.PropertiesTypeFactory" );
+    init( module, (fqn,files) -> new Model( getModule().getHost(), fqn, files ) );
   }
 
   @Override

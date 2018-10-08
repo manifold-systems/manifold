@@ -1,19 +1,18 @@
 package manifold.api.type;
 
 import manifold.api.host.IModule;
-import manifold.api.host.IModuleComponent;
 
 public class TypeName implements Comparable
 {
   public final String name;
   public final Kind kind;
   public final Visibility visibility;
-  public final IModuleComponent loader;
+  public final IModule module;
 
-  public TypeName( String name, IModuleComponent loader, Kind kind, Visibility visibility )
+  public TypeName( String name, IModule module, Kind kind, Visibility visibility )
   {
     this.name = name;
-    this.loader = loader;
+    this.module = module;
     this.kind = kind;
     this.visibility = visibility;
   }
@@ -42,7 +41,7 @@ public class TypeName implements Comparable
     {
       return false;
     }
-    if( loader != null ? !loader.equals( typeName.loader ) : typeName.loader != null )
+    if( module != null ? !module.equals( typeName.module ) : typeName.module != null )
     {
       return false;
     }
@@ -64,13 +63,13 @@ public class TypeName implements Comparable
     int result = name != null ? name.hashCode() : 0;
     result = 31 * result + (kind != null ? kind.hashCode() : 0);
     result = 31 * result + (visibility != null ? visibility.hashCode() : 0);
-    result = 31 * result + (loader != null ? loader.hashCode() : 0);
+    result = 31 * result + (module != null ? module.hashCode() : 0);
     return result;
   }
 
   public IModule getModule()
   {
-    return loader.getModule();
+    return module;
   }
 
   public enum Kind

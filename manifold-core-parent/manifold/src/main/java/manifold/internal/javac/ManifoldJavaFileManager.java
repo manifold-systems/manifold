@@ -22,7 +22,7 @@ import javax.tools.StandardLocation;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoaderListener;
+import manifold.api.host.ITypeSystemListener;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
@@ -38,7 +38,7 @@ import static manifold.api.type.ContributorKind.Primary;
 
 /**
  */
-class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeLoaderListener
+class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeSystemListener
 {
   private final IManifoldHost _host;
   private final boolean _fromJavaC;
@@ -61,7 +61,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     {
       ctx.put( JavaFileManager.class, fileManager );
     }
-    _host.addTypeLoaderListenerAsWeakRef( null, this );
+    _host.addTypeSystemListenerAsWeakRef( null, this );
   }
 
   public IManifoldHost getHost()

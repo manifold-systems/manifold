@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import manifold.api.fs.IFile;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.IModel;
@@ -27,7 +27,7 @@ public abstract class AbstractExtensionProducer<M extends IModel> extends JavaTy
 
 
   @Override
-  public void init( IModuleComponent moduleComponent )
+  public void init( IModule moduleComponent )
   {
     super.init( moduleComponent, this::createModel );
   }

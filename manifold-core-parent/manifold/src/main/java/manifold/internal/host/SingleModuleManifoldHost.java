@@ -5,7 +5,7 @@ import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
 import manifold.api.host.IModule;
-import manifold.api.host.ITypeLoaderListener;
+import manifold.api.host.ITypeSystemListener;
 import manifold.internal.javac.JavaParser;
 import manifold.util.BytecodeOptions;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -60,7 +60,7 @@ public abstract class SingleModuleManifoldHost extends AbstractManifoldHost
     _module.initializeTypeManifolds();
   }
 
-  public void addTypeLoaderListenerAsWeakRef( Object ctx, ITypeLoaderListener listener )
+  public void addTypeSystemListenerAsWeakRef( Object ctx, ITypeSystemListener listener )
   {
     // only relevant for environments where types change e.g., Manifold IJ plugin
   }

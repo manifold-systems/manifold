@@ -1149,8 +1149,8 @@ public class ImageTypeManifold extends JavaTypeManifold<Model> {
   private static final Set<String> FILE_EXTENSIONS = new HashSet<>(Arrays.asList("jpg", "png", "bmp", "wbmp", "gif"));
 
   @Override
-  public void init(ITypeLoader typeLoader) {
-    init(typeLoader, Model::new);
+  public void init(IModule module) {
+    init(module, Model::new);
   }
 
   @Override

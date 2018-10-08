@@ -11,7 +11,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.StreamUtil;
 
@@ -23,9 +23,9 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   public static final Set<String> FILE_EXTENSIONS = Collections.singleton( "darkj" );
 
   @Override
-  public void init( IModuleComponent typeLoader )
+  public void init( IModule module )
   {
-    init( typeLoader, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
+    init( module, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
   }
 
   @Override

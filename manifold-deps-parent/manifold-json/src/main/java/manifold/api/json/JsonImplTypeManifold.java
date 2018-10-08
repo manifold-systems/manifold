@@ -8,7 +8,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.ManClassUtil;
 
@@ -20,9 +20,9 @@ public class JsonImplTypeManifold extends JavaTypeManifold<Model>
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( FILE_EXTENSION );
   private static final String IMPL = "impl";
 
-  public void init( IModuleComponent typeLoader )
+  public void init( IModule module )
   {
-    init( typeLoader, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
+    init( module, (fqn, files) -> new Model( getModule().getHost(), fqn, files ) );
   }
 
   @Override

@@ -6,7 +6,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.host.IModuleComponent;
+import manifold.api.host.IModule;
 
 /**
  * A {@link ITypeManifold} is a fundamental component of the Manifold API. Implementors of this interface
@@ -31,14 +31,14 @@ public interface ITypeManifold extends IFileConnected
   /**
    * Initialize this type manifold.  Avoid defining types in the scope of this method.
    *
-   * @param tl The module to which this type manifold belongs
+   * @param module The module to which this type manifold belongs
    */
-  void init( IModuleComponent tl );
+  void init( IModule module );
 
   /**
-   * The TypeLoader to which this producer is scoped
+   * The module to which this producer is scoped
    */
-  IModuleComponent getTypeLoader();
+  IModule getModule();
 
   /**
    * What kind of source is produced?  Java or Gosu?

@@ -1,7 +1,6 @@
 package manifold.api.host;
 
-@SuppressWarnings("unused")
-public interface ITypeLoaderListener
+public interface ITypeSystemListener
 {
   /**
    * Fired when an existing type is refreshed, i.e. there are potential changes
@@ -9,7 +8,7 @@ public interface ITypeLoaderListener
   void refreshedTypes( RefreshRequest request );
 
   /**
-   * Fired when the typesystem is fully refreshed
+   * Fired when the type system is fully refreshed
    */
   void refreshed();
 

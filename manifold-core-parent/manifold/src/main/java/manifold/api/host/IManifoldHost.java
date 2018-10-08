@@ -21,7 +21,7 @@ public interface IManifoldHost extends IService
 
   boolean isPathIgnored( String path );
 
-  void addTypeLoaderListenerAsWeakRef( Object ctx, ITypeLoaderListener listener );
+  void addTypeSystemListenerAsWeakRef( Object ctx, ITypeSystemListener listener );
 
   IFileSystem getFileSystem();
 

@@ -19,7 +19,7 @@ public class TypeSystemAwareCache<K, V> extends Cache<K, V>
   public TypeSystemAwareCache( IManifoldHost host, String name, int size, CacheLoader<K, V> loader )
   {
     super( name, size, loader );
-    host.addTypeLoaderListenerAsWeakRef( null, _cacheClearer );
+    host.addTypeSystemListenerAsWeakRef( null, _cacheClearer );
   }
 
   private static class CacheClearer extends AbstractTypeSystemListener

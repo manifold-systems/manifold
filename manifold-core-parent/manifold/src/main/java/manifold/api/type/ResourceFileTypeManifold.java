@@ -18,7 +18,6 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
-import manifold.api.host.IModuleComponent;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.service.BaseService;
@@ -35,40 +34,28 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseService implements ITypeManifold
 {
-  private IModuleComponent _typeLoader;
+  private IModule _module;
   private LocklessLazyVar<FqnCache<LocklessLazyVar<M>>> _fqnToModel;
-  private String _typeFactoryFqn;
   private BiFunction<String, Set<IFile>, M> _modelMapper;
   @SuppressWarnings("all")
   private CacheClearer _cacheClearer;
 
   @Override
-  public void init( IModuleComponent tl )
+  public void init( IModule module )
   {
-    _typeLoader = tl;
+    _module = module;
   }
 
   /**
-   * @param typeLoader  The typeloader passed into the ISourceProvider implementation constructor
+   * @param module  The module passed into the ISourceProvider implementation constructor
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
-  protected void init( IModuleComponent typeLoader, BiFunction<String, Set<IFile>, M> modelMapper )
+  protected void init( IModule module, BiFunction<String, Set<IFile>, M> modelMapper )
   {
-    init( typeLoader, modelMapper, null );
-  }
-
-  /**
-   * @param typeLoader     The typeloader passed into the ISourceProvider implementation constructor
-   * @param modelMapper    A function to provide a model given a qualified name and resource file
-   * @param typeFactoryFqn For Gosu Lab.  Optional.
-   */
-  protected void init( IModuleComponent typeLoader, BiFunction<String, Set<IFile>, M> modelMapper, String typeFactoryFqn )
-  {
-    _typeLoader = typeLoader;
-    _typeFactoryFqn = typeFactoryFqn;
+    _module = module;
     _modelMapper = modelMapper;
     _fqnToModel = LocklessLazyVar.make( this::buildFqnToModelCache );
-    getModule().getHost().addTypeLoaderListenerAsWeakRef( getModule(), _cacheClearer = createCacheClearer() );
+    getModule().getHost().addTypeSystemListenerAsWeakRef( getModule(), _cacheClearer = createCacheClearer() );
   }
 
   protected CacheClearer createCacheClearer()
@@ -276,7 +263,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
 
   public IModule getModule()
   {
-    return _typeLoader.getModule();
+    return _module;
   }
 
   @Override
@@ -284,12 +271,6 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   {
     _fqnToModel.clear();
     return kind;
-  }
-
-  @Override
-  public IModuleComponent getTypeLoader()
-  {
-    return _typeLoader;
   }
 
   @Override
@@ -381,7 +362,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   {
     return getAllTypeNames().stream()
       .filter( fqn -> ManClassUtil.getPackage( fqn ).equals( namespace ) )
-      .map( fqn -> new TypeName( fqn, _typeLoader, TypeName.Kind.TYPE, TypeName.Visibility.PUBLIC ) )
+      .map( fqn -> new TypeName( fqn, _module, TypeName.Kind.TYPE, TypeName.Visibility.PUBLIC ) )
       .collect( Collectors.toSet() );
   }
 
@@ -402,29 +383,6 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   public void clear()
   {
     _fqnToModel.clear();
-  }
-
-  @Override
-  public <T> List<T> getInterface( Class<T> apiInterface )
-  {
-    if( _typeFactoryFqn == null || _typeFactoryFqn.isEmpty() )
-    {
-      return super.getInterface( apiInterface );
-    }
-
-    if( _fqnToModel != null && apiInterface.getName().equals( "editor.plugin.typeloader.ITypeFactory" ) )
-    {
-      try
-      {
-        //noinspection unchecked
-        return Collections.singletonList( (T)Class.forName( _typeFactoryFqn ).newInstance() );
-      }
-      catch( Exception e )
-      {
-        throw new RuntimeException( e );
-      }
-    }
-    return super.getInterface( apiInterface );
   }
 
   public static String getContent( IFile file )
