@@ -1601,7 +1601,7 @@ mutable interfaces from the class.  As such your code is better suited to confin
 ### Extension Libraries
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
-Manifold includes several extension libraries for commonly used classe, many of which are adapted
+Manifold includes several extension libraries for commonly used classes, many of which are adapted
 from Kotlin extensions.  Each library is available as a separate module or Jar file you can add 
 to your project separately depending on its needs.
 
