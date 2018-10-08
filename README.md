@@ -2,24 +2,49 @@
   <img src="https://i.imgur.com/No1RPUf.png" width="80%"/>
 </center>
 
-# Intro
-[Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
-Java. Building on this core framework Manifold supplements Java with new features you can use in your applications:
+## What is Manifold?
+[Manifold](http://manifold.systems) is a revolutionary new breed of Java tooling. It provides powerful features to make Java development more appealing and productive. Simply add the Manifold jar to your project and begin taking advantage of it.
 
-* **Type-safe Metaprogramming** -- renders code generators obsolete, similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
-* **Extension Methods** -- add methods to classes you don't own, comparable to the same feature in [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods) and [Kotlin](https://kotlinlang.org/docs/reference/extensions.html)
-* **Structural Typing** -- type-safe duck typing, much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
+## What can you do with Manifold?
 
-Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
-include:
-* **JSON** and **JSON Schema** integration
-* Type-safe **Templating** 
-* **Structural interfaces** and **Expando** objects
-* **Extension libraries** for collections, I/O, and text
-* **JavaScript** interop (experimental)
-* **SQL** and **DDL** interop (coming soon)
-* Lots more
+### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
+Gain direct, type-safe access to structured data. Eliminate code generators. Minimize build time.
+```java 
+  // JSON files are types!
+  Person person = Person.fromJsonUrl(url);
+  person.setFirstName("Scott");
+```
 
-All with comprehensive support in [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
+Add extension methods and interfaces to existing Java classes, even String, List, and File. Eliminate boilerplate code.
+```java
+  String greeting = "hello";
+  greeting.myMethod(); // augment any type
+```  
 
-# Visit the [Manifold docs](http://manifold.systems/docs.html) to learn more.
+### [Structural Typing](http://manifold.systems/docs.html#structural-interfaces)
+Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces.
+```java
+  MyInterface thing = (MyInterface)notMyInterface;
+  thing.myMethod(); // treat as your interface
+```
+
+### [Templates](http://manifold.systems/docs.html#templating)
+Make type-safe, templatized data files using pure Java. Use the same template expressions in Java strings.
+```java
+  int hour = 8;
+  // "It is 8 o'clock"
+  String time = "It is $hour o'clock"; 
+``` 
+ 
+### [Libraries](http://manifold.systems/docs.html#extension-libraries)
+Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
+```java
+  File file = new File(path);
+  // Use refreshing extensions to File
+  String content = file.readText();
+```  
+### [IntelliJ](http://manifold.systems/docs.html#working-with-intellij)
+Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured template editing, and more.
+
+### [Learn More](http://manifold.systems/docs.html)
