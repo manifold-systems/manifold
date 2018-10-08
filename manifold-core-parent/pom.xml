@@ -11,7 +11,8 @@
   <packaging>pom</packaging>
 
   <name>Manifold :: CoreParent</name>
-  <description>Manifold is a unique framework to dynamically and seamlessly extend Java's type system.</description>
+  <description>Manifold is a revolutionary new breed of Java tooling. It provides powerful features to make Java development more appealing and productive.
+  </description>
   <url>http://manifold.systems/</url>
 
   <modules>
