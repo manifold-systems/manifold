@@ -33,8 +33,8 @@ Unify disparate APIs. Bridge software components you do not control. Access maps
 Make type-safe, templatized data files using pure Java. Use the same template expressions in Java strings.
 ```java
   int hour = 8;
-  // "It is 8 o'clock"
-  String time = "It is $hour o'clock"; 
+  // prints "It is 8 o'clock"
+  System.out.println("It is $hour o'clock"); 
 ``` 
  
 ### [Libraries](http://manifold.systems/docs.html#extension-libraries)
