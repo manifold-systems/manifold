@@ -21,7 +21,7 @@ import manifold.api.host.IModule;
  * <p/>
  * Separate instances of a given implementation of this interface exist per {@link manifold.api.host.IModule}.
  */
-public interface ITypeManifold extends IFileConnected
+public interface ITypeManifold extends IFileConnected, ISelfCompiled
 {
   /**
    *  System property to aid in debugging generated source.
@@ -41,7 +41,7 @@ public interface ITypeManifold extends IFileConnected
   IModule getModule();
 
   /**
-   * What kind of source is produced?  Java or Gosu?
+   * What kind of source is produced?  Java?
    */
   ISourceKind getSourceKind();
 

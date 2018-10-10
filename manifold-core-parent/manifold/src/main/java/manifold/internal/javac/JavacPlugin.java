@@ -12,6 +12,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -288,18 +289,32 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
-  private void hijackJavacCompilerForJava9( TaskEvent te )
+  private void tailorJavaCompiler( TaskEvent te )
   {
-    if( IS_JAVA_8 )
-    {
-      return;
-    }
-
     CompilationUnitTree compilationUnit = te.getCompilationUnit();
     if( !(compilationUnit instanceof JCTree.JCCompilationUnit) )
     {
       return;
     }
+
+
+    //
+    // Both Java 8 and Java 9 alterations
+    //
+
+    // Override javac's ClassWriter
+    ManClassWriter manClassWriter = ManClassWriter.instance( _ctx );
+    ReflectUtil.field( JavaCompiler.instance( _ctx ), "writer" ).set( manClassWriter );
+
+    if( IS_JAVA_8 )
+    {
+      return;
+    }
+
+
+    //
+    // Java 9 specific alterations
+    //
 
     Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
     if( module == null || _seenModules.contains( module ) )
@@ -311,7 +326,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     BootstrapPlugin.openModule( _ctx, "jdk.compiler" );
 
-    // Override javac's Resolve (lol)
+    // Override javac's Resolve
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManResolve" ), "instance", Context.class ).invokeStatic( _ctx );
 
     // Override javac's ClassFinder
@@ -758,7 +773,7 @@ public class JavacPlugin implements Plugin, TaskListener
           Bootstrap.init();
 
           // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
-          hijackJavacCompilerForJava9( e );
+          tailorJavaCompiler( e );
         }
         break;
     }

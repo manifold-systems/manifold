@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.function.Supplier;
 import manifold.api.type.ContributorKind;
@@ -38,5 +39,16 @@ public class SourceSupplier
     return _sps == null || _sps.isEmpty() ||
            _sps.stream().anyMatch( e -> e.getContributorKind() == ContributorKind.Primary ||
                                         e.getContributorKind() == ContributorKind.Partial );
+  }
+
+  public boolean isSelfCompile()
+  {
+    return _sps == null || _sps.isEmpty() ||
+           _sps.stream().anyMatch( ITypeManifold::isSelfCompile );
+  }
+
+  public void compileInto( OutputStream os )
+  {
+    _sps.forEach( tm -> tm.compileInto( os ) );
   }
 }

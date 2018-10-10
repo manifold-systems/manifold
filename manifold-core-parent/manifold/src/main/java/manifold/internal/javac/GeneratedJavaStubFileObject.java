@@ -7,13 +7,14 @@ import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
 import javax.tools.SimpleJavaFileObject;
+import manifold.api.type.ISelfCompiled;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import static manifold.api.type.ITypeManifold.ARG_DUMP_SOURCE;
 
 /**
  */
-public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
+public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements ISelfCompiled
 {
   private String _name;
   private long _timestamp;
@@ -43,6 +44,18 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject
   public boolean isPrimary()
   {
     return _sourceSupplier.isPrimary();
+  }
+
+  @Override
+  public boolean isSelfCompile()
+  {
+    return _sourceSupplier.isSelfCompile();
+  }
+
+  @Override
+  public void compileInto( OutputStream os )
+  {
+    _sourceSupplier.compileInto( os );
   }
 
   @Override
