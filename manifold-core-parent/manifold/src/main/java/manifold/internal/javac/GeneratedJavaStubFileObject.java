@@ -1,20 +1,21 @@
 package manifold.internal.javac;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Set;
 import javax.tools.SimpleJavaFileObject;
-import manifold.api.type.ISelfCompiled;
+import manifold.api.fs.IFile;
+import manifold.api.type.ISelfCompiledFile;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import static manifold.api.type.ITypeManifold.ARG_DUMP_SOURCE;
 
 /**
  */
-public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements ISelfCompiled
+public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements ISelfCompiledFile
 {
   private String _name;
   private long _timestamp;
@@ -53,25 +54,25 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   }
 
   @Override
-  public void compileInto( OutputStream os )
+  public byte[] compile()
   {
-    _sourceSupplier.compileInto( os );
+    return _sourceSupplier.compile();
   }
 
   @Override
-  public InputStream openInputStream() throws IOException
-  {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public OutputStream openOutputStream() throws IOException
+  public InputStream openInputStream()
   {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public CharSequence getCharContent( boolean ignoreEncodingErrors ) throws IOException
+  public OutputStream openOutputStream()
+  {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public CharSequence getCharContent( boolean ignoreEncodingErrors )
   {
     String source = _src.get();
     maybeDumpSource( source );
@@ -100,7 +101,7 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   }
 
   @Override
-  public Writer openWriter() throws IOException
+  public Writer openWriter()
   {
     throw new UnsupportedOperationException();
   }
@@ -143,5 +144,13 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   public boolean isNameCompatible( String simpleName, Kind kind )
   {
     return !simpleName.equals( "module-info" ) && !simpleName.equals( "package-info" );
+  }
+
+  /**
+   * Resource files from which the type is created.
+   */
+  public Set<IFile> getResourceFiles()
+  {
+    return _sourceSupplier.getResourceFiles();
   }
 }

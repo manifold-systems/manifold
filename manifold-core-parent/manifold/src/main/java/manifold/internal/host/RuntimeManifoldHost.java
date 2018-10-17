@@ -17,70 +17,67 @@ import manifold.api.fs.IDirectory;
 import manifold.api.host.IRuntimeManifoldHost;
 import manifold.internal.runtime.UrlClassLoaderWrapper;
 import manifold.util.SourcePathUtil;
+import manifold.util.concurrent.LockingLazyVar;
 
 /**
  */
 public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRuntimeManifoldHost
 {
-  private volatile static IRuntimeManifoldHost HOST;
+  private volatile static LockingLazyVar<IRuntimeManifoldHost> HOST =
+    LockingLazyVar.make( RuntimeManifoldHost::loadRuntimeManifoldHost );
 
   private List<File> _classpath;
 
 
   public static IRuntimeManifoldHost get()
   {
-    if( HOST == null )
-    {
-      synchronized( RuntimeManifoldHost.class )
-      {
-        if( HOST != null )
-        {
-          return HOST;
-        }
-
-        // Allow for the IRuntimeManifoldHost impl to be customised as a Java Service
-        loadRuntimeManifoldHost();
-
-        if( HOST == null )
-        {
-          HOST = new RuntimeManifoldHost();
-        }
-      }
-    }
-
-    return HOST;
+    return HOST.get();
   }
 
-  private static void loadRuntimeManifoldHost()
+  public static IRuntimeManifoldHost clear()
+  {
+    return HOST.clear();
+  }
+
+  private static IRuntimeManifoldHost loadRuntimeManifoldHost()
   {
     try
     {
-      if( !loadRuntimeManifoldHost( RuntimeManifoldHost.class.getClassLoader() ) )
+      // Allow for the IRuntimeManifoldHost impl to be customised as a Java Service
+      IRuntimeManifoldHost host = loadRuntimeManifoldHost( RuntimeManifoldHost.class.getClassLoader() );
+      if( host == null )
       {
-        loadRuntimeManifoldHost( Thread.currentThread().getContextClassLoader() );
+        host = loadRuntimeManifoldHost( Thread.currentThread().getContextClassLoader() );
+      }
+      if( host != null )
+      {
+        return host;
       }
     }
     catch( ServiceConfigurationError e )
     {
+      // report, but do not throw, the exception; let the default host takeover
       e.printStackTrace();
     }
+
+    // default
+    return new RuntimeManifoldHost();
   }
 
-  private static boolean loadRuntimeManifoldHost( ClassLoader cl )
+  private static IRuntimeManifoldHost loadRuntimeManifoldHost( ClassLoader cl )
   {
     ServiceLoader<IRuntimeManifoldHost> loader = ServiceLoader.load( IRuntimeManifoldHost.class, cl );
     Iterator<IRuntimeManifoldHost> iterator = loader.iterator();
     if( iterator.hasNext() )
     {
-      HOST = iterator.next();
+      IRuntimeManifoldHost host = iterator.next();
       if( iterator.hasNext() )
       {
-        // ⚔ there can be only one ⚔
         System.out.println( "WARNING: Found multiple Manifold hosts, using first encountered: " + HOST.getClass().getName() );
       }
-      return true;
+      return host;
     }
-    return false;
+    return null;
   }
 
   public static void bootstrap()
@@ -105,6 +102,15 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
     init( sourcepath, classpath );
   }
 
+  /**
+   * Initialize host and its type manifolds. Includes classpath from the host's classloader in addition to provided
+   * classpath.
+   *
+   * @param sourcepath List of paths containing sources/resources
+   * @param classpath List of paths comprising the classpath
+   *
+   * @see #initDirectly(List, List)
+   */
   public void init( List<File> sourcepath, List<File> classpath )
   {
     List<File> combined = new ArrayList<>();
@@ -112,14 +118,14 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
     {
       combined.addAll( classpath );
     }
-    combined.addAll( deriveClasspathFrom( SourcePathUtil.class ) );
-    setPaths( sourcepath, combined );
+    combined.addAll( deriveClasspath() );
+    initDirectly( sourcepath, combined );
   }
 
-  private List<File> deriveClasspathFrom( Class clazz )
+  private List<File> deriveClasspath()
   {
     List<File> ll = new LinkedList<>();
-    ClassLoader loader = clazz.getClassLoader();
+    ClassLoader loader = getActualClassLoader();
     while( loader != null )
     {
       UrlClassLoaderWrapper wrap = UrlClassLoaderWrapper.wrap( loader );
@@ -147,7 +153,13 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
     return ll;
   }
 
-  private void setPaths( List<File> sourcepath, List<File> classpath )
+  /**
+   * Initialize the host and its type loaders using specified sourcepath and classpath.
+   *
+   * @param sourcepath List of paths containing sources/resources
+   * @param classpath List of paths comprising the classpath
+   */
+  protected void initDirectly( List<File> sourcepath, List<File> classpath )
   {
     classpath = new ArrayList<>( classpath );
     removeDups( classpath );

@@ -14,15 +14,23 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unused")
 public class BasicIncrementalCompileDriver implements IIncrementalCompileDriver
 {
-  private Map<File, Set<String>> _typesToFile;
+  private final boolean _incremental;
+  private final Map<File, Set<String>> _typesToFile;
 
-  public BasicIncrementalCompileDriver()
+  public BasicIncrementalCompileDriver( boolean incremental )
   {
+    _incremental = incremental;
     _typesToFile = new ConcurrentHashMap<>();
   }
 
   @Override
-  public Collection<File> getResourceFiles()
+  public boolean isIncremental()
+  {
+    return _incremental;
+  }
+
+  @Override
+  public Collection<File> getChangedFiles()
   {
     String manFilesProp = System.getProperty( "manifold.source.files" );
     if( manFilesProp == null )
@@ -44,7 +52,7 @@ public class BasicIncrementalCompileDriver implements IIncrementalCompileDriver
     _typesToFile.put( iFile, set );
   }
 
-  Map<File, Set<String>> getTypesToFile()
+  public Map<File, Set<String>> getTypesToFile()
   {
     return _typesToFile;
   }

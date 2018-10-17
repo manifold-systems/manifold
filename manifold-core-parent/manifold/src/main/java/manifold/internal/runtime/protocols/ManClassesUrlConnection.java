@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
+import manifold.api.type.ISelfCompiledFile;
 import manifold.api.type.ITypeManifold;
 import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.InMemoryClassJavaFileObject;
@@ -284,13 +285,25 @@ public class ManClassesUrlConnection extends URLConnection
       long before = System.nanoTime();
       try
       {
-        DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-        InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
-        if( cls != null )
+        if( _javaSrcFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)_javaSrcFile).isSelfCompile() )
         {
-          return cls.getBytes();
+          return ((ISelfCompiledFile)_javaSrcFile).compile();
         }
-        throw new JavaCompileIssuesException( _javaFqn, errorHandler );
+        else
+        {
+          DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
+          InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+          if( cls != null )
+          {
+            return cls.getBytes();
+          }
+          throw new JavaCompileIssuesException( _javaFqn, errorHandler );
+        }
+      }
+      catch( Throwable t )
+      {
+        t.printStackTrace();
+        throw t;
       }
       finally
       {

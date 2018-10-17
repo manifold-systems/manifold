@@ -120,7 +120,7 @@ public abstract class SimpleModule implements IModule
   {
     //noinspection unchecked
     Set<ITypeManifold> sps = findTypeManifoldsFor( fqn );
-    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( sps, () -> compoundProduce( location, sps, fqn, errorHandler ) ) );
+    return sps.isEmpty() ? null : new GeneratedJavaStubFileObject( fqn, new SourceSupplier( fqn, sps, () -> compoundProduce( location, sps, fqn, errorHandler ) ) );
   }
 
   private String compoundProduce( JavaFileManager.Location location, Set<ITypeManifold> sps, String fqn, DiagnosticListener<JavaFileObject> errorHandler )

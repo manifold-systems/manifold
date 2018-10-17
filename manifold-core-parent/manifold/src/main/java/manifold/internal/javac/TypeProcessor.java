@@ -3,11 +3,15 @@ package manifold.internal.javac;
 import com.sun.source.util.JavacTask;
 //import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.api.BasicJavacTask;
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.element.TypeElement;
 //import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -17,14 +21,20 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
 import manifold.util.ServiceUtil;
+import manifold.util.concurrent.ConcurrentHashSet;
 
 /**
  */
 public class TypeProcessor extends CompiledTypeProcessor
 {
+  private Map<File, Set<String>> _typesCompiledByFile;
+  private Set<Object> _drivers;
+
   TypeProcessor( IManifoldHost host, JavacTask javacTask )
   {
     super( host, javacTask );
+    _typesCompiledByFile = new ConcurrentHashMap<>();
+    _drivers = new ConcurrentHashSet<>();
     loadCompilerComponents( (BasicJavacTask)javacTask );
   }
 
@@ -43,6 +53,11 @@ public class TypeProcessor extends CompiledTypeProcessor
 //    }
 //    return false;
 //  }
+
+  public Map<File, Set<String>> getTypesCompiledByFile()
+  {
+    return _typesCompiledByFile;
+  }
 
   private void loadCompilerComponents( BasicJavacTask javacTask )
   {
@@ -92,5 +107,14 @@ public class TypeProcessor extends CompiledTypeProcessor
         }
       }
     }
+  }
+
+  public void addDrivers( Set<Object> drivers )
+  {
+    _drivers.addAll( drivers );
+  }
+  public Set<Object> getDrivers()
+  {
+    return _drivers;
   }
 }

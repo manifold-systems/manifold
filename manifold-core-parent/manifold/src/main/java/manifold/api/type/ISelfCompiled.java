@@ -1,15 +1,13 @@
 package manifold.api.type;
 
-import java.io.OutputStream;
-
 public interface ISelfCompiled
 {
-  default boolean isSelfCompile()
+  default boolean isSelfCompile( String fqn )
   {
     return false;
   }
 
-  default void compileInto( OutputStream os )
+  default byte[] compile( String fqn )
   {
     throw new UnsupportedOperationException();
   }

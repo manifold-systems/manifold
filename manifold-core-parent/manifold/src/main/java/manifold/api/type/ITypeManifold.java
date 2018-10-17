@@ -7,6 +7,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModule;
+import manifold.api.host.IRuntimeManifoldHost;
 
 /**
  * A {@link ITypeManifold} is a fundamental component of the Manifold API. Implementors of this interface
@@ -29,9 +30,26 @@ public interface ITypeManifold extends IFileConnected, ISelfCompiled
   String ARG_DUMP_SOURCE = "manifold.dump.source";
 
   /**
+   * A module calls this method to determine whether or not to include this type manifold in its collection of type
+   * manifolds.  Gives this type manifold an opportunity to opt out of inclusion based on the module. For instance,
+   * if a module should only operate in a runtime environment, it should return false if the module's host is not
+   * an instance of {@link IRuntimeManifoldHost}.
+   * <p/>
+   * Called after instantiation and, if returns true, before {@link #init(IModule)}.
+   *
+   * @param module The module asking for acceptance
+   * @return {@code true} If this type manifold should be initialized and included in the module,
+   * otherwise {@code false} to be discarded.
+   */
+  default boolean accept( IModule module )
+  {
+    return true;
+  }
+
+  /**
    * Initialize this type manifold.  Avoid defining types in the scope of this method.
    *
-   * @param module The module to which this type manifold belongs
+   * @param module The module to which this type manifold exclusively belongs
    */
   void init( IModule module );
 

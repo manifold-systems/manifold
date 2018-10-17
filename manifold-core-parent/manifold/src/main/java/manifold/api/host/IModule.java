@@ -176,7 +176,10 @@ public interface IModule
           throw new IllegalStateException( "Type manifold class '" + tmClass.getTypeName() + "' does not define an accessible default constructor" );
         }
         ITypeManifold tm = declaredConstructor.newInstance();
-        tms.add( tm );
+        if( tm.accept( this ) )
+        {
+          tms.add( tm );
+        }
       }
       catch( Exception e )
       {
@@ -209,7 +212,7 @@ public interface IModule
     // Exclude type manifolds listed in the "manifold.exclude" sys property
     List<String> excludedTypeManifolds = getExcludedTypeManifolds();
     tms.addAll( registeredTms.stream()
-      .filter( tm -> !excludedTypeManifolds.contains( tm.getClass().getTypeName() ) )
+      .filter( tm -> tm.accept( this ) && !excludedTypeManifolds.contains( tm.getClass().getTypeName() ) )
       .collect( Collectors.toSet() ) );
   }
 }

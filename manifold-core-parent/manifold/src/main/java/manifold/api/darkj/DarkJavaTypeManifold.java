@@ -12,15 +12,30 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IModule;
+import manifold.api.host.IRuntimeManifoldHost;
 import manifold.api.type.JavaTypeManifold;
 import manifold.util.StreamUtil;
 
 /**
+ * Dark Java is dark because it's Java, yet it can't be "seen" at compile-time.
+ * It satisfies the use-case where you need to write Java software against
+ * a system that materializes only at runtime.  For instance, say your code
+ * must target different versions of the same API. You can use Dark Java
+ * to write an alternative version of the parts of your software that support
+ * an older (or newer) API.
  */
 public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
 {
   @SuppressWarnings("WeakerAccess")
   public static final Set<String> FILE_EXTENSIONS = Collections.singleton( "darkj" );
+
+  @Override
+  public boolean accept( IModule module )
+  {
+    // Dark Java files are intended to be compiled dynamically at runtime, they
+    // should never be compiled statically, otherwise just use normal Java.
+    return module.getHost() instanceof IRuntimeManifoldHost;
+  }
 
   @Override
   public void init( IModule module )

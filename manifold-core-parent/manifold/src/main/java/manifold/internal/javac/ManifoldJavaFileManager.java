@@ -40,6 +40,8 @@ import static manifold.api.type.ContributorKind.Primary;
  */
 class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeSystemListener
 {
+  private static final JavaFileObject MISS_FO = new MissFileObject();
+
   private final IManifoldHost _host;
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
@@ -311,14 +313,20 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     FqnCacheNode<JavaFileObject> node = _generatedFiles.getNode( fqn );
     if( node != null )
     {
-      return node.getUserData();
+      JavaFileObject fo = node.getUserData();
+      // note userdata can be null in the case where an innerclass is loaded before the enclosing
+      if( fo != null )
+      {
+        return fo == MISS_FO ? null : fo;
+      }
     }
 
-    JavaFileObject file = module.produceFile( fqn, location, errorHandler );
-    // note we cache even if file is null, fqn cache is also a miss cache
-    _generatedFiles.add( fqn, file );
+    JavaFileObject fo = module.produceFile( fqn, location, errorHandler );
 
-    return file;
+    // note we cache even if file is null, fqn cache is also a miss cache
+    _generatedFiles.add( fqn, fo == null ? MISS_FO : fo);
+
+    return fo;
   }
 
   private Set<String> makeNames( Iterable<JavaFileObject> list )

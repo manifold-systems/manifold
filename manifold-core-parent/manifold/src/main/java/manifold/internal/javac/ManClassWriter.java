@@ -6,7 +6,7 @@ import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.tools.JavaFileObject;
-import manifold.api.type.ISelfCompiled;
+import manifold.api.type.ISelfCompiledFile;
 
 public class ManClassWriter extends ClassWriter
 {
@@ -31,9 +31,9 @@ public class ManClassWriter extends ClassWriter
   public void writeClassFile( OutputStream out, Symbol.ClassSymbol c ) throws StringOverflow, IOException, PoolOverflow
   {
     JavaFileObject sourceFile = c.sourcefile;
-    if( sourceFile instanceof ISelfCompiled && ((ISelfCompiled)sourceFile).isSelfCompile() )
+    if( sourceFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)sourceFile).isSelfCompile() )
     {
-      ((ISelfCompiled)sourceFile).compileInto( out );
+      out.write( ((ISelfCompiledFile)sourceFile).compile() );
     }
     else
     {

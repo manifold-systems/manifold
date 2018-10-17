@@ -48,7 +48,7 @@ public abstract class SingleModuleManifoldHost extends AbstractManifoldHost
     return _module;
   }
 
-  protected void createSingleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
+  void createSingleModule( List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
     if( _module != null )
     {

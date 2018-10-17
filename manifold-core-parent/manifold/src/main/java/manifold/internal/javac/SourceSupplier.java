@@ -1,23 +1,27 @@
 package manifold.internal.javac;
 
-import java.io.OutputStream;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import manifold.api.fs.IFile;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 
 public class SourceSupplier
 {
+  private String _fqn;
   private Supplier<String> _supplier;
   private final Set<ITypeManifold> _sps;
 
   /**
-   * @param tms The set of type manifolds responsible for producing the source.  An
-   *            empty or null set implies no type manifolds are involved.
+   * @param fqn      Qualified name of type
+   * @param tms      The set of type manifolds responsible for producing the source.  An
+   *                 empty or null set implies no type manifolds are involved.
    * @param supplier Supplier of the source code.
    */
-  public SourceSupplier( Set<ITypeManifold> tms, Supplier<String> supplier )
+  public SourceSupplier( String fqn, Set<ITypeManifold> tms, Supplier<String> supplier )
   {
+    _fqn = fqn;
     _supplier = supplier;
     _sps = tms;
   }
@@ -44,11 +48,19 @@ public class SourceSupplier
   public boolean isSelfCompile()
   {
     return _sps == null || _sps.isEmpty() ||
-           _sps.stream().anyMatch( ITypeManifold::isSelfCompile );
+           _sps.stream().anyMatch( tm -> tm.isSelfCompile( _fqn ) );
   }
 
-  public void compileInto( OutputStream os )
+  public byte[] compile()
   {
-    _sps.forEach( tm -> tm.compileInto( os ) );
+    return _sps.stream()
+      .filter( tm -> tm.isSelfCompile( _fqn ) )
+      .findFirst().orElseThrow( IllegalStateException::new )
+      .compile( _fqn );
+  }
+
+  public Set<IFile> getResourceFiles()
+  {
+    return _sps.stream().flatMap( tm -> tm.findFilesForType( _fqn ).stream() ).collect( Collectors.toSet() );
   }
 }
