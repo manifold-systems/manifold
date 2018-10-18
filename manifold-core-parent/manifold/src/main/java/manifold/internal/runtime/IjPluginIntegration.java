@@ -17,7 +17,7 @@ import manifold.util.StreamUtil;
  * its super class is package-private, which means it also must load in the same class loader,
  * which is the parent loader of the PluginClassLoader.
  */
-class IjPluginIntegration
+public class IjPluginIntegration
 {
   static void addUrlToIntelliJPluginClassLoader( ClassLoader cl, URL url )
   {
@@ -29,7 +29,7 @@ class IjPluginIntegration
         ReflectUtil.field( classPath, "myCanUseCache" ).set( false );
         Object urlLoader = makeUrlLoader( cl, url );
         ReflectUtil.method( ReflectUtil.field( classPath, "myLoaders" ).get(), "add", Object.class ).invoke( urlLoader );
-        ReflectUtil.method( ReflectUtil.field( classPath, "myLoadersMap" ).get(), "put", Object.class, Object.class ).invoke( url, urlLoader );;
+        ReflectUtil.method( ReflectUtil.field( classPath, "myLoadersMap" ).get(), "put", Object.class, Object.class ).invoke( url, urlLoader );
         //ReflectUtil.method( classPath, "initLoader", URL.class, ReflectUtil.type( "com.intellij.util.lang.Loader" ) ).invoke( url, urlLoader );
       }
       catch( Exception e )
@@ -45,6 +45,7 @@ class IjPluginIntegration
     Class cls = defineClass( cl, "/com/intellij/util/lang/UrlLoader.class" );
     defineClass( cl, "/com/intellij/util/lang/UrlLoader$JavaResource.class" );
     defineClass( cl, "/com/intellij/util/lang/UrlLoader$IjResource.class" );
+    //noinspection ConstantConditions
     return ReflectUtil.constructor( cls, URL.class, int.class ).newInstance( url, 0 );
   }
 
@@ -54,5 +55,23 @@ class IjPluginIntegration
     byte[] bytes = StreamUtil.getContent( stream );
     ClassLoader parent = (ClassLoader)Array.get( ReflectUtil.field( cl, "myParents" ).get(), 0 );
     return (Class)ReflectUtil.method( parent, "defineClass", byte[].class, int.class, int.class ).invoke( bytes, 0, bytes.length );
+  }
+
+  public static ClassLoader getParent( ClassLoader cl )
+  {
+    if( cl.getClass().getTypeName().equals( "com.intellij.ide.plugins.cl.PluginClassLoader" ) )
+    {
+      try
+      {
+        ClassLoader[] parents = (ClassLoader[])ReflectUtil.field( cl, "myParents" ).get();
+        return parents.length > 0 ? parents[0] : null;
+      }
+      catch( Exception e )
+      {
+        //## todo: log error
+        e.printStackTrace();
+      }
+    }
+    return null;
   }
 }
