@@ -246,16 +246,16 @@ controlled using the `-Xplugin` javac argument:
 
 The mode you use largely depends on your use-case and personal preference. Things to consider:
 
-* When compiling from the command line both modes operate _lazily_, a type is not compiled unless it is used.
-For example, if you are using the [Json manifold](#json-and-json-schema), only the Json files you reference 
-in your code will be processed and compiled.
+* Both modes operate _lazily_: a type is not compiled unless it is used. For example, if you are using the [Json manifold](#json-and-json-schema), 
+only the Json files you reference in your code will be processed and compiled. This means Manifold will not try to
+compile resources your project does not expect to use directly as types.
 
 * Even if you use static mode, you can still reference type manifold classes dynamically e.g., _reflectively_.
 In such a case Manifold will dynamically compile the referenced class as if you were operating in 
 dynamic mode.  In general, your code will work regardless of the mode you're using; Manifold will
 figure out what needs to be done. 
 
-* Dynamic mode requires `tools.jar` at runtime for Java 8.  Note tools.jar may still be required with 
+* Dynamic mode requires `tools.jar` at runtime for **Java 8**.  Note tools.jar may still be required with 
 static mode, depending on the Manifold features you use.  For example, [structural interfaces](#structural-interfaces)
 requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
 files as structural interfaces.
