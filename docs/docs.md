@@ -1957,7 +1957,6 @@ See _manifold.api.host.IManifoldHost_.
 
 ### Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
-Use Manifold freely with your favorite _open source_ application servers, database servers, and tools.
 
 ### Commercial
 Commercial licenses for this work are available. These replace the above ASL 2.0 and offer 
@@ -1965,7 +1964,7 @@ limited warranties, support, maintenance, and commercial server integrations.
 
 For more information, please visit: http://manifold.systems//licenses
 
-Contact admin@manifold.systems
+Contact: admin@manifold.systems
 
 ## Contributing
 
