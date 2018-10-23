@@ -189,10 +189,10 @@ Using Manifold in your Java project is simple:
 That's basically it, however there are nuances with Java, Maven, Gradle, etc. to consider depending on the version of
 Java your project uses.
 
-Manifold fully supports [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html), 
-[Java 9](http://www.oracle.com/technetwork/java/javase/downloads/jdk9-downloads-3848520.html), 
-[Java 10](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html), and 
-[Java 11](http://jdk.java.net/11/).  
+Manifold fully supports [Java 8](https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot), 
+[Java 9](https://adoptopenjdk.net/releases.html?variant=openjdk9&jvmVariant=hotspot), 
+[Java 10](https://adoptopenjdk.net/releases.html?variant=openjdk10&jvmVariant=hotspot), and 
+[Java 11](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot).  
 
 **Java 9 or later Notes**
 
