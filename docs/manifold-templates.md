@@ -646,4 +646,4 @@ the following to console:
 
 A demo spark application can be found here:
 
-[https://github.com/manifold-systems/spark-java-demo](https://github.com/manifold-systems/spark-java-demo)
+[https://github.com/manifold-systems/spark-java-demo](https://github.com/manifold-systems/manifold-sample-web-app)
