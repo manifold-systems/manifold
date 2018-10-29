@@ -71,8 +71,14 @@ public class NecessaryEvilUtil
       Class<?> classModule = ReflectUtil.type( "java.lang.Module" );
       ReflectUtil.MethodRef addExportsOrOpens = ReflectUtil.method( classModule, "implAddExportsOrOpens", String.class, classModule, boolean.class, boolean.class );
 
+      //
+      // Module: manifold jars
+      //
       Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( NecessaryEvilUtil.class );
 
+      //
+      // Module: java.base
+      //
       Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
       addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
 //      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", ReflectUtil.field( manifoldModule.getClass(), "ALL_UNNAMED_MODULE" ).getStatic(), true, true );
@@ -81,6 +87,9 @@ public class NecessaryEvilUtil
 //      Object /*Module*/ javaScriptingModule = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "javax.script.Bindings" ) );
 //      addExportsOrOpens.invoke( javaScriptingModule, "javax.script", manifoldModule, true, true );
 
+      //
+      // Module: jdk.compiler
+      //
       Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol" ) );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
@@ -94,6 +103,14 @@ public class NecessaryEvilUtil
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
+
+      //
+      // Module: jdk.javadoc
+      //
+      Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "jdk.javadoc.internal.doclets.formats.html.HtmlDoclet" ) );
+      addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
     }
     catch( Throwable e )
     {

@@ -1,8 +1,10 @@
 package manifold.util;
 
-import java.io.File;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 
 public class DebugLogUtil
 {
@@ -12,10 +14,13 @@ public class DebugLogUtil
    */
   public static void log( String path, String msg )
   {
-    File file = new File( path );
-    try( PrintWriter pw = new PrintWriter( file ) )
+    log( path, msg, false );
+  }
+  public static void log( String path, String msg, boolean append )
+  {
+    try( PrintWriter pw = new PrintWriter( new BufferedWriter( new FileWriter( path, append ) ) ) )
     {
-      pw.write( msg + "\n" );
+      pw.write( LocalDateTime.now() + ": " + msg + "\n" );
     }
     catch( IOException e )
     {
@@ -29,9 +34,13 @@ public class DebugLogUtil
    */
   public static void log( String path, Throwable t )
   {
-    File file = new File( path );
-    try( PrintWriter pw = new PrintWriter( file ) )
+    log( path, t, false );
+  }
+  public static void log( String path, Throwable t, boolean append )
+  {
+    try( PrintWriter pw = new PrintWriter( new BufferedWriter( new FileWriter( path, append ) ) ) )
     {
+      pw.write( LocalDateTime.now() + "\n" );
       t.printStackTrace( pw );
     }
     catch( IOException e )
