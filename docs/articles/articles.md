@@ -3,7 +3,7 @@ layout: default
 ---
 
 # Recent Articles
-
+<p>
 <table border=0 cellspacing=4 cellpadding=0 width=800>
  <tr>
   <td valign=top>
@@ -70,3 +70,4 @@ layout: default
  </tr>
  
 </table>
+</p>
