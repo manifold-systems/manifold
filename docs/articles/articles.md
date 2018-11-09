@@ -3,7 +3,7 @@ layout: default
 ---
 
 # Recent Articles
-
+articles
 <table border=0 cellspacing=4 cellpadding=0 width=800>
  <tr>
   <td valign=top>
