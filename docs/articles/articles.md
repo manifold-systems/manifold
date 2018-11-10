@@ -7,9 +7,8 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generators-150738.html">
-      <img width=240 height=135 src="https://jaxenter.com/wp-content/uploads/2018/10/shutterstock_739795408-350x197.jpg" alt="">
-     </a></p>
+  <p><img width=240 height=135 src="https://jaxenter.com/wp-content/uploads/2018/10/shutterstock_739795408-350x197.jpg" alt=""/>
+  </p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-code-generators-150738.html">Manifold: The reinvention of code generators - JAXenter</a></p>
