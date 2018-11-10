@@ -14,7 +14,7 @@ layout: default
   <p>Manifold offers cutting edge language features for Java devs. 
             Scott McKinney discusses Manifold's reinvention of code generators, 
 			namely Type Manifolds.</p>
-  <p>jaxenter.com</p>
+  <p><small>jaxenter.com</small></p>
   </td>
  </tr>
  
@@ -29,7 +29,7 @@ layout: default
   <p>Manifold is out of this world: this framework allows developers to dynamically and seamlessly 
             extend Java’s type system. In this article, Scott McKinney explores how the Manifold framework 
 			makes Java development more appealing and productive.</p>
-  <p>jaxenter.com</p>
+  <p><small>jaxenter.com</small></p>
   </td>
  </tr>
  
@@ -45,7 +45,7 @@ layout: default
   <p>Mit diesem Artikel startet eine neue Serie zu Manifold.Manifold ist eine einzigartige Open-Source-Technologie, 
             die man in jedem Java-Projekt verwenden kann, um innovative Sprachfunktionen wie typsichere Metaprogrammierung, 
 			Erweiterungsmethoden, Templating und strukturelle Typisierung nutzen zu können.</p>
-  <p>jaxenter.de</p>
+  <p><small>jaxenter.de</small></p>
   </td>
  </tr>
  
@@ -61,7 +61,7 @@ layout: default
             das Typsystem von Java dynamisch und nahtlos zu erweitern. In diesem Artikel 
 			untersucht Scott McKinney, Gründer und Engineer bei Manifold Systems, wie das 
 			Manifold Framework die Java-Entwicklung attraktiver und produktiver macht.</p>
-  <p>jaxenter.de</p>
+  <p><small>jaxenter.de</small></p>
   </td>
  </tr>
  
