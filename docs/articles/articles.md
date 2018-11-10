@@ -22,7 +22,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-alien-technology-142755.html"><img width=240 height=135 src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
+  <p><a href="https://jaxenter.com/manifold-alien-technology-142755.html"><img width="240" height="135" src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-alien-technology-142755.html">Manifold: Alien technology - JAXenter</a></p>
@@ -38,7 +38,7 @@ layout: default
   
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906"><img width=240 height=135 src="/images/manifold-java-code-generator.jpg" alt="c"></a></p>
+  <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906"><img width="240" height="135" src="/images/manifold-java-code-generator.jpg" alt="c"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906">Manifold: Die Neuerfindung des Code-Generators - JAXenter</a></p>
@@ -53,7 +53,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685"><img width=240 height=135 src="/images/shutterstock_546213388-768x581.jpg" alt="d"></a></p>
+  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685"><img width="240" height="135" src="/images/shutterstock_546213388-768x581.jpg" alt="d"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685">Manifold: Die Neuerfindung des Code-Generators - JAXenter</a></p>
