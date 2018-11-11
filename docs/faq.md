@@ -27,7 +27,7 @@ Yes.  IntelliJ IDEA provides comprehensive support for Manifold.  Download the p
 
 #### Q: How do I get the latest Intellij plugin updates?
 Install the Manifold plugin from the JetBrains repository available directly via: <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ search: <kbd>Manifold</kbd>.  
-IntelliJ notifies you withing 24 hours when an update is available and gives you the opportunity to sync.
+IntelliJ notifies you within 24 hours when an update is available and gives you the opportunity to sync.
 
 #### Q: How do I get String templates working, like `"Count: $count"`? 
 Just add the `strings` argument to the Manifold plugin:
