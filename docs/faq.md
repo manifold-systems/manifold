@@ -26,7 +26,7 @@ instructions.
 Yes.  IntelliJ IDEA provides comprehensive support for Manifold.  Download the plugin directly from IntelliJ 
 
 #### Q: How do I get the latest Intellij plugin updates?
-Install the Manifold plugin from the JetBrains repository available directly via: <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ search: <kbd>Manifold</kbd>`.  
+Install the Manifold plugin from the JetBrains repository available directly via: <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ search: <kbd>Manifold</kbd>.  
 IntelliJ notifies you withing 24 hours when an update is available and gives you the opportunity to sync.
 
 #### Q: How do I get String templates working, like `"Count: $count"`? 
@@ -73,7 +73,11 @@ help.
 
 #### Q: Why is the name "Manifold"?
 
-In mathematical physics a manifold allows one to experience an otherwise foreign
-geometry as a familiar Euclidean space.  Applying that general principal to Java's
-type system, a manifold allows one to access structured data as if it were a normal 
-Java class.
+In mathematical physics a manifold allows a complicated geometry to be understood and experienced as a more familiar 
+Euclidean space. For instance, although the Earth is not flat, it helps to think of it that way when we make and use maps. 
+Otherwise we have to reason about triangles having more than 180 degree angle sums!  Applying that general principal to 
+a programming language, a manifold allows information foreign to the language's type system to be accessed directly as 
+first-class types.  A JSON file, for example, is much easier to deal with in Java as a set of type-safe classes.
+
+The common definition of the word also applies.  Manifold transforms Java's otherwise closed, Class-based type system
+into a completely open system of manifold types.
