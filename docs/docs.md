@@ -1973,7 +1973,7 @@ Airplane airplane = new AirplaneBuilder()
 *type of this*.  This is what the self type accomplishes:
 
 ```java
-  public @Self LanguageBuilder withWheels(int wheels) {
+  public @Self VehicleBuilder withWheels(int wheels) {
     _wheels = wheels;
     return this; // returns THIS
   }
