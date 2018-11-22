@@ -1998,7 +1998,7 @@ typical graph or tree structure where the nodes in the structure are homogeneous
 public class Node {
   private List<Node> children;
   
-  public List<@Self Node> children() {
+  public List<@Self Node> getChildren() {
       return children;
   }
 }
@@ -2008,7 +2008,7 @@ public class MyNode extends Node {
 }
 ```
 
-Here you can make the component type of `List` the self type so you can use the `children` method type-safely from 
+Here you can make the component type of `List` the self type so you can use the `getChildren` method type-safely from 
 subtypes of node:
 
 ```java
