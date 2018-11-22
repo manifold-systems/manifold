@@ -2046,6 +2046,7 @@ The plugin currently supports most high-level IntelliJ features including:
 * Rename/Move refactoring
 * Quick navigation
 * Structural typing
+* Self type support
 * Incremental compilation
 * Hotswap debugging
 * Author template files
