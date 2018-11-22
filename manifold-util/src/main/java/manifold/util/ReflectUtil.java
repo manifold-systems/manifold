@@ -1,5 +1,6 @@
 package manifold.util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.StringTokenizer;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
@@ -40,7 +41,7 @@ public class ReflectUtil
     }
     catch( ClassNotFoundException e )
     {
-      throw new RuntimeException( e );
+      throw ManExceptionUtil.unchecked( e );
     }
   }
 
@@ -287,7 +288,7 @@ public class ReflectUtil
     }
     catch( Exception e )
     {
-      throw new RuntimeException( e );
+      throw ManExceptionUtil.unchecked( e );
     }
   }
 
@@ -303,7 +304,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
     return overrideField;
@@ -329,9 +330,13 @@ public class ReflectUtil
       {
         return _method.invoke( receiver, args );
       }
+      catch( InvocationTargetException ite )
+      {
+        throw ManExceptionUtil.unchecked( ite.getCause() );
+      }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -341,9 +346,13 @@ public class ReflectUtil
       {
         return _method.invoke( null, args );
       }
+      catch( InvocationTargetException ite )
+      {
+        throw ManExceptionUtil.unchecked( ite.getCause() );
+      }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -376,9 +385,13 @@ public class ReflectUtil
       {
         return _method.invoke( _receiver, args );
       }
+      catch( InvocationTargetException ite )
+      {
+        throw ManExceptionUtil.unchecked( ite.getCause() );
+      }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
   }
@@ -400,7 +413,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -417,7 +430,7 @@ public class ReflectUtil
           return;
         }
 
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -429,7 +442,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -445,7 +458,7 @@ public class ReflectUtil
         {
           return;
         }
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
   }
@@ -479,7 +492,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
 
@@ -495,7 +508,7 @@ public class ReflectUtil
         {
           return;
         }
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
   }
@@ -517,7 +530,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
   }
@@ -565,16 +578,19 @@ public class ReflectUtil
         outer:
         for( Method m : methods )
         {
-          Class<?>[] mparams = m.getParameterTypes();
           int paramsLen = params == null ? 0 : params.length;
-          if( mparams.length == paramsLen )
+          if( m.getParameterCount() == paramsLen )
           {
-            for( int i = 0; i < mparams.length; i++ )
+            if( paramsLen > 0 )
             {
-              Class<?> mparam = mparams[i];
-              if( !mparam.equals( params[i] ) )
+              Class<?>[] mparams = m.getParameterTypes();
+              for( int i = 0; i < mparams.length; i++ )
               {
-                continue outer;
+                Class<?> mparam = mparams[i];
+                if( !mparam.equals( params[i] ) )
+                {
+                  continue outer;
+                }
               }
             }
             return m;
@@ -616,16 +632,19 @@ public class ReflectUtil
       outer:
       for( Constructor m : constructors )
       {
-        Class<?>[] mparams = m.getParameterTypes();
         int paramsLen = params == null ? 0 : params.length;
-        if( mparams.length == paramsLen )
+        if( m.getParameterCount() == paramsLen )
         {
-          for( int i = 0; i < mparams.length; i++ )
+          Class<?>[] mparams = m.getParameterTypes();
+          if( paramsLen > 0 )
           {
-            Class<?> mparam = mparams[i];
-            if( !mparam.equals( params[i] ) )
+            for( int i = 0; i < mparams.length; i++ )
             {
-              continue outer;
+              Class<?> mparam = mparams[i];
+              if( !mparam.equals( params[i] ) )
+              {
+                continue outer;
+              }
             }
           }
           return m;
@@ -655,7 +674,7 @@ public class ReflectUtil
       }
       catch( Exception e )
       {
-        throw new RuntimeException( e );
+        throw ManExceptionUtil.unchecked( e );
       }
     }
     return false;

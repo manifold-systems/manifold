@@ -1,19 +1,20 @@
 package manifold.api.gen;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  */
-public class SrcType extends SrcElement
+public class SrcType extends SrcAnnotated<SrcType>
 {
   private String _fqn;
   private SrcType _componentType;
   private SrcType _enclosingType;
   private String _superOrExtends;
   private List<SrcType> _bound;
-  private List<SrcType> _typeParams = new ArrayList<>();
+  private List<SrcType> _typeParams;
   private int _arrayDims;
   private boolean _isPrimitive;
   private boolean _isDiamond;
@@ -37,14 +38,25 @@ public class SrcType extends SrcElement
     _isDiamond = simpleType._diamond;
     _arrayDims = simpleType._arrayDim;
     _componentType = _arrayDims > 0 ? new SrcType( simpleType.getComponentType() ) : null;
-    for( TypeNameParser.Type param : simpleType._params )
+
+    _typeParams = new ArrayList<>();
+    if( !simpleType._params.isEmpty() )
     {
-      addTypeParam( new SrcType( param ) );
+      _typeParams = new ArrayList<>();
+      for( TypeNameParser.Type param: simpleType._params )
+      {
+        addTypeParam( new SrcType( param ) );
+      }
     }
+
     if( simpleType._bound != null )
     {
       _superOrExtends = simpleType._superOrExtends;
       _bound = simpleType._bound.stream().map( SrcType::new ).collect( Collectors.toList() );
+    }
+    else
+    {
+      _bound = Collections.emptyList();
     }
   }
 
@@ -142,6 +154,11 @@ public class SrcType extends SrcElement
   public boolean isDiamond()
   {
     return _isDiamond;
+  }
+
+  public List<SrcType> getBounds()
+  {
+    return _bound;
   }
 
   public SrcType getComponentType()
@@ -246,7 +263,25 @@ public class SrcType extends SrcElement
       sb.append( '.' );
     }
 
-    String fqn = _fqn; //!! ALWAYS USE FULLY QUALIFIED NAMES -- SOME USES CASES DEPEND ON FULLY QUALIFIED NAMES
+    String fqn;
+    if( !getAnnotations().isEmpty() )
+    {
+      // type annotations apply to class name part:  "java.util. @Foo List"
+      StringBuilder sbFqn = new StringBuilder();
+      int iDot = _fqn.lastIndexOf( '.' );
+      if( iDot >= 0 )
+      {
+        sbFqn.append( _fqn, 0, iDot + 1 );
+      }
+      renderAnnotations( sbFqn, 1, true );
+      sbFqn.append( ' ' ).append( _fqn.substring( iDot+1 ) );
+      fqn = sbFqn.toString();
+    }
+    else
+    {
+      fqn = _fqn; //!! ALWAYS USE FULLY QUALIFIED NAMES -- SOME USE CASES DEPEND ON FULLY QUALIFIED NAMES
+    }
+
     sb.append( fqn );
     if( _isDiamond )
     {

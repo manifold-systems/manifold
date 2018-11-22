@@ -119,7 +119,10 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
   {
     renderAnnotations( sb, indent, false );
     indent( sb, indent );
-    renderModifiers( sb, (getModifiers() & ~Modifier.TRANSIENT), (getModifiers() & Flags.DEFAULT) != 0, Modifier.PUBLIC );
+    renderModifiers( sb,
+      getModifiers() & ~Modifier.TRANSIENT,
+      (getModifiers() & Flags.DEFAULT) != 0,
+      isNonDefaultNonStaticInterfaceMethod() ? Modifier.PUBLIC : 0 );
     renderTypeVars( _typeVars, sb );
     if( _returns != null )
     {

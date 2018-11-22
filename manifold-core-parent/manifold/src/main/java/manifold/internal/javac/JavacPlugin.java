@@ -9,6 +9,7 @@ import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
@@ -40,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
@@ -306,6 +306,10 @@ public class JavacPlugin implements Plugin, TaskListener
     // Override javac's ClassWriter
     ManClassWriter manClassWriter = ManClassWriter.instance( _ctx );
     ReflectUtil.field( JavaCompiler.instance( _ctx ), "writer" ).set( manClassWriter );
+
+    // Override javac's Attr
+    Attr manAttr = IS_JAVA_8 ? ManAttr_8.instance( _ctx ) : ManAttr_9.instance( _ctx );
+    ReflectUtil.field( JavaCompiler.instance( _ctx ), "attr" ).set( manAttr );
 
     if( IS_JAVA_8 )
     {

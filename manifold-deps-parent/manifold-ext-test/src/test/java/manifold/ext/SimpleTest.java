@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -50,6 +51,14 @@ public class SimpleTest extends TestCase
     IGenericThing<String> gthing = rc;
     List<String> glist = gthing.foo( "hi", new ArrayList<>() );
     System.out.println( glist.get( 0 ) );
+  }
+
+  public void testSelfTypeOnExtension()
+  {
+    LinkedList<String> linkedList = new LinkedList<>();
+    LinkedList<String> ret = linkedList.plus( "hi" );
+    assertEquals( "hi", ret.getFirst() );
+    List<LinkedList<String>> ret2 = linkedList.plusPlus( "hi" );
   }
 
   public void testStructural()

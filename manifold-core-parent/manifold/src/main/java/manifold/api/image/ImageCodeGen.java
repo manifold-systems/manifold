@@ -45,7 +45,7 @@ public class ImageCodeGen
                                                      .rawText( "super(url);" ) )
                                     .addStatement( new SrcRawStatement()
                                                      .rawText( "INSTANCE = this;" ) ) ) )
-        .addMethod( new SrcMethod().modifiers( Modifier.STATIC )
+        .addMethod( new SrcMethod().modifiers( Modifier.PUBLIC | Modifier.STATIC )
                       .name( "get" )
                       .returns( simpleName )
                       .body( new SrcStatementBlock()

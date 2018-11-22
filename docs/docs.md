@@ -19,6 +19,7 @@ include:
 * **Extension libraries** for collections, I/O, and text
 * **JavaScript** interop (experimental)
 * **SQL** and **DDL** interop (coming soon)
+* **Self** type support
 * Lots more
 
 At a high level each of these features is classified as either a **Type Manifold** or an
@@ -1919,7 +1920,119 @@ the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
+## The Self Type
 
+The *self type* is a common term used in the language community that refers to the *type of this* and is most useful
+in situations where you want the return type of a method in a supertype to have the type of the subtype.  Java does not 
+directly support the self type, but it does provide some useful features that can be used as a substitute for it, namely
+covariant return types and recursive generic types.  While both of these features are useful they fall short as a self
+type alternative in terms of convenience, simplicity, and type-safety.  The internet is ripe with info on the subject: 
+[here](https://www.sitepoint.com/self-types-with-javas-generics/), 
+[here](https://vyazelenko.com/2012/03/02/recursive-generics-to-the-rescue/), 
+[here](https://blog.joda.org/2007/08/java-7-self-types_1953.html), 
+[here](https://github.com/manifold-systems/manifold/issues/26).
+
+Manifold's `@Self` annotation provides Java with a direct self type implementation.  Use it on method return types to 
+enforce `type of this` where suitable.
+
+### The Basics
+
+A common use-case for the self type involves the *Builder* pattern:
+
+```java
+public class VehicleBuilder {
+  private int _wheels;
+  
+  public VehicleBuilder withWheels(int wheels) {
+    _wheels = wheels;
+    return this; // returns THIS
+  }
+}
+```  
+
+This is fine until we subclass it:
+
+```java
+public class AirplaneBuilder extends VehicleBuilder {
+  private int _wings;
+  
+  public AirplaneBuilder withWings(int wings) {
+    _wings = wings;
+    return this; // returns THIS
+  }
+}
+
+...
+
+Airplane airplane = new AirplaneBuilder()
+  .withWheels(2) // returns VehicleBuilder
+  .withWings(1)  // ERROR
+```
+
+`withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to return the 
+*type of this*.  This is what the self type accomplishes:
+
+```java
+  public @Self LanguageBuilder withWheels(int wheels) {
+    _wheels = wheels;
+    return this; // returns THIS
+  }
+```
+
+Now with the return type annotated with `@Self` the example works as desired:
+
+```java
+Airplane airplane = new AirplaneBuilder()
+  .withWheels(2) // returns AirplaneBuilder
+  .withWings(1)  // GOOD!
+``` 
+
+Annotate with `manifold.ext.api.Self` to preserve the "type of this" anywhere on or in a method return type.
+
+### Self + Generics
+
+You can also use `@Self` to annotate a _type argument_ of a return type.  A nice example of this involves a 
+typical graph or tree structure where the nodes in the structure are homogeneous:
+
+```java
+public class Node {
+  private List<Node> children;
+  
+  public List<@Self Node> children() {
+      return children;
+  }
+}
+
+public class MyNode extends Node {
+  ...
+}
+```
+
+Here you can make the component type of `List` the self type so you can use the `children` method type-safely from 
+subtypes of node:
+
+```java
+MyNode myNode = findMyNode();
+List<MyNode> = myNode.getChildren(); // wunderbar! 
+```
+
+### Self + Extensions
+
+You can use `@Self` with extension methods too.  Here we make an extension method as a means to conveniently chain 
+insertions to `Map` while preserving its concrete type:
+
+```java
+public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
+  thiz.put(key, value);
+  return thiz;
+}
+
+HashMap<String, String> map = new HashMap<>()
+  .add("bob", "fishspread")
+  .add("alec", "taco")
+  .add("miles", "mustard");
+```
+ 
 ## IDE -- IntelliJ IDEA
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.

@@ -47,6 +47,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
+import manifold.ext.api.Self;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
@@ -261,6 +262,130 @@ public class ExtensionTransformer extends TreeTranslator
     {
       result = tree;
     }
+  }
+
+  @Override
+  public void visitAnnotation( JCTree.JCAnnotation tree )
+  {
+    super.visitAnnotation( tree );
+    if( !Self.class.getTypeName().equals( tree.getAnnotationType().type.tsym.toString() ) )
+    {
+      return;
+    }
+
+    if( !isSelfInReturn( tree, tree ) )
+    {
+      _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_SELF_NOT_ALLOWED_HERE.get() );
+    }
+    else
+    {
+      verifySelfOnThis( tree, tree );
+    }
+  }
+
+  private void verifySelfOnThis( JCTree annotated, JCTree.JCAnnotation selfAnno )
+  {
+    String fqn;
+    if( annotated instanceof JCTree.JCAnnotatedType )
+    {
+      fqn = ((JCTree.JCAnnotatedType)annotated).getUnderlyingType().type.tsym.getQualifiedName().toString();
+    }
+    else if( annotated instanceof JCTree.JCMethodDecl )
+    {
+      fqn = ((JCTree.JCMethodDecl)annotated).getReturnType().type.tsym.getQualifiedName().toString();
+    }
+    else
+    {
+      //## todo: shouldn't happen
+      return;
+    }
+
+    try
+    {
+      JCTree.JCClassDecl enclosingClass = _tp.getClassDecl( annotated );
+      if( !isDeclaringClassOrExtension( annotated, fqn, enclosingClass ) && !fqn.equals( "Array" ) )
+      {
+        _tp.report( selfAnno, Diagnostic.Kind.ERROR,
+          ExtIssueMsg.MSG_SELF_NOT_ON_CORRECT_TYPE.get( fqn, enclosingClass.sym.getQualifiedName() ) );
+      }
+    }
+    catch( Throwable ignore )
+    {
+    }
+  }
+
+  private boolean isDeclaringClassOrExtension( JCTree annotated, String fqn, JCTree.JCClassDecl enclosingClass )
+  {
+    if( enclosingClass.sym.getQualifiedName().toString().equals( fqn ) )
+    {
+      return true;
+    }
+
+    if( isOnExtensionMethod( annotated, fqn, enclosingClass ) )
+    {
+      return true;
+    }
+    return false;
+  }
+
+  private boolean isOnExtensionMethod( JCTree annotated, String fqn, JCTree.JCClassDecl enclosingClass )
+  {
+    if( isExtensionClass( enclosingClass ) )
+    {
+      String extendedClassName = getExtendedClassName();
+      if( extendedClassName != null && extendedClassName.equals( fqn ) )
+      {
+        JCTree.JCMethodDecl declMethod = findDeclMethod( annotated );
+        if( declMethod != null )
+        {
+          List<JCTree.JCVariableDecl> parameters = declMethod.getParameters();
+          for( JCTree.JCVariableDecl param: parameters )
+          {
+            if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
+            {
+              return true;
+            }
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  private JCTree.JCMethodDecl findDeclMethod( Tree annotated )
+  {
+    if( annotated == null )
+    {
+      return null;
+    }
+
+    if( annotated instanceof JCTree.JCMethodDecl )
+    {
+      return (JCTree.JCMethodDecl)annotated;
+    }
+    return findDeclMethod( _tp.getParent( annotated ) );
+  }
+
+  private boolean isSelfInReturn( Tree tree, JCTree.JCAnnotation anno )
+  {
+    if( tree == null )
+    {
+      return false;
+    }
+
+    Tree parent = _tp.getParent( tree );
+    if( parent instanceof JCTree.JCMethodDecl &&
+        (tree == ((JCTree.JCMethodDecl)parent).getModifiers() ||
+         tree == ((JCTree.JCMethodDecl)parent).getReturnType() ||
+         ((JCTree.JCMethodDecl)parent).getModifiers().getAnnotations().contains( anno ) ))
+    {
+      // @Self allowed only in/on return type of instance method
+      return !((JCTree.JCMethodDecl)parent).getModifiers()
+        .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
+             isExtensionClass( getEnclosingClass( parent ) );
+    }
+
+    return isSelfInReturn( parent, anno );
   }
 
   @Override
@@ -779,6 +904,19 @@ public class ExtensionTransformer extends TreeTranslator
     return false;
   }
 
+  private JCTree.JCClassDecl getEnclosingClass( Tree tree )
+  {
+    if( tree == null )
+    {
+      return null;
+    }
+    if( tree instanceof JCTree.JCClassDecl )
+    {
+      return (JCTree.JCClassDecl)tree;
+    }
+    return getEnclosingClass( _tp.getParent( tree ) );
+  }
+
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
   {
     for( JCTree.JCAnnotation anno : annotations )
@@ -800,7 +938,7 @@ public class ExtensionTransformer extends TreeTranslator
       Names names = Names.instance( _tp.getContext() );
       Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), RuntimeMethods.class.getName() );
       Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
-                                                                    List.from( new Type[]{symbols.objectType, symbols.classType} ) );
+        List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
       TreeMaker make = _tp.getTreeMaker();

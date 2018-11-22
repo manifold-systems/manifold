@@ -4,13 +4,19 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.BoundKind;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.SymbolMetadata;
+import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.TypeAnnotationPosition;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.stream.Collectors;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
 import manifold.api.gen.SrcAnnotated;
@@ -24,6 +30,11 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
+import manifold.util.ReflectUtil;
+
+
+import static com.sun.tools.javac.code.TypeTag.CLASS;
+import static manifold.util.JreUtil.isJava8;
 
 /**
  */
@@ -56,7 +67,7 @@ public class SrcClassUtil
       .modifiers( classSymbol.getModifiers() );
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
     {
-      for( ImportTree imp : compilationUnit.getImports() )
+      for( ImportTree imp: compilationUnit.getImports() )
       {
         if( imp.isStatic() )
         {
@@ -69,7 +80,7 @@ public class SrcClassUtil
       }
     }
     addAnnotations( srcClass, classSymbol );
-    for( Symbol.TypeVariableSymbol typeVar : classSymbol.getTypeParameters() )
+    for( Symbol.TypeVariableSymbol typeVar: classSymbol.getTypeParameters() )
     {
       srcClass.addTypeVar( makeTypeVarType( typeVar ) );
     }
@@ -78,13 +89,13 @@ public class SrcClassUtil
     {
       srcClass.superClass( makeNestedType( superclass ) );
     }
-    for( Type iface : classSymbol.getInterfaces() )
+    for( Type iface: classSymbol.getInterfaces() )
     {
       srcClass.addInterface( makeNestedType( iface ) );
     }
     if( withMembers )
     {
-      for( Symbol sym : classSymbol.getEnclosedElements() )
+      for( Symbol sym: classSymbol.getEnclosedElements() )
       {
         long modifiers = SrcAnnotated.modifiersFrom( sym.getModifiers() );
         if( Modifier.isPrivate( (int)modifiers ) )
@@ -145,7 +156,7 @@ public class SrcClassUtil
   private void addField( SrcClass srcClass, Symbol sym )
   {
     Symbol.VarSymbol field = (Symbol.VarSymbol)sym;
-    SrcField srcField = new SrcField( field.name.toString(), new SrcType( field.type.toString() ) );
+    SrcField srcField = new SrcField( field.name.toString(), makeSrcType( field.type, sym, TargetType.FIELD, -1 ) );
     if( sym.isEnum() )
     {
       srcField.enumConst();
@@ -178,21 +189,25 @@ public class SrcClassUtil
     if( !srcMethod.isConstructor() )
     {
       srcMethod.name( name );
-      srcMethod.returns( new SrcType( method.getReturnType().toString() ) );
+      srcMethod.returns( makeSrcType( method.getReturnType(), method, TargetType.METHOD_RETURN, -1 ) );
     }
-    for( Symbol.TypeVariableSymbol typeVar : method.getTypeParameters() )
+    for( Symbol.TypeVariableSymbol typeVar: method.getTypeParameters() )
     {
       srcMethod.addTypeVar( makeTypeVarType( typeVar ) );
     }
-    for( Symbol.VarSymbol param : method.getParameters() )
+    List<Symbol.VarSymbol> parameters = method.getParameters();
+    for( int i = 0; i < parameters.size(); i++ )
     {
-      SrcParameter srcParam = new SrcParameter( param.flatName().toString(), new SrcType( param.type.toString() ) );
+      Symbol.VarSymbol param = parameters.get( i );
+      SrcParameter srcParam = new SrcParameter( param.flatName().toString(), makeSrcType( param.type, method, TargetType.METHOD_FORMAL_PARAMETER, i ) );
       srcMethod.addParam( srcParam );
       addAnnotations( srcParam, param );
     }
-    for( Type throwType : method.getThrownTypes() )
+    List<Type> thrownTypes = method.getThrownTypes();
+    for( int i = 0; i < thrownTypes.size(); i++ )
     {
-      srcMethod.addThrowType( new SrcType( throwType.toString() ) );
+      Type throwType = thrownTypes.get( i );
+      srcMethod.addThrowType( makeSrcType( throwType, method, TargetType.THROWS, i ) );
     }
     String bodyStmt;
     if( srcMethod.isConstructor() )
@@ -208,15 +223,224 @@ public class SrcClassUtil
       bodyStmt = "throw new RuntimeException();";
     }
     srcMethod.body( new SrcStatementBlock()
-                      .addStatement(
-                        new SrcRawStatement()
-                          .rawText( bodyStmt ) ) );
+      .addStatement(
+        new SrcRawStatement()
+          .rawText( bodyStmt ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  private SrcType makeSrcType( Type type, Symbol symbol, TargetType targetType, int index )
+  {
+    SrcType srcType;
+    List<Attribute.TypeCompound> annotationMirrors = type.getAnnotationMirrors();
+    if( annotationMirrors != null && !annotationMirrors.isEmpty() )
+    {
+      String unannotatedType = isJava8()
+                               ? ReflectUtil.method( type, "unannotatedType" ).invoke().toString()
+                               : ReflectUtil.method( type, "cloneWithMetadata", ReflectUtil.type( "com.sun.tools.javac.code.TypeMetadata" ) )
+                                 .invoke( ReflectUtil.field( "com.sun.tools.javac.code.TypeMetadata", "EMPTY" ).getStatic() ).toString();
+      srcType = new SrcType( unannotatedType );
+    }
+    else
+    {
+      srcType = new SrcType( typeNoAnnotations( type ) );
+    }
+    SymbolMetadata metadata = symbol.getMetadata();
+    if( metadata == null || metadata.isTypesEmpty() )
+    {
+      return srcType;
+    }
+    List<Attribute.TypeCompound> typeAttributes = metadata.getTypeAttributes();
+    if( typeAttributes.isEmpty() )
+    {
+      return null;
+    }
+
+    java.util.List<Attribute.TypeCompound> targetedTypeAttrs = typeAttributes.stream()
+      .filter( attr -> attr.getPosition().type == targetType && isTargetIndex( targetType, attr, index ) )
+      .collect( Collectors.toList() );
+
+    annotateType( srcType, targetedTypeAttrs );
+    return srcType;
+  }
+
+  private String typeNoAnnotations( Type type )
+  {
+    if( isJava8() )
+    {
+      return type.toString();
+    }
+
+    StringBuilder sb = new StringBuilder();
+    if( type instanceof Type.ClassType )
+    {
+      if( type.getEnclosingType().hasTag( CLASS ) &&
+          ReflectUtil.field( type.tsym.owner, "kind" ).get() == ReflectUtil.field( "com.sun.tools.javac.code.Kinds$Kind", "TYP" ).getStatic() )
+      {
+        sb.append( typeNoAnnotations( type.getEnclosingType() ) );
+        sb.append( "." );
+        sb.append( ReflectUtil.method( type, "className", Symbol.class, boolean.class ).invoke( type.tsym, false ) );
+      }
+      else
+      {
+        sb.append( ReflectUtil.method( type, "className", Symbol.class, boolean.class ).invoke( type.tsym, true ) );
+      }
+
+      List<Type> typeArgs = type.getTypeArguments();
+      if( typeArgs.nonEmpty() )
+      {
+        sb.append( '<' );
+        for( int i = 0; i < typeArgs.size(); i++ )
+        {
+          if( i > 0 )
+          {
+            sb.append( ", " );
+          }
+          Type typeArg = typeArgs.get( i );
+          sb.append( typeNoAnnotations( typeArg ) );
+        }
+        sb.append( ">" );
+      }
+    }
+    else if( type instanceof Type.ArrayType )
+    {
+      sb.append( typeNoAnnotations( ((Type.ArrayType)type).getComponentType() ) ).append( "[]" );
+    }
+    else if( type instanceof Type.WildcardType )
+    {
+      Type.WildcardType wildcardType = (Type.WildcardType)type;
+      BoundKind kind = wildcardType.kind;
+      sb.append( kind.toString() );
+      if( kind != BoundKind.UNBOUND )
+      {
+        sb.append( typeNoAnnotations( wildcardType.type ) );
+      }
+    }
+    else
+    {
+      sb.append( type.toString() );
+    }
+    return sb.toString();
+  }
+
+  private boolean isTargetIndex( TargetType targetType, Attribute.TypeCompound attr, int index )
+  {
+    switch( targetType )
+    {
+      case METHOD_FORMAL_PARAMETER:
+        return attr.getPosition().parameter_index == index;
+
+      case THROWS:
+        return attr.getPosition().type_index == index;
+
+      default:
+        return index < 0;
+    }
+  }
+
+  private void annotateType( SrcType srcType, java.util.List<Attribute.TypeCompound> attributes )
+  {
+    if( attributes.isEmpty() )
+    {
+      return;
+    }
+
+    for( Attribute.TypeCompound attr: attributes )
+    {
+      if( srcType.isArray() )
+      {
+        SrcType componentType = srcType.getComponentType();
+        addAnnotation( componentType, attr );
+      }
+      else if( isClassType( srcType ) )
+      {
+        TypeAnnotationPosition attrPos = attr.getPosition();
+        List<TypeAnnotationPosition.TypePathEntry> attrLocation = attrPos == null ? List.nil() : attrPos.location;
+        if( attrLocation.isEmpty() )
+        {
+          addAnnotation( srcType, attr );
+        }
+        else
+        {
+          java.util.List<SrcType> typeArguments = srcType.getTypeParams();
+          for( int i = 0; i < typeArguments.size(); i++ )
+          {
+            SrcType typeParam = typeArguments.get( i );
+            if( i == attrLocation.get( 0 ).arg )
+            {
+              List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy = List.from( attrLocation.subList( 1, attrLocation.size() ) );
+              TypeAnnotationPosition posCopy = getTypeAnnotationPosition( attrLocationCopy );
+              annotateType( typeParam, Collections.singletonList( new Attribute.TypeCompound( attr.type, attr.values, posCopy ) ) );
+            }
+          }
+        }
+      }
+      else if( "?".equals( srcType.getName() ) && !srcType.getBounds().isEmpty() )
+      {
+        TypeAnnotationPosition attrPos = attr.getPosition();
+        List<TypeAnnotationPosition.TypePathEntry> attrLocation = attrPos.location;
+        List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy = null;
+        if( !attrLocation.isEmpty() )
+        {
+          attrLocationCopy = List.from( attrLocation.subList( 1, attrLocation.size() ) );
+        }
+
+        if( attrLocationCopy == null || attrLocationCopy.isEmpty() )
+        {
+          addAnnotation( srcType, attr );
+        }
+        else
+        {
+          //noinspection ConstantConditions
+          TypeAnnotationPosition posCopy = getTypeAnnotationPosition( attrLocationCopy );
+          annotateType( srcType.getBounds().get( 0 ), Collections.singletonList( new Attribute.TypeCompound( attr.type, attr.values, posCopy ) ) );
+        }
+      }
+    }
+  }
+
+  private TypeAnnotationPosition getTypeAnnotationPosition( List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy )
+  {
+    TypeAnnotationPosition posCopy;
+    //noinspection ConstantConditions
+    if( isJava8() )
+    {
+      posCopy = (TypeAnnotationPosition)ReflectUtil.constructor( "com.sun.tools.javac.code.TypeAnnotationPosition" ).newInstance();
+      ReflectUtil.field( posCopy, "location" ).set( attrLocationCopy );
+    }
+    else
+    {
+      posCopy = (TypeAnnotationPosition)ReflectUtil
+        .method( TypeAnnotationPosition.class, "methodReceiver", List.class ).invokeStatic( attrLocationCopy );
+    }
+    return posCopy;
+  }
+
+  private void addAnnotation( SrcType srcType, Attribute.TypeCompound attr )
+  {
+    String fqn = attr.type.toString();
+    if( fqn.equals( "jdk.internal.HotSpotIntrinsicCandidate" ) )
+    {
+      // Since java 10 we have to keep these out of stubbed java source
+      return;
+    }
+    SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
+    for( Pair<Symbol.MethodSymbol, Attribute> value: attr.values )
+    {
+      annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.snd.type.toString() ), value.snd.getValue() );
+    }
+    srcType.addAnnotation( annoExpr );
+  }
+
+  private boolean isClassType( SrcType srcType )
+  {
+    return !srcType.isPrimitive() && !srcType.isArray() && !"?".equals( srcType.getName() );
   }
 
   private String genSuperCtorCall( IModule module, SrcClass srcClass, BasicJavacTask javacTask )
   {
-    String bodyStmt;SrcType superClass = srcClass.getSuperClass();
+    String bodyStmt;
+    SrcType superClass = srcClass.getSuperClass();
     if( superClass == null )
     {
       bodyStmt = "";
@@ -260,7 +484,7 @@ public class SrcClassUtil
     manifold.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
     Symbol.ClassSymbol cs = classSymbol.getFirst();
     Symbol.MethodSymbol ctor = null;
-    for( Symbol sym : cs.getEnclosedElements() )
+    for( Symbol sym: cs.getEnclosedElements() )
     {
       if( sym instanceof Symbol.MethodSymbol && sym.flatName().toString().equals( "<init>" ) )
       {
@@ -310,7 +534,7 @@ public class SrcClassUtil
 
   private void addAnnotations( SrcAnnotated<?> srcAnnotated, Symbol symbol )
   {
-    for( Attribute.Compound annotationMirror : symbol.getAnnotationMirrors() )
+    for( Attribute.Compound annotationMirror: symbol.getAnnotationMirrors() )
     {
       String fqn = annotationMirror.getAnnotationType().toString();
       if( fqn.equals( "jdk.internal.HotSpotIntrinsicCandidate" ) )
@@ -319,7 +543,7 @@ public class SrcClassUtil
         continue;
       }
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
-      for( Pair<Symbol.MethodSymbol, Attribute> value : annotationMirror.values )
+      for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
       {
         annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.snd.type.toString() ), value.snd.getValue() );
       }
