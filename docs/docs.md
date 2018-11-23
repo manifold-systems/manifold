@@ -171,8 +171,8 @@ If you simply want to experiment, grab the [Manifold sample project](https://git
 * Install the **Manifold plugin** from within IntelliJ: `Settings | Plugins | Browse Repositories | Manifold`
 * Restart IntelliJ to use the plugin
 * Open the project you just cloned (open the root directory or the pom.xml file)
-* Add the [Java 10 JDK](http://www.oracle.com/technetwork/java/javase/downloads/jdk10-downloads-4416644.html?): `File | Project Structure | SDKs | + | path-to-your-Jdk10`
-* Set the project JDK and language level: `File | Project Structure | Project` select `10` for both `Project JDK` and `Project language level`
+* Add the [Java 11 JDK](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot): `File | Project Structure | SDKs | + | path-to-your-Jdk11`
+* Set the project JDK and language level: `File | Project Structure | Project` select `11` for both `Project JDK` and `Project language level`
 * Build the project
 * Go nuts
   
