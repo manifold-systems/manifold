@@ -3,7 +3,7 @@
 </center>
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) is a revolutionary new breed of Java tooling. It provides powerful features to make 
+[Manifold](http://manifold.systems) is a new breed of Java tooling. It provides powerful features to make 
 Java development more appealing and productive. Simply add the Manifold jar to your project and begin taking advantage 
 of it.
 
