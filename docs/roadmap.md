@@ -5,7 +5,9 @@ layout: default
 # Manifold Roadmap
 ### A brain dump of thoughts that may contribute toward future Manifold releases
  
-## Data Science 
+## Long Term Goals
+
+### Data Science 
 
 A long term goal for Manifold is to make Java the center of a first-class data science development platform.  One reason,
 perhaps the primary reason, the data science community prefers other languages over Java relates to its type system.  Java is
@@ -27,7 +29,7 @@ if a static type system were "open" in such a way where types corresponding with
 materialize and directly resolve through compiler plugins?  This is Manifold's core function -- it seamlessly opens 
 Java's compiler to structured data plugins that participate as first-class type suppliers called _Type Manifolds_.  
 
-### Support Data Science Formats (initially focusing on biological sciences)
+#### Support Data Science Formats (initially focusing on biological sciences)
 Develop type manifolds for:
 * JSON
 * XML
@@ -37,21 +39,24 @@ Develop type manifolds for:
 * R Language
 * many many more
 
-### Support Scientific / Statistical Data Repositories
+#### Support Scientific / Statistical Data Repositories (Experimental)
 These type manifolds are URL-based.  One proof of concept is underway for DbPedia and SPARQL. 
 
-### Support SQL and DDL
+#### Support SQL and DDL (Experimental)
 This is a more involved Type Manifold and will involve writing a SQL parser, albeit not as complicated as a full
 parser because only the declarative portions are necessary to gather type information.
 
-### Integrate with other languages
+#### Integrate with other languages (Experimental)
 Write type manifolds for:
 * Python
 * R
 
-## Core Features
+## Short Term Goals
 
-### Expand Self Type Usage
+### Features on the Workbench
+**These are features currently being built or refined**
+
+#### Expand Self Type Usage
 
 Currently `@Self` is limited to targeting method return types.  In a future release `@Self` will expand support 
 to include method *parameter types*.
@@ -62,9 +67,9 @@ importantly, it enables more flexibility with the type system in terms of method
 opens the door to type-safe usages in methods like `Object#equals(Object)` -- with `@Self` you could instead define it as: 
 `Object#equals(@Self Object)` where you can override the method using the same `@Self` Object parameter type, but still have 
 the compiler enforce the subclass type for arguments to the method as well as enforce subclass treatment of the 
-parameter in the method body. This feature will be available in a future release.
+parameter in the method body.
 
-### Type-safe Reflection via @JailBreak
+#### Type-safe Reflection via @JailBreak
 
 Sometimes you have to call private methods and use other inaccessible features, but reflection makes this a tedious 
 process and results in hard to maintain code.  Worse, with reflection you completely bypass type-safety.  Manifold 
@@ -96,3 +101,7 @@ public static @JailBreak @Self Object $jailbreak(@This Object thiz) {
 }
 ```   
 
+### Features in the Queue
+**These are features that will be implemented in the near future**
+
+<todo:>
