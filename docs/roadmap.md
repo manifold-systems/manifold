@@ -18,7 +18,7 @@ Neither of these options is worth pursuing, however, when you have dynamically t
 What makes dynamic typing so attractive to data science programmers boils down to one word: Metaprogramming. With dynamic languages 
 your source code can play fast and loose with structured data because metaprogramming hooks it all up later at runtime.  There's 
 no free lunch, however.  The concise code comes at the heavy cost of weak type information.  Without static types 
-it's difficult to discover the features provided by metaprogramming in the context of a code editor, it is purely a runtime manifestation.  
+it's difficult to discover the features provided by metaprogramming in the context of a code editor, it is purely a runtime manifestation. 
 As a consequence metaprogramming often involves throwing source code over the wall and hoping for the best; 
 nonetheless a trade-off many data science programmers are willing to make.
 
