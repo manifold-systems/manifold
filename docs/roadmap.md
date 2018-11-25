@@ -66,9 +66,9 @@ parameter in the method body. This feature will be available in a future release
 
 ### Type-safe Reflection via @JailBreak
 
-Sometimes you have to call private methods and use other inaccessible features, but reflection makes this not 
-only difficult and sloppy, perhaps worse you lose compile-time type-safety in the process.  Manifold will 
-change that with `@JailBreak`:
+Sometimes you have to call private methods and use other inaccessible features, but reflection makes this a tedious 
+process and results in hard to maintain code.  Worse, with reflection you completely bypass type-safety.  Manifold 
+will change that with `@JailBreak`:
 
 ```java
 public class Foo {
