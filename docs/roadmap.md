@@ -81,5 +81,18 @@ foo.privateMethod("hi"); // type-safe call to "inaccessible" method
 
 Use `@JailBreak` to access classes, methods, and fields type-safely regardless of declared accessibility.  Because if 
 you're gonna do it anyway, why suffer the consequences of reflection?
-   
+
+Similarly, to conveniently use inaccessible features from an expression you can use the `$jailbreak()` extension method:
+
+```java
+myObject.getFoo().$jailbreak().privateMethod("hi");
+```
+
+Where the extension method is defined on `Object` as:
+
+```java
+public static @JailBreak @Self Object $jailbreak(@This Object thiz) {
+  return thiz;
+}
+```   
 
