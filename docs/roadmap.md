@@ -7,42 +7,48 @@ layout: default
  
 ## Data Science 
 
-A long term goal for Manifold is to make Java the center of a first-class data science environment.  One reason,
-perhaps the primary reason, the data science community steers clear from Java relates to its type system.  Java is
+A long term goal for Manifold is to make Java the center of a first-class data science development platform.  One reason,
+perhaps the primary reason, the data science community prefers other languages over Java relates to its type system.  Java is
 a statically typed language, which generally means it's type-safe and compiles.  While these are good traits, 
 they come with a significant downside if your goal is to fluently bind with structured data.  For instance,
 if you want to access CSV data files with Java, you either use a string-based static library and forgo type-safety or 
 you throw yet another code generator onto the pile and live with [the consequences](https://jaxenter.com/manifold-code-generators-150738.html).
-Neither of these options is worth pursuing, however, when you have dynamically typed languages at hand.  
+But neither of these options is worth pursuing when you have dynamically typed languages at hand.  
 
 What makes dynamic typing so attractive to data science programmers boils down to one word: Metaprogramming. With dynamic languages 
-your source code can play fast and loose with structured data because metaprogramming hooks it all up later at runtime.  There's 
-no free lunch, however.  The concise code comes at the heavy cost of weak type information.  Without static types 
-it's difficult to discover the features provided by metaprogramming in the context of a code editor, it is purely a runtime manifestation. 
-As a consequence metaprogramming often involves throwing source code over the wall and hoping for the best; 
-nonetheless a trade-off many data science programmers are willing to make.
+your source code can play fast and loose with structured data because metaprogramming hooks it all up later at runtime. 
+But there's a catch.  The concise code comes at the heavy cost of weak type information.  Without static types 
+it's difficult to discover and use features provided by metaprogramming while writing code, it is purely a runtime manifestation. 
+As a consequence metaprogramming can be difficult to learn and often leads to trial and error coding. Nonetheless it is 
+a trade-off many data science programmers are willing to make.
 
-But must one choose between type-safety and metaprogramming?  Most in the language community consider these to be 
-diametrically opposed ideas.  But what if metaprogramming could happen at _compile-time_?  What if a static type
-system were "open" in such a way where types could be dynamically resolved through plugins?  This is Manifold's 
-core function -- to open Java's type system so that other type domains can plugin and participate as first-class
-type providers.  This is what a Type Manifold is all about.  This is what can improve Java's standing as a data
-science language.
+Must we choose between type-safety and metaprogramming?  What if metaprogramming could happen at _compile-time_?  What
+if a static type system were "open" in such a way where types corresponding with structured data could dynamically 
+materialize and directly resolve through compiler plugins?  This is Manifold's core function -- it seamlessly opens 
+Java's compiler to structured data plugins that participate as first-class type suppliers called _Type Manifolds_.  
 
 ### Support Data Science Formats (initially focusing on biological sciences)
-Develop Type Manifolds for:
+Develop type manifolds for:
 * JSON
+* XML
 * CSV
+* XLS
 * FASTA
+* R Language
 * many many more
 
 ### Support Scientific / Statistical Data Repositories
-These type manifolds will be URL-based.  One proof of concept is underway for DbPedia and SPARQL. 
+These type manifolds are URL-based.  One proof of concept is underway for DbPedia and SPARQL. 
 
 ### Support SQL and DDL
-This is a more involved Type Manifold and will involve writing a decent SQL parser, albeit not as complicated as a full
+This is a more involved Type Manifold and will involve writing a SQL parser, albeit not as complicated as a full
 parser because only the declarative portions are necessary to gather type information.
- 
+
+### Integrate with other languages
+Write type manifolds for:
+* Python
+* R
+
 ## Core Features
 
 ### Expand Self Type Usage
