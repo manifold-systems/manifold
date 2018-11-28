@@ -1,7 +1,5 @@
 package manifold.internal.javac;
 
-import com.sun.source.util.JavacTask;
-//import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.api.BasicJavacTask;
 import java.io.File;
 import java.io.PrintWriter;
@@ -13,7 +11,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.element.TypeElement;
-//import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
@@ -30,12 +27,12 @@ public class TypeProcessor extends CompiledTypeProcessor
   private Map<File, Set<String>> _typesCompiledByFile;
   private Set<Object> _drivers;
 
-  TypeProcessor( IManifoldHost host, JavacTask javacTask )
+  TypeProcessor( IManifoldHost host, BasicJavacTask javacTask )
   {
     super( host, javacTask );
     _typesCompiledByFile = new ConcurrentHashMap<>();
     _drivers = new ConcurrentHashSet<>();
-    loadCompilerComponents( (BasicJavacTask)javacTask );
+    loadCompilerComponents( javacTask );
   }
 
 //  @Override

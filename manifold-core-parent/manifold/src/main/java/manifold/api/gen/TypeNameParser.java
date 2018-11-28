@@ -59,6 +59,24 @@ public class TypeNameParser
           type = new Type( name, superOrExtends, bounds );
         }
       }
+      else if( match( '<' ) )
+      {
+        // Handle "<any>" type used in javac to represent an Error type
+        type = null;
+        String any = _token;
+        if( matchName() )
+        {
+          if( !match( '>' ) )
+          {
+            throw new RuntimeException( "expecting '>" );
+          }
+          if( any.equals( "any" ) )
+          {
+            // produce a type to reflect the errant javac <any> Type
+            type = new Type( "Err" );
+          }
+        }
+      }
       else
       {
         return null;

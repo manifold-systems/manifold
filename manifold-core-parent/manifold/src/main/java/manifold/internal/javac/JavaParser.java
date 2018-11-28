@@ -3,7 +3,6 @@ package manifold.internal.javac;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.DocTrees;
-import com.sun.source.util.JavacTask;
 import com.sun.source.util.SourcePositions;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
@@ -88,8 +87,16 @@ public class JavaParser implements IJavaParser
           IModule globalModule = getHost().getSingleModule();
           if( globalModule != null )
           {
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH, globalModule.getSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
-            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH, globalModule.getJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.SOURCE_PATH,
+              globalModule.getSourcePath().stream()
+                .map( IResource::toJavaFile )
+                .filter( f -> !SourcePathUtil.excludeFromSourcePath( f.getAbsolutePath() ) )
+                .collect( Collectors.toList() ) );
+            ((StandardJavaFileManager)_fileManager).setLocation( StandardLocation.CLASS_PATH,
+              globalModule.getJavaClassPath().stream()
+                .map( IResource::toJavaFile )
+                .filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) )
+                .collect( Collectors.toList() ) );
           }
           _mfm = new ManifoldJavaFileManager( getHost(), _fileManager, null, false );
         }
@@ -106,7 +113,8 @@ public class JavaParser implements IJavaParser
     return _host;
   }
 
-  public boolean parseType( String fqn, List<CompilationUnitTree> trees, DiagnosticCollector<JavaFileObject> errorHandler )
+  public boolean parseType( String fqn, List<CompilationUnitTree> trees,
+                            DiagnosticCollector<JavaFileObject> errorHandler )
   {
     init();
 
@@ -117,7 +125,9 @@ public class JavaParser implements IJavaParser
     }
 
     StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _mfm, errorHandler, Collections.singletonList( "-proc:none" ), null, Collections.singletonList( pair.getFirst() ) );
+    BasicJavacTask javacTask = (BasicJavacTask)_javac.getTask(
+      errors, _mfm, errorHandler, Collections.singletonList( "-proc:none" ), null,
+      Collections.singletonList( pair.getFirst() ) );
     try
     {
       initTypeProcessing( javacTask, Collections.singleton( fqn ) );
@@ -134,14 +144,16 @@ public class JavaParser implements IJavaParser
     }
   }
 
-  public boolean parseText( String src, List<CompilationUnitTree> trees, Consumer<SourcePositions> sourcePositions, Consumer<DocTrees> docTrees, DiagnosticCollector<JavaFileObject> errorHandler )
+  public boolean parseText( String src, List<CompilationUnitTree> trees, Consumer<SourcePositions> sourcePositions,
+                            Consumer<DocTrees> docTrees, DiagnosticCollector<JavaFileObject> errorHandler )
   {
     init();
 
     ArrayList<JavaFileObject> javaStringObjects = new ArrayList<>();
     javaStringObjects.add( new StringJavaFileObject( "sample", src ) );
     StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)_javac.getTask( errors, _mfm, errorHandler, Collections.singletonList( "-proc:none" ), null, javaStringObjects );
+    BasicJavacTask javacTask = (BasicJavacTask)_javac.getTask(
+      errors, _mfm, errorHandler, Collections.singletonList( "-proc:none" ), null, javaStringObjects );
     try
     {
       initTypeProcessing( javacTask, Collections.singleton( "sample" ) );
@@ -172,7 +184,7 @@ public class JavaParser implements IJavaParser
 
   public JCTree.JCExpression parseExpr( String expr, DiagnosticCollector<JavaFileObject> errorHandler )
   {
-    //!! Do not init() here; do not use the _javac or _mfm for parseExpr() since this method is generally used
+    //!! Do not init() here; do not use _javac or _mfm for parseExpr() since this method is generally used
     //!! during the Parse phase, which happens earlier than the Enter phase where the plugin initializes much
     //!! of its state i.e., if parseExpr() is called before an Enter phase, it could use Manifold prematurely
     //!! and screw the pooch.  Also, we don't need Manifold for parsing expressions since it only produces a
@@ -186,7 +198,7 @@ public class JavaParser implements IJavaParser
       "}\n";
     javaStringObjects.add( new StringJavaFileObject( "sample", src ) );
     StringWriter errors = new StringWriter();
-    JavacTask javacTask = (JavacTask)Objects.requireNonNull( _parserJavac.get() )
+    BasicJavacTask javacTask = (BasicJavacTask)Objects.requireNonNull( _parserJavac.get() )
       .getTask( errors, null, errorHandler, Collections.singletonList( "-proc:none" ), null, javaStringObjects );
     try
     {
@@ -238,7 +250,8 @@ public class JavaParser implements IJavaParser
     try
     {
       StringWriter errors = new StringWriter();
-      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _mfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
+      BasicJavacTask javacTask = (BasicJavacTask)_javac.getTask(
+        errors, _mfm, errorHandler, options, null, Collections.singletonList( fileObj.getFirst() ) );
       initTypeProcessing( javacTask, Collections.singleton( fqn ) );
       javacTask.call();
       return _mfm.findCompiledFile( fileObj.getSecond() );
@@ -261,7 +274,8 @@ public class JavaParser implements IJavaParser
     try
     {
       StringWriter errors = new StringWriter();
-      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _mfm, errorHandler, options, null, Collections.singletonList( jfo ) );
+      BasicJavacTask javacTask = (BasicJavacTask)_javac.getTask(
+        errors, _mfm, errorHandler, options, null, Collections.singletonList( jfo ) );
       initTypeProcessing( javacTask, Collections.singleton( fqn ) );
       javacTask.call();
       return _mfm.findCompiledFile( fqn );
@@ -283,7 +297,7 @@ public class JavaParser implements IJavaParser
     try
     {
       StringWriter errors = new StringWriter();
-      JavacTask javacTask = (JavacTask)_javac.getTask( errors, _mfm, errorHandler, options, null, files );
+      BasicJavacTask javacTask = (BasicJavacTask)_javac.getTask( errors, _mfm, errorHandler, options, null, files );
       initTypeProcessing( javacTask, files.stream().map( this::getTypeForFile ).collect( Collectors.toSet() ) );
       javacTask.call();
       return _mfm.getCompiledFiles();
@@ -321,7 +335,7 @@ public class JavaParser implements IJavaParser
       .substring( 0, path.lastIndexOf( '.' ) );
   }
 
-  private void initTypeProcessing( JavacTask javacTask, Set<String> types )
+  private void initTypeProcessing( BasicJavacTask javacTask, Set<String> types )
   {
     TypeProcessor typeProcessor = new TypeProcessor( getHost(), javacTask );
     typeProcessor.addTypesToProcess( types );

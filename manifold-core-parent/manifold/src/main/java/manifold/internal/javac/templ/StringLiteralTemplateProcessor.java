@@ -30,8 +30,6 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 {
   private final TypeProcessor _tp;
   private BasicJavacTask _javacTask;
-  private TreeMaker _maker;
-  private Names _names;
   private Stack<Boolean> _disabled;
   private ManDiagnosticHandler _manDiagnosticHandler;
 
@@ -44,8 +42,6 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   public void init( BasicJavacTask javacTask )
   {
     _javacTask = javacTask;
-    _maker = TreeMaker.instance( _javacTask.getContext() );
-    _names = Names.instance( _javacTask.getContext() );
     _disabled = new Stack<>();
     _disabled.push( false );
 
@@ -203,6 +199,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
       return;
     }
 
+    TreeMaker maker = TreeMaker.instance( _javacTask.getContext() );
     String stringValue = (String)value;
     List<JCTree.JCExpression> exprs = parse( stringValue, jcLiteral.getPreferredPosition() );
     JCTree.JCBinary concat = null;
@@ -210,11 +207,11 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     {
       if( concat == null )
       {
-        concat = _maker.Binary( JCTree.Tag.PLUS, exprs.remove( 0 ), exprs.remove( 0 ) );
+        concat = maker.Binary( JCTree.Tag.PLUS, exprs.remove( 0 ), exprs.remove( 0 ) );
       }
       else
       {
-        concat = _maker.Binary( JCTree.Tag.PLUS, concat, exprs.remove( 0 ) );
+        concat = maker.Binary( JCTree.Tag.PLUS, concat, exprs.remove( 0 ) );
       }
     }
 
@@ -230,6 +227,9 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
       return Collections.emptyList();
     }
 
+    TreeMaker maker = TreeMaker.instance( _javacTask.getContext() );
+    Names names = Names.instance( _javacTask.getContext() );
+
     List<JCTree.JCExpression> exprs = new ArrayList<>();
     StringLiteralTemplateParser.Expr prev = null;
     for( StringLiteralTemplateParser.Expr comp : comps )
@@ -237,21 +237,21 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
       JCTree.JCExpression expr;
       if( comp.isVerbatim() )
       {
-        expr = _maker.Literal( comp.getExpr() );
+        expr = maker.Literal( comp.getExpr() );
       }
       else
       {
         if( prev != null && !prev.isVerbatim() )
         {
           // enforce concatenation
-          exprs.add( _maker.Literal( "" ) );
+          exprs.add( maker.Literal( "" ) );
         }
 
         int exprPos = literalOffset + 1 + comp.getOffset();
 
         if( comp.isIdentifier() )
         {
-          JCTree.JCIdent ident = _maker.Ident( _names.fromString( comp.getExpr() ) );
+          JCTree.JCIdent ident = maker.Ident( names.fromString( comp.getExpr() ) );
           ident.pos = exprPos;
           expr = ident;
         }
@@ -273,7 +273,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     if( exprs.size() == 1 )
     {
       // insert an empty string so concat will make the expr a string
-      exprs.add( 0, _maker.Literal( "" ) );
+      exprs.add( 0, maker.Literal( "" ) );
     }
 
     return exprs;

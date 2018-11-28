@@ -2,8 +2,10 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.tree.EndPosTable;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
+import java.util.function.Supplier;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import manifold.util.JavacDiagnostic;
@@ -12,12 +14,11 @@ import manifold.util.JavacDiagnostic;
  */
 public class IssueReporter<T> implements DiagnosticListener<T>
 {
-  //## would rather use javax.annotation.processing.Messager, but it doesn't give us what we want
-  private Log _issueLogger;
+  private Supplier<Context> _context;
 
-  public IssueReporter( Log issueLogger )
+  public IssueReporter( Supplier<Context> context )
   {
-    _issueLogger = issueLogger;
+    _context = context;
   }
 
   public void reportInfo( String msg )
@@ -37,7 +38,10 @@ public class IssueReporter<T> implements DiagnosticListener<T>
 
   public void report( Diagnostic<? extends T> diagnostic )
   {
-    IDynamicJdk.instance().report( _issueLogger, diagnostic );
+    //## would rather use javax.annotation.processing.Messager, but it doesn't give us what we want
+    Log issueLogger = Log.instance( _context.get() );
+
+    IDynamicJdk.instance().report( issueLogger, diagnostic );
   }
 
   static class Position implements JCDiagnostic.DiagnosticPosition

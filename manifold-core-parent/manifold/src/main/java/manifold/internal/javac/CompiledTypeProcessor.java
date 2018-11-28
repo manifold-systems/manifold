@@ -7,7 +7,6 @@ import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Types;
@@ -17,15 +16,11 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Log;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IManifoldHost;
@@ -34,9 +29,8 @@ import manifold.util.JavacDiagnostic;
 public abstract class CompiledTypeProcessor implements TaskListener
 {
   private final IManifoldHost _host;
-  private final JavacTask _javacTask;
+  private final BasicJavacTask _javacTask;
   private CompilationUnitTree _compilationUnit;
-  private final Types _types;
   private final Map<String, Boolean> _typesToProcess;
   private ParentMap _parents;
   private final IssueReporter<JavaFileObject> _issueReporter;
@@ -44,30 +38,21 @@ public abstract class CompiledTypeProcessor implements TaskListener
   private JCTree.JCClassDecl _tree;
   private boolean _generate;
 
-  CompiledTypeProcessor( IManifoldHost host, JavacTask javacTask )
+  CompiledTypeProcessor( IManifoldHost host, BasicJavacTask javacTask )
   {
     _host = host;
     _javacTask = javacTask;
     javacTask.addTaskListener( this );
-    Context context = ((BasicJavacTask)javacTask).getContext();
-    JavaCompiler compiler = JavaCompiler.instance( context );
-    compiler.shouldStopPolicyIfNoError = CompileState.max( compiler.shouldStopPolicyIfNoError, CompileState.FLOW );
-    _issueReporter = new IssueReporter<>( Log.instance( context ) );
-    _types = Types.instance( context );
-//    DiagnosticListener dl = context.get( DiagnosticListener.class );
-//    context.put( DiagnosticListener.class, (DiagnosticListener)null );
-//    context.put( DiagnosticListener.class, new WrappedDiagnosticListener( dl ) );
-
+    _issueReporter = new IssueReporter<>( _javacTask::getContext );
     _typesToProcess = new HashMap<>();
     _innerClassForGeneration = new HashMap<>();
-
     _parents = new ParentMap();
   }
 
   /**
    * Subclasses override to process a compiled type.
    */
-  public abstract void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter );
+  protected abstract void process( TypeElement element, IssueReporter<JavaFileObject> issueReporter );
 
 //  /**
 //   * Subclasses override to filter javac compile errors / warnings.
@@ -107,7 +92,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public Types getTypes()
   {
-    return _types;
+    return Types.instance( _javacTask.getContext() );
   }
 
   public JavacElements getElementUtil()
@@ -158,21 +143,12 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public void report( JCTree tree, Diagnostic.Kind kind, String msg )
   {
-    IssueReporter<JavaFileObject> reporter = new IssueReporter<>( Log.instance( getContext() ) );
+    IssueReporter<JavaFileObject> reporter = new IssueReporter<>( _javacTask::getContext );
     JavaFileObject file = getFile( tree );
     reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
 
-  public boolean addTypesToProcess( RoundEnvironment roundEnv )
-  {
-    for( TypeElement elem : ElementFilter.typesIn( roundEnv.getRootElements() ) )
-    {
-      _typesToProcess.put( elem.getQualifiedName().toString(), false );
-    }
-    return false;
-  }
-
-  public void addTypesToProcess( Set<String> types )
+  void addTypesToProcess( Set<String> types )
   {
     types.forEach( e -> _typesToProcess.put( e, false ) );
   }
@@ -287,68 +263,6 @@ public abstract class CompiledTypeProcessor implements TaskListener
     _innerClassForGeneration.put( def.sym.flatName().toString(), def );
   }
 
-  private boolean isNested( Element elem )
-  {
-    if( !(elem instanceof TypeElement) )
-    {
-      return false;
-    }
-    TypeElement typeElem = (TypeElement)elem;
-    String fqn = typeElem.getQualifiedName().toString();
-    if( _typesToProcess.containsKey( fqn ) )
-    {
-      return true;
-    }
-    for( String t: _typesToProcess.keySet() )
-    {
-      if( t.contains( fqn + '.' ) )
-      {
-        return true;
-      }
-    }
-    return isNested( typeElem.getEnclosingElement() );
-  }
-  private boolean isOuter( String fqn )
-  {
-    if( fqn.isEmpty() )
-    {
-      return false;
-    }
-    for( String t: _typesToProcess.keySet() )
-    {
-      if( t.contains( fqn + '.' ) )
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private class AnonymousClassListener implements Scope.ScopeListener
-  {
-    JCTree.JCClassDecl _tree;
-
-    public AnonymousClassListener( JCTree.JCClassDecl tree )
-    {
-      _tree = tree;
-    }
-
-    @Override
-    public void symbolAdded( Symbol sym, Scope s )
-    {
-      if( sym instanceof Symbol.ClassSymbol && sym.isAnonymous() )
-      {
-        System.out.println( sym.getQualifiedName() );
-      }
-    }
-
-    @Override
-    public void symbolRemoved( Symbol sym, Scope s )
-    {
-
-    }
-  }
-
   private class ParentMap
   {
     private Map<CompilationUnitTree, Map<Tree, Tree>> _parents;
@@ -368,23 +282,4 @@ public abstract class CompiledTypeProcessor implements TaskListener
       return parents.get( child );
     }
   }
-
-//  private class WrappedDiagnosticListener implements DiagnosticListener
-//  {
-//    private final DiagnosticListener _dl;
-//
-//    public WrappedDiagnosticListener( DiagnosticListener dl )
-//    {
-//      _dl = dl;
-//    }
-//
-//    @Override
-//    public void report( Diagnostic diagnostic )
-//    {
-//      if( !filterError( diagnostic ) )
-//      {
-//        _dl.report( diagnostic );
-//      }
-//    }
-//  }
 }

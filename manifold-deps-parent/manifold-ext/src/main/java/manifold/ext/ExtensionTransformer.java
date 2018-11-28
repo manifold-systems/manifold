@@ -806,7 +806,8 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     String extendedFqn = getExtendedClassName();
-    if( javacPlugin.getJavaInputFiles().stream().anyMatch( pair -> pair.getFirst().equals( extendedFqn ) ) )
+    if( javacPlugin.getJavaInputFiles().stream().anyMatch(
+      pair -> !(pair.getSecond() instanceof GeneratedJavaStubFileObject) && pair.getFirst().equals( extendedFqn ) ) )
     {
       _tp.report( typeDecl, Diagnostic.Kind.WARNING, ExtIssueMsg.MSG_CANNOT_EXTEND_SOURCE_FILE.get( extendedFqn ) );
     }

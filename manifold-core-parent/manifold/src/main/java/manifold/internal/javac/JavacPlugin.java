@@ -10,6 +10,7 @@ import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.CompileStates;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
@@ -20,7 +21,6 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Log;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -113,13 +113,11 @@ public class JavacPlugin implements Plugin, TaskListener
   private BasicJavacTask _javacTask;
   private Set<Pair<String, JavaFileObject>> _javaInputFiles;
   private List<String> _gosuInputFiles;
-  private TreeMaker _treeMaker;
-  private JavacElements _javacElements;
   private TypeProcessor _typeProcessor;
   private IssueReporter _issueReporter;
   private ManifoldJavaFileManager _manFileManager;
   private boolean _initialized;
-  private Set<Symbol> _seenModules;
+  private Map<Context, Set<Symbol>> _seenModules;
   private Map<String, Boolean> _argPresent;
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
 
@@ -215,7 +213,7 @@ public class JavacPlugin implements Plugin, TaskListener
   @SuppressWarnings("WeakerAccess")
   public Context getContext()
   {
-    return _ctx;
+    return _javacTask.getContext();
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -251,13 +249,13 @@ public class JavacPlugin implements Plugin, TaskListener
   @SuppressWarnings("WeakerAccess")
   public TreeMaker getTreeMaker()
   {
-    return _treeMaker;
+    return TreeMaker.instance( getContext() );
   }
 
   @SuppressWarnings("WeakerAccess")
   public JavacElements getJavacElements()
   {
-    return _javacElements;
+    return JavacElements.instance( getContext() );
   }
 
   @SuppressWarnings("unused")
@@ -277,14 +275,12 @@ public class JavacPlugin implements Plugin, TaskListener
     if( !(_fileManager instanceof ManifoldJavaFileManager) && _manFileManager == null )
     {
       _ctx = _javacTask.getContext();
-      _fileManager = _ctx.get( JavaFileManager.class );
+      _fileManager = getContext().get( JavaFileManager.class );
       _javaInputFiles = new HashSet<>();
       _gosuInputFiles = fetchGosuInputFiles();
-      _treeMaker = TreeMaker.instance( _ctx );
-      _javacElements = JavacElements.instance( _ctx );
       _typeProcessor = new TypeProcessor( getHost(), _javacTask );
-      _issueReporter = new IssueReporter( Log.instance( getContext() ) );
-      _seenModules = new LinkedHashSet<>();
+      _issueReporter = new IssueReporter( _javacTask::getContext );
+      _seenModules = new HashMap<>();
       _extraClasses = new ConcurrentHashSet<>();
       injectManFileManager();
     }
@@ -298,18 +294,22 @@ public class JavacPlugin implements Plugin, TaskListener
       return;
     }
 
+    // For type processing (##todo is this still necessary?)
+    JavaCompiler compiler = JavaCompiler.instance( getContext() );
+    compiler.shouldStopPolicyIfNoError = CompileStates.CompileState.max(
+      compiler.shouldStopPolicyIfNoError, CompileStates.CompileState.FLOW );
 
     //
     // Both Java 8 and Java 9 alterations
     //
 
     // Override javac's ClassWriter
-    ManClassWriter manClassWriter = ManClassWriter.instance( _ctx );
-    ReflectUtil.field( JavaCompiler.instance( _ctx ), "writer" ).set( manClassWriter );
+    ManClassWriter manClassWriter = ManClassWriter.instance( getContext() );
+    ReflectUtil.field( JavaCompiler.instance( getContext() ), "writer" ).set( manClassWriter );
 
     // Override javac's Attr
-    Attr manAttr = IS_JAVA_8 ? ManAttr_8.instance( _ctx ) : ManAttr_9.instance( _ctx );
-    ReflectUtil.field( JavaCompiler.instance( _ctx ), "attr" ).set( manAttr );
+    Attr manAttr = IS_JAVA_8 ? ManAttr_8.instance( getContext() ) : ManAttr_9.instance( getContext() );
+    ReflectUtil.field( JavaCompiler.instance( getContext() ), "attr" ).set( manAttr );
 
     if( IS_JAVA_8 )
     {
@@ -322,28 +322,34 @@ public class JavacPlugin implements Plugin, TaskListener
     //
 
     Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
-    if( module == null || _seenModules.contains( module ) )
+    if( module == null )
+    {
+      return;
+    }
+    Set<Symbol> modules = _seenModules.computeIfAbsent( getContext(), k -> new LinkedHashSet<>() );
+    if( modules.contains( module ) )
     {
       return;
     }
 
-    _seenModules.add( module );
+    modules.add( module );
 
-    BootstrapPlugin.openModule( _ctx, "jdk.compiler" );
+    BootstrapPlugin.openModule( getContext(), "jdk.compiler" );
 
     // Override javac's Resolve
-    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManResolve" ), "instance", Context.class ).invokeStatic( _ctx );
+    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManResolve" ), "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's ClassFinder
-    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder" ), "instance", Context.class ).invokeStatic( _ctx );
+    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder" ), "instance", Context.class ).invokeStatic( getContext() );
   }
 
   private void injectManFileManager()
   {
     // Override javac's JavaFileManager
-    _manFileManager = new ManifoldJavaFileManager( getHost(), _fileManager, _ctx, true );
-    _ctx.put( JavaFileManager.class, (JavaFileManager)null );
-    _ctx.put( JavaFileManager.class, _manFileManager );
+    _fileManager = getContext().get( JavaFileManager.class );
+    _manFileManager = new ManifoldJavaFileManager( getHost(), _fileManager, getContext(), true );
+    getContext().put( JavaFileManager.class, (JavaFileManager)null );
+    getContext().put( JavaFileManager.class, _manFileManager );
 
     // Assign our file manager to javac's various components
     try
@@ -457,10 +463,10 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private List<String> deriveClasspath()
   {
-    if( JreUtil.isJava9Modular_compiler( _ctx ) )
+    if( JreUtil.isJava9Modular_compiler( getContext() ) )
     {
       List<String> pathsFromModules = new ArrayList<>();
-      Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( _ctx );
+      Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( getContext() );
       // an explicit is compiling, determine the class path from its dependencies, which are allModules visible via Modules util
       for( Symbol m : (Iterable<Symbol>)ReflectUtil.method( modulesUtil, "allModules" ).invoke() )
       {
@@ -779,6 +785,19 @@ public class JavacPlugin implements Plugin, TaskListener
 
           // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
           tailorJavaCompiler( e );
+        }
+        break;
+        
+      case ANALYZE:
+        if( _javacTask.getContext() != _ctx )
+        {
+          // If annotation processors are present, javac creates a whole new JavaCompiler and ctx before Analyze phase...
+
+          _ctx = _javacTask.getContext();
+
+          // Override javac's stuff again for the new ctx
+          tailorJavaCompiler( e );
+          injectManFileManager();
         }
         break;
     }

@@ -59,6 +59,12 @@ public class SimpleTest extends TestCase
     LinkedList<String> ret = linkedList.plus( "hi" );
     assertEquals( "hi", ret.getFirst() );
     List<LinkedList<String>> ret2 = linkedList.plusPlus( "hi" );
+
+    HashMap<Integer,String> map1 = new HashMap<Integer, String>()
+      .add(1, "One")
+      .add(2, "Two")
+      .add(3, "Three");
+    map1.get( 1 );
   }
 
   public void testStructural()

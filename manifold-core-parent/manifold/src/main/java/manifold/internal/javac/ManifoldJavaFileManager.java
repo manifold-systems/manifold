@@ -4,7 +4,6 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.file.RelativePath;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Name;
 import java.io.File;
@@ -46,7 +45,6 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   private final boolean _fromJavaC;
   private FqnCache<InMemoryClassJavaFileObject> _classFiles;
   private FqnCache<JavaFileObject> _generatedFiles;
-  private Log _issueLogger;
   private Context _ctx;
   private int _runtimeMode;
 
@@ -58,7 +56,6 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     _fromJavaC = fromJavaC;
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
-    _issueLogger = Log.instance( ctx );
     if( ctx.get(JavaFileManager.class) == null )
     {
       ctx.put( JavaFileManager.class, fileManager );
@@ -232,7 +229,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
         }
         else
         {
-          IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( _issueLogger );
+          IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( () -> _ctx );
           String fqn = tn.name.replace( '$', '.' );
           JavaFileObject file = findGeneratedFile( fqn, location, tn.getModule(), issueReporter );
           if( file != null && isCorrectModule( location, patchableFiles, file, fqn ) )
