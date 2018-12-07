@@ -20,6 +20,7 @@ include:
 * **JavaScript** interop (experimental)
 * **SQL** and **DDL** interop (coming soon)
 * **Self** type support
+* **JailBreak** type-safe reflection
 * Lots more
 
 At a high level each of these features is classified as either a **Type Manifold** or an
@@ -1919,6 +1920,110 @@ main difference is that invocations must be made through structural interfaces a
 the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
+
+## Type-safe Reflection
+
+Sometimes you have to use Java reflection to access fields, methods, and types that are not directly accessible from
+your code. But writing reflection code is not only tedious and error-prone, it also loses type-safety in the process.  
+Manifold mitigates these issues with the `@JailBreak` annotation and the `jailbreak()` extension method.  Use them to
+leverage the convenience and type-safety of the Java compiler and let Manifold generate reliable, efficient reflection 
+code for you.
+
+### Using `@JailBreak`
+
+Annotate the type of any variable with `@JailBreak` to gain type-safe access to private fields, methods, and 
+types.
+
+#### Basic Use
+
+```java
+@JailBreak Foo foo = new Foo();
+foo.privateMethod();
+foo.privateMethod("hey");
+foo._privateField = 88;
+
+public class Foo {
+  private final int _privateField;
+  
+  public Foo(int value) {
+    _privateField = value;
+  }
+  
+  private String privateMethod() {
+    return "hi";
+  }
+  
+  private String privateMethod(String param) {
+    return param;
+  }
+}
+```
+
+#### Use With Static Members
+
+Since Java does not permit you to annotate the type in a static expression, you must use an instance:
+
+```java
+@JailBreak MyClass myClass = null; // value is insignificant
+myClass.staticMethod();
+myClass.Static_Field = "hi";
+
+public class MyClass {
+  private static String Static_Field = "hello";
+  
+  private static void staticMethod() {
+  }
+}
+```
+
+#### Use With Types and Constructors
+
+Use `@JailBreak` to access hidden types:
+```java
+com.abc. @JailBreak SecretClass secretClass = new SecretClass();
+String value = secretClass.getParam();
+```
+
+Use `@JailBreak` to invoke hidden constructors:
+```java
+new com.abc. @JailBreak SecretClass("hi");
+```
+
+```java
+package com.abc;
+// not public
+class SecretClass {
+  private final String _param;
+
+  public SecretClass(){
+    this("default");
+  }
+  // not public
+  SecretClass(String param){
+    _param = param;
+  }
+
+  private String getParam() {
+    return _param;
+  }
+}
+```
+
+### Using the `jailbreak()` Extension
+
+Similar to `@JailBreak` you can call the `jailbreak()` extension method from any expression to gain type-safe access to 
+private fields, methods, and types.
+
+```java
+MyClass myClass = new MyClass();
+myClass.jailbreak().privateMethodOnMyClass();
+```
+This method is especially handy when you have a chain of member access expressions and you want to quickly use
+inaccessible members:
+
+```java
+something.foo().jailbreak().bar.jailbreak().baz = value;
+``` 
 
 ## The Self Type
 
