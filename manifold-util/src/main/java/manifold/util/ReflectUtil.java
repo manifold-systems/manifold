@@ -41,7 +41,7 @@ public class ReflectUtil
     }
     catch( ClassNotFoundException e )
     {
-      throw ManExceptionUtil.unchecked( e );
+      return null;
     }
   }
 

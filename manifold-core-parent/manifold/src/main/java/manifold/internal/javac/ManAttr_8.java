@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.SymbolMetadata;
@@ -8,10 +9,19 @@ import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotationPosition;
 import com.sun.tools.javac.code.TypeAnnotationPosition.TypePathEntry;
+import com.sun.tools.javac.code.TypeAnnotations;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Check;
+import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Flow;
+import com.sun.tools.javac.comp.Lower;
+import com.sun.tools.javac.comp.MemberEnter;
+import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Context;
@@ -21,17 +31,21 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.util.ArrayList;
 import manifold.util.ReflectUtil;
+import manifold.util.Stack;
 
 
 import static com.sun.tools.javac.code.Kinds.VAL;
 import static com.sun.tools.javac.code.TypeTag.WILDCARD;
 import static com.sun.tools.javac.tree.JCTree.Tag.SELECT;
 
-public class ManAttr_8 extends Attr
+public class ManAttr_8 extends Attr implements ManAttr
 {
   private final Names _names;
   private final Symtab _syms;
   private final Check _chk;
+  private final ManLog_8 _manLog;
+  private Stack<JCTree.JCFieldAccess> _selects;
+  private Stack<JCTree.JCAnnotatedType> _annotatedTypes;
 
   public static ManAttr_8 instance( Context ctx )
   {
@@ -51,6 +65,100 @@ public class ManAttr_8 extends Attr
     _names = Names.instance( ctx );
     _syms = Symtab.instance( ctx );
     _chk = Check.instance( ctx );
+    _selects = new Stack<>();
+    _annotatedTypes = new Stack<>();
+
+    // Override logger to handle final field assignment for @JailBreak
+    _manLog = (ManLog_8)ManLog_8.instance( ctx );
+    ReflectUtil.field( this, "log" ).set( _manLog );
+    ReflectUtil.field( Flow.instance( ctx ), "log" ).set( _manLog );
+    ReflectUtil.field( DeferredAttr.instance( ctx ), "log" ).set( _manLog );
+
+    ReflectUtil.field( this, "rs" ).set( ManResolve.instance( ctx ) );
+
+    reassignAllEarlyHolders( ctx );
+  }
+
+  private void reassignAllEarlyHolders( Context ctx )
+  {
+    Object[] earlyAttrHolders = {
+      Resolve.instance( ctx ),
+      DeferredAttr.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      Annotate.instance( ctx ),
+      Lower.instance( ctx ),
+      TransTypes.instance( ctx ),
+      Annotate.instance( ctx ),
+      TypeAnnotations.instance( ctx ),
+      JavacTrees.instance( ctx ),
+      JavaCompiler.instance( ctx ),
+    };
+    for( Object instance: earlyAttrHolders )
+    {
+      ReflectUtil.LiveFieldRef attr = ReflectUtil.WithNull.field( instance, "attr" );
+      if( attr != null )
+      {
+        attr.set( this );
+      }
+    }
+  }
+
+  /**
+   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
+   */
+  @Override
+  public void visitSelect( JCTree.JCFieldAccess tree )
+  {
+    // record JCFieldAccess trees as they are visited so we can access them elsewhere while in context
+    _selects.push( tree );
+    try
+    {
+      super.visitSelect( tree );
+    }
+    finally
+    {
+      _selects.pop();
+    }
+  }
+
+  private boolean shouldCheckSuperType( Type type )
+  {
+    return _shouldCheckSuperType( type, true );
+  }
+  private boolean _shouldCheckSuperType( Type type, boolean checkSuper )
+  {
+    return
+      type instanceof Type.ClassType &&
+      type != Type.noType &&
+      !(type instanceof Type.ErrorType) &&
+      !type.toString().equals( Object.class.getTypeName() ) &&
+      (!checkSuper || _shouldCheckSuperType( ((Symbol.ClassSymbol)type.tsym).getSuperclass(), false ));
+  }
+
+  /**
+   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCAnnotatedType in context.
+   */
+  @Override
+  public void visitAnnotatedType( JCTree.JCAnnotatedType tree )
+  {
+    _annotatedTypes.push( tree );
+    try
+    {
+      super.visitAnnotatedType( tree );
+    }
+    finally
+    {
+      _annotatedTypes.pop();
+    }
+  }
+
+  public JCTree.JCFieldAccess peekSelect()
+  {
+    return _selects.isEmpty() ? null : _selects.peek();
+  }
+  public JCTree.JCAnnotatedType peekAnnotatedType()
+  {
+    return _annotatedTypes.isEmpty() ? null : _annotatedTypes.peek();
   }
 
   private ReflectUtil.MethodRef attribArgs = ReflectUtil.method( Attr.class, "attribArgs", int.class, List.class, Env.class, ListBuffer.class );
@@ -63,8 +171,67 @@ public class ManAttr_8 extends Attr
   private ReflectUtil.MethodRef check = ReflectUtil.method( Attr.class, "check", JCTree.class, Type.class, int.class, ResultInfo );
   private ReflectUtil.MethodRef validate = ReflectUtil.method( Check.class, "validate", List.class, Env.class );
 
+  /**
+   * Handles @Self, replaces expression type with self type
+   */
   @Override
   public void visitApply( JCTree.JCMethodInvocation tree )
+  {
+    if( !(tree.meth instanceof JCTree.JCFieldAccess) )
+    {
+      _visitApply( tree );
+      return;
+    }
+
+    if( JAILBREAK_PRIVATE_FROM_SUPERS )
+    {
+      _manLog.pushSuspendIssues( tree ); // since method-calls can be nested, we need a tree of stacks TreeNode(JCTree.JCFieldAccess, Stack<JCDiagnostic>>)
+    }
+
+    JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree.meth;
+    try
+    {
+      _visitApply( tree );
+
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        if( fieldAccess.type instanceof Type.ErrorType )
+        {
+          if( shouldCheckSuperType( fieldAccess.selected.type ) && _manLog.isJailBreakSelect( fieldAccess ) )
+          {
+            // set qualifier type to supertype to handle private methods
+            Type.ClassType oldType = (Type.ClassType)fieldAccess.selected.type;
+            fieldAccess.selected.type = ((Symbol.ClassSymbol)oldType.tsym).getSuperclass();
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+            fieldAccess.type = null;
+            fieldAccess.sym = null;
+            tree.type = null;
+
+            // retry with supertype
+            visitApply( tree );
+
+            // restore original type
+            fieldAccess.selected.type = oldType;
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+          }
+        }
+        else
+        {
+          // apply any issues logged for the found method (only the top of the suspend stack)
+          _manLog.recordRecentSuspendedIssuesAndRemoveOthers( tree );
+        }
+      }
+    }
+    finally
+    {
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        _manLog.popSuspendIssues( tree );
+      }
+    }
+  }
+
+  private void _visitApply( JCTree.JCMethodInvocation tree )
   {
     //noinspection unchecked
     Env<AttrContext> env = (Env<AttrContext>)ReflectUtil.field( this, "env" ).get();
@@ -108,10 +275,10 @@ public class ManAttr_8 extends Attr
     Type restype = mtype.getReturnType();
 
     // location of @Self if on a type argument or array component type
-    TypeAnnotationPosition selfPos =
-      findSelfAnnotationLocation( tree.meth.hasTag( SELECT )
-                                  ? ((JCTree.JCFieldAccess)tree.meth).sym
-                                  : ((JCTree.JCIdent)tree.meth).sym );
+    Symbol symbol = tree.meth.hasTag( SELECT )
+                    ? ((JCTree.JCFieldAccess)tree.meth).sym
+                    : ((JCTree.JCIdent)tree.meth).sym;
+    TypeAnnotationPosition selfPos = findSelfAnnotationLocation( symbol );
 
     if( restype.hasTag( WILDCARD ) )
     {
@@ -124,6 +291,7 @@ public class ManAttr_8 extends Attr
 
     if( selfPos != null || hasSelfType( restype ) )
     {
+      // Replace with self type
       restype = replaceSelfTypesWithQualifier( qualifier, restype, selfPos );
     }
     else

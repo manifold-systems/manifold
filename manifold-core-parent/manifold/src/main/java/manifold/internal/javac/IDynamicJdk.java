@@ -50,15 +50,15 @@ public interface IDynamicJdk
           String fqnIssueReporter;
           if( JavacPlugin.IS_JAVA_8 )
           {
-            fqnIssueReporter = "manifold.internal.javac.Java8DynamicJdk";
+            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_8";
           }
           else if( JreUtil.JAVA_VERSION < 11 ) // Java 9 & 10
           {
-            fqnIssueReporter = "manifold.internal.javac.Java9DynamicJdk";
+            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_9";
           }
           else // Java 11 or later
           {
-            fqnIssueReporter = "manifold.internal.javac.Java11DynamicJdk";
+            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_11";
           }
           return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }

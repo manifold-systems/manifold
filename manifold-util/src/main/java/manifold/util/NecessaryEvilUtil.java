@@ -81,6 +81,7 @@ public class NecessaryEvilUtil
       //
       Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
       addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+      addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
 //      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", ReflectUtil.field( manifoldModule.getClass(), "ALL_UNNAMED_MODULE" ).getStatic(), true, true );
       addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
 
@@ -101,6 +102,7 @@ public class NecessaryEvilUtil
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
 
@@ -128,6 +130,7 @@ public class NecessaryEvilUtil
                           "--add-opens=jdk.compiler/com.sun.tools.javac.parser=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=jdk.compiler/com.sun.tools.javac.platform=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=jdk.compiler/com.sun.tools.javac.processing=<ALL-UNNAMED or manifold-all>\n" +
+                          "--add-opens=jdk.compiler/com.sun.tools.javac.resources=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=jdk.compiler/com.sun.tools.javac.tree=<ALL-UNNAMED or manifold-all>\n" +
                           "--add-opens=jdk.compiler/com.sun.tools.javac.util=<ALL-UNNAMED or manifold-all>\n" );
       throw new RuntimeException( e );

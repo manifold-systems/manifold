@@ -97,11 +97,14 @@ public class SrcClassUtil
     {
       for( Symbol sym: classSymbol.getEnclosedElements() )
       {
-        long modifiers = SrcAnnotated.modifiersFrom( sym.getModifiers() );
-        if( Modifier.isPrivate( (int)modifiers ) )
-        {
-          continue;
-        }
+// include private members because:
+// 1. @JailBreak can expose private members
+// 2. Compiler error messages are better when referencing an inaccessible method vs. a non-existent one
+//        long modifiers = SrcAnnotated.modifiersFrom( sym.getModifiers() );
+//        if( Modifier.isPrivate( (int)modifiers ) )
+//        {
+//          continue;
+//        }
 
         if( sym instanceof Symbol.ClassSymbol )
         {
@@ -160,6 +163,7 @@ public class SrcClassUtil
     if( sym.isEnum() )
     {
       srcField.enumConst();
+      srcClass.addEnumConst( srcField );
     }
     else
     {
@@ -168,8 +172,8 @@ public class SrcClassUtil
       {
         srcField.initializer( new SrcRawExpression( getValueForType( sym.type ) ) );
       }
+      srcClass.addField( srcField );
     }
-    srcClass.addField( srcField );
   }
 
   private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, BasicJavacTask javacTask )
@@ -210,7 +214,7 @@ public class SrcClassUtil
       srcMethod.addThrowType( makeSrcType( throwType, method, TargetType.THROWS, i ) );
     }
     String bodyStmt;
-    if( srcMethod.isConstructor() )
+    if( srcMethod.isConstructor() && !srcClass.isEnum() )
     {
       // Note we can't just throw an exception for the ctor body, the compiler will
       // still complain about the missing super() call if the super class does not have

@@ -17,7 +17,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 
-public class Java8DynamicJdk implements IDynamicJdk
+public class JavaDynamicJdk_8 implements IDynamicJdk
 {
   @Override
   public <T> void report( Log issueLogger, Diagnostic<? extends T> diagnostic )

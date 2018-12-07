@@ -308,8 +308,13 @@ public class JavacPlugin implements Plugin, TaskListener
     ReflectUtil.field( JavaCompiler.instance( getContext() ), "writer" ).set( manClassWriter );
 
     // Override javac's Attr
-    Attr manAttr = IS_JAVA_8 ? ManAttr_8.instance( getContext() ) : ManAttr_9.instance( getContext() );
+    Attr manAttr = (Attr)(IS_JAVA_8
+      ? ReflectUtil.method( "manifold.internal.javac.ManAttr_8", "instance", Context.class ).invokeStatic( getContext() )
+      : ReflectUtil.method( "manifold.internal.javac.ManAttr_9", "instance", Context.class ).invokeStatic( getContext() ));
     ReflectUtil.field( JavaCompiler.instance( getContext() ), "attr" ).set( manAttr );
+
+    // Override javac's Resolve
+    ManResolve.instance( _ctx );
 
     if( IS_JAVA_8 )
     {
@@ -336,11 +341,8 @@ public class JavacPlugin implements Plugin, TaskListener
 
     BootstrapPlugin.openModule( getContext(), "jdk.compiler" );
 
-    // Override javac's Resolve
-    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManResolve" ), "instance", Context.class ).invokeStatic( getContext() );
-
     // Override javac's ClassFinder
-    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder" ), "instance", Context.class ).invokeStatic( getContext() );
+    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
   }
 
   private void injectManFileManager()
@@ -780,7 +782,7 @@ public class JavacPlugin implements Plugin, TaskListener
           // Initialize the Javac host environment
           getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );
 
-          // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder
+          // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder_9
           Bootstrap.init();
 
           // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes

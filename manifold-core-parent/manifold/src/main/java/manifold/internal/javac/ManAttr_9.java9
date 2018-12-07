@@ -1,6 +1,8 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Kinds;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.SymbolMetadata;
 import com.sun.tools.javac.code.Symtab;
@@ -8,10 +10,23 @@ import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotationPosition;
 import com.sun.tools.javac.code.TypeAnnotationPosition.TypePathEntry;
+import com.sun.tools.javac.code.TypeAnnotations;
+import com.sun.tools.javac.comp.Analyzer;
+import com.sun.tools.javac.comp.Annotate;
+import com.sun.tools.javac.comp.ArgumentAttr;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Check;
+import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Flow;
+import com.sun.tools.javac.comp.Lower;
+import com.sun.tools.javac.comp.MemberEnter;
+import com.sun.tools.javac.comp.Modules;
+import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.comp.TypeEnter;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Context;
@@ -20,18 +35,21 @@ import com.sun.tools.javac.util.ListBuffer;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.util.ArrayList;
-import java.util.Objects;
 import manifold.util.ReflectUtil;
+import manifold.util.Stack;
 
 
 import static com.sun.tools.javac.code.TypeTag.WILDCARD;
 import static com.sun.tools.javac.tree.JCTree.Tag.SELECT;
 
-public class ManAttr_9 extends Attr
+public class ManAttr_9 extends Attr implements ManAttr
 {
   private final Names _names;
   private final Symtab _syms;
   private final Check _chk;
+  private final ManLog_9 _manLog;
+  private Stack<JCTree.JCFieldAccess> _selects;
+  private Stack<JCTree.JCAnnotatedType> _annotatedTypes;
 
   public static ManAttr_9 instance( Context ctx )
   {
@@ -51,31 +69,40 @@ public class ManAttr_9 extends Attr
     _names = Names.instance( ctx );
     _syms = Symtab.instance( ctx );
     _chk = Check.instance( ctx );
-    
+    _selects = new Stack<>();
+    _annotatedTypes = new Stack<>();
+
+    // Override logger to handle final field assignment for @JailBreak
+    _manLog = (ManLog_9)ManLog_9.instance( ctx );
+    ReflectUtil.field( this, "log" ).set( _manLog );
+    ReflectUtil.field( Flow.instance( ctx ), "log" ).set( _manLog );
+    ReflectUtil.field( DeferredAttr.instance( ctx ), "log" ).set( _manLog );
+
+    ReflectUtil.field( this, "rs" ).set( ManResolve.instance( ctx ) );
+
     reassignAllEarlyHolders( ctx );
   }
 
   private void reassignAllEarlyHolders( Context ctx )
   {
-    String[] earlyAttrHolders = {
-      "com.sun.tools.javac.comp.Modules",
-      "com.sun.tools.javac.comp.Resolve",
-      "com.sun.tools.javac.comp.DeferredAttr",
-      "com.sun.tools.javac.comp.ArgumentAttr",
-      "com.sun.tools.javac.comp.MemberEnter",
-      "com.sun.tools.javac.comp.TypeEnter",
-      "com.sun.tools.javac.comp.Analyzer",
-      "com.sun.tools.javac.comp.Annotate",
-      "com.sun.tools.javac.comp.Lower",
-      "com.sun.tools.javac.comp.TransTypes",
-      "com.sun.tools.javac.comp.Annotate",
-      "com.sun.tools.javac.code.TypeAnnotations",
-      "com.sun.tools.javac.api.JavacTrees",
-      "com.sun.tools.javac.main.JavaCompiler",
+    Object[] earlyAttrHolders = {
+      Modules.instance( ctx ),
+      Resolve.instance( ctx ),
+      DeferredAttr.instance( ctx ),
+      ArgumentAttr.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      TypeEnter.instance( ctx ),
+      Analyzer.instance( ctx ),
+      Annotate.instance( ctx ),
+      Lower.instance( ctx ),
+      TransTypes.instance( ctx ),
+      Annotate.instance( ctx ),
+      TypeAnnotations.instance( ctx ),
+      JavacTrees.instance( ctx ),
+      JavaCompiler.instance( ctx ),
     };
-    for( String earlyAttrHolder: earlyAttrHolders )
+    for( Object instance: earlyAttrHolders )
     {
-      Object instance = ReflectUtil.method( earlyAttrHolder, "instance", Context.class ).invokeStatic( ctx );
       ReflectUtil.LiveFieldRef attr = ReflectUtil.WithNull.field( instance, "attr" );
       if( attr != null )
       {
@@ -84,20 +111,135 @@ public class ManAttr_9 extends Attr
     }
   }
 
-  private Class<?> KindSelector = ReflectUtil.type( "com.sun.tools.javac.code.Kinds$KindSelector" );
-  private Object VAL = Objects.requireNonNull( ReflectUtil.field( KindSelector, "VAL" ) ).getStatic();
-  private ReflectUtil.MethodRef attribArgs = ReflectUtil.method( Attr.class, "attribArgs", KindSelector, List.class, Env.class, ListBuffer.class );
+  /**
+   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
+   */
+  @Override
+  public void visitSelect( JCTree.JCFieldAccess tree )
+  {
+    // record JCFieldAccess trees as they are visited so we can access them elsewhere while in context
+    _selects.push( tree );
+    try
+    {
+      super.visitSelect( tree );
+    }
+    finally
+    {
+      _selects.pop();
+    }
+  }
+
+  private boolean shouldCheckSuperType( Type type )
+  {
+    return _shouldCheckSuperType( type, true );
+  }
+  private boolean _shouldCheckSuperType( Type type, boolean checkSuper )
+  {
+    return
+      type instanceof Type.ClassType &&
+      type != Type.noType &&
+      !(type instanceof Type.ErrorType) &&
+      !type.toString().equals( Object.class.getTypeName() ) &&
+      (!checkSuper || _shouldCheckSuperType( ((Symbol.ClassSymbol)type.tsym).getSuperclass(), false ));
+  }
+
+  /**
+   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCAnnotatedType in context.
+   */
+  @Override
+  public void visitAnnotatedType( JCTree.JCAnnotatedType tree )
+  {
+    _annotatedTypes.push( tree );
+    try
+    {
+      super.visitAnnotatedType( tree );
+    }
+    finally
+    {
+      _annotatedTypes.pop();
+    }
+  }
+
+  public JCTree.JCFieldAccess peekSelect()
+  {
+    return _selects.isEmpty() ? null : _selects.peek();
+  }
+  public JCTree.JCAnnotatedType peekAnnotatedType()
+  {
+    return _annotatedTypes.isEmpty() ? null : _annotatedTypes.peek();
+  }
+
+  private ReflectUtil.MethodRef attribArgs = ReflectUtil.method( Attr.class, "attribArgs", Kinds.KindSelector.class, List.class, Env.class, ListBuffer.class );
   private Class<?> ResultInfo = ReflectUtil.type( "com.sun.tools.javac.comp.Attr$ResultInfo" );
   private ReflectUtil.MethodRef attribTree = ReflectUtil.method( Attr.class, "attribTree", JCTree.class, Env.class, ResultInfo );
-  private ReflectUtil.ConstructorRef resultInfoCtor = ReflectUtil.constructor( ResultInfo, Attr.class, KindSelector, Type.class, Check.CheckContext.class );
+  private ReflectUtil.ConstructorRef resultInfoCtor = ReflectUtil.constructor( ResultInfo, Attr.class, Kinds.KindSelector.class, Type.class, Check.CheckContext.class );
   private ReflectUtil.MethodRef adjustMethodReturnType = ReflectUtil.method( Attr.class, "adjustMethodReturnType", Symbol.class, Type.class, Name.class, List.class, Type.class );
   private ReflectUtil.MethodRef checkRefTypes = ReflectUtil.method( Check.class, "checkRefTypes", List.class, List.class );
-  private ReflectUtil.MethodRef check = ReflectUtil.method( Attr.class, "check", JCTree.class, Type.class, KindSelector, ResultInfo );
+  private ReflectUtil.MethodRef check = ReflectUtil.method( Attr.class, "check", JCTree.class, Type.class, Kinds.KindSelector.class, ResultInfo );
   private ReflectUtil.MethodRef validate = ReflectUtil.method( Check.class, "validate", List.class, Env.class );
   private ReflectUtil.MethodRef cachedCapture = ReflectUtil.method( "com.sun.tools.javac.comp.InferenceContext", "cachedCapture", JCTree.class, Type.class, boolean.class );
 
+  /**
+   * Handles @Self, replaces expression type with self type
+   */
   @Override
   public void visitApply( JCTree.JCMethodInvocation tree )
+  {
+    if( !(tree.meth instanceof JCTree.JCFieldAccess) )
+    {
+      _visitApply( tree );
+      return;
+    }
+
+    if( JAILBREAK_PRIVATE_FROM_SUPERS )
+    {
+      _manLog.pushSuspendIssues( tree ); // since method-calls can be nested, we need a tree of stacks TreeNode(JCTree.JCFieldAccess, Stack<JCDiagnostic>>)
+    }
+
+    JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree.meth;
+    try
+    {
+      _visitApply( tree );
+
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        if( fieldAccess.type instanceof Type.ErrorType )
+        {
+          if( shouldCheckSuperType( fieldAccess.selected.type ) && _manLog.isJailBreakSelect( fieldAccess ) )
+          {
+            // set qualifier type to supertype to handle private methods
+            Type.ClassType oldType = (Type.ClassType)fieldAccess.selected.type;
+            fieldAccess.selected.type = ((Symbol.ClassSymbol)oldType.tsym).getSuperclass();
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+            fieldAccess.type = null;
+            fieldAccess.sym = null;
+            tree.type = null;
+
+            // retry with supertype
+            visitApply( tree );
+
+            // restore original type
+            fieldAccess.selected.type = oldType;
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+          }
+        }
+        else
+        {
+          // apply any issues logged for the found method (only the top of the suspend stack)
+          _manLog.recordRecentSuspendedIssuesAndRemoveOthers( tree );
+        }
+      }
+    }
+    finally
+    {
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        _manLog.popSuspendIssues( tree );
+      }
+    }
+  }
+
+  private void _visitApply( JCTree.JCMethodInvocation tree )
   {
     //noinspection unchecked
     Env<AttrContext> env = (Env<AttrContext>)ReflectUtil.field( this, "env" ).get();
@@ -123,7 +265,7 @@ public class ManAttr_9 extends Attr
     // Otherwise, we are seeing a regular method call.
     // Attribute the arguments, yielding list of argument types, ...
     ListBuffer<Type> argtypesBuf = new ListBuffer<>();
-    Object kind = attribArgs.invoke( this, VAL, tree.args, localEnv, argtypesBuf );
+    Object kind = attribArgs.invoke( this, Kinds.KindSelector.VAL, tree.args, localEnv, argtypesBuf );
     argtypes = argtypesBuf.toList();
     typeargtypes = attribAnyTypes( tree.typeargs, localEnv );
 
@@ -157,6 +299,7 @@ public class ManAttr_9 extends Attr
 
     if( selfPos != null || hasSelfType( restype ) )
     {
+      // Replace with self type
       restype = replaceSelfTypesWithQualifier( qualifier, restype, selfPos );
     }
     else
@@ -171,7 +314,7 @@ public class ManAttr_9 extends Attr
 
     Check.CheckContext checkContext = (Check.CheckContext)ReflectUtil.field( resultInfo, "checkContext" ).get();
     Type capturedRes = (Type)cachedCapture.invoke( ReflectUtil.method( checkContext, "inferenceContext" ).invoke(), tree, restype, true );
-    restype = (Type)check.invoke( this, tree, capturedRes, VAL, resultInfo );
+    restype = (Type)check.invoke( this, tree, capturedRes, Kinds.KindSelector.VAL, resultInfo );
     ReflectUtil.field( this, "result" ).set( restype );
     validate.invoke( _chk, tree.typeargs, localEnv );
   }

@@ -6,6 +6,7 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.SymbolMetadata;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -24,6 +25,7 @@ import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.Position;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -47,6 +49,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
+import manifold.ext.api.JailBreak;
 import manifold.ext.api.Self;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
@@ -178,9 +181,78 @@ public class ExtensionTransformer extends TreeTranslator
       }
       result = objIdent;
     }
+    else if( isJailBreakReceiver( tree ) )
+    {
+      result = replaceWithReflection( tree );
+    }
     else
     {
       result = tree;
+    }
+  }
+
+  @Override
+  public void visitAssign( JCTree.JCAssign tree )
+  {
+    super.visitAssign( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( isJailBreakReceiver( tree ) )
+    {
+      result = replaceWithReflection( tree );
+    }
+    else
+    {
+      result = tree;
+    }
+  }
+
+  @Override
+  public void visitNewClass( JCTree.JCNewClass tree )
+  {
+    super.visitNewClass( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( isJailBreakReceiver( tree ) )
+    {
+      result = replaceWithReflection( tree );
+    }
+    else
+    {
+      result = tree;
+    }
+  }
+
+  public void visitVarDef( JCTree.JCVariableDecl tree )
+  {
+    super.visitVarDef( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    JCExpression vartype = tree.vartype;
+    if( vartype instanceof JCTree.JCAnnotatedType )
+    {
+      if( ((JCTree.JCAnnotatedType)tree.vartype).getAnnotations().stream()
+        .anyMatch( anno -> JailBreak.class.getTypeName().equals( anno.attribute.type.toString() ) ) )
+      {
+        // if the type itself is inaccessible and annotated with @JailBreak, it will be erased to Object
+        tree.type = ((JCTree.JCAnnotatedType)tree.vartype).underlyingType.type;
+        tree.sym.type = _tp.getSymtab().objectType;
+      }
     }
   }
 
@@ -236,7 +308,6 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitApply( JCTree.JCMethodInvocation tree )
   {
     super.visitApply( tree );
-    Symbol.MethodSymbol method = findExtMethod( tree );
 
     eraseGenericStructuralVarargs( tree );
 
@@ -246,11 +317,11 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
+    Symbol.MethodSymbol method = findExtMethod( tree );
     if( method != null )
     {
       // Replace with extension method call
-      replaceExtCall( tree, method );
-      result = tree;
+      result = replaceExtCall( tree, method );
     }
     else if( isStructuralMethod( tree ) )
     {
@@ -258,10 +329,127 @@ public class ExtensionTransformer extends TreeTranslator
       // replace with proxy call
       result = replaceStructuralCall( tree );
     }
+    else if( isJailBreakReceiver( tree ) )
+    {
+      result = replaceWithReflection( tree );
+    }
     else
     {
       result = tree;
     }
+  }
+
+  @Override
+  public void visitReference( JCTree.JCMemberReference tree )
+  {
+    super.visitReference( tree );
+
+    //## todo: handle Method Refs here
+  }
+
+  public static boolean isJailBreakReceiver( JCTree tree )
+  {
+    if( tree instanceof JCTree.JCMethodInvocation )
+    {
+      JCExpression methodSelect = ((JCTree.JCMethodInvocation)tree).getMethodSelect();
+      if( methodSelect instanceof JCTree.JCFieldAccess )
+      {
+        return isJailBreakReceiver( (JCTree.JCFieldAccess)methodSelect );
+      }
+    }
+    else if( tree instanceof JCTree.JCFieldAccess )
+    {
+      return isJailBreakReceiver( (JCTree.JCFieldAccess)tree );
+    }
+    else if( tree instanceof JCTree.JCAssign )
+    {
+      JCExpression lhs = ((JCTree.JCAssign)tree).lhs;
+      if( lhs instanceof JCTree.JCFieldAccess )
+      {
+        return isJailBreakReceiver( lhs );
+      }
+    }
+    else if( tree instanceof JCTree.JCVariableDecl )
+    {
+      JCExpression initializer = ((JCTree.JCVariableDecl)tree).init;
+      if( initializer instanceof JCTree.JCFieldAccess )
+      {
+        return isJailBreakReceiver( initializer );
+      }
+    }
+    else if( tree instanceof JCTree.JCNewClass )
+    {
+      return isJailBreakReceiver( (JCTree.JCNewClass)tree );
+    }
+    return false;
+  }
+
+  public static boolean isJailBreakReceiver( JCTree.JCFieldAccess fieldAccess )
+  {
+    Symbol sym = null;
+    JCExpression selected = fieldAccess.selected;
+    if( selected instanceof JCTree.JCIdent )
+    {
+      sym = ((JCTree.JCIdent)selected).sym;
+    }
+    else if( selected instanceof JCTree.JCMethodInvocation )
+    {
+//      if( fieldAccess.name.toString().equals( "jailbreak" ) )
+//      {
+//        // special case for jailbreak() extension method
+//        return true;
+//      }
+      if( ((JCTree.JCMethodInvocation)selected).meth instanceof JCTree.JCFieldAccess )
+      {
+        sym = ((JCTree.JCFieldAccess)((JCTree.JCMethodInvocation)selected).meth).sym;
+      }
+      else if( ((JCTree.JCMethodInvocation)selected).meth instanceof JCTree.JCIdent )
+      {
+        sym = ((JCTree.JCIdent)((JCTree.JCMethodInvocation)selected).meth).sym;
+      }
+    }
+
+    return isJailBreakSymbol( sym );
+  }
+
+  public static boolean isJailBreakSymbol( Symbol sym )
+  {
+    if( sym == null )
+    {
+      return false;
+    }
+
+    SymbolMetadata metadata = sym.getMetadata();
+    if( metadata == null || (metadata.isTypesEmpty() && metadata.isEmpty()) )
+    {
+      return false;
+    }
+
+    List<Attribute.TypeCompound> typeAttributes = metadata.getTypeAttributes();
+    if( !typeAttributes.isEmpty() )
+    {
+      return typeAttributes.stream()
+        .anyMatch( attr -> attr.type.toString().equals( JailBreak.class.getTypeName() ) );
+    }
+
+    List<Attribute.Compound> attributes = metadata.getDeclarationAttributes();
+    if( !attributes.isEmpty() )
+    {
+      return attributes.stream()
+        .anyMatch( attr -> attr.type.toString().equals( JailBreak.class.getTypeName() ) );
+    }
+    return false;
+  }
+
+  public static boolean isJailBreakReceiver( JCTree.JCNewClass newExpr )
+  {
+    JCExpression classExpr = newExpr.clazz;
+    if( classExpr instanceof JCTree.JCAnnotatedType )
+    {
+      return ((JCTree.JCAnnotatedType)classExpr).annotations.stream()
+        .anyMatch( e -> JailBreak.class.getTypeName().equals( e.attribute.type.toString() ) );
+    }
+    return false;
   }
 
   @Override
@@ -377,7 +565,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( parent instanceof JCTree.JCMethodDecl &&
         (tree == ((JCTree.JCMethodDecl)parent).getModifiers() ||
          tree == ((JCTree.JCMethodDecl)parent).getReturnType() ||
-         ((JCTree.JCMethodDecl)parent).getModifiers().getAnnotations().contains( anno ) ))
+         ((JCTree.JCMethodDecl)parent).getModifiers().getAnnotations().contains( anno )) )
     {
       // @Self allowed only in/on return type of instance method
       return !((JCTree.JCMethodDecl)parent).getModifiers()
@@ -405,7 +593,7 @@ public class ExtensionTransformer extends TreeTranslator
   private void precompileClasses( JCTree.JCClassDecl tree )
   {
     Map<String, Set<String>> typeNames = new HashMap<>();
-    for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
+    for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
     {
       if( anno.getAnnotationType().type.toString().equals( Precompile.class.getCanonicalName() ) )
       {
@@ -453,7 +641,7 @@ public class ExtensionTransformer extends TreeTranslator
         if( tm.getClass().getName().equals( typeManifoldClassName ) )
         {
           Collection<String> namesToPrecompile = computeNamesToPrecompile( tm.getAllTypeNames(), entry.getValue() );
-          for( String fqn : namesToPrecompile )
+          for( String fqn: namesToPrecompile )
           {
             // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
             // the type will be compiled to disk.
@@ -496,7 +684,7 @@ public class ExtensionTransformer extends TreeTranslator
   private Set<Object> findDrivers( JCTree.JCClassDecl tree )
   {
     Set<Object> drivers = new HashSet<>();
-    for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
+    for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
     {
       if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
       {
@@ -550,9 +738,9 @@ public class ExtensionTransformer extends TreeTranslator
       }
 
       IManifoldHost host = _tp.getHost();
-      Set<IFile> changes = changedFiles.stream().map( ( File f) -> host.getFileSystem().getIFile( f ) )
+      Set<IFile> changes = changedFiles.stream().map( (File f) -> host.getFileSystem().getIFile( f ) )
         .collect( Collectors.toSet() );
-      for( ITypeManifold tm : host.getSingleModule().getTypeManifolds() )
+      for( ITypeManifold tm: host.getSingleModule().getTypeManifolds() )
       {
         for( IFile file: changes )
         {
@@ -560,7 +748,7 @@ public class ExtensionTransformer extends TreeTranslator
           if( types.size() > 0 )
           {
             ReflectUtil.method( driver, "mapTypesToFile", Set.class, File.class ).invoke( types, file.toJavaFile() );
-            for( String fqn : types )
+            for( String fqn: types )
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
               // the type will be compiled to disk.
@@ -920,7 +1108,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
   {
-    for( JCTree.JCAnnotation anno : annotations )
+    for( JCTree.JCAnnotation anno: annotations )
     {
       if( anno.getAnnotationType().type.toString().equals( annoClass.getCanonicalName() ) )
       {
@@ -1005,7 +1193,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   }
 
-  private void replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method )
+  private JCTree replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method )
   {
     JCExpression methodSelect = tree.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
@@ -1029,7 +1217,269 @@ public class ExtensionTransformer extends TreeTranslator
         newArgs.add( 0, thisArg );
         tree.args = List.from( newArgs );
       }
+      return tree;
     }
+    else if( methodSelect instanceof JCTree.JCIdent )
+    {
+      JCTree.JCIdent m = (JCTree.JCIdent)methodSelect;
+      boolean isStatic = m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
+      TreeMaker make = _tp.getTreeMaker();
+      JavacElements javacElems = _tp.getElementUtil();
+      String extensionFqn = method.getEnclosingElement().asType().tsym.toString();
+
+      ArrayList<JCExpression> newArgs = new ArrayList<>( tree.args );
+      if( !isStatic )
+      {
+        JCExpression thisArg = make.This( _tp.getClassDecl( tree ).type );
+        newArgs.add( 0, thisArg );
+      }
+      JCTree.JCMethodInvocation extCall =
+        make.Apply( List.nil(),
+          memberAccess( make, javacElems, extensionFqn ),
+          List.from( newArgs ) );
+      extCall.setPos( tree.pos );
+      extCall.type = tree.type;
+      JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)extCall.getMethodSelect();
+      newMethodSelect.sym = method;
+      newMethodSelect.type = method.type;
+      assignTypes( newMethodSelect.selected, method.owner );
+      return extCall;
+    }
+    return tree;
+  }
+
+  private JCTree.JCMethodInvocation replaceWithReflection( JCTree.JCMethodInvocation tree )
+  {
+    //## todo: maybe try to avoid reflection if the method is accessible -- at least check if the method and its enclosing nest of classes are all public
+
+    TreeMaker make = _tp.getTreeMaker();
+    JavacElements javacElems = _tp.getElementUtil();
+
+    JCExpression methodSelect = tree.getMethodSelect();
+    if( methodSelect instanceof JCTree.JCFieldAccess )
+    {
+      JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
+      boolean isStatic = m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
+      if( !(m.sym instanceof Symbol.MethodSymbol) )
+      {
+        return tree;
+      }
+      Type returnType = ((Symbol.MethodSymbol)m.sym).getReturnType();
+      Symbol.MethodSymbol reflectMethodSym = findReflectUtilMethod( tree, "invoke", returnType, isStatic );
+
+      List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)m.sym).getParameters();
+      ArrayList<JCExpression> paramTypes = new ArrayList<>();
+      for( Symbol.VarSymbol param: parameters )
+      {
+        JCExpression classExpr = makeClassExpr( tree, param.type );
+        paramTypes.add( classExpr );
+      }
+      Symtab symTab = _tp.getSymtab();
+      JCTree.JCNewArray paramTypesArray = make.NewArray(
+        make.Type( symTab.classType ), List.nil(), List.from( paramTypes ) );
+      paramTypesArray.type = new Type.ArrayType( symTab.classType, symTab.arrayClass );
+
+      JCTree.JCNewArray argsArray = make.NewArray(
+        make.Type( symTab.objectType ), List.nil(), tree.getArguments() );
+      argsArray.type = new Type.ArrayType( symTab.objectType, symTab.arrayClass );
+
+      ArrayList<JCExpression> newArgs = new ArrayList<>();
+      newArgs.add( isStatic ? makeClassExpr( tree, m.selected.type ) : m.selected ); // receiver or class
+      newArgs.add( make.Literal( m.sym.flatName().toString() ) ); // method name
+      newArgs.add( paramTypesArray ); // param types
+      newArgs.add( argsArray ); // args
+
+      Symbol.ClassSymbol reflectMethodClassSym =
+        IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+      JCTree.JCMethodInvocation reflectCall =
+        make.Apply( List.nil(),
+          memberAccess( make, javacElems, RuntimeMethods.class.getName() + "." + reflectMethodSym.flatName().toString() ),
+          List.from( newArgs ) );
+      reflectCall.setPos( tree.pos );
+      reflectCall.type = returnType;
+      JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)reflectCall.getMethodSelect();
+      newMethodSelect.sym = reflectMethodSym;
+      newMethodSelect.type = reflectMethodSym.type;
+      assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+
+      return reflectCall;
+    }
+    return tree;
+  }
+
+  private JCTree replaceWithReflection( JCTree.JCFieldAccess tree )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    JavacElements javacElems = _tp.getElementUtil();
+
+    boolean isStatic = tree.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
+    if( tree.sym instanceof Symbol.MethodSymbol )
+    {
+      return tree;
+    }
+
+    Tree parent = _tp.getParent( tree );
+    if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
+    {
+      // this is handled in visitAssign() (and visitAssignOp() maybe)
+      return tree;
+    }
+
+    Type type = tree.sym.type;
+    Symbol.MethodSymbol reflectMethodSym = findReflectUtilMethod( tree, type, isStatic, false );
+
+    ArrayList<JCExpression> newArgs = new ArrayList<>();
+    newArgs.add( isStatic ? makeClassExpr( tree, tree.selected.type ) : tree.selected ); // receiver or class
+    newArgs.add( make.Literal( tree.sym.flatName().toString() ) ); // field name
+
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    JCTree.JCMethodInvocation reflectCall =
+      make.Apply( List.nil(),
+        memberAccess( make, javacElems, RuntimeMethods.class.getName() + "." + reflectMethodSym.flatName().toString() ),
+        List.from( newArgs ) );
+    reflectCall.setPos( tree.pos );
+    reflectCall.type = type;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)reflectCall.getMethodSelect();
+    newMethodSelect.sym = reflectMethodSym;
+    newMethodSelect.type = reflectMethodSym.type;
+    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+
+    return reflectCall;
+  }
+
+  private JCTree replaceWithReflection( JCTree.JCAssign assignTree )
+  {
+    JCTree.JCFieldAccess tree = (JCTree.JCFieldAccess)assignTree.lhs;
+
+    TreeMaker make = _tp.getTreeMaker();
+    JavacElements javacElems = _tp.getElementUtil();
+
+    boolean isStatic = tree.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC );
+    if( tree.sym instanceof Symbol.MethodSymbol )
+    {
+      return assignTree;
+    }
+
+    Type type = tree.sym.type;
+    Symbol.MethodSymbol reflectMethodSym = findReflectUtilMethod( tree, type, isStatic, true );
+
+    ArrayList<JCExpression> newArgs = new ArrayList<>();
+    newArgs.add( isStatic ? makeClassExpr( tree, tree.selected.type ) : tree.selected ); // receiver or class
+    newArgs.add( make.Literal( tree.sym.flatName().toString() ) ); // field name
+    newArgs.add( assignTree.rhs ); // field value
+
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    JCTree.JCMethodInvocation reflectCall =
+      make.Apply( List.nil(),
+        memberAccess( make, javacElems, RuntimeMethods.class.getName() + "." + reflectMethodSym.flatName().toString() ),
+        List.from( newArgs ) );
+    reflectCall.setPos( tree.pos );
+    reflectCall.type = type;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)reflectCall.getMethodSelect();
+    newMethodSelect.sym = reflectMethodSym;
+    newMethodSelect.type = reflectMethodSym.type;
+    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+
+    return reflectCall;
+  }
+
+  private JCTree replaceWithReflection( JCTree.JCNewClass tree )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    JavacElements javacElems = _tp.getElementUtil();
+
+    Type type = ((JCTree.JCAnnotatedType)tree.clazz).underlyingType.type;
+
+    if( tree.constructor instanceof Symbol.ClassSymbol )
+    {
+      assert tree.constructor.kind == com.sun.tools.javac.code.Kinds.ERR;
+      return tree;
+    }
+
+    List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)tree.constructor).getParameters();
+    ArrayList<JCExpression> paramTypes = new ArrayList<>();
+    for( Symbol.VarSymbol param: parameters )
+    {
+      paramTypes.add( makeClassExpr( tree, param.type ) );
+    }
+    Symtab symTab = _tp.getSymtab();
+    JCTree.JCNewArray paramTypesArray = make.NewArray(
+      make.Type( symTab.classType ), List.nil(), List.from( paramTypes ) );
+    paramTypesArray.type = new Type.ArrayType( symTab.classType, symTab.arrayClass );
+
+    JCTree.JCNewArray argsArray = make.NewArray(
+      make.Type( symTab.objectType ), List.nil(), tree.getArguments() );
+    argsArray.type = new Type.ArrayType( symTab.objectType, symTab.arrayClass );
+
+    ArrayList<JCExpression> newArgs = new ArrayList<>();
+    newArgs.add( makeClassExpr( tree, type ) ); // the class
+    newArgs.add( paramTypesArray ); // param types
+    newArgs.add( argsArray ); // args
+
+
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    Symbol.MethodSymbol reflectMethodSym = findReflectUtilConstructor( tree );
+    JCTree.JCMethodInvocation reflectCall =
+      make.Apply( List.nil(),
+        memberAccess( make, javacElems, RuntimeMethods.class.getName() + "." + reflectMethodSym.flatName().toString() ),
+        List.from( newArgs ) );
+    reflectCall.setPos( tree.pos );
+    reflectCall.type = type;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)reflectCall.getMethodSelect();
+    newMethodSelect.sym = reflectMethodSym;
+    newMethodSelect.type = reflectMethodSym.type;
+    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+
+    return reflectCall;
+  }
+
+  private JCExpression makeClassExpr( JCTree tree, Type type )
+  {
+    JCExpression classExpr;
+    if( type.isPrimitive() ||
+        type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC ) )
+    {
+      // class is publicly accessible, assume we can use class literal
+      classExpr = _tp.getTreeMaker().ClassLiteral( type );
+    }
+    else
+    {
+      // generate `Class.forName( typeName )`
+      classExpr = classForNameCall( type, tree );
+    }
+    return classExpr;
+  }
+
+  private JCExpression classForNameCall( Type type, JCTree tree )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    JavacElements javacElems = _tp.getElementUtil();
+
+    JCTree.JCMethodInvocation forNameCall = make.Apply( List.nil(),
+      memberAccess( make, javacElems, Class.class.getName() + ".forName" ),
+      List.of( make.Literal( type.tsym.getQualifiedName().toString() ) ) );
+    forNameCall.setPos( Position.NOPOS );
+    forNameCall.type = _tp.getSymtab().classType;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)forNameCall.getMethodSelect();
+
+    Symbol.ClassSymbol classClassSymbol =
+      IDynamicJdk.instance().getTypeElement(
+        _tp.getContext(), _tp.getCompilationUnit(), Class.class.getName() );
+    Symbol.MethodSymbol forNameMethodSym = resolveMethod( tree.pos(),
+      Names.instance( _tp.getContext() ).fromString( "forName" ), classClassSymbol.type,
+      List.of( _tp.getSymtab().stringType ) );
+    newMethodSelect.sym = forNameMethodSym;
+    newMethodSelect.type = forNameMethodSym.type;
+    assignTypes( newMethodSelect.selected, classClassSymbol );
+
+    return forNameCall;
   }
 
   private void assignTypes( JCExpression m, Symbol symbol )
@@ -1043,75 +1493,152 @@ public class ExtensionTransformer extends TreeTranslator
     }
     else if( m instanceof JCTree.JCIdent )
     {
-      JCTree.JCIdent fieldAccess = (JCTree.JCIdent)m;
-      fieldAccess.sym = symbol;
-      fieldAccess.type = symbol.type;
+      JCTree.JCIdent ident = (JCTree.JCIdent)m;
+      ident.sym = symbol;
+      ident.type = symbol.type;
     }
   }
 
   private Symbol.MethodSymbol findExtMethod( JCTree.JCMethodInvocation tree )
   {
-    JCExpression methodSelect = tree.getMethodSelect();
-    if( methodSelect instanceof MemberSelectTree )
+    Symbol sym = null;
+    if( tree.meth instanceof JCTree.JCFieldAccess )
     {
-      JCTree.JCFieldAccess meth = (JCTree.JCFieldAccess)tree.meth;
-      if( meth.sym == null || !meth.sym.hasAnnotations() )
-      {
-        return null;
-      }
-      for( Attribute.Compound annotation : meth.sym.getAnnotationMirrors() )
-      {
-        if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
-        {
-          String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
-          boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
-          BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
-          Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
-          if( classSymbol == null )
-          {
-            // In module mode if a package in another module is not exported, classes in the package
-            // will not be accessible to other modules, hence the null classSymbol
-            continue;
-          }
+      sym = ((JCTree.JCFieldAccess)tree.meth).sym;
+    }
+    else if ( tree.meth instanceof JCTree.JCIdent )
+    {
+      sym = ((JCTree.JCIdent)tree.meth).sym;
+    }
 
-          Symbol.ClassSymbol extClassSym = classSymbol.getFirst();
-          if( extClassSym == null )
+    if( sym == null || !sym.hasAnnotations() )
+    {
+      return null;
+    }
+
+    for( Attribute.Compound annotation: sym.getAnnotationMirrors() )
+    {
+      if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
+      {
+        String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
+        boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
+        BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
+        Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
+        if( classSymbol == null )
+        {
+          // In module mode if a package in another module is not exported, classes in the package
+          // will not be accessible to other modules, hence the null classSymbol
+          continue;
+        }
+
+        Symbol.ClassSymbol extClassSym = classSymbol.getFirst();
+        if( extClassSym == null )
+        {
+          // This can happen during bootstrapping with Dark Java classes from Manifold itself
+          // So we short-circuit that here (ManClassFinder_9 or any other darkj class used during bootstrapping doesn't really need to use extensions)
+          return null;
+        }
+        Types types = Types.instance( javacTask.getContext() );
+        outer:
+        for( Symbol elem: IDynamicJdk.instance().getMembers( extClassSym ) )
+        {
+          if( elem instanceof Symbol.MethodSymbol && elem.flatName().toString().equals( sym.name.toString() ) )
           {
-            // This can happen during bootstrapping with Dark Java classes from Manifold itself
-            // e.g., ManResolve is a darkj class Manifold uses, ManResolve uses String, which may have an extension class which needs ManResole...
-            // So we short-circuit that here (ManResolve or any other darkj class used during bootstrapping doesn't really need to use extensions)
-            return null;
-          }
-          Types types = Types.instance( javacTask.getContext() );
-          outer:
-          for( Symbol elem : IDynamicJdk.instance().getMembers( extClassSym ) )
-          {
-            if( elem instanceof Symbol.MethodSymbol && elem.flatName().toString().equals( meth.sym.name.toString() ) )
+            Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
+            List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
+            List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)sym).getParameters();
+            int thisOffset = isStatic ? 0 : 1;
+            if( extParams.size() - thisOffset != calledParams.size() )
             {
-              Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
-              List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
-              List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)meth.sym).getParameters();
-              int thisOffset = isStatic ? 0 : 1;
-              if( extParams.size() - thisOffset != calledParams.size() )
-              {
-                continue;
-              }
-              for( int i = thisOffset; i < extParams.size(); i++ )
-              {
-                Symbol.VarSymbol extParam = extParams.get( i );
-                Symbol.VarSymbol calledParam = calledParams.get( i - thisOffset );
-                if( !types.isSameType( types.erasure( extParam.type ), types.erasure( calledParam.type ) ) )
-                {
-                  continue outer;
-                }
-              }
-              return extMethodSym;
+              continue;
             }
+            for( int i = thisOffset; i < extParams.size(); i++ )
+            {
+              Symbol.VarSymbol extParam = extParams.get( i );
+              Symbol.VarSymbol calledParam = calledParams.get( i - thisOffset );
+              if( !types.isSameType( types.erasure( extParam.type ), types.erasure( calledParam.type ) ) )
+              {
+                continue outer;
+              }
+            }
+            return extMethodSym;
           }
         }
       }
     }
     return null;
+  }
+
+  //## todo: cache these
+  private Symbol.MethodSymbol findReflectUtilMethod( JCTree tree, String name, Type returnType, boolean isStatic, Class... params )
+  {
+    name = name + (isStatic ? "Static" : "") + '_' + typeForReflect( returnType );
+
+    Symtab symtab = _tp.getSymtab();
+    Type.ArrayType classArrayType = new Type.ArrayType( symtab.classType, symtab.arrayClass );
+    Type.ArrayType objectArrayType = new Type.ArrayType( symtab.objectType, symtab.arrayClass );
+    List<Type> paramTypes;
+    if( isStatic )
+    {
+      paramTypes = List.of( symtab.classType, symtab.stringType, classArrayType, objectArrayType );
+    }
+    else
+    {
+      paramTypes = List.of( symtab.objectType, symtab.stringType, classArrayType, objectArrayType );
+    }
+
+    Names names = Names.instance( _tp.getContext() );
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    return resolveMethod( tree.pos(), names.fromString( name ), reflectMethodClassSym.type, paramTypes );
+  }
+
+  //## todo: cache these
+  private Symbol.MethodSymbol findReflectUtilMethod( JCTree tree, Type type, boolean isStatic, boolean setter )
+  {
+    String name = (setter ? "set" : "get") + "Field" + (isStatic ? "Static" : "") + '_' + typeForReflect( type );
+
+    Symtab symtab = _tp.getSymtab();
+    List<Type> paramTypes;
+    if( setter )
+    {
+      paramTypes = List.of( isStatic ? symtab.classType : symtab.objectType, symtab.stringType, type );
+    }
+    else
+    {
+      paramTypes = List.of( isStatic ? symtab.classType : symtab.objectType, symtab.stringType );
+    }
+
+    Names names = Names.instance( _tp.getContext() );
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    return resolveMethod( tree.pos(), names.fromString( name ), reflectMethodClassSym.type, paramTypes );
+  }
+
+  //## todo: cache this
+  private Symbol.MethodSymbol findReflectUtilConstructor( JCTree.JCNewClass tree )
+  {
+    Symtab symtab = _tp.getSymtab();
+    Type.ArrayType classArrayType = new Type.ArrayType( symtab.classType, symtab.arrayClass );
+    Type.ArrayType objectArrayType = new Type.ArrayType( symtab.objectType, symtab.arrayClass );
+    List<Type> paramTypes = List.of( symtab.classType, classArrayType, objectArrayType );
+
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+
+    Names names = Names.instance( _tp.getContext() );
+    return resolveMethod( tree.pos(), names.fromString( "construct" ), reflectMethodClassSym.type, paramTypes );
+  }
+
+  private String typeForReflect( Type returnType )
+  {
+    if( returnType.isPrimitive() )
+    {
+      return returnType.tsym.getSimpleName().toString();
+    }
+    return "Object";
   }
 
   private boolean isStructuralMethod( JCTree.JCMethodInvocation tree )

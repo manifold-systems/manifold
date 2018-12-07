@@ -21,25 +21,25 @@ import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Kinds.Kind.ERR;
 
-public class ManClassFinder extends ClassFinder
+public class ManClassFinder_9 extends ClassFinder
 {
   private final Context _ctx;
   private final ModuleFinder _moduleFinder;
   private final Symtab _symtab;
 
-  public static ManClassFinder instance( Context ctx )
+  public static ManClassFinder_9 instance( Context ctx )
   {
     ClassFinder finder = ctx.get( classFinderKey );
-    if( !(finder instanceof ManClassFinder) )
+    if( !(finder instanceof ManClassFinder_9) )
     {
       ctx.put( classFinderKey, (ClassFinder)null );
-      finder = new ManClassFinder( ctx );
+      finder = new ManClassFinder_9( ctx );
     }
 
-    return (ManClassFinder)finder;
+    return (ManClassFinder_9)finder;
   }
 
-  private ManClassFinder( Context context )
+  private ManClassFinder_9( Context context )
   {
     super( context );
 

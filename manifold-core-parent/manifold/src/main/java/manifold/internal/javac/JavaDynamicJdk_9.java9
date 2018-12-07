@@ -20,7 +20,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 
-public class Java11DynamicJdk implements IDynamicJdk
+public class JavaDynamicJdk_9 implements IDynamicJdk
 {
   @Override
   public <T> void report( Log issueLogger, Diagnostic<? extends T> diagnostic )
@@ -36,14 +36,14 @@ public class Java11DynamicJdk implements IDynamicJdk
           issueLogger.error( JCDiagnostic.DiagnosticFlag.MULTIPLE, new IssueReporter.Position( diagnostic ), CompilerProperties.Errors.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
           break;
         case WARNING:
-          issueLogger.warning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+          issueLogger.warning( new IssueReporter.Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
           break;
         case MANDATORY_WARNING:
-          issueLogger.mandatoryWarning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+          issueLogger.mandatoryWarning( new IssueReporter.Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
           break;
         case NOTE:
         case OTHER:
-          issueLogger.note( new IssueReporter.Position( diagnostic ), CompilerProperties.Notes.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+          issueLogger.note( new IssueReporter.Position( diagnostic ), "proc.messager", diagnostic.getMessage( Locale.getDefault() ) );
           break;
       }
     }
@@ -131,12 +131,12 @@ public class Java11DynamicJdk implements IDynamicJdk
   @Override
   public List<Type> getTargets( JCTree.JCLambda tree )
   {
-    return tree.target == null ? List.nil() : List.of( tree.target );
+    return tree.targets;
   }
   @Override
   public void setTargets( JCTree.JCLambda tree, List<Type> targets )
   {
-    tree.target = (targets == null || targets.isEmpty()) ? null : targets.head;
+    tree.targets = targets;
   }
 
   @Override
