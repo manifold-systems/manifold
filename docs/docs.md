@@ -1924,7 +1924,7 @@ See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for detail
 ## Type-safe Reflection
 
 Sometimes you have to use Java reflection to access fields, methods, and types that are not directly accessible from
-your code. But writing reflection code is not only tedious and error-prone, it also loses type-safety in the process.  
+your code. But writing reflection code is not only tedious and error-prone, it also loses type-safety in the process. 
 Manifold mitigates these issues with the `@JailBreak` annotation and the `jailbreak()` extension method.  Use them to
 leverage the convenience and type-safety of the Java compiler and let Manifold generate reliable, efficient reflection 
 code for you.
