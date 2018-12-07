@@ -2151,10 +2151,11 @@ The plugin currently supports most high-level IntelliJ features including:
 * Rename/Move refactoring
 * Quick navigation
 * Structural typing
-* Self type support
+* Type-safe reflection with `@JailBreak`
+* Self type support with `@Self`
 * Incremental compilation
 * Hotswap debugging
-* Author template files
+* Professional template file editor
 
 The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds, extension
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
