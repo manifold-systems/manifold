@@ -2163,7 +2163,9 @@ Likewise, jump directly from references to data source elements and find usages 
 Watch your JSON, images, properties, templates, and custom type manifolds come alive as types.
 Changes you make are instantly available in your code:
 
-Install the plugin directly from IntelliJ via: `Settings | Plugins | Browse Repositories | Manifold`
+Install the plugin directly from IntelliJ via:
+
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: <kbd>Manifold</kbd>
 
 ## Use with other JVM Languages
 
