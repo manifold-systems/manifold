@@ -10,7 +10,7 @@ of it.
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Gain direct, type-safe access to structured data. Eliminate code generators. Minimize build time.
+Gain direct, type-safe access to <i>any</i> data source. Remove the code gen step in your build process.
 ```java 
 // JSON files are types!
 Person person = Person.fromJsonUrl(url);
@@ -18,7 +18,7 @@ person.setFirstName("Scott");
 ```
 
 ### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
-Add extension methods and interfaces to existing Java classes, even String, List, and File. Eliminate boilerplate code.
+Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code.
 ```java
 String greeting = "hello";
 greeting.myMethod(); // augment any type
