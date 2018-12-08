@@ -10,6 +10,11 @@ import java.lang.annotation.Target;
  * <p/>
  * Annotate the type on a variable, parameter, or new expression with @{@link JailBreak} to avoid the drudgery
  * and vulnerability of Java reflection.
+ * <p/>
+ * See the <a href="http://manifold.systems/docs.html#type-safe-reflection">Type-safe Reflection</a> documentation for
+ * more information.
+ * <p/>
+ * See also {@link manifold.ext.extensions.java.lang.Object.ManObjectExt#jailbreak(Object)}
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE_USE})

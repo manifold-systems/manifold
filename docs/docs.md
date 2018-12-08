@@ -1941,7 +1941,8 @@ types.
 foo.privateMethod();
 foo.privateMethod("hey");
 foo._privateField = 88;
-
+```
+```java
 public class Foo {
   private final int _privateField;
   
@@ -1967,7 +1968,8 @@ Since Java does not permit you to annotate the type in a static expression, you 
 @JailBreak MyClass myClass = null; // value is insignificant
 myClass.staticMethod();
 myClass.Static_Field = "hi";
-
+```
+```java
 public class MyClass {
   private static String Static_Field = "hello";
   
@@ -1978,33 +1980,21 @@ public class MyClass {
 
 #### Use With Types and Constructors
 
-Use `@JailBreak` to access hidden types:
+Use `@JailBreak` to access hidden types and constructors:
 ```java
-com.abc. @JailBreak SecretClass secretClass = new SecretClass();
-String value = secretClass.getParam();
+com.abc. @JailBreak SecretClass secretClass = 
+  new com.abc. @JailBreak SecretClass("hi");
+secretClass._data = "hey";
 ```
-
-Use `@JailBreak` to invoke hidden constructors:
-```java
-new com.abc. @JailBreak SecretClass("hi");
-```
-
 ```java
 package com.abc;
 // not public
 class SecretClass {
-  private final String _param;
+  private final String _data;
 
-  public SecretClass(){
-    this("default");
-  }
   // not public
-  SecretClass(String param){
-    _param = param;
-  }
-
-  private String getParam() {
-    return _param;
+  SecretClass(String data){
+    _data = data;
   }
 }
 ```
@@ -2015,8 +2005,8 @@ Similar to `@JailBreak` you can call the `jailbreak()` extension method from any
 private fields, methods, and types.
 
 ```java
-MyClass myClass = new MyClass();
-myClass.jailbreak().privateMethodOnMyClass();
+Foo foo = new Foo();
+foo.jailbreak().privateMethodOnFoo();
 ```
 This method is especially handy when you have a chain of member access expressions and you want to quickly use
 inaccessible members:

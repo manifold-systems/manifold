@@ -14,6 +14,9 @@ import java.lang.annotation.Target;
  * {@link Self} annotation at the method return type position Java 8 misinterprets
  * it as a Method annotation, hence the METHOD target here. The METHOD target type
  * will be removed in a future release.
+ * <p/>
+ * See the <a href="http://manifold.systems/docs.html#the-self-type">Self Type</a> documentation
+ * for more information.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE_USE, ElementType.METHOD})
