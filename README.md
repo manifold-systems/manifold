@@ -32,7 +32,7 @@ thing.myMethod(); // treat as your interface
 ```
 
 ### [Templates](http://manifold.systems/docs.html#templating)
-Make type-safe, templatized data files using pure Java. Use the same template expressions in Java strings.
+Make type-safe, [template files](http://manifold.systems/manifold-templates.html) using pure Java. Use the same template expressions in Java strings.
 ```java
 int hour = 8;
 // print "It is 8 o'clock"
