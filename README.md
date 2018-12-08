@@ -39,6 +39,15 @@ int hour = 8;
 System.out.println("It is $hour o'clock"); 
 ``` 
  
+### [Type-safe Reflection](http://manifold.systems/docs.html#jailbreak)
+Access private features with <b>@JailBreak</b> to avoid the drudgery and vulnerability of Java reflection.
+```java
+@JailBreak Foo foo = new Foo();
+// Direct, type-safe access to *all* foo's members
+foo.privateMethod(x, y, z); 
+foo.privateField = value;
+```
+       
 ### [Libraries](http://manifold.systems/docs.html#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
 ```java
