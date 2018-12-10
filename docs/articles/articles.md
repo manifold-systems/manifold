@@ -10,18 +10,20 @@ layout: default
   <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html">Manifold: Extension methods for Java?! - JAXenter</a></p>
+  <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html">Manifold: Extension methods for Java?! (Part 2) - JAXenter</a></p>
   <p>Scott McKinney discusses Extension Classes, an innovative feature that enables you to supplement a class with your own methods, interfaces, and other features.</p>
   <p><small>jaxenter.com</small></p>
   </td>
  </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
  
  <tr>
   <td>
   <p><a href="https://jaxenter.com/manifold-code-generators-150738.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generators-150738.html">Manifold: The reinvention of code generators - JAXenter</a></p>
+  <p><a href="https://jaxenter.com/manifold-code-generators-150738.html">Manifold: The reinvention of code generators (Part 1) - JAXenter</a></p>
   <p>Manifold offers cutting edge language features for Java devs. 
             Scott McKinney discusses Manifold's reinvention of code generators, 
 			namely Type Manifolds.</p>
