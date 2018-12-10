@@ -7,7 +7,7 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a https://jaxenter.com/manifold-code-generator-part-2-151762.html<img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html">Manifold: Extension methods for Java?! - JAXenter</a></p>
