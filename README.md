@@ -41,7 +41,7 @@ foo.privateField = value;
 ```
 
 ### [Templates](http://manifold.systems/docs.html#templating)
-Make type-safe, [template files](http://manifold.systems/manifold-templates.html) using pure Java. Use the same template expressions in Java strings.
+Make type-safe [template files](http://manifold.systems/manifold-templates.html) using pure Java. Use the same template expressions in Java strings.
 ```java
 int hour = 8;
 // print "It is 8 o'clock"
@@ -55,6 +55,7 @@ File file = new File(path);
 // Use refreshing extensions to File
 String content = file.readText();
 ```  
+
 ### [IntelliJ](http://manifold.systems/docs.html#working-with-intellij)
 Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides 
 comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, 
