@@ -30,6 +30,15 @@ Unify disparate APIs. Bridge software components you do not control. Access maps
 MyInterface thing = (MyInterface)notMyInterface;
 thing.myMethod(); // treat as your interface
 ```
+ 
+### [Type-safe Reflection](http://manifold.systems/docs.html#type-safe-reflection)
+Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection.
+```java
+@Jailbreak Foo foo = new Foo();
+// Direct, type-safe access to *all* foo's members
+foo.privateMethod(x, y, z); 
+foo.privateField = value;
+```
 
 ### [Templates](http://manifold.systems/docs.html#templating)
 Make type-safe, [template files](http://manifold.systems/manifold-templates.html) using pure Java. Use the same template expressions in Java strings.
@@ -38,15 +47,6 @@ int hour = 8;
 // print "It is 8 o'clock"
 System.out.println("It is $hour o'clock"); 
 ``` 
- 
-### [Type-safe Reflection](http://manifold.systems/docs.html#jailbreak)
-Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection.
-```java
-@Jailbreak Foo foo = new Foo();
-// Direct, type-safe access to *all* foo's members
-foo.privateMethod(x, y, z); 
-foo.privateField = value;
-```
        
 ### [Libraries](http://manifold.systems/docs.html#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
