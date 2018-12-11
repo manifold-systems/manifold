@@ -17,6 +17,9 @@ public class ExtIssueMsg
   public static final IssueMsg MSG_CANNOT_EXTEND_SOURCE_FILE = new IssueMsg( "Extending source file '{0}' in the same module, consider modifying the file directly." );
   public static final IssueMsg MSG_SELF_NOT_ALLOWED_HERE = new IssueMsg( "@Self is not allowed here, use it exclusively on instance method declaration return types." );
   public static final IssueMsg MSG_SELF_NOT_ON_CORRECT_TYPE = new IssueMsg( "@Self cannot be applied to the type '{0}', only on '{1}'." );
+  public static final IssueMsg MSG_INCREMENT_OP_NOT_ALLOWED_REFLECTION = new IssueMsg( "++, -- expressions not supported with jailbreak, assign directly with '='" );
+  public static final IssueMsg MSG_COMPOUND_OP_NOT_ALLOWED_REFLECTION = new IssueMsg( "Compound assignment operators not supported with jailbreak, assign directly with '='" );
+
   //
   // For now these are only used in the IntelliJ plugin
   //

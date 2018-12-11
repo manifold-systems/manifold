@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import junit.framework.TestCase;
 import manifold.ext.api.JailBreak;
 import manifold.ext.stuff.Leaf;
+import manifold.ext.stuff.Sample;
 import manifold.util.ReflectUtil;
 
 public class JailBreakTest extends TestCase
@@ -101,5 +102,69 @@ public class JailBreakTest extends TestCase
     // Test a class that is extended
     @JailBreak ArrayList<String> list = new ArrayList<>();
     list.ensureCapacityInternal( 100 );
+  }
+
+  public void testAllTypesAssignField()
+  {
+    @JailBreak Sample s = new Sample();
+    s._booleanField = true;
+    assertTrue( s._booleanField );
+    s._charField = 'a';
+    assertEquals( 'a', s._charField );
+    s._byteField = Byte.MAX_VALUE;
+    assertEquals( Byte.MAX_VALUE, s._byteField );
+    s._shortField = Short.MAX_VALUE;
+    assertEquals( Short.MAX_VALUE, s._shortField );
+    s._intField = Integer.MAX_VALUE;
+    assertEquals( Integer.MAX_VALUE, s._intField );
+    s._longField = Long.MAX_VALUE;
+    assertEquals( Long.MAX_VALUE, s._longField );
+    s._floatField = Float.MAX_VALUE;
+    assertEquals( Float.MAX_VALUE, s._floatField );
+    s._doubleField = Double.MAX_VALUE;
+    assertEquals( Double.MAX_VALUE, s._doubleField );
+    s._stringField = "hello";
+    assertEquals( "hello", s._stringField );
+  }
+
+  public void testAllTypesAssignFieldAsExpr()
+  {
+    @JailBreak Sample s = new Sample();
+    boolean b = s._booleanField = true;
+    assertTrue( b );
+    char c = s._charField = 'a';
+    assertEquals( 'a', c );
+    byte bt = s._byteField = Byte.MAX_VALUE;
+    assertEquals( Byte.MAX_VALUE, bt );
+    short sh = s._shortField = Short.MAX_VALUE;
+    assertEquals( Short.MAX_VALUE, sh );
+    int i = s._intField = Integer.MAX_VALUE;
+    assertEquals( Integer.MAX_VALUE, i );
+    long l = s._longField = Long.MAX_VALUE;
+    assertEquals( Long.MAX_VALUE, l );
+    float f = s._floatField = Float.MAX_VALUE;
+    assertEquals( Float.MAX_VALUE, f );
+    double d = s._doubleField = Double.MAX_VALUE;
+    assertEquals( Double.MAX_VALUE, d );
+    String str = s._stringField = "hello";
+    assertEquals( "hello", str );
+  }
+
+  public void testUnaryExpr()
+  {
+    @JailBreak Sample s = new Sample();
+    s._intField = 8;
+    assertEquals( -8, -s._intField );
+    assertEquals( 8, +s._intField );
+    assertEquals( ~8, ~s._intField );
+
+    Sample ss = new Sample();
+    ss.jailbreak()._intField = 9;
+    assertEquals( -9, -ss.jailbreak()._intField );
+    assertEquals( 9, ss.jailbreak()._intField );
+    assertEquals( ~9, ~ss.jailbreak()._intField );
+
+    s._booleanField = true;
+    assertFalse( !s._booleanField );
   }
 }
