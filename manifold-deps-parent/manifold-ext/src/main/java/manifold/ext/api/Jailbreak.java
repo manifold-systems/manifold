@@ -6,9 +6,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Gain direct, type-safe access to otherwise inaccessible classes/methods/fields with @{@link JailBreak}.
+ * Gain direct, type-safe access to otherwise inaccessible classes/methods/fields with @{@link Jailbreak}.
  * <p/>
- * Annotate the type on a variable, parameter, or new expression with @{@link JailBreak} to avoid the drudgery
+ * Annotate the type on a variable, parameter, or new expression with @{@link Jailbreak} to avoid the drudgery
  * and vulnerability of Java reflection.
  * <p/>
  * See the <a href="http://manifold.systems/docs.html#type-safe-reflection">Type-safe Reflection</a> documentation for
@@ -18,6 +18,6 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE_USE})
-public @interface JailBreak
+public @interface Jailbreak
 {
 }

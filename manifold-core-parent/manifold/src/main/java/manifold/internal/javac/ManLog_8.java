@@ -51,9 +51,9 @@ public class ManLog_8 extends Log
     if( pos instanceof JCTree.JCFieldAccess &&
        ("cant.assign.val.to.final.var".equals( key ) ||
         "var.might.already.be.assigned".equals( key )) &&
-       isJailBreakSelect( (JCTree.JCFieldAccess)pos ) )
+       isJailbreakSelect( (JCTree.JCFieldAccess)pos ) )
     {
-      // For @JailBreak assignments, change error to warning re final var assignment
+      // For @Jailbreak assignments, change error to warning re final var assignment
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( source, pos, key, args ) );
     }
@@ -88,7 +88,7 @@ public class ManLog_8 extends Log
     }
   }
 
-  boolean isJailBreakSelect( JCTree.JCFieldAccess pos )
+  boolean isJailbreakSelect( JCTree.JCFieldAccess pos )
   {
     if( _extensionTransformerClass.get() == null )
     {
@@ -96,7 +96,7 @@ public class ManLog_8 extends Log
     }
 
     //noinspection ConstantConditions
-    return (boolean)ReflectUtil.method( _extensionTransformerClass.get(), "isJailBreakReceiver",
+    return (boolean)ReflectUtil.method( _extensionTransformerClass.get(), "isJailbreakReceiver",
       JCTree.JCFieldAccess.class ).invokeStatic( pos );
   }
 

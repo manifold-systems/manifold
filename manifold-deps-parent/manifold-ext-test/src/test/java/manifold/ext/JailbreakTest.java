@@ -3,21 +3,21 @@ package manifold.ext;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import junit.framework.TestCase;
-import manifold.ext.api.JailBreak;
+import manifold.ext.api.Jailbreak;
 import manifold.ext.stuff.Leaf;
 import manifold.ext.stuff.Sample;
 import manifold.util.ReflectUtil;
 
-public class JailBreakTest extends TestCase
+public class JailbreakTest extends TestCase
 {
   public void testJailbreakMethod()
   {
-    manifold.ext.stuff.@JailBreak SecretParam secretParam =
-      new manifold.ext.stuff.@JailBreak SecretParam();
+    manifold.ext.stuff.@Jailbreak SecretParam secretParam =
+      new manifold.ext.stuff.@Jailbreak SecretParam();
     secretParam._foo = 9;
 
-    manifold.ext.stuff.@JailBreak SecretClass secret =
-      new manifold.ext.stuff.@JailBreak SecretClass( secretParam );
+    manifold.ext.stuff.@Jailbreak SecretClass secret =
+      new manifold.ext.stuff.@Jailbreak SecretClass( secretParam );
 
     int foo = secret.getParam().jailbreak()._foo;
     assertEquals( 9, foo );
@@ -29,7 +29,7 @@ public class JailBreakTest extends TestCase
 
   public void testAccessPrivateMembersDeclaredInSupers()
   {
-    @JailBreak Leaf leaf = new Leaf();
+    @Jailbreak Leaf leaf = new Leaf();
     leaf.foo();
     assertEquals( 9, leaf.foo(9) );
     assertEquals( 9d, leaf.foo(9d) );
@@ -59,31 +59,31 @@ public class JailBreakTest extends TestCase
 
   public void testType()
   {
-    java.lang.@JailBreak AbstractStringBuilder sb = new @JailBreak StringBuilder();
+    java.lang.@Jailbreak AbstractStringBuilder sb = new @Jailbreak StringBuilder();
     sb.append( 8 );
 
-    manifold.ext.stuff.@JailBreak SecretParam secretParam =
-      new manifold.ext.stuff.@JailBreak SecretParam();
+    manifold.ext.stuff.@Jailbreak SecretParam secretParam =
+      new manifold.ext.stuff.@Jailbreak SecretParam();
     secretParam._foo = 9;
-    manifold.ext.stuff.@JailBreak SecretClass secret =
-      new manifold.ext.stuff.@JailBreak SecretClass( secretParam );
+    manifold.ext.stuff.@Jailbreak SecretClass secret =
+      new manifold.ext.stuff.@Jailbreak SecretClass( secretParam );
     secretParam = secret.getParam();
     assertEquals( 9, secretParam._foo );
   }
 
-  public void testJailBreak()
+  public void testJailbreak()
   {
     // instance method
-    @JailBreak LocalTime time = LocalTime.now();
+    @Jailbreak LocalTime time = LocalTime.now();
     time.writeReplace();
 
     // static method
-    @JailBreak LocalTime staticTime = null;
+    @Jailbreak LocalTime staticTime = null;
     LocalTime localTime = staticTime.create( 7, 59, 30, 99 );
     assertEquals( localTime.withHour( 7 ).withMinute( 59 ).withSecond( 30 ).withNano( 99 ), localTime );
 
     // instance field
-    @JailBreak LocalTime lt = null;
+    @Jailbreak LocalTime lt = null;
     lt = LocalTime.of( 11, 12 );
     assertEquals( 11, lt.hour );
     lt.hour = 12;
@@ -96,17 +96,17 @@ public class JailBreakTest extends TestCase
     assertEquals( ReflectUtil.field( LocalTime.class, "HOURS_PER_DAY" ).getStatic(), hoursPerDay + 1 );
 
     // new expr
-    String charStr = new java.lang.@JailBreak String( new char[]{'h', 'i'}, true );
+    String charStr = new java.lang.@Jailbreak String( new char[]{'h', 'i'}, true );
     assertEquals( "hi", charStr );
 
     // Test a class that is extended
-    @JailBreak ArrayList<String> list = new ArrayList<>();
+    @Jailbreak ArrayList<String> list = new ArrayList<>();
     list.ensureCapacityInternal( 100 );
   }
 
   public void testAllTypesAssignField()
   {
-    @JailBreak Sample s = new Sample();
+    @Jailbreak Sample s = new Sample();
     s._booleanField = true;
     assertTrue( s._booleanField );
     s._charField = 'a';
@@ -129,7 +129,7 @@ public class JailBreakTest extends TestCase
 
   public void testAllTypesAssignFieldAsExpr()
   {
-    @JailBreak Sample s = new Sample();
+    @Jailbreak Sample s = new Sample();
     boolean b = s._booleanField = true;
     assertTrue( b );
     char c = s._charField = 'a';
@@ -152,7 +152,7 @@ public class JailBreakTest extends TestCase
 
   public void testUnaryExpr()
   {
-    @JailBreak Sample s = new Sample();
+    @Jailbreak Sample s = new Sample();
     s._intField = 8;
     assertEquals( -8, -s._intField );
     assertEquals( 8, +s._intField );

@@ -98,7 +98,7 @@ public class SrcClassUtil
       for( Symbol sym: classSymbol.getEnclosedElements() )
       {
 // include private members because:
-// 1. @JailBreak can expose private members
+// 1. @Jailbreak can expose private members
 // 2. Compiler error messages are better when referencing an inaccessible method vs. a non-existent one
 //        long modifiers = SrcAnnotated.modifiersFrom( sym.getModifiers() );
 //        if( Modifier.isPrivate( (int)modifiers ) )

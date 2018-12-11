@@ -89,12 +89,12 @@ public class ManResolve extends Resolve
       return true;
     }
 
-    if( isJailBreakOnType() )
+    if( isJailbreakOnType() )
     {
       // handle the case where the class itself is inaccessible:
       //
-      // // the *type* must be @JailBreak as well as the constructor
-      // com.foo.@JailBreak PrivateClass privateThing = new com.foo.@JailBreak PrivateClass();
+      // // the *type* must be @Jailbreak as well as the constructor
+      // com.foo.@Jailbreak PrivateClass privateThing = new com.foo.@Jailbreak PrivateClass();
       // privateThing.privateMethod();
       // ...
       return true;
@@ -119,18 +119,18 @@ public class ManResolve extends Resolve
     return accessible;
   }
 
-  private boolean isJailBreakOnType()
+  private boolean isJailbreakOnType()
   {
     JCTree.JCAnnotatedType annotatedType = ((ManAttr)_attr).peekAnnotatedType();
     if( annotatedType != null )
     {
-      return annotatedType.toString().contains( "@JailBreak" );
+      return annotatedType.toString().contains( "@Jailbreak" );
     }
     return false;
   }
 
   /**
-   * Allow @JailBreak to expose otherwise inaccessible features
+   * Allow @Jailbreak to expose otherwise inaccessible features
    */
   @Override
   public boolean isAccessible( Env<AttrContext> env, Type site, Symbol sym, boolean checkInner )
@@ -141,14 +141,14 @@ public class ManResolve extends Resolve
       return true;
     }
 
-    if( isJailBreak( sym ) )
+    if( isJailbreak( sym ) )
     {
       return true;
     }
-    return isJailBreak( env.tree );
+    return isJailbreak( env.tree );
   }
 
-  private boolean isJailBreak( Symbol sym )
+  private boolean isJailbreak( Symbol sym )
   {
     Class<?> extensionTransformer = EXTENSION_TRANSFORMER.get();
     if( extensionTransformer == null )
@@ -156,11 +156,11 @@ public class ManResolve extends Resolve
       return false;
     }
 
-    return (boolean)ReflectUtil.method( extensionTransformer, "isJailBreakSymbol", Symbol.class )
+    return (boolean)ReflectUtil.method( extensionTransformer, "isJailbreakSymbol", Symbol.class )
       .invokeStatic( sym );
   }
 
-  private boolean isJailBreak( JCTree tree )
+  private boolean isJailbreak( JCTree tree )
   {
     if( !(tree instanceof JCTree.JCMethodInvocation) &&
         !(tree instanceof JCTree.JCFieldAccess) &&
@@ -178,17 +178,17 @@ public class ManResolve extends Resolve
       return false;
     }
 
-    boolean isJailBreak = (boolean)ReflectUtil.method( extensionTransformer, "isJailBreakReceiver", JCTree.class )
+    boolean isJailbreak = (boolean)ReflectUtil.method( extensionTransformer, "isJailbreakReceiver", JCTree.class )
       .invokeStatic( tree );
-    if( !isJailBreak )
+    if( !isJailbreak )
     {
       JCTree.JCFieldAccess select = ((ManAttr)_attr).peekSelect();
       if( select != null && select != tree )
       {
-        isJailBreak = (boolean)ReflectUtil.method( extensionTransformer, "isJailBreakReceiver", JCTree.JCFieldAccess.class )
+        isJailbreak = (boolean)ReflectUtil.method( extensionTransformer, "isJailbreakReceiver", JCTree.JCFieldAccess.class )
           .invokeStatic( select );
       }
     }
-    return isJailBreak;
+    return isJailbreak;
   }
 }

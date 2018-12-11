@@ -68,7 +68,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     _selects = new Stack<>();
     _annotatedTypes = new Stack<>();
 
-    // Override logger to handle final field assignment for @JailBreak
+    // Override logger to handle final field assignment for @Jailbreak
     _manLog = (ManLog_8)ManLog_8.instance( ctx );
     ReflectUtil.field( this, "log" ).set( _manLog );
     ReflectUtil.field( Flow.instance( ctx ), "log" ).set( _manLog );
@@ -104,7 +104,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   /**
-   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
+   * Facilitates @Jailbreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
    */
   @Override
   public void visitSelect( JCTree.JCFieldAccess tree )
@@ -136,7 +136,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   /**
-   * Facilitates @JailBreak. ManResolve#isAccessible() needs to know the JCAnnotatedType in context.
+   * Facilitates @Jailbreak. ManResolve#isAccessible() needs to know the JCAnnotatedType in context.
    */
   @Override
   public void visitAnnotatedType( JCTree.JCAnnotatedType tree )
@@ -197,7 +197,7 @@ public class ManAttr_8 extends Attr implements ManAttr
       {
         if( fieldAccess.type instanceof Type.ErrorType )
         {
-          if( shouldCheckSuperType( fieldAccess.selected.type ) && _manLog.isJailBreakSelect( fieldAccess ) )
+          if( shouldCheckSuperType( fieldAccess.selected.type ) && _manLog.isJailbreakSelect( fieldAccess ) )
           {
             // set qualifier type to supertype to handle private methods
             Type.ClassType oldType = (Type.ClassType)fieldAccess.selected.type;

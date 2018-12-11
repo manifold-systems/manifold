@@ -69,22 +69,22 @@ opens the door to type-safe usages in methods like `Object#equals(Object)` -- wi
 the compiler enforce the subclass type for arguments to the method as well as enforce subclass treatment of the 
 parameter in the method body.
 
-#### Type-safe Reflection via @JailBreak
+#### Type-safe Reflection via @Jailbreak
 
 Sometimes you have to call private methods and use other inaccessible features, but reflection makes this a tedious 
 process and results in hard to maintain code.  Worse, with reflection you completely bypass type-safety.  Manifold 
-will change that with `@JailBreak`:
+will change that with `@Jailbreak`:
 
 ```java
 public class Foo {
   private void privateMethod(String arg) {...}
 }
 
-@JailBreak Foo foo = new Foo();
+@Jailbreak Foo foo = new Foo();
 foo.privateMethod("hi"); // type-safe call to "inaccessible" method
 ```
 
-Use `@JailBreak` to access classes, methods, and fields type-safely regardless of declared accessibility.  Because if 
+Use `@Jailbreak` to access classes, methods, and fields type-safely regardless of declared accessibility.  Because if 
 you're gonna do it anyway, why suffer the consequences of reflection?
 
 Similarly, to conveniently use inaccessible features from an expression you can use the `$jailbreak()` extension method:
@@ -96,7 +96,7 @@ myObject.getFoo().$jailbreak().privateMethod("hi");
 Where the extension method is defined on `Object` as:
 
 ```java
-public static @JailBreak @Self Object $jailbreak(@This Object thiz) {
+public static @Jailbreak @Self Object $jailbreak(@This Object thiz) {
   return thiz;
 }
 ```   

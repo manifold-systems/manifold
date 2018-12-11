@@ -45,7 +45,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
-import manifold.ext.api.JailBreak;
+import manifold.ext.api.Jailbreak;
 import manifold.ext.api.Self;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
@@ -177,7 +177,7 @@ public class ExtensionTransformer extends TreeTranslator
       }
       result = objIdent;
     }
-    else if( isJailBreakReceiver( tree ) )
+    else if( isJailbreakReceiver( tree ) )
     {
       result = replaceWithReflection( tree );
     }
@@ -198,7 +198,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( isJailBreakReceiver( tree ) )
+    if( isJailbreakReceiver( tree ) )
     {
       result = replaceWithReflection( tree );
     }
@@ -219,7 +219,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( isJailBreakReceiver( tree ) )
+    if( isJailbreakReceiver( tree ) )
     {
       // +=, -=, etc. operators not supported with jailbreak, only direct assignment
       _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_COMPOUND_OP_NOT_ALLOWED_REFLECTION.get() );
@@ -245,7 +245,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( isJailBreakReceiver( tree ) )
+    if( isJailbreakReceiver( tree ) )
     {
       Tree.Kind kind = tree.getKind();
       if( kind == Tree.Kind.POSTFIX_INCREMENT || kind == Tree.Kind.POSTFIX_DECREMENT ||
@@ -275,7 +275,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( isJailBreakReceiver( tree ) )
+    if( isJailbreakReceiver( tree ) )
     {
       result = replaceWithReflection( tree );
     }
@@ -299,9 +299,9 @@ public class ExtensionTransformer extends TreeTranslator
     if( vartype instanceof JCTree.JCAnnotatedType )
     {
       if( ((JCTree.JCAnnotatedType)tree.vartype).getAnnotations().stream()
-        .anyMatch( anno -> JailBreak.class.getTypeName().equals( anno.attribute.type.toString() ) ) )
+        .anyMatch( anno -> Jailbreak.class.getTypeName().equals( anno.attribute.type.toString() ) ) )
       {
-        // if the type itself is inaccessible and annotated with @JailBreak, it will be erased to Object
+        // if the type itself is inaccessible and annotated with @Jailbreak, it will be erased to Object
         tree.type = ((JCTree.JCAnnotatedType)tree.vartype).underlyingType.type;
         tree.sym.type = _tp.getSymtab().objectType;
       }
@@ -381,7 +381,7 @@ public class ExtensionTransformer extends TreeTranslator
       // replace with proxy call
       result = replaceStructuralCall( tree );
     }
-    else if( isJailBreakReceiver( tree ) )
+    else if( isJailbreakReceiver( tree ) )
     {
       result = replaceWithReflection( tree );
     }
@@ -400,26 +400,26 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   @SuppressWarnings("WeakerAccess")
-  public static boolean isJailBreakReceiver( JCTree tree )
+  public static boolean isJailbreakReceiver( JCTree tree )
   {
     if( tree instanceof JCTree.JCMethodInvocation )
     {
       JCExpression methodSelect = ((JCTree.JCMethodInvocation)tree).getMethodSelect();
       if( methodSelect instanceof JCTree.JCFieldAccess )
       {
-        return isJailBreakReceiver( (JCTree.JCFieldAccess)methodSelect );
+        return isJailbreakReceiver( (JCTree.JCFieldAccess)methodSelect );
       }
     }
     else if( tree instanceof JCTree.JCFieldAccess )
     {
-      return isJailBreakReceiver( (JCTree.JCFieldAccess)tree );
+      return isJailbreakReceiver( (JCTree.JCFieldAccess)tree );
     }
     else if( tree instanceof JCTree.JCAssign )
     {
       JCExpression lhs = ((JCTree.JCAssign)tree).lhs;
       if( lhs instanceof JCTree.JCFieldAccess )
       {
-        return isJailBreakReceiver( lhs );
+        return isJailbreakReceiver( lhs );
       }
     }
     else if( tree instanceof JCTree.JCAssignOp )
@@ -427,7 +427,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression lhs = ((JCTree.JCAssignOp)tree).lhs;
       if( lhs instanceof JCTree.JCFieldAccess )
       {
-        return isJailBreakReceiver( lhs );
+        return isJailbreakReceiver( lhs );
       }
     }
     else if( tree instanceof JCTree.JCUnary )
@@ -435,7 +435,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression arg = ((JCTree.JCUnary)tree).arg;
       if( arg instanceof JCTree.JCFieldAccess )
       {
-        return isJailBreakReceiver( arg );
+        return isJailbreakReceiver( arg );
       }
     }
     else if( tree instanceof JCTree.JCVariableDecl )
@@ -443,19 +443,19 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression initializer = ((JCTree.JCVariableDecl)tree).init;
       if( initializer instanceof JCTree.JCFieldAccess )
       {
-        return isJailBreakReceiver( initializer );
+        return isJailbreakReceiver( initializer );
       }
     }
     else if( tree instanceof JCTree.JCNewClass )
     {
-      return isJailBreakReceiver( (JCTree.JCNewClass)tree );
+      return isJailbreakReceiver( (JCTree.JCNewClass)tree );
     }
     return false;
   }
 
   // called reflectively from manifold core
   @SuppressWarnings("WeakerAccess")
-  public static boolean isJailBreakReceiver( JCTree.JCFieldAccess fieldAccess )
+  public static boolean isJailbreakReceiver( JCTree.JCFieldAccess fieldAccess )
   {
     Symbol sym = null;
     JCExpression selected = fieldAccess.selected;
@@ -475,12 +475,12 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
 
-    return isJailBreakSymbol( sym );
+    return isJailbreakSymbol( sym );
   }
 
   // Called reflectively from manifold core
   @SuppressWarnings("WeakerAccess")
-  public static boolean isJailBreakSymbol( Symbol sym )
+  public static boolean isJailbreakSymbol( Symbol sym )
   {
     if( sym == null )
     {
@@ -497,25 +497,25 @@ public class ExtensionTransformer extends TreeTranslator
     if( !typeAttributes.isEmpty() )
     {
       return typeAttributes.stream()
-        .anyMatch( attr -> attr.type.toString().equals( JailBreak.class.getTypeName() ) );
+        .anyMatch( attr -> attr.type.toString().equals( Jailbreak.class.getTypeName() ) );
     }
 
     List<Attribute.Compound> attributes = metadata.getDeclarationAttributes();
     if( !attributes.isEmpty() )
     {
       return attributes.stream()
-        .anyMatch( attr -> attr.type.toString().equals( JailBreak.class.getTypeName() ) );
+        .anyMatch( attr -> attr.type.toString().equals( Jailbreak.class.getTypeName() ) );
     }
     return false;
   }
 
-  private static boolean isJailBreakReceiver( JCTree.JCNewClass newExpr )
+  private static boolean isJailbreakReceiver( JCTree.JCNewClass newExpr )
   {
     JCExpression classExpr = newExpr.clazz;
     if( classExpr instanceof JCTree.JCAnnotatedType )
     {
       return ((JCTree.JCAnnotatedType)classExpr).annotations.stream()
-        .anyMatch( e -> JailBreak.class.getTypeName().equals( e.attribute.type.toString() ) );
+        .anyMatch( e -> Jailbreak.class.getTypeName().equals( e.attribute.type.toString() ) );
     }
     return false;
   }
