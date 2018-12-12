@@ -1,9 +1,19 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.comp.ArgumentAttr;
+import com.sun.tools.javac.comp.DeferredAttr;
+import com.sun.tools.javac.comp.Enter;
+import com.sun.tools.javac.comp.Flow;
+import com.sun.tools.javac.comp.Lower;
+import com.sun.tools.javac.comp.MemberEnter;
+import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.comp.TypeEnter;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.DiagnosticSource;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -22,20 +32,55 @@ public class ManLog_9 extends Log
     if( !(log instanceof ManLog_9) )
     {
       ctx.put( logKey, (Log)null );
-      Object diagnosticHandler = ReflectUtil.field( log, "diagnosticHandler" ).get();
-      log = new ManLog_9( ctx );
-      ReflectUtil.field( log, "diagnosticHandler" ).set( diagnosticHandler );
+      //noinspection unchecked
+      log = new ManLog_9( ctx,
+        (DiagnosticHandler)ReflectUtil.field( log, "diagnosticHandler" ).get(),
+        log.currentSource(),
+        (Map<WriterKind, PrintWriter>)ReflectUtil.field( log, "writers" ).get() );
     }
 
     return log;
   }
 
-  private ManLog_9( Context ctx )
+  private ManLog_9( Context ctx, DiagnosticHandler diagnosticHandler, DiagnosticSource source,
+                    Map<WriterKind, PrintWriter> writers )
   {
     super( ctx );
+    ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
+    ReflectUtil.field( this, "source" ).set( source );
+    ReflectUtil.field( this, "writers" ).set( writers );
     _suspendedIssues = new HashMap<>();
     _extensionTransformerClass = LocklessLazyVar.make(
       () -> ReflectUtil.type( "manifold.ext.ExtensionTransformer" ) );
+    reassignAllEarlyHolders( ctx );
+  }
+
+  private void reassignAllEarlyHolders( Context ctx )
+  {
+    Object[] earlyAttrHolders = {
+      ArgumentAttr.instance( ctx ),
+      Resolve.instance( ctx ),
+      DeferredAttr.instance( ctx ),
+      Enter.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      TypeEnter.instance( ctx ),
+      Lower.instance( ctx ),
+      Flow.instance( ctx ),
+      //## todo:  some of these need their original Log, e.g., compile this "java.util.Date date = new java.util.Date( asdfg );" and see the fatal error report
+      //  TransTypes.instance( ctx ),
+      //  Annotate.instance( ctx ),
+      //  TypeAnnotations.instance( ctx ),
+      //  JavacTrees.instance( ctx ),
+      //  JavaCompiler.instance( ctx ),
+    };
+    for( Object instance: earlyAttrHolders )
+    {
+      ReflectUtil.LiveFieldRef log = ReflectUtil.WithNull.field( instance, "log" );
+      if( log != null )
+      {
+        log.set( this );
+      }
+    }
   }
 
   @Override

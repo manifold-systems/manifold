@@ -16,7 +16,6 @@ import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.comp.Flow;
 import com.sun.tools.javac.comp.Lower;
 import com.sun.tools.javac.comp.MemberEnter;
 import com.sun.tools.javac.comp.Resolve;
@@ -71,11 +70,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     // Override logger to handle final field assignment for @Jailbreak
     _manLog = (ManLog_8)ManLog_8.instance( ctx );
     ReflectUtil.field( this, "log" ).set( _manLog );
-    ReflectUtil.field( Flow.instance( ctx ), "log" ).set( _manLog );
-    ReflectUtil.field( DeferredAttr.instance( ctx ), "log" ).set( _manLog );
-
     ReflectUtil.field( this, "rs" ).set( ManResolve.instance( ctx ) );
-
     reassignAllEarlyHolders( ctx );
   }
 
@@ -85,7 +80,6 @@ public class ManAttr_8 extends Attr implements ManAttr
       Resolve.instance( ctx ),
       DeferredAttr.instance( ctx ),
       MemberEnter.instance( ctx ),
-      Annotate.instance( ctx ),
       Lower.instance( ctx ),
       TransTypes.instance( ctx ),
       Annotate.instance( ctx ),
