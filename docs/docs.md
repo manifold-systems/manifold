@@ -1999,6 +1999,14 @@ class SecretClass {
 }
 ```
 
+#### Break JPMS Barriers
+
+Access fields, methods, and constructors from packages otherwise prohibited for use in your module by the JPMS:
+```java
+jdk.internal.misc. @Jailbreak VM vm = null;
+String[] args = vm.getRuntimeArguments();
+```
+        
 ### Using the `jailbreak()` Extension
 
 Similar to `@Jailbreak` you can call the `jailbreak()` extension method from any expression to gain type-safe access to 

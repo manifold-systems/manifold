@@ -54,6 +54,7 @@ import manifold.internal.javac.GeneratedJavaStubFileObject;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
+import manifold.util.JreUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
@@ -1439,7 +1440,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     if( tree.constructor instanceof Symbol.ClassSymbol )
     {
-      assert tree.constructor.kind == com.sun.tools.javac.code.Kinds.ERR;
+      //assert tree.constructor.kind == com.sun.tools.javac.code.Kinds.ERR;
       return tree;
     }
 
@@ -1486,14 +1487,14 @@ public class ExtensionTransformer extends TreeTranslator
   {
     JCExpression classExpr;
     if( type.isPrimitive() ||
-        type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC ) )
+        (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )
     {
       // class is publicly accessible, assume we can use class literal
       classExpr = _tp.getTreeMaker().ClassLiteral( type );
     }
     else
     {
-      // generate `Class.forName( typeName )`
+      // generate `ReflectUtil.type( typeName )`
       classExpr = classForNameCall( type, tree );
     }
     return classExpr;
@@ -1504,24 +1505,21 @@ public class ExtensionTransformer extends TreeTranslator
     TreeMaker make = _tp.getTreeMaker();
     JavacElements javacElems = _tp.getElementUtil();
 
-    JCTree.JCMethodInvocation forNameCall = make.Apply( List.nil(),
-      memberAccess( make, javacElems, Class.class.getName() + ".forName" ),
+    JCTree.JCMethodInvocation typeCall = make.Apply( List.nil(),
+      memberAccess( make, javacElems, ReflectUtil.class.getName() + ".type" ),
       List.of( make.Literal( type.tsym.getQualifiedName().toString() ) ) );
-    forNameCall.setPos( Position.NOPOS );
-    forNameCall.type = _tp.getSymtab().classType;
-    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)forNameCall.getMethodSelect();
+    typeCall.setPos( Position.NOPOS );
+    typeCall.type = _tp.getSymtab().classType;
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)typeCall.getMethodSelect();
 
-    Symbol.ClassSymbol classClassSymbol =
-      IDynamicJdk.instance().getTypeElement(
-        _tp.getContext(), _tp.getCompilationUnit(), Class.class.getName() );
-    Symbol.MethodSymbol forNameMethodSym = resolveMethod( tree.pos(),
-      Names.instance( _tp.getContext() ).fromString( "forName" ), classClassSymbol.type,
-      List.of( _tp.getSymtab().stringType ) );
-    newMethodSelect.sym = forNameMethodSym;
-    newMethodSelect.type = forNameMethodSym.type;
-    assignTypes( newMethodSelect.selected, classClassSymbol );
+    Symbol.ClassSymbol reflectMethodClassSym =
+      IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), ReflectUtil.class.getName() );
+    Symbol.MethodSymbol typeMethodSymbol = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( "type" ), reflectMethodClassSym.type, List.of( _tp.getSymtab().stringType ) );
+    newMethodSelect.sym = typeMethodSymbol;
+    newMethodSelect.type = typeMethodSymbol.type;
+    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
 
-    return forNameCall;
+    return typeCall;
   }
 
   private void assignTypes( JCExpression m, Symbol symbol )

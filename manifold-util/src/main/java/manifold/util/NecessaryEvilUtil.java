@@ -116,24 +116,7 @@ public class NecessaryEvilUtil
     }
     catch( Throwable e )
     {
-      System.err.println( "Error initializing Manifold\n:" +
-                          "Failed to automatically configure Java module access, you must add the following arguments to java.exe:\n" +
-                          "--add-opens=java.base/jdk.internal.loader=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=java.base/java.net=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.api=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.code=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.comp=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.file=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.jvm=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.main=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.model=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.parser=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.platform=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.processing=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.resources=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.tree=<ALL-UNNAMED or manifold-all>\n" +
-                          "--add-opens=jdk.compiler/com.sun.tools.javac.util=<ALL-UNNAMED or manifold-all>\n" );
-      throw new RuntimeException( e );
+      throw new RuntimeException( "Error initializing Manifold", e );
     }
   }
 }

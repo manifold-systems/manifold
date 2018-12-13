@@ -2,6 +2,7 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.ClassFinder;
 import com.sun.tools.javac.code.Directive;
+import com.sun.tools.javac.code.Kinds;
 import com.sun.tools.javac.code.ModuleFinder;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
@@ -9,6 +10,7 @@ import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Modules;
 import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
@@ -61,7 +63,17 @@ public class ManClassFinder_9 extends ClassFinder
   {
     try
     {
-      return super.loadClass( msym, flatname );
+      Symbol.ClassSymbol classSymbol = super.loadClass( msym, flatname );
+      if( classSymbol.kind == Kinds.Kind.ERR )
+      {
+        // Permit case for @Jailbreak on a type where its package belongs to a module that needs to "open" it (runtime)
+        Symbol.ClassSymbol extClassSym = loadWhileInExtensionClass( msym, flatname );
+        if( extClassSym != null )
+        {
+          return extClassSym;
+        }
+      }
+      return classSymbol;
     }
     catch( Symbol.CompletionFailure ex )
     {
@@ -77,14 +89,16 @@ public class ManClassFinder_9 extends ClassFinder
 
   private Symbol.ClassSymbol loadWhileInExtensionClass( Symbol.ModuleSymbol msym, Name flatname )
   {
-    Env env = (Env)ReflectUtil.field( Attr.instance( _ctx ), "env" ).get();
+    Attr attr = Attr.instance( _ctx );
+    Env env = (Env)ReflectUtil.field( attr, "env" ).get();
     if( env == null )
     {
       return null;
     }
 
     JavaFileObject sourceFile = env.toplevel.getSourceFile();
-    if( !(sourceFile instanceof GeneratedJavaStubFileObject) )
+    if( !(sourceFile instanceof GeneratedJavaStubFileObject) && // is a type manifold generated class?
+        !isJailbreakOnType( attr ) ) // is the type annotated with @Jailbreak?
     {
       return null;
     }
@@ -145,6 +159,16 @@ public class ManClassFinder_9 extends ClassFinder
     }
 
     return null;
+  }
+
+  private boolean isJailbreakOnType( Attr attr )
+  {
+    JCTree.JCAnnotatedType annotatedType = ((ManAttr)attr).peekAnnotatedType();
+    if( annotatedType != null )
+    {
+      return annotatedType.toString().contains( "@Jailbreak" );
+    }
+    return false;
   }
 
   private void addJavaSeModule( Set<Symbol.ModuleSymbol> recoverableModules )

@@ -1,30 +1,56 @@
 package manifold.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.StringTokenizer;
-import manifold.util.concurrent.ConcurrentHashSet;
-import manifold.util.concurrent.ConcurrentWeakHashMap;
-
+import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import manifold.util.concurrent.ConcurrentHashSet;
+import manifold.util.concurrent.ConcurrentWeakHashMap;
 
+/**
+ * A Java reflection utility.  Use it to efficiently access classes by name, get/set field values,
+ * invoke methods, and use constructors. Notable features include:
+ * <ul>
+ * <li>Call a private method</li>
+ * <li>Get and set the value of a private, final field</li>
+ * <li>Access fields and methods of a class belonging to an inaccessible module</li>
+ * <li>Fields, methods, and constructors are cached upon use to improve performance</li>
+ * </ul>
+ * <p>
+ * (Use <b>@Jailbreak</b> to avoid writing reflection code.
+ * See <a href="http://manifold.systems/docs.html#type-safe-reflection">Type-safe Reflection</a>.)
+ */
 public class ReflectUtil
 {
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, Set<Constructor>> _constructorsByClass = new ConcurrentWeakHashMap<>();
+  //private static final ConcurrentHashMap<String, Boolean> _openPackages = new ConcurrentHashMap<>();
 
+  /**
+   * Searches the class loader of this class for the specified name, if not found searches
+   * the current thread's context class loader.
+   *
+   * @param fqn The qualified name of the type e.g., {@code "java.lang.String"}
+   *
+   * @return The {@code Class} corresponding with {@code fqn} or null if not found
+   */
   public static Class<?> type( String fqn )
   {
     try
     {
+      //openPackage( fqn, null );
       return Class.forName( fqn );
     }
     catch( ClassNotFoundException e )
@@ -33,10 +59,19 @@ public class ReflectUtil
     }
   }
 
+  /**
+   * Searches {@code cl} for the specified class {@code fqn}.
+   *
+   * @param fqn The qualified name of the type e.g., {@code "java.lang.String"}
+   * @param cl  The class loader to search
+   *
+   * @return The {@code Class} corresponding with {@code fqn} or null if not found
+   */
   public static Class<?> type( String fqn, ClassLoader cl )
   {
     try
     {
+      //openPackage( fqn, cl );
       return Class.forName( fqn, false, cl );
     }
     catch( ClassNotFoundException e )
@@ -45,6 +80,18 @@ public class ReflectUtil
     }
   }
 
+  /**
+   * Get a {@link LiveMethodRef} to the specified method. Typical use:
+   * <p>
+   * <pre> method(str, "substring", int.class).invoke(2) </pre>
+   *
+   * @param receiver The object to make the call on
+   * @param name     The name of the method to call or a '|' separated list of names, where the first found is used
+   * @param params   The types of the method's parameters
+   *
+   * @return A reference to the specified method, throws {@link RuntimeException} if the method is not found.
+   * Use {@link WithNull} to avoid the RuntimeException.
+   */
   public static LiveMethodRef method( Object receiver, String name, Class... params )
   {
     LiveMethodRef liveRef = WithNull.method( receiver, name, params );
@@ -55,11 +102,33 @@ public class ReflectUtil
     return liveRef;
   }
 
+  /**
+   * Get a {@link MethodRef} to the specified method. Typical use:
+   * <p>
+   * <pre> method("java.time.LocalTime", "of", int.class, int.class).invokeStatic(5, 30) </pre>
+   *
+   * @param fqn    The qualified name of the class containing the method
+   * @param name   The name of the method or a '|' separated list of names, where the first found is used
+   * @param params The types of the method's parameters
+   *
+   * @return A reference to the specified method or null if not found
+   */
   public static MethodRef method( String fqn, String name, Class... params )
   {
     return method( type( fqn ), name, params );
   }
 
+  /**
+   * Get a {@link MethodRef} to the specified method. Typical use:
+   * <p>
+   * <pre> method(LocalTime.class, "of", int.class, int.class).invokeStatic(5, 30) </pre>
+   *
+   * @param cls    The class containing the method
+   * @param name   The name of the method or a '|' separated list of names, where the first found is used
+   * @param params The types of the method's parameters
+   *
+   * @return A reference to the specified method or null if not found
+   */
   public static MethodRef method( Class<?> cls, String name, Class... params )
   {
     MethodRef match = matchFirstMethod( cls, name, params );
@@ -91,7 +160,7 @@ public class ReflectUtil
         }
       }
 
-      for( Class iface : cls.getInterfaces() )
+      for( Class iface: cls.getInterfaces() )
       {
         mr = method( iface, name, params );
         if( mr != null )
@@ -122,6 +191,17 @@ public class ReflectUtil
     return null;
   }
 
+  /**
+   * Get a {@link LiveFieldRef} to the specified field.  Typical use:
+   * <p>
+   * <pre> String name = field(foo, "name").get(); </pre>
+   *
+   * @param receiver The object having the field
+   * @param name     The name of the field or a '|' separated list of names, where the first found is used
+   *
+   * @return A reference to the specified field, throws {@link RuntimeException} if the field is not found.
+   * Use {@link WithNull} to avoid the RuntimeException.
+   */
   public static LiveFieldRef field( Object receiver, String name )
   {
     LiveFieldRef liveRef = WithNull.field( receiver, name );
@@ -132,11 +212,31 @@ public class ReflectUtil
     return liveRef;
   }
 
+  /**
+   * Get a {@link FieldRef} to the specified field.  Typical use:
+   * <p>
+   * <pre> field("java.time.LocalTime", "hour").get(); </pre>
+   *
+   * @param fqn  The qualified name of the class having the field
+   * @param name The name of the field or a '|' separated list of names, where the first found is used
+   *
+   * @return A reference to the specified field or null if not found
+   */
   public static FieldRef field( String fqn, String name )
   {
     return field( type( fqn ), name );
   }
 
+  /**
+   * Get a {@link FieldRef} to the specified field.  Typical use:
+   * <p>
+   * <pre> field(LocalTime.class, "hour").get(); </pre>
+   *
+   * @param cls  The class having the field
+   * @param name The name of the field or a '|' separated list of names, where the first found is used
+   *
+   * @return A reference to the specified field or null if not found
+   */
   public static FieldRef field( Class<?> cls, String name )
   {
     FieldRef match = matchFirstField( cls, name );
@@ -169,7 +269,7 @@ public class ReflectUtil
         }
       }
 
-      for( Class iface : cls.getInterfaces() )
+      for( Class iface: cls.getInterfaces() )
       {
         fr = field( iface, name );
         if( fr != null )
@@ -200,10 +300,31 @@ public class ReflectUtil
     return null;
   }
 
+  /**
+   * Get a {@link ConstructorRef} to the specified constructor. Typical use:
+   * <p>
+   * <pre> constructor("java.util.ArrayList", int.class).newInstance(32) </pre>
+   *
+   * @param fqn    The qualified name of the class to construct
+   * @param params A list of parameter types for the constructor
+   *
+   * @return A reference to the constructor or null if not found
+   */
   public static ConstructorRef constructor( String fqn, Class<?>... params )
   {
     return constructor( type( fqn ), params );
   }
+
+  /**
+   * Get a {@link ConstructorRef} to the specified constructor. Typical use:
+   * <p>
+   * <pre> constructor(ArrayList.class, int.class).newInstance(32) </pre>
+   *
+   * @param cls    The class to construct
+   * @param params A list of parameter types for the constructor
+   *
+   * @return A reference to the constructor or null if not found
+   */
   public static ConstructorRef constructor( Class<?> cls, Class<?>... params )
   {
     ConstructorRef mr = getConstructorFromCache( cls, params );
@@ -229,7 +350,7 @@ public class ReflectUtil
         }
       }
 
-      for( Class iface : cls.getInterfaces() )
+      for( Class iface: cls.getInterfaces() )
       {
         mr = constructor( iface, params );
         if( mr != null )
@@ -479,6 +600,7 @@ public class ReflectUtil
       return _field;
     }
 
+    @SuppressWarnings("unused")
     public Object getReceiver()
     {
       return _receiver;
@@ -576,7 +698,7 @@ public class ReflectUtil
       if( methods != null )
       {
         outer:
-        for( Method m : methods )
+        for( Method m: methods )
         {
           int paramsLen = params == null ? 0 : params.length;
           if( m.getParameterCount() == paramsLen )
@@ -630,7 +752,7 @@ public class ReflectUtil
     if( constructors != null )
     {
       outer:
-      for( Constructor m : constructors )
+      for( Constructor m: constructors )
       {
         int paramsLen = params == null ? 0 : params.length;
         if( m.getParameterCount() == paramsLen )
@@ -653,7 +775,7 @@ public class ReflectUtil
     }
     return null;
   }
-  
+
   private static boolean setFinal( Field field, Object value )
   {
     return setFinal( field, null, value );
@@ -744,7 +866,45 @@ public class ReflectUtil
   }
 
   /**
-   * Utility to access live methods and fields with possible null return value if not found
+   * Force class with name {@code fqn} to be loaded by {@code parentLoader}. Facilitates the case where a class
+   * must be declared in a package defined in a parent class loader in order to subclass and use package-local
+   * features defined there.
+   * <p>
+   * Note {@code fqn}'s natural class loader must have the {@code parentLoader} in its chain of parent loaders.
+   * Also be certain {@code fqn} is not already loaded by its natural loader, otherwise {@link LinkageError}s
+   * will result.
+   *
+   * @param fqn           The qualified name of the class to load
+   * @param content       The location of the class resource.  With Java 8 this can be {@code wouldBeLoader.getResource(className)}.
+   *                      But with Java 9 and later the JPMS strictly prohibits a package from existing in two loaders,
+   *                      therefore the class file must be placed in a different package, perhaps prefixed with a
+   *                      suitably named root package, otherwise the VM will throw a {@code LayerInstantiationException}
+   *                      when your application loads, before any of your code executes.
+   * @param wouldBeLoader The class loader that would naturally load {@code fqn}, must have {@code parentLoader} in its
+   *                      parent loader chain
+   * @param parentLoader  The class loader to load the class in, must be in the parent chain of {@code wouldBeLoader}
+   */
+  public static void preloadClassIntoParentLoader( String fqn, URI content, ClassLoader wouldBeLoader, ClassLoader parentLoader )
+  {
+    if( null != method( parentLoader, "findLoadedClass", String.class ).invoke( fqn ) )
+    {
+      // already loaded
+      return;
+    }
+
+    try
+    {
+      byte[] bytes = Files.readAllBytes( Paths.get( content ) );
+      method( parentLoader, "defineClass", byte[].class, int.class, int.class ).invoke( bytes, 0, bytes.length );
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Use to access live methods and fields with possible null return value if not found
    */
   public static class WithNull
   {
@@ -778,4 +938,49 @@ public class ReflectUtil
       return ref;
     }
   }
+
+  //## not necessary (until Unsafe goes away), using Unsafe.putObjectVolatile() to set 'override' directly
+//
+//  private static void openPackage( String fqn, ClassLoader cl )
+//  {
+//    if( JreUtil.isJava8() || _openPackages.containsKey( fqn ) )
+//    {
+//      return;
+//    }
+//
+//    int iDot = fqn.lastIndexOf( '.' );
+//    if( iDot < 0 )
+//    {
+//      return;
+//    }
+//
+//    String pkg = fqn.substring( 0, iDot );
+//    cl = cl == null ? ReflectUtil.class.getClassLoader() : cl;
+//    LiveFieldRef packageToModule = WithNull.field( cl, "packageToModule" );
+//    if( packageToModule != null )
+//    {
+//      Object loadedModule = ((Map)packageToModule.get()).get( pkg );
+//      if( loadedModule != null )
+//      {
+//        if( method( loadedModule, "loader" ).invoke() == cl )
+//        {
+//          String moduleName = (String)method( loadedModule, "name" ).invoke();
+//          //noinspection unchecked
+//          Object module = ((Optional)ReflectUtil.method( ReflectUtil.method( "java.lang.ModuleLayer", "boot" ).invokeStatic(), "findModule", String.class ).invoke( moduleName )).orElse( null );
+//          if( module != null )
+//          {
+//            Class<?> classModule = ReflectUtil.type( "java.lang.Module" );
+//            ReflectUtil.MethodRef addExportsOrOpens = method( classModule, "implAddExportsOrOpens", String.class, classModule, boolean.class, boolean.class );
+//            //noinspection ConstantConditions
+//            Object /*Module*/ manifoldModule = method( Class.class, "getModule" ).invoke( ReflectUtil.class );
+//            //noinspection ConstantConditions
+//            addExportsOrOpens.invoke( module, pkg, manifoldModule, true, true );
+//            _openPackages.put( pkg, true );
+//            return;
+//          }
+//        }
+//      }
+//    }
+//    _openPackages.put( pkg, false );
+//  }
 }
