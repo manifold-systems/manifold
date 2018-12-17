@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.internal.javac.IIssue;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
@@ -604,7 +603,8 @@ public class TemplateGen
         .newLine( "      renderInto(sb" );
       for( String[] param : safeParamsList() )
       {
-        sb.append( ", " ).append( param[1] );
+        String arg = param.length >= 2 ? param[1] : "err"; // eg. can happen during editing in IJ
+        sb.append( ", " ).append( arg );
       }
       sb.append( ");" )
         .newLine( "        return sb.toString();" )
