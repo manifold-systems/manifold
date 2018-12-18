@@ -197,7 +197,7 @@ Directives are commands that are evaluated by the compiler, and will affect the 
 The syntax of a directive is as follows:
 
 ```jsp
-<%@ directive-name %>
+<%@ directive-name [options] %>
 ```
 
 Here is a summary of all the ManTL directives. A more detailed description of each directive follows.
