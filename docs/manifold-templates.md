@@ -12,7 +12,7 @@ ManTL supports the full Java language, type-safe arguments to templates, type-sa
 shared layouts for templates and custom base classes for application-specific logic, among other features.
 
 ManTL files have the suffix `mtl`, often optionally preceded by the language that the template is targeting 
-(e.g. `index.html.mtl`).
+e.g., `index.html.mtl`.
 
 Unlike other template engines ManTL templates compile directly in your build as if Java source files.  Therefore
 your Java source code can reference and use your template files by name directly as Java classes. This level of 
@@ -277,7 +277,7 @@ The location of import statements must precede other directives.
 
 ### `extends`
 The `extends` directive is used to make a template extend a different base class, which can be used to provide
-additional application specific functionality (e.g. Request and Response objects in a web application).
+additional application specific functionality e.g., Request and Response objects in a web application.
 
 Here is a practical example of the `extends` directive being used:
 ```java
