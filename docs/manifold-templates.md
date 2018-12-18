@@ -48,7 +48,7 @@ ManTL can be used by simply adding the following dependency to your project:
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-templates</artifactId>
-      <version>0.1-alpha</version>
+      <version>0.32-alpha</version>
     </dependency>
 ```
 
@@ -59,7 +59,7 @@ a with the `mtl` suffix in your resources directory (nb: not in your source dire
 string content, as well as [dynamic content](#basic-syntax) and [directives](#directive-keywords) that change how the 
 template behaves.
 
-Consider the following Manifold Template named `HelloWorld.mtl`, located in the `resources/templates` directory:
+Consider the following Manifold Template named `HelloWorld.txt.mtl`, located in the `resources/templates` directory:
 
 ```jsp
 Hello World!
@@ -137,12 +137,8 @@ which will result in a compiler error, since there is no semicolon to end the li
 
 ## Expressions ##
 
-A ManTL expression contains a Java language expression that is evaluated, converted to a String, and
+A ManTL expression contains a Java language expression, it is evaluated, converted to a String, and
 inserted where the expression appears in the ManTL file.
-
->Because the value of an expression is converted to a String, you can use an expression within a line of text, whether or not it is tagged with HTML, in a JSP file.
-
->The expression element can contain any expression that is valid according to the Java Language Specification but you cannot use a semicolon to end an expression.
 
 The syntax of an expression is as follows:
 ```jsp
@@ -165,9 +161,7 @@ For example, you can do the following with expressions:
 </html>
 ```
 
-The above code will instantiate an `int y`, assign the value of 10 to it,
-and evaluate `y` twice: once to give the paragraph `font-size: 10`, and again
-within the paragraph block. It will generate the following HTML:
+The above template generates the following HTML:
 
 ```html
 <html>
@@ -177,6 +171,10 @@ within the paragraph block. It will generate the following HTML:
   </body>
 </html>
 ```
+
+Note the statement declaring the `y` variable does not contribute to the resulting content. This is because a statement
+does not produce a value to display.  On the other hand, since the evaluation of an expression always produces a value, 
+its value renders as part of the template's resulting content, hence both `y` expressions render `10`. 
 
 <a id="comments" class="toc_anchor"></a>
 
@@ -203,11 +201,13 @@ Here are the valid types of directives:
 
 | Directive Type | Syntax                                      | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
-| Import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
-| Extends         | `<%@ extends superclass %>`                  | Extends a superclass in the generated Java file                                     |
-| Params         | `<%@ params your-params-here %>`            | Gives parameters for the template                                                   |
-| Include        | `<%@ include otherTemplate %>`              | Include a separate template in the template                                         |
-| Section        | `<%@ section mySection(optional-params) %>` | Creates a sub-template within the template, that can be called from other templates |
+| import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
+| extends        | `<%@ extends superclass %>`                 | Extends a superclass in the generated Java file                                     |
+| params         | `<%@ params your-params-here %>`            | Gives parameters for the template                                                   |
+| include        | `<%@ include otherTemplate %>`              | Include a separate template in the template                                         |
+| section        | `<%@ section mySection(optional-params) %>` | Creates a sub-template within the template, that can be called from other templates |
+| layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
+| content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
 
 A more detailed explanation of various directive types [can be found
 below.](#directive-types)
@@ -243,8 +243,8 @@ For example, you can use the `import` keyword to utilize useful Java packages:
   </body>
 </html>
 ```
-The above code will result in the following HTML. Note that the import statements
-was necessary to be able to use `java.util.HashSet`.
+The above code will result in the following HTML. Note that the import statement
+is useful to reference `HashSet` later in the template.
 ```html
 <html>
   <head><title>Import Example</title></head>
@@ -255,16 +255,15 @@ was necessary to be able to use `java.util.HashSet`.
 </html>
 ```
 
-The location of import statements within the template file is irrelevant. Although it is idiomatic to include all imports
-at the beginning of the file, imports can be placed anywhere and will not affect the generated file.
+The location of import statements must precede other directives.
 
 <a id="-extends-" class="toc_anchor"></a>
 
 ## `extends` ##
-The `extends` keyword is used to make a template extend a different base class, which can be used to provide
+The `extends` directive is used to make a template extend a different base class, which can be used to provide
 additional application specific functionality (e.g. Request and Response objects in a web application).
 
-Here is a practical example of the 'extends' keyword being used:
+Here is a practical example of the `extends` keyword being used:
 ```java
 package demo;
 
@@ -311,7 +310,7 @@ And easily callable:
 
 ## `include` ##
 
-The `include` keyword allows users to insert other templates inside of the given template in a type
+The `include` directive allows users to insert other templates inside of the given template in a type
 safe manner.
 
 The syntax of the include keyword is as follows:
@@ -389,7 +388,7 @@ The syntax of the `params` command is as follows:
 <%@ params(your-params-here) %>
 ```
 
-For example, I can create the template `NameDisplay.html.mtl` as the following:
+For example, you can create the template `NameDisplay.html.mtl` as the following:
 
 ```jsp
 <%@ params(String name) %>
@@ -402,10 +401,8 @@ You can then include it in another template as follows:
 <html>
     <head><title>PARAMS Example</title></head>
     <body>
-      <%@ include NameDisplay("Sally") %>
-      <%@ include NameDisplay("Carson Gross") %>
-      <%@ include NameDisplay("Edward") %>
-      <%@ include NameDisplay("Harika") %>
+      <%@ include NameDisplay("Scott") %>
+      <%@ include NameDisplay("Robert") %>
     </body>
 </html>
 ```
@@ -415,10 +412,8 @@ Then, the following HTML will be generated:
 <html>
     <head><title>PARAMS Example</title></head>
     <body>
-      <p>Your name is: Sally </p>
-      <p>Your name is: Carson Gross </p>
-      <p>Your name is: Edward </p>
-      <p>Your name is: Harika </p>
+      <p>Your name is: Scott </p>
+      <p>Your name is: Robert </p>
     </body>
 </html>
 ```
@@ -441,7 +436,7 @@ to do so will result in an error during code generation.
 
 Imports within sections are valid, and will be handled accordingly.
 
-For example, I can create the template `nestedImport.html.mtl` as the following:
+For example, you can create the template `nestedImport.html.mtl` as the following:
 
 ```jsp
     <h1>This will make sure that nested imports are handled correctly.</h1>
@@ -467,7 +462,7 @@ The above code will generate the following HTML:
     <p> The above section should work </p>
 ```
 
-Then, I can include `mySection` it in a separate template:
+Then, you can include `mySection` in a separate template:
 ```jsp
     <%@ include nestedImport.mySection %>
 ```
@@ -492,7 +487,7 @@ See below.
 
 Layouts can be made and used with the `content` and `layouts` directives respectively.
 
-The `content` keyword will split the current template into the header and footer
+The `content` directive will split the current template into the header and footer
 of a layout.
 
 The `layouts` keyword will make the header and footer of the layout frame the
@@ -562,7 +557,7 @@ classes.  This can also be useful when you are overriding layouts, as specified 
 ## Layout Overrides ##
 
 Sometimes you may want to manually override the layout of a given template in code,
-or render a template with no layout.  ManTL classes include two helper methods:
+or render a template with no layout.  ManTL classes include two fluent helper methods:
 `withoutLayout` and `withLayout(ILayout)` to assist in these cases:
 
 ```java
@@ -607,9 +602,9 @@ public class WebApp {
 }
 ```
 
-Where there are two templates in the `resources` directory: one at `views/Index.html.mtl` and one at 
-`views/layouts/DefaultLayout.html.mtl`.  Note that the code takes advantage of the type-safe parameters available
-in ManTL.
+There are two templates in the `resources` directory: one at `views/Index.html.mtl` and one at 
+`views/layouts/DefaultLayout.html.mtl`.  Note the code takes advantage of the type-safe parameters available
+in ManTL and no TemplateEngine registry is needed.
 
 <a id="spark-template" class="toc_anchor"></a>
 
@@ -620,8 +615,8 @@ in your templates (or, more commonly, you would extend the class and add your ow
 base class provides various convenience methods to get the HTTP Request, Response, etc. and also automatically escapes
 all string content for HTML, to prevent malicious user input from causing a security issue in your application.
 
-If you wish you output raw HTML in a template that extends `manifold.templates.sparkjava.SparkTemplate`, you can use the
-`raw()` function to do so:
+If you wish, you can output raw HTML in a template that extends `manifold.templates.sparkjava.SparkTemplate` using the
+`raw()` function:
 
 ```jsp
   ${raw("<h1>Some Raw HTML</h1>")}
@@ -644,6 +639,6 @@ the following to console:
 
 ### Demo ###
 
-A demo spark application can be found here:
+A demo Spark application can be found here:
 
-[https://github.com/manifold-systems/spark-java-demo](https://github.com/manifold-systems/manifold-sample-web-app)
+[https://github.com/manifold-systems/manifold-sample-web-app](https://github.com/manifold-systems/manifold-sample-web-app)
