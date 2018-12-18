@@ -196,6 +196,78 @@ The syntax of a directive is as follows:
 
 Here are the valid types of directives:
 
+<div>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+
+<table>
+  <tr align="left">
+    <th>Directive</th>
+    <th>Syntax</th>
+    <th>Description</th>
+  </tr>
+  
+  <tr>
+    <td><b>import</b></td>
+    <td><code>&lt;%@&nbsp;import package&nbsp;%&gt;</code></td>
+    <td>Imports Java types for use elsewhere in the template file</td>
+  </tr>
+  
+  <tr>
+    <td><b>extends</b></td>
+    <td><code>&lt;%@&nbsp;extends base-class&nbsp;%&gt;</code></td>
+    <td>Specifies the base class for the template</td>
+  </tr>
+  
+  <tr>
+    <td><b>params</b></td>
+    <td><code>&lt;%@&nbsp;params(java-parameter-list)&nbsp;%&gt;</code></td>
+    <td>Provides a comma separated list of Java-style parameters</td>
+  </tr>
+  
+  <tr>
+    <td><b>include</b></td>
+    <td><code>&lt;%@&nbsp;include template-name&nbsp;%&gt;</code></td>
+    <td>Include a separate template in the enclosing template</td>
+  </tr>
+  
+  <tr>
+    <td><b>section</b></td>
+    <td><code>&lt;%@&nbsp;section&nbsp;section-name(parameter-list)&nbsp;%&gt;</code></td>
+    <td>Creates a sub-template within the template that can be called from other templates</td>
+  </tr>
+  
+  <tr>
+    <td><b>layout</b></td>
+    <td><code>&lt;%@&nbsp;layout template-name&nbsp;%&gt;</code></td>
+    <td>Specifies the template in which the declaring template nests its content</td>
+  </tr>
+  
+  <tr>
+    <td><b>content</b></td>
+    <td><code>&lt;%@&nbsp;content&nbsp;%&gt;</code></td>
+    <td>Used in a `layout` template, denotes where the content of a nested template renders</td>
+  </tr>
+  
+</table>
+
+</div>
+
 | Directive&nbsp;&nbsp;&nbsp;&nbsp;      | Syntax              | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
 | import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
