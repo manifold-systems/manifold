@@ -4,21 +4,18 @@ layout: default
 
 # ManTL (Manifold Template Language)
 
-ManTL is a lightweight & **type-safe** template engine directly integrated with the Java compiler using [Manifold](http://manifold.systems/).
-It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
-used in any application environment.
-
-ManTL supports the full Java language, type-safe arguments to templates, type-safe inclusion of other templates,
+ManTL is a lightweight & *type-safe* template engine directly integrated with the Java compiler using [Manifold](http://manifold.systems/).
+It supports the full Java language, type-safe arguments to templates, type-safe inclusion of other templates,
 shared layouts for templates and custom base classes for application-specific logic, among other features.
 
 ManTL files have the suffix `mtl`, often optionally preceded by the language that the template is targeting 
 e.g., `index.html.mtl`.
 
-Unlike other template engines ManTL templates compile directly in your build as if Java source files.  Therefore
+What sets ManTL apart?  Templates compile directly in your build as if Java source files _without a code generation build step_, therefore
 your Java source code can reference and use your template files by name directly as Java classes. This level of 
-type-safety ensures both integrity and high performance.  It also enables tooling like the [Manifold IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
-to provide deterministic code completion, usage searching, and refactoring.  Additionally Manifold support in IntelliJ
-provides incremental compilation and hot swap debugging -- make incremental template changes and see them live on a 
+type-safety ensures both integrity and high performance, both at runtime and compile-time.  It also enables tooling like the [Manifold IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
+to provide deterministic code completion, usage searching, and refactoring.  Additionally Manifold professional quality support in IntelliJ
+provides incremental compilation and hot swap debugging -- make incremental template changes and see them live on your 
 running server.
 
 
@@ -37,6 +34,7 @@ running server.
   * [`params`](#-params-)
   * [`section`](#-section-)
   * [`layout`](#-layout-)
+  * [`content`](#-layout-)
 - [Spark Java Support](#spark)
   * [Tracing](#tracing)
   * [Spark Template Base Class](#spark-template)
