@@ -32,6 +32,7 @@ public class RuntimeMethods
   private static final String STRUCTURAL_PROXY = "_structuralproxy_";
   private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
+  private static final Map<Class, Boolean> ICALL_HANDLER_MAP = new ConcurrentWeakHashMap<>();
 
   @SuppressWarnings("UnusedDeclaration")
   public static Object constructProxy( Object root, Class iface )
@@ -382,6 +383,29 @@ public class RuntimeMethods
 
   private static boolean hasCallHandlerMethod( Class rootClass )
   {
+    if( ICallHandler.class.isAssignableFrom( rootClass ) )
+    {
+      // Nominally implements ICallHandler
+      return true;
+    }
+    if( ReflectUtil.method( rootClass, "call", Class.class, String.class, String.class, Class.class, Class[].class, Object[].class ) != null )
+    {
+      // Structurally implements ICallHandler
+      return true;
+    }
+
+    // maybe has an extension satisfying ICallHandler
+    return hasCallHandlerFromExtension( rootClass );
+  }
+
+  private static boolean hasCallHandlerFromExtension( Class rootClass )
+  {
+    Boolean isCallHandler = ICALL_HANDLER_MAP.get( rootClass );
+    if( isCallHandler != null )
+    {
+      return isCallHandler;
+    }
+
     String fqn = rootClass.getCanonicalName();
     BasicJavacTask javacTask = RuntimeManifoldHost.get().getJavaParser().getJavacTask();
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).getClassSymbol( javacTask, fqn );
@@ -389,10 +413,15 @@ public class RuntimeMethods
     if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
     {
       // Nominally implements ICallHandler
-      return true;
+      isCallHandler = true;
     }
-
-    return hasCallMethod( javacTask, classSymbol.getFirst() );
+    else
+    {
+      // Structurally implements ICallHandler
+      isCallHandler = hasCallMethod( javacTask, classSymbol.getFirst() );
+    }
+    ICALL_HANDLER_MAP.put( rootClass, isCallHandler );
+    return isCallHandler;
   }
 
   private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
