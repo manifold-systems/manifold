@@ -199,15 +199,15 @@ The syntax of a directive is as follows:
 ```
 Here are the valid types of directives:
 
-| Directive      | Syntax                                      | Description                                                                         |
+| Directive&nbsp;&nbsp;&nbsp;&nbsp;      | Syntax                                      | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
-| `import`       | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
-| `extends`      | `<%@ extends superclass %>`                 | Extends a superclass in the generated Java file                                     |
-| `params`       | `<%@ params your-params-here %>`            | Gives parameters for the template                                                   |
-| `include`      | `<%@ include otherTemplate %>`              | Include a separate template in the template                                         |
-| `section`      | `<%@ section mySection(optional-params) %>` | Creates a sub-template within the template, that can be called from other templates |
-| `layout`       | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
-| `content`      | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
+| import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
+| extends        | `<%@ extends superclass %>`                 | Extends a superclass in the generated Java file                                     |
+| params         | `<%@ params your-params-here %>`            | Gives parameters for the template                                                   |
+| include        | `<%@ include otherTemplate %>`              | Include a separate template in the template                                         |
+| section        | `<%@ section mySection(optional-params) %>` | Creates a sub-template within the template, that can be called from other templates |
+| layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
+| content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
 
 A more detailed explanation of various directive types [can be found
 below.](#directive-types)
