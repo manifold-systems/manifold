@@ -102,7 +102,7 @@ an additional `Appendable` object and return `void`.
 
 <a id="basic-syntax" class="toc_anchor"></a>
 
-# Basic Syntax #
+# Syntax
 
 As with most template engines, a ManTL consist of regular textual content with various scriptlets and
 directives interspersed in that content.
@@ -194,7 +194,7 @@ The syntax of a directive is as follows:
 <%@ directive-name %>
 ```
 
-Here are the valid types of directives:
+Here is a summary of all the ManTL directives. A more detailed description of each directive follows.
 
 <style>
 table {
@@ -210,7 +210,7 @@ td, th {
 }
 
 tr:nth-child(even) {
-  background-color: #eeeeee;
+  background-color: #f8f8f8;
 }
 </style>
 
@@ -223,8 +223,6 @@ tr:nth-child(even) {
 | section        | `<%@ section section-name(parameter-list) %>` | Creates a sub-template within the template, that can be called from other templates |
 | layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
 | content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
-
-
 
 
 <a id="-import-" class="toc_anchor"></a>
@@ -535,7 +533,7 @@ The above code will generate the following HTML:
     </html>
 ```
 
-### Default Layouts
+#### Default Layouts
 
 ManTL also supports the ability to set default layouts for templates in a given package via the
 `ManifoldTemplates.java` configuration class:
