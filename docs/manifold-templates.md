@@ -22,17 +22,13 @@ ManTL files have the suffix `mtl`, often optionally preceded by the language tha
   * [Expressions](#expressions)
   * [Directives](#directives)
   * [Comments](#comments)
-- [Directive Keywords](#directive-keywords)
+- [Directives](#directives)
   * [`import`](#-import-)
   * [`extends`](#-extends-)
   * [`include`](#-include-)
-    * [Conditional Include](#conditional-include)
   * [`params`](#-params-)
   * [`section`](#-section-)
   * [`layout`](#-layout-)
-- [Layouts](#layouts)
-  * [Default Layouts](#default-layouts)
-  * [Layout Overrides](#layout-overrides)
 - [Spark Java Support](#spark)
   * [Tracing](#tracing)
   * [Spark Template Base Class](#spark-template)
@@ -56,7 +52,7 @@ ManTL can be used by simply adding the following dependency to your project:
 
 Once you have installed ManTL, you can begin using it by placing a new file that ends
 a with the `mtl` suffix in your resources directory (nb: not in your source directory).  The file can have any sort of 
-string content, as well as [dynamic content](#basic-syntax) and [directives](#directive-keywords) that change how the 
+string content, as well as [dynamic content](#basic-syntax) and [directives](#directives) that change how the 
 template behaves.
 
 Consider the following Manifold Template named `HelloWorld.txt.mtl`, located in the `resources/templates` directory:
@@ -211,21 +207,21 @@ Here are the valid types of directives:
 | content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
 
 
-<a id="directive-keywords" class="toc_anchor"></a>
+<a id="directives" class="toc_anchor"></a>
 
-# Directive Keywords #
+# Directives #
 
 <a id="-import-" class="toc_anchor"></a>
 
 ## `import` ##
-The `import` keyword is used to import external packages into the generated Java file.
+The `import` directive is used to import external packages into the generated Java file.
 
-The syntax of the import keyword is as follows:
+The syntax of the import directive is as follows:
 ```jsp
 <%@ import [package name] %>
 ```
 
-For example, you can use the `import` keyword to utilize useful Java packages:
+For example, you can use the `import` directive to utilize useful Java packages:
 ```jsp
 <html>
 <%@ import java.util.HashSet %>
@@ -261,7 +257,7 @@ The location of import statements must precede other directives.
 The `extends` directive is used to make a template extend a different base class, which can be used to provide
 additional application specific functionality (e.g. Request and Response objects in a web application).
 
-Here is a practical example of the `extends` keyword being used:
+Here is a practical example of the `extends` directive being used:
 ```java
 package demo;
 
@@ -311,7 +307,7 @@ And easily callable:
 The `include` directive allows users to insert other templates inside of the given template in a type
 safe manner.
 
-The syntax of the include keyword is as follows:
+The syntax of the `include` directive is as follows:
 ```jsp
 <%@ include [template to include] %>
 ```
@@ -358,8 +354,6 @@ Both statements will result in the following HTML code:
 
 ```
 
-<a id="conditional-include" class="toc_anchor"></a>
-
 ### Conditional Include ###
 ManTL supports shorthand for conditional inclusion of templates. The following syntax:
 ```jsp
@@ -377,11 +371,11 @@ Can be condensed to the following:
 
 ## `params` ##
 
-The `params` keyword is used to give parameters to a template. It is only allowed
+The `params` directive is used to give parameters to a template. It is only allowed
 for the outermost class (not within sections) and is generally only useful when creating
 templates that are meant to be included in other templates.
 
-The syntax of the `params` command is as follows:
+The syntax of the `params` directive is as follows:
 ```jsp
 <%@ params(your-params-here) %>
 ```
@@ -420,8 +414,8 @@ Then, the following HTML will be generated:
 
 ## `section` ##
 
-The `section` keyword will create a subsection of the current template that can
-then be added via an `include` keyword in other templates.
+The `section` directive will create a subsection of the current template that can
+then be added via an `include` directive in other templates.
 
 The syntax of a `section` block are as follows:
 ```jsp
@@ -477,25 +471,19 @@ Which will result in the following HTML:
 
 ## `layout` ##
 
-See below.
-
-<a id="layouts" class="toc_anchor"></a>
-
-# Layouts #
-
 Layouts can be made and used with the `content` and `layouts` directives respectively.
 
 The `content` directive will split the current template into the header and footer
 of a layout.
 
-The `layouts` keyword will make the header and footer of the layout frame the
+The `layouts` directive will make the header and footer of the layout frame the
 current template. The code from the current template will appear where the
-`content` keyword was originally.
+`content` directive was originally.
 
 Both the `content` directive and `layouts` directive are only valid in the outermost class
 (not within sections) and can only appear once in a template.
 
-The `params` directive is not yet supported for a template that contains the `content` keyword.
+The `params` directive is not yet supported for a template that contains the `content` directive.
 
 The syntax of a content template is as follows:
 ```jsp
@@ -531,9 +519,7 @@ The above code will generate the following HTML:
     </html>
 ```
 
-<a id="default-layouts" class="toc_anchor"></a>
-
-## Default Layouts ##
+### Default Layouts
 
 ManTL also supports the ability to set default layouts for templates in a given package via the
 `ManifoldTemplates.java` configuration class:
@@ -552,7 +538,7 @@ classes.  This can also be useful when you are overriding layouts, as specified 
 
 <a id="layout-overrides" class="toc_anchor"></a>
 
-## Layout Overrides ##
+### Layout Overrides
 
 Sometimes you may want to manually override the layout of a given template in code,
 or render a template with no layout.  ManTL classes include two fluent helper methods:
