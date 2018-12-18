@@ -222,7 +222,7 @@ tr:nth-child(even) {
 
 | Directive&nbsp;&nbsp;&nbsp;&nbsp;      | Syntax              | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
-| import         | `<%@ import type-name %>`                   | Imports Java types for use in template statements and expressions                   |
+| import         | `<%@ import type-name %>`                   | Imports Java types for use in template directives, statements, and expressions      |
 | extends        | `<%@ extends class-name %>`                 | Extends a base class having features suitable for the template file                 |
 | params         | `<%@ params(parameter-list) %>`             | Parameters for the template, arguments passed via the `render(arg-list)`method      |
 | include        | `<%@ include templaate-name %>`             | Include a separate template in the template                                         |
