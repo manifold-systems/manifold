@@ -184,7 +184,7 @@ The syntax of a comment is as follows:
 
 <a id="directives" class="toc_anchor"></a>
 
-## Directives ##
+## Directives
 
 Directives are commands that are evaluated by the compiler, and will affect the overall page structure.
 
@@ -225,13 +225,11 @@ tr:nth-child(even) {
 | content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
 
 
-<a id="directives" class="toc_anchor"></a>
 
-# Directives #
 
 <a id="-import-" class="toc_anchor"></a>
 
-## `import` ##
+### `import`
 The `import` directive is used to import external packages into the generated Java file.
 
 The syntax of the import directive is as follows:
@@ -271,7 +269,7 @@ The location of import statements must precede other directives.
 
 <a id="-extends-" class="toc_anchor"></a>
 
-## `extends` ##
+### `extends`
 The `extends` directive is used to make a template extend a different base class, which can be used to provide
 additional application specific functionality (e.g. Request and Response objects in a web application).
 
@@ -320,7 +318,7 @@ And easily callable:
 
 <a id="-include-" class="toc_anchor"></a>
 
-## `include` ##
+### `include`
 
 The `include` directive allows users to insert other templates inside of the given template in a type
 safe manner.
@@ -372,7 +370,7 @@ Both statements will result in the following HTML code:
 
 ```
 
-### Conditional Include ###
+#### Conditional Include
 ManTL supports shorthand for conditional inclusion of templates. The following syntax:
 ```jsp
   <% if (condition) { %>
@@ -387,7 +385,7 @@ Can be condensed to the following:
 
 <a id="-params-" class="toc_anchor"></a>
 
-## `params` ##
+### `params`
 
 The `params` directive is used to give parameters to a template. It is only allowed
 for the outermost class (not within sections) and is generally only useful when creating
@@ -430,7 +428,7 @@ Then, the following HTML will be generated:
 
 <a id="-section-" class="toc_anchor"></a>
 
-## `section` ##
+### `section`
 
 The `section` directive will create a subsection of the current template that can
 then be added via an `include` directive in other templates.
@@ -487,7 +485,7 @@ Which will result in the following HTML:
 
 <a id="-layout-" class="toc_anchor"></a>
 
-## `layout` ##
+### `layout`
 
 Layouts can be made and used with the `content` and `layouts` directives respectively.
 
@@ -556,7 +554,7 @@ classes.  This can also be useful when you are overriding layouts, as specified 
 
 <a id="layout-overrides" class="toc_anchor"></a>
 
-### Layout Overrides
+#### Layout Overrides
 
 Sometimes you may want to manually override the layout of a given template in code,
 or render a template with no layout.  ManTL classes include two fluent helper methods:
@@ -610,7 +608,7 @@ in ManTL and no TemplateEngine registry is needed.
 
 <a id="spark-template" class="toc_anchor"></a>
 
-### SparkTemplate Base Class ###
+### SparkTemplate Base Class
 
 Manifold provides a base class, `manifold.templates.sparkjava.SparkTemplate` that can be used via an `@extends` directive
 in your templates (or, more commonly, you would extend the class and add your own application functionality).  This
@@ -625,7 +623,7 @@ If you wish, you can output raw HTML in a template that extends `manifold.templa
 ```
 <a id="tracing" class="toc_anchor"></a>
 
-### Tracing ###
+### Tracing
 
 ManTL supports performance tracing via the following syntax:
 ```java
@@ -639,7 +637,7 @@ the following to console:
 
 <a id="demo" class="toc_anchor"></a>
 
-### Demo ###
+### Demo
 
 A demo Spark application can be found here:
 
