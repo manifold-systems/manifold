@@ -4,15 +4,23 @@ layout: default
 
 # ManTL (Manifold Template Language)
 
-ManTL is a lightweight & _type-safe_ template engine for the JVM using [Manifold](http://manifold.systems/).
+ManTL is a lightweight & **type-safe** template engine directly integrated with the Java compiler using [Manifold](http://manifold.systems/).
 It is modeled loosely on Java Server Pages (JSP), but is divorced from the Servlet API and thus can be
 used in any application environment.
 
-ManTL supports the full Java language, type-safe arguments to templates, type safe inclusion of other templates,
+ManTL supports the full Java language, type-safe arguments to templates, type-safe inclusion of other templates,
 shared layouts for templates and custom base classes for application-specific logic, among other features.
 
 ManTL files have the suffix `mtl`, often optionally preceded by the language that the template is targeting 
 (e.g. `index.html.mtl`).
+
+Unlike other template engines ManTL templates compile directly in your build as if Java source files.  Therefore
+your Java source code can reference and use your template files by name directly as Java classes. This level of 
+type-safety ensures both integrity and high performance.  It also enables tooling like the [Manifold IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
+to provide deterministic code completion, usage searching, and refactoring.  Additionally Manifold support in IntelliJ
+provides incremental compilation and hot swap debugging -- make incremental template changes and see them live on a 
+running server.
+
 
 ## Table of Contents
 - [Installing](#installing)
@@ -216,9 +224,9 @@ tr:nth-child(even) {
 
 | Directive&nbsp;&nbsp;&nbsp;&nbsp;      | Syntax              | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
-| import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
-| extends        | `<%@ extends class-name %>`                 | Extends a superclass in the generated Java file                                     |
-| params         | `<%@ params(parameter-list) %>`             | Provides parameters for the template (see the `render(arg-list)` method)            |
+| import         | `<%@ import type-name %>`                   | Imports Java types for use in template statements and expressions                   |
+| extends        | `<%@ extends class-name %>`                 | Extends a base class having features suitable for the template file                 |
+| params         | `<%@ params(parameter-list) %>`             | Parameters for the template, arguments passed via the `render(arg-list)`method      |
 | include        | `<%@ include templaate-name %>`             | Include a separate template in the template                                         |
 | section        | `<%@ section section-name(parameter-list) %>` | Creates a sub-template within the template, that can be called from other templates |
 | layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
@@ -433,7 +441,7 @@ then be added via an `include` directive in other templates.
 
 The syntax of a `section` block are as follows:
 ```jsp
-  <%@ section sectionName[(symbols-used-in-section)] %>
+  <%@ section section-name[(symbols-used-in-section)] %>
     SECTION CONTENT HERE
   <%@ end section %>
 ```
