@@ -199,7 +199,7 @@ The syntax of a directive is as follows:
 ```
 Here are the valid types of directives:
 
-| Directive Type | Syntax                                      | Description                                                                         |
+| Directive Type | `Syntax`                                    | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
 | import         | `<%@ import package %>`                     | Imports Java packages into the generated Java file                                  |
 | extends        | `<%@ extends superclass %>`                 | Extends a superclass in the generated Java file                                     |
