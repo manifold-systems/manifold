@@ -15,7 +15,7 @@
   <% for( int i = 0; i < 4; i++ ) {%>
     hello
   <%}%>
-  <%LocalDate date = LocalDate.now();%>
+  <%LocalDate date = LocalDate.of( 1984, 6, 15 );%>
   The date is ${date.getMonth()}/${date.getDayOfMonth()}/${date.getYear()}
   hello <%=param1%><%=param1%> bye
   hello

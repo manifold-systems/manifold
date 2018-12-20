@@ -1,1 +1,3 @@
+begin
 <%@ include NestedImportTest.mySection %>
+end

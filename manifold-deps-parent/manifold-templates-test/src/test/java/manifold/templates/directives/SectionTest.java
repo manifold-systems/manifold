@@ -43,4 +43,16 @@ public class SectionTest {
         assertEquals("First Section: 10Second Section: 10", SectionWithinSection.render(10));
     }
 
+    @Test
+    public void includeNestedSectionTest()
+    {
+        String result =
+          "begin\n" +
+          "        <h2 style=\"font-size: 1\">Font size: 1</h2>\n" +
+          "        <h2 style=\"font-size: 2\">Font size: 2</h2>\n" +
+          "        <h2 style=\"font-size: 3\">Font size: 3</h2>\n" +
+          "end";
+        assertEquals( result, demo.IncludeNestedSectionTest.render() );
+    }
+
 }

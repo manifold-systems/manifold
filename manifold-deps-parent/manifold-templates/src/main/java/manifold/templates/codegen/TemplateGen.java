@@ -283,7 +283,7 @@ public class TemplateGen
         case SECTION:
           String[] temp = text.substring( SECTION.keyword().length() ).trim().split( "\\(", 2 );
           className = temp[0].trim();
-          if( temp.length == 2 && !temp[1].equals( ")" ) )
+          if( temp.length == 2 && !temp[1].equals( ")" ) && !temp[1].trim().isEmpty() )
           {
             params = temp[1].substring( 0, temp[1].length() - 1 ).trim();
             paramsList = splitParamsList( params );
@@ -555,8 +555,8 @@ public class TemplateGen
 
     private void addRenderImpl()
     {
-      sb.newLine( "    public void renderImpl(Appendable buffer, ILayout overrideLayout" ).append( safeTrailingString( currClass.params ) ).append( ") {" );
-
+      sb.newLine( "    public void renderImpl(Appendable appendable, ILayout overrideLayout" ).append( safeTrailingString( currClass.params ) ).append( ") {" );
+      sb.newLine( "      WrapAppendable buffer = new WrapAppendable( appendable );" );
       boolean needsToCatchIO = currClass.depth == 0;
 
       if( !needsToCatchIO )
@@ -935,16 +935,23 @@ public class TemplateGen
           nextTokenType != Token.TokenType.EXPR_ANGLE_BEGIN &&
           nextTokenType != Token.TokenType.EXPR_BRACE_BEGIN )
       {
-        int iEol = text.lastIndexOf( '\n' );
-        if( iEol >= 0 )
+        if( isSpaces( text ) )
         {
-          for( int i = text.length() - 1; i >= iEol; i-- )
+          text = "";
+        }
+        else
+        {
+          int iEol = text.lastIndexOf( '\n' );
+          if( iEol >= 0 )
           {
-            char c = text.charAt( i );
-            if( c != ' ' && c != '\t' )
+            for( int i = text.length() - 1; i >= iEol; i-- )
             {
-              text = text.substring( 0, i + 1 );
-              break;
+              char c = text.charAt( i );
+              if( c != ' ' && c != '\t' )
+              {
+                text = text.substring( 0, i + 1 );
+                break;
+              }
             }
           }
         }
@@ -952,6 +959,19 @@ public class TemplateGen
       return text;
     }
 
+    private boolean isSpaces( String text )
+    {
+      int length = text.length();
+      for( int i = 0; i < length; i++ )
+      {
+        char c = text.charAt( i );
+        if( c != ' ' && c != '\t' )
+        {
+          return false;
+        }
+      }
+      return true;
+    }
 
     private void addInclude( Directive dir )
     {

@@ -1,5 +1,6 @@
 package manifold.templates.misc;
 
+import java.time.LocalDate;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
 
@@ -35,6 +36,7 @@ public class WhitespaceTest
       misc.TestNewLines.render( "Hello World!!!" ) );
   }
 
+  @Test
   @DisableStringLiteralTemplates
   public void testWhitespace()
   {
@@ -50,7 +52,7 @@ public class WhitespaceTest
       "    hello\n" +
       "    hello\n" +
       "    hello\n" +
-      "    The date is MAY/27/2018\n" +
+      "  The date is JUNE/15/1984\n" +
       "  hello hullohullo bye\n" +
       "  hello\n" +
       "\n" +
@@ -59,5 +61,25 @@ public class WhitespaceTest
       " bye\n" +
       "</html>",
       misc.whitespace.WhitespaceTemplate1.render( "hullo" ) );
+  }
+
+  @Test
+  public void testWhitespace2()
+  {
+    assertEquals(
+      "  hi\n" +
+      "  bye\n" +
+      "  sigh",
+      misc.whitespace.WhitespaceTemplate2.render() );
+  }
+
+  @Test
+  public void testWhitespace3()
+  {
+    assertEquals(
+      "  hi\n" +
+      "  bye\n" +
+      "  sigh",
+      misc.whitespace.WhitespaceTemplate3.render() );
   }
 }
