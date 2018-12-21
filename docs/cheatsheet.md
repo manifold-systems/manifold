@@ -175,7 +175,7 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 }
 ```
 
-## [Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces)
+## [@Structural - Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces.
 ```java
 @Structural
