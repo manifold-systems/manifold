@@ -35,7 +35,7 @@ enables incremental compilation and hot swap debugging, allowing you to make tem
   * [Tracing](#tracing)
   * [Spark Template Base Class](#spark-template)
   * [Demo](#demo)
-- [Miscellaneous](#miscellaneous)  
+- [Provided Manifold Features](#provided-manifold-features)  
   
 <a id="installing" class="toc_anchor"></a>
 
@@ -694,6 +694,8 @@ After invoking the `trace()` method, every following `render()` call prints the 
 A demo Spark application can be found here:
 
 [https://github.com/manifold-systems/manifold-sample-web-app](https://github.com/manifold-systems/manifold-sample-web-app)
+
+<a id="provided-manifold-features" class="toc_anchor"></a>
 
 # Provided Manifold Features
 
