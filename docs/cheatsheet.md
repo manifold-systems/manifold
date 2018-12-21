@@ -15,7 +15,7 @@ full-featured ManTL template editing, and more.
 
 
 ## [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Gain direct, type-safe access to <i>any</i> data source. Remove the code gen step in your build process.
+Gain direct, **type-safe** access to *any* type of data. Remove the code gen step in your build process.
 
 ### Resources
 Put data files in your `resource path`.
