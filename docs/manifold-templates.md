@@ -8,16 +8,11 @@ ManTL is a lightweight & *type-safe* template engine directly integrated with th
 It supports the full Java language, type-safe arguments to templates, type-safe inclusion of other templates,
 shared layouts for templates and custom base classes for application-specific logic, among other features.
 
-ManTL files have the suffix `mtl`, often optionally preceded by the language that the template is targeting 
-e.g., `index.html.mtl`.
-
-What sets ManTL apart?  Templates compile directly in your build as if Java source files _without a code generation build step_, therefore
-your Java source code can reference and use your template files by name directly as Java classes. This level of 
-type-safety ensures both integrity and high performance, both at runtime and compile-time.  It also enables tooling like the [Manifold IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
-to provide deterministic code completion, usage searching, and refactoring.  Additionally Manifold professional quality support in IntelliJ
-provides incremental compilation and hot swap debugging -- make incremental template changes and see them live on your 
-running server.
-
+Templates compile directly in your build as if Java source files _without a separate code generation build step_, therefore
+your Java source code can reference and use your template files by name directly as _Java classes_. This level of 
+integration and type-safety promotes higher levels of integrity and performance.  It also enables tooling like the [Manifold IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
+to provide deterministic code completion, navigation, usage searching, and refactoring.  Additionally the IntelliJ plugin
+enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
 ## Table of Contents
 - [Installing](#installing)
@@ -35,93 +30,106 @@ running server.
   * [`section`](#-section-)
   * [`layout`](#-layout-)
   * [`content`](#-layout-)
+- [Whitespace](#whitespace)
 - [Spark Java Support](#spark)
   * [Tracing](#tracing)
   * [Spark Template Base Class](#spark-template)
   * [Demo](#demo)
+- [Miscellaneous](#miscellaneous)  
   
 <a id="installing" class="toc_anchor"></a>
 
-# Installing #
+# Installing
 
-ManTL can be used by simply adding the following dependency to your project:
+Use ManTL in your project simply by adding the `manifold-template` dependency.
 
+Maven:
 ```xml
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-templates</artifactId>
-      <version>0.32-alpha</version>
-    </dependency>
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-templates</artifactId>
+    <!-- it is best to use the latest release -->
+    <version>0.32-alpha</version> 
+  </dependency>
 ```
 
-# Usage #
+Gradle:
+```groovy
+  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELASE'
+```
+  
+> Note [prebuilt binaries](http://manifold.systems/docs.html#binaries) are also available for non-Maven/Gradle projects.
+ 
+# Usage
 
-Once you have installed ManTL, you can begin using it by placing a new file that ends
-a with the `mtl` suffix in your resources directory (nb: not in your source directory).  The file can have any sort of 
-string content, as well as [dynamic content](#basic-syntax) and [directives](#directives) that change how the 
-template behaves.
+Once you have installed ManTL, you can begin using it by placing a new file with the `mtl` extension in your _resources_ 
+directory (nb: not in your source directory).  The file can have any sort of string content, as well as [dynamic content](#basic-syntax) 
+and [directives](#directives) that change how the template behaves.
 
-Consider the following Manifold Template named `HelloWorld.txt.mtl`, located in the `resources/templates` directory:
+> Note it is helpful, but not required, to include the file extension of the target content in the template file name.
+For instance, a template that produces HTML as output is named *MyTemplate.html.mtl*
+
+Consider the following template named `HelloWorld.txt.mtl`, located in the `resources/templates` directory:
 
 ```jsp
 Hello World!
 ```
-
-This template could then be used directly from your java code like so:
+This template can be used directly from your Java code:
 
 ```java
 import templates.HelloWorld;
-
-...
-    public void demo() {
-      System.out.println(HelloWorld.render());
-    }
-...
+public class Demo {
+  public static void main(String[] args) {
+    System.out.println(HelloWorld.render());
+  }
+}
 ```
 
-This would have the effect of printing "Hello World" to standard out.
+This prints `Hello World` to your console.
 
-If you wanted to add a parameter to the template, you can use the [`params`](#-params-) directive:
+If you want to add a parameter to the template, you can change the template to use the [`params`](#-params-) directive:
 
 ```jsp
 <%@ params(String name) %>
 Hello ${name}!
 ```
 
-You could then call the template like so:
+>Note you can make changes to your templates in IntelliJ while debugging your application. The Manifold plugin for 
+IntelliJ hot swaps incremental compilation changes into your running application.
+
+You can call this parameterized template with a `String` argument:
 
 ```java
 import templates.HelloWorld;
-
-...
-    public void demo() {
-      System.out.println(HelloWorld.render("ManTL"));
-    }
-...
+public class Demo {
+  public static void main(String[] args) {
+    System.out.println(HelloWorld.render("ManTL"));
+  }
+}
 ```
 
-Which would result in printing "Hello ManTL" to standard out.
+Which prints `Hello ManTL!` to your console.
 
 If you do not wish to materialize the template as a string, you can use the `renderInto()` method to render templates
-into any `Appendable` object.  The `renderInto()` method will have the same parameters as `render()` but will take
-an additional `Appendable` object and return `void`.
+into any `Appendable` object.  The `renderInto()` method is similar to `render()` but defines an additional `Appendable` 
+parameter and returns `void`.
 
 <a id="basic-syntax" class="toc_anchor"></a>
 
 # Syntax
 
-As with most template engines, a ManTL consist of regular textual content with various scriptlets and
-directives interspersed in that content.
+As with most template languages, a ManTL template consists of regular textual content interspersed with language 
+constructs such as statements, expressions, comments, and directives.
 
 <a id="statements" class="toc_anchor"></a>
 
 ## Statements
 
-ManTL lets you control output of a template with Java language statements, also known as a *scriptlet*.  You embed 
-statements or statement fragments in a template using this syntax:
+ManTL lets you control output of a template with Java language statements.  You embed statements or statement fragments 
+in a template using this syntax:
 
 ```jsp
-<% java-statements %>
+<% java-statement-parts %>
 ```
  
 ManTL supports all Java language statements including variable and method declarations and control structures. For 
@@ -138,14 +146,34 @@ Grade: A
 ```
 otherwise, the statement has no effect on the output.
 
-Also notice the statement is fragmented between two sets of `<% %>` delimiters. You can leverage many of Java's
+Notice the statement is fragmented between two sets of `<% %>` delimiters. You can leverage many of Java's
 statements in this way to control the output, including `if-else`, `switch`, `for`, `while`, and  `do-while`.
+
+This example demonstrates how a simple `for` statement can repeat a section of the template's content:
+```jsp
+<% for(String brand: Arrays.asList("Maserati", "Alfa Romeo", "Abarth") { %>
+  Fiat brand: ${brand}
+<% } %>
+``` 
+Renders as:
+```text
+  Fiat brand: Maserati
+  Fiat brand: Alfa Romeo
+  Fiat brand: Abarth
+```
+
+You can achieve the same result using a Java lambda expression:
+```jsp
+<% Arrays.asList("Maserati", "Alfa Romeo", "Abarth").forEach(brand -> { %>
+  Fiat brand: ${brand}
+<% }); %>
+``` 
 
 <a id="expressions" class="toc_anchor"></a>
 
 ## Expressions
 
-A ManTL expression contains a Java language expression, it is evaluated, coerced to a String, and
+A ManTL expression contains a Java language expression, it is evaluated, coerced to a `String`, and
 inserted where the expression appears in the ManTL file.
 
 Use expressions with this syntax:
@@ -158,7 +186,7 @@ Additionally, the following shorthand syntax is also valid:
 ${ java-expression }
 ```
 
-For example, you can do the following with expressions:
+For example, this template:
 ```jsp
 <html>
   <head><title>Expression Example</title></head>
@@ -169,27 +197,29 @@ For example, you can do the following with expressions:
 </html>
 ```
 
-The above template generates the following HTML:
+generates the following HTML:
 
 ```html
 <html>
   <head><title>Expression Example</title></head>
   <body>
-      <p style="font-size: 10"> The font size of this paragraph is 10. </p>
+    <p style="font-size: 10"> The font size of this paragraph is 10. </p>
   </body>
 </html>
 ```
 
-Note the statement declaring the `y` variable does not directly contribute to the resulting content. This is because a statement
-does not produce a value to display.  On the other hand since the evaluation of an expression always produces a value, 
-it renders as part of the template's resulting content, hence both `y` expressions render `10` in the output. 
+Note the statement declaring the `y` variable does not directly contribute to the resulting content. This is because a 
+statement does not produce a value to display, instead a statement *controls* what displays.  By contrast an expression 
+produces a value, thus it directly renders as part of the template's resulting content, hence both `${y}` expressions 
+render `10` in the output. 
 
 <a id="comments" class="toc_anchor"></a>
 
 ## Comments
-Comments are blocks of code the compiler ignores; they do not contribute to the template's output. Use them to comment 
-a template as you like. They will *not* appear as comments in the generated Java code, they are exclusively template
-file comments.
+Comments are blocks that delimit areas of the template the compiler ignores; they do not contribute to the template's 
+output. Use them to make comments and to temporarily mask off sections of a template as you like. 
+
+>Note template comments in no way affect the generated Java code, they are exclusively template file comments.
 
 The syntax of a comment is as follows:
 ```jsp
@@ -200,7 +230,7 @@ The syntax of a comment is as follows:
 
 ## Directives
 
-Directives are commands you use to direct the compilation and resulting structure of a template.
+Directives are commands you use to control the compilation and resulting structure of a template.
 
 Directives have the following syntax:
 
@@ -208,7 +238,7 @@ Directives have the following syntax:
 <%@ directive-name [options] %>
 ```
 
-Here is a summary of all the ManTL directives. More detailed descriptions of each follow.
+Here is a summary of all the ManTL directives. More detailed descriptions follow.
 
 <style>
 table {
@@ -272,7 +302,7 @@ The above template produces the following HTML:
   <head><title>Import Example</title></head>
   <body>
     <p> myHashSet contains 10. </p>
-    <p> myHashSet contains 15. </p
+    <p> myHashSet contains 15. </p>
   </body>
 </html>
 ```
@@ -337,10 +367,10 @@ safe manner.
 
 The syntax looks like this:
 ```jsp
-<%@ include [template to include] %>
+<%@ include [template-name] %>
 ```
 
-For example, consider the following template, `myTemplate.html.mtl`:
+For example, consider the following template, `MyTemplate.html.mtl`:
 ```jsp
 <% int fontSize = 0; %>
 <html>
@@ -357,7 +387,7 @@ For example, consider the following template, `myTemplate.html.mtl`:
 ```
 We can then include it from another template as such:
 ```jsp
-<%@ include myTemplate %>
+<%@ include MyTemplate %>
 ```
 
 Both statements will result in the following HTML code:
@@ -385,12 +415,12 @@ Both statements will result in the following HTML code:
 ManTL supports shorthand for conditional inclusion of templates. The following syntax:
 ```jsp
 <% if (condition) { %>
-  <%@ include myTemplate %>
+  <%@ include MyTemplate %>
 <% } %>
 ```
 Can be condensed to the following:
 ```jsp
-<%@ include myTemplate if(condition) %>
+<%@ include MyTemplate if(condition) %>
 ```
 (Note: In the above, parentheses are optional.)
 
@@ -398,8 +428,7 @@ Can be condensed to the following:
 
 ### `params`
 
-Use the `params` directive to declare parameters in a template, similar to declaring parameters for a method. It is 
-only allowed for the outermost class (not within sections).
+Use the `params` directive to declare parameters in a template, similar to declaring parameters for a method.
 
 The syntax of the `params` directive is as follows:
 ```jsp
@@ -440,7 +469,7 @@ Then, the following HTML will be generated:
 
 ### `section`
 
-The `section` directive creates a subsection of the current template that can be added via an `include` directive in 
+The `section` directive creates a subsection of the current template that can be added using the `include` directive in 
 other templates.
 
 The syntax of a `section` block:
@@ -452,7 +481,7 @@ The syntax of a `section` block:
 Note the corresponding `<%@ end section %>` directive must be used to complete the section, otherwise
 a compile error results.
 
-For example, you can create the template `nestedImport.html.mtl` as the following:
+For example, you can create the template `NestedImport.html.mtl` as the following:
 ```jsp
 <%@ import java.util.* %>
 <h1>Defines a section</h1>
@@ -479,7 +508,7 @@ The above code will generate the following HTML:
 
 Then, you can include `mySection` in a separate template:
 ```jsp
-  <%@ include nestedImport.mySection %>
+  <%@ include NestedImport.mySection %>
 ```
 
 Which will result in the following HTML:
@@ -494,26 +523,26 @@ Which will result in the following HTML:
 
 ### `layout`
 
-Layouts can be made and used with the `content` and `layouts` directives respectively.
+Layouts can be made and used with the `content` and `layout` directives respectively.
 
 The `content` directive splits the current template into the header and footer of a layout.
 
-The `layouts` directive makes the header and footer of the layout frame the current template. 
-The current template renders where at the location of the `content` directive.
+The `layout` directive makes the header and footer of the layout frame the current template. 
+The current template renders at the location of the `content` directive.
 
-Both the `content` directive and `layouts` directive are only valid in the outermost class
+Both the `content` directive and `layout` directive are only valid in the outermost class
 (not within sections) and can only appear once in a template.
 
 The `params` directive is not yet supported for a template that contains the `content` directive.
 
-The syntax of a content template is as follows:
+The syntax of a layout template is as follows:
 ```jsp
 HEADER CONTENT HERE
 <%@ content %>
 FOOTER CONTENT HERE
 ```
 
-For example, I can create the template `layoutEx.html.mtl` as the following:
+For example, you can create the template `LayoutEx.html.mtl`:
 ```jsp
 </html>
   </body>
@@ -524,7 +553,7 @@ For example, I can create the template `layoutEx.html.mtl` as the following:
 
 And use the layout in the following template:
 ```jsp
-<%@ layout layoutEx %>
+<%@ layout LayoutEx %>
 <h1>This is a template that uses a layout.</h1>
 <h2>The layout directive can appear anywhere in the template.</h2>
 ```
@@ -554,7 +583,7 @@ ManTL also supports the ability to set default layouts for templates in a given 
 ```
 
 By default, more specific layout declarations take precedence over less specific ones. For example, templates with a 
-declared layout (using the layout directive) use the declared layout rather than any default layout.
+declared layout (using the `layout` directive) override the default layout.
 
 Note the generated `asLayout()` static method on layout template classes.  This is useful when you override 
 layouts, as specified below.
@@ -565,7 +594,7 @@ layouts, as specified below.
 
 Sometimes you may want to manually override the layout of a given template in code,
 or render a template with no layout.  ManTL classes include two fluent helper methods:
-`withoutLayout` and `withLayout(ILayout)` to assist in these cases:
+`withoutLayout()` and `withLayout(ILayout)` to assist in these cases:
 
 ```java
   // Renders the template with no layout, regardless of the configuration
@@ -575,10 +604,25 @@ or render a template with no layout.  ManTL classes include two fluent helper me
   MyTemplate.withLayout(MyLayout.asLayout()).render(); 
 ```
 
+<a id="whitespace" class="toc_anchor"></a>
 
+# Whitespace
+
+ManTL language constructs are silent with respect to the template's output.  That is to say, contiguous whitespace 
+characters leading and trailing a language construct are omitted from the template's generated content. Whitespace 
+characters include spaces, tabs, and new lines.
+```jsp
+  <%@ import java.util.ArrayList %>
+  <% if(true) { <%>
+Hi
+  <% } %>
+```
+The above template renders just one line of text consisting of the two characters in the word `Hi`; none of the 
+whitespace immediately preceding or following the language constructs are included.  
+  
 <a id="spark" class="toc_anchor"></a>
 
-## Spark Java Support
+# Spark Java Support
 
 ManTL is designed with web frameworks like [Spark](http://sparkjava.com/) in mind.
 
@@ -599,7 +643,7 @@ public class WebApp {
     // Set up the default layout for the application
     ManifoldTemplates.setDefaultLayout(DefaultLayout.asLayout());
 
-    // enable tracing
+    // Enable tracing
     ManifoldTemplates.trace();
 
     // Render the index template
@@ -608,17 +652,20 @@ public class WebApp {
 }
 ```
 
-There are two templates in the `resources` directory: one at `views/Index.html.mtl` and one at 
-`views/layouts/DefaultLayout.html.mtl`.  Note the code takes advantage of the type-safe parameters available
-in ManTL and no "TemplateEngine" is needed.
+There are two templates in the `resources` directory: `views/Index.html.mtl` and `views/layouts/DefaultLayout.html.mtl`.
+Here the code references the `Index` template directly as a Java class.  This is a powerful aspect of ManTL -- the 
+compiler verifies your links are never broken and you can fully leverage the strength of IntelliJ for deterministic 
+code completion, usage searching, refactoring, navigation, incremental compilation, hot swap, etc.  
+  
+> Note the code takes advantage of the _type-safe_ parameters available in ManTL and no "TemplateEngine" is needed.
 
 <a id="spark-template" class="toc_anchor"></a>
 
 ### SparkTemplate Base Class
 
 Manifold provides base class `manifold.templates.sparkjava.SparkTemplate` for use with the `extends` directive
-in your templates (or, more commonly, you extend the base class and add your own application functionality).  This
-class provides various convenience methods to get the HTTP Request, Response, etc. and also automatically escapes
+in your templates (or, more commonly, you extend this class and add more of your own application functionality).  This
+class provides various convenience methods to get the HTTP `Request`, `Response`, etc. and it also automatically escapes
 all string content for HTML, to help prevent malicious user input from causing a security issue in your application.
 
 If you wish, you can output raw HTML in a template that extends `manifold.templates.sparkjava.SparkTemplate` using the
@@ -647,3 +694,36 @@ After invoking the `trace()` method, every following `render()` call prints the 
 A demo Spark application can be found here:
 
 [https://github.com/manifold-systems/manifold-sample-web-app](https://github.com/manifold-systems/manifold-sample-web-app)
+
+# Provided Manifold Features
+
+Because ManTL is a [Type Manifold](http://manifold.systems/docs.html#what-is-a-type-manifold) you can leverage other 
+aspects of Manifold in your code, including the [Properties Manifold](http://manifold.systems/docs.html#properties-files), 
+[Image Manifold](http://manifold.systems/docs.html#image-files), and others.  For instance, just as you have type-safe 
+access to `mtl` template files, you also have type-safe access to Java `properties` files and image files such as `png`, 
+`gif`, and `jpg`.
+
+You can create and use [Manifold Extensions](http://manifold.systems/docs.html#extension-classes) too.  Instead of 
+writing `Util` and `Helper` classes you can write your own extension methods for any Java class. Then use IntelliJ
+code completion to improve your development experience with the extended classes.
+
+Use other extension features such as  [@Jailbreak](http://manifold.systems/docs.html#type-safe-reflection) for type-safe 
+reflection and avoid the dangers of writing and maintaining reflection code in your app.  Use [@Self](http://manifold.systems/docs.html#the-self-type)
+to improve the usability of your *Builder* classes -- avoid complicated recursive generic types and the like.
+
+Utilize [Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces) in your code to avoid the penalties
+and tedium involved with reflection and proxies.  Structural interfaces are also quite powerful when combined with other 
+Manifold features such as Extension methods -- layer a unified API over different, but similar architectures.
+
+To utilize more of Manifold's features you can replace your `manifold-templates` dependency with `manifold-all`. 
+This change enables type-safe access to other type manifolds such as JSON files, JSON Schema, CSV and more.  You also 
+gain access to Manifold's provided extension libraries for I/O, Web, and Collections.
+
+```xml
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-all</artifactId>
+      <!-- it is best to use the latest release -->
+      <version>0.32-alpha</version> 
+    </dependency>
+```
