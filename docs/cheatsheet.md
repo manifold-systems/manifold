@@ -4,6 +4,16 @@ layout: default
 
 # Manifold Cheat Sheet
 
+>#### [IntelliJ IDEA](http://manifold.systems/docs.html#working-with-intellij)
+>Manifold is best experienced in IntelliJ IDEA. The Manifold plugin provides comprehensive support for IntelliJ features 
+including code completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, 
+full-featured ManTL template editing, and more. 
+>
+>Install the plugin directly from IntelliJ:
+>
+><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: <kbd>Manifold</kbd>
+
+
 ## [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
 Gain direct, type-safe access to <i>any</i> data source. Remove the code gen step in your build process.
 
@@ -325,10 +335,7 @@ File file = new File(path);
 // Use refreshing extensions to File
 String content = file.readText();
 ```  
-
-## [IntelliJ](http://manifold.systems/docs.html#working-with-intellij)
-Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides 
-comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, 
-incremental compilation, hotswap debugging, full-featured template editing, and more.
+Use the `manifold-all` dependency to access all Manifold's provided extension libraries including I/O, Web, and 
+Collections.
 
 ## [Learn More](http://manifold.systems/docs.html)
