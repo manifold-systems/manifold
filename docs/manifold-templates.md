@@ -717,7 +717,7 @@ Utilize [Structural Interfaces](http://manifold.systems/docs.html#structural-int
 and tedium involved with reflection and proxies.  Structural interfaces are also quite powerful when combined with other 
 Manifold features such as Extension methods -- layer a unified API over different, but similar architectures.
 
-To utilize more of Manifold's features you can replace your `manifold-templates` dependency with `manifold-all`. 
+To utilize even more of Manifold's features you can replace your `manifold-templates` dependency with `manifold-all`. 
 This change enables type-safe access to other type manifolds such as JSON files, JSON Schema, CSV and more.  You also 
 gain access to Manifold's provided extension libraries for I/O, Web, and Collections.
 
