@@ -1,5 +1,5 @@
 ---
-layout: docs_layout
+layout: default
 ---
 
 # Manifold Cheat Sheet
@@ -30,7 +30,7 @@ src
 ...
 }
 ```
-Use `Person.json` as a JSON-by-example schema for type-safe access to other such JSON data: 
+Use `Person.json` as a JSON-by-example schema: 
 ```java 
 import abc.Person;
 ...
@@ -38,9 +38,7 @@ Person person = Person.fromJsonUrl(url);
 person.setFirstName("Scott");
 ```
 Or use JSON Schema files:
-```text
 `resources/abc/Contact.json`
-```
 ```json
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
