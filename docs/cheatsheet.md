@@ -127,13 +127,13 @@ System.out.println(next); // prints '1'
 
 ## [String Templates](http://manifold.systems/docs.html#templating) (string interpolation)
 ### Enabling
-By default String templates are _disabled_.  Enable the feature with the `strings` Manifold javac plugin argument:
-```
--Xplugin:Manifold strings
-```  
-or
-```
--Xplugin:"Manifold strings"  // some tools require quotes)
+By default String templates are _disabled_.  Enable the feature with the `strings` Manifold plugin argument.
+
+Maven:
+```xml
+<compilerArgs>
+  <arg>-Xplugin:Manifold strings</arg>
+</compilerArgs>
 ```
 ### Using
 A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
@@ -149,7 +149,7 @@ String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // print
 ```
 Escape the `$` with `\$`.
 
-Use `@DisableStringLiteralTemplates` to turn string templates off at the class and method level.  
+Use `@DisableStringLiteralTemplates` to turn string templates off at the class and method levels.  
 
 ## [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
 
