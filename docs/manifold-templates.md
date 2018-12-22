@@ -15,7 +15,6 @@ to provide deterministic code completion, navigation, usage searching, and refac
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
 ## Table of Contents
-<style> li ul li {  margin-left:100px; } </style>
 * [Installing](#installing)
 * [Usage](#usage)
 * [Syntax](#basic-syntax)
