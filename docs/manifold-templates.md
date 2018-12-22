@@ -15,13 +15,7 @@ to provide deterministic code completion, navigation, usage searching, and refac
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
 <style>
-  ul.frames {
-    font-size: 0;
-  }
-  ul.frames li {
-    font-size: 12px; font-size:1.4rem;
-    display: inline;
-  }
+  li{ margin-right: -0.25em; }
 </style>
 ## Table of Contents
 * [Installing](#installing)
