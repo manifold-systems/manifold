@@ -15,27 +15,26 @@ to provide deterministic code completion, navigation, usage searching, and refac
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
 ## Table of Contents
-- [Installing](#installing)
-- [Usage](#usage)
-- [Template Syntax](#basic-syntax)
+* [Installing](#installing)
+* [Usage](#usage)
+* [Syntax](#basic-syntax)
   * [Statements](#statements)
   * [Expressions](#expressions)
-  * [Directives](#directives)
   * [Comments](#comments)
-- [Directives](#directives)
-  * [`import`](#-import-)
-  * [`extends`](#-extends-)
-  * [`include`](#-include-)
-  * [`params`](#-params-)
-  * [`section`](#-section-)
-  * [`layout`](#-layout-)
-  * [`content`](#-layout-)
-- [Whitespace](#whitespace)
-- [Spark Java Support](#spark)
+  * [Directives](#directives)
+    * [`import`](#-import-)
+    * [`extends`](#-extends-)
+    * [`params`](#-params-)
+    * [`include`](#-include-)
+    * [`section`](#-section-)
+    * [`layout`](#-layout-)
+    * [`content`](#-layout-)
+* [Whitespace](#whitespace)
+* [**Spark** Java Support](#spark)
   * [Tracing](#tracing)
-  * [Spark Template Base Class](#spark-template)
-  * [Demo](#demo)
-- [Provided Manifold Features](#provided-manifold-features)  
+  * [Template Base Class](#spark-template)
+  * [Sample Application](#demo)
+* [Provided Manifold Features](#provided-manifold-features)  
   
 <a id="installing" class="toc_anchor"></a>
 
@@ -357,6 +356,46 @@ And easily callable:
   get("/contact/:id", (req, resp) -> ShowContact.render(Contact.find(req.getParam("id")));
 ```
 
+<a id="-params-" class="toc_anchor"></a>
+
+### `params`
+
+Use the `params` directive to declare parameters in a template, similar to declaring parameters for a method.
+
+The syntax of the `params` directive is as follows:
+```jsp
+<%@ params(parameter-list) %>
+```
+
+For example, you can create the template `NameDisplay.html.mtl` as the following:
+
+```jsp
+<%@ params(String name) %>
+<p>Your name is: ${myName}</p>
+```
+
+You can then include it in another template as follows:
+
+```jsp
+<html>
+  <head><title>PARAMS Example</title></head>
+  <body>
+    <%@ include NameDisplay("Robert") %>
+    <%@ include NameDisplay("Scott") %>
+  </body>
+</html>
+```
+
+Then, the following HTML will be generated:
+```html
+<html>
+  <head><title>PARAMS Example</title></head>
+  <body>
+    <p>Your name is: Robert </p>
+    <p>Your name is: Scott </p>
+  </body>
+</html>
+```
 
 <a id="-include-" class="toc_anchor"></a>
 
@@ -424,46 +463,6 @@ Can be condensed to the following:
 ```
 (Note: In the above, parentheses are optional.)
 
-<a id="-params-" class="toc_anchor"></a>
-
-### `params`
-
-Use the `params` directive to declare parameters in a template, similar to declaring parameters for a method.
-
-The syntax of the `params` directive is as follows:
-```jsp
-<%@ params(parameter-list) %>
-```
-
-For example, you can create the template `NameDisplay.html.mtl` as the following:
-
-```jsp
-<%@ params(String name) %>
-<p>Your name is: ${myName}</p>
-```
-
-You can then include it in another template as follows:
-
-```jsp
-<html>
-  <head><title>PARAMS Example</title></head>
-  <body>
-    <%@ include NameDisplay("Robert") %>
-    <%@ include NameDisplay("Scott") %>
-  </body>
-</html>
-```
-
-Then, the following HTML will be generated:
-```html
-<html>
-  <head><title>PARAMS Example</title></head>
-  <body>
-    <p>Your name is: Robert </p>
-    <p>Your name is: Scott </p>
-  </body>
-</html>
-```
 
 <a id="-section-" class="toc_anchor"></a>
 
@@ -689,9 +688,9 @@ After invoking the `trace()` method, every following `render()` call prints the 
 
 <a id="demo" class="toc_anchor"></a>
 
-### Demo
+### Sample Application
 
-A demo Spark application can be found here:
+A sample Spark application is available here:
 
 [https://github.com/manifold-systems/manifold-sample-web-app](https://github.com/manifold-systems/manifold-sample-web-app)
 

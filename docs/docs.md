@@ -1065,8 +1065,8 @@ compilation use-case.
 ### Templating
 
 Manifold provides two forms of templating:
-* String Templates
-* Template Files
+* String Templates (or String interpolation)
+* Template *Files* with [ManTL](http://manifold.systems/manifold-templates.html)
 
 A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
 use `$` to embed a simple variable:
