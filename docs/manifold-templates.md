@@ -31,6 +31,7 @@ enables incremental compilation and hot swap debugging, allowing you to make tem
     * [`content`](#-layout-)
 * [Whitespace](#whitespace)
 * [**Spark** Java Support](#spark)
+  * [Hello World!](#spark-hello-world)
   * [Tracing](#tracing)
   * [Template Base Class](#spark-template)
   * [Sample Application](#demo)
@@ -625,17 +626,19 @@ whitespace immediately preceding or following the language constructs are includ
 
 ManTL is designed with web frameworks like [Spark](http://sparkjava.com/) in mind.
 
-A sample Spark application making use of ManTL:
+<a id="spark-hello-world" class="toc_anchor"></a>
+
+## Hello World!
+A simple "Hello World!" Spark application making use of ManTL:
 
 ```java
 package app;
 
 import manifold.templates.ManifoldTemplates;
+import views.Index;
+import views.layout.DefaultLayout;
 
 import static spark.Spark.*;
-
-import views.*;
-import views.layout.*;
 
 public class WebApp { 
   public static void main(String[] args) {
@@ -645,8 +648,8 @@ public class WebApp {
     // Enable tracing
     ManifoldTemplates.trace();
 
-    // Render the index template
-    get("/", (req, resp) -> Index.render("Hello World"));
+    // Render the Index template
+    get("/", (req, resp) -> Index.render("Hello World!"));
   }
 }
 ```
@@ -654,9 +657,9 @@ public class WebApp {
 There are two templates in the `resources` directory: `views/Index.html.mtl` and `views/layouts/DefaultLayout.html.mtl`.
 Here the code references the `Index` template directly as a Java class.  This is a powerful aspect of ManTL -- the 
 compiler verifies your links are never broken and you can fully leverage the strength of IntelliJ for deterministic 
-code completion, usage searching, refactoring, navigation, incremental compilation, hot swap, etc.  
+code completion, usage searching, refactoring, navigation, incremental compilation, and hot swap.  
   
-> Note the code takes advantage of the _type-safe_ parameters available in ManTL and no "TemplateEngine" is needed.
+> Note the code takes advantage of the _type-safe_ parameters available in ManTL and no Spark "TemplateEngine" is needed.
 
 <a id="spark-template" class="toc_anchor"></a>
 
