@@ -326,7 +326,7 @@ HashMap<String, String> map = new HashMap<>()
 
 ## [ManTL](http://manifold.systems/manifold-templates.html) (Superfast **type-safe** templates)
 
-ManTL has a separate [cheat sheet](http://manifold.systems/manifold-templates-cheatsheet.html)
+ManTL has a separate [cheat sheet](http://manifold.systems/manifold-templates.html)
 
 ## [Libraries](http://manifold.systems/docs.html#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
