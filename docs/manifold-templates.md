@@ -14,11 +14,6 @@ integration and type-safety promotes higher levels of integrity and performance.
 to provide deterministic code completion, navigation, usage searching, and refactoring.  Additionally the IntelliJ plugin
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
-<style>
-  ul {
-    display: flex;
-  }
-</style>
 ## Table of Contents
 * [Installing](#installing)
 * [Usage](#usage)
