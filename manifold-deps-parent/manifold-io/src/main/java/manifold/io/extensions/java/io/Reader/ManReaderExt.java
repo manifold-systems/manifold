@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.io.extensions.java.io.Reader;
 
 import manifold.io.extensions.java.io.File.ManFileExt;
@@ -34,8 +50,8 @@ public class ManReaderExt
   }
 
   /**
-   * Iterates through each line of this reader, calls [action] for each line read
-   * and closes the [Reader] when it's completed.
+   * Iterates through each line of this reader, calls {@code action} for each line read
+   * and closes the {@code Reader} when it's completed.
    *
    * @param action function to process file lines.
    */
@@ -57,9 +73,9 @@ public class ManReaderExt
   }
 
   /**
-   * Calls the [block] callback giving it a sequence of all the lines in this file and closes the reader once
+   * Calls the {@code block} callback giving it a sequence of all the lines in this file and closes the reader once
    * the processing is complete.
-   * @return the value returned by [block].
+   * @return the value returned by {@code block}.
    */
   public static <T> T useLines( @This Reader thiz, Function<Iterable<String>,T> block )
   {

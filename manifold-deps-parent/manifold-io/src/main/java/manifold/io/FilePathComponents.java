@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.io;
 
 import manifold.io.extensions.java.io.File.ManFileExt;
@@ -6,15 +22,18 @@ import java.util.List;
 
 /**
  * Represents the path to a file as a collection of directories.
- *
- * @property root the [File] object representing root of the path (for example, `/` or `C:` or empty for relative paths).
- * @property segments the list of [File] objects representing every directory in the path to the file,
- * up to an including the file itself.
  */
 public class FilePathComponents
 {
+  /**
+   * The {@link File} object representing root of the path (for example, {@code /} or {@code C:} or empty for relative paths).
+   */
   public final File root;
+  /**
+   * The list of {@link File} objects representing every directory in the path to the file, up to an including the file itself.
+   */
   public final List<File> segments;
+
 
   public FilePathComponents( File root, List<File> segments )
   {
@@ -31,7 +50,7 @@ public class FilePathComponents
   }
 
   /**
-   * Returns `true` when the [root] is not empty.
+   * Returns {@code true} when the {@link #root} is not empty.
    */
   public boolean isRooted()
   {
@@ -47,8 +66,8 @@ public class FilePathComponents
   }
 
   /**
-   * Returns a sub-path of the path, starting with the directory at the specified [beginIndex] and up
-   * to the specified [endIndex].
+   * Returns a sub-path of the path, starting with the directory at the specified {@code beginIndex} and up
+   * to the specified {@code endIndex}.
    */
   public File subPath( int beginIndex, int endIndex )
   {

@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.io;
 
 import java.io.File;
@@ -14,28 +30,29 @@ import manifold.util.Stack;
  * This class is intended to implement different file traversal methods.
  * It allows to iterate through all files inside a given directory.
  * <p>
- * Use [File.walk], [File.walkTopDown] or [File.walkBottomUp] extension functions to instantiate a `FileTreeWalk` instance.
+ * Use {@code File.walk}, {@code File.walkTopDown} or {@code File.walkBottomUp} extension 
+ * methods to instantiate a {@link FileTreeWalk} instance.
  * <p>
  * If the file path given is just a file, walker iterates only it.
- * If the file path given does not exist, walker iterates nothing, i.e. it's equivalent to an empty sequence.
+ * If the file path given does not exist, walker iterates nothing, i.e., it's equivalent to an empty sequence.
  */
 public class FileTreeWalk implements Iterable<File>
 {
-  private final File start;
-  private final FileWalkDirection direction; //= FileWalkDirection.TOP_DOWN;
-  private final Function<File, Boolean> onEnter;
-  private final Consumer<File> onLeave;
-  private final BiConsumer<File, IOException> onFail;
-  private final int maxDepth; // = Integer.MAX_VALUE;
+  private final File _start;
+  private final FileWalkDirection _direction; //= FileWalkDirection.TOP_DOWN;
+  private final Function<File, Boolean> _onEnter;
+  private final Consumer<File> _onLeave;
+  private final BiConsumer<File, IOException> _onFail;
+  private final int _maxDepth; // = Integer.MAX_VALUE;
 
   public FileTreeWalk( File start, FileWalkDirection direction, Function<File, Boolean> onEnter, Consumer<File> onLeave, BiConsumer<File, IOException> onFail, int maxDepth )
   {
-    this.start = start;
-    this.direction = direction;
-    this.onEnter = onEnter;
-    this.onLeave = onLeave;
-    this.onFail = onFail;
-    this.maxDepth = maxDepth;
+    _start = start;
+    _direction = direction;
+    _onEnter = onEnter;
+    _onLeave = onLeave;
+    _onFail = onFail;
+    _maxDepth = maxDepth;
   }
 
   public FileTreeWalk( File start, FileWalkDirection direction )
@@ -97,13 +114,13 @@ public class FileTreeWalk implements Iterable<File>
 
     FileTreeWalkIterator()
     {
-      if( start.isDirectory() )
+      if( _start.isDirectory() )
       {
-        state.push( directoryState( start ) );
+        state.push( directoryState( _start ) );
       }
-      else if( start.isFile() )
+      else if( _start.isFile() )
       {
-        state.push( new SingleFileState( start ) );
+        state.push( new SingleFileState( _start ) );
       }
       else
       {
@@ -129,7 +146,7 @@ public class FileTreeWalk implements Iterable<File>
 
     private DirectoryState directoryState( File root )
     {
-      return direction == FileWalkDirection.TOP_DOWN
+      return _direction == FileWalkDirection.TOP_DOWN
              ? new TopDownDirectoryState( root )
              : new BottomUpDirectoryState( root );
     }
@@ -153,7 +170,7 @@ public class FileTreeWalk implements Iterable<File>
       else
       {
         // Check that file/directory matches the filter
-        if( file == topState.root || !file.isDirectory() || state.size() >= maxDepth )
+        if( file == topState.root || !file.isDirectory() || state.size() >= _maxDepth )
         {
           // Proceed to a root directory or a simple file
           return file;
@@ -190,7 +207,7 @@ public class FileTreeWalk implements Iterable<File>
       {
         if( !failed && fileList == null )
         {
-          if( onEnter != null && !onEnter.apply( root ) )
+          if( _onEnter != null && !_onEnter.apply( root ) )
           {
             return null;
           }
@@ -198,9 +215,9 @@ public class FileTreeWalk implements Iterable<File>
           fileList = root.listFiles();
           if( fileList == null )
           {
-            if( onFail != null )
+            if( _onFail != null )
             {
-              onFail.accept( root, new AccessDeniedException( root.toString(), null, "Cannot list files in a directory" ) );
+              _onFail.accept( root, new AccessDeniedException( root.toString(), null, "Cannot list files in a directory" ) );
             }
             failed = true;
           }
@@ -219,9 +236,9 @@ public class FileTreeWalk implements Iterable<File>
         else
         {
           // That's all
-          if( onLeave != null )
+          if( _onLeave != null )
           {
-            onLeave.accept( root );
+            _onLeave.accept( root );
           }
           return null;
         }
@@ -251,9 +268,9 @@ public class FileTreeWalk implements Iterable<File>
         if( !rootVisited )
         {
           // First visit root
-          if( onEnter != null )
+          if( _onEnter != null )
           {
-            if( !onEnter.apply( root ) )
+            if( !_onEnter.apply( root ) )
             {
               return null;
             }
@@ -269,16 +286,16 @@ public class FileTreeWalk implements Iterable<File>
             fileList = root.listFiles();
             if( fileList == null )
             {
-              if( onFail != null )
+              if( _onFail != null )
               {
-                onFail.accept( root, new AccessDeniedException( root.toString(), null, "Cannot list files in a directory" ) );
+                _onFail.accept( root, new AccessDeniedException( root.toString(), null, "Cannot list files in a directory" ) );
               }
             }
             if( fileList == null || fileList.length == 0 )
             {
-              if( onLeave != null )
+              if( _onLeave != null )
               {
-                onLeave.accept( root );
+                _onLeave.accept( root );
               }
               return null;
             }
@@ -289,9 +306,9 @@ public class FileTreeWalk implements Iterable<File>
         else
         {
           // That's all
-          if( onLeave != null )
+          if( _onLeave != null )
           {
-            onLeave.accept( root );
+            _onLeave.accept( root );
           }
           return null;
         }
@@ -329,7 +346,7 @@ public class FileTreeWalk implements Iterable<File>
    */
   public FileTreeWalk onEnter( Function<File, Boolean> function )
   {
-    return new FileTreeWalk( start, direction, function, onLeave, onFail, maxDepth );
+    return new FileTreeWalk( _start, _direction, function, _onLeave, _onFail, _maxDepth );
   }
 
   /**
@@ -337,7 +354,7 @@ public class FileTreeWalk implements Iterable<File>
    */
   public FileTreeWalk onLeave( Consumer<File> function )
   {
-    return new FileTreeWalk( start, direction, onEnter, function, onFail, maxDepth );
+    return new FileTreeWalk( _start, _direction, _onEnter, function, _onFail, _maxDepth );
   }
 
   /**
@@ -347,7 +364,7 @@ public class FileTreeWalk implements Iterable<File>
    */
   public FileTreeWalk onFail( BiConsumer<File, IOException> function )
   {
-    return new FileTreeWalk( start, direction, onEnter, onLeave, function, maxDepth );
+    return new FileTreeWalk( _start, _direction, _onEnter, _onLeave, function, _maxDepth );
   }
 
   /**
@@ -364,7 +381,7 @@ public class FileTreeWalk implements Iterable<File>
     {
       throw new IllegalArgumentException( "depth must be positive, but was $depth." );
     }
-    return new FileTreeWalk( start, direction, onEnter, onLeave, onFail, depth );
+    return new FileTreeWalk( _start, _direction, _onEnter, _onLeave, _onFail, depth );
   }
 
   /**
@@ -382,6 +399,5 @@ public class FileTreeWalk implements Iterable<File>
      * Depth-first search, directory is visited AFTER its files
      */
     BOTTOM_UP
-    // Do we want also breadth-first search?
   }
 }

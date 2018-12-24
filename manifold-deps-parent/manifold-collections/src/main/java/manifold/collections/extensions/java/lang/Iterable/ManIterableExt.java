@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.collections.extensions.java.lang.Iterable;
 
 import java.util.ArrayList;
@@ -50,9 +66,9 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the first element matching the given [predicate].
+   * Returns the first element matching the given {@code predicate}.
    *
-   * @throws [NoSuchElementException] if no such element is found.
+   * @throws {@code NoSuchElementException} if no such element is found.
    */
   public static <T> T first( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -67,7 +83,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns index of the first element matching the given [predicate], or -1 if the collection does not contain such element.
+   * Returns index of the first element matching the given {@code predicate}, or -1 if the collection does not contain such element.
    */
   public static <T> int indexOfFirst( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -111,7 +127,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the first element matching the given [predicate], or `null` if element was not found.
+   * Returns the first element matching the given {@code predicate}, or {@code null} if element was not found.
    */
   public static <T> T firstOrNull( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -153,7 +169,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the last element matching the given [predicate].
+   * Returns the last element matching the given {@code predicate}.
    *
    * @throws NoSuchElementException if no such element is found.
    */
@@ -177,7 +193,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns index of the last element matching the given [predicate], or -1 if the collection does not contain such element.
+   * Returns index of the last element matching the given {@code predicate}, or -1 if the collection does not contain such element.
    */
   public static <T> int indexOfLast( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -195,7 +211,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the last element, or `null` if the collection is empty.
+   * Returns the last element, or {@code null} if the collection is empty.
    */
   public static <T> T lastOrNull( @This Iterable<T> thiz )
   {
@@ -220,7 +236,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the last element matching the given [predicate], or `null` if no such element was found.
+   * Returns the last element matching the given {@code predicate}, or {@code null} if no such element was found.
    */
   public static <T> T lastOrNull( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -261,7 +277,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the single element matching the given [predicate], or throws exception if there is no or more than one matching element.
+   * Returns the single element matching the given {@code predicate}, or throws exception if there is no or more than one matching element.
    */
   public static <T> T single( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -287,7 +303,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns single element, or `null` if the collection is empty or has more than one element.
+   * Returns single element, or {@code null} if the collection is empty or has more than one element.
    */
   public static <T> T singleOrNull( @This Iterable<T> thiz )
   {
@@ -312,7 +328,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the single element matching the given [predicate], or `null` if element was not found or more than one element was found.
+   * Returns the single element matching the given {@code predicate}, or {@code null} if element was not found or more than one element was found.
    */
   public static <T> T singleOrNull( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -338,7 +354,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing all elements matching the given [predicate].
+   * Returns a list containing all elements matching the given {@code predicate}.
    */
   public static <T> List<T> filterToList( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -346,7 +362,7 @@ public class ManIterableExt
   }
 
   /**
-   * Appends all elements matching the given [predicate] to the given [destination].
+   * Appends all elements matching the given {@code predicate} to the given {@code destination}.
    */
   public static <T, C extends Collection<? super T>> C filterTo( @This Iterable<T> thiz, C destination, Predicate<T> predicate )
   {
@@ -361,7 +377,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing only elements matching the given [predicate].
+   * Returns a list containing only elements matching the given {@code predicate}.
    *
    * @param predicate function that takes the index of an element and the element itself
    *                  and returns the result of predicate evaluation on the element.
@@ -372,7 +388,7 @@ public class ManIterableExt
   }
 
   /**
-   * Appends all elements matching the given [predicate] to the given [destination].
+   * Appends all elements matching the given {@code predicate} to the given {@code destination}.
    *
    * @param predicate function that takes the index of an element and the element itself
    *                  and returns the result of predicate evaluation on the element.
@@ -390,7 +406,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing all elements not matching the given [predicate].
+   * Returns a list containing all elements not matching the given {@code predicate}.
    */
   public static <T> List<T> filterNotToList( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -398,7 +414,7 @@ public class ManIterableExt
   }
 
   /**
-   * Appends all elements not matching the given [predicate] to the given [destination].
+   * Appends all elements not matching the given {@code predicate} to the given {@code destination}.
    */
   public static <T, C extends Collection<? super T>> C filterNotTo( @This Iterable<T> thiz, C destination, Predicate<T> predicate )
   {
@@ -427,7 +443,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a [List] containing all elements.
+   * Returns a {@code List} containing all elements.
    */
   public static <T> List<T> toList( @This Iterable<T> thiz )
   {
@@ -444,7 +460,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a [Set] containing all unique elements.
+   * Returns a {@code Set} containing all unique elements.
    * <p>
    * The returned set preserves the element iteration order of the original collection.
    */
@@ -463,7 +479,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a single list of all elements yielded from results of [transform] function being invoked on each element of original collection.
+   * Returns a single list of all elements yielded from results of {@code transform} function being invoked on each element of original collection.
    */
   public static <T, R> List<R> flatMap( @This Iterable<T> thiz, Function<T, Iterable<R>> transform )
   {
@@ -471,7 +487,7 @@ public class ManIterableExt
   }
 
   /**
-   * Appends all elements yielded from results of [transform] function being invoked on each element of original collection, to the given [destination].
+   * Appends all elements yielded from results of {@code transform} function being invoked on each element of original collection, to the given {@code destination}.
    */
   public static <T, R, C extends Collection<R>> C flatMapTo( @This Iterable<T> thiz, C destination, Function<T, Iterable<R>> transform )
   {
@@ -495,7 +511,7 @@ public class ManIterableExt
 
   /**
    * Returns a list containing only elements from the given collection
-   * having distinct keys returned by the given [selector] function.
+   * having distinct keys returned by the given {@code selector} function.
    * <p>
    * The elements in the resulting list are in the same order as they were in the source collection.
    */
@@ -542,8 +558,8 @@ public class ManIterableExt
    * Returns a set containing all distinct elements from both collections.
    * <p>
    * The returned set preserves the element iteration order of the original collection.
-   * Those elements of the [other] collection that are unique are iterated in the end
-   * in the order of the [other] collection.
+   * Those elements of the {@code other} collection that are unique are iterated in the end
+   * in the order of the {@code other} collection.
    */
   public static <T> Set<T> union( @This Iterable<T> thiz, Iterable<T> other )
   {
@@ -585,7 +601,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the number of elements matching the given [predicate].
+   * Returns the number of elements matching the given {@code predicate}.
    */
   public static <T> int count( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -601,7 +617,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the first element having the largest value according to the provided [comparator] or `null` if there are no elements.
+   * Returns the first element having the largest value according to the provided {@code comparator} or {@code null} if there are no elements.
    */
   public static <T> T maxWith( @This Iterable<T> thiz, Comparator<T> comparator )
   {
@@ -623,7 +639,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns the first element having the smallest value according to the provided [comparator] or `null` if there are no elements.
+   * Returns the first element having the smallest value according to the provided {@code comparator} or {@code null} if there are no elements.
    */
   public static <T> T minWith( @This Iterable<T> thiz, Comparator<T> comparator )
   {
@@ -646,8 +662,8 @@ public class ManIterableExt
 
   /**
    * Splits the original collection into pair of lists,
-   * where *first* list contains elements for which [predicate] yielded `true`,
-   * while *second* list contains elements for which [predicate] yielded `false`.
+   * where <i>first</i> list contains elements for which {@code predicate} yielded {@code true},
+   * while <i>second</i> list contains elements for which {@code predicate} yielded {@code false}.
    */
   public static <T> Pair<List<T>, List<T>> partition( @This Iterable<T> thiz, Predicate<T> predicate )
   {
@@ -673,7 +689,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing the results of applying the given [transform] function
+   * Returns a list containing the results of applying the given {@code transform} function
    * to each element in the original collection.
    */
   public static <T, R> List<R> mapToList( @This Iterable<T> thiz, Function<T, R> transform )
@@ -682,7 +698,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing the results of applying the given [transform] function
+   * Returns a list containing the results of applying the given {@code transform} function
    * to each element and its index in the original collection.
    *
    * @param transform function that takes the index of an element and the element itself
@@ -694,7 +710,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing only the non-null results of applying the given [transform] function
+   * Returns a list containing only the non-null results of applying the given {@code transform} function
    * to each element and its index in the original collection.
    *
    * @param transform function that takes the index of an element and the element itself
@@ -706,8 +722,8 @@ public class ManIterableExt
   }
 
   /**
-   * Applies the given [transform] function to each element and its index in the original collection
-   * and appends only the non-null results to the given [destination].
+   * Applies the given {@code transform} function to each element and its index in the original collection
+   * and appends only the non-null results to the given {@code destination}.
    *
    * @param transform function that takes the index of an element and the element itself
    *                  and returns the result of the transform applied to the element.
@@ -726,8 +742,8 @@ public class ManIterableExt
   }
 
   /**
-   * Applies the given [transform] function to each element and its index in the original collection
-   * and appends the results to the given [destination].
+   * Applies the given {@code transform} function to each element and its index in the original collection
+   * and appends the results to the given {@code destination}.
    *
    * @param transform function that takes the index of an element and the element itself
    *                  and returns the result of the transform applied to the element.
@@ -743,7 +759,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing only the non-null results of applying the given [transform] function
+   * Returns a list containing only the non-null results of applying the given {@code transform} function
    * to each element in the original collection.
    */
   public static <T, R> List<R> mapNotNull( @This Iterable<T> thiz, Function<T, R> transform )
@@ -752,8 +768,8 @@ public class ManIterableExt
   }
 
   /**
-   * Applies the given [transform] function to each element in the original collection
-   * and appends only the non-null results to the given [destination].
+   * Applies the given {@code transform} function to each element in the original collection
+   * and appends only the non-null results to the given {@code destination}.
    */
   public static <T, R, C extends Collection<? super R>> C mapNotNullTo( @This Iterable<T> thiz, C destination, Function<T, R> transform )
   {
@@ -769,8 +785,8 @@ public class ManIterableExt
   }
 
   /**
-   * Applies the given [transform] function to each element of the original collection
-   * and appends the results to the given [destination].
+   * Applies the given {@code transform} function to each element of the original collection
+   * and appends the results to the given {@code destination}.
    */
   public static <T, R, C extends Collection<? super R>> C mapTo( @This Iterable<T> thiz, C destination, Function<T, R> transform )
   {
@@ -782,7 +798,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing all the elmeents from [fromIndex] (inclusive)
+   * Returns a list containing all the elmeents from {@code fromIndex} (inclusive)
    */
   public static <T> List<T> subList( @This Iterable<T> thiz, int fromIndex )
   {
@@ -790,7 +806,7 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list containing the elmeents [fromIndex] (inclusive) to [toIndex] (exclusive)
+   * Returns a list containing the elmeents {@code fromIndex} (inclusive) to {@code toIndex} (exclusive)
    */
   public static <T> List<T> subList( @This Iterable<T> thiz, int fromIndex, int toIndex )
   {
@@ -818,7 +834,7 @@ public class ManIterableExt
   }
 
   /**
-   * Performs the given [action] on each element, providing sequential index with the element.
+   * Performs the given {@code action} on each element, providing sequential index with the element.
    *
    * @param action function that takes the index of an element and the element itself
    *               and performs the desired action on the element.
@@ -833,7 +849,7 @@ public class ManIterableExt
   }
 
   /**
-   * Join the elements together in a String separated by [separator].
+   * Join the elements together in a String separated by {@code separator}.
    */
   public static <T> String joinToString( @This Iterable<T> thiz, CharSequence separator )
   {
@@ -841,7 +857,7 @@ public class ManIterableExt
   }
 
   /**
-   * Append the elements to [buffer] separated by [separator].
+   * Append the elements to {@code buffer} separated by {@code separator}.
    */
   public static <T, A extends Appendable> A joinTo( @This Iterable<T> thiz, A buffer, CharSequence separator )
   {
@@ -865,9 +881,9 @@ public class ManIterableExt
   }
 
   /**
-   * Accumulates value starting with [demo] value and applying [operation] from left to right to current accumulator value and each element.
+   * Accumulates value starting with {@code demo} value and applying {@code operation} from left to right to current accumulator value and each element.
    * <p>
-   * The operation is _terminal_.
+   * The operation is <i>terminal</i>.
    */
   public static <T, R> R fold( @This Iterable<T> thiz, R initial, BiFunction<R, T, R> operation )
   {

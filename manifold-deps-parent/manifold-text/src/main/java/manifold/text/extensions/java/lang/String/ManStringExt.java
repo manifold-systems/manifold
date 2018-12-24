@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.text.extensions.java.lang.String;
 
 import manifold.ext.api.Extension;
@@ -11,7 +27,7 @@ import manifold.util.CharPredicate;
 public class ManStringExt
 {
   /**
-   * Returns a string with leading and trailing characters matching the [predicate] trimmed.
+   * Returns a string with leading and trailing characters matching the {@code predicate} trimmed.
    */
   public static String trim( @This String thiz, CharPredicate predicate )
   {
@@ -19,7 +35,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a string with leading characters matching the [predicate] trimmed.
+   * Returns a string with leading characters matching the {@code predicate} trimmed.
    */
   public static String trimStart( @This String thiz, CharPredicate predicate )
   {
@@ -27,7 +43,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a string with trailing characters matching the [predicate] trimmed.
+   * Returns a string with trailing characters matching the {@code predicate} trimmed.
    */
   public static String trimEnd( @This String thiz, CharPredicate predicate )
   {
@@ -35,7 +51,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a string with leading and trailing characters from the [chars] array trimmed.
+   * Returns a string with leading and trailing characters from the {@code chars} array trimmed.
    */
   public static String trim( @This String thiz, char... chars )
   {
@@ -54,7 +70,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a string with leading and trailing characters from the [chars] array trimmed.
+   * Returns a string with leading and trailing characters from the {@code chars} array trimmed.
    */
   public static String trimStart( @This String thiz, char... chars )
   {
@@ -73,7 +89,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a string with trailing characters from the [chars] array trimmed.
+   * Returns a string with trailing characters from the {@code chars} array trimmed.
    */
   public static String trimEnd( @This String thiz, char... chars )
   {
@@ -108,12 +124,12 @@ public class ManStringExt
   }
 
   /**
-   * Pads the string to the specified [length] at the beginning with the specified character or space.
+   * Pads the string to the specified {@code length} at the beginning with the specified character or space.
    *
    * @param length  the desired string length.
-   * @param padChar the character to pad string with, if it has length less than the [length] specified.
+   * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least [length], consisting of string prepended with [padChar] as many times.
+   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
   public static String padStart( @This String thiz, int length, char padChar )
@@ -122,12 +138,12 @@ public class ManStringExt
   }
 
   /**
-   * Pads the string to the specified [length] at the end with the specified character or space.
+   * Pads the string to the specified {@code length} at the end with the specified character or space.
    *
    * @param length  the desired string length.
-   * @param padChar the character to pad string with, if it has length less than the [length] specified.
+   * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least [length], consisting of string prepended with [padChar] as many times.
+   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
   public static String padEnd( @This String thiz, int length, char padChar )
@@ -144,7 +160,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring before the first occurrence of [delimiter] or null if the string
+   * Returns a substring before the first occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringBefore( @This String thiz, char delimiter )
@@ -154,7 +170,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring before the first occurrence of [delimiter] or null if the string
+   * Returns a substring before the first occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringBefore( @This String thiz, String delimiter )
@@ -164,7 +180,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring after the first occurrence of [delimiter] or null if the string
+   * Returns a substring after the first occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringAfter( @This String thiz, char delimiter )
@@ -174,7 +190,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring after the first occurrence of [delimiter] or null if the string
+   * Returns a substring after the first occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringAfter( @This String thiz, String delimiter )
@@ -184,7 +200,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring before the last occurrence of [delimiter] or null if the string
+   * Returns a substring before the last occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringBeforeLast( @This String thiz, char delimiter )
@@ -194,7 +210,7 @@ public class ManStringExt
   }
 
   /**
-   * Returns a substring before the last occurrence of [delimiter] or null if the string
+   * Returns a substring before the last occurrence of {@code delimiter} or null if the string
    * does not contain the delimiter
    */
   public static String substringBeforeLast( @This String thiz, String delimiter )
@@ -224,7 +240,7 @@ public class ManStringExt
   }
 
   /**
-   * If thiz string starts with the given [prefix], returns a copy of thiz string
+   * If thiz string starts with the given {@code prefix}, returns a copy of thiz string
    * with the prefix removed. Otherwise, returns thiz string.
    */
   public static String removePrefix( @This String thiz, CharSequence prefix )
@@ -237,7 +253,7 @@ public class ManStringExt
   }
 
   /**
-   * If thiz string ends with the given [suffix], returns a copy of thiz string
+   * If thiz string ends with the given {@code suffix}, returns a copy of thiz string
    * with the suffix removed. Otherwise, returns thiz string.
    */
   public static String removeSuffix( @This String thiz, CharSequence suffix )
@@ -250,8 +266,8 @@ public class ManStringExt
   }
 
   /**
-   * Removes from a string both the given [prefix] and [suffix] if and only if
-   * it starts with the [prefix] and ends with the [suffix].
+   * Removes from a string both the given {@code prefix} and {@code suffix} if and only if
+   * it starts with the {@code prefix} and ends with the {@code suffix}.
    * Otherwise returns thiz string unchanged.
    */
   public static String removeSurrounding( @This String thiz, CharSequence prefix, CharSequence suffix )
@@ -264,8 +280,8 @@ public class ManStringExt
   }
 
   /**
-   * Removes the given [delimiter] string from both the start and the end of thiz string
-   * if and only if it starts with and ends with the [delimiter].
+   * Removes the given {@code delimiter} string from both the start and the end of thiz string
+   * if and only if it starts with and ends with the {@code delimiter}.
    * Otherwise returns thiz string unchanged.
    */
   public static CharSequence removeSurrounding( @This String thiz, CharSequence delimiter )

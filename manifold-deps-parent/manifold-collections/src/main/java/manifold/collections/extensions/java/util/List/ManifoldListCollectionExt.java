@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.collections.extensions.java.util.List;
 
 import java.util.Collections;
@@ -53,9 +69,9 @@ public class ManifoldListCollectionExt
   }
 
   /**
-   * Returns the last element matching the given [predicate].
+   * Returns the last element matching the given {@code predicate}.
    *
-   * @throws [NoSuchElementException] if no such element is found.
+   * @throws NoSuchElementException if no such element is found.
    */
   public static <E> E last( @This List<E> thiz, Predicate<E> predicate )
   {
@@ -72,7 +88,7 @@ public class ManifoldListCollectionExt
   }
 
   /**
-   * Returns the last element, or `null` if the list is empty.
+   * Returns the last element, or {@code null} if the list is empty.
    */
   public static <E> E lastOrNull( @This List<E> thiz )
   {
@@ -80,7 +96,7 @@ public class ManifoldListCollectionExt
   }
 
   /**
-   * Returns the last element matching the given [predicate], or `null` if no such element was found.
+   * Returns the last element matching the given {@code predicate}, or {@code null} if no such element was found.
    */
   public static <E> E lastOrNull( @This List<E> thiz, Predicate<E> predicate )
   {
@@ -113,7 +129,7 @@ public class ManifoldListCollectionExt
   }
 
   /**
-   * Returns single element, or `null` if the list is empty or has more than one element.
+   * Returns single element, or {@code null} if the list is empty or has more than one element.
    */
   public static <E> E singleOrNull( @This List<E> thiz )
   {
@@ -121,7 +137,7 @@ public class ManifoldListCollectionExt
   }
 
   /**
-   * Returns an element at the given [index] or null if the [index] is out of bounds of this list.
+   * Returns an element at the given {@code index} or null if the {@code index} is out of bounds of this list.
    */
   public static <E> E getOrNull( @This List<E> thiz, int index )
   {

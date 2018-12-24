@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package manifold.io.extensions.java.io.File;
 
 import java.io.File;
@@ -28,23 +44,17 @@ public class ManFileExt
   public final static int DEFAULT_BUFFER_SIZE = 8192;
 
   /**
-   * Creates an empty directory in the specified [directory], using the given [prefix] and [suffix] to generate its name.
+   * Creates an empty directory in the specified {@code directory}, using the given {@code prefix} and {@code suffix} to generate its name.
    * <p>
-   * If [prefix] is not specified then some unspecified name will be used.
-   * If [suffix] is not specified then ".tmp" will be used.
-   * If [directory] is not specified then the default temporary-file directory will be used.
+   * If {@code prefix} is not specified then some unspecified name will be used.
+   * If {@code suffix} is not specified then ".tmp" will be used.
+   * If {@code directory} is not specified then the default temporary-file directory will be used.
    *
    * @return a file object corresponding to a newly-created directory.
    *
    * @throws IOException              in case of input/output error.
-   * @throws IllegalArgumentException if [prefix] is shorter than three symbols.
+   * @throws IllegalArgumentException if {@code } is shorter than three symbols.
    */
-  @Extension
-  public static File createTempDir() throws IOException
-  {
-    return createTempDir( "tmp", null, null );
-  }
-
   @Extension
   public static File createTempDir( String prefix, String suffix, File directory ) throws IOException
   {
@@ -60,6 +70,16 @@ public class ManFileExt
       throw new IOException( "Unable to create temporary directory " + dir );
     }
   }
+  /**
+   * Same as {@code createTempDir("tmp", null, null)}
+   * <p>
+   * @see #createTempDir(String, String, File)
+   */
+  @Extension
+  public static File createTempDir() throws IOException
+  {
+    return createTempDir( "tmp", null, null );
+  }
 
   /**
    * Returns the extension of this file (not including the dot), or an empty string if it doesn't have one.
@@ -71,7 +91,7 @@ public class ManFileExt
   }
 
   /**
-   * Returns [path] of this File using the invariant separator '/' to
+   * Returns {@code path} of this File using the invariant separator '/' to
    * separate the names in the name sequence.
    */
   public static String slashPath( @This File thiz )
@@ -89,11 +109,11 @@ public class ManFileExt
   }
 
   /**
-   * Calculates the relative path for this file from [base] file.
-   * Note that the [base] file is treated as a directory.
-   * If this file matches the [base] file, then an empty string will be returned.
+   * Calculates the relative path for this file from {@code base} file.
+   * Note that the {@code base} file is treated as a directory.
+   * If this file matches the {@code base} file, then an empty string will be returned.
    *
-   * @return relative path from [base] to this.
+   * @return relative path from {@code base} to this.
    *
    * @throws IllegalArgumentException if this and base paths have different roots.
    */
@@ -108,11 +128,11 @@ public class ManFileExt
   }
 
   /**
-   * Calculates the relative path for this file from [base] file.
-   * Note that the [base] file is treated as a directory.
-   * If this file matches the [base] file, then a [File] with empty path will be returned.
+   * Calculates the relative path for this file from {@code base} file.
+   * Note that the {@code base} file is treated as a directory.
+   * If this file matches the {@code base} file, then a {@code File} with empty path will be returned.
    *
-   * @return File with relative path from [base] to this.
+   * @return File with relative path from {@code base} to this.
    *
    * @throws IllegalArgumentException if this and base paths have different roots.
    */
@@ -122,11 +142,11 @@ public class ManFileExt
   }
 
   /**
-   * Calculates the relative path for this file from [base] file.
-   * Note that the [base] file is treated as a directory.
-   * If this file matches the [base] file, then a [File] with empty path will be returned.
+   * Calculates the relative path for this file from {@code base} file.
+   * Note that the {@code base} file is treated as a directory.
+   * If this file matches the {@code base} file, then a {@code File} with empty path will be returned.
    *
-   * @return File with relative path from [base] to this, or `this` if this and base paths have different roots.
+   * @return File with relative path from {@code base} to this, or {@code this} if this and base paths have different roots.
    */
   public static File relativeToOrSelf( @This File thiz, File base )
   {
@@ -135,11 +155,11 @@ public class ManFileExt
   }
 
   /**
-   * Calculates the relative path for this file from [base] file.
-   * Note that the [base] file is treated as a directory.
-   * If this file matches the [base] file, then a [File] with empty path will be returned.
+   * Calculates the relative path for this file from {@code base} file.
+   * Note that the {@code base} file is treated as a directory.
+   * If this file matches the {@code base} file, then a {@code File} with empty path will be returned.
    *
-   * @return File with relative path from [base] to this, or `null` if this and base paths have different roots.
+   * @return File with relative path from {@code base} to this, or {@code null} if this and base paths have different roots.
    */
   public static File relativeToOrNull( @This File thiz, File base )
   {
@@ -302,7 +322,7 @@ public class ManFileExt
   /**
    * Determines whether this file has a root or it represents a relative path.
    * <p>
-   * Returns `true` when this file has non-empty root.
+   * Returns {@code true} when this file has non-empty root.
    */
   public static boolean isRooted( @This File thiz )
   {
@@ -310,32 +330,27 @@ public class ManFileExt
   }
 
   /**
-   * Copies this file to the given [target] file.
+   * Copies this file to the given {@code target} file.
    * <p>
-   * If some directories on a way to the [target] are missing, they will be created.
-   * If the [target] file already exists, this function will fail unless [overwrite] argument is set to `true`.
+   * If some directories on a way to the {@code target} are missing, they will be created.
+   * If the {@code target} file already exists, this function will fail unless {@code overwrite} argument is set to {@code true}.
    * <p>
-   * When [overwrite] is `true` and [target] is a directory, it is replaced only if it is empty.
+   * When {@code overwrite} is {@code true} and {@code target} is a directory, it is replaced only if it is empty.
    * <p>
-   * If this file is a directory, it is copied without its content, i.e. an empty [target] directory is created.
-   * If you want to copy directory including its contents, use [copyRecursively].
+   * If this file is a directory, it is copied without its content, i.e. an empty {@code target} directory is created.
+   * If you want to copy directory including its contents, use {@code copyRecursively}.
    * <p>
    * The operation doesn't preserve copied file attributes such as creation/modification date, permissions, etc.
    *
-   * @param overwrite  `true` if destination overwrite is allowed.
+   * @param overwrite  {@code true} if destination overwrite is allowed.
    * @param bufferSize the buffer size to use when copying.
    *
-   * @return the [target] file.
+   * @return the {@code target} file.
    *
    * @throws NoSuchFileException        if the source file doesn't exist.
-   * @throws FileAlreadyExistsException if the destination file already exists and 'rewrite' argument is set to `false`.
+   * @throws FileAlreadyExistsException if the destination file already exists and 'rewrite' argument is set to {@code false}.
    * @throws IOException                if any errors occur while copying.
    */
-  public static File copyTo( @This File thiz, File target )
-  {
-    return thiz.copyTo( target, false, DEFAULT_BUFFER_SIZE );
-  }
-
   public static File copyTo( @This File thiz, File target, boolean overwrite, int bufferSize )
   {
     if( !thiz.exists() )
@@ -382,6 +397,15 @@ public class ManFileExt
 
     return target;
   }
+  /**
+   * Same as {@code copyTo(File, File, false, #DEFAULT_BUFFER_SIZE)}
+   * <p>
+   * @see #copyTo(File, File, boolean, int) 
+   */
+  public static File copyTo( @This File thiz, File target )
+  {
+    return thiz.copyTo( target, false, DEFAULT_BUFFER_SIZE );
+  }
 
   /**
    * Enum that can be used to specify behaviour of the `copyRecursively()` function
@@ -412,13 +436,13 @@ public class ManFileExt
   }
 
   /**
-   * Copies this file with all its children to the specified destination [target] path.
+   * Copies this file with all its children to the specified destination {@code target} path.
    * If some directories on the way to the destination are missing, they will be created.
    * <p>
-   * If this file path points to a single file, it will be copied to a file with the path [target].
-   * If this file path points to a directory, its children will be copied to a directory with the path [target].
+   * If this file path points to a single file, it will be copied to a file with the path {@code target}.
+   * If this file path points to a directory, its children will be copied to a directory with the path {@code target}.
    * <p>
-   * If the [target] already exists, it will be deleted before copying when the [overwrite] parameter permits so.
+   * If the {@code target} already exists, it will be deleted before copying when the {@code overwrite} parameter permits so.
    * <p>
    * The operation doesn't preserve copied file attributes such as creation/modification date, permissions, etc.
    * <p>
@@ -427,7 +451,7 @@ public class ManFileExt
    * specifying the file that caused the error and the exception itself.
    * By default this function rethrows exceptions.
    * <p>
-   * Exceptions that can be passed to the `onError` function:
+   * Exceptions that can be passed to the {@code onError} function:
    * <p>
    * - NoSuchFileException - if there was an attempt to copy a non-existent file
    * - FileAlreadyExistsException - if there is a conflict
@@ -436,28 +460,8 @@ public class ManFileExt
    * <p>
    * Note that if this function fails, partial copying may have taken place.
    *
-   * @return `false` if the copying was terminated, `true` otherwise.
+   * @return {@code false} if the copying was terminated, {@code true} otherwise.
    */
-  public static boolean copyRecursively( @This File thiz, File target )
-  {
-    return copyRecursively( thiz, target, false, ( t, u ) ->
-    {
-      throw new RuntimeException( u );
-    } );
-  }
-
-  public static boolean copyRecursively( @This File thiz, File target, Predicate<File> filter )
-  {
-    return copyRecursively( thiz, target, false, ( t, u ) ->
-    {
-      throw new RuntimeException( u );
-    }, filter);
-  }
-
-  public static boolean copyRecursively( @This File thiz, File target, boolean overwrite, BiFunction<File, IOException, OnErrorAction> onError ) {
-    return copyRecursively(thiz, target, overwrite, onError, file -> true);
-  }
-
   public static boolean copyRecursively( @This File thiz, File target, boolean overwrite,
                                          BiFunction<File, IOException, OnErrorAction> onError,
                                          Predicate<File> filter)
@@ -539,7 +543,33 @@ public class ManFileExt
     }
     return true;
   }
-
+  /**
+   * @see #copyRecursively(File, File, boolean, BiFunction, Predicate)
+   */
+  public static boolean copyRecursively( @This File thiz, File target )
+  {
+    return copyRecursively( thiz, target, false, ( t, u ) ->
+    {
+      throw new RuntimeException( u );
+    } );
+  }
+  /**
+   * @see #copyRecursively(File, File, boolean, BiFunction, Predicate)
+   */
+  public static boolean copyRecursively( @This File thiz, File target, Predicate<File> filter )
+  {
+    return copyRecursively( thiz, target, false, ( t, u ) ->
+    {
+      throw new RuntimeException( u );
+    }, filter);
+  }
+  /**
+   * @see #copyRecursively(File, File, boolean, BiFunction, Predicate) 
+   */
+  public static boolean copyRecursively( @This File thiz, File target, boolean overwrite, BiFunction<File, IOException, OnErrorAction> onError ) {
+    return copyRecursively(thiz, target, overwrite, onError, file -> true);
+  }
+  
   /**
    * Gets an iterable for visiting this directory and all its content.
    *
@@ -572,7 +602,7 @@ public class ManFileExt
    * Delete this file with all its children.
    * Note that if this operation fails then partial deletion may have taken place.
    *
-   * @return `true` if the file or directory is successfully deleted, `false` otherwise.
+   * @return {@code true} if the file or directory is successfully deleted, {@code false} otherwise.
    */
   public static boolean deleteRecursively( @This File thiz )
   {
@@ -582,11 +612,11 @@ public class ManFileExt
   }
 
   /**
-   * Determines whether this file belongs to the same root as [other]
-   * and starts with all components of [other] in the same order.
-   * So if [other] has N components, first N components of `this` must be the same as in [other].
+   * Determines whether this file belongs to the same root as {@code other}
+   * and starts with all components of {@code other} in the same order.
+   * So if {@code other} has N components, first N components of {@code this} must be the same as in {@code other}.
    *
-   * @return `true` if this path starts with [other] path, `false` otherwise.
+   * @return {@code true} if this path starts with {@code other} path, {@code false} otherwise.
    */
   public static boolean startsWith( @This File thiz, File other )
   {
@@ -601,11 +631,11 @@ public class ManFileExt
   }
 
   /**
-   * Determines whether this file belongs to the same root as [other]
-   * and starts with all components of [other] in the same order.
-   * So if [other] has N components, first N components of `this` must be the same as in [other].
+   * Determines whether this file belongs to the same root as {@code other}
+   * and starts with all components of {@code other} in the same order.
+   * So if {@code other} has N components, first N components of {@code this} must be the same as in {@code other}.
    *
-   * @return `true` if this path starts with [other] path, `false` otherwise.
+   * @return {@code true} if this path starts with {@code other} path, {@code false} otherwise.
    */
   public static boolean startsWith( @This File thiz, String other )
   {
@@ -613,13 +643,13 @@ public class ManFileExt
   }
 
   /**
-   * Determines whether this file path ends with the path of [other] file.
+   * Determines whether this file path ends with the path of {@code other} file.
    * <p>
-   * If [other] is rooted path it must be equal to this.
-   * If [other] is relative path then last N components of `this` must be the same as all components in [other],
-   * where N is the number of components in [other].
+   * If {@code other} is rooted path it must be equal to this.
+   * If {@code other} is relative path then last N components of {@code this} must be the same as all components in {@code other},
+   * where N is the number of components in {@code other}.
    *
-   * @return `true` if this path ends with [other] path, `false` otherwise.
+   * @return {@code true} if this path ends with {@code other} path, {@code false} otherwise.
    */
   public static boolean endsWith( @This File thiz, File other )
   {
@@ -635,12 +665,12 @@ public class ManFileExt
   }
 
   /**
-   * Determines whether this file belongs to the same root as [other]
-   * and ends with all components of [other] in the same order.
-   * So if [other] has N components, last N components of `this` must be the same as in [other].
-   * For relative [other], `this` can belong to any root.
+   * Determines whether this file belongs to the same root as {@code other}
+   * and ends with all components of {@code other} in the same order.
+   * So if {@code other} has N components, last N components of {@code this} must be the same as in {@code other}.
+   * For relative {@code other}, {@code this} can belong to any root.
    *
-   * @return `true` if this path ends with [other] path, `false` otherwise.
+   * @return {@code true} if this path ends with {@code other} path, {@code false} otherwise.
    */
   public static boolean endsWith( @This File thiz, String other )
   {
@@ -686,13 +716,13 @@ public class ManFileExt
   }
 
   /**
-   * Adds [relative] file to this, considering this as a directory.
-   * If [relative] has a root, [relative] is returned back.
+   * Adds {@code relative} file to this, considering this as a directory.
+   * If {@code relative} has a root, {@code relative} is returned back.
    * For instance, `File("/foo/bar").resolve(File("gav"))` is `File("/foo/bar/gav")`.
-   * This function is complementary with [relativeTo],
-   * so `f.resolve(g.relativeTo(f)) == g` should be always `true` except for different roots case.
+   * This function is complementary with {@code relativeTo},
+   * so `f.resolve(g.relativeTo(f)) == g` should be always {@code true} except for different roots case.
    *
-   * @return concatenated this and [relative] paths, or just [relative] if it's absolute.
+   * @return concatenated this and {@code relative} paths, or just {@code relative} if it's absolute.
    */
   public static File resolve( @This File thiz, File relative )
   {
@@ -707,11 +737,11 @@ public class ManFileExt
   }
 
   /**
-   * Adds [relative] name to this, considering this as a directory.
-   * If [relative] has a root, [relative] is returned back.
+   * Adds {@code relative} name to this, considering this as a directory.
+   * If {@code relative} has a root, {@code relative} is returned back.
    * For instance, `File("/foo/bar").resolve("gav")` is `File("/foo/bar/gav")`.
    *
-   * @return concatenated this and [relative] paths, or just [relative] if it's absolute.
+   * @return concatenated this and {@code relative} paths, or just {@code relative} if it's absolute.
    */
   public static File resolve( @This File thiz, String relative )
   {
@@ -719,11 +749,11 @@ public class ManFileExt
   }
 
   /**
-   * Adds [relative] file to this parent directory.
-   * If [relative] has a root or this has no parent directory, [relative] is returned back.
+   * Adds {@code relative} file to this parent directory.
+   * If {@code relative} has a root or this has no parent directory, {@code relative} is returned back.
    * For instance, `File("/foo/bar").resolveSibling(File("gav"))` is `File("/foo/gav")`.
    *
-   * @return concatenated this.parent and [relative] paths, or just [relative] if it's absolute or this has no parent.
+   * @return concatenated this.parent and {@code relative} paths, or just {@code relative} if it's absolute or this has no parent.
    */
   public static File resolveSibling( @This File thiz, File relative )
   {
@@ -735,11 +765,11 @@ public class ManFileExt
   }
 
   /**
-   * Adds [relative] name to this parent directory.
-   * If [relative] has a root or this has no parent directory, [relative] is returned back.
+   * Adds {@code relative} name to this parent directory.
+   * If {@code relative} has a root or this has no parent directory, {@code relative} is returned back.
    * For instance, `File("/foo/bar").resolveSibling("gav")` is `File("/foo/gav")`.
    *
-   * @return concatenated this.parent and [relative] paths, or just [relative] if it's absolute or this has no parent.
+   * @return concatenated this.parent and {@code relative} paths, or just {@code relative} if it's absolute or this has no parent.
    */
   public static File resolveSibling( @This File thiz, String relative )
   {
