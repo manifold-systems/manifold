@@ -81,8 +81,8 @@ public class JavacPlugin implements Plugin, TaskListener
     ARG_NO_BOOTSTRAP,
   };
 
-  private static final String GOSU_SOURCE_FILES = "gosu.source.files";
-  private static final String GOSU_SOURCE_LIST = "gosu.source.list";
+  private static final String OTHER_SOURCE_FILES = "other.source.files";
+  private static final String OTHER_SOURCE_LIST = "other.source.list";
 
   private static Class<?> CLASSFINDER_CLASS = null;
   private static Class<?> MODULES_CLASS = null;
@@ -112,7 +112,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private JavaFileManager _fileManager;
   private BasicJavacTask _javacTask;
   private Set<Pair<String, JavaFileObject>> _javaInputFiles;
-  private List<String> _gosuInputFiles;
+  private List<String> _otherInputFiles;
   private TypeProcessor _typeProcessor;
   private IssueReporter _issueReporter;
   private ManifoldJavaFileManager _manFileManager;
@@ -241,9 +241,9 @@ public class JavacPlugin implements Plugin, TaskListener
   }
 
   @SuppressWarnings("unused")
-  public List<String> getGosuInputFiles()
+  public List<String> getOtherInputFiles()
   {
-    return _gosuInputFiles;
+    return _otherInputFiles;
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -277,7 +277,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _ctx = _javacTask.getContext();
       _fileManager = getContext().get( JavaFileManager.class );
       _javaInputFiles = new HashSet<>();
-      _gosuInputFiles = fetchGosuInputFiles();
+      _otherInputFiles = fetchOtherInputFiles();
       _typeProcessor = new TypeProcessor( getHost(), _javacTask );
       _issueReporter = new IssueReporter( _javacTask::getContext );
       _seenModules = new HashMap<>();
@@ -555,7 +555,7 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     Set<String> sourcePath = new HashSet<>();
     deriveSourcePath( _javaInputFiles, sourcePath );
-    deriveAdditionalSourcePath( _gosuInputFiles, sourcePath );
+    deriveAdditionalSourcePath( _otherInputFiles, sourcePath );
     maybeAddResourcePath( _javaInputFiles, sourcePath );
     return sourcePath;
   }
@@ -732,22 +732,22 @@ public class JavacPlugin implements Plugin, TaskListener
     return typeIndex > 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
-  private List<String> fetchGosuInputFiles() //TODO rename to something language-agnostic
+  private List<String> fetchOtherInputFiles() //TODO rename to something language-agnostic
   {
-    if( System.getProperty( GOSU_SOURCE_FILES ) != null && System.getProperty( GOSU_SOURCE_LIST ) != null )
+    if( System.getProperty( OTHER_SOURCE_FILES ) != null && System.getProperty( OTHER_SOURCE_LIST ) != null )
     {
-      throw new IllegalArgumentException( String.format( "Properties %s and %s may not be set simultaneously; please choose one or the other.", GOSU_SOURCE_FILES, GOSU_SOURCE_LIST ) );
+      throw new IllegalArgumentException( String.format( "Properties %s and %s may not be set simultaneously; please choose one or the other.", OTHER_SOURCE_FILES, OTHER_SOURCE_LIST ) );
     }
 
     List<String> files = Collections.emptyList();
 
-    String property = System.getProperty( GOSU_SOURCE_FILES, "" );
+    String property = System.getProperty( OTHER_SOURCE_FILES, "" );
     if( !property.isEmpty() )
     {
       files = Arrays.asList( property.split( " " ) );
     }
 
-    String filepath = System.getProperty( GOSU_SOURCE_LIST, "" );
+    String filepath = System.getProperty( OTHER_SOURCE_LIST, "" );
     if( !filepath.isEmpty() )
     {
       try
@@ -839,11 +839,11 @@ public class JavacPlugin implements Plugin, TaskListener
     }
   }
 
-  private String extractPackageName( String gosuFile )
+  private String extractPackageName( String file )
   {
     try
     {
-      String source = StreamUtil.getContent( new FileReader( gosuFile ) );
+      String source = StreamUtil.getContent( new FileReader( file ) );
       int iPkg = source.indexOf( "package" );
       if( iPkg >= 0 )
       {

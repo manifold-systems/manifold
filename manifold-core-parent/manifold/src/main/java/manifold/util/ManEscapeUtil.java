@@ -45,7 +45,7 @@ public class ManEscapeUtil
    */
   public static String escapeForJava( char ch )
   {
-    String escape = escapeForGosuStringLiteral( ch );
+    String escape = escapeForJavaStringLiteral( ch );
     if( escape == null )
     {
       if( ch <= 31 || ch >= 127 )
@@ -56,22 +56,22 @@ public class ManEscapeUtil
     return escape;
   }
 
-  public static String escapeForGosuStringLiteral( String strText )
+  public static String escapeForJavaStringLiteral( String strText )
   {
-    return escapeForGosuStringLiteral( strText, 0, strText.length() );
+    return escapeForJavaStringLiteral( strText, 0, strText.length() );
   }
 
-  public static String escapeForGosuStringLiteral( String strText, int iStart, int iEnd )
+  public static String escapeForJavaStringLiteral( String strText, int iStart, int iEnd )
   {
     StringBuilder sb = new StringBuilder( strText.length() );
     for( int i = iStart; i < iEnd; i++ )
     {
-      sb.append( escapeForGosuStringLiteral( strText.charAt( i ) ) );
+      sb.append( escapeForJavaStringLiteral( strText.charAt( i ) ) );
     }
     return sb.toString();
   }
 
-  public static String escapeForGosuStringLiteral( char ch )
+  public static String escapeForJavaStringLiteral( char ch )
   {
     switch( ch )
     {
@@ -198,6 +198,9 @@ public class ManEscapeUtil
           break;
         case '"':
           entity = "&quot;";
+          break;
+        case '\'':
+          entity = "&#39";
           break;
         case '\n':
           if( escapeWhitespace )

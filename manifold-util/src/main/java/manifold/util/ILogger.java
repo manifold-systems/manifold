@@ -1,7 +1,7 @@
 package manifold.util;
 
 /**
- * Gosu logger-independent logging system.
+ * Logger-independent logging system.
  */
 public interface ILogger
 {

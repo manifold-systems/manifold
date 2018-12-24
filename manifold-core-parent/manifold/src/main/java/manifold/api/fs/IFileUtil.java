@@ -57,11 +57,6 @@ public class IFileUtil
       return false;
     }
 
-//    if( root.toString().contains( File.separator + "gosu-" ) )
-//    {
-//      return false;
-//    }
-
     return !Extensions.containsManifest( root ) ||
            !Extensions.getExtensions( root, Extensions.CONTAINS_SOURCES ).isEmpty() ||
 

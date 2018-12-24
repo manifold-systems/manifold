@@ -17,7 +17,7 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public class Json
 {
-  private static String _parser = System.getProperty( "gosu.json.parser" );
+  private static String _parser = System.getProperty( "manifold.json.parser" );
 
   public static String getParserName()
   {

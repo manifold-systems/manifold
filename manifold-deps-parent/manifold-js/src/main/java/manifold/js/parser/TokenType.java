@@ -4,11 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Created by ecai on 6/21/2016.
- */
-
-
 public enum TokenType {
     KEYWORD,
     IDENTIFIER,

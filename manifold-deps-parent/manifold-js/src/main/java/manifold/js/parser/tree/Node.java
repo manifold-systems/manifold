@@ -6,9 +6,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-/**
- * Created by carson on 6/15/16.
- */
 public class Node
 {
   private String _name;

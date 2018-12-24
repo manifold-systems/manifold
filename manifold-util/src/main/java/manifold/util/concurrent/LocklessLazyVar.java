@@ -64,7 +64,6 @@ public abstract class LocklessLazyVar<T>
 
   /**
    * Creates a new LockingLazyVar based on the type of the LazyVarInit passed in.
-   * This method is intended to be called with a lambda or block from Gosu.
    */
   public static <Q> LocklessLazyVar<Q> make( final LazyVarInit<Q> closure )
   {

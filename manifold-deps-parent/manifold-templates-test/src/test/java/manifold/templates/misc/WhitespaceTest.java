@@ -1,9 +1,7 @@
 package manifold.templates.misc;
 
-import java.time.LocalDate;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import org.junit.Test;
-
 
 import static org.junit.Assert.assertEquals;
 

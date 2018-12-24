@@ -10,9 +10,6 @@ import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 
-/**
- * Created by carson on 5/10/17.
- */
 public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
 {
   public static final String JS = "js";

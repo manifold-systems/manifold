@@ -19,7 +19,7 @@ public enum ClassType
     return this == JavaClass;
   }
 
-  public boolean isGosu()
+  public boolean isOther()
   {
     return
       this == Enhancement ||

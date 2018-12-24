@@ -115,7 +115,7 @@ public class JsonImplBase implements IJsonIO
   /**
    * Make a JSON-friendly URL with the arguments derived from this Json object.
    * <p>
-   * If an argument is a Gosu Dynamic Expando or a javax.script.Bindings or a List,
+   * If an argument is a javax.script.Bindings or a List,
    * it is transformed to JSON.  Otherwise, the argument is coerced to a String.  All
    * arguments are URL encoded.
    * <p>
@@ -180,7 +180,7 @@ public class JsonImplBase implements IJsonIO
   /**
    * Use http POST to pass this json to the URL and get back the full content as a String.
    * <p>
-   * If an argument is a Gosu Dynamic Expando or a javax.script.Bindings or a List,
+   * If an argument is a javax.script.Bindings or a List,
    * it is transformed to JSON.  Otherwise, the argument is coerced to a String.  All
    * arguments are URL encoded.
    *
@@ -196,7 +196,7 @@ public class JsonImplBase implements IJsonIO
   /**
    * Use http POST to pass arguments and get the full content of this URL as a JSON object.
    * <p>
-   * If an argument is a Gosu Dynamic Expando or a javax.script.Bindings or a List,
+   * If an argument is a javax.script.Bindings or a List,
    * it is transformed to JSON.  Otherwise, the argument is coerced to a String.  All
    * arguments are URL encoded.
    *

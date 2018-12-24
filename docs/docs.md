@@ -1226,7 +1226,7 @@ public class ImageCodeGen {
             new SrcRawStatement()
               .rawText("try {")
               .rawText("  return INSTANCE != null ? INSTANCE : new " + simpleName + 
-                "(new URL("\\" + ManEscapeUtil.escapeForGosuStringLiteral(_url) + "\\"));")
+                "(new URL("\\" + ManEscapeUtil.escapeForJavaStringLiteral(_url) + "\\"));")
               .rawText("} catch(Exception e) {")
               .rawText("  throw new RuntimeException(e);")
               .rawText("}"))));

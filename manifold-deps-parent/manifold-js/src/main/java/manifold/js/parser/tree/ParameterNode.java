@@ -5,10 +5,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import manifold.api.gen.SrcParameter;
 
-/**
- * Created by lmeyer-teruel on 7/26/2016.
- */
-
 public class ParameterNode extends Node
 {
   private ArrayList<String> _params;

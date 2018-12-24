@@ -5,18 +5,17 @@ import directives.imports.*;
 
 import static org.junit.Assert.assertEquals;
 
+public class ImportTest
+{
+  @Test
+  public void basicImportsWork()
+  {
+    assertEquals( "1", SimpleImport.render() );
+  }
 
-/**
- * Created by eim on 7/14/2017.
- */
-public class ImportTest {
-    @Test
-    public void basicImportsWork() {
-        assertEquals("1", SimpleImport.render());
-    }
-
-    @Test
-    public void multipleImportsWork() {
-        assertEquals("1hello", MultipleImport.render());
-    }
+  @Test
+  public void multipleImportsWork()
+  {
+    assertEquals( "1hello", MultipleImport.render() );
+  }
 }

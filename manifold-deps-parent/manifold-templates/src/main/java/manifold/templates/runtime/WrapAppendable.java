@@ -4,8 +4,8 @@ import java.io.IOException;
 import manifold.util.ManExceptionUtil;
 
 /**
- * Wraps calls to {@link Appendable} to handle {@link IOException}s that otherwise
- * are tedious to handle inside lambdas.
+ * Wraps calls to {@link Appendable} in the generated template to handle {@link IOException}s
+ * that otherwise are tedious to handle inside lambdas.
  */
 @SuppressWarnings("unused")
 public class WrapAppendable implements Appendable

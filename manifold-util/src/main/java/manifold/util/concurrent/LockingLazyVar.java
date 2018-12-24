@@ -110,8 +110,7 @@ public abstract class LockingLazyVar<T>
   }
 
   /**
-   * A simple init interface to make LockingLazyVar's easier to construct
-   * from gosu.
+   * A simple init interface to make LockingLazyVar's easier to construct.
    */
   public interface LazyVarInit<Q>
   {
@@ -120,7 +119,6 @@ public abstract class LockingLazyVar<T>
 
   /**
    * Creates a new LockingLazyVar based on the type of the LazyVarInit passed in.
-   * This method is intended to be called with blocks from Gosu.
    */
   public static <Q> LockingLazyVar<Q> make( final LazyVarInit<Q> init )
   {

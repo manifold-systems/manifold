@@ -151,7 +151,7 @@ public class JsonUtil
     if( comp instanceof String )
     {
       sb.append( '\"' );
-      sb.append( ManEscapeUtil.escapeForGosuStringLiteral( (String)comp ) );
+      sb.append( ManEscapeUtil.escapeForJavaStringLiteral( (String)comp ) );
       sb.append( '\"' );
     }
     else if( comp instanceof Integer ||

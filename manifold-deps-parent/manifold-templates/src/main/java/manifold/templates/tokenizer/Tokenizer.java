@@ -40,6 +40,7 @@ public class Tokenizer
 
     nextToken();
 
+    //noinspection ConditionalBreakInInfiniteLoop
     while( true )
     {
       if( index >= _text.length() )
@@ -56,8 +57,8 @@ public class Tokenizer
         column = 1;
       }
 
-      if( !escaped && c == '\\' && !isInCode() && _text.length() > index+1 &&
-          (charIs( index+1, '<' ) || charIs( index+1, '$' )) )
+      if( !escaped && c == '\\' && !isInCode() && _text.length() > index + 1 &&
+          (charIs( index + 1, '<' ) || charIs( index + 1, '$' )) )
       {
         escaped = true;
         index++;
@@ -256,7 +257,7 @@ public class Tokenizer
     {
       _isParsingString = true;
     }
-    else if( !charIs( index-1, '\\' ) )
+    else if( !charIs( index - 1, '\\' ) )
     {
       _isParsingString = false;
     }
@@ -278,7 +279,7 @@ public class Tokenizer
     {
       _isParsingCharLiteral = true;
     }
-    else if( !charIs( index-1, '\\' ) )
+    else if( !charIs( index - 1, '\\' ) )
     {
       _isParsingCharLiteral = false;
     }
@@ -291,7 +292,7 @@ public class Tokenizer
 
   private Token peek()
   {
-    return _tokens.get( _tokens.size()-1 );
+    return _tokens.get( _tokens.size() - 1 );
   }
 
   private void clear()

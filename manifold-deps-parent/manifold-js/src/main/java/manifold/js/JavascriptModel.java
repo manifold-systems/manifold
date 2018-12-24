@@ -6,9 +6,6 @@ import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 
-/**
- * Created by carson on 5/10/17.
- */
 public class JavascriptModel extends AbstractSingleFileModel
 {
   private String _url;

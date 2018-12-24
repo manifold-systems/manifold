@@ -20,7 +20,10 @@ public class Token
     COMMENT_END( "--%>" );
 
     private String _staticToken;
-    TokenType(){}
+
+    TokenType()
+    {
+    }
 
     TokenType( String staticToken )
     {

@@ -1,5 +1,6 @@
 package manifold.templates.codegen;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Token;
 import manifold.templates.tokenizer.Tokenizer;
+import manifold.util.ManClassUtil;
 
 
 import static manifold.templates.codegen.TemplateGen.DirType.*;
@@ -25,12 +27,32 @@ public class TemplateGen
 
   private List<TemplateIssue> _issues = new ArrayList<>();
 
+  public String generateCode( String fullyQualifiedName, String source, URI fileUri, String fileName )
+  {
+    FileGenerator generator = new FileGenerator( fullyQualifiedName, fileUri, fileName, source );
+    return generator.getFileContents();
+  }
+
+  private void addError( String message, int line )
+  {
+    TemplateIssue error = new TemplateIssue( IIssue.Kind.Error, 0, line, 0, message );
+    _issues.add( error );
+  }
+
+  public TemplateIssueContainer getIssues()
+  {
+    return new TemplateIssueContainer( _issues );
+  }
+
   class ClassInfo
   {
+    final String fqn;
+    private final ClassInfo parent;
     Map<Integer, ClassInfo> nestedClasses = new HashMap<>();
     String params = null;
     String[][] paramsList = null;
     String name;
+    URI fileUri;
     String fileName;
     String superClass = BASE_CLASS_NAME;
     int startTokenPos;
@@ -40,12 +62,15 @@ public class TemplateGen
     boolean hasLayout = false;
     Directive layoutDir;
     int contentPos;
+    String testSource;
 
     //only for the outermost class
-    ClassInfo( Iterator<Directive> dirIterator, String name, String fileName, Integer endTokenPos, boolean outermost )
+    private ClassInfo( Iterator<Directive> dirIterator, String fqn, String name, URI fileUri, String fileName, Integer endTokenPos )
     {
-      assert (outermost);
+      parent = null;
+      this.fqn = fqn;
       this.name = name;
+      this.fileUri = fileUri;
       this.fileName = fileName;
       this.startTokenPos = 0;
       this.endTokenPos = endTokenPos;
@@ -54,10 +79,13 @@ public class TemplateGen
       fillClassInfo( dirIterator );
     }
 
-    ClassInfo( Iterator<Directive> dirIterator, String name, String fileName, String params, String[][] paramList, int startTokenPos, int depth, String superClass )
+    ClassInfo( Iterator<Directive> dirIterator, ClassInfo parent, String name, String params, String[][] paramList, int startTokenPos, int depth, String superClass )
     {
+      this.parent = parent;
+      this.fqn = parent.fqn;
       this.name = name;
-      this.fileName = fileName;
+      this.fileUri = parent.fileUri;
+      this.fileName = parent.fileName;
       this.params = params;
       this.paramsList = paramList;
       this.startTokenPos = startTokenPos;
@@ -118,7 +146,7 @@ public class TemplateGen
             }
             break;
           case SECTION:
-            addNestedClass( new ClassInfo( dirIterator, dir.className, this.fileName, dir.params, dir.paramsList, dir.tokenPos + 1, depth + 1, superClass ) );
+            addNestedClass( new ClassInfo( dirIterator, this, dir.className, dir.params, dir.paramsList, dir.tokenPos + 1, depth + 1, superClass ) );
             break;
           case END_SECTION:
             if( endTokenPos == null )
@@ -447,7 +475,7 @@ public class TemplateGen
           if( cur._dirType == PARAMS )
           {
             String[][] outerClassParameters = cur.paramsList;
-            for( String[] currentParams : outerClassParameters )
+            for( String[] currentParams: outerClassParameters )
             {
               String parameter = currentParams[1];
               if( name.equals( parameter ) )
@@ -466,68 +494,37 @@ public class TemplateGen
 
   class FileGenerator
   {
-    private TemplateStringBuilder sb = new TemplateStringBuilder();
-    private ClassInfo currClass;
-    private List<Token> tokens;
-    private Map<Integer, Directive> dirMap;
+    private TemplateStringBuilder _sb = new TemplateStringBuilder();
+    private ClassInfo _currClass;
+    private List<Token> _tokens;
+    private Map<Integer, Directive> _dirMap;
 
-    private class TemplateStringBuilder
+    FileGenerator( String fqn, URI fileUri, String fileName, String source )
     {
-      private final String INDENT = "    ";
-      private StringBuilder sb = new StringBuilder();
-
-      TemplateStringBuilder newLine( String content )
-      {
-        sb.append( "\n" );
-        for( int i = 0; i < currClass.depth; i++ )
-        {
-          sb.append( INDENT );
-        }
-        sb.append( content );
-        return this;
-      }
-
-      TemplateStringBuilder append( String content )
-      {
-        sb.append( content );
-        return this;
-      }
-
-      public String toString()
-      {
-        return sb.toString();
-      }
-    }
-
-
-    FileGenerator( String fullyQualifiedName, String fileName, String source )
-    {
-      String[] parts = fullyQualifiedName.split( "\\." );
-      String className = parts[parts.length - 1];
-      StringBuilder packageName = new StringBuilder( parts[0] );
-      for( int i = 1; i < parts.length - 1; i++ )
-      {
-        packageName.append( "." ).append( parts[i] );
-      }
-
+      String className = ManClassUtil.getShortClassName( fqn );
+      String packageName = ManClassUtil.getPackage( fqn );
       Tokenizer tokenizer = new Tokenizer();
-      this.tokens = tokenizer.tokenize( source );
+      _tokens = tokenizer.tokenize( source );
 
-      List<Directive> dirList = getDirectivesList( tokens );
-      this.dirMap = getDirectivesMap( dirList );
-      this.currClass = new ClassInfo( dirList.iterator(), className, fileName, tokens.size() - 1, true );
-
-      buildFile( packageName.toString(), dirList );
+      List<Directive> dirList = getDirectivesList( _tokens );
+      _dirMap = getDirectivesMap( dirList );
+      _currClass = new ClassInfo( dirList.iterator(), fqn, className, fileUri, fileName, _tokens.size() - 1 );
+      if( fileUri == null )
+      {
+        // for tests to avoid files
+        _currClass.testSource = source;
+      }
+      buildFile( packageName, dirList );
     }
 
     String getFileContents()
     {
-      return sb.toString();
+      return _sb.toString();
     }
 
     private void buildFile( String packageName, List<Directive> dirList )
     {
-      sb.append( "package " ).append( packageName + ";\n" )
+      _sb.append( "package " ).append( packageName + ";\n" )
         .newLine( "import java.io.IOException;" )
         .newLine( "import manifold.templates.ManifoldTemplates;" )
         .newLine( "import manifold.templates.runtime.*;\n" );
@@ -555,86 +552,86 @@ public class TemplateGen
 
     private void addRenderImpl()
     {
-      sb.newLine( "    public void renderImpl(Appendable appendable, ILayout overrideLayout" ).append( safeTrailingString( currClass.params ) ).append( ") {" );
-      sb.newLine( "      WrapAppendable buffer = new WrapAppendable( appendable );" );
-      boolean needsToCatchIO = currClass.depth == 0;
+      _sb.newLine( "    public void renderImpl(Appendable appendable, ILayout overrideLayout" ).append( safeTrailingString( _currClass.params ) ).append( ") {" );
+      _sb.newLine( "      WrapAppendable buffer = new WrapAppendable(appendable);" );
+      boolean needsToCatchIO = _currClass.depth == 0;
 
       if( !needsToCatchIO )
       {
-        needsToCatchIO = containsStringContentOrExpr( tokens, currClass.startTokenPos - 1, currClass.endTokenPos );
+        needsToCatchIO = containsStringContentOrExpr( _tokens, _currClass.startTokenPos - 1, _currClass.endTokenPos );
       }
 
       if( needsToCatchIO )
       {
-        sb.newLine( "        try {" );
+        _sb.newLine( "        try {" );
       }
 
-      if( currClass.isLayout )
+      if( _currClass.isLayout )
       {
-        sb.newLine( "            header(buffer);" )
+        _sb.newLine( "            header(buffer);" )
           .newLine( "            footer(buffer);" );
       }
       else
       {
-        String isOuterTemplate = String.valueOf( currClass.depth == 0 );
-        sb.newLine( "            beforeRender(buffer, overrideLayout, " ).append( isOuterTemplate ).append( ");\n" );
-        sb.newLine( "            long startTime = System.nanoTime();\n" );
-        makeFuncContent( currClass.startTokenPos, currClass.endTokenPos );
-        sb.newLine( "            long endTime = System.nanoTime();\n" );
-        sb.newLine( "            long duration = (endTime - startTime)/1000000;\n" );
-        sb.newLine( "            afterRender(buffer, overrideLayout, " ).append( isOuterTemplate ).append( ", duration);\n" );
+        String isOuterTemplate = String.valueOf( _currClass.depth == 0 );
+        _sb.newLine( "            beforeRender(buffer, overrideLayout, " ).append( isOuterTemplate ).append( ");\n" );
+        _sb.newLine( "            long startTime = System.nanoTime();\n" );
+        makeFuncContent( _currClass.startTokenPos, _currClass.endTokenPos );
+        _sb.newLine( "            long endTime = System.nanoTime();\n" );
+        _sb.newLine( "            long duration = (endTime - startTime)/1000000;\n" );
+        _sb.newLine( "            afterRender(buffer, overrideLayout, " ).append( isOuterTemplate ).append( ", duration);\n" );
       }
 
       if( needsToCatchIO )
       {
-        sb.newLine( "        } catch (IOException e) {\n" )
+        _sb.newLine( "        } catch (IOException e) {\n" )
           .newLine( "            throw new RuntimeException(e);\n" )
           .newLine( "        }\n" );
       }
 
-      sb.newLine( "    }\n\n" );
+      _sb.newLine( "    }\n\n" );
     }
 
     private void addRender()
     {
-      sb.newLine( "" )
-        .newLine( "    public static String render(" ).append( safeString( currClass.params ) ).append( ") {" )
+      _sb.newLine( "" )
+        .newLine( "    public static String render(" ).append( safeString( _currClass.params ) ).append( ") {" )
         .newLine( "      StringBuilder sb = new StringBuilder();" )
         .newLine( "      renderInto(sb" );
-      for( String[] param : safeParamsList() )
+      for( String[] param: safeParamsList() )
       {
         String arg = param.length >= 2 ? param[1] : "err"; // eg. can happen during editing in IJ
-        sb.append( ", " ).append( arg );
+        _sb.append( ", " ).append( arg );
       }
-      sb.append( ");" )
+      _sb.append( ");" )
         .newLine( "        return sb.toString();" )
         .newLine( "    }\n" );
     }
 
     private void addRenderInto()
     {
-      sb.newLine( "    public static void renderInto(Appendable buffer" ).append( safeTrailingString( currClass.params ) ).append( ") {\n" )
-        .newLine( "      " + currClass.name + " instance = new " + currClass.name + "();" )
+      _sb.newLine( "    public static void renderInto(Appendable buffer" ).append( safeTrailingString( _currClass.params ) ).append( ") {\n" )
+        .newLine( "      " + _currClass.name + " instance = new " + _currClass.name + "();" )
         .newLine( "      instance.renderImpl(buffer, null" );
-      for( String[] param : safeParamsList() )
+      for( String[] param: safeParamsList() )
       {
-        sb.append( ", " ).append( param[1] );
+        _sb.append( ", " ).append( param[1] );
       }
-      sb.append( ");\n" )
+      _sb.append( ");\n" )
         .newLine( "    }\n\n" );
     }
 
     private void addWithoutLayout()
     {
-      sb.newLine( "    public static LayoutOverride withoutLayout() {" )
+      _sb.newLine( "    public static LayoutOverride withoutLayout() {" )
         .newLine( "        return withLayout(ILayout.EMPTY);" )
         .newLine( "    }\n\n" );
     }
 
     private void addWithLayout()
     {
-      sb.newLine( "    public static LayoutOverride withLayout(ILayout layout) {" )
-        .newLine( "      " + currClass.name + " instance = new " + currClass.name + "();" )
+      _sb.newLine( "    public static LayoutOverride withLayout(ILayout layout) {" )
+        .newLine( "      " + _currClass.name + " instance = new " + _currClass.name + "();" )
         .newLine( "        return instance.new LayoutOverride(layout);" )
         .newLine( "    }\n\n" );
     }
@@ -642,31 +639,31 @@ public class TemplateGen
 
     private void addLayoutOverrideClass()
     {
-      sb.newLine( "    public class LayoutOverride extends BaseLayoutOverride {" )
+      _sb.newLine( "    public class LayoutOverride extends BaseLayoutOverride {" )
         // constructor
         .newLine( "       public LayoutOverride(ILayout override) {" )
         .newLine( "         super(override);" )
         .newLine( "       }\n" )
         .newLine( "" )
         // render
-        .newLine( "    public String render(" ).append( safeString( currClass.params ) ).append( ") {" )
+        .newLine( "    public String render(" ).append( safeString( _currClass.params ) ).append( ") {" )
         .newLine( "      StringBuilder sb = new StringBuilder();" )
         .newLine( "      renderImpl(sb, getOverride()" );
-      for( String[] param : safeParamsList() )
+      for( String[] param: safeParamsList() )
       {
-        sb.append( ", " ).append( param[1] );
+        _sb.append( ", " ).append( param[1] );
       }
-      sb.append( ");" )
+      _sb.append( ");" )
         .newLine( "        return sb.toString();" )
         .newLine( "    }\n" )
         // renderInto
-        .newLine( "    public void renderInto(Appendable sb" ).append( safeTrailingString( currClass.params ) ).append( ") {" )
+        .newLine( "    public void renderInto(Appendable sb" ).append( safeTrailingString( _currClass.params ) ).append( ") {" )
         .newLine( "      renderImpl(sb, getOverride()" );
-      for( String[] param : safeParamsList() )
+      for( String[] param: safeParamsList() )
       {
-        sb.append( ", " ).append( param[1] );
+        _sb.append( ", " ).append( param[1] );
       }
-      sb.append( ");" )
+      _sb.append( ");" )
         .newLine( "    }\n" )
         // close class
         .newLine( "    }\n" );
@@ -700,7 +697,7 @@ public class TemplateGen
 
     private String[][] safeParamsList()
     {
-      String[][] paramsList = currClass.paramsList;
+      String[][] paramsList = _currClass.paramsList;
       if( paramsList == null )
       {
         paramsList = new String[0][0];
@@ -710,35 +707,36 @@ public class TemplateGen
 
     private void addFileHeader()
     {
-      sb.newLine( "\n" );
-      if( currClass.depth == 0 )
+      _sb.newLine( "\n" );
+      if( _currClass.depth == 0 )
       {
- //       sb.newLine( '@'+DisableStringLiteralTemplates.class.getTypeName() );
-        if( currClass.isLayout )
+        //       sb.newLine( '@'+DisableStringLiteralTemplates.class.getTypeName() );
+        if( _currClass.isLayout )
         {
-          sb.newLine( "public class " ).append( currClass.name ).append( " extends " ).append( currClass.superClass ).append( " implements " ).append( LAYOUT_INTERFACE ).append( " {" );
+          _sb.newLine( "public class " ).append( _currClass.name ).append( " extends " ).append( _currClass.superClass ).append( " implements " ).append( LAYOUT_INTERFACE ).append( " {" );
         }
         else
         {
-          sb.newLine( "public class " ).append( currClass.name ).append( " extends " ).append( currClass.superClass ).append( " {" );
+          _sb.newLine( "public class " ).append( _currClass.name ).append( " extends " ).append( _currClass.superClass ).append( " {" );
         }
       }
       else
       {
-        sb.newLine( "public static class " ).append( currClass.name ).append( " extends " ).append( currClass.superClass ).append( " {" );
+        _sb.newLine( "public static class " ).append( _currClass.name ).append( " extends " ).append( _currClass.superClass ).append( " {" );
       }
-      sb.newLine( "    private " ).append( currClass.name ).append( "(){" );
-      if( currClass.hasLayout )
+      _sb.newLine( "    private " ).append( _currClass.name ).append( "(){" );
+      if( _currClass.hasLayout )
       {
-        sb.newLine( "        setLayout(" ).append( currClass.layoutDir.className ).append( ".asLayout());" );
+        _sb.newLine( "        setLayout(" ).append( _currClass.layoutDir.className ).append( ".asLayout());" );
       }
-      sb.newLine( "    }\n" );
+      _sb.newLine( "    }\n" );
     }
 
 
     private void makeClassContent()
     {
       addFileHeader();
+      addGetTemplateResourceAsStream();
       addRender();
       addLayoutOverrideClass();
       addWithoutLayout();
@@ -746,36 +744,60 @@ public class TemplateGen
       addRenderInto();
       addRenderImpl();
 
-      if( currClass.isLayout )
+      if( _currClass.isLayout )
       {
         addHeaderAndFooter();
       }
-      for( ClassInfo nested : currClass.nestedClasses.values() )
+      for( ClassInfo nested: _currClass.nestedClasses.values() )
       {
-        currClass = nested;
+        _currClass = nested;
         makeClassContent();
       }
       //close class
-      sb.newLine( "}\n" );
+      _sb.newLine( "}\n" );
+    }
+
+    private void addGetTemplateResourceAsStream()
+    {
+      _sb.newLine( "    protected java.io.InputStream getTemplateResourceAsStream() {" )
+        .newLine( "        return " + (_currClass.fileUri == null ? "null" : "getClass().getResourceAsStream(\"" + getTemplateFilePath() + "\");") )
+        .newLine( "    }" );
+
+      if( _currClass.testSource != null )
+      {
+        //!! only for tests
+        _sb.newLine( "    protected String getTemplateText() {" )
+          .newLine( "        return \"" + _currClass.testSource.replace( "\"", "\\\\\"" ).replace( "\n", "\\\\n" ) + "\";" )
+          .newLine( "    }" );
+      }
+    }
+
+    private String getTemplateFilePath()
+    {
+      String className = ManClassUtil.getShortClassName( _currClass.fqn );
+      String uri = _currClass.fileUri.toString();
+      int nameIndex = uri.lastIndexOf( className );
+      String fileExt = uri.substring( nameIndex + className.length() );
+      return '/' + _currClass.fqn.replace( '.', '/' ) + fileExt;
     }
 
     private void addHeaderAndFooter()
     {
-      sb.newLine( "    public static " ).append( LAYOUT_INTERFACE ).append( " asLayout() {" )
-        .newLine( "        return new " + currClass.name + "();" )
+      _sb.newLine( "    public static " ).append( LAYOUT_INTERFACE ).append( " asLayout() {" )
+        .newLine( "        return new " + _currClass.name + "();" )
         .newLine( "    }\n" )
         .newLine( "    @Override" )
         .newLine( "    public void header(Appendable buffer) throws IOException {" )
         .newLine( "        if (getExplicitLayout() != null) {" )
         .newLine( "            getExplicitLayout().header(buffer);" )
         .newLine( "        }" );
-      assert (currClass.depth == 0);
-      makeFuncContent( currClass.startTokenPos, currClass.contentPos );
-      sb.newLine( "    }" )
+      assert (_currClass.depth == 0);
+      makeFuncContent( _currClass.startTokenPos, _currClass.contentPos );
+      _sb.newLine( "    }" )
         .newLine( "    @Override" )
         .newLine( "    public void footer(Appendable buffer) throws IOException {" );
-      makeFuncContent( currClass.contentPos, currClass.endTokenPos );
-      sb.newLine( "        if (getExplicitLayout() != null) {" )
+      makeFuncContent( _currClass.contentPos, _currClass.endTokenPos );
+      _sb.newLine( "        if (getExplicitLayout() != null) {" )
         .newLine( "            getExplicitLayout().footer(buffer);" )
         .newLine( "    }\n}" );
     }
@@ -798,7 +820,7 @@ public class TemplateGen
     private Map<Integer, Directive> getDirectivesMap( List<Directive> dirList )
     {
       Map<Integer, Directive> dirMap = new HashMap<>();
-      for( Directive dir : dirList )
+      for( Directive dir: dirList )
       {
         dirMap.put( dir.tokenPos, dir );
       }
@@ -807,59 +829,60 @@ public class TemplateGen
 
     private void addImports( List<Directive> dirList )
     {
-      for( Directive dir : dirList )
+      for( Directive dir: dirList )
       {
         if( dir._dirType == IMPORT )
         {
-          sb.newLine( "import " + dir.className + ";" );
+          _sb.newLine( "import " + dir.className + ";" );
         }
       }
     }
 
     private void makeFuncContent( Integer startPos, Integer endPos )
     {
-      ArrayList<Integer> bbLineNumbers = new ArrayList<>();
+      ArrayList<Integer> templateLineNumbers = new ArrayList<>();
       if( endPos == null )
       {
-        endPos = tokens.size() - 1;
+        endPos = _tokens.size() - 1;
       }
-      sb.newLine( "            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;" );
-      sb.newLine( "            try {" );
+      _sb.newLine( "            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;" );
+      _sb.newLine( "            try {" );
       Token.TokenType lastTokenType = null;
       outerLoop:
       for( int i = startPos; i <= endPos; i++ )
       {
-        Token token = tokens.get( i );
+        Token token = _tokens.get( i );
         switch( token.getType() )
         {
           case CONTENT:
-            String text = makeText( lastTokenType, nextTokenType( i + 1, endPos ), token.getText() );
-            if( text.length() > 0 )
+            int[] loc = makeText( lastTokenType, nextTokenType( i + 1, endPos ), token );
+            if( loc != null )
             {
-              sb.newLine( "                buffer.append(\"" ).append( text.replaceAll( "\"", "\\\\\"" ).replaceAll( "\r", "" ).replaceAll( "\n", "\\\\n" ) + "\");" );
-              bbLineNumbers.add( token.getLine() );
+              _sb.newLine( "                buffer.append(getTemplateText(), ${loc[0]}, ${loc[1]});" );
+              // sb.newLine( "                buffer.append(\"" ).append( text.replaceAll( "\"", "\\\\\"" ).replaceAll( "\r", "" ).replaceAll( "\n", "\\\\n" ) + "\");" );
+              templateLineNumbers.add( token.getLine() );
             }
             break;
           case STMT:
             String[] statementList = token.getText().split( "\n" );
             for( int j = 0; j < statementList.length; j++ )
             {
-              String statement = statementList[j].trim().replaceAll( "\r", "" );
-              sb.append( "                " ).append( statement ).append( "\n" );
-              bbLineNumbers.add( token.getLine() + j );
+              String statement = statementList[j].trim();
+              _sb.append( "                " ).append( statement ).append( "\n" );
+              templateLineNumbers.add( token.getLine() + j );
             }
             break;
           case EXPR:
-            sb.newLine( "                buffer.append(toS(" ).append( token.getText() ).append( "));" );
-            bbLineNumbers.add( token.getLine() );
+            _sb.newLine( "                buffer.append(toS(" ).append( token.getText() ).append( "));" );
+            templateLineNumbers.add( token.getLine() );
             break;
           case COMMENT:
             break;
           case DIRECTIVE:
-            Directive dir = dirMap.get( i );
+            Directive dir = _dirMap.get( i );
             if( dir._dirType == SECTION )
             {
-              ClassInfo classToSkipOver = currClass.nestedClasses.get( i + 1 );
+              ClassInfo classToSkipOver = _currClass.nestedClasses.get( i + 1 );
               if( classToSkipOver.endTokenPos == null )
               {
                 i = endPos;
@@ -888,48 +911,60 @@ public class TemplateGen
         }
         lastTokenType = token.getType();
       }
-      String nums = bbLineNumbers.toString().substring( 1, bbLineNumbers.toString().length() - 1 );
+      String nums = templateLineNumbers.toString().substring( 1, templateLineNumbers.toString().length() - 1 );
 
-      sb.newLine( "            } catch (RuntimeException e) {" );
-      sb.newLine( "                int[] bbLineNumbers = new int[]{" ).append( nums ).append( "};" );
-      sb.newLine( "                handleException(e, \"" ).append( currClass.fileName ).append( "\", lineStart, bbLineNumbers);\n            }" );
+      _sb.newLine( "            } catch (RuntimeException e) {" );
+      _sb.newLine( "                int[] templateLineNumbers = new int[]{" ).append( nums ).append( "};" );
+      _sb.newLine( "                handleException(e, \"" ).append( _currClass.fileName ).append( "\", lineStart, templateLineNumbers);\n            }" );
     }
 
     private Token.TokenType nextTokenType( int index, Integer endPos )
     {
       if( index <= endPos )
       {
-        return tokens.get( index ).getType();
+        return _tokens.get( index ).getType();
       }
       return null;
     }
 
-    private String makeText( Token.TokenType lastTokenType, Token.TokenType nextTokenType, String text )
+    private int[] makeText( Token.TokenType lastTokenType, Token.TokenType nextTokenType, Token token )
     {
+      int[] loc = null;
+      String text = token.getText();
       if( text != null && text.length() > 0 )
       {
+        int offset = token.getOffset();
         if( lastTokenType != Token.TokenType.CONTENT &&
             lastTokenType != Token.TokenType.EXPR )
         {
           if( text.charAt( 0 ) == '\n' )
           {
             // remove leading new line (which follows the preceding non-content token)
-            text = text.substring( 1 );
+            offset++;
           }
           else if( text.length() > 1 && text.charAt( 0 ) == '\r' && text.charAt( 1 ) == '\n' )
           {
             // remove leading new line (which follows the preceding non-content token)
-            text = text.substring( 2 );
+            offset += 2;
           }
         }
         // remove trailing indentation (which precedes the following non-content token)
-        text = removeTrailingIndentation( text, nextTokenType );
+        int length = removeTrailingIndentation( text, nextTokenType );
+        if( length > 0 )
+        {
+          length -= (offset - token.getOffset());
+          if( length > 0 )
+          {
+            loc = new int[]{offset, offset + length};
+          }
+        }
       }
-      return text;
+      return loc;
     }
 
-    private String removeTrailingIndentation( String text, Token.TokenType nextTokenType )
+    private int removeTrailingIndentation( String text, Token.TokenType nextTokenType )
     {
+      int length = text.length();
       if( text.length() > 0 &&
           nextTokenType != Token.TokenType.CONTENT &&
           nextTokenType != Token.TokenType.EXPR_ANGLE_BEGIN &&
@@ -937,7 +972,7 @@ public class TemplateGen
       {
         if( isSpaces( text ) )
         {
-          text = "";
+          length = 0;
         }
         else
         {
@@ -949,14 +984,14 @@ public class TemplateGen
               char c = text.charAt( i );
               if( c != ' ' && c != '\t' )
               {
-                text = text.substring( 0, i + 1 );
+                length = i + 1;
                 break;
               }
             }
           }
         }
       }
-      return text;
+      return length;
     }
 
     private boolean isSpaces( String text )
@@ -978,12 +1013,12 @@ public class TemplateGen
       assert (dir._dirType == INCLUDE);
       if( dir.conditional != null )
       {
-        sb.newLine( "            if(" ).append( dir.conditional ).append( "){" );
+        _sb.newLine( "            if(" ).append( dir.conditional ).append( "){" );
       }
-      sb.newLine( "            " ).append( dir.className ).append( ".withoutLayout().renderInto(buffer" ).append( safeTrailingString( dir.params ) ).append( ");" );
+      _sb.newLine( "            " ).append( dir.className ).append( ".withoutLayout().renderInto(buffer" ).append( safeTrailingString( dir.params ) ).append( ");" );
       if( dir.conditional != null )
       {
-        sb.newLine( "            " ).append( "}" );
+        _sb.newLine( "            " ).append( "}" );
       }
     }
 
@@ -993,30 +1028,40 @@ public class TemplateGen
       if( dir.params != null )
       {
         String paramsWithoutTypes = dir.makeParamsStringWithoutTypes( dir.paramsList );
-        sb.newLine( "            " ).append( dir.className ).append( ".renderInto(buffer, " ).append( paramsWithoutTypes ).append( ");" );
+        _sb.newLine( "            " ).append( dir.className ).append( ".renderInto(buffer, " ).append( paramsWithoutTypes ).append( ");" );
       }
       else
       {
-        sb.newLine( "            " ).append( dir.className ).append( ".renderInto(buffer);" );
+        _sb.newLine( "            " ).append( dir.className ).append( ".renderInto(buffer);" );
       }
     }
 
-  }
+    private class TemplateStringBuilder
+    {
+      private final String INDENT = "    ";
+      private StringBuilder sb = new StringBuilder();
 
-  public String generateCode( String fullyQualifiedName, String source, String fileName )
-  {
-    FileGenerator generator = new FileGenerator( fullyQualifiedName, fileName, source );
-    return generator.getFileContents();
-  }
+      TemplateStringBuilder newLine( String content )
+      {
+        sb.append( "\n" );
+        for( int i = 0; i < _currClass.depth; i++ )
+        {
+          sb.append( INDENT );
+        }
+        sb.append( content );
+        return this;
+      }
 
-  private void addError( String message, int line )
-  {
-    TemplateIssue error = new TemplateIssue( IIssue.Kind.Error, 0, line, 0, message );
-    _issues.add( error );
-  }
+      TemplateStringBuilder append( String content )
+      {
+        sb.append( content );
+        return this;
+      }
 
-  public TemplateIssueContainer getIssues()
-  {
-    return new TemplateIssueContainer( _issues );
+      public String toString()
+      {
+        return sb.toString();
+      }
+    }
   }
 }

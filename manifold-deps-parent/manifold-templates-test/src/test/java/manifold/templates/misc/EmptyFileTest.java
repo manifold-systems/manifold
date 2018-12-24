@@ -5,11 +5,12 @@ import misc.*;
 
 import static org.junit.Assert.assertEquals;
 
-public class EmptyFileTest {
-
-    @Test
-    public void emptyFileWorks() {
-        assertEquals("", EmptyTest.render());
-    }
+public class EmptyFileTest
+{
+  @Test
+  public void emptyFileWorks()
+  {
+    assertEquals( "", EmptyTest.render() );
+  }
 
 }
