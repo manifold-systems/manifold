@@ -263,7 +263,7 @@ public class TemplateGen
 
     DirType _dirType;
 
-    //imports "[class_name]"
+    //imports "[static] [class_name]"
     //extends "[class_name]"
     //params ([paramType paramName], [paramType paramName],...)                  <---nothing stored for params or end section
     //include "[templateName]"([paramVal], [paramVal],...) (conditional)
@@ -308,7 +308,6 @@ public class TemplateGen
       switch( _dirType )
       {
         case IMPORT:
-          className = text.substring( IMPORT.keyword().length() ).trim();
           break;
         case EXTENDS:
           className = text.substring( EXTENDS.keyword().length() ).trim();
@@ -849,7 +848,8 @@ public class TemplateGen
       {
         if( dir._dirType == IMPORT )
         {
-          _sb.newLine( "import " + dir.className + ";" );
+          // verbatim
+          _sb.newLine( dir.token.getText().trim() + ";" );
         }
       }
     }

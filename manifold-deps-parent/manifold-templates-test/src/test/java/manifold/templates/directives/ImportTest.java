@@ -14,6 +14,12 @@ public class ImportTest
   }
 
   @Test
+  public void staticImportsWork()
+  {
+    assertEquals( "2 hours = 120 minutes", StaticImport.render(2) );
+  }
+
+  @Test
   public void multipleImportsWork()
   {
     assertEquals( "1hello", MultipleImport.render() );
