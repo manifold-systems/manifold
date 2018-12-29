@@ -20,6 +20,7 @@ import java.io.StringReader;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 import manifold.util.Pair;
 
 public class DefaultParser implements IJsonParser
@@ -54,6 +55,22 @@ public class DefaultParser implements IJsonParser
     {
       return (Bindings)result;
     }
-    return NashornJsonParser.wrapValueInBindings( result );
+    return wrapValueInBindings( result );
   }
+
+  private static Bindings wrapValueInBindings( Object result ) throws ScriptException
+  {
+    if( result == null ||
+        result instanceof List ||
+        result instanceof String ||
+        result instanceof Number ||
+        result instanceof Boolean )
+    {
+      Bindings wrapper = new SimpleBindings();
+      wrapper.put( "value", result );
+      return wrapper;
+    }
+    throw new ScriptException( "Unexpected JSON result type: " + result.getClass().getName() );
+  }
+
 }

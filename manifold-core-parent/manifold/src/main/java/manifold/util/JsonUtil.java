@@ -35,7 +35,11 @@ public class JsonUtil
     for( int i = 0; i < name.length(); i++ )
     {
       char c = name.charAt( i );
-      if( c == '_' || c == '$' || (i == 0 ? Character.isLetter( c ) : Character.isLetterOrDigit( c )) )
+      if( i == 0 && Character.isDigit( c ) )
+      {
+        sb.append( '_' ).append( c );
+      }
+      else if( c == '_' || c == '$' || Character.isLetterOrDigit( c ) )
       {
         sb.append( c );
       }

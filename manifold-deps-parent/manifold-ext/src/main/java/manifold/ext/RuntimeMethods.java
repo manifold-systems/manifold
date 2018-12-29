@@ -35,6 +35,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
 import manifold.ext.api.ICallHandler;
+import manifold.ext.api.ICoercionProvider;
 import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
@@ -50,7 +51,7 @@ public class RuntimeMethods
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
   private static final Map<Class, Boolean> ICALL_HANDLER_MAP = new ConcurrentWeakHashMap<>();
 
-  @SuppressWarnings("UnusedDeclaration")
+  @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
   public static Object constructProxy( Object root, Class iface )
   {
     // return findCachedProxy( root, iface ); // this is only beneficial when structural invocation happens in a loop, otherwise too costly
@@ -114,6 +115,7 @@ public class RuntimeMethods
     return ICallHandler.UNHANDLED;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static Object coerce( Object value, Class<?> type )
   {
     if( value == null )
@@ -132,6 +134,70 @@ public class RuntimeMethods
       return value;
     }
 
+    Object result = callCoercionProviders( value, type );
+    if( result != ICallHandler.UNHANDLED )
+    {
+      return result;
+    }
+
+    Object boxedValue = coerceBoxed( value, type );
+    if( boxedValue != null )
+    {
+      return boxedValue;
+    }
+
+    if( type == BigInteger.class )
+    {
+      if( value instanceof Number )
+      {
+        return BigInteger.valueOf( ((Number)value).longValue() );
+      }
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? BigInteger.ONE: BigInteger.ZERO;
+      }
+      return new BigInteger( value.toString() );
+    }
+
+    if( type == BigDecimal.class )
+    {
+      if( value instanceof Boolean )
+      {
+        return ((Boolean)value) ? BigDecimal.ONE: BigDecimal.ZERO;
+      }
+      return new BigDecimal( value.toString() );
+    }
+
+    if( type == String.class )
+    {
+      return String.valueOf( value );
+    }
+
+    if( type.isEnum() )
+    {
+      String name = String.valueOf( value );
+      //noinspection unchecked
+      return Enum.valueOf( (Class<Enum>)type, name );
+    }
+
+    if( type.isArray() && valueClass.isArray() )
+    {
+      int length = Array.getLength( value );
+      Class<?> componentType = type.getComponentType();
+      Object array = Array.newInstance( componentType, length );
+      for( int i = 0; i < length; i++ )
+      {
+        Array.set( array, i, coerce( Array.get( value, i ), componentType ) );
+      }
+      return array;
+    }
+
+    // let the ClassCastException happen
+    return value;
+  }
+
+  private static Object coerceBoxed( Object value, Class<?> type )
+  {
     if( type == Boolean.class )
     {
       if( value instanceof Number )
@@ -228,48 +294,20 @@ public class RuntimeMethods
       }
       return Double.parseDouble( value.toString() );
     }
+    return null;
+  }
 
-    if( type == BigInteger.class )
+  private static Object callCoercionProviders( Object value, Class<?> type )
+  {
+    for( ICoercionProvider coercer: CoercionProviders.get() )
     {
-      if( value instanceof Number )
+      Object coercedValue = coercer.coerce( value, type );
+      if( coercedValue != ICallHandler.UNHANDLED )
       {
-        return BigInteger.valueOf( ((Number)value).longValue() );
+        return coercedValue;
       }
-      if( value instanceof Boolean )
-      {
-        return ((Boolean)value) ? BigInteger.ONE: BigInteger.ZERO;
-      }
-      return new BigInteger( value.toString() );
     }
-
-    if( type == BigDecimal.class )
-    {
-      if( value instanceof Boolean )
-      {
-        return ((Boolean)value) ? BigDecimal.ONE: BigDecimal.ZERO;
-      }
-      return new BigDecimal( value.toString() );
-    }
-
-    if( type == String.class )
-    {
-      return String.valueOf( value );
-    }
-
-    if( type.isArray() && valueClass.isArray() )
-    {
-      int length = Array.getLength( value );
-      Class<?> componentType = type.getComponentType();
-      Object array = Array.newInstance( componentType, length );
-      for( int i = 0; i < length; i++ )
-      {
-        Array.set( array, i, coerce( Array.get( value, i ), componentType ) );
-      }
-      return array;
-    }
-
-    // oh well, let the ClassCastException loose
-    return value;
+    return ICallHandler.UNHANDLED;
   }
 
   private static Class<?> box( Class<?> type )

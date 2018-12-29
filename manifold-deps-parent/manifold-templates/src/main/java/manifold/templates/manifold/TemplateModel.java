@@ -45,6 +45,11 @@ class TemplateModel extends AbstractSingleFileModel
   private void init()
   {
     IFile file = getFile();
+    if( !file.exists() )
+    {
+      return;
+    }
+
     try
     {
       String templateSource = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );

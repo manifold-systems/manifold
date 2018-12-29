@@ -18,24 +18,28 @@ package manifold.ext;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Map;
 import manifold.api.type.ActualName;
 import manifold.ext.api.AbstractDynamicTypeProxy;
+import manifold.ext.api.ICallHandler;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
- * Used at runtime to dynamically proxy a type that dynamically implements a structural interface via ICallHandler
- * e.g., an Extension Method for ICallHandler#call on Map could delegate get/set accessor calls to the map's
+ * Used at runtime to dynamically proxy a type that dynamically implements a structural interface via {@link ICallHandler}
+ * e.g., an Extension Method for {@link ICallHandler#call} on {@link Map} could delegate get/set accessor calls to the map's
  * key/value pairs and delegate method calls to key/value pairs involving functional interface values.
  * <p/>
- * The basic idea is to enable a manifold extension to dynamically dispatch calls to a structural interface via ICallHandler.
+ * The basic idea is to enable a manifold extension to dynamically dispatch calls to a structural interface via {@link ICallHandler}.
+ * <p/>
+ * See also {@link StructuralTypeProxyGenerator}
  */
-public class DynamicTypeProxyGenerator
+class DynamicTypeProxyGenerator
 {
   private DynamicTypeProxyGenerator()
   {
   }
 
-  public static Class makeProxy( Class<?> iface, Class<?> rootClass, final String name )
+  static Class makeProxy( Class<?> iface, Class<?> rootClass, final String name )
   {
     DynamicTypeProxyGenerator gen = new DynamicTypeProxyGenerator();
     String fqnProxy = getNamespace( iface ) + '.' + name;

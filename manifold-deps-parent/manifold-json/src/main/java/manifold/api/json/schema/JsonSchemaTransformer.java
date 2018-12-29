@@ -26,6 +26,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.StringTokenizer;
 import javax.script.Bindings;
 import manifold.api.fs.IFile;
@@ -66,8 +67,9 @@ public class JsonSchemaTransformer
   private static final String JSCH_REQUIRED = "required";
   static final String JSCH_DEFINITIONS = "definitions";
   static final String JSCH_PROPERTIES = "properties";
-  private final IManifoldHost _host;
+  private static final String JSCH_FORMAT = "format";
 
+  private final IManifoldHost _host;
   private FqnCache<IJsonType> _typeByFqn;
 
   private JsonSchemaTransformer( IManifoldHost host )
@@ -450,7 +452,7 @@ public class JsonSchemaTransformer
   @DisableStringLiteralTemplates
   IJsonType transformType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
   {
-    IJsonType result;
+    final IJsonType result;
     Object value = jsonObj.get( JSCH_TYPE );
     String type;
     Token token = null;
@@ -471,70 +473,87 @@ public class JsonSchemaTransformer
 
     Runnable transform = null;
 
-    boolean bRef = jsonObj.containsKey( JSCH_REF );
-    if( type == null || bRef || isCombination( jsonObj ) )
+    JsonFormatType formatType = jsonObj.containsKey( JSCH_FORMAT ) ? resolveFormatType( jsonObj ) : null;
+    if( formatType != null )
     {
-      JsonStructureType refParent = new JsonStructureType( parent, enclosing, name );
-      if( bRef && parent == null )
+      result = formatType;
+      cacheSimpleByFqn( parent, name, formatType );
+    }
+    else
+    {
+      boolean bRef = jsonObj.containsKey( JSCH_REF );
+      boolean bEnum = jsonObj.containsKey( JSCH_ENUM );
+      if( bEnum )
       {
-        Object refValue = jsonObj.get( JSCH_REF );
-        if( refValue instanceof Pair )
-        {
-          token = ((Token[])((Pair)refValue).getFirst())[0];
-        }
-        refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'$ref' not allowed at root level" ) );
-        result = refParent;
-      }
-      else
-      {
-        transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-        result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
         if( result != parent )
         {
           transferIssuesFromErrantType( parent, result, jsonObj );
         }
       }
-    }
-    else
-    {
-      switch( Type.fromName( type ) )
+      else if( type == null || bRef || isCombination( jsonObj ) )
       {
-        case Object:
-          result = new JsonStructureType( parent, enclosing, name );
-          transform = () -> ObjectTransformer.transform( this, (JsonStructureType)result, jsonObj );
-          break;
-        case Array:
-          result = new JsonListType( name, enclosing, parent );
-          transform = () -> ArrayTransformer.transform( this, name, (JsonListType)result, jsonObj );
-          break;
-        case String:
-          result = JsonSimpleType.String;
-          cacheSimpleByFqn( parent, name, result );
-          break;
-        case Number:
-          result = JsonSimpleType.Double;
-          cacheSimpleByFqn( parent, name, result );
-          break;
-        case Integer:
-          result = JsonSimpleType.Integer;
-          cacheSimpleByFqn( parent, name, result );
-          break;
-        case Boolean:
-          result = JsonSimpleType.Boolean;
-          cacheSimpleByFqn( parent, name, result );
-          break;
-        case Dynamic:
-        case Null:
-          result = DynamicType.instance();
-          cacheSimpleByFqn( parent, name, result );
-          break;
-        case Invalid:
-        default:
-          throw new IllegalSchemaTypeName( type, token );
+        JsonStructureType refParent = new JsonStructureType( parent, enclosing, name );
+        if( bRef && parent == null )
+        {
+          Object refValue = jsonObj.get( JSCH_REF );
+          if( refValue instanceof Pair )
+          {
+            token = ((Token[])((Pair)refValue).getFirst())[0];
+          }
+          refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'$ref' not allowed at root level" ) );
+          result = refParent;
+        }
+        else
+        {
+          transformDefinitions( parent, enclosing, name, jsonObj, refParent );
+          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+          if( result != parent )
+          {
+            transferIssuesFromErrantType( parent, result, jsonObj );
+          }
+        }
       }
-      transformDefinitions( parent, enclosing, name, jsonObj, result );
+      else
+      {
+        switch( Type.fromName( type ) )
+        {
+          case Object:
+            result = new JsonStructureType( parent, enclosing, name );
+            transform = () -> ObjectTransformer.transform( this, (JsonStructureType)result, jsonObj );
+            break;
+          case Array:
+            result = new JsonListType( name, enclosing, parent );
+            transform = () -> ArrayTransformer.transform( this, name, (JsonListType)result, jsonObj );
+            break;
+          case String:
+            result = JsonSimpleType.String;
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Number:
+            result = JsonSimpleType.Double;
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Integer:
+            result = JsonSimpleType.Integer;
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Boolean:
+            result = JsonSimpleType.Boolean;
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Dynamic:
+          case Null:
+            result = DynamicType.instance();
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Invalid:
+          default:
+            throw new IllegalSchemaTypeName( type, token );
+        }
+        transformDefinitions( parent, enclosing, name, jsonObj, result );
+      }
     }
-
 
     cacheType( parent, name, result, jsonObj );
     if( parent == null && enclosing != null )
@@ -551,6 +570,22 @@ public class JsonSchemaTransformer
       ((JsonSchemaType)result).setJsonSchema();
     }
     return result;
+  }
+
+  private JsonFormatType resolveFormatType( Bindings jsonObj )
+  {
+    JsonFormatType resolvedType = null;
+    for( IJsonFormatTypeResolver resolver: Objects.requireNonNull( FormatTypeResolvers.get() ) )
+    {
+      Object format = jsonObj.get( JSCH_FORMAT );
+      format = format instanceof Pair ? ((Pair)format).getSecond() : format;
+      resolvedType = resolver.resolveType( (String)format );
+      if( resolvedType != null )
+      {
+        break;
+      }
+    }
+    return resolvedType;
   }
 
   private boolean isCombination( Bindings jsonObj )
@@ -608,7 +643,7 @@ public class JsonSchemaTransformer
       result = transformCombination( parent, enclosing, name, jsonObj );
       if( result == null )
       {
-        result = deriveTypeFromEnum( jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
         if( result == null )
         {
           // No type or other means of deriving a type could be found.
@@ -620,28 +655,19 @@ public class JsonSchemaTransformer
     return result;
   }
 
-  private IJsonType deriveTypeFromEnum( Bindings bindings )
+  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
   {
-    List list = getJSchema_Enum( bindings );
+    List<?> list = getJSchema_Enum( bindings );
     if( list == null )
     {
       return null;
     }
 
-    IJsonType type = null;
-    for( Object elem : list )
+    JsonEnumType type = new JsonEnumType( parent, enclosing, name, list );
+    if( parent != null )
     {
-      IJsonType csr = Json.transformJsonObject( _host, "", null, elem );
-      if( type == null )
-      {
-        type = csr;
-      }
-      else if( !type.equals( csr ) )
-      {
-        type = DynamicType.instance();
-      }
+      parent.addChild( type.getLabel(), type );
     }
-
     return type;
   }
 

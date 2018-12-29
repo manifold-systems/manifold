@@ -1,0 +1,19 @@
+{
+  "$id": "https://example.com/restapi/HasEnum.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasEnum",
+  "type": "object",
+  "definitions": {
+    "MyEnum": {
+      "enum": ["red", "orange", 6, 9.0, null]
+    }
+  },
+  "properties": {
+    "foo" : {
+      "$ref": "#/definitions/MyEnum"
+    },
+    "bar" : {
+      "enum": ["blue", "green", 5, 4.0, null]
+    }
+  }
+}

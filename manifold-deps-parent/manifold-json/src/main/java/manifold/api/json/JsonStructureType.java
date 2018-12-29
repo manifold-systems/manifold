@@ -18,6 +18,7 @@ package manifold.api.json;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import javax.script.SimpleBindings;
 import manifold.api.json.schema.LazyRefJsonType;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
@@ -469,8 +470,12 @@ public class JsonStructureType extends JsonSchemaType
 
   private void renderFileField( StringBuilder sb, int indent )
   {
+    renderFileField( sb, indent, null );
+  }
+  protected void renderFileField( StringBuilder sb, int indent, String modifiers )
+  {
     indent( sb, indent );
-    sb.append( "String " + FIELD_FILE_URL + " = \"" ).append( getFile() == null ? "null" : getFile().toString() ).append( "\";\n" );
+    sb.append( modifiers == null ? "" : modifiers + " " ).append( "String " ).append( FIELD_FILE_URL ).append( " = \"" ).append( getFile() == null ? "null" : getFile().toString() ).append( "\";\n" );
   }
 
   private String addSuperTypes( StringBuilder sb )
@@ -494,7 +499,7 @@ public class JsonStructureType extends JsonSchemaType
     return "";
   }
 
-  private String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
+  protected String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
   {
     String identifier = makeIdentifier( name, capitalize );
     if( !identifier.equals( name ) )
@@ -514,7 +519,7 @@ public class JsonStructureType extends JsonSchemaType
     return capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
   }
 
-  private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
+  public boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name )
   {
     Token token = _memberLocations.get( name );
     if( token == null )
@@ -523,7 +528,7 @@ public class JsonStructureType extends JsonSchemaType
     }
     return addSourcePositionAnnotation( sb, indent, name, token );
   }
-  private boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
+  protected boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
   {
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( getIdentifier(), FIELD_FILE_URL ) ).name( "url" ) )
@@ -547,7 +552,7 @@ public class JsonStructureType extends JsonSchemaType
     String typeName = getIdentifier();
     sb.append( "static " ).append( typeName ).append( " create() {\n" );
     indent( sb, indent );
-    sb.append( "  return (" ).append( typeName ).append( ")new javax.script.SimpleBindings();\n" );
+    sb.append( "  return (" ).append( typeName ).append( ")new " ).append( SimpleBindings.class.getTypeName() ).append( "();\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
@@ -639,7 +644,7 @@ public class JsonStructureType extends JsonSchemaType
     return false;
   }
 
-  private void indent( StringBuilder sb, int indent )
+  protected void indent( StringBuilder sb, int indent )
   {
     for( int i = 0; i < indent; i++ )
     {

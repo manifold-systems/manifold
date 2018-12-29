@@ -1,0 +1,40 @@
+{
+  "$id": "https://example.com/restapi/HasFormats.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasFormats",
+  "type": "object",
+  "definitions": {
+    "MyDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "MyUtcMillisec": {
+      "type": "number",
+      "format": "utc-millisec"
+    }
+  },
+  "properties": {
+    "TheDateAndTime" : {
+      "$ref": "#/definitions/MyDateTime"
+    },
+    "TheTimestamp": {
+      "$ref": "#/definitions/MyUtcMillisec"
+    },
+    "TheDate": {
+      "type": "string",
+      "format": "date"
+    },
+    "TheTime": {
+      "type": "string",
+      "format": "time"
+    },
+    "AnotherDateTime": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "UnhandledFormat": {
+      "type": "string",
+      "format": "chickenbutt"
+    }
+  }
+}

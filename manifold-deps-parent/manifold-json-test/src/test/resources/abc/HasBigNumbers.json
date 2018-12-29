@@ -1,0 +1,32 @@
+{
+  "$id": "https://example.com/restapi/HasBigNumbers.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasBigNumbers",
+  "type": "object",
+  "definitions": {
+    "MyBigDecimal": {
+      "type": "string",
+      "format": "big-decimal"
+    },
+    "MyBigInteger": {
+      "type": "string",
+      "format": "big-integer"
+    }
+  },
+  "properties": {
+    "bigInt" : {
+      "$ref": "#/definitions/MyBigInteger"
+    },
+    "bigDec" : {
+      "$ref": "#/definitions/MyBigDecimal"
+    },
+    "anotherBigInt": {
+      "type": "string",
+      "format": "big-integer"
+    },
+    "anotherBigDec" : {
+      "type": "string",
+      "format": "big-decimal"
+    }
+  }
+}

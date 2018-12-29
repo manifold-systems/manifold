@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
-import javax.script.Bindings;
-import javax.script.SimpleBindings;
 import manifold.api.fs.IDirectory;
 import manifold.api.host.IRuntimeManifoldHost;
 import manifold.internal.runtime.IjPluginIntegration;
@@ -278,10 +276,5 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
         classpath.add( i, f );
       }
     }
-  }
-
-  public Bindings createBindings()
-  {
-    return new SimpleBindings();
   }
 }

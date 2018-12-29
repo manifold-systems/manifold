@@ -25,6 +25,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import javax.lang.model.type.NoType;
+import manifold.ext.api.Structural;
 import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
@@ -32,9 +33,11 @@ import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**
  * Used at runtime to dynamically proxy a type that structurally (as opposed to nominally)
- * implements an interface annotated with @Structural.
+ * implements an interface annotated with @{@link Structural}.
+ * <p/>
+ * See also {@link DynamicTypeProxyGenerator}
  */
-public class StructuralTypeProxyGenerator
+class StructuralTypeProxyGenerator
 {
   private final Class<?> _iface;
   private Class<?> _rootClass;
@@ -48,7 +51,7 @@ public class StructuralTypeProxyGenerator
     _name = name;
   }
 
-  public static Class makeProxy( Class<?> iface, Class<?> rootClass, final String name )
+  static Class makeProxy( Class<?> iface, Class<?> rootClass, final String name )
   {
     StructuralTypeProxyGenerator gen = new StructuralTypeProxyGenerator( iface, rootClass, name );
     String fqnProxy = getNamespace( iface ) + '.' + name;

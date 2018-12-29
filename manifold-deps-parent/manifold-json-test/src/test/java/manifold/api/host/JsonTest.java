@@ -12,9 +12,19 @@ import abc.OneOf_TopLevel;
 import abc.OneOf_TopLevel_Array;
 import abc.StrangeUriFormats;
 import abc.MixedArray;
+import abc.HasEnum;
+import abc.HasFormats;
+import abc.HasBigNumbers;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.script.Bindings;
 import junit.framework.TestCase;
 
@@ -103,7 +113,7 @@ public class JsonTest extends TestCase
     address.setCity("Cupertino");
     all.setBilling_address(address);
     AllOf_Hierarchy.shipping_address shipping_address = AllOf_Hierarchy.shipping_address.create();
-    shipping_address.setType("lol");
+    shipping_address.setType(AllOf_Hierarchy.shipping_address.type.residential);
     all.setShipping_address(shipping_address);
     assertSame( shipping_address, all.getShipping_address() );
   }
@@ -276,4 +286,102 @@ public class JsonTest extends TestCase
     return Arrays.asList( a );
   }
 
+  public void testEnums()
+  {
+    HasEnum hasEnum = HasEnum.create();
+
+    hasEnum.setBar( HasEnum.bar._4_0 );
+    assertEquals( HasEnum.bar._4_0, hasEnum.getBar() );
+    assertEquals( 4.0, ((Map)hasEnum).get( "bar" ) );
+
+    hasEnum.setFoo( HasEnum.MyEnum.red );
+    assertEquals( HasEnum.MyEnum.red, hasEnum.getFoo() );
+    assertEquals( "red", ((Map)hasEnum).get( "foo" ) );
+  }
+
+  public void testDateTimeFormat()
+  {
+    HasFormats hasFormats = HasFormats.create();
+    
+    LocalDateTime value = LocalDateTime.of(2000, 2, 20, 1, 2);
+    assertNull( hasFormats.getTheDateAndTime() );
+    hasFormats.setTheDateAndTime( value );
+    assertEquals( value, hasFormats.getTheDateAndTime() );
+    String actualValue = (String)((Map)hasFormats).get( "TheDateAndTime" );
+    assertEquals( value, LocalDateTime.parse( actualValue ) );
+    
+    assertNull( hasFormats.getAnotherDateTime() );
+    hasFormats.setAnotherDateTime( value );
+    assertEquals( value, hasFormats.getAnotherDateTime() );
+    actualValue = (String)((Map)hasFormats).get( "AnotherDateTime" );
+    assertEquals( value, LocalDateTime.parse( actualValue ) );
+  }
+  public void testDateFormat()
+  {
+    HasFormats hasFormats = HasFormats.create();
+    
+    LocalDate value = LocalDate.of(1999, 5, 22);
+    assertNull( hasFormats.getTheDate() );
+    hasFormats.setTheDate( value );
+    assertEquals( value, hasFormats.getTheDate() );
+    String actualValue = (String)((Map)hasFormats).get( "TheDate" );
+    assertEquals( value, LocalDate.parse( actualValue ) );
+  }
+  public void testTimeFormat()
+  {
+    HasFormats hasFormats = HasFormats.create();
+    
+    LocalTime value = LocalTime.of( 1, 2, 3, 4 );
+    assertNull( hasFormats.getTheTime() );
+    hasFormats.setTheTime( value );
+    assertEquals( value, hasFormats.getTheTime() );
+    String actualValue = (String)((Map)hasFormats).get( "TheTime" );
+    assertEquals( value, LocalTime.parse( actualValue ) );
+  }
+  public void testUtiMillisec()
+  {
+    HasFormats hasFormats = HasFormats.create();
+
+    Instant value = Instant.now();
+    assertNull( hasFormats.getTheTimestamp() );
+    hasFormats.setTheTimestamp( value );
+    assertEquals( value, hasFormats.getTheTimestamp() );
+    long actualValue = (long)((Map)hasFormats).get( "TheTimestamp" );
+    assertEquals( value, Instant.ofEpochMilli( actualValue ) );
+  }
+
+  public void testBigInteger()
+  {
+    HasBigNumbers hasBig = HasBigNumbers.create();
+
+    BigInteger value = new BigInteger( "1000000000000000000000" );
+    assertNull( hasBig.getBigInt() );
+    hasBig.setBigInt( value );
+    assertEquals( value, hasBig.getBigInt() );
+    String actualValue = (String)((Map)hasBig).get( "bigInt" );
+    assertEquals( value, new BigInteger( actualValue ) );
+
+    assertNull( hasBig.getAnotherBigInt() );
+    hasBig.setAnotherBigInt( value );
+    assertEquals( value, hasBig.getAnotherBigInt() );
+    actualValue = (String)((Map)hasBig).get( "anotherBigInt" );
+    assertEquals( value, new BigInteger( actualValue ) );
+  }
+  public void testBigDecimal()
+  {
+    HasBigNumbers hasBig = HasBigNumbers.create();
+
+    BigDecimal value = new BigDecimal( "1000000000000000000000.0000000000000000000001" );
+    assertNull( hasBig.getBigDec() );
+    hasBig.setBigDec( value );
+    assertEquals( value, hasBig.getBigDec() );
+    String actualValue = (String)((Map)hasBig).get( "bigDec" );
+    assertEquals( value, new BigDecimal( actualValue ) );
+
+    assertNull( hasBig.getAnotherBigDec() );
+    hasBig.setAnotherBigDec( value );
+    assertEquals( value, hasBig.getAnotherBigDec() );
+    actualValue = (String)((Map)hasBig).get( "anotherBigDec" );
+    assertEquals( value, new BigDecimal( actualValue ) );
+  }
 }

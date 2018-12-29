@@ -20,9 +20,13 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
+import javax.script.Bindings;
+import manifold.ext.CoercionProviders;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.Extension;
+import manifold.ext.api.IBindingType;
 import manifold.ext.api.ICallHandler;
+import manifold.ext.api.ICoercionProvider;
 import manifold.ext.api.This;
 
 /**
@@ -33,7 +37,7 @@ import manifold.ext.api.This;
 public abstract class MapStructExt implements ICallHandler
 {
   @SuppressWarnings("unused")
-  public static <K,V> Object call( @This Map<K,V> thiz, Class iface, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
+  public static <K, V> Object call( @This Map<K, V> thiz, Class iface, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
   {
     assert paramTypes.length == args.length;
 
@@ -147,12 +151,54 @@ public abstract class MapStructExt implements ICallHandler
             }
           }
         }
+        Object arg = args[0];
+        arg = coerceToBindingValue( thiz, arg );
         //noinspection unchecked
-        thiz.put( key, args[0] );
+        thiz.put( key, arg );
         return null;
       }
     }
     return ICallHandler.UNHANDLED;
+  }
+
+  private static Object coerceToBindingValue( Map thiz, Object arg )
+  {
+    if( arg instanceof IBindingType )
+    {
+      arg = ((IBindingType)arg).toBindingValue();
+    }
+    else if( needsCoercion( arg, thiz ) )
+    {
+      for( ICoercionProvider coercer: CoercionProviders.get() )
+      {
+        Object coercedValue = coercer.toBindingValue( arg );
+        if( coercedValue != ICallHandler.UNHANDLED )
+        {
+          arg = coercedValue;
+        }
+      }
+    }
+    return arg;
+  }
+
+  private static boolean needsCoercion( Object arg, Map thiz )
+  {
+    return thiz instanceof Bindings &&
+           !(arg instanceof Bindings) &&
+           !isPrimitiveType( arg.getClass() );
+  }
+
+  private static boolean isPrimitiveType( Class<?> type )
+  {
+    return type == String.class ||
+           type == Boolean.class ||
+           type == Character.class ||
+           type == Byte.class ||
+           type == Short.class ||
+           type == Integer.class ||
+           type == Long.class ||
+           type == Float.class ||
+           type == Double.class;
   }
 
   private static Object invoke( Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
@@ -164,7 +210,7 @@ public abstract class MapStructExt implements ICallHandler
     }
     try
     {
-      for( Method m : value.getClass().getMethods() )
+      for( Method m: value.getClass().getMethods() )
       {
         if( !m.isDefault() && !Modifier.isStatic( m.getModifiers() ) )
         {

@@ -30,10 +30,10 @@ public class ChromeTest extends TestCase
     String homepage_url = chr.getHomepage_url();
     chrome.icons icons = chr.getIcons();
     Object anImport = chr.getImport();
-    String incognito = chr.getIncognito();
+    chrome.incognito incognito = chr.getIncognito();
     List<chrome.input_components> input_components = chr.getInput_components();
     String key = chr.getKey();
-    Double manifest_version = chr.getManifest_version();
+    chrome.manifest_version manifest_version = chr.getManifest_version();
     String minimum_chrome_version = chr.getMinimum_chrome_version();
     List<chrome.nacl_modules> nacl_modules = chr.getNacl_modules();
     String name = chr.getName();
