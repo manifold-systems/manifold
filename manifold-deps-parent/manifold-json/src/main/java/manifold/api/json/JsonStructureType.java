@@ -18,9 +18,11 @@ package manifold.api.json;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import javax.script.Bindings;
 import javax.script.SimpleBindings;
 import manifold.api.json.schema.LazyRefJsonType;
-import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.ext.RuntimeMethods;
+import manifold.ext.api.IBindingsBacked;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.net.URL;
@@ -44,7 +46,6 @@ import manifold.util.ManStringUtil;
 
 /**
  */
-@DisableStringLiteralTemplates
 public class JsonStructureType extends JsonSchemaType
 {
   private static final String FIELD_FILE_URL = "__FILE_URL_";
@@ -363,13 +364,28 @@ public class JsonStructureType extends JsonSchemaType
       addSourcePositionAnnotation( sb, indent + 2, key );
       identifier = addActualNameAnnotation( sb, indent + 2, key, true );
       indent( sb, indent + 2 );
-      sb.append( propertyType ).append( " get" ).append( identifier ).append( "();\n" );
+      sb.append( "default $propertyType get" ).append( identifier ).append( "() {\n" );
+      indent( sb, indent + 4 );
+      if( type instanceof JsonListType || propertyType.indexOf( '>' ) > 0 )
+      {
+        sb.append( "return ($propertyType)getBindings().get(\"$key\");\n" );
+      }
+      else
+      {
+        sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${propertyType}.class);\n" );
+      }
+      indent( sb, indent + 2 );
+      sb.append( "}\n" );
       if( mutable )
       {
         addSourcePositionAnnotation( sb, indent + 2, key );
         addActualNameAnnotation( sb, indent + 2, key, true );
         indent( sb, indent + 2 );
-        sb.append( "void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " $value);\n" );
+        sb.append( "default void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " ${'$'}value) {\n" );
+        indent( sb, indent + 4 );
+        sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(getBindings(), ${'$'}value));\n" );
+        indent( sb, indent + 2 );
+        sb.append( "}\n" );
       }
       Set<IJsonType> union = _unionMembers.get( key );
       if( union != null )
@@ -386,7 +402,18 @@ public class JsonStructureType extends JsonSchemaType
           identifier = addActualNameAnnotation( sb, indent + 2, key, true );
           indent( sb, indent + 2 );
           String unionName = makeMemberIdentifier( constituentType );
-          sb.append( specificPropertyType ).append( " get" ).append( identifier ).append( "As" ).append( unionName ).append( "();\n" );
+          sb.append( "default $specificPropertyType  get" ).append( identifier ).append( "As" ).append( unionName ).append( "() {\n" );
+          indent( sb, indent + 4 );
+          if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
+          {
+            sb.append( "return ($specificPropertyType)getBindings().get(\"$key\");\n" );
+          }
+          else
+          {
+            sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${specificPropertyType}.class);\n" );
+          }
+          indent( sb, indent + 2 );
+          sb.append( "}\n");
           if( mutable )
           {
             addSourcePositionAnnotation( sb, indent + 2, key );
@@ -396,7 +423,11 @@ public class JsonStructureType extends JsonSchemaType
             }
             addActualNameAnnotation( sb, indent + 2, key, true );
             indent( sb, indent + 2 );
-            sb.append( "void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " $value);\n" );
+            sb.append( "default void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value) {\n" );
+            indent( sb, indent + 4 );
+            sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(getBindings(), ${'$'}value));\n" );
+            indent( sb, indent + 2 );
+            sb.append( "}\n" );
           }
         }
       }
@@ -480,20 +511,17 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addSuperTypes( StringBuilder sb )
   {
+    sb.append( " extends " ).append( IBindingsBacked.class.getSimpleName() );
+
     List<IJsonType> superTypes = getSuperTypes();
     if( superTypes.isEmpty() )
     {
       return "";
     }
-
-    sb.append( " extends " );
-    for( int i = 0; i < superTypes.size(); i++ )
+    
+    for( IJsonType superType: superTypes )
     {
-      IJsonType superType = superTypes.get( i );
-      if( i > 0 )
-      {
-        sb.append( ", " );
-      }
+      sb.append( ", " );
       sb.append( superType.getIdentifier() );
     }
     return "";
@@ -548,11 +576,26 @@ public class JsonStructureType extends JsonSchemaType
 
   private void renderTopLevelFactoryMethods( StringBuilder sb, int indent )
   {
-    indent( sb, indent );
     String typeName = getIdentifier();
+
+    indent( sb, indent );
     sb.append( "static " ).append( typeName ).append( " create() {\n" );
     indent( sb, indent );
     sb.append( "  return (" ).append( typeName ).append( ")new " ).append( SimpleBindings.class.getTypeName() ).append( "();\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+
+    // Called reflectively from RuntimeMethods, this proxy and the default get/set method impls defined here enable the
+    // JSON type manifold to avoid the overhead of dynamic proxy generation and compilation at runtime. Otherwise the
+    // ICallHandler-based dynamic proxy would be used, which causes a significant delay the first time a JSON interface
+    // is used.
+    indent( sb, indent );
+    sb.append( "static " ).append( typeName ).append( " proxy(" ).append( Bindings.class.getSimpleName() ).append( " bindings) {\n" );
+    sb.append( "    return new $typeName() {\n" +
+               "      public Bindings getBindings() {\n" +
+               "        return bindings;\n" +
+               "      }\n" +
+               "    };\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
@@ -560,21 +603,21 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "default String" ).append( " toJson() {\n" );
     indent( sb, indent );
-    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toJson(this);\n" );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toJson(getBindings());\n" );
     indent( sb, indent );
     sb.append( "}\n");
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml() {\n" );
     indent( sb, indent );
-    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this);\n" );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(getBindings());\n" );
     indent( sb, indent );
     sb.append( "}\n");
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml(String name) {\n" );
     indent( sb, indent );
-    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(this, name);\n" );
+    sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(getBindings(), name);\n" );
     indent( sb, indent );
     sb.append( "}\n");
 

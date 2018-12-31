@@ -17,11 +17,15 @@
 package manifold.api.json;
 
 import java.util.StringTokenizer;
+import javax.script.Bindings;
+import javax.script.SimpleBindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
+import manifold.ext.RuntimeMethods;
+import manifold.ext.api.IBindingsBacked;
 import manifold.ext.api.Structural;
 import manifold.util.ManClassUtil;
 
@@ -72,7 +76,11 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   {
     StringBuilder sb = new StringBuilder();
     sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )
-      .append( "import " ).append( Structural.class.getName() ).append( ";\n\n" );
+      .append( "import " ).append( Bindings.class.getName() ).append( ";\n" )
+      .append( "import " ).append( SimpleBindings.class.getName() ).append( ";\n" )
+      .append( "import " ).append( IBindingsBacked.class.getName() ).append( ";\n" )
+      .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
+      .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );
     model.getType().render( sb, 0, true );
     return sb.toString();

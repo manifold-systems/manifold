@@ -34,8 +34,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.type.NoType;
+import javax.script.Bindings;
+import manifold.ext.api.IBindingType;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.ICoercionProvider;
+import manifold.ext.api.IBindingsBacked;
 import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
@@ -388,6 +391,14 @@ public class RuntimeMethods
       return root;
     }
 
+    if( root instanceof Bindings && IBindingsBacked.class.isAssignableFrom( iface ) )
+    {
+      // An interface extending IBindingsBacked is expected to define a proxy(Bindings) method returning an
+      // implementation of the interface, see JsonStructureType.
+      // This strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via ICallHandler.
+      return ReflectUtil.method( iface, "proxy", Bindings.class ).invokeStatic( root );
+    }
+    
 //    final Field classRedefinedCount;
 //    try
 //    {
@@ -518,5 +529,43 @@ public class RuntimeMethods
       }
     }
     return false;
+  }
+
+  public static Object coerceToBindingValue( Map thiz, Object arg )
+  {
+    if( arg instanceof IBindingType )
+    {
+      arg = ((IBindingType)arg).toBindingValue();
+    }
+    else if( needsCoercion( arg, thiz ) )
+    {
+      for( ICoercionProvider coercer: CoercionProviders.get() )
+      {
+        Object coercedValue = coercer.toBindingValue( arg );
+        if( coercedValue != ICallHandler.UNHANDLED )
+        {
+          arg = coercedValue;
+        }
+      }
+    }
+    return arg;
+  }
+  private static boolean needsCoercion( Object arg, Map thiz )
+  {
+    return thiz instanceof Bindings &&
+           !(arg instanceof Bindings) &&
+           !isPrimitiveType( arg.getClass() );
+  }
+  private static boolean isPrimitiveType( Class<?> type )
+  {
+    return type == String.class ||
+           type == Boolean.class ||
+           type == Character.class ||
+           type == Byte.class ||
+           type == Short.class ||
+           type == Integer.class ||
+           type == Long.class ||
+           type == Float.class ||
+           type == Double.class;
   }
 }
