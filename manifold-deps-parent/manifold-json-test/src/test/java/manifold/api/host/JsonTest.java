@@ -66,8 +66,7 @@ public class JsonTest extends TestCase
     OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
     assertSame( myDef, myDefRes );
 
-    OneOf.thing.Option0 thingOption0 = OneOf.thing.Option0.create();
-    thingOption0.setFirstName("fred");
+    OneOf.thing.Option0 thingOption0 = OneOf.thing.Option0.create("fred");
     thingOption0.setLastName("flintstone");
     thingOption0.setSport("bowling");
     oneOf.setThingAsOption0(thingOption0);
@@ -81,7 +80,7 @@ public class JsonTest extends TestCase
     OneOf.thing.Option1 resThingOption1 = oneOf.getThingAsOption1();
     assertSame( thingOption1, resThingOption1 );
 
-    OneOf_TopLevel.Option0 topLevelOption0 = OneOf_TopLevel.Option0.create();
+    OneOf_TopLevel.Option0 topLevelOption0 = OneOf_TopLevel.Option0.create("Bob");
     oneOf.setTopLevelAsOption0( topLevelOption0 );
     OneOf_TopLevel.Option0 resTopLevelOption0 = oneOf.getTopLevelAsOption0();
     assertSame( topLevelOption0, resTopLevelOption0 );
@@ -93,7 +92,7 @@ public class JsonTest extends TestCase
     assertSame( topLevelOption1, resTopLevelOption1 );
     assertSame( topLevelOption1, oneOf.getTopLevel() );
 
-    List<OneOf_TopLevel_Array.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.Option0.create() );
+    List<OneOf_TopLevel_Array.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.Option0.create("Scott") );
     oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
     List<OneOf_TopLevel_Array.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
     assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
@@ -109,10 +108,10 @@ public class JsonTest extends TestCase
   public void testAllOf()
   {
     AllOf_Hierarchy all = AllOf_Hierarchy.create();
-    AllOf_Hierarchy.address address = AllOf_Hierarchy.address.create();
+    AllOf_Hierarchy.address address = AllOf_Hierarchy.address.create("111 Main St.", "Cupertino", "CA");
     address.setCity("Cupertino");
     all.setBilling_address(address);
-    AllOf_Hierarchy.shipping_address shipping_address = AllOf_Hierarchy.shipping_address.create();
+    AllOf_Hierarchy.shipping_address shipping_address = AllOf_Hierarchy.shipping_address.create("111 Main St.", "Cupertino", "CA", AllOf_Hierarchy.shipping_address.type.residential);
     shipping_address.setType(AllOf_Hierarchy.shipping_address.type.residential);
     all.setShipping_address(shipping_address);
     assertSame( shipping_address, all.getShipping_address() );
@@ -188,7 +187,7 @@ public class JsonTest extends TestCase
   {
     Contact contact = Contact.create();
     contact.getDateOfBirth();
-    contact.setPrimaryAddress( Contact.Address.create() );
+    contact.setPrimaryAddress( Contact.Address.create("111 Main St.", "Cupertino", "CA") );
     Contact.Address primaryAddress = contact.getPrimaryAddress();
     primaryAddress.setStreet_address( "111 Foo Dr" );
     primaryAddress.setCity( "Cupertino" );
@@ -205,11 +204,11 @@ public class JsonTest extends TestCase
 
   public void testThing()
   {
-    Product thing = Product.create();
+    Product thing = Product.create( 123d, "json", 5.99 );
     thing.setPrice( 1.55 );
     assertEquals( 1.55, thing.getPrice() );
 
-    Product.dimensions dims = Product.dimensions.create();
+    Product.dimensions dims = Product.dimensions.create(1.2, 2.3, 3.4);
     dims.setLength( 3.0 );
     dims.setWidth( 4.0 );
     dims.setHeight( 5.0 );
@@ -297,6 +296,15 @@ public class JsonTest extends TestCase
     hasEnum.setFoo( HasEnum.MyEnum.red );
     assertEquals( HasEnum.MyEnum.red, hasEnum.getFoo() );
     assertEquals( "red", ((Map)hasEnum).get( "foo" ) );
+
+//    assertEquals( 7, HasEnum.baz.values().length );
+//    assertEquals( "red", HasEnum.baz.red.name() );
+//    assertEquals( "blue", HasEnum.baz.blue.name() );
+//    assertEquals( "oraange", HasEnum.baz.orange.name() );
+//    assertEquals( "_6", HasEnum.baz._6.name() );
+//    assertEquals( "_3", HasEnum.baz._3.name() );
+//    assertEquals( "_9_0", HasEnum.baz._9_0.name() );
+//    assertEquals( "null", HasEnum.baz.Null.name() );
   }
 
   public void testDateTimeFormat()

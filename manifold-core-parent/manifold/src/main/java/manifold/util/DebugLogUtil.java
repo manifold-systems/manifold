@@ -20,6 +20,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 
 public class DebugLogUtil
@@ -63,5 +64,12 @@ public class DebugLogUtil
     {
       throw new RuntimeException( e );
     }
+  }
+
+  public static String getStackTrace( Throwable e )
+  {
+    StringWriter sw = new StringWriter();
+    e.printStackTrace( new PrintWriter( sw ) );
+    return sw.toString();
   }
 }

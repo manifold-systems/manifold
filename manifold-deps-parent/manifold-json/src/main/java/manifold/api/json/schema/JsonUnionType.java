@@ -64,7 +64,7 @@ public class JsonUnionType extends JsonStructureType
     return _constituentTypes.values();
   }
 
-  public void addConstituent( String name, IJsonType type )
+  void addConstituent( String name, IJsonType type )
   {
     if( _constituentTypes.isEmpty() )
     {
@@ -83,7 +83,7 @@ public class JsonUnionType extends JsonStructureType
            type.getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
   }
 
-  public IJsonType merge( IJsonType type )
+  public JsonUnionType merge( IJsonType type )
   {
     IJsonType mergedType = null;
     for( IJsonType c: getConstituents() )

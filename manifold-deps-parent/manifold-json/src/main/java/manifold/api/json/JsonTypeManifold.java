@@ -76,6 +76,7 @@ public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
   {
     StringBuilder sb = new StringBuilder();
     sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )
+      .append( "import " ).append( Json.class.getName() ).append( ";\n" )
       .append( "import " ).append( Bindings.class.getName() ).append( ";\n" )
       .append( "import " ).append( SimpleBindings.class.getName() ).append( ";\n" )
       .append( "import " ).append( IBindingsBacked.class.getName() ).append( ";\n" )

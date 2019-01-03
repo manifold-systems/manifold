@@ -18,14 +18,20 @@ package manifold.api.json.schema;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import manifold.api.gen.SrcElement;
 import manifold.api.gen.SrcType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonSimpleType;
+import manifold.api.json.JsonSimpleTypeWithDefault;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.ext.api.IBindingType;
+import manifold.util.DebugLogUtil;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
 
@@ -83,6 +89,42 @@ public class JsonEnumType extends JsonStructureType
       addMember( JsonUtil.makeIdentifier( String.valueOf( value ) ), type, token );
       _enumValues.add( value );
     }
+  }
+
+  private JsonEnumType( JsonEnumType enum1, JsonEnumType enum2 )
+  {
+    super( enum1.getParent(), enum1.getFile(), enum1.getName() );
+
+    Map<String, IJsonType> members = new HashMap<>( enum1.getMembers() );
+    members.putAll( enum2.getMembers() );
+    Map<String, Token> memberLocations = new HashMap<>( enum1.getMemberLocations() );
+    memberLocations.putAll( enum2.getMemberLocations() );
+    members.forEach( (m, v) -> addMember( m, v, memberLocations.get( m ) ) );
+
+    Set<Object> enumValues = new HashSet<>( enum1._enumValues );
+    enumValues.addAll( enum2._enumValues );
+    _enumValues = new ArrayList<>( enumValues );
+  }
+
+  @Override
+  public IJsonType merge( IJsonType that )
+  {
+    if( !getName().equals( that.getName() ) )
+    {
+      return null;
+    }
+
+    if( that instanceof JsonSimpleType || that instanceof JsonSimpleTypeWithDefault )
+    {
+      return that;
+    }
+    
+    if( !(that instanceof JsonEnumType) )
+    {
+      return null;
+    }
+
+    return new JsonEnumType( this, (JsonEnumType)that );
   }
 
   @Override
@@ -152,5 +194,7 @@ public class JsonEnumType extends JsonStructureType
     indent( sb, indent );
 
     sb.append( "}\n" );
+
+    DebugLogUtil.log( "c:\\temp\\enumlog.log", sb.toString(), true );
   }
 }

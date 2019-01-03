@@ -16,7 +16,11 @@
 
 package manifold.api.json.schema;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.script.Bindings;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
@@ -24,6 +28,7 @@ import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
+import manifold.util.DebugLogUtil;
 import manifold.util.Pair;
 
 /**
@@ -103,10 +108,29 @@ class ObjectTransformer
         IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings );
         _type.addMember( name, type, token );
       }
+      addRequired();
     }
     catch( Exception e )
     {
-      _type.addIssue( new JsonIssue( IIssue.Kind.Error, token, e.getMessage() ) );
+      String message = e.getMessage();
+      _type.addIssue( new JsonIssue( IIssue.Kind.Error, token,
+        message == null ? DebugLogUtil.getStackTrace( e ) : message ) );
     }
+  }
+
+  private void addRequired()
+  {
+    Object requiredValue = _jsonObj.get( JsonSchemaTransformer.JSCH_REQUIRED );
+    Set<String> required = Collections.emptySet();
+    if( requiredValue != null )
+    {
+      requiredValue = requiredValue instanceof Pair ? ((Pair)requiredValue).getSecond() : requiredValue;
+      if( requiredValue instanceof Collection )
+      {
+        //noinspection unchecked
+        required = new HashSet<>( (Collection<String>)requiredValue );
+      }
+    }
+    _type.addRequired( required );
   }
 }

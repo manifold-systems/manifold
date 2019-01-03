@@ -10,7 +10,7 @@ public class ChromeTest extends TestCase
 {
   public void testChrome()
   {
-    chrome chr = chrome.create();
+    chrome chr = chrome.create(chrome.manifest_version._2, "foo", "1.0.0");
     chr.setBackground( chrome.background.create() );
     chrome.background background = chr.getBackground();
     chrome.action browser_action = chr.getBrowser_action();

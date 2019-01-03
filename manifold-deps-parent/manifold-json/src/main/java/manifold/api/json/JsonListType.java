@@ -154,8 +154,14 @@ public class JsonListType extends JsonSchemaType
     return _innerTypes;
   }
 
-  IJsonType merge( JsonListType other )
+  public JsonListType merge( IJsonType that )
   {
+    if( !(that instanceof JsonListType) )
+    {
+      return null;
+    }
+
+    JsonListType other = (JsonListType)that;
     JsonListType mergedType = new JsonListType( getLabel(), getFile(), getParent() );
 
     if( !getComponentType().equalsStructurally( other.getComponentType() ) )

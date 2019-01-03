@@ -268,12 +268,12 @@ public class Json
 
   public static IJsonType mergeTypesNoUnion( IJsonType type1, IJsonType type2 )
   {
-    if( type1 == null && type2 != null )
+    if( type1 == null )
     {
       return type2;
     }
 
-    if( type2 == null && type1 != null )
+    if( type2 == null )
     {
       return type1;
     }
@@ -295,28 +295,13 @@ public class Json
       return type1;
     }
 
-    IJsonType mergedType = null;
+    // merge the types
+    IJsonType mergedType = type1.merge( type2 );
+    if( mergedType == null )
+    {
+      mergedType = type2.merge( type1 );
+    }
 
-    if( type1 instanceof JsonSimpleType && type2 instanceof JsonSimpleType )
-    {
-      mergedType = ((JsonSimpleType)type1).merge( (JsonSimpleType)type2 );
-    }
-    else if( type1 instanceof JsonStructureType && type2 instanceof JsonStructureType )
-    {
-      mergedType = ((JsonStructureType)type1).merge( (JsonStructureType)type2 );
-    }
-    else if( type1 instanceof JsonListType && type2 instanceof JsonListType )
-    {
-      mergedType = ((JsonListType)type1).merge( (JsonListType)type2 );
-    }
-    else if( type1 instanceof JsonUnionType )
-    {
-      mergedType = ((JsonUnionType)type1).merge( type2 );
-    }
-    else if( type2 instanceof JsonUnionType )
-    {
-      mergedType = ((JsonUnionType)type2).merge( type1 );
-    }
     return mergedType;
   }
 }

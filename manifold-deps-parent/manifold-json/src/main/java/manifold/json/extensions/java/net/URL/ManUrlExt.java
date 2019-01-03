@@ -36,16 +36,16 @@ import manifold.util.JsonUtil;
 import manifold.util.StreamUtil;
 
 /**
+ * Adds extension methods to URL for handling JSON, plain text, and binary content.
  */
 @Extension
 public class ManUrlExt
 {
   /**
-   * Make a JSON-compatible URL with the arguments from the Bindings. URL encodes
-   * the arguments in UTF-8 and appends them to the list using standard URL query
-   * delimiters.
+   * Make a JSON-compatible URL with the arguments from the {@link Bindings}. Encodes
+   * the arguments in UTF-8 and appends them to the list using standard URL query delimiters.
    * <p/>
-   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.
+   * If an argument is a {@link Bindings} or a {@link List}, it is transformed to JSON.
    * Otherwise, the argument is coerced to a String and URL encoded.
    */
   @Extension
@@ -97,10 +97,8 @@ public class ManUrlExt
   }
 
   /**
-   * Use http POST to pass JSON bindings to this URL and get back the full content as a String.
-   * <p>
-   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
-   * the argument is coerced to a String.  All arguments are URL encoded.
+   * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a>  to pass JSON bindings to
+   * this URL and get back the full content as a String.
    *
    * @return The full content of this URL coerced to a String.
    *
@@ -132,10 +130,8 @@ public class ManUrlExt
   }
 
   /**
-   * Use http POST to pass JSON bindings to this URL and get the full content as a JSON object.
-   * <p>
-   * If an argument is a javax.script.Bindings or a List, it is transformed to JSON.  Otherwise,
-   * the argument is coerced to a String.  All arguments are URL encoded.
+   * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a> to pass JSON bindings to
+   * this URL and get the full content as a JSON object.
    *
    * @return The full content of this URL's stream as a JSON object.
    *
@@ -191,7 +187,8 @@ public class ManUrlExt
   }
 
   /**
-   * @return If the content of this URL is a JSON document, a JSON object reflecting the document.
+   * @return A JSON object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
+   * content is not a JSON document.
    *
    * @see manifold.api.json.Json#fromJson(String)
    */

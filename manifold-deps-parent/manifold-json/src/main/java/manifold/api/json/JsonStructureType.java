@@ -19,7 +19,7 @@ package manifold.api.json;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
+import manifold.api.json.schema.JsonEnumType;
 import manifold.api.json.schema.LazyRefJsonType;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.IBindingsBacked;
@@ -42,6 +42,7 @@ import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
 import manifold.util.JsonUtil;
+import manifold.util.ManEscapeUtil;
 import manifold.util.ManStringUtil;
 
 /**
@@ -54,6 +55,7 @@ public class JsonStructureType extends JsonSchemaType
   private Map<String, Set<IJsonType>> _unionMembers;
   private Map<String, Token> _memberLocations;
   private Map<String, IJsonParentType> _innerTypes;
+  private Set<String> _required;
   private Token _token;
 
   public JsonStructureType( JsonSchemaType parent, URL source, String name )
@@ -69,6 +71,7 @@ public class JsonStructureType extends JsonSchemaType
     _innerTypes = Collections.emptyMap();
     _unionMembers = Collections.emptyMap();
     _superTypes = Collections.emptyList();
+    _required = Collections.emptySet();
   }
 
   @Override
@@ -140,7 +143,7 @@ public class JsonStructureType extends JsonSchemaType
     }
     _superTypes.add( superType );
   }
-  public List<IJsonType> getSuperTypes()
+  private List<IJsonType> getSuperTypes()
   {
     if( !_superTypes.isEmpty() )
     {
@@ -224,7 +227,24 @@ public class JsonStructureType extends JsonSchemaType
   {
     return _membersByName;
   }
+  private Map<String, IJsonType> getAllMembers()
+  {
+    Map<String, IJsonType> allMembers = new HashMap<>( _membersByName );
+    for( IJsonType extended: getSuperTypes() )
+    {
+      if( extended instanceof JsonStructureType )
+      {
+        allMembers.putAll( ((JsonStructureType)extended).getMembers() );
+      }
+    }
+    return allMembers;
+  }
+  protected Map<String, Token> getMemberLocations()
+  {
+    return _memberLocations;
+  }
 
+  @SuppressWarnings("unused")
   public Map<String, IJsonParentType> getInnerTypes()
   {
     return _innerTypes;
@@ -247,7 +267,7 @@ public class JsonStructureType extends JsonSchemaType
         {
           // if the existing type is dynamic, override it with a more specific type,
           // otherwise the types disagree...
-          throw new RuntimeException( "Types disagree for '" + name + "' from array data: " + type.getName() + " vs: " + existingType.getName() );
+          throw new RuntimeException( "Types disagree for '" + name + "' from array data: " + existingType.getName() + " vs: " + existingType.getName() );
         }
       }
     }
@@ -277,7 +297,7 @@ public class JsonStructureType extends JsonSchemaType
     }
   }
 
-  public IJsonType findMemberType( String name )
+  private IJsonType findMemberType( String name )
   {
     return _membersByName.get( name );
   }
@@ -291,8 +311,15 @@ public class JsonStructureType extends JsonSchemaType
     _token = token;
   }
 
-  JsonStructureType merge( JsonStructureType other )
+  public IJsonType merge( IJsonType that )
   {
+    if( !(that instanceof JsonStructureType) || that instanceof JsonEnumType )
+    {
+      return null;
+    }
+
+    JsonStructureType other = (JsonStructureType)that;
+
     if( !getName().equals( other.getName() ) )
     {
       return null;
@@ -578,12 +605,9 @@ public class JsonStructureType extends JsonSchemaType
   {
     String typeName = getIdentifier();
 
-    indent( sb, indent );
-    sb.append( "static " ).append( typeName ).append( " create() {\n" );
-    indent( sb, indent );
-    sb.append( "  return (" ).append( typeName ).append( ")new " ).append( SimpleBindings.class.getTypeName() ).append( "();\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
+    // Add a static create(...) method having parameters corresonding with "required" properties not having
+    // a "default" value.
+    addCreateMethod( sb, indent, typeName );
 
     // Called reflectively from RuntimeMethods, this proxy and the default get/set method impls defined here enable the
     // JSON type manifold to avoid the overhead of dynamic proxy generation and compilation at runtime. Otherwise the
@@ -605,21 +629,21 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toJson(getBindings());\n" );
     indent( sb, indent );
-    sb.append( "}\n");
+    sb.append( "}\n" );
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml() {\n" );
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(getBindings());\n" );
     indent( sb, indent );
-    sb.append( "}\n");
+    sb.append( "}\n" );
 
     indent( sb, indent );
     sb.append( "default String" ).append( " toXml(String name) {\n" );
     indent( sb, indent );
     sb.append( "  return " ).append( ManBindingsExt.class.getName() ).append( ".toXml(getBindings(), name);\n" );
     indent( sb, indent );
-    sb.append( "}\n");
+    sb.append( "}\n" );
 
     if( !shouldRenderTopLevel( this ) )
     {
@@ -667,6 +691,81 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "    return (" ).append( typeName ).append( ")fromJsonUrl(file.toURI().toURL());\n" );
     indent( sb, indent );
     sb.append( "  } catch(Exception e) {throw new RuntimeException(e);}\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void addCreateMethod( StringBuilder sb, int indent, String typeName )
+  {
+    indent( sb, indent );
+    sb.append( "static " ).append( typeName ).append( " create(" );
+    int count = 0;
+    Set<String> allRequired = getAllRequired();
+    Map<String, IJsonType> allMembers = getAllMembers();
+    for( String param: allRequired )
+    {
+      IJsonType paramType = allMembers.get( param );
+      if( paramType.getDefaultValue() == null )
+      {
+        if( count++ > 0 )
+        {
+          sb.append( ", " );
+        }
+        //noinspection unused
+        String paramTypeName = getPropertyType( paramType );
+        //noinspection unused
+        String paramName = makeIdentifier( param, false );
+        sb.append( "$paramTypeName $paramName" );
+      }
+    }
+    sb.append( ") {\n" );
+    indent( sb, indent );
+
+    sb.append( "SimpleBindings bindings_ = new SimpleBindings();\n" );
+    indent( sb, indent );
+    for( String requiredProp: allRequired )
+    {
+      IJsonType paramType = allMembers.get( requiredProp );
+      if( paramType.getDefaultValue() == null )
+      {
+        indent( sb, indent );
+        //noinspection unused
+        String passedInParam = makeIdentifier( requiredProp, false );
+        sb.append( "bindings_.put(\"$requiredProp\", $passedInParam);\n" );
+      }
+    }
+    for( Map.Entry<String, IJsonType> entry: allMembers.entrySet() )
+    {
+      Object defaultValue = entry.getValue().getDefaultValue();
+      if( defaultValue != null )
+      {
+        indent( sb, indent + 2 );
+        sb.append( "bindings_.put(\"${entry.getKey()}\", " );
+        if( defaultValue instanceof Bindings )
+        {
+          sb.append( "Json.fromJson(\"" );
+          StringBuilder defValJson = new StringBuilder();
+          JsonUtil.toJson( defValJson, 0, defaultValue );
+          sb.append( ManEscapeUtil.escapeForJava( defValJson.toString() ) );
+          sb.append( "\")" );
+        }
+        else if( defaultValue instanceof List )
+        {
+          sb.append( "Json.fromJson(\"" );
+          StringBuilder defValJson = new StringBuilder();
+          JsonUtil.toJson( defValJson, 0, defaultValue );
+          sb.append( ManEscapeUtil.escapeForJava( defValJson.toString() ) );
+          sb.append( "\").get(\"value\")" );
+        }
+        else
+        {
+          JsonUtil.toJson( sb, 0, defaultValue );
+        }
+        sb.append( ");\n" );
+      }
+    }
+    indent( sb, indent + 2 );
+    sb.append( "return ($typeName)bindings_;\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }
@@ -756,6 +855,43 @@ public class JsonStructureType extends JsonSchemaType
       }
     }
     return !iter1.hasNext() && !iter2.hasNext();
+  }
+
+  @SuppressWarnings({"WeakerAccess", "unused"})
+  public boolean isRequired( String name )
+  {
+    if( _required.contains( name ) )
+    {
+      return true;
+    }
+    for( IJsonType extended: getSuperTypes() )
+    {
+      if( extended instanceof JsonStructureType && ((JsonStructureType)extended).isRequired( name ) )
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+  private Set<String> getAllRequired()
+  {
+    Set<String> allRequired = new HashSet<>( _required );
+    for( IJsonType extended: getSuperTypes() )
+    {
+      if( extended instanceof JsonStructureType )
+      {
+        allRequired.addAll( ((JsonStructureType)extended)._required );
+      }
+    }
+    return allRequired;
+  }
+  public void addRequired( Set<String> required )
+  {
+    if( _required.isEmpty() )
+    {
+      _required = new HashSet<>();
+    }
+    _required.addAll( required );
   }
 
   @Override

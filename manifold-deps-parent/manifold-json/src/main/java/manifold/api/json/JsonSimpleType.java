@@ -16,38 +16,39 @@
 
 package manifold.api.json;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import manifold.ext.RuntimeMethods;
+
 /**
  */
 public enum JsonSimpleType implements IJsonType
 {
-  String,
-  Boolean,
-  Character,
-  Byte,
-  Short,
-  Integer,
-  Long,
-  Float,
-  Double,
-  BigDecimal,
-  BigInteger;
+  String( String.class ),
+  Boolean( Boolean.class ),
+  Character( Character.class ),
+  Byte( Byte.class ),
+  Short( Short.class ),
+  Integer( Integer.class ),
+  Long( Long.class ),
+  Float( Float.class ),
+  Double( Double.class ),
+  BigInteger( BigInteger.class ),
+  BigDecimal( BigDecimal.class ),
+  Null( "null" );
 
-  @Override
-  public String getName()
+  private final Class<?> _javaClass;
+  private final String _identifier;
+
+  JsonSimpleType( Class<?> javaClass )
   {
-    return super.name();
+    _identifier = name();
+    _javaClass = javaClass;
   }
-
-  @Override
-  public String getIdentifier()
+  JsonSimpleType( String identifier )
   {
-    return getName();
-  }
-
-  @Override
-  public IJsonParentType getParent()
-  {
-    return null;
+    _identifier = identifier;
+    _javaClass = Void.class;
   }
 
   public static JsonSimpleType get( Object jsonObj )
@@ -60,13 +61,57 @@ public enum JsonSimpleType implements IJsonType
     return valueOf( JsonSimpleType.class, jsonObj.getClass().getSimpleName() );
   }
 
-  JsonSimpleType merge( JsonSimpleType other )
+  @Override
+  public String getName()
   {
-    if( this == JsonSimpleType.String ||
-        other == JsonSimpleType.String )
+    return name();
+  }
+
+  @Override
+  public String getIdentifier()
+  {
+    return _identifier;
+  }
+
+  @Override
+  public IJsonParentType getParent()
+  {
+    return null;
+  }
+
+  @Override
+  public Object getDefaultValue()
+  {
+    return null;
+  }
+  @Override
+  public IJsonType setDefaultValue( Object value )
+  {
+    value = RuntimeMethods.coerce( value, _javaClass );
+    return new JsonSimpleTypeWithDefault( this, value );
+  }
+
+  public IJsonType merge( IJsonType that )
+  {
+    if( !(that instanceof JsonSimpleType) )
+    {
+      return that.merge( this );
+    }
+
+    JsonSimpleType other = (JsonSimpleType)that;
+    if( this == String || other == String )
     {
       // String is compatible with all simple types
-      return JsonSimpleType.String;
+      return String;
+    }
+
+    if( this == Null )
+    {
+      return other;
+    }
+    if( other == Null )
+    {
+      return this;
     }
 
     switch( this )

@@ -48,4 +48,23 @@ public class DynamicType implements IJsonType
   {
     return null;
   }
+
+  @Override
+  public Object getDefaultValue()
+  {
+    return null;
+  }
+
+  @Override
+  public IJsonType setDefaultValue( Object value )
+  {
+    //## todo:
+    return null;
+  }
+
+  @Override
+  public IJsonType merge( IJsonType type )
+  {
+    return null;
+  }
 }

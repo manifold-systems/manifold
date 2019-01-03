@@ -18,6 +18,8 @@ package manifold.api.json.schema;
 
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
+import manifold.api.json.JsonSimpleType;
+import manifold.api.json.JsonSimpleTypeWithDefault;
 
 /**
  * This type facilitates mapping a Java type to a JSON {@code "format"} type such as {@code "date-time}.
@@ -28,6 +30,7 @@ public class JsonFormatType implements IJsonType
 {
   private final String _format;
   private final Class<?> _javaType;
+  private Object _defaultValue;
 
   JsonFormatType( String format, Class<?> javaType )
   {
@@ -60,6 +63,31 @@ public class JsonFormatType implements IJsonType
   @Override
   public IJsonParentType getParent()
   {
+    return null;
+  }
+
+  @Override
+  public Object getDefaultValue()
+  {
+    return _defaultValue;
+  }
+  @Override
+  public IJsonType setDefaultValue( Object value )
+  {
+    _defaultValue = value;
+    return this;
+  }
+
+  @Override
+  public JsonFormatType merge( IJsonType type )
+  {
+    if( type instanceof JsonSimpleType ||
+        type instanceof JsonSimpleTypeWithDefault ||
+        type instanceof JsonFormatType )
+    {
+      //## todo: maybe be smarter about merging two format types?
+      return this;
+    }
     return null;
   }
 

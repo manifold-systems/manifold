@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,13 +62,15 @@ public class JsonSchemaTransformer
   @DisableStringLiteralTemplates
   private static final String JSCH_REF = "$ref";
   private static final String JSCH_ENUM = "enum";
+  private static final String JSCH_CONST = "const";
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
   private static final String JSCH_ANY_OF = "anyOf";
-  private static final String JSCH_REQUIRED = "required";
+  static final String JSCH_REQUIRED = "required";
   static final String JSCH_DEFINITIONS = "definitions";
   static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_FORMAT = "format";
+  private static final String JSCH_DEFAULT = "default";
 
   private final IManifoldHost _host;
   private FqnCache<IJsonType> _typeByFqn;
@@ -246,6 +249,21 @@ public class JsonSchemaTransformer
     else
     {
       list = (List)value;
+    }
+    return list;
+  }
+
+  private static List getJSchema_Const( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_CONST );
+    List list;
+    if( value instanceof Pair )
+    {
+      list = Collections.singletonList( ((Pair)value ).getSecond() );
+    }
+    else
+    {
+      list = Collections.singletonList( value );
     }
     return list;
   }
@@ -476,16 +494,25 @@ public class JsonSchemaTransformer
     JsonFormatType formatType = jsonObj.containsKey( JSCH_FORMAT ) ? resolveFormatType( jsonObj ) : null;
     if( formatType != null )
     {
-      result = formatType;
+      result = addDefaultValue( jsonObj, formatType );
       cacheSimpleByFqn( parent, name, formatType );
     }
     else
     {
       boolean bRef = jsonObj.containsKey( JSCH_REF );
       boolean bEnum = jsonObj.containsKey( JSCH_ENUM );
+      boolean bConst = jsonObj.containsKey( JSCH_CONST );
       if( bEnum )
       {
-        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
+        result = addDefaultValue( jsonObj, deriveTypeFromEnum( parent, enclosing, name, jsonObj ) );
+        if( result != parent )
+        {
+          transferIssuesFromErrantType( parent, result, jsonObj );
+        }
+      }
+      else if( bConst )
+      {
+        result = addDefaultValue( jsonObj, deriveTypeFromConst( parent, enclosing, name, jsonObj ) );
         if( result != parent )
         {
           transferIssuesFromErrantType( parent, result, jsonObj );
@@ -507,7 +534,8 @@ public class JsonSchemaTransformer
         else
         {
           transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+          IJsonType refOrCombinationType = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+          result = refOrCombinationType == null ? null : addDefaultValue( jsonObj, refOrCombinationType );
           if( result != parent )
           {
             transferIssuesFromErrantType( parent, result, jsonObj );
@@ -519,32 +547,35 @@ public class JsonSchemaTransformer
         switch( Type.fromName( type ) )
         {
           case Object:
-            result = new JsonStructureType( parent, enclosing, name );
+            result = addDefaultValue( jsonObj, new JsonStructureType( parent, enclosing, name ) );
             transform = () -> ObjectTransformer.transform( this, (JsonStructureType)result, jsonObj );
             break;
           case Array:
-            result = new JsonListType( name, enclosing, parent );
+            result = addDefaultValue( jsonObj, new JsonListType( name, enclosing, parent ) );
             transform = () -> ArrayTransformer.transform( this, name, (JsonListType)result, jsonObj );
             break;
           case String:
-            result = JsonSimpleType.String;
+            result = addDefaultValue( jsonObj, JsonSimpleType.String );
             cacheSimpleByFqn( parent, name, result );
             break;
           case Number:
-            result = JsonSimpleType.Double;
+            result = addDefaultValue( jsonObj, JsonSimpleType.Double );
             cacheSimpleByFqn( parent, name, result );
             break;
           case Integer:
-            result = JsonSimpleType.Integer;
+            result = addDefaultValue( jsonObj, JsonSimpleType.Integer );
             cacheSimpleByFqn( parent, name, result );
             break;
           case Boolean:
-            result = JsonSimpleType.Boolean;
+            result = addDefaultValue( jsonObj, JsonSimpleType.Boolean );
+            cacheSimpleByFqn( parent, name, result );
+            break;
+          case Null:
+            result = JsonSimpleType.Null;
             cacheSimpleByFqn( parent, name, result );
             break;
           case Dynamic:
-          case Null:
-            result = DynamicType.instance();
+            result = addDefaultValue( jsonObj, DynamicType.instance() );
             cacheSimpleByFqn( parent, name, result );
             break;
           case Invalid:
@@ -568,6 +599,21 @@ public class JsonSchemaTransformer
     if( result instanceof JsonSchemaType )
     {
       ((JsonSchemaType)result).setJsonSchema();
+    }
+    return result;
+  }
+
+  private IJsonType addDefaultValue( Bindings jsonObj, IJsonType result )
+  {
+    boolean bDefault = jsonObj.containsKey( JSCH_DEFAULT );
+    if( bDefault )
+    {
+      Object defaultValue = jsonObj.get( JSCH_DEFAULT );
+      if( defaultValue instanceof Pair )
+      {
+        defaultValue = ((Pair)defaultValue).getSecond();
+      }
+      result = result.setDefaultValue( defaultValue );
     }
     return result;
   }
@@ -658,6 +704,18 @@ public class JsonSchemaTransformer
   private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
   {
     List<?> list = getJSchema_Enum( bindings );
+    return makeEnum( parent, enclosing, name, list );
+  }
+
+  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
+  {
+    // Note the "const" type is shorthand for a single element "enum" type
+    List<?> list = getJSchema_Const( bindings );
+    return makeEnum( parent, enclosing, name, list );
+  }
+
+  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list )
+  {
     if( list == null )
     {
       return null;
@@ -695,29 +753,7 @@ public class JsonSchemaTransformer
     {
       return null;
     }
-
-    JsonStructureType type = buildHierarchy( parent, enclosing, name, list );
-    if( type != null )
-    {
-      for( Object elem : list )
-      {
-        if( elem instanceof Pair )
-        {
-          elem = ((Pair)elem).getSecond();
-        }
-        if( elem instanceof Bindings )
-        {
-          Bindings elemBindings = (Bindings)elem;
-          Bindings properties = getJSchema_Properties( elemBindings );
-          if( properties != null )
-          {
-            ObjectTransformer.transform( this, type, elemBindings );
-          }
-        }
-      }
-    }
-
-    return type;
+    return buildHierarchy( parent, enclosing, name, list );
   }
 
   private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
@@ -751,7 +787,7 @@ public class JsonSchemaTransformer
       
       if( elem instanceof Bindings )
       {
-        if( !isTypeDescriptor( (Bindings)elem ) )
+        if( ((Bindings)elem).size() == 1 && ((Bindings)elem).containsKey( JSCH_REQUIRED ) )
         {
           continue;
         }
@@ -790,7 +826,7 @@ public class JsonSchemaTransformer
 
       if( elem instanceof Bindings )
       {
-        if( !isTypeDescriptor( (Bindings)elem ) )
+        if( ((Bindings)elem).size() == 1 && ((Bindings)elem).containsKey( JSCH_REQUIRED ) )
         {
           continue;
         }
@@ -821,12 +857,6 @@ public class JsonSchemaTransformer
       return type;
     }
     return null;
-  }
-
-  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-  private boolean isTypeDescriptor( Bindings elem )
-  {
-    return !(elem.size() == 1 && elem.containsKey( JSCH_REQUIRED ));
   }
 
   private IJsonType findReference( JsonSchemaType parent, URL enclosing, Bindings jsonObj )

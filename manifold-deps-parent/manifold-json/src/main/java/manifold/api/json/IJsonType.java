@@ -29,6 +29,11 @@ public interface IJsonType
 
   IJsonParentType getParent();
 
+  Object getDefaultValue();
+  IJsonType setDefaultValue( Object value );
+
+  IJsonType merge( IJsonType type );
+
   default List<IJsonType> getDefinitions()
   {
     return Collections.emptyList();

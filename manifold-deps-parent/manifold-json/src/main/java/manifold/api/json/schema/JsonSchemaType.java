@@ -39,6 +39,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   private List<JsonIssue> _issues;
   private boolean _bSchemaType;
   private ResolveState _resolveState;
+  private Object _defaultValue;
 
   enum ResolveState
   {
@@ -154,6 +155,18 @@ public abstract class JsonSchemaType implements IJsonParentType
   protected void setJsonSchema()
   {
     _bSchemaType = true;
+  }
+
+  @Override
+  public Object getDefaultValue()
+  {
+    return _defaultValue;
+  }
+  @Override
+  public IJsonType setDefaultValue( Object value )
+  {
+    _defaultValue = value;
+    return this;
   }
 
   protected boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )

@@ -99,6 +99,26 @@ public class JsonUtil
     sb.append( "}" );
   }
 
+  public static void toJson( StringBuilder target, int indent, Object value )
+  {
+    if( value instanceof Pair )
+    {
+      value = ((Pair)value).getSecond();
+    }
+    if( value instanceof Bindings )
+    {
+      toJson( ((Bindings)value), target, indent + 2 );
+    }
+    else if( value instanceof List )
+    {
+      listToJson( target, indent, (List)value );
+    }
+    else
+    {
+      appendValue( target, value );
+    }
+  }
+
   private static boolean isNewLine( StringBuilder sb )
   {
     return sb.length() > 0 && sb.charAt( sb.length() - 1 ) == '\n';
@@ -180,7 +200,8 @@ public class JsonUtil
              comp instanceof Float ||
              comp instanceof Short ||
              comp instanceof Character ||
-             comp instanceof Byte )
+             comp instanceof Byte ||
+             comp instanceof Boolean )
     {
       sb.append( comp );
     }
