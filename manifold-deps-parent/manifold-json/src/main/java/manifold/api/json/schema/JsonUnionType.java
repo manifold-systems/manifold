@@ -27,12 +27,24 @@ import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.Json;
 import manifold.api.json.JsonStructureType;
+import manifold.util.concurrent.LocklessLazyVar;
 
 /**
  */
 public class JsonUnionType extends JsonStructureType
 {
   private Map<String, IJsonType> _constituentTypes;
+  private LocklessLazyVar<JsonEnumType> _collapsedEnumType = LocklessLazyVar.make( () -> {
+    if( !getMembers().isEmpty() )
+    {
+      return null;
+    }
+    if( getConstituents().stream().allMatch( e -> e instanceof JsonEnumType ) )
+    {
+      return makeEnumType( getConstituents() );
+    }
+    return null;
+  } );
 
   public JsonUnionType( JsonSchemaType parent, URL source, String name )
   {
@@ -101,5 +113,22 @@ public class JsonUnionType extends JsonStructureType
     }
     addConstituent( mergedType.getName(), mergedType );
     return this;
+  }
+
+  public JsonEnumType getCollapsedEnumType()
+  {
+    return _collapsedEnumType.get();
+  }
+
+  @Override
+  public void render( StringBuilder sb, int indent, boolean mutable )
+  {
+    JsonEnumType collapsedEnumType = getCollapsedEnumType();
+    if( collapsedEnumType != null )
+    {
+      collapsedEnumType.render( sb, indent, mutable );
+      return;
+    }
+    super.render( sb, indent, mutable );
   }
 }

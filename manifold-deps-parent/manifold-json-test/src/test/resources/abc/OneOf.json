@@ -56,6 +56,9 @@
     },
     "topLevelArray": {
       "$ref": "OneOf_TopLevel_Array.json"
+    },
+    "topLevelEnumArray": {
+      "$ref": "Enum_TopLevel_Array.json"
     }
   },
   "oneOf": [

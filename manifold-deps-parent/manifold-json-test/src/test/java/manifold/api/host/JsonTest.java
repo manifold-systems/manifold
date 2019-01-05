@@ -10,6 +10,7 @@ import abc.AllOf_Hierarchy;
 import abc.OneOf;
 import abc.OneOf_TopLevel;
 import abc.OneOf_TopLevel_Array;
+import abc.Enum_TopLevel_Array;
 import abc.StrangeUriFormats;
 import abc.MixedArray;
 import abc.HasEnum;
@@ -27,10 +28,12 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import junit.framework.TestCase;
+import org.junit.Assert;
 
 
 import static abc.Person.*;
 import static abc.Person.Address.*;
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  */
@@ -103,6 +106,10 @@ public class JsonTest extends TestCase
     List<OneOf_TopLevel_Array.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
     assertSame( topLevelArrayOption1, resTopLevelArrayOption1 );
     assertSame( topLevelArrayOption1, oneOf.getTopLevelArray() );
+
+    List<Enum_TopLevel_Array> enumArray = Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.e );
+    oneOf.setTopLevelEnumArray( enumArray );
+    assertSame( enumArray, oneOf.getTopLevelEnumArray() );
   }
 
   public void testAllOf()
@@ -297,14 +304,64 @@ public class JsonTest extends TestCase
     assertEquals( HasEnum.MyEnum.red, hasEnum.getFoo() );
     assertEquals( "red", ((Map)hasEnum).get( "foo" ) );
 
-//    assertEquals( 7, HasEnum.baz.values().length );
-//    assertEquals( "red", HasEnum.baz.red.name() );
-//    assertEquals( "blue", HasEnum.baz.blue.name() );
-//    assertEquals( "oraange", HasEnum.baz.orange.name() );
-//    assertEquals( "_6", HasEnum.baz._6.name() );
-//    assertEquals( "_3", HasEnum.baz._3.name() );
-//    assertEquals( "_9_0", HasEnum.baz._9_0.name() );
-//    assertEquals( "null", HasEnum.baz.Null.name() );
+    assertEquals( 7, HasEnum.baz.values().length );
+    assertEquals( "red", HasEnum.baz.red.name() );
+    assertEquals( "blue", HasEnum.baz.blue.name() );
+    assertEquals( "orange", HasEnum.baz.orange.name() );
+    assertEquals( "_6", HasEnum.baz._6.name() );
+    assertEquals( "_3", HasEnum.baz._3.name() );
+    assertEquals( "_9_0", HasEnum.baz._9_0.name() );
+    assertEquals( "Null", HasEnum.baz.Null.name() );
+
+    assertEquals( 7, HasEnum.bazAnyOf.values().length );
+    assertEquals( "red", HasEnum.bazAnyOf.red.name() );
+    assertEquals( "blue", HasEnum.bazAnyOf.blue.name() );
+    assertEquals( "orange", HasEnum.bazAnyOf.orange.name() );
+    assertEquals( "_6", HasEnum.bazAnyOf._6.name() );
+    assertEquals( "_3", HasEnum.bazAnyOf._3.name() );
+    assertEquals( "_9_0", HasEnum.bazAnyOf._9_0.name() );
+    assertEquals( "Null", HasEnum.bazAnyOf.Null.name() );
+
+    assertEquals( 7, HasEnum.bazOneOf.values().length );
+    assertEquals( "red", HasEnum.bazOneOf.red.name() );
+    assertEquals( "blue", HasEnum.bazOneOf.blue.name() );
+    assertEquals( "orange", HasEnum.bazOneOf.orange.name() );
+    assertEquals( "_6", HasEnum.bazOneOf._6.name() );
+    assertEquals( "_3", HasEnum.bazOneOf._3.name() );
+    assertEquals( "_9_0", HasEnum.bazOneOf._9_0.name() );
+    assertEquals( "Null", HasEnum.bazOneOf.Null.name() );
+
+    assertEquals( 7, HasEnum.justRefs.values().length );
+    assertEquals( "red", HasEnum.justRefs.red.name() );
+    assertEquals( "orange", HasEnum.justRefs.orange.name() );
+    assertEquals( "_6", HasEnum.justRefs._6.name() );
+    assertEquals( "_9_0", HasEnum.justRefs._9_0.name() );
+    assertEquals( "Null", HasEnum.justRefs.Null.name() );
+    assertEquals( "stuff", HasEnum.justRefs.stuff.name() );
+    assertEquals( "things", HasEnum.justRefs.things.name() );
+
+    assertEquals( 7, HasEnum.justRefsAnyOf.values().length );
+    assertEquals( "red", HasEnum.justRefsAnyOf.red.name() );
+    assertEquals( "orange", HasEnum.justRefsAnyOf.orange.name() );
+    assertEquals( "_6", HasEnum.justRefsAnyOf._6.name() );
+    assertEquals( "_9_0", HasEnum.justRefsAnyOf._9_0.name() );
+    assertEquals( "Null", HasEnum.justRefsAnyOf.Null.name() );
+    assertEquals( "stuff", HasEnum.justRefsAnyOf.stuff.name() );
+    assertEquals( "things", HasEnum.justRefsAnyOf.things.name() );
+
+    assertEquals( 7, HasEnum.justRefsOneOf.values().length );
+    assertEquals( "red", HasEnum.justRefsOneOf.red.name() );
+    assertEquals( "orange", HasEnum.justRefsOneOf.orange.name() );
+    assertEquals( "_6", HasEnum.justRefsOneOf._6.name() );
+    assertEquals( "_9_0", HasEnum.justRefsOneOf._9_0.name() );
+    assertEquals( "Null", HasEnum.justRefsOneOf.Null.name() );
+    assertEquals( "stuff", HasEnum.justRefsOneOf.stuff.name() );
+    assertEquals( "things", HasEnum.justRefsOneOf.things.name() );
+
+    assertEquals( 5, Enum_TopLevel_Array.values().length );
+    List<Enum_TopLevel_Array> enumArray =
+      Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.b, Enum_TopLevel_Array.c, Enum_TopLevel_Array.d, Enum_TopLevel_Array.e );
+    assertArrayEquals( Enum_TopLevel_Array.values(), enumArray.toArray( new Enum_TopLevel_Array[0] ) );
   }
 
   public void testDateTimeFormat()

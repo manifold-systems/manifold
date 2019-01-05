@@ -31,7 +31,6 @@ import manifold.api.json.JsonSimpleTypeWithDefault;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.ext.api.IBindingType;
-import manifold.util.DebugLogUtil;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
 
@@ -91,18 +90,20 @@ public class JsonEnumType extends JsonStructureType
     }
   }
 
-  private JsonEnumType( JsonEnumType enum1, JsonEnumType enum2 )
+  public JsonEnumType( JsonEnumType enum1, JsonEnumType enum2, JsonSchemaType parent, String name )
   {
-    super( enum1.getParent(), enum1.getFile(), enum1.getName() );
+    super( parent, enum1.getFile(), name );
 
     Map<String, IJsonType> members = new HashMap<>( enum1.getMembers() );
-    members.putAll( enum2.getMembers() );
     Map<String, Token> memberLocations = new HashMap<>( enum1.getMemberLocations() );
-    memberLocations.putAll( enum2.getMemberLocations() );
-    members.forEach( (m, v) -> addMember( m, v, memberLocations.get( m ) ) );
-
     Set<Object> enumValues = new HashSet<>( enum1._enumValues );
-    enumValues.addAll( enum2._enumValues );
+    if( enum2 != null )
+    {
+      members.putAll( enum2.getMembers() );
+      memberLocations.putAll( enum2.getMemberLocations() );
+      enumValues.addAll( enum2._enumValues );
+    }
+    members.forEach( (m, v) -> addMember( m, v, memberLocations.get( m ) ) );
     _enumValues = new ArrayList<>( enumValues );
   }
 
@@ -124,7 +125,7 @@ public class JsonEnumType extends JsonStructureType
       return null;
     }
 
-    return new JsonEnumType( this, (JsonEnumType)that );
+    return new JsonEnumType( this, (JsonEnumType)that, getParent(), getName() );
   }
 
   @Override
@@ -194,7 +195,5 @@ public class JsonEnumType extends JsonStructureType
     indent( sb, indent );
 
     sb.append( "}\n" );
-
-    DebugLogUtil.log( "c:\\temp\\enumlog.log", sb.toString(), true );
   }
 }

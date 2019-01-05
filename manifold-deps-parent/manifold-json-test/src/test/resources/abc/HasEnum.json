@@ -6,6 +6,9 @@
   "definitions": {
     "MyEnum": {
       "enum": ["red", "orange", 6, 9.0, null]
+    },
+    "MyEnum2": {
+      "enum": ["stuff", "things"]
     }
   },
   "properties": {
@@ -14,6 +17,68 @@
     },
     "bar" : {
       "enum": ["blue", "green", 5, 4.0, null]
+    },
+    "baz": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "enum": ["blue", "orange", 6, 3]
+        }
+      ]
+    },
+    "justRefs": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "$ref": "#/definitions/MyEnum2"
+        }
+      ]
+    },
+
+    "bazAnyOf": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "enum": ["blue", "orange", 6, 3]
+        }
+      ]
+    },
+    "bazOneOf": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "enum": ["blue", "orange", 6, 3]
+        }
+      ]
+    },
+
+    "justRefsAnyOf": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "$ref": "#/definitions/MyEnum2"
+        }
+      ]
+    },
+    "justRefsOneOf": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/MyEnum"
+        },
+        {
+          "$ref": "#/definitions/MyEnum2"
+        }
+      ]
     }
   }
 }

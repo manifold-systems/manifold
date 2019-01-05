@@ -778,39 +778,66 @@ public class JsonSchemaTransformer
   private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list )
   {
     JsonStructureType type = null;
+    boolean hasType = false;
+    int i = 0;
     for( Object elem : list )
     {
       if( elem instanceof Pair )
       {
         elem = ((Pair)elem).getSecond();
       }
-      
+
       if( elem instanceof Bindings )
       {
-        if( ((Bindings)elem).size() == 1 && ((Bindings)elem).containsKey( JSCH_REQUIRED ) )
+        Bindings elemBindings = (Bindings)elem;
+
+        if( elemBindings.size() == 1 && elemBindings.containsKey( JSCH_REQUIRED ) )
         {
           continue;
         }
 
-        Bindings elemBindings = (Bindings)elem;
-        IJsonType ref = findReference( parent, enclosing, elemBindings );
+        type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
+
+        IJsonType ref = findReference( type, enclosing, elemBindings );
         if( ref != null )
         {
-          type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
+          if( !hasType )
+          {
+            ObjectTransformer.transform( this, type, elemBindings );
+            hasType = true;
+          }
           type.addSuper( ref );
+        }
+        else if( elemBindings.containsKey( JSCH_ENUM ) )
+        {
+          if( !hasType )
+          {
+            ObjectTransformer.transform( this, type, elemBindings );
+            hasType = true;
+          }
+
+          IJsonType enumType = addDefaultValue( elemBindings, deriveTypeFromEnum( type, enclosing, "enum"+i++, elemBindings ) );
+          if( enumType != parent )
+          {
+            transferIssuesFromErrantType( parent, enumType, elemBindings );
+          }
+          // Note enunType can't really be a super type. Basically if any types in an "allOf" are enum, they all have
+          // to be, thus the code gen logic can turn this structure type into a single enum type collapsing all enums
+          // into one. This includes any $ref enum types that may be super types.
+          type.addSuper( enumType );
         }
         else
         {
           Bindings properties = getJSchema_Properties( elemBindings );
           if( properties != null )
           {
-            type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
             ObjectTransformer.transform( this, type, elemBindings );
+            hasType = true;
           }
         }
       }
     }
-    return type;
+    return hasType ? type : null;
   }
 
   private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list )

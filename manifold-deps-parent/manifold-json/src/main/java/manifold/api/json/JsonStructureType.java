@@ -16,6 +16,7 @@
 
 package manifold.api.json;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import javax.script.Bindings;
@@ -360,6 +361,13 @@ public class JsonStructureType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
+    JsonEnumType enumType = getAllOfEnumType();
+    if( enumType != null )
+    {
+      enumType.render( sb, indent, mutable );
+      return;
+    }
+
     if( getParent() != null )
     {
       sb.append( '\n' );
@@ -414,50 +422,7 @@ public class JsonStructureType extends JsonSchemaType
         indent( sb, indent + 2 );
         sb.append( "}\n" );
       }
-      Set<IJsonType> union = _unionMembers.get( key );
-      if( union != null )
-      {
-        for( IJsonType constituentType : union )
-        {
-          sb.append( '\n' );
-          String specificPropertyType = getConstituentQn( constituentType, type );
-          addSourcePositionAnnotation( sb, indent + 2, key );
-          if( constituentType instanceof JsonSchemaType )
-          {
-            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
-          }
-          identifier = addActualNameAnnotation( sb, indent + 2, key, true );
-          indent( sb, indent + 2 );
-          String unionName = makeMemberIdentifier( constituentType );
-          sb.append( "default $specificPropertyType  get" ).append( identifier ).append( "As" ).append( unionName ).append( "() {\n" );
-          indent( sb, indent + 4 );
-          if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
-          {
-            sb.append( "return ($specificPropertyType)getBindings().get(\"$key\");\n" );
-          }
-          else
-          {
-            sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${specificPropertyType}.class);\n" );
-          }
-          indent( sb, indent + 2 );
-          sb.append( "}\n");
-          if( mutable )
-          {
-            addSourcePositionAnnotation( sb, indent + 2, key );
-            if( constituentType instanceof JsonSchemaType )
-            {
-              addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
-            }
-            addActualNameAnnotation( sb, indent + 2, key, true );
-            indent( sb, indent + 2 );
-            sb.append( "default void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value) {\n" );
-            indent( sb, indent + 4 );
-            sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(getBindings(), ${'$'}value));\n" );
-            indent( sb, indent + 2 );
-            sb.append( "}\n" );
-          }
-        }
-      }
+      renderUnionAccessors( sb, indent, mutable, key, type );
     }
     for( IJsonParentType child : _innerTypes.values() )
     {
@@ -476,6 +441,96 @@ public class JsonStructureType extends JsonSchemaType
     }
     indent( sb, indent );
     sb.append( "}\n" );
+  }
+
+  private void renderUnionAccessors( StringBuilder sb, int indent, boolean mutable, String key, IJsonType type )
+  {
+    if( isCollapsedUnionEnum( type ) )
+    {
+      return;
+    }
+
+    String identifier;
+    Set<IJsonType> union = _unionMembers.get( key );
+    if( union != null )
+    {
+      for( IJsonType constituentType : union )
+      {
+        sb.append( '\n' );
+        String specificPropertyType = getConstituentQn( constituentType, type );
+        addSourcePositionAnnotation( sb, indent + 2, key );
+        if( constituentType instanceof JsonSchemaType )
+        {
+          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+        }
+        identifier = addActualNameAnnotation( sb, indent + 2, key, true );
+        indent( sb, indent + 2 );
+        String unionName = makeMemberIdentifier( constituentType );
+        sb.append( "default $specificPropertyType  get" ).append( identifier ).append( "As" ).append( unionName ).append( "() {\n" );
+        indent( sb, indent + 4 );
+        if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
+        {
+          sb.append( "return ($specificPropertyType)getBindings().get(\"$key\");\n" );
+        }
+        else
+        {
+          sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${specificPropertyType}.class);\n" );
+        }
+        indent( sb, indent + 2 );
+        sb.append( "}\n");
+        if( mutable )
+        {
+          addSourcePositionAnnotation( sb, indent + 2, key );
+          if( constituentType instanceof JsonSchemaType )
+          {
+            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+          }
+          addActualNameAnnotation( sb, indent + 2, key, true );
+          indent( sb, indent + 2 );
+          sb.append( "default void set" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value) {\n" );
+          indent( sb, indent + 4 );
+          sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(getBindings(), ${'$'}value));\n" );
+          indent( sb, indent + 2 );
+          sb.append( "}\n" );
+        }
+      }
+    }
+  }
+
+  private boolean isCollapsedUnionEnum( IJsonType type )
+  {
+    while( type instanceof JsonListType )
+    {
+      type = ((JsonListType)type).getComponentType();
+    }
+    JsonEnumType enumType = type instanceof JsonUnionType ? ((JsonUnionType)type).getCollapsedEnumType() : null;
+    return enumType != null;
+  }
+
+  private JsonEnumType getAllOfEnumType()
+  {
+    if( !getMembers().isEmpty() )
+    {
+      return null;
+    }
+
+    if( getSuperTypes().stream().allMatch( e -> e instanceof JsonEnumType ) )
+    {
+      return makeEnumType( getSuperTypes() );
+    }
+    return null;
+  }
+
+  protected JsonEnumType makeEnumType( Collection<? extends IJsonType> types )
+  {
+    JsonEnumType result = null;
+    JsonEnumType prev = null;
+    for( IJsonType type: types )
+    {
+      result = new JsonEnumType( (JsonEnumType)type, prev, getParent(), getName() );
+      prev = result;
+    }
+    return result;
   }
 
   private String getConstituentQn( IJsonType constituentType, IJsonType propertyType )
@@ -498,7 +553,8 @@ public class JsonStructureType extends JsonSchemaType
     }
     if( propertyType instanceof JsonUnionType )
     {
-      return Object.class.getSimpleName();
+      JsonEnumType enumType = ((JsonUnionType)propertyType).getCollapsedEnumType();
+      return enumType != null ? enumType.getIdentifier() : Object.class.getSimpleName();
     }
     return propertyType.getIdentifier();
   }
