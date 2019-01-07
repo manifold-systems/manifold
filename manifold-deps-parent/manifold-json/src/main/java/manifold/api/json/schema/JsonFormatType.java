@@ -18,8 +18,7 @@ package manifold.api.json.schema;
 
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
-import manifold.api.json.JsonSimpleType;
-import manifold.api.json.JsonSimpleTypeWithDefault;
+import manifold.api.json.JsonBasicType;
 
 /**
  * This type facilitates mapping a Java type to a JSON {@code "format"} type such as {@code "date-time}.
@@ -30,12 +29,13 @@ public class JsonFormatType implements IJsonType
 {
   private final String _format;
   private final Class<?> _javaType;
-  private Object _defaultValue;
+  private final TypeAttributes _typeAttributes;
 
-  JsonFormatType( String format, Class<?> javaType )
+  JsonFormatType( String format, Class<?> javaType, TypeAttributes typeAttributes )
   {
     _format = format;
     _javaType = javaType;
+    _typeAttributes = typeAttributes;
   }
 
   /**
@@ -67,22 +67,24 @@ public class JsonFormatType implements IJsonType
   }
 
   @Override
-  public Object getDefaultValue()
+  public TypeAttributes getTypeAttributes()
   {
-    return _defaultValue;
+    return _typeAttributes;
   }
   @Override
-  public IJsonType setDefaultValue( Object value )
+  public IJsonType copyWithAttributes( TypeAttributes attributes )
   {
-    _defaultValue = value;
-    return this;
+    if( getTypeAttributes().equals( attributes ) )
+    {
+      return this;
+    }
+    return new JsonFormatType( _format, _javaType, TypeAttributes.merge( getTypeAttributes(), attributes ) );
   }
 
   @Override
   public JsonFormatType merge( IJsonType type )
   {
-    if( type instanceof JsonSimpleType ||
-        type instanceof JsonSimpleTypeWithDefault ||
+    if( type instanceof JsonBasicType ||
         type instanceof JsonFormatType )
     {
       //## todo: maybe be smarter about merging two format types?

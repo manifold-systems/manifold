@@ -105,7 +105,7 @@ class ObjectTransformer
           bindings = (Bindings)value;
         }
 
-        IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings );
+        IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings, null );
         _type.addMember( name, type, token );
       }
       addRequired();

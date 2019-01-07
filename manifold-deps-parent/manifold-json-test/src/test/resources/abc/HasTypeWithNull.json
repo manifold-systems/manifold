@@ -1,0 +1,140 @@
+{
+  "$id": "https://example.com/restapi/HasTypeWithNull.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasTypeWithNull",
+  "type": "object",
+  "definitions": {
+    "NullableString": {
+      "type": ["string", "null"]
+    },
+    "NullableDate": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "NullableNumber": {
+      "type": ["number", "null"]
+    },
+    "NullableTimestamp": {
+      "type": ["number", "null"],
+      "format": "utc-millisec"
+    },
+
+    "NullableString_oneOf": {
+      "oneOf": [
+        {"type": "string" },
+        {"type": "null"}
+      ]
+    },
+    "NullableDate_oneOf": {
+      "oneOf": [
+        {"type": "string", "format": "date-time"},
+        {"type": "null"}
+      ]
+    },
+    "NullableNumber_oneOf": {
+      "oneOf": [
+        {"type": "number"},
+        {"type": "null"}
+      ]
+    },
+    "NullableTimestamp_oneOf": {
+      "oneOf": [
+        {"type": "number", "format": "utc-millisec"},
+        {"type": "null"}
+      ]
+    },
+
+    "NullableObject": {
+      "type": ["object", "null"],
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "NullableObject_oneOf": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "NullableObject_OpenAPI": {
+      "type": "object",
+      "nullable": true,
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "NullableList": {
+      "type": ["array", "null"],
+      "items": {"$ref": "#/definitions/NullableNumber"}
+    },
+    "NullableList_oneOf": {
+      "oneOf": [
+        {"type": "array", "items": {"$ref": "#/definitions/NullableNumber"}},
+        {"type": "null"}
+      ]
+    }
+  },
+  "properties": {
+    "nullableString" : {
+      "$ref": "#/definitions/NullableString"
+    },
+    "nullableDate" : {
+      "$ref": "#/definitions/NullableDate"
+    },
+    "nullableNumber" : {
+      "$ref": "#/definitions/NullableNumber"
+    },
+    "nullableTimestamp" : {
+      "$ref": "#/definitions/NullableTimestamp"
+    },
+
+    "nullableString_oneOf" : {
+      "$ref": "#/definitions/NullableString_oneOf"
+    },
+    "nullableDate_oneOf" : {
+      "$ref": "#/definitions/NullableDate_oneOf"
+    },
+    "nullableNumber_oneOf" : {
+      "$ref": "#/definitions/NullableNumber_oneOf"
+    },
+    "nullableTimestamp_oneOf" : {
+      "$ref": "#/definitions/NullableTimestamp_oneOf"
+    },
+
+    "nullableDate_inline": {
+      "type": ["string","null"],
+      "format": "date-time"
+    },
+
+    "nullableList": {
+      "$ref": "#/definitions/NullableList"
+    },
+    "nullableList_oneOf": {
+      "$ref": "#/definitions/NullableList_oneOf"
+    },
+
+    "name": {
+      "type": "string"
+    },
+    "nullableName": {
+      "type": ["string", "null"]
+    },
+    "nullableName_OpenAPI": {
+      "type": "string",
+      "nullable": true
+    }
+  }
+}

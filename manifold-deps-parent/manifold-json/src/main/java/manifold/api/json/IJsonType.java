@@ -18,6 +18,7 @@ package manifold.api.json;
 
 import java.util.Collections;
 import java.util.List;
+import manifold.api.json.schema.TypeAttributes;
 
 /**
  */
@@ -29,8 +30,8 @@ public interface IJsonType
 
   IJsonParentType getParent();
 
-  Object getDefaultValue();
-  IJsonType setDefaultValue( Object value );
+  TypeAttributes getTypeAttributes();
+  IJsonType copyWithAttributes( TypeAttributes attributes );
 
   IJsonType merge( IJsonType type );
 

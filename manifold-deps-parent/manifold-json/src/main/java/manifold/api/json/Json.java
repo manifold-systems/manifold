@@ -211,7 +211,7 @@ public class Json
     }
     else
     {
-      type = JsonSimpleType.get( jsonObj );
+      type = JsonBasicType.get( jsonObj );
     }
     if( parent == null && type instanceof JsonSchemaType )
     {

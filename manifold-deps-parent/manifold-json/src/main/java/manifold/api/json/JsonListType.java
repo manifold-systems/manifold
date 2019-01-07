@@ -30,26 +30,27 @@ import manifold.api.json.schema.LazyRefJsonType;
  */
 public class JsonListType extends JsonSchemaType
 {
-  private IJsonType _componentType;
+  private IJsonType[] _componentType; // using one elem array b/c clones need to reflect this value after it is reassigned
   private Map<String, IJsonParentType> _innerTypes;
 
   public JsonListType( String label, URL source, JsonSchemaType parent )
   {
     super( label, source, parent );
     _innerTypes = Collections.emptyMap();
+    _componentType = new IJsonType[1];
   }
 
   @Override
   protected void resolveRefsImpl()
   {
     super.resolveRefsImpl();
-    if( _componentType instanceof JsonSchemaType )
+    if( _componentType[0] instanceof JsonSchemaType )
     {
-      ((JsonSchemaType)_componentType).resolveRefs();
+      ((JsonSchemaType)_componentType[0]).resolveRefs();
     }
-    else if( _componentType instanceof LazyRefJsonType )
+    else if( _componentType[0] instanceof LazyRefJsonType )
     {
-      _componentType = ((LazyRefJsonType)_componentType).resolve();
+      _componentType[0] = ((LazyRefJsonType)_componentType[0]).resolve();
     }
     for( Map.Entry<String, IJsonParentType> entry : new HashSet<>( _innerTypes.entrySet() ) )
     {
@@ -78,13 +79,13 @@ public class JsonListType extends JsonSchemaType
 
   private String getComponentTypeName()
   {
-    if( _componentType == null || _componentType instanceof LazyRefJsonType )
+    if( _componentType[0] == null || _componentType[0] instanceof LazyRefJsonType )
     {
       // can happen if asked before this list type is fully configured
       return "_undefined_";
     }
 
-    return _componentType instanceof JsonUnionType ? "Object" : _componentType.getIdentifier();
+    return _componentType[0] instanceof JsonUnionType ? "Object" : _componentType[0].getIdentifier();
   }
 
   public String getIdentifier()
@@ -112,9 +113,9 @@ public class JsonListType extends JsonSchemaType
     IJsonType innerType = _innerTypes.get( name );
     if( innerType == null )
     {
-      if( _componentType instanceof IJsonParentType )
+      if( _componentType[0] instanceof IJsonParentType )
       {
-        innerType = ((IJsonParentType)_componentType).findChild( name );
+        innerType = ((IJsonParentType)_componentType[0]).findChild( name );
       }
       if( innerType == null )
       {
@@ -135,20 +136,22 @@ public class JsonListType extends JsonSchemaType
     return innerType;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public IJsonType getComponentType()
   {
-    return _componentType;
+    return _componentType[0];
   }
 
   public void setComponentType( IJsonType compType )
   {
-    if( _componentType != null && _componentType != compType )
+    if( _componentType[0] != null && _componentType[0] != compType )
     {
-      throw new IllegalStateException( "Component type already set to: " + _componentType.getIdentifier() + ", which is not the same as: " + compType.getIdentifier() );
+      throw new IllegalStateException( "Component type already set to: " + _componentType[0].getIdentifier() + ", which is not the same as: " + compType.getIdentifier() );
     }
-    _componentType = compType;
+    _componentType[0] = compType;
   }
 
+  @SuppressWarnings("unused")
   public Map<String, IJsonParentType> getInnerTypes()
   {
     return _innerTypes;
@@ -208,7 +211,7 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_componentType.equalsStructurally( that._componentType ) )
+    if( !_componentType[0].equalsStructurally( that._componentType[0] ) )
     {
       return false;
     }
@@ -239,7 +242,7 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_componentType.equals( that._componentType ) )
+    if( !_componentType[0].equals( that._componentType[0] ) )
     {
       return false;
     }
@@ -249,7 +252,7 @@ public class JsonListType extends JsonSchemaType
   @Override
   public int hashCode()
   {
-    int result = _componentType.hashCode();
+    int result = _componentType[0].hashCode();
     result = 31 * result + _innerTypes.hashCode();
     return result;
   }

@@ -94,9 +94,10 @@ class ArrayTransformer
     }
     if( items instanceof List )
     {
+      Boolean nullable = _schemaTx.isNullable( (List)items );
       for( Object elem : (List)items )
       {
-        IJsonType csr = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)elem );
+        IJsonType csr = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)elem, nullable );
         if( componentType == null )
         {
           componentType = csr;
@@ -110,7 +111,7 @@ class ArrayTransformer
     }
     else if( items instanceof Bindings )
     {
-      componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items );
+      componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items, null );
     }
     else if( items == null )
     {

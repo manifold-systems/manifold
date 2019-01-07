@@ -24,11 +24,12 @@ import manifold.api.json.IJsonType;
 public class LazyRefJsonType implements IJsonType
 {
   private final Supplier<IJsonType> _supplier;
-  private Object _defaultValue;
+  private TypeAttributes _typeAttributes;
 
   LazyRefJsonType( Supplier<IJsonType> supplier )
   {
     _supplier = supplier;
+    _typeAttributes = new TypeAttributes( (Boolean)null, null );
   }
 
   public IJsonType resolve()
@@ -38,11 +39,25 @@ public class LazyRefJsonType implements IJsonType
     {
       type = ((LazyRefJsonType)type).resolve();
     }
-    if( _defaultValue != null )
-    {
-      type.setDefaultValue( _defaultValue );
-    }
+    type = type.copyWithAttributes( _typeAttributes.copy() );
     return type;
+  }
+
+  @Override
+  public TypeAttributes getTypeAttributes()
+  {
+    return _typeAttributes;
+  }
+  @Override
+  public LazyRefJsonType copyWithAttributes( TypeAttributes attributes )
+  {
+    if( _typeAttributes.equals( attributes ) )
+    {
+      return this;
+    }
+    LazyRefJsonType copy = new LazyRefJsonType( _supplier );
+    copy._typeAttributes = TypeAttributes.merge( copy._typeAttributes, attributes );
+    return copy;
   }
 
   @Override
@@ -61,18 +76,6 @@ public class LazyRefJsonType implements IJsonType
   public IJsonParentType getParent()
   {
     throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Object getDefaultValue()
-  {
-    return _defaultValue;
-  }
-  @Override
-  public IJsonType setDefaultValue( Object value )
-  {
-    _defaultValue = value;
-    return this;
   }
 
   @Override

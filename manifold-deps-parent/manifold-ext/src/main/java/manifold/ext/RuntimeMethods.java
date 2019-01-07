@@ -123,6 +123,10 @@ public class RuntimeMethods
   {
     if( value == null )
     {
+      if( type.isPrimitive() )
+      {
+        return defaultPrimitiveValue( type );
+      }
       return null;
     }
 
@@ -199,9 +203,47 @@ public class RuntimeMethods
     return value;
   }
 
+  private static Object defaultPrimitiveValue( Class<?> type )
+  {
+    if( type == int.class ||
+        type == short.class )
+    {
+      return 0;
+    }
+    if( type == byte.class )
+    {
+      return (byte)0;
+    }
+    if( type == long.class )
+    {
+      return 0L;
+    }
+    if( type == float.class )
+    {
+      return 0f;
+    }
+    if( type == double.class )
+    {
+      return 0d;
+    }
+    if( type == boolean.class )
+    {
+      return false;
+    }
+    if( type == char.class )
+    {
+      return (char)0;
+    }
+    if( type == void.class )
+    {
+      return null;
+    }
+    throw new IllegalArgumentException( "Unsupported primitive type: " + type.getSimpleName() );
+  }
+
   private static Object coerceBoxed( Object value, Class<?> type )
   {
-    if( type == Boolean.class )
+    if( type == Boolean.class || type == boolean.class )
     {
       if( value instanceof Number )
       {
@@ -210,7 +252,7 @@ public class RuntimeMethods
       return Boolean.parseBoolean( value.toString() );
     }
 
-    if( type == Byte.class )
+    if( type == Byte.class || type == byte.class )
     {
       if( value instanceof Number )
       {
@@ -223,7 +265,7 @@ public class RuntimeMethods
       return Byte.parseByte( value.toString() );
     }
 
-    if( type == Character.class )
+    if( type == Character.class || type == char.class )
     {
       if( value instanceof Number )
       {
@@ -233,7 +275,7 @@ public class RuntimeMethods
       return s.isEmpty() ? (char)0 : s.charAt( 0 );
     }
 
-    if( type == Short.class )
+    if( type == Short.class || type == short.class )
     {
       if( value instanceof Number )
       {
@@ -246,7 +288,7 @@ public class RuntimeMethods
       return Short.parseShort( value.toString() );
     }
 
-    if( type == Integer.class )
+    if( type == Integer.class || type == int.class )
     {
       if( value instanceof Number )
       {
@@ -259,7 +301,7 @@ public class RuntimeMethods
       return Integer.parseInt( value.toString() );
     }
 
-    if( type == Long.class )
+    if( type == Long.class || type == long.class )
     {
       if( value instanceof Number )
       {
@@ -272,7 +314,7 @@ public class RuntimeMethods
       return Long.parseLong( value.toString() );
     }
 
-    if( type == Float.class )
+    if( type == Float.class || type == float.class )
     {
       if( value instanceof Number )
       {
@@ -285,7 +327,7 @@ public class RuntimeMethods
       return Float.parseFloat( value.toString() );
     }
 
-    if( type == Double.class )
+    if( type == Double.class || type == double.class )
     {
       if( value instanceof Number )
       {

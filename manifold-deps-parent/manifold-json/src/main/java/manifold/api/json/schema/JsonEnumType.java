@@ -26,8 +26,7 @@ import java.util.Set;
 import manifold.api.gen.SrcElement;
 import manifold.api.gen.SrcType;
 import manifold.api.json.IJsonType;
-import manifold.api.json.JsonSimpleType;
-import manifold.api.json.JsonSimpleTypeWithDefault;
+import manifold.api.json.JsonBasicType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.ext.api.IBindingType;
@@ -65,12 +64,14 @@ import manifold.util.Pair;
 public class JsonEnumType extends JsonStructureType
 {
   private final List<Object> _enumValues;
+  private final boolean _hasNull;
 
   JsonEnumType( JsonSchemaType parent, URL source, String name, List<?> list )
   {
     super( parent, source, name );
 
     _enumValues = new ArrayList<>();
+    boolean hasNull = false;
     for( Object value: list )
     {
       Token token;
@@ -84,10 +85,16 @@ public class JsonEnumType extends JsonStructureType
         token = null;
       }
 
-      IJsonType type = JsonSimpleType.get( value );
+      JsonBasicType type = JsonBasicType.get( value );
+      if( !hasNull && type == null || type.getJsonType() == Type.Null )
+      {
+        hasNull = true;
+        continue;
+      }
       addMember( JsonUtil.makeIdentifier( String.valueOf( value ) ), type, token );
       _enumValues.add( value );
     }
+    _hasNull = hasNull;
   }
 
   public JsonEnumType( JsonEnumType enum1, JsonEnumType enum2, JsonSchemaType parent, String name )
@@ -105,6 +112,10 @@ public class JsonEnumType extends JsonStructureType
     }
     members.forEach( (m, v) -> addMember( m, v, memberLocations.get( m ) ) );
     _enumValues = new ArrayList<>( enumValues );
+    _hasNull = enum1._hasNull || enum2 != null && enum2._hasNull;
+    getTypeAttributes().setNullable( TypeAttributes.or( _hasNull,
+                                     (TypeAttributes.and( enum1.getTypeAttributes().getNullable(),
+                                       enum2 == null ? null : enum2.getTypeAttributes().getNullable() )) ) );
   }
 
   @Override
@@ -115,7 +126,7 @@ public class JsonEnumType extends JsonStructureType
       return null;
     }
 
-    if( that instanceof JsonSimpleType || that instanceof JsonSimpleTypeWithDefault )
+    if( that instanceof JsonBasicType )
     {
       return that;
     }

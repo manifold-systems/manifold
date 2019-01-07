@@ -16,6 +16,8 @@
 
 package manifold.api.json;
 
+import manifold.api.json.schema.TypeAttributes;
+
 /**
  */
 public class DynamicType implements IJsonType
@@ -27,8 +29,11 @@ public class DynamicType implements IJsonType
     return INSTANCE;
   }
 
+  private final TypeAttributes _typeAttributes;
+
   private DynamicType()
   {
+    _typeAttributes = new TypeAttributes( true, null );
   }
 
   @Override
@@ -50,16 +55,14 @@ public class DynamicType implements IJsonType
   }
 
   @Override
-  public Object getDefaultValue()
+  public TypeAttributes getTypeAttributes()
   {
-    return null;
+    return _typeAttributes;
   }
-
   @Override
-  public IJsonType setDefaultValue( Object value )
+  public IJsonType copyWithAttributes( TypeAttributes attributes )
   {
-    //## todo:
-    return null;
+    return this;
   }
 
   @Override

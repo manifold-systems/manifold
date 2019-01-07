@@ -16,6 +16,7 @@ import abc.MixedArray;
 import abc.HasEnum;
 import abc.HasFormats;
 import abc.HasBigNumbers;
+import abc.HasTypeWithNull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -304,57 +305,51 @@ public class JsonTest extends TestCase
     assertEquals( HasEnum.MyEnum.red, hasEnum.getFoo() );
     assertEquals( "red", ((Map)hasEnum).get( "foo" ) );
 
-    assertEquals( 7, HasEnum.baz.values().length );
+    assertEquals( 6, HasEnum.baz.values().length );
     assertEquals( "red", HasEnum.baz.red.name() );
     assertEquals( "blue", HasEnum.baz.blue.name() );
     assertEquals( "orange", HasEnum.baz.orange.name() );
     assertEquals( "_6", HasEnum.baz._6.name() );
     assertEquals( "_3", HasEnum.baz._3.name() );
     assertEquals( "_9_0", HasEnum.baz._9_0.name() );
-    assertEquals( "Null", HasEnum.baz.Null.name() );
 
-    assertEquals( 7, HasEnum.bazAnyOf.values().length );
+    assertEquals( 6, HasEnum.bazAnyOf.values().length );
     assertEquals( "red", HasEnum.bazAnyOf.red.name() );
     assertEquals( "blue", HasEnum.bazAnyOf.blue.name() );
     assertEquals( "orange", HasEnum.bazAnyOf.orange.name() );
     assertEquals( "_6", HasEnum.bazAnyOf._6.name() );
     assertEquals( "_3", HasEnum.bazAnyOf._3.name() );
     assertEquals( "_9_0", HasEnum.bazAnyOf._9_0.name() );
-    assertEquals( "Null", HasEnum.bazAnyOf.Null.name() );
 
-    assertEquals( 7, HasEnum.bazOneOf.values().length );
+    assertEquals( 6, HasEnum.bazOneOf.values().length );
     assertEquals( "red", HasEnum.bazOneOf.red.name() );
     assertEquals( "blue", HasEnum.bazOneOf.blue.name() );
     assertEquals( "orange", HasEnum.bazOneOf.orange.name() );
     assertEquals( "_6", HasEnum.bazOneOf._6.name() );
     assertEquals( "_3", HasEnum.bazOneOf._3.name() );
     assertEquals( "_9_0", HasEnum.bazOneOf._9_0.name() );
-    assertEquals( "Null", HasEnum.bazOneOf.Null.name() );
 
-    assertEquals( 7, HasEnum.justRefs.values().length );
+    assertEquals( 6, HasEnum.justRefs.values().length );
     assertEquals( "red", HasEnum.justRefs.red.name() );
     assertEquals( "orange", HasEnum.justRefs.orange.name() );
     assertEquals( "_6", HasEnum.justRefs._6.name() );
     assertEquals( "_9_0", HasEnum.justRefs._9_0.name() );
-    assertEquals( "Null", HasEnum.justRefs.Null.name() );
     assertEquals( "stuff", HasEnum.justRefs.stuff.name() );
     assertEquals( "things", HasEnum.justRefs.things.name() );
 
-    assertEquals( 7, HasEnum.justRefsAnyOf.values().length );
+    assertEquals( 6, HasEnum.justRefsAnyOf.values().length );
     assertEquals( "red", HasEnum.justRefsAnyOf.red.name() );
     assertEquals( "orange", HasEnum.justRefsAnyOf.orange.name() );
     assertEquals( "_6", HasEnum.justRefsAnyOf._6.name() );
     assertEquals( "_9_0", HasEnum.justRefsAnyOf._9_0.name() );
-    assertEquals( "Null", HasEnum.justRefsAnyOf.Null.name() );
     assertEquals( "stuff", HasEnum.justRefsAnyOf.stuff.name() );
     assertEquals( "things", HasEnum.justRefsAnyOf.things.name() );
 
-    assertEquals( 7, HasEnum.justRefsOneOf.values().length );
+    assertEquals( 6, HasEnum.justRefsOneOf.values().length );
     assertEquals( "red", HasEnum.justRefsOneOf.red.name() );
     assertEquals( "orange", HasEnum.justRefsOneOf.orange.name() );
     assertEquals( "_6", HasEnum.justRefsOneOf._6.name() );
     assertEquals( "_9_0", HasEnum.justRefsOneOf._9_0.name() );
-    assertEquals( "Null", HasEnum.justRefsOneOf.Null.name() );
     assertEquals( "stuff", HasEnum.justRefsOneOf.stuff.name() );
     assertEquals( "things", HasEnum.justRefsOneOf.things.name() );
 
@@ -448,5 +443,68 @@ public class JsonTest extends TestCase
     assertEquals( value, hasBig.getAnotherBigDec() );
     actualValue = (String)((Map)hasBig).get( "anotherBigDec" );
     assertEquals( value, new BigDecimal( actualValue ) );
+  }
+
+  public void testNullable()
+  {
+    HasTypeWithNull top = HasTypeWithNull.create();
+
+    String nullableString = top.getNullableString();
+    assertNull( nullableString );
+    top.setNullableString( "hi" );
+    assertEquals( "hi", top.getNullableString() );
+
+    nullableString = top.getNullableString_oneOf();
+    assertNull( nullableString );
+    top.setNullableString_oneOf( "hi" );
+    assertEquals( "hi", top.getNullableString_oneOf() );
+
+    Double nullableNumber = top.getNullableNumber();
+    assertNull( nullableNumber );
+    top.setNullableNumber( 5d );
+    assertEquals( 5d, top.getNullableNumber() );
+
+    nullableNumber = top.getNullableNumber_oneOf();
+    assertNull( nullableNumber );
+    top.setNullableNumber_oneOf( 5d );
+    assertEquals( 5d, top.getNullableNumber_oneOf() );
+
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime nullableDate = top.getNullableDate();
+    assertNull( nullableDate );
+    top.setNullableDate( now );
+    assertEquals( now, top.getNullableDate() );
+
+    nullableDate = top.getNullableDate_oneOf();
+    assertNull( nullableDate );
+    top.setNullableDate_oneOf( now );
+    assertEquals( now, top.getNullableDate_oneOf() );
+
+    nullableDate = top.getNullableDate_inline();
+    assertNull( nullableDate );
+    top.setNullableDate_inline( now );
+    assertEquals( now, top.getNullableDate_inline() );
+
+    Instant timestamp = Instant.now();
+    Instant nullableTimestamp = top.getNullableTimestamp();
+    assertNull( nullableTimestamp );
+    top.setNullableTimestamp( timestamp );
+    assertEquals( timestamp, top.getNullableTimestamp() );
+
+    nullableTimestamp = top.getNullableTimestamp_oneOf();
+    assertNull( nullableTimestamp );
+    top.setNullableTimestamp_oneOf( timestamp );
+    assertEquals( timestamp, top.getNullableTimestamp_oneOf() );
+
+    List<Double> list = Arrays.asList( 1d, 2d, 3d );
+    List<Double> nullableList = top.getNullableList();
+    assertNull( nullableList );
+    top.setNullableList( list );
+    assertEquals( list, top.getNullableList() );
+
+    nullableList = top.getNullableList_oneOf();
+    assertNull( nullableList );
+    top.setNullableList_oneOf( list );
+    assertEquals( list, top.getNullableList_oneOf() );
   }
 }

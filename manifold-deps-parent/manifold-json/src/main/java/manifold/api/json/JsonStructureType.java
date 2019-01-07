@@ -761,7 +761,7 @@ public class JsonStructureType extends JsonSchemaType
     for( String param: allRequired )
     {
       IJsonType paramType = allMembers.get( param );
-      if( paramType.getDefaultValue() == null )
+      if( paramType.getTypeAttributes().getDefaultValue() == null )
       {
         if( count++ > 0 )
         {
@@ -782,7 +782,7 @@ public class JsonStructureType extends JsonSchemaType
     for( String requiredProp: allRequired )
     {
       IJsonType paramType = allMembers.get( requiredProp );
-      if( paramType.getDefaultValue() == null )
+      if( paramType.getTypeAttributes().getDefaultValue() == null )
       {
         indent( sb, indent );
         //noinspection unused
@@ -792,7 +792,7 @@ public class JsonStructureType extends JsonSchemaType
     }
     for( Map.Entry<String, IJsonType> entry: allMembers.entrySet() )
     {
-      Object defaultValue = entry.getValue().getDefaultValue();
+      Object defaultValue = entry.getValue().getTypeAttributes().getDefaultValue();
       if( defaultValue != null )
       {
         indent( sb, indent + 2 );

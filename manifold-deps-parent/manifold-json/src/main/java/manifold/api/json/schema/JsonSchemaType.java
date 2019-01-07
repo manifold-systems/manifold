@@ -30,7 +30,7 @@ import manifold.util.JsonUtil;
 
 /**
  */
-public abstract class JsonSchemaType implements IJsonParentType
+public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 {
   private final String _name;
   private final JsonSchemaType _parent;
@@ -39,7 +39,7 @@ public abstract class JsonSchemaType implements IJsonParentType
   private List<JsonIssue> _issues;
   private boolean _bSchemaType;
   private ResolveState _resolveState;
-  private Object _defaultValue;
+  private TypeAttributes _typeAttributes;
 
   enum ResolveState
   {
@@ -53,6 +53,7 @@ public abstract class JsonSchemaType implements IJsonParentType
     _file = source;
     _issues = Collections.emptyList();
     _resolveState = ResolveState.Unresolved;
+    _typeAttributes = new TypeAttributes( false, null );
   }
 
   public abstract String getFqn();
@@ -158,15 +159,28 @@ public abstract class JsonSchemaType implements IJsonParentType
   }
 
   @Override
-  public Object getDefaultValue()
+  public TypeAttributes getTypeAttributes()
   {
-    return _defaultValue;
+    return _typeAttributes;
   }
   @Override
-  public IJsonType setDefaultValue( Object value )
+  public JsonSchemaType copyWithAttributes( TypeAttributes attributes )
   {
-    _defaultValue = value;
-    return this;
+    if( getTypeAttributes().equals( attributes ) )
+    {
+      return this;
+    }
+
+    try
+    {
+      JsonSchemaType copy = (JsonSchemaType)clone();
+      copy._typeAttributes = TypeAttributes.merge( copy._typeAttributes, attributes );
+      return copy;
+    }
+    catch( CloneNotSupportedException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   protected boolean mergeInnerTypes( IJsonParentType other, IJsonParentType mergedType, Map<String, IJsonParentType> innerTypes )

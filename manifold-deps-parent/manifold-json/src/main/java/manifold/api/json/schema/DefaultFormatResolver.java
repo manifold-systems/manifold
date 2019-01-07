@@ -42,12 +42,12 @@ public class DefaultFormatResolver implements IJsonFormatTypeResolver
     LocklessLazyVar.make( () -> {
       // Standard temporal formats (JSON Schema 6)
       Map<String, JsonFormatType> formatToType = new HashMap<>();
-      formatToType.put( "date-time", new JsonFormatType( "date-time", LocalDateTime.class ) );
-      formatToType.put( "date", new JsonFormatType( "date", LocalDate.class ) );
-      formatToType.put( "time", new JsonFormatType( "time", LocalTime.class ) );
+      formatToType.put( "date-time", new JsonFormatType( "date-time", LocalDateTime.class, new TypeAttributes( (Boolean)null, null ) ) );
+      formatToType.put( "date", new JsonFormatType( "date", LocalDate.class, new TypeAttributes( (Boolean)null, null ) ) );
+      formatToType.put( "time", new JsonFormatType( "time", LocalTime.class, new TypeAttributes( (Boolean)null, null ) ) );
       // Non-standard temporal formats
-      formatToType.put( "full-date", new JsonFormatType( "full-date", LocalDateTime.class ) );
-      formatToType.put( "utc-millisec", new JsonFormatType( "utc-millisec", Instant.class ) );
+      formatToType.put( "full-date", new JsonFormatType( "full-date", LocalDateTime.class, new TypeAttributes( (Boolean)null, null ) ) );
+      formatToType.put( "utc-millisec", new JsonFormatType( "utc-millisec", Instant.class, new TypeAttributes( (Boolean)null, null ) ) );
       return formatToType;
     } );
 
