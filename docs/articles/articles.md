@@ -51,6 +51,20 @@ layout: default
   
  <tr>
   <td>
+  <p><a href="https://entwickler.de/leseproben/manifold-nicht-von-dieser-welt-579872136.html"><img width="240" height="135" src="/images/entwickler.png" alt="c"></a></p>
+  </td>
+  <td>
+  <p><a href="https://entwickler.de/leseproben/manifold-nicht-von-dieser-welt-579872136.html">Manifold: Nicht von dieser Welt - entwickler</a></p>
+  <p>Java schließt mit Manifold die Lücke zu vielen Funktionen, die bisher ausschließlich dynamischen Sprachen vorbehalten waren. 
+     Darüber hinaus liefert Manifold diese Eigenschaften mit intakter Typsicherheit. Metaprogrammierung, Extension Classes und strukturelle Typisierung sind leicht verfügbar und vollständig in IntelliJ IDEA integriert.</p>
+  <p><small>entwickler.de</small></p>
+  </td>
+ </tr>
+ 
+  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.de/manifold-code-generator-java-metadata-74906"><img width="240" height="135" src="/images/manifold-java-code-generator.jpg" alt="c"></a></p>
   </td>
   <td>
