@@ -31,6 +31,10 @@ public class JsonFormatType implements IJsonType
   private final Class<?> _javaType;
   private final TypeAttributes _typeAttributes;
 
+  JsonFormatType( String format, Class<?> javaType )
+  {
+    this( format, javaType, new TypeAttributes( (Boolean)null, null ) );
+  }
   JsonFormatType( String format, Class<?> javaType, TypeAttributes typeAttributes )
   {
     _format = format;

@@ -17,6 +17,7 @@ import abc.HasEnum;
 import abc.HasFormats;
 import abc.HasBigNumbers;
 import abc.HasTypeWithNull;
+import abc.HasBinaryFormats;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -29,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import junit.framework.TestCase;
+import manifold.api.json.schema.Base64Encoding;
+import manifold.api.json.schema.OctetEncoding;
+import manifold.util.ReflectUtil;
 import org.junit.Assert;
 
 
@@ -409,6 +413,15 @@ public class JsonTest extends TestCase
     long actualValue = (long)((Map)hasFormats).get( "TheTimestamp" );
     assertEquals( value, Instant.ofEpochMilli( actualValue ) );
   }
+  public void testInt64()
+  {
+    HasFormats hasFormats = HasFormats.create();
+
+    assertEquals( null, hasFormats.getInt64() );
+    hasFormats.setInt64( (Long)Long.MAX_VALUE );
+    assertEquals( (Long)Long.MAX_VALUE, hasFormats.getInt64() );
+    assertTrue( ((Map)hasFormats).get( "int64" ) instanceof Long );
+  }
 
   public void testBigInteger()
   {
@@ -506,5 +519,31 @@ public class JsonTest extends TestCase
     assertNull( nullableList );
     top.setNullableList_oneOf( list );
     assertEquals( list, top.getNullableList_oneOf() );
+  }
+
+  public void testBinary()
+  {
+    HasBinaryFormats hasBinary = HasBinaryFormats.create();
+
+    String text = "The quick brown fox jumps over the lazy dog 0123456789 ;.,!@#$%^&*()_+=-\\|][{}\":?/><`~";
+    String base64 = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyAwMTIzNDU2Nzg5IDsuLCFAIyQlXiYqKClfKz0tXHxdW3t9Ijo/Lz48YH4=";
+    hasBinary.setByteFormat( Base64Encoding.encoded( base64 ) );
+    assertEquals( base64, hasBinary.getByteFormat().toString() );
+    assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
+    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+    // repeat to test releasing of memory
+    assertEquals( base64, hasBinary.getByteFormat().toString() );
+    assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
+    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+
+    String octet = OctetEncoding.decoded( text.getBytes() ).toString();
+    hasBinary.setBinaryFormat( OctetEncoding.encoded( octet ) );
+    assertEquals( octet, hasBinary.getBinaryFormat().toString() );
+    assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
+    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+    // repeat to test releasing of memory
+    assertEquals( octet, hasBinary.getBinaryFormat().toString() );
+    assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
+    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
   }
 }

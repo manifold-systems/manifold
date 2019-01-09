@@ -1,0 +1,24 @@
+{
+  "$id": "https://example.com/restapi/HasBinaryFormats.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasBinaryFormats",
+  "type": "object",
+  "definitions": {
+    "BinaryFormat": {
+      "type": "string",
+      "format": "binary"
+    },
+    "ByteFormat": {
+      "type": "string",
+      "format": "byte"
+    }
+  },
+  "properties": {
+    "binaryFormat" : {
+      "$ref": "#/definitions/BinaryFormat"
+    },
+    "byteFormat" : {
+      "$ref": "#/definitions/ByteFormat"
+    }
+  }
+}

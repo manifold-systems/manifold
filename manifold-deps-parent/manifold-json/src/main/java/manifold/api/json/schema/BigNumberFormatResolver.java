@@ -31,8 +31,8 @@ import static manifold.ext.api.ICallHandler.UNHANDLED;
  */
 public class BigNumberFormatResolver implements IJsonFormatTypeResolver
 {
-  private static final JsonFormatType BIG_INTEGER = new JsonFormatType( "big-integer", BigInteger.class, new TypeAttributes( (Boolean)null, null ) );
-  private static final JsonFormatType BIG_DECIMAL = new JsonFormatType( "big-decimal", BigDecimal.class, new TypeAttributes( (Boolean)null, null ) );
+  private static final JsonFormatType BIG_INTEGER = new JsonFormatType( "big-integer", BigInteger.class );
+  private static final JsonFormatType BIG_DECIMAL = new JsonFormatType( "big-decimal", BigDecimal.class );
 
   @Override
   public JsonFormatType resolveType( String format )
@@ -54,13 +54,13 @@ public class BigNumberFormatResolver implements IJsonFormatTypeResolver
     //
     // From JSON value to Java value
     //
-    if( type == BigInteger.class )
+    if( type == BigInteger.class && value instanceof String )
     {
-      return "0".equals( value ) ? BigInteger.ZERO : new BigInteger( String.valueOf( value ) );
+      return "0".equals( value ) ? BigInteger.ZERO : new BigInteger( (String)value );
     }
-    if( type == BigDecimal.class )
+    if( type == BigDecimal.class && value instanceof String )
     {
-      return "0".equals( value ) ? BigDecimal.ZERO : new BigDecimal( String.valueOf( value ) );
+      return "0".equals( value ) ? BigDecimal.ZERO : new BigDecimal( (String)value );
     }
 
     //
