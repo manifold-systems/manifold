@@ -17,6 +17,7 @@
 package manifold.api.json;
 
 import java.net.URL;
+import manifold.api.json.schema.TypeAttributes;
 
 /**
  */
@@ -26,7 +27,7 @@ public class ErrantType extends JsonStructureType
 
   public ErrantType( URL file, String errantTypeName )
   {
-    super( null, file, errantTypeName );
+    super( null, file, errantTypeName, new TypeAttributes() );
   }
 
   @Override

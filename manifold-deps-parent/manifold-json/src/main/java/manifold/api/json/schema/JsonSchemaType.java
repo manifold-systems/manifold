@@ -29,50 +29,70 @@ import manifold.api.json.JsonListType;
 import manifold.util.JsonUtil;
 
 /**
+ * The base JSON Schema type.
+ * <p>
+ * <b>Attention!</b> subclasses must take care to share state with copies.
+ * See the {@link State} class below.
  */
 public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 {
-  private final String _name;
-  private final JsonSchemaType _parent;
-  private List<IJsonType> _definitions;
-  private URL _file;
-  private List<JsonIssue> _issues;
-  private boolean _bSchemaType;
-  private ResolveState _resolveState;
-  private TypeAttributes _typeAttributes;
+  /**
+   * Since we use clone() to copy, assignment to these fields must be reflected across all copies,
+   * hence the encapsulation/indirection with the State class.
+   */
+  private static class State
+  {
+    private final String _name;
+    private final JsonSchemaType _parent;
+    private final URL _file;
+    private List<IJsonType> _definitions;
+    private List<JsonIssue> _issues;
+    private boolean _bSchemaType;
+    private ResolveState _resolveState;
+
+    private State( String name, JsonSchemaType parent, URL file )
+    {
+      _name = name;
+      _parent = parent;
+      _file = file;
+
+      _issues = Collections.emptyList();
+      _resolveState = ResolveState.Unresolved;
+    }
+  }
 
   enum ResolveState
   {
     Unresolved, Resolving, Resolved
   }
 
-  protected JsonSchemaType( String name, URL source, JsonSchemaType parent )
+  private final State _state; // shared state across type copies
+  private TypeAttributes _typeAttributes; // non-shared state that is different per type copy
+
+  
+  protected JsonSchemaType( String name, URL source, JsonSchemaType parent, TypeAttributes attr )
   {
-    _name = name;
-    _parent = parent;
-    _file = source;
-    _issues = Collections.emptyList();
-    _resolveState = ResolveState.Unresolved;
-    _typeAttributes = new TypeAttributes( false, null );
+    _state = new State( name, parent, source );
+    _typeAttributes = attr;
   }
 
   public abstract String getFqn();
 
   final public void resolveRefs()
   {
-    if( _resolveState != ResolveState.Unresolved )
+    if( _state._resolveState != ResolveState.Unresolved )
     {
       return;
     }
 
-    _resolveState = ResolveState.Resolving;
+    _state._resolveState = ResolveState.Resolving;
     try
     {
       resolveRefsImpl();
     }
     finally
     {
-      _resolveState = ResolveState.Resolved;
+      _state._resolveState = ResolveState.Resolved;
     }
   }
 
@@ -94,7 +114,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
         }
         resolved.add( type );
       }
-      _definitions = resolved;
+      _state._definitions = resolved;
     }
   }
 
@@ -107,10 +127,10 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   public URL getFile()
   {
-    return _file != null
-           ? _file
-           : _parent != null
-             ? _parent.getFile()
+    return _state._file != null
+           ? _state._file
+           : _state._parent != null
+             ? _state._parent.getFile()
              : null;
   }
 
@@ -122,7 +142,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   @Override
   public String getName()
   {
-    return _name;
+    return _state._name;
   }
 
   @Override
@@ -134,28 +154,28 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   @Override
   public JsonSchemaType getParent()
   {
-    return _parent;
+    return _state._parent;
   }
 
   @Override
   public List<IJsonType> getDefinitions()
   {
-    return _definitions;
+    return _state._definitions;
   }
 
   public void setDefinitions( List<IJsonType> definitions )
   {
-    _definitions = definitions;
+    _state._definitions = definitions;
   }
 
-  public boolean isSchemaType()
+  protected boolean isSchemaType()
   {
-    return _bSchemaType;
+    return _state._bSchemaType;
   }
 
-  protected void setJsonSchema()
+  void setJsonSchema()
   {
-    _bSchemaType = true;
+    _state._bSchemaType = true;
   }
 
   @Override
@@ -174,7 +194,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     try
     {
       JsonSchemaType copy = (JsonSchemaType)clone();
-      copy._typeAttributes = TypeAttributes.merge( copy._typeAttributes, attributes );
+      copy._typeAttributes = copy._typeAttributes.overrideWith( attributes );
       return copy;
     }
     catch( CloneNotSupportedException e )
@@ -218,7 +238,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       return getParent().getIssues();
     }
 
-    return _issues;
+    return _state._issues;
   }
 
   @Override
@@ -230,11 +250,11 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       return;
     }
 
-    if( _issues.isEmpty() )
+    if( _state._issues.isEmpty() )
     {
-      _issues = new ArrayList<>();
+      _state._issues = new ArrayList<>();
     }
-    _issues.add( issue );
+    _state._issues.add( issue );
   }
 
   @Override

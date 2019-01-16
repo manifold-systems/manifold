@@ -33,6 +33,7 @@ import manifold.util.ManClassUtil;
  */
 public class JsonTypeManifold extends JavaTypeManifold<JsonModel>
 {
+  @SuppressWarnings("WeakerAccess")
   public static final String FILE_EXTENSION = "json";
 
   @Override

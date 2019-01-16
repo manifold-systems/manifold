@@ -33,7 +33,7 @@ public class DynamicType implements IJsonType
 
   private DynamicType()
   {
-    _typeAttributes = new TypeAttributes( true, null );
+    _typeAttributes = new TypeAttributes( true );
   }
 
   @Override

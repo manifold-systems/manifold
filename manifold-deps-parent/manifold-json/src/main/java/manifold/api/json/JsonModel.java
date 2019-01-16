@@ -29,6 +29,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.schema.IllegalSchemaTypeName;
+import manifold.api.json.schema.TypeAttributes;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
@@ -77,7 +78,7 @@ class JsonModel extends AbstractSingleFileModel
         }
         else
         {
-          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName() );
+          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName(), new TypeAttributes() );
         }
       }
       catch( IllegalSchemaTypeName e )

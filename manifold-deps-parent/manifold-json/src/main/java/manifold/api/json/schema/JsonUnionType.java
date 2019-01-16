@@ -33,7 +33,11 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public class JsonUnionType extends JsonStructureType
 {
-  private Map<String, IJsonType> _constituentTypes;
+  private final class State
+  {
+    private Map<String, IJsonType> _constituentTypes;
+  }
+
   private LocklessLazyVar<JsonEnumType> _collapsedEnumType = LocklessLazyVar.make( () -> {
     if( !getMembers().isEmpty() )
     {
@@ -46,17 +50,21 @@ public class JsonUnionType extends JsonStructureType
     return null;
   } );
 
-  public JsonUnionType( JsonSchemaType parent, URL source, String name )
+  private final State _state;
+
+
+  public JsonUnionType( JsonSchemaType parent, URL source, String name, TypeAttributes attr )
   {
-    super( parent, source, name );
-    _constituentTypes = Collections.emptyMap();
+    super( parent, source, name, attr );
+    _state = new State();
+    _state._constituentTypes = Collections.emptyMap();
   }
 
   @Override
   protected void resolveRefsImpl()
   {
     super.resolveRefsImpl();
-    for( Map.Entry<String, IJsonType> entry: new HashSet<>( _constituentTypes.entrySet() ) )
+    for( Map.Entry<String, IJsonType> entry: new HashSet<>( _state._constituentTypes.entrySet() ) )
     {
       IJsonType type = entry.getValue();
       if( type instanceof JsonSchemaType )
@@ -66,23 +74,23 @@ public class JsonUnionType extends JsonStructureType
       else if( type instanceof LazyRefJsonType )
       {
         type = ((LazyRefJsonType)type).resolve();
-        _constituentTypes.put( entry.getKey(), type );
+        _state._constituentTypes.put( entry.getKey(), type );
       }
     }
   }
 
   public Collection<? extends IJsonType> getConstituents()
   {
-    return _constituentTypes.values();
+    return _state._constituentTypes.values();
   }
 
   void addConstituent( String name, IJsonType type )
   {
-    if( _constituentTypes.isEmpty() )
+    if( _state._constituentTypes.isEmpty() )
     {
-      _constituentTypes = new HashMap<>();
+      _state._constituentTypes = new HashMap<>();
     }
-    _constituentTypes.put( name, type );
+    _state._constituentTypes.put( name, type );
     if( type instanceof IJsonParentType && !isDefinition( type ) )
     {
       super.addChild( name, (IJsonParentType)type );

@@ -1,23 +1,7 @@
 package manifold.api.host;
 
-import abc.Contact;
-import abc.Junk;
-import abc.Outside;
-import abc.Person;
-import abc.Product;
-import abc.Tree;
-import abc.AllOf_Hierarchy;
-import abc.OneOf;
-import abc.OneOf_TopLevel;
-import abc.OneOf_TopLevel_Array;
-import abc.Enum_TopLevel_Array;
-import abc.StrangeUriFormats;
-import abc.MixedArray;
-import abc.HasEnum;
-import abc.HasFormats;
-import abc.HasBigNumbers;
-import abc.HasTypeWithNull;
-import abc.HasBinaryFormats;
+import abc.*;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -29,6 +13,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
+
+import abc.FootballPlayer.football_team;
 import junit.framework.TestCase;
 import manifold.api.json.schema.Base64Encoding;
 import manifold.api.json.schema.OctetEncoding;
@@ -545,5 +531,58 @@ public class JsonTest extends TestCase
     assertEquals( octet, hasBinary.getBinaryFormat().toString() );
     assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
     assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+  }
+
+  public void testReadOnly()
+  {
+    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(0).build();
+    readOnlyEtc.get("absent");
+    readOnlyEtc.getIntegerValue_ReadOnly();
+    readOnlyEtc.getStringValue_ReadOnly();
+    readOnlyEtc.getNoAdditional();
+    readOnlyEtc.getNoAdditionalPlusPatternProperties();
+    readOnlyEtc.getTheDateAndTime_NotReadOnly();
+    readOnlyEtc.getTheDateAndTime_ReadOnly();
+    readOnlyEtc.getTheTimestamp_NotReadOnly();
+    readOnlyEtc.getTheTimestamp_ReadOnly();
+    readOnlyEtc.getBindings();
+    readOnlyEtc.getClass();
+    assertEquals( 10, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("get") ).count() );
+
+    readOnlyEtc.setInteger_WriteOnly(8);
+    readOnlyEtc.setString_WriteOnly("hi");
+    readOnlyEtc.setTheDateAndTime_NotReadOnly(LocalDateTime.now());
+    readOnlyEtc.setTheTimestamp_NotReadOnly(Instant.now());
+    assertEquals( 4, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("set") ).count() );
+  }
+
+  public void testAdditionalProperties()
+  {
+    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(0).build();
+    assertEquals( 0, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
+    readOnlyEtc.put( "IntegerValue_ReadOnly", 50 );
+    assertEquals( 50, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
+    assertNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditional.class, "get", String.class ) );
+    assertNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditional.class, "put", String.class, Object.class ) );
+    assertNotNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditionalPlusPatternProperties.class, "get", String.class ) );
+    assertNotNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditionalPlusPatternProperties.class, "put", String.class, Object.class ) );
+  }
+
+  public void testBuilders()
+  {
+    FootballPlayer footballPlayer =
+            FootballPlayer.builder("Joe", "Smith",
+                    football_team.builder("east", "lions").build())
+                    .withAge(25).build();
+
+    // Since the person interface is an inner class of FootballPlayer, FootballPlayer cannot extend it.  Here we
+    // test that FootballPlayer still implements person structurally.
+    FootballPlayer.person castPerson = (FootballPlayer.person)footballPlayer;
+    assertEquals( "Joe", castPerson.getFirst_name() );
+    assertEquals( "Smith", castPerson.getLast_name() );
+    assertEquals( 25, castPerson.getAge() );
+
+    FootballPlayer.person person = FootballPlayer.person.create("scott", "mckinney");
+    person = FootballPlayer.person.builder("scott", "mckinney").withAge(29).build();
   }
 }

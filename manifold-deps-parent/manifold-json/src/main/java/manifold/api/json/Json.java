@@ -26,6 +26,7 @@ import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaTransformerSession;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
+import manifold.api.json.schema.TypeAttributes;
 import manifold.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -110,6 +111,7 @@ public class Json
    * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type, and the component type recursively follows these rules
    * </ul>
    */
+  @SuppressWarnings("unused")
   public static String makeStructureTypes( IManifoldHost host, String nameForStructure, Bindings bindings, boolean mutable )
   {
     JsonStructureType type = (JsonStructureType)transformJsonObject( host, nameForStructure, null, bindings );
@@ -151,7 +153,7 @@ public class Json
         if( !(type instanceof JsonStructureType) )
         {
           // handle case for mixed array where component types are different (object and array)
-          type = new JsonStructureType( parent, source, name );
+          type = new JsonStructureType( parent, source, name, new TypeAttributes() );
         }
         for( Object k : ((Bindings)jsonObj).keySet() )
         {
@@ -179,7 +181,7 @@ public class Json
       if( !(type instanceof JsonListType) )
       {
         // handle case for mixed array where component types are different (object and array)
-        type = new JsonListType( name, source, parent );
+        type = new JsonListType( name, source, parent, new TypeAttributes() );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
@@ -250,7 +252,7 @@ public class Json
     if( mergedType == null && type1.getParent() instanceof JsonListType )
     {
       JsonListType listType = (JsonListType)type1.getParent();
-      JsonUnionType unionType = new JsonUnionType( listType, listType.getFile(), "UnionType" );
+      JsonUnionType unionType = new JsonUnionType( listType, listType.getFile(), "UnionType", new TypeAttributes() );
       unionType.merge( type1 );
       unionType.merge( type2 );
       mergedType = unionType;

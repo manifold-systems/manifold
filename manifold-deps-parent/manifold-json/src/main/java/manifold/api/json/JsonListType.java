@@ -25,34 +25,41 @@ import java.util.Map;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.api.json.schema.LazyRefJsonType;
+import manifold.api.json.schema.TypeAttributes;
 
 /**
  */
 public class JsonListType extends JsonSchemaType
 {
-  private IJsonType[] _componentType; // using one elem array b/c clones need to reflect this value after it is reassigned
-  private Map<String, IJsonParentType> _innerTypes;
-
-  public JsonListType( String label, URL source, JsonSchemaType parent )
+  private static final class State
   {
-    super( label, source, parent );
-    _innerTypes = Collections.emptyMap();
-    _componentType = new IJsonType[1];
+    private IJsonType _componentType;
+    private Map<String, IJsonParentType> _innerTypes;
+  }
+
+  private final State _state;
+
+
+  public JsonListType( String label, URL source, JsonSchemaType parent, TypeAttributes attr )
+  {
+    super( label, source, parent, attr );
+    _state = new State();
+    _state._innerTypes = Collections.emptyMap();
   }
 
   @Override
   protected void resolveRefsImpl()
   {
     super.resolveRefsImpl();
-    if( _componentType[0] instanceof JsonSchemaType )
+    if( _state._componentType instanceof JsonSchemaType )
     {
-      ((JsonSchemaType)_componentType[0]).resolveRefs();
+      ((JsonSchemaType)_state._componentType).resolveRefs();
     }
-    else if( _componentType[0] instanceof LazyRefJsonType )
+    else if( _state._componentType instanceof LazyRefJsonType )
     {
-      _componentType[0] = ((LazyRefJsonType)_componentType[0]).resolve();
+      _state._componentType = ((LazyRefJsonType)_state._componentType).resolve();
     }
-    for( Map.Entry<String, IJsonParentType> entry : new HashSet<>( _innerTypes.entrySet() ) )
+    for( Map.Entry<String, IJsonParentType> entry : new HashSet<>( _state._innerTypes.entrySet() ) )
     {
       IJsonType type = entry.getValue();
       if( type instanceof JsonSchemaType )
@@ -61,7 +68,7 @@ public class JsonListType extends JsonSchemaType
       }
       else if( type instanceof LazyRefJsonType )
       {
-        _innerTypes.put( entry.getKey(), (IJsonParentType)((LazyRefJsonType)type).resolve() );
+        _state._innerTypes.put( entry.getKey(), (IJsonParentType)((LazyRefJsonType)type).resolve() );
       }
     }
   }
@@ -79,13 +86,13 @@ public class JsonListType extends JsonSchemaType
 
   private String getComponentTypeName()
   {
-    if( _componentType[0] == null || _componentType[0] instanceof LazyRefJsonType )
+    if( _state._componentType == null || _state._componentType instanceof LazyRefJsonType )
     {
       // can happen if asked before this list type is fully configured
       return "_undefined_";
     }
 
-    return _componentType[0] instanceof JsonUnionType ? "Object" : _componentType[0].getIdentifier();
+    return _state._componentType instanceof JsonUnionType ? "Object" : _state._componentType.getIdentifier();
   }
 
   public String getIdentifier()
@@ -101,21 +108,21 @@ public class JsonListType extends JsonSchemaType
 
   public void addChild( String name, IJsonParentType type )
   {
-    if( _innerTypes.isEmpty() )
+    if( _state._innerTypes.isEmpty() )
     {
-      _innerTypes = new HashMap<>();
+      _state._innerTypes = new HashMap<>();
     }
-    _innerTypes.put( name, type );
+    _state._innerTypes.put( name, type );
   }
 
   public IJsonType findChild( String name )
   {
-    IJsonType innerType = _innerTypes.get( name );
+    IJsonType innerType = _state._innerTypes.get( name );
     if( innerType == null )
     {
-      if( _componentType[0] instanceof IJsonParentType )
+      if( _state._componentType instanceof IJsonParentType )
       {
-        innerType = ((IJsonParentType)_componentType[0]).findChild( name );
+        innerType = ((IJsonParentType)_state._componentType).findChild( name );
       }
       if( innerType == null )
       {
@@ -139,22 +146,22 @@ public class JsonListType extends JsonSchemaType
   @SuppressWarnings("WeakerAccess")
   public IJsonType getComponentType()
   {
-    return _componentType[0];
+    return _state._componentType;
   }
 
   public void setComponentType( IJsonType compType )
   {
-    if( _componentType[0] != null && _componentType[0] != compType )
+    if( _state._componentType != null && _state._componentType != compType )
     {
-      throw new IllegalStateException( "Component type already set to: " + _componentType[0].getIdentifier() + ", which is not the same as: " + compType.getIdentifier() );
+      throw new IllegalStateException( "Component type already set to: " + _state._componentType.getIdentifier() + ", which is not the same as: " + compType.getIdentifier() );
     }
-    _componentType[0] = compType;
+    _state._componentType = compType;
   }
 
   @SuppressWarnings("unused")
   public Map<String, IJsonParentType> getInnerTypes()
   {
-    return _innerTypes;
+    return _state._innerTypes;
   }
 
   public JsonListType merge( IJsonType that )
@@ -165,7 +172,7 @@ public class JsonListType extends JsonSchemaType
     }
 
     JsonListType other = (JsonListType)that;
-    JsonListType mergedType = new JsonListType( getLabel(), getFile(), getParent() );
+    JsonListType mergedType = new JsonListType( getLabel(), getFile(), getParent(), getTypeAttributes().blendWith( that.getTypeAttributes() ) );
 
     if( !getComponentType().equalsStructurally( other.getComponentType() ) )
     {
@@ -180,7 +187,7 @@ public class JsonListType extends JsonSchemaType
       }
     }
 
-    if( !mergeInnerTypes( other, mergedType, _innerTypes ) )
+    if( !mergeInnerTypes( other, mergedType, _state._innerTypes ) )
     {
       return null;
     }
@@ -190,7 +197,7 @@ public class JsonListType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
-    for( IJsonParentType child : _innerTypes.values() )
+    for( IJsonParentType child : _state._innerTypes.values() )
     {
       child.render( sb, indent, mutable );
     }
@@ -211,14 +218,14 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_componentType[0].equalsStructurally( that._componentType[0] ) )
+    if( !_state._componentType.equalsStructurally( that._state._componentType ) )
     {
       return false;
     }
-    return _innerTypes.size() == that._innerTypes.size() &&
-           _innerTypes.keySet().stream().allMatch(
-             key -> that._innerTypes.containsKey( key ) &&
-                    _innerTypes.get( key ).equalsStructurally( that._innerTypes.get( key ) ) );
+    return _state._innerTypes.size() == that._state._innerTypes.size() &&
+           _state._innerTypes.keySet().stream().allMatch(
+             key -> that._state._innerTypes.containsKey( key ) &&
+                    _state._innerTypes.get( key ).equalsStructurally( that._state._innerTypes.get( key ) ) );
   }
 
   @Override
@@ -242,18 +249,18 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_componentType[0].equals( that._componentType[0] ) )
+    if( !_state._componentType.equals( that._state._componentType ) )
     {
       return false;
     }
-    return _innerTypes.equals( that._innerTypes );
+    return _state._innerTypes.equals( that._state._innerTypes );
   }
 
   @Override
   public int hashCode()
   {
-    int result = _componentType[0].hashCode();
-    result = 31 * result + _innerTypes.hashCode();
+    int result = _state._componentType.hashCode();
+    result = 31 * result + _state._innerTypes.hashCode();
     return result;
   }
 }

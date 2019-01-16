@@ -18,7 +18,7 @@ package manifold.api.json.schema;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.script.Bindings;
@@ -128,7 +128,7 @@ class ObjectTransformer
       if( requiredValue instanceof Collection )
       {
         //noinspection unchecked
-        required = new HashSet<>( (Collection<String>)requiredValue );
+        required = new LinkedHashSet<>( (Collection<String>)requiredValue );
       }
     }
     _type.addRequired( required );

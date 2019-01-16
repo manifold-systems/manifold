@@ -43,13 +43,12 @@ import manifold.api.json.JsonListType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
+import manifold.util.DebugLogUtil;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
 
-
-import static manifold.api.json.schema.TypeAttributes.or;
 
 /**
  */
@@ -66,12 +65,16 @@ public class JsonSchemaTransformer
   private static final String JSCH_ONE_OF = "oneOf";
   private static final String JSCH_ANY_OF = "anyOf";
   static final String JSCH_REQUIRED = "required";
-  static final String JSCH_DEFINITIONS = "definitions";
+  public static final String JSCH_DEFINITIONS = "definitions";
   static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_FORMAT = "format";
-  private static final String JSCH_DEFAULT = "default";
 
-  private static final String JSCH_NULLABLE = "nullable";
+  static final String JSCH_ADDITIONNAL_PROPERTIES = "additionalProperties";
+  static final String JSCH_PATTERN_PROPERTIES = "patternProperties";
+  static final String JSCH_DEFAULT = "default";
+  static final String JSCH_NULLABLE = "nullable";
+  static final String JSCH_READONLY = "readOnly";
+  static final String JSCH_WRITEONLY = "writeOnly";
 
 
   private final IManifoldHost _host;
@@ -314,7 +317,7 @@ public class JsonSchemaTransformer
 
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, URL enclosing, Bindings jsonObj )
   {
-    return transformDefinitions( new JsonStructureType( parent, enclosing, nameQualifier ), enclosing, jsonObj );
+    return transformDefinitions( new JsonStructureType( parent, enclosing, nameQualifier, new TypeAttributes() ), enclosing, jsonObj );
   }
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, URL enclosing, Bindings jsonObj )
   {
@@ -324,7 +327,7 @@ public class JsonSchemaTransformer
       return null;
     }
 
-    JsonStructureType definitionsHolder = new JsonStructureType( parent, enclosing, JSCH_DEFINITIONS );
+    JsonStructureType definitionsHolder = new JsonStructureType( parent, enclosing, JSCH_DEFINITIONS, new TypeAttributes() );
     List<IJsonType> result = new ArrayList<>();
     cacheByFqn( definitionsHolder );
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
@@ -353,7 +356,8 @@ public class JsonSchemaTransformer
       }
       catch( Exception e )
       {
-        parent.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null, e.getMessage() ) );
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null,
+          e.getMessage() == null ? DebugLogUtil.getStackTrace( e ) : e.getMessage() ) );
       }
     }
     return result;
@@ -487,8 +491,9 @@ public class JsonSchemaTransformer
     JsonFormatType formatType = jsonObj.containsKey( JSCH_FORMAT ) ? resolveFormatType( jsonObj ) : null;
     if( formatType != null )
     {
-      result = formatType;
-      cacheSimpleByFqn( parent, name, formatType );
+      // Copy format type to allow format type services to reuse types
+      result = formatType.copyWithAttributes( new TypeAttributes( nullable, jsonObj ) );
+      cacheSimpleByFqn( parent, name, result );
     }
     else
     {
@@ -497,7 +502,7 @@ public class JsonSchemaTransformer
       boolean bConst = jsonObj.containsKey( JSCH_CONST );
       if( bEnum )
       {
-        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj, nullable );
         if( result != parent )
         {
           transferIssuesFromErrantType( parent, result, jsonObj );
@@ -505,7 +510,7 @@ public class JsonSchemaTransformer
       }
       else if( bConst )
       {
-        result = deriveTypeFromConst( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromConst( parent, enclosing, name, jsonObj, nullable );
         if( result != parent )
         {
           transferIssuesFromErrantType( parent, result, jsonObj );
@@ -513,7 +518,7 @@ public class JsonSchemaTransformer
       }
       else if( type == null || bRef || isCombination( jsonObj ) )
       {
-        JsonStructureType refParent = new JsonStructureType( parent, enclosing, name );
+        JsonStructureType refParent = new JsonStructureType( parent, enclosing, name, new TypeAttributes() );
         if( bRef && parent == null )
         {
           Object refValue = jsonObj.get( JSCH_REF );
@@ -527,10 +532,20 @@ public class JsonSchemaTransformer
         else
         {
           transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj, nullable );
           if( result != parent )
           {
             transferIssuesFromErrantType( parent, result, jsonObj );
+          }
+          if( result != null )
+          {
+            // refParent is just a placeholder for definitions until the ref or combo type is constructe.
+            // Assign the definitions from the refParent to the actual parent
+            List<IJsonType> definitions = refParent.getDefinitions();
+            if( definitions != null )
+            {
+              result.setDefinitions( definitions );
+            }
           }
         }
       }
@@ -540,19 +555,21 @@ public class JsonSchemaTransformer
         switch( t )
         {
           case Object:
-            result = new JsonStructureType( parent, enclosing, name );
+            result = new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) );
             transform = () -> ObjectTransformer.transform( this, (JsonStructureType)result, jsonObj );
             break;
           case Array:
-            result = new JsonListType( name, enclosing, parent );
+            result = new JsonListType( name, enclosing, parent, new TypeAttributes( nullable, jsonObj ) );
             transform = () -> ArrayTransformer.transform( this, name, (JsonListType)result, jsonObj );
             break;
           case Dynamic:
             result = DynamicType.instance();
             cacheSimpleByFqn( parent, name, result );
             break;
+          case Invalid:
+            throw new IllegalSchemaTypeName( type, token );
           default:
-            result = new JsonBasicType( t, new TypeAttributes( nullable, null ) );
+            result = new JsonBasicType( t, new TypeAttributes( nullable, jsonObj ) );
             cacheSimpleByFqn( parent, name, result );
             break;
         }
@@ -574,7 +591,7 @@ public class JsonSchemaTransformer
     {
       ((JsonSchemaType)result).setJsonSchema();
     }
-    return result == null ? null : copyWithAttributes( result, jsonObj, nullable );
+    return result;
   }
 
   private Boolean isNullable( Bindings jsonObj, Boolean isNullable, TypeResult tr )
@@ -635,21 +652,6 @@ public class JsonSchemaTransformer
     return tr;
   }
   
-  private IJsonType copyWithAttributes( IJsonType result, Bindings jsonObj, Boolean nullable )
-  {
-    boolean bDefault = jsonObj.containsKey( JSCH_DEFAULT );
-    Object defaultValue = null;
-    if( bDefault )
-    {
-      defaultValue = jsonObj.get( JSCH_DEFAULT );
-      if( defaultValue instanceof Pair )
-      {
-        defaultValue = ((Pair)defaultValue).getSecond();
-      }
-    }
-    return result.copyWithAttributes( new TypeAttributes( or( nullable, isNullable( jsonObj ) ), defaultValue ) );
-  }
-
   private JsonFormatType resolveFormatType( Bindings jsonObj )
   {
     JsonFormatType resolvedType = null;
@@ -712,16 +714,20 @@ public class JsonSchemaTransformer
     }
   }
 
-  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     IJsonType result;
     result = findReference( parent, enclosing, jsonObj );
-    if( result == null )
+    if( result != null )
     {
-      result = transformCombination( parent, enclosing, name, jsonObj );
+      result = result.copyWithAttributes( new TypeAttributes( nullable, jsonObj ) );
+    }
+    else
+    {
+      result = transformCombination( parent, enclosing, name, jsonObj, nullable );
       if( result == null )
       {
-        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj, nullable );
         if( result == null )
         {
           // No type or other means of deriving a type could be found.
@@ -733,27 +739,27 @@ public class JsonSchemaTransformer
     return result;
   }
 
-  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
+  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
   {
     List<?> list = getJSchema_Enum( bindings );
-    return makeEnum( parent, enclosing, name, list );
+    return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
+  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
   {
     // Note the "const" type is shorthand for a single element "enum" type
     List<?> list = getJSchema_Const( bindings );
-    return makeEnum( parent, enclosing, name, list );
+    return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list )
+  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list, TypeAttributes attr )
   {
     if( list == null )
     {
       return null;
     }
 
-    JsonEnumType type = new JsonEnumType( parent, enclosing, name, list );
+    JsonEnumType type = new JsonEnumType( parent, enclosing, name, list, attr );
     if( parent != null )
     {
       parent.addChild( type.getLabel(), type );
@@ -761,53 +767,53 @@ public class JsonSchemaTransformer
     return type;
   }
 
-  private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
-    IJsonType type = transformAllOf( parent, enclosing, name, jsonObj );
+    IJsonType type = transformAllOf( parent, enclosing, name, jsonObj, nullable );
     if( type != null )
     {
       return type;
     }
 
-    type = transformAnyOf( parent, enclosing, name, jsonObj );
+    type = transformAnyOf( parent, enclosing, name, jsonObj, nullable );
     if( type != null )
     {
       return type;
     }
 
-    return transformOneOf( parent, enclosing, name, jsonObj );
+    return transformOneOf( parent, enclosing, name, jsonObj, nullable );
   }
 
-  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AllOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildHierarchy( parent, enclosing, name, list );
+    return buildHierarchy( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AnyOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildUnion( parent, enclosing, name, list );
+    return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
-  private IJsonType transformOneOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformOneOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_OneOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildUnion( parent, enclosing, name, list );
+    return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list )
+  private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     JsonStructureType type = null;
     boolean hasType = false;
@@ -828,7 +834,7 @@ public class JsonSchemaTransformer
           continue;
         }
 
-        type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
+        type = type == null ? new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) ) : type;
 
         IJsonType ref = findReference( type, enclosing, elemBindings );
         if( ref != null )
@@ -848,7 +854,7 @@ public class JsonSchemaTransformer
             hasType = true;
           }
 
-          IJsonType enumType = copyWithAttributes( deriveTypeFromEnum( type, enclosing, "enum" + i++, elemBindings ), elemBindings, null );
+          IJsonType enumType = deriveTypeFromEnum( type, enclosing, "enum" + i++, elemBindings, nullable );
           if( enumType != parent )
           {
             transferIssuesFromErrantType( parent, enumType, elemBindings );
@@ -865,6 +871,7 @@ public class JsonSchemaTransformer
           {
             ObjectTransformer.transform( this, type, elemBindings );
             hasType = true;
+            type = (JsonStructureType)type.copyWithAttributes( new TypeAttributes( elemBindings ) );
           }
         }
       }
@@ -872,7 +879,7 @@ public class JsonSchemaTransformer
     return hasType ? type : null;
   }
 
-  private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list )
+  private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     IJsonType singleNullable = maybeGetSingleNullable( parent, enclosing, name, list );
     if( singleNullable != null )
@@ -880,9 +887,14 @@ public class JsonSchemaTransformer
       return singleNullable;
     }
 
-    JsonUnionType type = new JsonUnionType( parent, enclosing, name );
+    JsonUnionType type = new JsonUnionType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) );
     int i = 0;
-    Boolean nullable = isNullable( list );
+    Boolean isNullable = isNullable( list );
+    nullable = nullable == null
+               ? isNullable
+               : isNullable == null
+                 ? nullable
+                 : (Boolean)(isNullable || nullable);
     for( Object elem : list )
     {
       if( elem instanceof Pair )

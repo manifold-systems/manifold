@@ -64,7 +64,7 @@ public class JsonBasicType implements IJsonType
 
   private JsonBasicType( Type type )
   {
-    this( type, new TypeAttributes( true, null ) );
+    this( type, new TypeAttributes( true ) );
   }
 
   public static JsonBasicType get( Object jsonObj )
@@ -168,7 +168,7 @@ public class JsonBasicType implements IJsonType
     {
       return this;
     }
-    return new JsonBasicType( _type, TypeAttributes.merge( getTypeAttributes(), attributes ) );
+    return new JsonBasicType( _type, getTypeAttributes().overrideWith( attributes ) );
   }
 
   public IJsonType merge( IJsonType that )
@@ -182,7 +182,7 @@ public class JsonBasicType implements IJsonType
     if( _javaClass == String.class || other._javaClass == String.class )
     {
       // String is compatible with all simple types
-      return new JsonBasicType( Type.String, new TypeAttributes( this, other ) );
+      return new JsonBasicType( Type.String, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
     }
 
     if( _javaClass == Void.class )
@@ -197,7 +197,7 @@ public class JsonBasicType implements IJsonType
     if( _type == Type.Integer && other._type == Type.Number ||
         _type == Type.Number && other._type == Type.Integer )
     {
-      return new JsonBasicType( Type.Number, new TypeAttributes( this, other ) );
+      return new JsonBasicType( Type.Number, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
     }
 
     return null;

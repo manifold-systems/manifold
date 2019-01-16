@@ -66,9 +66,9 @@ public class JsonEnumType extends JsonStructureType
   private final List<Object> _enumValues;
   private final boolean _hasNull;
 
-  JsonEnumType( JsonSchemaType parent, URL source, String name, List<?> list )
+  JsonEnumType( JsonSchemaType parent, URL source, String name, List<?> list, TypeAttributes attr )
   {
-    super( parent, source, name );
+    super( parent, source, name, attr );
 
     _enumValues = new ArrayList<>();
     boolean hasNull = false;
@@ -99,7 +99,7 @@ public class JsonEnumType extends JsonStructureType
 
   public JsonEnumType( JsonEnumType enum1, JsonEnumType enum2, JsonSchemaType parent, String name )
   {
-    super( parent, enum1.getFile(), name );
+    super( parent, enum1.getFile(), name, enum2 == null ? enum1.getTypeAttributes() : enum1.getTypeAttributes().blendWith( enum2.getTypeAttributes() ) );
 
     Map<String, IJsonType> members = new HashMap<>( enum1.getMembers() );
     Map<String, Token> memberLocations = new HashMap<>( enum1.getMemberLocations() );

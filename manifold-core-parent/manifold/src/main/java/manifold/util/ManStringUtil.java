@@ -52,6 +52,7 @@ import java.util.regex.Pattern;
  * @author Chris Hyzer
  *         Johnson
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class ManStringUtil
 {
   private static final String[] EMPTY_STRING_ARRAY = new String[0];
@@ -81,7 +82,7 @@ public class ManStringUtil
 
   public static ArrayList<Integer> findDistinctIndexesOf( String string, String substringToLookFor )
   {
-    ArrayList<Integer> positions = new ArrayList<Integer>();
+    ArrayList<Integer> positions = new ArrayList<>();
 
     if( ManStringUtil.isEmpty( substringToLookFor ) )
     {
@@ -106,7 +107,7 @@ public class ManStringUtil
    * @param s         The String to tokenize
    * @param separator The character delimiting tokens
    *
-   * @return An ArrayList of String tokens, or null is s is null or 0 length.
+   * @return An ArrayList<String> of String tokens, or null is s is null or 0 length.
    */
   public static String[] tokenize( String s, char separator )
   {
@@ -115,8 +116,8 @@ public class ManStringUtil
       return null;
     }
     int start = 0;
-    int stop = 0;
-    ArrayList tokens = new ArrayList();
+    int stop;
+    ArrayList<String> tokens = new ArrayList<>();
     while( start <= s.length() )
     {
       stop = s.indexOf( separator, start );
@@ -129,7 +130,7 @@ public class ManStringUtil
       start = stop + 1;
     }
 
-    return (String[])tokens.toArray( new String[tokens.size()] );
+    return tokens.toArray( new String[0] );
   }
 
   /**
@@ -224,7 +225,7 @@ public class ManStringUtil
     }
     for( int i = 0; i < strLen; i++ )
     {
-      if( (Character.isWhitespace( str.charAt( i ) ) == false) )
+      if( !Character.isWhitespace( str.charAt( i ) ) )
       {
         return false;
       }
@@ -1145,7 +1146,7 @@ public class ManStringUtil
     {
       return false;
     }
-    return str.indexOf( searchStr ) >= 0;
+    return str.contains( searchStr );
   }
 
   /**
@@ -1633,7 +1634,7 @@ public class ManStringUtil
     // String's can't have a MAX_VALUEth index.
     int ret = Integer.MAX_VALUE;
 
-    int tmp = 0;
+    int tmp;
     for( int i = 0; i < sz; i++ )
     {
       String search = searchStrs[i];
@@ -1690,7 +1691,7 @@ public class ManStringUtil
     }
     int sz = searchStrs.length;
     int ret = -1;
-    int tmp = 0;
+    int tmp;
     for( int i = 0; i < sz; i++ )
     {
       String search = searchStrs[i];
@@ -2259,7 +2260,7 @@ public class ManStringUtil
     }
     int closeLen = close.length();
     int openLen = open.length();
-    List list = new ArrayList();
+    List<String> list = new ArrayList<>();
     int pos = 0;
     while( pos < (strLen - closeLen) )
     {
@@ -2281,7 +2282,7 @@ public class ManStringUtil
     {
       return null;
     }
-    return (String[])list.toArray( new String[list.size()] );
+    return list.toArray( new String[0] );
   }
 
   // Nested extraction
@@ -2647,7 +2648,7 @@ public class ManStringUtil
 
     int separatorLength = separator.length();
 
-    ArrayList substrings = new ArrayList();
+    ArrayList<String> substrings = new ArrayList<>();
     int numberOfSubstrings = 0;
     int beg = 0;
     int end = 0;
@@ -2705,7 +2706,7 @@ public class ManStringUtil
       }
     }
 
-    return (String[])substrings.toArray( new String[substrings.size()] );
+    return substrings.toArray( new String[0] );
   }
 
   // -----------------------------------------------------------------------
@@ -2806,7 +2807,7 @@ public class ManStringUtil
     {
       return EMPTY_STRING_ARRAY;
     }
-    List list = new ArrayList();
+    List<String> list = new ArrayList<>();
     int i = 0, start = 0;
     boolean match = false;
     boolean lastMatch = false;
@@ -2831,7 +2832,7 @@ public class ManStringUtil
     {
       list.add( str.substring( start, i ) );
     }
-    return (String[])list.toArray( new String[list.size()] );
+    return list.toArray( new String[0] );
   }
 
   /**
@@ -2947,7 +2948,7 @@ public class ManStringUtil
     {
       return EMPTY_STRING_ARRAY;
     }
-    List list = new ArrayList();
+    List<String> list = new ArrayList<>();
     int sizePlus1 = 1;
     int i = 0, start = 0;
     boolean match = false;
@@ -3035,7 +3036,7 @@ public class ManStringUtil
     {
       list.add( str.substring( start, i ) );
     }
-    return (String[])list.toArray( new String[list.size()] );
+    return list.toArray( new String[0] );
   }
 
   /**
@@ -3125,7 +3126,7 @@ public class ManStringUtil
       return EMPTY_STRING_ARRAY;
     }
     char[] c = str.toCharArray();
-    List list = new ArrayList();
+    List<String> list = new ArrayList<>();
     int tokenStart = 0;
     int currentType = Character.getType( c[tokenStart] );
     for( int pos = tokenStart + 1; pos < c.length; pos++ )
@@ -3152,7 +3153,7 @@ public class ManStringUtil
       currentType = type;
     }
     list.add( new String( c, tokenStart, c.length - tokenStart ) );
-    return (String[])list.toArray( new String[list.size()] );
+    return list.toArray( new String[0] );
   }
 
   // Joining
@@ -3941,7 +3942,7 @@ public class ManStringUtil
     StringBuilder buf = new StringBuilder( text.length() + increase );
     while( end != -1 )
     {
-      buf.append( text.substring( start, end ) ).append( replacement );
+      buf.append( text, start, end ).append( replacement );
       start = end + replLength;
       if( --max == 0 )
       {
@@ -3980,8 +3981,8 @@ public class ManStringUtil
    * </pre>
    *
    * @param text            text to search and replace in, no-op if null
-   * @param searchList      the Strings to search for, no-op if null
-   * @param replacementList the Strings to replace them with, no-op if null
+   * @param searchList<String>      the Strings to search for, no-op if null
+   * @param replacementList<String> the Strings to replace them with, no-op if null
    *
    * @return the text with any replacements processed, <code>null</code> if
    * null String input
@@ -4025,8 +4026,8 @@ public class ManStringUtil
    * </pre>
    *
    * @param text            text to search and replace in, no-op if null
-   * @param searchList      the Strings to search for, no-op if null
-   * @param replacementList the Strings to replace them with, no-op if null
+   * @param searchList<String>      the Strings to search for, no-op if null
+   * @param replacementList<String> the Strings to replace them with, no-op if null
    *
    * @return the text with any replacements processed, <code>null</code> if
    * null String input
@@ -4073,8 +4074,8 @@ public class ManStringUtil
    * </pre>
    *
    * @param text            text to search and replace in, no-op if null
-   * @param searchList      the Strings to search for, no-op if null
-   * @param replacementList the Strings to replace them with, no-op if null
+   * @param searchList<String>      the Strings to search for, no-op if null
+   * @param replacementList<String> the Strings to replace them with, no-op if null
    * @param repeat          if true, then replace repeatedly
    *                        until there are no more possible replacements or timeToLive < 0
    * @param timeToLive      if less than 0 then there is a circular reference and endless
@@ -4126,7 +4127,7 @@ public class ManStringUtil
     // index on index that the match was found
     int textIndex = -1;
     int replaceIndex = -1;
-    int tempIndex = -1;
+    int tempIndex;
 
     // index of replace array that will replace the search string found
     // NOTE: logic duplicated below START
@@ -4193,7 +4194,6 @@ public class ManStringUtil
 
       textIndex = -1;
       replaceIndex = -1;
-      tempIndex = -1;
       // find the next earliest match
       // NOTE: logic mostly duplicated above START
       for( int i = 0; i < searchLength; i++ )
@@ -4378,8 +4378,8 @@ public class ManStringUtil
    */
   public static String overlayString( String text, String overlay, int start, int end )
   {
-    return new StringBuffer( start + overlay.length() + text.length() - end + 1 )
-      .append( text.substring( 0, start ) )
+    return new StringBuilder( start + overlay.length() + text.length() - end + 1 )
+      .append( text, 0, start )
       .append( overlay )
       .append( text.substring( end ) )
       .toString();
@@ -4449,8 +4449,8 @@ public class ManStringUtil
       start = end;
       end = temp;
     }
-    return new StringBuffer( len + start - end + overlay.length() + 1 )
-      .append( str.substring( 0, start ) )
+    return new StringBuilder( len + start - end + overlay.length() + 1 )
+      .append( str, 0, start )
       .append( overlay )
       .append( str.substring( end ) )
       .toString();
@@ -5416,15 +5416,11 @@ public class ManStringUtil
    */
   public static String capitalize( String str )
   {
-    int strLen;
-    if( str == null || (strLen = str.length()) == 0 )
+    if( str == null || str.length() == 0 )
     {
       return str;
     }
-    return new StringBuffer( strLen )
-      .append( Character.toTitleCase( str.charAt( 0 ) ) )
-      .append( str.substring( 1 ) )
-      .toString();
+    return String.valueOf( Character.toTitleCase( str.charAt( 0 ) ) ) + str.substring( 1 );
   }
 
   /**
@@ -5463,15 +5459,11 @@ public class ManStringUtil
    */
   public static String uncapitalize( String str )
   {
-    int strLen;
-    if( str == null || (strLen = str.length()) == 0 )
+    if( str == null || str.length() == 0 )
     {
       return str;
     }
-    return new StringBuffer( strLen )
-      .append( Character.toLowerCase( str.charAt( 0 ) ) )
-      .append( str.substring( 1 ) )
-      .toString();
+    return String.valueOf( Character.toLowerCase( str.charAt( 0 ) ) ) + str.substring( 1 );
   }
 
   /**
@@ -5524,7 +5516,7 @@ public class ManStringUtil
     }
     StringBuilder buffer = new StringBuilder( strLen );
 
-    char ch = 0;
+    char ch;
     for( int i = 0; i < strLen; i++ )
     {
       ch = str.charAt( i );
@@ -5652,7 +5644,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( Character.isLetter( str.charAt( i ) ) == false )
+      if( !Character.isLetter( str.charAt( i ) ) )
       {
         return false;
       }
@@ -5691,7 +5683,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( (Character.isLetter( str.charAt( i ) ) == false) && (str.charAt( i ) != ' ') )
+      if( !Character.isLetter( str.charAt( i ) ) && (str.charAt( i ) != ' ') )
       {
         return false;
       }
@@ -5729,7 +5721,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( Character.isLetterOrDigit( str.charAt( i ) ) == false )
+      if( !Character.isLetterOrDigit( str.charAt( i ) ) )
       {
         return false;
       }
@@ -5768,7 +5760,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( (Character.isLetterOrDigit( str.charAt( i ) ) == false) && (str.charAt( i ) != ' ') )
+      if( !Character.isLetterOrDigit( str.charAt( i ) ) && (str.charAt( i ) != ' ') )
       {
         return false;
       }
@@ -5807,7 +5799,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( Character.isDigit( str.charAt( i ) ) == false )
+      if( !Character.isDigit( str.charAt( i ) ) )
       {
         return false;
       }
@@ -5848,7 +5840,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( (Character.isDigit( str.charAt( i ) ) == false) && (str.charAt( i ) != ' ') )
+      if( !Character.isDigit( str.charAt( i ) ) && (str.charAt( i ) != ' ') )
       {
         return false;
       }
@@ -5952,7 +5944,7 @@ public class ManStringUtil
     int sz = str.length();
     for( int i = 0; i < sz; i++ )
     {
-      if( (Character.isWhitespace( str.charAt( i ) ) == false) )
+      if( !Character.isWhitespace( str.charAt( i ) ) )
       {
         return false;
       }
@@ -6036,7 +6028,7 @@ public class ManStringUtil
   //-----------------------------------------------------------------------
 
   /**
-   * <p>Reverses a String as per {@link StringBuffer#reverse()}.</p>
+   * <p>Reverses a String as per {@link StringBuilder#reverse()}.</p>
    * <p>
    * <p>A <code>null</code> String returns <code>null</code>.</p>
    * <p>
@@ -6056,7 +6048,7 @@ public class ManStringUtil
     {
       return null;
     }
-    return new StringBuffer( str ).reverse().toString();
+    return new StringBuilder( str ).reverse().toString();
   }
 
   // Abbreviating
@@ -6891,6 +6883,31 @@ public class ManStringUtil
           return text.substring( 1, text.length()-1 );
         }
       }
+    }
+    return text;
+  }
+  
+  public static String replaceCRLFwithLF( String text )
+  {
+    StringBuilder result = new StringBuilder();
+    int len = text.length() - 1;
+    int offset = 0;
+    for( int i = 0; i < len; i++ )
+    {
+      char c = text.charAt( i );
+      if( c == '\r' && text.charAt( i+1 ) == '\n' )
+      {
+        result.append( text, offset, i ).append( '\n' );
+        offset = (++i + 1);
+      }
+    }
+    if( offset > 0 )
+    {
+      if( offset < text.length() )
+      {
+        result.append( text, offset, text.length() );
+      }
+      return result.toString();
     }
     return text;
   }
