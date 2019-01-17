@@ -54,11 +54,11 @@ import manifold.util.cache.FqnCache;
  */
 public class JsonSchemaTransformer
 {
-  private static final String JSCH_SCHEMA = "\$schema";
+  private static final String JSCH_SCHEMA = "${'$'}schema";
   private static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
-  private static final String JSCH_ID = "\$id";
-  private static final String JSCH_REF = "\$ref";
+  private static final String JSCH_ID = "${'$'}id";
+  private static final String JSCH_REF = "${'$'}ref";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_CONST = "const";
   private static final String JSCH_ALL_OF = "allOf";
@@ -125,7 +125,7 @@ public class JsonSchemaTransformer
     if( !isSchema( docObj ) )
     {
       ErrantType errant = new ErrantType( source, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '\$source' does not contain a '\$schema' element." ) );
+      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '${'$'}source' does not contain a '${'$'}schema' element." ) );
       return errant;
     }
 
@@ -526,7 +526,7 @@ public class JsonSchemaTransformer
           {
             token = ((Token[])((Pair)refValue).getFirst())[0];
           }
-          refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'\$ref' not allowed at root level" ) );
+          refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'${'$'}ref' not allowed at root level" ) );
           result = refParent;
         }
         else
