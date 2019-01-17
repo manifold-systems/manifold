@@ -490,9 +490,10 @@ public class JsonStructureType extends JsonSchemaType
   private void addGetter( StringBuilder sb, int indent, IJsonType type, String key, String propertyType )
   {
     addSourcePositionAnnotation( sb, indent + 2, key );
+    //noinspection unused
     String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
     indent( sb, indent + 2 );
-    sb.append( "default $propertyType get" ).append( identifier ).append( "() {\n" );
+    sb.append( "default $propertyType get$identifier() {\n" );
     indent( sb, indent + 4 );
     if( type instanceof JsonListType || propertyType.indexOf( '>' ) > 0 )
     {
@@ -509,9 +510,10 @@ public class JsonStructureType extends JsonSchemaType
   private void addSetter( StringBuilder sb, int indent, String key, String propertyType )
   {
     addSourcePositionAnnotation( sb, indent + 2, key );
+    //noinspection unused
     String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
     indent( sb, indent + 2 );
-    sb.append( "default void set" ).append( identifier ).append( "(" ).append( propertyType ).append( " ${'$'}value) {\n" );
+    sb.append( "default void set$identifier(" ).append( propertyType ).append( " ${'$'}value) {\n" );
     indent( sb, indent + 4 );
     sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(getBindings(), ${'$'}value));\n" );
     indent( sb, indent + 2 );
@@ -996,7 +998,7 @@ public class JsonStructureType extends JsonSchemaType
       indent( sb, indent );
       sb.append( "public Builder with$suffix($propertyType $identifier) {\n" );
       indent( sb, indent+2 );
-      sb.append( "_bindings.put(\"$key\", $identifier);\n" );
+      sb.append( "_bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(_bindings, $identifier));\n" );
       indent( sb, indent+2 );
       sb.append( "return this;\n" );
       indent( sb, indent );

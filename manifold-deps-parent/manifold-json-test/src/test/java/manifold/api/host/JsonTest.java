@@ -22,6 +22,7 @@ import org.junit.Assert;
 
 import static abc.Person.*;
 import static abc.Person.Address.*;
+import static java.lang.System.out;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -181,21 +182,25 @@ public class JsonTest extends TestCase
 
   public void testRef()
   {
-    Contact contact = Contact.create();
-    contact.getDateOfBirth();
-    contact.setPrimaryAddress( Contact.Address.create("111 Main St.", "Cupertino", "CA") );
+    Contact contact = Contact.builder()
+      .withName("Scott McKinney")
+      .withDateOfBirth(LocalDate.of(1986, 8, 9))
+      .withPrimaryAddress(Contact.Address.create("111 Main St.", "Cupertino", "CA")).build();
     Contact.Address primaryAddress = contact.getPrimaryAddress();
-    primaryAddress.setStreet_address( "111 Foo Dr" );
-    primaryAddress.setCity( "Cupertino" );
-    primaryAddress.setState( "CA" );
-    assertEquals( "111 Foo Dr", primaryAddress.getStreet_address() );
+    assertEquals( "111 Main St.", primaryAddress.getStreet_address() );
     assertEquals( "Cupertino", primaryAddress.getCity() );
     assertEquals( "CA", primaryAddress.getState() );
+    assertEquals( "Scott McKinney", contact.getName() );
+    assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
     assertEquals( "{\n" +
-                  "  \"street_address\": \"111 Foo Dr\",\n" +
-                  "  \"city\": \"Cupertino\",\n" +
-                  "  \"state\": \"CA\"\n" +
-                  "}", primaryAddress.toJson() );
+                  "  \"DateOfBirth\": \"1986-08-09\",\n" +
+                  "  \"PrimaryAddress\": {\n" +
+                  "    \"street_address\": \"111 Main St.\",\n" +
+                  "    \"city\": \"Cupertino\",\n" +
+                  "    \"state\": \"CA\"\n" +
+                  "  },\n" +
+                  "  \"Name\": \"Scott McKinney\"\n" +
+                  "}", contact.toJson() );
   }
 
   public void testThing()
@@ -350,14 +355,14 @@ public class JsonTest extends TestCase
   public void testDateTimeFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalDateTime value = LocalDateTime.of(2000, 2, 20, 1, 2);
     assertNull( hasFormats.getTheDateAndTime() );
     hasFormats.setTheDateAndTime( value );
     assertEquals( value, hasFormats.getTheDateAndTime() );
     String actualValue = (String)((Map)hasFormats).get( "TheDateAndTime" );
     assertEquals( value, LocalDateTime.parse( actualValue ) );
-    
+
     assertNull( hasFormats.getAnotherDateTime() );
     hasFormats.setAnotherDateTime( value );
     assertEquals( value, hasFormats.getAnotherDateTime() );
@@ -367,7 +372,7 @@ public class JsonTest extends TestCase
   public void testDateFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalDate value = LocalDate.of(1999, 5, 22);
     assertNull( hasFormats.getTheDate() );
     hasFormats.setTheDate( value );
@@ -378,7 +383,7 @@ public class JsonTest extends TestCase
   public void testTimeFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalTime value = LocalTime.of( 1, 2, 3, 4 );
     assertNull( hasFormats.getTheTime() );
     hasFormats.setTheTime( value );

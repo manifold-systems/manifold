@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
   "type" : "object",
-  "id" : "urn:xyz:Contact:1.0",
+  "id" : "http://example.com/schemas/Contact.json",
 
   "definitions": {
     "Address": {
@@ -25,16 +25,15 @@
     },
     "DateOfBirth" : {
       "type" : "string",
-      "format" : "timestamp"
+      "format" : "date"
     },
     "HomePhone" : {
       "type" : "string"
     },
     "HomePhoneCountry" : {
-      "type" : "string",
-      "format" : "typekey.PhoneCountryCode"
+      "type" : "string"
     },
-    "Name" : {
+    "Name": {
       "type" : "string"
     },
     "NumDependents" : {
