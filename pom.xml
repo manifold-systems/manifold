@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.35-SNAPSHOT</version>
+  <version>0.37-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>Manifold is a new breed of Java tooling. It provides powerful features to make Java development more appealing and productive.</description>
