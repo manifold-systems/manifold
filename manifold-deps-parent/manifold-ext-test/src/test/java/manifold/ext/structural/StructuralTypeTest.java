@@ -1,6 +1,7 @@
 package manifold.ext.structural;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +54,13 @@ public class StructuralTypeTest extends TestCase
     assertEquals( makeSampleList_Sorted(), points );
   }
 
+  public void testCallFromBoundedTypeVar()
+  {
+    Rectangle rectangle = new Rectangle( 1, 2, 3, 4 );
+    HasCoordinate<Rectangle> rectCoord = new HasCoordinate<>( rectangle );
+    assertEquals( 1.0, rectCoord.getX() );
+  }
+
   private List<Point> makeSampleList()
   {
     return Arrays.asList( new Point( 3, 2 ), new Point( 1, 2 ), new Point( 3, 5 ), new Point( 1, 1 ) );
@@ -68,6 +76,21 @@ public class StructuralTypeTest extends TestCase
     public int compare(Coordinate c1, Coordinate c2) {
       double res = c1.getX() == c2.getX() ? c1.getY() - c2.getY() : c1.getX() - c2.getX();
       return res < 0 ? -1 : res > 0 ? 1 : 0;
+    }
+  }
+
+  static class HasCoordinate<E extends abc.Coordinate>
+  {
+    private final E _coord;
+
+    HasCoordinate( E coord )
+    {
+      _coord = coord;
+    }
+
+    double getX()
+    {
+      return _coord.getX();
     }
   }
 }
