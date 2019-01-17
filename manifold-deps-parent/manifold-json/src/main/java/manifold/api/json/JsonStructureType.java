@@ -653,16 +653,59 @@ public class JsonStructureType extends JsonSchemaType
 
   private String getPropertyType( IJsonType propertyType )
   {
+    String name;
     if( propertyType instanceof JsonListType )
     {
-      return List.class.getTypeName() + '<' + getPropertyType( ((JsonListType)propertyType).getComponentType() ) + '>';
+      name = List.class.getTypeName() + '<' + getPropertyType( ((JsonListType)propertyType).getComponentType() ) + '>';
     }
-    if( propertyType instanceof JsonUnionType )
+    else if( propertyType instanceof JsonUnionType )
     {
       JsonEnumType enumType = ((JsonUnionType)propertyType).getCollapsedEnumType();
-      return enumType != null ? enumType.getIdentifier() : Object.class.getSimpleName();
+      name = enumType != null
+             ? getNameRelativeFromMe( enumType )
+             : Object.class.getSimpleName();
     }
-    return propertyType.getIdentifier();
+    else
+    {
+      name = propertyType instanceof JsonSchemaType
+             ? getNameRelativeFromMe( propertyType )
+             : propertyType.getIdentifier();
+    }
+    return name;
+  }
+
+  private String getNameRelativeFromMe( IJsonType type )
+  {
+    IJsonType parent = getParentFromMe( type );
+    if( parent == null )
+    {
+      return type.getIdentifier();
+    }
+
+    return getNameRelativeFromMe( parent ) + '.' + type.getIdentifier();
+  }
+  private IJsonType getParentFromMe( IJsonType type )
+  {
+    IJsonParentType parent = type.getParent();
+    if( parent != null )
+    {
+      if( parent instanceof JsonListType )
+      {
+        return getParentFromMe( parent );
+      }
+
+      if( parent.getIdentifier().equals( JsonSchemaTransformer.JSCH_DEFINITIONS ) )
+      {
+        return getParentFromMe( parent );
+      }
+
+      if( parent == this )
+      {
+        return null;
+      }
+    }
+
+    return parent;
   }
 
   private String getConstituentQn( IJsonType constituentType )

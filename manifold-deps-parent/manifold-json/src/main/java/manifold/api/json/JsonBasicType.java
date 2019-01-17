@@ -94,45 +94,6 @@ public class JsonBasicType implements IJsonType
     return new JsonBasicType( Type.String );
   }
 
-  /**
-   *  For component type of array because implemented as a List,
-   *  generics does not support primitive type param
-   */
-  JsonBasicType forceBoxed()
-  {
-    if( _javaClass.isPrimitive() )
-    {
-      Class<?> javaClass;
-      if( _javaClass == boolean.class )
-      {
-        javaClass = Boolean.class;
-      }
-      else if( _javaClass == int.class )
-      {
-        javaClass = Integer.class;
-      }
-      else if( _javaClass == long.class )
-      {
-        javaClass = Long.class;
-      }
-      else if( _javaClass == float.class )
-      {
-        javaClass = Float.class;
-      }
-      else if( _javaClass == double.class )
-      {
-        javaClass = Double.class;
-      }
-      else
-      {
-        throw new IllegalStateException();
-      }
-      JsonBasicType copy = (JsonBasicType)copyWithAttributes( getTypeAttributes() );
-      copy._javaClass = javaClass;
-    }
-    return this;
-  }
-
   @Override
   public String getName()
   {

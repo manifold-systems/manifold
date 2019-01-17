@@ -14,13 +14,11 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 
-import abc.FootballPlayer.football_team;
 import junit.framework.TestCase;
 import manifold.api.json.schema.Base64Encoding;
 import manifold.api.json.schema.OctetEncoding;
 import manifold.util.ReflectUtil;
 import org.junit.Assert;
-
 
 import static abc.Person.*;
 import static abc.Person.Address.*;
@@ -572,7 +570,7 @@ public class JsonTest extends TestCase
   {
     FootballPlayer footballPlayer =
             FootballPlayer.builder("Joe", "Smith",
-                    football_team.builder("east", "lions").build())
+                    FootballPlayer.football_team.builder("east", "lions").build())
                     .withAge(25).build();
 
     // Since the person interface is an inner class of FootballPlayer, FootballPlayer cannot extend it.  Here we
@@ -584,5 +582,21 @@ public class JsonTest extends TestCase
 
     FootballPlayer.person person = FootballPlayer.person.create("scott", "mckinney");
     person = FootballPlayer.person.builder("scott", "mckinney").withAge(29).build();
+
+//    angular.create(1).setSchematics(abc.angular.schematicOptions.create());
+//    angular.create().
+//
+//    apple_app_site_association.create(apple_app_site_association.applinks.create(apple_app_site_association.applinks.apps.__, Arrays.asList(apple_app_site_association.applinks.details.builder().withAppID("foo").build())));
+//    resume.builder().withBasics(
+//            resume.basics.builder().withProfiles(Arrays.asList(resume.basics.profiles.builder().build())).build() );
+  }
+
+  public void testNestedDefinitions()
+  {
+    HasNestedDefinitions nestedDefs = HasNestedDefinitions.create();
+    nestedDefs.setTheNestedObject( HasNestedDefinitions.MyObject.MyNestedObject.create() );
+    nestedDefs.getTheNestedObject().setNestedThing( "hi" );
+    nestedDefs.getTheNestedObject().getNestedThing();
+    nestedDefs.getTheNestedString();
   }
 }
