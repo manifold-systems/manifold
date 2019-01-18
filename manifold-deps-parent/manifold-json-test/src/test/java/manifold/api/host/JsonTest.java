@@ -1,7 +1,5 @@
 package manifold.api.host;
 
-import abc.*;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -14,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 
+import abc.*;
 import junit.framework.TestCase;
 import manifold.api.json.schema.Base64Encoding;
 import manifold.api.json.schema.OctetEncoding;
@@ -222,7 +221,7 @@ public class JsonTest extends TestCase
     assertSame( dims, dims2 );
   }
 
-  public void testStructuralIntefaceCasting()
+  public void testStructuralInterfaceCasting()
   {
     Person person = Person.create();
     IWhatever whatever = (IWhatever)person;
@@ -594,6 +593,13 @@ public class JsonTest extends TestCase
 //    apple_app_site_association.create(apple_app_site_association.applinks.create(apple_app_site_association.applinks.apps.__, Arrays.asList(apple_app_site_association.applinks.details.builder().withAppID("foo").build())));
 //    resume.builder().withBasics(
 //            resume.basics.builder().withProfiles(Arrays.asList(resume.basics.profiles.builder().build())).build() );
+  }
+
+  public void testDataBindingsEqual()
+  {
+    MyObj myObj = MyObj.builder("hi").withBar(LocalDate.of(2020, 12, 3)).build();
+    MyObj myObj2 = MyObj.builder("hi").withBar(LocalDate.of(2020, 12, 3)).build();
+    assertEquals(myObj, myObj2);
   }
 
   public void testNestedDefinitions()

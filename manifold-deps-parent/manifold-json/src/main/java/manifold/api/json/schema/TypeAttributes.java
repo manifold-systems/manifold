@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import manifold.util.Pair;
 
 
@@ -40,17 +40,17 @@ public final class TypeAttributes
 
   public TypeAttributes()
   {
-    this( null, new SimpleBindings() );
+    this( null, new DataBindings() );
   }
 
   public TypeAttributes( Boolean nullable )
   {
-    this( nullable, new SimpleBindings() );
+    this( nullable, new DataBindings() );
   }
 
   public TypeAttributes( Bindings bindings )
   {
-    this( null, new SimpleBindings() );
+    this( null, new DataBindings() );
     assignAttribute( bindings, JSCH_NULLABLE );
   }
 
@@ -221,7 +221,7 @@ public final class TypeAttributes
     private static final BiFunction<Boolean, Boolean, Boolean> TRUE_IF_ONE_TRUE = AttributeTypes::trueIfOneTrue;
     static final BiFunction<Object, Object, Object> OVERRIDE = (o1, o2) -> (o2 != null) ? o2 : o1;
     static final BiFunction<Bindings, Bindings, Bindings> MERGE = (o1, o2) -> {
-      SimpleBindings o3 = new SimpleBindings();
+      DataBindings o3 = new DataBindings();
       if( o1 != null ) o3.putAll( o1 );
       if( o2 != null ) o3.putAll( o2 );
       return o3;

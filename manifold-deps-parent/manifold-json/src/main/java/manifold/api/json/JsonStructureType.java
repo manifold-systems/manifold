@@ -1073,7 +1073,7 @@ public class JsonStructureType extends JsonSchemaType
     addRequredParams( sb, allRequired, allMembers );
     sb.append( ") {\n" );
     indent( sb, indent + 2 );
-    sb.append( "SimpleBindings bindings_ = new SimpleBindings();\n" );
+    sb.append( "DataBindings bindings_ = new DataBindings();\n" );
     for( String requiredProp: allRequired )
     {
       IJsonType paramType = allMembers.get( requiredProp );

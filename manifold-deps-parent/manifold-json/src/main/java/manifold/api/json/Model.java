@@ -19,7 +19,7 @@ package manifold.api.json;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -58,7 +58,7 @@ class Model extends AbstractSingleFileModel
       {
         _issues = new JsonIssueContainer( (ScriptException)cause, getFile() );
       }
-      bindings = new SimpleBindings();
+      bindings = new DataBindings();
     }
 
     IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), null, bindings );

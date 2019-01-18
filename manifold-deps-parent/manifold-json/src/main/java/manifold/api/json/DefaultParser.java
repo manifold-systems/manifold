@@ -20,7 +20,7 @@ import java.io.StringReader;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import manifold.util.Pair;
 
 public class DefaultParser implements IJsonParser
@@ -66,7 +66,7 @@ public class DefaultParser implements IJsonParser
         result instanceof Number ||
         result instanceof Boolean )
     {
-      Bindings wrapper = new SimpleBindings();
+      Bindings wrapper = new DataBindings();
       wrapper.put( "value", result );
       return wrapper;
     }

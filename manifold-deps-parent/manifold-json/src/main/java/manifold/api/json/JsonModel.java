@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Set;
 import javax.script.Bindings;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -64,7 +64,7 @@ class JsonModel extends AbstractSingleFileModel
       {
         _issues = new JsonIssueContainer( (ScriptException)cause, getFile() );
       }
-      bindings = new SimpleBindings();
+      bindings = new DataBindings();
     }
 
     try
