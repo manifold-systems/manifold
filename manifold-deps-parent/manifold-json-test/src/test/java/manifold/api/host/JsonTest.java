@@ -602,6 +602,28 @@ public class JsonTest extends TestCase
     assertEquals(myObj, myObj2);
   }
 
+  public void testUsesDefs()
+  {
+    UsesDefs usesDefs = UsesDefs.builder("hi")
+      .withThing(UsesDefs.Thing.builder()
+        .withField1("f1")
+        .withField2(3)
+        .build())
+      .withStuff(OtherDefs.Stuff.builder("foo")
+        .withBar(4)
+        .build())
+      .withMore(OtherDefs.Stuff.builder("fu")
+        .withBar(5)
+        .build())
+      .build();
+    assertEquals( "f1", usesDefs.getThing().getField1() );
+    assertEquals( 3, usesDefs.getThing().getField2() );
+    assertEquals( "foo", usesDefs.getStuff().getFoo() );
+    assertEquals( 4, usesDefs.getStuff().getBar() );
+    assertEquals( "fu", usesDefs.getMore().getFoo() );
+    assertEquals( 5, usesDefs.getMore().getBar() );
+  }
+
   public void testNestedDefinitions()
   {
     HasNestedDefinitions nestedDefs = HasNestedDefinitions.create();

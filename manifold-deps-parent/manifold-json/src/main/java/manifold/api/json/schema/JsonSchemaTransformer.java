@@ -66,6 +66,7 @@ public class JsonSchemaTransformer
   private static final String JSCH_ANY_OF = "anyOf";
   static final String JSCH_REQUIRED = "required";
   public static final String JSCH_DEFINITIONS = "definitions";
+  private static final String JSCH_DEFS = "${'$'}defs";
   static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_FORMAT = "format";
 
@@ -219,6 +220,10 @@ public class JsonSchemaTransformer
   private static Bindings getJSchema_Definitions( Bindings docObj )
   {
     Object value = docObj.get( JSCH_DEFINITIONS );
+    if( value == null )
+    {
+      value = docObj.get( JSCH_DEFS );
+    }
     return getBindings( value );
   }
 
@@ -1047,7 +1052,7 @@ public class JsonSchemaTransformer
     {
       Pair<IJsonType, JsonSchemaTransformer> pair = findBaseType( token, parent, enclosing, uri, filePart );
 
-      IJsonType definition = pair == null ? null : findFragmentType( enclosing, uri, pair );
+      IJsonType definition = pair == null ? null : findFragmentType( token, uri, pair );
       if( definition == null )
       {
         parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI: $uri" ) );
@@ -1058,25 +1063,36 @@ public class JsonSchemaTransformer
     {
       // relative to this file
 
-      String fragment = uri.getFragment();
+      IJsonType fragment = findFragmentRef( parent, enclosing, token, uri );
       if( fragment != null )
       {
-        return new LazyRefJsonType( () -> {
-          IJsonType localRef = findLocalRef( fragment, enclosing );
-          if( localRef == null )
-          {
-            parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
-            localRef = new ErrantType( enclosing, fragment );
-          }
-          return localRef;
-        } );
+        return fragment;
       }
     }
 
     throw new UnsupportedOperationException( "Unhandled URI: $ref" );
   }
 
-  private IJsonType findFragmentType( URL enclosing, URI uri, Pair<IJsonType, JsonSchemaTransformer> pair )
+  private IJsonType findFragmentRef( JsonSchemaType parent, URL enclosing, Token token, URI uri )
+  {
+    String uriFragment = uri.getFragment();
+    if( uriFragment != null )
+    {
+      String fragment = uriFragment.replace( JSCH_DEFS, JSCH_DEFINITIONS );
+      return new LazyRefJsonType( () -> {
+        IJsonType localRef = findLocalRef( fragment, enclosing );
+        if( localRef == null )
+        {
+          parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
+          localRef = new ErrantType( enclosing, fragment );
+        }
+        return localRef;
+      } );
+    }
+    return null;
+  }
+
+  private IJsonType findFragmentType( Token token, URI uri, Pair<IJsonType, JsonSchemaTransformer> pair )
   {
     String fragment = uri.getFragment();
     IJsonType baseType = pair.getFirst();
@@ -1085,8 +1101,7 @@ public class JsonSchemaTransformer
       return baseType;
     }
 
-    JsonSchemaTransformer tx = pair.getSecond();
-    return tx.findLocalRef( fragment, enclosing );
+    return pair.getSecond().findFragmentRef( (JsonSchemaType)baseType, ((JsonSchemaType)baseType).getFile(), token, uri );
   }
 
   private Pair<IJsonType, JsonSchemaTransformer> findBaseType( Token token, JsonSchemaType parent, URL enclosing, URI uri, String filePart )
@@ -1159,9 +1174,8 @@ public class JsonSchemaTransformer
       {
         name = name.substring( 0, iDot );
       }
-      baseType = transform( _host, name, url, bindings );
-      pair = new Pair<>( baseType, this );
-      JsonSchemaTransformerSession.instance().cacheBaseType( url, pair );
+      transform( _host, name, url, bindings );
+      pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
     }
     return pair;
   }

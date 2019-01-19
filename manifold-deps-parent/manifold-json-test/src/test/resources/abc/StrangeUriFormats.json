@@ -3,7 +3,7 @@
   "additionalProperties": false,
   "properties": {
     "nc:Vehicle": {
-      "description": "A conveyance designed to carry an operator, passengers and/or cargo, over land.",
+      "description": "a vehicle or array of vehicles",
       "oneOf": [
         {
           "$ref": "#/definitions/nc:VehicleType"
@@ -19,7 +19,7 @@
   },
   "definitions": {
     "nc:VehicleType": {
-      "description": "A data type for a conveyance designed to carry an operator, passengers and/or cargo, over land.",
+      "description": "a vehicle type",
       "allOf": [
         {
           "type": "object",
