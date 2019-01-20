@@ -1912,7 +1912,7 @@ Runnable runner = (Runnable) map;
 runner.run();
 ```
 
-This example prints "run" because `Map.call()` dispatches the call to the "run" entry having a 
+This example prints "hello" because `Map.call()` dispatches the call to the "run" entry having a 
 `Runnable` functional interface value.
 
 Note the similarity of this functionality on `Map` with _expando_ types in dynamic languages.  The
