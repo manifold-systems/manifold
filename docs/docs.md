@@ -1184,7 +1184,7 @@ First, `ImageTypeManifold` overrides the `init()` method to supply the base clas
 that shortly.  Next, it overrides `handlesFileExtension()` to tell the base class which file extensions it handles.
 Next, since the image manifold produces classes with a slightly different name than the base file name, it overrides 
 `aliasFqn()` to provide an alias for the qualified name of the form "<package>.<image-name>_<ext>".  The name must
-match the class name the image manifold produces. There are no inner classed produced by this manifold, therefore
+match the class name the image manifold produces. There are no inner classes produced by this manifold, therefore
 it overrides `isInnerType()` returning false; the base class must ask the subclass to resolve inner types.  Finally,
 the image manifold overrides `produce()`, this is where you produce Java source for a specified class name.
 
@@ -1912,7 +1912,7 @@ Runnable runner = (Runnable) map;
 runner.run();
 ```
 
-This example prints "run" because `Map.call()` dispatches the call to the "run" entry having a 
+This example prints "hello" because `Map.call()` dispatches the call to the "run" entry having a 
 `Runnable` functional interface value.
 
 Note the similarity of this functionality on `Map` with _expando_ types in dynamic languages.  The
