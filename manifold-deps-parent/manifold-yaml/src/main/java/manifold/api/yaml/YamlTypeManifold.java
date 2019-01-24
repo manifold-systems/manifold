@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package manifold.api.json;
+package manifold.api.yaml;
 
+import java.util.Arrays;
+import java.util.List;
 import manifold.api.host.IModule;
+import manifold.api.json.AbstractJsonTypeManifold;
 
 /**
  */
-public class JsonTypeManifold extends AbstractJsonTypeManifold<JsonModel>
+public class YamlTypeManifold extends AbstractJsonTypeManifold<YamlModel>
 {
   @SuppressWarnings("WeakerAccess")
-  public static final String FILE_EXTENSION = "json";
+  public static final List<String> FILE_EXTENSION = Arrays.asList( "yaml", "yml" );
 
   @Override
   public void init( IModule module )
   {
-    init( module, (fqn, files) -> new JsonModel( getModule().getHost(), fqn, files ) );
+    init( module, ( fqn, files ) -> new YamlModel( getModule().getHost(), fqn, files ) );
   }
 
   @Override
   public boolean handlesFileExtension( String fileExtension )
   {
-    return fileExtension.equals( FILE_EXTENSION );
+    return FILE_EXTENSION.contains( fileExtension );
   }
 }

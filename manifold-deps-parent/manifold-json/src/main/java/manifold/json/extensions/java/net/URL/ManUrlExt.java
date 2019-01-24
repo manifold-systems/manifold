@@ -16,6 +16,7 @@
 
 package manifold.json.extensions.java.net.URL;
 
+import manifold.api.json.Yaml;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.io.IOException;
 import java.io.InputStream;
@@ -100,15 +101,17 @@ public class ManUrlExt
    * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a>  to pass JSON bindings to
    * this URL and get back the full content as a String.
    *
+   * @param arguments A mapping of argument name to value, using JSON Schema as the format
+   *
    * @return The full content of this URL coerced to a String.
    *
    * @see #postForJsonContent(URL, Bindings)
    */
-  public static String postForTextContent( @This URL url, Bindings bindings )
+  public static String postForTextContent( @This URL url, Bindings arguments )
   {
     try
     {
-      byte[] bytes = bindings.makeArguments().getBytes( "UTF-8" );
+      byte[] bytes = arguments.makeArguments().getBytes( "UTF-8" );
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod( "POST" );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
@@ -133,14 +136,32 @@ public class ManUrlExt
    * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a> to pass JSON bindings to
    * this URL and get the full content as a JSON object.
    *
+   * @param arguments A mapping of argument name to value, using JSON Schema as the format
+   *
    * @return The full content of this URL's stream as a JSON object.
    *
    * @see #postForTextContent(URL, Bindings)
    */
   @SuppressWarnings("unused")
-  public static Bindings postForJsonContent( @This URL url, Bindings bindings )
+  public static Bindings postForJsonContent( @This URL url, Bindings arguments )
   {
-    return Json.fromJson( postForTextContent( url, bindings ) );
+    return Json.fromJson( postForTextContent( url, arguments ) );
+  }
+
+  /**
+   * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a> to pass YAML bindings to
+   * this URL and get the full content as a YAML object.
+   *
+   * @param arguments A mapping of argument name to value, using JSON Schema as the format
+   *
+   * @return The full content of this URL's stream as a YAML object.
+   *
+   * @see #postForTextContent(URL, Bindings)
+   */
+  @SuppressWarnings("unused")
+  public static Bindings postForYamlContent( @This URL url, Bindings arguments )
+  {
+    return Yaml.fromYaml( postForTextContent( url, arguments ) );
   }
 
   private static String makeValue( Object value )
@@ -195,5 +216,16 @@ public class ManUrlExt
   public static Bindings getJsonContent( @This URL thiz )
   {
     return Json.fromJson( getTextContent( thiz ) );
+  }
+  
+  /**
+   * @return A YAML object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
+   * content is not a YAML document.
+   *
+   * @see manifold.api.json.Yaml#fromYaml(String)
+   */
+  public static Bindings getYamlContent( @This URL thiz )
+  {
+    return Yaml.fromYaml( getTextContent( thiz ) );
   }
 }

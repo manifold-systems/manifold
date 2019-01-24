@@ -18,6 +18,7 @@ package manifold.api.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Objects;
 import manifold.api.json.schema.Type;
 import manifold.api.json.schema.TypeAttributes;
 import manifold.ext.RuntimeMethods;
@@ -155,6 +156,11 @@ public class JsonBasicType implements IJsonType
       return this;
     }
 
+    if( _type == other._type )
+    {
+      return new JsonBasicType( _type, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
+    }
+
     if( _type == Type.Integer && other._type == Type.Number ||
         _type == Type.Number && other._type == Type.Integer )
     {
@@ -162,5 +168,28 @@ public class JsonBasicType implements IJsonType
     }
 
     return null;
+  }
+
+  @Override
+  public boolean equals( Object o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
+    JsonBasicType that = (JsonBasicType)o;
+    return _type == that._type &&
+           Objects.equals( _javaClass, that._javaClass ) &&
+           Objects.equals( _typeAttributes, that._typeAttributes );
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash( _type, _javaClass, _typeAttributes );
   }
 }

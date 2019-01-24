@@ -55,7 +55,7 @@ import manifold.util.cache.FqnCache;
 public class JsonSchemaTransformer
 {
   private static final String JSCH_SCHEMA = "${'$'}schema";
-  private static final String JSCH_TYPE = "type";
+  static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
   private static final String JSCH_ID = "${'$'}id";
   private static final String JSCH_REF = "${'$'}ref";
@@ -89,12 +89,14 @@ public class JsonSchemaTransformer
 
   public static boolean isSchema( Bindings bindings )
   {
-           // Ideally the "$schema" element would be required, but JSchema does not require it.
+           // Ideally the "$schema" element would be required, but JSON Schema does not require it.
     return bindings.get( JsonSchemaTransformer.JSCH_SCHEMA ) != null ||
            // As a fallback check for "$id" as this is pretty uniquely Json Schema
            bindings.get( JsonSchemaTransformer.JSCH_ID ) != null ||
            // As a fallback to the fallback, check for: "type": "object" or "type": "array"
-           typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array );
+           typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array ) ||
+           // As a fallback to the fallback to the fallback, check for: "properties": (lots of use-cases like this unfortunately)
+           bindings.get( JsonSchemaTransformer.JSCH_PROPERTIES ) != null;
   }
 
   private static boolean typeMatches( Bindings bindings, Type testType )

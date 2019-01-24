@@ -249,7 +249,7 @@ public class JsonTest extends TestCase
   // root array with dissimilar component types (object and array)
   public void testMixedArray()
   {
-    MixedArray mixedArray = MixedArray.fromJson(
+    MixedArray mixedArray = MixedArray.load().fromJson(
       "[\n" +
       "  {\n" +
       "    \"page\": 1,\n" +

@@ -8,20 +8,15 @@
     <version>0.40-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-json</artifactId>
+  <artifactId>manifold-yaml</artifactId>
 
-  <name>Manifold :: Json</name>
+  <name>Manifold :: Yaml</name>
 
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
+      <artifactId>manifold-json</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.snakeyaml</groupId>
-      <artifactId>snakeyaml-engine</artifactId>
-      <version>1.0</version>
     </dependency>
   </dependencies>
 

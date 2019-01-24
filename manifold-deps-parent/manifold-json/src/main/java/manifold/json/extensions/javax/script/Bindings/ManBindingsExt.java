@@ -24,15 +24,20 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.Json;
+import manifold.api.json.Yaml;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
+import org.snakeyaml.engine.v1.api.Dump;
+import org.snakeyaml.engine.v1.api.DumpSettings;
+import org.snakeyaml.engine.v1.api.DumpSettingsBuilder;
+import org.snakeyaml.engine.v1.api.StreamDataWriter;
 
 /**
- * Extends {@link Bindings} with methods to transform the Bindings contents to JSON and XML and to conveniently use the
- * Bindings for JSON Web requests.
+ * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, and XML and to conveniently
+ * use the Bindings for JSON and YAML Web services.
  */
 @Extension
 public class ManBindingsExt
@@ -50,34 +55,72 @@ public class ManBindingsExt
   }
 
   /**
+   * Serializes this {@link Bindings} instance to a YAML formatted String
+   *
+   * @return This {@link Bindings} instance serialized to a YAML formatted String
+   */
+  public static String toYaml( @This Bindings thiz )
+  {
+    StringBuilder sb = new StringBuilder();
+    toYaml( thiz, sb );
+    return sb.toString();
+  }
+
+  /**
    * Serializes this {@link Bindings} instance into a JSON formatted StringBuilder {@code target}
    * with the specified {@code indent} of spaces.
    *
    * @param target A {@link StringBuilder} to write the JSON in
-   * @param indent The margin of spaces to indent the JSON
+   * @param margin The margin of spaces to indent the resulting block of JSON
    */
-  public static void toJson( @This Bindings thiz, StringBuilder target, int indent )
+  public static void toJson( @This Bindings thiz, StringBuilder target, int margin )
   {
     int iKey = 0;
     if( isNewLine( target ) )
     {
-      indent( target, indent );
+      indent( target, margin );
     }
     if( thiz.size() > 0 )
     {
       target.append( "{\n" );
       for( String key: thiz.keySet() )
       {
-        indent( target, indent + 2 );
+        indent( target, margin + 2 );
         target.append( '\"' ).append( key ).append( '\"' ).append( ": " );
         Object value = thiz.get( key );
-        JsonUtil.toJson( target, indent, value );
+        JsonUtil.toJson( target, margin, value );
         appendCommaNewLine( target, iKey < thiz.size() - 1 );
         iKey++;
       }
     }
-    indent( target, indent );
+    indent( target, margin );
     target.append( "}" );
+  }
+
+  /**
+   * Serializes this {@link Bindings} instance into a YAML 1.2 formatted StringBuilder {@code target}
+   * with the specified {@code indent} of spaces.
+   *
+   * @param target A {@link StringBuilder} to write the YAML in
+   */
+  public static void toYaml( @This Bindings thiz, StringBuilder target )
+  {
+    DumpSettings settings = new DumpSettingsBuilder().setIndent( 2 ).build();
+    new Dump( settings ).dump( thiz,
+      new StreamDataWriter()
+      {
+        @Override
+        public void write( String str )
+        {
+          target.append( str );
+        }
+
+        @Override
+        public void write( String str, int offset, int length )
+        {
+          target.append( str, offset, offset + length );
+        }
+      } );
   }
 
   private static boolean isNewLine( StringBuilder sb )
@@ -284,6 +327,27 @@ public class ManBindingsExt
   }
 
   /**
+   * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a> to pass JSON bindings to
+   * this URL and get the full response as a YAML object.
+   *
+   * @return The full content of this URL's stream as a YAML object.
+   *
+   * @see ManUrlExt#postForTextContent(URL, Bindings)
+   */
+  @SuppressWarnings("unused")
+  public static Bindings postForYamlContent( @This Bindings thiz, String url )
+  {
+    try
+    {
+      return Yaml.fromYaml( ManUrlExt.postForTextContent( new URL( url ), thiz ) );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
    * Get the content from the specified {@code url} using this {@link Bindings} as <a href="https://www.json.org/">JSON-formatted</a> arguments.
    * Encodes the arguments in UTF-8 and appends them to the list using standard <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.2">HTTP GET format</a>.
    * <p/>
@@ -305,6 +369,30 @@ public class ManBindingsExt
   public static Bindings getJsonContent( @This Bindings thiz, String url )
   {
     return Json.fromJson( ManUrlExt.getTextContent( makeUrl( thiz, url ) ) );
+  }
+
+  /**
+   * Get the content from the specified {@code url} using this {@link Bindings} as <a href="https://www.yaml.org/">YAML-formatted</a> arguments.
+   * Encodes the arguments in UTF-8 and appends them to the list using standard <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.2">HTTP GET format</a>.
+   * <p/>
+   * This Bindings instance must be composed of property names mapped to YAML values.  A YAML value is one of:
+   * <ul>
+   *   <li> a simple type such as a String, number, or boolean </li>
+   *   <li> a {@link Bindings} of property names to YAML values </li>
+   *   <li> a {@link List} composed of YAML values </li>
+   * </ul>
+   * If an argument is a {@link Bindings} or a {@link List}, it is transformed to YAML.  Otherwise, the argument is
+   * coerced to a String and URL encoded.
+   *
+   * @return YAML bindings reflecting the content of the URL.  Otherwise if the content is not YAML formatted, a
+   * {@link RuntimeException} results.
+   *
+   * @see #postForYamlContent(Bindings, String)
+   * @see manifold.api.json.Yaml#fromYaml(String)
+   */
+  public static Bindings getYamlContent( @This Bindings thiz, String url )
+  {
+    return Yaml.fromYaml( ManUrlExt.getTextContent( makeUrl( thiz, url ) ) );
   }
 
   /**

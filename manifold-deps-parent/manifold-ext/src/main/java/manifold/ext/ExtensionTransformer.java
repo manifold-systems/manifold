@@ -1449,6 +1449,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   private JCTree replaceWithReflection( JCTree.JCNewClass tree )
   {
+    if( tree.constructor == null )
+    {
+      return tree;
+    }
+
     TreeMaker make = _tp.getTreeMaker();
     JavacElements javacElems = _tp.getElementUtil();
 
@@ -1501,6 +1506,10 @@ public class ExtensionTransformer extends TreeTranslator
 
   private JCExpression makeClassExpr( JCTree tree, Type type )
   {
+    BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
+    Types types = Types.instance( javacTask.getContext() );
+    type = types.erasure( type );
+
     JCExpression classExpr;
     if( type.isPrimitive() ||
         (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )

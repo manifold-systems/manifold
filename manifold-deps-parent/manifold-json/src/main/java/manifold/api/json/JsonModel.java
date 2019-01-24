@@ -38,12 +38,12 @@ import manifold.util.JavacDiagnostic;
 
 /**
  */
-class JsonModel extends AbstractSingleFileModel
+public class JsonModel extends AbstractSingleFileModel
 {
   private IJsonParentType _type;
   private JsonIssueContainer _issues;
 
-  JsonModel( IManifoldHost host, String fqn, Set<IFile> files )
+  public JsonModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
     super( host, fqn, files );
     init();
@@ -55,7 +55,7 @@ class JsonModel extends AbstractSingleFileModel
     Bindings bindings;
     try
     {
-      bindings = Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ), false, true );
+      bindings = loadBindings();
     }
     catch( Exception e )
     {
@@ -95,6 +95,11 @@ class JsonModel extends AbstractSingleFileModel
     {
       throw new RuntimeException( e );
     }
+  }
+
+  protected Bindings loadBindings()
+  {
+    return Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ), false, true );
   }
 
   public IJsonParentType getType()

@@ -1,0 +1,39 @@
+---
+"$schema": http://json-schema.org/draft-04/schema#
+type: object
+id: http://example.com/schemas/Contact.yml
+definitions:
+  Address:
+    type: object
+    properties:
+      street_address:
+        type: string
+      city:
+        type: string
+      state:
+        type: string
+    required:
+    - street_address
+    - city
+    - state
+properties:
+  ContactAddresses:
+    type: array
+    items:
+      type: object
+      "$ref": "#/definitions/Address"
+  DateOfBirth:
+    type: string
+    format: date
+  HomePhone:
+    type: string
+  HomePhoneCountry:
+    type: string
+  Name:
+    type: string
+  NumDependents:
+    type: integer
+    format: int32
+  PrimaryAddress:
+    type: object
+    "$ref": "#/definitions/Address"

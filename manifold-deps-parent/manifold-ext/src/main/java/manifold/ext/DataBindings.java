@@ -58,6 +58,16 @@ public class DataBindings implements Bindings
   }
 
   /**
+   * Construct with initial size.
+   *
+   * @param size the initial size of the bindings
+   */
+  public DataBindings( int size )
+  {
+    this( new HashMap<>( size ) );
+  }
+
+  /**
    * Sets the specified key/value in the underlying {@code map} field.
    *
    * @param name  Name of value

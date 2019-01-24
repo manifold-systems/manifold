@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ *   
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-package manifold.api.json;
+package manifold.api.yaml;
 
-import manifold.api.host.IModule;
+import java.util.Set;
+import javax.script.Bindings;
+import manifold.api.fs.IFile;
+import manifold.api.host.IManifoldHost;
+import manifold.api.json.JsonModel;
+import manifold.api.json.Yaml;
+import manifold.api.type.ResourceFileTypeManifold;
 
 /**
  */
-public class JsonTypeManifold extends AbstractJsonTypeManifold<JsonModel>
+class YamlModel extends JsonModel
 {
-  @SuppressWarnings("WeakerAccess")
-  public static final String FILE_EXTENSION = "json";
-
-  @Override
-  public void init( IModule module )
+  YamlModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
-    init( module, (fqn, files) -> new JsonModel( getModule().getHost(), fqn, files ) );
+    super( host, fqn, files );
   }
 
   @Override
-  public boolean handlesFileExtension( String fileExtension )
+  protected Bindings loadBindings()
   {
-    return fileExtension.equals( FILE_EXTENSION );
+    return Yaml.fromYaml( ResourceFileTypeManifold.getContent( getFile() ), false, true );
   }
 }
