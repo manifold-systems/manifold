@@ -610,40 +610,40 @@ apply plugin: 'java'
 
 dependencies {
   // -- All manifold, includes all other dependencies listed here --
-  compile group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-all', version: 'RELEASE'
 
 
   // -- Or individual dependencies --
   
   // Core Manifold support, includes properties and image manifolds
-  compile group: 'systems.manifold', name: 'manifold', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold', version: 'RELEASE'
   
   // Support for structural typing and extensions
-  compile group: 'systems.manifold', name: 'manifold-ext', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-ext', version: 'RELEASE'
     
   // JSON and JSchema support  
-  compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-json', version: 'RELEASE'
   
   // JavaScript support (experimental)
-  compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-js', version: 'RELEASE'
   
   // Template support
-  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELEASE'
   
   // Collection extensions
-  compile group: 'systems.manifold', name: 'manifold-collections', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-collections', version: 'RELEASE'
   
   // I/O extensions
-  compile group: 'systems.manifold', name: 'manifold-io', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-io', version: 'RELEASE'
   
   // Text extensions
-  compile group: 'systems.manifold', name: 'manifold-text', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-text', version: 'RELEASE'
   
   
   // -- For Java 9 or later ==
   
   // Add manifold-all to -processorpath for javac
-  annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+  annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELEASE'
   
   
   // -- For Java 8 only --
