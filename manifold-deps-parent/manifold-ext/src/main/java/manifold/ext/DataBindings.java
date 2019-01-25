@@ -17,7 +17,7 @@
 package manifold.ext;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -54,7 +54,7 @@ public class DataBindings implements Bindings
    */
   public DataBindings()
   {
-    this( new HashMap<>() );
+    this( new LinkedHashMap<>() );
   }
 
   /**
@@ -64,7 +64,7 @@ public class DataBindings implements Bindings
    */
   public DataBindings( int size )
   {
-    this( new HashMap<>( size ) );
+    this( new LinkedHashMap<>( size ) );
   }
 
   /**

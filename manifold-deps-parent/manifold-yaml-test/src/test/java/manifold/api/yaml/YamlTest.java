@@ -16,9 +16,11 @@
 
 package manifold.api.yaml;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
+import java.util.List;
 import javax.script.Bindings;
 import junit.framework.TestCase;
 import manifold.api.json.Yaml;
@@ -35,13 +37,49 @@ public class YamlTest extends TestCase
     System.out.println( JsonUtil.toJson( bindings ) );
   }
 
-  public void testInvoice()
+  public void testSampleYaml() throws FileNotFoundException
   {
     Invoice invoice = Invoice.load().fromYamlUrl( getClass().getResource( "/abc/yaml/Invoice.yaml" ) );
-    System.out.println( invoice.toYaml() );
+    Integer invoiceId = invoice.getInvoice();
+    assertEquals( 34843, invoiceId.intValue() );
+    String date = invoice.getDate();
+    assertEquals( "2001-01-23", date );
+    Invoice.bill_to bill_to = invoice.getBill_to();
+    String given = bill_to.getGiven();
+    assertEquals( "Chris", given );
+    String family = bill_to.getFamily();
+    assertEquals( "Dumars", family );
+    Invoice.bill_to.address address = bill_to.getAddress();
+    String lines = address.getLines();
+    assertEquals( "458 Walkman Dr.\nSuite #292\n", lines );
+    String city = address.getCity();
+    assertEquals( "Royal Oak", city );
+    String state = address.getState();
+    assertEquals( "MI", state );
+    Integer postal = address.getPostal();
+    assertEquals( 48046, postal.intValue() );
+    Invoice.ship_to ship_to = invoice.getShip_to();
+    String given2 = ship_to.getGiven();
+    String family2 = ship_to.getFamily();
+    Invoice.ship_to.address address2 = ship_to.getAddress();
+    String lines2 = address2.getLines();
+    String city2 = address2.getCity();
+    String state2 = address2.getState();
+    Integer postal2 = address2.getPostal();
+    List<Invoice.product> products = invoice.getProduct();
+    Invoice.product product = products.get(0);
+    String sku = product.getSku();
+    Integer quantity = product.getQuantity();
+    String description = product.getDescription();
+    Double price = product.getPrice();
+    Double tax = invoice.getTax();
+    Double total = invoice.getTotal();
+    assertEquals( 4443.52, Math.round( total * 100d )/100d );
+    String comments = invoice.getComments();
+    assertEquals( "Late afternoon is best. Backup contact is Nancy Billsmer @ 338-4338.", comments );
   }
 
-  public void testContact()
+  public void testJsonSchemaYaml()
   {
     Contact contact = Contact.builder()
       .withName("Scott McKinney")
@@ -54,14 +92,20 @@ public class YamlTest extends TestCase
     assertEquals( "Scott McKinney", contact.getName() );
     assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
     assertEquals( "{\n" +
+                  "  \"Name\": \"Scott McKinney\",\n" +
                   "  \"DateOfBirth\": \"1986-08-09\",\n" +
                   "  \"PrimaryAddress\": {\n" +
                   "    \"street_address\": \"111 Main St.\",\n" +
                   "    \"city\": \"Cupertino\",\n" +
                   "    \"state\": \"CA\"\n" +
-                  "  },\n" +
-                  "  \"Name\": \"Scott McKinney\"\n" +
+                  "  }\n" +
                   "}", contact.toJson() );
+    assertEquals( "Name: Scott McKinney\n" +
+                  "DateOfBirth: 1986-08-09\n" +
+                  "PrimaryAddress:\n" +
+                  "  street_address: 111 Main St.\n" +
+                  "  city: Cupertino\n" +
+                  "  state: CA\n", contact.toYaml() );
   }
 
 }

@@ -43,7 +43,7 @@ public interface IJsonBindingsBacked extends IBindingsBacked
    */
   default String toYaml()
   {
-    return ManBindingsExt.toJson( getBindings() );
+    return ManBindingsExt.toYaml( getBindings() );
   }
 
   /**

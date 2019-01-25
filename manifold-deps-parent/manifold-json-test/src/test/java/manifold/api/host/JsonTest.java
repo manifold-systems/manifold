@@ -192,13 +192,13 @@ public class JsonTest extends TestCase
     assertEquals( "Scott McKinney", contact.getName() );
     assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
     assertEquals( "{\n" +
+                  "  \"Name\": \"Scott McKinney\",\n" +
                   "  \"DateOfBirth\": \"1986-08-09\",\n" +
                   "  \"PrimaryAddress\": {\n" +
                   "    \"street_address\": \"111 Main St.\",\n" +
                   "    \"city\": \"Cupertino\",\n" +
                   "    \"state\": \"CA\"\n" +
-                  "  },\n" +
-                  "  \"Name\": \"Scott McKinney\"\n" +
+                  "  }\n" +
                   "}", contact.toJson() );
   }
 

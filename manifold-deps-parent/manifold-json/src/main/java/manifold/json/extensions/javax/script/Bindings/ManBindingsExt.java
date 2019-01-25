@@ -34,6 +34,7 @@ import org.snakeyaml.engine.v1.api.Dump;
 import org.snakeyaml.engine.v1.api.DumpSettings;
 import org.snakeyaml.engine.v1.api.DumpSettingsBuilder;
 import org.snakeyaml.engine.v1.api.StreamDataWriter;
+import org.snakeyaml.engine.v1.common.FlowStyle;
 
 /**
  * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, and XML and to conveniently
@@ -105,7 +106,12 @@ public class ManBindingsExt
    */
   public static void toYaml( @This Bindings thiz, StringBuilder target )
   {
-    DumpSettings settings = new DumpSettingsBuilder().setIndent( 2 ).build();
+    DumpSettings settings = new DumpSettingsBuilder()
+      .setBestLineBreak( "\n" )
+      .setMultiLineFlow( true )
+      .setDefaultFlowStyle( FlowStyle.BLOCK )
+      .setIndent( 2 )
+      .build();
     new Dump( settings ).dump( thiz,
       new StreamDataWriter()
       {
