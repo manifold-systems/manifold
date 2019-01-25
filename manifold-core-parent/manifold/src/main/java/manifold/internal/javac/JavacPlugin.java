@@ -740,6 +740,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private String derivePath( String type, String sourceFile )
   {
+    sourceFile = new File( sourceFile ).getAbsolutePath();
     int iDot = sourceFile.lastIndexOf( '.' );
     String ext = iDot > 0 ? sourceFile.substring( iDot ) : "";
     String pathRelativeFile = type.replace( '.', File.separatorChar ) + ext;
