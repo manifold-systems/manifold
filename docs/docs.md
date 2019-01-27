@@ -1057,7 +1057,7 @@ myUrl.append(query.getBindings().makeArguments());
 ### YAML
 The YAML type manifold provides comprehensive support for YAML.  You can define a YAML or JSON API with YAML resource 
 files.  Manifold can derive an API from sample data in YAML format.  Or you can build [JSON Schema](https://json-schema.org/) 
-directly with YAML.
+APIs directly with YAML.
 
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
 type manifold reference above.  All that applies to JSON applies to YAML.
