@@ -84,7 +84,7 @@ public class JsonUnionType extends JsonStructureType
     return _state._constituentTypes.values();
   }
 
-  void addConstituent( String name, IJsonType type )
+  public void addConstituent( String name, IJsonType type )
   {
     if( _state._constituentTypes.isEmpty() )
     {

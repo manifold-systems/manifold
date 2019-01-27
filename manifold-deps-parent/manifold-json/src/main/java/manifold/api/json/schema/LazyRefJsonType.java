@@ -39,6 +39,10 @@ public class LazyRefJsonType implements IJsonType
     {
       type = ((LazyRefJsonType)type).resolve();
     }
+    if( type instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)type).resolveRefs();
+    }
     type = type.copyWithAttributes( _typeAttributes.copy() );
     return type;
   }

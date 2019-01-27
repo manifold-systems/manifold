@@ -749,7 +749,7 @@ public class JavacPlugin implements Plugin, TaskListener
     return typeIndex > 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
-  private List<String> fetchOtherInputFiles() //TODO rename to something language-agnostic
+  private List<String> fetchOtherInputFiles()
   {
     if( System.getProperty( OTHER_SOURCE_FILES ) != null && System.getProperty( OTHER_SOURCE_LIST ) != null )
     {

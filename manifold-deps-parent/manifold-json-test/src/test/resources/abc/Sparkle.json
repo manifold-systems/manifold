@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/Around.json",
+  "type": "object",
+  "definitions": {
+    "ThingOne": {
+      "type": "object",
+      "properties": {
+        "redFish": {
+          "type": "string"
+        }
+      }
+    },
+    "ThingTwo": {
+      "type": "object",
+      "properties": {
+        "blueFish": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "thing": {
+      "allOf": [
+        {"oneOf": [
+          {"$ref": "#/definitions/ThingOne"},
+          {"$ref": "#/definitions/ThingTwo"}
+
+        ]},
+        {"properties": {
+          "discriminator": {
+            "enum": ["ThingOne", "ThingTwo"]
+          }
+        }}
+      ]
+    }
+  }
+}

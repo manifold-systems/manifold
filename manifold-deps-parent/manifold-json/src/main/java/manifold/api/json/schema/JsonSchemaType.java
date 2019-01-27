@@ -43,7 +43,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   private static class State
   {
     private final String _name;
-    private final JsonSchemaType _parent;
+    private JsonSchemaType _parent;
     private final URL _file;
     private List<IJsonType> _definitions;
     private List<JsonIssue> _issues;
@@ -156,6 +156,10 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   {
     return _state._parent;
   }
+  public void setParent( IJsonParentType parent )
+  {
+    _state._parent = (JsonSchemaType)parent;
+  }
 
   @Override
   public List<IJsonType> getDefinitions()
@@ -173,7 +177,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return _state._bSchemaType;
   }
 
-  void setJsonSchema()
+  protected void setJsonSchema()
   {
     _state._bSchemaType = true;
   }

@@ -99,13 +99,13 @@ public class YamlTest extends TestCase
                   "    \"city\": \"Cupertino\",\n" +
                   "    \"state\": \"CA\"\n" +
                   "  }\n" +
-                  "}", contact.toJson() );
+                  "}", contact.write().toJson() );
     assertEquals( "Name: Scott McKinney\n" +
                   "DateOfBirth: 1986-08-09\n" +
                   "PrimaryAddress:\n" +
                   "  street_address: 111 Main St.\n" +
                   "  city: Cupertino\n" +
-                  "  state: CA\n", contact.toYaml() );
+                  "  state: CA\n", contact.write().toYaml() );
   }
 
 }

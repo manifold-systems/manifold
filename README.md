@@ -10,9 +10,10 @@ of it.
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Gain direct, type-safe access to <i>any</i> data source. Remove the code gen step in your build process.
+Gain direct, type-safe access to <i>any</i> data source, such as JSON and YAML. Remove the code gen step in your build 
+process.
 ```java 
-// JSON files are types!
+// JSON and YAML files are types! No code gen!
 Person person = Person.fromJsonUrl(url);
 person.setFirstName("Scott");
 ```

@@ -115,7 +115,7 @@ public class JsonSchemaTransformer
     {
       typeName = (String)type;
     }
-    return typeName.equals( testType.getName() );
+    return typeName != null && typeName.equals( testType.getName() );
   }
 
   @SuppressWarnings("unused")
@@ -231,16 +231,11 @@ public class JsonSchemaTransformer
 
   private static Bindings getBindings( Object value )
   {
-    Bindings bindings;
     if( value instanceof Pair )
     {
-      bindings = (Bindings)((Pair)value).getSecond();
+      value = ((Pair)value).getSecond();
     }
-    else
-    {
-      bindings = (Bindings)value;
-    }
-    return bindings;
+    return value instanceof Bindings ? (Bindings)value : null;
   }
 
   private static Bindings getJSchema_Properties( Bindings docObj )
@@ -251,75 +246,36 @@ public class JsonSchemaTransformer
 
   private static List getJSchema_Enum( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ENUM );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ENUM ) );
   }
 
   private static List getJSchema_Const( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_CONST );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = Collections.singletonList( ((Pair)value ).getSecond() );
-    }
-    else
-    {
-      list = Collections.singletonList( value );
-    }
-    return list;
+    return getList( docObj.get( JSCH_CONST ) );
   }
 
   private static List getJSchema_AllOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ALL_OF );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ALL_OF ) );
   }
+
   private static List getJSchema_AnyOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ANY_OF );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ANY_OF ) );
   }
+
   private static List getJSchema_OneOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ONE_OF );
-    List list;
+    return getList( docObj.get( JSCH_ONE_OF ) );
+  }
+
+  private static List getList( Object value )
+  {
     if( value instanceof Pair )
     {
-      list = (List)((Pair)value).getSecond();
+      value = ((Pair)value).getSecond();
     }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return value instanceof List ? (List)value : null;
   }
 
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, URL enclosing, Bindings jsonObj )
@@ -824,7 +780,7 @@ public class JsonSchemaTransformer
   {
     JsonStructureType type = null;
     boolean hasType = false;
-    int i = 0;
+    int iInner = 0;
     for( Object elem : list )
     {
       if( elem instanceof Pair )
@@ -836,16 +792,25 @@ public class JsonSchemaTransformer
       {
         Bindings elemBindings = (Bindings)elem;
 
+        type = type == null ? new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) ) : type;
+
         if( elemBindings.size() == 1 && elemBindings.containsKey( JSCH_REQUIRED ) )
         {
-          continue;
+          //
+          // "required"
+          //
+          
+          Object requiredValue = elemBindings.get( JsonSchemaTransformer.JSCH_REQUIRED );
+          type.addRequiredWithTokens( requiredValue );
         }
-
-        type = type == null ? new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) ) : type;
 
         IJsonType ref = findReference( type, enclosing, elemBindings );
         if( ref != null )
         {
+          //
+          // "$ref"
+          //
+
           if( !hasType )
           {
             ObjectTransformer.transform( this, type, elemBindings );
@@ -855,13 +820,17 @@ public class JsonSchemaTransformer
         }
         else if( elemBindings.containsKey( JSCH_ENUM ) )
         {
+          //
+          // "enum"
+          //
+
           if( !hasType )
           {
             ObjectTransformer.transform( this, type, elemBindings );
             hasType = true;
           }
 
-          IJsonType enumType = deriveTypeFromEnum( type, enclosing, "enum" + i++, elemBindings, nullable );
+          IJsonType enumType = deriveTypeFromEnum( type, enclosing, "enum" + iInner++, elemBindings, nullable );
           if( enumType != parent )
           {
             transferIssuesFromErrantType( parent, enumType, elemBindings );
@@ -876,9 +845,27 @@ public class JsonSchemaTransformer
           Bindings properties = getJSchema_Properties( elemBindings );
           if( properties != null )
           {
+            //
+            // "properties"
+            //
+
             ObjectTransformer.transform( this, type, elemBindings );
             hasType = true;
             type = (JsonStructureType)type.copyWithAttributes( new TypeAttributes( elemBindings ) );
+          }
+          else
+          {
+            //
+            // allOf", "oneOf", "anyOf"
+            //
+
+            IJsonType comboType = transformCombination( type, enclosing, "Combo" + iInner++, elemBindings, nullable );
+            if( comboType != parent )
+            {
+              transferIssuesFromErrantType( parent, comboType, elemBindings );
+              // special handling required for combo as super type
+              type.addSuper( comboType );
+            }
           }
         }
       }

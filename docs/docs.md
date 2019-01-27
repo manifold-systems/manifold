@@ -14,6 +14,7 @@ Java. Building on this core framework Manifold supplements Java with new feature
 Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
 include:
 * **JSON** and **JSON Schema** integration
+* **YAML** integration
 * Type-safe **Templating** 
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
@@ -72,6 +73,7 @@ spreadsheets, web services, and programming languages.
 Currently Manifold provides type manifolds for:
 
 *   JSON and [JSON Schema](http://json-schema.org/)
+*   YAML
 *   Properties files
 *   Image files
 *   Dark Java
@@ -210,7 +212,7 @@ module your.module.name {
   requires jdk.unsupported; // As a convenience Manifold uses internal Java APIs to make module setup easier for you
 
   // Optional
-  requires java.scripting;  // if using Json manifold: for javax.script.Bindings
+  requires java.scripting;  // if using JSON or YAML manifolds: for javax.script.Bindings
   requires java.desktop;  // if using Image manifold: for javax.swing.ImageIcon
   requires jdk.scripting.nashorn;  // if using Javascript manifold
 }
@@ -248,8 +250,8 @@ controlled using the `-Xplugin` javac argument:
 
 The mode you use largely depends on your use-case and personal preference. Things to consider:
 
-* Both modes operate _lazily_: a type is not compiled unless it is used. For example, if you are using the [Json manifold](#json-and-json-schema), 
-only the Json files you reference in your code will be processed and compiled. This means Manifold will not try to
+* Both modes operate _lazily_: a type is not compiled unless it is used. For example, if you are using the [JSON manifold](#json-and-json-schema), 
+only the JSON files you reference in your code will be processed and compiled. This means Manifold will not try to
 compile resources your project does not expect to use directly as types.
 
 * Even if you use static mode, you can still reference type manifold classes dynamically e.g., _reflectively_.
@@ -259,11 +261,11 @@ figure out what needs to be done.
 
 * Dynamic mode requires `tools.jar` at runtime for **Java 8**.  Note tools.jar may still be required with 
 static mode, depending on the Manifold features you use.  For example, [structural interfaces](#structural-interfaces)
-requires tools.jar, regardless of mode.  The Json manifold models both sample Json files and [Json Schema](http://json-schema.org/) 
-files as structural interfaces.
+requires tools.jar, regardless of mode.  The JSON & YAML manifolds model both sample files and files conforming to
+[JSON Schema](http://json-schema.org/) as structural interfaces.
 
-* Static mode is generally faster at runtime since it pre-compiles all the type manifold resources when you 
-build your project
+* Static mode is generally faster at runtime since it pre-compiles all the type manifold resources along with Java 
+sources when you build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
@@ -320,7 +322,9 @@ Core Manifold support, also includes properties and image manifolds
 * [manifold-ext](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE):
 Support for structural typing and extensions
 * [manifold-json](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE):
-JSON and JSchema support
+JSON and JSON Schema support
+* [manifold-yaml](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-yaml&v=RELEASE):
+YAML support
 * [manifold-js](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE):
 JavaScript support (experimental)
 * [manifold-collections](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE):
@@ -373,6 +377,13 @@ recommended setup.
   <dependency>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-json</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--YAML support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-yaml</artifactId>
     <version>RELEASE</version>
   </dependency>
   
@@ -624,6 +635,9 @@ dependencies {
   // JSON and JSchema support  
   compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
   
+  // YAML support
+  compile group: 'systems.manifold', name: 'manifold-yaml', version: 'RELASE'
+  
   // JavaScript support (experimental)
   compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
   
@@ -663,7 +677,7 @@ tasks.withType(JavaCompile) {
 Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
 As a consequence the software industry has become much less code-centric and much more information-centric. Despite 
 this transformation the means by which our software consumes structured information has remained unchanged for decades.
-Whether it's JSON, XSD/XML, RDF, CSV, DDL, SQL, Javascript, or any one of a multitude of other metadata sources, most modern 
+Whether it's JSON, YAML, XML, CSV, DDL, SQL, Javascript, or any one of a multitude of other metadata sources, most modern 
 languages, including Java, do very little to connect them with your code.
 
 Developers are conditioned to reach for code generators and static libraries as a means to bridge the gap. 
@@ -738,71 +752,317 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
 Currently Manifold provides reference implementations for a few commonly used data sources:
 
 *   JSON and JSON Schema
+*   YAML
 *   Properties files
 *   Image files
 *   Dark Java
-*   Templating
+*   Template files
 
 We are working on support for more data sources including:
-*   RDF
 *   CSV
 *   JavaScript
 *   Standard SQL and DDL
 
 
 ### JSON and JSON Schema
-[JSON](http://www.json.org/) has become the wire protocol of choice and, more generally, the preferred
-structured data format. There is no shortage of JSON libraries for Java, these include 
-[Jackson](https://github.com/FasterXML/jackson-docs), [Gson](https://github.com/google/gson), and a 
-multitude of others.  They all do basically the same thing -- given a pre-defined or generated type, 
-the libraries can read from and write to the type in terms of JSON:
+The JSON type manifold provides comprehensive support for JSON.  You can define a JSON API with JSON resources 
+consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or later. Your JSON 
+resource files serve as the _single source of truth_ regarding JSON APIs.  You use JSON-expressed types *directly* 
+in your code without maintaining a separate set of classes or wedging a code generator into your build.
 
-```java
-Widget widget = new Widget(bindings);
-ObjectMapper mapper = new ObjectMapper();
-
-String jsonStr = mapper.writeValueAsString(widget);
-Widget result = mapper.readValue(jsonStr, Widget.class);
+Here is a simple `User` type defined in `resources/abc/User.json` using JSON Schema:
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/User.json",
+  "type": "object",
+  "definitions": {
+    "Gender": {
+      "type": "string",
+      "enum": ["male", "female"]
+    }
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "User's full name.",
+      "maxLength": 80
+    },
+    "email": {
+      "description": "User's email.",
+      "type": "string",
+      "format": "email"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "description": "Date of uses birth in the one and only date standard: ISO 8601.",
+      "format": "date"
+    },
+    "gender": {
+      "$ref" : "#/definitions/Gender"
+    }
+  },
+  "required": ["name", "email"]
+}
 ```
+Most type manifolds, including the JSON manifold, define a type using the name of the file and resource path: `abc.User`.
+JSON types are defined as a set of _interface_ APIs.  As such the `User` API provides type-safe methods to:
+* **create** a `User`
+* **build** a `User`
+* **modify** properties of a `User`  
+* **load** a `User` from a string, a file, or a URL using HTTP GET
+* **post** a `User` to a URL using HTTP POST
+* **write** a `User` as formatted JSON, YAML, or XML
 
-The JSON type manifold takes a different approach. Avoiding multiple systems of
-record, instead of generating classes or weaving annotations into hand crafted
-code the type manifold directly maps JSON sample files or JSON Schema files to
-Java's type system as abstract types.
+#### Creating & Building JSON 
+You create an instance of a JSON type using either the `create()` method or the `builder()` method.
 
-As this example illustrates, you work directly with a JSON bindings object as if it were a
-Java class:
-
+The `create()` method defines parameters matching the `required` properties defined on the type. The `User.create()`
+declares two parameters matching the `required` properties:
 ```java
-Widget widget = (Widget) bindings;
-
-String jsonStr = widget.toJson();
-Widget result = Widget.fromJson(jsonStr); 
+static User create(String name, String email) {...}
 ```
-
-This approach eliminates library usage and connects your code directly to JSON metadata.
-Another advantage involves object identity.  The `Widget` type is just
-an interface directly on the JSON bindings.  The interface both abstracts and preserves the 
-implementation details of the underlying JSON object -- the `Bindings` object isn't wrapped or proxied.
-The type manifold achieves this via [extension interfaces](#extension_interfaces) on the
-`javax.script.Bindings` object and through the use of [structural interfaces](#structural_interfaces) -- 
-JSON types are structural interfaces. Essentially, the `widget` object _is_ the `Bindings` object; 
-changes you make to `widget` are changes directly on the Bindings.  Additionally, like all type 
-manifolds, there are no generated files or other build steps involved. 
- 
-Combining forces, Manifold [extension libraries](#extension_libraries) help reduce
-common remote API drudgery involving JSON:
-
+You can use this to create a new instance of the `User` type and then modify it using _setter_ methods to change 
+optional properties:
 ```java
-WidgetQuery query = WidgetQuery.create();
+import abc.User;
+import abc.User.Gender;
+import java.time.LocalDate;
 ...
-WidgetResults result = (WidgetResults) query.postForJsonContent("http://acme.widgets/find");
+User user = User.create("Scott McKinney", "scott@manifold.systems");
+user.setGender(Gender.male);
+user.setDate_of_birth(LocalDate.of(1980, 7, 4));
 ```
 
-This example uses the `postForJsonContent()` extension method which performs an HTTP Post using `query` 
-JSON bindings and transforms the resulting document to JSON bindings, which is directly castable to the 
-`WidgetResults` structural interface. 
+Alternatively, you can use `builder()` to fluently build a new instance:
+```java
+User user = User.builder("Scott McKinney", "scott@manifold.systems")
+  .withGender(Gender.male)
+  .withDate_of_birth(LocalDate.of(1980, 7, 4))
+  .build();
+```
 
+You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
+heavier APIs.  After it is fully configured call the `build()` method to construct the type.
+
+#### Loading JSON
+In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
+from a variety of existing sources using `load()`.
+
+You can load a `User` instance from a String:
+```java
+// From a YAML string
+User user = User.load().fromYaml( 
+  "name: Scott McKinney\n" + 
+  "email: scott@manifold.systems\n" +
+  "gender: male\n" +
+  "date_of_birth: 1980-07-04"
+ );
+```
+
+Load from a file:
+```java
+// From a JSON file
+User user = User.load().fromJsonFile("/path/to/MyUser.json");
+```
+
+You can invoke a REST API to fetch a `User` using HTTP GET:
+```java
+// Uses HTTP GET to invoke the API
+User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
+```
+
+
+#### Posting JSON
+You can invoke an HTTP POST API using `post()`:
+* `toJsonUrl()`
+* `toYamlUrl()`
+* `toTextUrl()`
+```java
+Bindings result = user.post().toJsonUrl("http://api.example.com/post/user");
+```
+Since the JSON API consists of [structural interfaces](#structural_interfaces) you can directly cast the result to a 
+JSON API interface if the URL declares to return a specific JSON Schema type.  
+
+#### Writing JSON
+An instance of a JSON API object can be written as formatted text with `write()`:
+* `toJson()` - produces a JSON formatted String
+* `toYaml()` - produces a YAML formatted String
+* `toXml()` - produces an XML formatted String
+
+The following example produces a JSON formatted string:
+```java
+User user = User.builder("Scott McKinney", "scott@manifold.systems")
+  .withGender(Gender.male)
+  .withDate_of_birth(LocalDate.of(1980, 7, 4))
+  .build();
+
+String json = user.write().toJson();
+System.out.println(json);
+```
+Output:
+```json
+{
+  "name": "Scott McKinney",
+  "email": "scott@manifold.systems",
+  "gender": "male",
+  "date_of_birth": "1980-07-04"
+}
+```
+
+#### Properties Marked `readOnly` or `writeOnly` 
+A `readOnly` property is initialized as a parameter in either of the `create()` and `builder()` methods. A `readOnly` 
+property is not modifiable in the API once a type is created or built.
+
+Conversely, a `writeOnly` property such as a password is only writable -- you cannot read such a property using a `get`
+method.
+
+#### Nullable Properties
+Manifold supports JSON Schema's many curious ways to say that a property can have a `null` value. These include:
+* The type array:  `"type": ["", "null"]`
+* The union type:  `"oneOf": [ ..., {"type": "null"}]`
+* The enum type: `"enum": [..., null]`
+* [OpenAPI 3.0](https://swagger.io/docs/specification/about/) _nullable_ attribute:`"nullable": true`
+
+#### `additionalProperties` and `patternProperties`
+If a schema defines `additionalProperties` and/or `patternProperties`, the API provides a pair of methods to get/put 
+arbitrary properties for a JSON instance, these are in addition to the getter/setter methods for named properties.
+For instance, if a type `Thing` declares `additionalProperties` you can do this:
+```java
+Thing thing = Thing.create();
+thing.put("MyProperty", "MyValue");
+String value = (String)thing.get("MyProperty");
+```  
+
+#### Nested Types
+Nested types defined within a JSON type, such as the `Gender` enum type in `User`, are available in the `User` API as
+inner interfaces or enum types.  An nested type has all the same features as a top-level type including `create()`,
+`builder()`, `load()`, etc.
+
+#### Format Types
+As you can see from the `User` example Manifold supports standard JSON Schema `format` types.  These include:
+
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #eeeeee;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+</style>
+
+| Format           | JSON Type    | Java Type                                     |
+|------------------|--------------|-----------------------------------------------|
+| `"date-time"`    | `"string"`   | `java.time.LocalDateTime`                     |
+| `"date"`         | `"string"`   | `java.time.LocalDate`                         |
+| `"time"`         | `"string"`   | `java.time.LocalTime`                         |
+| `"utc-millisec"` | `"integer"`  | `java.time.Instant`                           |
+| `"int64"`        | `"integer"`  | `long` or `java.lang.Long` if nullable        |
+| `"int32"`        | `"integer"`  | `int` or `java.lang.Integer` if nullable      |
+| `"big-integer"`  | `"string"`   | `java.math.BigInteger`                        |
+| `"big-decimal"`  | `"string"`   | `java.math.BigDecimal`                        |
+| `"binary"`       | `"string"`   | `manifold.api.json.schema.OctetEncoding`      |
+| `"byte"`         | `"string"`   | `manifold.api.json.schema.Base64Encoding`     | 
+
+Other standard format types not listed here are supported but remain as `java.lang.String` or whichever `type` is 
+specified along with the `format`.
+
+Additionally, Manifold includes an API you can implement to provide your own custom formats.  Implement the 
+`manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
+[service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
+
+
+#### Composition Types with `allOf`
+JSON Schema's `allOf` construct is a way to reuse types by composing a type with references to other types. A Manifold 
+JSON type involving `allOf` uses interface composition to define the type.  
+```yaml
+definitions:
+  Address:
+    type: object
+    properties:
+       ...
+ 
+type: object
+properties: 
+  BillingAddress:
+  - $ref: '#/definitions/Address'      
+  ShippingAddress:
+    allOf:
+    - $ref: '#/definitions/Address'
+    - properties:
+        Kind:
+          enum:
+          - residential
+          - commercial
+      required:
+      - Kind
+```
+The resulting type for `ShippingAddress` is a composition of types utilizing interface inheritance:
+```java
+@Structural
+public interface ShippingAddress extends Address {
+  Kind getKind();
+  void setKind(Kind value);
+}
+``` 
+
+Note all JSON API interfaces are [structural](#structural_interfaces), which means JSON API types are assignable if the
+methods they define are compatible.  Although `allOf` types conveniently use interface inheritance for re-use, it is
+not necessary for assignability.
+
+
+#### Union Types with `oneOf`/`anyOf`
+Normally you define a property with a single type, like `string` or `Address`.  However, using `oneOf` or `anyOf` you
+can declare a _set_ of possible types for a property, where a property value can be an instance of any one of the types.  
+The language community commonly refers to this as a [union type](https://en.wikipedia.org/wiki/Union_type). 
+
+Although Java does not directly support unions, they can be synthesized with method naming conventions.
+```yaml
+pet:
+  oneOf:
+  - $ref: '#/definitions/Cat'
+  - $ref: '#/definitions/Dog'
+```  
+The enclosing interface's `pet` property declares methods to reflect the possible types:
+```java
+Cat getPetAsCat();
+void setPetAsCat(Cat value);
+Dog getPetAsDog();
+void setPetAsDog(Dog value);
+Object getPet();
+void setPet(Object value);
+``` 
+There is still only one value backing the `pet` property.
+
+#### JSON & YAML Utilities
+In addition to the JSON type manifold other forms of JSON and YAML support include:
+* Extension methods on `URL` and `Bindings` e.g.,
+```json
+// Easily convert JSON for use as a HTTP query
+myUrl.append(query.getBindings().makeArguments());
+```
+* The `Json`, `Yaml` and `JsonUtil` classes
+* The `OctetEncoding` and `Base64Encoding` classes facilitate sending/receiving binary information via JSON
+* Structural interfaces on `Bindings`
+  
+### YAML
+The YAML type manifold provides comprehensive support for YAML.  You can define a YAML or JSON API with YAML resource 
+files.  Manifold can derive an API from sample data in YAML format.  Or you can build [JSON Schema](https://json-schema.org/) 
+directly with YAML.
+
+Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
+type manifold reference above.  All that applies to JSON applies to YAML.
+
+  
 ### Properties Files
 
 Many Java applications incorporate
@@ -1631,7 +1891,7 @@ to your project separately depending on its needs.
     - java.io.Reader
     - java.io.Writer
 
-*   **Web/Json**
+*   **Web/JSON/YAML**
  
     Defined in module `manifold-json` this library extends:
     - java.net.URL
@@ -2154,7 +2414,7 @@ The plugin currently supports most high-level IntelliJ features including:
 The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds, extension
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
 Likewise, jump directly from references to data source elements and find usages of them in your code.
-Watch your JSON, images, properties, templates, and custom type manifolds come alive as types.
+Watch your JSON/YAML, images, properties, templates, and custom type manifolds come alive as types.
 Changes you make are instantly available in your code:
 
 Install the plugin directly from IntelliJ via:

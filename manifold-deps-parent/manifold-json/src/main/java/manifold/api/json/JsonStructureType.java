@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
 import javax.script.Bindings;
 import manifold.api.json.schema.JsonEnumType;
 import manifold.api.json.schema.JsonSchemaTransformer;
@@ -101,10 +102,29 @@ public class JsonStructureType extends JsonSchemaType
   {
     super.resolveRefsImpl();
 
+    resolveSuperTypes();
     resolveMembers();
     resolveUnions();
     resolveInnerTypes();
     resolveAndVerifyRequiredProperties();
+  }
+
+  private void resolveSuperTypes()
+  {
+    ArrayList<IJsonType> copy = new ArrayList<>( _state._superTypes );
+    for( int i = 0; i < copy.size(); i++ )
+    {
+      IJsonType type = copy.get( i );
+      if( type instanceof JsonSchemaType )
+      {
+        ((JsonSchemaType)type).resolveRefs();
+      }
+      else if( type instanceof LazyRefJsonType )
+      {
+        type = ((LazyRefJsonType)type).resolve();
+        _state._superTypes.set( i, type );
+      }
+    }
   }
 
   private void resolveMembers()
@@ -119,9 +139,56 @@ public class JsonStructureType extends JsonSchemaType
       }
       else if( type instanceof LazyRefJsonType )
       {
-        _state._membersByName.put( entry.getKey(), ((LazyRefJsonType)type).resolve() );
+        type = ((LazyRefJsonType)type).resolve();
+        _state._membersByName.put( entry.getKey(), type );
       }
+
+//      if( type instanceof JsonStructureType )
+//      {
+//        resolveInvertedUnionMember( entry.getKey(), (JsonStructureType)type );
+//      }
     }
+  }
+
+  /**
+   * If any of the super types is a union, this structure type must be converted to a union where each constituent of
+   * the super type union[s] merges with the non-union super types and base type of this structure type.
+   * ## todo:
+   */
+  private void resolveInvertedUnionMember( String name, JsonStructureType type )
+  {
+    Set<? extends IJsonType> unionConstituents = type.getSuperTypes().stream()
+      .filter( e -> e instanceof JsonUnionType )
+      .flatMap( e -> ((JsonUnionType)e).getConstituents().stream() )
+      .collect( Collectors.toSet() );
+    if( unionConstituents.isEmpty() )
+    {
+      return;
+    }
+    JsonUnionType unionType = new JsonUnionType( type.getParent(), type.getFile(), type.getName(), type.getTypeAttributes().copy() );
+    unionType.setJsonSchema();
+    type.getParent().addChild( unionType.getLabel(), unionType );
+    type.getInnerTypes().forEach( ( n, inner ) -> {
+      if( !(inner instanceof JsonUnionType) )
+      {
+        unionType.addChild( n, inner );
+        if( inner instanceof JsonSchemaType )
+        {
+          ((JsonSchemaType)inner).setParent( unionType );
+        }
+      }
+    } );
+    for( IJsonType constituent: unionConstituents )
+    {
+      JsonStructureType newConstituent = new JsonStructureType( unionType, type.getFile(), constituent.getName(), constituent.getTypeAttributes().copy() );
+      newConstituent.addSuper( constituent );
+      type.getSuperTypes().forEach( newConstituent::addSuper ); // union supers are not included for code gen
+      type.getMembers().forEach( (n, member) -> newConstituent.addMember( n, member, type.getMemberLocations().get( n ) ) );
+      unionType.addConstituent( constituent.getName(), newConstituent );
+    }
+    _state._membersByName.remove( name );
+    Token token = _state._memberLocations.remove( name );
+    addMember( name, unionType, token );
   }
 
   private void resolveUnions()
@@ -227,22 +294,6 @@ public class JsonStructureType extends JsonSchemaType
   }
   private List<IJsonType> getSuperTypes()
   {
-    if( !_state._superTypes.isEmpty() )
-    {
-      if( _state._superTypes.stream().anyMatch( e -> e instanceof LazyRefJsonType ) )
-      {
-        List<IJsonType> resolved = new ArrayList<>();
-        for( IJsonType type: _state._superTypes )
-        {
-          if( type instanceof LazyRefJsonType )
-          {
-            type = ((LazyRefJsonType)type).resolve();
-          }
-          resolved.add( type );
-        }
-        _state._superTypes = resolved;
-      }
-    }
     return _state._superTypes;
   }
 
@@ -807,7 +858,9 @@ public class JsonStructureType extends JsonSchemaType
 
   private String addSuperTypes( StringBuilder sb, @SuppressWarnings("unused") String ifaceName )
   {
-    sb.append( " extends " ).append( IJsonBindingsBacked.class.getSimpleName() );
+    //noinspection unused
+    String IJsonBindingsBacked = IJsonBindingsBacked.class.getSimpleName();
+    sb.append( " extends $IJsonBindingsBacked" );
 
     List<IJsonType> superTypes = getSuperTypes();
     if( superTypes.isEmpty() )
@@ -820,10 +873,12 @@ public class JsonStructureType extends JsonSchemaType
       // Java does not allow extending your own inner class,
       // instead we will grab all the methods from this later.
       // See renderProperties().
-      if( !isSuperParentMe( superType ) )
+      if( !isSuperParentMe( superType ) &&
+          superType instanceof JsonStructureType &&
+          !(superType instanceof JsonUnionType) )
       {
         sb.append( ", " );
-        sb.append( superType.getIdentifier() );
+        sb.append( getPropertyType( superType ) );
       }
     }
     return "";
@@ -889,7 +944,7 @@ public class JsonStructureType extends JsonSchemaType
     addBuilderMethod( sb, indent );
 
     // Provide a loader(...) method, returns Loader<typeName> with methods for loading content from String, URL, file, etc.
-    addLoaderMethod( sb, indent, typeName );
+    addLoadMethod( sb, indent, typeName );
 
     // Called reflectively from RuntimeMethods, this proxy and the default get/set method impls defined here enable the
     // JSON type manifold to avoid the overhead of dynamic proxy generation and compilation at runtime. Otherwise the
@@ -1143,12 +1198,14 @@ public class JsonStructureType extends JsonSchemaType
     }
   }
 
-  private void addLoaderMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
+  private void addLoadMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
   {
     indent( sb, indent );
-    sb.append( "static " ).append( "Loader<$typeName>" ).append( " load() {\n" );
+    //noinspection unused
+    String Loader = Loader.class.getTypeName();
+    sb.append( "static " ).append( "$Loader<$typeName>" ).append( " load() {\n" );
     indent( sb, indent );
-    sb.append( "  return new Loader<>();\n" );
+    sb.append( "  return new $Loader<>();\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }

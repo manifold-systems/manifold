@@ -199,7 +199,7 @@ public class JsonTest extends TestCase
                   "    \"city\": \"Cupertino\",\n" +
                   "    \"state\": \"CA\"\n" +
                   "  }\n" +
-                  "}", contact.toJson() );
+                  "}", contact.write().toJson() );
   }
 
   public void testThing()
@@ -235,15 +235,15 @@ public class JsonTest extends TestCase
 
     assertEquals( "{\n" +
                   "  \"Name\": \"Joe Namath\"\n" +
-                  "}", person.toJson() );
+                  "}", person.write().toJson() );
 
     assertEquals( "<object>\n" +
                   "  <Name>Joe Namath</Name>\n" +
-                  "</object>\n", person.toXml() );
+                  "</object>\n", person.write().toXml() );
 
     assertEquals( "<person>\n" +
                   "  <Name>Joe Namath</Name>\n" +
-                  "</person>\n", person.toXml( "person" ) );
+                  "</person>\n", person.write().toXml( "person" ) );
   }
 
   // root array with dissimilar component types (object and array)
