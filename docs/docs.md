@@ -943,7 +943,7 @@ For improved type-safety you can define structural interfaces for applicable pro
 @Structural
 public interface HasColor extends Bindings {
   default String getColor() {
-    return get("color");
+    return (String)get("color");
   }  
   default void setColor(String value) {
     put("color", value);
