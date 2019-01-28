@@ -938,6 +938,24 @@ thing.put("MyProperty", "MyValue");
 String value = (String)thing.get("MyProperty");
 ```  
 
+For improved type-safety you can define structural interfaces for applicable properties:
+```java
+@Structural
+public interface HasColor extends Bindings {
+  default String getColor() {
+    return get("color");
+  }  
+  default void setColor(String value) {
+    put("color", value);
+  }  
+} 
+```
+```java
+HasColor hasColor = (HasColor)thing;
+hasColor.setColor("blue");
+String color = hasColor.getColor();
+```
+
 #### Nested Types
 Nested types defined within a JSON type, such as the `Gender` enum type in `User`, are available in the `User` API as
 inner interfaces or enum types.  An nested type has all the same features as a top-level type including `create()`,
