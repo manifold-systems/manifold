@@ -928,7 +928,7 @@ Manifold supports JSON Schema's many curious ways to say that a property can hav
 * The enum type: `"enum": [..., null]`
 * [OpenAPI 3.0](https://swagger.io/docs/specification/about/) _nullable_ attribute:`"nullable": true`
 
-#### `additionalProperties` and `patternProperties`
+#### **'additionalProperties'** and **'patternProperties'**
 If a schema defines `additionalProperties` and/or `patternProperties`, the API provides a pair of methods to get/put 
 arbitrary properties for a JSON instance, these are in addition to the getter/setter methods for named properties.
 For instance, if a type `Thing` declares `additionalProperties` you can do this:
