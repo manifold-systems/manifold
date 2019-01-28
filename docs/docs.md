@@ -765,10 +765,14 @@ We are working on support for more data sources including:
 
 
 ### JSON and JSON Schema
-The JSON type manifold provides comprehensive support for JSON.  You can define a JSON API with JSON resources 
-consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or later. Your JSON 
-resource files serve as the _single source of truth_ regarding JSON APIs.  You use JSON-expressed types *directly* 
-in your code without maintaining a separate set of classes or wedging a code generator into your build.
+The JSON type manifold provides comprehensive support for JSON resource files (extension `.json`).  You can define a 
+JSON API with JSON resources consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or 
+later. Your JSON resource files serve as the _single source of truth_ regarding JSON APIs.  You use JSON-expressed
+types *directly* in your code without maintaining a separate set of classes or wedging a code generator into your build.
+
+Note the Manifold plugin for IntelliJ supports JSON and YAML two-way tooling.  Make changes to your JSON and YAML files
+and use the changes immediately in your code.  Additionally you can use features such as Find Usages, Refactor/Rename,
+Navigation, Hotswap Debugging, etc. directly from elements in resources files and Java files.  
 
 Here is a simple `User` type defined in `resources/abc/User.json` using JSON Schema:
 ```json
@@ -1056,7 +1060,7 @@ myUrl.append(query.getBindings().makeArguments());
   
 ### YAML
 The YAML type manifold provides comprehensive support for YAML.  You can define a YAML or JSON API with YAML resource 
-files.  Manifold can derive an API from sample data in YAML format.  Or you can build [JSON Schema](https://json-schema.org/) 
+files with extensions `.yml` and `.yaml`.  Manifold can derive an API from sample data in YAML format.  Or you can build [JSON Schema](https://json-schema.org/) 
 APIs directly with YAML.
 
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
