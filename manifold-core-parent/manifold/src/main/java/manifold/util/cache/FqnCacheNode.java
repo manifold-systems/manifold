@@ -128,6 +128,11 @@ public class FqnCacheNode<K>
     }
   }
 
+  public final boolean isEmpty()
+  {
+    return isLeaf();
+  }
+
   public final boolean isLeaf()
   {
     return _children == null || _children.isEmpty();

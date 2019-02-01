@@ -271,8 +271,9 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       }
 
       // true if type is not exclusively an extended type
-      Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn );
-      return typeManifoldsFor.stream().anyMatch( tm -> tm.getContributorKind() == Primary );
+      //noinspection unchecked
+      Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn, tm -> tm.getContributorKind() == Primary );
+      return !typeManifoldsFor.isEmpty();
     }
 
     if( patchableFiles == null )

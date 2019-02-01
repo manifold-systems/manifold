@@ -269,7 +269,9 @@ sources when you build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
-
+> Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
+whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-@precompile)
+ 
 ### Working with IntelliJ
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
@@ -2414,6 +2416,52 @@ HashMap<String, String> map = new HashMap<>()
   .add("miles", "mustard");
 ```
  
+## Using `@Precompile`
+
+By default a Type Manifold compiles a resource type only if you use it somewhere in your code.  Normally this is 
+desirable because if you don't use it as a Java class, why compile it?  There are cases, however, where *your*
+code may not be the only code that potentially uses the resources.  For instance, if your project provides an API
+in terms of JSON Schema files, there's a good chance you aren't using the JSON directly -- but consumers of your API will.
+Another case involves a mutli-module Java 11 project where a module provides resource files, but only dependent modules
+use them as Manifold types.  For cases like these you can instruct Manifold to precompile resources using the 
+`@Precompile` annotation.
+
+You can annotate any class in your project with `@Precompile`, typically you annotate the main class or, if there isn't 
+a main class, you can make a class just for the annotation. But you can put `@Precompile` anywhere you like. 
+
+For example, if you are using the JSON manifold, you can instruct the Java compiler to compile all `.json` files
+regardless of whether or not your module uses them as types.
+```java
+@Precompile(fileExtension = "json")
+public class Main {
+  ...
+}
+```
+
+You can refine `@Precompile` to compile only files matching a regex pattern:
+```java
+@Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
+```
+This tells the compile to precompile JSON files in the package `com.abc` and staring with `"My"`.
+
+You can also specify the type manifold class.  This example is logically the same as the previous one:
+```java
+@Precompile(typeManifold = YamlTypeManifold.class, typeNames = "com.abc.(My)+")
+```
+
+You can also stack `@Precompile`:
+```java
+@Precompile(fileExtension = "json", typeNames = "com.abc.(My)+")
+@Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
+```
+This tells the compile to precompile all JSON and YAML files in the package `com.abc` and staring with `"My"`.
+
+Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with type manifolds in your
+module:
+```java
+@Precompile
+```
+
 ## IDE -- IntelliJ IDEA
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.

@@ -18,7 +18,6 @@ package manifold.api.host;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -92,53 +91,60 @@ public interface IModule
 
   JavaFileObject produceFile( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler );
 
+  default Set<ITypeManifold> findTypeManifoldsFor( String fqn )
+  {
+    return findTypeManifoldsFor( fqn, null );
+  }
   /**
    * Finds the set of type manifolds that contribute toward the definition of a given type.
    *
-   * @param fqn        A fully qualified type name
-   * @param predicates Zero or more predicates to filter the set of type manifolds available
+   * @param fqn       A fully qualified type name
+   * @param predicate A predicate to filter the set of type manifolds available
    *
    * @return The set of type manifolds that contribute toward the definition of {@code fqn}
    */
-  default Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold>... predicates )
+  default Set<ITypeManifold> findTypeManifoldsFor( String fqn, Predicate<ITypeManifold> predicate )
   {
-    Set<ITypeManifold> tms = new HashSet<>( 2 );
+    Set<ITypeManifold> tms = null;
     Set<ITypeManifold> typeManifolds = getTypeManifolds();
-    if( predicates != null && predicates.length > 0 )
-    {
-      typeManifolds = typeManifolds.stream()
-        .filter( e -> Arrays.stream( predicates )
-          .anyMatch( p -> p.test( e ) ) )
-        .collect( Collectors.toSet() );
-    }
     for( ITypeManifold tm : typeManifolds )
     {
-      if( tm.isType( fqn ) )
+      if( (predicate == null || predicate.test( tm )) &&
+          tm.isType( fqn ) )
       {
+        tms = tms == null ? new HashSet<>( 2 ) : tms;
         tms.add( tm );
       }
     }
-    return tms;
+    return tms == null ? Collections.emptySet() : tms;
   }
 
+  default Set<ITypeManifold> findTypeManifoldsFor( IFile file )
+  {
+    return findTypeManifoldsFor( file, null );
+  }
   /**
    * Finds the set of type manifolds that handle a given resource file.
    *
    * @param file A resource file
+   * @param predicate A predicate to filter the set of type manifolds available
    *
    * @return The set of type manifolds that handle {@code file}
    */
-  default Set<ITypeManifold> findTypeManifoldsFor( IFile file )
+  default Set<ITypeManifold> findTypeManifoldsFor( IFile file, Predicate<ITypeManifold> predicate )
   {
-    Set<ITypeManifold> tms = new HashSet<>( 2 );
-    for( ITypeManifold tm : getTypeManifolds() )
+    Set<ITypeManifold> tms = null;
+    Set<ITypeManifold> typeManifolds = getTypeManifolds();
+    for( ITypeManifold tm : typeManifolds )
     {
-      if( tm.handlesFile( file ) )
+      if( (predicate == null || predicate.test( tm )) &&
+          tm.handlesFile( file ) )
       {
+        tms = tms == null ? new HashSet<>( 2 ) : tms;
         tms.add( tm );
       }
     }
-    return tms;
+    return tms == null ? Collections.emptySet() : tms;
   }
 
   /**

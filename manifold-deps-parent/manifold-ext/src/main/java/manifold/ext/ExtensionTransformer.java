@@ -57,6 +57,7 @@ import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
@@ -682,7 +683,10 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
 
-    precompile( typeNames );
+    if( !typeNames.isEmpty() )
+    {
+      precompile( typeNames );
+    }
   }
 
   private void getTypesToCompile( JCTree.JCAnnotation precompileAnno, Map<String, Set<String>> typeNames )
@@ -695,21 +699,50 @@ public class ExtensionTransformer extends TreeTranslator
 
     String typeManifoldClassName = null;
     String regex = ".*";
+    String ext = "*";
     for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
-      if( argName.toString().equals( "typeManifold" ) )
+      switch( argName.toString() )
       {
-        typeManifoldClassName = pair.snd.getValue().toString();
-      }
-      else if( argName.toString().equals( "typeNames" ) )
-      {
-        regex = pair.snd.getValue().toString();
+        case "typeManifold":
+          typeManifoldClassName = pair.snd.getValue().toString();
+          break;
+        case "fileExtension":
+          ext = pair.snd.getValue().toString();
+          break;
+        case "typeNames":
+          regex = pair.snd.getValue().toString();
+          break;
       }
     }
 
-    Set<String> regexes = typeNames.computeIfAbsent( typeManifoldClassName, tm -> new HashSet<>() );
-    regexes.add( regex );
+    addToPrecompile( typeNames, typeManifoldClassName, ext, regex );
+  }
+
+  private void addToPrecompile( Map<String, Set<String>> typeNames, String typeManifoldClassName, String ext, String regex )
+  {
+    if( typeManifoldClassName != null )
+    {
+      Set<String> regexes = typeNames.computeIfAbsent( typeManifoldClassName, tm -> new HashSet<>() );
+      regexes.add( regex );
+    }
+    else
+    {
+      boolean all = "*".equals( ext );
+      _tp.getHost().getSingleModule().getTypeManifolds().stream()
+        .filter( tm -> tm.getContributorKind() != ContributorKind.Supplemental )
+        .forEach( tm ->
+          {
+            boolean match = !all && tm.handlesFileExtension( ext );
+            if( all || match )
+            {
+              String classname = tm.getClass().getTypeName();
+              Set<String> regexes = typeNames.computeIfAbsent( classname, e -> new HashSet<>() );
+              regexes.add( regex );
+            }
+          } );
+    }
   }
 
   private void precompile( Map<String, Set<String>> typeNames )
@@ -1376,7 +1409,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Tree.Kind kind = parent.getKind();
 
-      if( kind != Tree.Kind.UNARY_MINUS && kind != Tree.Kind.UNARY_PLUS  &&
+      if( kind != Tree.Kind.UNARY_MINUS && kind != Tree.Kind.UNARY_PLUS &&
           kind != Tree.Kind.LOGICAL_COMPLEMENT && kind != Tree.Kind.BITWISE_COMPLEMENT )
       {
         // supporting -, +, !, ~  not supporting --, ++

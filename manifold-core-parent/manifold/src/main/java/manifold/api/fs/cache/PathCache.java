@@ -41,7 +41,7 @@ public class PathCache
 {
   @SuppressWarnings({"FieldCanBeLocal", "UnusedDeclaration"})
   private CacheClearer _clearer;
-  private IModule _module;
+  private final IModule _module;
   private final Supplier<Collection<IDirectory>> _pathSupplier;
   private final Runnable _clearHandler;
   private Map<IFile, Set<String>> _reverseMap;
