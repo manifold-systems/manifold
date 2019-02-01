@@ -2309,18 +2309,18 @@ something.foo().jailbreak().bar.jailbreak().baz = value;
 
 ## The Self Type
 
-The *self type* is a common term used in the language community for the *type of this* and is most useful
+The *self type* is a common term used in the language community to mean *"the runtime type of this type"* and is most useful
 in situations where you want the return type of a method in a supertype to have the type of the subtype.  Java does not 
-directly support the self type, but it does provide some useful features that can be used as a substitute for it, namely
-covariant return types and recursive generic types.  While both of these features are useful they fall short as a self
-type alternative in terms of convenience, simplicity, and type-safety.
+directly support the self type, but it does provide some useful features that approximate some of the self type's capabilities,
+namely covariant return types and recursive generic types.  While both of these features are useful, the self type hits
+the sweet spot between them.
 
 Manifold's `@Self` annotation provides Java with a direct self type implementation.  Use it on method return types to 
-enforce `type of this` where suitable.
+enforce *"the runtime type of this type"* where suitable.
 
 ### The Basics
 
-A common use-case for the self type involves the *Builder* pattern:
+A common use-case for the self type involves fluent APIs like the *Builder* pattern:
 
 ```java
 public class VehicleBuilder {
@@ -2442,7 +2442,7 @@ You can refine `@Precompile` to compile only files matching a regex pattern:
 ```java
 @Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
 ```
-This tells the compile to precompile JSON files in the package `com.abc` and staring with `"My"`.
+This tells the compiler to precompile JSON files in the package `com.abc` and starting with `"My"`.
 
 You can also specify the type manifold class.  This example is logically the same as the previous one:
 ```java
@@ -2454,9 +2454,9 @@ You can also stack `@Precompile`:
 @Precompile(fileExtension = "json", typeNames = "com.abc.(My)+")
 @Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
 ```
-This tells the compile to precompile all JSON and YAML files in the package `com.abc` and staring with `"My"`.
+This tells the compiler to precompile all JSON and YAML files in the package `com.abc` and starting with `"My"`.
 
-Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with type manifolds in your
+Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with all the type manifolds in your
 module:
 ```java
 @Precompile
