@@ -2353,7 +2353,7 @@ Airplane airplane = new AirplaneBuilder()
 ```
 
 `withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to return the 
-*type of this*.  This is what the self type accomplishes:
+*"the runtime type of `this`"*.  This is what the self type accomplishes:
 
 ```java
   public @Self VehicleBuilder withWheels(int wheels) {
@@ -2370,7 +2370,7 @@ Airplane airplane = new AirplaneBuilder()
   .withWings(1)  // GOOD!
 ``` 
 
-Annotate with `manifold.ext.api.Self` to preserve the "type of this" anywhere on or in a method return type.
+Annotate with `@Self` to preserve the *"the runtime type of `this`"* anywhere on or in a method return type.
 
 ### Self + Generics
 
