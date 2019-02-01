@@ -2309,14 +2309,14 @@ something.foo().jailbreak().bar.jailbreak().baz = value;
 
 ## The Self Type
 
-The *self type* is a common term used in the language community to mean *"the runtime type of this type"* and is most useful
+The *self type* is a common term used in the language community to mean *"the runtime type of `this`"* and is most useful
 in situations where you want the return type of a method in a supertype to have the type of the subtype.  Java does not 
 directly support the self type, but it does provide some useful features that approximate some of the self type's capabilities,
 namely covariant return types and recursive generic types.  While both of these features are useful, the self type hits
 the sweet spot between them.
 
 Manifold's `@Self` annotation provides Java with a direct self type implementation.  Use it on method return types to 
-enforce *"the runtime type of this type"* where suitable.
+enforce *"the runtime type of `this`"* where suitable.
 
 ### The Basics
 
