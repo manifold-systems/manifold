@@ -301,7 +301,7 @@ public class JsonStructureType extends JsonSchemaType
   {
     if( _state._innerTypes.isEmpty() )
     {
-      _state._innerTypes = new HashMap<>();
+      _state._innerTypes = new LinkedHashMap<>();
     }
     _state._innerTypes.put( name, type );
   }
@@ -367,7 +367,7 @@ public class JsonStructureType extends JsonSchemaType
       return _allMembers;
     }
 
-    Map<String, IJsonType> allMembers = new HashMap<>( _state._membersByName );
+    Map<String, IJsonType> allMembers = new LinkedHashMap<>( _state._membersByName );
     for( IJsonType extended: getSuperTypes() )
     {
       if( extended instanceof JsonStructureType )
@@ -422,7 +422,7 @@ public class JsonStructureType extends JsonSchemaType
       {
         if( _state._unionMembers.isEmpty() )
         {
-          _state._unionMembers = new HashMap<>();
+          _state._unionMembers = new LinkedHashMap<>();
         }
 
         Set<IJsonType> union = _state._unionMembers.computeIfAbsent( name, k -> new LinkedHashSet<>() );
@@ -1058,7 +1058,7 @@ public class JsonStructureType extends JsonSchemaType
 
 //  private Map<String, IJsonType> getAllReadOnly()
 //  {
-//    Map<String, IJsonType> readOnlyProps = new HashMap<>();
+//    Map<String, IJsonType> readOnlyProps = new LinkedHashMap<>();
 //    for( Map.Entry<String, IJsonType> entry: getAllMembers().entrySet() )
 //    {
 //      Boolean readOnly = entry.getValue().getTypeAttributes().getReadOnly();
@@ -1071,7 +1071,7 @@ public class JsonStructureType extends JsonSchemaType
 //  }
   private Map<String, IJsonType> getNotRequired()
   {
-    Map<String, IJsonType> result = new HashMap<>();
+    Map<String, IJsonType> result = new LinkedHashMap<>();
     Set<String> allRequired = getAllRequired();
     getAllMembers().forEach( (key, value) -> {
       if( !allRequired.contains( key ) )
