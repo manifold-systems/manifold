@@ -1330,6 +1330,13 @@ public class ExtensionTransformer extends TreeTranslator
   {
     //## todo: maybe try to avoid reflection if the method is accessible -- at least check if the method and its enclosing nest of classes are all public
 
+    Type type = tree.getMethodSelect().type;
+    if( type instanceof Type.ErrorType )
+    {
+      // No such field/method or wrong params
+      return tree;
+    }
+
     TreeMaker make = _tp.getTreeMaker();
     JavacElements javacElems = _tp.getElementUtil();
 
@@ -1419,6 +1426,12 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     Type type = tree.sym.type;
+    if( type instanceof Type.ErrorType )
+    {
+      // No such field/method
+      return tree;
+    }
+
     Symbol.MethodSymbol reflectMethodSym = findFieldAccessReflectUtilMethod( tree, type, isStatic, false );
 
     ArrayList<JCExpression> newArgs = new ArrayList<>();
