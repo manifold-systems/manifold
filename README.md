@@ -13,30 +13,34 @@ of it.
 Gain direct, type-safe access to <i>any</i> data source, such as JSON and YAML. Remove the code gen step in your build 
 process.
 ```java 
-// JSON and YAML files are types! No code gen!
-Person person = Person.fromJsonUrl(url);
-person.setFirstName("Scott");
+// Access your User.json file directly as a type, no code gen!
+User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
+user.setName("Scott");
+user.post().toJsonUrl("http://api.example.com/post/user");
 ```
 
 ### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
 Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code.
 ```java
 String greeting = "hello";
-greeting.myMethod(); // augment any type
+greeting.myMethod(); // Add your own methods to String!
 ```  
 
 ### [Structural Typing](http://manifold.systems/docs.html#structural-interfaces)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces.
 ```java
-MyInterface thing = (MyInterface)notMyInterface;
-thing.myMethod(); // treat as your interface
+Map<String, Object> map = new HashMap<>();
+MyThingInterface thing = (MyThingInterface) map; // O_o
+thing.setFoo(new Foo());
+Foo foo = thing.getFoo();
+out.println(thing.getClass()); // prints "java.util.HashMap"
 ```
  
 ### [Type-safe Reflection](http://manifold.systems/docs.html#type-safe-reflection)
 Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection.
 ```java
 @Jailbreak Foo foo = new Foo();
-// Direct, type-safe access to *all* foo's members
+// Direct, *type-safe* access to *all* foo's members
 foo.privateMethod(x, y, z); 
 foo.privateField = value;
 ```
@@ -46,7 +50,7 @@ Make type-safe [template files](http://manifold.systems/manifold-templates.html)
 ```java
 int hour = 8;
 // print "It is 8 o'clock"
-System.out.println("It is $hour o'clock"); 
+System.out.println("It is $hour o'clock"); // Finally!!!
 ``` 
        
 ### [Libraries](http://manifold.systems/docs.html#extension-libraries)
