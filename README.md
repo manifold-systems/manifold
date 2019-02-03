@@ -20,7 +20,7 @@ user.post().toJsonUrl("http://api.example.com/post/user");
 ```
 
 ### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
-Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code.
+Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
