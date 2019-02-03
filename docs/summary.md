@@ -1,5 +1,6 @@
-
+---
 layout: default
+---
 
 ## What is Manifold?
 [Manifold](http://manifold.systems) is a new breed of Java tooling. It provides powerful features to make
