@@ -52,7 +52,7 @@ int hour = 15;
 // Simple variable access with '$'
 String result = "The hour is $hour"; // Yes!!!
 // Use expressions with '${}'
-String ltime = ""It is ${hour > 12 ? hour-12 : hour} o'clock";
+result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
        
 ### Fast, Type-safe Templates with [ManTL](http://manifold.systems/manifold-templates.html)
