@@ -45,14 +45,34 @@ foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
-### [Templates](http://manifold.systems/docs.html#templating)
-Make type-safe [template files](http://manifold.systems/manifold-templates.html) using pure Java. Use the same template expressions in Java strings.
+### [String Templates](http://manifold.systems/docs.html#templating) (aka String Interpolation)
+Embed variables and expressions in String literals, no more clunky string concat!
 ```java
-int hour = 8;
-// print "It is 8 o'clock"
-System.out.println("It is $hour o'clock"); // Finally!!!
+int hour = 15;
+// Simple variable access with '$'
+String result = "The hour is $hour"; // Yes!!!
+// Use expressions with '${}'
+String ltime = ""It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
        
+### Fast, Type-safe Templates with [ManTL](http://manifold.systems/manifold-templates.html)
+Author template files with the full expressive power of Java, use your templates directly in your code as types.
+```jsp
+<%@ import java.util.List %>
+<%@ import com.example.User %>
+<%@ params(List<User> users) %>
+<html lang="en">
+<body>
+<% users.stream()
+   .filter(user -> user.getDateOfBirth() != null)
+   .forEach(user -> { %>
+    User: ${user.getName()} <br>
+    DOB: ${user.getDateOfBirth()} <br>
+<% }); %>
+</body>
+</html>
+```
+
 ### [Libraries](http://manifold.systems/docs.html#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
 ```java
