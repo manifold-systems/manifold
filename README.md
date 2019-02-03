@@ -55,14 +55,14 @@ String result = "The hour is $hour"; // Yes!!!
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
        
-### Type-safe Templates with [ManTL](http://manifold.systems/manifold-templates.html)
+### [Template Files with *ManTL*](http://manifold.systems/manifold-templates.html)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
 ```java
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
 ```
-A ManTL file in `abc/example/UserSample.html.mtl`
-```jsp
+A tempate file `abc/example/UserSample.html.mtl`
+```html
 <%@ import java.util.List %>
 <%@ import com.example.User %>
 <%@ params(List<User> users) %>
