@@ -3,7 +3,7 @@ layout: default
 ---
 
 ## Introducing _Manifold_!
-[Manifold](http://manifold.systems) is breakthrough technology you can use to seamlessly extend Java to compile and load types from sources
+[Manifold](http://manifold.systems) is a breakthrough technology you can use to seamlessly extend Java to compile and load types from sources
 _in addition to_ `.java` files.  Using this framework your code has direct, type-safe access to metadata such as YAML & JSON Schema files, DDL & SQL queries,
 and even other programming languages. Building on this foundation Manifold provides an ever growing set of extensions, including comprehensive support for
 [YAML and JSON Schema](http://manifold.systems/docs.html#json-and-json-schema),
