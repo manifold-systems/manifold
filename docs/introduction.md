@@ -12,7 +12,7 @@ full featured [templates](http://manifold.systems/manifold-templates.html),
 [string interpolation](http://manifold.systems/docs.html#templating), and a lot more.
 
 Manifold fulfills the promise: _**your metadata is the single source of truth**_. There is *nothing* to manage between your metadata and your
-code -- no code generation steps in your build, no annotation processor steps, no custom class loaders, no runtime agents.
+code -- no code generation steps in your build, no POJOs, no annotation processor steps, no custom class loaders, no runtime agents.
 
 All features are fully supported in IntelliJ IDEA.  Author JSON Schema documents and code against them as you make changes without
 a code generation step. Jump directly to a YAML property from a call site in your code. Quickly rename a JSON field and its
