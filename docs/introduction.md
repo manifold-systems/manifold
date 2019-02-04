@@ -15,7 +15,7 @@ Manifold fulfills the promise: _**your metadata is the single source of truth**_
 code -- no code generation steps in your build, no annotation processor steps, no custom class loaders, no runtime agents.
 
 All features are fully supported in IntelliJ IDEA.  Author JSON Schema documents and code against them as you make changes without
-a code generation step. Jump directly to a YAML property from a call site in your code. Quickly rename an JSON field and its
+a code generation step. Jump directly to a YAML property from a call site in your code. Quickly rename a JSON field and its
 usages across your codebase.  Use Hotswap to make and test changes to files while debugging.  Author templates with the full
 expressive power of Java and use them type-safely in your code.  Etc. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
 
