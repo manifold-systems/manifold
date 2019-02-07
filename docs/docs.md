@@ -776,7 +776,7 @@ Note the Manifold plugin for IntelliJ supports JSON and YAML two-way tooling.  M
 and use the changes immediately in your code.  Additionally you can use features such as Find Usages, Refactor/Rename,
 Navigation, Hotswap Debugging, etc. directly from elements in resources files and Java files.  
 
-Here is a simple `User` type defined in `resources/abc/User.json` using JSON Schema:
+Here is a simple `User` type defined in `resources/example/schemas/User.json` using JSON Schema:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -811,8 +811,12 @@ Here is a simple `User` type defined in `resources/abc/User.json` using JSON Sch
   "required": ["name", "email"]
 }
 ```
-Most type manifolds, including the JSON manifold, define a type using the name of the file and resource path: `abc.User`.
-JSON types are defined as a set of _interface_ APIs.  As such the `User` API provides type-safe methods to:
+Most type manifolds, including the JSON and YAML manifolds, follow the Java naming convention where a type name is based on the
+resource file name relative to its location in the resource path. Thus the JSON resource file `resources/example/schemas/User.json`
+has the Java type `example.schemas.User`.
+
+JSON types are defined as a set of fluent _interface_ APIs.  For example, the `User` JSON type is an interface and
+provides type-safe methods to:
 * **create** a `User`
 * **build** a `User`
 * **modify** properties of a `User`  
@@ -820,19 +824,21 @@ JSON types are defined as a set of _interface_ APIs.  As such the `User` API pro
 * **post** a `User` to a URL using HTTP POST
 * **write** a `User` as formatted JSON, YAML, or XML
 
-#### Creating & Building JSON 
+#### Creating & Building JSON
 You create an instance of a JSON type using either the `create()` method or the `builder()` method.
 
-The `create()` method defines parameters matching the `required` properties defined on the type. The `User.create()`
-declares two parameters matching the `required` properties:
+The `create()` method defines parameters matching the `required` properties defined in the JSON Schema, if the type is
+plain JSON or no `required` properties are specified, `create()` has no parameters.
+
+The `User.create()` method declares two parameters matching the `required` properties:
 ```java
 static User create(String name, String email) {...}
 ```
-You can use this to create a new instance of the `User` type and then modify it using _setter_ methods to change 
-optional properties:
+You can use this to create a new instance of the `User` type with `name` and `email` arguments and then modify it using
+_setter_ methods to change optional properties:
 ```java
-import abc.User;
-import abc.User.Gender;
+import example.schemas.User;
+import example.schemas.User.Gender;
 import java.time.LocalDate;
 ...
 User user = User.create("Scott McKinney", "scott@manifold.systems");
@@ -851,11 +857,13 @@ User user = User.builder("Scott McKinney", "scott@manifold.systems")
 You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
 heavier APIs.  After it is fully configured call the `build()` method to construct the type.
 
+> Note `with` methods also serve as a means to initialize values for `readOnly` properties.
+
 #### Loading JSON
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
-from a variety of existing sources using `load()`.
+a variety of existing sources using `load()`.
 
-You can load a `User` instance from a String:
+You can load a `User` instance from a YAML String:
 ```java
 // From a YAML string
 User user = User.load().fromYaml( 
@@ -928,7 +936,7 @@ Manifold supports JSON Schema's many curious ways to say that a property can hav
 * The type array:  `"type": ["", "null"]`
 * The union type:  `"oneOf": [ ..., {"type": "null"}]`
 * The enum type: `"enum": [..., null]`
-* [OpenAPI 3.0](https://swagger.io/docs/specification/about/) _nullable_ attribute:`"nullable": true`
+* [OpenAPI 3.0](https://swagger.io/docs/specification/about/) _nullable_ attribute: `"nullable": true`
 
 #### **'additionalProperties'** and **'patternProperties'**
 If a schema defines `additionalProperties` and/or `patternProperties`, the API provides a pair of methods to get/put 
@@ -960,7 +968,7 @@ String color = hasColor.getColor();
 
 #### Nested Types
 Nested types defined within a JSON type, such as the `Gender` enum type in `User`, are available in the `User` API as
-inner interfaces or enum types.  An nested type has all the same features as a top-level type including `create()`,
+inner interfaces or enum types.  An nested interface type has all the same features as a top-level type including `create()`,
 `builder()`, `load()`, etc.
 
 #### Format Types
@@ -1076,11 +1084,11 @@ myUrl.append(query.getBindings().makeArguments());
 ```
 * The `Json`, `Yaml` and `JsonUtil` classes
 * The `OctetEncoding` and `Base64Encoding` classes facilitate sending/receiving binary information via JSON
-* Structural interfaces on `Bindings`
+* Structural interfaces on `Bindings` -- you can define your own structural interfaces for improved type-safety on bindings (or maps)
   
 ### YAML
-The YAML type manifold provides comprehensive support for YAML.  You can define a YAML or JSON API with YAML resource 
-files with extensions `.yml` and `.yaml`.  Manifold can derive an API from sample data in YAML format.  Or you can build [JSON Schema](https://json-schema.org/) 
+The YAML type manifold provides comprehensive support for YAML (1.2).  You can define a YAML or JSON API with YAML resource
+files (`.yml` and `.yaml` files).  Manifold can derive an API from sample data in YAML format or you can build [JSON Schema](https://json-schema.org/)
 APIs directly with YAML.
 
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
@@ -2421,16 +2429,15 @@ HashMap<String, String> map = new HashMap<>()
 By default a Type Manifold compiles a resource type only if you use it somewhere in your code.  Normally this is 
 desirable because if you don't use it as a Java class, why compile it?  There are cases, however, where *your*
 code may not be the only code that potentially uses the resources.  For instance, if your project provides an API
-in terms of JSON Schema files, there's a good chance you aren't using the JSON directly -- but consumers of your API will.
-Another case involves a mutli-module Java 11 project where a module provides resource files, but only dependent modules
-use them as Manifold types.  For cases like these you can instruct Manifold to precompile resources using the 
-`@Precompile` annotation.
+in terms of JSON Schema files, there's a good chance your project doesn't use the JSON directly -- but consumers of your API do.
+A similar case involves a mutli-module Java 11 project where a module provides resource files, but only dependent modules
+use them as Manifold types.  Although Manifold works in both of these situations, it compiles the types dynamically,
+which entails a one time performance bump the first time each class is used at runtime. For cases like these you can
+avoid dynamic compilation using the `@Precompile` annotation.
 
-You can annotate any class in your project with `@Precompile`, typically you annotate the main class or, if there isn't 
-a main class, you can make a class just for the annotation. But you can put `@Precompile` anywhere you like. 
-
-For example, if you are using the JSON manifold, you can instruct the Java compiler to compile all `.json` files
-regardless of whether or not your module uses them as types.
+You can annotate any class in your project/module with `@Precompile`. For example, if you are using the JSON manifold,
+you can instruct the Java compiler to compile all `.json` files regardless of whether or not your module uses them as
+types:
 ```java
 @Precompile(fileExtension = "json")
 public class Main {
@@ -2442,7 +2449,7 @@ You can refine `@Precompile` to compile only files matching a regex pattern:
 ```java
 @Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
 ```
-This tells the compiler to precompile JSON files in the package `com.abc` and starting with `"My"`.
+This tells the compiler to precompile YAML files in package `com.abc` starting with `"My"`.
 
 You can also specify the type manifold class.  This example is logically the same as the previous one:
 ```java
@@ -2454,10 +2461,10 @@ You can also stack `@Precompile`:
 @Precompile(fileExtension = "json", typeNames = "com.abc.(My)+")
 @Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
 ```
-This tells the compiler to precompile all JSON and YAML files in the package `com.abc` and starting with `"My"`.
+This tells the compiler to precompile all JSON and YAML files in package `com.abc` starting with `"My"`.
 
-Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with all the type manifolds in your
-module:
+Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with all the type manifolds
+enabled in your module:
 ```java
 @Precompile
 ```

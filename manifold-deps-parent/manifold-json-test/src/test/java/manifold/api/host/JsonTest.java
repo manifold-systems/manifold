@@ -50,10 +50,19 @@ public class JsonTest extends TestCase
   {
     OneOf oneOf = OneOf.create();
 
+    OneOf.MyDef myDef = OneOf.MyDef.builder().withChocolate("milk").build();
+
+    oneOf.setOneOfRefAsMyDef(myDef);
+    String choco = oneOf.getOneOfRefAsMyDef().getChocolate();
+    assertEquals( "milk", choco );
+    oneOf.setOneOfRefAsString("hi");
+    assertEquals( "hi", oneOf.getOneOfRefAsString() );
+    assertEquals( "hi", (String)oneOf.getOneOfRef() );
+
     oneOf.setThingAsBoolean( Boolean.TRUE );
     assertTrue( oneOf.getThingAsBoolean() );
 
-    OneOf.MyDef myDef = OneOf.MyDef.create();
+    myDef = OneOf.MyDef.create();
     oneOf.setThingAsMyDef(myDef);
     OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
     assertSame( myDef, myDefRes );
@@ -631,5 +640,68 @@ public class JsonTest extends TestCase
     nestedDefs.getTheNestedObject().setNestedThing( "hi" );
     nestedDefs.getTheNestedObject().getNestedThing();
     nestedDefs.getTheNestedString();
+  }
+
+  public void testRefVariations()
+  {
+    RefVariations.Car car = RefVariations.Car.create();
+    RefVariations.Color_rgb color_rgb = RefVariations.Color_rgb.builder().withBlue(1).withGreen(2).withRed(3).build();
+    RefVariations.Color2_rgb color2_rgb = RefVariations.Color2_rgb.builder().withBlue(1).withGreen(2).withRed(3).build();
+    car.setColor1(color_rgb);
+    car.getColor1().getRed();
+    car.getColor1().setAlphaAsColor2_rgb(color2_rgb);
+    car.getColor1().getAlphaAsColor2_rgb().getBlue();
+    car.getColor1().getAlphaAsString();
+    String inner = car.getColor1().getInner();
+
+    car.setColor2(color_rgb);
+    car.getColor2().getRed();
+    car.getColor2().getAlphaAsColor2_rgb().getBlue();
+    car.getColor2().getAlphaAsString();
+    inner = car.getColor2().getInner();
+
+    car.setInner3("inner3");
+
+    car.setInner4("inner3");
+
+    car.setColor5(color_rgb);
+    car.getColor5().getRed();
+    car.getColor5().getAlphaAsColor2_rgb().getBlue();
+    car.getColor5().getAlphaAsString();
+    inner = car.getColor5().getInner();
+
+    car.setColor6(color_rgb);
+    car.getColor6().getRed();
+    car.getColor6().getAlphaAsColor2_rgb().getBlue();
+    car.getColor6().getAlphaAsString();
+    inner = car.getColor6().getInner();
+
+    car.setColor7(color_rgb);
+    car.getColor7().getRed();
+    car.getColor7().getAlphaAsColor2_rgb().getBlue();
+    car.getColor7().getAlphaAsString();
+    inner = car.getColor7().getInner();
+
+    car.setInner8("inner3");
+
+    car.setAlphaAsColor2_rgb(color2_rgb);
+
+    car.setColor1_1(color2_rgb);
+    car.getColor1_1().getRed();
+    inner = car.getColor1_1().getInner();
+
+    car.setColor1_2(color2_rgb);
+    car.getColor1_2().getRed();
+    inner = car.getColor1_2().getInner();
+
+    inner = car.getInner1_3();
+
+    inner = car.getInner1_4();
+
+    car.setColor1_5(color2_rgb);
+    car.getColor1_5().getRed();
+    inner = car.getColor1_5().getInner();
+
+    inner = car.getInner1_6();
   }
 }

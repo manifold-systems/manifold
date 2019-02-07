@@ -141,6 +141,7 @@ public class JsonStructureType extends JsonSchemaType
       {
         type = ((LazyRefJsonType)type).resolve();
         _state._membersByName.put( entry.getKey(), type );
+        addUnionMemberAccess( entry.getKey(), type );
       }
 
 //      if( type instanceof JsonStructureType )
@@ -539,6 +540,7 @@ public class JsonStructureType extends JsonSchemaType
 
   private void renderInnerTypes( StringBuilder sb, int indent, boolean mutable )
   {
+    addProxy( sb, indent );
     addBuilder( sb, indent );
     
     for( IJsonParentType child : _state._innerTypes.values() )
@@ -953,17 +955,9 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     //noinspection unused
     String Bindings = Bindings.class.getSimpleName();
-    sb.append( "static " ).append( typeName ).append( " proxy($Bindings bindings) {\n" );
-    indent( sb, indent + 2 );
-    sb.append( "return new $typeName() {\n" );
-    indent( sb, indent + 4 );
-    sb.append( "  public $Bindings getBindings() {\n" );
-    indent( sb, indent + 6 );
-    sb.append( "    return bindings;\n" );
-    indent( sb, indent + 4 );
-    sb.append( "  }\n" );
-    indent( sb, indent + 2 );
-    sb.append( "};\n" );
+    sb.append( "static " ).append( typeName ).append( " proxy(final $Bindings bindings) {\n" );
+    indent( sb, indent );
+    sb.append( "  return new Proxy(bindings);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }
@@ -997,6 +991,24 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( ");\n" );
     indent -= 2;
     indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void addProxy( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    //noinspection unused
+    String Bindings = Bindings.class.getSimpleName();
+    indent( sb, indent += 2 );
+    sb.append( "class Proxy implements $typeName {\n" );
+    indent( sb, indent + 2 );
+    sb.append( "  private final $Bindings _bindings;\n" );
+    indent( sb, indent + 2 );
+    sb.append( "  private Proxy($Bindings bindings) {_bindings = bindings;}\n" );
+    indent( sb, indent + 2 );
+    sb.append( "  public $Bindings getBindings() {return _bindings;}\n" );
+    indent( sb, indent + 2 );
     sb.append( "}\n" );
   }
 

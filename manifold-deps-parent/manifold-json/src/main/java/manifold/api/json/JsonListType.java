@@ -218,7 +218,8 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_state._componentType.equalsStructurally( that._state._componentType ) )
+    if( _state._componentType == null ||
+        !_state._componentType.equalsStructurally( that._state._componentType ) )
     {
       return false;
     }
@@ -249,7 +250,8 @@ public class JsonListType extends JsonSchemaType
 
     JsonListType that = (JsonListType)o;
 
-    if( !_state._componentType.equals( that._state._componentType ) )
+    if( _state._componentType == null ||
+        !_state._componentType.equals( that._state._componentType ) )
     {
       return false;
     }
@@ -259,7 +261,7 @@ public class JsonListType extends JsonSchemaType
   @Override
   public int hashCode()
   {
-    int result = _state._componentType.hashCode();
+    int result =  _state._componentType == null ? 0 : _state._componentType.hashCode();
     result = 31 * result + _state._innerTypes.hashCode();
     return result;
   }
