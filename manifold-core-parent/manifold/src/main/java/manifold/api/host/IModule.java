@@ -31,13 +31,10 @@ import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.darkj.DarkJavaTypeManifold;
 import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.cache.PathCache;
-import manifold.api.image.ImageTypeManifold;
-import manifold.api.properties.PropertiesTypeManifold;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.util.ServiceUtil;
@@ -156,7 +153,6 @@ public interface IModule
   {
     // note type manifolds are sorted via getTypeManifoldSorter(), hence the use of TreeSet
     SortedSet<ITypeManifold> typeManifolds = new TreeSet<>( getTypeManifoldSorter() );
-    loadBuiltIn( typeManifolds );
     loadRegistered( typeManifolds );
     return typeManifolds;
   }
@@ -172,42 +168,6 @@ public interface IModule
   {
     //noinspection ComparatorMethodParameterNotUsed
     return (tm1, tm2) -> tm1.getContributorKind() == ContributorKind.Supplemental ? 1 : -1;
-  }
-
-  /**
-   * Loads, but does not initialize, all <i>built-in</i> type manifolds managed by this module.
-   * A built-in type manifold is not registered as a Java service, instead it is constructed directly.
-   */
-  default void loadBuiltIn( Set<ITypeManifold> tms )
-  {
-    List<String> excludedTypeManifolds = getExcludedTypeManifolds();
-    addBuiltIn( PropertiesTypeManifold.class, tms, excludedTypeManifolds );
-    addBuiltIn( ImageTypeManifold.class, tms, excludedTypeManifolds );
-    addBuiltIn( DarkJavaTypeManifold.class, tms, excludedTypeManifolds );
-  }
-
-  default void addBuiltIn( Class<? extends ITypeManifold> tmClass, Set<ITypeManifold> tms, List<String> excludedTypeManifolds )
-  {
-    if( !excludedTypeManifolds.contains( tmClass.getTypeName() ) )
-    {
-      try
-      {
-        Constructor<? extends ITypeManifold> declaredConstructor = tmClass.getDeclaredConstructor();
-        if( declaredConstructor == null )
-        {
-          throw new IllegalStateException( "Type manifold class '" + tmClass.getTypeName() + "' does not define an accessible default constructor" );
-        }
-        ITypeManifold tm = declaredConstructor.newInstance();
-        if( tm.accept( this ) )
-        {
-          tms.add( tm );
-        }
-      }
-      catch( Exception e )
-      {
-        throw new RuntimeException( e );
-      }
-    }
   }
 
   default List<String> getExcludedTypeManifolds()

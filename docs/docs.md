@@ -323,6 +323,12 @@ Uber-jar containing all of the binaries below (recommended)
 Core Manifold support, also includes properties and image manifolds
 * [manifold-ext](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE):
 Support for structural typing and extensions
+* [manifold-properties](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-properties&v=RELEASE):
+Properties files support
+* [manifold-image](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-image&v=RELEASE):
+Image files support
+* [manifold-darkj](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-darkj&v=RELEASE):
+Dark Java support
 * [manifold-json](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE):
 JSON and JSON Schema support
 * [manifold-yaml](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-yaml&v=RELEASE):
@@ -361,17 +367,38 @@ recommended setup.
 *Or* choose from the list of individual dependencies:
 
 ```xml
-  <!--Core Manifold support, includes properties and image manifolds-->
+  <!--Core Manifold support-->
   <dependency>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold</artifactId>
     <version>RELEASE</version>
   </dependency>
   
-  <!--Support for structural typing and extensions-->
+  <!--Support for extension methods, structural typing, string interpolation, @Jailbreak, @Self, @Precompile-->
   <dependency>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-ext</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Properties files support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-properties</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Image files support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-image</artifactId>
+    <version>RELEASE</version>
+  </dependency>
+  
+  <!--Dark Java support-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-darkj</artifactId>
     <version>RELEASE</version>
   </dependency>
   
@@ -623,43 +650,52 @@ apply plugin: 'java'
 
 dependencies {
   // -- All manifold, includes all other dependencies listed here --
-  compile group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-all', version: 'RELEASE'
 
 
   // -- Or individual dependencies --
   
-  // Core Manifold support, includes properties and image manifolds
-  compile group: 'systems.manifold', name: 'manifold', version: 'RELASE'
+  // Core Manifold support
+  compile group: 'systems.manifold', name: 'manifold', version: 'RELEASE'
   
-  // Support for structural typing and extensions
-  compile group: 'systems.manifold', name: 'manifold-ext', version: 'RELASE'
+  // Support for extension methods, structural typing, string interpolation, @Jailbreak, @Self, @Precompile
+  compile group: 'systems.manifold', name: 'manifold-ext', version: 'RELEASE'
     
+  // Properties files support  
+  compile group: 'systems.manifold', name: 'manifold-properties', version: 'RELEASE'
+  
+  // Image files support  
+  compile group: 'systems.manifold', name: 'manifold-image', version: 'RELEASE'
+  
+  // Dark Java support  
+  compile group: 'systems.manifold', name: 'manifold-darkj', version: 'RELEASE'
+  
   // JSON and JSchema support  
-  compile group: 'systems.manifold', name: 'manifold-json', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-json', version: 'RELEASE'
   
   // YAML support
-  compile group: 'systems.manifold', name: 'manifold-yaml', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-yaml', version: 'RELEASE'
   
   // JavaScript support (experimental)
-  compile group: 'systems.manifold', name: 'manifold-js', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-js', version: 'RELEASE'
   
-  // Template support
-  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELASE'
+  // Template support (ManTL)
+  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELEASE'
   
   // Collection extensions
-  compile group: 'systems.manifold', name: 'manifold-collections', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-collections', version: 'RELEASE'
   
   // I/O extensions
-  compile group: 'systems.manifold', name: 'manifold-io', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-io', version: 'RELEASE'
   
   // Text extensions
-  compile group: 'systems.manifold', name: 'manifold-text', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-text', version: 'RELEASE'
   
   
   // -- For Java 9 or later ==
   
   // Add manifold-all to -processorpath for javac
-  annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELASE'
+  annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELEASE'
   
   
   // -- For Java 8 only --

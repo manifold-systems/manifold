@@ -24,7 +24,17 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-darkj</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-image</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -40,6 +50,11 @@
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-properties</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

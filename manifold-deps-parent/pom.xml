@@ -15,25 +15,31 @@
   <url>http://manifold.systems/</url>
 
   <modules>
-    <module>manifold-test</module>
+    <module>manifold-collections</module>
+    <module>manifold-collections-test</module>
+    <module>manifold-darkj</module>
+    <module>manifold-darkj-test</module>
     <module>manifold-ext</module>
     <module>manifold-ext-test</module>
     <module>manifold-ext-producer-sample</module>
     <module>manifold-ext-producer-sample-test</module>
     <module>manifold-io</module>
     <module>manifold-io-test</module>
-    <module>manifold-json</module>
-    <module>manifold-json-test</module>
-    <module>manifold-yaml</module>
-    <module>manifold-yaml-test</module>
+    <module>manifold-image</module>
+    <module>manifold-image-test</module>
     <module>manifold-js</module>
     <module>manifold-js-test</module>
-    <module>manifold-text</module>
-    <module>manifold-text-test</module>
-    <module>manifold-collections</module>
-    <module>manifold-collections-test</module>
+    <module>manifold-json</module>
+    <module>manifold-json-test</module>
+    <module>manifold-properties</module>
+    <module>manifold-properties-test</module>
     <module>manifold-templates</module>
     <module>manifold-templates-test</module>
+    <module>manifold-test</module>
+    <module>manifold-text</module>
+    <module>manifold-text-test</module>
+    <module>manifold-yaml</module>
+    <module>manifold-yaml-test</module>
   </modules>
 
   <build>
