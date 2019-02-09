@@ -32,7 +32,6 @@ import manifold.ext.RuntimeMethods;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -383,7 +382,7 @@ public class JsonStructureType extends JsonSchemaType
     return _state._memberLocations;
   }
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "WeakerAccess"})
   public Map<String, IJsonParentType> getInnerTypes()
   {
     return _state._innerTypes;
@@ -542,7 +541,8 @@ public class JsonStructureType extends JsonSchemaType
   {
     addProxy( sb, indent );
     addBuilder( sb, indent );
-    
+    addCopier( sb, indent );
+
     for( IJsonParentType child : _state._innerTypes.values() )
     {
       child.render( sb, indent + 2, mutable );
@@ -945,6 +945,12 @@ public class JsonStructureType extends JsonSchemaType
     // withXxx( x ) methods corresponding with non "required" properties
     addBuilderMethod( sb, indent );
 
+    // Similar to builder(), copier() takes an instance to copy and has withXxx() methods, and a copy() method
+    addCopierMethod( sb, indent );
+
+    // Add a simple copy method for a deep copy
+    addCopyMethod( sb, indent );
+
     // Provide a loader(...) method, returns Loader<typeName> with methods for loading content from String, URL, file, etc.
     addLoadMethod( sb, indent, typeName );
 
@@ -994,6 +1000,19 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "}\n" );
   }
 
+  private void addCopierMethod( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "static Copier copier($typeName from) {return new Copier(from);}\n" );
+  }
+
+  /**
+   * Not so much a "proxy" as a substitute for a structural proxy that is otherwise generated dynamically at runtime.
+   * Essentially this class is a compile-time substitute that vastly improves the first-time load performance of
+   * JSON types.
+   */
   private void addProxy( StringBuilder sb, int indent )
   {
     //noinspection unused
@@ -1002,11 +1021,11 @@ public class JsonStructureType extends JsonSchemaType
     String Bindings = Bindings.class.getSimpleName();
     indent( sb, indent += 2 );
     sb.append( "class Proxy implements $typeName {\n" );
-    indent( sb, indent + 2 );
+    indent( sb, indent );
     sb.append( "  private final $Bindings _bindings;\n" );
-    indent( sb, indent + 2 );
+    indent( sb, indent );
     sb.append( "  private Proxy($Bindings bindings) {_bindings = bindings;}\n" );
-    indent( sb, indent + 2 );
+    indent( sb, indent );
     sb.append( "  public $Bindings getBindings() {return _bindings;}\n" );
     indent( sb, indent + 2 );
     sb.append( "}\n" );
@@ -1025,75 +1044,13 @@ public class JsonStructureType extends JsonSchemaType
     // constructor
     addBuilderConstructor( sb, indent );
 
-    addWithMethods( sb, indent );
+    addWithMethods( getNotRequired(), "Builder", sb, indent );
 
     addBuildMethod( sb, indent );
 
     indent( sb, indent - 2 );
     sb.append( "}\n" );
   }
-
-  private void addBuildMethod( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent );
-    sb.append( "public $typeName build() {\n" );
-    indent( sb, indent+2 );
-    sb.append( "return ($typeName)_bindings;\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
-  }
-
-  private void addWithMethods( StringBuilder sb, int indent )
-  {
-    for( Map.Entry<String, IJsonType> entry: getNotRequired().entrySet() )
-    {
-      //noinspection unused
-      String propertyType = getPropertyType( entry.getValue() );
-      String key = entry.getKey();
-      //noinspection unused
-      String suffix = makeIdentifier( key, true );
-      addSourcePositionAnnotation( sb, indent + 2, key );
-      //noinspection unused
-      String identifier = addActualNameAnnotation( sb, indent + 2, key, false );
-      indent( sb, indent );
-      sb.append( "public Builder with$suffix($propertyType $identifier) {\n" );
-      indent( sb, indent+2 );
-      sb.append( "_bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(_bindings, $identifier));\n" );
-      indent( sb, indent+2 );
-      sb.append( "return this;\n" );
-      indent( sb, indent );
-      sb.append( "}\n" );
-    }
-  }
-
-//  private Map<String, IJsonType> getAllReadOnly()
-//  {
-//    Map<String, IJsonType> readOnlyProps = new LinkedHashMap<>();
-//    for( Map.Entry<String, IJsonType> entry: getAllMembers().entrySet() )
-//    {
-//      Boolean readOnly = entry.getValue().getTypeAttributes().getReadOnly();
-//      if( readOnly != null && readOnly )
-//      {
-//        readOnlyProps.put( entry.getKey(), entry.getValue() );
-//      }
-//    }
-//    return readOnlyProps;
-//  }
-  private Map<String, IJsonType> getNotRequired()
-  {
-    Map<String, IJsonType> result = new LinkedHashMap<>();
-    Set<String> allRequired = getAllRequired();
-    getAllMembers().forEach( (key, value) -> {
-      if( !allRequired.contains( key ) )
-      {
-        result.put( key, value );
-      }
-    } );
-    return result;
-  }
-
 
   private void addBuilderConstructor( StringBuilder sb, int indent )
   {
@@ -1124,6 +1081,132 @@ public class JsonStructureType extends JsonSchemaType
     indent -= 2;
     indent( sb, indent );
     sb.append( "}\n" );
+  }
+
+  private void addBuildMethod( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "public $typeName build() {\n" );
+    indent( sb, indent+2 );
+    sb.append( "return ($typeName)_bindings;\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void addCopier( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String Bindings = Bindings.class.getSimpleName();
+    indent( sb, indent );
+    sb.append( "class Copier {\n" );
+    indent( sb, indent );
+    sb.append( "  private final $Bindings _bindings;\n" );
+    indent( sb, indent );
+
+    // constructor
+    addCopierConstructor( sb, indent );
+
+    addWithMethods( getNotRequired(), "Copier", sb, indent );
+
+    addCopierCopyMethod( sb, indent );
+
+    indent( sb, indent - 2 );
+    sb.append( "}\n" );
+  }
+
+  private void addCopierCopyMethod( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "public $typeName copy() {return ($typeName)_bindings;}\n" );
+  }
+
+  private void addCopierConstructor( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "private Copier($typeName from) {_bindings = from.copy().getBindings();}\n" );
+  }
+
+  private void addCopyMethod( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "default $typeName copy() {return ($typeName)getBindings().deepCopy();}\n" );
+  }
+
+  private void addWithMethods( Map<String, IJsonType> fields, @SuppressWarnings("unused") String builderType, StringBuilder sb, int indent )
+  {
+    for( Map.Entry<String, IJsonType> entry: fields.entrySet() )
+    {
+      //noinspection unused
+      String propertyType = getPropertyType( entry.getValue() );
+      String key = entry.getKey();
+      //noinspection unused
+      String suffix = makeIdentifier( key, true );
+      addSourcePositionAnnotation( sb, indent + 2, key );
+      //noinspection unused
+      String identifier = addActualNameAnnotation( sb, indent + 2, key, false );
+      indent( sb, indent );
+      sb.append( "public $builderType with$suffix($propertyType $identifier) {\n" );
+      indent( sb, indent );
+      sb.append( "  _bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(_bindings, $identifier));\n" );
+      indent( sb, indent );
+      sb.append( "  return this;\n" );
+      indent( sb, indent );
+      sb.append( "}\n" );
+      renderUnionAccessors_With( builderType, sb, indent, key, entry.getValue() );
+    }
+  }
+
+  private void renderUnionAccessors_With( @SuppressWarnings("unused") String builderType, StringBuilder sb, int indent, String key, IJsonType type )
+  {
+    if( isCollapsedUnionEnum( type ) )
+    {
+      return;
+    }
+
+    Set<IJsonType> union = _state._unionMembers.get( key );
+    if( union != null )
+    {
+      for( IJsonType constituentType: union )
+      {
+        sb.append( '\n' );
+        String specificPropertyType = getConstituentQn( constituentType, type );
+        String unionName = makeMemberIdentifier( constituentType );
+        addSourcePositionAnnotation( sb, indent + 2, key );
+        if( constituentType instanceof JsonSchemaType )
+        {
+          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+        }
+        String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
+        indent( sb, indent + 2 );
+        sb.append( "public $builderType with" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value) {\n" );
+        indent( sb, indent + 2 );
+        sb.append( "  _bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(_bindings, ${'$'}value));\n" );
+        sb.append( "  return this;\n" );
+        indent( sb, indent + 2 );
+        sb.append( "}\n" );
+      }
+    }
+  }
+
+  private Map<String, IJsonType> getNotRequired()
+  {
+    Map<String, IJsonType> result = new LinkedHashMap<>();
+    Set<String> allRequired = getAllRequired();
+    getAllMembers().forEach( (key, value) -> {
+      if( !allRequired.contains( key ) )
+      {
+        result.put( key, value );
+      }
+    } );
+    return result;
   }
 
   private void addCreateMethod( StringBuilder sb, int indent, String typeName )

@@ -433,8 +433,14 @@ public class RuntimeMethods
       return root;
     }
 
-    if( root instanceof Bindings && IBindingsBacked.class.isAssignableFrom( iface ) )
+    if( root instanceof Map && IBindingsBacked.class.isAssignableFrom( iface ) )
     {
+      if( !(root instanceof Bindings) )
+      {
+        //noinspection unchecked
+        root = new DataBindings( (Map)root );
+      }
+
       // An interface extending IBindingsBacked is expected to define a proxy(Bindings) method returning an
       // implementation of the interface, see JsonStructureType.
       // This strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via ICallHandler.

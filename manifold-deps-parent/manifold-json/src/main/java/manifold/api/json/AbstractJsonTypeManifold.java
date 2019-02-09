@@ -38,7 +38,7 @@ import manifold.util.ManClassUtil;
 public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends JavaTypeManifold<T>
 {
   private static final Set<String> API_INNER_CLASS_NAMES =
-    new HashSet<>( Arrays.asList( "Proxy", "Builder" ) );
+    new HashSet<>( Arrays.asList( "Proxy", "Builder", "Copier" ) );
 
   @Override
   public boolean isInnerType( String topLevel, String relativeInner )

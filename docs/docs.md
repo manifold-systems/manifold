@@ -270,7 +270,7 @@ sources when you build your project
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
 > Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
-whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-@precompile)
+whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-precompile)
  
 ### Working with IntelliJ
 
@@ -805,14 +805,15 @@ We are working on support for more data sources including:
 ### JSON and JSON Schema
 The JSON type manifold provides comprehensive support for JSON resource files (extension `.json`).  You can define a 
 JSON API with JSON resources consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or 
-later. Your JSON resource files serve as the _single source of truth_ regarding JSON APIs.  You use JSON-expressed
+later. Your JSON resource files serve as the **single source of truth** regarding JSON APIs.  You use JSON-expressed
 types *directly* in your code without maintaining a separate set of classes or wedging a code generator into your build.
 
-Note the Manifold plugin for IntelliJ supports JSON and YAML two-way tooling.  Make changes to your JSON and YAML files
-and use the changes immediately in your code.  Additionally you can use features such as Find Usages, Refactor/Rename,
-Navigation, Hotswap Debugging, etc. directly from elements in resources files and Java files.  
+Note the Manifold plugin for IntelliJ IDEA supports JSON and YAML fluid API development.  Make changes to your JSON and YAML
+files and use the changes immediately in your code, no compilation step.  You can use features such as Find Usages,
+Refactor/Rename, and Navigation directly between elements in JSON and YAML resources files and Java files. Additionally
+you can make and test changes in a live application or service using IntelliJ's Hotswap debugger.
 
-Here is a simple `User` type defined in `resources/example/schemas/User.json` using JSON Schema:
+Here is a simple `User` type defined in `resources/com/example/schemas/User.json` using JSON Schema:
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -847,9 +848,17 @@ Here is a simple `User` type defined in `resources/example/schemas/User.json` us
   "required": ["name", "email"]
 }
 ```
+
+#### Naming
+
 Most type manifolds, including the JSON and YAML manifolds, follow the Java naming convention where a type name is based on the
-resource file name relative to its location in the resource path. Thus the JSON resource file `resources/example/schemas/User.json`
-has the Java type `example.schemas.User`.
+resource file name relative to its location in the resource path. Thus the JSON resource file `resources/com/example/schemas/User.json`
+has the Java type `com.example.schemas.User`.
+
+The name *should* also match the schema `$id`, if one is provided.  The `User` type declares `"$id": "http://example.com/schemas/User.json"`,
+which corresponds with the name `com.example.schemas.User`.
+
+#### Fluent API
 
 JSON types are defined as a set of fluent _interface_ APIs.  For example, the `User` JSON type is an interface and
 provides type-safe methods to:
@@ -859,6 +868,7 @@ provides type-safe methods to:
 * **load** a `User` from a string, a file, or a URL using HTTP GET
 * **post** a `User` to a URL using HTTP POST
 * **write** a `User` as formatted JSON, YAML, or XML
+* **copy** a `User`
 
 #### Creating & Building JSON
 You create an instance of a JSON type using either the `create()` method or the `builder()` method.
@@ -873,8 +883,8 @@ static User create(String name, String email) {...}
 You can use this to create a new instance of the `User` type with `name` and `email` arguments and then modify it using
 _setter_ methods to change optional properties:
 ```java
-import example.schemas.User;
-import example.schemas.User.Gender;
+import com.example.schemas.User;
+import com.example.schemas.User.Gender;
 import java.time.LocalDate;
 ...
 User user = User.create("Scott McKinney", "scott@manifold.systems");
@@ -960,9 +970,25 @@ Output:
 }
 ```
 
+#### Copying JSON
+Use the `copy()` method to make a deep copy of any JSON API object:
+```java
+User user = User.create(...);
+...
+User copy = user.copy();
+```
+Alternatively, you can use the `copier()` static method for a richer set of features:
+```java
+User copy = User.copier(user).withName("Bob").copy();
+```
+`copier()` is a lot like `builder()` but lets you start with an already built object from which you can make
+modifications.  Also like `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
+`readOnly` fields after the `copy()` method constructs the object.
+
 #### Properties Marked `readOnly` or `writeOnly` 
-A `readOnly` property is initialized as a parameter in either of the `create()` and `builder()` methods. A `readOnly` 
-property is not modifiable in the API once a type is created or built.
+If a property is set to `readOnly` in a schema you can initialize it as a parameter in the `create()` and `builder()`
+methods. A `readOnly` property does not have a corresponding setter method in the API, thus you can't modify it after a
+type is initialized.
 
 Conversely, a `writeOnly` property such as a password is only writable -- you cannot read such a property using a `get`
 method.
@@ -1007,7 +1033,7 @@ Nested types defined within a JSON type, such as the `Gender` enum type in `User
 inner interfaces or enum types.  An nested interface type has all the same features as a top-level type including `create()`,
 `builder()`, `load()`, etc.
 
-#### Format Types
+#### `format` Types
 As you can see from the `User` example Manifold supports standard JSON Schema `format` types.  These include:
 
 <style>
@@ -1111,6 +1137,84 @@ void setPet(Object value);
 ``` 
 There is still only one value backing the `pet` property.
 
+#### Structural Interfaces
+JSON API interfaces are *structural* interfaces. You can read all about what a structural interface is [here](#structural-interfaces).  In short
+a structural interface doesn't have to be implemented directly in order to be used.  For instance, you can make a
+type-safe call through a structural interface method on an object so long as the object has a method with the same name
+and compatible parameters:
+```java
+User user = (User) new FooUser();
+user.setName("Scott");
+
+public class FooUser {
+...
+  public void setName(String name) {...}
+...
+}
+```
+Even though `FooUser` does not directly implement our `User` API, we can still use `FooUser` as our `User` if it
+satisfies the parts of `User` we need to invoke, such as the `setName()` method.  This can be handy when integrating
+with other systems that may have generated classes from the same schemas.
+
+Another example illustrating the utility of structural interfaces involves a more dynamic application. Manifold
+provides an extension class to enable dynamic structural typing on any class deriving from Java's `Map`. This means you
+can do this:
+```java
+HashMap<String, Object> map = new HashMap<>();
+User user = (User) map;
+user.setFirstName("Bob");
+String bob = (String) map.get("name");
+```
+So useful is this that it is the foundation of the JSON API implementation.  All JSON API objects are directly backed by
+the JSON `Bindings` map that is parsed from the JSON payload. This is also part of what makes the Manifold JSON API
+uniquely both type-safe and the *single source of truth*.  There is literally nothing between your JSON Schema API documents and
+the code that consumes them.
+
+Read more about [dynamic structural typing](dynamic-typing-with-icallhandler).
+
+#### Extension
+
+You and the consumers of your JSON API can use Manifold extension classes to tailor it to specific lines of business.
+
+You can add new methods:
+```java
+user.needsPasswordRemind();
+...
+```
+```java
+package extensions.com.example.schemas.User;
+import com.example.schemas.User;
+@Extension
+public class MyUserExtension {
+  public static boolean needsPasswordRemind(@This User thiz) {
+    return passwordCheck(thiz, otherInfo);
+  }
+
+  public static void postAHyperMediaLink(...) {...}
+
+  // more extension methods...
+}
+```
+
+You can add new interfaces:
+```java
+package extensions.com.example.schemas.User;
+import com.example.schemas.User;
+@Extension
+public class MyUserExtension extends EmailContact {
+  // implement EmailContact methods User does not already satisfy here...
+}
+```
+Now `User` also logically extends `EmailContact` and can be directly used as such in code.
+
+Note extensions do NOT physically alter the classes they extend, they only provide type information so the compiler can
+resolve method calls and perform static type analysis.
+
+You can even write your own type manifolds to dynamically generate extension classes and have your code automatically
+resolve against the extensions. This can be useful to seamlessly add hypermedia linkage to your JSON API.  See
+[Generating Extension Classes](#generating-extension-classes) for more info.
+
+
 #### JSON & YAML Utilities
 In addition to the JSON type manifold other forms of JSON and YAML support include:
 * Extension methods on `URL` and `Bindings` e.g.,
@@ -1121,7 +1225,8 @@ myUrl.append(query.getBindings().makeArguments());
 * The `Json`, `Yaml` and `JsonUtil` classes
 * The `OctetEncoding` and `Base64Encoding` classes facilitate sending/receiving binary information via JSON
 * Structural interfaces on `Bindings` -- you can define your own structural interfaces for improved type-safety on bindings (or maps)
-  
+
+
 ### YAML
 The YAML type manifold provides comprehensive support for YAML (1.2).  You can define a YAML or JSON API with YAML resource
 files (`.yml` and `.yaml` files).  Manifold can derive an API from sample data in YAML format or you can build [JSON Schema](https://json-schema.org/)

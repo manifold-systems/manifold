@@ -20,11 +20,14 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import javax.script.Bindings;
 import manifold.api.json.Json;
 import manifold.api.json.Yaml;
+import manifold.ext.DataBindings;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
@@ -480,5 +483,59 @@ public class ManBindingsExt
       sb.append( ' ' );
       i++;
     }
+  }
+
+  /**
+   * Provide a deep copy of this {@code Bindings} using a {@code DataBindings} for the copy.
+   * <p/>
+   * Same as invoking: {@code deepCopy(DataBindings::new)}
+   * 
+   * @return A deep copy of this {@code Bindings}
+   */
+  public static Bindings deepCopy( @This Bindings thiz )
+  {
+    return deepCopy( thiz, DataBindings::new );
+  }
+  /**
+   * Provide a deep copy of this {@code Bindings}.  Note this method assumes the Bindings is limited to a JSON
+   * style {@code Bindings<String, Value>} where {@code Value} type is strictly:
+   * <ul>
+   *   <li>a {@code String}, {@code Number}, or {@code Boolean}</li>
+   *   <li>a {@code List} of {@code Value}</li>
+   *   <li>a {@code Bindings} of {@code String} to {@code Value}</li>
+   * </ul>
+   * Any deviation from this format may result in unexpected behavior.
+   *
+   * @param bindingsSupplier Creates the {@code Bindings} instance used for the copy and instances for nested {@code Bindings}.
+   * @return A deep copy of this {@code Bindings}
+   */
+  public static <E extends Bindings> E deepCopy( @This Bindings thiz, Function<Integer, E> bindingsSupplier )
+  {
+    //noinspection unchecked
+    return (E)deepCopyValue( thiz, bindingsSupplier );
+  }
+
+  private static <E extends Bindings> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )
+  {
+    if( value instanceof Bindings )
+    {
+      Bindings dataBindings = (Bindings)value;
+      Bindings copy = bindingsSupplier.apply( dataBindings.size() );
+      dataBindings.forEach( (k, v) -> copy.put( k, deepCopyValue( v, bindingsSupplier ) ) );
+      //noinspection unchecked
+      return copy;
+    }
+
+    if( value instanceof List )
+    {
+      //noinspection unchecked
+      List<Object> list = (List<Object>)value;
+      List<Object> copy = new ArrayList<>( list.size() );
+      list.forEach( e -> copy.add( deepCopyValue( e, bindingsSupplier ) ) );
+      //noinspection unchecked
+      return copy;
+    }
+
+    return value;
   }
 }

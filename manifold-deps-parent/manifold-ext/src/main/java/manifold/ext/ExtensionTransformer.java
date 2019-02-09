@@ -1760,11 +1760,19 @@ public class ExtensionTransformer extends TreeTranslator
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
       if( m.sym != null && !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
-        JCExpression thisArg = m.selected;
-        return TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym );
+        if( !isObjectMethod( m.sym ) )
+        {
+          JCExpression thisArg = m.selected;
+          return TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym );
+        }
       }
     }
     return false;
+  }
+
+  private boolean isObjectMethod( Symbol sym )
+  {
+    return sym.owner != null && sym.owner.type == _tp.getSymtab().objectType;
   }
 
   private JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )
