@@ -270,7 +270,7 @@ sources when you build your project
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
 > Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
-whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-precompile)
+whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-%40precompile)
  
 ### Working with IntelliJ
 
@@ -1170,7 +1170,7 @@ the JSON `Bindings` map that is parsed from the JSON payload. This is also part 
 uniquely both type-safe and the *single source of truth*.  There is literally nothing between your JSON Schema API documents and
 the code that consumes them.
 
-Read more about [dynamic structural typing](dynamic-typing-with-icallhandler).
+Read more about [dynamic structural typing](#dynamic-typing-with-icallhandler).
 
 #### Extension
 
