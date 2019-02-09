@@ -1207,7 +1207,7 @@ public class MyUserExtension extends EmailContact {
 ```
 Now `User` also logically extends `EmailContact` and can be directly used as such in code.
 
-Note extensions do NOT physically alter the classes they extend, they only provide type information so the compiler can
+> Note extensions do NOT physically alter the classes they extend, they only provide type information so the compiler can
 resolve method calls and perform static type analysis.
 
 You can even write your own type manifolds to dynamically generate extension classes and have your code automatically
