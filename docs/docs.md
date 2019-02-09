@@ -270,7 +270,7 @@ sources when you build your project
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
 > Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
-whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-%40precompile)
+whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-precompile)
  
 ### Working with IntelliJ
 
