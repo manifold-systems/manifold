@@ -79,26 +79,7 @@ public class ManBindingsExt
    */
   public static void toJson( @This Bindings thiz, StringBuilder target, int margin )
   {
-    int iKey = 0;
-    if( isNewLine( target ) )
-    {
-      indent( target, margin );
-    }
-    if( thiz.size() > 0 )
-    {
-      target.append( "{\n" );
-      for( String key: thiz.keySet() )
-      {
-        indent( target, margin + 2 );
-        target.append( '\"' ).append( key ).append( '\"' ).append( ": " );
-        Object value = thiz.get( key );
-        JsonUtil.toJson( target, margin, value );
-        appendCommaNewLine( target, iKey < thiz.size() - 1 );
-        iKey++;
-      }
-    }
-    indent( target, margin );
-    target.append( "}" );
+    JsonUtil.toJson( thiz, target, margin );
   }
 
   /**

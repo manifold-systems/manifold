@@ -61,6 +61,30 @@ public class StructuralTypeTest extends TestCase
     assertEquals( 1.0, rectCoord.getX() );
   }
 
+  public void testEqualsUsesRawValues()
+  {
+    Coordinate c1 = (Coordinate)new Point( 8, 9 );
+    Coordinate c2 = (Coordinate)new Point( 8, 9 );
+
+    boolean equals = c1.equals( c2 );
+    assertTrue( equals );
+    equals = c2.equals( c1 );
+    assertTrue( equals );
+  }
+
+  public void testHashCodeUsesRawValues()
+  {
+    Point point = new Point( 8, 9 );
+    Coordinate coord = (Coordinate)point;
+    assertEquals( point.hashCode(), coord.hashCode() );
+  }
+
+  public void testGetClassUsesRawValues()
+  {
+    Coordinate coord = (Coordinate) new Point( 8, 9 );
+    assertEquals( Point.class, coord.getClass() );
+  }
+
   private List<Point> makeSampleList()
   {
     return Arrays.asList( new Point( 3, 2 ), new Point( 1, 2 ), new Point( 3, 5 ), new Point( 1, 1 ) );

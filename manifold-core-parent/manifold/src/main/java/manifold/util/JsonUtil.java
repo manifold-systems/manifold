@@ -71,9 +71,9 @@ public class JsonUtil
     {
       indent( sb, indent );
     }
+    sb.append( "{\n" );
     if( thisBindings.size() > 0 )
     {
-      sb.append( "{\n" );
       for( String key : thisBindings.keySet() )
       {
         indent( sb, indent + 2 );
@@ -85,7 +85,7 @@ public class JsonUtil
         }
         else if( value instanceof List )
         {
-          listToJson( sb, indent, (List)value );
+          listToJson( sb, indent + 2, (List)value );
         }
         else
         {
@@ -99,7 +99,31 @@ public class JsonUtil
     sb.append( "}" );
   }
 
-  public static void toJson( StringBuilder target, int indent, Object value )
+  /**
+   * Build a JSON string from the specified {@code value}. The {@code value} must be a valid JSON value:
+   * <lu>
+   *   <li>primitive, boxed primitive, or {@code String}</li>
+   *   <li>{@code List} of JSON values</li>
+   *   <li>{@code Bindings} of JSON values</li>
+   * </lu>
+   * @return A JSON String reflecting the specified {@code value}
+   */
+  public static String toJson( Object value )
+  {
+    StringBuilder target = new StringBuilder();
+    toJson( target, 0, value );
+    return target.toString();
+  }
+  /**
+   * Build a JSON string in the specified {@code target} from the specified {@code value} with the provided left
+   * {@code margin}. The {@code value} must be a valid JSON value:
+   * <lu>
+   *   <li>primitive, boxed primitive, or {@code String}</li>
+   *   <li>{@code List} of JSON values</li>
+   *   <li>{@code Bindings} of JSON values</li>
+   * </lu>
+   */
+  public static void toJson( StringBuilder target, int margin, Object value )
   {
     if( value instanceof Pair )
     {
@@ -107,11 +131,11 @@ public class JsonUtil
     }
     if( value instanceof Bindings )
     {
-      toJson( ((Bindings)value), target, indent + 2 );
+      toJson( ((Bindings)value), target, margin );
     }
     else if( value instanceof List )
     {
-      listToJson( target, indent, (List)value );
+      listToJson( target, margin, (List)value );
     }
     else
     {
@@ -137,22 +161,22 @@ public class JsonUtil
         Object comp = value.get( i );
         if( comp instanceof Bindings )
         {
-          toJson( (Bindings)comp, sb, indent + 4 );
+          toJson( (Bindings)comp, sb, indent + 2 );
         }
         else if( comp instanceof List )
         {
-          listToJson( sb, indent + 4, (List)comp );
+          listToJson( sb, indent + 2, (List)comp );
         }
         else
         {
-          indent( sb, indent + 4 );
+          indent( sb, indent + 2 );
           appendValue( sb, comp );
         }
         appendCommaNewLine( sb, i < iSize - 1 );
         i++;
       }
     }
-    indent( sb, indent + 2 );
+    indent( sb, indent );
     sb.append( "]" );
   }
 

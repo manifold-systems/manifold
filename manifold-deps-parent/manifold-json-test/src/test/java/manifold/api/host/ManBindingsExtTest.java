@@ -21,21 +21,90 @@ import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
 import junit.framework.TestCase;
+import manifold.api.json.Json;
+import manifold.api.json.Yaml;
 import manifold.ext.DataBindings;
 
 public class ManBindingsExtTest extends TestCase
 {
   public void testDeepCopy()
   {
+    DataBindings bindings = makeSampleBindings();
+    bindings.put( "bindings", bindings.deepCopy() );
+
+    assertIdenticalDeepCopies( bindings.deepCopy(), bindings );
+  }
+
+  public void testToFromJson()
+  {
+    DataBindings empty = new DataBindings();
+    assertEquals( "{\n}", empty.toJson() );
+
+    DataBindings sample = makeSampleBindings();
+    assertEquals(
+      "{\n" +
+      "  \"name\": \"Scott\",\n" +
+      "  \"age\": 32,\n" +
+      "  \"bool\": true,\n" +
+      "  \"empty\": {\n" +
+      "  },\n" +
+      "  \"list\": [\n" +
+      "    \"a\",\n" +
+      "    \"b\",\n" +
+      "    \"c\"\n" +
+      "  ],\n" +
+      "  \"list2\": [\n" +
+      "    {\n" +
+      "      \"name\": \"Scott\",\n" +
+      "      \"age\": 32,\n" +
+      "      \"bool\": true,\n" +
+      "      \"empty\": {\n" +
+      "      },\n" +
+      "      \"list\": [\n" +
+      "        \"a\",\n" +
+      "        \"b\",\n" +
+      "        \"c\"\n" +
+      "      ]\n" +
+      "    },\n" +
+      "    {\n" +
+      "      \"name\": \"Scott\",\n" +
+      "      \"age\": 32,\n" +
+      "      \"bool\": true,\n" +
+      "      \"empty\": {\n" +
+      "      },\n" +
+      "      \"list\": [\n" +
+      "        \"a\",\n" +
+      "        \"b\",\n" +
+      "        \"c\"\n" +
+      "      ]\n" +
+      "    }\n" +
+      "  ]\n" +
+      "}",
+      sample.toJson() );
+
+    assertEquals( sample, Json.fromJson( sample.toJson() ) );
+  }
+
+  public void testToFromYaml()
+  {
+    DataBindings empty = new DataBindings();
+   //## todo: enable after https://bitbucket.org/asomov/snakeyaml-engine/issues/8 is fixed
+   // assertEquals( "{\n}\n", empty.toYaml() );
+
+    DataBindings sample = makeSampleBindings();
+    assertEquals( sample, Yaml.fromYaml( sample.toYaml() ) );
+  }
+
+  private DataBindings makeSampleBindings()
+  {
     DataBindings bindings = new DataBindings();
     bindings.put( "name", "Scott" );
     bindings.put( "age", 32 );
     bindings.put( "bool", true );
+    bindings.put( "empty", new DataBindings() );
     bindings.put( "list", Arrays.asList( "a", "b", "c" ) );
     bindings.put( "list2", Arrays.asList( bindings.deepCopy(), bindings.deepCopy() ) );
-    bindings.put( "bindings", bindings.deepCopy() );
-
-    assertIdenticalDeepCopies( bindings.deepCopy(), bindings );
+    return bindings;
   }
 
   private void assertIdenticalDeepCopies( Object p1, Object p2 )
