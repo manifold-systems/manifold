@@ -813,6 +813,9 @@ files and use the changes immediately in your code, no compilation step.  You ca
 Refactor/Rename, and Navigation directly between elements in JSON and YAML resources files and Java files. Additionally
 you can make and test changes in a live application or service using IntelliJ's Hotswap debugger.
 
+> Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
+begin experimenting with a JSON Schema REST API using Manifold.
+
 Here is a simple `User` type defined in `resources/com/example/schemas/User.json` using JSON Schema:
 ```json
 {
@@ -1573,6 +1576,9 @@ String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
 ``` 
 
 Template **_files_** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
+
+> Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to quickly
+begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
 
 
 ### Build Your Own Manifold

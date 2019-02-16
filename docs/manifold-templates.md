@@ -14,6 +14,9 @@ integration and type-safety promotes higher levels of integrity and performance.
 to provide deterministic code completion, navigation, usage searching, and refactoring.  Additionally the IntelliJ plugin
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
+> Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to quickly
+begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
+
 ## Table of Contents
 * [Installing](#installing)
 * [Usage](#usage)
