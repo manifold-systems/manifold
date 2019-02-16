@@ -18,14 +18,18 @@ package manifold.api.json;
 
 import java.util.List;
 import java.util.Map;
-import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.ext.DataBindings;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
+import org.snakeyaml.engine.v1.api.Dump;
+import org.snakeyaml.engine.v1.api.DumpSettings;
+import org.snakeyaml.engine.v1.api.DumpSettingsBuilder;
 import org.snakeyaml.engine.v1.api.Load;
 import org.snakeyaml.engine.v1.api.LoadSettings;
 import org.snakeyaml.engine.v1.api.LoadSettingsBuilder;
+import org.snakeyaml.engine.v1.api.StreamDataWriter;
+import org.snakeyaml.engine.v1.common.FlowStyle;
 import org.snakeyaml.engine.v1.constructor.BaseConstructor;
 import org.snakeyaml.engine.v1.constructor.StandardConstructor;
 import org.snakeyaml.engine.v1.exceptions.ConstructorException;
@@ -45,12 +49,12 @@ public class Yaml
    * @return A javax.script.Bindings instance
    */
   @SuppressWarnings("UnusedDeclaration")
-  public static Bindings fromYaml( String yaml )
+  public static Object fromYaml( String yaml )
   {
     return fromYaml( yaml, false, false );
   }
 
-  public static Bindings fromYaml( String yaml, boolean withBigNumbers, boolean withTokens )
+  public static Object fromYaml( String yaml, boolean withBigNumbers, boolean withTokens )
   {
     try
     {
@@ -69,38 +73,45 @@ public class Yaml
     }
   }
 
-  private static Bindings parseYaml( String yaml, boolean withBigNumbers, boolean withTokens ) throws ScriptException
+  /**
+   * Serializes a JSON value to a YAML 1.2 formatted StringBuilder {@code target}
+   * with the specified {@code indent} of spaces.
+   *
+   * @param target A {@link StringBuilder} to write the YAML in
+   */
+  public static void toYaml( Object jsonValue, StringBuilder target )
+  {
+    DumpSettings settings = new DumpSettingsBuilder()
+      .setBestLineBreak( "\n" )
+      .setMultiLineFlow( true )
+      .setDefaultFlowStyle( FlowStyle.BLOCK )
+      .setIndent( 2 )
+      .build();
+    new Dump( settings ).dump( jsonValue,
+      new StreamDataWriter()
+      {
+        @Override
+        public void write( String str )
+        {
+          target.append( str );
+        }
+
+        @Override
+        public void write( String str, int offset, int length )
+        {
+          target.append( str, offset, offset + length );
+        }
+      } );
+  }
+
+  private static Object parseYaml( String yaml, boolean withBigNumbers, boolean withTokens ) throws ScriptException
   {
     LoadSettings loadSettings = new LoadSettingsBuilder()
       .setUseMarks( true )
       .setDefaultMap( DataBindings::new )
       .build();
     Load load = new Load( loadSettings, new MyConstructor( loadSettings, withTokens ) );
-    Object result = load.loadFromString( yaml );
-    if( result instanceof Pair )
-    {
-      result = ((Pair)result).getSecond();
-    }
-    if( result instanceof Bindings )
-    {
-      return (Bindings)result;
-    }
-    return wrapValueInBindings( result );
-  }
-
-  private static Bindings wrapValueInBindings( Object result ) throws ScriptException
-  {
-    if( result == null ||
-        result instanceof List ||
-        result instanceof String ||
-        result instanceof Number ||
-        result instanceof Boolean )
-    {
-      Bindings wrapper = new DataBindings();
-      wrapper.put( "value", result );
-      return wrapper;
-    }
-    throw new ScriptException( "Unexpected YAML result type: " + result.getClass().getName() );
+    return load.loadFromString( yaml );
   }
 
   private static class MyConstructor extends StandardConstructor

@@ -16,7 +16,9 @@
 
 package manifold.util;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import javax.script.Bindings;
 
 /**
@@ -238,5 +240,141 @@ public class JsonUtil
       throw new IllegalStateException( "Unsupported expando type: " + comp.getClass() );
     }
     return sb;
+  }
+
+  public static String toXml( Object jsonValue )
+  {
+    StringBuilder sb = new StringBuilder();
+    toXml( jsonValue, "object", sb, 0 );
+    return sb.toString();
+  }
+
+  public static void toXml( Object jsonValue, String name, StringBuilder target, int indent )
+  {
+    if( jsonValue instanceof Bindings )
+    {
+      toXml( (Bindings)jsonValue, name, target, indent );
+    }
+    else if( jsonValue instanceof List )
+    {
+      toXml( (List)jsonValue, name, target, indent );
+    }
+    else
+    {
+      toXml( String.valueOf( jsonValue ), name, target, indent );
+    }
+  }
+
+  /**
+   * Serializes this {@link Bindings} instance into an XML formatted StringBuilder {@code target}
+   * with the specified {@code indent} of spaces.
+   *
+   * @param name   The name of the root element to nest the Bindings XML
+   * @param target A {@link StringBuilder} to write the XML in
+   * @param indent The margin of spaces to indent the XML
+   */
+  private static void toXml( Bindings bindings, String name, StringBuilder target, int indent )
+  {
+    indent( target, indent );
+    target.append( '<' ).append( name );
+    if( bindings.size() > 0 )
+    {
+      target.append( ">\n" );
+      for( String key: bindings.keySet() )
+      {
+        Object value = bindings.get( key );
+        if( value instanceof Pair )
+        {
+          value = ((Pair)value).getSecond();
+        }
+
+        if( value instanceof Bindings )
+        {
+          toXml( (Bindings)value, key, target, indent + 2 );
+        }
+        else if( value instanceof List )
+        {
+          toXml( (List)value, key, target, indent + 2 );
+        }
+        else
+        {
+          toXml( String.valueOf( value ), key, target, indent + 2 );
+        }
+      }
+      indent( target, indent );
+      target.append( "</" ).append( name ).append( ">\n" );
+    }
+    else
+    {
+      target.append( "/>\n" );
+    }
+  }
+
+  private static void toXml( List value, String name, StringBuilder target, int indent )
+  {
+    int len = value.size();
+    indent( target, indent );
+    target.append( "<" ).append( name );
+    if( len > 0 )
+    {
+      target.append( ">\n" );
+      for( Object comp: value )
+      {
+        if( comp instanceof Pair )
+        {
+          comp = ((Pair)comp).getSecond();
+        }
+
+        if( comp instanceof Bindings )
+        {
+          toXml( ((Bindings)comp), "li", target, indent + 4 );
+        }
+        else if( comp instanceof List)
+        {
+          toXml( ((List)comp), "li", target, indent + 4 );
+        }
+        else
+        {
+          indent( target, indent + 4 );
+          target.append( "<li>" ).append( comp ).append( "</li>\n" );
+        }
+      }
+      indent( target, indent + 2 );
+      target.append( "</" ).append( name ).append( ">\n" );
+    }
+    else
+    {
+      target.append( "/>\n" );
+    }
+  }
+
+  private static void toXml( String value, String name, StringBuilder target, int indent )
+  {
+    indent( target, indent );
+    target.append( '<' ).append( name ).append( ">" );
+    target.append( value );
+    target.append( "</" ).append( name ).append( ">\n" );
+  }
+
+  public static <E extends Bindings> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )
+  {
+    if( value instanceof Bindings )
+    {
+      Bindings dataBindings = (Bindings)value;
+      Bindings copy = bindingsSupplier.apply( dataBindings.size() );
+      dataBindings.forEach( ( k, v ) -> copy.put( k, deepCopyValue( v, bindingsSupplier ) ) );
+      return copy;
+    }
+
+    if( value instanceof List )
+    {
+      //noinspection unchecked
+      List<Object> list = (List<Object>)value;
+      List<Object> copy = new ArrayList<>( list.size() );
+      list.forEach( e -> copy.add( deepCopyValue( e, bindingsSupplier ) ) );
+      return copy;
+    }
+
+    return value;
   }
 }

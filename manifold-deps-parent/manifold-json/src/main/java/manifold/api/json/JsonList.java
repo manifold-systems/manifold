@@ -16,17 +16,26 @@
 
 package manifold.api.json;
 
-import manifold.ext.api.IBindingsBacked;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- * A base interface for all JSON and YAML types with methods to transform bindings to/from JSON and YAML
- * and to conveniently use the Bindings for JSON and YAML Web services.
- */
-public interface IJsonBindingsBacked extends IBindingsBacked
+public class JsonList<T> implements IJsonList<T>
 {
-  /** A fluent method to write this JSON object in various formats including JSON, YAML, and XML */
-  default Writer write()
+  private final List _list;
+
+  public JsonList()
   {
-    return new Writer( getBindings() );
+    _list = new ArrayList<>();
+  }
+
+  public JsonList( List list )
+  {
+    _list = list;
+  }
+
+  @Override
+  public List<T> getList()
+  {
+    return _list;
   }
 }

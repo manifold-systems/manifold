@@ -65,6 +65,7 @@ public class JsonSchemaTransformer
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
   private static final String JSCH_ANY_OF = "anyOf";
+  static final String JSCH_ITEMS = "items";
   static final String JSCH_REQUIRED = "required";
   public static final String JSCH_DEFINITIONS = "definitions";
   private static final String JSCH_DEFS = "${'$'}defs";
@@ -122,13 +123,13 @@ public class JsonSchemaTransformer
   }
 
   @SuppressWarnings("unused")
-  public static IJsonType transform( IManifoldHost host, String name, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, Object jsonValue )
   {
-    return transform( host, name, null, docObj );
+    return transform( host, name, null, jsonValue );
   }
-  public static IJsonType transform( IManifoldHost host, String name, URL source, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, URL source, Object jsonValue )
   {
-    if( !isSchema( docObj ) )
+    if( !(jsonValue instanceof Bindings) || !isSchema( (Bindings)jsonValue ) )
     {
       ErrantType errant = new ErrantType( source, name );
       errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '${'$'}source' does not contain a '${'$'}schema' element." ) );
@@ -140,14 +141,15 @@ public class JsonSchemaTransformer
     session.pushTransformer( transformer );
     try
     {
-      name = name == null || name.isEmpty() ? getJSchema_Name( docObj ) : name;
-      IJsonType cachedType = findTopLevelCachedType( name, source, docObj );
+      Bindings bindings = (Bindings)jsonValue;
+      name = name == null || name.isEmpty() ? getJSchema_Name( bindings ) : name;
+      IJsonType cachedType = findTopLevelCachedType( name, source, bindings );
       if( cachedType != null && !(cachedType instanceof ErrantType) )
       {
         return cachedType;
       }
 
-      IJsonType type = transformer.transformType( null, source, name, docObj, null );
+      IJsonType type = transformer.transformType( null, source, name, bindings, null );
       if( type instanceof JsonSchemaType && cachedType != null )
       {
         // move issues from errant cached type to the actual type
@@ -292,9 +294,9 @@ public class JsonSchemaTransformer
           bindings = (Bindings)value;
         }
         IJsonType type = transformType( definitionsHolder, enclosing, name, bindings, null );
-        if( tokens != null && type instanceof JsonStructureType )
+        if( tokens != null && type instanceof JsonSchemaType )
         {
-          ((JsonStructureType)type).setToken( tokens[0] );
+          ((JsonSchemaType)type).setToken( tokens[0] );
         }
         result.add( type );
       }
@@ -446,10 +448,6 @@ public class JsonSchemaTransformer
   }
   void cacheSimpleByFqn( JsonSchemaType parent, String name, IJsonType type )
   {
-    if( parent instanceof JsonListType )
-    {
-      return;
-    }
     _typeByFqn.add( parent.getFqn() + '.' + name, type );
   }
   private void cacheType( IJsonParentType parent, String name, IJsonType type, Bindings jsonObj )
@@ -1228,10 +1226,10 @@ public class JsonSchemaTransformer
         return null;
       }
 
-      Bindings bindings;
+      Object jsonObject;
       try
       {
-        bindings = Json.fromJson( otherFileContent );
+        jsonObject = Json.fromJson( otherFileContent );
       }
       catch( Exception e )
       {
@@ -1245,7 +1243,7 @@ public class JsonSchemaTransformer
       {
         name = name.substring( 0, iDot );
       }
-      transform( _host, name, url, bindings );
+      transform( _host, name, url, jsonObject );
       pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
     }
     return pair;

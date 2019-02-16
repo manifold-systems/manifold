@@ -40,9 +40,9 @@ public class JsonTest extends TestCase
     resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
     assertSame( resVt, vt );
 
-    List<StrangeUriFormats.nc_VehicleType> lvt = Collections.singletonList( vt );
-    uriFormats.setNc_VehicleAsListOfnc_VehicleType( lvt );
-    StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsListOfnc_VehicleType();
+    StrangeUriFormats.nc_VehicleType lvt = (StrangeUriFormats.nc_VehicleType)Collections.singletonList( vt );
+    uriFormats.setNc_VehicleAsnc_VehicleType( lvt );
+    StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
     assertSame( resLvt, lvt );
   }
 
@@ -93,19 +93,19 @@ public class JsonTest extends TestCase
     assertSame( topLevelOption1, resTopLevelOption1 );
     assertSame( topLevelOption1, oneOf.getTopLevel() );
 
-    List<OneOf_TopLevel_Array.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.Option0.create("Scott") );
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0.create("Scott") );
     oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
-    List<OneOf_TopLevel_Array.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
     assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
     assertSame( topLevelArrayOption0, oneOf.getTopLevelArray() );
 
-    List<OneOf_TopLevel_Array.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.Option1.create() );
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1.create() );
     oneOf.setTopLevelArrayAsOption1( topLevelArrayOption1 );
-    List<OneOf_TopLevel_Array.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
     assertSame( topLevelArrayOption1, resTopLevelArrayOption1 );
     assertSame( topLevelArrayOption1, oneOf.getTopLevelArray() );
 
-    List<Enum_TopLevel_Array> enumArray = Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.e );
+    List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray = Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
     oneOf.setTopLevelEnumArray( enumArray );
     assertSame( enumArray, oneOf.getTopLevelEnumArray() );
   }
@@ -176,13 +176,13 @@ public class JsonTest extends TestCase
     Planet planet = Planet.create();
     address.setPlanet( planet );
 
-    Hobby baseball = Hobby.create();
+    Hobby.HobbyItem baseball = Hobby.HobbyItem.create();
     baseball.setCategory( "Sport" );
-    Hobby fishing = Hobby.create();
+    Hobby.HobbyItem fishing = Hobby.HobbyItem.create();
     fishing.setCategory( "Recreation" );
-    List<Hobby> hobbies = asList( baseball, fishing );
+    Hobby hobbies = (Hobby)asList( baseball, fishing );
     person.setHobby( hobbies );
-    List<Hobby> h = person.getHobby();
+    Hobby h = (Hobby)person.getHobby();
     assertEquals( 2, h.size() );
     assertEquals( baseball, h.get( 0 ) );
     assertEquals( fishing, h.get( 1 ) );
@@ -213,20 +213,20 @@ public class JsonTest extends TestCase
 
   public void testThing()
   {
-    Product thing = Product.create( 123d, "json", 5.99 );
+    Product.ProductItem thing = Product.ProductItem.create( 123d, "json", 5.99 );
     thing.setPrice( 1.55 );
     assertEquals( 1.55, thing.getPrice() );
 
-    Product.dimensions dims = Product.dimensions.create(1.2, 2.3, 3.4);
+    Product.ProductItem.dimensions dims = Product.ProductItem.dimensions.create(1.2, 2.3, 3.4);
     dims.setLength( 3.0 );
     dims.setWidth( 4.0 );
     dims.setHeight( 5.0 );
     thing.setDimensions( dims );
-    Product.dimensions dims2 = thing.getDimensions();
+    Product.ProductItem.dimensions dims2 = thing.getDimensions();
     assertSame( dims, dims2 );
 
     Bindings bindings = (Bindings)thing;
-    dims2 = (Product.dimensions)bindings.get( "dimensions" );
+    dims2 = (Product.ProductItem.dimensions)bindings.get( "dimensions" );
     assertSame( dims, dims2 );
   }
 
@@ -282,8 +282,8 @@ public class JsonTest extends TestCase
       "    }\n" +
       "  ]\n" +
       "]" );
-    assertEquals( 1, (int)mixedArray.getValueAsvalue0().get(0).getPage() );
-    List<MixedArray.value1> countries = mixedArray.getValueAsListOfvalue1().get(1);
+    assertEquals( 1, (int)mixedArray.getAsMixedArrayItem0(0).getPage() );
+    MixedArray.MixedArrayItem1 countries = (MixedArray.MixedArrayItem1) mixedArray.getAsMixedArrayItem1(1);
     assertEquals( "Aruba", countries.get( 0 ).getName() );
     assertEquals( "ZJ", countries.get( 0 ).getRegion().getIso2code() );
   }
@@ -354,10 +354,11 @@ public class JsonTest extends TestCase
     assertEquals( "stuff", HasEnum.justRefsOneOf.stuff.name() );
     assertEquals( "things", HasEnum.justRefsOneOf.things.name() );
 
-    assertEquals( 5, Enum_TopLevel_Array.values().length );
-    List<Enum_TopLevel_Array> enumArray =
-      Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.b, Enum_TopLevel_Array.c, Enum_TopLevel_Array.d, Enum_TopLevel_Array.e );
-    assertArrayEquals( Enum_TopLevel_Array.values(), enumArray.toArray( new Enum_TopLevel_Array[0] ) );
+    assertEquals( 5, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.values().length );
+    List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray =
+      Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.b,
+        Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.c, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.d, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
+    assertArrayEquals( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.values(), enumArray.toArray( new Enum_TopLevel_Array.Enum_TopLevel_ArrayItem[0] ) );
   }
 
   public void testDateTimeFormat()

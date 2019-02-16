@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.api.json;
-
-import manifold.ext.api.IBindingsBacked;
+package manifold.ext.api;
 
 /**
- * A base interface for all JSON and YAML types with methods to transform bindings to/from JSON and YAML
- * and to conveniently use the Bindings for JSON and YAML Web services.
+ * The {@link Structural#factoryClass}, if provided, must implement this interface.
+ * @param <T> The type of the value the proxy will delegate to.
  */
-public interface IJsonBindingsBacked extends IBindingsBacked
+public interface IProxyFactory<T>
 {
-  /** A fluent method to write this JSON object in various formats including JSON, YAML, and XML */
-  default Writer write()
-  {
-    return new Writer( getBindings() );
-  }
+  /**
+   * Create a proxy for the {@code iface} interface, delegating to {@code target}.
+   * @param target The target value for the proxy
+   * @param iface The interface to proxy
+   * @return A proxy for the {@ocde iface} interface.
+   */
+  Object proxy( T target, Class iface );
 }

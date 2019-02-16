@@ -33,7 +33,7 @@ public class YamlTest extends TestCase
 {
   public void testYaml() throws IOException
   {
-    Bindings bindings = Yaml.fromYaml( StreamUtil.getContent( new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ) ) ) );
+    Bindings bindings = (Bindings) Yaml.fromYaml( StreamUtil.getContent( new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ) ) ) );
     System.out.println( JsonUtil.toJson( bindings ) );
   }
 
@@ -66,8 +66,8 @@ public class YamlTest extends TestCase
     String city2 = address2.getCity();
     String state2 = address2.getState();
     Integer postal2 = address2.getPostal();
-    List<Invoice.product> products = invoice.getProduct();
-    Invoice.product product = products.get(0);
+    Invoice.product products = (Invoice.product) invoice.getProduct();
+    Invoice.product.productItem product = products.get(0);
     String sku = product.getSku();
     Integer quantity = product.getQuantity();
     String description = product.getDescription();

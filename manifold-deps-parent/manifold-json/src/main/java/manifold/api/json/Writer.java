@@ -17,8 +17,9 @@
 package manifold.api.json;
 
 import java.io.IOException;
+import java.util.List;
 import javax.script.Bindings;
-import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
+import manifold.util.JsonUtil;
 
 /**
  * This class is used as part of the JSON API. It defines methods to write this JSON object
@@ -26,11 +27,19 @@ import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
  */
 public class Writer
 {
-  private final Bindings _bindings;
+  private final Object _value;
 
-  public Writer( Bindings bindings )
+  public Writer( Bindings jsonBindings )
   {
-    _bindings = bindings;
+    _value = jsonBindings;
+  }
+  public Writer( List<?> jsonList )
+  {
+    _value = jsonList;
+  }
+  public Writer( Object jsonValue )
+  {
+    _value = jsonValue;
   }
 
   /**
@@ -40,13 +49,13 @@ public class Writer
    */
   public String toJson()
   {
-    return ManBindingsExt.toJson( _bindings );
+    return JsonUtil.toJson( _value );
   }
   public void toJson( Appendable target )
   {
     try
     {
-      target.append( ManBindingsExt.toJson( _bindings ) );
+      target.append( JsonUtil.toJson( _value ) );
     }
     catch( IOException e )
     {
@@ -61,13 +70,15 @@ public class Writer
    */
   public String toYaml()
   {
-    return ManBindingsExt.toYaml( _bindings );
+    StringBuilder sb = new StringBuilder();
+    Yaml.toYaml( _value, sb );
+    return sb.toString();
   }
   public void toYaml( Appendable target )
   {
     try
     {
-      target.append( ManBindingsExt.toYaml( _bindings ) );
+      target.append( toYaml() );
     }
     catch( IOException e )
     {
@@ -82,13 +93,13 @@ public class Writer
    */
   public String toXml()
   {
-    return ManBindingsExt.toXml( _bindings );
+    return JsonUtil.toXml( _value );
   }
   public void toXml( Appendable target )
   {
     try
     {
-      target.append( ManBindingsExt.toXml( _bindings ) );
+      target.append( JsonUtil.toXml( _value ) );
     }
     catch( IOException e )
     {
@@ -105,6 +116,8 @@ public class Writer
    */
   public String toXml( String name )
   {
-    return ManBindingsExt.toXml( _bindings, name );
+    StringBuilder sb = new StringBuilder();
+    JsonUtil.toXml( _value, name, sb, 0 );
+    return sb.toString();
   }
 }

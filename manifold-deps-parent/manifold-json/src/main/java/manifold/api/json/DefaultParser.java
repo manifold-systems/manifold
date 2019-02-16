@@ -18,9 +18,7 @@ package manifold.api.json;
 
 import java.io.StringReader;
 import java.util.List;
-import javax.script.Bindings;
 import javax.script.ScriptException;
-import manifold.ext.DataBindings;
 import manifold.util.Pair;
 
 public class DefaultParser implements IJsonParser
@@ -33,7 +31,7 @@ public class DefaultParser implements IJsonParser
   }
 
   @Override
-  public Bindings parseJson( String jsonText, boolean withBigNumbers, boolean withTokens ) throws ScriptException
+  public Object parseJson( String jsonText, boolean withBigNumbers, boolean withTokens ) throws ScriptException
   {
     SimpleParserImpl parser = new SimpleParserImpl( new Tokenizer( new StringReader( jsonText ) ), withBigNumbers );
     Object result = parser.parse( withTokens );
@@ -41,7 +39,7 @@ public class DefaultParser implements IJsonParser
     if( errors.size() != 0 )
     {
       StringBuilder sb = new StringBuilder( "Found errors:\n" );
-      for( String err : errors )
+      for( String err: errors )
       {
         sb.append( err ).append( "\n" );
       }
@@ -51,26 +49,6 @@ public class DefaultParser implements IJsonParser
     {
       result = ((Pair)result).getSecond();
     }
-    if( result instanceof Bindings )
-    {
-      return (Bindings)result;
-    }
-    return wrapValueInBindings( result );
+    return result;
   }
-
-  private static Bindings wrapValueInBindings( Object result ) throws ScriptException
-  {
-    if( result == null ||
-        result instanceof List ||
-        result instanceof String ||
-        result instanceof Number ||
-        result instanceof Boolean )
-    {
-      Bindings wrapper = new DataBindings();
-      wrapper.put( "value", result );
-      return wrapper;
-    }
-    throw new ScriptException( "Unexpected JSON result type: " + result.getClass().getName() );
-  }
-
 }

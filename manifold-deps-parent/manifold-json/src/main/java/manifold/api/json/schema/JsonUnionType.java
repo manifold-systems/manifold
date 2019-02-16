@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
@@ -88,7 +89,7 @@ public class JsonUnionType extends JsonStructureType
   {
     if( _state._constituentTypes.isEmpty() )
     {
-      _state._constituentTypes = new HashMap<>();
+      _state._constituentTypes = new LinkedHashMap<>();
     }
     _state._constituentTypes.put( name, type );
     if( type instanceof IJsonParentType && !isDefinition( type ) )

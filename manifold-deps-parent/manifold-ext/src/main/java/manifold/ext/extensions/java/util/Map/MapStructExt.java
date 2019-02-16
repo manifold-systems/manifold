@@ -20,6 +20,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
+import javax.script.Bindings;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
@@ -148,7 +149,10 @@ public abstract class MapStructExt implements ICallHandler
           }
         }
         Object arg = args[0];
-        arg = RuntimeMethods.coerceToBindingValue( thiz, arg );
+        if( thiz instanceof Bindings )
+        {
+          arg = RuntimeMethods.coerceToBindingValue( arg );
+        }
         //noinspection unchecked
         thiz.put( key, arg );
         return null;

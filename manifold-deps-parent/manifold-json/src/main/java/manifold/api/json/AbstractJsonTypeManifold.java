@@ -16,8 +16,11 @@
 
 package manifold.api.json;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.script.Bindings;
@@ -27,7 +30,9 @@ import javax.tools.JavaFileObject;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.DataBindings;
 import manifold.ext.RuntimeMethods;
+import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
+import manifold.util.JsonUtil;
 import manifold.util.ManClassUtil;
 
 /**
@@ -38,7 +43,7 @@ import manifold.util.ManClassUtil;
 public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends JavaTypeManifold<T>
 {
   private static final Set<String> API_INNER_CLASS_NAMES =
-    new HashSet<>( Arrays.asList( "Proxy", "Builder", "Copier" ) );
+    new HashSet<>( Arrays.asList( "Proxy", "ProxyFactory", "Builder", "Copier" ) );
 
   @Override
   public boolean isInnerType( String topLevel, String relativeInner )
@@ -95,10 +100,18 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
     StringBuilder sb = new StringBuilder();
     sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )
       .append( "import " ).append( Json.class.getName() ).append( ";\n" )
+      .append( "import " ).append( JsonUtil.class.getName() ).append( ";\n" )
       .append( "import " ).append( Bindings.class.getName() ).append( ";\n" )
+      .append( "import " ).append( Loader.class.getName() ).append( ";\n" )
+      .append( "import " ).append( Requester.class.getName() ).append( ";\n" )
+      .append( "import " ).append( List.class.getName() ).append( ";\n" )
+      .append( "import " ).append( ArrayList.class.getName() ).append( ";\n" )
+      .append( "import " ).append( Map.class.getName() ).append( ";\n" )
       .append( "import " ).append( DataBindings.class.getName() ).append( ";\n" )
       .append( "import " ).append( IJsonBindingsBacked.class.getName() ).append( ";\n" )
+      .append( "import " ).append( IJsonList.class.getName() ).append( ";\n" )
       .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
+      .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
       .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );
     model.getType().render( sb, 0, true );

@@ -20,12 +20,16 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.api.json.schema.LazyRefJsonType;
 import manifold.api.json.schema.TypeAttributes;
+import manifold.ext.RuntimeMethods;
 
 /**
  */
@@ -73,44 +77,11 @@ public class JsonListType extends JsonSchemaType
     }
   }
 
-  @Override
-  public String getLabel()
-  {
-    return super.getName();
-  }
-
-  public String getName()
-  {
-    return "ListOf" + getComponentTypeName();
-  }
-
-  private String getComponentTypeName()
-  {
-    if( _state._componentType == null || _state._componentType instanceof LazyRefJsonType )
-    {
-      // can happen if asked before this list type is fully configured
-      return "_undefined_";
-    }
-
-    return _state._componentType instanceof JsonUnionType ? "Object" : _state._componentType.getIdentifier();
-  }
-
-  public String getIdentifier()
-  {
-    return getName();
-  }
-
-  @Override
-  public String getFqn()
-  {
-    return getName();
-  }
-
   public void addChild( String name, IJsonParentType type )
   {
     if( _state._innerTypes.isEmpty() )
     {
-      _state._innerTypes = new HashMap<>();
+      _state._innerTypes = new LinkedHashMap<>();
     }
     _state._innerTypes.put( name, type );
   }
@@ -143,7 +114,6 @@ public class JsonListType extends JsonSchemaType
     return innerType;
   }
 
-  @SuppressWarnings("WeakerAccess")
   public IJsonType getComponentType()
   {
     return _state._componentType;
@@ -197,10 +167,211 @@ public class JsonListType extends JsonSchemaType
 
   public void render( StringBuilder sb, int indent, boolean mutable )
   {
-    for( IJsonParentType child : _state._innerTypes.values() )
+    String name = getName();
+    String identifier = addActualNameAnnotation( sb, indent, name, false );
+
+    if( !(getParent() instanceof JsonStructureType) ||
+        !((JsonStructureType)getParent()).addSourcePositionAnnotation( sb, indent, identifier ) )
     {
-      child.render( sb, indent, mutable );
+      if( getToken() != null )
+      {
+        // this is most likely a "definitions" inner class
+        addSourcePositionAnnotation( sb, indent, identifier, getToken() );
+      }
     }
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class, backingClass=List.class)\n" );
+    indent( sb, indent );
+    //noinspection unused
+    String componentType = getPropertyType( getComponentType(), true, false );
+    sb.append( "public interface " ).append( identifier ).append( " extends IJsonList<$componentType> {\n" );
+    renderFileField( sb, indent + 2 );
+    renderStaticMembers( sb, indent + 2 );
+    renderUnionAccessors( sb, indent + 2 );
+    renderInnerTypes( sb, indent, mutable );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void renderUnionAccessors( StringBuilder sb, int indent )
+  {
+    IJsonType componentType = getComponentType();
+    if( !(componentType instanceof JsonUnionType) )
+    {
+      return;
+    }
+
+    if( isCollapsedUnionEnum( componentType ) )
+    {
+      return;
+    }
+
+    for( IJsonType constituentType: getConstuents( componentType, new LinkedHashSet<>() ) )
+    {
+      sb.append( '\n' );
+      String specificPropertyType = getConstituentQn( constituentType, componentType );
+//      addSourcePositionAnnotation( sb, indent + 2, key );
+      if( constituentType instanceof JsonSchemaType )
+      {
+        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+      }
+      indent( sb, indent + 2 );
+      //noinspection unused
+      String unionName = makeMemberIdentifier( constituentType );
+      sb.append( "default $specificPropertyType getAs$unionName(int index) {\n" );
+      indent( sb, indent + 4 );
+      if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
+      {
+        sb.append( "return ($specificPropertyType)getList().get(index);\n" );
+      }
+      else
+      {
+        //noinspection unused
+        String rawSpecificPropertyType = removeGenerics( specificPropertyType );
+        sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() )
+          .append( ".coerce(getList().get(index), $rawSpecificPropertyType.class);\n" );
+      }
+      indent( sb, indent + 2 );
+      sb.append( "}\n" );
+
+      //noinspection UnusedAssignment
+      specificPropertyType = getConstituentQn( constituentType, componentType, true );
+      if( constituentType instanceof JsonSchemaType )
+      {
+        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+      }
+      indent( sb, indent + 2 );
+      sb.append( "default void setAs$unionName(int index, $specificPropertyType ${'$'}value) {\n" );
+      indent( sb, indent + 4 );
+      sb.append( "getList().set(index, " ).append( RuntimeMethods.class.getSimpleName() )
+        .append( ".coerceToBindingValue(${'$'}value));\n" );
+      indent( sb, indent + 2 );
+      sb.append( "}\n" );
+
+      if( constituentType instanceof JsonSchemaType )
+      {
+        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+      }
+      indent( sb, indent + 2 );
+      sb.append( "default void addAs$unionName(int index, $specificPropertyType ${'$'}value) {\n" );
+      indent( sb, indent + 4 );
+      sb.append( "getList().add(index, " ).append( RuntimeMethods.class.getSimpleName() )
+        .append( ".coerceToBindingValue(${'$'}value));\n" );
+      indent( sb, indent + 2 );
+      sb.append( "}\n" );
+    }
+  }
+
+  private Set<IJsonType> getConstuents( IJsonType type, Set<IJsonType> constituents )
+  {
+    if( type instanceof JsonUnionType )
+    {
+      constituents.addAll( ((JsonUnionType)type).getConstituents() );
+    }
+    else if( type instanceof JsonListType )
+    {
+      getConstuents( ((JsonListType)type).getComponentType(), constituents );
+    }
+    return constituents;
+  }
+
+  private void renderStaticMembers( StringBuilder sb, int indent )
+  {
+    String typeName = getIdentifier();
+
+    // Add a static create(...) method having parameters corresponding with "required" properties not having
+    // a "default" value.
+    addCreateMethod( sb, indent, typeName );
+
+    // Provide a loader(...) method, returns Loader<typeName> with methods for loading content from String, URL, file, etc.
+    addLoadMethod( sb, indent, typeName );
+  }
+
+  private void addLoadMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
+  {
+    indent( sb, indent );
+    //noinspection unused
+    sb.append( "static " ).append( "Loader<$typeName>" ).append( " load() {\n" );
+    indent( sb, indent );
+    sb.append( "  return new Loader<>();\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void addCreateMethod( StringBuilder sb, int indent, String typeName )
+  {
+    indent( sb, indent );
+    sb.append( "static " ).append( typeName ).append( " create() {\n" );
+    indent( sb, indent );
+    sb.append( "  return ($typeName)new ArrayList();\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void renderInnerTypes( StringBuilder sb, int indent, boolean mutable )
+  {
+    addProxy( sb, indent );
+    addProxyFactory( sb, indent );
+    renderJsonInnerTypes( sb, indent, mutable );
+  }
+
+  private void renderJsonInnerTypes( StringBuilder sb, int indent, boolean mutable )
+  {
+    for( IJsonParentType child: _state._innerTypes.values() )
+    {
+      child.render( sb, indent + 2, mutable );
+    }
+    List<IJsonType> definitions = getDefinitions();
+    if( definitions != null )
+    {
+      for( IJsonType child: definitions )
+      {
+        if( child instanceof IJsonParentType )
+        {
+          ((IJsonParentType)child).render( sb, indent + 2, mutable );
+        }
+      }
+    }
+  }
+
+  /**
+   * Not so much a "proxy" as a substitute for a structural proxy that is otherwise generated dynamically at runtime.
+   * Essentially this class is a compile-time substitute that vastly improves the first-time load performance of
+   * JSON types.
+   */
+  private void addProxy( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    //noinspection unused
+    indent( sb, indent += 2 );
+    sb.append( "class Proxy implements $typeName {\n" );
+    indent( sb, indent );
+    sb.append( "  private final List _list;\n" );
+    indent( sb, indent );
+    sb.append( "  private Proxy(List list) {_list = list;}\n" );
+    indent( sb, indent );
+    sb.append( "  public List getList() {return _list;}\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private void addProxyFactory( StringBuilder sb, int indent )
+  {
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent += 2 );
+    sb.append( "class ProxyFactory implements IProxyFactory<List> {\n" );
+    indent( sb, indent );
+    sb.append( "  public Object proxy(List list, Class iface) {\n" );
+    indent( sb, indent );
+    sb.append( "    return new Proxy(list);\n" );
+    indent( sb, indent );
+    sb.append( "  }\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
   }
 
   @Override
@@ -261,7 +432,7 @@ public class JsonListType extends JsonSchemaType
   @Override
   public int hashCode()
   {
-    int result =  _state._componentType == null ? 0 : _state._componentType.hashCode();
+    int result = _state._componentType == null ? 0 : _state._componentType.hashCode();
     result = 31 * result + _state._innerTypes.hashCode();
     return result;
   }

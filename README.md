@@ -10,12 +10,14 @@ of it.
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Gain direct, type-safe access to <i>any</i> type of data, such as JSON Schema and YAML. Remove the code gen step in your build process.
-```java 
-// Access your User.json file directly as a type, no code gen!
-User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
-user.setName("Scott");
-user.post().toJsonUrl("http://api.example.com/post/user");
+Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as JSON Schema and YAML. Remove the code gen step in your build process.
+```java
+// Use your User.json schema file directly as a type, no code gen!
+User user = User.builder("myid", "mypassword", "Scott")
+  .withGender(male)
+  .withDob(LocalDate.of(1987, 6, 15))
+  .build();
+User.request("htt://api.example.com/users").postOne(user);
 ```
 
 ### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)

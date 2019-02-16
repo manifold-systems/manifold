@@ -20,6 +20,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -101,9 +103,9 @@ public class JsonEnumType extends JsonStructureType
   {
     super( parent, enum1.getFile(), name, enum2 == null ? enum1.getTypeAttributes() : enum1.getTypeAttributes().blendWith( enum2.getTypeAttributes() ) );
 
-    Map<String, IJsonType> members = new HashMap<>( enum1.getMembers() );
-    Map<String, Token> memberLocations = new HashMap<>( enum1.getMemberLocations() );
-    Set<Object> enumValues = new HashSet<>( enum1._enumValues );
+    Map<String, IJsonType> members = new LinkedHashMap<>( enum1.getMembers() );
+    Map<String, Token> memberLocations = new LinkedHashMap<>( enum1.getMemberLocations() );
+    Set<Object> enumValues = new LinkedHashSet<>( enum1._enumValues );
     if( enum2 != null )
     {
       members.putAll( enum2.getMembers() );

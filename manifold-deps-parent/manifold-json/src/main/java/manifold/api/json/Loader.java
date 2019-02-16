@@ -16,13 +16,17 @@
 
 package manifold.api.json;
 
+import java.util.Arrays;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 
 /**
  * This class is used as part of the JSON API. It provides methods to load an instance of a JSON interface from
- * JSON and YAML sources such as String, File, and URL (via HTTP GET).
+ * potential JSON and YAML sources such as String, File, and URL (via HTTP GET).
+ * <p/>
+ * See {@link Requester}, obtained from a JSON API object's {@code send()} method, for methods to send an HTTP request
+ * using GET, POST, PUT, PATCH, & DELETE.
  *
- * @param <E> The sub-interface extending {@link IJsonBindingsBacked}
+ * @param <E> The sub-interface extending {@link IJsonBindingsBacked} or {@link IJsonList}
  */
 public class Loader<E>
 {
@@ -31,11 +35,17 @@ public class Loader<E>
     return (E)Json.fromJson( jsonText );
   }
 
-  public E fromJsonUrl( String url )
+  public E fromJsonUrl( String urlBase, String... urlSuffix )
   {
     try
     {
-      return (E)ManUrlExt.getJsonContent( new java.net.URL( url ) );
+      StringBuilder url = new StringBuilder( urlBase );
+      if( urlSuffix != null )
+      {
+        Arrays.stream( urlSuffix ).forEach( url::append );
+      }
+
+      return (E)ManUrlExt.getJsonContent( new java.net.URL( url.toString() ) );
     }
     catch( Exception e )
     {
@@ -67,11 +77,17 @@ public class Loader<E>
     return (E)Yaml.fromYaml( yamlText );
   }
 
-  public E fromYamlUrl( String url )
+  public E fromYamlUrl( String urlBase, String... urlSuffix )
   {
     try
     {
-      return (E)ManUrlExt.getYamlContent( new java.net.URL( url ) );
+      StringBuilder url = new StringBuilder( urlBase );
+      if( urlSuffix != null )
+      {
+        Arrays.stream( urlSuffix ).forEach( url::append );
+      }
+
+      return (E)ManUrlExt.getYamlContent( new java.net.URL( url.toString() ) );
     }
     catch( Exception e )
     {

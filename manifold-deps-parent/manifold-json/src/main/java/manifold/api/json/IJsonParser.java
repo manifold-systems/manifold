@@ -16,7 +16,6 @@
 
 package manifold.api.json;
 
-import javax.script.Bindings;
 import javax.script.ScriptException;
 
 /**
@@ -32,10 +31,10 @@ public interface IJsonParser
    * @param withTokens Store tokens for Json name value pairs.  The token contains positional
    *                   information for tooling e.g., to facilitate navigation in an IDE.  This
    *                   parameter should be false for normal use-cases.
-   * @return A standard javax.script.Bindings object of the Json text.  If the Json is List or simple value, it is wrapped in a Bindings.
+   * @return A JSON value (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    * @throws ScriptException
    */
-  Bindings parseJson( String jsonText, boolean withBigNumbers, boolean withTokens ) throws ScriptException;
+  Object parseJson( String jsonText, boolean withBigNumbers, boolean withTokens ) throws ScriptException;
 
   static IJsonParser getDefaultParser()
   {

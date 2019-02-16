@@ -34,7 +34,7 @@ class YamlModel extends JsonModel
   }
 
   @Override
-  protected Bindings loadBindings()
+  protected Object load()
   {
     return Yaml.fromYaml( ResourceFileTypeManifold.getContent( getFile() ), false, true );
   }

@@ -31,4 +31,24 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Structural
 {
+  /**
+   * Optional.
+   * <p/>
+   * A factory class that produces a class given a class extending {@code backingClass} and the structural interface to
+   * proxy.  The factory class must provide a public default constructor and must implement {@link IProxyFactory}.
+   * <p/>
+   * Note the factory class is optional and exists primarily to address performance when the first time a type is cast
+   * to a structural interface.  If a factory class is <i>not</i> provided, Manifold dynamically generates and compiles
+   * one at runtime, which entails a significant first-time performance hit.  Thus a compile-time proxy factory provides
+   * a way to eliminate this performance hit if and when needed.
+   */
+  Class factoryClass() default Void.class;
+
+  /**
+   * Optional.
+   * <p/>
+   * The base type of the object the proxy will wrap. This parameter is only relevant for structural interfaces that
+   * provide a {@code factoryClass} parameter.
+   */
+  Class backingClass() default Void.class;
 }

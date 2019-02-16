@@ -866,9 +866,10 @@ provides type-safe methods to:
 * **build** a `User`
 * **modify** properties of a `User`  
 * **load** a `User` from a string, a file, or a URL using HTTP GET
-* **post** a `User` to a URL using HTTP POST
+* **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
 * **write** a `User` as formatted JSON, YAML, or XML
 * **copy** a `User`
+* **cast** any JSON compatible {@code Map} or {@code Bindings} directly to `User` *without proxies*
 
 #### Creating & Building JSON
 You create an instance of a JSON type using either the `create()` method or the `builder()` method.
@@ -932,17 +933,36 @@ You can invoke a REST API to fetch a `User` using HTTP GET:
 User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
 ```
 
-
-#### Posting JSON
-You can invoke an HTTP POST API using `post()`:
-* `toJsonUrl()`
-* `toYamlUrl()`
-* `toTextUrl()`
+#### Request REST API services
+Use the `request()` static method to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE:
 ```java
-Bindings result = user.post().toJsonUrl("http://api.example.com/post/user");
+String id = "scott";
+User user = User.request("http://api.example.com/users").getOne("/$id");
 ```
-Since the JSON API consists of [structural interfaces](#structural_interfaces) you can directly cast the result to a 
-JSON API interface if the URL declares to return a specific JSON Schema type.  
+The `request()` methods provides support for all basic REST API client usage:
+```java
+Requester<User> req = User.request("http://api.example.com/users");
+
+// Get all Users via HTTP GET
+IJsonList<User> users = req.getMany();
+
+// Add a User with HTTP POST
+User user = User.builder("scott", "mypassword", "Scott")
+  .withGender(male)
+  .build();
+req.postOne(user);
+
+// Get a User with HTTP GET
+String id = user.getId();
+user = req.getOne("/$id");
+
+// Update a User with HTTP PUT
+user.setDob(LocalDate.of(1980, 7, 7));
+req.putOne("/$id", user);
+
+// Delete a User with HTTP DELETE
+req.delete("/$id");
+```
 
 #### Writing JSON
 An instance of a JSON API object can be written as formatted text with `write()`:

@@ -27,12 +27,13 @@ import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
 import manifold.util.Pair;
 
+
+import static manifold.api.json.schema.JsonSchemaTransformer.JSCH_ITEMS;
+
 /**
  */
 class ArrayTransformer
 {
-  private static final String JSCH_ITEMS = "items";
-
   private final JsonSchemaTransformer _schemaTx;
   private final String _name;
   private final JsonListType _type;
@@ -92,12 +93,13 @@ class ArrayTransformer
     {
       items = value;
     }
+    String name = _name + "Item";
     if( items instanceof List )
     {
       Boolean nullable = _schemaTx.isNullable( (List)items );
       for( Object elem : (List)items )
       {
-        IJsonType csr = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)elem, nullable );
+        IJsonType csr = _schemaTx.transformType( _type, _type.getFile(), name, (Bindings)elem, nullable );
         if( componentType == null )
         {
           componentType = csr;
@@ -111,7 +113,7 @@ class ArrayTransformer
     }
     else if( items instanceof Bindings )
     {
-      componentType = _schemaTx.transformType( _type, _type.getFile(), _name, (Bindings)items, null );
+      componentType = _schemaTx.transformType( _type, _type.getFile(), name, (Bindings)items, null );
     }
     else if( items == null )
     {
@@ -119,7 +121,8 @@ class ArrayTransformer
     }
     else
     {
-      _type.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null, "Expecting '{' or '[' for object or array to contain array component type" ) );
+      _type.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null,
+        "Expecting '{' or '[' for object or array to contain array component type" ) );
       componentType = new ErrantType( _type.getFile(), "Errant" );
     }
     _type.setComponentType( componentType );

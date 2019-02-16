@@ -77,14 +77,14 @@ public class Json
    *
    * @param json A Standard JSON formatted string
    *
-   * @return A javax.script.Bindings instance
+   * @return A JSON value (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
   @SuppressWarnings("UnusedDeclaration")
-  public static Bindings fromJson( String json )
+  public static Object fromJson( String json )
   {
     return fromJson( json, false, false );
   }
-  public static Bindings fromJson( String json, boolean withBigNumbers, boolean withTokens )
+  public static Object fromJson( String json, boolean withBigNumbers, boolean withTokens )
   {
     try
     {
@@ -146,7 +146,7 @@ public class Json
     {
       if( JsonSchemaTransformer.isSchema( (Bindings)jsonObj ) )
       {
-        type = JsonSchemaTransformer.transform( host, name, source, (Bindings)jsonObj );
+        type = JsonSchemaTransformer.transform( host, name, source, jsonObj );
       }
       else
       {
@@ -186,6 +186,7 @@ public class Json
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
       {
+        name += "Item";
         int i = 0;
         boolean isDissimilar = isDissimilar( (List)jsonObj );
         for( Object elem : (List)jsonObj )
