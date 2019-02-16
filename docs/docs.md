@@ -869,7 +869,7 @@ provides type-safe methods to:
 * **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
 * **write** a `User` as formatted JSON, YAML, or XML
 * **copy** a `User`
-* **cast** any JSON compatible {@code Map} or {@code Bindings} directly to `User` *without proxies*
+* **cast** to `User` from any structurally compatible type including `Map`s, all *without proxies*
 
 #### Creating & Building JSON
 You create an instance of a JSON type using either the `create()` method or the `builder()` method.
