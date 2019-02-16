@@ -11,8 +11,18 @@ full-featured ManTL template editing, and more.
 >
 >Install the plugin directly from IntelliJ:
 >
-><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: <kbd>Manifold</kbd>
+><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: `Manifold`
 
+## Sample Projects
+
+Clone the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) to for a nice
+demonstration of features.
+
+Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
+begin experimenting with a JSON Schema REST API using Manifold.
+
+Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to get hooked
+on ManTL templates with the Manifold IntelliJ plugin.
 
 ## [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
 Gain direct, **type-safe** access to *any* type of data. Remove the code gen step in your build process.
@@ -158,6 +168,8 @@ req.putOne("/$id", user);
 // Delete a User with HTTP DELETE
 req.delete("/$id");
 ```
+> Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
+begin experimenting with a JSON Schema REST API using Manifold.
 
 #### Writing JSON
 An instance of a JSON API object can be written as formatted text with `write()`:
