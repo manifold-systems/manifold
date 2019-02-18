@@ -18,15 +18,30 @@ package manifold.api.json;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 
 /**
  * This class defines methods to simplify making HTTP requests involved with basic REST API calls supporting via GET,
- * POST, PUT, PATCH, and DELETE and handles responses in JSON/JSON Schema, YAML, XML, or plain text.
+ * POST, PUT, PATCH, and DELETE and handles responses in JSON/JSON Schema, YAML, XML, or plain text.  An instance of
+ * this class may be use for multiple get/post/etc. requests.
  * <p/>
  * Normally you use this class via the JSON API {@code request(url)} method to manage simple HTTP request API calls:
- * <pre><code>  User user = User.request("http://example.com/users").getOne("/$id");</code></pre>
+ * <pre><code>
+ * User user = User.request("http://example.com/users").getOne("/$id");
+ *
+ * // or
+ *
+ * Requester&lt;User&gt; req = User.request("http://example.com/users")
+ *   .withBearerAuthorization("xxx...x"); // eg., using OAuth token
+ * User user = req.getOne("/$id");
+ * user.setName("Scott");
+ * req.putOne("/$id", user);
+ * </code></pre>
  * Note this class is intended for <i>basic</i> REST API use and is designed to supplement more capable REST API
  * frameworks such as Spring.
  *
@@ -37,18 +52,95 @@ import manifold.json.extensions.java.net.URL.ManUrlExt;
 public class Requester<T>
 {
   private final String _urlBase;
+  private Format _format;
+  private Map<String, String> _headers;
+  private int _timeout;
 
   public enum Format
   {
-    Json, Yaml, Plain
+    Json, Yaml, Text
   }
 
   /**
+   * Get an instance of {@code Requester} from a JSON API type eg., {@code User.request()}.  Requester is a builder
+   * type: you can configure the requests you'll make using {@code withXxx()} calls to specify an authorization
+   * token, response format, custom headers, etc. Then you can make one or more requests with a single instance:
+   * <pre><code>
+   * Requester&lt;User&gt; req = User.request("http://example.com/users")
+   *   .withBearerAuthorization("xxx...x"); // eg., using OAuth token
+   * User user = req.getOne("/$id");
+   * user.setName("Scott");
+   * req.putOne("/$id", user);
+   * </code></pre>
    * @param urlBase A URL providing HTTP services for {@code T}, such as "http://example.com/users"
    */
   public Requester( String urlBase )
   {
     _urlBase = urlBase;
+    _format = Format.Json;
+    _headers = new HashMap<>();
+    _timeout = 0;
+  }
+
+  /**
+   * Set the default format expected in the response. The response will be parsed according to this setting.
+   * @param format Json, Yaml, or Plain text. Default is Json.
+   */
+  public Requester<T> withResponseFormat( Format format )
+  {
+    _format = format;
+    return this;
+  }
+
+  /**
+   * Set an HTTP request header {@code name : value} pair
+   * See <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields>HTTP header fields</a>
+   */
+  public Requester<T> withHeader( String name, String value )
+  {
+    _headers.put( name, value );
+    return this;
+  }
+
+  /**
+   * Set the Basic Authorization header using the provided {@code username} and {@code password}
+   */
+  @SuppressWarnings("unused")
+  public Requester<T> withBasicAuthorization( String username, String password )
+  {
+    String authorization = Base64.getEncoder()
+      .encodeToString(( "$username:$password" ).getBytes( StandardCharsets.UTF_8 ) );
+    return withHeader( "Authorization", "Basic $authorization" );
+  }
+
+  /**
+   * Set the Bearer Authorization header using the provided {@code accessToken}.
+   * For instance, if using OAuth, {@code accessToken} is the token response from:
+   * <pre><code>
+   * curl -d "grant_type=password&client_id=[...]&client_secret=[...]&username=[...]&password=[...]"
+   *   https://[domain]/[oauth-service]
+   * </code></pre>
+   */
+  @SuppressWarnings("unused")
+  public Requester<T> withBearerAuthorization( String accessToken )
+  {
+    return withAuthorization( "Bearer", accessToken );
+  }
+  @SuppressWarnings("unused")
+  public Requester<T> withAuthorization( String tokenType, String accessToken )
+  {
+    return withHeader( "Authorization", "$tokenType $accessToken" );
+  }
+
+  /**
+   * The connection timeout setting in milliseconds. If the timeout expires before the connection can be established, a
+   * {@link java.net.SocketTimeoutException) is thrown. A value of zero is interpreted as an infinite timeout, this is
+   * the default setting.
+   */
+  public Requester<T> withTimeout( int timeout )
+  {
+    _timeout = timeout;
+    return this;
   }
 
   /**
@@ -57,7 +149,7 @@ public class Requester<T>
    * @return A single {@code T} JSON API object specified in the {@code urlSuffix}
    * <p/>
    * Same as calling:
-   * {@link #getOne(String, Object, Format)} with {@code getOne("", null, Format.Json)}
+   * {@link #getOne(String, Object, Format)} with {@code getOne("", null, _format)}
    */
   public T getOne()
   {
@@ -72,7 +164,7 @@ public class Requester<T>
    * @return A single {@code T} JSON API object specified in the {@code urlSuffix}
    * <p/>
    * Same as calling:
-   * {@link #getOne(String, Object, Format)} with {@code getOne(urlSuffix, null, Format.Json)}
+   * {@link #getOne(String, Object, Format)} with {@code getOne(urlSuffix, null, _format)}
    */
   public T getOne( String urlSuffix )
   {
@@ -81,7 +173,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #getOne(String, Object, Format)} with {@code getOne("", arguments, Format.Json)}
+   * {@link #getOne(String, Object, Format)} with {@code getOne("", arguments, _format)}
    */
   public T getOne( Object arguments )
   {
@@ -90,11 +182,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #getOne(String, Object, Format)} with {@code getOne(urlSuffix, arguments, Format.Json)}
+   * {@link #getOne(String, Object, Format)} with {@code getOne(urlSuffix, arguments, _format)}
    */
   public T getOne( String urlSuffix, Object arguments )
   {
-    return getOne( urlSuffix, arguments, Format.Json );
+    return getOne( urlSuffix, arguments, _format );
   }
 
   /**
@@ -119,7 +211,7 @@ public class Requester<T>
    * @return The complete list of {@code T} JSON API objects as a {@code IJsonList<T>}
    * <p/>
    * Same as calling:
-   * {@link #getMany(String, Object, Format)} with {@code getMany("", null, Format.Json)}
+   * {@link #getMany(String, Object, Format)} with {@code getMany("", null, _format)}
    */
   public IJsonList<T> getMany()
   {
@@ -128,7 +220,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #getMany(String, Object, Format)} with {@code getMany(urlSuffix, null, Format.Json)}
+   * {@link #getMany(String, Object, Format)} with {@code getMany(urlSuffix, null, _format)}
    */
   public IJsonList<T> getMany( String urlSuffix )
   {
@@ -137,7 +229,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #getMany(String, Object, Format)} with {@code getMany("", arguments, Format.Json)}
+   * {@link #getMany(String, Object, Format)} with {@code getMany("", arguments, _format)}
    */
   public IJsonList<T> getMany( Object arguments )
   {
@@ -146,11 +238,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #getMany(String, Object, Format)} with {@code getMany(urlSuffix, arguments, Format.Json)}
+   * {@link #getMany(String, Object, Format)} with {@code getMany(urlSuffix, arguments, _format)}
    */
   public IJsonList<T> getMany( String urlSuffix, Object arguments )
   {
-    return getMany( urlSuffix, arguments, Format.Json );
+    return getMany( urlSuffix, arguments, _format );
   }
 
   /**
@@ -171,7 +263,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #postOne(String, Object, Format)} with {@code postOne("", payload, Format.Json)}
+   * {@link #postOne(String, Object, Format)} with {@code postOne("", payload, _format)}
    */
   public <R> R postOne( T payload )
   {
@@ -180,11 +272,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #postOne(String, Object, Format)} with {@code postOne(urlSuffix, payload, Format.Json)}
+   * {@link #postOne(String, Object, Format)} with {@code postOne(urlSuffix, payload, _format)}
    */
   public <R> R postOne( String urlSuffix, T payload )
   {
-    return postOne( urlSuffix, payload, Format.Json );
+    return postOne( urlSuffix, payload, _format );
   }
 
   /**
@@ -205,7 +297,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #postMany(String, List, Format)} with {@code postMany("", payload, Format.Json)}
+   * {@link #postMany(String, List, Format)} with {@code postMany("", payload, _format)}
    */
   public <R> R postMany( List<T> payload )
   {
@@ -214,11 +306,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #postMany(String, List, Format)} with {@code postMany(urlSuffix, payload, Format.Json)}
+   * {@link #postMany(String, List, Format)} with {@code postMany(urlSuffix, payload, _format)}
    */
   public <R> R postMany( String urlSuffix, List<T> payload )
   {
-    return postMany( urlSuffix, payload, Format.Json );
+    return postMany( urlSuffix, payload, _format );
   }
 
   /**
@@ -239,7 +331,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #putOne(String, Object, Format)} with {@code putOne("", payload, Format.Json)}
+   * {@link #putOne(String, Object, Format)} with {@code putOne("", payload, _format)}
    */
   public <R> R putOne( T payload )
   {
@@ -248,11 +340,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #putOne(String, Object, Format)} with {@code putOne(urlSuffix, payload, Format.Json)}
+   * {@link #putOne(String, Object, Format)} with {@code putOne(urlSuffix, payload, _format)}
    */
   public <R> R putOne( String urlSuffix, T payload )
   {
-    return putOne( urlSuffix, payload, Format.Json );
+    return putOne( urlSuffix, payload, _format );
   }
 
   /**
@@ -273,7 +365,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #putMany(String, List, Format)} with {@code putMany("", payload, Format.Json)}
+   * {@link #putMany(String, List, Format)} with {@code putMany("", payload, _format)}
    */
   public <R> R putMany( List<T> payload )
   {
@@ -282,11 +374,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #putMany(String, List, Format)} with {@code putMany(urlSuffix, payload, Format.Json)}
+   * {@link #putMany(String, List, Format)} with {@code putMany(urlSuffix, payload, _format)}
    */
   public <R> R putMany( String urlSuffix, List<T> payload )
   {
-    return putMany( urlSuffix, payload, Format.Json );
+    return putMany( urlSuffix, payload, _format );
   }
 
   /**
@@ -307,7 +399,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #patchOne(String, Object, Format)} with {@code patchOne("", payload, Format.Json)}
+   * {@link #patchOne(String, Object, Format)} with {@code patchOne("", payload, _format)}
    */
   public <R> R patchOne( T payload )
   {
@@ -316,11 +408,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #patchOne(String, Object, Format)} with {@code patchOne(urlSuffix, payload, Format.Json)}
+   * {@link #patchOne(String, Object, Format)} with {@code patchOne(urlSuffix, payload, _format)}
    */
   public <R> R patchOne( String urlSuffix, T payload )
   {
-    return patchOne( urlSuffix, payload, Format.Json );
+    return patchOne( urlSuffix, payload, _format );
   }
 
   /**
@@ -341,7 +433,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #patchMany(String, List, Format)} with {@code patchMany("", payload, Format.Json)}
+   * {@link #patchMany(String, List, Format)} with {@code patchMany("", payload, _format)}
    */
   public <R> R patchMany( List<T> payload )
   {
@@ -350,11 +442,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #patchMany(String, List, Format)} with {@code patchMany(urlSuffix, payload, Format.Json)}
+   * {@link #patchMany(String, List, Format)} with {@code patchMany(urlSuffix, payload, _format)}
    */
   public <R> R patchMany( String urlSuffix, List<T> payload )
   {
-    return patchMany( urlSuffix, payload, Format.Json );
+    return patchMany( urlSuffix, payload, _format );
   }
 
   /**
@@ -375,7 +467,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #delete(String, Object, Format)} with {@code delete("", arguments, Format.Json)}
+   * {@link #delete(String, Object, Format)} with {@code delete("", arguments, _format)}
    */
   public <R> R delete( Object arguments )
   {
@@ -384,7 +476,7 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #delete(String, Object, Format)} with {@code delete(urlSuffix, null, Format.Json)}
+   * {@link #delete(String, Object, Format)} with {@code delete(urlSuffix, null, _format)}
    */
   public <R> R delete( String urlSuffix )
   {
@@ -393,11 +485,11 @@ public class Requester<T>
 
   /**
    * Same as calling:
-   * {@link #delete(String, Object, Format)} with {@code delete(urlSuffix, arguments, Format.Json)}
+   * {@link #delete(String, Object, Format)} with {@code delete(urlSuffix, arguments, _format)}
    */
   public <R> R delete( String urlSuffix, Object arguments )
   {
-    return delete( urlSuffix, arguments, Format.Json );
+    return delete( urlSuffix, arguments, _format );
   }
 
   /**
@@ -422,13 +514,15 @@ public class Requester<T>
     switch( format )
     {
       case Json:
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendJsonRequest( url, m, jsonValue ),
+        _headers.put( "Accept", "application/json" );
+        return Request.send( ( url, p, m ) -> ManUrlExt.sendJsonRequest( url, m, jsonValue, _headers, _timeout ),
           method, jsonValue, _urlBase, urlSuffix );
       case Yaml:
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendYamlRequest( url, m, jsonValue ),
+        _headers.put( "Accept", "application/x-yaml, application/yaml, text/yaml;q=0.9" );
+        return Request.send( ( url, p, m ) -> ManUrlExt.sendYamlRequest( url, m, jsonValue, _headers, _timeout ),
           method, jsonValue, _urlBase, urlSuffix );
-      case Plain:
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendPlainTextRequest( url, m, jsonValue ),
+      case Text:
+        return Request.send( ( url, p, m ) -> ManUrlExt.sendPlainTextRequest( url, m, jsonValue, _headers, _timeout ),
           method, jsonValue, _urlBase, urlSuffix );
     }
     throw new IllegalArgumentException( "format: " + format );

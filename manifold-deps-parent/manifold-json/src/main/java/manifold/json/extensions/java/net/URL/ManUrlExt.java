@@ -17,6 +17,7 @@
 package manifold.json.extensions.java.net.URL;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import manifold.api.json.Yaml;
 import manifold.ext.api.Jailbreak;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
@@ -134,19 +135,25 @@ public class ManUrlExt
    *
    * @param httpMethod The HTTP method to use: "GET", "POST", "PUT", "PATCH", or "DELETE"
    * @param jsonValue A JSON value (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   * @param headers Optional header name/value pairs
+   * @param timeout Connection timeout, zero is interpreted as an infinite timeout, a negative value indicates default
    *
+   * @param headers
    * @return The raw response as a String.
    *
    * @see #sendJsonRequest(URL, String, Object)
    * @see #sendYamlRequest(URL, String, Object)
    */
-  private static String sendRequest( URL url, String httpMethod, Object jsonValue )
+  private static String sendRequest( URL url, String httpMethod, Object jsonValue,
+                                     Map<String, String> headers, int timeout )
   {
     try
     {
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod( httpMethod );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
+      headers.forEach( conn::setRequestProperty );
+      conn.setConnectTimeout( timeout );
       if( jsonValue != null &&
           !httpMethod.equals( "GET" ) && !httpMethod.equals( "DELETE" ) )
       {
@@ -188,12 +195,17 @@ public class ManUrlExt
    *
    * @return A JSON value parsed from the JSON response.
    *
-   * @see #sendRequest(URL, String, Object)
+   * @see #sendRequest(URL, String, Object, Map, int)
    */
   @SuppressWarnings("unused")
   public static Object sendJsonRequest( @This URL url, String httpMethod, Object jsonValue )
   {
-    return Json.fromJson( sendRequest( url, httpMethod, jsonValue ) );
+    return sendJsonRequest( url, httpMethod, jsonValue, Collections.emptyMap(), 0 );
+  }
+  public static Object sendJsonRequest( @This URL url, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Json.fromJson( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -204,12 +216,17 @@ public class ManUrlExt
    *
    * @return A JSON value parsed from the YAML response.
    *
-   * @see #sendRequest(URL, String, Object) 
+   * @see #sendRequest(URL, String, Object, Map, int)
    */
   @SuppressWarnings("unused")
   public static Object sendYamlRequest( @This URL url, String httpMethod, Object jsonValue )
   {
-    return Yaml.fromYaml( sendRequest( url, httpMethod, jsonValue ) );
+    return sendYamlRequest( url, httpMethod, jsonValue, Collections.emptyMap(), 0 );
+  }
+  public static Object sendYamlRequest( @This URL url, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Yaml.fromYaml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -220,12 +237,17 @@ public class ManUrlExt
    *
    * @return The raw response body as plain text
    *
-   * @see #sendRequest(URL, String, Object)
+   * @see #sendRequest(URL, String, Object, Map, int)
    */
   @SuppressWarnings("unused")
   public static String sendPlainTextRequest( @This URL url, String httpMethod, Object jsonValue )
   {
-    return sendRequest( url, httpMethod, jsonValue );
+    return sendPlainTextRequest( url, httpMethod, jsonValue, Collections.emptyMap(), 0 );
+  }
+  public static String sendPlainTextRequest( @This URL url, String httpMethod, Object jsonValue,
+                                             Map<String, String> headers, int timeout )
+  {
+    return sendRequest( url, httpMethod, jsonValue, headers, timeout );
   }
 
   /**
