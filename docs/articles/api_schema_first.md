@@ -39,9 +39,9 @@ A programming language fantasy world would have the Java compiler directly under
 generation step, similar to the way metaprogramming magically connects code with structured data in dynamic languages.
 This is precisely what [Manifold](http://manifold.systems/) accomplishes, all without sacrificing type-safety. Manifold is a general
 framework to type-safely expose all kinds of data sources to Java. Using this framework Manifold also provides support for several specific
-data formats including JSON, JSON Schema, YAML, and others.  Essentially, Manifold supplies Java with full-spectrum JSON Schema _vision_:
-* JSON Schema type definitions are Java types -- the Java compiler _sees_ JSON Schema
-* Your JSON Schema is the API *Single Source of Truth (SSoT)*
+data formats including JSON, JSON Schema, YAML, and others.  With Manifold Java has full-spectrum JSON Schema _vision_:
+* The Java compiler understands JSON Schema type definitions
+* JSON Schema is the API *Single Source of Truth (SSoT)*
 * Eliminates the code generation step in your build!
 * Scalable: JSON files are source files
 * Top-notch IDE integration:
