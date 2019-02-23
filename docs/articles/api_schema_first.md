@@ -255,7 +255,7 @@ project and experiment with Manifold yourself.
 ## To Sum Up
 In this post I've introduced Manifold as a breakthrough Java framework you can use to streamline your REST API development
 process.  With it you can eliminate code generators from your build script along with the host of problems associated with them.
-Using the Manifold IntelliJ IDEA plugin you can further increase your development experience: directly navigate to your
+Using the Manifold IntelliJ IDEA plugin you can further improve your development experience: directly navigate to your
 JSON Schema elements, find usages of them in your code, use deterministic refactor and rename tooling, compile changes
 incrementally, etc.. I also covered some of the JSON API features such as the `request()` method for direct HTTP functionality.
 Finally, I demonstrated how you can create a REST service using Manifold with SparkJava -- a lightweight powerful combination.
