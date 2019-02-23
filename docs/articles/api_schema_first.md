@@ -257,7 +257,7 @@ In this post I've introduced Manifold as a breakthrough Java framework you can u
 process.  With it you can eliminate code generators from your build script along with the host of problems associated with them.
 Using the Manifold IntelliJ IDEA plugin you can further improve your development experience: directly navigate to your
 JSON Schema elements, find usages of them in your code, use deterministic refactor and rename tooling, compile changes
-incrementally, etc.. I also covered some of the JSON API features such as the `request()` method for direct HTTP functionality.
+incrementally, etc. I also covered some of the JSON API features such as the `request()` method for direct HTTP functionality.
 Finally, I demonstrated how you can create a REST service using Manifold with SparkJava -- a lightweight powerful combination.
 
 Manifold doesn't stop there, however.  JSON Schema support is just a small sampling of what the Manifold framework can do.
