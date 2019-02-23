@@ -21,7 +21,7 @@ a streamlined API development experience. The problems involved with code genera
 * Stale generated classes
 * Increased build times
 * Scalability issues: interdependencies, caching, integrations, etc.
-* Train of thought interruptions
+* Interrupts train of thought
 * Poor IDE integration:
   * No immediate feedback from changes
   * No incremental compilation
@@ -144,7 +144,12 @@ You can make changes to `User.json` and immediately use the changes in your code
 etc. and immediately see the changes take effect in your code.  Easily navigate from code usages to the declarations in
 `User.json`.  Find your code usages from any declared element in `User.json`.
 
-> Watch this [screencast](http://manifold.systems/images/Json.mp4) to see all of this in action.
+> Watch the screencast to see all of this in action:
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/Json.mp4">
+  </video>
+</p>
 
 ## Fluent API
 
@@ -238,7 +243,17 @@ public class UserServer {
   }
 ```
 
-Clone the source code for this sample application here: https://github.com/manifold-systems/manifold-sample-rest-api
+Clone the source code for this sample application here: [https://github.com/manifold-systems/manifold-sample-rest-api](https://github.com/manifold-systems/manifold-sample-rest-api)
 
+## To Sum Up
+In this post I've introduced Manifold as a breakthrough Java framework you can use to streamline your REST API development
+process.  With it you can eliminate code generators from your build script and the host of problems associated with them.
+Using the Manifold IntelliJ IDEA plugin you can further increase your development experience: directly navigate to your
+JSON Schema elements, find usages of them in your code, and use deterministic refactor and rename tooling. I also covered
+some of the JSON API features such as the `request()` method for direct HTTP functionality. Finally, I demonstrated how
+you can create a REST service using Manifold with SparkJava -- a lightweight, potent combination.
+
+Manifold doesn't stop there, however.  JSON Schema support is just a small sampling of what the Manifold framework can do.
+Learn more about [Manifold](http://manifold.systems).
 
 
