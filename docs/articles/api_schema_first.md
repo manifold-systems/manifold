@@ -175,6 +175,7 @@ Additionally, the API fully supports the JSON Schema format including:
 * `additionalProperties` and `patternProperties`
 * Nested types
 * Recursive types
+* External types
 * `format` types
 * `allOf` composition types
 * `oneOf`/`anyOf` union types
