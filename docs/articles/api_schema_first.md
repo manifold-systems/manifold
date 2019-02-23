@@ -243,7 +243,8 @@ public class UserServer {
   }
 ```
 
-Clone the source code for this sample application here: [https://github.com/manifold-systems/manifold-sample-rest-api](https://github.com/manifold-systems/manifold-sample-rest-api)
+> Clone the source code for the [manifold-sample-rest-api](https://github.com/manifold-systems/manifold-sample-rest-api)
+project and experiment with Manifold yourself.
 
 ## To Sum Up
 In this post I've introduced Manifold as a breakthrough Java framework you can use to streamline your REST API development
