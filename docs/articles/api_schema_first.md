@@ -1,26 +1,28 @@
-# Building REST APIs with Manifold & JSON Schema
+# REST with Manifold
 
-Developing a REST service can benefit from focusing on the API you'd like to provide.  Some have formalized this concept
-with _API-first_.  Regardless of how you apply the concept, your Java development experience along the way should remain
-as smooth as possible.  This post presents [Manifold](http://manifold.systems/) as a simple new way to maintain an API-centric
-development process without sacrificing your Java development experience.
+Developing a REST service can benefit from focusing on the API you'd like to provide.  Keeping the API at the center of
+your development team's focus facilitates keeping your service consumer's interests first.  JSON Schema is widely used as a
+means to centrally design, document, and publish REST APIs.  This post presents [Manifold](http://manifold.systems/) as a
+breakthrough Java technology you can use to seamlessly incorporate JSON Schema into your development process.
 
 ## The REST API Design Problem
 
 Most REST APIs are described in terms of the request/response formats they comprise using a schema definition
-language such as JSON Schema.  A complete REST API provides the following information:
+language such as JSON Schema.  A complete REST API schema provides the following information:
 * Language-neutral **type definitions**
 * Formal type and data **constraints**
 * Comprehensive **documentation**
 
-As a language neutral format, however, JSON Schema is not directly accessible from Java. The preferred, decades-old solution
-to this kind of problem involves running a code generator in a separate build step to transform structured data to Java.
-But this trades one big problem for another -- a code generation step most often hinders what could otherwise be
-a streamlined API development experience. The problems involved with code generators include:
-* No feedback: JSON schema changes are invisible Java until you rebuild the API
+As a language neutral format, however, JSON Schema is not directly accessible from Java; the schema-defined type
+definitions are not visible to Java's type system. The preferred, albeit decades-old, solution to this kind of problem
+involves wedging a code generator into the build to transform structured data to Java.  But this trades one
+big problem for another -- a code generation step most often hinders what could otherwise be a streamlined development
+experience. The problems involved with code generators include:
+* No feedback: JSON schema changes are invisible to Java until you rebuild the API
 * Stale generated classes
 * Increased build times
-* Scalability issues: interdependencies, caching, integrations, etc.
+* Scalability issues: code gen interdependencies, caching, integrations, etc.
+* Difficult problems with custom class loaders, runtime agents, annotation processors
 * Interrupts train of thought
 * Poor IDE integration:
   * No immediate feedback from changes
@@ -44,6 +46,7 @@ data formats including JSON, JSON Schema, YAML, and others.  With Manifold Java 
 * JSON Schema is the API *Single Source of Truth (SSoT)*
 * Eliminates the code generation step in your build!
 * Scalable: JSON files are source files
+* No custom class loaders, no runtime agents, no annotation processors
 * Top-notch IDE integration:
   * Make JSON Schema changes and immediately use the changes in your code, no compiling
   * Incremental, processes only the JSON Schema changes you've made, faster builds
@@ -51,6 +54,8 @@ data formats including JSON, JSON Schema, YAML, and others.  With Manifold Java 
   * Perform usage searches on JSON Schema elements to find code references
   * Rename / refactor Schema elements
   * Hotswap debugging support
+
+Using Manifold in your project is easy. Simply add the Manifold jar to your project and begin taking advantage of it.
 
 >The IDE experience is paramount as most professional Java developers live and breathe within the IDE. Manifold does not
 >disappoint, it provides a complete, seamless dev experience with the IntelliJ IDEA Manifold plugin.  You can install
@@ -248,11 +253,11 @@ project and experiment with Manifold yourself.
 
 ## To Sum Up
 In this post I've introduced Manifold as a breakthrough Java framework you can use to streamline your REST API development
-process.  With it you can eliminate code generators from your build script and the host of problems associated with them.
+process.  With it you can eliminate code generators from your build script along with the host of problems associated with them.
 Using the Manifold IntelliJ IDEA plugin you can further increase your development experience: directly navigate to your
-JSON Schema elements, find usages of them in your code, and use deterministic refactor and rename tooling. I also covered
-some of the JSON API features such as the `request()` method for direct HTTP functionality. Finally, I demonstrated how
-you can create a REST service using Manifold with SparkJava -- a lightweight, potent combination.
+JSON Schema elements, find usages of them in your code, use deterministic refactor and rename tooling, compile changes
+incrementally, etc.. I also covered some of the JSON API features such as the `request()` method for direct HTTP functionality.
+Finally, I demonstrated how you can create a REST service using Manifold with SparkJava -- a lightweight powerful combination.
 
 Manifold doesn't stop there, however.  JSON Schema support is just a small sampling of what the Manifold framework can do.
 Learn more about [Manifold](http://manifold.systems).
