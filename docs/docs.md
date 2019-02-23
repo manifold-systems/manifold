@@ -1160,7 +1160,7 @@ void setPet(Object value);
 ``` 
 There is still only one value backing the `pet` property.
 
-#### Structural Interfaces
+#### Interfaces are _Structural_
 JSON API interfaces are *structural* interfaces. You can read all about what a structural interface is [here](#structural-interfaces).  In short
 a structural interface doesn't have to be implemented directly in order to be used.  For instance, you can make a
 type-safe call through a structural interface method on an object so long as the object has a method with the same name
