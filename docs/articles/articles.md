@@ -7,6 +7,19 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://medium.com/@scott_86456/rest-api-vision-with-manifold-cb76774c35"><img width="240" height="135" src="/images/restapi_vision.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://medium.com/@scott_86456/rest-api-vision-with-manifold-cb76774c35">REST API <i>Vision</i> with Manifold</a></p>
+  <p>Discover how to use Manifold to enable JSON Schema your REST API single source of truth (SSoT)</p>
+  <p><small>medium.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
@@ -15,9 +28,9 @@ layout: default
   <p><small>jaxenter.com</small></p>
   </td>
  </tr>
- 
+
  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
- 
+
  <tr>
   <td>
   <p><a href="https://jaxenter.com/manifold-code-generators-150738.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
