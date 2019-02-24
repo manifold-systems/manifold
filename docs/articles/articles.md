@@ -11,7 +11,8 @@ layout: default
   </td>
   <td>
   <p><a href="https://medium.com/@scott_86456/rest-api-vision-with-manifold-cb76774c35">REST API <i>Vision</i> with Manifold</a></p>
-  <p>Discover how to use Manifold to enable JSON Schema your REST API single source of truth (SSoT)</p>
+  <p>Discover how to use Manifold to enable JSON Schema as your REST API single source of truth (SSoT).  Scott McKinney
+     explains why code generators slow you down and how to use Manifold to bypass them altogether to improve your API development process.</p>
   <p><small>medium.com</small></p>
   </td>
  </tr>
