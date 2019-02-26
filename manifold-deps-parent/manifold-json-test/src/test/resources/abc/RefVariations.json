@@ -1,0 +1,61 @@
+{
+  "$id": "#root",
+  "type": "object",
+  "definitions": {
+    "Color2.rgb": {
+      "$id": "#color.foo2",
+      "type": "object",
+      "properties": {
+        "red": "integer",
+        "green": "integer",
+        "blue": "integer",
+        "inner": {
+          "$id": "#color2.in",
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "Color.rgb": {
+      "$id": "#color.foo",
+      "type": "object",
+      "properties": {
+        "red": "integer",
+        "green": "integer",
+        "blue": "integer",
+        "alpha": {
+          "oneOf": [
+            {"$ref": "#/definitions/Color2.rgb"},
+            {"type":  "string"}
+          ]
+        },
+        "inner": {
+          "$id": "#color.in",
+          "type": "string"
+        }
+      }
+    },
+    "Car": {
+      "type": "object",
+      "properties": {
+        "color1": { "$ref": "#color.foo"},
+        "color2": { "$ref": "#Color.rgb"},
+        "inner3": { "$ref": "#/Color.rgb/inner"},
+        "inner4": { "$ref": "#color.foo/inner"},
+        "color5": { "$ref": "#/Color_rgb"},
+        "color6": { "$ref": "#/properties/Color.rgb"},
+        "color7": { "$ref": "#/properties/Color_rgb"},
+        "inner8": { "$ref": "#color.in"},
+        "alpha": { "$ref": "#color.foo/alpha"},
+
+        "color1_1": { "$ref": "#color.foo2"},
+        "color1_2": { "$ref": "#/definitions/Color2.rgb"},
+        "inner1_3": { "$ref": "#/definitions/Color2.rgb/inner"},
+        "inner1_4": { "$ref": "#color.foo/inner"},
+        "color1_5": { "$ref": "#/definitions/Color2_rgb"},
+        "inner1_6": { "$ref": "#color.in"}
+      }
+    }
+  }
+}

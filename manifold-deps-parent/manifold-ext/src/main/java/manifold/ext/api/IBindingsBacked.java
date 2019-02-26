@@ -20,7 +20,9 @@ import javax.script.Bindings;
 
 /**
  * A {@link Structural} interface with only getter/setter methods can extend this interface and provide default
- * implementations of its methods and provide a static {@code proxy(Bindings)} method to avoid runtime proxy generation.
+ * implementations of its methods and implement a compile-time proxy API to avoid the overhead runtime proxy
+ * generation.
+ * <p/>
  * See the {@code JsonStructureType}.
  */
 public interface IBindingsBacked

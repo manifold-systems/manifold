@@ -29,7 +29,7 @@ public class LazyRefJsonType implements IJsonType
   LazyRefJsonType( Supplier<IJsonType> supplier )
   {
     _supplier = supplier;
-    _typeAttributes = new TypeAttributes( (Boolean)null, null );
+    _typeAttributes = new TypeAttributes();
   }
 
   public IJsonType resolve()
@@ -38,6 +38,10 @@ public class LazyRefJsonType implements IJsonType
     while( type instanceof LazyRefJsonType )
     {
       type = ((LazyRefJsonType)type).resolve();
+    }
+    if( type instanceof JsonSchemaType )
+    {
+      ((JsonSchemaType)type).resolveRefs();
     }
     type = type.copyWithAttributes( _typeAttributes.copy() );
     return type;
@@ -56,7 +60,7 @@ public class LazyRefJsonType implements IJsonType
       return this;
     }
     LazyRefJsonType copy = new LazyRefJsonType( _supplier );
-    copy._typeAttributes = TypeAttributes.merge( copy._typeAttributes, attributes );
+    copy._typeAttributes = copy._typeAttributes.overrideWith( attributes );
     return copy;
   }
 

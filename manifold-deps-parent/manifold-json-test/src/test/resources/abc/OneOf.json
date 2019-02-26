@@ -10,9 +10,18 @@
           "type": "string"
         }
       }
+    },
+    "WithRef": {
+      "oneOf": [
+        {"$ref": "#/definitions/MyDef"},
+        {"type":  "string"}
+      ]
     }
   },
   "properties": {
+    "oneOfRef": {
+      "$ref": "#/definitions/WithRef"
+    },
     "thing": {
       "type": "object",
       "oneOf": [

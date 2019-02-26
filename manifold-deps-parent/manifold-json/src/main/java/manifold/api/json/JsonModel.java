@@ -20,15 +20,15 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.script.Bindings;
 import javax.script.ScriptException;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.schema.IllegalSchemaTypeName;
+import manifold.api.json.schema.TypeAttributes;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
@@ -37,12 +37,12 @@ import manifold.util.JavacDiagnostic;
 
 /**
  */
-class JsonModel extends AbstractSingleFileModel
+public class JsonModel extends AbstractSingleFileModel
 {
   private IJsonParentType _type;
   private JsonIssueContainer _issues;
 
-  JsonModel( IManifoldHost host, String fqn, Set<IFile> files )
+  public JsonModel( IManifoldHost host, String fqn, Set<IFile> files )
   {
     super( host, fqn, files );
     init();
@@ -51,10 +51,10 @@ class JsonModel extends AbstractSingleFileModel
   private void init()
   {
     _issues = null;
-    Bindings bindings;
+    Object jsonValue;
     try
     {
-      bindings = Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ), false, true );
+      jsonValue = load();
     }
     catch( Exception e )
     {
@@ -63,21 +63,21 @@ class JsonModel extends AbstractSingleFileModel
       {
         _issues = new JsonIssueContainer( (ScriptException)cause, getFile() );
       }
-      bindings = new SimpleBindings();
+      jsonValue = new DataBindings();
     }
 
     try
     {
       try
       {
-        IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), getFile().toURI().toURL(), null, bindings );
+        IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), getFile().toURI().toURL(), null, jsonValue );
         if( type instanceof IJsonParentType )
         {
           _type = (IJsonParentType)type;
         }
         else
         {
-          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName() );
+          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName(), new TypeAttributes() );
         }
       }
       catch( IllegalSchemaTypeName e )
@@ -94,6 +94,11 @@ class JsonModel extends AbstractSingleFileModel
     {
       throw new RuntimeException( e );
     }
+  }
+
+  protected Object load()
+  {
+    return Json.fromJson( ResourceFileTypeManifold.getContent( getFile() ), false, true );
   }
 
   public IJsonParentType getType()

@@ -248,7 +248,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
           IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( () -> _ctx );
           String fqn = tn.name.replace( '$', '.' );
           JavaFileObject file = findGeneratedFile( fqn, location, tn.getModule(), issueReporter );
-          if( file != null && isCorrectModule( location, patchableFiles, file, fqn ) )
+          if( file != null && isCorrectModule( tn.getModule(), location, patchableFiles, file, fqn ) )
           {
             newList.add( file );
           }
@@ -259,11 +259,13 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     return list;
   }
 
-  private boolean isCorrectModule( Location location, Iterable<JavaFileObject> patchableFiles, JavaFileObject file, String fqn )
+  private boolean isCorrectModule( IModule module, Location location, Iterable<JavaFileObject> patchableFiles, JavaFileObject file, String fqn )
   {
     if( !(location instanceof ManPatchModuleLocation) )
     {
-      // not a ManPatchModuleLocation means not an extended class
+      // NOT a ManPatchModuleLocation means NOT an extended class...
+      // and also NOT a class in a dependency that is not compiled, but
+      // needs to be dynamically compiled from the dependent module
 
       if( !JreUtil.isJava9Modular_compiler( _ctx ) )
       {
@@ -271,8 +273,17 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       }
 
       // true if type is not exclusively an extended type
-      Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn );
-      return typeManifoldsFor.stream().anyMatch( tm -> tm.getContributorKind() == Primary );
+      //noinspection unchecked
+      Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn, tm -> tm.getContributorKind() == Primary );
+      return !typeManifoldsFor.isEmpty();
+    }
+
+    Set<ITypeManifold> tms = module.findTypeManifoldsFor( fqn );
+    if( tms.stream().anyMatch( tm -> tm.getContributorKind() == Primary ) )
+    {
+      // type is from a dependency module, but was not compiled there, yet is
+      // referenced outside the module and needs to be dynamically compiled
+      return true;
     }
 
     if( patchableFiles == null )
@@ -288,6 +299,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
       if( cname.equals( name) )
       {
+        // existing type is extended
         return true;
       }
     }

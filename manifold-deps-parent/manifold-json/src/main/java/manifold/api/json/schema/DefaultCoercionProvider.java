@@ -55,7 +55,7 @@ public class DefaultCoercionProvider implements ICoercionProvider
   @Override
   public Object toBindingValue( Object value )
   {
-    // Enum type
+    // Enum type & Union type
     if( value instanceof IBindingType )
     {
       return ((IBindingType)value).toBindingValue();

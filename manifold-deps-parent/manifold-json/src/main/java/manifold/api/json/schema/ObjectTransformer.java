@@ -16,20 +16,21 @@
 
 package manifold.api.json.schema;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import javax.script.Bindings;
+import manifold.api.json.ErrantType;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
+import manifold.ext.DataBindings;
 import manifold.internal.javac.IIssue;
 import manifold.util.DebugLogUtil;
 import manifold.util.Pair;
+
+
+import static manifold.api.json.schema.JsonSchemaTransformer.JSCH_TYPE;
 
 /**
  */
@@ -89,23 +90,31 @@ class ObjectTransformer
         properties = (Bindings)props;
       }
 
-      for( Map.Entry<String, Object> entry : properties.entrySet() )
+      for( Map.Entry<String, Object> entry: properties.entrySet() )
       {
         String name = entry.getKey();
         Object value = entry.getValue();
-        Bindings bindings;
         if( value instanceof Pair )
         {
           token = ((Token[])((Pair)value).getFirst())[0];
-          bindings = (Bindings)((Pair)value).getSecond();
+          value = ((Pair)value).getSecond();
         }
         else
         {
           token = null;
-          bindings = (Bindings)value;
         }
-
-        IJsonType type = _schemaTx.transformType( _type, _type.getFile(), name, bindings, null );
+        Bindings bindings = handleOpenApiIdiom( value );
+        IJsonType type;
+        if( bindings == null )
+        {
+          ErrantType errant = new ErrantType( null, name );
+          _type.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Missing type" ) );
+          type = errant;
+        }
+        else
+        {
+          type = _schemaTx.transformType( _type, _type.getFile(), name, bindings, null );
+        }
         _type.addMember( name, type, token );
       }
       addRequired();
@@ -118,19 +127,36 @@ class ObjectTransformer
     }
   }
 
+  /**
+   * OpenAPI lets you do this:
+   * <pre><code>
+   * "name": "string"
+   * </code></pre>
+   * instead of this:
+   * <pre><code>
+   * "name": {
+   *   "type": "string"
+   * }
+   * </code></pre>
+   */
+  private Bindings handleOpenApiIdiom( Object value )
+  {
+    Bindings bindings;
+    if( value instanceof String )
+    {
+      bindings = new DataBindings();
+      bindings.put( JSCH_TYPE, value );
+    }
+    else
+    {
+      bindings = (Bindings)value;
+    }
+    return bindings;
+  }
+
   private void addRequired()
   {
     Object requiredValue = _jsonObj.get( JsonSchemaTransformer.JSCH_REQUIRED );
-    Set<String> required = Collections.emptySet();
-    if( requiredValue != null )
-    {
-      requiredValue = requiredValue instanceof Pair ? ((Pair)requiredValue).getSecond() : requiredValue;
-      if( requiredValue instanceof Collection )
-      {
-        //noinspection unchecked
-        required = new HashSet<>( (Collection<String>)requiredValue );
-      }
-    }
-    _type.addRequired( required );
+    _type.addRequiredWithTokens( requiredValue );
   }
 }

@@ -16,14 +16,14 @@
 
 package manifold.json.extensions.javax.script.Bindings;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Function;
 import javax.script.Bindings;
-import manifold.api.json.Json;
+import manifold.api.json.Yaml;
+import manifold.ext.DataBindings;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
@@ -31,8 +31,8 @@ import manifold.util.JsonUtil;
 import manifold.util.Pair;
 
 /**
- * Extends {@link Bindings} with methods to transform the Bindings contents to JSON and XML and to conveniently use the
- * Bindings for JSON Web requests.
+ * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, and XML and to conveniently
+ * use the Bindings for JSON and YAML Web services.
  */
 @Extension
 public class ManBindingsExt
@@ -50,34 +50,38 @@ public class ManBindingsExt
   }
 
   /**
+   * Serializes this {@link Bindings} instance to a YAML formatted String
+   *
+   * @return This {@link Bindings} instance serialized to a YAML formatted String
+   */
+  public static String toYaml( @This Bindings thiz )
+  {
+    StringBuilder sb = new StringBuilder();
+    toYaml( thiz, sb );
+    return sb.toString();
+  }
+
+  /**
    * Serializes this {@link Bindings} instance into a JSON formatted StringBuilder {@code target}
    * with the specified {@code indent} of spaces.
    *
    * @param target A {@link StringBuilder} to write the JSON in
-   * @param indent The margin of spaces to indent the JSON
+   * @param margin The margin of spaces to indent the resulting block of JSON
    */
-  public static void toJson( @This Bindings thiz, StringBuilder target, int indent )
+  public static void toJson( @This Bindings thiz, StringBuilder target, int margin )
   {
-    int iKey = 0;
-    if( isNewLine( target ) )
-    {
-      indent( target, indent );
-    }
-    if( thiz.size() > 0 )
-    {
-      target.append( "{\n" );
-      for( String key: thiz.keySet() )
-      {
-        indent( target, indent + 2 );
-        target.append( '\"' ).append( key ).append( '\"' ).append( ": " );
-        Object value = thiz.get( key );
-        JsonUtil.toJson( target, indent, value );
-        appendCommaNewLine( target, iKey < thiz.size() - 1 );
-        iKey++;
-      }
-    }
-    indent( target, indent );
-    target.append( "}" );
+    JsonUtil.toJson( thiz, target, margin );
+  }
+
+  /**
+   * Serializes this {@link Bindings} instance into a YAML 1.2 formatted StringBuilder {@code target}
+   * with the specified {@code indent} of spaces.
+   *
+   * @param target A {@link StringBuilder} to write the YAML in
+   */
+  public static void toYaml( @This Bindings thiz, StringBuilder target )
+  {
+    Yaml.toYaml( thiz, target );
   }
 
   private static boolean isNewLine( StringBuilder sb )
@@ -179,70 +183,7 @@ public class ManBindingsExt
    */
   public static void toXml( @This Bindings thiz, String name, StringBuilder target, int indent )
   {
-    indent( target, indent );
-    target.append( '<' ).append( name );
-    if( thiz.size() > 0 )
-    {
-      target.append( ">\n" );
-      for( String key: thiz.keySet() )
-      {
-        Object value = thiz.get( key );
-        if( value instanceof Pair )
-        {
-          value = ((Pair)value).getSecond();
-        }
-        if( value instanceof Bindings )
-        {
-          toXml( ((Bindings)value), key, target, indent + 2 );
-        }
-        else if( value instanceof List )
-        {
-          int len = ((List)value).size();
-          indent( target, indent + 2 );
-          target.append( "<" ).append( key );
-          if( len > 0 )
-          {
-            target.append( ">\n" );
-            for( Object comp: (List)value )
-            {
-              if( comp instanceof Pair )
-              {
-                comp = ((Pair)comp).getSecond();
-              }
-
-              if( comp instanceof Bindings )
-              {
-                toXml( ((Bindings)comp), "li", target, indent + 4 );
-              }
-              else
-              {
-                indent( target, indent + 4 );
-                target.append( "<li>" ).append( comp ).append( "</li>\n" );
-              }
-            }
-            indent( target, indent + 2 );
-            target.append( "</" ).append( key ).append( ">\n" );
-          }
-          else
-          {
-            target.append( "/>\n" );
-          }
-        }
-        else
-        {
-          indent( target, indent + 2 );
-          target.append( '<' ).append( key ).append( ">" );
-          target.append( value );
-          target.append( "</" ).append( key ).append( ">\n" );
-        }
-      }
-      indent( target, indent );
-      target.append( "</" ).append( name ).append( ">\n" );
-    }
-    else
-    {
-      target.append( "/>\n" );
-    }
+    JsonUtil.toXml( thiz, name, target, indent );
   }
 
   /**
@@ -263,19 +204,20 @@ public class ManBindingsExt
   }
 
   /**
-   * Use <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.3">HTTP POST</a> to pass JSON bindings to
-   * this URL and get the full response as a JSON object.
+   * Use HTTP GET, POST, PUT, PATCH, or DELETE to send this {@code Bindings} to a URL with a JSON response.
    *
-   * @return The full content of this URL's stream as a JSON object.
+   * @param httpMethod HTTP method to use: "GET", "POST", "PUT", "PATCH", or "DELETE"
+   * @param url The URL to send this Bindings to
+   * @return The full content of this URL's JSON response as a JSON value.
    *
-   * @see ManUrlExt#postForTextContent(URL, Bindings)
+   * @see ManUrlExt#sendJsonRequest(URL, String, Object)
    */
   @SuppressWarnings("unused")
-  public static Bindings postForJsonContent( @This Bindings thiz, String url )
+  public static Object sendJsonRequest( @This Bindings thiz, String httpMethod, String url )
   {
     try
     {
-      return Json.fromJson( ManUrlExt.postForTextContent( new URL( url ), thiz ) );
+      return ManUrlExt.sendJsonRequest( new URL( url ), httpMethod, thiz );
     }
     catch( MalformedURLException e )
     {
@@ -284,86 +226,22 @@ public class ManBindingsExt
   }
 
   /**
-   * Get the content from the specified {@code url} using this {@link Bindings} as <a href="https://www.json.org/">JSON-formatted</a> arguments.
-   * Encodes the arguments in UTF-8 and appends them to the list using standard <a href="https://www.w3.org/MarkUp/html-spec/html-spec_8.html#SEC8.2.2">HTTP GET format</a>.
-   * <p/>
-   * This Bindings instance must be composed of property names mapped to JSON values.  A JSON value is one of:
-   * <ul>
-   *   <li> a simple type such as a String, number, or boolean </li>
-   *   <li> a {@link Bindings} of property names to JSON values </li>
-   *   <li> a {@link List} composed of JSON values </li>
-   * </ul>
-   * If an argument is a {@link Bindings} or a {@link List}, it is transformed to JSON.  Otherwise, the argument is
-   * coerced to a String and URL encoded.
+   * Use HTTP GET, POST, PUT, PATCH, or DELETE to send this {@code Bindings} to a URL with a YAML response.
    *
-   * @return JSON bindings reflecting the content of the URL.  Otherwise if the content is not JSON formatted, a
-   * {@link RuntimeException} results.
+   * @param httpMethod HTTP method to use: "GET", "POST", "PUT", "PATCH", or "DELETE"
+   * @param url The URL to send this Bindings to
+   * @return The full content of this URL's YAML response as a JSON value.
    *
-   * @see #postForJsonContent(Bindings, String)
-   * @see manifold.api.json.Json#fromJson(String)
+   * @see ManUrlExt#sendYamlRequest(URL, String, Object)
    */
-  public static Bindings getJsonContent( @This Bindings thiz, String url )
-  {
-    return Json.fromJson( ManUrlExt.getTextContent( makeUrl( thiz, url ) ) );
-  }
-
-  /**
-   * Convert this Json {@link Bindings} to an arguments String suitable for a JSON-compatible URL.
-   *
-   * @return A String formatted with JSON-compatible URL arguments
-   */
-  public static String makeArguments( @This Bindings arguments )
+  @SuppressWarnings("unused")
+  public static Object sendYamlRequest( @This Bindings thiz, String httpMethod, String url )
   {
     try
     {
-      StringBuilder sb = new StringBuilder();
-      for( Map.Entry<String, Object> entry: arguments.entrySet() )
-      {
-        if( sb.length() != 0 )
-        {
-          sb.append( '&' );
-        }
-        sb.append( URLEncoder.encode( entry.getKey(), "UTF-8" ) )
-          .append( '=' )
-          .append( makeValue( entry.getValue() ) );
-      }
-      return sb.toString();
+      return ManUrlExt.sendYamlRequest( new URL( url ), httpMethod, thiz );
     }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  /**
-   * Convert {@code value} to a String suitable for a JSON URL argument.
-   *
-   * @param value A JSON value.  One of:
-   *              <ul>
-   *              <li> a simple type such as a String, number, or boolean </li>
-   *              <li> a {@link Bindings} of property names to JSON values </li>
-   *              <li> a {@link List} composed of JSON values </li>
-   *              </ul>
-   *
-   * @return JSON formatted value String escaped for URL use.
-   */
-  @Extension
-  public static String makeValue( Object value )
-  {
-    if( value instanceof Bindings )
-    {
-      value = JsonUtil.toJson( (Bindings)value );
-    }
-    else if( value instanceof List )
-    {
-      value = JsonUtil.listToJson( (List)value );
-    }
-
-    try
-    {
-      return URLEncoder.encode( value.toString(), "UTF-8" );
-    }
-    catch( UnsupportedEncodingException e )
+    catch( MalformedURLException e )
     {
       throw new RuntimeException( e );
     }
@@ -386,5 +264,37 @@ public class ManBindingsExt
       sb.append( ' ' );
       i++;
     }
+  }
+
+  /**
+   * Provide a deep copy of this {@code Bindings} using a {@code DataBindings} for the copy.
+   * <p/>
+   * Same as invoking: {@code deepCopy(DataBindings::new)}
+   *
+   * @return A deep copy of this {@code Bindings}
+   */
+  public static Bindings deepCopy( @This Bindings thiz )
+  {
+    return deepCopy( thiz, DataBindings::new );
+  }
+
+  /**
+   * Provide a deep copy of this {@code Bindings}.  Note this method assumes the Bindings is limited to a JSON
+   * style {@code Bindings<String, Value>} where {@code Value} type is strictly:
+   * <ul>
+   * <li>a {@code String}, {@code Number}, or {@code Boolean}</li>
+   * <li>a {@code List} of {@code Value}</li>
+   * <li>a {@code Bindings} of {@code String} to {@code Value}</li>
+   * </ul>
+   * Any deviation from this format may result in unexpected behavior.
+   *
+   * @param bindingsSupplier Creates the {@code Bindings} instance used for the copy and instances for nested {@code Bindings}.
+   *
+   * @return A deep copy of this {@code Bindings}
+   */
+  public static <E extends Bindings> E deepCopy( @This Bindings thiz, Function<Integer, E> bindingsSupplier )
+  {
+    //noinspection unchecked
+    return (E)JsonUtil.deepCopyValue( thiz, bindingsSupplier );
   }
 }

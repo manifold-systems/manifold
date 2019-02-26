@@ -32,6 +32,10 @@
       "type": "string",
       "format": "date-time"
     },
+    "int64": {
+      "type": "integer",
+      "format": "int64"
+    },
     "UnhandledFormat": {
       "type": "string",
       "format": "chickenbutt"

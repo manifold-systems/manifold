@@ -1,0 +1,40 @@
+{
+  "$id": "https://example.com/restapi/HasNestedDefinitions.json",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "HasNestedDefinitions",
+  "type": "object",
+  "definitions": {
+    "MyObject": {
+      "type": "object",
+      "definitions": {
+        "MyNestedString": {
+          "type": "string"
+        },
+        "MyNestedObject": {
+          "type": "object",
+          "properties": {
+            "nestedThing": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "properties": {
+        "thing": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "properties": {
+    "TheObject" : {
+      "$ref": "#/definitions/MyObject"
+    },
+    "TheNestedString" : {
+      "$ref": "#/definitions/MyObject/definitions/MyNestedString"
+    },
+    "TheNestedObject" : {
+      "$ref": "#/definitions/MyObject/definitions/MyNestedObject"
+    }
+  }
+}

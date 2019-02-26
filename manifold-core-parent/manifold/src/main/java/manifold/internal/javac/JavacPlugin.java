@@ -24,10 +24,16 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.CompileStates;
+import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Enter;
+import com.sun.tools.javac.comp.MemberEnter;
+import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
@@ -37,9 +43,12 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.MandatoryWarningHandler;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -329,6 +338,10 @@ public class JavacPlugin implements Plugin, TaskListener
       : ReflectUtil.method( "manifold.internal.javac.ManAttr_9", "instance", Context.class ).invokeStatic( getContext() ));
     ReflectUtil.field( JavaCompiler.instance( getContext() ), "attr" ).set( manAttr );
 
+    // Reassign Log fields (the Attr above created a ManLog_X, assign it to various Log fields in the compiler)
+    // Note this is only relevant when compiling with annotation processors
+    reassignLog( _ctx, (Log)ReflectUtil.field( manAttr ,"log" ).get() );
+
     // Override javac's Resolve
     ManResolve.instance( _ctx );
 
@@ -359,6 +372,46 @@ public class JavacPlugin implements Plugin, TaskListener
 
     // Override javac's ClassFinder
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
+  }
+
+  private void reassignLog( Context ctx, Log log )
+  {
+    Object[] earlyAttrHolders = {
+      Check.instance( ctx ),
+      Resolve.instance( ctx ),
+      DeferredAttr.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      Annotate.instance( ctx ),
+      JavacTrees.instance( ctx ),
+      JavaCompiler.instance( ctx ),
+      JavacProcessingEnvironment.instance( ctx ),
+    };
+    for( Object instance: earlyAttrHolders )
+    {
+      ReflectUtil.LiveFieldRef l = ReflectUtil.WithNull.field( instance, "log" );
+      if( l != null )
+      {
+        l.set( log );
+      }
+    }
+
+    // Also reassign the 'log' fields in Check's various MandatoryWarningHandlers...
+    for( Field f: Check.class.getDeclaredFields() )
+    {
+      if( MandatoryWarningHandler.class.isAssignableFrom( f.getType() ) )
+      {
+        f.setAccessible( true );
+        try
+        {
+          Object mwh = f.get( Check.instance( ctx ) );
+          ReflectUtil.field( mwh, "log" ).set( log );
+        }
+        catch( IllegalAccessException e )
+        {
+          throw new RuntimeException( e );
+        }
+      }
+    }
   }
 
   private void injectManFileManager()
@@ -740,6 +793,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private String derivePath( String type, String sourceFile )
   {
+    sourceFile = new File( sourceFile ).getAbsolutePath();
     int iDot = sourceFile.lastIndexOf( '.' );
     String ext = iDot > 0 ? sourceFile.substring( iDot ) : "";
     String pathRelativeFile = type.replace( '.', File.separatorChar ) + ext;
@@ -748,7 +802,7 @@ public class JavacPlugin implements Plugin, TaskListener
     return typeIndex > 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
-  private List<String> fetchOtherInputFiles() //TODO rename to something language-agnostic
+  private List<String> fetchOtherInputFiles()
   {
     if( System.getProperty( OTHER_SOURCE_FILES ) != null && System.getProperty( OTHER_SOURCE_LIST ) != null )
     {

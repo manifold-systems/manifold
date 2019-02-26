@@ -16,15 +16,6 @@
 
 package manifold.ext;
 
-import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.Types;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Name;
-import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -33,26 +24,20 @@ import java.math.BigInteger;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.lang.model.type.NoType;
 import javax.script.Bindings;
 import manifold.ext.api.IBindingType;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.ICoercionProvider;
-import manifold.ext.api.IBindingsBacked;
-import manifold.internal.host.RuntimeManifoldHost;
-import manifold.internal.javac.ClassSymbols;
-import manifold.internal.javac.IDynamicJdk;
-import manifold.util.Pair;
+import manifold.ext.api.IProxyFactory;
+import manifold.ext.api.Structural;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 public class RuntimeMethods
 {
-  private static final String STRUCTURAL_PROXY = "_structuralproxy_";
-  private static Map<Class, Map<Class, Constructor>> PROXY_CACHE = new ConcurrentHashMap<>();
+  private static Map<Class, Map<Class, IProxyFactory<?>>> PROXY_CACHE = new ConcurrentHashMap<>();
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
-  private static final Map<Class, Boolean> ICALL_HANDLER_MAP = new ConcurrentWeakHashMap<>();
 
   @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
   public static Object constructProxy( Object root, Class iface )
@@ -92,7 +77,7 @@ public class RuntimeMethods
     Set<Class> ifaces = ID_MAP.get( thiz );
     if( ifaces != null )
     {
-      for( Class iface : ifaces )
+      for( Class iface: ifaces )
       {
         if( iface == proxiedIface )
         {
@@ -118,7 +103,6 @@ public class RuntimeMethods
     return ICallHandler.UNHANDLED;
   }
 
-  @SuppressWarnings("WeakerAccess")
   public static Object coerce( Object value, Class<?> type )
   {
     if( value == null )
@@ -161,7 +145,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? BigInteger.ONE: BigInteger.ZERO;
+        return ((Boolean)value) ? BigInteger.ONE : BigInteger.ZERO;
       }
       return new BigInteger( value.toString() );
     }
@@ -170,7 +154,7 @@ public class RuntimeMethods
     {
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? BigDecimal.ONE: BigDecimal.ZERO;
+        return ((Boolean)value) ? BigDecimal.ONE : BigDecimal.ZERO;
       }
       return new BigDecimal( value.toString() );
     }
@@ -260,7 +244,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? (byte)1: (byte)0;
+        return ((Boolean)value) ? (byte)1 : (byte)0;
       }
       return Byte.parseByte( value.toString() );
     }
@@ -283,7 +267,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? (short)1: (short)0;
+        return ((Boolean)value) ? (short)1 : (short)0;
       }
       return Short.parseShort( value.toString() );
     }
@@ -296,7 +280,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? 1: 0;
+        return ((Boolean)value) ? 1 : 0;
       }
       return Integer.parseInt( value.toString() );
     }
@@ -309,7 +293,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? 1L: 0L;
+        return ((Boolean)value) ? 1L : 0L;
       }
       return Long.parseLong( value.toString() );
     }
@@ -322,7 +306,7 @@ public class RuntimeMethods
       }
       if( value instanceof Boolean )
       {
-        return ((Boolean)value) ? 1f: 0f;
+        return ((Boolean)value) ? 1f : 0f;
       }
       return Float.parseFloat( value.toString() );
     }
@@ -399,7 +383,7 @@ public class RuntimeMethods
       Method m = iface.getDeclaredMethod( name, paramTypes );
       if( m == null )
       {
-        for( Class superIface : iface.getInterfaces() )
+        for( Class superIface: iface.getInterfaces() )
         {
           m = findMethod( superIface, name, paramTypes );
           if( m != null )
@@ -433,44 +417,24 @@ public class RuntimeMethods
       return root;
     }
 
-    if( root instanceof Bindings && IBindingsBacked.class.isAssignableFrom( iface ) )
-    {
-      // An interface extending IBindingsBacked is expected to define a proxy(Bindings) method returning an
-      // implementation of the interface, see JsonStructureType.
-      // This strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via ICallHandler.
-      return ReflectUtil.method( iface, "proxy", Bindings.class ).invokeStatic( root );
-    }
-    
-//    final Field classRedefinedCount;
-//    try
-//    {
-//      classRedefinedCount = Class.class.getDeclaredField( "classRedefinedCount" );
-//      classRedefinedCount.setAccessible( true );
-//      System.out.println( "### " + iface.getSimpleName() + ": " + classRedefinedCount.getInt( iface ) );
-//    }
-//    catch( Exception e )
-//    {
-//      throw new RuntimeException( e );
-//    }
-
-    Map<Class, Constructor> proxyByClass = PROXY_CACHE.get( iface );
+    Map<Class, IProxyFactory<?>> proxyByClass = PROXY_CACHE.get( iface );
     if( proxyByClass == null )
     {
       PROXY_CACHE.put( iface, proxyByClass = new ConcurrentHashMap<>() );
     }
-    Constructor proxyClassCtor = proxyByClass.get( rootClass );
-    if( proxyClassCtor == null ) //|| BytecodeOptions.JDWP_ENABLED.get() )
+    IProxyFactory proxyFactory = proxyByClass.get( rootClass );
+    if( proxyFactory == null )
     {
-      Class proxyClass = createProxy( iface, rootClass );
-      proxyByClass.put( rootClass, proxyClassCtor = proxyClass.getConstructors()[0] );
+      proxyFactory = createProxy( iface, rootClass );
+      proxyByClass.put( rootClass, proxyFactory );
     }
     try
     {
-      // in Java 9 in modular mode the proxy class belongs to the owner's module,
+      // in Java 9+ in modular mode the proxy class belongs to the owner's module,
       // therefore we need to make it accessible from the manifold module before
       // calling newInstance()
-      ReflectUtil.setAccessible( proxyClassCtor );
-      return proxyClassCtor.newInstance( root );
+      //noinspection unchecked
+      return proxyFactory.proxy( root, iface );
     }
     catch( Exception e )
     {
@@ -478,108 +442,54 @@ public class RuntimeMethods
     }
   }
 
-  private static Class createProxy( Class iface, Class rootClass )
+  private static IProxyFactory createProxy( Class iface, Class rootClass )
   {
-    String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
-    if( hasCallHandlerMethod( rootClass ) )
+    IProxyFactory proxyFactory = maybeSelfProxyClass( rootClass, iface );
+    if( proxyFactory == null )
     {
-      return DynamicTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
+      proxyFactory = new DynamicProxyFactory( iface, rootClass );
     }
-    return StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
+    return proxyFactory;
   }
 
-  private static boolean hasCallHandlerMethod( Class rootClass )
+  private static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )
   {
-    if( ICallHandler.class.isAssignableFrom( rootClass ) )
+    Structural anno = iface.getAnnotation( Structural.class );
+    if( anno != null )
     {
-      // Nominally implements ICallHandler
-      return true;
-    }
-    if( ReflectUtil.method( rootClass, "call", Class.class, String.class, String.class, Class.class, Class[].class, Object[].class ) != null )
-    {
-      // Structurally implements ICallHandler
-      return true;
-    }
+      // This strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via
+      // ICallHandler
 
-    // maybe has an extension satisfying ICallHandler
-    return hasCallHandlerFromExtension( rootClass );
-  }
-
-  private static boolean hasCallHandlerFromExtension( Class rootClass )
-  {
-    Boolean isCallHandler = ICALL_HANDLER_MAP.get( rootClass );
-    if( isCallHandler != null )
-    {
-      return isCallHandler;
-    }
-
-    String fqn = rootClass.getCanonicalName();
-    BasicJavacTask javacTask = RuntimeManifoldHost.get().getJavaParser().getJavacTask();
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).getClassSymbol( javacTask, fqn );
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> callHandlerSymbol = ClassSymbols.instance( RuntimeManifoldHost.get().getSingleModule() ).getClassSymbol( javacTask, ICallHandler.class.getCanonicalName() );
-    if( Types.instance( javacTask.getContext() ).isAssignable( classSymbol.getFirst().asType(), callHandlerSymbol.getFirst().asType() ) )
-    {
-      // Nominally implements ICallHandler
-      isCallHandler = true;
-    }
-    else
-    {
-      // Structurally implements ICallHandler
-      isCallHandler = hasCallMethod( javacTask, classSymbol.getFirst() );
-    }
-    ICALL_HANDLER_MAP.put( rootClass, isCallHandler );
-    return isCallHandler;
-  }
-
-  private static boolean hasCallMethod( BasicJavacTask javacTask, Symbol.ClassSymbol classSymbol )
-  {
-    Name call = Names.instance( javacTask.getContext() ).fromString( "call" );
-    Iterable<Symbol> elems = IDynamicJdk.instance().getMembersByName( classSymbol, call );
-    for( Symbol s : elems )
-    {
-      if( s instanceof Symbol.MethodSymbol )
+      Class<?> backingClass = anno.backingClass();
+      if( backingClass != Void.class && backingClass.isAssignableFrom( rootClass ) )
       {
-        List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)s).getParameters();
-        if( parameters.size() != 6 )
+        Class factoryClass = anno.factoryClass();
+        try
         {
-          return false;
+          // In Java 9+ in modular mode the proxy factory class belongs to the owner's module,
+          // therefore we need to use the constructor and make it accessible from the manifold module
+          // before calling newInstance() (as opposed to calling newInstance() from the class)
+          Constructor constructor = factoryClass.getConstructors()[0];
+          ReflectUtil.setAccessible( constructor );
+          return (IProxyFactory)constructor.newInstance();
+          //return (IProxyFactory)factoryClass.newInstance();
         }
-
-        Symtab symbols = Symtab.instance( javacTask.getContext() );
-        Types types = Types.instance( javacTask.getContext() );
-        return types.erasure( parameters.get( 0 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 1 ).asType().equals( symbols.stringType ) &&
-               parameters.get( 2 ).asType().equals( symbols.stringType ) &&
-               types.erasure( parameters.get( 3 ).asType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 4 ).asType() instanceof Type.ArrayType && types.erasure( ((Type.ArrayType)parameters.get( 4 ).asType()).getComponentType() ).equals( types.erasure( symbols.classType ) ) &&
-               parameters.get( 5 ).asType() instanceof Type.ArrayType && ((Type.ArrayType)parameters.get( 5 ).asType()).getComponentType().equals( symbols.objectType );
+        catch( Exception e )
+        {
+          throw new RuntimeException( e );
+        }
       }
     }
-    Type superclass = classSymbol.getSuperclass();
-    if( !(superclass instanceof NoType) )
-    {
-      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)superclass.tsym ) )
-      {
-        return true;
-      }
-    }
-    for( Type iface : classSymbol.getInterfaces() )
-    {
-      if( hasCallMethod( javacTask, (Symbol.ClassSymbol)iface.tsym ) )
-      {
-        return true;
-      }
-    }
-    return false;
+    return null;
   }
 
-  public static Object coerceToBindingValue( Map thiz, Object arg )
+  public static Object coerceToBindingValue( Object arg )
   {
     if( arg instanceof IBindingType )
     {
       arg = ((IBindingType)arg).toBindingValue();
     }
-    else if( needsCoercion( arg, thiz ) )
+    else if( needsCoercion( arg ) )
     {
       for( ICoercionProvider coercer: CoercionProviders.get() )
       {
@@ -592,12 +502,13 @@ public class RuntimeMethods
     }
     return arg;
   }
-  private static boolean needsCoercion( Object arg, Map thiz )
+
+  private static boolean needsCoercion( Object arg )
   {
-    return thiz instanceof Bindings &&
-           !(arg instanceof Bindings) &&
+    return !(arg instanceof Bindings) &&
            !isPrimitiveType( arg.getClass() );
   }
+
   private static boolean isPrimitiveType( Class<?> type )
   {
     return type == String.class ||

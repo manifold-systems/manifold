@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "$defs": {
+    "Thing": {
+      "type": "object",
+      "properties": {
+        "field1": {"type": "string"},
+        "field2": {"type": "integer"}
+      }
+    }
+  },
+  "properties": {
+    "foo": {"type": "string"},
+    "bar": {"format": "date"},
+    "thing": {"$ref": "#/$defs/Thing"},
+    "stuff": {"$ref": "OtherDefs.json#/$defs/Stuff"},
+    "more": {"$ref": "OtherDefs.json#stuff"}
+  },
+  "required": ["foo"]
+}

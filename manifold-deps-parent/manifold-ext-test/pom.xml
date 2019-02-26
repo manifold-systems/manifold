@@ -4,7 +4,7 @@
     <parent>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-deps-parent</artifactId>
-      <version>0.35-SNAPSHOT</version>
+      <version>0.45-SNAPSHOT</version>
     </parent>
 
     <artifactId>manifold-ext-test</artifactId>
@@ -15,6 +15,11 @@
       <dependency>
         <groupId>systems.manifold</groupId>
         <artifactId>manifold-ext</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>systems.manifold</groupId>
+        <artifactId>manifold-image</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>

@@ -172,18 +172,12 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
 
   private boolean isInnerToPrimaryManifold( String topLevel, String relativeInner )
   {
-    Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel );
-    if( tms != null )
-    {
-      for( ITypeManifold tm : tms )
-      {
-        if( tm.getContributorKind() == ContributorKind.Primary && tm instanceof ResourceFileTypeManifold )
-        {
-          return ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner );
-        }
-      }
-    }
-    return false;
+    //noinspection unchecked
+    Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel,
+      tm -> tm.getContributorKind() == ContributorKind.Primary &&
+            tm instanceof ResourceFileTypeManifold &&
+            ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner ) );
+    return !tms.isEmpty();
   }
 
   //## todo: This applies only to precompiled Java class files.
@@ -263,20 +257,25 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     @Override
     public void refreshedTypes( RefreshRequest request )
     {
+      IModule refreshModule = request.module;
+      if( refreshModule != null && refreshModule != getModule() )
+      {
+        return;
+      }
+
       super.refreshedTypes( request );
+
       if( request.file == null )
       {
         return;
       }
 
-      for( ITypeManifold tm: ExtensionManifold.this.getModule().findTypeManifoldsFor( request.file ) )
+      //noinspection unchecked
+      for( ITypeManifold tm: ExtensionManifold.this.getModule().findTypeManifoldsFor( request.file, tm -> tm instanceof IExtensionClassProducer ) )
       {
-        if( tm instanceof IExtensionClassProducer )
+        for( String extended: ((IExtensionClassProducer)tm).getExtendedTypesForFile( request.file ) )
         {
-          for( String extended: ((IExtensionClassProducer)tm).getExtendedTypesForFile( request.file ) )
-          {
-            refreshedType( extended, request );
-          }
+          refreshedType( extended, request );
         }
       }
     }
@@ -297,43 +296,4 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
       }
     }
   }
-
-//  @Override
-//  public boolean filterError( TypeProcessor typeProcessor, Diagnostic diagnostic )
-//  {
-//    if( diagnostic.getKind() == Diagnostic.Kind.ERROR )
-//    {
-//      Object[] args = ((JCDiagnostic)diagnostic).getArgs();
-//      if( args != null )
-//      {
-//        for( Object arg: args )
-//        {
-//          if( arg instanceof JCDiagnostic )
-//          {
-//            JCDiagnostic jcArg = (JCDiagnostic)arg;
-//            if( jcArg.getCode().equals( "compiler.misc.inconvertible.types" ) )
-//            {
-//              Object[] argArgs = jcArg.getArgs();
-//              if( argArgs != null && argArgs.length == 2 )
-//              {
-//                Type.ClassType type = (Type.ClassType)argArgs[1];
-//                if( type.tsym.hasAnnotations() )
-//                {
-//                  for( Attribute.Compound anno: type.tsym.getAnnotationMirrors() )
-//                  {
-//                    if( ((Type.ClassType)anno.getAnnotationType()).tsym.getQualifiedName().toString().equals( Structural.class.getName() ) )
-//                    {
-//                      //((JCDiagnostic)diagnostic).getDiagnosticPosition().getTree().type = type;
-//                      return true;
-//                    }
-//                  }
-//                }
-//              }
-//            }
-//          }
-//        }
-//      }
-//    }
-//    return false;
-//  }
 }

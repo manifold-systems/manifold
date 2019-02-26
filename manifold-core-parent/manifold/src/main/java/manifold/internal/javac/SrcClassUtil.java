@@ -602,7 +602,8 @@ public class SrcClassUtil
     }
     else
     {
-      return "null";
+      String fqn = type.toString();
+      return "(" + fqn  + ")null"; // cast to disambiguate when used as an argument
     }
   }
 

@@ -31,7 +31,11 @@ public class JsonFormatType implements IJsonType
   private final Class<?> _javaType;
   private final TypeAttributes _typeAttributes;
 
-  JsonFormatType( String format, Class<?> javaType, TypeAttributes typeAttributes )
+  JsonFormatType( String format, Class<?> javaType )
+  {
+    this( format, javaType, new TypeAttributes() );
+  }
+  private JsonFormatType( String format, Class<?> javaType, TypeAttributes typeAttributes )
   {
     _format = format;
     _javaType = javaType;
@@ -41,6 +45,7 @@ public class JsonFormatType implements IJsonType
   /**
    * The type that is generated as part of the JSON Java API.
    */
+  @SuppressWarnings("WeakerAccess")
   public Class<?> getJavaType()
   {
     return _javaType;
@@ -78,7 +83,7 @@ public class JsonFormatType implements IJsonType
     {
       return this;
     }
-    return new JsonFormatType( _format, _javaType, TypeAttributes.merge( getTypeAttributes(), attributes ) );
+    return new JsonFormatType( _format, _javaType, getTypeAttributes().overrideWith( attributes ) );
   }
 
   @Override

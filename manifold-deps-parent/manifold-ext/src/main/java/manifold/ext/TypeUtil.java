@@ -28,7 +28,12 @@ public class TypeUtil
 {
   public static boolean isStructuralInterface( TypeProcessor tp, Symbol sym )
   {
-    if( sym == null || !sym.isInterface() || !sym.hasAnnotations() )
+    if( sym == null )
+    {
+      return false;
+    }
+
+    if( (!sym.isInterface() || !sym.hasAnnotations()) && !(sym instanceof Symbol.TypeVariableSymbol) )
     {
       return false;
     }
@@ -36,6 +41,10 @@ public class TypeUtil
     // use the raw type
     Type type = tp.getTypes().erasure( sym.type );
     sym = type.tsym;
+    if( !sym.isInterface() || !sym.hasAnnotations() )
+    {
+      return false;
+    }
 
     for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
     {

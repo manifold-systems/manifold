@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>0.35-SNAPSHOT</version>
+    <version>0.45-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-json</artifactId>
@@ -15,13 +15,13 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold</artifactId>
+      <artifactId>manifold-ext</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.snakeyaml</groupId>
+      <artifactId>snakeyaml-engine</artifactId>
+      <version>1.0</version>
     </dependency>
   </dependencies>
 

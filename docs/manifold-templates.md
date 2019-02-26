@@ -14,6 +14,9 @@ integration and type-safety promotes higher levels of integrity and performance.
 to provide deterministic code completion, navigation, usage searching, and refactoring.  Additionally the IntelliJ plugin
 enables incremental compilation and hot swap debugging, allowing you to make template changes in a running application.
 
+> Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to quickly
+begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
+
 ## Table of Contents
 * [Installing](#installing)
 * [Usage](#usage)
@@ -720,14 +723,14 @@ and tedium involved with reflection and proxies.  Structural interfaces are also
 Manifold features such as Extension methods -- layer a unified API over different, but similar architectures.
 
 To utilize even more of Manifold's features you can replace your `manifold-templates` dependency with `manifold-all`. 
-This change enables type-safe access to other type manifolds such as JSON files, JSON Schema, CSV and more.  You also 
-gain access to Manifold's provided extension libraries for I/O, Web, and Collections.
+This change enables type-safe access to other type manifolds such as JSON and YAML files, JSON Schema, CSV and more.  
+You also gain access to Manifold's provided extension libraries for I/O, Web, and Collections.
 
 ```xml
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-all</artifactId>
       <!-- it is best to use the latest release -->
-      <version>0.32-alpha</version> 
+      <version>0.40-alpha</version> 
     </dependency>
 ```

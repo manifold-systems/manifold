@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.script.Bindings;
-import javax.script.SimpleBindings;
+import manifold.ext.DataBindings;
 import manifold.util.Pair;
 
 /*
@@ -109,7 +109,7 @@ final class SimpleParserImpl
   private Object parseObject()
   {
     // using a LinkedHashMap to preserve insertion order, necessary for IJ plugin
-    Bindings map = new SimpleBindings( new LinkedHashMap<>() );
+    Bindings map = new DataBindings( new LinkedHashMap<>() );
 
     advance();
     if( _token.getType() == TokenType.STRING )

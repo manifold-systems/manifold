@@ -1,22 +1,5 @@
 package manifold.api.host;
 
-import abc.Contact;
-import abc.Junk;
-import abc.Outside;
-import abc.Person;
-import abc.Product;
-import abc.Tree;
-import abc.AllOf_Hierarchy;
-import abc.OneOf;
-import abc.OneOf_TopLevel;
-import abc.OneOf_TopLevel_Array;
-import abc.Enum_TopLevel_Array;
-import abc.StrangeUriFormats;
-import abc.MixedArray;
-import abc.HasEnum;
-import abc.HasFormats;
-import abc.HasBigNumbers;
-import abc.HasTypeWithNull;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Instant;
@@ -28,12 +11,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
-import junit.framework.TestCase;
-import org.junit.Assert;
 
+import abc.*;
+import junit.framework.TestCase;
+import manifold.api.json.schema.Base64Encoding;
+import manifold.api.json.schema.OctetEncoding;
+import manifold.util.ReflectUtil;
+import org.junit.Assert;
 
 import static abc.Person.*;
 import static abc.Person.Address.*;
+import static java.lang.System.out;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -52,9 +40,9 @@ public class JsonTest extends TestCase
     resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
     assertSame( resVt, vt );
 
-    List<StrangeUriFormats.nc_VehicleType> lvt = Collections.singletonList( vt );
-    uriFormats.setNc_VehicleAsListOfnc_VehicleType( lvt );
-    StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsListOfnc_VehicleType();
+    StrangeUriFormats.nc_VehicleType lvt = (StrangeUriFormats.nc_VehicleType)Collections.singletonList( vt );
+    uriFormats.setNc_VehicleAsnc_VehicleType( lvt );
+    StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
     assertSame( resLvt, lvt );
   }
 
@@ -62,10 +50,19 @@ public class JsonTest extends TestCase
   {
     OneOf oneOf = OneOf.create();
 
+    OneOf.MyDef myDef = OneOf.MyDef.builder().withChocolate("milk").build();
+
+    oneOf.setOneOfRefAsMyDef(myDef);
+    String choco = oneOf.getOneOfRefAsMyDef().getChocolate();
+    assertEquals( "milk", choco );
+    oneOf.setOneOfRefAsString("hi");
+    assertEquals( "hi", oneOf.getOneOfRefAsString() );
+    assertEquals( "hi", (String)oneOf.getOneOfRef() );
+
     oneOf.setThingAsBoolean( Boolean.TRUE );
     assertTrue( oneOf.getThingAsBoolean() );
 
-    OneOf.MyDef myDef = OneOf.MyDef.create();
+    myDef = OneOf.MyDef.create();
     oneOf.setThingAsMyDef(myDef);
     OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
     assertSame( myDef, myDefRes );
@@ -96,19 +93,19 @@ public class JsonTest extends TestCase
     assertSame( topLevelOption1, resTopLevelOption1 );
     assertSame( topLevelOption1, oneOf.getTopLevel() );
 
-    List<OneOf_TopLevel_Array.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.Option0.create("Scott") );
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0.create("Scott") );
     oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
-    List<OneOf_TopLevel_Array.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
     assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
     assertSame( topLevelArrayOption0, oneOf.getTopLevelArray() );
 
-    List<OneOf_TopLevel_Array.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.Option1.create() );
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1.create() );
     oneOf.setTopLevelArrayAsOption1( topLevelArrayOption1 );
-    List<OneOf_TopLevel_Array.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
+    List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
     assertSame( topLevelArrayOption1, resTopLevelArrayOption1 );
     assertSame( topLevelArrayOption1, oneOf.getTopLevelArray() );
 
-    List<Enum_TopLevel_Array> enumArray = Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.e );
+    List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray = Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
     oneOf.setTopLevelEnumArray( enumArray );
     assertSame( enumArray, oneOf.getTopLevelEnumArray() );
   }
@@ -179,13 +176,13 @@ public class JsonTest extends TestCase
     Planet planet = Planet.create();
     address.setPlanet( planet );
 
-    Hobby baseball = Hobby.create();
+    Hobby.HobbyItem baseball = Hobby.HobbyItem.create();
     baseball.setCategory( "Sport" );
-    Hobby fishing = Hobby.create();
+    Hobby.HobbyItem fishing = Hobby.HobbyItem.create();
     fishing.setCategory( "Recreation" );
-    List<Hobby> hobbies = asList( baseball, fishing );
+    Hobby hobbies = (Hobby)asList( baseball, fishing );
     person.setHobby( hobbies );
-    List<Hobby> h = person.getHobby();
+    Hobby h = (Hobby)person.getHobby();
     assertEquals( 2, h.size() );
     assertEquals( baseball, h.get( 0 ) );
     assertEquals( fishing, h.get( 1 ) );
@@ -193,43 +190,47 @@ public class JsonTest extends TestCase
 
   public void testRef()
   {
-    Contact contact = Contact.create();
-    contact.getDateOfBirth();
-    contact.setPrimaryAddress( Contact.Address.create("111 Main St.", "Cupertino", "CA") );
+    Contact contact = Contact.builder()
+      .withName("Scott McKinney")
+      .withDateOfBirth(LocalDate.of(1986, 8, 9))
+      .withPrimaryAddress(Contact.Address.create("111 Main St.", "Cupertino", "CA")).build();
     Contact.Address primaryAddress = contact.getPrimaryAddress();
-    primaryAddress.setStreet_address( "111 Foo Dr" );
-    primaryAddress.setCity( "Cupertino" );
-    primaryAddress.setState( "CA" );
-    assertEquals( "111 Foo Dr", primaryAddress.getStreet_address() );
+    assertEquals( "111 Main St.", primaryAddress.getStreet_address() );
     assertEquals( "Cupertino", primaryAddress.getCity() );
     assertEquals( "CA", primaryAddress.getState() );
+    assertEquals( "Scott McKinney", contact.getName() );
+    assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
     assertEquals( "{\n" +
-                  "  \"street_address\": \"111 Foo Dr\",\n" +
-                  "  \"city\": \"Cupertino\",\n" +
-                  "  \"state\": \"CA\"\n" +
-                  "}", primaryAddress.toJson() );
+                  "  \"Name\": \"Scott McKinney\",\n" +
+                  "  \"DateOfBirth\": \"1986-08-09\",\n" +
+                  "  \"PrimaryAddress\": {\n" +
+                  "    \"street_address\": \"111 Main St.\",\n" +
+                  "    \"city\": \"Cupertino\",\n" +
+                  "    \"state\": \"CA\"\n" +
+                  "  }\n" +
+                  "}", contact.write().toJson() );
   }
 
   public void testThing()
   {
-    Product thing = Product.create( 123d, "json", 5.99 );
+    Product.ProductItem thing = Product.ProductItem.create( 123d, "json", 5.99 );
     thing.setPrice( 1.55 );
     assertEquals( 1.55, thing.getPrice() );
 
-    Product.dimensions dims = Product.dimensions.create(1.2, 2.3, 3.4);
+    Product.ProductItem.dimensions dims = Product.ProductItem.dimensions.create(1.2, 2.3, 3.4);
     dims.setLength( 3.0 );
     dims.setWidth( 4.0 );
     dims.setHeight( 5.0 );
     thing.setDimensions( dims );
-    Product.dimensions dims2 = thing.getDimensions();
+    Product.ProductItem.dimensions dims2 = thing.getDimensions();
     assertSame( dims, dims2 );
 
     Bindings bindings = (Bindings)thing;
-    dims2 = (Product.dimensions)bindings.get( "dimensions" );
+    dims2 = (Product.ProductItem.dimensions)bindings.get( "dimensions" );
     assertSame( dims, dims2 );
   }
 
-  public void testStructuralIntefaceCasting()
+  public void testStructuralInterfaceCasting()
   {
     Person person = Person.create();
     IWhatever whatever = (IWhatever)person;
@@ -243,21 +244,21 @@ public class JsonTest extends TestCase
 
     assertEquals( "{\n" +
                   "  \"Name\": \"Joe Namath\"\n" +
-                  "}", person.toJson() );
+                  "}", person.write().toJson() );
 
     assertEquals( "<object>\n" +
                   "  <Name>Joe Namath</Name>\n" +
-                  "</object>\n", person.toXml() );
+                  "</object>\n", person.write().toXml() );
 
     assertEquals( "<person>\n" +
                   "  <Name>Joe Namath</Name>\n" +
-                  "</person>\n", person.toXml( "person" ) );
+                  "</person>\n", person.write().toXml( "person" ) );
   }
 
   // root array with dissimilar component types (object and array)
   public void testMixedArray()
   {
-    MixedArray mixedArray = MixedArray.fromJson(
+    MixedArray mixedArray = MixedArray.load().fromJson(
       "[\n" +
       "  {\n" +
       "    \"page\": 1,\n" +
@@ -281,8 +282,8 @@ public class JsonTest extends TestCase
       "    }\n" +
       "  ]\n" +
       "]" );
-    assertEquals( 1, (int)mixedArray.getValueAsvalue0().get(0).getPage() );
-    List<MixedArray.value1> countries = mixedArray.getValueAsListOfvalue1().get(1);
+    assertEquals( 1, (int)mixedArray.getAsMixedArrayItem0(0).getPage() );
+    MixedArray.MixedArrayItem1 countries = (MixedArray.MixedArrayItem1) mixedArray.getAsMixedArrayItem1(1);
     assertEquals( "Aruba", countries.get( 0 ).getName() );
     assertEquals( "ZJ", countries.get( 0 ).getRegion().getIso2code() );
   }
@@ -353,23 +354,24 @@ public class JsonTest extends TestCase
     assertEquals( "stuff", HasEnum.justRefsOneOf.stuff.name() );
     assertEquals( "things", HasEnum.justRefsOneOf.things.name() );
 
-    assertEquals( 5, Enum_TopLevel_Array.values().length );
-    List<Enum_TopLevel_Array> enumArray =
-      Arrays.asList( Enum_TopLevel_Array.a, Enum_TopLevel_Array.b, Enum_TopLevel_Array.c, Enum_TopLevel_Array.d, Enum_TopLevel_Array.e );
-    assertArrayEquals( Enum_TopLevel_Array.values(), enumArray.toArray( new Enum_TopLevel_Array[0] ) );
+    assertEquals( 5, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.values().length );
+    List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray =
+      Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.b,
+        Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.c, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.d, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
+    assertArrayEquals( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.values(), enumArray.toArray( new Enum_TopLevel_Array.Enum_TopLevel_ArrayItem[0] ) );
   }
 
   public void testDateTimeFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalDateTime value = LocalDateTime.of(2000, 2, 20, 1, 2);
     assertNull( hasFormats.getTheDateAndTime() );
     hasFormats.setTheDateAndTime( value );
     assertEquals( value, hasFormats.getTheDateAndTime() );
     String actualValue = (String)((Map)hasFormats).get( "TheDateAndTime" );
     assertEquals( value, LocalDateTime.parse( actualValue ) );
-    
+
     assertNull( hasFormats.getAnotherDateTime() );
     hasFormats.setAnotherDateTime( value );
     assertEquals( value, hasFormats.getAnotherDateTime() );
@@ -379,7 +381,7 @@ public class JsonTest extends TestCase
   public void testDateFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalDate value = LocalDate.of(1999, 5, 22);
     assertNull( hasFormats.getTheDate() );
     hasFormats.setTheDate( value );
@@ -390,7 +392,7 @@ public class JsonTest extends TestCase
   public void testTimeFormat()
   {
     HasFormats hasFormats = HasFormats.create();
-    
+
     LocalTime value = LocalTime.of( 1, 2, 3, 4 );
     assertNull( hasFormats.getTheTime() );
     hasFormats.setTheTime( value );
@@ -408,6 +410,15 @@ public class JsonTest extends TestCase
     assertEquals( value, hasFormats.getTheTimestamp() );
     long actualValue = (long)((Map)hasFormats).get( "TheTimestamp" );
     assertEquals( value, Instant.ofEpochMilli( actualValue ) );
+  }
+  public void testInt64()
+  {
+    HasFormats hasFormats = HasFormats.create();
+
+    assertEquals( null, hasFormats.getInt64() );
+    hasFormats.setInt64( (Long)Long.MAX_VALUE );
+    assertEquals( (Long)Long.MAX_VALUE, hasFormats.getInt64() );
+    assertTrue( ((Map)hasFormats).get( "int64" ) instanceof Long );
   }
 
   public void testBigInteger()
@@ -506,5 +517,192 @@ public class JsonTest extends TestCase
     assertNull( nullableList );
     top.setNullableList_oneOf( list );
     assertEquals( list, top.getNullableList_oneOf() );
+  }
+
+  public void testBinary()
+  {
+    HasBinaryFormats hasBinary = HasBinaryFormats.create();
+
+    String text = "The quick brown fox jumps over the lazy dog 0123456789 ;.,!@#$%^&*()_+=-\\|][{}\":?/><`~";
+    String base64 = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZyAwMTIzNDU2Nzg5IDsuLCFAIyQlXiYqKClfKz0tXHxdW3t9Ijo/Lz48YH4=";
+    hasBinary.setByteFormat( Base64Encoding.encoded( base64 ) );
+    assertEquals( base64, hasBinary.getByteFormat().toString() );
+    assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
+    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+    // repeat to test releasing of memory
+    assertEquals( base64, hasBinary.getByteFormat().toString() );
+    assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
+    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+
+    String octet = OctetEncoding.decoded( text.getBytes() ).toString();
+    hasBinary.setBinaryFormat( OctetEncoding.encoded( octet ) );
+    assertEquals( octet, hasBinary.getBinaryFormat().toString() );
+    assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
+    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+    // repeat to test releasing of memory
+    assertEquals( octet, hasBinary.getBinaryFormat().toString() );
+    assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
+    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+  }
+
+  public void testReadOnly()
+  {
+    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(0).build();
+    readOnlyEtc.get("absent");
+    readOnlyEtc.getIntegerValue_ReadOnly();
+    readOnlyEtc.getStringValue_ReadOnly();
+    readOnlyEtc.getNoAdditional();
+    readOnlyEtc.getNoAdditionalPlusPatternProperties();
+    readOnlyEtc.getTheDateAndTime_NotReadOnly();
+    readOnlyEtc.getTheDateAndTime_ReadOnly();
+    readOnlyEtc.getTheTimestamp_NotReadOnly();
+    readOnlyEtc.getTheTimestamp_ReadOnly();
+    readOnlyEtc.getBindings();
+    readOnlyEtc.getClass();
+    assertEquals( 10, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("get") ).count() );
+
+    readOnlyEtc.setInteger_WriteOnly(8);
+    readOnlyEtc.setString_WriteOnly("hi");
+    readOnlyEtc.setTheDateAndTime_NotReadOnly(LocalDateTime.now());
+    readOnlyEtc.setTheTimestamp_NotReadOnly(Instant.now());
+    assertEquals( 4, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("set") ).count() );
+  }
+
+  public void testAdditionalProperties()
+  {
+    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(0).build();
+    assertEquals( 0, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
+    readOnlyEtc.put( "IntegerValue_ReadOnly", 50 );
+    assertEquals( 50, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
+    assertNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditional.class, "get", String.class ) );
+    assertNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditional.class, "put", String.class, Object.class ) );
+    assertNotNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditionalPlusPatternProperties.class, "get", String.class ) );
+    assertNotNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditionalPlusPatternProperties.class, "put", String.class, Object.class ) );
+  }
+
+  public void testBuilders()
+  {
+    FootballPlayer footballPlayer =
+            FootballPlayer.builder("Joe", "Smith",
+                    FootballPlayer.football_team.builder("east", "lions").build())
+                    .withAge(25).build();
+
+    // Since the person interface is an inner class of FootballPlayer, FootballPlayer cannot extend it.  Here we
+    // test that FootballPlayer still implements person structurally.
+    FootballPlayer.person castPerson = (FootballPlayer.person)footballPlayer;
+    assertEquals( "Joe", castPerson.getFirst_name() );
+    assertEquals( "Smith", castPerson.getLast_name() );
+    assertEquals( 25, castPerson.getAge() );
+
+    FootballPlayer.person person = FootballPlayer.person.create("scott", "mckinney");
+    person = FootballPlayer.person.builder("scott", "mckinney").withAge(29).build();
+
+//    angular.create(1).setSchematics(abc.angular.schematicOptions.create());
+//    angular.create().
+//
+//    apple_app_site_association.create(apple_app_site_association.applinks.create(apple_app_site_association.applinks.apps.__, Arrays.asList(apple_app_site_association.applinks.details.builder().withAppID("foo").build())));
+//    resume.builder().withBasics(
+//            resume.basics.builder().withProfiles(Arrays.asList(resume.basics.profiles.builder().build())).build() );
+  }
+
+  public void testDataBindingsEqual()
+  {
+    MyObj myObj = MyObj.builder("hi").withBar(LocalDate.of(2020, 12, 3)).build();
+    MyObj myObj2 = MyObj.builder("hi").withBar(LocalDate.of(2020, 12, 3)).build();
+    assertEquals(myObj, myObj2);
+  }
+
+  public void testUsesDefs()
+  {
+    UsesDefs usesDefs = UsesDefs.builder("hi")
+      .withThing(UsesDefs.Thing.builder()
+        .withField1("f1")
+        .withField2(3)
+        .build())
+      .withStuff(OtherDefs.Stuff.builder("foo")
+        .withBar(4)
+        .build())
+      .withMore(OtherDefs.Stuff.builder("fu")
+        .withBar(5)
+        .build())
+      .build();
+    assertEquals( "f1", usesDefs.getThing().getField1() );
+    assertEquals( 3, usesDefs.getThing().getField2() );
+    assertEquals( "foo", usesDefs.getStuff().getFoo() );
+    assertEquals( 4, usesDefs.getStuff().getBar() );
+    assertEquals( "fu", usesDefs.getMore().getFoo() );
+    assertEquals( 5, usesDefs.getMore().getBar() );
+  }
+
+  public void testNestedDefinitions()
+  {
+    HasNestedDefinitions nestedDefs = HasNestedDefinitions.create();
+    nestedDefs.setTheNestedObject( HasNestedDefinitions.MyObject.MyNestedObject.create() );
+    nestedDefs.getTheNestedObject().setNestedThing( "hi" );
+    nestedDefs.getTheNestedObject().getNestedThing();
+    nestedDefs.getTheNestedString();
+  }
+
+  public void testRefVariations()
+  {
+    RefVariations.Car car = RefVariations.Car.create();
+    RefVariations.Color_rgb color_rgb = RefVariations.Color_rgb.builder().withBlue(1).withGreen(2).withRed(3).build();
+    RefVariations.Color2_rgb color2_rgb = RefVariations.Color2_rgb.builder().withBlue(1).withGreen(2).withRed(3).build();
+    car.setColor1(color_rgb);
+    car.getColor1().getRed();
+    car.getColor1().setAlphaAsColor2_rgb(color2_rgb);
+    car.getColor1().getAlphaAsColor2_rgb().getBlue();
+    car.getColor1().getAlphaAsString();
+    String inner = car.getColor1().getInner();
+
+    car.setColor2(color_rgb);
+    car.getColor2().getRed();
+    car.getColor2().getAlphaAsColor2_rgb().getBlue();
+    car.getColor2().getAlphaAsString();
+    inner = car.getColor2().getInner();
+
+    car.setInner3("inner3");
+
+    car.setInner4("inner3");
+
+    car.setColor5(color_rgb);
+    car.getColor5().getRed();
+    car.getColor5().getAlphaAsColor2_rgb().getBlue();
+    car.getColor5().getAlphaAsString();
+    inner = car.getColor5().getInner();
+
+    car.setColor6(color_rgb);
+    car.getColor6().getRed();
+    car.getColor6().getAlphaAsColor2_rgb().getBlue();
+    car.getColor6().getAlphaAsString();
+    inner = car.getColor6().getInner();
+
+    car.setColor7(color_rgb);
+    car.getColor7().getRed();
+    car.getColor7().getAlphaAsColor2_rgb().getBlue();
+    car.getColor7().getAlphaAsString();
+    inner = car.getColor7().getInner();
+
+    car.setInner8("inner3");
+
+    car.setAlphaAsColor2_rgb(color2_rgb);
+
+    car.setColor1_1(color2_rgb);
+    car.getColor1_1().getRed();
+    inner = car.getColor1_1().getInner();
+
+    car.setColor1_2(color2_rgb);
+    car.getColor1_2().getRed();
+    inner = car.getColor1_2().getInner();
+
+    inner = car.getInner1_3();
+
+    inner = car.getInner1_4();
+
+    car.setColor1_5(color2_rgb);
+    car.getColor1_5().getRed();
+    inner = car.getColor1_5().getInner();
+
+    inner = car.getInner1_6();
   }
 }

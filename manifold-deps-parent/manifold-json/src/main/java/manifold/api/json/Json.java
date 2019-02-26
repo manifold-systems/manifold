@@ -26,6 +26,7 @@ import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaTransformerSession;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
+import manifold.api.json.schema.TypeAttributes;
 import manifold.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -76,14 +77,14 @@ public class Json
    *
    * @param json A Standard JSON formatted string
    *
-   * @return A javax.script.Bindings instance
+   * @return A JSON value (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
   @SuppressWarnings("UnusedDeclaration")
-  public static Bindings fromJson( String json )
+  public static Object fromJson( String json )
   {
     return fromJson( json, false, false );
   }
-  public static Bindings fromJson( String json, boolean withBigNumbers, boolean withTokens )
+  public static Object fromJson( String json, boolean withBigNumbers, boolean withTokens )
   {
     try
     {
@@ -110,6 +111,7 @@ public class Json
    * <li> Otherwise, if the value is a List, the property is a List parameterized with the component type, and the component type recursively follows these rules
    * </ul>
    */
+  @SuppressWarnings("unused")
   public static String makeStructureTypes( IManifoldHost host, String nameForStructure, Bindings bindings, boolean mutable )
   {
     JsonStructureType type = (JsonStructureType)transformJsonObject( host, nameForStructure, null, bindings );
@@ -144,14 +146,14 @@ public class Json
     {
       if( JsonSchemaTransformer.isSchema( (Bindings)jsonObj ) )
       {
-        type = JsonSchemaTransformer.transform( host, name, source, (Bindings)jsonObj );
+        type = JsonSchemaTransformer.transform( host, name, source, jsonObj );
       }
       else
       {
         if( !(type instanceof JsonStructureType) )
         {
           // handle case for mixed array where component types are different (object and array)
-          type = new JsonStructureType( parent, source, name );
+          type = new JsonStructureType( parent, source, name, new TypeAttributes() );
         }
         for( Object k : ((Bindings)jsonObj).keySet() )
         {
@@ -179,11 +181,12 @@ public class Json
       if( !(type instanceof JsonListType) )
       {
         // handle case for mixed array where component types are different (object and array)
-        type = new JsonListType( name, source, parent );
+        type = new JsonListType( name, source, parent, new TypeAttributes() );
       }
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
       {
+        name += "Item";
         int i = 0;
         boolean isDissimilar = isDissimilar( (List)jsonObj );
         for( Object elem : (List)jsonObj )
@@ -250,7 +253,7 @@ public class Json
     if( mergedType == null && type1.getParent() instanceof JsonListType )
     {
       JsonListType listType = (JsonListType)type1.getParent();
-      JsonUnionType unionType = new JsonUnionType( listType, listType.getFile(), "UnionType" );
+      JsonUnionType unionType = new JsonUnionType( listType, listType.getFile(), "UnionType", new TypeAttributes() );
       unionType.merge( type1 );
       unionType.merge( type2 );
       mergedType = unionType;

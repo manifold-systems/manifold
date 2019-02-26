@@ -24,7 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -43,54 +43,64 @@ import manifold.api.json.JsonListType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
+import manifold.util.DebugLogUtil;
 import manifold.util.JsonUtil;
 import manifold.util.Pair;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
 
 
-import static manifold.api.json.schema.TypeAttributes.or;
-
 /**
  */
 public class JsonSchemaTransformer
 {
-  private static final String JSCH_SCHEMA = "\$schema";
-  private static final String JSCH_TYPE = "type";
+  private static final String JSCH_SCHEMA = "${'$'}schema";
+  static final String JSCH_TYPE = "type";
   private static final String JSCH_NAME = "name";
-  private static final String JSCH_ID = "\$id";
-  private static final String JSCH_REF = "\$ref";
+  private static final String JSCH_ID = "${'$'}id";
+  private static final String JSCH_ID_OLD = "id";
+  private static final String JSCH_REF = "${'$'}ref";
   private static final String JSCH_ENUM = "enum";
   private static final String JSCH_CONST = "const";
   private static final String JSCH_ALL_OF = "allOf";
   private static final String JSCH_ONE_OF = "oneOf";
   private static final String JSCH_ANY_OF = "anyOf";
+  static final String JSCH_ITEMS = "items";
   static final String JSCH_REQUIRED = "required";
-  static final String JSCH_DEFINITIONS = "definitions";
+  public static final String JSCH_DEFINITIONS = "definitions";
+  private static final String JSCH_DEFS = "${'$'}defs";
   static final String JSCH_PROPERTIES = "properties";
   private static final String JSCH_FORMAT = "format";
-  private static final String JSCH_DEFAULT = "default";
 
-  private static final String JSCH_NULLABLE = "nullable";
+  static final String JSCH_ADDITIONNAL_PROPERTIES = "additionalProperties";
+  static final String JSCH_PATTERN_PROPERTIES = "patternProperties";
+  static final String JSCH_DEFAULT = "default";
+  static final String JSCH_NULLABLE = "nullable";
+  static final String JSCH_READONLY = "readOnly";
+  static final String JSCH_WRITEONLY = "writeOnly";
 
 
   private final IManifoldHost _host;
   private FqnCache<IJsonType> _typeByFqn;
+  private Map<String, IJsonType> _typeById;
 
   private JsonSchemaTransformer( IManifoldHost host )
   {
-    _typeByFqn = new FqnCache<>( "doc", true, JsonUtil::makeIdentifier );
     _host = host;
+    _typeByFqn = new FqnCache<>( "doc", true, JsonUtil::makeIdentifier );
+    _typeById = new HashMap<>();
   }
 
   public static boolean isSchema( Bindings bindings )
   {
-           // Ideally the "$schema" element would be required, but JSchema does not require it.
+           // Ideally the "$schema" element would be required, but JSON Schema does not require it.
     return bindings.get( JsonSchemaTransformer.JSCH_SCHEMA ) != null ||
            // As a fallback check for "$id" as this is pretty uniquely Json Schema
            bindings.get( JsonSchemaTransformer.JSCH_ID ) != null ||
            // As a fallback to the fallback, check for: "type": "object" or "type": "array"
-           typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array );
+           typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array ) ||
+           // As a fallback to the fallback to the fallback, check for: "properties": (lots of use-cases like this unfortunately)
+           bindings.get( JsonSchemaTransformer.JSCH_PROPERTIES ) != null;
   }
 
   private static boolean typeMatches( Bindings bindings, Type testType )
@@ -109,20 +119,20 @@ public class JsonSchemaTransformer
     {
       typeName = (String)type;
     }
-    return typeName.equals( testType.getName() );
+    return typeName != null && typeName.equals( testType.getName() );
   }
 
   @SuppressWarnings("unused")
-  public static IJsonType transform( IManifoldHost host, String name, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, Object jsonValue )
   {
-    return transform( host, name, null, docObj );
+    return transform( host, name, null, jsonValue );
   }
-  public static IJsonType transform( IManifoldHost host, String name, URL source, Bindings docObj )
+  public static IJsonType transform( IManifoldHost host, String name, URL source, Object jsonValue )
   {
-    if( !isSchema( docObj ) )
+    if( !(jsonValue instanceof Bindings) || !isSchema( (Bindings)jsonValue ) )
     {
       ErrantType errant = new ErrantType( source, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '\$source' does not contain a '\$schema' element." ) );
+      errant.addIssue( new JsonIssue( IIssue.Kind.Error, null, "The Json object from '${'$'}source' does not contain a '${'$'}schema' element." ) );
       return errant;
     }
 
@@ -131,14 +141,21 @@ public class JsonSchemaTransformer
     session.pushTransformer( transformer );
     try
     {
-      name = name == null || name.isEmpty() ? getJSchema_Name( docObj ) : name;
-      IJsonType cachedType = findTopLevelCachedType( name, source, docObj );
-      if( cachedType != null )
+      Bindings bindings = (Bindings)jsonValue;
+      name = name == null || name.isEmpty() ? getJSchema_Name( bindings ) : name;
+      IJsonType cachedType = findTopLevelCachedType( name, source, bindings );
+      if( cachedType != null && !(cachedType instanceof ErrantType) )
       {
         return cachedType;
       }
 
-      return transformer.transformType( null, source, name, docObj, null );
+      IJsonType type = transformer.transformType( null, source, name, bindings, null );
+      if( type instanceof JsonSchemaType && cachedType != null )
+      {
+        // move issues from errant cached type to the actual type
+        moveIssuesFromErrantType( (JsonSchemaType)type, (ErrantType)cachedType );
+      }
+      return type;
     }
     finally
     {
@@ -157,44 +174,6 @@ public class JsonSchemaTransformer
       }
     }
 
-    Object value = docObj.get( JSCH_ID );
-    if( value == null )
-    {
-      return null;
-    }
-
-    String id;
-    Token token = null;
-    if( value instanceof Pair )
-    {
-      id = (String)((Pair)value).getSecond();
-      token = ((Token[])((Pair)value).getFirst())[1];
-    }
-    else
-    {
-      id = (String)value;
-    }
-
-    if( id == null || id.isEmpty() )
-    {
-      return null;
-    }
-
-    try
-    {
-      URL url = new URL( id );
-      Pair<IJsonType, JsonSchemaTransformer> pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
-      if( pair != null )
-      {
-        return pair.getFirst();
-      }
-    }
-    catch( MalformedURLException e )
-    {
-      ErrantType errant = new ErrantType( null, name );
-      errant.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Malformed URL id: $id" ) );
-      return errant;
-    }
     return null;
   }
 
@@ -213,24 +192,33 @@ public class JsonSchemaTransformer
     return name;
   }
 
+  private static Object getJSchema_Id( Bindings docObj )
+  {
+    Object value = docObj.get( JSCH_ID );
+    if( value == null )
+    {
+      value = docObj.get( JSCH_ID_OLD );
+    }
+    return value;
+  }
+
   private static Bindings getJSchema_Definitions( Bindings docObj )
   {
     Object value = docObj.get( JSCH_DEFINITIONS );
+    if( value == null )
+    {
+      value = docObj.get( JSCH_DEFS );
+    }
     return getBindings( value );
   }
 
   private static Bindings getBindings( Object value )
   {
-    Bindings bindings;
     if( value instanceof Pair )
     {
-      bindings = (Bindings)((Pair)value).getSecond();
+      value = ((Pair)value).getSecond();
     }
-    else
-    {
-      bindings = (Bindings)value;
-    }
-    return bindings;
+    return value instanceof Bindings ? (Bindings)value : null;
   }
 
   private static Bindings getJSchema_Properties( Bindings docObj )
@@ -241,80 +229,41 @@ public class JsonSchemaTransformer
 
   private static List getJSchema_Enum( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ENUM );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ENUM ) );
   }
 
   private static List getJSchema_Const( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_CONST );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = Collections.singletonList( ((Pair)value ).getSecond() );
-    }
-    else
-    {
-      list = Collections.singletonList( value );
-    }
-    return list;
+    return getList( docObj.get( JSCH_CONST ) );
   }
 
   private static List getJSchema_AllOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ALL_OF );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ALL_OF ) );
   }
+
   private static List getJSchema_AnyOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ANY_OF );
-    List list;
-    if( value instanceof Pair )
-    {
-      list = (List)((Pair)value).getSecond();
-    }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return getList( docObj.get( JSCH_ANY_OF ) );
   }
+
   private static List getJSchema_OneOf( Bindings docObj )
   {
-    Object value = docObj.get( JSCH_ONE_OF );
-    List list;
+    return getList( docObj.get( JSCH_ONE_OF ) );
+  }
+
+  private static List getList( Object value )
+  {
     if( value instanceof Pair )
     {
-      list = (List)((Pair)value).getSecond();
+      value = ((Pair)value).getSecond();
     }
-    else
-    {
-      list = (List)value;
-    }
-    return list;
+    return value instanceof List ? (List)value : null;
   }
 
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, URL enclosing, Bindings jsonObj )
   {
-    return transformDefinitions( new JsonStructureType( parent, enclosing, nameQualifier ), enclosing, jsonObj );
+    return transformDefinitions( new JsonStructureType( parent, enclosing, nameQualifier, new TypeAttributes() ), enclosing, jsonObj );
   }
   private List<IJsonType> transformDefinitions( JsonSchemaType parent, URL enclosing, Bindings jsonObj )
   {
@@ -324,7 +273,7 @@ public class JsonSchemaTransformer
       return null;
     }
 
-    JsonStructureType definitionsHolder = new JsonStructureType( parent, enclosing, JSCH_DEFINITIONS );
+    JsonStructureType definitionsHolder = new JsonStructureType( parent, enclosing, JSCH_DEFINITIONS, new TypeAttributes() );
     List<IJsonType> result = new ArrayList<>();
     cacheByFqn( definitionsHolder );
     for( Map.Entry<String, Object> entry : definitions.entrySet() )
@@ -345,23 +294,39 @@ public class JsonSchemaTransformer
           bindings = (Bindings)value;
         }
         IJsonType type = transformType( definitionsHolder, enclosing, name, bindings, null );
-        if( tokens != null && type instanceof JsonStructureType )
+        if( tokens != null && type instanceof JsonSchemaType )
         {
-          ((JsonStructureType)type).setToken( tokens[0] );
+          ((JsonSchemaType)type).setToken( tokens[0] );
         }
         result.add( type );
       }
       catch( Exception e )
       {
-        parent.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null, e.getMessage() ) );
+        parent.addIssue( new JsonIssue( IIssue.Kind.Error, tokens != null ? tokens[1] : null,
+          e.getMessage() == null ? DebugLogUtil.getStackTrace( e ) : e.getMessage() ) );
       }
     }
     return result;
   }
 
-  private IJsonType findLocalRef( String localRef, URL enclosing )
+  private IJsonType findLocalRef( String ref, URL enclosing )
   {
-    localRef = makeLocalRef( localRef );
+    // Find by ref "id"
+
+    IJsonType type1 = findById( ref );
+    if( type1 != null )
+    {
+      return type1;
+    }
+
+    // Find by ref "location path"
+
+    return findByLocationPath( ref, enclosing );
+  }
+
+  private IJsonType findByLocationPath( String ref, URL enclosing )
+  {
+    String localRef = makeLocalRef( ref );
     if( localRef.isEmpty() )
     {
       // an empty "#" ref must resolve to the enclosing URL
@@ -374,6 +339,35 @@ public class JsonSchemaTransformer
     return _typeByFqn.get( localRef );
   }
 
+  private IJsonType findById( String ref )
+  {
+    IJsonType type = _typeById.get( ref );
+    if( type != null )
+    {
+      return type;
+    }
+    if( !ref.startsWith( "#" ) )
+    {
+      // If the original ref is prefixed with '#', it was removed by the URI parser, try prepending it and roll dice.
+      // (Not sure why the JSON Schema docs uses an example where the 'id' begins with '#', which is the fragment
+      // separator char in a URI...)
+      type = _typeById.get( '#' + ref );
+      if( type != null )
+      {
+        return type;
+      }
+    }
+    if( ref.startsWith( "/" ) )
+    {
+      type = _typeById.get( ref.substring( 1 ) );
+      if( type != null )
+      {
+        return type;
+      }
+    }
+    return null;
+  }
+
   private String makeLocalRef( String localRef )
   {
     if( localRef.isEmpty() )
@@ -381,24 +375,71 @@ public class JsonSchemaTransformer
       return "";
     }
 
-    localRef = localRef.replace( '/', '.' );
     char firstChar = localRef.charAt( 0 );
-    if( firstChar == '.' || firstChar == '#' )
+    if( firstChar == '/' )
     {
       localRef = localRef.substring( 1 );
     }
     StringBuilder sb = new StringBuilder();
-    for( StringTokenizer tokenizer = new StringTokenizer( localRef, "." ); tokenizer.hasMoreTokens(); )
+    for( StringTokenizer tokenizer = new StringTokenizer( localRef, "/" ); tokenizer.hasMoreTokens(); )
     {
       if( sb.length() > 0 )
       {
         sb.append( '.' );
       }
       String token = tokenizer.nextToken();
+      if( sb.length() == 0 )
+      {
+        // ref looks like: "#someType/foo/bar"
+        // thus we first lookup "#someType", and prepend its path
+        // {
+        //   "definitions": {
+        //     "Foo": {
+        //       "$id": "#someType"
+        //       ...
+        //     }
+        //   }
+        // }
+        // "#someType/foo/bar => "#/definitions/foo/bar"
+        prependPathToIdRef( token, sb );
+        if( sb.length() > 0 )
+        {
+          continue;
+        }
+      }
+
       token = JsonUtil.makeIdentifier( token );
       sb.append( token );
     }
     return sb.toString();
+  }
+
+  private void prependPathToIdRef( String id, StringBuilder sb )
+  {
+    IJsonType type = findById( id );
+    if( type == null )
+    {
+      // not an id
+      return;
+    }
+
+    // build a path to the type
+    while( type.getParent() != null )
+    {
+      if( sb.length() > 0 )
+      {
+        sb.insert( 0, '.' );
+      }
+      if( type instanceof JsonSchemaType )
+      {
+        sb.insert( 0, JsonUtil.makeIdentifier( ((JsonSchemaType)type).getLabel() ) );
+      }
+      else
+      {
+        sb.insert( 0, JsonUtil.makeIdentifier( type.getName() ) );
+      }
+      type = type.getParent();
+    }
   }
 
   void cacheByFqn( JsonSchemaType type )
@@ -407,25 +448,26 @@ public class JsonSchemaTransformer
   }
   void cacheSimpleByFqn( JsonSchemaType parent, String name, IJsonType type )
   {
-    if( parent instanceof JsonListType )
-    {
-      return;
-    }
     _typeByFqn.add( parent.getFqn() + '.' + name, type );
   }
   private void cacheType( IJsonParentType parent, String name, IJsonType type, Bindings jsonObj )
   {
-    Object value = jsonObj.get( JSCH_ID );
+    // Cache by FQN
+
+    if( type instanceof JsonSchemaType )
+    {
+      cacheByFqn( (JsonSchemaType)type );
+    }
+    else if( type instanceof LazyRefJsonType )
+    {
+      cacheSimpleByFqn( (JsonSchemaType)parent, name, type );
+    }
+
+    // Also cache by Id (if defined)
+
+    Object value = getJSchema_Id( jsonObj );
     if( value == null )
     {
-      if( type instanceof JsonSchemaType )
-      {
-        cacheByFqn( (JsonSchemaType)type );
-      }
-      else if( type instanceof LazyRefJsonType )
-      {
-        cacheSimpleByFqn( (JsonSchemaType)parent, name, type );
-      }
       return;
     }
 
@@ -446,25 +488,20 @@ public class JsonSchemaTransformer
   {
     if( id.isEmpty() )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Relative 'id' is invalid: empty string" ) );
+      (parent == null ? (IJsonParentType)type : parent)
+        .addIssue( new JsonIssue( IIssue.Kind.Error, token, "Relative 'id' is invalid: empty string" ) );
       return;
     }
 
-    String localRef = makeLocalRef( id );
-    if( localRef.isEmpty() )
-    {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Relative 'id' is invalid: $id" ) );
-      return;
-    }
-
-    IJsonType existing = findLocalRef( id, null );
+    IJsonType existing = _typeById.get( id );
     if( existing != null )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Id '$id' already assigned to type '${existing.getName()}'" ) );
+      (parent == null ? (IJsonParentType)type : parent)
+        .addIssue( new JsonIssue( IIssue.Kind.Error, token, "Id '$id' already assigned to type '${existing.getName()}'" ) );
     }
     else
     {
-      _typeByFqn.add( localRef, type );
+      _typeById.put( id, type );
     }
   }
 
@@ -487,8 +524,9 @@ public class JsonSchemaTransformer
     JsonFormatType formatType = jsonObj.containsKey( JSCH_FORMAT ) ? resolveFormatType( jsonObj ) : null;
     if( formatType != null )
     {
-      result = formatType;
-      cacheSimpleByFqn( parent, name, formatType );
+      // Copy format type to allow format type services to reuse types
+      result = formatType.copyWithAttributes( new TypeAttributes( nullable, jsonObj ) );
+      cacheSimpleByFqn( parent, name, result );
     }
     else
     {
@@ -497,23 +535,23 @@ public class JsonSchemaTransformer
       boolean bConst = jsonObj.containsKey( JSCH_CONST );
       if( bEnum )
       {
-        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj, nullable );
         if( result != parent )
         {
-          transferIssuesFromErrantType( parent, result, jsonObj );
+          copyIssuesFromErrantType( parent, result, jsonObj );
         }
       }
       else if( bConst )
       {
-        result = deriveTypeFromConst( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromConst( parent, enclosing, name, jsonObj, nullable );
         if( result != parent )
         {
-          transferIssuesFromErrantType( parent, result, jsonObj );
+          copyIssuesFromErrantType( parent, result, jsonObj );
         }
       }
       else if( type == null || bRef || isCombination( jsonObj ) )
       {
-        JsonStructureType refParent = new JsonStructureType( parent, enclosing, name );
+        JsonStructureType refParent = new JsonStructureType( parent, enclosing, name, new TypeAttributes() );
         if( bRef && parent == null )
         {
           Object refValue = jsonObj.get( JSCH_REF );
@@ -521,16 +559,26 @@ public class JsonSchemaTransformer
           {
             token = ((Token[])((Pair)refValue).getFirst())[0];
           }
-          refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'\$ref' not allowed at root level" ) );
+          refParent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "'${'$'}ref' not allowed at root level" ) );
           result = refParent;
         }
         else
         {
           transformDefinitions( parent, enclosing, name, jsonObj, refParent );
-          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj );
+          result = findReferenceTypeOrCombinationType( parent, enclosing, name, jsonObj, nullable );
           if( result != parent )
           {
-            transferIssuesFromErrantType( parent, result, jsonObj );
+            copyIssuesFromErrantType( parent, result, jsonObj );
+          }
+          if( result != null )
+          {
+            // refParent is just a placeholder for definitions until the ref or combo type is constructe.
+            // Assign the definitions from the refParent to the actual parent
+            List<IJsonType> definitions = refParent.getDefinitions();
+            if( definitions != null )
+            {
+              result.setDefinitions( definitions );
+            }
           }
         }
       }
@@ -540,19 +588,21 @@ public class JsonSchemaTransformer
         switch( t )
         {
           case Object:
-            result = new JsonStructureType( parent, enclosing, name );
+            result = new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) );
             transform = () -> ObjectTransformer.transform( this, (JsonStructureType)result, jsonObj );
             break;
           case Array:
-            result = new JsonListType( name, enclosing, parent );
+            result = new JsonListType( name, enclosing, parent, new TypeAttributes( nullable, jsonObj ) );
             transform = () -> ArrayTransformer.transform( this, name, (JsonListType)result, jsonObj );
             break;
           case Dynamic:
             result = DynamicType.instance();
             cacheSimpleByFqn( parent, name, result );
             break;
+          case Invalid:
+            throw new IllegalSchemaTypeName( type, token );
           default:
-            result = new JsonBasicType( t, new TypeAttributes( nullable, null ) );
+            result = new JsonBasicType( t, new TypeAttributes( nullable, jsonObj ) );
             cacheSimpleByFqn( parent, name, result );
             break;
         }
@@ -574,7 +624,7 @@ public class JsonSchemaTransformer
     {
       ((JsonSchemaType)result).setJsonSchema();
     }
-    return result == null ? null : copyWithAttributes( result, jsonObj, nullable );
+    return result;
   }
 
   private Boolean isNullable( Bindings jsonObj, Boolean isNullable, TypeResult tr )
@@ -635,21 +685,6 @@ public class JsonSchemaTransformer
     return tr;
   }
   
-  private IJsonType copyWithAttributes( IJsonType result, Bindings jsonObj, Boolean nullable )
-  {
-    boolean bDefault = jsonObj.containsKey( JSCH_DEFAULT );
-    Object defaultValue = null;
-    if( bDefault )
-    {
-      defaultValue = jsonObj.get( JSCH_DEFAULT );
-      if( defaultValue instanceof Pair )
-      {
-        defaultValue = ((Pair)defaultValue).getSecond();
-      }
-    }
-    return result.copyWithAttributes( new TypeAttributes( or( nullable, isNullable( jsonObj ) ), defaultValue ) );
-  }
-
   private JsonFormatType resolveFormatType( Bindings jsonObj )
   {
     JsonFormatType resolvedType = null;
@@ -694,9 +729,9 @@ public class JsonSchemaTransformer
     result.setDefinitions( definitions );
   }
 
-  private void transferIssuesFromErrantType( JsonSchemaType parent, IJsonType result, Bindings jsonObj )
+  private static void copyIssuesFromErrantType( JsonSchemaType parent, IJsonType type, Bindings jsonObj )
   {
-    if( result instanceof ErrantType )
+    if( type instanceof ErrantType )
     {
       Object value = jsonObj.get( JSCH_REF );
       Token token = null;
@@ -705,23 +740,35 @@ public class JsonSchemaTransformer
         token = ((Token[])((Pair)value).getFirst())[1];
       }
 
-      for( JsonIssue issue: ((ErrantType)result).getIssues() )
+      for( JsonIssue issue: ((ErrantType)type).getIssues() )
       {
         parent.addIssue( new JsonIssue( issue.getKind(), token, issue.getMessage() ) );
       }
     }
   }
 
-  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private static void moveIssuesFromErrantType( JsonSchemaType target, ErrantType errant )
+  {
+    for( JsonIssue issue: errant.getIssues() )
+    {
+      target.addIssue( issue );
+    }
+  }
+
+  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     IJsonType result;
     result = findReference( parent, enclosing, jsonObj );
-    if( result == null )
+    if( result != null )
     {
-      result = transformCombination( parent, enclosing, name, jsonObj );
+      result = result.copyWithAttributes( new TypeAttributes( nullable, jsonObj ) );
+    }
+    else
+    {
+      result = transformCombination( parent, enclosing, name, jsonObj, nullable );
       if( result == null )
       {
-        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj );
+        result = deriveTypeFromEnum( parent, enclosing, name, jsonObj, nullable );
         if( result == null )
         {
           // No type or other means of deriving a type could be found.
@@ -733,27 +780,27 @@ public class JsonSchemaTransformer
     return result;
   }
 
-  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
+  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
   {
     List<?> list = getJSchema_Enum( bindings );
-    return makeEnum( parent, enclosing, name, list );
+    return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings )
+  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
   {
     // Note the "const" type is shorthand for a single element "enum" type
     List<?> list = getJSchema_Const( bindings );
-    return makeEnum( parent, enclosing, name, list );
+    return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list )
+  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list, TypeAttributes attr )
   {
     if( list == null )
     {
       return null;
     }
 
-    JsonEnumType type = new JsonEnumType( parent, enclosing, name, list );
+    JsonEnumType type = new JsonEnumType( parent, enclosing, name, list, attr );
     if( parent != null )
     {
       parent.addChild( type.getLabel(), type );
@@ -761,57 +808,57 @@ public class JsonSchemaTransformer
     return type;
   }
 
-  private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
-    IJsonType type = transformAllOf( parent, enclosing, name, jsonObj );
+    IJsonType type = transformAllOf( parent, enclosing, name, jsonObj, nullable );
     if( type != null )
     {
       return type;
     }
 
-    type = transformAnyOf( parent, enclosing, name, jsonObj );
+    type = transformAnyOf( parent, enclosing, name, jsonObj, nullable );
     if( type != null )
     {
       return type;
     }
 
-    return transformOneOf( parent, enclosing, name, jsonObj );
+    return transformOneOf( parent, enclosing, name, jsonObj, nullable );
   }
 
-  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AllOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildHierarchy( parent, enclosing, name, list );
+    return buildHierarchy( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AnyOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildUnion( parent, enclosing, name, list );
+    return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
-  private IJsonType transformOneOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj )
+  private IJsonType transformOneOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_OneOf( jsonObj );
     if( list == null )
     {
       return null;
     }
-    return buildUnion( parent, enclosing, name, list );
+    return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list )
+  private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     JsonStructureType type = null;
     boolean hasType = false;
-    int i = 0;
+    int iInner = 0;
     for( Object elem : list )
     {
       if( elem instanceof Pair )
@@ -823,16 +870,25 @@ public class JsonSchemaTransformer
       {
         Bindings elemBindings = (Bindings)elem;
 
+        type = type == null ? new JsonStructureType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) ) : type;
+
         if( elemBindings.size() == 1 && elemBindings.containsKey( JSCH_REQUIRED ) )
         {
-          continue;
+          //
+          // "required"
+          //
+          
+          Object requiredValue = elemBindings.get( JsonSchemaTransformer.JSCH_REQUIRED );
+          type.addRequiredWithTokens( requiredValue );
         }
-
-        type = type == null ? new JsonStructureType( parent, enclosing, name ) : type;
 
         IJsonType ref = findReference( type, enclosing, elemBindings );
         if( ref != null )
         {
+          //
+          // "$ref"
+          //
+
           if( !hasType )
           {
             ObjectTransformer.transform( this, type, elemBindings );
@@ -842,16 +898,20 @@ public class JsonSchemaTransformer
         }
         else if( elemBindings.containsKey( JSCH_ENUM ) )
         {
+          //
+          // "enum"
+          //
+
           if( !hasType )
           {
             ObjectTransformer.transform( this, type, elemBindings );
             hasType = true;
           }
 
-          IJsonType enumType = copyWithAttributes( deriveTypeFromEnum( type, enclosing, "enum" + i++, elemBindings ), elemBindings, null );
+          IJsonType enumType = deriveTypeFromEnum( type, enclosing, "enum" + iInner++, elemBindings, nullable );
           if( enumType != parent )
           {
-            transferIssuesFromErrantType( parent, enumType, elemBindings );
+            copyIssuesFromErrantType( parent, enumType, elemBindings );
           }
           // Note enunType can't really be a super type. Basically if any types in an "allOf" are enum, they all have
           // to be, thus the code gen logic can turn this structure type into a single enum type collapsing all enums
@@ -863,8 +923,27 @@ public class JsonSchemaTransformer
           Bindings properties = getJSchema_Properties( elemBindings );
           if( properties != null )
           {
+            //
+            // "properties"
+            //
+
             ObjectTransformer.transform( this, type, elemBindings );
             hasType = true;
+            type = (JsonStructureType)type.copyWithAttributes( new TypeAttributes( elemBindings ) );
+          }
+          else
+          {
+            //
+            // allOf", "oneOf", "anyOf"
+            //
+
+            IJsonType comboType = transformCombination( type, enclosing, "Combo" + iInner++, elemBindings, nullable );
+            if( comboType != parent )
+            {
+              copyIssuesFromErrantType( parent, comboType, elemBindings );
+              // special handling required for combo as super type
+              type.addSuper( comboType );
+            }
           }
         }
       }
@@ -872,7 +951,7 @@ public class JsonSchemaTransformer
     return hasType ? type : null;
   }
 
-  private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list )
+  private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     IJsonType singleNullable = maybeGetSingleNullable( parent, enclosing, name, list );
     if( singleNullable != null )
@@ -880,9 +959,14 @@ public class JsonSchemaTransformer
       return singleNullable;
     }
 
-    JsonUnionType type = new JsonUnionType( parent, enclosing, name );
+    JsonUnionType type = new JsonUnionType( parent, enclosing, name, new TypeAttributes( nullable, jsonObj ) );
     int i = 0;
-    Boolean nullable = isNullable( list );
+    Boolean isNullable = isNullable( list );
+    nullable = nullable == null
+               ? isNullable
+               : isNullable == null
+                 ? nullable
+                 : (Boolean)(isNullable || nullable);
     for( Object elem : list )
     {
       if( elem instanceof Pair )
@@ -1015,11 +1099,13 @@ public class JsonSchemaTransformer
     URI uri;
     try
     {
+      // support refs like: "#/properties/blah".  They are the same as: "#/blah"
+      ref = ref.replace( "/properties/", "/" ).replace( "/properties#", "/" );
       uri = new URI( ref );
     }
     catch( URISyntaxException e )
     {
-      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI syntax: $ref" ) );
+      parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI syntax: ${e.getReason()}" ) );
       return null;
     }
 
@@ -1035,7 +1121,7 @@ public class JsonSchemaTransformer
     {
       Pair<IJsonType, JsonSchemaTransformer> pair = findBaseType( token, parent, enclosing, uri, filePart );
 
-      IJsonType definition = pair == null ? null : findFragmentType( enclosing, uri, pair );
+      IJsonType definition = pair == null ? null : findFragmentType( token, uri, pair );
       if( definition == null )
       {
         parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI: $uri" ) );
@@ -1046,25 +1132,36 @@ public class JsonSchemaTransformer
     {
       // relative to this file
 
-      String fragment = uri.getFragment();
+      IJsonType fragment = findFragmentRef( parent, enclosing, token, uri );
       if( fragment != null )
       {
-        return new LazyRefJsonType( () -> {
-          IJsonType localRef = findLocalRef( fragment, enclosing );
-          if( localRef == null )
-          {
-            parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Invalid URI fragment: $fragment" ) );
-            localRef = new ErrantType( enclosing, fragment );
-          }
-          return localRef;
-        } );
+        return fragment;
       }
     }
 
     throw new UnsupportedOperationException( "Unhandled URI: $ref" );
   }
 
-  private IJsonType findFragmentType( URL enclosing, URI uri, Pair<IJsonType, JsonSchemaTransformer> pair )
+  private IJsonType findFragmentRef( JsonSchemaType parent, URL enclosing, Token token, URI uri )
+  {
+    String uriFragment = uri.getFragment();
+    if( uriFragment != null )
+    {
+      String fragment = uriFragment.replace( JSCH_DEFS, JSCH_DEFINITIONS );
+      return new LazyRefJsonType( () -> {
+        IJsonType localRef = findLocalRef( fragment, enclosing );
+        if( localRef == null )
+        {
+          parent.addIssue( new JsonIssue( IIssue.Kind.Error, token, "Cannot resolve reference: $fragment" ) );
+          localRef = new ErrantType( enclosing, fragment );
+        }
+        return localRef;
+      } );
+    }
+    return null;
+  }
+
+  private IJsonType findFragmentType( Token token, URI uri, Pair<IJsonType, JsonSchemaTransformer> pair )
   {
     String fragment = uri.getFragment();
     IJsonType baseType = pair.getFirst();
@@ -1073,8 +1170,7 @@ public class JsonSchemaTransformer
       return baseType;
     }
 
-    JsonSchemaTransformer tx = pair.getSecond();
-    return tx.findLocalRef( fragment, enclosing );
+    return pair.getSecond().findFragmentRef( (JsonSchemaType)baseType, ((JsonSchemaType)baseType).getFile(), token, uri );
   }
 
   private Pair<IJsonType, JsonSchemaTransformer> findBaseType( Token token, JsonSchemaType parent, URL enclosing, URI uri, String filePart )
@@ -1130,10 +1226,10 @@ public class JsonSchemaTransformer
         return null;
       }
 
-      Bindings bindings;
+      Object jsonObject;
       try
       {
-        bindings = Json.fromJson( otherFileContent );
+        jsonObject = Json.fromJson( otherFileContent );
       }
       catch( Exception e )
       {
@@ -1147,9 +1243,8 @@ public class JsonSchemaTransformer
       {
         name = name.substring( 0, iDot );
       }
-      baseType = transform( _host, name, url, bindings );
-      pair = new Pair<>( baseType, this );
-      JsonSchemaTransformerSession.instance().cacheBaseType( url, pair );
+      transform( _host, name, url, jsonObject );
+      pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
     }
     return pair;
   }

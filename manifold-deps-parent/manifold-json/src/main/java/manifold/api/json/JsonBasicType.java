@@ -18,6 +18,7 @@ package manifold.api.json;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Objects;
 import manifold.api.json.schema.Type;
 import manifold.api.json.schema.TypeAttributes;
 import manifold.ext.RuntimeMethods;
@@ -64,7 +65,7 @@ public class JsonBasicType implements IJsonType
 
   private JsonBasicType( Type type )
   {
-    this( type, new TypeAttributes( true, null ) );
+    this( type, new TypeAttributes( true ) );
   }
 
   public static JsonBasicType get( Object jsonObj )
@@ -92,45 +93,6 @@ public class JsonBasicType implements IJsonType
       return new JsonBasicType( Type.Boolean );
     }
     return new JsonBasicType( Type.String );
-  }
-
-  /**
-   *  For component type of array because implemented as a List,
-   *  generics does not support primitive type param
-   */
-  JsonBasicType forceBoxed()
-  {
-    if( _javaClass.isPrimitive() )
-    {
-      Class<?> javaClass;
-      if( _javaClass == boolean.class )
-      {
-        javaClass = Boolean.class;
-      }
-      else if( _javaClass == int.class )
-      {
-        javaClass = Integer.class;
-      }
-      else if( _javaClass == long.class )
-      {
-        javaClass = Long.class;
-      }
-      else if( _javaClass == float.class )
-      {
-        javaClass = Float.class;
-      }
-      else if( _javaClass == double.class )
-      {
-        javaClass = Double.class;
-      }
-      else
-      {
-        throw new IllegalStateException();
-      }
-      JsonBasicType copy = (JsonBasicType)copyWithAttributes( getTypeAttributes() );
-      copy._javaClass = javaClass;
-    }
-    return this;
   }
 
   @Override
@@ -168,7 +130,7 @@ public class JsonBasicType implements IJsonType
     {
       return this;
     }
-    return new JsonBasicType( _type, TypeAttributes.merge( getTypeAttributes(), attributes ) );
+    return new JsonBasicType( _type, getTypeAttributes().overrideWith( attributes ) );
   }
 
   public IJsonType merge( IJsonType that )
@@ -182,7 +144,7 @@ public class JsonBasicType implements IJsonType
     if( _javaClass == String.class || other._javaClass == String.class )
     {
       // String is compatible with all simple types
-      return new JsonBasicType( Type.String, new TypeAttributes( this, other ) );
+      return new JsonBasicType( Type.String, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
     }
 
     if( _javaClass == Void.class )
@@ -194,12 +156,40 @@ public class JsonBasicType implements IJsonType
       return this;
     }
 
+    if( _type == other._type )
+    {
+      return new JsonBasicType( _type, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
+    }
+
     if( _type == Type.Integer && other._type == Type.Number ||
         _type == Type.Number && other._type == Type.Integer )
     {
-      return new JsonBasicType( Type.Number, new TypeAttributes( this, other ) );
+      return new JsonBasicType( Type.Number, getTypeAttributes().blendWith( other.getTypeAttributes() ) );
     }
 
     return null;
+  }
+
+  @Override
+  public boolean equals( Object o )
+  {
+    if( this == o )
+    {
+      return true;
+    }
+    if( o == null || getClass() != o.getClass() )
+    {
+      return false;
+    }
+    JsonBasicType that = (JsonBasicType)o;
+    return _type == that._type &&
+           Objects.equals( _javaClass, that._javaClass ) &&
+           Objects.equals( _typeAttributes, that._typeAttributes );
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash( _type, _javaClass, _typeAttributes );
   }
 }

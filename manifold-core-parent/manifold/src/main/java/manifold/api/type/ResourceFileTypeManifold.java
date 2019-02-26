@@ -44,7 +44,7 @@ import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
- * A base class for a type manifold that is based on a resource file of a specific extension.
+ * A base class for a type manifold that is based on a resource file type, typically discernible by the file extension.
  *
  * @param <M> The model you derive backing contributions of source code.
  */
@@ -63,7 +63,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   }
 
   /**
-   * @param module  The module passed into the ISourceProvider implementation constructor
+   * @param module  The module passed into the {@code ITypeManifold) implementation constructor
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
   protected void init( IModule module, BiFunction<String, Set<IFile>, M> modelMapper )
@@ -292,6 +292,12 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   @Override
   public boolean isType( String fqn )
   {
+    FqnCache<LocklessLazyVar<M>> fqnCache = _fqnToModel.get();
+    if( fqnCache.isEmpty() )
+    {
+      return false;
+    }
+
     fqn = fqn.replace( '$', '.' );
     
     String topLevel = findTopLevelFqn( fqn );
@@ -320,9 +326,15 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   @SuppressWarnings("WeakerAccess")
   public String findTopLevelFqn( String fqn )
   {
+    FqnCache<LocklessLazyVar<M>> fqnCache = _fqnToModel.get();
+    if( fqnCache.isEmpty() )
+    {
+      return null;
+    }
+
     while( true )
     {
-      LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( fqn );
+      LocklessLazyVar<M> lazyModel = fqnCache.get( fqn );
       if( lazyModel != null )
       {
         return fqn;
@@ -339,7 +351,13 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   @Override
   public boolean isTopLevelType( String fqn )
   {
-    return _fqnToModel.get().get( fqn ) != null;
+    FqnCache<LocklessLazyVar<M>> fqnCache = _fqnToModel.get();
+    if( fqnCache.isEmpty() )
+    {
+      return false;
+    }
+
+    return fqnCache.get( fqn ) != null;
   }
 
   @Override
@@ -370,7 +388,13 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   @Override
   public Collection<String> getAllTypeNames()
   {
-    return _fqnToModel.get().getFqns();
+    FqnCache<LocklessLazyVar<M>> fqnCache = _fqnToModel.get();
+    if( fqnCache.isEmpty() )
+    {
+      return Collections.emptySet();
+    }
+
+    return fqnCache.getFqns();
   }
 
   @Override
@@ -447,8 +471,9 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
         return;
       }
 
-      Set<ITypeManifold> sps = getModule().findTypeManifoldsFor( request.file );
-      if( !sps.contains( ResourceFileTypeManifold.this ) )
+      Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( request.file,
+        tm -> tm == ResourceFileTypeManifold.this );
+      if( tms.isEmpty() )
       {
         return;
       }

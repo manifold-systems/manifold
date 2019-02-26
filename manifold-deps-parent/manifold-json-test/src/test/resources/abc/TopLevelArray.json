@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "top level array",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "foo": {
+        "type": "string"
+      },
+      "nested": {
+        "type": "array",
+        "items": {
+          "bar": "string"
+        }
+      }
+    }
+  }
+}

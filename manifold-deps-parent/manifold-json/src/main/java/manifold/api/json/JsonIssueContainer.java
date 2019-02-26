@@ -36,6 +36,7 @@ public class JsonIssueContainer implements IIssueContainer
   private final IFile _file;
   private final List<IIssue> _issues;
 
+  @SuppressWarnings("unused")
   public JsonIssueContainer()
   {
     _issues = Collections.emptyList();
@@ -51,6 +52,7 @@ public class JsonIssueContainer implements IIssueContainer
    * ...
    * </pre>
    */
+  @SuppressWarnings("WeakerAccess")
   public JsonIssueContainer( ScriptException cause, IFile file )
   {
     _issues = new ArrayList<>();
@@ -59,6 +61,7 @@ public class JsonIssueContainer implements IIssueContainer
     addIssues( cause );
   }
 
+  @SuppressWarnings("WeakerAccess")
   public JsonIssueContainer( IFile file )
   {
     _issues = new ArrayList<>();
@@ -88,19 +91,19 @@ public class JsonIssueContainer implements IIssueContainer
 
   private int parseNum( String line, char delim )
   {
-    String num = "";
+    StringBuilder num = new StringBuilder();
     for( int i = 0; i < line.length(); i++ )
     {
       char c = line.charAt( i );
       if( c != delim )
       {
-        num += c;
+        num.append( c );
       }
       else
       {
         try
         {
-          return Integer.parseInt( num );
+          return Integer.parseInt( num.toString() );
         }
         catch( Exception e )
         {
@@ -129,6 +132,7 @@ public class JsonIssueContainer implements IIssueContainer
     return getIssues();
   }
 
+  @SuppressWarnings("WeakerAccess")
   public void addIssues( ScriptException cause )
   {
     String message = cause.getMessage();
@@ -146,9 +150,9 @@ public class JsonIssueContainer implements IIssueContainer
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public void addIssues( IllegalSchemaTypeName cause )
   {
-    String message = cause.getMessage();
     Token token = cause.getToken();
     int lineNum = token.getLineNumber();
     int column = token.getColumn();

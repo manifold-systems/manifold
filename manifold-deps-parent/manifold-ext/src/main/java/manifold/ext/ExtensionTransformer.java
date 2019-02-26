@@ -57,6 +57,7 @@ import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
+import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
@@ -682,7 +683,10 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
 
-    precompile( typeNames );
+    if( !typeNames.isEmpty() )
+    {
+      precompile( typeNames );
+    }
   }
 
   private void getTypesToCompile( JCTree.JCAnnotation precompileAnno, Map<String, Set<String>> typeNames )
@@ -695,21 +699,50 @@ public class ExtensionTransformer extends TreeTranslator
 
     String typeManifoldClassName = null;
     String regex = ".*";
+    String ext = "*";
     for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
-      if( argName.toString().equals( "typeManifold" ) )
+      switch( argName.toString() )
       {
-        typeManifoldClassName = pair.snd.getValue().toString();
-      }
-      else if( argName.toString().equals( "typeNames" ) )
-      {
-        regex = pair.snd.getValue().toString();
+        case "typeManifold":
+          typeManifoldClassName = pair.snd.getValue().toString();
+          break;
+        case "fileExtension":
+          ext = pair.snd.getValue().toString();
+          break;
+        case "typeNames":
+          regex = pair.snd.getValue().toString();
+          break;
       }
     }
 
-    Set<String> regexes = typeNames.computeIfAbsent( typeManifoldClassName, tm -> new HashSet<>() );
-    regexes.add( regex );
+    addToPrecompile( typeNames, typeManifoldClassName, ext, regex );
+  }
+
+  private void addToPrecompile( Map<String, Set<String>> typeNames, String typeManifoldClassName, String ext, String regex )
+  {
+    if( typeManifoldClassName != null )
+    {
+      Set<String> regexes = typeNames.computeIfAbsent( typeManifoldClassName, tm -> new HashSet<>() );
+      regexes.add( regex );
+    }
+    else
+    {
+      boolean all = "*".equals( ext );
+      _tp.getHost().getSingleModule().getTypeManifolds().stream()
+        .filter( tm -> tm.getContributorKind() != ContributorKind.Supplemental )
+        .forEach( tm ->
+          {
+            boolean match = !all && tm.handlesFileExtension( ext );
+            if( all || match )
+            {
+              String classname = tm.getClass().getTypeName();
+              Set<String> regexes = typeNames.computeIfAbsent( classname, e -> new HashSet<>() );
+              regexes.add( regex );
+            }
+          } );
+    }
   }
 
   private void precompile( Map<String, Set<String>> typeNames )
@@ -1297,6 +1330,13 @@ public class ExtensionTransformer extends TreeTranslator
   {
     //## todo: maybe try to avoid reflection if the method is accessible -- at least check if the method and its enclosing nest of classes are all public
 
+    Type type = tree.getMethodSelect().type;
+    if( type instanceof Type.ErrorType )
+    {
+      // No such field/method or wrong params
+      return tree;
+    }
+
     TreeMaker make = _tp.getTreeMaker();
     JavacElements javacElems = _tp.getElementUtil();
 
@@ -1376,7 +1416,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       Tree.Kind kind = parent.getKind();
 
-      if( kind != Tree.Kind.UNARY_MINUS && kind != Tree.Kind.UNARY_PLUS  &&
+      if( kind != Tree.Kind.UNARY_MINUS && kind != Tree.Kind.UNARY_PLUS &&
           kind != Tree.Kind.LOGICAL_COMPLEMENT && kind != Tree.Kind.BITWISE_COMPLEMENT )
       {
         // supporting -, +, !, ~  not supporting --, ++
@@ -1386,6 +1426,12 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     Type type = tree.sym.type;
+    if( type instanceof Type.ErrorType )
+    {
+      // No such field/method
+      return tree;
+    }
+
     Symbol.MethodSymbol reflectMethodSym = findFieldAccessReflectUtilMethod( tree, type, isStatic, false );
 
     ArrayList<JCExpression> newArgs = new ArrayList<>();
@@ -1449,6 +1495,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   private JCTree replaceWithReflection( JCTree.JCNewClass tree )
   {
+    if( tree.constructor == null )
+    {
+      return tree;
+    }
+
     TreeMaker make = _tp.getTreeMaker();
     JavacElements javacElems = _tp.getElementUtil();
 
@@ -1501,6 +1552,10 @@ public class ExtensionTransformer extends TreeTranslator
 
   private JCExpression makeClassExpr( JCTree tree, Type type )
   {
+    BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
+    Types types = Types.instance( javacTask.getContext() );
+    type = types.erasure( type );
+
     JCExpression classExpr;
     if( type.isPrimitive() ||
         (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )
@@ -1705,11 +1760,19 @@ public class ExtensionTransformer extends TreeTranslator
       JCTree.JCFieldAccess m = (JCTree.JCFieldAccess)methodSelect;
       if( m.sym != null && !m.sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
       {
-        JCExpression thisArg = m.selected;
-        return TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym );
+        if( !isObjectMethod( m.sym ) )
+        {
+          JCExpression thisArg = m.selected;
+          return TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym );
+        }
       }
     }
     return false;
+  }
+
+  private boolean isObjectMethod( Symbol sym )
+  {
+    return sym.owner != null && sym.owner.type == _tp.getSymtab().objectType;
   }
 
   private JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )

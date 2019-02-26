@@ -11,8 +11,18 @@ full-featured ManTL template editing, and more.
 >
 >Install the plugin directly from IntelliJ:
 >
-><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: <kbd>Manifold</kbd>
+><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: `Manifold`
 
+## Sample Projects
+
+Clone the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) to for a nice
+demonstration of features.
+
+Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
+begin experimenting with a JSON Schema REST API using Manifold.
+
+Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to get hooked
+on ManTL templates with the Manifold IntelliJ plugin.
 
 ## [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
 Gain direct, **type-safe** access to *any* type of data. Remove the code gen step in your build process.
@@ -32,6 +42,8 @@ src
 
 ### [JSON & JSON Schema](http://manifold.systems/docs.html#json-and-json-schema)
 
+You can use both sample JSON files and JSON Schema files.
+
 `resources/abc/Person.json`
 ```json
 {
@@ -49,31 +61,147 @@ person.setFirstName("Scott");
 ```
 Or use JSON Schema files:
 `resources/abc/Contact.json`
+Here is a simple `User` type defined in `resources/abc/User.json` using JSON Schema:
 ```json
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
-  "type" : "object",
-  "id" : "urn:xyz:Contact:1.0",
-
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/User.json",
+  "type": "object",
   "definitions": {
-    "Address": {
-      "type": "object",
-      "properties": {
-        "street_address": { "type": "string" },
-        "city":           { "type": "string" },
-        "state":          { "type": "string" }
-      },
-      "required": ["street_address", "city", "state"]
+    "Gender": {
+      "type": "string",
+      "enum": ["male", "female"]
     }
   },
-...
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "User's full name.",
+      "maxLength": 80
+    },
+    "email": {
+      "description": "User's email.",
+      "type": "string",
+      "format": "email"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "description": "Date of uses birth in the one and only date standard: ISO 8601.",
+      "format": "date"
+    },
+    "gender": {
+      "$ref" : "#/definitions/Gender"
+    }
+  },
+  "required": ["name", "email"]
 }
 ```
-```java 
-import abc.Contact;
+You can use this to create a new instance of the `User` type and then modify it using _setter_ methods to change
+optional properties:
+```java
+import abc.User;
+import abc.User.Gender;
+import java.time.LocalDate;
 ...
-Contact contact = Contact.fromJsonUrl(url);
+User user = User.create("Scott McKinney", "scott@manifold.systems");
+user.setGender(Gender.male);
+user.setDate_of_birth(LocalDate.of(1980, 7, 4));
 ```
+
+Alternatively, you can use `builder()` to fluently build a new instance:
+```java
+User user = User.builder("Scott McKinney", "scott@manifold.systems")
+  .withGender(Gender.male)
+  .withDate_of_birth(LocalDate.of(1980, 7, 4))
+  .build();
+```
+You can load a `User` instance from a String:
+```java
+// From a YAML string
+User user = User.load().fromYaml(
+  "name: Scott McKinney\n" +
+  "email: scott@manifold.systems\n" +
+  "gender: male\n" +
+  "date_of_birth: 1980-07-04"
+ );
+```
+
+Load from a file:
+```java
+// From a JSON file
+User user = User.load().fromJsonFile("/path/to/MyUser.json");
+```
+
+You can invoke a REST API to fetch a `User` using HTTP GET:
+```java
+// Uses HTTP GET to invoke the API
+User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
+```
+
+#### Request REST API services
+Use the `request()` static method to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE:
+```java
+String id = "scott";
+User user = User.request("http://api.example.com/users").getOne("/$id");
+```
+The `request()` method provides support for all basic REST API client usage:
+```java
+Requester<User> req = User.request("http://api.example.com/users");
+
+// Get all Users via HTTP GET
+IJsonList<User> users = req.getMany();
+
+// Add a User with HTTP POST
+User user = User.builder("scott", "mypassword", "Scott")
+  .withGender(male)
+  .build();
+req.postOne(user);
+
+// Get a User with HTTP GET
+String id = user.getId();
+user = req.getOne("/$id");
+
+// Update a User with HTTP PUT
+user.setDob(LocalDate.of(1980, 7, 7));
+req.putOne("/$id", user);
+
+// Delete a User with HTTP DELETE
+req.delete("/$id");
+```
+> Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
+begin experimenting with a JSON Schema REST API using Manifold.
+
+#### Writing JSON
+An instance of a JSON API object can be written as formatted text with `write()`:
+* `toJson()` - produces a JSON formatted String
+* `toYaml()` - produces a YAML formatted String
+* `toXml()` - produces an XML formatted String
+
+The following example produces a JSON formatted string:
+```java
+User user = User.builder("Scott McKinney", "scott@manifold.systems")
+  .withGender(Gender.male)
+  .withDate_of_birth(LocalDate.of(1980, 7, 4))
+  .build();
+
+String json = user.write().toJson();
+System.out.println(json);
+```
+Output:
+```json
+{
+  "name": "Scott McKinney",
+  "email": "scott@manifold.systems",
+  "gender": "male",
+  "date_of_birth": "1980-07-04"
+}
+```
+
+### [YAML](http://manifold.systems/docs.html#json-and-json-schema)
+
+Manifold fully supports YAML 1.2.  You can use YAML to build JSON Schema files as well.  All that applies to JSON applie to YAML.
+
+
 ### [Properties](http://manifold.systems/docs.html#properties-files)
 Avoid strings, access properties type-safely:
 

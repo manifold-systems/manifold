@@ -47,11 +47,15 @@ public enum Type
     switch( schemaName )
     {
       case "object":
+      case "Object":
         return Object;
       case "array":
+      case "Array":
         return Array;
       case "string":
+      case "String":
         return String;
+      case "double":
       case "number":
         return Number;
       case "integer":

@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "$defs": {
+    "Stuff": {
+      "$id": "stuff",
+      "type": "object",
+      "properties": {
+        "foo": {"type": "string"},
+        "bar": {"type": "integer"}
+      },
+      "required": ["foo"]
+    }
+  },
+  "properties": {
+    "blah": {"type": "string"}
+  }
+}

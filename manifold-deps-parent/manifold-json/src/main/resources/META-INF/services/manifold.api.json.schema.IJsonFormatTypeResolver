@@ -1,2 +1,3 @@
 manifold.api.json.schema.DefaultFormatResolver
 manifold.api.json.schema.BigNumberFormatResolver
+manifold.api.json.schema.BinaryFormatResolver
