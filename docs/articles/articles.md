@@ -100,7 +100,7 @@ layout: default
   <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685"><img width="240" height="135" src="/images/shutterstock_546213388-768x581.jpg" alt="d"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685">Manifold: Die Neuerfindung des Code-Generators - JAXenter</a></p>
+  <p><a href="https://jaxenter.de/manifold-typsystem-dynamisch-erweitern-69685">Manifold: Eine außeridische Technik für die dynamische Erweiterung von Javas Typsystem - JAXenter</a></p>
   <p>Manifold ist nicht von dieser Welt: Das Framework ermöglicht es Entwicklern, 
             das Typsystem von Java dynamisch und nahtlos zu erweitern. In diesem Artikel 
 			untersucht Scott McKinney, Gründer und Engineer bei Manifold Systems, wie das 
