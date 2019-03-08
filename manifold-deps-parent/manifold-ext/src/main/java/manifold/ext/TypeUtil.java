@@ -19,6 +19,8 @@ package manifold.ext;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.util.Context;
 import manifold.ext.api.Structural;
 import manifold.internal.javac.TypeProcessor;
 
@@ -54,5 +56,11 @@ public class TypeUtil
       }
     }
     return false;
+  }
+
+  public static boolean isAssignableFromErased( Context ctx, Symbol.ClassSymbol to, Symbol.TypeSymbol from )
+  {
+    Types types = Types.instance( ctx );
+    return types.isAssignable( types.erasure( to.asType() ), types.erasure( from.asType() ) );
   }
 }

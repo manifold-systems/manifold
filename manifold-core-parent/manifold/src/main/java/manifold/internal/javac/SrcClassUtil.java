@@ -419,7 +419,7 @@ public class SrcClassUtil
     }
   }
 
-  private TypeAnnotationPosition getTypeAnnotationPosition( List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy )
+  public static TypeAnnotationPosition getTypeAnnotationPosition( List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy )
   {
     TypeAnnotationPosition posCopy;
     //noinspection ConstantConditions

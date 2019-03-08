@@ -41,6 +41,8 @@ import manifold.util.concurrent.LocklessLazyVar;
 
 public class ManResolve extends Resolve
 {
+  private static final String RESOLVE_FIELD = "rs";
+
   private static final LocklessLazyVar<Class<?>> EXTENSION_TRANSFORMER = LocklessLazyVar.make(
     () -> ReflectUtil.type( "manifold.ext.ExtensionTransformer" )
   );
@@ -64,27 +66,46 @@ public class ManResolve extends Resolve
   {
     super( context );
     _attr = Attr.instance( context );
+    ReflectUtil.field( this, "log" ).set( ReflectUtil.field( _attr, "log" ).get() );
 
-    if( ! JavacPlugin.IS_JAVA_8 )
+    if( JavacPlugin.IS_JAVA_8 )
+    {
+      reassignEarlyHolders8( context );
+    }
+    else
     {
       reassignEarlyHolders( context );
     }
   }
 
+  private void reassignEarlyHolders8( Context context )
+  {
+    ReflectUtil.field( Attr.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( DeferredAttr.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Check.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Infer.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Flow.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Lower.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Gen.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Annotate.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( JavacTrees.instance( context ), "resolve" ).set( this );
+    ReflectUtil.field( TransTypes.instance( context ), "resolve" ).set( this );
+  }
+
   private void reassignEarlyHolders( Context context )
   {
-    ReflectUtil.field( _attr, "rs" ).set( this );
-    ReflectUtil.field( DeferredAttr.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( Check.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( Infer.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( Flow.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( LambdaToMethod.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( Lower.instance( context ), "rs" ).set( this );
-    ReflectUtil.field( Gen.instance( context ), "rs" ).set( this );
+    ReflectUtil.field( _attr, RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( DeferredAttr.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Check.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Infer.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Flow.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( LambdaToMethod.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Lower.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( Gen.instance( context ), RESOLVE_FIELD ).set( this );
     ReflectUtil.field(
       ReflectUtil.method(
         ReflectUtil.type( "com.sun.tools.javac.jvm.StringConcat" ), "instance", Context.class )
-        .invokeStatic( context ), "rs" )
+        .invokeStatic( context ), RESOLVE_FIELD )
       .set( this );
     ReflectUtil.field( JavacTrees.instance( context ), "resolve" ).set( this );
     ReflectUtil.field( Annotate.instance( context ), "resolve" ).set( this );

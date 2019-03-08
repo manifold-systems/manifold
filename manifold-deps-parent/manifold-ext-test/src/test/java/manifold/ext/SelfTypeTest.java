@@ -1,17 +1,18 @@
 package manifold.ext;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import junit.framework.TestCase;
 import manifold.ext.api.Self;
 
 public class SelfTypeTest extends TestCase
 {
-//  List<@Self Foo> foo;
-//  @Self Foo foos;
-
   public void testSelfType()
   {
     barQualifier();
@@ -22,11 +23,28 @@ public class SelfTypeTest extends TestCase
     new Bar<String>().noQualifier();
   }
 
+  public void testExtensions()
+  {
+    "hi".something( "" );
+
+    LinkedList<String> ll = new LinkedList<>();
+    ll.add( "hi" );
+    String result = ll.brapple( l -> l.getFirst() );
+  }
+
   static class Foo<T>
   {
+    @Self Foo<T> _parent;
+    List<@Self Foo<T>> _children = new ArrayList<>();
+
     @Self Foo<T> getMe()
     {
       return this;
+    }
+
+    @Self Foo<T> getMeParam( @Self Foo<T> me )
+    {
+      return me;
     }
 
     List<@Self Foo<T>> getListFoo()
@@ -69,19 +87,30 @@ public class SelfTypeTest extends TestCase
       return Collections.singletonMap( this, "hi" );
     }
 
-    @Self Foo[] getArrayFoo()
+    @Self Foo<T>[] getArrayFoo()
     {
       Object array = Array.newInstance( getClass(), 1 );
       Array.set( array, 0, this );
-      return (Foo[])array;
+      return (Foo<T>[])array;
     }
 
-    Foo @Self [] getArrayFoo2()
+    Foo<T> @Self [] getArrayFoo2()
     {
       return getArrayFoo();
     }
-    
-    
+
+    Map<@Self Foo<T>, String> blahMap( Map<@Self Foo<T>, String> foo ){
+      return Collections.singletonMap( this, "hi" );
+    }
+    List<@Self Foo<T>> blahList( List<@Self Foo<T>> foo ){
+      return Collections.singletonList( null );
+    }
+
+    <R> R apply( Function<@Self Foo<T>, R> mapper )
+    {
+      return mapper.apply( this );
+    }
+
     void fooQualifier()
     {
       Foo<T> foo = this.getMe();
@@ -95,6 +124,13 @@ public class SelfTypeTest extends TestCase
       Map<Foo<T>, String> maps = this.getMapFoo2();
       Foo<T>[] foos = this.getArrayFoo();
       Foo<T>[] foos2 = this.getArrayFoo2();
+      List<Foo<T>> l = this.blahList( new ArrayList<Foo<T>>() );
+      Map<Foo<T>, String> m = this.blahMap( new HashMap<Foo<T>, String>() );
+      Foo<T> fooMe = this.apply( e -> e.getMe() );
+
+      this._parent = new Foo<>();
+      this._children.add( new Foo<T>() );
+      Foo<T> child = _children.get(0);
     }
 
     void noQualifier()
@@ -109,14 +145,25 @@ public class SelfTypeTest extends TestCase
       Map<Foo<T>, String> maps = getMapFoo2();
       Foo<T>[] foos = getArrayFoo();
       Foo<T>[] foos2 = getArrayFoo2();
+      List<Foo<T>> l = blahList( new ArrayList<Foo<T>>() );
+      Map<Foo<T>, String> m = blahMap( new HashMap<Foo<T>, String>() );
+      Foo<T> fooMe = apply( e -> e.getMe() );
+
+      _parent = new Foo<>();
+      _children.add( new Foo<T>() );
+      Foo<T> child = _children.get(0);
     }
   }
 
   static class Bar<T> extends Foo<T>
   {
+    void barMethod() {}
+
     void noQualifier()
     {
       Bar<T> bar = getMe();
+      getMeParam(this).barMethod();
+
       List<Bar<T>> list = getListFoo();
       List<? extends Bar> list2 = getListFoo2();
       List<? extends Map<String, Bar<T>>> list3 = getListMapFoo();
@@ -127,6 +174,46 @@ public class SelfTypeTest extends TestCase
       Map<Bar<T>, String> maps = getMapFoo2();
       Bar[] bars = getArrayFoo();
       Bar[] bars2 = getArrayFoo2();
+      List<Bar<T>> l = blahList( new ArrayList<>() );
+      Map<Bar<T>, String> m = blahMap( new HashMap<>() );
+      Bar<T> barMe = apply( e -> e.getMe() );
+
+      _parent = new Bar<>();
+      _parent.barMethod();
+
+      _children.add( new Bar<T>() );
+      Bar<T> child = _children.get(0);
+    }
+  }
+
+  static class Buz<S> extends Bar<S>
+  {
+    void buzMethod() {}
+
+    void noQualifier()
+    {
+      Buz<S> buz = getMe();
+      this.getMeParam(this).buzMethod();
+
+      List<Buz<S>> list = getListFoo();
+      List<? extends Buz> list2 = getListFoo2();
+      List<? extends Map<String, Buz<S>>> list3 = getListMapFoo();
+      List<? extends Map<Buz<S>, String>> list4 = getListMapFoo2();
+      List<? extends Map<String, ? extends Buz>> list5 = getListMapFoo3();
+      List<? extends Map<? extends Buz, String>> list6 = getListMapFoo4();
+      Map<String, Buz<S>> map = getMapFoo();
+      Map<Buz<S>, String> maps = getMapFoo2();
+      Buz[] buzs = getArrayFoo();
+      Buz[] buzs2 = getArrayFoo2();
+      List<Buz<S>> l = blahList( new ArrayList<Buz<S>>() );
+      Map<Buz<S>, String> m = blahMap( new HashMap<Buz<S>, String>() );
+      Buz<S> buzMe = apply( e -> e.getMe() );
+
+      _parent = new Buz<S>();
+      _parent.buzMethod();
+
+      _children.add( new Buz<S>() );
+      Buz<S> child = _children.get(0);
     }
   }
 
@@ -143,13 +230,25 @@ public class SelfTypeTest extends TestCase
     Map<String, Bar<String>> map = zeeBar.getMapFoo();
     Map<Bar<String>, String> maps = zeeBar.getMapFoo2();
     Bar[] bars = zeeBar.getArrayFoo();
-    //Bar[] bars2  = zeeBar.getArrayFoo2();
+    Bar[] bars2  = zeeBar.getArrayFoo2();
+    List<Bar<String>> l = zeeBar.blahList( new ArrayList<Bar<String>>() );
+    Map<Bar<String>, String> m = zeeBar.blahMap( new HashMap<Bar<String>, String>() );
+    Bar<String> buzMe = zeeBar.apply( e -> e.getMe() );
+
+    zeeBar._parent = new Bar<String>();
+    zeeBar._parent.barMethod();
+
+    zeeBar._children.add( new Bar<String>() );
+    Bar<String> child = zeeBar._children.get(0);
   }
 
   private void barQualifierRaw()
   {
     Bar zeeBar = new Bar();
-    Bar bar = zeeBar.getMe();
+
+//    Bar bar = zeeBar.getMe();
+//    bar.barMethod();
+
     List<Bar> list = zeeBar.getListFoo();
     List<? extends Bar> list2 = zeeBar.getListFoo2();
     List<? extends Map<String, Bar>> list3 = zeeBar.getListMapFoo();
@@ -158,8 +257,15 @@ public class SelfTypeTest extends TestCase
     List<? extends Map<? extends Bar, String>> list6 = zeeBar.getListMapFoo4();
     Map<String, Bar> map = zeeBar.getMapFoo();
     Map<Bar, String> maps = zeeBar.getMapFoo2();
-    Bar[] bars = zeeBar.getArrayFoo();
-    //Bar[] bars2  = zeeBar.getArrayFoo2();
-  }
+//    Bar[] bars = zeeBar.getArrayFoo();
+    Bar[] bars2  = zeeBar.getArrayFoo2();
+    List<Bar> l = zeeBar.blahList( new ArrayList<Bar>() );
+    Map<Bar, String> m = zeeBar.blahMap( new HashMap<Bar, String>() );
 
+//    zeeBar.addChild( new Bar() );
+//    Bar child = zeeBar._children.get(0);
+
+    //"".hi();
+    //java.util.Date date = new java.util.Date( asdfg );
+  }
 }

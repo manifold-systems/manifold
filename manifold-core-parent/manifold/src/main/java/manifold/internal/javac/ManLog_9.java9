@@ -1,19 +1,30 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.ArgumentAttr;
+import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.comp.Flow;
+import com.sun.tools.javac.comp.Infer;
 import com.sun.tools.javac.comp.Lower;
 import com.sun.tools.javac.comp.MemberEnter;
 import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.comp.TypeEnter;
+import com.sun.tools.javac.jvm.ClassReader;
+import com.sun.tools.javac.jvm.ClassWriter;
+import com.sun.tools.javac.jvm.Gen;
+import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.DiagnosticSource;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.util.MandatoryWarningHandler;
 import java.io.PrintWriter;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -47,38 +58,67 @@ public class ManLog_9 extends Log
   {
     super( ctx );
     ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
+    try { ReflectUtil.field( diagnosticHandler, "this$0" ).set( this ); } catch( Exception ignore ){}
     ReflectUtil.field( this, "source" ).set( source );
     ReflectUtil.field( this, "writers" ).set( writers );
     _suspendedIssues = new HashMap<>();
     _extensionTransformerClass = LocklessLazyVar.make(
       () -> ReflectUtil.type( "manifold.ext.ExtensionTransformer" ) );
-    reassignAllEarlyHolders( ctx );
+    reassignLog( ctx );
   }
 
-  private void reassignAllEarlyHolders( Context ctx )
+  private void reassignLog( Context ctx )
   {
     Object[] earlyAttrHolders = {
+      Annotate.instance( ctx ),
       ArgumentAttr.instance( ctx ),
-      Resolve.instance( ctx ),
+      Check.instance( ctx ),
+      ClassReader.instance( ctx ),
+      ClassWriter.instance( ctx ),
       DeferredAttr.instance( ctx ),
       Enter.instance( ctx ),
-      MemberEnter.instance( ctx ),
-      TypeEnter.instance( ctx ),
-      Lower.instance( ctx ),
       Flow.instance( ctx ),
-      //## todo:  some of these need their original Log, e.g., compile this "java.util.Date date = new java.util.Date( asdfg );" and see the fatal error report
-      //  TransTypes.instance( ctx ),
-      //  Annotate.instance( ctx ),
-      //  TypeAnnotations.instance( ctx ),
-      //  JavacTrees.instance( ctx ),
-      //  JavaCompiler.instance( ctx ),
+      Gen.instance( ctx ),
+      Infer.instance( ctx ),
+      JavaCompiler.instance( ctx ),
+      JavacProcessingEnvironment.instance( ctx ),
+      JavacTrees.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      Resolve.instance( ctx ),
+      TypeEnter.instance( ctx ),
+//      LambdaToMethod.instance( ctx ),
+//      Lower.instance( ctx ),
+//      MemberEnter.instance( ctx ),
+//      TransTypes.instance( ctx ),
+//      TypeAnnotations.instance( ctx ),
     };
     for( Object instance: earlyAttrHolders )
     {
-      ReflectUtil.LiveFieldRef log = ReflectUtil.WithNull.field( instance, "log" );
-      if( log != null )
+      ReflectUtil.LiveFieldRef l = ReflectUtil.WithNull.field( instance, "log" );
+      if( l != null )
       {
-        log.set( this );
+        l.set( this );
+      }
+    }
+
+    // Reassign Log fields
+    // Note this is only relevant when compiling with annotation processors
+
+    // Also reassign the 'log' fields in Check's various MandatoryWarningHandlers...
+    for( Field f: Check.class.getDeclaredFields() )
+    {
+      if( MandatoryWarningHandler.class.isAssignableFrom( f.getType() ) )
+      {
+        f.setAccessible( true );
+        try
+        {
+          Object mwh = f.get( Check.instance( ctx ) );
+          ReflectUtil.field( mwh, "log" ).set( this );
+        }
+        catch( IllegalAccessException e )
+        {
+          throw new RuntimeException( e );
+        }
       }
     }
   }

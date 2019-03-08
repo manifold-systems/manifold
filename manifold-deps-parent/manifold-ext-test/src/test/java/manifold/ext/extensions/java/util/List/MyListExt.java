@@ -2,6 +2,7 @@ package manifold.ext.extensions.java.util.List;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import manifold.ext.api.Extension;
 import manifold.ext.api.Self;
@@ -62,6 +63,12 @@ public class MyListExt
 
   public static <E,F extends List<E>> F find(@This List<E> thiz, F f )
   {
-      return f;
+    return f;
   }
+
+  public static <E, R> R brapple( @This List<E> thiz, Function<@Self List<E>, R> mapper )
+  {
+    return mapper.apply(thiz);
+  }
+
 }

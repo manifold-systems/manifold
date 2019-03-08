@@ -547,7 +547,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( !isSelfInReturn( tree, tree ) )
+    if( !isSelfInMethodDeclOrFieldDecl( tree, tree ) )
     {
       _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_SELF_NOT_ALLOWED_HERE.get() );
     }
@@ -590,7 +590,9 @@ public class ExtensionTransformer extends TreeTranslator
 
   private boolean isDeclaringClassOrExtension( JCTree annotated, String fqn, JCTree.JCClassDecl enclosingClass )
   {
-    if( enclosingClass.sym.getQualifiedName().toString().equals( fqn ) )
+    if( enclosingClass.sym.getQualifiedName().toString().equals( fqn ) ||
+        _tp.getTypes().isAssignable( IDynamicJdk.instance().getTypeElement(
+          _tp.getContext(), _tp.getCompilationUnit(), fqn ).asType(), enclosingClass.sym.type ) )
     {
       return true;
     }
@@ -636,7 +638,7 @@ public class ExtensionTransformer extends TreeTranslator
     return findDeclMethod( _tp.getParent( annotated ) );
   }
 
-  private boolean isSelfInReturn( Tree tree, JCTree.JCAnnotation anno )
+  private boolean isSelfInMethodDeclOrFieldDecl( Tree tree, JCTree.JCAnnotation anno )
   {
     if( tree == null )
     {
@@ -644,18 +646,32 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     Tree parent = _tp.getParent( tree );
-    if( parent instanceof JCTree.JCMethodDecl &&
-        (tree == ((JCTree.JCMethodDecl)parent).getModifiers() ||
-         tree == ((JCTree.JCMethodDecl)parent).getReturnType() ||
-         ((JCTree.JCMethodDecl)parent).getModifiers().getAnnotations().contains( anno )) )
+    if( parent instanceof JCTree.JCTypeParameter )
     {
-      // @Self allowed only in/on return type of instance method
+      // @Self not allowed on type param
+      return false;
+    }
+
+    if( parent instanceof JCTree.JCMethodDecl )
+    {
+      // @Self allowed only on return type and parameters of an instance method
       return !((JCTree.JCMethodDecl)parent).getModifiers()
         .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
              isExtensionClass( getEnclosingClass( parent ) );
     }
 
-    return isSelfInReturn( parent, anno );
+    if( parent instanceof JCTree.JCVariableDecl )
+    {
+      Tree container = _tp.getParent( parent );
+      if( container instanceof JCTree.JCClassDecl )
+      {
+        // @Self allowed only on class var, not local var
+        return !((JCTree.JCVariableDecl)parent).getModifiers()
+          .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
+               isExtensionClass( getEnclosingClass( parent ) );
+      }
+    }
+    return isSelfInMethodDeclOrFieldDecl( parent, anno );
   }
 
   @Override
@@ -1119,7 +1135,9 @@ public class ExtensionTransformer extends TreeTranslator
         if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
           Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
-          if( extendClassSym != null && !TypeUtil.isStructuralInterface( _tp, extendClassSym ) ) // an extended class could be made a structural interface which results in Object as @This param, ignore this
+          if( extendClassSym != null &&
+              !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
+              !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) )
           {
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
           }
