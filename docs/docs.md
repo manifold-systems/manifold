@@ -2651,8 +2651,13 @@ public class DoublyNode extends SinglyNode {
   private @Self DoublyNode prev;
 
   public void setNext(@Self SinglyNode next) {
-    super.setNext(next);
-    if(next instanceof DoublyNode) next.prev = this;
+    if(next instanceof DoublyNode) {
+      super.setNext(next);
+      next.prev = this;
+    }
+    else {
+      throw new IllegalArgumentException();
+    }
   }
 }
 ```
