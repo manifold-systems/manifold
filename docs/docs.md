@@ -2482,20 +2482,58 @@ inaccessible members:
 something.foo().jailbreak().bar.jailbreak().baz = value;
 ``` 
 
-## The Self Type
+## The *Self* Type
 
-The *self type* is a common term used in the language community to mean *"the runtime type of `this`"* and is most useful
-in situations where you want the return type of a method in a supertype to have the type of the subtype.  Java does not 
-directly support the self type, but it does provide some useful features that approximate some of the self type's capabilities,
-namely covariant return types and recursive generic types.  While both of these features are useful, the self type hits
-the sweet spot between them.
+The *Self* type is a common term used in the language community to mean *"the subtype of `this`"* and is most useful
+in situations where you want a return type or parameter type of a method in a base type to reflect the subtype
+i.e., the *invoking* type.  For instance, consider the `equals()` method. We all know it suffers from Java's lack of a
+Self type:
+```java
+public class MyClass {
+  @Override
+  public boolean equals(Object obj) { // why Object?!
+    ...
+  }
+}
 
-Manifold's `@Self` annotation provides Java with a direct self type implementation.  Use it on method return types to 
-enforce *"the runtime type of `this`"* where suitable.
+MyClass myClass = new MyClass();
+myClass.equals("nope"); // this compiles! :(
+```
+What we want is to somehow override `equals()` to enforce `MyClass` symmetry:
+```java
+public boolean equals(MyClass obj) {
+  ...
+}
+```
+But Java does not support covariance in parameter types, and for good reason. It would break if we called it like this:
+```java
+((Object)myClass).equals("notMyClass"); // BOOM! String is not assignable to MyClass
+```
 
-### The Basics
+Manifold's **`@Self`** type provides an elegant solution:
+```java
+public boolean equals(@Self Object obj) {
+  ...
+}
+```
+Now we have the behavior we want:
+```java
+MyClass myClass = new MyClass();
+myClass.equals("notMyClass"); // Compile Error. YES!!!
+```
 
-A common use-case for the self type involves fluent APIs like the *Builder* pattern:
+> Note although Java does not provide a Self type, it does provide some of its capabilities with *recursive generic types*.
+But this feature can be difficult to understand and use, and the syntax it imposes is often unsuitable for class
+hierarchies and APIs. Additionally, it is ineffective for cases like `equals()` -- it requires that we change the base
+class definition! E.g., `public class Object<T extends Object<T>>`... oy!
+
+But as you'll see Manifold's `@Self` annotation altogether removes the need for recursive generics. It provides Java with
+a simpler, more versatile alternative.  Use it on method return types, parameter types, and field types to enforce
+*"the subtype of `this`"* where suitable.
+
+### Builders
+
+A common use-case for the Self type involves fluent APIs like the *Builder* pattern:
 
 ```java
 public class VehicleBuilder {
@@ -2523,12 +2561,12 @@ public class AirplaneBuilder extends VehicleBuilder {
 ...
 
 Airplane airplane = new AirplaneBuilder()
-  .withWheels(2) // returns VehicleBuilder
+  .withWheels(3) // returns VehicleBuilder :(
   .withWings(1)  // ERROR
 ```
 
 `withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to return the 
-*"the runtime type of `this`"*.  This is what the self type accomplishes:
+*"the subtype of `this`"*.  This is what the self type accomplishes:
 
 ```java
   public @Self VehicleBuilder withWheels(int wheels) {
@@ -2541,23 +2579,28 @@ Now with the return type annotated with `@Self` the example works as desired:
 
 ```java
 Airplane airplane = new AirplaneBuilder()
-  .withWheels(2) // returns AirplaneBuilder
+  .withWheels(2) // returns AirplaneBuilder :)
   .withWings(1)  // GOOD!
 ``` 
 
-Annotate with `@Self` to preserve the *"the runtime type of `this`"* anywhere on or in a method return type.
+Annotate with `@Self` to preserve the *"the subtype of `this`"* anywhere on or in a method return type, parameter type,
+or field type.
 
 ### Self + Generics
 
-You can also use `@Self` to annotate a _type argument_ of a return type.  A nice example of this involves a 
-typical graph or tree structure where the nodes in the structure are homogeneous:
+You can also use `@Self` to annotate a _type argument_.  A nice example of this involves a typical graph or tree
+structure where the nodes in the structure are homogeneous:
 
 ```java
 public class Node {
-  private List<Node> children;
+  private List<@Self Node> children;
   
   public List<@Self Node> getChildren() {
-      return children;
+    return children;
+  }
+
+  public void addChild(@Self Node child) {
+    children.add(child);
   }
 }
 
@@ -2566,7 +2609,7 @@ public class MyNode extends Node {
 }
 ```
 
-Here you can make the component type of `List` the self type so you can use the `getChildren` method type-safely from 
+Here you can make the component type of `List` the Self type so you can use the `getChildren` method type-safely from
 subtypes of node:
 
 ```java
@@ -2576,8 +2619,8 @@ List<MyNode> = myNode.getChildren(); // wunderbar!
 
 ### Self + Extensions
 
-You can use `@Self` with extension methods too.  Here we make an extension method as a means to conveniently chain 
-insertions to `Map` while preserving its concrete type:
+You can use `@Self` with [extension methods](#extension-classes) too.  Here we make an extension method as a means to
+conveniently chain additions to `Map` while preserving its concrete type:
 
 ```java
 public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
@@ -2586,11 +2629,49 @@ public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
 }
 
 HashMap<String, String> map = new HashMap<>()
-  .add("bob", "fishspread")
-  .add("alec", "taco")
-  .add("miles", "mustard");
+  .add("nick", "grouper")
+  .add("miles", "amberjack");
+  .add("alec", "barracuda")
 ```
- 
+
+### Overriding Methods
+
+Using @Self in a method return type or parameter type has _no_ effect on the method's override characteristics or binary
+signature:
+```java
+public class SinglyNode {
+  private @Self SinglyNode next;
+  
+  public void setNext(@Self SinglyNode next) {
+    this.next = next;
+  }
+}
+
+public class DoublyNode extends SinglyNode {
+  private @Self DoublyNode prev;
+
+  public void setNext(@Self SinglyNode next) {
+    super.setNext(next);
+    if(next instanceof DoublyNode) next.prev = this;
+  }
+}
+```
+Of particular interest is the `@Self SinglyNode` parameter in the `DoublyNode` override. As mentioned earlier Java does not
+permit covariant parameter overrides -- we can't override the method using a `DoublyNode` parameter type.  To make up for
+this `@Self` informs the compiler that the parameter is indeed a `DoublyNode` when invoked from a `DoublyNode`:
+```java
+doublyNode.setNext(singlyNode); // Compile Error :)
+doublyNode.setNext(doublyNode); // OK :)
+```
+This is precisely the arrangement we want.  Type-safety is enforced at the call site.  But, equally important, the
+subclass handles the parameter as a base class.  Why?  Because this:
+```java
+((SinglyNode)doublyNode).setNext(singlyNode);
+```
+Here `setNext()`, although invoked as a `SinglyNode`, dispatches to the `DoublyNode` override.  Thus the `SinglyNode` parameter
+type enforces that a `SinglyNode` cannot be mistaken for `DoublyNode`, hence the necessity of the `instanceof` check in
+`setNext()`.
+
 ## Using `@Precompile`
 
 By default a Type Manifold compiles a resource type only if you use it somewhere in your code.  Normally this is 
