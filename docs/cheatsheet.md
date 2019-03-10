@@ -542,7 +542,7 @@ public class DoublyNode extends SinglyNode {
   public void setNext(@Self SinglyNode next) {
     if(next instanceof DoublyNode) {
       super.setNext(next);
-      next.prev = this;
+      ((DoublyNode)next).prev = this;
     }
     else {
       throw new IllegalArgumentException();
