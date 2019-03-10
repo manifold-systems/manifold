@@ -400,39 +400,96 @@ secretClass._data = "hey";
 
 ## [@Self - The Self Type](http://manifold.systems/docs.html#the-self-type)
 
-Use `@Self` on method return types to enforce `type of this` where suitable.
+Manifold supports the *Self* type via the `@Self` annotation. Use `@Self` with method return types, parameter types, and
+field types to enforce `subtype of this` where suitable.  Use `@Self` as a simpler, more versatile alternative to Java's
+recursive generic types.
 
-### Basic
+### `equals()`
 
-A common use-case for the self type involves the *Builder* pattern:
+You can use `@Self` to make methods like `equals()` type-safe:
+```java
+public class MyClass {
+  @Override
+  public boolean equals(@Self Object obj) {
+    ...
+  }
+}
+```
+Now your equals() method enforces `MyClass` as the parameter:
+```java
+myClass.equals("notMyClass"); // Compile Error. :)
+```
+
+### Builders
+
+A common use-case for the Self type involves fluent APIs like the *Builder* pattern:
 
 ```java
 public class VehicleBuilder {
   private int _wheels;
-  
-  public @Self VehicleBuilder withWheels(int wheels) {
+
+  public VehicleBuilder withWheels(int wheels) {
     _wheels = wheels;
-    return this;
+    return this; // returns THIS
   }
 }
-```  
+```
 
-With the return type annotated with `@Self` the example works as desired:
+This is fine until we subclass it:
+
+```java
+public class AirplaneBuilder extends VehicleBuilder {
+  private int _wings;
+
+  public AirplaneBuilder withWings(int wings) {
+    _wings = wings;
+    return this; // returns THIS
+  }
+}
+
+...
+
+Airplane airplane = new AirplaneBuilder()
+  .withWheels(3) // returns VehicleBuilder :(
+  .withWings(1)  // ERROR
+```
+
+`withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to return the
+*"the subtype of `this`"*.  This is what the self type accomplishes:
+
+```java
+  public @Self VehicleBuilder withWheels(int wheels) {
+    _wheels = wheels;
+    return this; // returns THIS
+  }
+```
+
+Now with the return type annotated with `@Self` the example works as desired:
 
 ```java
 Airplane airplane = new AirplaneBuilder()
-  .withWheels(2) // return type is AirplaneBuilder GOOD!
-  .withWings(1) 
-``` 
+  .withWheels(2) // returns AirplaneBuilder :)
+  .withWings(1)  // GOOD!
+```
+
+Annotate with `@Self` to preserve the *"the subtype of `this`"* anywhere on or in a method return type, parameter type,
+or field type.
 
 ### Self + Generics
+
+You can also use `@Self` to annotate a _type argument_.  A nice example of this involves a typical graph or tree
+structure where the nodes in the structure are homogeneous:
 
 ```java
 public class Node {
   private List<Node> children;
-  
+
   public List<@Self Node> getChildren() {
-      return children;
+    return children;
+  }
+
+  public void addChild(@Self Node child) {
+    children.add(child);
   }
 }
 
@@ -440,15 +497,19 @@ public class MyNode extends Node {
   ...
 }
 ```
+
+Here you can make the component type of `List` the Self type so you can use the `getChildren` method type-safely from
+subtypes of node:
+
 ```java
 MyNode myNode = findMyNode();
-List<MyNode> = myNode.getChildren(); // wunderbar! 
+List<MyNode> = myNode.getChildren(); // wunderbar!
 ```
 
 ### Self + Extensions
 
-You can use `@Self` with extension methods too.  Here we make an extension method as a means to conveniently chain 
-insertions to `Map` while preserving its concrete type:
+You can use `@Self` with [extension methods]((http://manifold.systems/docs.html#extension-classes)) too.  Here we make
+an extension method as a means to conveniently chain additions to `Map` while preserving its concrete type:
 
 ```java
 public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
@@ -457,9 +518,37 @@ public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
 }
 
 HashMap<String, String> map = new HashMap<>()
-  .add("bob", "fishspread")
-  .add("alec", "taco")
-  .add("miles", "mustard");
+  .add("nick", "grouper")
+  .add("miles", "amberjack");
+  .add("alec", "barracuda")
+```
+
+### Overriding Methods
+
+Using @Self in a method return type or parameter type has _no_ effect on the method's override characteristics or binary
+signature:
+```java
+public class SinglyNode {
+  private @Self SinglyNode next;
+
+  public void setNext(@Self SinglyNode next) {
+    this.next = next;
+  }
+}
+
+public class DoublyNode extends SinglyNode {
+  private @Self DoublyNode prev;
+
+  public void setNext(@Self SinglyNode next) {
+    if(next instanceof DoublyNode) {
+      super.setNext(next);
+      next.prev = this;
+    }
+    else {
+      throw new IllegalArgumentException();
+    }
+  }
+}
 ```
 
 ## [ManTL](http://manifold.systems/manifold-templates.html) (Superfast **type-safe** templates)

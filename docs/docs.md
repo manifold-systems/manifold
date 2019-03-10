@@ -2593,7 +2593,7 @@ structure where the nodes in the structure are homogeneous:
 
 ```java
 public class Node {
-  private List<@Self Node> children;
+  private List<Node> children;
   
   public List<@Self Node> getChildren() {
     return children;
