@@ -306,6 +306,12 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private void tailorJavaCompiler( TaskEvent te )
   {
+    if( !isExtensionsEnabled() )
+    {
+      // No need to hook up all the extension stuff if it's not enabled
+      return;
+    }
+
     CompilationUnitTree compilationUnit = te.getCompilationUnit();
     if( !(compilationUnit instanceof JCTree.JCCompilationUnit) )
     {
@@ -333,6 +339,9 @@ public class JavacPlugin implements Plugin, TaskListener
 
     // Override javac's Resolve
     ManResolve.instance( _ctx );
+
+    // Override javac's TransTypes
+    ManTransTypes.instance( _ctx );
 
     // Override javac's Types
     ManTypes.instance( _ctx );
@@ -365,6 +374,19 @@ public class JavacPlugin implements Plugin, TaskListener
 
     // Override javac's ClassFinder
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
+  }
+
+  private boolean isExtensionsEnabled()
+  {
+    try
+    {
+      Class.forName( "manifold.ext.api.Self" );
+      return true;
+    }
+    catch( ClassNotFoundException e )
+    {
+      return false;
+    }
   }
 
   private void injectManFileManager()

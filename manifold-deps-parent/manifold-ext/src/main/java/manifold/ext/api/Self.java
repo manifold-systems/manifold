@@ -22,8 +22,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotate a method's return type with @{@link Self} to achieve covariance
- * with respect to subclasses of the method's declaring class.
+ * Annotate a method return type, parameter type, or a field type with @{@link Self} to achieve <i>Self</i>
+ * type behavior.
  * <p/>
  * Note the {@link ElementType#METHOD} target is for <b>internal use only</b>.
  * This is necessary for generated code where even though the code applies the

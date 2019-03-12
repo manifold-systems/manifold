@@ -27,6 +27,7 @@ public class ManAttr_9 extends Attr implements ManAttr
   private final ManLog_9 _manLog;
   private Stack<JCTree.JCFieldAccess> _selects;
   private Stack<JCTree.JCAnnotatedType> _annotatedTypes;
+  private Stack<JCTree.JCMethodDecl> _methodDefs;
 
   public static ManAttr_9 instance( Context ctx )
   {
@@ -45,6 +46,7 @@ public class ManAttr_9 extends Attr implements ManAttr
     super( ctx );
     _selects = new Stack<>();
     _annotatedTypes = new Stack<>();
+    _methodDefs = new Stack<>();
 
     // Override logger to handle final field assignment for @Jailbreak
     _manLog = (ManLog_9)ManLog_9.instance( ctx );
@@ -78,6 +80,23 @@ public class ManAttr_9 extends Attr implements ManAttr
         attr.set( this );
       }
     }
+  }
+
+  public void visitMethodDef( JCTree.JCMethodDecl tree )
+  {
+    _methodDefs.push( tree );
+    try
+    {
+      super.visitMethodDef( tree );
+    }
+    finally
+    {
+      _methodDefs.pop();
+    }
+  }
+  public JCTree.JCMethodDecl peekMethodDef()
+  {
+    return _methodDefs.isEmpty() ? null : _methodDefs.peek();
   }
 
   /**

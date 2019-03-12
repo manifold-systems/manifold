@@ -31,13 +31,16 @@ import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Flow;
 import com.sun.tools.javac.comp.Infer;
+import com.sun.tools.javac.comp.LambdaToMethod;
 import com.sun.tools.javac.comp.Lower;
 import com.sun.tools.javac.comp.MemberEnter;
 import com.sun.tools.javac.comp.TransTypes;
 import com.sun.tools.javac.jvm.Gen;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.RichDiagnosticFormatter;
 import java.util.ArrayList;
@@ -50,6 +53,10 @@ public class ManTypes extends Types
   private static final String SELF_TYPE_NAME = "manifold.ext.api.Self";
 
   private final Symtab _syms;
+  private final Attr _attr;
+  private final ManTransTypes _transTypes;
+
+  private int _overrideCount;
 
   public static Types instance( Context ctx )
   {
@@ -67,8 +74,9 @@ public class ManTypes extends Types
   {
     super( ctx );
 
+    _attr = Attr.instance( ctx );
     _syms = Symtab.instance( ctx );
-
+    _transTypes = (ManTransTypes)TransTypes.instance( ctx );
     if( JavacPlugin.IS_JAVA_8 )
     {
       reassignEarlyHolders8( ctx );
@@ -91,6 +99,7 @@ public class ManTypes extends Types
     ReflectUtil.field( JavaCompiler.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacTrees.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacElements.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( LambdaToMethod.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Lower.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( ManResolve.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( MemberEnter.instance( context ), TYPES_FIELD ).set( this );
@@ -110,10 +119,7 @@ public class ManTypes extends Types
     ReflectUtil.field( JavaCompiler.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacElements.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacTrees.instance( context ), TYPES_FIELD ).set( this );
-    //noinspection ConstantConditions
-    ReflectUtil.field(
-      ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.LambdaToMethod" ), "instance", Context.class )
-        .invokeStatic( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( LambdaToMethod.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Lower.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( ManResolve.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( MemberEnter.instance( context ), TYPES_FIELD ).set( this );
@@ -135,6 +141,17 @@ public class ManTypes extends Types
       return memberType;
     }
 
+    if( _overrideCount > 0 || _transTypes.isTranslating() )
+    {
+      return memberType;
+    }
+
+    JCTree.JCMethodDecl methodDef = ((ManAttr)_attr).peekMethodDef();
+    if( isSameMethodSym( memberSym, methodDef ) )
+    {
+      return memberType;
+    }
+
     if( memberSym.getEnclosingElement().type.equals( qualifier ) )
     {
       return memberType;
@@ -147,6 +164,12 @@ public class ManTypes extends Types
       memberType = replaceSelfTypesWithQualifier( qualifier, memberType, selfPos );
     }
     return memberType;
+  }
+
+  private boolean isSameMethodSym( Symbol memberSym, JCTree.JCMethodDecl methodDef )
+  {
+    return methodDef != null && methodDef.sym != null &&
+           isSameType( erasure( methodDef.sym.type ), erasure( memberSym.type ) );
   }
 
   private java.util.List<TypeAnnotationPosition> findSelfAnnotationLocation( Symbol sym )
@@ -231,6 +254,11 @@ public class ManTypes extends Types
       List<TypeAnnotationPosition.TypePathEntry> selfLocation = selfPos.location;
       TypeAnnotationPosition.TypePathEntry loc = selfLocation.get( 0 );
       List<TypeAnnotationPosition.TypePathEntry> selfLocationCopy = List.from( selfLocation.subList( 1, selfLocation.size() ) );
+
+      if( loc == TypeAnnotationPosition.TypePathEntry.INNER_TYPE )
+      {
+        return receiverType;
+      }
 
       boolean replaced = false;
       ArrayList<Type> newParams = new ArrayList<>();
@@ -401,5 +429,25 @@ public class ManTypes extends Types
       return makeArray( ((Type.ArrayType)unannotatedType).getComponentType(), new Type.ArrayType( receiverType, _syms.arrayClass ) );
     }
     return receiverType;
+  }
+
+  /**
+   * Override to keep track of when/if implemetation() is in scope, if ManTypes#memberType() should not try to
+   * substitute the qualifier type for @Self because the qualifier is not really a call site, rather it is the
+   * declaring class of the method being checked for override etc.  Thus we need to let the normal signature flow
+   * through.
+   */
+  @Override
+  public Symbol.MethodSymbol implementation( Symbol.MethodSymbol ms, Symbol.TypeSymbol origin, boolean checkResult, Filter<Symbol> implFilter )
+  {
+    _overrideCount++;
+    try
+    {
+      return super.implementation( ms, origin, checkResult, implFilter );
+    }
+    finally
+    {
+      _overrideCount--;
+    }
   }
 }

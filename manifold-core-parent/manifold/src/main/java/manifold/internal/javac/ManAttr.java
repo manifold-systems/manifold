@@ -22,6 +22,7 @@ public interface ManAttr
 {
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
+  JCTree.JCMethodDecl peekMethodDef();
   JCTree.JCFieldAccess peekSelect();
   JCTree.JCAnnotatedType peekAnnotatedType();
 }
