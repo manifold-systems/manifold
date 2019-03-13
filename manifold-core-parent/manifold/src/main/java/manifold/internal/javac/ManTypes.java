@@ -38,7 +38,10 @@ import com.sun.tools.javac.comp.TransTypes;
 import com.sun.tools.javac.jvm.Gen;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.model.JavacTypes;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.List;
@@ -98,6 +101,7 @@ public class ManTypes extends Types
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavaCompiler.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacTrees.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( JavacTypes.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacElements.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( LambdaToMethod.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Lower.instance( context ), TYPES_FIELD ).set( this );
@@ -109,6 +113,9 @@ public class ManTypes extends Types
 
   private void reassignEarlyHolders( Context context )
   {
+    ReflectUtil.field(
+      ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Analyzer" ), "instance", Context.class )
+        .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Annotate.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Attr.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
@@ -118,17 +125,29 @@ public class ManTypes extends Types
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavaCompiler.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacElements.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( JavacProcessingEnvironment.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( JavacTrees.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( JavacTypes.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( LambdaToMethod.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Lower.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( ManResolve.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( MemberEnter.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field(
+      ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class )
+        .invokeStatic( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field(
+      ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Operators" ), "instance", Context.class )
+        .invokeStatic( context ), TYPES_FIELD ).set( this );
     //noinspection ConstantConditions
     ReflectUtil.field(
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.jvm.StringConcat" ), "instance", Context.class )
         .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( RichDiagnosticFormatter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field(
+      ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.TypeEnter" ), "instance", Context.class )
+        .invokeStatic( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( TreeMaker.instance( context ), TYPES_FIELD ).set( this );
   }
 
   @Override
