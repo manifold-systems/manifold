@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>0.49-SNAPSHOT</version>
+    <version>0.49-alpha</version>
   </parent>
 
   <artifactId>manifold-bootstrap-plugin</artifactId>
