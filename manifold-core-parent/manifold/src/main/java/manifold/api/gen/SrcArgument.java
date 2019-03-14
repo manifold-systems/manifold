@@ -42,7 +42,7 @@ public class SrcArgument extends SrcAnnotated<SrcArgument>
 
   public SrcArgument copy()
   {
-    return new SrcArgument( _value.copy() );
+    return new SrcArgument( _value.copy() ).name( getSimpleName() );
   }
 
   public SrcExpression getValue()

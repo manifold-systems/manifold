@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.ext.api;
+package manifold.ext.extensions.java.time.chrono.ChronoLocalDateTime;
 
-/**
- * The {@link Structural#factoryClass}, if provided, must implement this interface.
- * @param <T> The type of the value the proxy will delegate to.
- * @param <I> The interface to proxy
- */
-public interface IProxyFactory<T, I>
-{
-  /**
-   * Create a proxy for the {@code iface} interface, delegating to {@code target}.
-   * @param target The target value for the proxy
-   * @param iface The interface to proxy
-   * @return A proxy for the {@ocde iface} interface.
-   */
-  I proxy( T target, Class<I> iface );
+import manifold.ext.api.Extension;
+import manifold.ext.api.Structural;
+
+@Extension
+@Structural(factoryClass = Date_To_ChronoLocalDateTime.class)
+public class MyChronoLocalDateTimeExt {
 }

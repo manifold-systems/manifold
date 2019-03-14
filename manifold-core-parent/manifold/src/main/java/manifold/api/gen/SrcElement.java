@@ -16,6 +16,7 @@
 
 package manifold.api.gen;
 
+import com.sun.tools.javac.code.Type;
 import java.lang.reflect.Array;
 import manifold.util.ManEscapeUtil;
 
@@ -74,6 +75,10 @@ public abstract class SrcElement
     else if( value instanceof Class )
     {
       result = ((Class)value).getName() + ".class";
+    }
+    else if( value instanceof Type )
+    {
+      result = ((Type)value).tsym.getQualifiedName().toString() + ".class";
     }
     else if( value instanceof String )
     {

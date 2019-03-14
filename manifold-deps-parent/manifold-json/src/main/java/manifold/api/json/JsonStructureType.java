@@ -496,7 +496,7 @@ public class JsonStructureType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent );
-    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class, backingClass=Map.class)\n" );
+    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
     indent( sb, indent );
     sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb, identifier ) ).append( " {\n" );
     renderFileField( sb, indent + 2 );
@@ -857,9 +857,9 @@ public class JsonStructureType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent += 2 );
-    sb.append( "class ProxyFactory implements IProxyFactory<Map> {\n" );
+    sb.append( "class ProxyFactory implements IProxyFactory<Map, ${getIdentifier()}> {\n" );
     indent( sb, indent );
-    sb.append( "  public Object proxy(Map bindings, Class iface) {\n" );
+    sb.append( "  public ${getIdentifier()} proxy(Map bindings, Class<${getIdentifier()}> iface) {\n" );
     indent( sb, indent );
     sb.append( "    if(!(bindings instanceof Bindings)) {bindings = new DataBindings(bindings);}\n" );
     indent( sb, indent );

@@ -27,7 +27,7 @@ import manifold.util.JsonUtil;
  * A base interface for all JSON and YAML types with methods to transform a JSON value List to/from JSON and YAML
  * and to conveniently use the List for JSON and YAML Web services / APIs.
  */
-@Structural(factoryClass = IJsonList.Factory.class, backingClass = List.class)
+@Structural(factoryClass = IJsonList.Factory.class)
 public interface IJsonList<T> extends IListBacked<T>
 {
   /** Loader is a fluent API with methods for loading content from String, URL, file, etc. */
@@ -50,13 +50,12 @@ public interface IJsonList<T> extends IListBacked<T>
   }
 
   /** For Internal Use Only */
-  class Factory implements IProxyFactory<List>
+  class Factory implements IProxyFactory<List, IJsonList>
   {
     @Override
-    public Class proxy( List target, Class iface )
+    public IJsonList proxy( List target, Class<IJsonList> iface )
     {
-      assert iface == IJsonList.class;
-      return JsonList.class;
+      return new JsonList( target );
     }
   }
 }

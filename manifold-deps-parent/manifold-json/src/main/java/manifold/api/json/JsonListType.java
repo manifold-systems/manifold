@@ -18,7 +18,6 @@ package manifold.api.json;
 
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -182,7 +181,7 @@ public class JsonListType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent );
-    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class, backingClass=List.class)\n" );
+    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
     indent( sb, indent );
     //noinspection unused
     String componentType = getPropertyType( getComponentType(), true, false );
@@ -363,9 +362,9 @@ public class JsonListType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent += 2 );
-    sb.append( "class ProxyFactory implements IProxyFactory<List> {\n" );
+    sb.append( "class ProxyFactory implements IProxyFactory<List, ${getIdentifier()}> {\n" );
     indent( sb, indent );
-    sb.append( "  public Object proxy(List list, Class iface) {\n" );
+    sb.append( "  public ${getIdentifier()} proxy(List list, Class<${getIdentifier()}> iface) {\n" );
     indent( sb, indent );
     sb.append( "    return new Proxy(list);\n" );
     indent( sb, indent );

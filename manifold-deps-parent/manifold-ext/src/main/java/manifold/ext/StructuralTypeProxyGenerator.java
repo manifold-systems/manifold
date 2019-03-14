@@ -113,7 +113,9 @@ class StructuralTypeProxyGenerator
 
   private void genInterfaceMethodDecl( StringBuilder sb, Method mi, Class rootType )
   {
-    if( (mi.isDefault() && !implementsMethod( rootType, mi )) || Modifier.isStatic( mi.getModifiers() ) )
+    if( (mi.isDefault() && !implementsMethod( rootType, mi )) ||
+        Modifier.isStatic( mi.getModifiers() ) ||
+        mi.isBridge() || mi.isSynthetic() )
     {
       return;
     }

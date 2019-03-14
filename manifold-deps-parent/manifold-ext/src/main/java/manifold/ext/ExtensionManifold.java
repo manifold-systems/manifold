@@ -119,7 +119,8 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
           {
             try
             {
-              //## note: this is pretty sloppy science here, but we don't want to parse java or use asm at this point
+              //## note: this is pretty sloppy science here, but we don't want to parse
+              // java or use asm here i.e., handlesFile() this has to be *fast*.
 
               if( file.getExtension().equalsIgnoreCase( "java" ) )
               {
@@ -172,7 +173,6 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
 
   private boolean isInnerToPrimaryManifold( String topLevel, String relativeInner )
   {
-    //noinspection unchecked
     Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel,
       tm -> tm.getContributorKind() == ContributorKind.Primary &&
             tm instanceof ResourceFileTypeManifold &&
@@ -270,7 +270,6 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
         return;
       }
 
-      //noinspection unchecked
       for( ITypeManifold tm: ExtensionManifold.this.getModule().findTypeManifoldsFor( request.file, tm -> tm instanceof IExtensionClassProducer ) )
       {
         for( String extended: ((IExtensionClassProducer)tm).getExtendedTypesForFile( request.file ) )

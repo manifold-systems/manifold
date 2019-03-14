@@ -19,25 +19,41 @@ package manifold.ext;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.script.Bindings;
+import manifold.api.type.ITypeManifold;
 import manifold.ext.api.IBindingType;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.ICoercionProvider;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.util.ReflectUtil;
+import manifold.util.ServiceUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
+import manifold.util.concurrent.LocklessLazyVar;
 
 public class RuntimeMethods
 {
-  private static Map<Class, Map<Class, IProxyFactory<?>>> PROXY_CACHE = new ConcurrentHashMap<>();
+  private static Map<Class, Map<Class, IProxyFactory<?,?>>> PROXY_CACHE = new ConcurrentHashMap<>();
   private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
+  private static final LocklessLazyVar<Set<IProxyFactory>> _registeredProxyFactories =
+    LocklessLazyVar.make( () -> {
+      Set<IProxyFactory> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, IProxyFactory.class, RuntimeMethods.class.getClassLoader() );
+      return registered;
+    } );
 
   @SuppressWarnings({"UnusedDeclaration", "WeakerAccess"})
   public static Object constructProxy( Object root, Class iface )
@@ -417,7 +433,7 @@ public class RuntimeMethods
       return root;
     }
 
-    Map<Class, IProxyFactory<?>> proxyByClass = PROXY_CACHE.get( iface );
+    Map<Class, IProxyFactory<?,?>> proxyByClass = PROXY_CACHE.get( iface );
     if( proxyByClass == null )
     {
       PROXY_CACHE.put( iface, proxyByClass = new ConcurrentHashMap<>() );
@@ -454,33 +470,75 @@ public class RuntimeMethods
 
   private static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )
   {
+    // The self-proxy strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via
+    // ICallHandler
+
     Structural anno = iface.getAnnotation( Structural.class );
     if( anno != null )
     {
-      // This strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via
-      // ICallHandler
-
-      Class<?> backingClass = anno.backingClass();
-      if( backingClass != Void.class && backingClass.isAssignableFrom( rootClass ) )
+      Class factoryClass = anno.factoryClass();
+      if( factoryClass != Void.class )
       {
-        Class factoryClass = anno.factoryClass();
-        try
+        // If the proxy factory declared in @Structural handles the rootClass, create the proxy via the factory
+
+        IProxyFactory proxyFactory = maybeMakeProxyFactory( rootClass, factoryClass, RuntimeMethods::constructProxyFactory );
+        if( proxyFactory != null )
         {
-          // In Java 9+ in modular mode the proxy factory class belongs to the owner's module,
-          // therefore we need to use the constructor and make it accessible from the manifold module
-          // before calling newInstance() (as opposed to calling newInstance() from the class)
-          Constructor constructor = factoryClass.getConstructors()[0];
-          ReflectUtil.setAccessible( constructor );
-          return (IProxyFactory)constructor.newInstance();
-          //return (IProxyFactory)factoryClass.newInstance();
-        }
-        catch( Exception e )
-        {
-          throw new RuntimeException( e );
+          return proxyFactory;
         }
       }
     }
+
+    // See if there is a registered IProxyFactory for the rootClass and iface, so create one that way,
+    // otherwise return null
+
+    return findRegisteredFactory( rootClass, iface );
+  }
+
+  private static IProxyFactory findRegisteredFactory( Class<?> rootClass, Class<?> iface )
+  {
+    //noinspection ConstantConditions
+    return _registeredProxyFactories.get().stream()
+      .filter( e -> maybeMakeProxyFactory( rootClass, e.getClass(), c -> e ) != null )
+      .findFirst().orElse( null );
+  }
+
+  private static IProxyFactory maybeMakeProxyFactory( Class<?> rootClass, Class factoryClass, Function<Class<?>, IProxyFactory> proxyFactoryMaker )
+  {
+    Type type = Arrays.stream( factoryClass.getGenericInterfaces() )
+      .filter( e -> e.getTypeName().startsWith( IProxyFactory.class.getTypeName() ) )
+      .findFirst().orElse( null );
+    if( type instanceof ParameterizedType )
+    {
+      Type typeArg = ((ParameterizedType)type).getActualTypeArguments()[0];
+      if( typeArg instanceof ParameterizedType )
+      {
+        typeArg = ((ParameterizedType)typeArg).getRawType();
+      }
+      if( ((Class<?>)typeArg).isAssignableFrom( rootClass ) )
+      {
+        return proxyFactoryMaker.apply( factoryClass );
+      }
+    }
     return null;
+  }
+
+  private static IProxyFactory constructProxyFactory( Class factoryClass )
+  {
+    try
+    {
+      // In Java 9+ in modular mode the proxy factory class belongs to the owner's module,
+      // therefore we need to use the constructor and make it accessible from the manifold module
+      // before calling newInstance() (as opposed to calling newInstance() from the class)
+      Constructor constructor = factoryClass.getConstructors()[0];
+      ReflectUtil.setAccessible( constructor );
+      return (IProxyFactory)constructor.newInstance();
+      //return (IProxyFactory)factoryClass.newInstance();
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   public static Object coerceToBindingValue( Object arg )
