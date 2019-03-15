@@ -2326,7 +2326,7 @@ Coordinate coord = (Coordinate) new Point(4,5);
 coord.getX();
 ```
 The first time `Point` is called through a `Coordinate` Manifold dynamically generates and compiles a proxy for `Point`
-as a `Coordinate`.  Most of the time this may not matter -- avoid premature optimization! -- but when it does matter the
+as a `Coordinate`.  Most of the time this does not matter -- avoid premature optimization! -- but when it does matter the
 delay can be a problem.  To address that you can provide your own proxy ahead of time via the `IProxyFactory` service.
 ```java
 public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
