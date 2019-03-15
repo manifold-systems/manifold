@@ -2312,7 +2312,64 @@ Voila! `Vector` now structurally implements `Coordinate` and can be used with `c
 Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
 project does not control.
 
-  
+### Implementation by Proxy
+
+You can provide your own proxies the compiler can use to delegate structural calls.  This is especially useful to avoid
+the ones-time runtime overhead of the first call through a structural interface. Consider the `Coordinate` structural
+interface earlier.
+```java
+Coordinate coord = (Coordinate) new Point(4,5);
+coord.getX();
+```
+The first time `Point` is called through a `Coordinate` Manifold dynamically generates and compiles a proxy for `Point`
+as a `Coordinate`.  Most of the time this may not matter -- avoid premature optimization! -- but when it does matter the
+delay can be a problem.  To address that you can provide your own proxy ahead of time via the `IProxyFactory` service.
+```java
+public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
+  @Override
+  public Coordinate proxy(Point pt, Class<Coordinate> cls) {
+    return new Proxy(pt);
+  }
+
+  public static class Proxy implements Coordinate
+  {
+    private final Point _delegate;
+
+    public Proxy(Point pt) {
+      _delegate = tp;
+    }
+
+    public double getX() {
+      return _delegate.getX();
+    }
+
+    public double getY() {
+      return _delegate.getY();
+    }
+  }
+}
+```
+The compiler uses this proxy factory to make `Point` calls through `Coordinate`, which vastly improves the first time
+call performance since it saves Manifold from dynamically generating and compiling a similar class.
+
+Your proxy factory must be registered as a service in `META-INF` directly like so:
+```
+src
+-- main
+---- resources
+------ META-INF
+-------- services
+---------- manifold.ext.api.IProxyFactory
+```
+Following standard Java [ServiceLoader protocol](https://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html)
+you create a text file called `manifold.ext.api.IProxyFactory` in the `service` directory under your `META-INF` directory.
+The file should contain the fully qualified name of your proxy factory class (the one that implements `IProxyFactory`) followed
+by a new blank line:
+```
+com.abc.Point_To_Coordinate
+
+```
+
 ### Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
