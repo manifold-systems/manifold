@@ -2319,7 +2319,7 @@ implement your own proxy factory...
 ### Implementation by Proxy
 
 You can provide your own proxies the compiler can use to delegate structural calls.  This is especially useful to avoid
-the ones-time runtime overhead of the first call through a structural interface. Consider the `Coordinate` structural
+the one-time runtime overhead of the first call through a structural interface. Consider the `Coordinate` structural
 interface earlier.
 ```java
 Coordinate coord = (Coordinate) new Point(4,5);
