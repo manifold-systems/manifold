@@ -2312,6 +2312,10 @@ Voila! `Vector` now structurally implements `Coordinate` and can be used with `c
 Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
 project does not control.
 
+If you'd rather not add extension methods to Vector, or the extension class strategy is unsuitable for your use-case
+(e.g., the `Comparable<T>` interface sometimes makes this impossible), you can instead go a more direct route and
+implement your own proxy factory...
+
 ### Implementation by Proxy
 
 You can provide your own proxies the compiler can use to delegate structural calls.  This is especially useful to avoid
