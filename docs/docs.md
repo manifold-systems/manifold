@@ -739,6 +739,10 @@ tasks.withType(JavaCompile) {
     options.fork = true
 }
 ```
+Use with accompanying `settings.gradle` file:
+```gradle
+rootProject.name = 'MySampleProject'
+```
 
 Here is a sample `build.gradle` file using `manifold-all` with **Java 11**:
 ```gradle
@@ -768,6 +772,10 @@ tasks.withType(JavaCompile) {
     options.compilerArgs += '-Xplugin:Manifold strings'
     options.fork = true
 }
+```
+Use with accompanying `settings.gradle` file:
+```gradle
+rootProject.name = 'MySampleProject'
 ```
 
 ## What Is a Type Manifold?
