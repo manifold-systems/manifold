@@ -710,6 +710,66 @@ tasks.withType(JavaCompile) {
 }
 ```
 
+Here is a sample `build.gradle` file using `manifold-all` with **Java 8**:
+```gradle
+plugins {
+    id 'java'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+targetCompatibility = 1.8
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // tools.jar dependency (for Java 8 only)
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += '-Xplugin:Manifold strings'
+    options.fork = true
+}
+```
+
+Here is a sample `build.gradle` file using `manifold-all` with **Java 11**:
+```gradle
+plugins {
+    id 'java'
+}
+
+group 'com.example'
+version '1.0-SNAPSHOT'
+
+targetCompatibility = 11
+sourceCompatibility = 11
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+
+    // Add manifold-all to -processorpath for javac
+    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += '-Xplugin:Manifold strings'
+    options.fork = true
+}
+```
+
 ## What Is a Type Manifold?
 
 Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
