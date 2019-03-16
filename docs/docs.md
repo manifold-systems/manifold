@@ -631,13 +631,14 @@ Here is a simple project layout demonstrating use of the `manifold-all` with Sur
 
 ```
 
+<!---
 **Archetype**
 
 A Maven archetype facilitates new project creation.  Use the Manifold [archetype](https://github.com/manifold-systems/archetype) to quickly
 create a new Manifold project.  This is an easy process from IntelliJ:
 
 <p><img src="/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
-
+--->
 
 ### Gradle
 
