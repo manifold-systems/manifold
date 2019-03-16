@@ -701,7 +701,7 @@ dependencies {
   // -- For Java 8 only --
   
   // tools.jar dependency
-  compile files("\${System.getProperty('java.home')}/../lib/tools.jar")
+  compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
 tasks.withType(JavaCompile) {
