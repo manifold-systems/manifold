@@ -11,7 +11,9 @@
   <packaging>pom</packaging>
 
   <name>Manifold :: CoreParent</name>
-  <description>Manifold is a new breed of Java tooling. It provides powerful features to make Java development more appealing and productive.
+  <description>
+    Manifold re-energizes Java with powerful features like Type-safe Metaprogramming, Structural Typing, and Extension Methods.
+    Simply add the Manifold jar to your project and begin taking advantage of it.
   </description>
   <url>http://manifold.systems/</url>
 
