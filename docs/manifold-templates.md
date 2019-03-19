@@ -731,6 +731,6 @@ You also gain access to Manifold's provided extension libraries for I/O, Web, an
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-all</artifactId>
       <!-- it is best to use the latest release -->
-      <version>0.40-alpha</version> 
+      <version>0.50-alpha</version>
     </dependency>
 ```
