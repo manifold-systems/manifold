@@ -52,7 +52,7 @@ Maven:
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-templates</artifactId>
     <!-- it is best to use the latest release -->
-    <version>0.32-alpha</version> 
+    <version>0.50-alpha</version>
   </dependency>
 ```
 
