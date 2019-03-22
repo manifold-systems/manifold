@@ -2526,7 +2526,7 @@ types.
 #### Basic Use
 
 ```java
-@Jailbreak Foo foo = new Foo();
+@Jailbreak Foo foo = new Foo(1);
 foo.privateMethod();
 foo.privateMethod("hey");
 foo._privateField = 88;
