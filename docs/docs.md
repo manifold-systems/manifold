@@ -1347,12 +1347,12 @@ of hard-coded strings:
 Properties myProperties = new Properties();
 myProperties.load(getClass().getResourceAsStream("/abc/MyProperties.properties"));
 
-println(myProperties.getProperty("my.dark.chocolate"));
+println(myProperties.getProperty("my.chocolate.dark"));
 ```
 
 With the Properties type manifold we can access properties directly using simple, type-safe code:
 ```java
-println(abc.MyProperties.my.dark.chocolate);
+println(abc.MyProperties.my.chocolate.dark);
 ```
 
 Behind the scenes the properties type manifold creates a Java class for the
