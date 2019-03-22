@@ -266,7 +266,8 @@ public class Json
 
     // if the existing type is dynamic, override it with a more specific type,
     // otherwise the types disagree...
-    throw new RuntimeException( "Incompatible types: " + type1.getIdentifier() + " vs: " + type2.getIdentifier() );
+    throw new RuntimeException( "Incompatible types: " + type1.getIdentifier() + " vs: " +
+                                (type2 instanceof JsonListType ? "Array: " : "") + type2.getIdentifier() );
   }
 
   public static IJsonType mergeTypesNoUnion( IJsonType type1, IJsonType type2 )

@@ -378,12 +378,27 @@ public class JsonStructureType extends JsonSchemaType
       }
       if( existingType != DynamicType.instance() )
       {
-        type = Json.mergeTypes( existingType, type );
-        if( type == null )
+        try
         {
-          // if the existing type is dynamic, override it with a more specific type,
-          // otherwise the types disagree...
-          throw new RuntimeException( "Types disagree for '" + name + "' from array data: " + existingType.getName() + " vs: " + existingType.getName() );
+          type = Json.mergeTypes( existingType, type );
+          if( type == null )
+          {
+            // if the existing type is dynamic, override it with a more specific type,
+            // otherwise the types disagree...
+            throw new RuntimeException( "Types disagree for '" + name + "' from array data: " + existingType.getName() + " vs: " + existingType.getName() );
+          }
+        }
+        catch( Exception e )
+        {
+          String message = e.getMessage();
+          addIssue( new JsonIssue( IIssue.Kind.Error, token, message ) );
+          type = DynamicType.instance();
+
+          if( message == null || message.isEmpty() )
+          {
+            // dump stack to diagnose unexpected error
+            e.printStackTrace();
+          }
         }
       }
     }
