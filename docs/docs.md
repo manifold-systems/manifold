@@ -2520,8 +2520,11 @@ code for you.
 
 ### Using `@Jailbreak`
 
-Annotate the type of any variable with `@Jailbreak` to gain type-safe access to private fields, methods, and 
+Annotate the type of any variable with `@Jailbreak` to gain direct, type-safe access to private fields, methods, and
 types.
+
+>Note, `@Jailbreak` is ideal for use within tests. It saves you from losing type-safety that is otherwise the case with
+reflection code and it enables you to maintain private methods and fields.
 
 #### Basic Use
 
