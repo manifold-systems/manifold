@@ -24,7 +24,7 @@ public class SourcePathUtil
 {
   public static boolean excludeFromSourcePath( String p )
   {
-    warnIfRoot( p );
+    //## slow: warnIfRoot( p );
     String path = p.replace( File.separatorChar, '/' ).toLowerCase();
     return isJrePath( path ) ||
            path.contains( "/idea_rt.jar" );
@@ -32,7 +32,7 @@ public class SourcePathUtil
 
   public static boolean excludeFromTestPath( String p )
   {
-    warnIfRoot( p );
+    //## slow: warnIfRoot( p );
     String path = p.replace( File.separatorChar, '/' ).toLowerCase();
     return
       // necessary since java 9
