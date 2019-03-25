@@ -97,12 +97,9 @@ public class NecessaryEvilUtil
       //
       Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
       addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
       addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
-//      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", ReflectUtil.field( manifoldModule.getClass(), "ALL_UNNAMED_MODULE" ).getStatic(), true, true );
       addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
-
-//      Object /*Module*/ javaScriptingModule = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "javax.script.Bindings" ) );
-//      addExportsOrOpens.invoke( javaScriptingModule, "javax.script", manifoldModule, true, true );
 
       //
       // Module: jdk.compiler
