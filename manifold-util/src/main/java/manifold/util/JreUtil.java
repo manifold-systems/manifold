@@ -59,6 +59,15 @@ public class JreUtil
     return !isJava8();
   }
 
+  public static boolean isJava12()
+  {
+    return JAVA_VERSION == 12;
+  }
+  public static boolean isJava12orLater()
+  {
+    return JAVA_VERSION >= 12;
+  }
+
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
   {
     if( _modular == null )

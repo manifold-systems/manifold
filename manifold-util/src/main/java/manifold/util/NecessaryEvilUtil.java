@@ -17,13 +17,31 @@
 package manifold.util;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import sun.misc.Unsafe;
 
 public class NecessaryEvilUtil
 {
   private static Unsafe UNSAFE = null;
 
-  static Unsafe getUnsafe()
+  static
+  {
+    if( JreUtil.isJava12orLater() )
+    {
+      try
+      {
+        // Shutdown Oracle's attempt at blacklisting fields and methods from reflection in Java 12
+        Class<?> hackClass = Class.forName( "manifold.util.ReflectionHack_12" );
+        Method hackReflection = hackClass.getMethod( "hackReflection" );
+        hackReflection.invoke( null );
+      }
+      catch( Throwable ignore )
+      {
+      }
+    }
+  }
+
+  public static Unsafe getUnsafe()
   {
     if( UNSAFE != null )
     {
