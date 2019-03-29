@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.53-SNAPSHOTT</version>
+  <version>0.54-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>
