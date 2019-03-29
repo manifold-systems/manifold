@@ -141,10 +141,21 @@ public class ManLog_9 extends Log
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( null, source, pos, (String)ReflectUtil.field( errorKey, "code" ).get(), ReflectUtil.field( errorKey, "args" ).get() ) );
     }
+    else if( isSuppressedCheckedExceptionError( errorKey.key() ) )
+    {
+      // suppress checked exception errors
+    }
     else
     {
       super.error( pos, errorKey );
     }
+  }
+
+  private boolean isSuppressedCheckedExceptionError( String key )
+  {
+    return JavacPlugin.instance() != null &&
+           JavacPlugin.instance().isCheckedExceptionsOff() &&
+           key != null && key.contains( "unreported.exception." );
   }
 
   private DiagnosticHandler getDiagnosticHandler()

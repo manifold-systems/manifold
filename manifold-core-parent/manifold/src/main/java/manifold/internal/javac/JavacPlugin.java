@@ -88,6 +88,8 @@ public class JavacPlugin implements Plugin, TaskListener
   private static final String ARG_STATIC = "static";
   /** enables string literal templating */
   private static final String ARG_STRINGS = "strings";
+  /** turns off checked exceptions */
+  private static final String ARG_EXCEPTIONS = "exceptions";
   /** disables &lt;clinit&gt; bootstap */
   private static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
   /** all plugin args */
@@ -96,6 +98,7 @@ public class JavacPlugin implements Plugin, TaskListener
     ARG_DYNAMIC,
     ARG_STATIC,
     ARG_STRINGS,
+    ARG_EXCEPTIONS,
     ARG_NO_BOOTSTRAP,
   };
 
@@ -306,12 +309,13 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private void tailorJavaCompiler( TaskEvent te )
   {
-    if( !isExtensionsEnabled() )
-    {
-      // No need to hook up all the extension stuff if it's not enabled
-      return;
-    }
-
+//##todo: some features like the `exception` option use parts of the tailored compiler eg ManLog which don't require ext
+//    if( !isExtensionsEnabled() )
+//    {
+//      // No need to hook up all the extension stuff if it's not enabled
+//      return;
+//    }
+//
     CompilationUnitTree compilationUnit = te.getCompilationUnit();
     if( !(compilationUnit instanceof JCTree.JCCompilationUnit) )
     {
@@ -945,6 +949,11 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isStringTemplatesEnabled()
   {
     return _argPresent.get( ARG_STRINGS );
+  }
+
+  public boolean isCheckedExceptionsOff()
+  {
+    return _argPresent.get( ARG_EXCEPTIONS );
   }
 
   public boolean isNoBootstrapping()
