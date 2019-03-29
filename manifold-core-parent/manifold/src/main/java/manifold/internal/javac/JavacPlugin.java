@@ -83,17 +83,17 @@ import manifold.util.concurrent.ConcurrentHashSet;
 public class JavacPlugin implements Plugin, TaskListener
 {
   /** dynamic compilation mode */
-  private static final String ARG_DYNAMIC = "dynamic";
+  public static final String ARG_DYNAMIC = "dynamic";
   /** static mode (deprecated, now the default) */
-  private static final String ARG_STATIC = "static";
+  public static final String ARG_STATIC = "static";
   /** enables string literal templating */
-  private static final String ARG_STRINGS = "strings";
+  public static final String ARG_STRINGS = "strings";
   /** turns off checked exceptions */
-  private static final String ARG_EXCEPTIONS = "exceptions";
+  public static final String ARG_EXCEPTIONS = "exceptions";
   /** disables &lt;clinit&gt; bootstap */
-  private static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
+  public static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
   /** all plugin args */
-  private static final String[] ARGS =
+  public static final String[] ARGS =
   {
     ARG_DYNAMIC,
     ARG_STATIC,
