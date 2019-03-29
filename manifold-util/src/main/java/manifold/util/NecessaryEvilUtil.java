@@ -35,8 +35,9 @@ public class NecessaryEvilUtil
         Method hackReflection = hackClass.getMethod( "hackReflection" );
         hackReflection.invoke( null );
       }
-      catch( Throwable ignore )
+      catch( Throwable e )
       {
+        throw new RuntimeException( e );
       }
     }
   }
