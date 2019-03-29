@@ -155,7 +155,9 @@ public class ManLog_9 extends Log
   {
     return JavacPlugin.instance() != null &&
            JavacPlugin.instance().isCheckedExceptionsOff() &&
-           key != null && key.contains( "unreported.exception." );
+           key != null &&
+           (key.contains( "unreported.exception." ) ||
+            key.contains( "incompatible.thrown.types" ));
   }
 
   private DiagnosticHandler getDiagnosticHandler()

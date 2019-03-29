@@ -72,7 +72,13 @@ public class ManLog_8 extends Log
   {
     super( ctx, errWriter, warnWriter, noticeWriter );
     ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
-    try { ReflectUtil.field( diagnosticHandler, "this$0" ).set( this ); } catch( Exception ignore ){}
+    try
+    {
+      ReflectUtil.field( diagnosticHandler, "this$0" ).set( this );
+    }
+    catch( Exception ignore )
+    {
+    }
     ReflectUtil.field( this, "source" ).set( source );
     _suspendedIssues = new HashMap<>();
     _extensionTransformerClass = LocklessLazyVar.make(
@@ -145,19 +151,15 @@ public class ManLog_8 extends Log
   {
     //noinspection StatementWithEmptyBody
     if( pos instanceof JCTree.JCFieldAccess &&
-       ("cant.assign.val.to.final.var".equals( key ) ||
-        "var.might.already.be.assigned".equals( key )) &&
-       isJailbreakSelect( (JCTree.JCFieldAccess)pos ) )
+        ("cant.assign.val.to.final.var".equals( key ) ||
+         "var.might.already.be.assigned".equals( key )) &&
+        isJailbreakSelect( (JCTree.JCFieldAccess)pos ) )
     {
       // For @Jailbreak assignments, change error to warning re final var assignment
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( source, pos, key, args ) );
     }
-    else if( isSuppressedCheckedExceptionError( key ) )
-    {
-      // suppress checked exception errors
-    }
-    else
+    else if( !isSuppressedCheckedExceptionError( key ) )
     {
       super.error( pos, key, args );
     }
@@ -167,7 +169,9 @@ public class ManLog_8 extends Log
   {
     return JavacPlugin.instance() != null &&
            JavacPlugin.instance().isCheckedExceptionsOff() &&
-             key != null && key.contains( "unreported.exception." );
+           key != null &&
+           (key.contains( "unreported.exception." ) ||
+            key.contains( "incompatible.thrown.types" ));
   }
 
   private DiagnosticHandler getDiagnosticHandler()
