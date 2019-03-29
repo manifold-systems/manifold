@@ -179,7 +179,7 @@ If you simply want to experiment, grab the [Manifold sample project](https://git
 * Build the project
 * Go nuts
   
-Note you can change the JDK to Java 8, 9, 10 or 11.  But you need to make changes in the `pom.xml` file to make that
+Note you can change the JDK to any Java release 8 - 12.  But you need to make changes in the `pom.xml` file to make that
 work.  There are notes in the `pom.xml` file to help with that.  Read them carefully and maybe read the rest of this 
 Setup section too.
 
@@ -193,10 +193,7 @@ Using Manifold in your Java project is simple:
 That's basically it, however there are nuances with Java, Maven, Gradle, etc. to consider depending on the version of
 Java your project uses.
 
-Manifold fully supports [Java 8](https://adoptopenjdk.net/releases.html?variant=openjdk8&jvmVariant=hotspot), 
-[Java 9](https://adoptopenjdk.net/releases.html?variant=openjdk9&jvmVariant=hotspot), 
-[Java 10](https://adoptopenjdk.net/releases.html?variant=openjdk10&jvmVariant=hotspot), and 
-[Java 11](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot).  
+Manifold fully supports Java releases 8 - 12 on all platforms, including Windows, Linux, and Mac.
 
 **Java 9 or later Notes**
 
