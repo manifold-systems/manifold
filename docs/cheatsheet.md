@@ -552,7 +552,7 @@ public class DoublyNode extends SinglyNode {
 ```
 
 ## [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
-Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings <i>exceptions</i>`. Now checked exceptions
+Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings` *`exceptions`*. Now checked exceptions
 behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
 ```java
 List<String> strings = ...;

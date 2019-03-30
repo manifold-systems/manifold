@@ -2852,8 +2852,8 @@ enabled in your module:
 @Precompile
 ```
 
-## [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
-Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings <i>exceptions</i>`. Now checked exceptions
+## Checked Exception Suppression
+Simply add the `exceptions` plugin argument: `-Xplugin:Manifold exceptions`. Now checked exceptions
 behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
 
 ### No More Catch-n-Wrap
@@ -2870,7 +2870,7 @@ catch(MalformedURLException e) {
 process(url);
 ```
 This code alone explains why the designers of modern languages such as Scala, Kotlin, and others chose not to
-follow Java's example.  The `exceptions` plugin options provides you with the same choice.  With it enabled you can
+follow Java's example.  The `exceptions` plugin option provides you with the same choice.  With it enabled you can
 write the same code like this:
 ```java
 process(new URL("http://manifold.systems"));
@@ -2885,7 +2885,7 @@ List<URL> urls = list
   .map(URL::new) // Boom! Unhandled exception error: MalformedURLException
   .collect(Collectors.toList());
 ```
-The checked exception destroys what could otherwise involve concise usage of lambdas.  With Manifold, however, you are
+The checked exception prevents concise lambda usage here.  With Manifold, however, you are
 free to write code as you like:
 ```java
 List<String> strings = ...;
