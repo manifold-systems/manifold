@@ -2914,11 +2914,13 @@ To use Checked Exception Suppression you must add the `exceptions` plugin option
 ```
 
 ### Gradle:
+```groovy
 tasks.withType(JavaCompile) {
-    // Add the Manifold plugin, with string templates and checked exception suppression enabled
-    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
-    options.fork = true
+  // Add the Manifold plugin, with string templates and checked exception suppression enabled
+  options.compilerArgs += '-Xplugin:Manifold strings exceptions'
+  options.fork = true
 }
+```
 
 ### Intellij:
 If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
