@@ -2925,7 +2925,9 @@ tasks.withType(JavaCompile) {
 ### Intellij:
 If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
 <kbd>Settings</kbd> ➜ <kbd>Build, Execution, Deployment</kbd> ➜ <kbd>Compiler</kbd> ➜ <kbd>Java Compiler</kbd> ➜ <kbd>Additional command line parameters:</kbd>
+
 `-Xplugin:"Manifold strings exceptions"  -processorpath /path/to/your/manifold-all-xxx.jar`
+
 >Note the `-processorpath` argument is required for Java 9 and later, not Java 8.
 
 
