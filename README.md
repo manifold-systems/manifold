@@ -45,6 +45,16 @@ foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
+### [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
+Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings <i>exceptions</i>`. Now checked exceptions
+behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+```java
+List<String> strings = ...;
+List<URL> urls = list
+  .map(URL::new) // No need to handle the MalformedURLException!
+  .collect(Collectors.toList());
+```
+
 ### [String Templates](http://manifold.systems/docs.html#templating) (aka String Interpolation)
 Embed variables and expressions in String literals, no more clunky string concat!
 ```java

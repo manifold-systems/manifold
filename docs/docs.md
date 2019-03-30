@@ -485,8 +485,8 @@ Use one of the following configurations depending on whether you use:
             <arg>--add-modules</arg>
             <arg>manifold.all</arg>
   
-            <!--Add the Manifold plugin, with string templates enabled-->
-            <arg>-Xplugin:Manifold strings</arg>
+            <!--Add the Manifold plugin, with string templates and checked exception suppression enabled-->
+            <arg>-Xplugin:Manifold strings exceptions</arg>
   
           </compilerArgs>
   
@@ -528,8 +528,8 @@ Use one of the following configurations depending on whether you use:
           <encoding>UTF-8</encoding>
           <compilerArgs>
   
-            <!-- Add the Manifold plugin, with string templates enabled -->
-            <arg>-Xplugin:Manifold strings</arg>
+            <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
+            <arg>-Xplugin:Manifold strings exceptions</arg>
   
           </compilerArgs>
   
@@ -566,8 +566,8 @@ Use one of the following configurations depending on whether you use:
           <encoding>UTF-8</encoding>
           <compilerArgs>
   
-            <!-- Add the Manifold plugin, with string templates enabled -->
-            <arg>-Xplugin:Manifold strings</arg>
+            <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
+            <arg>-Xplugin:Manifold strings exceptions</arg>
   
           </compilerArgs>
         </configuration>
@@ -703,7 +703,7 @@ dependencies {
 }
 
 tasks.withType(JavaCompile) {
-  options.compilerArgs += '-Xplugin:Manifold'
+  options.compilerArgs += '-Xplugin:Manifold strings exceptions'
   options.fork = true
 }
 ```
@@ -725,7 +725,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only)
@@ -733,7 +733,7 @@ dependencies {
 }
 
 tasks.withType(JavaCompile) {
-    options.compilerArgs += '-Xplugin:Manifold strings'
+    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
     options.fork = true
 }
 ```
@@ -759,15 +759,15 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-all to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.50-alpha'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
 }
 
 tasks.withType(JavaCompile) {
-    options.compilerArgs += '-Xplugin:Manifold strings'
+    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
     options.fork = true
 }
 ```
@@ -2851,6 +2851,81 @@ enabled in your module:
 ```java
 @Precompile
 ```
+
+## [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
+Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings <i>exceptions</i>`. Now checked exceptions
+behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+
+### No More Catch-n-Wrap
+The vast majority of checked exceptions go unhandled, instead they are caught, wrapped in unchecked exceptions, and
+rethrown like this:
+```java
+URL url;
+try {
+  url = new URL("http://manifold.systems");
+}
+catch(MalformedURLException e) {
+  throw new RuntimeException(e);
+}
+process(url);
+```
+This code alone explains why the designers of modern languages such as Scala, Kotlin, and others chose not to
+follow Java's example.  The `exceptions` plugin options provides you with the same choice.  With it enabled you can
+write the same code like this:
+```java
+process(new URL("http://manifold.systems"));
+```
+Sells itself.
+
+### Lambdas
+Perhaps the most offensive checked exception use-cases involve lambdas:
+```java
+List<String> strings = ...;
+List<URL> urls = list
+  .map(URL::new) // Boom! Unhandled exception error: MalformedURLException
+  .collect(Collectors.toList());
+```
+The checked exception destroys what could otherwise involve concise usage of lambdas.  With Manifold, however, you are
+free to write code as you like:
+```java
+List<String> strings = ...;
+List<URL> urls = list
+  .map(URL::new) // No need to handle the MalformedURLException!
+  .collect(Collectors.toList());
+```
+
+To use Checked Exception Suppression you must add the `exceptions` plugin option to your build configuration.
+### Maven:
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-compiler-plugin</artifactId>
+  <version>3.8.0</version>
+  <configuration>
+    <encoding>UTF-8</encoding>
+    <compilerArgs>
+
+      <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
+      <arg>-Xplugin:Manifold strings exceptions</arg>
+
+    </compilerArgs>
+  </configuration>
+</plugin>
+```
+
+### Gradle:
+tasks.withType(JavaCompile) {
+    // Add the Manifold plugin, with string templates and checked exception suppression enabled
+    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
+    options.fork = true
+}
+
+### Intellij:
+If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
+<kbd>Settings</kbd> ➜ <kbd>Build, Execution, Deployment</kbd> ➜ <kbd>Compiler</kbd> ➜ <kbd>Java Compiler</kbd> ➜ <kbd>Additional command line parameters:</kbd>
+`-Xplugin:"Manifold strings exceptions"  -processorpath /path/to/your/manifold-all-xxx.jar`
+>Note the `-processorpath` argument is required for Java 9 and later, not Java 8.
+
 
 ## IDE -- IntelliJ IDEA
 

@@ -551,6 +551,49 @@ public class DoublyNode extends SinglyNode {
 }
 ```
 
+## [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
+Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings <i>exceptions</i>`. Now checked exceptions
+behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+```java
+List<String> strings = ...;
+List<URL> urls = list
+  .map(URL::new) // No need to handle the MalformedURLException!
+  .collect(Collectors.toList());
+```
+
+To use Checked Exception Suppression you must add the `exceptions` plugin option to your build configuration.
+### Maven:
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+  <artifactId>maven-compiler-plugin</artifactId>
+  <version>3.8.0</version>
+  <configuration>
+    <encoding>UTF-8</encoding>
+    <compilerArgs>
+
+      <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
+      <arg>-Xplugin:Manifold strings exceptions</arg>
+
+    </compilerArgs>
+  </configuration>
+</plugin>
+```
+
+### Gradle:
+tasks.withType(JavaCompile) {
+    // Add the Manifold plugin, with string templates and checked exception suppression enabled
+    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
+    options.fork = true
+}
+
+### Intellij:
+If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
+<kbd>Settings</kbd> ➜ <kbd>Build, Execution, Deployment</kbd> ➜ <kbd>Compiler</kbd> ➜ <kbd>Java Compiler</kbd> ➜ <kbd>Additional command line parameters:</kbd>
+`-Xplugin:"Manifold strings exceptions"  -processorpath /path/to/your/manifold-all-xxx.jar`
+>Note the `-processorpath` argument is required for Java 9 and later, not Java 8.
+
+
 ## [ManTL](http://manifold.systems/manifold-templates.html) (Superfast **type-safe** templates)
 
 ManTL has a separate [cheat sheet](http://manifold.systems/manifold-templates.html)
