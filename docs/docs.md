@@ -167,7 +167,7 @@ modules, or Java 9 or later without modules.  Please keep this in mind and read 
 
 ### I don't want to read all this
 
-If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and go nuts:
+If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and have at it:
 
 * `git clone https://github.com/manifold-systems/manifold-sample-project.git`
 * Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
@@ -177,11 +177,14 @@ If you simply want to experiment, grab the [Manifold sample project](https://git
 * Add the [Java 11 JDK](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot): `File | Project Structure | SDKs | + | path-to-your-Jdk11`
 * Set the project JDK and language level: `File | Project Structure | Project` select `11` for both `Project JDK` and `Project language level`
 * Build the project
-* Go nuts
+* Experiment!
   
 Note you can change the JDK to any Java release 8 - 12.  But you need to make changes in the `pom.xml` file to make that
 work.  There are notes in the `pom.xml` file to help with that.  Read them carefully and maybe read the rest of this 
 Setup section too.
+
+>Don't be shy with questions, comments, or complaints. We want *all* your feedback, good or bad! We use github issues
+to track feedback [here](https://github.com/manifold-systems/manifold/issues). Also feel free to send email: [@info@manifold.systems](mailto:info@manifold.systems).
 
 ### Basics
 
