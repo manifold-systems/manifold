@@ -184,7 +184,7 @@ work.  There are notes in the `pom.xml` file to help with that.  Read them caref
 Setup section too.
 
 >Don't be shy with questions, comments, or complaints. We want *all* your feedback, good or bad! We use github issues
-to track feedback [here](https://github.com/manifold-systems/manifold/issues). Also feel free to send email: [@info@manifold.systems](mailto:info@manifold.systems).
+to track feedback [here](https://github.com/manifold-systems/manifold/issues). Also feel free to send email: [info@manifold.systems](mailto:info@manifold.systems).
 
 ### Basics
 
