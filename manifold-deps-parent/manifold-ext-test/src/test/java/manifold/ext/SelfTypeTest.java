@@ -10,6 +10,11 @@ import java.util.Map;
 import java.util.function.Function;
 import junit.framework.TestCase;
 import manifold.ext.api.Self;
+import manifold.ext.stuff.Car;
+import manifold.ext.stuff.CarBuilder;
+
+
+import static java.lang.System.out;
 
 public class SelfTypeTest extends TestCase
 {
@@ -21,6 +26,16 @@ public class SelfTypeTest extends TestCase
     new Foo<String>().fooQualifier();
     new Bar<String>().fooQualifier();
     new Bar<String>().noQualifier();
+  }
+
+  public void testMoreSelfType()
+  {
+    CarBuilder carBuilder = new CarBuilder();
+    Car car = carBuilder
+      .withName("Mach Five") // returns CarBuilder
+      .withColor(255, 255, 255)
+      .build();
+    assertEquals("Mach Five", car.getName());
   }
 
   public void testExtensions()

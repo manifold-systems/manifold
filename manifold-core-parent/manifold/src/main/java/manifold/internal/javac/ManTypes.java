@@ -220,7 +220,8 @@ public class ManTypes extends Types
   {
     if( JavacPlugin.IS_JAVA_8 )
     {
-      if( type.getClass().getTypeName().equals( "com.sun.tools.javac.code.Type.AnnotatedType" ) )
+      if( type.getClass().getTypeName().equals( "com.sun.tools.javac.code.Type.AnnotatedType" ) ||
+          type.getClass().getTypeName().equals( "com.sun.tools.javac.code.Type$AnnotatedType" ) )
       {
         Type unannotatedType = (Type)ReflectUtil.method( type, "unannotatedType" ).invoke();
         for( Attribute.TypeCompound anno: type.getAnnotationMirrors() )
