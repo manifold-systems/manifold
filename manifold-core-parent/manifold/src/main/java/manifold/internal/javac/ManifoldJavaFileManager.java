@@ -34,7 +34,6 @@ import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
-import manifold.api.fs.cache.PathCache;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeSystemListener;
@@ -229,11 +228,6 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
           continue;
         }
 
-        if( isClassFile( tn ) )
-        {
-          continue;
-        }
-
         if( tn.kind == TypeName.Kind.NAMESPACE )
         {
           if( recurse )
@@ -319,18 +313,6 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       return null;
     }
     return (Location)ReflectUtil.field( moduleElement, "classLocation" ).get();
-  }
-
-  private boolean isClassFile( TypeName tn )
-  {
-    String fqn = tn.name;
-    int iDollar = fqn.indexOf( '$' );
-    if( iDollar > 0 )
-    {
-      fqn = fqn.substring( 0, iDollar );
-    }
-    PathCache pathCache = getHost().getSingleModule().getPathCache();
-    return pathCache.getExtensionCache( "class" ).get( fqn ) != null;
   }
 
   private JavaFileObject findGeneratedFile( String fqn, Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )

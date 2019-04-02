@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import junit.framework.TestCase;
+import manifold.api.type.BasicIncrementalCompileDriver;
+import manifold.api.type.ContributorKind;
 import manifold.ext.api.Structural;
 
 /**
@@ -51,6 +53,9 @@ public class SimpleTest extends TestCase
     IGenericThing<String> gthing = rc;
     List<String> glist = gthing.foo( "hi", new ArrayList<>() );
     System.out.println( glist.get( 0 ) );
+
+    ContributorKind.Primary.hiContributorKind();
+    new BasicIncrementalCompileDriver(true).hiBasic();
   }
 
   public void testSelfTypeOnExtension()
