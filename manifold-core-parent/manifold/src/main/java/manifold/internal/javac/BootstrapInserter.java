@@ -29,13 +29,18 @@ import manifold.internal.runtime.Bootstrap;
 
 
 /**
- * Add a static block to top-level classes to demo Manifold:
+ * Add a static block to top-level classes to automatically initialize Manifold:
  * <pre>
  *   static {
  *     Bootstrap.init();
  *   }
  * </pre>
- * Note this call is fast and does nothing if Manifold is already bootstrapped.
+ * Note this call is fast and does nothing if Manifold is already bootstrapped i.e., it is idempotent.
+ * <p/>
+ * You can use {@link NoBootstrap} to prevent a class from having the bootstrap block inserted.
+ * <p/>
+ * You can use the {@code no-bootstrap} Manifold plugin argument to completely disable bootstrap blocks from your
+ * project.
  */
 class BootstrapInserter extends TreeTranslator
 {
@@ -67,7 +72,24 @@ class BootstrapInserter extends TreeTranslator
   {
     return !annotatedWith_NoBootstrap( tree.getModifiers().getAnnotations() ) &&
            !JavacPlugin.instance().isNoBootstrapping() &&
+           !alreadyHasBootstrap( tree ) &&
            !skipForOtherReasons( tree );
+  }
+
+  // If an annotation processor is active, a class can be processed multiple times,
+  // so we check to see if we've already added the bootstrap block.
+  private boolean alreadyHasBootstrap( JCTree.JCClassDecl tree )
+  {
+    return tree.defs.stream().anyMatch(
+      def -> {
+        if( def instanceof JCTree.JCBlock )
+        {
+          String staticBlock = def.toString();
+          return staticBlock.startsWith( "static" ) &&
+                 staticBlock.contains( Bootstrap.class.getName() + ".init" );
+        }
+        return false;
+      } );
   }
 
   private boolean skipForOtherReasons( JCTree.JCClassDecl tree )
