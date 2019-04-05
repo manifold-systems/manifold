@@ -2,6 +2,8 @@
   <img src="https://i.imgur.com/No1RPUf.png" width="80%"/>
 </center>
 
+[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+
 ## What is Manifold?
 [Manifold](http://manifold.systems) re-energizes Java with powerful features like Type-safe Metaprogramming, Structural Typing, and Extension Methods.
  Simply add the Manifold jar to your project and begin taking advantage of it.
