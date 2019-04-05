@@ -1,5 +1,6 @@
 package manifold.util;
 
+import java.lang.reflect.AccessibleObject;
 import junit.framework.TestCase;
 
 public class ReflectUtilTest extends TestCase
@@ -28,5 +29,13 @@ public class ReflectUtilTest extends TestCase
     assertNotNull( field );
     field.set( "bye" );
     assertEquals( "bye", field.get() );
+  }
+
+  public void testOverrideOffsetForJava12() throws NoSuchFieldException
+  {
+    // since we run this test in Java 8, we can test that the approximated offset for Java 12 matches the actual offset
+    long approximateOffset = AccessibleObject_layout.getOverrideOffset( NecessaryEvilUtil.getUnsafe() );
+    long actualOffset = NecessaryEvilUtil.getUnsafe().objectFieldOffset( AccessibleObject.class.getDeclaredField( "override" ) );
+    assertEquals( actualOffset, approximateOffset );
   }
 }

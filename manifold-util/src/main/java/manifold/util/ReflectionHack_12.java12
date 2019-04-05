@@ -31,19 +31,19 @@ import sun.misc.Unsafe;
  */
 public class ReflectionHack_12
 {
-  // Must hard code the {@link AccessibleObject#override} field offset (because it is one of the filtered fields)
-  private static final int OVERRIDE_FIELD_OFFSET = 12;
-
   public static void hackReflection()
   {
     try
     {
       Unsafe unsafe = NecessaryEvilUtil.getUnsafe();
 
+      // Must approximate the {@link AccessibleObject#override} field offset (because it is one of the filtered fields)
+      long overrideOffset = AccessibleObject_layout.getOverrideOffset( unsafe );
+
       // Change the value in Reflection.ALL_MEMBERS singleton set so that nothing is filtered
 
       Method addOpens = Module.class.getDeclaredMethod( "implAddOpens", String.class, Module.class );
-      unsafe.putObject( addOpens, OVERRIDE_FIELD_OFFSET, true );
+      unsafe.putObject( addOpens, overrideOffset, true );
       addOpens.invoke( String.class.getModule(), "jdk.internal.reflect", NecessaryEvilUtil.class.getModule() );
       //SharedSecrets.getJavaLangAccess().addExports( String.class.getModule(), "jdk.internal.reflect", NecessaryEvilUtil.class.getModule() );
 
