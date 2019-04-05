@@ -449,15 +449,6 @@ public class SrcClass extends SrcStatement<SrcClass>
     {
       method.render( sb, indent );
     }
-
-    if( isEnum() &&
-        _constructors.stream().noneMatch( c -> c.getParameters().isEmpty() ) &&
-        _methods.stream().noneMatch( m -> m.isConstructor() && m.getParameters().isEmpty() ) )
-    {
-      // Enums need a no-arg ctor because for the stub we render the constants to not call a ctor.
-      indent( sb, indent );
-      sb.append( getSimpleName() ).append( "() { throw new RuntimeException(); }" );
-    }
   }
 
   private void renderStaticBlocks( StringBuilder sb, int indent )

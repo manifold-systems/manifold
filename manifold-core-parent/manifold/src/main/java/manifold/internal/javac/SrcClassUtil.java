@@ -111,7 +111,8 @@ public class SrcClassUtil
     }
     if( withMembers )
     {
-      for( Symbol sym: classSymbol.getEnclosedElements() )
+      java.util.List<Symbol> members = classSymbol.getEnclosedElements();
+      for( Symbol sym: members )
       {
 // include private members because:
 // 1. @Jailbreak can expose private members
@@ -138,8 +139,30 @@ public class SrcClassUtil
           }
         }
       }
+
+      addDefaultCtorForEnum( classSymbol, srcClass, members );
     }
     return srcClass;
+  }
+
+  private void addDefaultCtorForEnum( Symbol.ClassSymbol classSymbol, SrcClass srcClass, java.util.List<Symbol> members )
+  {
+    if( !classSymbol.isEnum() )
+    {
+      return;
+    }
+
+    if( members.stream().noneMatch( e ->
+      e.isConstructor() && e instanceof Symbol.MethodSymbol && ((Symbol.MethodSymbol)e).getParameters().isEmpty() ) )
+    {
+      // Add default no-arg ctor because enum constant stubs do not call a ctor explicitly
+      SrcMethod srcMethod = new SrcMethod( srcClass, true );
+      srcMethod.body( new SrcStatementBlock()
+        .addStatement(
+          new SrcRawStatement()
+            .rawText( "throw new RuntimeException();" ) ) );
+      srcClass.addMethod( srcMethod );
+    }
   }
 
   private boolean isEnumMethod( Symbol sym )

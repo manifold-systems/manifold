@@ -13,6 +13,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import junit.framework.TestCase;
 import manifold.api.type.BasicIncrementalCompileDriver;
+import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.api.Structural;
 
@@ -55,6 +56,7 @@ public class SimpleTest extends TestCase
     System.out.println( glist.get( 0 ) );
 
     ContributorKind.Primary.hiContributorKind();
+    ClassType.Enum.hiClassType();
     new BasicIncrementalCompileDriver(true).hiBasic();
   }
 
