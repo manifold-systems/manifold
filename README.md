@@ -106,3 +106,4 @@ comprehensive support for IntelliJ features including code completion, navigatio
 incremental compilation, hotswap debugging, full-featured template editing, and more.
 
 ### [Learn More](http://manifold.systems/docs.html)
+[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
