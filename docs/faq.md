@@ -42,19 +42,23 @@ See the [Setup](http://manifold.systems/docs.html#maven) docs for more info.
 ## Getting Help
 
 #### Q: Where can I find help?
-We use github issues to communicate with Manifold users regarding questions, comments, and issues.  If you have 
-something to say, don't be shy, please go [here](https://github.com/manifold-systems/manifold/issues), click the 
-`New Issue` button and let us know what's up.  We'll respond within 24 hours and work in the Pacific Time Zone.
+**Report A Bug**
+We use github issues to track bugs, features, and other requests.  Please (pretty please with sugar on top) if you
+discover a bug, have a feature request, or an idea go [here](https://github.com/manifold-systems/manifold/issues) and let us know. We'll
+respond within 24 hours and work in the Pacific Time Zone.
 
-If your question or issue is more pressing, please send an email to [info@manifold.systems](mailto:info@manifold.systems).
+**Discussion**
+If you have something to say beyond issue tracking, start a [discussion](https://gitter.im/manifold-systems/community)
+or checkout other discussions, don't be shy.
+
+**Private E-mail**
+If your question or issue is more pressing or confidential, don't hesitate to send an email to [info@manifold.systems](mailto:info@manifold.systems).
 We'll respond ASAP.
 
 #### Q: I've read the docs page.  Can I learn more about Manifold elsewhere?
+
 Links to recently published Manifold articles are available on the [Articles](http://manifold.systems/articles/articles.html) 
 page.  There is always another article on the way, check back for more. 
-
-Of course if you have questions or comments, please add them [here](https://github.com/manifold-systems/manifold/issues). 
-
 
 ## Troubleshooting
 
@@ -68,19 +72,17 @@ IntelliJ's UI. Please refer to the [Maven](http://manifold.systems/docs.html#mav
 sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instructions. 
 
 Please [let us know](https://github.com/manifold-systems/manifold/issues) if you can't get it working, we're happy to 
-help.
-
-
+help.  Or start a Manifold gitter [discussion](https://gitter.im/manifold-systems/community).
 
 ## History / Trivia
 
 #### Q: Why is the name "Manifold"?
 
-In mathematical physics a manifold allows a complicated geometry to be understood and experienced as a more familiar 
-Euclidean space. For instance, although the Earth is not flat, it helps to think of it that way when we make and use maps. 
-Otherwise we have to reason about triangles having more than 180 degree angle sums!  Applying that general principal to 
-a programming language, a manifold allows information foreign to the language's type system to be accessed directly as 
-first-class types.  A JSON file, for example, is much easier to deal with in Java as a set of type-safe classes.
+The idea derives from the math / physics use of the term where a manifold allows a complicated geometry to be understood and experienced as a more familiar
+Euclidean space. For instance, although the Earth is not flat, it helps to think of it that way when we make and use maps.
+Otherwise we have to reason about triangles having more than 180 degree angle sums!  Applying that general principal to
+software, a manifold allows a domain of information foreign to a programming language's type system to be accessed directly as
+a set of first-class types.  A JSON file, for example, is much easier to deal with in Java as a set of type-safe classes.
 
 The common definition of the word also applies.  Manifold transforms Java's otherwise closed, Class-based type system
-into a completely open system of manifold types.
+into a virtually open system of manifold types.
