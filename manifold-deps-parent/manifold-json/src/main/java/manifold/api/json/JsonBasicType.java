@@ -68,6 +68,43 @@ public class JsonBasicType implements IJsonType
     this( type, new TypeAttributes( true ) );
   }
 
+  public boolean isPrimitive()
+  {
+    return _javaClass.isPrimitive();
+  }
+
+  public Class<?> box()
+  {
+    if( isPrimitive() )
+    {
+      if( _javaClass == int.class )
+      {
+        return Integer.class;
+      }
+      if( _javaClass == long.class )
+      {
+        return Long.class;
+      }
+      if( _javaClass == char.class )
+      {
+        return Character.class;
+      }
+      if( _javaClass == double.class )
+      {
+        return Double.class;
+      }
+      if( _javaClass == float.class )
+      {
+        return Float.class;
+      }
+      if( _javaClass == boolean.class )
+      {
+        return Boolean.class;
+      }
+    }
+    throw new IllegalStateException( "Unexpected type to box: " + _javaClass.getTypeName() );
+  }
+
   public static JsonBasicType get( Object jsonObj )
   {
     if( jsonObj == null )

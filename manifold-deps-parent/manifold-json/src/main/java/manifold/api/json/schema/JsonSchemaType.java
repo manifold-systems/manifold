@@ -28,6 +28,7 @@ import manifold.api.json.IJsonList;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
 import manifold.api.json.Json;
+import manifold.api.json.JsonBasicType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
 import manifold.api.json.Token;
@@ -359,9 +360,15 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     String name;
     if( propertyType instanceof JsonListType )
     {
-      name = param
-             ? (List.class.getTypeName() + '<' + getPropertyType( ((JsonListType)propertyType).getComponentType(), qualifiedWithMe, param ) + '>')
-             : getNameRelativeFromMe( propertyType, qualifiedWithMe );
+      if( param )
+      {
+        String componentTypeName = makeTypeParameter( ((JsonListType)propertyType).getComponentType(), qualifiedWithMe, param );
+        name = List.class.getTypeName() + '<' + componentTypeName + '>';
+      }
+      else
+      {
+        name = getNameRelativeFromMe( propertyType, qualifiedWithMe );
+      }
     }
     else if( propertyType instanceof JsonUnionType )
     {
@@ -377,6 +384,16 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
              : propertyType.getIdentifier();
     }
     return name;
+  }
+
+  protected String makeTypeParameter( IJsonType type, boolean qualifiedWithMe, boolean param )
+  {
+    if( type instanceof JsonBasicType && ((JsonBasicType)type).isPrimitive() )
+    {
+      // Must box primitive type for List<T>
+      return ((JsonBasicType)type).box().getTypeName();
+    }
+    return getPropertyType( type, qualifiedWithMe, param );
   }
 
   protected IJsonType getConstituentQnComponent( IJsonType constituentType )
@@ -429,12 +446,20 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   }
   protected String getConstituentQn( IJsonType constituentType, IJsonType propertyType, boolean param )
   {
-    String qn = getPropertyType( constituentType, false, param );
-    while( propertyType instanceof JsonListType )
+    String qn;
+    if( !(propertyType instanceof JsonListType) )
     {
-      //noinspection StringConcatenationInLoop
-      qn = (param ? List.class.getTypeName() : IJsonList.class.getTypeName()) + '<' + qn + '>';
-      propertyType = ((JsonListType)propertyType).getComponentType();
+      qn = getPropertyType( constituentType, false, param );
+    }
+    else
+    {
+      qn = makeTypeParameter( constituentType, false, param );
+      while( propertyType instanceof JsonListType )
+      {
+        //noinspection StringConcatenationInLoop
+        qn = (param ? List.class.getTypeName() : IJsonList.class.getTypeName()) + '<' + qn + '>';
+        propertyType = ((JsonListType)propertyType).getComponentType();
+      }
     }
     return qn;
   }

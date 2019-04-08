@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "http://marksto.name/schemas/Test.json",
+  "definitions": {
+    "SubObject": {
+      "type": "object",
+      "properties": {
+        "string": {
+          "type": "string"
+        },
+        "number": {
+          "type": "number"
+        },
+        "integer": {
+          "type": "integer",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "type": "object",
+  "properties": {
+    "string": {
+      "type": "string"
+    },
+    "number": {
+      "type": "number"
+    },
+    "integer": {
+      "type": "integer",
+      "exclusiveMinimum": 0
+    },
+
+    "sub_object": {
+      "type" : "object",
+      "$ref": "#/definitions/SubObject"
+    },
+
+    "array_strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "array_numbers": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "array_integers": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "required": [
+    "string",
+    "number",
+    "integer"
+  ]
+}

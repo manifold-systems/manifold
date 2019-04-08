@@ -184,7 +184,7 @@ public class JsonListType extends JsonSchemaType
     sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
     indent( sb, indent );
     //noinspection unused
-    String componentType = getPropertyType( getComponentType(), true, false );
+    String componentType = makeTypeParameter( getComponentType(), true, false );
     sb.append( "public interface " ).append( identifier ).append( " extends IJsonList<$componentType> {\n" );
     renderFileField( sb, indent + 2 );
     renderStaticMembers( sb, indent + 2 );

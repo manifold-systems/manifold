@@ -705,4 +705,28 @@ public class JsonTest extends TestCase
 
     inner = car.getInner1_6();
   }
+
+  public void testPrimitiveNumericLists()
+  {
+    PrimitiveLists good = PrimitiveLists.create("id", 1.0, 1);
+    good.setArray_integers( Arrays.asList(1, 2, 3) );
+    good.setArray_numbers( Arrays.asList(1.1, 2.2, 3.2) );
+    assertEquals(
+      "{\n" +
+      "  \"string\": \"id\",\n" +
+      "  \"number\": 1.0,\n" +
+      "  \"integer\": 1,\n" +
+      "  \"array_integers\": [\n" +
+      "    1,\n" +
+      "    2,\n" +
+      "    3\n" +
+      "  ],\n" +
+      "  \"array_numbers\": [\n" +
+      "    1.1,\n" +
+      "    2.2,\n" +
+      "    3.2\n" +
+      "  ]\n" +
+      "}",
+      good.write().toJson() );
+  }
 }
