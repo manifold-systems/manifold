@@ -414,7 +414,28 @@ public class ExtensionTransformer extends TreeTranslator
   {
     super.visitReference( tree );
 
-    //## todo: handle Method Refs here
+    if( isExtensionMethod( tree.sym ) )
+    {
+      // Method references not supported on extension methods
+      
+      _tp.report( tree, Diagnostic.Kind.ERROR,
+        ExtIssueMsg.MSG_EXTENSION_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
+    }
+  }
+
+  private boolean isExtensionMethod( Symbol sym )
+  {
+    if( sym instanceof Symbol.MethodSymbol )
+    {
+      for( Attribute.Compound annotation: sym.getAnnotationMirrors() )
+      {
+        if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
+        {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   @SuppressWarnings("WeakerAccess")
