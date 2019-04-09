@@ -2858,7 +2858,7 @@ enabled in your module:
 
 ## Checked Exception Suppression
 Simply add the `exceptions` plugin argument: `-Xplugin:Manifold exceptions`. Now checked exceptions
-behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+behave like unchecked exceptions!  No more compiler errors, no more boilerplate try/catch/wrap/rethrow nonsense.
 
 ### No More Catch-n-Wrap
 The vast majority of checked exceptions go unhandled, instead they are caught, wrapped in unchecked exceptions, and
