@@ -25,11 +25,11 @@ public class SrcMethod extends AbstractSrcMethod<SrcMethod>
     this( null );
   }
 
-  public SrcMethod( SrcClass srcClass )
+  public SrcMethod( AbstractSrcClass srcClass )
   {
     this( srcClass, false );
   }
-  public SrcMethod( SrcClass srcClass, boolean isCtor )
+  public SrcMethod( AbstractSrcClass srcClass, boolean isCtor )
   {
     super( srcClass );
     setConstructor( isCtor );

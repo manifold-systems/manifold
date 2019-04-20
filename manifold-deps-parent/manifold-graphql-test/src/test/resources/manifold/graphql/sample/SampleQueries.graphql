@@ -1,0 +1,50 @@
+query MovieQuery($title: String, $genre: Genre, $year: Int, $actors: [ActorInput!]) {
+  movies(title: $title, genre: $genre, year: $year, actors: $actors) {
+    id
+    title
+    genre
+    releaseDate
+    starring {
+      ... on Person {
+        id
+        name
+      }
+      ... on Animal {
+        id
+        name
+        kind
+      }
+    }
+    cast {
+      id
+      name
+      type
+      actor {
+        id
+        name
+      }
+    }
+  }
+}
+
+query ActorQuery($movie: MovieInput!) {
+  actors(movie: $movie) {
+    ... on Person {
+      id
+      name
+    }
+    ... on Animal {
+      id
+      name
+      kind
+    }
+  }
+}
+
+mutation ReviewMutation($movie: ID!, $review: ReviewInput!) {
+  createReview(movie: $movie, review: $review) {
+    id
+    stars
+    comment
+  }
+}

@@ -20,7 +20,7 @@ package manifold.api.gen;
  */
 public class SrcConstructor extends AbstractSrcMethod<SrcConstructor>
 {
-  public SrcConstructor( SrcClass owner )
+  public SrcConstructor( AbstractSrcClass owner )
   {
     super( owner );
     if( owner != null )

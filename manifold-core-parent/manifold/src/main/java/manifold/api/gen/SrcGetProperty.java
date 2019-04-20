@@ -41,7 +41,7 @@ public class SrcGetProperty extends AbstractSrcMethod<SrcGetProperty>
     returns( type );
   }
 
-  public SrcGetProperty( SrcClass srcClass )
+  public SrcGetProperty( AbstractSrcClass srcClass )
   {
     super( srcClass );
   }

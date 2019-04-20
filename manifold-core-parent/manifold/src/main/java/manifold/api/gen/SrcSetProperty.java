@@ -43,7 +43,7 @@ public class SrcSetProperty extends AbstractSrcMethod<SrcSetProperty>
     type( type );
   }
 
-  public SrcSetProperty( SrcClass srcClass )
+  public SrcSetProperty( AbstractSrcClass srcClass )
   {
     super( srcClass );
     returns( "void" );

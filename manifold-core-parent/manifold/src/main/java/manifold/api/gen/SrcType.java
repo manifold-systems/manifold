@@ -273,6 +273,10 @@ public class SrcType extends SrcAnnotated<SrcType>
 
   public StringBuilder render( StringBuilder sb, int indent )
   {
+    return render( sb, indent, true );
+  }
+  public StringBuilder render( StringBuilder sb, int indent, boolean withAnnos )
+  {
     if( _enclosingType != null )
     {
       _enclosingType.render( sb, indent );
@@ -280,7 +284,7 @@ public class SrcType extends SrcAnnotated<SrcType>
     }
 
     String fqn;
-    if( !getAnnotations().isEmpty() )
+    if( withAnnos && !getAnnotations().isEmpty() )
     {
       // type annotations apply to class name part:  "java.util. @Foo List"
       StringBuilder sbFqn = new StringBuilder();

@@ -45,7 +45,7 @@ public class SrcField extends SrcAnnotated<SrcField>
     type( type );
   }
 
-  public SrcField( SrcClass srcClass )
+  public SrcField( AbstractSrcClass srcClass )
   {
     super( srcClass );
   }

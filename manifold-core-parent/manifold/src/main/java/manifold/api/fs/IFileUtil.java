@@ -16,6 +16,10 @@
 
 package manifold.api.fs;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import manifold.util.StreamUtil;
+
 public class IFileUtil
 {
 
@@ -84,5 +88,26 @@ public class IFileUtil
            // http://www.coderanch.com/t/69641/BEA-Weblogic/wl-cls-gen-jar-coming
            // So we need to always treat it as containing sources
            root.getName().equals( "_wl_cls_gen.jar" );
+  }
+
+  public static int findOffset( IFile file, int line, int column )
+  {
+    try
+    {
+      int offset = 0;
+      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      for( int i = 1; i < line; i++ )
+      {
+        if( content.length() > offset )
+        {
+          offset = content.indexOf( '\n', offset ) + 1;
+        }
+      }
+      return offset + column - 1;
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 }

@@ -1,0 +1,221 @@
+type Ability implements Node {
+  id: ID!
+  name: String
+  created: String
+  modified: String
+  description: String
+  resource_uri: String
+}
+
+type AbilityConnection {
+  pageInfo: PageInfo!
+  edges: [AbilityEdge]
+}
+
+type AbilityEdge {
+  node: Ability
+  cursor: String!
+}
+
+type Description implements Node {
+  created: String
+  description: String
+  games(after: String, first: Int, before: String, last: Int): GameConnection
+  id: ID!
+  modified: String
+  name: String
+  pokemon: Pokemon
+  resource_uri: String
+}
+
+type DescriptionConnection {
+  pageInfo: PageInfo!
+  edges: [DescriptionEdge]
+}
+
+type DescriptionEdge {
+  node: Description
+  cursor: String!
+}
+
+type Egg implements Node {
+  created: String
+  id: ID!
+  modified: String
+  name: String
+  pokemon(after: String, first: Int, before: String, last: Int): PokemonConnection
+  resource_uri: String
+}
+
+type EggConnection {
+  pageInfo: PageInfo!
+  edges: [EggEdge]
+}
+
+type EggEdge {
+  node: Egg
+  cursor: String!
+}
+
+type Evolution {
+  level: Int
+  method: String
+  pokemon: Pokemon
+  to: String
+}
+
+type Game implements Node {
+  created: String
+  generation: Int
+  id: ID!
+  modified: String
+  name: String
+  release_year: Int
+  resource_uri: String
+}
+
+type GameConnection {
+  pageInfo: PageInfo!
+  edges: [GameEdge]
+}
+
+type GameEdge {
+  node: Game
+  cursor: String!
+}
+
+type Move implements Node {
+  accuracy: Int
+  category: String
+  created: String
+  description: String
+  id: ID!
+  modified: String
+  name: String
+  power: Int
+  pp: Int
+  resource_uri: String
+}
+
+type MoveConnection {
+  pageInfo: PageInfo!
+  edges: [MoveEdge]
+}
+
+type MoveEdge {
+  node: Move
+  cursor: String!
+}
+
+interface Node {
+  id: ID!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Pokedex implements Node {
+  id: ID!
+  created: String
+  modified: String
+  name: String
+  pokemon(start: Int!, number: Int!): PokemonConnection
+  resource_uri: String
+}
+
+type Pokemon implements Node {
+  id: ID!
+  abilities(after: String, first: Int, before: String, last: Int): AbilityConnection
+  attack: Int
+  catch_rate: Int
+  created: String
+  defense: Int
+  descriptions(after: String, first: Int, before: String, last: Int): DescriptionConnection
+  egg_cycles: Int
+  egg_groups(after: String, first: Int, before: String, last: Int): EggConnection
+  ev_yield: String
+  evolutions: [Evolution]
+  exp: Int
+  growth_rate: String
+  happiness: Int
+  height: String
+  hp: Int
+  male_female_ratio: String
+  modified: String
+  moves(after: String, first: Int, before: String, last: Int): MoveConnection
+  name: String
+  national_id: Int
+  pkdx_id: Int
+  resource_uri: String
+  sp_atk: Int
+  sp_def: Int
+  species: String
+  speed: Int
+  sprites(after: String, first: Int, before: String, last: Int): SpriteConnection
+  total: Int
+  types(after: String, first: Int, before: String, last: Int): TypeConnection
+  weight: String
+}
+
+type PokemonConnection {
+  pageInfo: PageInfo!
+  edges: [PokemonEdge]
+}
+
+type PokemonEdge {
+  node: Pokemon
+  cursor: String!
+}
+
+type Query {
+  node(id: ID!): Node
+  pokedex: Pokedex
+  pokemon(number: Int!): Pokemon
+}
+
+type Sprite implements Node {
+  created: String
+  id: ID!
+  image: String
+  modified: String
+  name: String
+  pokemon: Pokemon
+  resource_uri: String
+}
+
+type SpriteConnection {
+  pageInfo: PageInfo!
+  edges: [SpriteEdge]
+}
+
+type SpriteEdge {
+  node: Sprite
+  cursor: String!
+}
+
+type Type implements Node {
+  created: String
+  id: ID!
+  ineffective(after: String, first: Int, before: String, last: Int): TypeConnection
+  modified: String
+  name: String
+  no_effect(after: String, first: Int, before: String, last: Int): TypeConnection
+  resistance(after: String, first: Int, before: String, last: Int): TypeConnection
+  resource_uri: String
+  super_effective(after: String, first: Int, before: String, last: Int): TypeConnection
+  weakness(after: String, first: Int, before: String, last: Int): TypeConnection
+}
+
+type TypeConnection {
+  pageInfo: PageInfo!
+  edges: [TypeEdge]
+}
+
+type TypeEdge {
+  node: Type
+  cursor: String!
+}

@@ -26,6 +26,8 @@
     <module>manifold-ext-test</module>
     <module>manifold-ext-producer-sample</module>
     <module>manifold-ext-producer-sample-test</module>
+    <module>manifold-graphql</module>
+    <module>manifold-graphql-test</module>
     <module>manifold-io</module>
     <module>manifold-io-test</module>
     <module>manifold-image</module>

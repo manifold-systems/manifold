@@ -32,7 +32,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
   private List<SrcType> _throwTypes;
   private boolean _isConstructor;
 
-  public AbstractSrcMethod( SrcClass srcClass )
+  public AbstractSrcMethod( AbstractSrcClass srcClass )
   {
     super( srcClass );
     _typeVars = Collections.emptyList();
@@ -174,8 +174,8 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
 
   private boolean isNonDefaultNonStaticInterfaceMethod()
   {
-    return getOwner() instanceof SrcClass &&
-           ((SrcClass)getOwner()).isInterface() &&
+    return getOwner() instanceof AbstractSrcClass &&
+           ((AbstractSrcClass)getOwner()).isInterface() &&
            (getModifiers() & Flags.DEFAULT) == 0 &&
            (getModifiers() & Flags.STATIC) == 0;
   }

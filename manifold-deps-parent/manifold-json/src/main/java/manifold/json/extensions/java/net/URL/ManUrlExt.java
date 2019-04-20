@@ -149,6 +149,10 @@ public class ManUrlExt
   {
     try
     {
+      if( jsonValue != null && (httpMethod.equals( "GET") || httpMethod.equals( "DELETE" )) )
+      {
+        url = makeUrl( url.toString(), jsonValue );
+      }
       HttpURLConnection conn = (HttpURLConnection)url.openConnection();
       conn.setRequestMethod( httpMethod );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
@@ -290,7 +294,7 @@ public class ManUrlExt
   {
     return Json.fromJson( getTextContent( thiz ) );
   }
-  
+
   /**
    * @return A YAML object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
    * content is not a YAML document.

@@ -1,0 +1,87 @@
+schema {
+  query: QueryRoot
+  mutation: MutationRoot
+}
+
+type QueryRoot {
+  movies(title: String, genre: Genre = Action, year: Int, actors: [ActorInput!]) : [Movie!]
+  actors(movie: MovieInput!) : [CastMember!]!
+}
+
+type MutationRoot {
+  createReview(movie: ID!, review: ReviewInput) : Review
+}
+
+type Movie {
+  id: ID!
+  title: String!
+  genre: [Genre!]!
+  releaseDate: Date!
+  cast: [Character!]!
+  starring: CastMember
+}
+
+type Character {
+  id: ID!
+  actor: Actor!
+  name: String!
+  type: Type!
+}
+
+type Person implements Actor {
+  id: ID!
+  name: String!
+  dateOfBirth: Date!
+  nationality: String
+  height: Int
+}
+
+type Animal implements Actor {
+  id: ID!
+  name: String!
+  nationality: String
+  kind: String
+}
+
+interface Actor {
+  id: ID!
+  name: String!
+  nationality: String
+}
+
+type Review {
+  id: ID!
+  movie: ID!
+  stars: Int!
+  comment: String
+}
+
+input ReviewInput {
+  stars: Int!
+  comment: String
+}
+
+input ActorInput {
+  name: String!
+  nationality: String
+}
+
+input MovieInput {
+  title: String!
+  genre: Genre!
+  releaseDate: Date
+}
+
+union CastMember = Person | Animal
+
+scalar Date
+
+enum Type {
+  Main, Supporting, Antagonist, Tertiary, Flat
+}
+
+enum Genre {
+  Action, Comedy, Drama, Fantasy, Horror, Romance, SciFi, Western
+}
+
+
