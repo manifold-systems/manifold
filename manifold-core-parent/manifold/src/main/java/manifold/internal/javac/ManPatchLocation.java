@@ -45,11 +45,25 @@ public class ManPatchLocation implements JavaFileManager.Location
     return false;
   }
 
+
+  /**
+   * Overrides Location#inferModuleName in Java 9+
+   *
+   * @noinspection WeakerAccess
+   */
   public String inferModuleName( Context ctx )
   {
     Names names = Names.instance( ctx );
     GeneratedJavaStubFileObject fo = _fo;
     String packageName = getPackageName( fo );
+
+    if( ReflectUtil.field(
+      ReflectUtil.method( "com.sun.tools.javac.comp.Modules", "instance", Context.class )
+        .invokeStatic( ctx ), "allModules" ).get() == null )
+    {
+      // If using JavaParser.compile(), say from Lab, we don't care about modules, otherwise we run into trouble
+      return null;
+    }
 
     JavacElements elementUtils = JavacElements.instance( ctx );
     for( Object /*ModuleElement*/ ms : (Iterable)ReflectUtil.method( elementUtils, "getAllModuleElements" ).invoke() )

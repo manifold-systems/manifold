@@ -63,6 +63,17 @@ public class UrlClassLoaderWrapper
     return wrapped;
   }
 
+  public static boolean canWrap( ClassLoader loader )
+  {
+    LiveMethodRef getURLs = getURLsMethod( loader );
+    if( getURLs != null )
+    {
+      LiveMethodRef addUrl = ReflectUtil.WithNull.method( getURLs.getReceiver(), "addURL|addUrl", URL.class );
+      return addUrl != null;
+    }
+    return false;
+  }
+
   public static UrlClassLoaderWrapper wrap( ClassLoader loader )
   {
     LiveMethodRef getURLs = getURLsMethod( loader );
