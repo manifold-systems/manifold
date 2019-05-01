@@ -15,6 +15,7 @@ Leveraging these key features Manifold delivers a set of high-level components y
 include:
 * **JSON** and **JSON Schema** integration
 * **YAML** integration
+* **GraphQL** support
 * Type-safe **Templating** 
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
@@ -74,6 +75,7 @@ Currently Manifold provides type manifolds for:
 
 *   JSON and [JSON Schema](http://json-schema.org/)
 *   YAML
+*   GraphQL
 *   Properties files
 *   Image files
 *   Dark Java
@@ -334,6 +336,8 @@ Dark Java support
 JSON and JSON Schema support
 * [manifold-yaml](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-yaml&v=RELEASE):
 YAML support
+* [manifold-graphql](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-graphql&v=RELEASE):
+GraphQL support
 * [manifold-js](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE):
 JavaScript support (experimental)
 * [manifold-collections](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE):
@@ -861,6 +865,7 @@ Currently Manifold provides reference implementations for a few commonly used da
 
 *   JSON and JSON Schema
 *   YAML
+*   GraphQL
 *   Properties files
 *   Image files
 *   Dark Java
@@ -1328,7 +1333,46 @@ APIs directly with YAML.
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
 type manifold reference above.  All that applies to JSON applies to YAML.
 
-  
+### GraphQL _(Work in progress)_
+
+The GraphQL Manifold is a type manifold library that allows for seamless interaction
+with [GraphQL](https://graphql.org/) resources (`.graphql` schema files).
+
+Use the GraphQL Manifold in any Java project to **type-safely** build and execute GraphQL queries and mutations without
+introducing a code generation step in your build process.
+
+## Build Queries
+```java
+private static String ENDPOINT = "http://example/graphql";
+...
+var query = MovieQuery.builder().withGenre(Action).build();
+var result = query.request(ENDPOINT).post();
+var actionMovies = result.getMovies();
+for (var movie : actionMovies) {
+  out.println(
+    "Title: ${movie.getTitle()}\n" +
+    "Genre: ${movie.getGenre()}\n" +
+    "Year: ${movie.getReleaseDate().getYear()}\n");
+}
+```
+
+## Execute Mutations
+```java
+// Find the movie to review ("Le Mans")
+var movie = MovieQuery.builder().withTitle("Le Mans").build()
+  .request(ENDPOINT).post().getMovies().first();
+// Submit a review for the movie
+var review = ReviewInput.builder(5).withComment("Topnotch racing film.").build();
+var mutation = ReviewMutation.builder(movie.getId(), review).build();
+var createdReview = mutation.request(ENDPOINT).post().getCreateReview();
+out.println(
+  "Review for: ${movie.getTitle()}\n" +
+  "Stars: ${createdReview.getStars()}\n" +
+  "Comment: ${createdReview.getComment()}\n"
+);
+```
+todo:
+
 ### Properties Files
 
 Many Java applications incorporate

@@ -57,6 +57,11 @@ also works with Java versions 8 - 12.
 
 Here are some sample build configurations references.
 
+>Note you can replace the `manifold-graphql` dependency with **`manifold-all`** as a quick way to gain access to all of
+Manifold's features.  But `manifold-graphql` already brings in a lot of Manifold including
+[Extension Methods](http://manifold.systems/docs.html#extension-classes),
+String Templates](http://manifold.systems/docs.html#templating), and more.
+
 ## Gradle
 
 ### Java 8
@@ -95,7 +100,7 @@ rootProject.name = 'MyGraphQLProject'
 ```
 
 ### Java 11+
-Here is a sample `build.gradle` file using `manifold-all` with **Java 11**:
+Here is a sample `build.gradle` file using `manifold-graphql` with **Java 11**:
 ```groovy
 plugins {
     id 'java'
@@ -115,7 +120,7 @@ dependencies {
     compile group: 'systems.manifold', name: 'manifold-graphql', version: '0.XX-alpha'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
-    // Add manifold-all to -processorpath for javac
+    // Add manifold-graphql to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-graphql', version: '0.XX-alpha'
 }
 
