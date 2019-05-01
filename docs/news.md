@@ -3,7 +3,7 @@ layout: default
 ---
 
 # News
-
+<br/><br/>
 
 
 ## Manifold 0.62-alpha released (1 May 2019)
@@ -26,6 +26,7 @@ Manifold 0.62-alpha is available for download on [Maven Central](https://search.
 <br/><br/>
 
 
+
 ## Manifold 0.59-alpha released (8 April 2019)
 
 Bug fixes
@@ -37,6 +38,7 @@ Manifold 0.59-alpha is available for download on [Maven Central](https://search.
 <br/><br/>
 
 
+
 ## Manifold 0.56-alpha released (2 April 2019)
 
 Bug fixes
@@ -46,6 +48,8 @@ Bug fixes
 * other minor changes
 
 Manifold 0.59-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.59-alpha/jar).
+<br/><br/>
+
 
 
 ## Manifold 0.55-alpha released (31 March 2019)
@@ -59,6 +63,7 @@ Highlights
 Bug fixes
 * [#55](https://github.com/manifold-systems/manifold/issues/55), don't display warning message re manifold jars for a project without manifold dependencies
 * other minor fixes
+<br/><br/>
 
 
 
@@ -69,6 +74,7 @@ Highlights
 * Fix issues with "Create Extension Method Class" dialog
 * Some performance improvements esp. faster manifold resource compilation with larger projects
 * Other minor improvements and fixes
+<br/><br/>
 
 
 
@@ -81,6 +87,7 @@ Highlights
 Bug fixes
 * Fix regression where annotation processing libraries could cause problems with self types, structural types, etc.
 * Fix completion issue. A project with multiple unrelated modules can now access extension methods from shared jar files such as Manifold's builtin extensions for String etc.
+<br/><br/>
 
 
 
@@ -95,6 +102,7 @@ Highlights
 * You can override methods having @Self in a parameter and maintain the super type's signature, but also have your subclass type enforced, no bridge methods or other shenanigans otherwise present with recursive generics
 * @Self is fully supported in *extension methods*
 >Note the completion of @Self facilitates [#47](https://github.com/manifold-systems/manifold/issues/47) -- use @Self instead of generic methods and recursive generic types.
+<br/><br/>
 
 
 
@@ -113,6 +121,7 @@ JSON Schema improvements
 * IJsonParser no longer wraps lists in bindings with single "value" property -- returns JSON List as-is now
 * Fixed bug dealing with not preserving insertion order of oneOf/anyOf union types
 * Several other bug fixes along the way
+<br/><br/>
 
 
 
@@ -137,6 +146,8 @@ etc.
 * Support non-standard JSON Schema type names with proper-case, `String`, `Object`, `Array` and also support `double` as an alias for `number`. 
 * Fix a bug where an errant Json list type has a null component type
 * Fix a bug where a $ref to a oneOf type did not add union methods to the ref'ing type
+<br/><br/>
+
 
 
 ## Manifold 0.42-alpha released (2 February 2019)
@@ -150,6 +161,7 @@ Highlights
 * Enhancements to @Precompile
 * Manifold works with Lombok (edge release)
 * Very large scale projects supported
+<br/><br/>
 
 
 
@@ -179,6 +191,7 @@ Manifold JSON changes
 * Much refactoring to better accommodate the additional `readOnly`, `additionProperties`, etc. attributes
 
 * support nested `definitions` for JSON Schema
+<br/><br/>
 
 
 
@@ -202,6 +215,7 @@ Manifold JSON changes
 * Support `default` value and `required` properties type-safely by adding parameters to the JSON interface's static create() method where each parameter corresponds with a `required` property that does not have a `default` value 
 * Support `const` as a single value enum type (as described in the JSON Schema) 
 * Support `allOf`, `anyOf`, `oneOf` where all the component types are enums such that regardless of the all/any/one operation the resulting type is a single enum composed of all the constants in all the component enum types
+<br/><br/>
 
 
 
@@ -214,6 +228,7 @@ Manifold Templates (ManTL) changes
 * fix `section` support involving params
 * support lambda usage where the statement block of the lambda is used for generating content
 * filter leading spaces associated with some non-content template constructs
+<br/><br/>
 
 
 
@@ -224,6 +239,7 @@ Manifold Templates (ManTL) changes
   * Fix problems related to compile error reporting from javac
   * Prohibit use of @Jailbreak in compound assignment expressions and increment/decrement expressions; it's better to use direct assignment with '='
   * Resolve https://github.com/manifold-systems/manifold/issues/33
+<br/><br/>
 
 
 
@@ -243,6 +259,7 @@ foo.jailbreak().privateMethodOnFoo()
 ```
 Bug fixes
 * Fixed [#31](https://github.com/manifold-systems/manifold/issues/31)
+<br/><br/>
 
 
 
@@ -253,4 +270,5 @@ Highlights
 * Fix modifier code gen where public was used instead of the original modifier
 * Fix ReflectUtil method invocation to unwrap InvocationTargetException and rethrow original exception
 * Other minor changes
+<br/><br/>
 
