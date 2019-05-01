@@ -1338,7 +1338,7 @@ type manifold reference above.  All that applies to JSON applies to YAML.
 >Work in progress!
 
 Use the GraphQL Manifold for productive _Schema-First_ [GraphQL](https://graphql.org/) development in any Java project.
-*Type-safely** build and execute queries and mutations without introducing a code generation step in your build
+**Type-safely** build and execute queries and mutations without introducing a code generation step in your build
 process. Your `.graphql` schema files _**are**_ your API!
 
 Get your hands dirty now with the [sample GraphQL application](https://github.com/manifold-systems/manifold-sample-graphql-app).
