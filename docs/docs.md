@@ -173,7 +173,8 @@ If you simply want to experiment, grab the [Manifold sample project](https://git
 
 * `git clone https://github.com/manifold-systems/manifold-sample-project.git`
 * Open [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
-* Install the **Manifold plugin** from within IntelliJ: `Settings | Plugins | Browse Repositories | Manifold`
+* Install the **Manifold plugin** from within IntelliJ:
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 * Restart IntelliJ to use the plugin
 * Open the project you just cloned (open the root directory or the pom.xml file)
 * Add the [Java 11 JDK](https://adoptopenjdk.net/releases.html?variant=openjdk11&jvmVariant=hotspot): `File | Project Structure | SDKs | + | path-to-your-Jdk11`
@@ -283,7 +284,7 @@ Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/ide
 
 Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
 
-```Settings | Plugins | Browse Repositories | Manifold```
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 <p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
@@ -3010,7 +3011,7 @@ Changes you make are instantly available in your code:
 
 Install the plugin directly from IntelliJ via:
 
-<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: <kbd>Manifold</kbd>
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 ## Use with other JVM Languages
 

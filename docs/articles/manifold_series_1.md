@@ -150,7 +150,7 @@ Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/ide
 
 Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
 
-```Settings | Plugins | Browse Repositories | Manifold```
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 

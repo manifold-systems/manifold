@@ -11,7 +11,7 @@ full-featured ManTL template editing, and more.
 >
 >Install the plugin directly from IntelliJ:
 >
-><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Browse repositories</kbd> ➜ search: `Manifold`
+><kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
 ## Sample Projects
 
