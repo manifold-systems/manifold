@@ -54,7 +54,7 @@ Manifold provides a new option to **Turn Off Checked Exceptions!**
 
 Highlights
 * Simply add the `exceptions` plugin argument e.g., `-Xplugin:Manifold strings exceptions`
-** Now checked exceptions behave like unchecked exceptions! No more compiler errors, no more boilerplate try/catch, no more nonsense.
+  * Now checked exceptions behave like unchecked exceptions! No more compiler errors, no more boilerplate try/catch, no more nonsense.
 
 Bug fixes
 * [#55](https://github.com/manifold-systems/manifold/issues/55), don't display warning message re manifold jars for a project without manifold dependencies
@@ -89,9 +89,9 @@ Bug fixes
 Highlights
 * Rewrite @Self implementation to provide comprehensive 'self' type support. Essentially, @Self is suitable as a simpler alternative to recursive generic types.
 * @Self can be applied to:
-** instance method return type
-** instance method parameter type
-** instance field type
+  * instance method return type
+  * instance method parameter type
+  * instance field type
 * You can override methods having @Self in a parameter and maintain the super type's signature, but also have your subclass type enforced, no bridge methods or other shenanigans otherwise present with recursive generics
 * @Self is fully supported in *extension methods*
 >Note the completion of @Self facilitates [#47](https://github.com/manifold-systems/manifold/issues/47) -- use @Self instead of generic methods and recursive generic types.
@@ -102,14 +102,14 @@ Highlights
 
 Structural Interface improvements
 * Structural interface improvements
-** Provide a solution to eliminate the first-time load/cast overhead for a structural interface. Enable a structural interface to provide its own proxy factory via new optional parameters to @Structural(factoryClass, baseClass)
+  * Provide a solution to eliminate the first-time load/cast overhead for a structural interface. Enable a structural interface to provide its own proxy factory via new optional parameters to @Structural(factoryClass, baseClass)
 
 JSON Schema improvements
 * JSON array types are now concrete types and define a component type named Item
-** Thus a JSON array declared as "Users" has type "Users" and, if not a $ref, its nested component type is named "UsersItem"
-** The "Users" type is an interface and extends IJsonList, which in extends List
+  * Thus a JSON array declared as "Users" has type "Users" and, if not a $ref, its nested component type is named "UsersItem"
+  * The "Users" type is an interface and extends IJsonList, which in extends List
 * Added `request(URL)` static method on all JSON API interfaces
-** Use to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE
+  * Use to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE
 * IJsonParser no longer wraps lists in bindings with single "value" property -- returns JSON List as-is now
 * Fixed bug dealing with not preserving insertion order of oneOf/anyOf union types
 * Several other bug fixes along the way
@@ -121,9 +121,9 @@ JSON Schema improvements
 Manifold core changes
 * Support dynamic compilation/loading of resources in other dependency modules in a multi-module Java 11 (JPMS) project
 * Eliminate "built-in" type manifolds, move them all out into separate modules:
-** `manifold-properties`
-** `manifold-image`
-** `manifold-darkj`
+  * `manifold-properties`
+  * `manifold-image`
+  * `manifold-darkj`
 >Note although all built-in type manifolds are now registered and loaded separately as services, they are all still included in the `manifold-all` jar
 
 Manifold JSON changes: 
@@ -157,25 +157,25 @@ Highlights
 
 Manifold JSON changes
 * Support JSON Schema's many curious ways of saying a type is "nullable":
-** The type array: `"type": ["", "null"]`
-** The union type: `"oneOf": [ ..., {"type": "null"}]`
-** The enum type: `"enum": [..., null]`
-** OpenAPI's sane way: `"nullable"`
+  * The type array: `"type": ["", "null"]`
+  * The union type: `"oneOf": [ ..., {"type": "null"}]`
+  * The enum type: `"enum": [..., null]`
+  * OpenAPI's sane way: `"nullable"`
 
 * Support OpenAPI formats:
-** `byte`, `binary` with backing classes: `Base64Encoding` and `OctetEncoding`
-** `int64` with `Long`/`long`
-** note `int32`, `float`, and `double` formats are naturally accounted for with default backing types Integer/int, Double/double, no need for special formats
+  * `byte`, `binary` with backing classes: `Base64Encoding` and `OctetEncoding`
+  * `int64` with `Long`/`long`
+  * note `int32`, `float`, and `double` formats are naturally accounted for with default backing types Integer/int, Double/double, no need for special formats
 
 * Support `readOnly` and `writeOnly`
 * Support `additionalProperties` and `patternProperties`
-** both of these control whether or not a type can be treated as a general map, has methods get(key) and put(key, value)
+  * both of these control whether or not a type can be treated as a general map, has methods get(key) and put(key, value)
 * Support json schema cycles stemming from `oneOf` i.e., interface Foo extends Foo.InnerClass
-** such a cycle is short-circuited by directly incorporating the super interface's property methods in the extending type
-** Foo.InnerClass remains an inner class of Foo and Foo remains structurally assignable to Foo.InnerClass (JSON interfaces are structural interfaces)
+  * such a cycle is short-circuited by directly incorporating the super interface's property methods in the extending type
+  * Foo.InnerClass remains an inner class of Foo and Foo remains structurally assignable to Foo.InnerClass (JSON interfaces are structural interfaces)
 * Add Builders having withXxx() methods
-** a json schema interface now has a static builder(...) method with parameters matching the create(...) method (required properties)
-** returns inner class Builder instance having withXxx(x) matching all non-required properties
+  * a json schema interface now has a static builder(...) method with parameters matching the create(...) method (required properties)
+  * returns inner class Builder instance having withXxx(x) matching all non-required properties
 * Much refactoring to better accommodate the additional `readOnly`, `additionProperties`, etc. attributes
 
 * support nested `definitions` for JSON Schema
@@ -191,14 +191,14 @@ Manifold Templates (ManTL) changes
 
 Manifold JSON changes 
 * Remove overhead of JSON dynamic proxy by removing it in favor of improving the interface API to provide its own implementation 
-** Usage of a JSON interface no longer involves a runtime delay the first time it is used 
+  * Usage of a JSON interface no longer involves a runtime delay the first time it is used
 * Type-safe support for JSON Schema `enum` types, generate Java enum to correspond with any JSON `enum` including non-string values 
 * Type-safe, pluggable support for JSON Schema `format` types like `date-time` etc. 
-** The JSON type manifold supplies a Java service provider API with `IJsonFormatTypeResolver` 
-** Implement `IJsonFormatTypeResolver` to map Java types to your own formats 
-** Manifold supports standard JSON Schema formats including `date-time`, `date`, `time` using `java.time.LocalDateTime`, `LocalDate`, and `LocalTime` 
-** Manifold supports some non-standard formats too including `utc-millisec` with `java.time.Instant` 
-** Additionally Manifold provides new (non-standard) formats such as `big-integer` and `big-decimal` 
+  * The JSON type manifold supplies a Java service provider API with `IJsonFormatTypeResolver`
+  * Implement `IJsonFormatTypeResolver` to map Java types to your own formats
+  * Manifold supports standard JSON Schema formats including `date-time`, `date`, `time` using `java.time.LocalDateTime`, `LocalDate`, and `LocalTime`
+  * Manifold supports some non-standard formats too including `utc-millisec` with `java.time.Instant`
+  * Additionally Manifold provides new (non-standard) formats such as `big-integer` and `big-decimal`
 * Support `default` value and `required` properties type-safely by adding parameters to the JSON interface's static create() method where each parameter corresponds with a `required` property that does not have a `default` value 
 * Support `const` as a single value enum type (as described in the JSON Schema) 
 * Support `allOf`, `anyOf`, `oneOf` where all the component types are enums such that regardless of the all/any/one operation the resulting type is a single enum composed of all the constants in all the component enum types
@@ -220,10 +220,10 @@ Manifold Templates (ManTL) changes
 ## Manifold 0.32-alpha (11 December 2018)
 
 * Fix some issues introduced with Jailbreak (from ver 0.30-alpha)
-** Rename `@JailBreak` to proper spelling '@Jailbreak` (doh!)
-** Fix problems related to compile error reporting from javac
-** Prohibit use of @Jailbreak in compound assignment expressions and increment/decrement expressions; it's better to use direct assignment with '='
-** Resolve https://github.com/manifold-systems/manifold/issues/33
+  * Rename `@JailBreak` to proper spelling '@Jailbreak` (doh!)
+  * Fix problems related to compile error reporting from javac
+  * Prohibit use of @Jailbreak in compound assignment expressions and increment/decrement expressions; it's better to use direct assignment with '='
+  * Resolve https://github.com/manifold-systems/manifold/issues/33
 
 
 
