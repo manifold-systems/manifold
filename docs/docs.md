@@ -1333,15 +1333,19 @@ APIs directly with YAML.
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
 type manifold reference above.  All that applies to JSON applies to YAML.
 
-### GraphQL _(Work in progress)_
+### GraphQL
 
-The GraphQL Manifold is a type manifold library that allows for seamless interaction
-with [GraphQL](https://graphql.org/) resources (`.graphql` schema files).
+>Work in progress!
 
-Use the GraphQL Manifold in any Java project to **type-safely** build and execute GraphQL queries and mutations without
-introducing a code generation step in your build process.
+Use the GraphQL Manifold for productive _Schema-First_ [GraphQL](https://graphql.org/) development in any Java project.
+*Type-safely** build and execute queries and mutations without introducing a code generation step in your build
+process. Your `.graphql` schema files _**are**_ your API!
 
-## Build Queries
+Get your hands dirty now with the [sample GraphQL application](https://github.com/manifold-systems/manifold-sample-graphql-app).
+
+>This feature is under development. More docs coming soon...
+
+#### Build Queries
 ```java
 private static String ENDPOINT = "http://example/graphql";
 ...
@@ -1356,7 +1360,7 @@ for (var movie : actionMovies) {
 }
 ```
 
-## Execute Mutations
+#### Execute Mutations
 ```java
 // Find the movie to review ("Le Mans")
 var movie = MovieQuery.builder().withTitle("Le Mans").build()
