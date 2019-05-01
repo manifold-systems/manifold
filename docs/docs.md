@@ -2970,7 +2970,7 @@ Manifold is foremost a JVM development tool.  It works straightaway with the Jav
 compiler.  It's also designed for use within other JVM languages via the _plugin host_ API. You can
 implement this API to host Manifold from within another JVM language.
 
-See _manifold.api.host.IManifoldHost_. 
+See [manifold.api.host.IManifoldHost](https://github.com/manifold-systems/manifold/blob/master/manifold-core-parent/manifold/src/main/java/manifold/api/host/IManifoldHost.java). 
 
 ## License
 
