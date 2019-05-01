@@ -23,7 +23,7 @@ Highlights
 * Excellent **IntelliJ** support via Manifold plugin
 
 Manifold 0.62-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.62-alpha/jar).
-
+<br/><br/>
 
 
 ## Manifold 0.59-alpha released (8 April 2019)
@@ -34,7 +34,7 @@ Bug fixes
 * other minor fixes
 
 Manifold 0.59-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.59-alpha/jar).
-
+<br/><br/>
 
 
 ## Manifold 0.56-alpha released (2 April 2019)
