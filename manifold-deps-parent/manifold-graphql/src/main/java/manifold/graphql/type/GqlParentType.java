@@ -20,6 +20,7 @@ import com.sun.tools.javac.code.Flags;
 import graphql.language.AstPrinter;
 import graphql.language.Definition;
 import graphql.language.EnumTypeDefinition;
+import graphql.language.EnumTypeExtensionDefinition;
 import graphql.language.EnumValueDefinition;
 import graphql.language.Field;
 import graphql.language.FieldDefinition;
@@ -27,13 +28,16 @@ import graphql.language.FragmentDefinition;
 import graphql.language.FragmentSpread;
 import graphql.language.InlineFragment;
 import graphql.language.InputObjectTypeDefinition;
+import graphql.language.InputObjectTypeExtensionDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.InterfaceTypeDefinition;
+import graphql.language.InterfaceTypeExtensionDefinition;
 import graphql.language.ListType;
 import graphql.language.NamedNode;
 import graphql.language.Node;
 import graphql.language.NonNullType;
 import graphql.language.ObjectTypeDefinition;
+import graphql.language.ObjectTypeExtensionDefinition;
 import graphql.language.OperationDefinition;
 import graphql.language.OperationTypeDefinition;
 import graphql.language.ScalarTypeDefinition;
@@ -52,6 +56,7 @@ import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +67,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
 import manifold.api.fs.IFile;
+import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcConstructor;
@@ -70,11 +76,11 @@ import manifold.api.gen.SrcGetProperty;
 import manifold.api.gen.SrcLinkedClass;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.json.IJsonBindingsBacked;
+import manifold.api.json.Loader;
 import manifold.api.json.schema.FormatTypeResolvers;
 import manifold.api.json.schema.IJsonFormatTypeResolver;
 import manifold.api.json.schema.JsonFormatType;
@@ -88,6 +94,8 @@ import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.graphql.request.Executor;
 import manifold.util.ManEscapeUtil;
+import manifold.util.ManStringUtil;
+import manifold.util.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -110,6 +118,7 @@ class GqlParentType
   private final Map<String, FragmentDefinition> _fragments;
   private final IFile _file;
   private final GqlManifold _gqlManifold;
+  private final Map<TypeDefinition, Set<UnionTypeDefinition>> _typeToUnions;
 
   GqlParentType( String fqn, SchemaDefinition schemaDefinition, TypeDefinitionRegistry registry,
                  Map<String, OperationDefinition> operations, Map<String, FragmentDefinition> fragments,
@@ -122,6 +131,7 @@ class GqlParentType
     _fragments = fragments;
     _file = file;
     _gqlManifold = gqlManifold;
+    _typeToUnions = new HashMap<>();
   }
 
   private String getFqn()
@@ -137,6 +147,7 @@ class GqlParentType
   void render( StringBuilder sb )
   {
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Interface, _file )
+      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Modifier.PUBLIC );
     addImports( srcClass );
     addInnerTypes( srcClass );
@@ -146,6 +157,15 @@ class GqlParentType
 
   private void addInnerTypes( SrcLinkedClass srcClass )
   {
+    _registry.types().values().stream()
+      .filter( e -> e instanceof UnionTypeDefinition )
+      .map( e -> (UnionTypeDefinition)e )
+      .forEach( e -> e.getMemberTypes().stream()
+        .map( m -> findTypeDefinition( m ) )
+        .forEach( typeDef ->
+          _typeToUnions.computeIfAbsent( typeDef, t -> new HashSet<>() )
+            .add( e ) ) );
+
     for( TypeDefinition type: _registry.types().values() )
     {
       if( type instanceof ObjectTypeDefinition )
@@ -163,6 +183,10 @@ class GqlParentType
       else if( type instanceof InputObjectTypeDefinition )
       {
         addInnerInputType( (InputObjectTypeDefinition)type, srcClass );
+      }
+      else if( type instanceof UnionTypeDefinition )
+      {
+        addInnerUnionType( (UnionTypeDefinition)type, srcClass );
       }
     }
   }
@@ -185,34 +209,6 @@ class GqlParentType
     }
   }
 
-  private void addProxyClasses( SrcLinkedClass enclosingType )
-  {
-    addProxy( enclosingType );
-    addProxyFactory( enclosingType );
-  }
-
-  /**
-   * Not so much a "proxy" as a substitute for a structural proxy that is otherwise generated dynamically at runtime.
-   * Essentially this class is a compile-time substitute that vastly improves the first-time load performance of
-   * GraphQL types.
-   */
-  private void addProxy( SrcLinkedClass enclosingType )
-  {
-    String fqn = enclosingType.getName() + ".Proxy";
-    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Class )
-      .addInterface( enclosingType.getName() )
-      .addField( new SrcField( "_bindings", Bindings.class )
-        .modifiers( Modifier.PRIVATE | Modifier.FINAL ) )
-      .addConstructor( new SrcConstructor()
-        .modifiers( Modifier.PRIVATE )
-        .addParam( "bindings", Bindings.class )
-        .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText( "_bindings = bindings;" ) ) ) )
-      .addGetProperty( new SrcGetProperty( "Bindings", Bindings.class )
-        .modifiers( Modifier.PUBLIC )
-        .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText( "return _bindings;" ) ) ) );
-    enclosingType.addInnerClass( srcClass );
-  }
-
   private void addProxyFactory( SrcLinkedClass enclosingType )
   {
     String fqn = enclosingType.getName() + ".ProxyFactory";
@@ -222,36 +218,55 @@ class GqlParentType
         .modifiers( Modifier.PUBLIC )
         .name( "proxy" )
         .returns( new SrcType( enclosingType.getSimpleName() ) )
-        .addParam( "bindings", Map.class )
+        .addParam( "map", Map.class.getSimpleName() )
         .addParam( "iface", new SrcType( "Class<${enclosingType.getSimpleName()}>" ) )
         .body( new SrcStatementBlock()
-          .addStatement( new SrcRawStatement().rawText(
-            "if(!(bindings instanceof Bindings)) {bindings = new DataBindings(bindings);}" ) )
-          .addStatement( new SrcRawStatement().rawText(
-            "return new Proxy((Bindings)bindings);" ) ) ) );
+          .addStatement( "Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings(map);" )
+          .addStatement( "return new ${enclosingType.getSimpleName()}() {public Bindings getBindings() {return bindings;}};" ) ) );
     enclosingType.addInnerClass( srcClass );
   }
 
   private void addQueryType( OperationDefinition operation, SrcLinkedClass enclosingType )
   {
-    String fqn = getFqn() + '.' + operation.getName();
+    String identifier = makeIdentifier( operation.getName(), false );
+    String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class )
-      .addAnnotation( new SrcAnnotationExpression( Structural.class )
-        .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
+    addActualNameAnnotation( srcClass, operation.getName(), false );
     addSourcePositionAnnotation( srcClass, operation, operation::getName, srcClass );
-    addProxyClasses( srcClass );
+    addProxyFactory( srcClass );
     addQueryResultType( operation, getRoot( operation.getOperation() ), srcClass );
     addBuilder( srcClass, operation );
     addCreateMethod( srcClass, operation );
     addBuilderMethod( srcClass, operation );
     addRequestMethod( srcClass, operation );
+    addLoadMethod( srcClass );
 
     for( VariableDefinition varDef: operation.getVariableDefinitions() )
     {
-      addProperty( srcClass, varDef, remove$( varDef.getName() ), varDef.getName(),
-        makeSrcType( varDef.getType(), false ) );
+      String actualName = ensure$included( varDef );
+      String propName = makeIdentifier( remove$( actualName ), true );
+      SrcType type = makeSrcType( varDef.getType(), false );
+      //noinspection unused
+      StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
+      //noinspection unused
+      StringBuilder componentType = getComponentType( type ).render( new StringBuilder(), 0, false );
+      SrcGetProperty getter = new SrcGetProperty( propName, type )
+        .modifiers( Flags.DEFAULT )
+        .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"${remove$( actualName )}\"), ${componentType}.class);" );
+      addActualNameAnnotation( getter, actualName, true );
+      addSourcePositionAnnotation( srcClass, varDef, actualName, getter );
+      srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+
+      SrcSetProperty setter = new SrcSetProperty( propName, type )
+        .modifiers( Flags.DEFAULT )
+        .body( "getBindings().put(\"${remove$( actualName )}\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
+      addActualNameAnnotation( setter, actualName, true );
+      addSourcePositionAnnotation( srcClass, varDef, actualName, setter );
+      srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
     }
 
     enclosingType.addInnerClass( srcClass );
@@ -276,29 +291,34 @@ class GqlParentType
       .name( "request" )
       .addParam( "url", String.class )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText(
-        "return new Executor<Result>(url, \"$query\", getBindings());"
-      ) ) ) );
+      .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      ) );
   }
-  
+
+  private void addLoadMethod( SrcLinkedClass srcClass )
+  {
+    //noinspection unused
+    String simpleName = srcClass.getSimpleName();
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "load" )
+      .returns( new SrcType( "Loader<$simpleName>" ) )
+      .body( "return new Loader<>();" );
+    srcClass.addMethod( method );
+  }
+
   private void addCreateMethod( SrcLinkedClass srcClass, Definition definition )
   {
     String simpleName = srcClass.getSimpleName();
     SrcMethod method = new SrcMethod( srcClass )
-      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .modifiers( Modifier.STATIC )
       .name( "create" )
       .returns( simpleName );
-    for( NamedNode node: getDefinitions( definition ) )
-    {
-      if( isRequiredVar( node ) )
-      {
-        method.addParam( remove$( node.getName() ), makeSrcType( getType( node ), false ) );
-      }
-    }
+    addRequiredParameters( definition, method );
     srcClass.addMethod( method );
 
     SrcStatementBlock block = new SrcStatementBlock();
-    block.addStatement( new SrcRawStatement().rawText( "$simpleName thiz = ($simpleName)new DataBindings();" ) );
+    block.addStatement( "$simpleName thiz = ($simpleName)new DataBindings();" );
     for( NamedNode node: getDefinitions( definition ) )
     {
       String name = remove$( node.getName() );
@@ -306,26 +326,20 @@ class GqlParentType
       String Prop = makeIdentifier( name, true );
       if( isRequiredVar( node ) )
       {
-        block.addStatement( new SrcRawStatement().rawText( "thiz.set$Prop($name);" ) );
+        block.addStatement( "thiz.set$Prop($name);" );
       }
     }
-    block.addStatement( new SrcRawStatement().rawText( "return thiz;" ) );
+    block.addStatement( "return thiz;" );
     method.body( block );
   }
 
   private void addBuilderMethod( SrcLinkedClass srcClass, Definition definition )
   {
     SrcMethod method = new SrcMethod( srcClass )
-      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .modifiers( Modifier.STATIC )
       .name( "builder" )
       .returns( new SrcType( "Builder" ) );
-    for( NamedNode node: getDefinitions( definition ) )
-    {
-      if( isRequiredVar( node ) )
-      {
-        method.addParam( remove$( node.getName() ), makeSrcType( getType( node ), false ) );
-      }
-    }
+    addRequiredParameters( definition, method );
     srcClass.addMethod( method );
 
     StringBuilder sb = new StringBuilder();
@@ -341,10 +355,20 @@ class GqlParentType
       sb.append( param.getSimpleName() );
     }
     sb.append( ");" );
+    method.body( sb.toString() );
+  }
 
-    SrcStatementBlock block = new SrcStatementBlock();
-    block.addStatement( new SrcRawStatement().rawText( sb.toString() ) );
-    method.body( block );
+  private void addRequiredParameters( Definition definition, AbstractSrcMethod method )
+  {
+    for( NamedNode node: getDefinitions( definition ) )
+    {
+      if( isRequiredVar( node ) )
+      {
+        Type type = getType( node );
+        SrcType srcType = makeSrcType( type, false );
+        method.addParam( remove$( node.getName() ), srcType );
+      }
+    }
   }
 
   private void addBuilder( SrcLinkedClass enclosingType, Definition definition )
@@ -361,21 +385,11 @@ class GqlParentType
         .modifiers( Modifier.PUBLIC )
         .name( "build" )
         .returns( enclosingType.getSimpleName() )
-        .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText(
-          "return _result;"
-        ) ) ) );
-
+        .body( "return _result;" ) );
     enclosingType.addInnerClass( srcClass );
 
-    for( NamedNode node: getDefinitions( definition ) )
-    {
-      if( isRequiredVar( node ) )
-      {
-        ctor.addParam( remove$( node.getName() ), makeSrcType( getType( node ), false ) );
-      }
-    }
-    ctor.body( new SrcStatementBlock().addStatement(
-      new SrcRawStatement().rawText( addBuilderConstructorBody( ctor ) ) ) );
+    addRequiredParameters( definition, ctor );
+    ctor.body( addBuilderConstructorBody( ctor ) );
 
     addWithMethods( srcClass, definition );
   }
@@ -409,17 +423,7 @@ class GqlParentType
 
       Type type = getType( node );
       String propName = makeIdentifier( node.getName(), true );
-      TypeDefinition typeDef = findTypeDefinition( type );
-      if( typeDef instanceof UnionTypeDefinition )
-      {
-        addUnionOverloads_With( srcClass, node, propName, type, (UnionTypeDefinition)typeDef );
-
-        addWithMethod( srcClass, node, propName, convertSrcType( type, findLub( (UnionTypeDefinition)typeDef ) ) );
-      }
-      else
-      {
-        addWithMethod( srcClass, node, propName, makeSrcType( type, false ) );
-      }
+      addWithMethod( srcClass, node, propName, makeSrcType( type, false ) );
     }
   }
 
@@ -460,7 +464,8 @@ class GqlParentType
   private void addWithMethod( SrcLinkedClass srcClass, NamedNode node, String propName, SrcType type )
   {
     //noinspection unused
-    String actualName = node.getName();
+    String actualName = ensure$included( node );
+
     //noinspection unused
     StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
     SrcMethod withMethod = new SrcMethod()
@@ -468,41 +473,24 @@ class GqlParentType
       .name( "with$propName" )
       .addParam( "${'$'}value", type )
       .returns( new SrcType( "Builder" ) )
-      .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText(
-        "_result.getBindings().put(\"$actualName\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));" ) )
-        .addStatement( new SrcRawStatement().rawText(
-          "return this;"
-        ) ) );
+      .body( new SrcStatementBlock()
+        .addStatement( "_result.getBindings().put(\"${remove$(actualName)}\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));" )
+        .addStatement( "return this;" ) );
     addActualNameAnnotation( withMethod, actualName, true );
     addSourcePositionAnnotation( srcClass, node, actualName, withMethod );
 
     srcClass.addMethod( withMethod );
   }
 
-  private void addUnionOverloads_With( SrcLinkedClass srcClass, NamedNode node, String propName,
-                                       Type maybeListType, UnionTypeDefinition typeDef )
+  @NotNull
+  private String ensure$included( NamedNode node )
   {
-    if( getListType( maybeListType ) != null )
+    String actualName = node.getName();
+    if( !actualName.startsWith( "$" ) && node instanceof VariableDefinition )
     {
-      // can't have heterogeneous list (no union support for type args)
-      // however the caller can instead get the LUB of the union type (if the type's implement a common interface)
-      return;
+      actualName = '$' + actualName;
     }
-
-    for( Type t: typeDef.getMemberTypes() )
-    {
-      TypeDefinition td = findTypeDefinition( t );
-      if( td instanceof UnionTypeDefinition )
-      {
-        addUnionOverloads_With( srcClass, node, propName, maybeListType, (UnionTypeDefinition)td );
-      }
-      else
-      {
-        SrcType unionMemberType = convertSrcType( maybeListType, makeSrcType( t, false ).getName() );
-        String propertyName = "${propName}As${makeIdentifier( unionMemberType.getFqName(), true )}";
-        addWithMethod( srcClass, node, propertyName, unionMemberType );
-      }
-    }
+    return actualName;
   }
 
   private boolean isRequiredVar( NamedNode node )
@@ -523,7 +511,7 @@ class GqlParentType
           .filter( e -> e.getName().equals( getOperationKey( operation ) ) ).findFirst();
       if( rootQueryType.isPresent() )
       {
-        Type type = rootQueryType.get().getType();
+        Type type = rootQueryType.get().getTypeName();
         root = findTypeDefinition( type );
       }
     }
@@ -538,43 +526,25 @@ class GqlParentType
 
   private String getOperationDefaultTypeName( OperationDefinition.Operation operation )
   {
-    switch( operation )
-    {
-      case QUERY:
-        return "Query";
-      case MUTATION:
-        return "Mutation";
-      case SUBSCRIPTION:
-        return "Subscription";
-    }
-    throw new IllegalStateException();
+    return ManStringUtil.capitalize( operation.name().toLowerCase() );
   }
 
   @NotNull
   private String getOperationKey( OperationDefinition.Operation operation )
   {
-    switch( operation )
-    {
-      case QUERY:
-        return "query";
-      case MUTATION:
-        return "mutation";
-      case SUBSCRIPTION:
-        return "subscription";
-    }
-    throw new IllegalStateException();
+    return operation.name().toLowerCase();
   }
 
   private void addQueryResultType( OperationDefinition operation, TypeDefinition ctx, SrcLinkedClass enclosingType )
   {
     String fqn = enclosingType.getName() + ".Result";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class )
-      .addAnnotation( new SrcAnnotationExpression( Structural.class )
-        .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, "Result.ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
 
-    addProxyClasses( srcClass );
+    addProxyFactory( srcClass );
 
     for( Selection member: operation.getSelectionSet().getSelections() )
     {
@@ -586,7 +556,6 @@ class GqlParentType
 
   private void addImports( SrcLinkedClass srcClass )
   {
-    importAllOtherGqlTypes( srcClass );
     srcClass.addImport( Bindings.class );
     srcClass.addImport( Executor.class );
     srcClass.addImport( DataBindings.class );
@@ -594,6 +563,7 @@ class GqlParentType
     srcClass.addImport( IJsonBindingsBacked.class );
     srcClass.addImport( IProxyFactory.class );
     srcClass.addImport( List.class );
+    srcClass.addImport( Loader.class );
     srcClass.addImport( Map.class );
     srcClass.addImport( RuntimeMethods.class );
     srcClass.addImport( NotNull.class );
@@ -601,6 +571,7 @@ class GqlParentType
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( SourcePosition.class );
     srcClass.addImport( Structural.class );
+    importAllOtherGqlTypes( srcClass );
   }
 
   private void importAllOtherGqlTypes( SrcLinkedClass srcClass )
@@ -615,33 +586,68 @@ class GqlParentType
 
   private void addInnerObjectType( ObjectTypeDefinition type, SrcLinkedClass enclosingType )
   {
-    String fqn = getFqn() + '.' + type.getName();
+    String identifier = makeIdentifier( type.getName(), false );
+    String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class )
-      .addAnnotation( new SrcAnnotationExpression( Structural.class )
-        .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
+    addUnionInterfaces( type, srcClass );
+    addActualNameAnnotation( srcClass, type.getName(), false );
     addSourcePositionAnnotation( srcClass, type, srcClass );
     List<Type> interfaces = type.getImplements();
     addInterfaces( srcClass, interfaces );
-    addProxyClasses( srcClass );
+    addProxyFactory( srcClass );
+    addBuilder( srcClass, type );
+    addCreateMethod( srcClass, type );
+    addBuilderMethod( srcClass, type );
+    addLoadMethod( srcClass );
     for( FieldDefinition member: type.getFieldDefinitions() )
     {
       addMember( srcClass, member );
     }
+    addObjectExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addUnionInterfaces( TypeDefinition type, SrcLinkedClass srcClass )
+  {
+    Set<UnionTypeDefinition> unions = _typeToUnions.get( type );
+    if( unions != null )
+    {
+      unions.forEach( union -> srcClass.addInterface( makeIdentifier( union.getName(), false ) ) );
+    }
+  }
+
+  private void addObjectExtensions( ObjectTypeDefinition type, SrcLinkedClass srcClass )
+  {
+    List<ObjectTypeExtensionDefinition> objectExtensions = _registry.objectTypeExtensions().get( type.getName() );
+    if( objectExtensions != null )
+    {
+      for( ObjectTypeExtensionDefinition ext: objectExtensions )
+      {
+        for( FieldDefinition member: ext.getFieldDefinitions() )
+        {
+          addMember( srcClass, member );
+        }
+      }
+    }
   }
 
   private void addInnerInputType( InputObjectTypeDefinition type, SrcLinkedClass enclosingType )
   {
-    String fqn = getFqn() + '.' + type.getName();
+    String identifier = makeIdentifier( type.getName(), false );
+    String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class )
-      .addAnnotation( new SrcAnnotationExpression( Structural.class )
-        .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
+    addUnionInterfaces( type, srcClass );
+    addActualNameAnnotation( srcClass, type.getName(), false );
     addSourcePositionAnnotation( srcClass, type, srcClass );
-    addProxyClasses( srcClass );
+    addProxyFactory( srcClass );
     addBuilder( srcClass, type );
     addCreateMethod( srcClass, type );
     addBuilderMethod( srcClass, type );
@@ -649,45 +655,153 @@ class GqlParentType
     {
       addMember( srcClass, member );
     }
+    addInputExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addInputExtensions( InputObjectTypeDefinition type, SrcLinkedClass srcClass )
+  {
+    List<InputObjectTypeExtensionDefinition> inputExtensions = _registry.inputObjectTypeExtensions().get( type.getName() );
+    if( inputExtensions != null )
+    {
+      for( InputObjectTypeExtensionDefinition ext: inputExtensions )
+      {
+        for( InputValueDefinition member: ext.getInputValueDefinitions() )
+        {
+          addMember( srcClass, member );
+        }
+      }
+    }
   }
 
   private void addInnerInterfaceType( InterfaceTypeDefinition type, SrcLinkedClass enclosingType )
   {
-    String fqn = getFqn() + '.' + type.getName();
+    String identifier = makeIdentifier( type.getName(), false );
+    String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class )
-      .addAnnotation( new SrcAnnotationExpression( Structural.class )
-        .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
+    addUnionInterfaces( type, srcClass );
+    addActualNameAnnotation( srcClass, type.getName(), false );
     addSourcePositionAnnotation( srcClass, type, srcClass );
-    addProxyClasses( srcClass );
+    addProxyFactory( srcClass );
     for( FieldDefinition member: type.getFieldDefinitions() )
     {
       addMember( srcClass, member );
     }
+    addInterfaceExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addInterfaceExtensions( InterfaceTypeDefinition type, SrcLinkedClass srcClass )
+  {
+    List<InterfaceTypeExtensionDefinition> interfaceExtensions = _registry.interfaceTypeExtensions().get( type.getName() );
+    if( interfaceExtensions != null )
+    {
+      for( InterfaceTypeExtensionDefinition ext: interfaceExtensions )
+      {
+        for( FieldDefinition member: ext.getFieldDefinitions() )
+        {
+          addMember( srcClass, member );
+        }
+      }
+    }
   }
 
   private void addInnerEnumType( EnumTypeDefinition type, SrcLinkedClass enclosingType )
   {
-    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn() + '.' + type.getName(), enclosingType, Enum )
+    String identifier = makeIdentifier( type.getName(), false );
+    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn() + '.' + identifier, enclosingType, Enum )
       .modifiers( Modifier.PUBLIC )
-      .addInterface( IBindingType.class );
+      .addInterface( IBindingType.class.getSimpleName() );
+    addActualNameAnnotation( srcClass, type.getName(), false );
     addSourcePositionAnnotation( srcClass, type, srcClass );
     for( EnumValueDefinition member: type.getEnumValueDefinitions() )
     {
-      SrcField enumConst = new SrcField( member.getName(), type.getName() );
-      srcClass.addEnumConst( enumConst );
+      addEnumConstant( identifier, srcClass, member );
     }
+    addEnumExtensions( type, srcClass );
     srcClass.addMethod(
       new SrcMethod( srcClass )
         .name( "toBindingValue" )
         .modifiers( Modifier.PUBLIC )
         .returns( Object.class )
-        .body( new SrcStatementBlock()
-          .addStatement( new SrcRawStatement().rawText( "return name();" ) ) ) );
+        .body( "return name();" ) );
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addEnumConstant( String identifier, SrcLinkedClass srcClass, EnumValueDefinition member )
+  {
+    SrcField enumConst = new SrcField( makeIdentifier( member.getName(), false ), identifier );
+    addSourcePositionAnnotation( srcClass, member, enumConst );
+    srcClass.addEnumConst( enumConst );
+  }
+
+  private void addEnumExtensions( EnumTypeDefinition type, SrcLinkedClass srcClass )
+  {
+    List<EnumTypeExtensionDefinition> enumExtensions = _registry.enumTypeExtensions().get( type.getName() );
+    if( enumExtensions != null )
+    {
+      String declaringType = makeIdentifier( type.getName(), false );
+      for( EnumTypeExtensionDefinition ext: enumExtensions )
+      {
+        for( EnumValueDefinition member: ext.getEnumValueDefinitions() )
+        {
+          addEnumConstant( declaringType, srcClass, member );
+        }
+      }
+    }
+  }
+
+  private void addInnerUnionType( UnionTypeDefinition type, SrcLinkedClass enclosingType )
+  {
+    String identifier = makeIdentifier( type.getName(), false );
+    String fqn = getFqn() + '.' + identifier;
+    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
+      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
+      .modifiers( Modifier.PUBLIC );
+    addUnionInterfaces( type, srcClass );
+    String lub = findLub( type );
+    if( lub != null )
+    {
+      srcClass.addInterface( makeIdentifier( lub, false ) );
+    }
+    addActualNameAnnotation( srcClass, type.getName(), false );
+    addSourcePositionAnnotation( srcClass, type, srcClass );
+    addProxyFactory( srcClass );
+    addIntersectionMethods( srcClass, type );
+    enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addIntersectionMethods( SrcLinkedClass srcClass, UnionTypeDefinition union )
+  {
+    Set<Pair<String, String>> fieldDefs = new HashSet<>();
+    Map<String, FieldDefinition> nameToFieldDef = new HashMap<>();
+    for( Type memberType: union.getMemberTypes() )
+    {
+      TypeDefinition typeDef = findTypeDefinition( memberType );
+      if( typeDef instanceof ObjectTypeDefinition )
+      {
+        if( fieldDefs.isEmpty() )
+        {
+          fieldDefs.addAll( ((ObjectTypeDefinition)typeDef).getFieldDefinitions()
+            .stream().map( e -> {
+              nameToFieldDef.put( e.getName(), e );
+              return new Pair<>( e.getName(), e.getType().toString() );
+            } ).collect( Collectors.toSet() ) );
+        }
+        else
+        {
+          fieldDefs.retainAll( ((ObjectTypeDefinition)typeDef).getFieldDefinitions()
+            .stream().map( e -> new Pair<>( e.getName(), e.getType().toString() ) ).collect( Collectors.toSet() ) );
+        }
+      }
+    }
+    fieldDefs.forEach( fieldDef -> addMember( srcClass, null, nameToFieldDef.get( fieldDef.getFirst() ).getType(), fieldDef.getFirst() ) );
   }
 
   private void addInterfaces( SrcLinkedClass srcClass, List<Type> interfaces )
@@ -696,7 +810,7 @@ class GqlParentType
     {
       if( iface instanceof TypeName )
       {
-        srcClass.addInterface( ((TypeName)iface).getName() );
+        srcClass.addInterface( makeIdentifier( ((TypeName)iface).getName(), false ) );
       }
     }
   }
@@ -711,20 +825,24 @@ class GqlParentType
     {
       FragmentDefinition fragment = _fragments.get( ((FragmentSpread)selection).getName() );
       TypeDefinition fragmentCtx = findTypeDefinition( fragment.getTypeCondition() );
-      assert fragmentCtx != null;
-      for( Selection fragSelection: fragment.getSelectionSet().getSelections() )
+      if( fragmentCtx != null )
       {
-        addQuerySelection( srcClass, fragmentCtx, fragSelection );
+        for( Selection fragSelection: fragment.getSelectionSet().getSelections() )
+        {
+          addQuerySelection( srcClass, fragmentCtx, fragSelection );
+        }
       }
     }
     else if( selection instanceof InlineFragment )
     {
       InlineFragment inlineFragment = (InlineFragment)selection;
       TypeDefinition fragmentCtx = findTypeDefinition( inlineFragment.getTypeCondition() );
-      assert fragmentCtx != null;
-      for( Selection fragSelection: inlineFragment.getSelectionSet().getSelections() )
+      if( fragmentCtx != null )
       {
-        addQuerySelection( srcClass, fragmentCtx, fragSelection );
+        for( Selection fragSelection: inlineFragment.getSelectionSet().getSelections() )
+        {
+          addQuerySelection( srcClass, fragmentCtx, fragSelection );
+        }
       }
     }
   }
@@ -734,6 +852,7 @@ class GqlParentType
     Optional<FieldDefinition> fieldDef;
     String alias = field.getAlias();
     String fieldName = field.getName();
+    String name = alias == null ? fieldName : alias;
     if( ctx instanceof ObjectTypeDefinition )
     {
       fieldDef = ((ObjectTypeDefinition)ctx).getFieldDefinitions().stream()
@@ -744,44 +863,114 @@ class GqlParentType
       fieldDef = ((InterfaceTypeDefinition)ctx).getFieldDefinitions().stream()
         .filter( e -> e.getName().equals( fieldName ) ).findFirst();
     }
+    else if( ctx instanceof UnionTypeDefinition && fieldName.equals( "__typename" ) )
+    {
+      // The discriminator for the union
+      String propName = name;
+      SrcType type = new SrcType( String.class.getSimpleName() );
+      propName = makeIdentifier( propName, true );
+      //noinspection unused
+      StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
+      //noinspection unused
+      StringBuilder componentType = getComponentType( type ).render( new StringBuilder(), 0, false );
+      SrcGetProperty getter = new SrcGetProperty( propName, type )
+        .modifiers( Flags.DEFAULT )
+        .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$name\"), ${componentType}.class);" );
+      addActualNameAnnotation( getter, name, true );
+      addSourcePositionAnnotation( srcClass, field, name, getter );
+      srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+
+      //## no setters for queries?
+//      SrcSetProperty setter = new SrcSetProperty( propName, type )
+//        .modifiers( Flags.DEFAULT )
+//        .body( "getBindings().put(\"$name\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
+//      addActualNameAnnotation( setter, name, true );
+//      addSourcePositionAnnotation( srcClass, field, name, setter );
+//      srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
+
+      return;
+    }
     else
     {
       throw new UnsupportedOperationException( ctx.getName() );
     }
 
     SelectionSet childSelections = field.getSelectionSet();
-    String name = alias == null ? fieldName : alias;
     FieldDefinition fieldDefStatic = fieldDef.orElse( null );
     if( fieldDefStatic == null )
     {
       // assume the parser exposes the error
       return;
     }
+
     Type type = fieldDefStatic.getType();
     if( childSelections == null || childSelections.getSelections().isEmpty() )
     {
-      addProperty( srcClass, field, name, name, makeSrcType( type, false ) );
+      String propName = name;
+      SrcType type1 = makeSrcType( type, false );
+      propName = makeIdentifier( propName, true );
+      //noinspection unused
+      StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
+      //noinspection unused
+      StringBuilder componentType = getComponentType( type1 ).render( new StringBuilder(), 0, false );
+      SrcGetProperty getter = new SrcGetProperty( propName, type1 )
+        .modifiers( Flags.DEFAULT )
+        .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$name\"), ${componentType}.class);" );
+      addActualNameAnnotation( getter, name, true );
+      addSourcePositionAnnotation( srcClass, field, name, getter );
+      srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+
+//## no setters for queries?
+//      SrcSetProperty setter = new SrcSetProperty( propName, type1 )
+//        .modifiers( Flags.DEFAULT )
+//        .body( "getBindings().put(\"$name\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
+//      addActualNameAnnotation( setter, name, true );
+//      addSourcePositionAnnotation( srcClass, field, name, setter );
+//      srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
     }
     else
     {
-      addProperty( srcClass, field, name, name, convertSrcType( type, name ) );
+      String propName = name;
+      SrcType type1 = convertSrcType( type, name );
+      propName = makeIdentifier( propName, true );
+      //noinspection unused
+      StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
+      //noinspection unused
+      StringBuilder componentType = getComponentType( type1 ).render( new StringBuilder(), 0, false );
+      SrcGetProperty getter = new SrcGetProperty( propName, type1 )
+        .modifiers( Flags.DEFAULT )
+        .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$name\"), ${componentType}.class);" );
+      addActualNameAnnotation( getter, name, true );
+      addSourcePositionAnnotation( srcClass, field, name, getter );
+      srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+
+//## no setters for queries?
+//      SrcSetProperty setter = new SrcSetProperty( propName, type1 )
+//        .modifiers( Flags.DEFAULT )
+//        .body( "getBindings().put(\"$name\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
+//      addActualNameAnnotation( setter, name, true );
+//      addSourcePositionAnnotation( srcClass, field, name, setter );
+//      srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
 
       // inner interface of Result interface
-      String fqn = srcClass.getName() + '.' + name;
+      String identifier = makeIdentifier( name, false );
+      String fqn = srcClass.getName() + '.' + identifier;
       SrcLinkedClass srcInnerResult = new SrcLinkedClass( fqn, srcClass, Interface )
-        .addInterface( IJsonBindingsBacked.class )
-        .addAnnotation( new SrcAnnotationExpression( Structural.class )
-          .addArgument( "factoryClass", Class.class, fqn + ".ProxyFactory.class" ) )
+        .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+        .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+          .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
         .modifiers( Modifier.PUBLIC );
-      addSourcePositionAnnotation( srcClass, field, () -> name, srcInnerResult );
-
-      addProxyClasses( srcInnerResult );
+      addActualNameAnnotation( srcInnerResult, name, false );
+      addSourcePositionAnnotation( srcClass, field, name, srcInnerResult );
+      addProxyFactory( srcInnerResult );
 
       for( Selection member: childSelections.getSelections() )
       {
         TypeDefinition typeDef = findTypeDefinition( type );
-        assert typeDef != null;
-        addQuerySelection( srcInnerResult, typeDef, member );
+        if( typeDef != null )
+        {
+          addQuerySelection( srcInnerResult, typeDef, member );
+        }
       }
 
       srcClass.addInnerClass( srcInnerResult );
@@ -848,20 +1037,34 @@ class GqlParentType
 
   private void addMember( SrcLinkedClass srcClass, NamedNode member, Type type, String name )
   {
-    TypeDefinition typeDef = findTypeDefinition( getComponentType( type ) );
-    if( typeDef instanceof UnionTypeDefinition )
+    String propName = name;
+    SrcType type1 = makeSrcType( type, false );
+    propName = makeIdentifier( propName, true );
+    //noinspection unused
+    StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
+    //noinspection unused
+    StringBuilder componentType = getComponentType( type1 ).render( new StringBuilder(), 0, false );
+    SrcGetProperty getter = new SrcGetProperty( propName, type1 )
+      .modifiers( Flags.DEFAULT )
+      .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$name\"), ${componentType}.class);" );
+    if( member != null )
     {
-      addUnionOverloads( srcClass, member, type, (UnionTypeDefinition)typeDef );
+      addActualNameAnnotation( getter, name, true );
+      addSourcePositionAnnotation( srcClass, member, name, getter );
+    }
+    srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 
-      addProperty( srcClass, member, name, name, convertSrcType( type, findLub( (UnionTypeDefinition)typeDef ) ) );
-    }
-    else
+    SrcSetProperty setter = new SrcSetProperty( propName, type1 )
+      .modifiers( Flags.DEFAULT )
+      .body( "getBindings().put(\"$name\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
+    if( member != null )
     {
-      addProperty( srcClass, member, name, name, makeSrcType( type, false ) );
+      addActualNameAnnotation( setter, name, true );
+      addSourcePositionAnnotation( srcClass, member, name, setter );
     }
+    srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
   }
 
-  @NotNull
   private String findLub( UnionTypeDefinition typeDef )
   {
     Set<Set<InterfaceTypeDefinition>> ifaces = new HashSet<>();
@@ -888,7 +1091,7 @@ class GqlParentType
     if( intersection.isEmpty() )
     {
       // no common interface
-      return Object.class.getSimpleName();
+      return null;
     }
     else
     {
@@ -910,61 +1113,14 @@ class GqlParentType
     return getListType( ((NonNullType)type).getType() );
   }
 
-  private void addProperty( SrcLinkedClass srcClass, Node node, String propName, String actualName, SrcType type )
+  private SrcType getComponentType( SrcType type )
   {
-    propName = makeIdentifier( propName, true );
-    //noinspection unused
-    StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
-    SrcGetProperty getter = new SrcGetProperty( propName, type )
-      .modifiers( Flags.DEFAULT )
-      .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText(
-        type.getTypeParams().isEmpty()
-        ? "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$actualName\"), ${propertyType}.class);"
-        : "return ($propertyType)getBindings().get(\"$actualName\");" ) ) ); // List type, no coercion necessary
-    if( node != null )
+    List<SrcType> typeParams = type.getTypeParams();
+    if( !typeParams.isEmpty() )
     {
-      addActualNameAnnotation( getter, actualName, true );
-      addSourcePositionAnnotation( srcClass, node, actualName, getter );
+      return getComponentType( typeParams.get( 0 ) );
     }
-    srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
-
-    SrcSetProperty setter = new SrcSetProperty( propName, type )
-      .modifiers( Flags.DEFAULT )
-      .body( new SrcStatementBlock().addStatement( new SrcRawStatement().rawText(
-        "getBindings().put(\"$actualName\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" ) ) );
-    if( node != null )
-    {
-      addActualNameAnnotation( setter, actualName, true );
-      addSourcePositionAnnotation( srcClass, node, actualName, setter );
-    }
-    srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
-  }
-
-  private void addUnionOverloads( SrcLinkedClass srcClass, NamedNode member, Type maybeListType, UnionTypeDefinition typeDef )
-  {
-    if( getListType( maybeListType ) != null )
-    {
-      // can't have heterogeneous list (no union support for type args)
-      // however the caller can instead get the LUB of the union type (if the type's implement a common interface)
-      return;
-    }
-
-    for( Type t: typeDef.getMemberTypes() )
-    {
-      TypeDefinition td = findTypeDefinition( t );
-      if( td instanceof UnionTypeDefinition )
-      {
-        addUnionOverloads( srcClass, member, maybeListType, (UnionTypeDefinition)td );
-      }
-      else
-      {
-        SrcType unionMemberType = convertSrcType( maybeListType, makeSrcType( t, false ).getName() );
-        String memberName = member.getName();
-        String propertyName =
-          "${makeIdentifier( memberName, true )}As${makeIdentifier( unionMemberType.getFqName(), true )}";
-        addProperty( srcClass, member, propertyName, memberName, unionMemberType );
-      }
-    }
+    return type;
   }
 
   private void addSourcePositionAnnotation( SrcLinkedClass srcClass, NamedNode node, SrcAnnotated srcAnno )
@@ -977,10 +1133,81 @@ class GqlParentType
     addSourcePositionAnnotation( srcClass, node, name.get(), srcAnno );
   }
 
+  //todo: there is a bug in graphql-java where the line number info is off by one (+1)
+  // see https://github.com/graphql-java/graphql-java/issues/1512
+  private static Boolean GRAPHQL_LINE_OFFSET_BUG = null;
+  private SourceLocation getActualSourceLocation( SrcLinkedClass srcClass, Node node )
+  {
+    String startSymbol = getStartSymbol( node );
+    SourceLocation loc = node.getSourceLocation();
+    if( GRAPHQL_LINE_OFFSET_BUG == null )
+    {
+      GRAPHQL_LINE_OFFSET_BUG = !srcClass.verifyOffset( loc.getLine(), loc.getColumn(), startSymbol );
+      if( GRAPHQL_LINE_OFFSET_BUG &&
+          !srcClass.verifyOffset( loc.getLine() - 1, loc.getColumn(), startSymbol ) )
+      {
+        GRAPHQL_LINE_OFFSET_BUG = null;
+        System.out.println( "GRAPHQL_LINE_OFFSET_BUG check failure" );
+        return loc;
+      }
+    }
+
+    int line = loc.getLine();
+    if( GRAPHQL_LINE_OFFSET_BUG )
+    {
+      // adjust for the graphql-java line location bug
+      line--;
+    }
+
+    //todo: the column offset is the start of the declaration, not the name, so we account for that here,
+    // remove if/when graphql-java changes this
+    int columnOffset = startSymbol.isEmpty() ? 0 : startSymbol.length() + 1;
+    int column = loc.getColumn() + columnOffset;
+
+    return new SourceLocation( line, column );
+  }
+  
   private void addSourcePositionAnnotation( SrcLinkedClass srcClass, Node node, String name, SrcAnnotated srcAnno )
   {
-    SourceLocation loc = node.getSourceLocation();
+    SourceLocation loc = getActualSourceLocation( srcClass, node );
     srcClass.addSourcePositionAnnotation( srcAnno, name, loc.getLine(), loc.getColumn() );
+  }
+
+  private String getStartSymbol( Node node )
+  {
+    String start = "";
+    if( node instanceof TypeDefinition )
+    {
+      if( node instanceof ObjectTypeDefinition )
+      {
+        start = "type";
+      }
+      else if( node instanceof EnumTypeDefinition )
+      {
+        start = "enum";
+      }
+      else if( node instanceof InputObjectTypeDefinition )
+      {
+        start = "input";
+      }
+      else if( node instanceof InterfaceTypeDefinition )
+      {
+        start = "interface";
+      }
+      else if( node instanceof ScalarTypeDefinition )
+      {
+        start = "scalar";
+      }
+      else if( node instanceof UnionTypeDefinition )
+      {
+        start = "union";
+      }
+    }
+    else if( node instanceof OperationDefinition )
+    {
+      start = ((OperationDefinition)node).getOperation().name().toLowerCase();
+    }
+    return start;
   }
 
   private Type getComponentType( Type type )
@@ -1011,7 +1238,7 @@ class GqlParentType
     SrcType srcType = new SrcType( convertType( type, component ) );
     if( type instanceof NonNullType )
     {
-      srcType.addAnnotation( new SrcAnnotationExpression( NotNull.class ) );
+      srcType.addAnnotation( new SrcAnnotationExpression( NotNull.class.getSimpleName() ) );
     }
     return srcType;
   }
@@ -1056,7 +1283,7 @@ class GqlParentType
     if( scalarType == null )
     {
       // not a scalar type, therefore it must be a 'type'
-      return type.getName();
+      return makeIdentifier( type.getName(), false );
     }
 
     Class<?> cls = getJavaClass( type, boxed );
@@ -1098,8 +1325,6 @@ class GqlParentType
         cls = boxed ? Long.class : long.class;
         break;
       case "Float":
-        cls = boxed ? Float.class : float.class;
-        break;
       case "Double":
         cls = boxed ? Double.class : double.class;
         break;

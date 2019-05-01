@@ -43,7 +43,7 @@ public class JsonTest extends TestCase
     StrangeUriFormats.nc_VehicleType lvt = (StrangeUriFormats.nc_VehicleType)Collections.singletonList( vt );
     uriFormats.setNc_VehicleAsnc_VehicleType( lvt );
     StrangeUriFormats.nc_VehicleType resLvt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
-    assertSame( resLvt, lvt );
+    assertEquals( resLvt, lvt );
   }
 
   public void testOneOf()
@@ -96,18 +96,18 @@ public class JsonTest extends TestCase
     List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0.create("Scott") );
     oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
     List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> resTopLevelArrayOption0 = oneOf.getTopLevelArrayAsOption0();
-    assertSame( topLevelArrayOption0, resTopLevelArrayOption0 );
-    assertSame( topLevelArrayOption0, oneOf.getTopLevelArray() );
+    assertEquals( topLevelArrayOption0, resTopLevelArrayOption0 );
+    assertEquals( topLevelArrayOption0, oneOf.getTopLevelArray() );
 
     List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> topLevelArrayOption1 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1.create() );
     oneOf.setTopLevelArrayAsOption1( topLevelArrayOption1 );
     List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option1> resTopLevelArrayOption1 = oneOf.getTopLevelArrayAsOption1();
-    assertSame( topLevelArrayOption1, resTopLevelArrayOption1 );
-    assertSame( topLevelArrayOption1, oneOf.getTopLevelArray() );
+    assertEquals( topLevelArrayOption1, resTopLevelArrayOption1 );
+    assertEquals( topLevelArrayOption1, oneOf.getTopLevelArray() );
 
     List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray = Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
     oneOf.setTopLevelEnumArray( enumArray );
-    assertSame( enumArray, oneOf.getTopLevelEnumArray() );
+    assertEquals( enumArray, oneOf.getTopLevelEnumArray() );
   }
 
   public void testAllOf()

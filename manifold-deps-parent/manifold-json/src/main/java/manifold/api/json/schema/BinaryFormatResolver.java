@@ -17,6 +17,12 @@
 package manifold.api.json.schema;
 
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+
 import static manifold.ext.api.ICallHandler.UNHANDLED;
 
 /**
@@ -29,6 +35,13 @@ public class BinaryFormatResolver implements IJsonFormatTypeResolver
 {
   private static final JsonFormatType BINARY = new JsonFormatType( "binary", OctetEncoding.class );
   private static final JsonFormatType BYTE = new JsonFormatType( "byte", Base64Encoding.class );
+  private static final List<JsonFormatType> ALL = Arrays.asList( BINARY, BYTE );
+
+  @Override
+  public Set<String> getFormats()
+  {
+    return ALL.stream().map( JsonFormatType::getName ).collect( Collectors.toSet() );
+  }
 
   @Override
   public JsonFormatType resolveType( String format )

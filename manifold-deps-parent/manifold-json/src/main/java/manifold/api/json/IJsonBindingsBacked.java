@@ -24,7 +24,9 @@ import manifold.ext.api.IBindingsBacked;
  */
 public interface IJsonBindingsBacked extends IBindingsBacked
 {
-  /** A fluent method to write this JSON object in various formats including JSON, YAML, and XML */
+  /**
+   * A fluent method to write this JSON object in various formats including JSON, YAML, and XML
+   */
   default Writer write()
   {
     return new Writer( getBindings() );

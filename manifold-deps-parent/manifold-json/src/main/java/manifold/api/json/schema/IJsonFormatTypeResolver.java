@@ -16,6 +16,7 @@
 
 package manifold.api.json.schema;
 
+import java.util.Set;
 import manifold.ext.api.ICoercionProvider;
 
 /**
@@ -35,6 +36,14 @@ import manifold.ext.api.ICoercionProvider;
  */
 public interface IJsonFormatTypeResolver extends ICoercionProvider
 {
+  /**
+   * A list of one or more format names such as {@code "date-time", "date", "time"} to be referenced in Json Schema
+   * {@code "format"} types.
+   *
+   * @return
+   */
+  Set<String> getFormats();
+
   /**
    * Given a JSON Schema {@code "format"} value such as {@code "date-time"} provide an {@link JsonFormatType}
    * to correspond with the format.

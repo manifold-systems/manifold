@@ -16,6 +16,8 @@
 
 package manifold.graphql.type;
 
+import graphql.ErrorClassification;
+import graphql.ErrorType;
 import graphql.GraphQLError;
 import graphql.InvalidSyntaxError;
 import graphql.language.Definition;
@@ -25,7 +27,9 @@ import graphql.language.OperationDefinition;
 import graphql.language.SDLDefinition;
 import graphql.language.ScalarTypeDefinition;
 import graphql.language.SchemaDefinition;
+import graphql.language.SourceLocation;
 import graphql.language.TypeDefinition;
+import graphql.parser.InvalidSyntaxException;
 import graphql.parser.Parser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
@@ -46,6 +50,7 @@ import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.util.JavacDiagnostic;
 import manifold.util.StreamUtil;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 public class GqlModel extends AbstractSingleFileModel
@@ -70,7 +75,8 @@ public class GqlModel extends AbstractSingleFileModel
   {
     _issues = null;
     parse();
-    _type = new GqlParentType( getFqn(), _schemaDefinition, _typeRegistry, _operations, _fragments, getFile(), _gqlManifold );
+    _type = new GqlParentType( getFqn(), _schemaDefinition, _typeRegistry,
+      _operations, _fragments, getFile(), _gqlManifold );
   }
 
   private void parse()
@@ -80,14 +86,19 @@ public class GqlModel extends AbstractSingleFileModel
       String schema = StreamUtil.getContent( new InputStreamReader( stream ) );
       parse( schema );
     }
-    catch( ParseCancellationException e )
+    catch( InvalidSyntaxException ise )
     {
-      handleParseException( e );
+      _issues = new GqlIssueContainer( Collections.singletonList( toGraphQLError( ise ) ), getFile() );
       _typeRegistry = new TypeDefinitionRegistry();
     }
-    catch( IOException e )
+    catch( ParseCancellationException pce )
     {
-      throw new RuntimeException( e );
+      handleParseException( pce );
+      _typeRegistry = new TypeDefinitionRegistry();
+    }
+    catch( IOException ioe )
+    {
+      throw new RuntimeException( ioe );
     }
   }
 
@@ -113,7 +124,7 @@ public class GqlModel extends AbstractSingleFileModel
       }
       else if( definition instanceof SDLDefinition )
       {
-        // types, interfaces, unions, inputs, scalars
+        // types, interfaces, unions, inputs, scalars, extensions
         typeRegistry.add( (SDLDefinition)definition ).ifPresent( errors::add );
         if( definition instanceof ScalarTypeDefinition )
         {
@@ -140,8 +151,44 @@ public class GqlModel extends AbstractSingleFileModel
 
   private void handleParseException( ParseCancellationException e ) throws RuntimeException
   {
-    InvalidSyntaxError invalidSyntaxError = InvalidSyntaxError.toInvalidSyntaxError( e );
-    _issues = new GqlIssueContainer( Collections.singletonList( invalidSyntaxError ), getFile() );
+    _issues = new GqlIssueContainer( Collections.singletonList( toInvalidSyntaxError( e ) ), getFile() );
+  }
+
+  private GraphQLError toGraphQLError( InvalidSyntaxException ise )
+  {
+    return new GraphQLError()
+    {
+      @Override
+      public String getMessage()
+      {
+        return ise.getMessage();
+      }
+
+      @Override
+      public List<SourceLocation> getLocations()
+      {
+        return Collections.singletonList( ise.getLocation() );
+      }
+
+      @Override
+      public ErrorClassification getErrorType()
+      {
+        return ErrorType.InvalidSyntax;
+      }
+    };
+  }
+
+  private static InvalidSyntaxError toInvalidSyntaxError( Exception parseException )
+  {
+    String msg = parseException.getMessage();
+    SourceLocation sourceLocation = null;
+    if( parseException.getCause() instanceof RecognitionException )
+    {
+      RecognitionException recognitionException = (RecognitionException)parseException.getCause();
+      msg = recognitionException.getMessage();
+      sourceLocation = new SourceLocation( recognitionException.getOffendingToken().getLine(), recognitionException.getOffendingToken().getCharPositionInLine() );
+    }
+    return new InvalidSyntaxError( sourceLocation, msg );
   }
 
   GqlParentType getType()

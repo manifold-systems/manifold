@@ -16,6 +16,7 @@
 
 package manifold.graphql.request;
 
+import graphql.language.OperationDefinition.Operation;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.IJsonBindingsBacked;
@@ -23,24 +24,34 @@ import manifold.ext.DataBindings;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 
-@Structural(factoryClass = IGqlRequestArguments.ProxyFactory.class)
-public interface IGqlRequestArguments<V> extends IJsonBindingsBacked
+@Structural(factoryClass = GqlRequestBody.ProxyFactory.class)
+public interface GqlRequestBody<V> extends IJsonBindingsBacked
 {
-  static <V> IGqlRequestArguments<V> create( String query, V variables )
+  static <V> GqlRequestBody<V> create( String operation, String query, V variables )
   {
     DataBindings bindings = new DataBindings();
-    bindings.put( "query", query );
+    bindings.put( operation, query );
     bindings.put( "variables", variables );
 
     //noinspection unchecked
-    return (IGqlRequestArguments<V>)bindings;
+    return (GqlRequestBody<V>)bindings;
   }
 
+  @SuppressWarnings("unused") // used for tests
   default String getQuery()
   {
-    return (String)getBindings().get( "query" );
+    for( Operation operation: Operation.values() )
+    {
+      String query = (String)getBindings().get( operation.name().toLowerCase() );
+      if( query != null )
+      {
+        return query;
+      }
+    }
+    return null;
   }
 
+  @SuppressWarnings("unused")
   default V getVariables()
   {
     //noinspection unchecked
@@ -48,33 +59,17 @@ public interface IGqlRequestArguments<V> extends IJsonBindingsBacked
     return (V)getBindings().get( "variables" );
   }
 
-  class Proxy implements IGqlRequestArguments
-  {
-    private final Bindings _bindings;
-
-    private Proxy( Bindings bindings )
-    {
-      _bindings = bindings;
-    }
-
-    @Override
-    public Bindings getBindings()
-    {
-      return _bindings;
-    }
-  }
-
-  class ProxyFactory implements IProxyFactory<Map, IGqlRequestArguments>
+  class ProxyFactory implements IProxyFactory<Map, GqlRequestBody>
   {
     @Override
-    public IGqlRequestArguments proxy( Map bindings, Class<IGqlRequestArguments> iface )
+    public GqlRequestBody proxy( Map map, Class<GqlRequestBody> iface )
     {
-      if( !(bindings instanceof Bindings) )
-      {
-        //noinspection unchecked
-        bindings = new DataBindings( bindings );
-      }
-      return new Proxy( (Bindings)bindings );
+      //noinspection unchecked
+      Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings( map );
+
+      // DO NOT CHANGE THIS TO A LAMBDA, YOU WILL HAVE BAD LUCK FOR 9 YEARS
+      //noinspection Convert2Lambda
+      return new GqlRequestBody() {public Bindings getBindings() {return bindings;}};
     }
   }
 }

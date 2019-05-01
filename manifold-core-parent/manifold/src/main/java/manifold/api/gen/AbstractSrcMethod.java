@@ -91,6 +91,12 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     return (T)this;
   }
 
+  public T body( String rawText )
+  {
+    _body = new SrcStatementBlock().addStatement( rawText );
+    return (T)this;
+  }
+
   public SrcType getReturnType()
   {
     return _returns;

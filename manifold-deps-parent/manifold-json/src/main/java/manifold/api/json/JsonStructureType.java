@@ -42,7 +42,7 @@ import manifold.util.ManEscapeUtil;
 import manifold.util.Pair;
 
 /**
- *
+ * The main JSON type reflecting name/value pair bindings.
  */
 public class JsonStructureType extends JsonSchemaType
 {
@@ -567,8 +567,7 @@ public class JsonStructureType extends JsonSchemaType
       boolean isWriteOnly = type.getTypeAttributes().getWriteOnly() != null && type.getTypeAttributes().getWriteOnly();
       if( !isWriteOnly )
       {
-        String propertyType = getPropertyType( type );
-        addGetter( sb, indent, type, key, propertyType );
+        addGetter( sb, indent, type, key );
       }
       boolean isReadOnly = type.getTypeAttributes().getReadOnly() != null && type.getTypeAttributes().getReadOnly();
       if( mutable && !isReadOnly )
@@ -591,24 +590,30 @@ public class JsonStructureType extends JsonSchemaType
     }
   }
 
-  private void addGetter( StringBuilder sb, int indent, IJsonType type, String key, String propertyType )
+  private void addGetter( StringBuilder sb, int indent, IJsonType type, String key )
   {
     addSourcePositionAnnotation( sb, indent + 2, key );
     //noinspection unused
     String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
     indent( sb, indent + 2 );
+    //noinspection unused
+    String propertyType = getPropertyType( type );
     sb.append( "default $propertyType get$identifier() {\n" );
     indent( sb, indent + 4 );
-    if( type instanceof JsonListType || propertyType.indexOf( '>' ) > 0 )
-    {
-      sb.append( "return ($propertyType)getBindings().get(\"$key\");\n" );
-    }
-    else
-    {
-      sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${propertyType}.class);\n" );
-    }
+    //noinspection unused
+    String componentType = getPropertyType( getComponentType( type ) );
+    sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${componentType}.class);\n" );
     indent( sb, indent + 2 );
     sb.append( "}\n" );
+  }
+
+  private IJsonType getComponentType( IJsonType type )
+  {
+    if( type instanceof JsonListType )
+    {
+      return getComponentType( ((JsonListType)type).getComponentType() );
+    }
+    return type;
   }
 
   private void addSetter( StringBuilder sb, int indent, String key, String propertyType )

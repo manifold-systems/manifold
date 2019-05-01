@@ -84,7 +84,7 @@ public class ManPatchLocation implements JavaFileManager.Location
           }
           if( pkg.toString().equals( packageName ) )
           {
-            //noinspection unchecked,RedundantCast
+            //noinspection unchecked
             Iterable<Symbol> symbolsByName = (Iterable<Symbol>)ReflectUtil.method( ReflectUtil.method( pkg, "members" ).invoke(), "getSymbolsByName", Name.class ).invoke( names.fromString( getClassName( fo ) ) );
             if( symbolsByName.iterator().hasNext() )
             {

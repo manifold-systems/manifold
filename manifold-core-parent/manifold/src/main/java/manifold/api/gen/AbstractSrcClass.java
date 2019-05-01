@@ -363,10 +363,16 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     {
       SrcField c = _enumConsts.get( i );
       c.renderAnnotations( sb, indent, false );
-      sb.append( i > 0 ? ",\n" : "" )
-        .append( indent( sb, indent ) )
-        .append( c.getSimpleName() )
-        .append( i == _enumConsts.size() - 1 ? ";\n\n" : "" );
+      indent( sb, indent );
+      sb.append( c.getSimpleName() );
+      if( i == _enumConsts.size() - 1 )
+      {
+        sb.append( ";\n\n" );
+      }
+      else
+      {
+        sb.append( ",\n" );
+      }
     }
   }
 

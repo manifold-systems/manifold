@@ -5,8 +5,8 @@ import manifold.ext.api.Jailbreak;
 import manifold.graphql.request.Executor;
 import org.junit.Test;
 
-import static manifold.graphql.sample.Sample.ReviewInput;
-import static manifold.graphql.sample.SampleQueries.ReviewMutation;
+import static manifold.graphql.sample.movies.ReviewInput;
+import static manifold.graphql.sample.queries.ReviewMutation;
 import static org.junit.Assert.assertEquals;
 
 public class MutationTest {
@@ -33,8 +33,7 @@ public class MutationTest {
 
     @Jailbreak Executor<ReviewMutation.Result> request = review.request("");
     String query = request._reqArgs.getQuery();
-    assertEquals(
-      "mutation ReviewMutation($movie: ID!, $review: ReviewInput!) { createReview(movie: $movie, review: $review) { id stars comment } }",
-      query);
+    String expected = "mutation ReviewMutation($movie: ID!, $review: ReviewInput!) { createReview(movie: $movie, review: $review) { id stars comment } }";
+    assertEquals( expected.replaceAll("\\s+",""), query.replaceAll("\\s+","") );
   }
 }

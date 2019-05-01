@@ -101,8 +101,6 @@ public class ManEscapeUtil
         return "\\r";
       case '\t':
         return "\\t";
-      case '\'':
-        return "\\'";
       case '\"':
         return "\\\"";
       case '\\':

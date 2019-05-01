@@ -17,8 +17,10 @@
 package manifold.util;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.Map;
 import javax.script.Bindings;
 
 /**
@@ -54,19 +56,19 @@ public class JsonUtil
   }
 
   /**
-   * Serializes this Bindings instance to a JSON formatted String
+   * Serializes this Map instance to a JSON formatted String
    */
-  public static String toJson( Bindings thisBindings )
+  public static String toJson( Map thisMap )
   {
     StringBuilder sb = new StringBuilder();
-    toJson( thisBindings, sb, 0 );
+    toJson( thisMap, sb, 0 );
     return sb.toString();
   }
 
   /**
-   * Serializes this Bindings instance into a JSON formatted StringBuilder with the specified indent of spaces
+   * Serializes this Map instance into a JSON formatted StringBuilder with the specified indent of spaces
    */
-  public static void toJson( Bindings thisBindings, StringBuilder sb, int indent )
+  public static void toJson( Map thisMap, StringBuilder sb, int indent )
   {
     int iKey = 0;
     if( isNewLine( sb ) )
@@ -74,26 +76,26 @@ public class JsonUtil
       indent( sb, indent );
     }
     sb.append( "{\n" );
-    if( thisBindings.size() > 0 )
+    if( thisMap.size() > 0 )
     {
-      for( String key : thisBindings.keySet() )
+      for( Object key : thisMap.keySet() )
       {
         indent( sb, indent + 2 );
         sb.append( '\"' ).append( key ).append( '\"' ).append( ": " );
-        Object value = thisBindings.get( key );
-        if( value instanceof Bindings )
+        Object value = thisMap.get( key );
+        if( value instanceof Map )
         {
-          toJson( (Bindings)value, sb, indent + 2 );
+          toJson( (Map)value, sb, indent + 2 );
         }
-        else if( value instanceof List )
+        else if( value instanceof Iterable )
         {
-          listToJson( sb, indent + 2, (List)value );
+          listToJson( sb, indent + 2, (Iterable)value );
         }
         else
         {
           appendValue( sb, value );
         }
-        appendCommaNewLine( sb, iKey < thisBindings.size() - 1 );
+        appendCommaNewLine( sb, iKey < thisMap.size() - 1 );
         iKey++;
       }
     }
@@ -105,8 +107,8 @@ public class JsonUtil
    * Build a JSON string from the specified {@code value}. The {@code value} must be a valid JSON value:
    * <lu>
    *   <li>primitive, boxed primitive, or {@code String}</li>
-   *   <li>{@code List} of JSON values</li>
-   *   <li>{@code Bindings} of JSON values</li>
+   *   <li>{@code Iterable} of JSON values</li>
+   *   <li>{@code Map} of JSON values</li>
    * </lu>
    * @return A JSON String reflecting the specified {@code value}
    */
@@ -121,8 +123,8 @@ public class JsonUtil
    * {@code margin}. The {@code value} must be a valid JSON value:
    * <lu>
    *   <li>primitive, boxed primitive, or {@code String}</li>
-   *   <li>{@code List} of JSON values</li>
-   *   <li>{@code Bindings} of JSON values</li>
+   *   <li>{@code Iterable} of JSON values</li>
+   *   <li>{@code Map} of JSON values</li>
    * </lu>
    */
   public static void toJson( StringBuilder target, int margin, Object value )
@@ -131,13 +133,13 @@ public class JsonUtil
     {
       value = ((Pair)value).getSecond();
     }
-    if( value instanceof Bindings )
+    if( value instanceof Map )
     {
-      toJson( ((Bindings)value), target, margin );
+      toJson( ((Map)value), target, margin );
     }
-    else if( value instanceof List )
+    else if( value instanceof Iterable )
     {
-      listToJson( target, margin, (List)value );
+      listToJson( target, margin, (Iterable)value );
     }
     else
     {
@@ -150,33 +152,32 @@ public class JsonUtil
     return sb.length() > 0 && sb.charAt( sb.length() - 1 ) == '\n';
   }
 
-  public static void listToJson( StringBuilder sb, int indent, List value )
+  public static void listToJson( StringBuilder sb, int indent, Iterable value )
   {
     sb.append( '[' );
-    if( value.size() > 0 )
+    int i = 0;
+    for( Iterator iter = value.iterator(); iter.hasNext(); )
     {
-      sb.append( "\n" );
-      int iSize = value.size();
-      int i = 0;
-      while( i < iSize )
+      Object comp = iter.next();
+      if( i == 0 )
       {
-        Object comp = value.get( i );
-        if( comp instanceof Bindings )
-        {
-          toJson( (Bindings)comp, sb, indent + 2 );
-        }
-        else if( comp instanceof List )
-        {
-          listToJson( sb, indent + 2, (List)comp );
-        }
-        else
-        {
-          indent( sb, indent + 2 );
-          appendValue( sb, comp );
-        }
-        appendCommaNewLine( sb, i < iSize - 1 );
-        i++;
+        sb.append( "\n" );
       }
+      if( comp instanceof Map )
+      {
+        toJson( (Map)comp, sb, indent + 2 );
+      }
+      else if( comp instanceof Iterable )
+      {
+        listToJson( sb, indent + 2, (Iterable)comp );
+      }
+      else
+      {
+        indent( sb, indent + 2 );
+        appendValue( sb, comp );
+      }
+      appendCommaNewLine( sb, iter.hasNext() );
+      i++;
     }
     indent( sb, indent );
     sb.append( "]" );
@@ -185,7 +186,7 @@ public class JsonUtil
   /**
    * Serializes a JSON-compatible List into a JSON formatted StringBuilder with the specified indent of spaces
    */
-  public static String listToJson( List list )
+  public static String listToJson( Iterable list )
   {
     StringBuilder sb = new StringBuilder();
     listToJson( sb, 0, list );
@@ -251,13 +252,13 @@ public class JsonUtil
 
   public static void toXml( Object jsonValue, String name, StringBuilder target, int indent )
   {
-    if( jsonValue instanceof Bindings )
+    if( jsonValue instanceof Map )
     {
-      toXml( (Bindings)jsonValue, name, target, indent );
+      toXml( (Map)jsonValue, name, target, indent );
     }
-    else if( jsonValue instanceof List )
+    else if( jsonValue instanceof Iterable )
     {
-      toXml( (List)jsonValue, name, target, indent );
+      toXml( (Iterable)jsonValue, name, target, indent );
     }
     else
     {
@@ -266,21 +267,21 @@ public class JsonUtil
   }
 
   /**
-   * Serializes this {@link Bindings} instance into an XML formatted StringBuilder {@code target}
+   * Serializes this {@link Map} instance into an XML formatted StringBuilder {@code target}
    * with the specified {@code indent} of spaces.
    *
-   * @param name   The name of the root element to nest the Bindings XML
+   * @param name   The name of the root element to nest the Map XML
    * @param target A {@link StringBuilder} to write the XML in
    * @param indent The margin of spaces to indent the XML
    */
-  private static void toXml( Bindings bindings, String name, StringBuilder target, int indent )
+  private static void toXml( Map bindings, String name, StringBuilder target, int indent )
   {
     indent( target, indent );
     target.append( '<' ).append( name );
     if( bindings.size() > 0 )
     {
       target.append( ">\n" );
-      for( String key: bindings.keySet() )
+      for( Object key: bindings.keySet() )
       {
         Object value = bindings.get( key );
         if( value instanceof Pair )
@@ -288,17 +289,17 @@ public class JsonUtil
           value = ((Pair)value).getSecond();
         }
 
-        if( value instanceof Bindings )
+        if( value instanceof Map )
         {
-          toXml( (Bindings)value, key, target, indent + 2 );
+          toXml( (Map)value, key.toString(), target, indent + 2 );
         }
-        else if( value instanceof List )
+        else if( value instanceof Iterable )
         {
-          toXml( (List)value, key, target, indent + 2 );
+          toXml( (Iterable)value, key.toString(), target, indent + 2 );
         }
         else
         {
-          toXml( String.valueOf( value ), key, target, indent + 2 );
+          toXml( String.valueOf( value ), key.toString(), target, indent + 2 );
         }
       }
       indent( target, indent );
@@ -310,16 +311,17 @@ public class JsonUtil
     }
   }
 
-  private static void toXml( List value, String name, StringBuilder target, int indent )
+  private static void toXml( Iterable value, String name, StringBuilder target, int indent )
   {
-    int len = value.size();
     indent( target, indent );
     target.append( "<" ).append( name );
-    if( len > 0 )
+    Iterator iter = value.iterator();
+    if( iter.hasNext() )
     {
       target.append( ">\n" );
-      for( Object comp: value )
+      while( iter.hasNext() )
       {
+        Object comp = iter.next();
         if( comp instanceof Pair )
         {
           comp = ((Pair)comp).getSecond();
@@ -329,9 +331,9 @@ public class JsonUtil
         {
           toXml( ((Bindings)comp), "li", target, indent + 4 );
         }
-        else if( comp instanceof List)
+        else if( comp instanceof Iterable )
         {
-          toXml( ((List)comp), "li", target, indent + 4 );
+          toXml( ((Iterable)comp), "li", target, indent + 4 );
         }
         else
         {
@@ -356,21 +358,21 @@ public class JsonUtil
     target.append( "</" ).append( name ).append( ">\n" );
   }
 
-  public static <E extends Bindings> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )
+  public static <E extends Map<String, Object>> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )
   {
-    if( value instanceof Bindings )
+    if( value instanceof Map )
     {
-      Bindings dataBindings = (Bindings)value;
-      Bindings copy = bindingsSupplier.apply( dataBindings.size() );
-      dataBindings.forEach( ( k, v ) -> copy.put( k, deepCopyValue( v, bindingsSupplier ) ) );
+      Map<String, Object> dataMap = (Map)value;
+      Map<String, Object> copy = bindingsSupplier.apply( dataMap.size() );
+      dataMap.forEach( ( k, v ) -> copy.put( k, deepCopyValue( v, bindingsSupplier ) ) );
       return copy;
     }
 
-    if( value instanceof List )
+    if( value instanceof Iterable )
     {
       //noinspection unchecked
-      List<Object> list = (List<Object>)value;
-      List<Object> copy = new ArrayList<>( list.size() );
+      Iterable<Object> list = (Iterable<Object>)value;
+      List<Object> copy = new ArrayList<>();
       list.forEach( e -> copy.add( deepCopyValue( e, bindingsSupplier ) ) );
       return copy;
     }

@@ -63,6 +63,7 @@ public class UrlClassLoaderWrapper
     return wrapped;
   }
 
+  @SuppressWarnings("unused")
   public static boolean canWrap( ClassLoader loader )
   {
     LiveMethodRef getURLs = getURLsMethod( loader );

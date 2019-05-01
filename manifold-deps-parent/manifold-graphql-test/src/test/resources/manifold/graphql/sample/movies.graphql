@@ -1,11 +1,20 @@
+#
+# A very simple schema for movies
+#
+
 schema {
   query: QueryRoot
   mutation: MutationRoot
 }
 
 type QueryRoot {
-  movies(title: String, genre: Genre = Action, year: Int, actors: [ActorInput!]) : [Movie!]
-  actors(movie: MovieInput!) : [CastMember!]!
+  movies(title: String, genre: Genre = Action, releaseDate: Date, actors: [ActorInput!]) : [Movie!]
+  actors(title: String, genre: Genre) : [CastMember!]!
+  movie(id: ID!) : Movie
+  role(id: ID!) : Role
+  person(id: ID!) : Person
+  animal(id: ID!) : Animal
+  review(id: ID!) : Review
 }
 
 type MutationRoot {
@@ -17,11 +26,11 @@ type Movie {
   title: String!
   genre: [Genre!]!
   releaseDate: Date!
-  cast: [Character!]!
+  cast: [Role!]!
   starring: CastMember
 }
 
-type Character {
+type Role {
   id: ID!
   actor: Actor!
   name: String!
@@ -33,7 +42,7 @@ type Person implements Actor {
   name: String!
   dateOfBirth: Date!
   nationality: String
-  height: Int
+  height: Float # meters
 }
 
 type Animal implements Actor {
@@ -43,6 +52,7 @@ type Animal implements Actor {
   kind: String
 }
 
+
 interface Actor {
   id: ID!
   name: String!
@@ -51,7 +61,7 @@ interface Actor {
 
 type Review {
   id: ID!
-  movie: ID!
+  movie: Movie!
   stars: Int!
   comment: String
 }

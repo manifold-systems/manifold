@@ -21,13 +21,13 @@ import manifold.api.json.Requester;
 
 public class Executor<T>
 {
-  private final IGqlRequestArguments _reqArgs;
+  private final GqlRequestBody _reqArgs;
   private Requester<Bindings> _requester;
 
-  public Executor( String url, String query, Bindings variables )
+  public Executor( String url, String operation, String query, Bindings variables )
   {
     _requester = new Requester<>( url );
-    _reqArgs = IGqlRequestArguments.create( query, variables );
+    _reqArgs = GqlRequestBody.create( operation, query, variables );
   }
 
   /**
@@ -84,7 +84,7 @@ public class Executor<T>
    */
   public T post()
   {
-    return (T)((Bindings)_requester.postOne( _reqArgs.getBindings() )).get( "data ");
+    return (T)((Bindings)_requester.postOne( _reqArgs.getBindings() )).get( "data" );
   }
 
   /**

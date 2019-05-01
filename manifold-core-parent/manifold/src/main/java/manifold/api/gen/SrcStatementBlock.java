@@ -31,6 +31,12 @@ public class SrcStatementBlock extends SrcStatement<SrcStatementBlock>
     return this;
   }
 
+  public SrcStatementBlock addStatement( String rawText )
+  {
+    _statements.add( new SrcRawStatement().rawText( rawText ) );
+    return this;
+  }
+
   @Override
   public StringBuilder render( StringBuilder sb, int indent )
   {

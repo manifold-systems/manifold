@@ -32,8 +32,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
-import manifold.api.type.ITypeManifold;
 import manifold.ext.api.IBindingType;
+import manifold.ext.api.IBindingsBacked;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.ICoercionProvider;
 import manifold.ext.api.IProxyFactory;
@@ -119,6 +119,10 @@ public class RuntimeMethods
     return ICallHandler.UNHANDLED;
   }
 
+  /**
+   * Coerce the value from a JSON bindings value to more type-safe a Java value, using {@link ICoercionProvider}
+   * where applicable. Note for List the {@code type} corresponds with the deepest component type of the list.
+   */
   public static Object coerce( Object value, Class<?> type )
   {
     if( value == null )
@@ -128,6 +132,20 @@ public class RuntimeMethods
         return defaultPrimitiveValue( type );
       }
       return null;
+    }
+
+    if( IBindingsBacked.class.isAssignableFrom( type ) )
+    {
+      return value;
+    }
+
+    if( value instanceof List )
+    {
+      Class<?> finalType = type;
+      //noinspection unchecked
+      return ((List)value).stream()
+      .map( e -> coerce( e, finalType ) )
+      .collect( Collectors.toList() );
     }
 
     if( type.isPrimitive() )
@@ -492,10 +510,10 @@ public class RuntimeMethods
     // See if there is a registered IProxyFactory for the rootClass and iface, so create one that way,
     // otherwise return null
 
-    return findRegisteredFactory( rootClass, iface );
+    return findRegisteredFactory( rootClass );
   }
 
-  private static IProxyFactory findRegisteredFactory( Class<?> rootClass, Class<?> iface )
+  private static IProxyFactory findRegisteredFactory( Class<?> rootClass )
   {
     //noinspection ConstantConditions
     return _registeredProxyFactories.get().stream()
@@ -545,19 +563,34 @@ public class RuntimeMethods
   {
     if( arg instanceof IBindingType )
     {
-      arg = ((IBindingType)arg).toBindingValue();
+      return ((IBindingType)arg).toBindingValue();
     }
-    else if( needsCoercion( arg ) )
+
+    if( arg instanceof IBindingsBacked )
+    {
+      return arg;
+    }
+
+    if( arg instanceof List )
+    {
+      //noinspection unchecked
+      return ((List)arg).stream()
+        .map( e -> coerceToBindingValue( e ) )
+        .collect( Collectors.toList() );
+    }
+
+    if( needsCoercion( arg ) )
     {
       for( ICoercionProvider coercer: CoercionProviders.get() )
       {
         Object coercedValue = coercer.toBindingValue( arg );
         if( coercedValue != ICallHandler.UNHANDLED )
         {
-          arg = coercedValue;
+          return coercedValue;
         }
       }
     }
+
     return arg;
   }
 

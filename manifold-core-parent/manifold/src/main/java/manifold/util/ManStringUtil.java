@@ -6911,4 +6911,62 @@ public class ManStringUtil
     }
     return text;
   }
+
+  /**
+   * Converts snake_case/kebab-case to camelCase e.g., my_var_name becomes myVarName.
+   */
+  public static String toCamelCase( String thiz )
+  {
+    StringBuilder sb = new StringBuilder();
+    boolean isUpper = false;
+    for( int i = 0; i < thiz.length(); i++ )
+    {
+      char c = thiz.charAt( i );
+      if( Character.isAlphabetic( c ) )
+      {
+        if( isUpper )
+        {
+          c = Character.toUpperCase( c );
+          isUpper = false;
+        }
+        else if( i == 0 )
+        {
+          c = Character.toLowerCase( c );
+        }
+        sb.append( c );
+      }
+      else
+      {
+        isUpper = true;
+      }
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Converts snake_case/kebab-case to PascalCase e.g., my-type-name becomes MyTypeName.
+   */
+  public static String toPascalCase( String thiz )
+  {
+    StringBuilder sb = new StringBuilder();
+    boolean isUpper = true;
+    for( int i = 0; i < thiz.length(); i++ )
+    {
+      char c = thiz.charAt( i );
+      if( Character.isAlphabetic( c ) )
+      {
+        if( isUpper )
+        {
+          c = Character.toUpperCase( c );
+          isUpper = false;
+        }
+        sb.append( c );
+      }
+      else
+      {
+        isUpper = true;
+      }
+    }
+    return sb.toString();
+  }
 }

@@ -1,5 +1,0 @@
-query MyQuery($number: Int!) {
-  pokemon(number: $number) {
-    name
-  }
-}

@@ -24,6 +24,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import manifold.ext.RuntimeMethods;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -51,6 +52,13 @@ public class DefaultFormatResolver implements IJsonFormatTypeResolver
       formatToType.put( "int64", new JsonFormatType( "int64", Long.class ) );
       return formatToType;
     } );
+
+  @Override
+  public Set<String> getFormats()
+  {
+    //noinspection ConstantConditions
+    return _formatToType.get().keySet();
+  }
 
   @Override
   public JsonFormatType resolveType( String format )

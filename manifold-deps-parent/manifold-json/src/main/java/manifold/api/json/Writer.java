@@ -17,7 +17,6 @@
 package manifold.api.json;
 
 import java.io.IOException;
-import java.util.List;
 import javax.script.Bindings;
 import manifold.util.JsonUtil;
 
@@ -33,7 +32,7 @@ public class Writer
   {
     _value = jsonBindings;
   }
-  public Writer( List<?> jsonList )
+  public Writer( Iterable<?> jsonList )
   {
     _value = jsonList;
   }

@@ -19,6 +19,10 @@ package manifold.api.json.schema;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 
 import static manifold.ext.api.ICallHandler.UNHANDLED;
@@ -33,6 +37,13 @@ public class BigNumberFormatResolver implements IJsonFormatTypeResolver
 {
   private static final JsonFormatType BIG_INTEGER = new JsonFormatType( "big-integer", BigInteger.class );
   private static final JsonFormatType BIG_DECIMAL = new JsonFormatType( "big-decimal", BigDecimal.class );
+  private static final List<JsonFormatType> ALL = Arrays.asList( BIG_DECIMAL, BIG_INTEGER );
+
+  @Override
+  public Set<String> getFormats()
+  {
+    return ALL.stream().map( JsonFormatType::getName ).collect( Collectors.toSet() );
+  }
 
   @Override
   public JsonFormatType resolveType( String format )
@@ -56,11 +67,11 @@ public class BigNumberFormatResolver implements IJsonFormatTypeResolver
     //
     if( type == BigInteger.class && value instanceof String )
     {
-      return "0".equals( value ) ? BigInteger.ZERO : new BigInteger( (String)value );
+      return "0" .equals( value ) ? BigInteger.ZERO : new BigInteger( (String)value );
     }
     if( type == BigDecimal.class && value instanceof String )
     {
-      return "0".equals( value ) ? BigDecimal.ZERO : new BigDecimal( (String)value );
+      return "0" .equals( value ) ? BigDecimal.ZERO : new BigDecimal( (String)value );
     }
 
     //
