@@ -19,6 +19,30 @@ package manifold.graphql.request;
 import javax.script.Bindings;
 import manifold.api.json.Requester;
 
+/**
+ * Based on:
+ *
+ * How to make GraphQL HTTP request using cUrl
+ * Based on the GET/POST and the Content-Type header, it expects the input params differently.
+ * This behaviour was ported from express-graphql.
+ *
+ * So given the following query:
+ *
+ * mutation M {
+ *   newTodo: createTodo(text: "This is a mutation example") {
+ *     text
+ *     done
+ *   }
+ * }
+ * using GET
+ * $ curl -g -GET 'http://localhost:8080/graphql?query=mutation+M{newTodo:createTodo(text:"This+is+a+mutation+example"){text+done}}'
+ * using POST + Content-Type: application/graphql
+ * $ curl -XPOST http://localhost:8080/graphql -H 'Content-Type: application/graphql' -d 'mutation M { newTodo: createTodo(text: "This is a mutation example") { text done } }'
+ * using POST + Content-Type: application/json
+ * $ curl -XPOST http://localhost:8080/graphql -H 'Content-Type: application/json' -d '{"query": "mutation M { newTodo: createTodo(text: \"This is a mutation example\") { text done } }"}'
+ * 
+ * @param <T>
+ */
 public class Executor<T>
 {
   private final GqlRequestBody _reqArgs;
@@ -28,12 +52,12 @@ public class Executor<T>
   {
     _requester = new Requester<>( url );
     _requester.withHeader( "Content-Type", "application/json" );
-    _reqArgs = GqlRequestBody.create( operation, query, variables );
+    _reqArgs = GqlRequestBody.create( query, variables );
   }
 
   /**
    * Set an HTTP request header {@code name : value} pair
-   * See <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields>HTTP header fields</a>
+   * See <a href="https://en.wikipedia.org/wiki/List_of_HTTP_header_fields">HTTP header fields</a>
    */
   public Executor<T> withHeader( String name, String value )
   {

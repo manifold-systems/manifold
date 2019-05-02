@@ -16,7 +16,6 @@
 
 package manifold.graphql.request;
 
-import graphql.language.OperationDefinition.Operation;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.IJsonBindingsBacked;
@@ -27,10 +26,10 @@ import manifold.ext.api.Structural;
 @Structural(factoryClass = GqlRequestBody.ProxyFactory.class)
 public interface GqlRequestBody<V> extends IJsonBindingsBacked
 {
-  static <V> GqlRequestBody<V> create( String operation, String query, V variables )
+  static <V> GqlRequestBody<V> create( String query, V variables )
   {
     DataBindings bindings = new DataBindings();
-    bindings.put( operation, query );
+    bindings.put( "query", query );
     bindings.put( "variables", variables );
 
     //noinspection unchecked
@@ -40,15 +39,7 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
   @SuppressWarnings("unused") // used for tests
   default String getQuery()
   {
-    for( Operation operation: Operation.values() )
-    {
-      String query = (String)getBindings().get( operation.name().toLowerCase() );
-      if( query != null )
-      {
-        return query;
-      }
-    }
-    return null;
+    return (String)getBindings().get( "query" );
   }
 
   @SuppressWarnings("unused")
