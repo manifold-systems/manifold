@@ -123,7 +123,8 @@ public class NecessaryEvilUtil
       //
       // Module: jdk.compiler
       //
-      Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol" ) );
+      Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" )
+        .invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol", true ) );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
@@ -141,7 +142,14 @@ public class NecessaryEvilUtil
       //
       // Module: jdk.javadoc
       //
-      Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( ReflectUtil.type( "jdk.javadoc.internal.doclets.formats.html.HtmlDoclet" ) );
+      Class<?> HtmlDoclet = ReflectUtil.type( "jdk.javadoc.internal.doclets.formats.html.HtmlDoclet", true );
+      if( HtmlDoclet == null )
+      {
+        // Warn and continue
+        System.out.println( "\nWARNING: Failed to find class 'jdk.javadoc.internal.doclets.formats.html.HtmlDoclet'\n" );
+        return;
+      }
+      Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
       addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
       addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );

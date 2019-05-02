@@ -27,12 +27,15 @@ import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
+import manifold.util.concurrent.LocklessLazyVar;
 
 /**
  * A Java reflection utility.  Use it to efficiently access classes by name, get/set field values,
@@ -52,6 +55,8 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, Set<Constructor>> _constructorsByClass = new ConcurrentWeakHashMap<>();
+  private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
+
   //private static final ConcurrentHashMap<String, Boolean> _openPackages = new ConcurrentHashMap<>();
 
   /**
@@ -64,6 +69,10 @@ public class ReflectUtil
    */
   public static Class<?> type( String fqn )
   {
+    return type( fqn, false );
+  }
+  public static Class<?> type( String fqn, boolean useCallChain )
+  {
     try
     {
       //openPackage( fqn, null );
@@ -71,7 +80,7 @@ public class ReflectUtil
     }
     catch( ClassNotFoundException e )
     {
-      return type( fqn, Thread.currentThread().getContextClassLoader() );
+      return type( fqn, Thread.currentThread().getContextClassLoader(), useCallChain );
     }
   }
 
@@ -85,6 +94,10 @@ public class ReflectUtil
    */
   public static Class<?> type( String fqn, ClassLoader cl )
   {
+    return type( fqn, cl, false );
+  }
+  public static Class<?> type( String fqn, ClassLoader cl, boolean useCallChain )
+  {
     try
     {
       //openPackage( fqn, cl );
@@ -92,8 +105,39 @@ public class ReflectUtil
     }
     catch( ClassNotFoundException e )
     {
+      return useCallChain ? findInCallChain( fqn ) : null;
+    }
+  }
+
+  private static Class<?> findInCallChain( String fqn )
+  {
+    Class[] stackTraceClasses = Objects.requireNonNull( _sm.get() ).getClassContext();
+    if( stackTraceClasses == null )
+    {
       return null;
     }
+
+    HashSet<ClassLoader> attempted = new HashSet<>();
+    attempted.add( ReflectUtil.class.getClassLoader() );
+    attempted.add( Thread.currentThread().getContextClassLoader() );
+
+    for( Class cls: stackTraceClasses )
+    {
+      ClassLoader cl = cls.getClassLoader();
+      if( attempted.contains( cl ) )
+      {
+        continue;
+      }
+      attempted.add( cl );
+      try
+      {
+        return Class.forName( fqn, false, cl );
+      }
+      catch( ClassNotFoundException ignore )
+      {
+      }
+    }
+    return null;
   }
 
   /**
@@ -900,6 +944,7 @@ public class ReflectUtil
    *                      parent loader chain
    * @param parentLoader  The class loader to load the class in, must be in the parent chain of {@code wouldBeLoader}
    */
+  @SuppressWarnings("unused")
   public static void preloadClassIntoParentLoader( String fqn, URI content, ClassLoader wouldBeLoader, ClassLoader parentLoader )
   {
     if( null != method( parentLoader, "findLoadedClass", String.class ).invoke( fqn ) )
@@ -952,6 +997,18 @@ public class ReflectUtil
         ref = null;
       }
       return ref;
+    }
+  }
+
+  static class ClassContextSecurityManager extends SecurityManager
+  {
+    /**
+     * Expose getClassContext() to enable finding classloaders in the stack trace
+     */
+    @Override
+    protected Class[] getClassContext()
+    {
+      return super.getClassContext();
     }
   }
 
