@@ -27,6 +27,7 @@ public class Executor<T>
   public Executor( String url, String operation, String query, Bindings variables )
   {
     _requester = new Requester<>( url );
+    _requester.withHeader( "Content-Type", "application/json" );
     _reqArgs = GqlRequestBody.create( operation, query, variables );
   }
 

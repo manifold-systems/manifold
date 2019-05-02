@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
@@ -603,9 +604,10 @@ class GqlParentType
     addCreateMethod( srcClass, type );
     addBuilderMethod( srcClass, type );
     addLoadMethod( srcClass );
-    for( FieldDefinition member: type.getFieldDefinitions() )
+    List<FieldDefinition> fieldDefinitions = type.getFieldDefinitions();
+    for( FieldDefinition member: fieldDefinitions )
     {
-      addMember( srcClass, member );
+      addMember( srcClass, member, name -> fieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) );
     }
     addObjectExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
@@ -622,14 +624,20 @@ class GqlParentType
 
   private void addObjectExtensions( ObjectTypeDefinition type, SrcLinkedClass srcClass )
   {
+    List<FieldDefinition> baseFieldDefinitions = type.getFieldDefinitions();
     List<ObjectTypeExtensionDefinition> objectExtensions = _registry.objectTypeExtensions().get( type.getName() );
     if( objectExtensions != null )
     {
       for( ObjectTypeExtensionDefinition ext: objectExtensions )
       {
-        for( FieldDefinition member: ext.getFieldDefinitions() )
+        List<FieldDefinition> extFieldDefinitions = ext.getFieldDefinitions();
+        for( FieldDefinition member: extFieldDefinitions )
         {
-          addMember( srcClass, member );
+          addMember( srcClass, member,
+            name ->
+              baseFieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) ||
+              extFieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) )
+          );
         }
       }
     }
@@ -651,9 +659,10 @@ class GqlParentType
     addBuilder( srcClass, type );
     addCreateMethod( srcClass, type );
     addBuilderMethod( srcClass, type );
-    for( InputValueDefinition member: type.getInputValueDefinitions() )
+    List<InputValueDefinition> inputValueDefinitions = type.getInputValueDefinitions();
+    for( InputValueDefinition member: inputValueDefinitions )
     {
-      addMember( srcClass, member );
+      addMember( srcClass, member, name -> inputValueDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) );
     }
     addInputExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
@@ -661,14 +670,20 @@ class GqlParentType
 
   private void addInputExtensions( InputObjectTypeDefinition type, SrcLinkedClass srcClass )
   {
+    List<InputValueDefinition> baseInputValueDefinitions = type.getInputValueDefinitions();
     List<InputObjectTypeExtensionDefinition> inputExtensions = _registry.inputObjectTypeExtensions().get( type.getName() );
     if( inputExtensions != null )
     {
       for( InputObjectTypeExtensionDefinition ext: inputExtensions )
       {
-        for( InputValueDefinition member: ext.getInputValueDefinitions() )
+        List<InputValueDefinition> extInputValueDefinitions = ext.getInputValueDefinitions();
+        for( InputValueDefinition member: extInputValueDefinitions )
         {
-          addMember( srcClass, member );
+          addMember( srcClass, member,
+            name ->
+              baseInputValueDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) ||
+              extInputValueDefinitions.stream().anyMatch( f -> f.getName().equals( name ) )
+          );
         }
       }
     }
@@ -687,9 +702,10 @@ class GqlParentType
     addActualNameAnnotation( srcClass, type.getName(), false );
     addSourcePositionAnnotation( srcClass, type, srcClass );
     addProxyFactory( srcClass );
-    for( FieldDefinition member: type.getFieldDefinitions() )
+    List<FieldDefinition> fieldDefinitions = type.getFieldDefinitions();
+    for( FieldDefinition member: fieldDefinitions )
     {
-      addMember( srcClass, member );
+      addMember( srcClass, member, name -> fieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) );
     }
     addInterfaceExtensions( type, srcClass );
     enclosingType.addInnerClass( srcClass );
@@ -697,14 +713,20 @@ class GqlParentType
 
   private void addInterfaceExtensions( InterfaceTypeDefinition type, SrcLinkedClass srcClass )
   {
+    List<FieldDefinition> baseFieldDefinitions = type.getFieldDefinitions();
     List<InterfaceTypeExtensionDefinition> interfaceExtensions = _registry.interfaceTypeExtensions().get( type.getName() );
     if( interfaceExtensions != null )
     {
       for( InterfaceTypeExtensionDefinition ext: interfaceExtensions )
       {
-        for( FieldDefinition member: ext.getFieldDefinitions() )
+        List<FieldDefinition> extFieldDefinitions = ext.getFieldDefinitions();
+        for( FieldDefinition member: extFieldDefinitions )
         {
-          addMember( srcClass, member );
+          addMember( srcClass, member,
+            name ->
+              baseFieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) ) ||
+              extFieldDefinitions.stream().anyMatch( f -> f.getName().equals( name ) )
+          );
         }
       }
     }
@@ -801,7 +823,9 @@ class GqlParentType
         }
       }
     }
-    fieldDefs.forEach( fieldDef -> addMember( srcClass, null, nameToFieldDef.get( fieldDef.getFirst() ).getType(), fieldDef.getFirst() ) );
+    fieldDefs.forEach(
+      fieldDef -> addMember( srcClass, null, nameToFieldDef.get( fieldDef.getFirst() ).getType(), fieldDef.getFirst(),
+        name -> fieldDefs.stream().anyMatch( f -> f.getFirst().equals( name ) ) ) );
   }
 
   private void addInterfaces( SrcLinkedClass srcClass, List<Type> interfaces )
@@ -1021,30 +1045,37 @@ class GqlParentType
     return _gqlManifold.findSchemaDefinition();
   }
 
-  private void addMember( SrcLinkedClass srcClass, FieldDefinition member )
+  private void addMember( SrcLinkedClass srcClass, FieldDefinition member, Predicate<String> duplicateChecker )
   {
     Type type = member.getType();
     String name = makeIdentifier( member.getName(), false );
-    addMember( srcClass, member, type, name );
+    addMember( srcClass, member, type, name, duplicateChecker );
   }
 
-  private void addMember( SrcLinkedClass srcClass, InputValueDefinition member )
+  private void addMember( SrcLinkedClass srcClass, InputValueDefinition member, Predicate<String> duplicateChecker )
   {
     Type type = member.getType();
     String name = makeIdentifier( member.getName(), false );
-    addMember( srcClass, member, type, name );
+    addMember( srcClass, member, type, name, duplicateChecker );
   }
 
-  private void addMember( SrcLinkedClass srcClass, NamedNode member, Type type, String name )
+  private void addMember( SrcLinkedClass srcClass, NamedNode member, Type type, String name,
+                          Predicate<String> duplicateChecker )
   {
-    String propName = name;
-    SrcType type1 = makeSrcType( type, false );
-    propName = makeIdentifier( propName, true );
+    SrcType srcType = makeSrcType( type, false );
+    String propName = makeIdentifier( name, true );
+    if( !propName.equals( name ) && duplicateChecker.test( propName ) )
+    {
+      // There are two fields that differ in name only by the case of the first character "Foo" v. "foo".
+      // Since the get/set methods capitalize the name, we must differentiate the method names
+      // e.g., getFoo() and get_foo()
+      propName = '_' + makeIdentifier( name, false );
+    }
     //noinspection unused
-    StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
+    StringBuilder propertyType = srcType.render( new StringBuilder(), 0, false );
     //noinspection unused
-    StringBuilder componentType = getComponentType( type1 ).render( new StringBuilder(), 0, false );
-    SrcGetProperty getter = new SrcGetProperty( propName, type1 )
+    StringBuilder componentType = getComponentType( srcType ).render( new StringBuilder(), 0, false );
+    SrcGetProperty getter = new SrcGetProperty( propName, srcType )
       .modifiers( Flags.DEFAULT )
       .body( "return ($propertyType)" + RuntimeMethods.class.getSimpleName() + ".coerce(getBindings().get(\"$name\"), ${componentType}.class);" );
     if( member != null )
@@ -1054,7 +1085,7 @@ class GqlParentType
     }
     srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 
-    SrcSetProperty setter = new SrcSetProperty( propName, type1 )
+    SrcSetProperty setter = new SrcSetProperty( propName, srcType )
       .modifiers( Flags.DEFAULT )
       .body( "getBindings().put(\"$name\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));\n" );
     if( member != null )

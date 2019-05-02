@@ -123,7 +123,20 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 
   public static String makeIdentifier( String name, boolean capitalize )
   {
-    return capitalize ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) ) : JsonUtil.makeIdentifier( name );
+    String identifier = capitalize
+                        ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) )
+                        : JsonUtil.makeIdentifier( name );
+    return handleSpecialCases( identifier );
+  }
+
+  private static String handleSpecialCases( String identifier )
+  {
+    if( identifier.equals( Class.class.getSimpleName() ) )
+    {
+      // prevent overriding Object#getClass()
+      return "Clazz";
+    }
+    return identifier;
   }
 
   public boolean verifyOffset( int line, int column, String startSymbol )

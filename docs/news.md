@@ -10,7 +10,7 @@ layout: default
 
 Manifold 0.62-alpha introduces _schema-first_ **GraphQL** support!
 
-With the GraphQL Manifold framework `.graphql` schema files come to life in your Java project -- the entire GraphQL type
+With the GraphQL Manifold framework `.graphql` (SDL) files come to life in your Java project -- the entire GraphQL type
 system is at your fingertips in your Java code.  Build and execute queries **type-safely**, make changes to GraphQL schema
 files and automatically see and use the changes in your code _without recompiling!_  And **no code generation** steps in
 your build.
