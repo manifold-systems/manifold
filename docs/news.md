@@ -6,9 +6,9 @@ layout: default
 <br/><br/>
 
 
-## Manifold 0.62-alpha released (1 May 2019)
+## Manifold 0.63-alpha released (1 May 2019)
 
-Manifold 0.62-alpha introduces _schema-first_ **GraphQL** support!
+Manifold 0.63-alpha introduces _schema-first_ **GraphQL** support!
 
 With the GraphQL Manifold framework `.graphql` (SDL) files come to life in your Java project -- the entire GraphQL type
 system is at your fingertips in your Java code.  Build and execute queries **type-safely**, make changes to GraphQL schema
@@ -22,7 +22,7 @@ Highlights
 * Simple, **type-safe** query building and execution
 * Excellent **IntelliJ** support via Manifold plugin
 
-Manifold 0.62-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.62-alpha/jar).
+Manifold 0.63-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.63-alpha/jar).
 <br/><br/>
 
 
