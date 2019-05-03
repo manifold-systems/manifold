@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>0.64-SNAPSHOT</version>
+    <version>0.64-alpha</version>
   </parent>
 
   <artifactId>manifold-json</artifactId>
