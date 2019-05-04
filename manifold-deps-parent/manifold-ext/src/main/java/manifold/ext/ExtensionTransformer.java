@@ -421,6 +421,25 @@ public class ExtensionTransformer extends TreeTranslator
       _tp.report( tree, Diagnostic.Kind.ERROR,
         ExtIssueMsg.MSG_EXTENSION_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
     }
+    else if( isStructuralMethod( tree.sym ) )
+    {
+      // Method references not supported on structural interface methods
+
+      _tp.report( tree, Diagnostic.Kind.ERROR,
+        ExtIssueMsg.MSG_STRUCTURAL_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
+    }
+  }
+
+  private boolean isStructuralMethod( Symbol sym )
+  {
+    if( sym != null && !sym.getModifiers().contains( javax.lang.model.element.Modifier.STATIC ) )
+    {
+      if( !isObjectMethod( sym ) )
+      {
+        return TypeUtil.isStructuralInterface( _tp, sym.owner );
+      }
+    }
+    return false;
   }
 
   private boolean isExtensionMethod( Symbol sym )
