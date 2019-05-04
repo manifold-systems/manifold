@@ -4,8 +4,9 @@ layout: default
 
 ## Introducing _Manifold_!
 [Manifold](http://manifold.systems) is a breakthrough technology you can use to seamlessly extend Java to compile and load types from sources
-_in addition to_ `.java` files.  Using this framework your code has direct, type-safe access to metadata such as YAML & JSON Schema files, DDL & SQL queries,
+_in addition to_ `.java` files.  Using this framework your code has direct, type-safe access to metadata such as GraphQL, YAML & JSON Schema files, DDL & SQL queries,
 and even other programming languages. Building on this foundation Manifold provides an ever growing set of extensions, including comprehensive support for
+[GraphQL](http://manifold.systems/docs.html#graphql),
 [YAML and JSON Schema](http://manifold.systems/docs.html#json-and-json-schema),
 [extension methods](http://manifold.systems/docs.html#extension-classes),
 full featured [templates](http://manifold.systems/manifold-templates.html),
@@ -14,7 +15,7 @@ full featured [templates](http://manifold.systems/manifold-templates.html),
 Manifold fulfills the promise: _**your metadata is the single source of truth**_. There is *nothing* to manage between your metadata and your
 code -- no code generation steps in your build, no POJOs, no annotation processor steps, no custom class loaders, no runtime agents.
 
-All features are fully supported in IntelliJ IDEA.  Author JSON Schema documents and code against them as you make changes without
+All features are fully supported in IntelliJ IDEA.  Author GraphQL schema files and code against them as you make changes without
 a code generation step. Jump directly to a YAML property from a call site in your code. Quickly rename a JSON field and its
 usages across your codebase.  Use Hotswap to make and test changes to files while debugging.  Author templates with the full
 expressive power of Java and use them type-safely in your code.  Etc. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
@@ -24,7 +25,7 @@ Manifod is easy to use, it's just a JAR file you add to your existing project.  
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as JSON Schema and YAML. Remove the code gen step in your build process.
+Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as GraphQL, JSON Schema and YAML. Remove the code gen step in your build process.
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
