@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package manifold.api.json;
+package manifold.api.host;
 
-import java.util.List;
+import abc.*;
+import abc.sub.*;
+import junit.framework.TestCase;
 
-/**
- */
-public interface IJsonParentType extends IJsonType
+public class RelativePackageTest extends TestCase
 {
-  void addChild( String name, IJsonParentType child );
+  public void testSubPkgFromParentPkg() {
+    Test1 test = Test1.builder().withSubTest(SubTest1.builder().withId("hi").build()).build();
+    assertEquals( "hi", test.getSubTest().getId() );
+  }
 
-  IJsonType findChild( String name );
-
-  List<JsonIssue> getIssues();
-  void addIssue( JsonIssue issue );
-
-  void render( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable );
+  public void testParentPkgFromSubPkg() {
+    SubTest2 subtest = SubTest2.builder().withTest2(Test2.create()).build();
+    assertNotNull( subtest.getTest2() );
+  }
 }

@@ -112,11 +112,12 @@ public class Json
    * </ul>
    */
   @SuppressWarnings("unused")
-  public static String makeStructureTypes( IManifoldHost host, String nameForStructure, Bindings bindings, boolean mutable )
+  public static String makeStructureTypes( IManifoldHost host, String nameForStructure, Bindings bindings, AbstractJsonTypeManifold tm,
+                                           boolean mutable )
   {
     JsonStructureType type = (JsonStructureType)transformJsonObject( host, nameForStructure, null, bindings );
     StringBuilder sb = new StringBuilder();
-    type.render( sb, 0, mutable );
+    type.render( tm, sb, 0, mutable );
     return sb.toString();
   }
 

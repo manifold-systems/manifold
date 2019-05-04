@@ -18,8 +18,6 @@ package manifold.api.json.schema;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -27,6 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import manifold.api.gen.SrcElement;
 import manifold.api.gen.SrcType;
+import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.IJsonType;
 import manifold.api.json.JsonBasicType;
 import manifold.api.json.JsonStructureType;
@@ -142,8 +141,10 @@ public class JsonEnumType extends JsonStructureType
   }
 
   @Override
-  public void render( StringBuilder sb, int indent, boolean mutable )
+  public void render( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable )
   {
+    setTm( tm );
+
     if( getParent() != null )
     {
       sb.append( '\n' );

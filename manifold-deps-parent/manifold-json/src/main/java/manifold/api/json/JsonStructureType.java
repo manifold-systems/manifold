@@ -145,6 +145,7 @@ public class JsonStructureType extends JsonSchemaType
    * the super type union[s] merges with the non-union super types and base type of this structure type.
    * ## todo:
    */
+  @SuppressWarnings("unused")
   private void resolveInvertedUnionMember( String name, JsonStructureType type )
   {
     Set<? extends IJsonType> unionConstituents = type.getSuperTypes().stream()
@@ -482,12 +483,14 @@ public class JsonStructureType extends JsonSchemaType
     return mergedType;
   }
 
-  public void render( StringBuilder sb, int indent, boolean mutable )
+  public void render( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable )
   {
+    setTm( tm );
+
     JsonEnumType enumType = getAllOfEnumType();
     if( enumType != null )
     {
-      enumType.render( sb, indent, mutable );
+      enumType.render( tm, sb, indent, mutable );
       return;
     }
 
@@ -532,7 +535,7 @@ public class JsonStructureType extends JsonSchemaType
 
     for( IJsonParentType child: _state._innerTypes.values() )
     {
-      child.render( sb, indent + 2, mutable );
+      child.render( getTm(), sb, indent + 2, mutable );
     }
     List<IJsonType> definitions = getDefinitions();
     if( definitions != null )
@@ -541,7 +544,7 @@ public class JsonStructureType extends JsonSchemaType
       {
         if( child instanceof IJsonParentType )
         {
-          ((IJsonParentType)child).render( sb, indent + 2, mutable );
+          ((IJsonParentType)child).render( getTm(), sb, indent + 2, mutable );
         }
       }
     }

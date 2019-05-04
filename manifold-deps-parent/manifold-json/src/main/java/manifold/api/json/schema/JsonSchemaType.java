@@ -18,12 +18,16 @@ package manifold.api.json.schema;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import manifold.api.fs.IFile;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
+import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.IJsonList;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
@@ -36,6 +40,7 @@ import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
 import manifold.util.JsonUtil;
+import manifold.util.ManClassUtil;
 import manifold.util.ManStringUtil;
 
 /**
@@ -82,7 +87,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   private final State _state; // shared state across type copies
   private TypeAttributes _typeAttributes; // non-shared state that is different per type copy
-
+  private AbstractJsonTypeManifold _tm;
   
   protected JsonSchemaType( String name, URL source, JsonSchemaType parent, TypeAttributes attr )
   {
@@ -99,6 +104,19 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       result += '.';
     }
     return result + JsonUtil.makeIdentifier( getLabel() );
+  }
+
+  public AbstractJsonTypeManifold getTm()
+  {
+    if( _tm == null && getParent() != null )
+    {
+      return getParent().getTm();
+    }
+    return _tm;
+  }
+  public void setTm( AbstractJsonTypeManifold tm )
+  {
+    _tm = tm;
   }
 
   final public void resolveRefs()
@@ -407,6 +425,11 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   private String getNameRelativeFromMe( IJsonType type, boolean qualifiedWithMe )
   {
+    if( type instanceof JsonSchemaType && !Objects.equals( getPackage( (JsonSchemaType)type ), getPackage( this ) ) )
+    {
+      return getFqn( (JsonSchemaType)type );
+    }
+
     IJsonType parent = getParentFromMe( type, qualifiedWithMe );
     if( parent == null )
     {
@@ -414,6 +437,28 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     }
 
     return getNameRelativeFromMe( parent, qualifiedWithMe ) + '.' + type.getIdentifier();
+  }
+
+  private String getFqn( JsonSchemaType type )
+  {
+    if( type.getParent() == null )
+    {
+      return getPackage( type ) + '.' + type.getIdentifier();
+    }
+
+    return getFqn() + '.' + getIdentifier();
+  }
+
+  private String getPackage( JsonSchemaType type )
+  {
+    if( type.getParent() != null )
+    {
+      return getPackage( type.getParent() );
+    }
+    IFile file = getTm().getModule().getHost().getFileSystem().getIFile( type.getFile() );
+    String[] types = getTm().getTypesForFile( file );
+    String fqn = Arrays.stream( types ).filter( e -> e.endsWith( type.getIdentifier() ) ).findFirst().orElse( null );
+    return ManClassUtil.getPackage( fqn );
   }
 
   private IJsonType getParentFromMe( IJsonType type, boolean qualifiedWithMe )

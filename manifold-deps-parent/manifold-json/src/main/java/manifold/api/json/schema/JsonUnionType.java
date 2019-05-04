@@ -19,10 +19,10 @@ package manifold.api.json.schema;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
 import manifold.api.json.IJsonType;
@@ -130,14 +130,14 @@ public class JsonUnionType extends JsonStructureType
   }
 
   @Override
-  public void render( StringBuilder sb, int indent, boolean mutable )
+  public void render( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable )
   {
     JsonEnumType collapsedEnumType = getCollapsedEnumType();
     if( collapsedEnumType != null )
     {
-      collapsedEnumType.render( sb, indent, mutable );
+      collapsedEnumType.render( tm, sb, indent, mutable );
       return;
     }
-    super.render( sb, indent, mutable );
+    super.render( tm, sb, indent, mutable );
   }
 }

@@ -98,7 +98,8 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
   protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, T model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
-    sb.append( "package " ).append( ManClassUtil.getPackage( topLevelFqn ) ).append( ";\n\n" )
+    String pkg = ManClassUtil.getPackage( topLevelFqn );
+    sb.append( "package " ).append( pkg ).append( ";\n\n" )
       .append( "import " ).append( Json.class.getName() ).append( ";\n" )
       .append( "import " ).append( JsonUtil.class.getName() ).append( ";\n" )
       .append( "import " ).append( Bindings.class.getName() ).append( ";\n" )
@@ -114,7 +115,7 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
       .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );
-    model.getType().render( sb, 0, true );
+    model.getType().render( this, sb, 0, true );
     return sb.toString();
   }
 }

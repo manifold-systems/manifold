@@ -164,8 +164,10 @@ public class JsonListType extends JsonSchemaType
     return mergedType;
   }
 
-  public void render( StringBuilder sb, int indent, boolean mutable )
+  public void render( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable )
   {
+    setTm( tm );
+
     String name = getName();
     String identifier = addActualNameAnnotation( sb, indent, name, false );
 
@@ -320,7 +322,7 @@ public class JsonListType extends JsonSchemaType
   {
     for( IJsonParentType child: _state._innerTypes.values() )
     {
-      child.render( sb, indent + 2, mutable );
+      child.render( getTm(), sb, indent + 2, mutable );
     }
     List<IJsonType> definitions = getDefinitions();
     if( definitions != null )
@@ -329,7 +331,7 @@ public class JsonListType extends JsonSchemaType
       {
         if( child instanceof IJsonParentType )
         {
-          ((IJsonParentType)child).render( sb, indent + 2, mutable );
+          ((IJsonParentType)child).render( getTm(), sb, indent + 2, mutable );
         }
       }
     }
