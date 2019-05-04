@@ -20,7 +20,7 @@ User user = User.builder("myid", "mypassword", "Scott")
   .withGender(male)
   .withDob(LocalDate.of(1987, 6, 15))
   .build();
-User.request("htt://api.example.com/users").postOne(user);
+User.request("http://api.example.com/users").postOne(user);
 ```
 
 ### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
