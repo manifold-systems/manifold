@@ -13,7 +13,7 @@
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as JSON Schema and YAML. Remove the code gen step in your build process.
+Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as GraphQL, JSON Schema and YAML. Remove the code gen step in your build process.
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
