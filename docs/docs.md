@@ -1541,7 +1541,7 @@ From Java we can use this template in a type-safe manner:
 ```java
 import com.foo.MyTemplate;
 ...
-String reuslts = MyTemplate.renderToString(Arrays.asList("Orax", "Dynatron", "Lazerhawk", "FM-84"));
+String results = MyTemplate.renderToString(Arrays.asList("Orax", "Dynatron", "Lazerhawk", "FM-84"));
 System.out.println(results);
 ``` 
 This prints the following to the console:
