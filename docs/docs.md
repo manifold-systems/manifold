@@ -1428,7 +1428,7 @@ ImageIcon image = new ImageIcon("abc/widget/images/companyLogo.png");
 
 Custom library layers often contribute toward image caching and other services:
 ```java
-import abc.widget.util.ImageUtilties;
+import abc.widget.util.ImageUtilities;
 
 ImageIcon image = ImageUtilities.getCachedImage("abc/widget/images/companyLogo.png");
 render(image);
