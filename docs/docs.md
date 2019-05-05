@@ -35,7 +35,7 @@ to automatically connect schematized data sources with Java.  More specifically,
 a type manifold transforms a data source into a data _type_ directly accessible in 
 your Java code eliminating code generation build steps involved with conventional tools. 
 Additionally Manifold provides IDE integration to automatically keep types in sync with 
-data sources as you make changes, again with no addtitional build steps. In essence with 
+data sources as you make changes, again with no additional build steps. In essence with 
 Manifold a data source **_is_** a data type.
 
 To illustrate, consider this properties resource file:
