@@ -75,7 +75,7 @@ Author template files with the full expressive power of Java, use your templates
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
 ```
-A tempate file `abc/example/UserSample.html.mtl`
+A template file `abc/example/UserSample.html.mtl`
 ```html
 <%@ import java.util.List %>
 <%@ import com.example.User %>
