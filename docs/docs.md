@@ -2340,7 +2340,7 @@ public static class MyCapitalizer {
 }
 ```
 
-At first glance it looks like `MyCapitaizer` does not satisfy the structure of `Capitalizer`, neither the
+At first glance it looks like `MyCapitalizer` does not satisfy the structure of `Capitalizer`, neither the
 parameter type nor the return type of the method match the interface. After careful inspection, however,
 it is clear the methods are call-compatible from the perspective of `Capitalizer`:
 
@@ -2351,7 +2351,7 @@ CharSequence properName = cap.capitalize("tigers");
 
 `MyCapitalizer`'s method can be called with `Capitalizer`'s `String` parameter because `MyCapitalizer`'s
 `CharSequence` parameter is assignable from `String` -- _contravariant_ parameter types support
-call-compatibility. Similarly we can accept `MyCapitaizer`'s `String` return type because it is
+call-compatibility. Similarly we can accept `MyCapitalizer`'s `String` return type because it is
 assignable to `Capitalizer`'s `CharSequence` return type -- _covariant_ return types support
 call-compatibility. Therefore, even though their method signatures aren't identical, `MyCapitalizer` is
 structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`'s methods.
