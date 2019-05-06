@@ -35,7 +35,7 @@ to automatically connect schematized data sources with Java.  More specifically,
 a type manifold transforms a data source into a data _type_ directly accessible in 
 your Java code eliminating code generation build steps involved with conventional tools. 
 Additionally Manifold provides IDE integration to automatically keep types in sync with 
-data sources as you make changes, again with no addtitional build steps. In essence with 
+data sources as you make changes, again with no additional build steps. In essence with 
 Manifold a data source **_is_** a data type.
 
 To illustrate, consider this properties resource file:
@@ -1428,7 +1428,7 @@ ImageIcon image = new ImageIcon("abc/widget/images/companyLogo.png");
 
 Custom library layers often contribute toward image caching and other services:
 ```java
-import abc.widget.util.ImageUtilties;
+import abc.widget.util.ImageUtilities;
 
 ImageIcon image = ImageUtilities.getCachedImage("abc/widget/images/companyLogo.png");
 render(image);
@@ -1541,7 +1541,7 @@ From Java we can use this template in a type-safe manner:
 ```java
 import com.foo.MyTemplate;
 ...
-String reuslts = MyTemplate.renderToString(Arrays.asList("Orax", "Dynatron", "Lazerhawk", "FM-84"));
+String results = MyTemplate.renderToString(Arrays.asList("Orax", "Dynatron", "Lazerhawk", "FM-84"));
 System.out.println(results);
 ``` 
 This prints the following to the console:
@@ -2340,7 +2340,7 @@ public static class MyCapitalizer {
 }
 ```
 
-At first glance it looks like `MyCapitaizer` does not satisfy the structure of `Capitalizer`, neither the
+At first glance it looks like `MyCapitalizer` does not satisfy the structure of `Capitalizer`, neither the
 parameter type nor the return type of the method match the interface. After careful inspection, however,
 it is clear the methods are call-compatible from the perspective of `Capitalizer`:
 
@@ -2351,7 +2351,7 @@ CharSequence properName = cap.capitalize("tigers");
 
 `MyCapitalizer`'s method can be called with `Capitalizer`'s `String` parameter because `MyCapitalizer`'s
 `CharSequence` parameter is assignable from `String` -- _contravariant_ parameter types support
-call-compatibility. Similarly we can accept `MyCapitaizer`'s `String` return type because it is
+call-compatibility. Similarly we can accept `MyCapitalizer`'s `String` return type because it is
 assignable to `Capitalizer`'s `CharSequence` return type -- _covariant_ return types support
 call-compatibility. Therefore, even though their method signatures aren't identical, `MyCapitalizer` is
 structurally assignable to `Capitalizer` because it is safe to use in terms of `Capitalizer`'s methods.
