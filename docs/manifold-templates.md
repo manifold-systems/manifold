@@ -266,7 +266,7 @@ tr:nth-child(even) {
 | import         | `<%@ import type-name %>`                   | Imports Java types for use in template directives, statements, and expressions      |
 | extends        | `<%@ extends class-name %>`                 | Extends a base class having features suitable for the template file                 |
 | params         | `<%@ params(parameter-list) %>`             | Parameters for the template, arguments passed via the `render(arg-list)`method      |
-| include        | `<%@ include template-name %>`              | Include a separate template in the template                                         |
+| include        | `<%@ include template-name[(parameter-list)] [if <condition>]%>` | Include a separate template in the template                                         |
 | section        | `<%@ section section-name(parameter-list) %>` | Creates a sub-template within the template, that can be called from other templates |
 | layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
 | content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |

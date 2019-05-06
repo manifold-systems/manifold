@@ -18,6 +18,9 @@ full-featured ManTL template editing, and more.
 Clone the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) to for a nice
 demonstration of features.
 
+Clone the [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app) to learn
+more about *schema-first* design with GraphQL using Manifold.
+
 Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
 begin experimenting with a JSON Schema REST API using Manifold.
 
@@ -37,7 +40,7 @@ src
 ---- java
 ------ <your .java files>
 ---- resources
------- <your .png, .json, .mtl, and other resource files>
+------ <your .png, .json, .graphql, .mtl, and other resource files>
 ```
 
 ### [JSON & JSON Schema](http://manifold.systems/docs.html#json-and-json-schema)
