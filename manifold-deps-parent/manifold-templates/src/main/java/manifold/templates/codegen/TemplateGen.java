@@ -123,6 +123,7 @@ public class TemplateGen
         {
           case IMPORT:
             break;
+          case NEST:
           case INCLUDE:
             break;
           case EXTENDS:
@@ -235,6 +236,7 @@ public class TemplateGen
     EXTENDS( "extends" ),    //className
     PARAMS( "params" ),     //           params, paramsList
     INCLUDE( "include" ),    //className, params,            conditional
+    NEST( "nest" ),      //className, params,            conditional
     SECTION( "section" ),    //className, params, paramsList
     END_SECTION( "end" ),//
     CONTENT( "content" ),    //
@@ -267,17 +269,18 @@ public class TemplateGen
     //extends "[class_name]"
     //params ([paramType paramName], [paramType paramName],...)                  <---nothing stored for params or end section
     //include "[templateName]"([paramVal], [paramVal],...) (conditional)
+    //nest "[templateName]"([paramVal], [paramVal],...) (conditional)
     //section "[sectionName]"([paramType paramName], [paramType paramName],...)
     //end section
     String className;
 
-    //iff section, params, and include (empty string if params not given for include)
+    //iff section, params, nest, and include (empty string if params not given for include/nest)
     String params;
 
-    //iff section and params only (include doesn't need it broken down bc types aren't given)
+    //iff section and params only (include/nest doesn't need it broken down bc types aren't given)
     String[][] paramsList;
 
-    //iff include
+    //iff include/nest
     String conditional;
 
     Directive( int tokenPos, Token token, List<Token> tokens )
@@ -321,7 +324,8 @@ public class TemplateGen
           }
           break;
         case INCLUDE:
-          fillIncludeVars();
+        case NEST:
+          fillIncludeVars( _dirType );
           break;
         case SECTION:
           String[] temp = text.substring( SECTION.keyword().length() ).trim().split( "\\(", 2 );
@@ -347,31 +351,47 @@ public class TemplateGen
     }
 
     /**
-     * Helper method: Given that the type of token is INCLUDE, will parse through the content of the token
-     * and accordingly set className, params, and conditional. The format of an include statement is as follows:
+     * Helper method: Given that the type of token is INCLUDE/NEST, will parse through the content of the token
+     * and accordingly set className, params, and conditional. The format of an include/nest statement is as follows:
      * <%@ include templateNameHere[(optional-params)][if(optional conditional)] %>
      * Note that in the if statement, parentheses around the conditional are optional.
+     * @param dirType
      */
-    private void fillIncludeVars()
+    private void fillIncludeVars( DirType dirType )
     {
       String text = token.getText();
       text = text.trim();
-      String content = text.substring( INCLUDE.keyword().length() ).trim();
+      String content = text.substring( dirType == INCLUDE ? INCLUDE.keyword().length() : NEST.keyword().length() ).trim();
       int index = 0;
       while( index < content.length() )
       {
         if( content.charAt( index ) == '(' )
         {
           this.className = content.substring( 0, index ).trim();
-          this.params = content.substring( index + 1, content.indexOf( ')' ) );
-          fillConditional( content.substring( content.indexOf( ')' ) + 1 ).trim() );
+          this.params = null;
+          if( content.length() > index+1 && content.indexOf( ')', index+1 ) >= 0 )
+          {
+            this.params = content.substring( index + 1, content.indexOf( ')' ) );
+            fillConditional( content.substring( content.indexOf( ')' ) + 1 ).trim() );
+          }
+          else
+          {
+            addError( "')' expected", token.getLine() );
+          }
           return;
         }
         else if( index < content.length() - 2 && content.charAt( index ) == ' ' && content.charAt( index + 1 ) == 'i' && content.charAt( index + 2 ) == 'f' )
         {
           this.className = content.substring( 0, index ).trim();
           this.params = null;
-          fillConditional( content.substring( index + 1 ).trim() );
+          if( content.length() > index+1 )
+          {
+            fillConditional( content.substring( index + 1 ).trim() );
+          }
+          else
+          {
+            addError( "'if' condition expected", token.getLine() );
+          }
           return;
         }
         index += 1;
@@ -385,6 +405,7 @@ public class TemplateGen
      * @param conditional A statement as follows: if([INSERT CONDITIONAL HERE]), where parentheses are
      *                    optional.
      */
+    // todo: this needs grownup attention (it's using hard-coded offsets, instead it should be tokenized etc.)
     private void fillConditional( String conditional )
     {
       if( conditional.length() < 2 )
@@ -392,9 +413,16 @@ public class TemplateGen
         return;
       }
       String conditionalWithoutIf = conditional.substring( 2 );
-      if( conditionalWithoutIf.charAt( 0 ) == '(' )
+      if( conditionalWithoutIf.length() > 0 && conditionalWithoutIf.charAt( 0 ) == '(' )
       {
-        this.conditional = conditionalWithoutIf.substring( 1, conditionalWithoutIf.length() - 1 );
+        if( conditionalWithoutIf.length() > 2 )
+        {
+          this.conditional = conditionalWithoutIf.substring( 1, conditionalWithoutIf.length() - 1 );
+        }
+        else
+        {
+          addError( "Expecting a condition expression", token.getLine() );
+        }
       }
       else
       {
@@ -567,8 +595,12 @@ public class TemplateGen
 
     private void addRenderImpl()
     {
-      _sb.newLine( "    public void renderImpl(Appendable appendable, ILayout overrideLayout" ).append( safeTrailingString( _currClass.params ) ).append( ") {" );
-      _sb.newLine( "      WrapAppendable buffer = new WrapAppendable(appendable);" );
+      _sb.newLine( "    public void renderImpl(Appendable appendable, ILayout overrideLayout" ).append( safeTrailingString( _currClass.params ) ).append( ") {\n" );
+      _sb.append("        renderImpl(appendable, \"\", overrideLayout" );
+      appendArgs().append( ");\n" );
+      _sb.newLine( "    }" );
+      _sb.newLine( "    public void renderImpl(Appendable appendable, String indentation, ILayout overrideLayout" ).append( safeTrailingString( _currClass.params ) ).append( ") {" );
+      _sb.newLine( "      WrapAppendable buffer = new WrapAppendable(appendable, indentation);" );
       boolean needsToCatchIO = _currClass.depth == 0;
 
       if( !needsToCatchIO )
@@ -628,10 +660,17 @@ public class TemplateGen
       _sb.newLine( "    public static void renderInto(Appendable buffer" ).append( safeTrailingString( _currClass.params ) ).append( ") {\n" )
         .newLine( "      " + _currClass.name + " instance = new " + _currClass.name + "();" )
         .newLine( "      instance.renderImpl(buffer, null" );
-      for( String[] param: safeParamsList() )
-      {
-        _sb.append( ", " ).append( param[1] );
-      }
+      appendArgs();
+      _sb.append( ");\n" )
+        .newLine( "    }\n\n" );
+    }
+
+    private void addNestInto()
+    {
+      _sb.newLine( "    public static void nestInto(Appendable buffer, String indentation" ).append( safeTrailingString( _currClass.params ) ).append( ") {\n" )
+        .newLine( "      " + _currClass.name + " instance = new " + _currClass.name + "();" )
+        .newLine( "      instance.renderImpl(buffer, indentation, null" );
+      appendArgs();
       _sb.append( ");\n" )
         .newLine( "    }\n\n" );
     }
@@ -664,26 +703,36 @@ public class TemplateGen
         .newLine( "    public String render(" ).append( safeString( _currClass.params ) ).append( ") {" )
         .newLine( "      StringBuilder sb = new StringBuilder();" )
         .newLine( "      renderImpl(sb, getOverride()" );
-      for( String[] param: safeParamsList() )
-      {
-        _sb.append( ", " ).append( param[1] );
-      }
+      appendArgs();
       _sb.append( ");" )
         .newLine( "        return sb.toString();" )
         .newLine( "    }\n" )
         // renderInto
         .newLine( "    public void renderInto(Appendable sb" ).append( safeTrailingString( _currClass.params ) ).append( ") {" )
         .newLine( "      renderImpl(sb, getOverride()" );
-      for( String[] param: safeParamsList() )
-      {
-        _sb.append( ", " ).append( param[1] );
-      }
+      appendArgs();
+      _sb.append( ");" )
+        .newLine( "    }\n" )
+        // nestInto
+        .newLine( "    public void nestInto(Appendable sb, String indentation" ).append( safeTrailingString( _currClass.params ) ).append( ") {" )
+        .newLine( "      renderImpl(sb, indentation, getOverride()" );
+      appendArgs();
       _sb.append( ");" )
         .newLine( "    }\n" )
         // close class
         .newLine( "    }\n" );
+    }
 
-
+    private TemplateStringBuilder appendArgs()
+    {
+      for( String[] param: safeParamsList() )
+      {
+        if( param.length > 1 )
+        {
+          _sb.append( ", " ).append( param[1] );
+        }
+      }
+      return _sb;
     }
 
     private String safeTrailingString( String string )
@@ -757,6 +806,7 @@ public class TemplateGen
       addWithoutLayout();
       addWithLayout();
       addRenderInto();
+      addNestInto();
       addRenderImpl();
 
       if( _currClass.isLayout )
@@ -863,7 +913,7 @@ public class TemplateGen
       }
       _sb.newLine( "            int lineStart = Thread.currentThread().getStackTrace()[1].getLineNumber() + 1;" );
       _sb.newLine( "            try {" );
-      Token.TokenType lastTokenType = null;
+      int lastTokenIndex = -1;
       outerLoop:
       for( int i = startPos; i <= endPos; i++ )
       {
@@ -871,7 +921,8 @@ public class TemplateGen
         switch( token.getType() )
         {
           case CONTENT:
-            int[] loc = makeText( lastTokenType, nextTokenType( i + 1, endPos ), token );
+          {
+            int[] loc = makeText( lastTokenIndex, nextTokenType( i + 1, endPos ), token );
             if( loc != null )
             {
               _sb.newLine( "                buffer.append(getTemplateText(), ${loc[0]}, ${loc[1]});" );
@@ -879,7 +930,9 @@ public class TemplateGen
               templateLineNumbers.add( token.getLine() );
             }
             break;
+          }
           case STMT:
+          {
             String[] statementList = token.getText().split( "\n" );
             for( int j = 0; j < statementList.length; j++ )
             {
@@ -888,13 +941,19 @@ public class TemplateGen
               templateLineNumbers.add( token.getLine() + j );
             }
             break;
+          }
           case EXPR:
+          {
             _sb.newLine( "                buffer.append(toS(" ).append( token.getText() ).append( "));" );
             templateLineNumbers.add( token.getLine() );
             break;
+          }
           case COMMENT:
+          {
             break;
+          }
           case DIRECTIVE:
+          {
             Directive dir = _dirMap.get( i );
             if( dir._dirType == SECTION )
             {
@@ -917,15 +976,20 @@ public class TemplateGen
             {
               addInclude( dir );
             }
+            else if( dir._dirType == NEST )
+            {
+              addNest( dir, i );
+            }
             else if( dir._dirType == CONTENT )
             {
               break;
             }
             break;
+          }
           default:
             continue;
         }
-        lastTokenType = token.getType();
+        lastTokenIndex = i;
       }
       String nums = templateLineNumbers.toString().substring( 1, templateLineNumbers.toString().length() - 1 );
 
@@ -943,15 +1007,18 @@ public class TemplateGen
       return null;
     }
 
-    private int[] makeText( Token.TokenType lastTokenType, Token.TokenType nextTokenType, Token token )
+    private int[] makeText( int prevTokenIndex, Token.TokenType nextTokenType, Token token )
     {
       int[] loc = null;
       String text = token.getText();
+      Token prevToken = prevTokenIndex < 0 ? null :_tokens.get( prevTokenIndex );
+      Token.TokenType prevTokenType = prevToken == null ? null : prevToken.getType();
       if( text != null && text.length() > 0 )
       {
         int offset = token.getOffset();
-        if( lastTokenType != Token.TokenType.CONTENT &&
-            lastTokenType != Token.TokenType.EXPR )
+        if( prevTokenType != Token.TokenType.CONTENT &&
+            prevTokenType != Token.TokenType.EXPR &&
+            !(prevTokenType == Token.TokenType.DIRECTIVE && _dirMap.get( prevTokenIndex )._dirType == NEST) )
         {
           if( text.charAt( 0 ) == '\n' )
           {
@@ -1036,6 +1103,53 @@ public class TemplateGen
       {
         _sb.newLine( "            " ).append( "}" );
       }
+    }
+
+    private void addNest( Directive dir, int index )
+    {
+      assert (dir._dirType == NEST);
+
+      //noinspection unused
+      String indentation = getIndentation( index - 2 );
+
+      if( dir.conditional != null )
+      {
+        _sb.newLine( "            if(" ).append( dir.conditional ).append( "){" );
+      }
+      _sb.newLine( "            " ).append( dir.className ).append( ".withoutLayout().nestInto(buffer, \"${indentation}\"" ).append( safeTrailingString( dir.params ) ).append( ");" );
+      if( dir.conditional != null )
+      {
+        _sb.newLine( "            " ).append( "}" );
+      }
+    }
+
+    private String getIndentation( int index )
+    {
+      if( index < 0 )
+      {
+        return "";
+      }
+      Token token = _tokens.get( index );
+      if( token.getType() == Token.TokenType.CONTENT )
+      {
+        StringBuilder indent = new StringBuilder();
+        String text = token.getText();
+        int len = text.length();
+        for( int i = 0; i < len; i++ )
+        {
+          char c = text.charAt( len - i - 1 );
+          if( c == ' ' || c == '\t' )
+          {
+            indent.insert( 0, c );
+          }
+          else
+          {
+            break;
+          }
+        }
+        return indent.toString();
+      }
+      return "";
     }
 
     private void addSection( Directive dir )

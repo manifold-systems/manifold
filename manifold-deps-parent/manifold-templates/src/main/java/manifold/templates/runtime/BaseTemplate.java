@@ -102,6 +102,11 @@ public abstract class BaseTemplate
       ILayout templateLayout = override == null ? getTemplateLayout() : override;
       templateLayout.footer( buffer );
     }
+    if( buffer instanceof WrapAppendable )
+    {
+      // E.g., to trigger indentation for the `nest` directive
+      ((WrapAppendable)buffer).complete();
+    }
     ManifoldTemplates.getTracer().trace( this.getClass(), renderTime );
   }
 
