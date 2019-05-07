@@ -20,7 +20,7 @@ a code generation step. Jump directly to a YAML property from a call site in you
 usages across your codebase.  Use Hotswap to make and test changes to files while debugging.  Author templates with the full
 expressive power of Java and use them type-safely in your code.  Etc. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
 
-Manifod is easy to use, it's just a JAR file you add to your existing project.  Just drop it in and begin taking advantage of it.
+Manifold is easy to use, it's just a JAR file you add to your existing project.  Just drop it in and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
@@ -87,7 +87,7 @@ Author template files with the full expressive power of Java, use your templates
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
 ```
-A tempate file `abc/example/UserSample.html.mtl`
+A template file `abc/example/UserSample.html.mtl`
 ```html
 <%@ import java.util.List %>
 <%@ import com.example.User %>

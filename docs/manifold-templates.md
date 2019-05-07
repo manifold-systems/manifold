@@ -58,7 +58,7 @@ Maven:
 
 Gradle:
 ```groovy
-  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELASE'
+  compile group: 'systems.manifold', name: 'manifold-templates', version: 'RELEASE'
 ```
   
 > Note [prebuilt binaries](http://manifold.systems/docs.html#binaries) are also available for non-Maven/Gradle projects.
