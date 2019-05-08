@@ -18,6 +18,7 @@ Bug fixes and improvements
 * Other minor changes
 
 Manifold version 0.65-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.65-alpha/jar).
+
 IntelliJ plugin version [0.65-alpha](https://plugins.jetbrains.com/plugin/10057-manifold/update/62038) available for download (Best if installed directly from within IntelliJ IDEA).
 <br/><br/>
 
