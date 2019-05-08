@@ -6,6 +6,23 @@ layout: default
 <br/><br/>
 
 
+## Manifold 0.65-alpha released (8 May 2019)
+
+Bug fixes and improvements
+* Improved java source viewer on manifold resources (a debugging aid for type manifold impls in IJ)
+* https://github.com/manifold-systems/manifold/issues/75: Fix stack overflow involving element refs
+* https://github.com/manifold-systems/manifold/issues/76: Define a new [ManTL](http://manifold.systems/manifold-templates.html) directive: `nest`. Behaves exactly like `include` but retains and distributes the indentation whitespace immediately preceding the `nest` directive, and retains whitespace immediately following the directive.  The indentation is applied to each line in the resulting `nest`ed template or section. This behavior facilitates the code generation use-case where whitespace formatting, esp. indentation, is significant.
+* https://github.com/manifold-systems/manifold/issues/74: Handle a missed use-case for checked exception suppression
+* https://github.com/manifold-systems/manifold/issues/64: Provide a compile-time error indicating a method reference is not supported on a structural interface method, instead a lambda expression must be used.
+* https://github.com/manifold-systems/manifold/issues/63: Fully support relative JSON refs
+* Other minor changes
+
+Manifold version 0.65-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.65-alpha/jar).
+IntelliJ plugin version [0.65-alpha](https://plugins.jetbrains.com/plugin/10057-manifold/update/62038) available for download (Best if installed directly from within IntelliJ IDEA).
+<br/><br/>
+
+
+
 ## Manifold 0.63-alpha released (1 May 2019)
 
 Manifold 0.63-alpha introduces _schema-first_ **GraphQL** support!
