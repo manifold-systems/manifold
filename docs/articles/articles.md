@@ -26,9 +26,7 @@ layout: default
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html">Manifold: Extension methods for Java?! (Part 2) - JAXenter</a></p>
-  <p>Discover how to use Manifold to enable JSON Schema as your REST API single source of truth (SSoT). Scott McKinney
-     explains how the new Manifold framework connects your JSON Schema and YAML resources directly to Java without code
-     generators, annotated POJOs, or other go-betweens.</p>
+  <p>Scott McKinney discusses Extension Classes, an innovative feature that enables you to supplement a class with your own methods, interfaces, and other features.</p>
   <p><small>jaxenter.com</small></p>
   </td>
  </tr>
