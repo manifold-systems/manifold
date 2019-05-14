@@ -87,16 +87,16 @@ public class Bootstrap
     }
 
     UrlClassLoaderWrapper wrapped = UrlClassLoaderWrapper.wrap( loader );
-    boolean bSysLoader = loader == ClassLoader.getSystemClassLoader();
-    if( bSysLoader )
-    {
+//    boolean bSysLoader = loader == ClassLoader.getSystemClassLoader();
+//    if( bSysLoader )
+//    {
       canWrap = wrapped != null;
-    }
-    else
-    {
-      ClassLoader parent = loader.getParent();
-      canWrap = wrapped != null && (parent == null || canWrapChain( parent ));
-    }
+//    }
+//    else
+//    {
+//      ClassLoader parent = loader.getParent();
+//      canWrap = wrapped != null && (parent == null || canWrapChain( parent ));
+//    }
 
     LOADER_TO_CAN_WRAP.put( loader, canWrap );
     return canWrap;
