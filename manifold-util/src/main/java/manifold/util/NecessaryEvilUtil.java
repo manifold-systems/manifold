@@ -18,8 +18,6 @@ package manifold.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashSet;
-import java.util.Set;
 
 import sun.misc.Unsafe;
 
@@ -112,79 +110,54 @@ public class NecessaryEvilUtil
       //
       // Module: manifold jars
       //
-      Set<Object> targetModules = new HashSet<>();
       Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( NecessaryEvilUtil.class );
-      targetModules.add( manifoldModule );
 
-      maybeHandleJBoss( targetModules );
+      //
+      // Module: java.base
+      //
+      Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
+      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+      addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
+      addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
+      addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
 
-      for( Object targetModule: targetModules )
+      //
+      // Module: jdk.compiler
+      //
+      Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" )
+        .invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol", true ) );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.file", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.jvm", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.main", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.model", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
+
+      //
+      // Module: jdk.javadoc
+      //
+      Class<?> HtmlDoclet = ReflectUtil.type( "jdk.javadoc.internal.doclets.formats.html.HtmlDoclet", true );
+      if( HtmlDoclet == null )
       {
-        //
-        // Module: java.base
-        //
-        Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
-        addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", targetModule, true, true );
-        addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", targetModule, true, true );
-        addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", targetModule, true, true ); // for jailbreak
-        addExportsOrOpens.invoke( javaBaseModule, "java.net", targetModule, true, true );
-
-        //
-        // Module: jdk.compiler
-        //
-        Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" )
-          .invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol", true ) );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.file", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.jvm", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.main", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.model", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", targetModule, true, true );
-
-        //
-        // Module: jdk.javadoc
-        //
-        Class<?> HtmlDoclet = ReflectUtil.type( "jdk.javadoc.internal.doclets.formats.html.HtmlDoclet", true );
-        if( HtmlDoclet == null )
-        {
-          // Warn and continue
-          System.out.println( "\nWARNING: Failed to find class 'jdk.javadoc.internal.doclets.formats.html.HtmlDoclet'\n" );
-          return;
-        }
-        Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
-        addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", targetModule, true, true );
-        addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", targetModule, true, true );
+        // Warn and continue
+        System.out.println( "\nWARNING: Failed to find class 'jdk.javadoc.internal.doclets.formats.html.HtmlDoclet'\n" );
+        return;
       }
+      Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
+      addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
+      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
     }
     catch( Throwable e )
     {
       throw new RuntimeException( "Error initializing Manifold", e );
-    }
-  }
-
-  private static void maybeHandleJBoss( Set<Object> targetModules )
-  {
-    ClassLoader thisClassLoader = NecessaryEvilUtil.class.getClassLoader();
-    if( thisClassLoader.getClass().getTypeName().equals( "org.jboss.modules.ModuleClassLoader" ) )
-    {
-      try
-      {
-        Object jbossNamedModule = ReflectUtil.field( thisClassLoader, "module" ).get();
-        targetModules.add( jbossNamedModule );
-      }
-      catch( Exception e )
-      {
-        System.out.println( "\nWARNING: Failed to get JBoss module." );
-        e.printStackTrace();
-      }
     }
   }
 }
