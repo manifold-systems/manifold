@@ -4,7 +4,7 @@
     <parent>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-deps-parent</artifactId>
-      <version>0.67-SNAPSHOT</version>
+      <version>0.68-SNAPSHOT</version>
     </parent>
 
     <artifactId>manifold-collections</artifactId>
