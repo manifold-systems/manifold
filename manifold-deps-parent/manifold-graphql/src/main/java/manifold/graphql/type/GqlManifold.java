@@ -30,7 +30,7 @@ import manifold.api.type.JavaTypeManifold;
 
 public class GqlManifold extends JavaTypeManifold<GqlModel>
 {
-  public static final List<String> EXTS = Arrays.asList( "graphql", "gql" );
+  public static final List<String> EXTS = Arrays.asList( "graphql", "graphqls", "gql" );
 
   @Override
   public void init( IModule module )
