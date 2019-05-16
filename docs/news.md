@@ -5,6 +5,32 @@ layout: default
 # News
 <br/><br/>
 
+## Manifold 0.68-alpha released (16 May 2019)
+
+Bug fixes and improvements 
+* [#87](https://github.com/manifold-systems/manifold/issues/87): handle case where a jar file has both a file entry and a directory entry as siblings with the same exact name 
+* [#88](https://github.com/manifold-systems/manifold/issues/88): extension classes fix 
+* [#89](https://github.com/manifold-systems/manifold/issues/89): support `graphqls` extension 
+* fix NPEs related to recent changes involving manifold plugin dormancy when a project is not using manifold dependencies 
+
+Manifold version 0.68-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.68-alpha/jar).
+<br/><br/>
+
+
+
+## Manifold 0.66-alpha released (14 May 2019)
+
+Bug fixes and improvements 
+* [#62](https://github.com/manifold-systems/manifold/issues/62): fix "never accessed" warnings for string interpolation 
+* [#80](https://github.com/manifold-systems/manifold/issues/80), [#81](https://github.com/manifold-systems/manifold/issues/81): fix static ext methods re IJ usage searching, rename, etc. 
+* [#84](https://github.com/manifold-systems/manifold/issues/84): manifold plugin extensions are "dumb" when project has no dependencies on manifold : they have no side effects when called 
+* [#85](https://github.com/manifold-systems/manifold/issues/85): fix incremental compile/hotswap of manifold types 
+* For a project with no manifold dependencies, invoking UI action to create an extension class or ManTL file produces a warning message indicating the dependencies must be added 
+
+Manifold version 0.66-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.66-alpha/jar).
+<br/><br/>
+
+
 
 ## Manifold 0.65-alpha released (8 May 2019)
 
@@ -18,8 +44,6 @@ Bug fixes and improvements
 * Other minor changes
 
 Manifold version 0.65-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.65-alpha/jar).
-
-IntelliJ plugin version [0.65-alpha](https://plugins.jetbrains.com/plugin/10057-manifold/update/62038) available for download (Best if installed directly from within IntelliJ IDEA).
 <br/><br/>
 
 
