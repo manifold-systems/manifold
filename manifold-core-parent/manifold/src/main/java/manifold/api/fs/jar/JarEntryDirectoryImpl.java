@@ -28,7 +28,8 @@ import manifold.api.fs.IResource;
 
 public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarFileDirectory
 {
-  private Map<String, IResource> _resources = new HashMap<>();
+  private Map<String, JarEntryDirectoryImpl> _directories = new HashMap<>();
+  private Map<String, JarEntryFileImpl> _files = new HashMap<>();
   private List<IDirectory> _childDirs = new ArrayList<>();
   private List<IFile> _childFiles = new ArrayList<>();
 
@@ -40,11 +41,11 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
   @Override
   public JarEntryDirectoryImpl getOrCreateDirectory( String relativeName )
   {
-    JarEntryDirectoryImpl result = (JarEntryDirectoryImpl)_resources.get( relativeName );
+    JarEntryDirectoryImpl result = _directories.get( relativeName );
     if( result == null )
     {
       result = new JarEntryDirectoryImpl( getFileSystem(), relativeName, this, _jarFile );
-      _resources.put( relativeName, result );
+      _directories.put( relativeName, result );
       _childDirs.add( result );
     }
     return result;
@@ -53,11 +54,11 @@ public class JarEntryDirectoryImpl extends JarEntryResourceImpl implements IJarF
   @Override
   public JarEntryFileImpl getOrCreateFile( String relativeName )
   {
-    JarEntryFileImpl result = (JarEntryFileImpl)_resources.get( relativeName );
+    JarEntryFileImpl result = _files.get( relativeName );
     if( result == null )
     {
       result = new JarEntryFileImpl( getFileSystem(), relativeName, this, _jarFile );
-      _resources.put( relativeName, result );
+      _files.put( relativeName, result );
       _childFiles.add( result );
     }
     return result;
