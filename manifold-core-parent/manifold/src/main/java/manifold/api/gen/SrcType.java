@@ -342,6 +342,6 @@ public class SrcType extends SrcAnnotated<SrcType>
 
   public boolean isEnum()
   {
-    return false;
+    return _isEnum;
   }
 }

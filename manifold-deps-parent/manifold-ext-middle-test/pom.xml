@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>0.67-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-ext-middle-test</artifactId>
+
+  <name>Manifold :: ExtensionMiddleTest</name>
+
+  <description>
+    As a dependency to manifold-ext-test, this module serves as a means to separate the extended
+    classes defined here and tested via the extension classes defined in manifold-ext-test, that
+    is to say an extended class must be compiled and not defined as source in the same module as
+    the extension class.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  
+</project>

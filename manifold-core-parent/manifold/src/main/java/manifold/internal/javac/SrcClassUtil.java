@@ -588,7 +588,13 @@ public class SrcClassUtil
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
       for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
       {
-        annoExpr.addArgument( value.fst.flatName().toString(), new SrcType( value.snd.type.toString() ), value.snd.getValue() );
+        Type t = value.snd.type;
+        SrcType type = new SrcType( t.toString() );
+        if( t.tsym != null && t.tsym.isEnum() )
+        {
+          type.setEnum( true );
+        }
+        annoExpr.addArgument( value.fst.flatName().toString(), type, value.snd.getValue() );
       }
       srcAnnotated.addAnnotation( annoExpr );
     }

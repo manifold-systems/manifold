@@ -117,6 +117,10 @@ public abstract class SrcElement
       sb.append( "}" );
       result = sb.toString();
     }
+    else if( type != null && type.isEnum() )
+    {
+      result = type.getFqName() + '.' + value.toString();
+    }
     else
     {
       result = value.toString();

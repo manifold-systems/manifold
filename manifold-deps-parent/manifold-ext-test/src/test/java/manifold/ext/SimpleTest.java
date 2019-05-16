@@ -1,5 +1,6 @@
 package manifold.ext;
 
+import abc.ClassWithAnnotatedMethod;
 import abc.Coordinate;
 import abc.IGenericThing;
 import java.awt.Rectangle;
@@ -111,6 +112,12 @@ public class SimpleTest extends TestCase
   {
     HashMap<String, String> map = new HashMap<>();
     map.fubar();
+  }
+
+  public void testCodeGenSupportsClassWithAnnotatedMethodHavingEnumConstants()
+  {
+    ClassWithAnnotatedMethod classWithAnno = new ClassWithAnnotatedMethod();
+    assertSame( classWithAnno, classWithAnno.myExtensionMethod() );
   }
 
   public void testStructuralOnExistingInterface()
