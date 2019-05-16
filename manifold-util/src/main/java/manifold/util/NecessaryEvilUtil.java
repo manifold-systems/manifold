@@ -18,6 +18,7 @@ package manifold.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+
 import sun.misc.Unsafe;
 
 public class NecessaryEvilUtil
