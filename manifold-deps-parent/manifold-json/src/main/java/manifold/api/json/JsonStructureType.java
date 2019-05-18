@@ -657,7 +657,7 @@ public class JsonStructureType extends JsonSchemaType
       indent( sb, indent + 2 );
       sb.append( "default Object put(String ${'$'}name, Object ${'$'}value) {\n" );
       indent( sb, indent + 4 );
-      sb.append( "return getBindings().put(${'$'}name, ${'$'}value);\n" );
+      sb.append( "return getBindings().put(${'$'}name, " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(${'$'}value));\n" );
       indent( sb, indent + 2 );
       sb.append( "}\n" );
     }
@@ -1088,7 +1088,7 @@ public class JsonStructureType extends JsonSchemaType
         indent( sb, indent + 2 );
         //noinspection unused
         String passedInParam = makeIdentifier( requiredProp, false );
-        sb.append( "bindings_.put(\"$requiredProp\", $passedInParam);\n" );
+        sb.append( "bindings_.put(\"$requiredProp\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue($passedInParam));\n" );
       }
     }
     for( Map.Entry<String, IJsonType> entry: allMembers.entrySet() )

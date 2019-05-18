@@ -596,7 +596,8 @@ public class RuntimeMethods
 
   private static boolean needsCoercion( Object arg )
   {
-    return !(arg instanceof Bindings) &&
+    return arg != null &&
+           !(arg instanceof Bindings) &&
            !isPrimitiveType( arg.getClass() );
   }
 

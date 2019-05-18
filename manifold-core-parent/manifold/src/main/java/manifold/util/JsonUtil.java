@@ -52,7 +52,30 @@ public class JsonUtil
         sb.append( '_' );
       }
     }
-    return sb.toString();
+    identifier = makeCorrections( sb );
+    return identifier;
+  }
+
+  private static String makeCorrections( StringBuilder sb )
+  {
+    String identifier = sb.toString();
+    if( isAllUnderscores( identifier ) )
+    {
+      identifier = "_" + identifier.length();
+    }
+    return identifier;
+  }
+
+  private static boolean isAllUnderscores( String result )
+  {
+    for( int i = 0; i < result.length(); i++ )
+    {
+      if( result.charAt( i ) != '_' )
+      {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
