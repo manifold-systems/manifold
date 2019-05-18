@@ -2,7 +2,7 @@
 layout: docs_layout
 ---
 
-## Manifold in a Nutshell
+# Manifold in a Nutshell
 
 [Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
 Java. Building on this core framework Manifold supplements Java with new features you can use in your applications:
@@ -28,7 +28,7 @@ include:
 At a high level each of these features is classified as either a **Type Manifold** or an
 **Extension** via the **Extension Manifold**.
 
-### Type Manifolds
+## Type Manifolds
 
 Bridging the worlds of information and programming, *type manifolds* act as adapters 
 to automatically connect schematized data sources with Java.  More specifically, 
@@ -84,7 +84,7 @@ Currently Manifold provides type manifolds for:
 *   DDL and SQL (work in progress)
 
 
-### The Extension Manifold
+## The Extension Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes
 including Java's own runtime classes such as `String`. You can add new methods, annotations, and 
@@ -142,7 +142,7 @@ There's a lot more to the extension manifold including [structural interfaces](#
 similar to interfaces in the [Go](https://golang.org/) language. We'll cover more later in this guide.
 
 
-### Benefits
+## Benefits
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There is no code
 generation step in the build, no extra .class files or .java files to manage, no annotation processors, and no extra
@@ -161,13 +161,13 @@ Additionally, Manifold is just a JAR file you can drop into your existing projec
 it incrementally without having to rewrite classes or conform to a new way of doing things.
 
 
-## Setup
+# Setup
 
 Using Manifold in your project is easy, but there are configuration details you should understand before you get going.
 Your project's configuration of Manifold largely depends on which version of Java it uses, namely Java 8, Java 9 or later with 
 modules, or Java 9 or later without modules.  Please keep this in mind and read this section carefully.
 
-### I don't want to read all this
+## I don't want to read all this
 
 If you simply want to experiment, grab the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) and have at it:
 
@@ -190,7 +190,7 @@ Setup section too.
 to track feedback [here](https://github.com/manifold-systems/manifold/issues). Or start a discussion on
 [gitter](https://gitter.im/manifold-systems/community).  Also feel free to send email: [info@manifold.systems](mailto:info@manifold.systems).
 
-### Basics
+## Basics
 
 Using Manifold in your Java project is simple:
 
@@ -240,7 +240,7 @@ As a minor note, the `-processorpath` argument for **Java 8** `javac` may be omi
 javac -Xplugin:Manifold ...
 ```
 
-### Modes
+## Modes
 
 You can use Manifold in one of two ways: **dynamically** or **statically**.  The mode 
 determines whether or not Manifold compiles resource types to disk at compile-time, and in 
@@ -276,7 +276,7 @@ sources when you build your project
 > Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
 whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-precompile)
  
-### Working with IntelliJ
+## Working with IntelliJ
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
 
@@ -318,7 +318,7 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 <p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
 
-### Binaries
+## Binaries
 
 For the convenience of non-maven users you can directly download Manifold binaries:
 * [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
@@ -351,7 +351,7 @@ Text extensions
 Integrated template support
 
 
-### Maven
+## Maven
 To setup a Maven project with Manifold you must:
 * specify the Manifold dependencies you need
 * configure the `maven-compiler-plugin`
@@ -646,7 +646,7 @@ create a new Manifold project.  This is an easy process from IntelliJ:
 <p><img src="/images/archetype.png" alt="echo method" width="60%" height="60%"/></p>
 --->
 
-### Gradle
+## Gradle
 
 Add manifold artifacts that suit your project's needs.  The minimum requirements are to 
 include the core `manifold` artifact(s) and the `-Xplugin:Manifold` argument as a Java 
@@ -785,7 +785,7 @@ Use with accompanying `settings.gradle` file:
 rootProject.name = 'MySampleProject'
 ```
 
-## What Is a Type Manifold?
+# What Is a Type Manifold?
 
 Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
 As a consequence the software industry has become much less code-centric and much more information-centric. Despite 
@@ -878,7 +878,7 @@ We are working on support for more data sources including:
 *   Standard SQL and DDL
 
 
-### JSON and JSON Schema
+## JSON and JSON Schema
 The JSON type manifold provides comprehensive support for JSON resource files (extension `.json`).  You can define a 
 JSON API with JSON resources consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or 
 later. Your JSON resource files serve as the **single source of truth** regarding JSON APIs.  You use JSON-expressed
@@ -928,7 +928,7 @@ Here is a simple `User` type defined in `resources/com/example/schemas/User.json
 }
 ```
 
-#### Naming
+### Naming
 
 Most type manifolds, including the JSON and YAML manifolds, follow the Java naming convention where a type name is based on the
 resource file name relative to its location in the resource path. Thus the JSON resource file `resources/com/example/schemas/User.json`
@@ -937,7 +937,7 @@ has the Java type `com.example.schemas.User`.
 The name *should* also match the schema `$id`, if one is provided.  The `User` type declares `"$id": "http://example.com/schemas/User.json"`,
 which corresponds with the name `com.example.schemas.User`.
 
-#### Fluent API
+### Fluent API
 
 JSON types are defined as a set of fluent _interface_ APIs.  For example, the `User` JSON type is an interface and
 provides type-safe methods to:
@@ -950,7 +950,7 @@ provides type-safe methods to:
 * **copy** a `User`
 * **cast** to `User` from any structurally compatible type including `Map`s, all *without proxies*
 
-#### Creating & Building JSON
+### Creating & Building JSON
 You create an instance of a JSON type using either the `create()` method or the `builder()` method.
 
 The `create()` method defines parameters matching the `required` properties defined in the JSON Schema, if the type is
@@ -985,7 +985,7 @@ heavier APIs.  After it is fully configured call the `build()` method to constru
 
 > Note `with` methods also serve as a means to initialize values for `readOnly` properties.
 
-#### Loading JSON
+### Loading JSON
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
 a variety of existing sources using `load()`.
 
@@ -1012,7 +1012,7 @@ You can invoke a REST API to fetch a `User` using HTTP GET:
 User user = User.load().fromJsonUrl("http://api.example.com/users/$userId");
 ```
 
-#### Request REST API services
+### Request REST API services
 Use the `request()` static method to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE:
 ```java
 String id = "scott";
@@ -1043,7 +1043,7 @@ req.putOne("/$id", user);
 req.delete("/$id");
 ```
 
-#### Writing JSON
+### Writing JSON
 An instance of a JSON API object can be written as formatted text with `write()`:
 * `toJson()` - produces a JSON formatted String
 * `toYaml()` - produces a YAML formatted String
@@ -1069,7 +1069,7 @@ Output:
 }
 ```
 
-#### Copying JSON
+### Copying JSON
 Use the `copy()` method to make a deep copy of any JSON API object:
 ```java
 User user = User.create(...);
@@ -1084,7 +1084,7 @@ User copy = User.copier(user).withName("Bob").copy();
 modifications.  Also like `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
 `readOnly` fields after the `copy()` method constructs the object.
 
-#### Properties Marked `readOnly` or `writeOnly` 
+### Properties Marked `readOnly` or `writeOnly` 
 If a property is set to `readOnly` in a schema you can initialize it as a parameter in the `create()` and `builder()`
 methods. A `readOnly` property does not have a corresponding setter method in the API, thus you can't modify it after a
 type is initialized.
@@ -1092,14 +1092,14 @@ type is initialized.
 Conversely, a `writeOnly` property such as a password is only writable -- you cannot read such a property using a `get`
 method.
 
-#### Nullable Properties
+### Nullable Properties
 Manifold supports JSON Schema's many curious ways to say that a property can have a `null` value. These include:
 * The type array:  `"type": ["", "null"]`
 * The union type:  `"oneOf": [ ..., {"type": "null"}]`
 * The enum type: `"enum": [..., null]`
 * [OpenAPI 3.0](https://swagger.io/docs/specification/about/) _nullable_ attribute: `"nullable": true`
 
-#### **'additionalProperties'** and **'patternProperties'**
+### **'additionalProperties'** and **'patternProperties'**
 If a schema defines `additionalProperties` and/or `patternProperties`, the API provides a pair of methods to get/put 
 arbitrary properties for a JSON instance, these are in addition to the getter/setter methods for named properties.
 For instance, if a type `Thing` declares `additionalProperties` you can do this:
@@ -1127,12 +1127,12 @@ hasColor.setColor("blue");
 String color = hasColor.getColor();
 ```
 
-#### Nested Types
+### Nested Types
 Nested types defined within a JSON type, such as the `Gender` enum type in `User`, are available in the `User` API as
 inner interfaces or enum types.  An nested interface type has all the same features as a top-level type including `create()`,
 `builder()`, `load()`, etc.
 
-#### `format` Types
+### `format` Types
 As you can see from the `User` example Manifold supports standard JSON Schema `format` types.  These include:
 
 <style>
@@ -1174,7 +1174,7 @@ Additionally, Manifold includes an API you can implement to provide your own cus
 [service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
 
 
-#### Composition Types with `allOf`
+### Composition Types with `allOf`
 JSON Schema's `allOf` construct is a way to reuse types by composing a type with references to other types. A Manifold 
 JSON type involving `allOf` uses interface composition to define the type.  
 ```yaml
@@ -1213,7 +1213,7 @@ methods they define are compatible.  Although `allOf` types conveniently use int
 not necessary for assignability.
 
 
-#### Union Types with `oneOf`/`anyOf`
+### Union Types with `oneOf`/`anyOf`
 Normally you define a property with a single type, like `string` or `Address`.  However, using `oneOf` or `anyOf` you
 can declare a _set_ of possible types for a property, where a property value can be an instance of any one of the types.  
 The language community commonly refers to this as a [union type](https://en.wikipedia.org/wiki/Union_type). 
@@ -1236,7 +1236,7 @@ void setPet(Object value);
 ``` 
 There is still only one value backing the `pet` property.
 
-#### Interfaces are _Structural_
+### Interfaces are _Structural_
 JSON API interfaces are *structural* interfaces. You can read all about what a structural interface is [here](#structural-interfaces).  In short
 a structural interface doesn't have to be implemented directly in order to be used.  For instance, you can make a
 type-safe call through a structural interface method on an object so long as the object has a method with the same name
@@ -1271,7 +1271,7 @@ the code that consumes them.
 
 Read more about [dynamic structural typing](#dynamic-typing-with-icallhandler).
 
-#### Extension
+### Extension
 
 You and the consumers of your JSON API can use Manifold extension classes to tailor it to specific lines of business.
 
@@ -1314,7 +1314,7 @@ resolve against the extensions. This can be useful to seamlessly add hypermedia 
 [Generating Extension Classes](#generating-extension-classes) for more info.
 
 
-#### JSON & YAML Utilities
+### JSON & YAML Utilities
 In addition to the JSON type manifold other forms of JSON and YAML support include:
 * Extension methods on `URL` and `Bindings` e.g.,
 ```json
@@ -1326,7 +1326,7 @@ myUrl.append(query.getBindings().makeArguments());
 * Structural interfaces on `Bindings` -- you can define your own structural interfaces for improved type-safety on bindings (or maps)
 
 
-### YAML
+## YAML
 The YAML type manifold provides comprehensive support for YAML (1.2).  You can define a YAML or JSON API with YAML resource
 files (`.yml` and `.yaml` files).  Manifold can derive an API from sample data in YAML format or you can build [JSON Schema](https://json-schema.org/)
 APIs directly with YAML.
@@ -1334,23 +1334,286 @@ APIs directly with YAML.
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](#json_and_json_schema)
 type manifold reference above.  All that applies to JSON applies to YAML.
 
-### GraphQL
-
->Work in progress!
+## GraphQL
 
 Use the GraphQL Manifold for productive _Schema-First_ [GraphQL](https://graphql.org/) development in any Java project.
 **Type-safely** build and execute queries and mutations without introducing a code generation step in your build
-process. Your `.graphql` schema files _**are**_ your API!
+process. Access GraphQL types defined in standard `.graphql` schemas directly in your Java code. Build queries 
+using native `.graphql` query files and immediately access changes as you make them from Java code -- without 
+recompiling!  Your code is always in sync with GraphQL definitions.  This is true _Schema-First_ development!
 
-Get your hands dirty now with the [sample GraphQL application](https://github.com/manifold-systems/manifold-sample-graphql-app).
+> Clone the [sample GraphQL application](https://github.com/manifold-systems/manifold-sample-graphql-app) to quickly
+begin experimenting with GraphQL using Manifold.
 
->This feature is under development. More docs coming soon...
+### GraphQL Files
 
-#### Build Queries
+The GraphQL Manifold enables your Java code to directly access types and queries defined in native GraphQL schema files.
+Drop a schema file into your project and start using and build queries in your code, no code generators to engage, no
+recompiling between schema changes. Supports all standard file extensions including `.graphql`, `.graphqls`, and `.gql`.    
+
+When you add a GraphQL file to your project it becomes a Java *resource*.  A resource, like a class, is rooted in a resource or
+source directory, depending on your build configuration.  Maven and Gradle projects, for example, typically define a
+`src/main/resources` root for all the resource files in a given module.
+
+The path from the resource root determines the fully qualified name of the types derived from the GraphQL files.  For
+example, GraphQL type definitions from file `src/main/resources/com/example/Movies.graphql` are accessible from Java
+interface `com.example.Movies` where `com.example` is the package and `Movies` is the top-level interface name.  Type
+type definitions are inner classes defined inside `Movies`.
+
+>You can provide any number of GraphQL resource files; all files form a collective GraphQL type domain.  This means you
+can organize schema types in separate files and also separate queries and mutations from schema definitions.
+ 
+#### Schema File Sample: `com/example/Movies.graphql`
+```graphql
+type Query {
+    movies(genre: Genre!, title: String, releaseDate: Date) : [Movie!]
+    reviews(genre: Genre) : [Review!]
+}
+
+type Movie {
+    id: ID!
+    title: String!
+    genre: [Genre!]!
+    releaseDate: Date!
+}
+
+type Mutation {
+    createReview(movie: ID!, review: ReviewInput) : Review
+}
+
+input MovieInput {
+    title: String!
+    genre: Genre!
+    releaseDate: Date
+}
+
+input ReviewInput {
+    stars: Int!
+    comment: String
+}
+
+type Review {
+    id: ID!
+    movie: Movie!
+    stars: Int!
+    comment: String
+}
+
+enum Genre {
+    Action, Comedy, Drama, Fantasy, Horror, Romance, SciFi, Western
+}
+
+scalar Date
+```  
+
+#### Query File Sample: `com/example/MovieQueries.graphql`
+```graphql
+query MovieQuery($genre: Genre!, $title: String, $releaseDate: Date) {
+    movies(genre: $genre, title: $title, releaseDate: $releaseDate) {
+        id
+        title
+        genre
+        releaseDate
+    }
+}
+
+query ReviewQuery($genre: Genre) {
+    reviews(genre: $genre) {
+        id
+        stars
+        comment
+        movie {
+            id
+            title
+        }
+    }
+}
+
+mutation ReviewMutation($movie: ID!, $review: ReviewInput!) {
+    createReview(movie: $movie, review: $review) {
+        id
+        stars
+        comment
+    }
+}
+
+extend type Query {
+    reviewsByStars(stars: Int) : [Review!]!
+}
+```
+
+### Types
+
+GraphQL provides several useful type abstractions these include:
+* `schema`
+* `type`
+* `input`
+* `interface`
+* `enum`
+* `union`
+* `scalar`
+* `query`
+* `mutation`
+* `subscription`
+
+The GraphQL manifold supports all type abstractions except the subscription type, which will be supported in a later
+release.
+
+#### `schema`
+`schema` is a simple type that lets you specify the root query type, the root mutation type, and the root subscription
+type.  Without a schema type, the default root type names are `Query`, `Mutation`, and `Subscription`.
+
+#### `type`
+`type` is the GraphQL foundational abstraction. The manifold API reflects a `type` as a structural _interface_. 
+As the basis of the GraphQL manifold API, interfaces hide implementation detail that may otherwise complicate
+the evolution of the API e.g., as new features are added to the GraphQL specification.
+
+#### `input`
+An `input` is basically a `type` intended for use as a mutation constraint. It is identical to `type` in terms of
+representation in the manifold API.  
+
+#### `interface`
+`interface` abstractions are structural interfaces in the manifold API.  They are structured just like `type`
+abstractions, but do not have creation methods.
+
+#### `enum`
+The `enum` abstraction maps directly to a Java enum in the manifold API.
+
+#### `union`
+Since the JVM does not provide a union type the manifold API approximates it as an interface extending the least
+upper bound (LUB) `interface` abstraction of the union component types, or extends nothing of no LUB `interface` exists.
+Its declared properties consist of the intersection of all the properties of the union component types.  As such a
+property outside the intersection must be accessed by casting a union to a union component type declaring the
+property.  Note a GraphQL query can provide a discriminator in terms of the `__typename` property to facilitate
+conditional access to union properties.
+
+#### `scalar`
+The manifold API fully supports GraphQL scalars and also provides a host of non-standard but commonly used types. See
+_Scalar Types_ below.
+ 
+#### `query`
+Similar to the `type` abstraction, the manifold API exposes a `query` as a structural interface. Non-null query
+parameters translate to parameters in the `create` and `builder` methods, and the nullable parameters are _getter_/_setter_
+methods and _with_ in the builder.  Additionally the _structural_ interfaces allow the query implementation to be free
+of POJOs, marshalling, and other mapping code present in conventional API tooling.  As such a query structural interface
+*directly* overlays a raw GraphQL query response; there is absolutely *zero* processing of query results after a query
+HTTP request.  The only processing involved happens when a scalar value must be coerced to a type-safe value; this
+happens lazily on a per call-site basis.
+
+#### `mutation`
+The manifold API treatment of mutations is identical to queries. See `query` above.
+ 
+#### `subscription`
+_not implemented_
+
+### Fluent API
+
+GraphQL is a language-neutral, type-safe API.  The GraphQL Manifold provides a concise, fluent mapping of the API to
+Java.  For example, the `MovieQuery` type is an interface and provides type-safe methods to:
+* **create** a `MovieQuery`
+* **build** a `MovieQuery`
+* **modify** properties of a `MovieQuery`  
+* **load** a `MovieQuery` from a string, a file, or a URL using HTTP GET
+* **request** Web service operations using HTTP GET and POST
+* **write** a `MovieQuery` as formatted JSON, YAML, or XML
+* **copy** a `MovieQuery`
+* **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
+
+### Creating & Building GraphQL
+You create an instance of a GraphQL type using either the `create()` method or the `builder()` method.
+
+The `create()` method defines parameters matching the `non-null` properties defined in the query schema; if no non-null
+properties are specified, `create()` has no parameters.
+
+The `MovieQuery.create()` method declares one non-null property:
+```java
+static MovieQuery create(Genre genre) {...}
+```
+You can use this to create a new `MovieQuery` with a `Genre` then modify it using _setter_ methods to change optional
+properties:
+```java
+import com.example.MovieQueries.*;
+import java.time.LocalDate;
+import static com.example.Movies.Genre.Action;
+...
+MovieQuery query = MovieQuery.create(Action);
+query.setTitle("Le Mans");
+query.setReleaseDate(LocalDate.of(1972, 6, 7));
+```
+
+Alternatively, you can use `builder()` to fluently build a new instance:
+```java
+MovieQuery query = MovieQuery.builder(Action)
+  .withTitle("Le Mans")
+  .withReleaseDate(LocalDate.of(1972, 6, 7))
+  .build();
+```
+
+You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
+heavier APIs.  After it is fully configured call the `build()` method to construct the type.
+
+### Loading a GraphQL Object
+In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
+a variety of existing sources using `load()`.
+
+You can load a `MovieQuery` instance from a variety of formats including JSON and YAML:
+```java
+MovieQuery query = MovieQuery.load().fromYaml(
+  "genre: Action\n" +
+  "title: Le Mans\n" +
+  "releaseDate: 1971-06-03");
+```
+
+Load from a file:
+```java
+User user = User.load().fromJsonFile("/path/to/MyMovieQuery.json");
+```
+
+### Writing GraphQL Objects
+An instance of a GraphQL object can be written as formatted text with `write()`:
+* `toJson()` - produces a JSON formatted String
+* `toYaml()` - produces a YAML formatted String
+* `toXml()` - produces an XML formatted String
+
+The following example produces a JSON formatted string:
+```java
+MovieQuery query = MovieQuery.builder(Action)
+  .withTitle("Le Mans")
+  .withReleaseDate(LocalDate.of(1972, 6, 7))
+  .build();
+
+String json = query.write().toJson();
+System.out.println(json);
+```
+Output:
+```json
+{
+  "genre": "Action",
+  "title": "Le Mans",
+  "releaseDate": "1971-06-03"
+}
+```
+
+### Copying GraphQL
+Use the `copy()` method to make a deep copy of any GraphQL object:
+```java
+MovieQuery query = MovieQuery.create(...);
+...
+MovieQuery copy = query.copy();
+```
+Alternatively, you can use the `copier()` static method for a richer set of features:
+```java
+MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
+```
+`copier()` is a lot like `builder()` but lets you start with an already built object from which you can make
+modifications.
+
+
+### Execute Queries
 ```java
 private static String ENDPOINT = "http://example/graphql";
 ...
-var query = MovieQuery.builder().withGenre(Action).build();
+var query = MovieQuery.builder(Action).build();
 var result = query.request(ENDPOINT).post();
 var actionMovies = result.getMovies();
 for (var movie : actionMovies) {
@@ -1361,10 +1624,10 @@ for (var movie : actionMovies) {
 }
 ```
 
-#### Execute Mutations
+### Execute Mutations
 ```java
 // Find the movie to review ("Le Mans")
-var movie = MovieQuery.builder().withTitle("Le Mans").build()
+var movie = MovieQuery.builder(Action).withTitle("Le Mans").build()
   .request(ENDPOINT).post().getMovies().first();
 // Submit a review for the movie
 var review = ReviewInput.builder(5).withComment("Topnotch racing film.").build();
@@ -1376,9 +1639,45 @@ out.println(
   "Comment: " + createdReview.getComment() + "\n"
 );
 ```
-todo:
 
-### Properties Files
+### Scalar Types
+
+GraphQL specifies several standard scalar types, in addition to these Manifold provides several other non-standard, but
+commonly used types.  These include:
+| Name             | Persists As  | Java Type                                     |
+|------------------|--------------|-----------------------------------------------|
+| _Byte_           | _byte_       | `byte` or `java.lang.Byte` if nullable        |
+| _Char_           | _char_       | `char` or `java.lang.Character` if nullable   |
+| _Character_      | _char_       | `char` or `java.lang.Character` if nullable   |
+| _Int_            | _integer_    | `int` or `java.lang.Integer` if nullable      |
+| _Integer_        | _integer_    | `int` or `java.lang.Integer` if nullable      |
+| _Long_           | _long_       | `long` or `java.lang.Long` if nullable        |
+| _Float_          | _double_     | `double` or `java.lang.Double` if nullable    |
+| _Double_         | _double_     | `double` or `java.lang.Double` if nullable    |
+| _Boolean_        | _boolean_    | `boolean` or `java.lang.Boolean` if nullable  |
+| _String_         | _string_     | `java.lang.String`                            |
+| _ID_             | _string_     | `java.lang.String`                            |
+| _Date_           | _string_     | `java.time.LocalDate`                         |
+| _LocalDate_      | _string_     | `java.time.LocalDate`                         |
+| _Time_           | _string_     | `java.time.LocalTime`                         |
+| _LocalTime_      | _string_     | `java.time.LocalTime`                         |
+| _DateTime_       | _string_     | `java.time.LocalDateTime`                     |
+| _LocalDateTime_  | _string_     | `java.time.LocalDateTime`                     |
+| _Instant_        | _integer_    | `java.time.Instant`                           |
+| _BigInteger_     | _string_     | `java.math.BigInteger`                        |
+| _BigDecimal_     | _string_     | `java.math.BigDecimal`                        |
+| _Binary_         | _string_     | `manifold.api.json.schema.OctetEncoding`      |
+| _Octet_          | _string_     | `manifold.api.json.schema.OctetEncoding`      |
+| _Base64_         | _string_     | `manifold.api.json.schema.Base64Encoding`     | 
+
+Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
+`manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
+[service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
+
+>If you've implemented format type resolvers for JSON Schema, you can share them with your GraphQL APIs.  No need to
+reinvent the wheel!
+
+## Properties Files
 
 Many Java applications incorporate
 [properties resource files](https://docs.oracle.com/javase/7/docs/api/java/util/Properties.html)
@@ -1411,7 +1710,7 @@ application, changes you make in
 the file are immediately available in your code with no user intervention in
 between -- no code gen files and no compiling between changes.
 
-### Image Files
+## Image Files
 
 User interfaces frequently use image resource files for one purpose or another.  Java supports most of the
 popular formats including png, jpg, gif, and bmp via a collection of utility classes such as
@@ -1448,7 +1747,7 @@ different types sharing a single name.  Additionally image classes are direct su
  `ImageIcon` class to conform with existing frameworks. As with all
   type manifolds there are no code gen files or other build steps involved.
 
-### JavaScript
+## JavaScript
 
 ** Warning: Javascript support is experimental and incomplete **
 
@@ -1557,7 +1856,7 @@ The end
 
 For full-featured template engine functionality see project [ManTL](http://manifold.systems/manifold-templates.html).
 
-### Dark Java
+## Dark Java
 
 Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
 can be executed -- the JVM cannot execute .java files directly.  Although the advantages of static compilation usually
@@ -1637,7 +1936,7 @@ This basic interface factory pattern can be used anywhere you need to use a Dark
 compilation use-case.  
  
  
-### Templating
+## Templating
 
 Manifold provides two forms of templating:
 * String Templates (or String interpolation)
@@ -1700,7 +1999,7 @@ Template **_files_** are much more powerful and are documented in project [ManTL
 begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
 
 
-### Build Your Own Manifold
+## Build Your Own Manifold
 
 Almost any data source is a potential type manifold.  These include file schemas, query languages, database definitions, 
 data services, templates, spreadsheets, programming languages, and more.  So while the Manifold team provides several 
@@ -1885,7 +2184,7 @@ serve as decent reference implementations for wrapping existing code generators 
 respectively.
 
 
-## Extension Classes
+# Extension Classes
 
 Similar to other languages such as 
 [C#](https://docs.microsoft.com/en-us/dotnet/csharp/csharp), [Kotlin](https://kotlinlang.org/), and
@@ -1928,7 +2227,7 @@ or module name to prevent naming collisions.
 Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
 extension classes from other classes that may reside in the same package.
 
-### Extension Method Basics
+## Extension Method Basics
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
@@ -1960,7 +2259,7 @@ Call static extensions just as if they were on the extended class:
 String.lineSeparator()
 ```
 
-### Generics
+## Generics
 
 You can extend generic classes too and define generic methods. This is how Manifold extension libraries
 work with collections and other generic classes. For example, here is the `first()` extension method on
@@ -1994,7 +2293,7 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
 variable `E`.
 
-### Static Dispatching
+## Static Dispatching
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
 not really inserted into the extended class. Instead the Java compiler and Manifold cooperate to make a
@@ -2043,7 +2342,7 @@ if (name.isNullOrEmpty()) {
 
 Here the example doesn't check for null and instead shifts the burden to the extension.
 
-### Accessibility and Scope
+## Accessibility and Scope
 
 An extension method never shadows or overrides a class method; when an extension method's name and
 parameters match a class method, the class method always has precedence over the extension. For example:
@@ -2087,7 +2386,7 @@ if you're using Maven the scope of an extension matches the dependency relations
 pom.xml file. Similarly in module-aware IDEs such as IntelliJ IDEA, an extension's scope is the same as
 the module's.
 
-### Annotation Extensions
+## Annotation Extensions
 
 In addition to adding new methods, extension classes can also add _annotations_ to a class. At present
 annotation extensions are limited to the extended _class_; you can't yet add annotations to members of 
@@ -2113,7 +2412,7 @@ of your project classes no longer have to declare they implement it nominally.
 
 See [Structural Interfaces](#structural_interfaces) later in this guide for fuller coverage of the topic.
 
-### Extension Interfaces
+## Extension Interfaces
 
 An extension class can add structural interfaces to its extended class.  This feature helps with a 
 variety of use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
@@ -2178,7 +2477,7 @@ mutable interfaces from the class.  As such your code is better suited to confin
 `List` operations on otherwise fully mutable lists.
 
 
-### Extension Libraries
+## Extension Libraries
 
 An extension library is a logical grouping of functionality defined by a set of extension classes.
 Manifold includes several extension libraries for commonly used classes, many of which are adapted
@@ -2215,7 +2514,7 @@ to your project separately depending on its needs.
     - java.net.URL
     - javax.script.Bindings
 
-### Generating Extension Classes
+## Generating Extension Classes
 
 Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
 than painstakingly writing such classes by hand it's easier and less error prone to produce them via 
@@ -2226,7 +2525,7 @@ manifold produces. For the typical use case your type manifold should extend `Ab
 See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
 
 
-## Structural Interfaces
+# Structural Interfaces
 
 Java is a _nominally_ typed language -- types are assignable based on the names declared in their
 definitions. For example:
@@ -2320,7 +2619,7 @@ comprehend your code faster. The general idea is to use an interface structurall
 use it nominally or doing so overcomplicates your code.
 
 
-### Type Assignability and Variance
+## Type Assignability and Variance
 
 A type is assignable to a structural interface if it provides compatible versions of all the
 methods declared in the interface. The use of the term _compatible_ here instead of _identical_ is
@@ -2362,7 +2661,7 @@ as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no lo
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.
 
-### Implementation by Field
+## Implementation by Field
 
 Another example where classes have wiggle room implementing structural interfaces involves property 
 getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
@@ -2390,7 +2689,7 @@ is/get/set prefixes and taking into account field naming conventions. For exampl
 and `_name` all match the `getName()` property method and are weighted in that order.
 
 
-### Implementation by Extension
+## Implementation by Extension
 
 It's possible to implement methods of a structural interface via extension methods.  Looking back at the
 `Coordinate` example, consider this class:
@@ -2435,7 +2734,7 @@ Nevertheless if you'd rather not add extension methods to `Vector`, or the exten
 your use-case e.g., the `Comparable<T>` interface sometimes makes this impossible, you can instead go a more direct
 route and implement your own proxy factory...
 
-### Implementation by Proxy
+## Implementation by Proxy
 
 You can provide your own proxies the compiler can use to delegate structural calls.  This is especially useful to avoid
 the one-time runtime overhead of the first call through a structural interface. Consider the `Coordinate` structural
@@ -2493,7 +2792,7 @@ com.abc.Point_To_Coordinate
 
 ```
 
-### Dynamic Typing with `ICallHandler`
+## Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
 
@@ -2560,7 +2859,7 @@ the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
-## Type-safe Reflection
+# Type-safe Reflection
 
 Sometimes you have to use Java reflection to access fields, methods, and types that are not directly accessible from
 your code. But writing reflection code is not only tedious and error-prone, it also loses type-safety in the process. 
@@ -2568,7 +2867,7 @@ Manifold mitigates these issues with the `@Jailbreak` annotation and the `jailbr
 leverage the convenience and type-safety of the Java compiler and let Manifold generate reliable, efficient reflection 
 code for you.
 
-### Using `@Jailbreak`
+## Using `@Jailbreak`
 
 Annotate the type of any variable with `@Jailbreak` to gain direct, type-safe access to private fields, methods, and
 types.
@@ -2576,7 +2875,7 @@ types.
 >Note, `@Jailbreak` is ideal for use within tests. It saves you from losing type-safety that is otherwise the case with
 reflection code and it enables you to maintain private methods and fields.
 
-#### Basic Use
+### Basic Use
 
 ```java
 @Jailbreak Foo foo = new Foo(1);
@@ -2602,7 +2901,7 @@ public class Foo {
 }
 ```
 
-#### Use With Static Members
+### Use With Static Members
 
 Since Java does not permit you to annotate the type in a static expression, you must use an instance:
 
@@ -2620,7 +2919,7 @@ public class MyClass {
 }
 ```
 
-#### Use With Types and Constructors
+### Use With Types and Constructors
 
 Use `@Jailbreak` to access hidden types and constructors:
 ```java
@@ -2641,7 +2940,7 @@ class SecretClass {
 }
 ```
 
-#### Break JPMS Barriers
+### Break JPMS Barriers
 
 Access fields, methods, and constructors from packages otherwise prohibited for use in your module by the JPMS:
 ```java
@@ -2649,7 +2948,7 @@ jdk.internal.misc. @Jailbreak VM vm = null;
 String[] args = vm.getRuntimeArguments();
 ```
         
-### Using the `jailbreak()` Extension
+## Using the `jailbreak()` Extension
 
 Similar to `@Jailbreak` you can call the `jailbreak()` extension method from any expression to gain type-safe access to 
 private fields, methods, and types.
@@ -2665,7 +2964,7 @@ inaccessible members:
 something.foo().jailbreak().bar.jailbreak().baz = value;
 ``` 
 
-## The *Self* Type
+# The *Self* Type
 
 The *Self* type is a common term used in the language community to mean *"the subtype of `this`"* and is most useful
 in situations where you want a return type or parameter type of a method in a base type to reflect the subtype
@@ -2714,7 +3013,7 @@ But as you'll see Manifold's `@Self` annotation altogether removes the need for 
 a simpler, more versatile alternative.  Use it on method return types, parameter types, and field types to enforce
 *"the subtype of `this`"* where suitable.
 
-### Builders
+## Builders
 
 A common use-case for the Self type involves fluent APIs like the *Builder* pattern:
 
@@ -2769,7 +3068,7 @@ Airplane airplane = new AirplaneBuilder()
 Annotate with `@Self` to preserve the *"the subtype of `this`"* anywhere on or in a method return type, parameter type,
 or field type.
 
-### Self + Generics
+## Self + Generics
 
 You can also use `@Self` to annotate a _type argument_.  A nice example of this involves a typical graph or tree
 structure where the nodes in the structure are homogeneous:
@@ -2800,7 +3099,7 @@ MyNode myNode = findMyNode();
 List<MyNode> = myNode.getChildren(); // wunderbar! 
 ```
 
-### Self + Extensions
+## Self + Extensions
 
 You can use `@Self` with [extension methods](#extension-classes) too.  Here we make an extension method as a means to
 conveniently chain additions to `Map` while preserving its concrete type:
@@ -2817,7 +3116,7 @@ HashMap<String, String> map = new HashMap<>()
   .add("alec", "barracuda")
 ```
 
-### Overriding Methods
+## Overriding Methods
 
 Using @Self in a method return type or parameter type has _no_ effect on the method's override characteristics or binary
 signature:
@@ -2860,7 +3159,7 @@ Here `setNext()`, although invoked as a `SinglyNode`, dispatches to the `DoublyN
 type enforces that a `SinglyNode` cannot be mistaken for `DoublyNode`, hence the necessity of the `instanceof` check in
 `setNext()`.
 
-## Using `@Precompile`
+# Using `@Precompile`
 
 By default a Type Manifold compiles a resource type only if you use it somewhere in your code.  Normally this is 
 desirable because if you don't use it as a Java class, why compile it?  There are cases, however, where *your*
@@ -2905,11 +3204,11 @@ enabled in your module:
 @Precompile
 ```
 
-## Checked Exception Suppression
+# Checked Exception Suppression
 Simply add the `exceptions` plugin argument: `-Xplugin:Manifold exceptions`. Now checked exceptions
 behave like unchecked exceptions!  No more compiler errors, no more boilerplate try/catch/wrap/rethrow nonsense.
 
-### No More Catch-n-Wrap
+## No More Catch-n-Wrap
 The vast majority of checked exceptions go unhandled, instead they are caught, wrapped in unchecked exceptions, and
 rethrown like this:
 ```java
@@ -2930,7 +3229,7 @@ process(new URL("http://manifold.systems"));
 ```
 Sells itself.
 
-### Lambdas
+## Lambdas
 Perhaps the most offensive checked exception use-cases involve lambdas:
 ```java
 List<String> strings = ...;
@@ -2948,7 +3247,7 @@ List<URL> urls = list
 ```
 
 To use Checked Exception Suppression you must add the `exceptions` plugin option to your build configuration.
-### Maven:
+## Maven:
 ```xml
 <plugin>
   <groupId>org.apache.maven.plugins</groupId>
@@ -2966,7 +3265,7 @@ To use Checked Exception Suppression you must add the `exceptions` plugin option
 </plugin>
 ```
 
-### Gradle:
+## Gradle:
 ```groovy
 tasks.withType(JavaCompile) {
   // Add the Manifold plugin, with string templates and checked exception suppression enabled
@@ -2975,7 +3274,7 @@ tasks.withType(JavaCompile) {
 }
 ```
 
-### Intellij:
+## Intellij:
 If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
 <kbd>Settings</kbd> ➜ <kbd>Build, Execution, Deployment</kbd> ➜ <kbd>Compiler</kbd> ➜ <kbd>Java Compiler</kbd> ➜ <kbd>Additional command line parameters:</kbd>
 
@@ -2984,7 +3283,7 @@ If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add th
 >Note the `-processorpath` argument is required for Java 9 and later, not Java 8.
 
 
-## IDE -- IntelliJ IDEA
+# IDE -- IntelliJ IDEA
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.
 
@@ -3013,7 +3312,7 @@ Install the plugin directly from IntelliJ via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-## Use with other JVM Languages
+# Use with other JVM Languages
 
 Manifold is foremost a JVM development tool.  It works straightaway with the Java Language and Java 
 compiler.  It's also designed for use within other JVM languages via the _plugin host_ API. You can
@@ -3021,12 +3320,12 @@ implement this API to host Manifold from within another JVM language.
 
 See [manifold.api.host.IManifoldHost](https://github.com/manifold-systems/manifold/blob/master/manifold-core-parent/manifold/src/main/java/manifold/api/host/IManifoldHost.java). 
 
-## License
+# License
 
-### Open Source
+## Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
 
-### Commercial
+## Commercial
 Commercial licenses for this work are available. These replace the above ASL 2.0 and offer 
 limited warranties, support, maintenance, and commercial server integrations.
 
@@ -3034,7 +3333,7 @@ For more information, please visit: http://manifold.systems//licenses
 
 Contact: admin@manifold.systems
 
-## Contributing
+# Contributing
 
 To contribute a change to Manifold [open source](https://github.com/manifold-systems/manifold):
 
@@ -3043,11 +3342,11 @@ To contribute a change to Manifold [open source](https://github.com/manifold-sys
 * Implement your fix and write tests
 * Create a pull request for that branch against `development` in the main repository
 
-## Versioning
+# Versioning
 
 For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags).
 
-## Building
+# Building
 
 To build:
 
@@ -3057,6 +3356,6 @@ To execute tests:
 
     mvn test
 
-## Author
+# Author
 
 * [Scott McKinney](https://www.linkedin.com/in/scott-mckinney-52295625/) - *Manifold creator, principal engineer, and founder of [Manifold Systems, LLC](http://manifold.systems)*
