@@ -7,13 +7,14 @@
 [![](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) re-energizes Java with powerful features like Type-safe Metaprogramming, Structural Typing, and Extension Methods.
- Simply add the Manifold jar to your project and begin taking advantage of it.
+[Manifold](http://manifold.systems) re-energizes Java with powerful features like Type-safe Metaprogramming, Structural
+Typing, and Extension Methods. Simply add the Manifold jar to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
 ### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as GraphQL, JSON Schema and YAML. Remove the code gen step in your build process.
+Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
+and **YAML**. Remove the code gen step in your build process.
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
@@ -50,8 +51,8 @@ foo.privateField = value;
 ```
 
 ### [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
-Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings`*`exceptions`*. Now checked exceptions
-behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
+swallowing, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
 ```java
 List<String> strings = ...;
 List<URL> urls = list
