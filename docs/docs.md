@@ -1665,31 +1665,50 @@ query.request(ENDPOINT).withTimeout(...)
 
 GraphQL specifies several standard scalar types, in addition to these Manifold provides several other non-standard, but
 commonly used types.  These include:
-| Name             | Persists As  | Java Type                                     |
+
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #eeeeee;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+</style>
+
+| Name             | Persists&nbsp;As  | Java Type                                     |
 |------------------|--------------|-----------------------------------------------|
-| _Byte_           | _byte_       | `byte` or `java.lang.Byte` if nullable        |
-| _Char_           | _char_       | `char` or `java.lang.Character` if nullable   |
-| _Character_      | _char_       | `char` or `java.lang.Character` if nullable   |
-| _Int_            | _integer_    | `int` or `java.lang.Integer` if nullable      |
-| _Integer_        | _integer_    | `int` or `java.lang.Integer` if nullable      |
-| _Long_           | _long_       | `long` or `java.lang.Long` if nullable        |
-| _Float_          | _double_     | `double` or `java.lang.Double` if nullable    |
-| _Double_         | _double_     | `double` or `java.lang.Double` if nullable    |
-| _Boolean_        | _boolean_    | `boolean` or `java.lang.Boolean` if nullable  |
-| _String_         | _string_     | `java.lang.String`                            |
-| _ID_             | _string_     | `java.lang.String`                            |
-| _Date_           | _string_     | `java.time.LocalDate`                         |
-| _LocalDate_      | _string_     | `java.time.LocalDate`                         |
-| _Time_           | _string_     | `java.time.LocalTime`                         |
-| _LocalTime_      | _string_     | `java.time.LocalTime`                         |
-| _DateTime_       | _string_     | `java.time.LocalDateTime`                     |
-| _LocalDateTime_  | _string_     | `java.time.LocalDateTime`                     |
-| _Instant_        | _integer_    | `java.time.Instant`                           |
-| _BigInteger_     | _string_     | `java.math.BigInteger`                        |
-| _BigDecimal_     | _string_     | `java.math.BigDecimal`                        |
-| _Binary_         | _string_     | `manifold.api.json.schema.OctetEncoding`      |
-| _Octet_          | _string_     | `manifold.api.json.schema.OctetEncoding`      |
-| _Base64_         | _string_     | `manifold.api.json.schema.Base64Encoding`     | 
+| **Byte**         | _byte_       | `byte` or `java.lang.Byte` if nullable        |
+| **Char**         | _char_       | `char` or `java.lang.Character` if nullable   |
+| **Character**    | _char_       | `char` or `java.lang.Character` if nullable   |
+| **Int**          | _integer_    | `int` or `java.lang.Integer` if nullable      |
+| **Integer**      | _integer_    | `int` or `java.lang.Integer` if nullable      |
+| **Long**         | _long_       | `long` or `java.lang.Long` if nullable        |
+| **Float**        | _double_     | `double` or `java.lang.Double` if nullable    |
+| **Double**       | _double_     | `double` or `java.lang.Double` if nullable    |
+| **Boolean**      | _boolean_    | `boolean` or `java.lang.Boolean` if nullable  |
+| **String**       | _string_     | `java.lang.String`                            |
+| **ID**           | _string_     | `java.lang.String`                            |
+| **Date**         | _string_     | `java.time.LocalDate`                         |
+| **LocalDate**    | _string_     | `java.time.LocalDate`                         |
+| **Time**         | _string_     | `java.time.LocalTime`                         |
+| **LocalTime**    | _string_     | `java.time.LocalTime`                         |
+| **DateTime**     | _string_     | `java.time.LocalDateTime`                     |
+| **LocalDateTime**| _string_     | `java.time.LocalDateTime`                     |
+| **Instant**      | _integer_    | `java.time.Instant`                           |
+| **BigInteger**   | _string_     | `java.math.BigInteger`                        |
+| **BigDecimal**   | _string_     | `java.math.BigDecimal`                        |
+| **Binary**       | _string_     | `manifold.api.json.schema.OctetEncoding`      |
+| **Octet**        | _string_     | `manifold.api.json.schema.OctetEncoding`      |
+| **Base64**       | _string_     | `manifold.api.json.schema.Base64Encoding`     | 
 
 Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
 `manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
