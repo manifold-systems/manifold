@@ -1358,7 +1358,7 @@ source directory, depending on your build configuration.  Maven and Gradle proje
 The path from the resource root determines the fully qualified name of the types derived from the GraphQL files.  For
 example, GraphQL type definitions from file `src/main/resources/com/example/Movies.graphql` are accessible from Java
 interface `com.example.Movies` where `com.example` is the package and `Movies` is the top-level interface name.  Type
-type definitions are inner classes defined inside `Movies`.
+definitions are inner classes defined inside the `Movies` interface.
 
 >You can provide any number of GraphQL resource files; all files form a collective GraphQL type domain.  This means you
 can organize schema types in separate files and also separate queries and mutations from schema definitions.
@@ -1442,6 +1442,165 @@ extend type Query {
 }
 ```
 
+### Fluent API
+
+GraphQL is a language-neutral, type-safe API.  The GraphQL Manifold provides a concise, fluent mapping of the API to
+Java.  For example, the `MovieQuery` type is a Java interface and provides type-safe methods to:
+* **create** a `MovieQuery`
+* **build** a `MovieQuery`
+* **modify** properties of a `MovieQuery`  
+* **load** a `MovieQuery` from a string, a file, or a URL
+* **execute** a `MovieQuery` with *type-safe* response 
+* **write** a `MovieQuery` as formatted JSON, YAML, or XML
+* **copy** a `MovieQuery`
+* **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
+
+### Building Types & Queries
+You create an instance of a GraphQL type using either the `create()` method or the `builder()` method.
+
+The `create()` method defines parameters matching the `non-null` parameters declared in the query schema; if no non-null
+parameters exist, `create()` has an empty parameter list.
+
+For example, the `MovieQuery.create()` method declares one parameter corresponding with the non-null `Genre` parameter:
+```java
+static MovieQuery create(@NotNull Genre genre) {...}
+```
+You can use this to create a new `MovieQuery` with a `Genre` then modify it using _setter_ methods to change optional
+properties:
+```java
+import com.example.MovieQueries.*;
+import java.time.LocalDate;
+import static com.example.Movies.Genre.Action;
+...
+MovieQuery query = MovieQuery.create(Action);
+query.setTitle("Le Mans");
+query.setReleaseDate(LocalDate.of(1971, 6, 3));
+```
+
+Alternatively, you can use `builder()` to fluently build a new instance:
+```java
+MovieQuery query = MovieQuery.builder(Action)
+  .withTitle("Le Mans")
+  .withReleaseDate(LocalDate.of(1971, 6, 3))
+  .build();
+```
+
+You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
+heavier APIs.  After it is fully configured call the `build()` method to construct the type.
+
+### Execute Queries
+You can execute queries and mutations using a concise, fluent API.  Simply provide the endpoint as a URL, and get or
+post your request. Query results are type-safe and constrained to the properties defined in the GraphQL query.
+
+```java
+import com.example.MovieQueries.*;
+import java.time.LocalDate;
+import static com.example.Movies.Genre.Action;
+...
+private static String ENDPOINT = "http://com.example/graphql";
+...
+var query = MovieQuery.builder(Action).build();
+var result = query.request(ENDPOINT).post();
+var actionMovies = result.getMovies();
+for (var movie : actionMovies) {
+  out.println(
+    "Title: " + movie.getTitle() + "\n" +
+    "Genre: " + movie.getGenre() + "\n" +
+    "Year: " + movie.getReleaseDate().getYear() + "\n");
+}
+```
+
+### Execute Mutations
+You execute a mutation exactly as you would a query using the same API.  Note this example creates a `ReviewInput`
+instance also using the same API.  
+
+```java
+// Find the movie to review ("Le Mans")
+var movie = MovieQuery.builder(Action).withTitle("Le Mans").build()
+  .request(ENDPOINT).post().getMovies().first();
+// Submit a review for the movie
+var review = ReviewInput.builder(5).withComment("Topnotch racing film.").build();
+var mutation = ReviewMutation.builder(movie.getId(), review).build();
+var createdReview = mutation.request(ENDPOINT).post().getCreateReview();
+out.println(
+  "Review for: " + movie.getTitle() + "\n" +
+  "Stars: " + createdReview.getStars() + "\n" +
+  "Comment: " + createdReview.getComment() + "\n"
+);
+```
+
+### Loading a GraphQL Object
+In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
+a variety of existing sources using `load()`.
+
+You can load a `MovieQuery` instance from a variety of formats including JSON and YAML:
+```java
+MovieQuery query = MovieQuery.load().fromYaml(
+  "genre: Action\n" +
+  "title: Le Mans\n" +
+  "releaseDate: 1971-06-03");
+```
+
+Load from a file:
+```java
+User user = User.load().fromJsonFile("/path/to/MyMovieQuery.json");
+```
+
+### Writing GraphQL Objects
+An instance of a GraphQL object can be written as formatted text with `write()`:
+* `toJson()` - produces a JSON formatted String
+* `toYaml()` - produces a YAML formatted String
+* `toXml()` - produces an XML formatted String
+
+The following example produces a JSON formatted string:
+```java
+MovieQuery query = MovieQuery.builder(Action)
+  .withTitle("Le Mans")
+  .withReleaseDate(LocalDate.of(1972, 6, 3))
+  .build();
+
+String json = query.write().toJson();
+System.out.println(json);
+```
+Output:
+```json
+{
+  "genre": "Action",
+  "title": "Le Mans",
+  "releaseDate": "1971-06-03"
+}
+```
+
+### Copying GraphQL Objects
+Use the `copy()` method to make a deep copy of any GraphQL object:
+```java
+MovieQuery query = MovieQuery.create(...);
+...
+MovieQuery copy = query.copy();
+```
+Alternatively, you can use the `copier()` static method for a richer set of features:
+```java
+MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
+```
+`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.
+
+
+### HTTP Request Configuration
+
+You can configure the HTTP request to your needs.  For instance, you can use a variety of authorization options, set
+header values, specify a timeout, etc.
+
+```java
+// Specify an authorization token
+query.request(ENDPOINT).withAuthorization(...)
+
+// Supply header values
+query.request(ENDPOINT).withHeader(...)
+
+// Set a timeout
+query.request(ENDPOINT).withTimeout(...)
+```
+
 ### Types
 
 GraphQL provides several useful type abstractions these include:
@@ -1511,154 +1670,6 @@ _not implemented_
 You can add properties, interfaces, and annotations to existing types using the `extend` construct.  The manifold API
 fully supports all type extensions.
 
-### Fluent API
-
-GraphQL is a language-neutral, type-safe API.  The GraphQL Manifold provides a concise, fluent mapping of the API to
-Java.  For example, the `MovieQuery` type is an interface and provides type-safe methods to:
-* **create** a `MovieQuery`
-* **build** a `MovieQuery`
-* **modify** properties of a `MovieQuery`  
-* **load** a `MovieQuery` from a string, a file, or a URL
-* **execute** a `MovieQuery` with *type-safe* response 
-* **write** a `MovieQuery` as formatted JSON, YAML, or XML
-* **copy** a `MovieQuery`
-* **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
-
-### Creating & Building GraphQL
-You create an instance of a GraphQL type using either the `create()` method or the `builder()` method.
-
-The `create()` method defines parameters matching the `non-null` properties defined in the query schema; if no non-null
-properties are specified, `create()` has no parameters.
-
-The `MovieQuery.create()` method declares one non-null property:
-```java
-static MovieQuery create(Genre genre) {...}
-```
-You can use this to create a new `MovieQuery` with a `Genre` then modify it using _setter_ methods to change optional
-properties:
-```java
-import com.example.MovieQueries.*;
-import java.time.LocalDate;
-import static com.example.Movies.Genre.Action;
-...
-MovieQuery query = MovieQuery.create(Action);
-query.setTitle("Le Mans");
-query.setReleaseDate(LocalDate.of(1971, 6, 3));
-```
-
-Alternatively, you can use `builder()` to fluently build a new instance:
-```java
-MovieQuery query = MovieQuery.builder(Action)
-  .withTitle("Le Mans")
-  .withReleaseDate(LocalDate.of(1971, 6, 3))
-  .build();
-```
-
-You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
-heavier APIs.  After it is fully configured call the `build()` method to construct the type.
-
-### Loading a GraphQL Object
-In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
-a variety of existing sources using `load()`.
-
-You can load a `MovieQuery` instance from a variety of formats including JSON and YAML:
-```java
-MovieQuery query = MovieQuery.load().fromYaml(
-  "genre: Action\n" +
-  "title: Le Mans\n" +
-  "releaseDate: 1971-06-03");
-```
-
-Load from a file:
-```java
-User user = User.load().fromJsonFile("/path/to/MyMovieQuery.json");
-```
-
-### Writing GraphQL Objects
-An instance of a GraphQL object can be written as formatted text with `write()`:
-* `toJson()` - produces a JSON formatted String
-* `toYaml()` - produces a YAML formatted String
-* `toXml()` - produces an XML formatted String
-
-The following example produces a JSON formatted string:
-```java
-MovieQuery query = MovieQuery.builder(Action)
-  .withTitle("Le Mans")
-  .withReleaseDate(LocalDate.of(1972, 6, 3))
-  .build();
-
-String json = query.write().toJson();
-System.out.println(json);
-```
-Output:
-```json
-{
-  "genre": "Action",
-  "title": "Le Mans",
-  "releaseDate": "1971-06-03"
-}
-```
-
-### Copying GraphQL
-Use the `copy()` method to make a deep copy of any GraphQL object:
-```java
-MovieQuery query = MovieQuery.create(...);
-...
-MovieQuery copy = query.copy();
-```
-Alternatively, you can use the `copier()` static method for a richer set of features:
-```java
-MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
-```
-`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.
-
-
-### Execute Queries
-```java
-private static String ENDPOINT = "http://com.example/graphql";
-...
-var query = MovieQuery.builder(Action).build();
-var result = query.request(ENDPOINT).post();
-var actionMovies = result.getMovies();
-for (var movie : actionMovies) {
-  out.println(
-    "Title: " + movie.getTitle() + "\n" +
-    "Genre: " + movie.getGenre() + "\n" +
-    "Year: " + movie.getReleaseDate().getYear() + "\n");
-}
-```
-
-### Execute Mutations
-```java
-// Find the movie to review ("Le Mans")
-var movie = MovieQuery.builder(Action).withTitle("Le Mans").build()
-  .request(ENDPOINT).post().getMovies().first();
-// Submit a review for the movie
-var review = ReviewInput.builder(5).withComment("Topnotch racing film.").build();
-var mutation = ReviewMutation.builder(movie.getId(), review).build();
-var createdReview = mutation.request(ENDPOINT).post().getCreateReview();
-out.println(
-  "Review for: " + movie.getTitle() + "\n" +
-  "Stars: " + createdReview.getStars() + "\n" +
-  "Comment: " + createdReview.getComment() + "\n"
-);
-```
-
-### HTTP Request Configuration
-
-You can configure the HTTP request to your needs.  For instance, you can use a variety of authorization options, set
-header values, specify a timeout, etc.
-
-```java
-// Specify an authorization token
-query.request(ENDPOINT).withAuthorization(...)
-
-// Supply header values
-query.request(ENDPOINT).withHeader(...)
-
-// Set a timeout
-query.request(ENDPOINT).withTimeout(...)
-```
 
 ### Scalar Types
 
