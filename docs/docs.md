@@ -1080,8 +1080,8 @@ Alternatively, you can use the `copier()` static method for a richer set of feat
 ```java
 User copy = User.copier(user).withName("Bob").copy();
 ```
-`copier()` is a lot like `builder()` but lets you start with an already built object from which you can make
-modifications.  Also like `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
+`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
+`builder()` it maintains the integrity of the schema's declared mutability -- you can't change
 `readOnly` fields after the `copy()` method constructs the object.
 
 ### Properties Marked `readOnly` or `writeOnly` 
@@ -1482,7 +1482,7 @@ The `enum` abstraction maps directly to a Java enum in the manifold API.
 
 #### `union`
 Since the JVM does not provide a union type the manifold API approximates it as an interface extending the least
-upper bound (LUB) `interface` abstraction of the union component types, or extends nothing of no LUB `interface` exists.
+upper bound (LUB) `interface` abstraction of the union component types, or extends nothing if no LUB `interface` exists.
 Its declared properties consist of the intersection of all the properties of the union component types.  As such a
 property outside the intersection must be accessed by casting a union to a union component type declaring the
 property.  Note a GraphQL query can provide a discriminator in terms of the `__typename` property to facilitate
@@ -1495,7 +1495,7 @@ _Scalar Types_ below.
 #### `query`
 Similar to the `type` abstraction, the manifold API exposes a `query` as a structural interface. Non-null query
 parameters translate to parameters in the `create` and `builder` methods, and the nullable parameters are _getter_/_setter_
-methods and _with_ in the builder.  Additionally the _structural_ interfaces allow the query implementation to be free
+methods and _with_ methods in the builder.  Additionally the _structural_ interfaces allow the query implementation to be free
 of POJOs, marshalling, and other mapping code present in conventional API tooling.  As such a query structural interface
 *directly* overlays a raw GraphQL query response; there is absolutely *zero* processing of query results after a query
 HTTP request.  The only processing involved happens when a scalar value must be coerced to a type-safe value; this
@@ -1519,7 +1519,7 @@ Java.  For example, the `MovieQuery` type is an interface and provides type-safe
 * **build** a `MovieQuery`
 * **modify** properties of a `MovieQuery`  
 * **load** a `MovieQuery` from a string, a file, or a URL using HTTP GET
-* **request** Make HTTP GET and POST requests to execute queries & mutations
+* **request** via HTTP GET and POST to execute a `MovieQuery`
 * **write** a `MovieQuery` as formatted JSON, YAML, or XML
 * **copy** a `MovieQuery`
 * **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
@@ -1543,14 +1543,14 @@ import static com.example.Movies.Genre.Action;
 ...
 MovieQuery query = MovieQuery.create(Action);
 query.setTitle("Le Mans");
-query.setReleaseDate(LocalDate.of(1972, 6, 7));
+query.setReleaseDate(LocalDate.of(1971, 6, 3));
 ```
 
 Alternatively, you can use `builder()` to fluently build a new instance:
 ```java
 MovieQuery query = MovieQuery.builder(Action)
   .withTitle("Le Mans")
-  .withReleaseDate(LocalDate.of(1972, 6, 7))
+  .withReleaseDate(LocalDate.of(1971, 6, 3))
   .build();
 ```
 
@@ -1584,7 +1584,7 @@ The following example produces a JSON formatted string:
 ```java
 MovieQuery query = MovieQuery.builder(Action)
   .withTitle("Le Mans")
-  .withReleaseDate(LocalDate.of(1972, 6, 7))
+  .withReleaseDate(LocalDate.of(1972, 6, 3))
   .build();
 
 String json = query.write().toJson();
@@ -1610,8 +1610,7 @@ Alternatively, you can use the `copier()` static method for a richer set of feat
 ```java
 MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
 ```
-`copier()` is a lot like `builder()` but lets you start with an already built object from which you can make
-modifications.
+`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.
 
 
 ### Execute Queries
