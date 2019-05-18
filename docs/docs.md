@@ -1519,7 +1519,7 @@ Java.  For example, the `MovieQuery` type is an interface and provides type-safe
 * **build** a `MovieQuery`
 * **modify** properties of a `MovieQuery`  
 * **load** a `MovieQuery` from a string, a file, or a URL using HTTP GET
-* **request** Web service operations using HTTP GET and POST
+* **request** Make HTTP GET and POST requests to execute queries & mutations
 * **write** a `MovieQuery` as formatted JSON, YAML, or XML
 * **copy** a `MovieQuery`
 * **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
@@ -1643,6 +1643,22 @@ out.println(
   "Stars: " + createdReview.getStars() + "\n" +
   "Comment: " + createdReview.getComment() + "\n"
 );
+```
+
+### HTTP Request Configuration
+
+You can configure the HTTP request to your needs.  For instance, you can use a variety of authorization options, set
+header values, specify a timeout, etc.
+
+```java
+// Specify an authorization token
+query.request(ENDPOINT).withAuthorization(...)
+
+// Supply header values
+query.request(ENDPOINT).withHeader(...)
+
+// Set a timeout
+query.request(ENDPOINT).withTimeout(...)
 ```
 
 ### Scalar Types
