@@ -1455,6 +1455,7 @@ GraphQL provides several useful type abstractions these include:
 * `query`
 * `mutation`
 * `subscription`
+* `extend`
 
 The GraphQL manifold supports all type abstractions except the subscription type, which will be supported in a later
 release.
@@ -1505,6 +1506,10 @@ The manifold API treatment of mutations is identical to queries. See `query` abo
  
 #### `subscription`
 _not implemented_
+
+#### `extend`
+You can add properties, interfaces, and annotations to existing types using the `extend` construct.  The manifold API
+fully supports all type extensions.
 
 ### Fluent API
 
