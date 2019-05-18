@@ -1340,7 +1340,7 @@ Use the GraphQL Manifold for productive _Schema-First_ [GraphQL](https://graphql
 **Type-safely** build and execute queries and mutations without introducing a code generation step in your build
 process. Access GraphQL types defined in standard `.graphql` schemas directly in your Java code. Build queries 
 using native `.graphql` query files and immediately access changes as you make them from Java code -- without 
-recompiling!  Your code is always in sync with GraphQL definitions.  This is true _Schema-First_ development!
+recompiling!  Your code is always in sync with GraphQL definitions.
 
 > Clone the [sample GraphQL application](https://github.com/manifold-systems/manifold-sample-graphql-app) to quickly
 begin experimenting with GraphQL using Manifold.
@@ -1518,8 +1518,8 @@ Java.  For example, the `MovieQuery` type is an interface and provides type-safe
 * **create** a `MovieQuery`
 * **build** a `MovieQuery`
 * **modify** properties of a `MovieQuery`  
-* **load** a `MovieQuery` from a string, a file, or a URL using HTTP GET
-* **request** via HTTP GET and POST to execute a `MovieQuery`
+* **load** a `MovieQuery` from a string, a file, or a URL
+* **execute** a `MovieQuery` with *type-safe* response 
 * **write** a `MovieQuery` as formatted JSON, YAML, or XML
 * **copy** a `MovieQuery`
 * **cast** to `MovieQuery` from any structurally compatible type including `Map`s, all *without proxies*
@@ -1615,7 +1615,7 @@ MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
 
 ### Execute Queries
 ```java
-private static String ENDPOINT = "http://example/graphql";
+private static String ENDPOINT = "http://com.example/graphql";
 ...
 var query = MovieQuery.builder(Action).build();
 var result = query.request(ENDPOINT).post();
