@@ -1348,7 +1348,7 @@ begin experimenting with GraphQL using Manifold.
 ### GraphQL Files
 
 The GraphQL Manifold enables your Java code to directly access types and queries defined in native GraphQL schema files.
-Drop a schema file into your project and start using and build queries in your code, no code generators to engage, no
+Drop a schema file into your project and start using and building queries in your code, no code generators to engage, no
 recompiling between schema changes. Supports all standard file extensions including `.graphql`, `.graphqls`, and `.gql`.    
 
 When you add a GraphQL file to your project it becomes a Java *resource*.  A resource, like a class, is rooted in a resource or
@@ -1529,6 +1529,22 @@ out.println(
 );
 ```
 
+### HTTP Request Configuration
+
+You can configure the HTTP request to your needs.  For instance, you can use a variety of authorization options, set
+header values, specify a timeout, etc.
+
+```java
+// Specify an authorization token
+query.request(ENDPOINT).withAuthorization(...)
+
+// Supply header values
+query.request(ENDPOINT).withHeader(...)
+
+// Set a timeout
+query.request(ENDPOINT).withTimeout(...)
+```
+
 ### Loading a GraphQL Object
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
 a variety of existing sources using `load()`.
@@ -1584,22 +1600,6 @@ MovieQuery copy = MovieQuery.copier(query).withGenre(Drama).copy();
 ```
 `copier()` is a lot like `builder()` but lets you start with an already built object you can modify.
 
-
-### HTTP Request Configuration
-
-You can configure the HTTP request to your needs.  For instance, you can use a variety of authorization options, set
-header values, specify a timeout, etc.
-
-```java
-// Specify an authorization token
-query.request(ENDPOINT).withAuthorization(...)
-
-// Supply header values
-query.request(ENDPOINT).withHeader(...)
-
-// Set a timeout
-query.request(ENDPOINT).withTimeout(...)
-```
 
 ### Types
 
