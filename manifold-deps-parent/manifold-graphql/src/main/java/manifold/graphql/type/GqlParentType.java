@@ -245,6 +245,9 @@ class GqlParentType
     addBuilderMethod( srcClass, operation );
     addRequestMethod( srcClass, operation );
     addLoadMethod( srcClass );
+    addCopier( srcClass, operation );
+    addCopierMethod( srcClass );
+    addCopyMethod( srcClass );
 
     for( VariableDefinition varDef: operation.getVariableDefinitions() )
     {
@@ -428,6 +431,46 @@ class GqlParentType
     }
   }
 
+  private void addCopier( SrcLinkedClass enclosingType, Definition definition )
+  {
+    String fqn = enclosingType.getName() + ".Copier";
+    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Class )
+      .addField( new SrcField( "_result", enclosingType.getSimpleName() )
+        .modifiers( Modifier.PRIVATE | Modifier.FINAL ) )
+      .addConstructor( new SrcConstructor()
+        .modifiers( Modifier.PRIVATE )
+        .addParam( "from", enclosingType.getSimpleName() )
+        .body( "_result = from.copy();" ) )
+      .addMethod( new SrcMethod()
+        .modifiers( Modifier.PUBLIC )
+        .name( "copy" )
+        .returns( enclosingType.getSimpleName() )
+        .body( "return _result;" ) );
+    addWithMethods( srcClass, definition );
+    enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addCopierMethod( SrcLinkedClass enclosingType )
+  {
+    SrcMethod method = new SrcMethod( enclosingType )
+      .modifiers( Modifier.STATIC)
+      .name( "copier" )
+      .returns( new SrcType( "Copier" ) )
+      .addParam( "from", enclosingType.getSimpleName() )
+      .body( "return new Copier(from);" );
+    enclosingType.addMethod( method );
+  }
+
+  private void addCopyMethod( SrcLinkedClass enclosingType )
+  {
+    SrcMethod method = new SrcMethod( enclosingType )
+      .modifiers( Flags.DEFAULT )
+      .name( "copy" )
+      .returns( new SrcType( enclosingType.getSimpleName() ) )
+      .body( "return (${enclosingType.getSimpleName()})getBindings().deepCopy();" );
+    enclosingType.addMethod( method );
+  }
+
   private List<? extends NamedNode> getDefinitions( Definition def )
   {
     if( def instanceof OperationDefinition )
@@ -462,7 +505,7 @@ class GqlParentType
     throw new IllegalStateException();
   }
 
-  private void addWithMethod( SrcLinkedClass srcClass, NamedNode node, String propName, SrcType type )
+  private void addWithMethod( SrcLinkedClass srcClass, NamedNode node, @SuppressWarnings("unused") String propName, SrcType type )
   {
     //noinspection unused
     String actualName = ensure$included( node );
@@ -473,7 +516,7 @@ class GqlParentType
       .modifiers( Flags.PUBLIC )
       .name( "with$propName" )
       .addParam( "${'$'}value", type )
-      .returns( new SrcType( "Builder" ) )
+      .returns( new SrcType( srcClass.getSimpleName() ) )
       .body( new SrcStatementBlock()
         .addStatement( "_result.getBindings().put(\"${remove$(actualName)}\", " + RuntimeMethods.class.getSimpleName() + ".coerceToBindingValue(${'$'}value));" )
         .addStatement( "return this;" ) );
@@ -604,6 +647,10 @@ class GqlParentType
     addCreateMethod( srcClass, type );
     addBuilderMethod( srcClass, type );
     addLoadMethod( srcClass );
+    addCopier( srcClass, type );
+    addCopierMethod( srcClass );
+    addCopyMethod( srcClass );
+
     List<FieldDefinition> fieldDefinitions = type.getFieldDefinitions();
     for( FieldDefinition member: fieldDefinitions )
     {
