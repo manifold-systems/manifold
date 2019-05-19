@@ -245,6 +245,12 @@ to your project separately depending on your needs.
     - java.io.Reader
     - java.io.Writer
 
+*   **JDBC**
+
+    Defined in module `manifold-jdbc` this library extends:
+    - java.sql.ResultSet
+    - java.sql.CallableStatement
+
 *   **Web/Json**
  
     Defined in module `manifold-json` this library extends:

@@ -349,7 +349,8 @@ I/O extensions
 Text extensions
 * [manifold-templates](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-templates&v=RELEASE):
 Integrated template support
-
+* [manifold-jdbc](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-jdbc&v=RELEASE):
+JDBC extensions
 
 ## Maven
 To setup a Maven project with Manifold you must:
@@ -456,6 +457,13 @@ recommended setup.
     <artifactId>manifold-text</artifactId>
     <version>RELEASE</version>
   </dependency>    
+  
+  <!--JDBC extensions-->
+  <dependency>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-jdbc</artifactId>
+    <version>RELEASE</version>
+  </dependency>
 ```
 
 **Configure the maven-compiler-plugin**
@@ -2557,6 +2565,12 @@ to your project separately depending on its needs.
     - java.io.OutputStream
     - java.io.Reader
     - java.io.Writer
+
+*   **JDBC**
+
+    Defined in module `manifold-jdbc` this library extends:
+    - java.sql.ResultSet
+    - java.sql.CallableStatement
 
 *   **Web/JSON/YAML**
  

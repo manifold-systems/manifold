@@ -33,6 +33,8 @@
     <module>manifold-io-test</module>
     <module>manifold-image</module>
     <module>manifold-image-test</module>
+    <module>manifold-jdbc</module>
+    <module>manifold-jdbc-test</module>
     <module>manifold-js</module>
     <module>manifold-js-test</module>
     <module>manifold-json</module>

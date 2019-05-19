@@ -49,6 +49,11 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-jdbc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-js</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -64,17 +69,17 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-yaml</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
       <artifactId>manifold-templates</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-text</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-yaml</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

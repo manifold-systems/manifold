@@ -8,21 +8,22 @@
     <version>0.69-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-graphql</artifactId>
+  <artifactId>manifold-jdbc</artifactId>
 
-  <name>Manifold :: GraphQL</name>
+  <name>Manifold :: JDBC</name>
 
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-json</artifactId>
+      <artifactId>manifold</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.graphql-java</groupId>
-      <artifactId>graphql-java</artifactId>
-      <version>12.0</version>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>org.jetbrains</groupId>
       <artifactId>annotations</artifactId>
@@ -45,6 +46,5 @@
       </plugin>
     </plugins>
   </build>
-
 
 </project>
