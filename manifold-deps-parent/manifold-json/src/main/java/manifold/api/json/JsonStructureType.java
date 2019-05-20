@@ -40,6 +40,7 @@ import manifold.internal.javac.IIssue;
 import manifold.util.JsonUtil;
 import manifold.util.ManEscapeUtil;
 import manifold.util.Pair;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * The main JSON type reflecting name/value pair bindings.
@@ -1137,8 +1138,18 @@ public class JsonStructureType extends JsonSchemaType
         String paramTypeName = getPropertyType( paramType, false, true );
         //noinspection unused
         String paramName = makeIdentifier( param, false );
+        maybeAddNotNull( sb, paramType );
         sb.append( "$paramTypeName $paramName" );
       }
+    }
+  }
+
+  private void maybeAddNotNull( StringBuilder sb, IJsonType paramType )
+  {
+    if( paramType.getTypeAttributes().getNullable() != Boolean.TRUE &&
+        (!(paramType instanceof JsonBasicType) || !((JsonBasicType)paramType).isPrimitive()) )
+    {
+      sb.append( '@' ).append( NotNull.class.getSimpleName() ).append( ' ' );
     }
   }
 

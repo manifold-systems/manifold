@@ -34,6 +34,7 @@ import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.util.JsonUtil;
 import manifold.util.ManClassUtil;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * A base class for a Type Manifold modeled with a {@link JsonModel} e.g., parses its resource to a {@link Bindings}.
@@ -112,6 +113,7 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( IJsonBindingsBacked.class.getName() ).append( ";\n" )
       .append( "import " ).append( IJsonList.class.getName() ).append( ";\n" )
       .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
+      .append( "import " ).append( NotNull.class.getName() ).append( ";\n" )
       .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
       .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );
