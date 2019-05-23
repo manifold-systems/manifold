@@ -69,19 +69,38 @@ public class FqnCacheNode<K>
     }
   }
 
-  public FqnCacheNode<K> getOrCreateChild( String segment )
+  public FqnCacheNode<K> getOrCreateChild( String child )
+  {
+    return getOrCreateChild( child, null, false );
+  }
+  public FqnCacheNode<K> getOrCreateChild( String child, K userData )
+  {
+    return getOrCreateChild( child, userData, true );
+  }
+  private FqnCacheNode<K> getOrCreateChild( String child, K userData, boolean setUserData )
   {
     if( _children == null )
     {
       _children = new ConcurrentHashMap<>( 2 );
     }
-    FqnCacheNode<K> node = _children.get( segment );
+    FqnCacheNode<K> node = _children.get( child );
     if( node == null )
     {
-      node = new FqnCacheNode<>( segment, this );
-      _children.put( segment, node );
+      node = new FqnCacheNode<>( child, this );
+      if( setUserData )
+      {
+        // adding a child and setting userData must be an atomic operation,
+        // therefore userdata is assigned before child is added
+        node.setUserData( userData );
+      }
+      _children.put( child, node );
       invalidate();
     }
+    else if( setUserData )
+    {
+      node.setUserData( userData );
+    }
+
     return node;
   }
 
@@ -115,17 +134,7 @@ public class FqnCacheNode<K>
 
   public final void setUserData( K userData )
   {
-    K prev = _userData;
     _userData = userData;
-    updateReverseMap( this, prev );
-  }
-
-  protected void updateReverseMap( FqnCacheNode<K> node, K prev )
-  {
-    if( _parent != null )
-    {
-      _parent.updateReverseMap( node, prev );
-    }
   }
 
   public final boolean isEmpty()

@@ -91,11 +91,19 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
   public void add( String fqn, T userData )
   {
     FqnCacheNode<T> n = this;
-    for( String part : getParts( fqn, _validator ) )
+    String[] parts = getParts( fqn, _validator );
+    for( int i = 0; i < parts.length; i++ )
     {
-      n = n.getOrCreateChild( part );
+      String part = parts[i];
+      if( i < parts.length - 1 )
+      {
+        n = n.getOrCreateChild( part );
+      }
+      else
+      {
+        n = n.getOrCreateChild( part, userData );
+      }
     }
-    n.setUserData( userData );
   }
 
   public void addAll( FqnCache<T> from )
