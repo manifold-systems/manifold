@@ -142,7 +142,8 @@ class GqlParentType
 
   boolean hasChild( String childName )
   {
-    return _registry.getType( childName ).isPresent();
+    return _registry.getType( childName ).isPresent() ||
+           _operations.containsKey( childName );
   }
 
   void render( StringBuilder sb )
