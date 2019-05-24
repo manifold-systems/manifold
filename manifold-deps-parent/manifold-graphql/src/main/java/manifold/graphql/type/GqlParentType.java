@@ -159,14 +159,7 @@ class GqlParentType
 
   private void addInnerTypes( SrcLinkedClass srcClass )
   {
-    _registry.types().values().stream()
-      .filter( e -> e instanceof UnionTypeDefinition )
-      .map( e -> (UnionTypeDefinition)e )
-      .forEach( e -> e.getMemberTypes().stream()
-        .map( m -> findTypeDefinition( m ) )
-        .forEach( typeDef ->
-          _typeToUnions.computeIfAbsent( typeDef, t -> new HashSet<>() )
-            .add( e ) ) );
+    mapUnionMemberToUnions();
 
     for( TypeDefinition type: _registry.types().values() )
     {
@@ -191,6 +184,38 @@ class GqlParentType
         addInnerUnionType( (UnionTypeDefinition)type, srcClass );
       }
     }
+  }
+
+  // Map of union type member to union types, facilitates nominal typing (for performance) e.g.,
+  //
+  //     union PointyShape = Triangle | Diamond
+  //
+  //     interface PointyShape { /* intersection methods of Triangle and Diamond */ }
+  //
+  // Since we model a union as an interface consisting of the intersection of methods of its member types, by
+  // definition the member types logically implement the union, therefore the member type explicitly declares that it
+  // implements all unions of which it is a member:
+  //
+  //     interface Triangle extends PointyShape { ... }
+  //
+  // Thus we can nominally address a Triangle as a PointyShape:
+  //
+  //     PointyShape pointy = triangle;
+  //
+  // Note because we model graphql types as *structural* interfaces the nominal typing added here is unnecessary --
+  // because PointyShape is structural we could cast triangle. However, from a performance standpoint it is worthwhile
+  // because it saves us the initial cost of dynamic proxy generation, which otherwise adds considerable lag on first
+  // use.
+  private void mapUnionMemberToUnions()
+  {
+    _registry.types().values().stream()
+      .filter( typeDef -> typeDef instanceof UnionTypeDefinition )
+      .map( typeDef -> (UnionTypeDefinition)typeDef )
+      .forEach( unionTypeDef -> unionTypeDef.getMemberTypes().stream()
+        .map( memberType -> findTypeDefinition( memberType ) )
+        .forEach( memberTypeDef ->
+          _typeToUnions.computeIfAbsent( memberTypeDef, t -> new HashSet<>() )
+            .add( unionTypeDef ) ) );
   }
 
   private void addInnerOperations( SrcLinkedClass srcClass )
