@@ -879,6 +879,13 @@ We are working on support for more data sources including:
 
 
 ## JSON and JSON Schema
+
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/json.mp4">
+  </video>
+</p>
+
 The JSON type manifold provides comprehensive support for JSON resource files (extension `.json`).  You can define a 
 JSON API with JSON resources consisting of either sample JSON or [JSON Schema](https://json-schema.org/) version 4 or 
 later. Your JSON resource files serve as the **single source of truth** regarding JSON APIs.  You use JSON-expressed
@@ -1335,6 +1342,12 @@ Manifold lets you use YAML and JSON interchangeably, as such please refer to the
 type manifold reference above.  All that applies to JSON applies to YAML.
 
 ## GraphQL
+
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/graphql.mp4">
+  </video>
+</p>
 
 Use the GraphQL Manifold for productive _Schema-First_ [GraphQL](https://graphql.org/) development in any Java project.
 **Type-safely** build and execute queries and mutations without introducing a code generation step in your build
