@@ -13,9 +13,9 @@ layout: default
   </video>
 </p>
 <br>
-Clone the the [GraphQL sample application](https://github.com/manifold-systems/manifold-sample-graphql-app) to
-experiment with type-safe GraphQL. Don't forget to add the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold),
-and while you're at it add the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql), it pairs
+Clone the [GraphQL sample application](https://github.com/manifold-systems/manifold-sample-graphql-app) to experiment 
+with type-safe GraphQL. Don't forget to add the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold),
+and while you're at it add the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) too; it pairs
 extremely well with the Manifold plugin when developing with GraphQL.
 <br/><br/> 
 
