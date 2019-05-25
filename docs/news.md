@@ -5,6 +5,16 @@ layout: default
 # News
 <br/><br/>
 
+## A screencast showcasing Manifold's new GraphQL support (24 May 2019):
+
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/graphql.mp4">
+  </video>
+</p>
+<br/><br/> 
+
+
 ## Manifold 0.71-alpha released (22 May 2019)
 
 Bug fixes and improvements 
