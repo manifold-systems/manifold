@@ -5,6 +5,20 @@ layout: default
 # News
 <br/><br/>
 
+## Manifold 0.71-alpha released (22 May 2019)
+
+Bug fixes and improvements 
+* [#90](https://github.com/manifold-systems/manifold/issues/90): improve identifier encoding, fix JSON create/build parameter coercion
+* Fix JPS compiler plugin bug involving projects without manifold dependencies
+* Add Copier/Copy API support for GraphQL types and operations
+* Fix race condition in IJ plugin involving internal caching
+* Several minor GraphQL related fixes
+
+Manifold version 0.71-alpha is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/0.71-alpha/jar).
+<br/><br/>
+
+
+
 ## Manifold 0.68-alpha released (16 May 2019)
 
 Bug fixes and improvements 
