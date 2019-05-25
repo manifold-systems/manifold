@@ -808,7 +808,7 @@ This disconnect is notorious for causing a host of problems, which include:
 * generated code is often cached and shared, which leads to stale cache issues
 * customers often need to change metadata, which requires access to code generators
 
-In stark contrast to code generators, the _Type Manifold API_ plugs directly into the Java compiler so that to produce
+In stark contrast to code generators, the _Type Manifold API_ plugs directly into the Java compiler to produce
 types on demand. As such your code can reference a structured data source directly and type-safely without any code
 generation build step.  In essence the Type Manifold API reinvents code generation:
 * Structured data sources are virtual Java types!
