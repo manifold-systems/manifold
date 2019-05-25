@@ -195,7 +195,9 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
   public Iterable<JavaFileObject> list( Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse ) throws IOException
   {
-    Iterable<JavaFileObject> list = super.list( location, packageName, kinds, recurse );
+    Iterable<JavaFileObject> list = super.list( location, packageName,
+      new HashSet<>( kinds ), // make a copy because this super call likes to remove the SOURCE kind in a multi-module project
+      recurse );
     if( kinds.contains( JavaFileObject.Kind.SOURCE ) && (location == StandardLocation.SOURCE_PATH || location == StandardLocation.CLASS_PATH || location instanceof ManPatchModuleLocation) )
     {
       Set<TypeName> children =((SimpleModule)getHost().getSingleModule()).getChildrenOfNamespace( packageName );

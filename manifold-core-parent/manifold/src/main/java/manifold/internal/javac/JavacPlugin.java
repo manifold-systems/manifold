@@ -114,11 +114,11 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     try
     {
+      NecessaryEvilUtil.bypassJava9Security();
       // ClassFinder is new in Java 9, its presence indicates Java 9 or later
       CLASSFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ClassFinder", false, ClassReader.class.getClassLoader() );
       MODULES_CLASS = Class.forName( "com.sun.tools.javac.comp.Modules", false, ClassReader.class.getClassLoader() );
       MODULEFINDER_CLASS = Class.forName( "com.sun.tools.javac.code.ModuleFinder", false, ClassReader.class.getClassLoader() );
-      NecessaryEvilUtil.disableJava9IllegalAccessWarning();
     }
     catch( Throwable ignore )
     {
@@ -149,7 +149,6 @@ public class JavacPlugin implements Plugin, TaskListener
 
   public JavacPlugin()
   {
-    INSTANCE = this;
   }
 
   @Override
@@ -161,6 +160,8 @@ public class JavacPlugin implements Plugin, TaskListener
   @Override
   public void init( JavacTask task, String... args )
   {
+    INSTANCE = this;
+
     _javacTask = (BasicJavacTask)task;
 
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
@@ -937,7 +938,10 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private void insertBootstrap( JCTree.JCClassDecl tree )
   {
-    TreeTranslator visitor = new BootstrapInserter( this );
+    // we construct BootstrapInserter reflectively because it extends TreeTranslator,
+    // which we have yet to open/export as JavacPlugin is loaded before that time
+    TreeTranslator visitor = (TreeTranslator)ReflectUtil
+      .constructor( "manifold.internal.javac.BootstrapInserter", JavacPlugin.class ).newInstance( this );
     tree.accept( visitor );
   }
 
