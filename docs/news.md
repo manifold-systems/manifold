@@ -5,13 +5,17 @@ layout: default
 # News
 <br/><br/>
 
-## A screencast showcasing Manifold's new GraphQL support (24 May 2019):
-
+## A new screencast showcasing Manifold's new GraphQL support (24 May 2019):
+<br>
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
     <source type="video/mp4" src="/images/graphql.mp4">
   </video>
 </p>
+<br>
+Clone the the [GraphQL sample application](https://github.com/manifold-systems/manifold-sample-graphql-app) to
+experiment with type-safe GraphQL. Don't forget to add the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql),
+it pairs extremely well with the Manifold plugin when developing with GraphQL.
 <br/><br/> 
 
 
