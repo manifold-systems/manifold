@@ -264,9 +264,8 @@ dynamic mode.  In general, your code will work regardless of the mode you're usi
 figure out what needs to be done. 
 
 * Dynamic mode requires `tools.jar` at runtime for **Java 8**.  Note tools.jar may still be required with 
-static mode, depending on the Manifold features you use.  For example, [structural interfaces](#structural-interfaces)
-requires tools.jar, regardless of mode.  The JSON & YAML manifolds model both sample files and files conforming to
-[JSON Schema](http://json-schema.org/) as structural interfaces.
+static mode, depending on the Manifold features you use.  For example, if you use [structural interfaces](#structural-interfaces)
+your project may require tools.jar, regardless of mode.
 
 * Static mode is generally faster at runtime since it pre-compiles all the type manifold resources along with Java 
 sources when you build your project
@@ -734,7 +733,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only)
@@ -768,11 +767,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-all to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.55-alpha'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
 }
 
 tasks.withType(JavaCompile) {
@@ -790,20 +789,17 @@ rootProject.name = 'MySampleProject'
 Structured information is _everywhere_ and it is produced by near _everything_ with a power cord. 
 As a consequence the software industry has become much less code-centric and much more information-centric. Despite 
 this transformation the means by which our software consumes structured information has remained unchanged for decades.
-Whether it's JSON, YAML, XML, CSV, DDL, SQL, Javascript, or any one of a multitude of other metadata sources, most modern 
+Whether it's GraphQL, JSON, SQL, Javascript, or any one of a multitude of other structured data sources, most modern 
 languages, including Java, do very little to connect them with your code.
 
-Developers are conditioned to reach for code generators and static libraries as a means to bridge the gap. 
-Collectively these are referred to as _type-bridging_ tools because they provide types and methods to
-bridge or map Java code to structured information.  But because type-bridging is not an integral part of the
-Java compiler or JVM, code generators necessarily implement a **_push_** architecture -- the compiler can't ask for
-a class to be generated, instead the generator processes its full domain of types ahead of time and writes them to disk 
-so that the compiler can use them in a later build step.  This disconnect is the source of a host of problems:
+Developers typically use _type-bridging_ tools such as code generators as a means to bridge this gap. But because
+a type-bridging tool is not an integral part of the Java compiler or JVM, it must run in a separate build step. A code
+generator, for example, must compile its *full domain* of types separately in advance of the normal build sequence.
+This disconnect is notorious for causing a host of problems, which include:
 * stale generated classes
+* no support for *incremental* compilation, all or nothing
 * long build times
-* the domain graph of metadata is too large to generate, code bloat
-* changes to structured data don't invalidate generated code
-* no support for incremental compilation, all or nothing
+* code bloat
 * can't navigate from code reference to corresponding element in the structured data
 * can't find code usages of elements from the structured data  
 * can't refactor / rename structured data elements 
@@ -812,14 +808,13 @@ so that the compiler can use them in a later build step.  This disconnect is the
 * generated code is often cached and shared, which leads to stale cache issues
 * customers often need to change metadata, which requires access to code generators
 
-In stark contrast to code generators, the _Type Manifold API_ naturally promotes a **_pull_** architecture.  The API plugs into the Java compiler so that 
-a type manifold implementing the API resolves and produces types only as needed. In other words the compiler **_drives_** a type manifold by 
-asking it to resolve types as the compiler encounters them.  As such your code can reference structured data sources 
-directly as Java types as defined by the type manifolds your project uses.  In essence the Type Manifold API reinvents code generation:
+In stark contrast to code generators, the _Type Manifold API_ plugs directly into the Java compiler so that to produce
+types on demand. As such your code can reference a structured data source directly and type-safely without any code
+generation build step.  In essence the Type Manifold API reinvents code generation:
 * Structured data sources are virtual Java types!
 * Your build process is now free of code generation management
 * Using a type manifold is simply a matter of adding a Jar file to your project
-* You can perform incremental compilation based on changes to structured data
+* You can perform *incremental* compilation based on changes to structured data
 * You can add/remove/modify a structured data source in your project and immediately use and see the change in your code
 * You can compile projected classes to disk as normal class files or use them dynamically at runtime
 * There are no custom class loaders involved and no thread context loaders to manage
@@ -828,14 +823,17 @@ directly as Java types as defined by the type manifolds your project uses.  In e
 * You can rename / refactor elements in structured data sources
 
 Further, the Type Manifold API unifies code generation architecture by providing much needed structure and consistency 
-for developers writing code generators. It puts an end to "lone wolf" code gen projects only one developer fully understands.
-Moreover, you don't have to invest in one-off IDE integration projects; the Manifold plugin for IntelliJ handles everything 
-for you, from incremental compilation to usage searching to refactoring.  Finally, even if you've already invested in an 
-existing code generator, you can still recycle it as a wrapped type manifold -- the wrapper can delegate 
-source production to your existing framework.
+for developers *writing* code gen tooling. It puts an end to "lone wolf" code gen projects only one developer fully understands.
+Moreover, you don't have to invest in one-off IDE integration projects; the Manifold plugin for IntelliJ handles *everything* 
+for you.  All types and extensions provided by the Type Manifold API are fully managed in IntelliJ, including incremental
+compilation, usage searching, and refactoring.  As a consequence IntelliJ integration is free when you use Manifold in your
+architecture.
 
-To illustrate, consider this simple example. Normally you access Java properties
-resources like this:
+>Note if you've already invested in a conventional code generator, you can still recycle it as a *wrapped* type
+manifold -- the wrapper can delegate source production to your existing framework.
+
+
+To illustrate, consider this simple example. Normally you access Java properties resources like this:
 
 ```java
 Properties myProperties = new Properties();
@@ -864,17 +862,18 @@ schemas, queries, database definitions, data services, templates, spreadsheets, 
  
 Currently Manifold provides reference implementations for a few commonly used data sources:
 
-*   JSON and JSON Schema
+*   JSON
+*   JSON Schema
 *   YAML
 *   GraphQL
+*   JavaScript
 *   Properties files
 *   Image files
 *   Dark Java
 *   Template files
 
 We are working on support for more data sources including:
-*   CSV
-*   JavaScript
+*   R Language
 *   Standard SQL and DDL
 
 
@@ -2047,7 +2046,7 @@ public class MyClass
 }
 ```
 
-Finally, you can use the `$` literally and bypass string templates using standard Java character escape syntax (since ver 0.14-alpha):
+Finally, you can use the `$` literally and bypass string templates using standard Java character escape syntax:
 ```java
 String verbatim = "It is \$hour o'clock"; // prints "It is $hour o'clock"
 ```
@@ -2855,6 +2854,22 @@ com.abc.Point_To_Coordinate
 
 ```
 
+### Using `factoryClass`
+If you are the declarer of the structural interface, you can skip the Java service and specify a proxy factory
+directly in the `@Structural` call site:
+
+```java
+@Structural(factoryClass = Point_To_Coordinate.class)
+public interface Coordinate {
+  ...
+}
+```
+
+Manifold inspects the `facotryClass` to see whether or not it is appropriate for a given proxy.  For instance, from
+the super class declaration `IProxyFactory<Point, Coordinate>` Manifold determines `Point_To_Coordinate` is exclusively
+a proxy factory for `Point`, other classes go through the default dynamic proxy generation/compilation.  
+ 
+ 
 ## Dynamic Typing with `ICallHandler`
 
 Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
