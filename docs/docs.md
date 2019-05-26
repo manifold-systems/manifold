@@ -2605,11 +2605,7 @@ to your project separately depending on its needs.
 >```groovy
 >jar {
 >  manifest {
->    attributes(
->      'Implementation-Title':project.name,
->      'Implementation-Version':project.version,
->      'Main-Class':mainClassName,
->      'Contains-Sources':'java,class')
+>    attributes('Contains-Sources':'java,class')
 >  }
 >}
 >```
