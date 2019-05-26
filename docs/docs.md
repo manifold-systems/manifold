@@ -2576,11 +2576,13 @@ to your project separately depending on its needs.
     - java.net.URL
     - javax.script.Bindings
 
->**!IMPORTANT!** You can create your own custom extension libraries.  There's nothing special about a "library", it's just a normal
-dependency in a project.  However for manifold to recognize extensions, as a performance measure, the library must
-declare it has extensions to process. Do that using the `Contains-Sources` manifest entry.
+> 
+> &#x1f6c8; **IMPORTANT!**  
+> You can create your own custom extension libraries.  There's nothing special about a "library", it's just a normal
+> dependency in a project.  However for manifold to recognize extensions, as a performance measure, the library must
+> declare it has extensions to process. Do that using the `Contains-Sources` manifest entry.
 >
->In a maven build use the `maven-jar-plugin` to add the `Contains-Sources` manifest entry to your Jar file:
+> With **Maven** use the `maven-jar-plugin` to add the `Contains-Sources` manifest entry to your Jar file:
 >```xml
 ><build>
 >  <plugins>
@@ -2598,6 +2600,18 @@ declare it has extensions to process. Do that using the `Contains-Sources` manif
 >    </plugin>
 >  </plugins>
 ></build>
+>```
+> Similarly with **Gradle** add the `Contains-Sources` manifest attribute:
+>```groovy
+>jar {
+>  manifest {
+>    attributes(
+>      'Implementation-Title':project.name,
+>      'Implementation-Version':project.version,
+>      'Main-Class':mainClassName,
+>      'Contains-Sources':'java,class')
+>  }
+>}
 >```
 
 ## Generating Extension Classes
