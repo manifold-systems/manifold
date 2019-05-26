@@ -2577,7 +2577,7 @@ to your project separately depending on its needs.
     - javax.script.Bindings
 
 > 
-> &#x1f6c8; **IMPORTANT!**  
+> **&#x1f6c8;** **IMPORTANT!**  
 > You can create your own custom extension libraries.  There's nothing special about a "library", it's just a normal
 > dependency in a project.  However for manifold to recognize extensions, as a performance measure, the library must
 > declare it has extensions to process. Do that using the `Contains-Sources` manifest entry.
