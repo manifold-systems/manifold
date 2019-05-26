@@ -2576,6 +2576,30 @@ to your project separately depending on its needs.
     - java.net.URL
     - javax.script.Bindings
 
+>**!IMPORTANT!** You can create your own custom extension libraries.  There's nothing special about a "library", it's just a normal
+dependency in a project.  However for manifold to recognize extensions, as a performance measure, the library must
+declare it has extensions to process. Do that using the `Contains-Sources` manifest entry.
+>
+>In a maven build use the `maven-jar-plugin` to add the `Contains-Sources` manifest entry to your Jar file:
+>```xml
+><build>
+>  <plugins>
+>    <plugin>
+>      <groupId>org.apache.maven.plugins</groupId>
+>      <artifactId>maven-jar-plugin</artifactId>
+>      <configuration>
+>        <archive>
+>          <manifestEntries>
+>            <!--class files as source must be available for extension method classes-->
+>            <Contains-Sources>java,class</Contains-Sources>
+>          </manifestEntries>
+>        </archive>
+>      </configuration>
+>    </plugin>
+>  </plugins>
+></build>
+>```
+
 ## Generating Extension Classes
 
 Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
