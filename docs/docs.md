@@ -288,31 +288,17 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 <p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 
-**New Project**
-
-Creating a new project with Manifold support is easy:
-
-<p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="/images/NewProject.mp4">
-  </video>
-</p>
-
-
-**Add Manifold to Existing Module**
-
-Adding manifold to module[s] of an existing project is easy:
-
-<p><img src="/images/ManifoldModule.png" alt="echo method" width="60%" height="60%"/></p>
-
-
 **Sample Project**
 
 Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
 
 ```File | New | Project from Version Control | Git```
 
+<kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
+
 <p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+
+Enter: `https://github.com/manifold-systems/manifold-sample-project.git`
 
 <p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
@@ -355,7 +341,7 @@ To setup a Maven project with Manifold you must:
 * specify the Manifold dependencies you need
 * configure the `maven-compiler-plugin`
 
-**Dependencies**
+### Dependencies
 
 Use the `manifold-all` dependency as a simple way to use all of Manifold's basic features.  This is the 
 recommended setup.
@@ -457,106 +443,15 @@ recommended setup.
   </dependency>    
 ```
 
-**Configure the maven-compiler-plugin**
+## Configure the maven-compiler-plugin
 
 You setup the `maven-compiler-plugin` according to the version of Java your project uses.
 Use one of the following configurations depending on whether you use:
-* Java 9 or later with modules
-* Java 9 or later without modules
 * Java 8
+* Java 9+ with *unnamed* module
+* Java 9+ with named module[s] (defines module-info.java files)
 
-`Java 9 or later` using *modules* mode -- project defines at least one `module-info.java` file
-```xml
-  <build>
-    <plugins>
-      <!--
-        *** JAVA 9+ MULTI-MODULE MODE ***
-         (project defines module-info.java file)
-        
-        Configure the maven-compiler-plugin to use Manifold.
-        - add the manifold-all module to -add-modules arg
-        - add the -Xplugin:Manifold argument for the javac compiler
-        - add the manifold-all module to javac -processorpath arg
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-  
-        <!-- version 3.8.0+ is necessary to support Java 10+ -->
-        <version>3.8.0</version>
-  
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <compilerArgs>
-  
-            <!--Add the manifold-all module-->
-            <arg>--add-modules</arg>
-            <arg>manifold.all</arg>
-  
-            <!--Add the Manifold plugin, with string templates and checked exception suppression enabled-->
-            <arg>-Xplugin:Manifold strings exceptions</arg>
-  
-          </compilerArgs>
-  
-          <!-- Add the processor path for the plugin (required for Java 9+ -->
-          <annotationProcessorPaths>
-            <path>
-              <groupId>systems.manifold</groupId>
-              <artifactId>manifold-all</artifactId>
-              <version>${manifold-version}</version>
-            </path>
-          </annotationProcessorPaths>
-  
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-``` 
-
-`Java 9 or later` using *default* mode -- project does **NOT** defines a `module-info.java` file
-```xml
-  <build>
-    <plugins>  
-      <!--
-       *** JAVA 9+ DEFAULT MODULE MODE***
-        (project does *NOT* define module-info.java file)
-  
-       Configure the maven-compiler-plugin use Manifold.
-       - add the -Xplugin:Manifold argument for the javac compiler
-       - add the manifold-all module to javac -processorpath arg
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-  
-        <!-- version 3.8.0+ is necessary to support Java 10+ -->
-        <version>3.8.0</version>
-  
-        <configuration>
-          <encoding>UTF-8</encoding>
-          <compilerArgs>
-  
-            <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
-            <arg>-Xplugin:Manifold strings exceptions</arg>
-  
-          </compilerArgs>
-  
-          <!-- Add the processor path for the plugin (required for Java 9+ -->
-          <annotationProcessorPaths>
-            <path>
-              <groupId>systems.manifold</groupId>
-              <artifactId>manifold-all</artifactId>
-              <version>${manifold-version}</version>
-            </path>
-          </annotationProcessorPaths>
-  
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-```
-
-`Java 8`
+### Java 8
 ```xml
   <build>
     <plugins>     
@@ -610,7 +505,98 @@ Use one of the following configurations depending on whether you use:
   </profiles>
 ```
 
-***Surefire***
+### Java 9+ with *unnamed* module
+```xml
+  <build>
+    <plugins>  
+      <!--
+       *** JAVA 9+ DEFAULT MODULE MODE***
+        (project does *NOT* define module-info.java file)
+  
+       Configure the maven-compiler-plugin use Manifold.
+       - add the -Xplugin:Manifold argument for the javac compiler
+       - add the manifold-all module to javac -processorpath arg
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+  
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+  
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+  
+            <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
+            <arg>-Xplugin:Manifold strings exceptions</arg>
+  
+          </compilerArgs>
+  
+          <!-- Add the processor path for the plugin (required for Java 9+ -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-all</artifactId>
+              <version>${manifold-version}</version>
+            </path>
+          </annotationProcessorPaths>
+  
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+```
+
+### Java 9+ with named modules (uses module-info.java files)
+```xml
+  <build>
+    <plugins>
+      <!--
+        *** JAVA 9+ MULTI-MODULE MODE ***
+         (project defines module-info.java file)
+        
+        Configure the maven-compiler-plugin to use Manifold.
+        - add the manifold-all module to -add-modules arg
+        - add the -Xplugin:Manifold argument for the javac compiler
+        - add the manifold-all module to javac -processorpath arg
+      -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+  
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+  
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+  
+            <!--Add the manifold-all module-->
+            <arg>--add-modules</arg>
+            <arg>manifold.all</arg>
+  
+            <!--Add the Manifold plugin, with string templates and checked exception suppression enabled-->
+            <arg>-Xplugin:Manifold strings exceptions</arg>
+  
+          </compilerArgs>
+  
+          <!-- Add the processor path for the plugin (required for Java 9+ -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-all</artifactId>
+              <version>${manifold-version}</version>
+            </path>
+          </annotationProcessorPaths>
+  
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+``` 
+
+### Surefire
 
 Here is a simple project layout demonstrating use of the `manifold-all` with Surefire:
 
@@ -682,6 +668,9 @@ dependencies {
   // YAML support
   compile group: 'systems.manifold', name: 'manifold-yaml', version: 'RELEASE'
   
+  // GraphQL support
+  compile group: 'systems.manifold', name: 'manifold-graphql', version: 'RELEASE'
+  
   // JavaScript support (experimental)
   compile group: 'systems.manifold', name: 'manifold-js', version: 'RELEASE'
   
@@ -698,7 +687,7 @@ dependencies {
   compile group: 'systems.manifold', name: 'manifold-text', version: 'RELEASE'
   
   
-  // -- For Java 9 or later ==
+  // -- For Java 9+ ==
   
   // Add manifold-all to -processorpath for javac
   annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: 'RELEASE'
@@ -716,6 +705,7 @@ tasks.withType(JavaCompile) {
 }
 ```
 
+### Java 8
 Here is a sample `build.gradle` file using `manifold-all` with **Java 8**:
 ```gradle
 plugins {
@@ -750,6 +740,7 @@ Use with accompanying `settings.gradle` file:
 rootProject.name = 'MySampleProject'
 ```
 
+### Java 11
 Here is a sample `build.gradle` file using `manifold-all` with **Java 11**:
 ```gradle
 plugins {
