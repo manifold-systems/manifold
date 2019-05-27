@@ -292,13 +292,11 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) f
 
 Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
 
-```File | New | Project from Version Control | Git```
-
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
 <p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-Enter: `https://github.com/manifold-systems/manifold-sample-project.git`
+Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
 
 <p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
