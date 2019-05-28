@@ -27,7 +27,7 @@ begin experimenting with a JSON Schema REST API using Manifold.
 Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to get hooked
 on ManTL templates with the Manifold IntelliJ plugin.
 
-## [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
+## [Meta-programming](http://manifold.systems/docs.html#manifold)
 Gain direct, **type-safe** access to *any* type of data. Remove the code gen step in your build process.
 
 ### Resources

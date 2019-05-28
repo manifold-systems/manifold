@@ -24,7 +24,7 @@ Manifold is easy to use, it's just a JAR file you add to your existing project. 
 
 ## What can you do with Manifold?
 
-### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
+### [Meta-programming](http://manifold.systems/docs.html#manifold)
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as GraphQL, JSON Schema and YAML. Remove the code gen step in your build process.
 ```java
 // Use your User.json schema file directly as a type, no code gen!

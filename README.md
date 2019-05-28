@@ -12,7 +12,7 @@ Typing, and Extension Methods. Simply add the Manifold jar to your project and b
 
 ## What can you do with Manifold?
 
-### [Meta-programming](http://manifold.systems/docs.html#manifold-in-a-nutshell)
+### [Meta-programming](http://manifold.systems/docs.html#manifold)
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
 and **YAML**. Remove the code gen step in your build process.
 ```java
