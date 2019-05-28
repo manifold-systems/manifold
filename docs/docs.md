@@ -33,7 +33,8 @@ enabling a type manifold to transform structured data into a data _type_ directl
 eliminating code generation build steps otherwise required with conventional tools. Additionally the Manifold plugin
 for IntelliJ IDEA provides comprehensive integration for type manifolds. Types are always in sync; changes you make to
 structured data are immediately available in the type system _without a compilation step_.  Code completion, navigation,
-usage searching, refactoring -- all seamlessly integrated.  With type manifolds a data source is a virtual data _type_.
+usage searching, refactoring, incremental compilation, hotswap debugging -- all seamlessly integrated.  With type
+manifolds a data source is a virtual data _type_.
 
 To illustrate, consider this simple properties resource file:
 
