@@ -2,7 +2,7 @@
 layout: docs_layout
 ---
 
-# Manifold
+# Overview
 
 [Manifold](https://manifold.systems/) is a framework to dynamically and _seamlessly_ supplement Java with powerful
 features you can use directly in your applications:
