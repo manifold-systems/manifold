@@ -30,10 +30,10 @@ your project, these include:
 Bridging the worlds of information and programming, a *type manifold* acts as an adapter to automatically connect a
 structured data source to Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler
 enabling a type manifold to transform structured data into a data _type_ directly accessible in your Java code
-eliminating code generation build steps otherwise required with conventional tools. Additionally Manifold provides
-comprehensive IntelliJ IDEA integration. Types are always in sync; changes you make to structured data are immediately
-available in the type system _without a compilation step_.  Code completion, navigation, usage searching, refactoring --
-all seamlessly integrated.  With Manifold a data source is a virtual data _type_.
+eliminating code generation build steps otherwise required with conventional tools. Additionally the Manifold plugin
+for IntelliJ IDEA provides comprehensive integration for type manifolds. Types are always in sync; changes you make to
+structured data are immediately available in the type system _without a compilation step_.  Code completion, navigation,
+usage searching, refactoring -- all seamlessly integrated.  With type manifolds a data source is a virtual data _type_.
 
 To illustrate, consider this simple properties resource file:
 
