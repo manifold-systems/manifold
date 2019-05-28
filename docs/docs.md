@@ -2,20 +2,20 @@
 layout: docs_layout
 ---
 
-# Manifold in a Nutshell
+# Manifold
 
-[Manifold](https://manifold.systems/) is a unique framework to dynamically and _seamlessly_ extend
-Java. Building on this core framework Manifold supplements Java with new features you can use in your applications:
+[Manifold](https://manifold.systems/) is a framework to dynamically and _seamlessly_ supplement Java with powerful
+features you can use directly in your applications:
 
 * **Type-safe Metaprogramming** -- renders code generators obsolete, similar in concept to [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)
 * **Extension Methods** -- add methods to classes you don't own, comparable to the same feature in [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods) and [Kotlin](https://kotlinlang.org/docs/reference/extensions.html)
 * **Structural Typing** -- type-safe duck typing, much like interfaces in [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html) and [Go](https://tour.golang.org/methods/10)
 
-Leveraging these key features Manifold delivers a set of high-level components you can plug into your project, these
-include:
+Using this framework Manifold provides an ever growing set of components, called _Type Manifolds_, you can plug into
+your project, these include:
+* **GraphQL** integration
 * **JSON** and **JSON Schema** integration
 * **YAML** integration
-* **GraphQL** support
 * Type-safe **Templating** 
 * **Structural interfaces** and **Expando** objects
 * **Extension libraries** for collections, I/O, and text
@@ -25,20 +25,17 @@ include:
 * **Jailbreak** type-safe reflection
 * Lots more
 
-At a high level each of these features is classified as either a **Type Manifold** or an
-**Extension** via the **Extension Manifold**.
-
 ## Type Manifolds
 
-Bridging the worlds of information and programming, *type manifolds* act as adapters 
-to automatically connect schematized data sources with Java.  More specifically, 
-a type manifold transforms a data source into a data _type_ directly accessible in 
-your Java code eliminating code generation build steps involved with conventional tools. 
-Additionally Manifold provides IDE integration to automatically keep types in sync with 
-data sources as you make changes, again with no additional build steps. In essence with 
-Manifold a data source **_is_** a data type.
+Bridging the worlds of information and programming, a *type manifold* acts as an adapter to automatically connect a
+structured data source to Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler
+enabling a type manifold to transform structured data into a data _type_ directly accessible in your Java code
+eliminating code generation build steps otherwise required with conventional tools. Additionally Manifold provides
+comprehensive IntelliJ IDEA integration. Types are always in sync; changes you make to structured data are immediately
+available in the type system _without a compilation step_.  Code completion, navigation, usage searching, refactoring --
+all seamlessly integrated.  With Manifold a data source is a virtual data _type_.
 
-To illustrate, consider this properties resource file:
+To illustrate, consider this simple properties resource file:
 
 `/abc/MyProperties.properties`
 ```properties
@@ -73,9 +70,9 @@ spreadsheets, web services, and programming languages.
 
 Currently Manifold provides type manifolds for:
 
+*   GraphQL
 *   JSON and [JSON Schema](http://json-schema.org/)
 *   YAML
-*   GraphQL
 *   Properties files
 *   Image files
 *   Dark Java
