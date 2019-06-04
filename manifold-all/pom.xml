@@ -78,6 +78,14 @@
       <artifactId>manifold-text</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <!-- since we inherit slf4j from one of our dependencies (we don't care about the logging it does) add slf4j-nop
+         to turn off logging so we can shade/rename org.slf4j.* packages (prevents JPMS collision) -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-nop</artifactId>
+      <version>1.7.26</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -106,21 +114,38 @@
             <goals>
               <goal>shade</goal>
             </goals>
+            
             <configuration>
+              
               <filters>
                 <filter>
                   <artifact>*:*</artifact>
                   <excludes>
-                    <!-- remove the license file from one of the dependencies, manifold license has precedence -->
+                    <!-- manifold's license supersede's dependency license copied to root -->
                     <exclude>LICENSE.md</exclude>
                   </excludes>
                 </filter>
               </filters>
+
               <transformers>
                 <!-- merge all the services for a given interface file -->
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
               </transformers>
+              
+              <relocations>
+                <!-- prevent JPMS collisions, rename all org.* packages to manifold.shade.org.* -->
+                <relocation>
+                  <pattern>org</pattern>
+                  <shadedPattern>manifold.shade.org</shadedPattern>
+                </relocation>
+<!-- todo: Can't shade graphql-java right now, breaks graphql manifold -->
+<!--                <relocation>-->
+<!--                  <pattern>graphql</pattern>-->
+<!--                  <shadedPattern>manifold.shade.graphql</shadedPattern>-->
+<!--                </relocation>-->
+              </relocations>
             </configuration>
+            
           </execution>
         </executions>
       </plugin>
