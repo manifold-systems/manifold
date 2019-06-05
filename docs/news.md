@@ -5,6 +5,17 @@ layout: default
 # News
 <br/><br/>
 
+## Manifold 2019.1 is released! (5 June 2019):
+<br>
+Announcing Manifold's first official release -- 2019.1 is available! From *Type-safe Metaprogramming*,
+*Structural Interfaces*, and *Extension Classes* to *GraphQL*, *JSON Schema*, and *Templates* and everything in between.
+All ready for your imagination! 
+
+Manifold version `2019.1.2` is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/2019.1.2/jar).
+The Manifold IntelliJ IDEA plugin version `2019.1.2` is available directly from your IDE or visit the
+[JetBrains Plugins Repository](https://plugins.jetbrains.com/plugin/10057-manifold).
+<br/><br/> 
+
 ## A new screencast showcasing Manifold's new GraphQL support (24 May 2019):
 <br>
 <p>
