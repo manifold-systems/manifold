@@ -7,6 +7,21 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/shutterstock_232482730-768x513.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Type-safe reflection code with `@Jailbreak`</a></p>
+  <p>Ever overexpose fields and methods just so they can be accessed from tests? Ever write reflection code in order to
+     access private class members? You can stop doing that now. Maintain integrity and type-safety with @Jailbreak from
+     the Manifold project.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/rest-api-vision-manifold-156110.html"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
   </td>
   <td>
