@@ -5,6 +5,28 @@ layout: default
 # News
 <br/><br/>
 
+## Neuer Artikel bei Jaxenter (8. Juni 2019):
+<br>
+<table>
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931">REST API Vision mit Manifold</a></p>
+  <p>Manifold ist eine einzigartige Open-Source-Technologie, die man in jedem Java-Projekt verwenden kann, um innovative
+    Sprachfunktionen wie typsichere Metaprogrammierung, Erweiterungsmethoden, Templating und strukturelle Typisierung
+    nutzen zu können. Im dritten Teil unserer Artikelserie zeigt Scott McKinney, wie man Manifold einsetzen kann, um
+    JSON Schema als REST API Single Source of Truth (SSoT) festzulegen. Er geht dabei auch darauf ein, wie das Framework
+    JSON-Schema- und YAML-Ressourcen auf direktem Wege mit Java verbindet, ohne dabei auf Code-Generatoren, kommentierte
+    POJOs oder andere Zwischenlösungen angewiesen zu sein.</p>
+  <p><small>jaxenter.de</small></p>
+  </td>
+ </tr>
+</table>
+<br/><br/> 
+
+
 ## New article at Jaxenter (6 June 2019):
 <br>
 <table>
