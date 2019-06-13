@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -62,10 +63,41 @@ public abstract class SimpleModule implements IModule
   public SimpleModule( IManifoldHost host, List<IDirectory> classpath, List<IDirectory> sourcePath, List<IDirectory> outputPath )
   {
     _host = host;
+
+    verifyPaths( classpath, "classpath" );
     _classpath = classpath;
+
+    verifyPaths( sourcePath, "source path" );
     _sourcePath = sourcePath;
+
+    verifyPaths( outputPath, "output path" );
     _outputPath = outputPath;
+
     _pathCache = LocklessLazyVar.make( this::makePathCache );
+  }
+
+  private void verifyPaths( List<IDirectory> paths, String pathType )
+  {
+    if( paths == null )
+    {
+      return;
+    }
+
+    for( Iterator<IDirectory> iter = paths.iterator(); iter.hasNext(); )
+    {
+      IDirectory dir = iter.next();
+      if( dir == null )
+      {
+        System.err.println( "Null path found in " + pathType );
+      }
+      else if( !dir.exists() )
+      {
+        // Warn of the nonexistent path
+        System.err.println( "Warning: " + dir + " does not exist in " + pathType );
+        // Remove it, otherwise in Java 9+ checks are made to verify the paths exist e.g., module locations
+        iter.remove();
+      }
+    }
   }
 
   @Override
