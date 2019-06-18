@@ -182,8 +182,7 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
    */
   protected void initDirectly( List<File> sourcepath, List<File> classpath )
   {
-    classpath = new ArrayList<>( classpath );
-    removeDups( classpath );
+    classpath = removeDups( classpath );
 
     if( classpath.equals( _classpath ) )
     {
@@ -219,7 +218,7 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
     createSingleModule( cp, all, Collections.emptyList() );
   }
 
-  private List<IDirectory> createDefaultClassPath()
+  protected List<IDirectory> createDefaultClassPath()
   {
     List<String> vals = new ArrayList<>();
     vals.add( removeQuotes( System.getProperty( "java.class.path", "" ) ) );
@@ -264,17 +263,8 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
     return classpath;
   }
 
-  private static void removeDups( List classpath )
+  private static <E> List<E> removeDups( List<E> classpath )
   {
-    for( int i = classpath.size() - 1; i >= 0; i-- )
-    {
-      Object f = classpath.get( i );
-      classpath.remove( i );
-      if( !classpath.contains( f ) )
-      {
-        //noinspection unchecked
-        classpath.add( i, f );
-      }
-    }
+    return new ArrayList<>( new LinkedHashSet<>( classpath ) );
   }
 }
