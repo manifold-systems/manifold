@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,25 @@
 
 package manifold.api.fs;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.util.function.Supplier;
 
-public interface IFile extends IResource
+/**
+ * A fragment of a file that is to be treated separate fron the enclosing file.  Facilitates embedding structured
+ * content in a Java source file as opposed to using a separate resource file.
+ */
+public interface IFileFragment extends IFile
 {
-  IFile[] EMPTY_ARRAY = new IFile[0];
+  IFile getEnclosingFile();
+  int getOffset();
+  void setOffset( Supplier<Integer> offset );
+  int getLength();
 
-  InputStream openInputStream() throws IOException;
+  /** The file element hosting the fragment e.g., a comment or string literal */
+  Object getContainer();
+  void setContainer( Object container );
 
-  OutputStream openOutputStream() throws IOException;
-
-  OutputStream openOutputStreamForAppend() throws IOException;
-
-  String getExtension();
-
-  String getBaseName();
-
-  /** Facilitates virtual files e.g., IFileFragment */
   default IFile getPhysicalFile()
   {
-    return this;
+    return getEnclosingFile().getPhysicalFile();
   }
 }

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
@@ -328,13 +329,25 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   protected boolean addSourcePositionAnnotation( StringBuilder sb, int indent, String name, Token token )
   {
+    int offset = token.getOffset();
+    IFile file = getIFile();
+    if( file instanceof IFileFragment )
+    {
+      offset += ((IFileFragment)file).getOffset();
+    }
+
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( getIdentifier(), FIELD_FILE_URL ) ).name( "url" ) )
       .addArgument( "feature", String.class, name )
-      .addArgument( "offset", int.class, token.getOffset() )
+      .addArgument( "offset", int.class, offset )
       .addArgument( "length", int.class, name.length() );
     annotation.render( sb, indent );
     return true;
+  }
+
+  private IFile getIFile()
+  {
+    return getTm().getModule().getHost().getFileSystem().getIFile( getFile() );
   }
 
   protected String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )

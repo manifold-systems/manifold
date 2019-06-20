@@ -36,28 +36,36 @@ public class Tokenizer
   {
     try
     {
-      _url = file.toURI().toURL();
+      String url = file.toURI().toURL().toString();
+      String content = ResourceFileTypeManifold.getContent( file );
+      init( content, url );
     }
     catch( MalformedURLException e )
     {
       throw new RuntimeException( e );
     }
-    String content = ResourceFileTypeManifold.getContent( file );
-    init( content );
   }
 
-  Tokenizer( String subtext )
+  public Tokenizer( String source, String url )
   {
-    init( subtext );
+    init( source, url );
   }
 
-  private void init( String content )
+  private void init( String content, String url )
   {
     _content = content.replace( "\r\n", "\n" );
     //Line number and col are 1 indexed; offset is 0 indexed (nextchar increments col and offset)
     _lineNumber = 1;
     _col = 0;
     _offset = -1;
+    try
+    {
+      _url = new URL( url );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
     nextChar();
   }
 

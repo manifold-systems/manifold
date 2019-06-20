@@ -85,7 +85,7 @@ public class ManPatchLocation implements JavaFileManager.Location
           if( pkg.toString().equals( packageName ) )
           {
             //noinspection unchecked
-            Iterable<Symbol> symbolsByName = (Iterable<Symbol>)ReflectUtil.method( ReflectUtil.method( pkg, "members" ).invoke(), "getSymbolsByName", Name.class ).invoke( names.fromString( getClassName( fo ) ) );
+            Iterable<Symbol> symbolsByName = (Iterable<Symbol>)ReflectUtil.method( ReflectUtil.method( pkg, "members" ).invoke(), "getSymbolsByName", Name.class ).invoke( names.fromString( getPhysicalClassName( fo ) ) );
             if( symbolsByName.iterator().hasNext() )
             {
               return ReflectUtil.method( ms, "getQualifiedName" ).invoke().toString();
@@ -109,8 +109,14 @@ public class ManPatchLocation implements JavaFileManager.Location
     return "";
   }
 
-  private String getClassName( GeneratedJavaStubFileObject fo )
+  private String getPhysicalClassName( GeneratedJavaStubFileObject fo )
   {
+    if( fo.isFileFragment() )
+    {
+      // must return the fragment's enclosing class name to infer the module
+      return fo.getFileFragment().getEnclosingFile().getBaseName();
+    }
+    
     String name = fo.getName();
     name = name.substring( name.lastIndexOf( '/' ) + 1, name.lastIndexOf( '.' ) );
     return name;

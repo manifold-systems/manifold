@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcClass;
@@ -44,8 +45,9 @@ import manifold.util.cache.FqnCacheNode;
 
 
 /**
+ *
  */
-public class PropertiesCodeGen
+class PropertiesCodeGen
 {
   private static final String FIELD_FILE_URL = "__FILE_URL_";
   private final String _fqn;
@@ -61,7 +63,7 @@ public class PropertiesCodeGen
     _content = assignContent();
   }
 
-  public SrcClass make()
+  SrcClass make()
   {
     SrcClass srcClass = new SrcClass( _fqn, SrcClass.Kind.Class ).imports( SourcePosition.class );
 
@@ -87,9 +89,9 @@ public class PropertiesCodeGen
         .initializer( getFile() ) );
   }
 
-  public SrcClass make( SrcClass srcClass, FqnCacheNode<String> node )
+  private SrcClass make( SrcClass srcClass, FqnCacheNode<String> node )
   {
-    for( FqnCacheNode<String> childNode : node.getChildren() )
+    for( FqnCacheNode<String> childNode: node.getChildren() )
     {
       SrcType type = new SrcType( childNode.isLeaf() ? "String" : childNode.getName() );
       SrcField propertyField = new SrcField( srcClass )
@@ -193,7 +195,7 @@ public class PropertiesCodeGen
   {
     SrcSwitchStatement stmt = new SrcSwitchStatement();
     stmt.expr( new SrcIdentifier( "propertyName" ) );
-    for( FqnCacheNode<String> childNode : node.getChildren() )
+    for( FqnCacheNode<String> childNode: node.getChildren() )
     {
       stmt.addCase(
         new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
@@ -222,14 +224,31 @@ public class PropertiesCodeGen
     {
       fqn = fqn.substring( prefix.length() );
     }
+
     // this is a crappy way to approximate the offset, we really need to parse the file ourselves and store the offsets
-    int fullFqn = findFqn( fqn, false );
-    if( fullFqn >= 0 )
+    int offset = -1;
+    int iFqn = findProperty( fqn, false );
+    if( iFqn >= 0 )
     {
-      return useOffsetOfLastMember( fqn, fullFqn );
+      offset = useOffsetOfLastMember( fqn, iFqn );
     }
-    int offset = findFqn( fqn, true );
-    return useOffsetOfLastMember( fqn, offset );
+    else
+    {
+      iFqn = findProperty( fqn, true );
+      if( iFqn >= 0 )
+      {
+        offset = useOffsetOfLastMember( fqn, iFqn );
+      }
+    }
+
+    //assert offset >= 0;
+
+    if( _file instanceof IFileFragment )
+    {
+      offset += ((IFileFragment)_file).getOffset();
+    }
+
+    return offset;
   }
 
   private int useOffsetOfLastMember( String fqn, int offset )
@@ -247,27 +266,26 @@ public class PropertiesCodeGen
     return offset;
   }
 
-  private int findFqn( String fqn, boolean bPartialMatch )
+  private int findProperty( String property, boolean bPartialMatch )
   {
     String content = _content;
     int index = 0;
     while( true )
     {
-      index = content.indexOf( fqn, index );
+      index = content.indexOf( property, index );
       if( index < 0 )
       {
         break;
       }
-      if( (index == 0 || content.charAt( index-1 ) == '\n') &&
-          content.length() > index + fqn.length() &&
-          (content.charAt( index + fqn.length() ) == '=' ||
-           content.charAt( index + fqn.length() ) == ' ' ||
-           (bPartialMatch && content.charAt( index + fqn.length() ) == '.')) )
+      char op;
+      if( isPropertyStart( content, index ) &&
+          content.length() > index + property.length() &&
+          ((op = content.charAt( index + property.length() )) == '=' || op == ' ' || (bPartialMatch && op == '.')) )
       {
         break;
       }
 
-      index += fqn.length();
+      index += property.length();
       if( index >= content.length() )
       {
         index = -1;
@@ -275,6 +293,26 @@ public class PropertiesCodeGen
       }
     }
     return index;
+  }
+
+  private boolean isPropertyStart( String content, int index )
+  {
+    if( --index < 0 )
+    {
+      return true;
+    }
+
+    char c = content.charAt( index );
+    if( c == '\n' )
+    {
+      return true;
+    }
+    if( c == ' ' || c == '\t' )
+    {
+      // ignore indentation
+      return isPropertyStart( content, index );
+    }
+    return false;
   }
 
   private String assignContent()

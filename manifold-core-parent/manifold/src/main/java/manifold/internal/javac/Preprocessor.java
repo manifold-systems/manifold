@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-package manifold.api.properties;
+package manifold.internal.javac;
 
-import junit.framework.TestCase;
-
-import abc.MyProperties;
-import gw.lang.SystemProperties;
-
-/**
- */
-public class PropertiesTest extends TestCase
+public class Preprocessor
 {
-  public void testProperties()
+  private final ManParserFactory _parserFactory;
+
+  public Preprocessor( ManParserFactory parserFactory )
   {
-    assertEquals( "Hello", MyProperties.MyProperty.toString() );
-    assertEquals( "Sub Property", MyProperties.MyProperty.Sub );
-    assertNotNull( SystemProperties.java.version );
+    _parserFactory = parserFactory;
   }
 
-  public void testFragrment()
+  public CharSequence process( CharSequence input )
   {
-    //[>MyPropertiesRightHere.properties<] Foo=bar
-    assertEquals( "bar", MyPropertiesRightHere.Foo );
+    // note, a preprocessor that needs to tokenize the input can use the Java scanner like this:
+    //Scanner scanner = ScannerFactory.instance( JavacPlugin.instance().getContext() ).newScanner( input, true );
+
+    //## todo: provide service interface for preprocessor implementors
+    return input;
   }
 }

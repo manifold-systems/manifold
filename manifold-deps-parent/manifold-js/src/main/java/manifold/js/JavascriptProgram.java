@@ -17,6 +17,7 @@
 package manifold.js;
 
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 import javax.script.Invocable;
@@ -24,8 +25,11 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
+import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotated;
+import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
@@ -43,22 +47,40 @@ import manifold.js.parser.tree.FunctionNode;
 import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
+import manifold.util.ManEscapeUtil;
 
 
 import static manifold.js.Util.safe;
 
 public class JavascriptProgram
 {
-
-  /* codegen */
-  static SrcClass genProgram( String fqn, ProgramNode programNode )
+  static SrcClass genProgram( String fqn, ProgramNode programNode, IFile file )
   {
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class ).superClass( JavascriptProgram.class )
       .imports( SourcePosition.class );
 
-    clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
-      .modifiers( Modifier.STATIC )
-      .initializer( new SrcRawExpression( ("init(\"" + fqn + "\")") ) ) );
+    if( file instanceof IFileFragment )
+    {
+      String url;
+      try
+      {
+        url = ((IFileFragment)file).getEnclosingFile().toURI().toURL().toString();
+      }
+      catch( MalformedURLException e )
+      {
+        throw new RuntimeException( e );
+      }
+      clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+        .modifiers( Modifier.STATIC )
+        .initializer( new SrcRawExpression( ("initDirect(\"" + ManEscapeUtil.escapeForJava(
+          ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")") ) ) );
+    }
+    else
+    {
+      clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+        .modifiers( Modifier.STATIC )
+        .initializer( new SrcRawExpression( ("init(\"" + fqn + "\")") ) ) );
+    }
 
     clazz.addConstructor( new SrcConstructor().modifiers( Modifier.PRIVATE ).body( new SrcStatementBlock() ) );
 
@@ -68,14 +90,18 @@ public class JavascriptProgram
         .name( node.getName() )
         .modifiers( Modifier.STATIC | Modifier.PUBLIC )
         .returns( node.getReturnType() );
-
+      srcMethod.addAnnotation(
+        new SrcAnnotationExpression( SourcePosition.class )
+          .addArgument( "url", String.class, programNode.getUrl().toString() )
+          .addArgument( "feature", String.class, node.getName() )
+          .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
+          .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
       List<SrcParameter> srcParameters = makeSrcParameters( node, srcMethod );
       srcMethod.body( new SrcStatementBlock()
         .addStatement(
           new SrcRawStatement()
             .rawText( "return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList( srcParameters ) + ");" ) ) );
       clazz.addMethod( srcMethod );
-
     }
     return clazz;
   }
@@ -102,11 +128,12 @@ public class JavascriptProgram
     return sb.toString();
   }
 
-  /* implementation */
+  @SuppressWarnings("unused")
   public static <T> T invoke( ScriptEngine engine, String func, Object... args )
   {
     try
     {
+      //noinspection unchecked
       return (T)((Invocable)engine).invokeFunction( func, args );
     }
     catch( Exception e )
@@ -115,11 +142,23 @@ public class JavascriptProgram
     }
   }
 
+  @SuppressWarnings("unused")
   public static ScriptEngine init( String programName )
   {
     ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
     nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
     Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
+    Node programNode = parser.parse();
+    safe( () -> nashorn.eval( programNode.genCode() ) );
+    return nashorn;
+  }
+
+  @SuppressWarnings("unused")
+  public static ScriptEngine initDirect( String source, String url )
+  {
+    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
+    nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
+    Parser parser = new Parser( new Tokenizer( source, url ) );
     Node programNode = parser.parse();
     safe( () -> nashorn.eval( programNode.genCode() ) );
     return nashorn;
@@ -151,5 +190,14 @@ public class JavascriptProgram
       throw new IllegalStateException( "Could not find type manifold for extension: " + fileExt );
     }
     return tm;
+  }
+
+  private static Object absoluteOffset( int offset, IFile file )
+  {
+    if( file instanceof IFileFragment )
+    {
+      offset += ((IFileFragment)file).getOffset();
+    }
+    return offset;
   }
 }

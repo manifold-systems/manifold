@@ -40,6 +40,7 @@ import manifold.api.service.BaseService;
 import manifold.util.ManClassUtil;
 import manifold.util.StreamUtil;
 import manifold.util.cache.FqnCache;
+import manifold.util.cache.IllegalTypeNameException;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -63,7 +64,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   }
 
   /**
-   * @param module  The module passed into the {@code ITypeManifold) implementation constructor
+   * @param module      The module passed into the {@code ITypeManifold) implementation constructor
    * @param modelMapper A function to provide a model given a qualified name and resource file
    */
   protected void init( IModule module, BiFunction<String, Set<IFile>, M> modelMapper )
@@ -84,7 +85,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     FqnCache<LocklessLazyVar<M>> fqnToModel = new FqnCache<>();
     Map<String, Set<IFile>> primaryFqnToFiles = buildPrimaryFqnToFilesMap();
 
-    for( Map.Entry<String, Set<IFile>> entry : primaryFqnToFiles.entrySet() )
+    for( Map.Entry<String, Set<IFile>> entry: primaryFqnToFiles.entrySet() )
     {
       String primaryFqn = entry.getKey();
       Set<IFile> files = entry.getValue();
@@ -104,9 +105,9 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
       }
 
       // Map additional types to same model
-      for( IFile file : files )
+      for( IFile file: files )
       {
-        for( String addFqn : getAdditionalTypes( primaryFqnNoMinus, file ) )
+        for( String addFqn: getAdditionalTypes( primaryFqnNoMinus, file ) )
         {
           if( model == null )
           {
@@ -129,7 +130,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
         }
       }
     }
-    
+
     return fqnToModel;
   }
 
@@ -137,7 +138,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   {
     Map<String, Set<IFile>> primaryFqnToFiles = new HashMap<>();
     Map<String, FqnCache<IFile>> extensionCaches = getModule().getPathCache().getExtensionCaches();
-    for( Map.Entry<String, FqnCache<IFile>> entry : extensionCaches.entrySet() )
+    for( Map.Entry<String, FqnCache<IFile>> entry: extensionCaches.entrySet() )
     {
       String ext = entry.getKey();
       if( !handlesFileExtension( ext ) )
@@ -146,7 +147,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
       }
 
       FqnCache<IFile> fileCache = entry.getValue();
-      for( String fqn : fileCache.getFqns() )
+      for( String fqn: fileCache.getFqns() )
       {
         IFile file = fileCache.get( fqn );
         if( file != null && handlesFile( file ) )
@@ -175,7 +176,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   protected boolean isDuplicate( IFile file, Set<IFile> files )
   {
     Set<String> fqnForFile = getModule().getPathCache().getFqnForFile( file );
-    for( IFile f : files )
+    for( IFile f: files )
     {
       Set<String> fqn = getModule().getPathCache().getFqnForFile( f );
       if( fqnForFile.equals( fqn ) )
@@ -199,7 +200,8 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    * Provide the type name that corresponds with the resource file, if different from {@code defaultFqn}.
    *
    * @param defaultFqn The default name derived from the resource file name.
-   * @param file The resource file corresponding with the type name.
+   * @param file       The resource file corresponding with the type name.
+   *
    * @return A valid type name corresponding with the type or {@code null} if there is no primary type for {@code file}
    * but there may be additional types via {@link #getAdditionalTypes(String, IFile)}
    */
@@ -214,7 +216,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
    * In the case of extension classes, this type manifold must implement IExtensionProvider.
    *
    * @param fqnForFile The primary type this type manifold assigned to {@code file}
-   * @param file The resource file from which types may be derived
+   * @param file       The resource file from which types may be derived
    */
   protected Set<String> getAdditionalTypes( String fqnForFile, IFile file )
   {
@@ -232,11 +234,11 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   /**
    * Contribute source code for the specified type and model.
    *
-   *
-   * @param location (Experimental) The location of the use-site in the Java compiler.  Provides javac module context.  Optional and only relevant at compile-time when executed within a Javac compiler.
+   * @param location    (Experimental) The location of the use-site in the Java compiler.  Provides javac module context.  Optional and only relevant at compile-time when executed within a Javac compiler.
    * @param topLevelFqn The qualified name of the top-level type to contribute.
    * @param existing    The source produced from other manifolds so far; if not empty, this manifold must not be a {@link ContributorKind#Primary} contributor.
    * @param model       The model your manifold uses to generate the source.
+   *
    * @return The combined source code for the specified top-level type.
    */
   protected abstract String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, M model, DiagnosticListener<JavaFileObject> errorHandler );
@@ -244,7 +246,20 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   protected M getModel( String topLevel )
   {
     LocklessLazyVar<M> lazyModel = _fqnToModel.get().get( topLevel );
-    return lazyModel == null ? null : lazyModel.get();
+    M model = null;
+    if( lazyModel != null )
+    {
+      try
+      {
+        model = lazyModel.get();
+      }
+      catch( IllegalTypeNameException itne )
+      {
+        // some environments (intellij) sometimes allow crazy stuff to parse as a name, ignore this
+        System.out.println( "Info: " + itne.getClass().getSimpleName() + ": " + topLevel );
+      }
+    }
+    return model;
   }
 
   @Override
@@ -265,7 +280,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     Set<String> aliasedFqns = new HashSet<>();
     if( fqns != null )
     {
-      for( String fqn : fqns )
+      for( String fqn: fqns )
       {
         fqn = getTypeNameForFile( fqn, file );
         if( fqn != null )
@@ -299,7 +314,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     }
 
     fqn = fqn.replace( '$', '.' );
-    
+
     String topLevel = findTopLevelFqn( fqn );
     if( topLevel == null )
     {
@@ -483,7 +498,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
       switch( request.kind )
       {
         case MODIFICATION:
-          for( String type : getTypesForFile( request.file ) )
+          for( String type: getTypesForFile( request.file ) )
           {
             modifiedType( Collections.singleton( request.file ), type );
           }
@@ -491,7 +506,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
 
         case CREATION:
         {
-          for( String type : getTypesForFile( request.file ) )
+          for( String type: getTypesForFile( request.file ) )
           {
             createdType( Collections.singleton( request.file ), type );
           }
@@ -500,7 +515,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
 
         case DELETION:
         {
-          for( String type : getTypesForFile( request.file ) )
+          for( String type: getTypesForFile( request.file ) )
           {
             deletedType( Collections.singleton( request.file ), type );
           }

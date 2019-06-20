@@ -60,7 +60,10 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
   TypeDefinition findTypeDefinition( String simpleName )
   {
     return getAllTypeNames().stream()
-      .map( fqn -> getModel( fqn ).getTypeDefinition( simpleName ) )
+      .map( fqn -> {
+        GqlModel model = getModel( fqn );
+        return model == null ? null : model.getTypeDefinition( simpleName );
+      } )
       .filter( Objects::nonNull )
       .findFirst().orElse( null );
   }
@@ -68,7 +71,10 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
   ScalarTypeDefinition findScalarTypeDefinition( String simpleName )
   {
     return getAllTypeNames().stream()
-      .map( fqn -> getModel( fqn ).getScalarTypeDefinition( simpleName ) )
+      .map( fqn -> {
+        GqlModel model = getModel( fqn );
+        return model == null ? null : model.getScalarTypeDefinition( simpleName );
+      } )
       .filter( Objects::nonNull )
       .findFirst().orElse( null );
   }
@@ -76,7 +82,10 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
   SchemaDefinition findSchemaDefinition()
   {
     return getAllTypeNames().stream()
-      .map( fqn -> getModel( fqn ).getSchemaDefinition() )
+      .map( fqn -> {
+        GqlModel model = getModel( fqn );
+        return model == null ? null : model.getSchemaDefinition();
+      } )
       .filter( Objects::nonNull )
       .findFirst().orElse( null );
   }

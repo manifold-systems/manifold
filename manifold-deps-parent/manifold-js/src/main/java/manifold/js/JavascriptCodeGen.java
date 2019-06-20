@@ -62,11 +62,11 @@ class JavascriptCodeGen
 
       if( parser.isES6Class() )
       {
-        return JavascriptClass.genClass( _fqn, programNode );
+        return JavascriptClass.genClass( _fqn, programNode, _file );
       }
       else
       {
-        return JavascriptProgram.genProgram( _fqn, programNode );
+        return JavascriptProgram.genProgram( _fqn, programNode, _file );
       }
     }
   }

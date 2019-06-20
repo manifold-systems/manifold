@@ -35,6 +35,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -49,9 +50,11 @@ import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.util.JavacDiagnostic;
-import manifold.util.StreamUtil;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class GqlModel extends AbstractSingleFileModel
 {
@@ -68,12 +71,14 @@ public class GqlModel extends AbstractSingleFileModel
   {
     super( gqlManifold.getModule().getHost(), fqn, files );
     _gqlManifold = gqlManifold;
+    _issues = null;
+    _fragments = Collections.emptyMap();
+    _operations = Collections.emptyMap();
     init();
   }
 
   private void init()
   {
-    _issues = null;
     parse();
     _type = new GqlParentType( getFqn(), _schemaDefinition, _typeRegistry,
       _operations, _fragments, getFile(), _gqlManifold );
@@ -83,8 +88,7 @@ public class GqlModel extends AbstractSingleFileModel
   {
     try( InputStream stream = getFile().openInputStream() )
     {
-      String schema = StreamUtil.getContent( new InputStreamReader( stream ) );
-      parse( schema );
+      parse( new InputStreamReader( stream, UTF_8 )  );
     }
     catch( InvalidSyntaxException ise )
     {
@@ -102,7 +106,7 @@ public class GqlModel extends AbstractSingleFileModel
     }
   }
 
-  private void parse( String schemaInput ) throws ParseCancellationException
+  private void parse( Reader schemaInput ) throws ParseCancellationException
   {
     Parser parser = new Parser();
     Document document = parser.parseDocument( schemaInput );

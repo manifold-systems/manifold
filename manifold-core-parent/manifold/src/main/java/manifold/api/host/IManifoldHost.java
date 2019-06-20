@@ -16,6 +16,7 @@
 
 package manifold.api.host;
 
+import manifold.api.fs.IFileFragment;
 import manifold.api.fs.IFileSystem;
 import manifold.api.service.IService;
 import manifold.internal.javac.JavaParser;
@@ -38,6 +39,8 @@ public interface IManifoldHost extends IService
   boolean isPathIgnored( String path );
 
   void addTypeSystemListenerAsWeakRef( Object ctx, ITypeSystemListener listener );
+
+  void createdType( IFileFragment file, String[] types );
 
   IFileSystem getFileSystem();
 

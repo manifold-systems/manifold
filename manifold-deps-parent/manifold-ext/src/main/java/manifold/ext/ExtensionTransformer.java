@@ -47,6 +47,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,6 +57,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
@@ -862,7 +864,18 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     _tp.addDrivers( drivers );
+    addFileFragmentDriver();
     return _tp.getDrivers();
+  }
+
+  private void addFileFragmentDriver()
+  {
+    Class<?> type = ReflectUtil.type( "manifold.ij.jps.IjFileFragmentIncrementalCompileDriver" );
+    if( type != null )
+    {
+      Object driver = ReflectUtil.method( type, "getInstance" ).invokeStatic();
+      _tp.addDrivers( Collections.singleton( driver ) );
+    }
   }
 
   private void getIncrementalCompileDrivers( JCTree.JCAnnotation anno, Set<Object> drivers )
@@ -958,6 +971,10 @@ public class ExtensionTransformer extends TreeTranslator
     {
       try
       {
+        while( ifile instanceof IFileFragment )
+        {
+          ifile = ((IFileFragment)ifile).getEnclosingFile();
+        }
         file = ifile.toJavaFile();
       }
       catch( Exception e )
@@ -965,17 +982,32 @@ public class ExtensionTransformer extends TreeTranslator
         continue;
       }
 
-      //noinspection unchecked
       Map<File, Set<String>> typesCompiledByFile = _tp.getTypesCompiledByFile();
       Set<String> types = typesCompiledByFile.get( file );
       if( types == null )
       {
         typesCompiledByFile.put( file, types = new ConcurrentHashSet<>() );
       }
-      types.add( qualifiedName.toString() );
+      StringBuilder sb = new StringBuilder();
+      make$name( tree.sym, sb );
+      types.add( sb.toString() );
     }
 
     addIndirectCompiledTypesToBuildForMapping( drivers );
+  }
+
+  private void make$name( Symbol.ClassSymbol sym, StringBuilder sb )
+  {
+    Symbol enclosingElement = sym.getEnclosingElement();
+    if( enclosingElement instanceof Symbol.ClassSymbol )
+    {
+      make$name( (Symbol.ClassSymbol)enclosingElement, sb );
+      sb.append( '$' ).append( sym.getSimpleName() );
+    }
+    else
+    {
+      sb.append( sym.getQualifiedName().toString() );
+    }
   }
 
   private void addIndirectCompiledTypesToBuildForMapping( Set<Object> drivers )

@@ -13,6 +13,7 @@ import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 @DisableStringLiteralTemplates
 public class QueryTest
@@ -57,7 +58,6 @@ public class QueryTest
   }
 
   @Test
-
   public void testActorsQuery()
   {
     ActorQuery actorQuery = ActorQuery
@@ -77,5 +77,33 @@ public class QueryTest
     String query = request._reqArgs.getQuery();
     String expected = "query ActorQuery($title:String!,$genre:Genre) {actors(title:$title,genre:$genre) {... on Person {id name} ... on Animal {id name kind}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
+  }
+
+  @Test
+  public void testEmbeddedQuery()
+  {
+    /* [> MyEmbedded.graphql <]
+    query MyOneAnimal($id: ID!) {
+      animal(id: $id) {
+        id
+        name
+        kind
+        nationality
+      }
+    }*/
+    MyEmbedded.MyOneAnimal myOneAnimal = MyEmbedded.MyOneAnimal.builder( "1" ).build();
+    assertNotNull( myOneAnimal );
+
+    /**[>MyEmbedded2.graphql<]
+    query MyOneAnimal2($id: ID!) {
+      animal(id: $id) {
+        id
+        name
+        kind
+        nationality
+      }
+    }*/
+    MyEmbedded2.MyOneAnimal2 myOneAnimal2 = MyEmbedded2.MyOneAnimal2.builder( "1" ).build();
+    assertNotNull( myOneAnimal2 );
   }
 }

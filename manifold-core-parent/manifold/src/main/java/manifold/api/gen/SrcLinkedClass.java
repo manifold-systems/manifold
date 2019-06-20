@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.util.JsonUtil;
@@ -179,6 +180,11 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
           throw ManExceptionUtil.unchecked( ioe );
         }
       } );
-    return lineOffsets[line - 1] + column - 1;
+    int offset = lineOffsets[line - 1] + column - 1;
+    if( file instanceof IFileFragment )
+    {
+      offset += ((IFileFragment)file).getOffset();
+    }
+    return offset;
   }
 }

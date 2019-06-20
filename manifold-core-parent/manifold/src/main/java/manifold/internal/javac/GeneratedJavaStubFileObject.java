@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.Set;
 import javax.tools.SimpleJavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.type.ISelfCompiledFile;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -37,6 +38,8 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   private long _timestamp;
   private SourceSupplier _sourceSupplier;
   private LocklessLazyVar<String> _src = LocklessLazyVar.make( () -> _sourceSupplier.getSource() );
+  private LocklessLazyVar<Boolean> _isFragment = LocklessLazyVar.make(
+    () -> getResourceFiles().stream().anyMatch( f -> f instanceof IFileFragment ) );
 
   public GeneratedJavaStubFileObject( String name, SourceSupplier sourceSupplier )
   {
@@ -160,6 +163,17 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   public boolean isNameCompatible( String simpleName, Kind kind )
   {
     return !simpleName.equals( "module-info" ) && !simpleName.equals( "package-info" );
+  }
+
+  public boolean isFileFragment()
+  {
+    return _isFragment.get();
+  }
+  public IFileFragment getFileFragment()
+  {
+    return (IFileFragment)getResourceFiles().stream()
+      .filter( f -> f instanceof IFileFragment )
+      .findFirst().orElse( null );
   }
 
   /**

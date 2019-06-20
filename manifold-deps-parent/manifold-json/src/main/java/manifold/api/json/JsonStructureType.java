@@ -588,6 +588,7 @@ public class JsonStructureType extends JsonSchemaType
     {
       if( isSuperParentMe( superType ) && !(superType instanceof JsonEnumType) )
       {
+        ((JsonStructureType)superType).setTm( getTm() );
         ((JsonStructureType)superType).renderProperties( sb, indent, mutable, rendered );
       }
     }

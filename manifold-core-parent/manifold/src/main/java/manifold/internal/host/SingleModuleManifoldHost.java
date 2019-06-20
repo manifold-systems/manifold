@@ -18,6 +18,7 @@ package manifold.internal.host;
 
 import java.util.List;
 import manifold.api.fs.IDirectory;
+import manifold.api.fs.IFileFragment;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.def.FileSystemImpl;
 import manifold.api.host.IModule;
@@ -31,6 +32,7 @@ import manifold.util.concurrent.LocklessLazyVar;
 public abstract class SingleModuleManifoldHost extends AbstractManifoldHost
 {
   private DefaultSingleModule _module;
+  private TypeRefreshListener _typeRefreshHandler = new TypeRefreshListener( this );
   private ThreadLocal<JavaParser> _javaParser = new ThreadLocal<>();
   private LocklessLazyVar<IFileSystem> _fileSystem = LocklessLazyVar.make(
     () ->
@@ -78,6 +80,14 @@ public abstract class SingleModuleManifoldHost extends AbstractManifoldHost
 
   public void addTypeSystemListenerAsWeakRef( Object ctx, ITypeSystemListener listener )
   {
-    // only relevant for environments where types change e.g., Manifold IJ plugin
+    // Full type system monitoring is only necessary for an environment like an IDE where types change.
+    // Compilation and runtime environments should only care about *creation* events e.g., from a type embedded via @Type.
+    _typeRefreshHandler.addTypeSystemListenerAsWeakRef( listener );
+  }
+
+  @Override
+  public void createdType( IFileFragment file, String[] types )
+  {
+    _typeRefreshHandler.created( file, types );
   }
 }

@@ -64,7 +64,7 @@ public class PathCache
     {
       if( IFileUtil.hasSourceFiles( sourceEntry ) )
       {
-        addFilesInDir( "", sourceEntry, filesByExtension );
+        addTypesForFiles( "", sourceEntry, filesByExtension );
       }
     }
     _filesByExtension = filesByExtension;
@@ -109,19 +109,13 @@ public class PathCache
     return _reverseMap.get( file );
   }
 
-  private void addFilesInDir( String relativePath, IDirectory dir, Map<String, FqnCache<IFile>> filesByExtension )
+  private void addTypesForFiles( String pkg, IDirectory dir, Map<String, FqnCache<IFile>> filesByExtension )
   {
-    if( !_module.getHost().isPathIgnored( relativePath ) )
+    if( !_module.getHost().isPathIgnored( pkg ) )
     {
       for( IFile file : dir.listFiles() )
       {
-        String simpleName = file.getName();
-        int iDot = simpleName.lastIndexOf( '.' );
-        if( iDot > 0 )
-        {
-          simpleName = simpleName.substring( 0, iDot );
-        }
-        String fqn = appendResourceNameToPath( relativePath, simpleName );
+        String fqn = qualifyName( pkg, file.getName() );
         addToExtension( fqn, file, filesByExtension );
         addToReverseMap( file, fqn );
       }
@@ -129,8 +123,8 @@ public class PathCache
       {
         if( isValidPackage( subdir ) )
         {
-          String fqn = appendResourceNameToPath( relativePath, subdir.getName() );
-          addFilesInDir( fqn, subdir, filesByExtension );
+          String fqn = qualifyName( pkg, subdir.getName() );
+          addTypesForFiles( fqn, subdir, filesByExtension );
         }
       }
     }
@@ -168,18 +162,24 @@ public class PathCache
     }
   }
 
-  private String appendResourceNameToPath( String relativePath, String resourceName )
+  public static String qualifyName( String pkg, String resourceName )
   {
-    String path;
-    if( relativePath.length() > 0 )
+    int iDot = resourceName.lastIndexOf( '.' );
+    if( iDot > 0 )
     {
-      path = relativePath + '.' + JsonUtil.makeIdentifier( resourceName );
+      resourceName = resourceName.substring( 0, iDot );
+    }
+
+    String fqn;
+    if( pkg.length() > 0 )
+    {
+      fqn = pkg + '.' + JsonUtil.makeIdentifier( resourceName );
     }
     else
     {
-      path = resourceName;
+      fqn = resourceName;
     }
-    return path;
+    return fqn;
   }
 
   private void removeFromReverseMap( IFile file, String fqn )

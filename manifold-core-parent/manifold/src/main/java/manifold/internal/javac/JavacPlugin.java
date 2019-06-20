@@ -54,6 +54,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +66,10 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import manifold.api.fs.IFile;
+import manifold.api.fs.cache.PathCache;
+import manifold.api.fs.def.FileFragmentImpl;
+import manifold.api.type.ITypeManifold;
 import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.JavacManifoldHost;
 import manifold.internal.runtime.Bootstrap;
@@ -77,6 +82,10 @@ import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.StreamUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
+
+
+import static manifold.api.fs.def.FileFragmentImpl.Place.StringLiteral;
+import static manifold.api.type.ContributorKind.Supplemental;
 
 /**
  */
@@ -141,6 +150,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private Map<Context, Set<Symbol>> _seenModules;
   private Map<String, Boolean> _argPresent;
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
+  private ArrayList<FileFragmentResource> _fileFragmentResources;
 
   public static JavacPlugin instance()
   {
@@ -170,6 +180,7 @@ public class JavacPlugin implements Plugin, TaskListener
     processArgs( jpe, args );
 
     _host = new JavacManifoldHost();
+    _fileFragmentResources = new ArrayList<>();
     hijackJavacFileManager();
     task.addTaskListener( this );
   }
@@ -816,28 +827,42 @@ public class JavacPlugin implements Plugin, TaskListener
     return files;
   }
 
+  private void initialize( TaskEvent e )
+  {
+    if( !_initialized )
+    {
+      _initialized = true;
+
+      // Must perform shenanigans early
+      NecessaryEvilUtil.bypassJava9Security();
+
+      // Initialize the Javac host environment
+      getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );
+
+      // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder_9
+      Bootstrap.init();
+
+      // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
+      tailorJavaCompiler( e );
+    }
+  }
+
   @Override
   public void started( TaskEvent e )
   {
     switch( e.getKind() )
     {
+      case PARSE:
+        // override the ParserFactory to support fragments in comments
+        ManParserFactory parserFactory = ManParserFactory.instance( _javacTask.getContext() );
+        parserFactory.setTaskEvent( e );
+        ReflectUtil.field( JavaCompiler.instance( _javacTask.getContext() ), "parserFactory" ).set( parserFactory );
+        break;
+
       case ENTER:
-        if( !_initialized )
-        {
-          _initialized = true;
-
-          // Must perform shenanigans early
-          NecessaryEvilUtil.bypassJava9Security();
-
-          // Initialize the Javac host environment
-          getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );
-
-          // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder_9
-          Bootstrap.init();
-
-          // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
-          tailorJavaCompiler( e );
-        }
+        initialize( e );
+        // add the fragments created during parsing
+        addFileFragments( e );
         break;
 
       case ANALYZE:
@@ -963,5 +988,85 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isNoBootstrapping()
   {
     return _argPresent.get( ARG_NO_BOOTSTRAP );
+  }
+
+  public void registerType( JavaFileObject sourceFile, int offset, String name, String ext, String content )
+  {
+    _fileFragmentResources.add( new FileFragmentResource( sourceFile, offset, name, ext, content ) );
+  }
+
+  private void addFileFragments( TaskEvent e )
+  {
+    //noinspection Java8CollectionRemoveIf
+    for( Iterator<FileFragmentResource> iterator = _fileFragmentResources.iterator(); iterator.hasNext(); )
+    {
+      FileFragmentResource fragment = iterator.next();
+      if( fragment.embed( e ) )
+      {
+        iterator.remove();
+      }
+    }
+  }
+
+  private class FileFragmentResource
+  {
+    private final JavaFileObject _sourceFile;
+    private final String _name;
+    private final String _ext;
+    private final String _content;
+    private final int _offset;
+
+    private FileFragmentResource( JavaFileObject sourceFile, int offset, String name, String ext, String content )
+    {
+      _sourceFile = sourceFile;
+      _name = name;
+      _ext = ext;
+      _content = content;
+      _offset = offset;
+    }
+
+    private boolean embed( TaskEvent e )
+    {
+      JavaFileObject sourceFile = e.getSourceFile();
+      if( !sourceFile.equals( _sourceFile ) )
+      {
+        return false;
+      }
+
+      IFile file;
+      try
+      {
+        file = getHost().getFileSystem().getIFile( sourceFile.toUri().toURL() );
+      }
+      catch( Exception ex )
+      {
+        return false;
+      }
+
+      ExpressionTree pkg = e.getCompilationUnit().getPackageName();
+      if( pkg == null )
+      {
+        return false;
+      }
+
+      FileFragmentImpl fragment =
+        new FileFragmentImpl( _name, _ext, StringLiteral, file, _offset, _content.length(), _content );
+      JavacManifoldHost host = JavacPlugin.instance().getHost();
+      Set<ITypeManifold> tms = host.getSingleModule()
+        .findTypeManifoldsFor( fragment, t -> t.getContributorKind() != Supplemental );
+      ITypeManifold tm = tms.stream().findFirst().orElse( null );
+      if( tm == null )
+      {
+        //## todo: add compile warning
+        return true;
+      }
+
+      // ensure path cache is created before creation notify
+      host.getSingleModule().getPathCache();
+
+      String fqn = PathCache.qualifyName( pkg.toString(), _name );
+      host.createdType( fragment, new String[] {fqn} );
+      return true;
+    }
   }
 }

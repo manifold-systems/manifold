@@ -25,6 +25,8 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import jdk.nashorn.api.scripting.JSObject;
 import jdk.nashorn.api.scripting.ScriptObjectMirror;
+import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcClass;
@@ -53,9 +55,8 @@ import static manifold.js.JavascriptProgram.*;
 //## todo: replace nashorn with something else (it will be removed jdk11+ time frame)
 public class JavascriptClass
 {
-  static SrcClass genClass( String fqn, ProgramNode programNode )
+  static SrcClass genClass( String fqn, ProgramNode programNode, IFile file )
   {
-
     ClassNode classNode = programNode.getFirstChild( ClassNode.class );
 
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class );
@@ -63,7 +64,7 @@ public class JavascriptClass
       new SrcAnnotationExpression( SourcePosition.class )
         .addArgument( "url", String.class, programNode.getUrl().toString() )
         .addArgument( "feature", String.class, ManClassUtil.getShortClassName( fqn ) )
-        .addArgument( "offset", int.class, classNode.getStart().getOffset() )
+        .addArgument( "offset", int.class, absoluteOffset( classNode.getStart().getOffset(), file ) )
         .addArgument( "length", int.class, classNode.getEnd().getOffset() - classNode.getStart().getOffset() ) );
 
     String superClass = classNode.getSuperClass();
@@ -85,15 +86,15 @@ public class JavascriptClass
 
     clazz.addField( new SrcField( "_context", ScriptObjectMirror.class ) );
 
-    addConstructor( clazz, classNode );
+    addConstructor( clazz, classNode, file );
     addUtilityMethods( clazz, classNode, fqn );
-    addMethods( fqn, clazz, classNode );
-    addProperties( fqn, clazz, classNode );
+    addMethods( fqn, clazz, classNode, file );
+    addProperties( fqn, clazz, classNode, file );
 
     return clazz;
   }
 
-  private static void addConstructor( SrcClass clazz, ClassNode classNode )
+  private static void addConstructor( SrcClass clazz, ClassNode classNode, IFile file )
   {
     ConstructorNode constructor = classNode.getFirstChild( ConstructorNode.class );
 
@@ -109,7 +110,7 @@ public class JavascriptClass
         new SrcAnnotationExpression( SourcePosition.class )
           .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
           .addArgument( "feature", String.class, "constructor" )
-          .addArgument( "offset", int.class, constructor.getStart().getOffset() )
+          .addArgument( "offset", int.class, absoluteOffset( constructor.getStart().getOffset(), file ) )
           .addArgument( "length", int.class, constructor.getEnd().getOffset() - constructor.getStart().getOffset() ) );
     }
     else
@@ -162,7 +163,7 @@ public class JavascriptClass
     return id;
   }
 
-  private static void addMethods( String fqn, SrcClass clazz, ClassNode classNode )
+  private static void addMethods( String fqn, SrcClass clazz, ClassNode classNode, IFile file )
   {
     for( ClassFunctionNode node : classNode.getChildren( ClassFunctionNode.class ) )
     {
@@ -174,7 +175,7 @@ public class JavascriptClass
         new SrcAnnotationExpression( SourcePosition.class )
           .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
           .addArgument( "feature", String.class, node.getName() )
-          .addArgument( "offset", int.class, node.getStart().getOffset() )
+          .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
           .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
 
       // params
@@ -203,7 +204,7 @@ public class JavascriptClass
     }
   }
 
-  private static void addProperties( String fqn, SrcClass clazz, ClassNode classNode )
+  private static void addProperties( String fqn, SrcClass clazz, ClassNode classNode, IFile file )
   {
 
     for( PropertyNode node : classNode.getChildren( PropertyNode.class ) )
@@ -223,7 +224,7 @@ public class JavascriptClass
           new SrcAnnotationExpression( SourcePosition.class )
             .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
             .addArgument( "feature", String.class, node.getName() )
-            .addArgument( "offset", int.class, node.getStart().getOffset() )
+            .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
             .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
 
         //impl
@@ -341,4 +342,12 @@ public class JavascriptClass
     return (ScriptObjectMirror)((ScriptObjectMirror)engine.get( "nashorn.global" )).get( name );
   }
 
+  private static Object absoluteOffset( int offset, IFile file )
+  {
+    if( file instanceof IFileFragment )
+    {
+      offset += ((IFileFragment)file).getOffset();
+    }
+    return offset;
+  }
 }

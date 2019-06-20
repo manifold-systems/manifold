@@ -38,7 +38,7 @@ public class TemplateTokenizer extends Tokenizer
 
   TemplateTokenizer( String subtext, boolean isJST )
   {
-    super( subtext );
+    super( subtext, null );
     init( isJST );
   }
 
