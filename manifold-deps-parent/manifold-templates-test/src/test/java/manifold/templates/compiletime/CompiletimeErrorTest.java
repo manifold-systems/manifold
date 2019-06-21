@@ -14,10 +14,10 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ extends ExtendsTesterTemplate %><%@ extends ExtendsTesterTemplate %>", null,
+      "<%@ extends ExtendsTesterTemplate %><%@ extends ExtendsTesterTemplate %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ extends ExtendsTesterTemplate %><%@ extends ExtendsTesterTemplate %><%@ end section %>", null,
+      "<%@ section mySection %><%@ extends ExtendsTesterTemplate %><%@ extends ExtendsTesterTemplate %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();
@@ -38,10 +38,10 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ params(String name, int age) %><%@ params(String name, int age) %>", null,
+      "<%@ params(String name, int age) %><%@ params(String name, int age) %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ params(String name, int age) %><%@ end section %>", null,
+      "<%@ section mySection %><%@ params(String name, int age) %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();
@@ -61,16 +61,16 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ extends ExtendsTesterTemplate %><%@ end section %>", null,
+      "<%@ section mySection %><%@ extends ExtendsTesterTemplate %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ params(String name, int age) %><%@ end section %>", null,
+      "<%@ section mySection %><%@ params(String name, int age) %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ end section %>", null,
+      "<%@ end section %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section MySection %>", null,
+      "<%@ section MySection %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();
@@ -93,10 +93,10 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ content %><%@ content %>", null,
+      "<%@ content %><%@ content %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ content %><%@ end section %>", null,
+      "<%@ section mySection %><%@ content %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();
@@ -116,10 +116,10 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ layout directives.layouts.IsLayout%><%@ layout directives.layouts.IsLayout%>", null,
+      "<%@ layout directives.layouts.IsLayout%><%@ layout directives.layouts.IsLayout%>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section mySection %><%@ layout directives.layouts.IsLayout %><%@ end section %>", null,
+      "<%@ section mySection %><%@ layout directives.layouts.IsLayout %><%@ end section %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();
@@ -139,10 +139,10 @@ public class CompiletimeErrorTest
   {
     TemplateGen generator = new TemplateGen();
     generator.generateCode( "testing.tester",
-      "<%@ invalidDirective %>", null,
+      "<%@ invalidDirective %>", null, null,
       "tester.manifold.templates.html" );
     generator.generateCode( "testing.tester",
-      "<%@ section MySection(apple) %> <%@ end section %>", null,
+      "<%@ section MySection(apple) %> <%@ end section %>", null, null,
       "tester.manifold.templates.html" );
 
     List<String> expectedMessages = new ArrayList<>();

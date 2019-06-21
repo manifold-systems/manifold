@@ -55,7 +55,7 @@ class TemplateModel extends AbstractSingleFileModel
       String templateSource = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
       templateSource = templateSource.replace( "\r\n", "\n" );
       TemplateGen generator = new TemplateGen();
-      _source = generator.generateCode( getFqn(), templateSource, file.toURI(), file.getName() );
+      _source = generator.generateCode( getFqn(), templateSource, file, file.toURI(), file.getName() );
       _issues = generator.getIssues();
     }
     catch( IOException e )

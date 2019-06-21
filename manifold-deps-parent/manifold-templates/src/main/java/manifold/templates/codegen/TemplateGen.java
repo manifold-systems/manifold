@@ -26,12 +26,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
+import manifold.api.fs.def.FileFragmentImpl;
+import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.internal.javac.IIssue;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Token;
 import manifold.templates.tokenizer.Tokenizer;
 import manifold.util.ManClassUtil;
+import manifold.util.ManEscapeUtil;
 
 
 import static manifold.templates.codegen.TemplateGen.DirType.*;
@@ -43,9 +48,9 @@ public class TemplateGen
 
   private List<TemplateIssue> _issues = new ArrayList<>();
 
-  public String generateCode( String fullyQualifiedName, String source, URI fileUri, String fileName )
+  public String generateCode( String fullyQualifiedName, String source, IFile file, URI fileUri, String fileName )
   {
-    FileGenerator generator = new FileGenerator( fullyQualifiedName, fileUri, fileName, source );
+    FileGenerator generator = new FileGenerator( fullyQualifiedName, file, fileUri, fileName, source );
     return generator.getFileContents();
   }
 
@@ -79,9 +84,10 @@ public class TemplateGen
     Directive layoutDir;
     int contentPos;
     String testSource;
+    private IFile _file;
 
     //only for the outermost class
-    private ClassInfo( Iterator<Directive> dirIterator, String fqn, String name, URI fileUri, String fileName, Integer endTokenPos )
+    private ClassInfo( Iterator<Directive> dirIterator, String fqn, String name, IFile file, URI fileUri, String fileName, Integer endTokenPos )
     {
       parent = null;
       this.fqn = fqn;
@@ -91,6 +97,7 @@ public class TemplateGen
       this.startTokenPos = 0;
       this.endTokenPos = endTokenPos;
       this.depth = 0;
+      _file = file;
 
       fillClassInfo( dirIterator );
     }
@@ -227,6 +234,16 @@ public class TemplateGen
     void addNestedClass( ClassInfo nestedClass )
     {
       nestedClasses.put( nestedClass.startTokenPos, nestedClass );
+    }
+
+    public boolean isFragment()
+    {
+      return _file instanceof IFileFragment;
+    }
+
+    public String getFragmentText()
+    {
+      return ((FileFragmentImpl)_file).getContent();
     }
   }
 
@@ -542,7 +559,7 @@ public class TemplateGen
     private List<Token> _tokens;
     private Map<Integer, Directive> _dirMap;
 
-    FileGenerator( String fqn, URI fileUri, String fileName, String source )
+    FileGenerator( String fqn, IFile file, URI fileUri, String fileName, String source )
     {
       String className = ManClassUtil.getShortClassName( fqn );
       String packageName = ManClassUtil.getPackage( fqn );
@@ -551,7 +568,7 @@ public class TemplateGen
 
       List<Directive> dirList = getDirectivesList( _tokens );
       _dirMap = getDirectivesMap( dirList );
-      _currClass = new ClassInfo( dirList.iterator(), fqn, className, fileUri, fileName, _tokens.size() - 1 );
+      _currClass = new ClassInfo( dirList.iterator(), fqn, className, file, fileUri, fileName, _tokens.size() - 1 );
       if( fileUri == null )
       {
         // for tests to avoid files
@@ -824,13 +841,25 @@ public class TemplateGen
 
     private void addGetTemplateResourceAsStream()
     {
-      _sb.newLine( "    protected java.io.InputStream getTemplateResourceAsStream() {" )
-        .newLine( "        return " + (_currClass.fileUri == null ? "null" : "getClass().getResourceAsStream(\"" + getTemplateFilePath() + "\");") )
-        .newLine( "    }" );
+      if( _currClass.isFragment() )
+      {
+        _sb.newLine( "    @" + DisableStringLiteralTemplates.class.getTypeName() );
+        _sb.newLine( "    protected java.io.InputStream getTemplateResourceAsStream() {" )
+          .newLine( "        return new java.io.ByteArrayInputStream(\"" +
+                    ManEscapeUtil.escapeForJavaStringLiteral( _currClass.getFragmentText() ) + "\".getBytes());" )
+          .newLine( "    }" );
+      }
+      else
+      {
+        _sb.newLine( "    protected java.io.InputStream getTemplateResourceAsStream() {" )
+          .newLine( "        return " + (_currClass.fileUri == null ? "null" : "getClass().getResourceAsStream(\"" + getTemplateFilePath() + "\");") )
+          .newLine( "    }" );
+      }
 
       if( _currClass.testSource != null )
       {
         //!! only for tests
+        _sb.newLine( "    @" + DisableStringLiteralTemplates.class.getTypeName() );
         _sb.newLine( "    protected String getTemplateText() {" )
           .newLine( "        return \"" + _currClass.testSource.replace( "\"", "\\\\\"" ).replace( "\n", "\\\\n" ) + "\";" )
           .newLine( "    }" );

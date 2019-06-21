@@ -17,6 +17,8 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.parser.Tokens;
+import java.util.ArrayList;
+import java.util.List;
 import javax.tools.JavaFileObject;
 
 /**
@@ -69,6 +71,7 @@ public class CommentProcessor
     }
   }
 
+  @SuppressWarnings("WeakerAccess")
   public Fragment parseFragment( int pos, String comment, Style style )
   {
     int index = 0;
@@ -97,28 +100,21 @@ public class CommentProcessor
         '>' == comment.charAt( index++ ) )
     {
       index = skipSpaces( comment, index, end );
-      String name = readName( comment, index, end );
+      String name = parseName( comment, index, end );
       if( name != null )
       {
         index += name.length();
-        if( index < end )
+        List<String> exts = new ArrayList<>();
+        index = parseExtensions( comment, index, end, exts );
+        if( index < end && !exts.isEmpty() )
         {
-          if( '.' == comment.charAt( index++ ) )
+          index = skipSpaces( comment, index, end );
+          if( index+1 < end &&
+              '<' == comment.charAt( index++ ) &&
+              ']' == comment.charAt( index++ ) )
           {
-            index = skipSpaces( comment, index, end );
-            String ext = readName( comment, index, end );
-            if( ext != null )
-            {
-              index += ext.length();
-              index = skipSpaces( comment, index, end );
-              if( index+1 < end &&
-                  '<' == comment.charAt( index++ ) &&
-                  ']' == comment.charAt( index++ ) )
-              {
-                String content = comment.substring( index, end );
-                return new Fragment( pos + index, name, ext, content );
-              }
-            }
+            String content = comment.substring( index, end );
+            return new Fragment( pos + index, makeBaseName( name, exts ), exts.get( exts.size()-1 ), content );
           }
         }
       }
@@ -126,7 +122,37 @@ public class CommentProcessor
     return null;
   }
 
-  private String readName( String comment, int index, int end )
+  private int parseExtensions( String comment, int index, int end, List<String> exts )
+  {
+    while( index < end &&
+           '.' == comment.charAt( index ) )
+    {
+      index++;
+      String ext = parseName( comment, index, end );
+      if( ext != null )
+      {
+        exts.add( ext );
+        index += ext.length();
+      }
+      else
+      {
+        break;
+      }
+    }
+    return index;
+  }
+
+  private String makeBaseName( String name, List<String> exts )
+  {
+    StringBuilder sb = new StringBuilder( name );
+    for( int i = 0; i < exts.size() - 1; i++ )
+    {
+      sb.append( '.' ).append( exts.get( i ) );
+    }
+    return sb.toString();
+  }
+
+  private String parseName( String comment, int index, int end )
   {
     StringBuilder sb = new StringBuilder();
     int start = index;
@@ -161,7 +187,7 @@ public class CommentProcessor
     private final String _ext;
     private final String _content;
 
-    public Fragment( int offset, String name, String ext, String content )
+    Fragment( int offset, String name, String ext, String content )
     {
       _offset = offset;
       _name = name;
