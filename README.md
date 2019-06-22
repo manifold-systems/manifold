@@ -8,7 +8,7 @@
 
 ## What is Manifold?
 [Manifold](http://manifold.systems) supplements Java with useful features like Type-safe Metaprogramming, Structural
-Typing, and Extension Methods. Simply add the Manifold jar to your project and begin taking advantage of it.
+Typing, and Extension Methods. Simply add Manifold to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
