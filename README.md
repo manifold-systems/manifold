@@ -14,7 +14,7 @@ Typing, and Extension Methods. Simply add the Manifold jar to your project and b
 
 ### [Meta-programming](http://manifold.systems/docs.html)
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
-and **YAML**. Remove the code gen step in your build process.
+and **YAML**. Remove the code gen step in your build process. [Check it out!](http://manifold.systems/images/graphql.mp4)
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
@@ -32,7 +32,7 @@ greeting.myMethod(); // Add your own methods to String!
 ```  
 
 ### [Structural Typing](http://manifold.systems/docs.html#structural-interfaces)
-Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces.
+Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [Check it out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java
 Map<String, Object> map = new HashMap<>();
 MyThingInterface thing = (MyThingInterface) map; // O_o
@@ -42,7 +42,7 @@ out.println(thing.getClass()); // prints "java.util.HashMap"
 ```
  
 ### [Type-safe Reflection](http://manifold.systems/docs.html#type-safe-reflection)
-Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection.
+Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection. [Check it out!](http://manifold.systems/images/jailbreak.mp4) 
 ```java
 @Jailbreak Foo foo = new Foo();
 // Direct, *type-safe* access to *all* foo's members
@@ -61,7 +61,7 @@ List<URL> urls = list
 ```
 
 ### [String Templates](http://manifold.systems/docs.html#templating) (aka String Interpolation)
-Embed variables and expressions in String literals, no more clunky string concat!
+Embed variables and expressions in String literals, no more clunky string concat! [Check it out!](http://manifold.systems/images/string_interpolation.mp4)
 ```java
 int hour = 15;
 // Simple variable access with '$'
@@ -72,6 +72,7 @@ result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
        
 ### [Template Files with *ManTL*](http://manifold.systems/manifold-templates.html)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
+Supports type-safe inclusion of other templates, shared layouts, and more. [Check it out!](http://manifold.systems/images/mantl.mp4)
 ```java
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
