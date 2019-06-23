@@ -3,9 +3,10 @@ layout: default
 ---
 
 ## Introducing _Manifold_!
-[Manifold](http://manifold.systems) is a breakthrough technology you can use to seamlessly extend Java to compile and load types from sources
-_in addition to_ `.java` files.  Using this framework your code has direct, type-safe access to metadata such as GraphQL, YAML & JSON Schema files, DDL & SQL queries,
-and even other programming languages. Building on this foundation Manifold provides an ever growing set of extensions, including comprehensive support for
+[Manifold](http://manifold.systems) is a breakthrough technology you can use to seamlessly extend Java to compile and
+load types from non-Java source files.  Using this framework your code has direct, type-safe access to metadata such as
+GraphQL, YAML & JSON Schema files, SQL, and even other programming languages. Building on this foundation Manifold
+provides an ever growing set of extensions, including comprehensive support for
 [GraphQL](http://manifold.systems/docs.html#graphql),
 [YAML and JSON Schema](http://manifold.systems/docs.html#json-and-json-schema),
 [extension methods](http://manifold.systems/docs.html#extension-classes),
@@ -20,7 +21,8 @@ a code generation step. Jump directly to a YAML property from a call site in you
 usages across your codebase.  Use Hotswap to make and test changes to files while debugging.  Author templates with the full
 expressive power of Java and use them type-safely in your code.  Etc.
 
-Manifold is easy to use, it's just a JAR file you add to your existing project.  Just drop it in and begin taking advantage of it.
+Manifold is easy to use, it's just a dependency you add to your existing project.  See the
+[Setup Guide](http://manifold.systems/docs.html#setup) for details.
 
 ## What can you do with Manifold?
 

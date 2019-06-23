@@ -27,7 +27,58 @@ begin experimenting with a JSON Schema REST API using Manifold.
 Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to get hooked
 on ManTL templates with the Manifold IntelliJ plugin.
 
-## [Meta-programming](http://manifold.systems/docs.html)
+## Screencasts
+
+* [GraphQL](http://manifold.systems/images/graphql.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/graphql.mp4">
+  </video>
+</p>
+
+* [JSON Schema](http://manifold.systems/images/json.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/json.mp4">
+  </video>
+</p>
+  
+* [Extension Methods](http://manifold.systems/images/ExtensionMethod.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/ExtensionMethod.mp4">
+  </video>
+</p>
+
+* [Structural Typing](http://manifold.systems/images/structural%20typing.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/structural%20typing.mp4">
+  </video>
+</p>
+
+* [Type-safe Reflection (**@Jailbreak**)](http://manifold.systems/images/jailbreak.mp4) 
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/jailbreak.mp4">
+  </video>
+</p>
+
+* [String Templates (aka Interpolation)](http://manifold.systems/images/string_interpolation.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/string_interpolation.mp4">
+  </video>
+</p>
+
+* [Manifold Template Language (ManTL)](http://manifold.systems/images/mantl.mp4)
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/mantl.mp4">
+  </video>
+</p>
+
+## [Metaprogramming](http://manifold.systems/docs.html)
 Gain direct, **type-safe** access to *any* type of data. Remove the code gen step in your build process.
 
 ### Resources
