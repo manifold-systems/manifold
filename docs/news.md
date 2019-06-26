@@ -5,6 +5,16 @@ layout: default
 # News
 <br/><br/>
 
+## JetBrains Marketplace is LIVE with Manifold (25 June 2019):
+<br>
+JetBrains Marketplace is [LIVE](https://blog.jetbrains.com/platform/2019/06/jetbrains-marketplace-is-live/) today along
+with [Manifold IntelliJ plugin release 2019.1.5](https://plugins.jetbrains.com/plugin/10057-manifold).
+<br><br> 
+<small>The Manifold IntelliJ IDEA plugin version `2019.1.5` is available directly from your IDE or visit the
+[JetBrains Plugins Repository](https://plugins.jetbrains.com/plugin/10057-manifold).</small>
+<br/><br/> 
+
+
 ## Neuer Artikel bei Jaxenter (8. Juni 2019):
 <br>
 <table>
