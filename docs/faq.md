@@ -14,7 +14,7 @@ Yes.  Manifold fully supports Java 8 - 12.  Manifold also fully supports the Jav
 [Setup Guide](http://manifold.systems/docs.html#setup) for more info.
 
 #### Q: Manifold is somehow using Java internal APIs to do its magic. Could it break in a future version of Java?
-No.  Java internal APIs can change from version to version, however Manifold always adjusts to changes ahead of Java
+Unlikely.  Java internal APIs can change from version to version, however Manifold always adjusts to changes ahead of Java
 releases.  To understand this better consider Manifold currently works with Java versions 8, 9, 10, 11, 12, and soon 13. 
 The internal APIs have changed significantly between all those versions, yet Manifold continues to work and improve
 along the way.
