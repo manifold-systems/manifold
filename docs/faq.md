@@ -9,9 +9,15 @@ layout: default
 
 ## Common Questions
 
-#### Q: Does Manifold support Java 11?
-Yes.  Manifold fully supports Java 8 - 12.  Manifold fully supports the Java Platform Module System (JPMS).  See the
+#### Q: Does Manifold support Java 11? 12? 8?
+Yes.  Manifold fully supports Java 8 - 12.  Manifold also fully supports the Java Platform Module System (JPMS).  See the
 [Setup Guide](http://manifold.systems/docs.html#setup) for more info.
+
+#### Q: Manifold is somehow using Java internal APIs to do its magic. Could it break in a future version of Java?
+No.  Java internal APIs can change from version to version, however Manifold always adjusts to changes ahead of Java
+releases.  To understand this better consider Manifold currently works with Java versions 8, 9, 10, 11, 12, and soon 13. 
+The internal APIs have changed significantly between all those versions, yet Manifold continues to work and improve
+along the way.
 
 #### Q: Is Manifold free?
 Yes, Manifold is an [open source](https://github.com/manifold-systems/manifold) project available on github freely 
