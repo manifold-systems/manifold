@@ -28,12 +28,13 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.IFileSystem;
 import manifold.api.fs.ResourcePath;
+import manifold.internal.javac.HostKind;
 
 public class FileFragmentImpl implements IFileFragment
 {
   private final String _name;
   private final String _ext;
-  private final Place _place;
+  private final HostKind _hostKind;
   private final IFile _enclosingFile;
   private int _offset;
   private Supplier<Integer> _offsetSupplier;
@@ -41,13 +42,11 @@ public class FileFragmentImpl implements IFileFragment
   private final String _content;
   private Object _container;
 
-  public enum Place { StringLiteral, RawLiteral, PlainText, BlockComment, LineComment, Binary }
-
-  public FileFragmentImpl( String name, String ext, Place place, IFile enclosingFile, int offset, int length, String content )
+  public FileFragmentImpl( String name, String ext, HostKind hostKind, IFile enclosingFile, int offset, int length, String content )
   {
     _name = name;
     _ext = ext.toLowerCase();
-    _place = place;
+    _hostKind = hostKind;
     _enclosingFile = enclosingFile;
     _offset = offset;
     _length = length;
@@ -70,9 +69,9 @@ public class FileFragmentImpl implements IFileFragment
     _container = container;
   }
 
-  public Place getPlace()
+  public HostKind getHostKind()
   {
-    return _place;
+    return _hostKind;
   }
 
   @Override

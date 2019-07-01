@@ -180,7 +180,18 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
           throw ManExceptionUtil.unchecked( ioe );
         }
       } );
-    int offset = lineOffsets[line - 1] + column - 1;
+    int offset;
+    try
+    {
+      offset = lineOffsets[line - 1] + column - 1;
+    }
+    catch( ArrayIndexOutOfBoundsException ex )
+    {
+      System.err.print( "WARNING: ");
+      ex.printStackTrace();
+      offset = 0;
+    }
+
     if( file instanceof IFileFragment )
     {
       offset += ((IFileFragment)file).getOffset();

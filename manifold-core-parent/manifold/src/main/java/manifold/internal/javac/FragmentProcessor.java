@@ -20,16 +20,21 @@ import com.sun.tools.javac.parser.Tokens;
 import java.util.ArrayList;
 import java.util.List;
 import javax.tools.JavaFileObject;
+import manifold.util.fingerprint.Fingerprint;
 
 /**
  * Process embedded type fragments. Dynamically adds virtual resource files to the type system as they are encountered,
  * thus enabling native resource types to be embedded in Java source.
  */
-public class CommentProcessor
+public class FragmentProcessor
 {
-  private final static CommentProcessor INSTANCE = new CommentProcessor();
+  public static final String FRAGMENT_START = "[>";
+  public static final String FRAGMENT_END = "<]";
 
-  public static CommentProcessor instance()
+  private final static FragmentProcessor INSTANCE = new FragmentProcessor();
+  public static final String ANONYMOUS_FRAGMENT_PREFIX = "Fragment_";
+
+  public static FragmentProcessor instance()
   {
     return INSTANCE;
   }
@@ -42,84 +47,119 @@ public class CommentProcessor
   */
   /*[>Foo.graphql<] query Persons { name address }*/
   //[>Foo.graphql<] query Persons { name address }
-  /**[>Foo.graphql<] query Persons { name address }*/
+
+  /**
+   * [>Foo.graphql<] query Persons { name address }
+   */
   void processComment( JavaFileObject sourceFile, int pos, String comment, Tokens.Comment.CommentStyle style )
   {
-    Fragment f = parseFragment( pos, comment, Style.from( style ) );
+    Fragment f = parseFragment( pos, comment, HostKind.from( style ) );
     if( f != null )
     {
-      JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f._content );
+      JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
     }
   }
 
-  public enum Style
+  void processString( JavaFileObject sourceFile, int pos, String chars, char type )
   {
-    LINE, BLOCK, JAVADOC;
-
-    static Style from( Tokens.Comment.CommentStyle s )
+    Fragment f = parseFragment( pos, chars, type == '`' ? HostKind.BACKTICK_LITERAL : HostKind.DOUBLE_QUOTE_LITERAL );
+    if( f != null )
     {
-      switch( s )
-      {
-        case LINE:
-          return LINE;
-        case BLOCK:
-          return BLOCK;
-        case JAVADOC:
-          return JAVADOC;
-      }
-      throw new IllegalStateException();
+      JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
     }
   }
 
-  @SuppressWarnings("WeakerAccess")
-  public Fragment parseFragment( int pos, String comment, Style style )
+  public Fragment parseFragment( int pos, String chars, HostKind hostKind )
   {
     int index = 0;
-    int end = comment.length();
-    switch( style )
+    int end = chars.length();
+    boolean isString = false;
+    switch( hostKind )
     {
-      case LINE:
+      case LINE_COMMENT:
         index += 2; // skip '//'
         break;
-      case BLOCK:
+      case BLOCK_COMMENT:
         index += 2; // skip '/*'
         end -= 2;   // end before '*/'
         break;
-      case JAVADOC:
+      case JAVADOC_COMMENT:
         index += 3; // skip '/**'
         end -= 2;   // end before '*/'
         break;
+      case DOUBLE_QUOTE_LITERAL:
+      case BACKTICK_LITERAL:
+        isString = true;
+        index += 1; // skip '"' or '`'
+        end -= 1;   // end before terminating '"' or '`'
+        break;
     }
-    index = skipSpaces( comment, index, end );
-    if( index+1 >= end )
+    index = isString ? index : skipSpaces( chars, index, end );
+    if( index + 1 >= end )
     {
       return null;
     }
 
-    if( '[' == comment.charAt( index++ ) &&
-        '>' == comment.charAt( index++ ) )
+    if( FRAGMENT_START.charAt( 0 ) == chars.charAt( index++ ) &&
+        FRAGMENT_START.charAt( 1 ) == chars.charAt( index++ ) )
     {
-      index = skipSpaces( comment, index, end );
-      String name = parseName( comment, index, end );
+      String name;
+      if( isString )
+      {
+        // Do not skip spaces for String literal
+
+        if( index < end && chars.charAt( index ) == '.' )
+        {
+          // Name is optional if fragment is in a String literal e.g., "[>.sql<] blah blah" // just the dot is ok
+          //(note the reason why the dot is needed for anonymity is so that multi-extension names can be distinguished
+          //esp. for template languages e.g., .html.mtl)
+          name = "";
+        }
+        else
+        {
+          name = parseName( chars, index, end );
+        }
+      }
+      else
+      {
+        index = skipSpaces( chars, index, end );
+        name = parseName( chars, index, end );
+      }
+
       if( name != null )
       {
         index += name.length();
         List<String> exts = new ArrayList<>();
-        index = parseExtensions( comment, index, end, exts );
+        index = parseExtensions( chars, index, end, exts );
         if( index < end && !exts.isEmpty() )
         {
-          index = skipSpaces( comment, index, end );
-          if( index+1 < end &&
-              '<' == comment.charAt( index++ ) &&
-              ']' == comment.charAt( index++ ) )
+          index = skipSpaces( chars, index, end );
+          if( index + 1 < end &&
+              FRAGMENT_END.charAt( 0 ) == chars.charAt( index++ ) &&
+              FRAGMENT_END.charAt( 1 ) == chars.charAt( index++ ) )
           {
-            String content = comment.substring( index, end );
-            return new Fragment( pos + index, makeBaseName( name, exts ), exts.get( exts.size()-1 ), content );
+            String content = chars.substring( index, end );
+            name = isString ? handleAnonymousName( name, content ) : name;
+            return new Fragment( pos + index, makeBaseName( name, exts ), exts.get( exts.size() - 1 ), hostKind, content );
           }
         }
       }
     }
     return null;
+  }
+
+  private String handleAnonymousName( String name, String content )
+  {
+    if( name.isEmpty() )
+    {
+      // name must be uniquely deterministic wrt content
+
+      Fingerprint fingerprint = new Fingerprint( content );
+      String suffix = fingerprint.toString();
+      suffix = suffix.replace( '-', '_');
+      name = ANONYMOUS_FRAGMENT_PREFIX + suffix;
+    }
+    return name;
   }
 
   private int parseExtensions( String comment, int index, int end, List<String> exts )
@@ -186,12 +226,14 @@ public class CommentProcessor
     private final String _name;
     private final String _ext;
     private final String _content;
+    private final HostKind _hostKind;
 
-    Fragment( int offset, String name, String ext, String content )
+    Fragment( int offset, String name, String ext, HostKind hostKind, String content )
     {
       _offset = offset;
       _name = name;
       _ext = ext;
+      _hostKind = hostKind;
       _content = content;
     }
 
@@ -208,6 +250,12 @@ public class CommentProcessor
     public String getExt()
     {
       return _ext;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public HostKind getHostKind()
+    {
+      return _hostKind;
     }
 
     public String getContent()

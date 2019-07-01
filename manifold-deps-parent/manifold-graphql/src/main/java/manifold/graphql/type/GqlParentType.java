@@ -68,6 +68,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -87,6 +88,7 @@ import manifold.api.json.schema.IJsonFormatTypeResolver;
 import manifold.api.json.schema.JsonFormatType;
 import manifold.api.templ.DisableStringLiteralTemplates;
 import manifold.api.type.ActualName;
+import manifold.api.type.FragmentValue;
 import manifold.api.type.SourcePosition;
 import manifold.ext.DataBindings;
 import manifold.ext.RuntimeMethods;
@@ -148,13 +150,84 @@ class GqlParentType
 
   void render( StringBuilder sb )
   {
-    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Interface, _file )
+    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _file )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
+      .addAnnotation( new SrcAnnotationExpression( FragmentValue.class.getSimpleName() )
+        .addArgument( "methodName", String.class, "fragmentValue" )
+        .addArgument( "type", String.class, getFqn() ) )
       .modifiers( Modifier.PUBLIC );
     addImports( srcClass );
     addInnerTypes( srcClass );
     addInnerOperations( srcClass );
+    addFragmentValueMethod( srcClass );
     srcClass.render( sb, 0 );
+  }
+
+  private void addFragmentValueMethod( SrcLinkedClass srcClass )
+  {
+    if( !(_file instanceof IFileFragment) )
+    {
+      return;
+    }
+
+    switch( ((IFileFragment)_file).getHostKind() )
+    {
+      case DOUBLE_QUOTE_LITERAL:
+      case BACKTICK_LITERAL:
+        break;
+
+      default:
+        return;
+    }
+
+    for( OperationDefinition operation: _operations.values() )
+    {
+      switch( operation.getOperation() )
+      {
+        case QUERY:
+        case MUTATION:
+          // Queries and mutations are the same thing -- web requests
+          addValueMethodForOperation( operation, srcClass );
+          break;
+        case SUBSCRIPTION:
+          // todo:
+          break;
+      }
+    }
+  }
+
+  private void addValueMethodForOperation( OperationDefinition operation, SrcLinkedClass srcClass )
+  {
+    String identifier = makeIdentifier( operation.getName(), false );
+
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Flags.PUBLIC )
+      .name( "builder" )
+      .returns( new SrcType( identifier + ".Builder" ) );
+    addRequiredParameters( operation, method );
+    StringBuilder sb = new StringBuilder();
+    sb.append( "return $identifier.builder(" );
+    int count = 0;
+    for( SrcParameter param: method.getParameters() )
+    {
+      if( count++ > 0 )
+      {
+        sb.append( ", " );
+      }
+      //noinspection unused
+      sb.append( param.getSimpleName() );
+    }
+    sb.append( ");" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+
+
+    SrcMethod valueMethod = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "fragmentValue" )
+      .returns( srcClass.getSimpleName() )
+      .body( "return new ${srcClass.getSimpleName()}();" );
+    srcClass.addMethod( valueMethod );
   }
 
   private void addInnerTypes( SrcLinkedClass srcClass )
@@ -479,7 +552,7 @@ class GqlParentType
   private void addCopierMethod( SrcLinkedClass enclosingType )
   {
     SrcMethod method = new SrcMethod( enclosingType )
-      .modifiers( Modifier.STATIC)
+      .modifiers( Modifier.STATIC )
       .name( "copier" )
       .returns( new SrcType( "Copier" ) )
       .addParam( "from", enclosingType.getSimpleName() )
@@ -641,6 +714,7 @@ class GqlParentType
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( SourcePosition.class );
     srcClass.addImport( Structural.class );
+    srcClass.addImport( FragmentValue.class );
     importAllOtherGqlTypes( srcClass );
   }
 
@@ -1257,7 +1331,7 @@ class GqlParentType
     }
 
     int line = loc.getLine();
-    if( GRAPHQL_LINE_OFFSET_BUG )
+    if( line > 1 && GRAPHQL_LINE_OFFSET_BUG )
     {
       // adjust for the graphql-java line location bug
       line--;
@@ -1270,7 +1344,7 @@ class GqlParentType
 
     return new SourceLocation( line, column );
   }
-  
+
   private void addSourcePositionAnnotation( SrcLinkedClass srcClass, Node node, String name, SrcAnnotated srcAnno )
   {
     SourceLocation loc = getActualSourceLocation( srcClass, node );

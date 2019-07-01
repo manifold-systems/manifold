@@ -31,6 +31,9 @@ import java.lang.invoke.MethodType;
 import java.nio.CharBuffer;
 import manifold.util.ReflectUtil;
 
+
+import static com.sun.tools.javac.parser.Tokens.TokenKind.STRINGLITERAL;
+
 /**
  * Override ParserFactory to:<br>
  * - facilitate a pluggable Java preprocessor<br>
@@ -183,9 +186,22 @@ public class ManParserFactory extends ParserFactory
       {
         Tokens.Comment comment = super.processComment( pos, endPos, style );
         char[] buf = reader.getRawCharacters( pos, endPos );
-        CommentProcessor.instance().processComment(
+        FragmentProcessor.instance().processComment(
           _scannerFactory._parserFactory._taskEvent.getSourceFile(), pos, new String( buf ), style );
         return comment;
+      }
+
+      public Tokens.Token readToken()
+      {
+        Tokens.Token token = super.readToken();
+        if( token.kind == STRINGLITERAL )
+        {
+          // todo: passing raw characters means we must parse string literal escaped chars esp. '"', '\n', unicode
+          char[] buf = reader.getRawCharacters( token.pos, token.endPos );
+          FragmentProcessor.instance().processString(
+            ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ), '"' );
+        }
+        return token;
       }
     }
 
@@ -222,9 +238,21 @@ public class ManParserFactory extends ParserFactory
         {
           Tokens.Comment comment = super.processComment( pos, endPos, style );
           char[] buf = reader.getRawCharacters( pos, endPos );
-          CommentProcessor.instance().processComment(
+          FragmentProcessor.instance().processComment(
             ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), pos, new String( buf ), style );
           return comment;
+        }
+
+        public Tokens.Token readToken()
+        {
+          Tokens.Token token = super.readToken();
+          if( token.kind == STRINGLITERAL )
+          {
+            char[] buf = reader.getRawCharacters( token.pos, token.endPos );
+            FragmentProcessor.instance().processString(
+              ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ), '"' );
+          }
+          return token;
         }
       }
     }

@@ -17,6 +17,7 @@
 package manifold.api.fs;
 
 import java.util.function.Supplier;
+import manifold.internal.javac.HostKind;
 
 /**
  * A fragment of a file that is to be treated separate fron the enclosing file.  Facilitates embedding structured
@@ -28,6 +29,7 @@ public interface IFileFragment extends IFile
   int getOffset();
   void setOffset( Supplier<Integer> offset );
   int getLength();
+  HostKind getHostKind();
 
   /** The file element hosting the fragment e.g., a comment or string literal */
   Object getContainer();

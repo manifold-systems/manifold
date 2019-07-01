@@ -1,7 +1,9 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotations;
 import com.sun.tools.javac.comp.Analyzer;
@@ -18,13 +20,20 @@ import com.sun.tools.javac.comp.TypeEnter;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Name;
+import java.io.IOException;
+import manifold.api.type.FragmentValue;
 import manifold.util.ReflectUtil;
 import manifold.util.Stack;
 
 
+import static com.sun.tools.javac.code.TypeTag.CLASS;
+import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+
 public class ManAttr_9 extends Attr implements ManAttr
 {
   private final ManLog_9 _manLog;
+  private final Symtab _syms;
   private Stack<JCTree.JCFieldAccess> _selects;
   private Stack<JCTree.JCAnnotatedType> _annotatedTypes;
   private Stack<JCTree.JCMethodDecl> _methodDefs;
@@ -47,6 +56,7 @@ public class ManAttr_9 extends Attr implements ManAttr
     _selects = new Stack<>();
     _annotatedTypes = new Stack<>();
     _methodDefs = new Stack<>();
+    _syms = Symtab.instance( ctx );
 
     // Override logger to handle final field assignment for @Jailbreak
     _manLog = (ManLog_9)ManLog_9.instance( ctx );
@@ -217,5 +227,83 @@ public class ManAttr_9 extends Attr implements ManAttr
         _manLog.popSuspendIssues( tree );
       }
     }
+  }
+
+  // overrides to handle fragments in String literals
+  public void visitLiteral( JCTree.JCLiteral tree )
+  {
+    if( tree.typetag == CLASS && tree.value.toString().startsWith( "[>" ) )
+    {
+      Type type = getFragmentValueType( tree );
+      tree.type = type;
+      ReflectUtil.field( this, "result" ).set( type );
+    }
+    else
+    {
+      super.visitLiteral( tree );
+    }
+  }
+
+  private Type getFragmentValueType( JCTree.JCLiteral tree )
+  {
+    try
+    {
+      CharSequence source = getEnv().toplevel.sourcefile.getCharContent( true );
+      CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
+        tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
+      FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
+        tree.pos().getStartPosition(), chars.toString(), DOUBLE_QUOTE_LITERAL );
+      if( fragment != null )
+      {
+        //String fragClass = getEnv().toplevel.packge.toString() + '.' + "Fragment_" + new Fingerprint( chars.toString() );
+        String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();
+        Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, fragClass );
+        for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+        {
+          if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
+          {
+            Type type = getFragmentValueType( annotation );
+            if( type != null )
+            {
+              return type;
+            }
+          }
+        }
+        getLogger().rawWarning( tree.pos().getStartPosition(),
+          "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
+      }
+    }
+    catch( IOException e )
+    {
+      getLogger().rawWarning( tree.pos().getStartPosition(),
+        "Error parsing Manifold fragment.\n" +
+        e.getClass().getSimpleName() + ": " + e.getMessage() + "\n" +
+        (e.getStackTrace().length > 0 ? e.getStackTrace()[0].toString() : "") );
+    }
+    return _syms.stringType.constType( tree.value );
+  }
+
+  private Type getFragmentValueType( Attribute.Compound attribute )
+  {
+    String type = null;
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "type" ) )
+      {
+        type = (String)pair.snd.getValue();
+      }
+    }
+
+    if( type != null )
+    {
+      Symbol.ClassSymbol fragValueSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, type );
+      if( fragValueSym != null )
+      {
+        return fragValueSym.type;
+      }
+    }
+
+    return null;
   }
 }

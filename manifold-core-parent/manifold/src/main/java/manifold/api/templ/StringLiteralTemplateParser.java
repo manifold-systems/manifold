@@ -17,8 +17,10 @@
 package manifold.api.templ;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.IntPredicate;
+import manifold.internal.javac.FragmentProcessor;
 
 public class StringLiteralTemplateParser
 {
@@ -39,7 +41,18 @@ public class StringLiteralTemplateParser
    */
   public static List<Expr> parse( IntPredicate $escapeMatcher, String stringValue )
   {
+    if( isFilterFromTemplateParsing( stringValue ) )
+    {
+      return Collections.emptyList();
+    }
+
     return new StringLiteralTemplateParser( $escapeMatcher, stringValue ).parse();
+  }
+
+  private static boolean isFilterFromTemplateParsing( String stringValue )
+  {
+    // don't allow string templates in fragments e.g., interferes with graphql and awkward to use @DisableStringLiteralTemplates
+    return stringValue.startsWith( FragmentProcessor.FRAGMENT_START ) || stringValue.startsWith( '"' + FragmentProcessor.FRAGMENT_START );
   }
 
   private StringLiteralTemplateParser( IntPredicate $escapeMatcher, String stringValue )

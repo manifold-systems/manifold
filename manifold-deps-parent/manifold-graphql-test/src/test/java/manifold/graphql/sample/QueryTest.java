@@ -12,8 +12,10 @@ import org.junit.Test;
 import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
+import static manifold.internal.javac.FragmentProcessor.ANONYMOUS_FRAGMENT_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @DisableStringLiteralTemplates
 public class QueryTest
@@ -105,5 +107,20 @@ public class QueryTest
     }*/
     MyEmbedded2.MyOneAnimal2 myOneAnimal2 = MyEmbedded2.MyOneAnimal2.builder( "1" ).build();
     assertNotNull( myOneAnimal2 );
+  }
+
+  @Test
+  public void testStringLiteralQuery()
+  {
+    Foo value = "[>Foo.graphql<] query MyOneAnimal($id: ID!) { animal(id: $id) { id name } }";
+    Foo.MyOneAnimal myOneAnimal = value.builder( "1" ).build();
+    assertNotNull( myOneAnimal );
+  }
+
+  @Test
+  public void testAnonymousStringLiteralQuery()
+  {
+    Object value = "[>.graphql<] query MyOneAnimal2($id: ID!) { animal(id: $id) { id name } }";
+    assertTrue( value.getClass().getSimpleName().startsWith( ANONYMOUS_FRAGMENT_PREFIX ) );
   }
 }

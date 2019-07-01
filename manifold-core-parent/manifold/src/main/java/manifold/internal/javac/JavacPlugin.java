@@ -84,7 +84,6 @@ import manifold.util.StreamUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
-import static manifold.api.fs.def.FileFragmentImpl.Place.StringLiteral;
 import static manifold.api.type.ContributorKind.Supplemental;
 
 /**
@@ -853,7 +852,7 @@ public class JavacPlugin implements Plugin, TaskListener
     switch( e.getKind() )
     {
       case PARSE:
-        // override the ParserFactory to support fragments in comments
+        // override the ParserFactory to support fragments in comments and string literals
         ManParserFactory parserFactory = ManParserFactory.instance( _javacTask.getContext() );
         parserFactory.setTaskEvent( e );
         ReflectUtil.field( JavaCompiler.instance( _javacTask.getContext() ), "parserFactory" ).set( parserFactory );
@@ -990,9 +989,9 @@ public class JavacPlugin implements Plugin, TaskListener
     return _argPresent.get( ARG_NO_BOOTSTRAP );
   }
 
-  public void registerType( JavaFileObject sourceFile, int offset, String name, String ext, String content )
+  public void registerType( JavaFileObject sourceFile, int offset, String name, String ext, HostKind hostKind, String content )
   {
-    _fileFragmentResources.add( new FileFragmentResource( sourceFile, offset, name, ext, content ) );
+    _fileFragmentResources.add( new FileFragmentResource( sourceFile, offset, name, ext, hostKind, content ) );
   }
 
   private void addFileFragments( TaskEvent e )
@@ -1011,18 +1010,20 @@ public class JavacPlugin implements Plugin, TaskListener
   private class FileFragmentResource
   {
     private final JavaFileObject _sourceFile;
+    private final int _offset;
     private final String _name;
     private final String _ext;
+    private final HostKind _hostKind;
     private final String _content;
-    private final int _offset;
 
-    private FileFragmentResource( JavaFileObject sourceFile, int offset, String name, String ext, String content )
+    private FileFragmentResource( JavaFileObject sourceFile, int offset, String name, String ext, HostKind hostKind, String content )
     {
       _sourceFile = sourceFile;
+      _offset = offset;
       _name = name;
       _ext = ext;
+      _hostKind = hostKind;
       _content = content;
-      _offset = offset;
     }
 
     private boolean embed( TaskEvent e )
@@ -1050,7 +1051,7 @@ public class JavacPlugin implements Plugin, TaskListener
       }
 
       FileFragmentImpl fragment =
-        new FileFragmentImpl( _name, _ext, StringLiteral, file, _offset, _content.length(), _content );
+        new FileFragmentImpl( _name, _ext, _hostKind, file, _offset, _content.length(), _content );
       JavacManifoldHost host = JavacPlugin.instance().getHost();
       Set<ITypeManifold> tms = host.getSingleModule()
         .findTypeManifoldsFor( fragment, t -> t.getContributorKind() != Supplemental );

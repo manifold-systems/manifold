@@ -42,6 +42,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Position;
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -60,6 +61,7 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
+import manifold.api.type.FragmentValue;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
@@ -69,6 +71,7 @@ import manifold.ext.api.Self;
 import manifold.ext.api.Structural;
 import manifold.ext.api.This;
 import manifold.internal.javac.ClassSymbols;
+import manifold.internal.javac.FragmentProcessor;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
@@ -77,6 +80,9 @@ import manifold.util.JreUtil;
 import manifold.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
+
+
+import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 
 /**
  */
@@ -347,6 +353,115 @@ public class ExtensionTransformer extends TreeTranslator
       tree.type = getObjectClass().type;
     }
     result = tree;
+  }
+
+  @Override
+  public void visitLiteral( JCTree.JCLiteral tree )
+  {
+    super.visitLiteral( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( tree.typetag.getKindLiteral() == Tree.Kind.STRING_LITERAL )
+    {
+      result = replaceStringLiteral( tree );
+    }
+    else
+    {
+      result = tree;
+    }
+  }
+
+  private JCTree replaceStringLiteral( JCTree.JCLiteral tree )
+  {
+    String literal = (String)tree.getValue();
+    if( !literal.contains( FragmentProcessor.FRAGMENT_START ) ||
+        !literal.contains( FragmentProcessor.FRAGMENT_END ) )
+    {
+      return tree;
+    }
+
+    JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
+    try
+    {
+      CharSequence source = enclosingClass.sym.sourcefile.getCharContent( true );
+      CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
+        tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
+      FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
+        tree.pos().getStartPosition(), chars.toString(), DOUBLE_QUOTE_LITERAL );
+      if( fragment != null )
+      {
+        String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();
+        Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fragClass );
+        for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+        {
+          if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
+          {
+            return replaceStringLiteral( fragSym, tree, annotation );
+          }
+        }
+      }
+    }
+    catch( IOException e )
+    {
+      System.err.print( "WARNING: " );
+      e.printStackTrace();
+    }
+    return tree;
+  }
+
+  private JCTree replaceStringLiteral( Symbol.ClassSymbol fragSym, JCTree.JCLiteral tree, Attribute.Compound attribute )
+  {
+    if( attribute == null )
+    {
+      return tree;
+    }
+
+    String methodName = null;
+    String type = null;
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "methodName" ) )
+      {
+        methodName = (String)pair.snd.getValue();
+      }
+      else if( argName.toString().equals( "type" ) )
+      {
+        type = (String)pair.snd.getValue();
+      }
+    }
+
+    if( type != null )
+    {
+      return replaceStringLiteral( fragSym, tree, methodName, type );
+    }
+
+    return tree;
+  }
+
+  private JCExpression replaceStringLiteral( Symbol.ClassSymbol fragSym, JCTree tree, String methodName, String type )
+  {
+    TreeMaker make = _tp.getTreeMaker();
+    Names names = Names.instance( _tp.getContext() );
+
+    Symbol.MethodSymbol fragmentValueMethod = resolveMethod( tree.pos(), names.fromString( methodName ),
+      fragSym.type, List.nil() );
+
+    JCTree.JCMethodInvocation fragmentValueCall = make.Apply( List.nil(),
+      memberAccess( make, _tp.getElementUtil(), fragSym.getQualifiedName() + "." + methodName ), List.nil() );
+    fragmentValueCall.type = fragmentValueMethod.getReturnType(); // type
+    fragmentValueCall.setPos( tree.pos );
+    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)fragmentValueCall.getMethodSelect();
+    newMethodSelect.sym = fragmentValueMethod;
+    newMethodSelect.type = fragmentValueMethod.type;
+    assignTypes( newMethodSelect.selected, fragSym );
+
+    return fragmentValueCall;
   }
 
   private void eraseCompilerGeneratedCast( JCTypeCast tree )

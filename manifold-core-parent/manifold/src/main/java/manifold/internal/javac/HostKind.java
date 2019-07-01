@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,26 +16,23 @@
 
 package manifold.internal.javac;
 
-import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Log;
-import manifold.util.ReflectUtil;
+import com.sun.tools.javac.parser.Tokens;
 
-public interface ManAttr
+public enum HostKind
 {
-  boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
+  LINE_COMMENT, BLOCK_COMMENT, JAVADOC_COMMENT, DOUBLE_QUOTE_LITERAL, BACKTICK_LITERAL;
 
-  JCTree.JCMethodDecl peekMethodDef();
-  JCTree.JCFieldAccess peekSelect();
-  JCTree.JCAnnotatedType peekAnnotatedType();
-
-  default Env getEnv()
+  static HostKind from( Tokens.Comment.CommentStyle s )
   {
-    return (Env)ReflectUtil.field( this, "env" ).get();
-  }
-
-  default Log getLogger()
-  {
-    return (Log)ReflectUtil.field( this, "log" ).get();
+    switch( s )
+    {
+      case LINE:
+        return LINE_COMMENT;
+      case BLOCK:
+        return BLOCK_COMMENT;
+      case JAVADOC:
+        return JAVADOC_COMMENT;
+    }
+    throw new IllegalStateException();
   }
 }
