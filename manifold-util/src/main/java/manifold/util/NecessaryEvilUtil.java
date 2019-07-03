@@ -152,8 +152,12 @@ public class NecessaryEvilUtil
       }
       Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
       addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
-      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
-      addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
+      if( !JreUtil.isJava13orLater() )
+      {
+        // `com.sun.tools.doclets.standard.Standard` and `com.sun.tools.javadoc.main.Main` are removed in JDK 13
+        addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.javadoc.main", manifoldModule, true, true );
+        addExportsOrOpens.invoke( jdkJavadoc, "com.sun.tools.doclets.standard", manifoldModule, true, true );
+      }
     }
     catch( Throwable e )
     {
