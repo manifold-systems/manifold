@@ -39,6 +39,5 @@ public interface IJsonParser
   static IJsonParser getDefaultParser()
   {
     return DefaultParser.instance();
-    //return NashornJsonParser.instance();
   }
 }

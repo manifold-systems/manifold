@@ -8,6 +8,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mozilla.javascript.Undefined.SCRIPTABLE_UNDEFINED;
 
 public class BasicProgramTest {
 
@@ -69,7 +70,7 @@ public class BasicProgramTest {
   @Test
   public void testStateCanBeUpdatedInPrograms() {
     assertEquals("foo", program_1.getY());
-    assertEquals(null, program_1.setY("bar"));
+    assertEquals(SCRIPTABLE_UNDEFINED, program_1.setY("bar"));
     assertEquals("bar", program_1.getY());
   }
 

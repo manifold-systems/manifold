@@ -10,6 +10,10 @@ class Person {
     return this._f + " " + this._l
   }
 
+  static staticFunction() {
+    return 'hello';
+  }
+
   get firstName() {
     java.lang.System.out.println("Here")
     return this._f

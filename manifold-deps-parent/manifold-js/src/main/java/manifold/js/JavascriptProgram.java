@@ -20,10 +20,6 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
-import javax.script.Invocable;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.def.FileFragmentImpl;
@@ -48,6 +44,9 @@ import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
 import manifold.util.ManEscapeUtil;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.ScriptableObject;
 
 
 import static manifold.js.Util.safe;
@@ -70,14 +69,14 @@ public class JavascriptProgram
       {
         throw new RuntimeException( e );
       }
-      clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+      clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
         .initializer( new SrcRawExpression( ("initDirect(\"" + ManEscapeUtil.escapeForJava(
           ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")") ) ) );
     }
     else
     {
-      clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+      clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
         .initializer( new SrcRawExpression( ("init(\"" + fqn + "\")") ) ) );
     }
@@ -129,12 +128,12 @@ public class JavascriptProgram
   }
 
   @SuppressWarnings("unused")
-  public static <T> T invoke( ScriptEngine engine, String func, Object... args )
+  public static <T> T invoke( ScriptableObject scope, String func, Object... args )
   {
     try
     {
-      //noinspection unchecked
-      return (T)((Invocable)engine).invokeFunction( func, args );
+      Function renderToString = (Function)scope.get( func, scope );
+      return (T)renderToString.call( Context.getCurrentContext(), scope, scope, args );
     }
     catch( Exception e )
     {
@@ -143,25 +142,25 @@ public class JavascriptProgram
   }
 
   @SuppressWarnings("unused")
-  public static ScriptEngine init( String programName )
+  public static ScriptableObject init( String programName )
   {
-    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
-    nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
+    ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
     Node programNode = parser.parse();
-    safe( () -> nashorn.eval( programNode.genCode() ) );
-    return nashorn;
+    safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), programName, 1, null ) );
+    return scope;
   }
 
+  private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
   @SuppressWarnings("unused")
-  public static ScriptEngine initDirect( String source, String url )
+  public static ScriptableObject initDirect( String source, String url )
   {
-    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
-    nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
+    ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( source, url ) );
     Node programNode = parser.parse();
-    safe( () -> nashorn.eval( programNode.genCode() ) );
-    return nashorn;
+    safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null ) );
+    _counter.set( _counter.get() + 1 );
+    return scope;
   }
 
   static IFile loadSrcForName( String fqn, String fileExt )

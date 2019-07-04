@@ -17,6 +17,11 @@
       <artifactId>manifold</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.mozilla</groupId>
+      <artifactId>rhino</artifactId>
+      <version>1.7.11</version>
+    </dependency>
   </dependencies>
 
 </project>

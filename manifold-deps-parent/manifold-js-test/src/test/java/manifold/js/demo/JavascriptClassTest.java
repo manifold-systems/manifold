@@ -9,6 +9,8 @@ public class JavascriptClassTest {
 
   @Test
   public void testBasicClassesWorks() {
+    assertEquals( "hello", Person.staticFunction() );
+    
     Person x = new Person("Joe", "Blow");
     Person y = new Person("Joe", "Blow");
 

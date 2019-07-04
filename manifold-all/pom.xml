@@ -122,7 +122,7 @@
                   <artifact>*:*</artifact>
                   <excludes>
                     <!-- manifold's license supersede's dependency license copied to root -->
-                    <exclude>LICENSE.md</exclude>
+                    <exclude>LICENSE.*</exclude>
                   </excludes>
                 </filter>
               </filters>
@@ -137,6 +137,10 @@
                 <relocation>
                   <pattern>org</pattern>
                   <shadedPattern>manifold.shade.org</shadedPattern>
+                  <excludes>
+                    <!-- rhino can't be shaded e.g., it dynamically loads "org.mozilla.javascript.Script" -->
+                    <exclude>org.mozilla.**</exclude>
+                  </excludes>
                 </relocation>
 <!-- todo: Can't shade graphql-java right now, breaks graphql manifold -->
 <!--                <relocation>-->

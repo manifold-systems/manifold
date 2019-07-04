@@ -108,6 +108,6 @@ public class JSTNode extends Node
     code.append( "\n\t" ).append( STR_BUILDER )
       .append( " += " )
       .append( RAW_STR_LIST )
-      .append( "[" + count + "]" );
+      .append( ".get(" + count + ")" );
   }
 }

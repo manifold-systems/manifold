@@ -20,11 +20,6 @@ package manifold.js;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.List;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import jdk.nashorn.api.scripting.JSObject;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.gen.AbstractSrcMethod;
@@ -48,11 +43,13 @@ import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
 import manifold.js.parser.tree.PropertyNode;
 import manifold.util.ManClassUtil;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Scriptable;
+import org.mozilla.javascript.ScriptableObject;
 
 
 import static manifold.js.JavascriptProgram.*;
 
-//## todo: replace nashorn with something else (it will be removed jdk11+ time frame)
 public class JavascriptClass
 {
   static SrcClass genClass( String fqn, ProgramNode programNode, IFile file )
@@ -75,7 +72,7 @@ public class JavascriptClass
     clazz.imports( JavascriptClass.class )
       .imports( SourcePosition.class );
 
-    clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+    clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC | Modifier.VOLATILE )
       .initializer( new SrcRawExpression( ("null") ) ) );
 
@@ -84,7 +81,7 @@ public class JavascriptClass
       .initializer( new SrcRawExpression( ("0") ) ) );
 
 
-    clazz.addField( new SrcField( "_context", ScriptObjectMirror.class ) );
+    clazz.addField( new SrcField( "_context", ScriptableObject.class ) );
 
     addConstructor( clazz, classNode, file );
     addUtilityMethods( clazz, classNode, fqn );
@@ -136,7 +133,7 @@ public class JavascriptClass
     SrcMethod m = new SrcMethod()
       .name( "getEngine" )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
-      .returns( ScriptEngine.class )
+      .returns( ScriptableObject.class )
       .body( new SrcStatementBlock()
         .addStatement(
           new SrcRawStatement()
@@ -165,7 +162,7 @@ public class JavascriptClass
 
   private static void addMethods( String fqn, SrcClass clazz, ClassNode classNode, IFile file )
   {
-    for( ClassFunctionNode node : classNode.getChildren( ClassFunctionNode.class ) )
+    for( ClassFunctionNode node: classNode.getChildren( ClassFunctionNode.class ) )
     {
       AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
         .name( node.getName() )
@@ -180,7 +177,7 @@ public class JavascriptClass
 
       // params
       ParameterNode parameters = node.getFirstChild( ParameterNode.class );
-      for( SrcParameter srcParameter : parameters.toParamList() )
+      for( SrcParameter srcParameter: parameters.toParamList() )
       {
         srcMethod.addParam( srcParameter );
       }
@@ -207,7 +204,7 @@ public class JavascriptClass
   private static void addProperties( String fqn, SrcClass clazz, ClassNode classNode, IFile file )
   {
 
-    for( PropertyNode node : classNode.getChildren( PropertyNode.class ) )
+    for( PropertyNode node: classNode.getChildren( PropertyNode.class ) )
     {
       final String name = node.getName();
       final String capitalizedName = name.substring( 0, 1 ).toUpperCase() + name.substring( 1 );
@@ -278,68 +275,52 @@ public class JavascriptClass
     }
   }
 
-  /* implementation */
-  public static <T> T invoke( ScriptObjectMirror context, String func, Object... args )
+  public static <T> T invoke( ScriptableObject scope, String func, Object... args )
   {
-    return (T)context.callMember( func, args );
+    //noinspection unchecked
+    return (T)ScriptableObject.callMethod( scope, func, args );
   }
 
-  public static <T> T invokeStatic( ScriptEngine engine, String className, String func, Object... args )
+  public static <T> T invokeStatic( ScriptableObject scope, String className, String func, Object... args )
   {
-    ScriptObjectMirror classObject = getClassObject( engine, className );
-    return (T)classObject.callMember( func, args );
+    //noinspection unchecked
+    return (T)ScriptableObject.callMethod( (Scriptable)scope.get( className, scope ), func, args );
   }
 
-  public static Object getProp( ScriptObjectMirror context, String prop )
+  public static Object getProp( ScriptableObject scope, String prop )
   {
-    return context.get( prop );
+    return ScriptableObject.getProperty( scope, prop );
   }
 
-  public static Object getStaticProp( ScriptEngine engine, String className, String property )
+  public static Object getStaticProp( ScriptableObject scope, String className, String prop )
   {
-    ScriptObjectMirror classObject = getClassObject( engine, className );
-    return classObject.get( property );
+    return ScriptableObject.getProperty( (Scriptable)scope.get( className, scope ), prop );
   }
 
-  public static void setProp( ScriptObjectMirror context, String prop, Object value )
+  public static void setProp( ScriptableObject scope, String prop, Object value )
   {
-    context.setMember( prop, value );
+    ScriptableObject.putProperty( scope, prop, value );
   }
 
-  public static void setStaticProp( ScriptEngine engine, String className, String property, Object value )
+  public static void setStaticProp( ScriptableObject scope, String className, String prop, Object value )
   {
-    ScriptObjectMirror classObject = getClassObject( engine, className );
-    classObject.put( "_" + property, value ); //TODO why the underscore?
+    ScriptableObject.putProperty( (Scriptable)scope.get( className, scope ), prop, value );
   }
 
-  public static ScriptEngine init( String programName )
+  public static ScriptableObject init( String programName )
   {
-    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
-    nashorn.setBindings( new ThreadSafeBindings(), ScriptContext.ENGINE_SCOPE );
+    ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
     Node programNode = parser.parse();
     ClassNode classNode = programNode.getFirstChild( ClassNode.class );
     String script = classNode.genCode();
-    try
-    {
-      nashorn.eval( script );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-    return nashorn;
+    Context.getCurrentContext().evaluateString( scope, script, programName, 1, null );
+    return scope;
   }
 
-  public static ScriptObjectMirror initInstance( ScriptEngine engine, String name, Object... args )
+  public static ScriptableObject initInstance( ScriptableObject scope, String name, Object... args )
   {
-    JSObject classObject = getClassObject( engine, name );
-    return (ScriptObjectMirror)classObject.newObject( args );
-  }
-
-  private static ScriptObjectMirror getClassObject( ScriptEngine engine, String name )
-  {
-    return (ScriptObjectMirror)((ScriptObjectMirror)engine.get( "nashorn.global" )).get( name );
+    return (ScriptableObject)Context.getCurrentContext().newObject( scope, name, args );
   }
 
   private static Object absoluteOffset( int offset, IFile file )

@@ -20,9 +20,6 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.script.Invocable;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcField;
@@ -35,6 +32,9 @@ import manifold.js.parser.TemplateParser;
 import manifold.js.parser.TemplateTokenizer;
 import manifold.js.parser.tree.template.JSTNode;
 import manifold.js.parser.tree.template.RawStringNode;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.Function;
+import org.mozilla.javascript.ScriptableObject;
 
 
 import static manifold.js.JavascriptProgram.generateArgList;
@@ -52,7 +52,7 @@ public class JavascriptTemplate
       .modifiers( Modifier.STATIC )
       .initializer( new SrcRawExpression( ("manifold.js.JavascriptTemplate.initNode(\"" + fqn + "\")") ) ) );
 
-    clazz.addField( new SrcField( "ENGINE", ScriptEngine.class )
+    clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
       .modifiers( Modifier.STATIC )
       .initializer( new SrcRawExpression( ("manifold.js.JavascriptTemplate.initEngine(TEMPLATE_NODE)") ) ) );
 
@@ -72,7 +72,7 @@ public class JavascriptTemplate
   }
 
   //Calls the generated renderToString function with raw strings from template
-  public static String renderToStringImpl( ScriptEngine engine, JSTNode templateNode, Object... args )
+  public static String renderToStringImpl( ScriptableObject scope, JSTNode templateNode, Object... args )
   {
     try
     {
@@ -86,8 +86,8 @@ public class JavascriptTemplate
 
       argsWithStrings[argsWithStrings.length - 1] = rawStrings;
 
-      String ret = (String)((Invocable)engine).invokeFunction( "renderToString", argsWithStrings );
-      return ret;
+      Function renderToString = (Function)scope.get( "renderToString", scope );
+      return (String)renderToString.call( Context.getCurrentContext(), scope, scope, argsWithStrings );
     }
     catch( Exception e )
     {
@@ -95,11 +95,15 @@ public class JavascriptTemplate
     }
   }
 
-  public static ScriptEngine initEngine( JSTNode templateNode )
+  private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
+
+  public static ScriptableObject initEngine( JSTNode templateNode )
   {
-    ScriptEngine nashorn = new ScriptEngineManager().getEngineByName( "nashorn" );
-    safe( () -> nashorn.eval( templateNode.genCode() ) );
-    return nashorn;
+    ScriptableObject scope = SharedScope.newStaticScope();
+    String name = "template_" + _counter.get();
+    _counter.set( _counter.get() + 1 );
+    safe( () -> Context.getCurrentContext().evaluateString( scope, templateNode.genCode(), name, 1, null ) );
+    return scope;
   }
 
   public static JSTNode initNode( String programName )
