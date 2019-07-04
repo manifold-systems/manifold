@@ -18,6 +18,12 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <!-- ext is needed for testing file fragments (see JavascriptProgramTest) -->
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>

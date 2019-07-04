@@ -34,6 +34,7 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
+import manifold.api.type.FragmentValue;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.SourcePosition;
 import manifold.internal.host.RuntimeManifoldHost;
@@ -56,10 +57,15 @@ public class JavascriptProgram
   static SrcClass genProgram( String fqn, ProgramNode programNode, IFile file )
   {
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class ).superClass( JavascriptProgram.class )
-      .imports( SourcePosition.class );
+      .imports( SourcePosition.class )
+      .imports( FragmentValue.class );
 
     if( file instanceof IFileFragment )
     {
+      clazz.addAnnotation( new SrcAnnotationExpression( FragmentValue.class.getSimpleName() )
+        .addArgument( "methodName", String.class, "fragmentValue" )
+        .addArgument( "type", String.class, Object.class.getTypeName() ) );
+
       String url;
       try
       {
@@ -71,8 +77,17 @@ public class JavascriptProgram
       }
       clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
-        .initializer( new SrcRawExpression( ("initDirect(\"" + ManEscapeUtil.escapeForJava(
-          ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")") ) ) );
+        .initializer( new SrcRawExpression( "initDirect(\"" + ManEscapeUtil.escapeForJava(
+          ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")" ) ) );
+
+      AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
+        .name( "fragmentValue" )
+        .modifiers( Modifier.STATIC | Modifier.PUBLIC )
+        .returns( Object.class.getSimpleName() );
+      srcMethod.body( "return evaluate(\"" + ManEscapeUtil.escapeForJava(
+        ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\");" );
+      clazz.addMethod( srcMethod );
+
     }
     else
     {
@@ -83,7 +98,7 @@ public class JavascriptProgram
 
     clazz.addConstructor( new SrcConstructor().modifiers( Modifier.PRIVATE ).body( new SrcStatementBlock() ) );
 
-    for( FunctionNode node : programNode.getChildren( FunctionNode.class ) )
+    for( FunctionNode node: programNode.getChildren( FunctionNode.class ) )
     {
       AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
         .name( node.getName() )
@@ -109,7 +124,7 @@ public class JavascriptProgram
   {
     ParameterNode paramNode = node.getFirstChild( ParameterNode.class );
     List<SrcParameter> srcParameters = paramNode != null ? paramNode.toParamList() : Collections.emptyList();
-    for( SrcParameter srcParameter : srcParameters )
+    for( SrcParameter srcParameter: srcParameters )
     {
       srcMethod.addParam( srcParameter );
     }
@@ -119,7 +134,7 @@ public class JavascriptProgram
   static String generateArgList( List<SrcParameter> srcParameters )
   {
     StringBuilder sb = new StringBuilder();
-    for( SrcParameter srcParameter : srcParameters )
+    for( SrcParameter srcParameter: srcParameters )
     {
       sb.append( "," );
       sb.append( srcParameter.getSimpleName() );
@@ -152,6 +167,7 @@ public class JavascriptProgram
   }
 
   private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
+
   @SuppressWarnings("unused")
   public static ScriptableObject initDirect( String source, String url )
   {
@@ -163,6 +179,17 @@ public class JavascriptProgram
     return scope;
   }
 
+  @SuppressWarnings("unused")
+  protected static Object evaluate( String source, String url )
+  {
+    ScriptableObject scope = SharedScope.newStaticScope();
+    Parser parser = new Parser( new Tokenizer( source, url ) );
+    Node programNode = parser.parse();
+    Object value = safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null ) );
+    _counter.set( _counter.get() + 1 );
+    return value;
+  }
+
   static IFile loadSrcForName( String fqn, String fileExt )
   {
     List<IFile> filesForType = findJavascriptManifold( fileExt ).findFilesForType( fqn );
@@ -172,7 +199,7 @@ public class JavascriptProgram
     }
     if( filesForType.size() > 1 )
     {
-      System.err.println( "===\nWARNING: more than one ." + fileExt + " file corresponds with type: '" + fqn + "':\n");
+      System.err.println( "===\nWARNING: more than one ." + fileExt + " file corresponds with type: '" + fqn + "':\n" );
       filesForType.forEach( file -> System.err.println( file.toString() ) );
       System.err.println( "using the first one: " + filesForType.get( 0 ) + "\n===" );
     }

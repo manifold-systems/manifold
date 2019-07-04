@@ -17,6 +17,13 @@ public class JavascriptProgramTest {
     assertEquals(3.0, asDouble( JavascriptProgram.nextNumber() ), 0 );
   }
 
+  @Test
+  public void testFileFragment()
+  {
+    int value = (int)"[>.js<] 3 + 4 + 5";
+    assertEquals( 12, value );
+  }
+
   /**
    * needed for testing with Java 8 and Java 9 (nashorn changed behavior between those versions)
    */
