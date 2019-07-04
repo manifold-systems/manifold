@@ -45,7 +45,9 @@ public class ArrowExpressionNode extends Node
   @Override
   public String genCode()
   {
-    /*For expressions, use Nashorn closure extension function (ex. function square(x) x*x;)*/
+    //## todo: this was ok with nashorn, but maybe not with rhino...
+
+    /*For expressions, use closure extension function (ex. function square(x) x*x;)*/
     return "function ("  + _params + ")" + super.genCode();
   }
 }

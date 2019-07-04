@@ -4,7 +4,7 @@ layout: default
 # The Javascript Manifold
 
 The Javascript Manifold (Manifold.js) is a [Manifold](http://manifold.systems/) extension library that allows for seamless interaction with javascript
-resources from Java using the [Java Nashorn](http://openjdk.java.net/projects/nashorn/) project.
+resources from Java using the [Rhino](https://github.com/mozilla/rhino) project.
 
 The library supports the use of javascript programs from Java, the use of ES6-flavored javascript classes from
 java, the use of Java classes from javascript, as well as the creation of type-safe javascript expressions for
@@ -61,11 +61,6 @@ will print
 
     0.0
     1.0
-
-### Threading
-
-Manifold.js is subject to the same threading restrictions that the Nashorn javascript engine is.  All programs and classes use
-a ConcurrentHashMap for their Bindings, and should thus be safe for inter-thread use [per this SO article](https://stackoverflow.com/questions/30140103/should-i-use-a-separate-scriptengine-and-compiledscript-instances-per-each-threa/30159424#30159424).
 
 ### Typescript-Style Typing (Parameters & Return Types)
 

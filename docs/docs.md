@@ -216,7 +216,6 @@ module your.module.name {
   // Optional
   requires java.scripting;  // if using JSON or YAML manifolds: for javax.script.Bindings
   requires java.desktop;  // if using Image manifold: for javax.swing.ImageIcon
-  requires jdk.scripting.nashorn;  // if using Javascript manifold
 }
 ```
 Additionally **Java 9 or later** projects must include the `-processorpath` for the manifold jar file along with the `-Xplugin:Manifold` argument to javac:

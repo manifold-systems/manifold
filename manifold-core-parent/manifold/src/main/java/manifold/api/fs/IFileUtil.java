@@ -80,7 +80,7 @@ public class IFileUtil
     return !Extensions.containsManifest( root ) ||
            !Extensions.getExtensions( root, Extensions.CONTAINS_SOURCES ).isEmpty() ||
 
-           // this check is too aggressive eg., including jars like nashorn.jar
+           // this check is too aggressive eg., including many jars we don't need to process
            //!Extensions.getExtensions( root, "Main-Class" ).isEmpty() ||
 
            // Weblogic packages all WEB-INF/classes content into this JAR
