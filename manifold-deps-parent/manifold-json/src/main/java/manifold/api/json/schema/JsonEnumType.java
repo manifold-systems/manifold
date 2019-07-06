@@ -16,13 +16,13 @@
 
 package manifold.api.json.schema;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import manifold.api.fs.IFile;
 import manifold.api.gen.SrcElement;
 import manifold.api.gen.SrcType;
 import manifold.api.json.AbstractJsonTypeManifold;
@@ -67,7 +67,7 @@ public class JsonEnumType extends JsonStructureType
   private final List<Object> _enumValues;
   private final boolean _hasNull;
 
-  JsonEnumType( JsonSchemaType parent, URL source, String name, List<?> list, TypeAttributes attr )
+  JsonEnumType( JsonSchemaType parent, IFile source, String name, List<?> list, TypeAttributes attr )
   {
     super( parent, source, name, attr );
 

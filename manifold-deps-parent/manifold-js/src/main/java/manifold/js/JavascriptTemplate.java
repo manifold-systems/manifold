@@ -25,9 +25,6 @@ import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawExpression;
-import manifold.api.gen.SrcRawStatement;
-import manifold.api.gen.SrcStatementBlock;
 import manifold.js.parser.TemplateParser;
 import manifold.js.parser.TemplateTokenizer;
 import manifold.js.parser.tree.template.JSTNode;
@@ -39,22 +36,20 @@ import org.mozilla.javascript.ScriptableObject;
 
 import static manifold.js.JavascriptProgram.generateArgList;
 import static manifold.js.JavascriptProgram.makeSrcParameters;
-import static manifold.js.Util.safe;
 
 public class JavascriptTemplate
 {
-
-  public static SrcClass genClass( String fqn, JSTNode jstNode )
+  static SrcClass genClass( String fqn, JSTNode jstNode )
   {
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class );
 
     clazz.addField( new SrcField( "TEMPLATE_NODE", JSTNode.class )
-      .modifiers( Modifier.STATIC )
-      .initializer( new SrcRawExpression( ("manifold.js.JavascriptTemplate.initNode(\"" + fqn + "\")") ) ) );
+      .modifiers( Modifier.STATIC | Modifier.FINAL )
+      .initializer( JavascriptTemplate.class.getTypeName() + ".initNode(\"" + fqn + "\")" ) );
 
-    clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
-      .modifiers( Modifier.STATIC )
-      .initializer( new SrcRawExpression( ("manifold.js.JavascriptTemplate.initEngine(TEMPLATE_NODE)") ) ) );
+    clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
+      .modifiers( Modifier.STATIC | Modifier.FINAL )
+      .initializer( JavascriptTemplate.class.getTypeName() + ".initEngine(TEMPLATE_NODE)" ) );
 
     AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
       .name( "renderToString" )
@@ -62,16 +57,15 @@ public class JavascriptTemplate
       .returns( String.class );
 
     List<SrcParameter> srcParameters = makeSrcParameters( jstNode, srcMethod );
-    srcMethod.body( new SrcStatementBlock()
-      .addStatement(
-        new SrcRawStatement()
-          .rawText( "return manifold.js.JavascriptTemplate.renderToStringImpl(ENGINE, TEMPLATE_NODE" + generateArgList( srcParameters ) + ");" ) ) );
+    srcMethod.body( "return " + JavascriptTemplate.class.getTypeName() +
+                    ".renderToStringImpl(SCOPE, TEMPLATE_NODE" + generateArgList( srcParameters ) + ");" );
     clazz.addMethod( srcMethod );
 
     return clazz;
   }
 
   //Calls the generated renderToString function with raw strings from template
+  @SuppressWarnings("unused")
   public static String renderToStringImpl( ScriptableObject scope, JSTNode templateNode, Object... args )
   {
     try
@@ -97,18 +91,21 @@ public class JavascriptTemplate
 
   private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
 
+  @SuppressWarnings("unused")
   public static ScriptableObject initEngine( JSTNode templateNode )
   {
     ScriptableObject scope = SharedScope.newStaticScope();
     String name = "template_" + _counter.get();
     _counter.set( _counter.get() + 1 );
-    safe( () -> Context.getCurrentContext().evaluateString( scope, templateNode.genCode(), name, 1, null ) );
+    Context.getCurrentContext().evaluateString( scope, templateNode.genCode(), name, 1, null );
     return scope;
   }
 
+  @SuppressWarnings("unused")
   public static JSTNode initNode( String programName )
   {
-    TemplateParser parser = new TemplateParser( new TemplateTokenizer( JavascriptProgram.loadSrcForName( programName, JavascriptTypeManifold.JST ), true ) );
+    TemplateParser parser = new TemplateParser(
+      new TemplateTokenizer( JavascriptProgram.loadSrcForName( programName, JavascriptTypeManifold.JST ), true ) );
     return (JSTNode)parser.parse();
   }
 }

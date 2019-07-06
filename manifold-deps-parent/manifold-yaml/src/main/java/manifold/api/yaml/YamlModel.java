@@ -17,7 +17,6 @@
 package manifold.api.yaml;
 
 import java.util.Set;
-import javax.script.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.JsonModel;

@@ -17,10 +17,10 @@
 package manifold.api.json;
 
 
-import java.net.URL;
 import java.util.List;
 import javax.script.Bindings;
 import javax.script.ScriptException;
+import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaTransformerSession;
@@ -125,7 +125,7 @@ public class Json
   {
     return transformJsonObject( host, name, null, parent, jsonObj );
   }
-  public static IJsonType transformJsonObject( IManifoldHost host, String name, URL source, final JsonSchemaType parent, Object jsonObj )
+  public static IJsonType transformJsonObject( IManifoldHost host, String name, IFile source, final JsonSchemaType parent, Object jsonObj )
   {
     IJsonType type = null;
 

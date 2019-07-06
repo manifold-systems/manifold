@@ -171,6 +171,9 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     INSTANCE = this;
 
+    // calling this here because the line below this references the type `BasicJavacTask`, which is in a jdk module needing exposure
+    NecessaryEvilUtil.bypassJava9Security();
+
     _javacTask = (BasicJavacTask)task;
 
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );

@@ -16,7 +16,6 @@
 
 package manifold.api.json;
 
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -24,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import manifold.api.fs.IFile;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.api.json.schema.LazyRefJsonType;
@@ -43,7 +43,7 @@ public class JsonListType extends JsonSchemaType
   private final State _state;
 
 
-  public JsonListType( String label, URL source, JsonSchemaType parent, TypeAttributes attr )
+  public JsonListType( String label, IFile source, JsonSchemaType parent, TypeAttributes attr )
   {
     super( label, source, parent, attr );
     _state = new State();

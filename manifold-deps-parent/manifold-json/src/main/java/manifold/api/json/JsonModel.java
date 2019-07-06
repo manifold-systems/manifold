@@ -16,7 +16,6 @@
 
 package manifold.api.json;
 
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -68,31 +67,24 @@ public class JsonModel extends AbstractSingleFileModel
 
     try
     {
-      try
+      IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), getFile(), null, jsonValue );
+      if( type instanceof IJsonParentType )
       {
-        IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), getFile().toURI().toURL(), null, jsonValue );
-        if( type instanceof IJsonParentType )
-        {
-          _type = (IJsonParentType)type;
-        }
-        else
-        {
-          _type = new JsonStructureType( null, getFile().toURI().toURL(), getFile().getBaseName(), new TypeAttributes() );
-        }
+        _type = (IJsonParentType)type;
       }
-      catch( IllegalSchemaTypeName e )
+      else
       {
-        _type = new ErrantType( getFile().toURI().toURL(), e.getTypeName() );
-        if( _issues == null )
-        {
-          _issues = new JsonIssueContainer( getFile() );
-        }
-        _issues.addIssues( e );
+        _type = new JsonStructureType( null, getFile(), getFile().getBaseName(), new TypeAttributes() );
       }
     }
-    catch( MalformedURLException e )
+    catch( IllegalSchemaTypeName e )
     {
-      throw new RuntimeException( e );
+      _type = new ErrantType( getFile(), e.getTypeName() );
+      if( _issues == null )
+      {
+        _issues = new JsonIssueContainer( getFile() );
+      }
+      _issues.addIssues( e );
     }
   }
 

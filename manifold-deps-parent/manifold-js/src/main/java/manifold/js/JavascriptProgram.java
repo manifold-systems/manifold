@@ -31,8 +31,6 @@ import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawExpression;
-import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.ITypeManifold;
@@ -49,8 +47,6 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
-
-import static manifold.js.Util.safe;
 
 public class JavascriptProgram
 {
@@ -75,10 +71,10 @@ public class JavascriptProgram
       {
         throw new RuntimeException( e );
       }
-      clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
+      clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
-        .initializer( new SrcRawExpression( "initDirect(\"" + ManEscapeUtil.escapeForJava(
-          ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")" ) ) );
+        .initializer( "initDirect(\"" + ManEscapeUtil.escapeForJava(
+          ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")" ) );
 
       AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
         .name( "fragmentValue" )
@@ -91,9 +87,9 @@ public class JavascriptProgram
     }
     else
     {
-      clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
+      clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
-        .initializer( new SrcRawExpression( ("init(\"" + fqn + "\")") ) ) );
+        .initializer( "init(\"" + fqn + "\")" ) );
     }
 
     clazz.addConstructor( new SrcConstructor().modifiers( Modifier.PRIVATE ).body( new SrcStatementBlock() ) );
@@ -109,12 +105,9 @@ public class JavascriptProgram
           .addArgument( "url", String.class, programNode.getUrl().toString() )
           .addArgument( "feature", String.class, node.getName() )
           .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
-          .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
-      List<SrcParameter> srcParameters = makeSrcParameters( node, srcMethod );
-      srcMethod.body( new SrcStatementBlock()
-        .addStatement(
-          new SrcRawStatement()
-            .rawText( "return invoke(ENGINE, \"" + node.getName() + "\"" + generateArgList( srcParameters ) + ");" ) ) );
+          .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) )
+        .body( "return invoke(SCOPE, \"" + node.getName() + "\"" +
+               generateArgList( makeSrcParameters( node, srcMethod ) ) + ");" );
       clazz.addMethod( srcMethod );
     }
     return clazz;
@@ -148,6 +141,7 @@ public class JavascriptProgram
     try
     {
       Function renderToString = (Function)scope.get( func, scope );
+      //noinspection unchecked
       return (T)renderToString.call( Context.getCurrentContext(), scope, scope, args );
     }
     catch( Exception e )
@@ -162,7 +156,7 @@ public class JavascriptProgram
     ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
     Node programNode = parser.parse();
-    safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), programName, 1, null ) );
+    Context.getCurrentContext().evaluateString( scope, programNode.genCode(), programName, 1, null );
     return scope;
   }
 
@@ -174,7 +168,7 @@ public class JavascriptProgram
     ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( source, url ) );
     Node programNode = parser.parse();
-    safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null ) );
+    Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null );
     _counter.set( _counter.get() + 1 );
     return scope;
   }
@@ -185,9 +179,7 @@ public class JavascriptProgram
     ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( source, url ) );
     Node programNode = parser.parse();
-    Object value = safe( () -> Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null ) );
-    _counter.set( _counter.get() + 1 );
-    return value;
+    return Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "evaluate_js", 1, null );
   }
 
   static IFile loadSrcForName( String fqn, String fileExt )

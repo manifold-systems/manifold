@@ -16,7 +16,6 @@
 
 package manifold.api.json;
 
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +28,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
+import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
+import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.json.schema.JsonEnumType;
 import manifold.api.json.schema.JsonSchemaTransformer;
 import manifold.api.json.schema.JsonSchemaType;
@@ -46,6 +48,9 @@ import manifold.util.Pair;
  */
 public class JsonStructureType extends JsonSchemaType
 {
+  @SuppressWarnings("unused")
+  private static final String FROM_SOURCE_METHOD = "fromSource";
+
   private static final class State
   {
     private List<IJsonType> _superTypes;
@@ -65,7 +70,7 @@ public class JsonStructureType extends JsonSchemaType
   private Map<String, IJsonType> _allMembers;
   private Set<String> _allRequired;
 
-  public JsonStructureType( JsonSchemaType parent, URL source, String name, TypeAttributes attr )
+  public JsonStructureType( JsonSchemaType parent, IFile source, String name, TypeAttributes attr )
   {
     super( name, source, parent, attr );
 
@@ -515,6 +520,11 @@ public class JsonStructureType extends JsonSchemaType
     String typeName = getIdentifier();
     indent( sb, indent );
     sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
+    if( getIFile() instanceof IFileFragment )
+    {
+      indent( sb, indent );
+      sb.append( "@FragmentValue(methodName=\"$FROM_SOURCE_METHOD\", type=\"$typeName\")\n" );
+    }
     indent( sb, indent );
     sb.append( "public interface " ).append( identifier ).append( addSuperTypes( sb, identifier ) ).append( " {\n" );
     renderFileField( sb, indent + 2 );
@@ -812,6 +822,65 @@ public class JsonStructureType extends JsonSchemaType
 
     // Provide a requester(urlBase) method, returns Requester<typeName> with for performing HTTP requests using HTTP GET, POST, PUT, PATCH, & DELETE
     addRequestMethod( sb, indent, typeName );
+
+    // Allow non-schema json files to load from themselves easily, also corresponds with @FragmentValue added to toplevel class
+    addInstanceMethod( sb, indent );
+  }
+
+  private void addInstanceMethod( StringBuilder sb, int indent )
+  {
+    IFile file = getIFile();
+    if( isSchemaType() || !isParentRoot() )
+    {
+      return;
+    }
+
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "static $typeName $FROM_SOURCE_METHOD() {\n" );
+    indent( sb, indent );
+
+    //## todo: this switch is ripe, should be configurable as part of AbstractJsonTypeManifold somehow?
+    String methodName;
+    switch( file.getExtension() )
+    {
+      case JsonTypeManifold.FILE_EXTENSION:
+        methodName = "fromJson";
+        break;
+      case "yaml":
+      case "yml":
+        methodName = "fromYaml";
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+
+    if( file instanceof FileFragmentImpl )
+    {
+      // include fragment directly as string literal
+
+      sb.append( "  return load()." ).append( methodName )
+        .append( "(\"" ).append( getContentForLiteral( (FileFragmentImpl)file ) ).append( "\");\n" );
+    }
+    else
+    {
+      // avoid using a string literal, file could be very large, instead reference the corresponding resource file
+
+      //## todo: using getFqn(), which may not correspond with resource file name
+      //noinspection unused
+      String resourceFile = '/' + getFqn( this ).replace( '.', '/' ) + '.' + file.getExtension();
+      sb.append( "  return load()." ).append( methodName ).append( "Reader" )
+        .append( "(new java.io.InputStreamReader($typeName.class.getResourceAsStream(\"$resourceFile\")));\n" );
+    }
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private String getContentForLiteral( FileFragmentImpl file )
+  {
+    String content = file.getContent();
+    return ManEscapeUtil.escapeForJavaStringLiteral( content );
   }
 
   private void addBuilderMethod( StringBuilder sb, int indent )

@@ -16,7 +16,7 @@
 
 package manifold.api.json.schema;
 
-import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,6 +42,7 @@ import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
 import manifold.util.JsonUtil;
 import manifold.util.ManClassUtil;
+import manifold.util.ManEscapeUtil;
 import manifold.util.ManStringUtil;
 
 /**
@@ -63,14 +64,14 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   {
     private final String _name;
     private JsonSchemaType _parent;
-    private final URL _file;
+    private final IFile _file;
     private List<IJsonType> _definitions;
     private List<JsonIssue> _issues;
     private boolean _bSchemaType;
     private ResolveState _resolveState;
     private Token _token;
 
-    private State( String name, JsonSchemaType parent, URL file )
+    private State( String name, JsonSchemaType parent, IFile file )
     {
       _name = name;
       _parent = parent;
@@ -90,7 +91,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   private TypeAttributes _typeAttributes; // non-shared state that is different per type copy
   private AbstractJsonTypeManifold _tm;
   
-  protected JsonSchemaType( String name, URL source, JsonSchemaType parent, TypeAttributes attr )
+  protected JsonSchemaType( String name, IFile source, JsonSchemaType parent, TypeAttributes attr )
   {
     _state = new State( name, parent, source );
     _typeAttributes = attr;
@@ -107,7 +108,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return result + JsonUtil.makeIdentifier( getLabel() );
   }
 
-  public AbstractJsonTypeManifold getTm()
+  protected AbstractJsonTypeManifold getTm()
   {
     if( _tm == null && getParent() != null )
     {
@@ -167,7 +168,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
            getParent().getParent() == null && !getParent().getName().equals( JsonSchemaTransformer.JSCH_DEFINITIONS );
   }
 
-  public URL getFile()
+  public IFile getFile()
   {
     return _state._file != null
            ? _state._file
@@ -345,9 +346,9 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return true;
   }
 
-  private IFile getIFile()
+  protected IFile getIFile()
   {
-    return getTm().getModule().getHost().getFileSystem().getIFile( getFile() );
+    return getFile();
   }
 
   protected String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
@@ -379,7 +380,16 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   protected void renderFileField( StringBuilder sb, int indent, String modifiers )
   {
     indent( sb, indent );
-    sb.append( modifiers == null ? "" : modifiers + " " ).append( "String " ).append( FIELD_FILE_URL ).append( " = \"" ).append( getFile() == null ? "null" : getFile().toString() ).append( "\";\n" );
+    try
+    {
+      String url = getFile() == null ? "null" : getFile().toURI().toURL().toString();
+      url = ManEscapeUtil.escapeForJavaStringLiteral( url );
+      sb.append( modifiers == null ? "" : modifiers + " " ).append( "String " ).append( FIELD_FILE_URL ).append( " = \"" ).append( url ).append( "\";\n" );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   protected String getPropertyType( IJsonType propertyType )
@@ -452,7 +462,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return getNameRelativeFromMe( parent, qualifiedWithMe ) + '.' + type.getIdentifier();
   }
 
-  private String getFqn( JsonSchemaType type )
+  protected String getFqn( JsonSchemaType type )
   {
     if( type.getParent() == null )
     {
@@ -468,7 +478,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     {
       return getPackage( type.getParent() );
     }
-    IFile file = getTm().getModule().getHost().getFileSystem().getIFile( type.getFile() );
+    IFile file = type.getFile();
     String[] types = getTm().getTypesForFile( file );
     String fqn = Arrays.stream( types ).filter( e -> e.endsWith( type.getIdentifier() ) ).findFirst().orElse( null );
     return ManClassUtil.getPackage( fqn );

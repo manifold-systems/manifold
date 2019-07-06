@@ -16,8 +16,10 @@
 
 package manifold.api.json;
 
+import java.io.Reader;
 import java.util.Arrays;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
+import manifold.util.StreamUtil;
 
 /**
  * This class is used as part of the JSON API. It provides methods to load an instance of a JSON interface from
@@ -70,6 +72,17 @@ public class Loader<E>
     }
   }
 
+  public E fromJsonReader( Reader reader )
+  {
+    try
+    {
+      return (E)Json.fromJson( StreamUtil.getContent( reader ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
 
 
   public E fromYaml( String yamlText )
@@ -105,6 +118,18 @@ public class Loader<E>
     try
     {
       return fromYamlUrl( file.toURI().toURL() );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public E fromYamlReader( Reader reader )
+  {
+    try
+    {
+      return (E)Yaml.fromYaml( StreamUtil.getContent( reader ) );
     }
     catch( Exception e )
     {

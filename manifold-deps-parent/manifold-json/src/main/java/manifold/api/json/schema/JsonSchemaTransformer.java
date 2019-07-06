@@ -127,7 +127,7 @@ public class JsonSchemaTransformer
   {
     return transform( host, name, null, jsonValue );
   }
-  public static IJsonType transform( IManifoldHost host, String name, URL source, Object jsonValue )
+  public static IJsonType transform( IManifoldHost host, String name, IFile source, Object jsonValue )
   {
     if( !(jsonValue instanceof Bindings) || !isSchema( (Bindings)jsonValue ) )
     {
@@ -163,7 +163,7 @@ public class JsonSchemaTransformer
     }
   }
 
-  private static IJsonType findTopLevelCachedType( String name, URL source, Bindings docObj )
+  private static IJsonType findTopLevelCachedType( String name, IFile source, Bindings docObj )
   {
     if( source != null )
     {
@@ -261,11 +261,11 @@ public class JsonSchemaTransformer
     return value instanceof List ? (List)value : null;
   }
 
-  private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, URL enclosing, Bindings jsonObj )
+  private List<IJsonType> transformDefinitions( JsonSchemaType parent, String nameQualifier, IFile enclosing, Bindings jsonObj )
   {
     return transformDefinitions( new JsonStructureType( parent, enclosing, nameQualifier, new TypeAttributes() ), enclosing, jsonObj );
   }
-  private List<IJsonType> transformDefinitions( JsonSchemaType parent, URL enclosing, Bindings jsonObj )
+  private List<IJsonType> transformDefinitions( JsonSchemaType parent, IFile enclosing, Bindings jsonObj )
   {
     Bindings definitions = getJSchema_Definitions( jsonObj );
     if( definitions == null )
@@ -309,7 +309,7 @@ public class JsonSchemaTransformer
     return result;
   }
 
-  private IJsonType findLocalRef( String ref, URL enclosing )
+  private IJsonType findLocalRef( String ref, IFile enclosing )
   {
     // Find by ref "id"
 
@@ -324,7 +324,7 @@ public class JsonSchemaTransformer
     return findByLocationPath( ref, enclosing );
   }
 
-  private IJsonType findByLocationPath( String ref, URL enclosing )
+  private IJsonType findByLocationPath( String ref, IFile enclosing )
   {
     String localRef = makeLocalRef( ref );
     if( localRef.isEmpty() )
@@ -505,7 +505,7 @@ public class JsonSchemaTransformer
     }
   }
 
-  IJsonType transformType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean isNullable )
+  IJsonType transformType( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean isNullable )
   {
     final IJsonType result;
     Object value = jsonObj.get( JSCH_TYPE );
@@ -715,7 +715,7 @@ public class JsonSchemaTransformer
            jsonObj.get( JSCH_PROPERTIES ) instanceof Pair && ((Pair)jsonObj.get( JSCH_PROPERTIES )).getSecond() instanceof Bindings;
   }
 
-  private void transformDefinitions( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, IJsonType result )
+  private void transformDefinitions( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, IJsonType result )
   {
     List<IJsonType> definitions;
     if( result instanceof JsonSchemaType )
@@ -755,7 +755,7 @@ public class JsonSchemaTransformer
     }
   }
 
-  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
+  private IJsonType findReferenceTypeOrCombinationType( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     IJsonType result;
     result = findReference( parent, enclosing, jsonObj );
@@ -780,20 +780,20 @@ public class JsonSchemaTransformer
     return result;
   }
 
-  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
+  private IJsonType deriveTypeFromEnum( JsonSchemaType parent, IFile enclosing, String name, Bindings bindings, Boolean nullable )
   {
     List<?> list = getJSchema_Enum( bindings );
     return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType deriveTypeFromConst( JsonSchemaType parent, URL enclosing, String name, Bindings bindings, Boolean nullable )
+  private IJsonType deriveTypeFromConst( JsonSchemaType parent, IFile enclosing, String name, Bindings bindings, Boolean nullable )
   {
     // Note the "const" type is shorthand for a single element "enum" type
     List<?> list = getJSchema_Const( bindings );
     return makeEnum( parent, enclosing, name, list, new TypeAttributes( nullable, bindings ) );
   }
 
-  private IJsonType makeEnum( JsonSchemaType parent, URL enclosing, String name, List<?> list, TypeAttributes attr )
+  private IJsonType makeEnum( JsonSchemaType parent, IFile enclosing, String name, List<?> list, TypeAttributes attr )
   {
     if( list == null )
     {
@@ -808,7 +808,7 @@ public class JsonSchemaTransformer
     return type;
   }
 
-  private IJsonType transformCombination( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
+  private IJsonType transformCombination( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     IJsonType type = transformAllOf( parent, enclosing, name, jsonObj, nullable );
     if( type != null )
@@ -825,7 +825,7 @@ public class JsonSchemaTransformer
     return transformOneOf( parent, enclosing, name, jsonObj, nullable );
   }
 
-  private JsonStructureType transformAllOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
+  private JsonStructureType transformAllOf( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AllOf( jsonObj );
     if( list == null )
@@ -835,7 +835,7 @@ public class JsonSchemaTransformer
     return buildHierarchy( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private IJsonType transformAnyOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
+  private IJsonType transformAnyOf( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_AnyOf( jsonObj );
     if( list == null )
@@ -844,7 +844,7 @@ public class JsonSchemaTransformer
     }
     return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
-  private IJsonType transformOneOf( JsonSchemaType parent, URL enclosing, String name, Bindings jsonObj, Boolean nullable )
+  private IJsonType transformOneOf( JsonSchemaType parent, IFile enclosing, String name, Bindings jsonObj, Boolean nullable )
   {
     List list = getJSchema_OneOf( jsonObj );
     if( list == null )
@@ -854,7 +854,7 @@ public class JsonSchemaTransformer
     return buildUnion( parent, enclosing, name, list, jsonObj, nullable );
   }
 
-  private JsonStructureType buildHierarchy( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
+  private JsonStructureType buildHierarchy( JsonSchemaType parent, IFile enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     JsonStructureType type = null;
     boolean hasType = false;
@@ -951,7 +951,7 @@ public class JsonSchemaTransformer
     return hasType ? type : null;
   }
 
-  private IJsonType buildUnion( JsonSchemaType parent, URL enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
+  private IJsonType buildUnion( JsonSchemaType parent, IFile enclosing, String name, List list, Bindings jsonObj, Boolean nullable )
   {
     IJsonType singleNullable = maybeGetSingleNullable( parent, enclosing, name, list );
     if( singleNullable != null )
@@ -1026,7 +1026,7 @@ public class JsonSchemaTransformer
     return null;
   }
 
-  private IJsonType maybeGetSingleNullable( JsonSchemaType parent, URL enclosing, String name, List list )
+  private IJsonType maybeGetSingleNullable( JsonSchemaType parent, IFile enclosing, String name, List list )
   {
     if( list.size() != 2 )
     {
@@ -1075,7 +1075,7 @@ public class JsonSchemaTransformer
     return null;
   }
 
-  private IJsonType findReference( JsonSchemaType parent, URL enclosing, Bindings jsonObj )
+  private IJsonType findReference( JsonSchemaType parent, IFile enclosing, Bindings jsonObj )
   {
     Object value = jsonObj.get( JSCH_REF );
     String ref;
@@ -1142,7 +1142,7 @@ public class JsonSchemaTransformer
     throw new UnsupportedOperationException( "Unhandled URI: $ref" );
   }
 
-  private IJsonType findFragmentRef( JsonSchemaType parent, URL enclosing, Token token, URI uri )
+  private IJsonType findFragmentRef( JsonSchemaType parent, IFile enclosing, Token token, URI uri )
   {
     String uriFragment = uri.getFragment();
     if( uriFragment != null )
@@ -1173,7 +1173,7 @@ public class JsonSchemaTransformer
     return pair.getSecond().findFragmentRef( (JsonSchemaType)baseType, ((JsonSchemaType)baseType).getFile(), token, uri );
   }
 
-  private Pair<IJsonType, JsonSchemaTransformer> findBaseType( Token token, JsonSchemaType parent, URL enclosing, URI uri, String filePart )
+  private Pair<IJsonType, JsonSchemaTransformer> findBaseType( Token token, JsonSchemaType parent, IFile enclosing, URI uri, String filePart )
   {
     URL url;
     String scheme = uri.getScheme();
@@ -1187,7 +1187,7 @@ public class JsonSchemaTransformer
       else
       {
         // assume file system relative path
-        url = new URL( enclosing, filePart );
+        url = new URL( enclosing.toURI().toURL(), filePart );
       }
     }
     catch( MalformedURLException e )
@@ -1196,7 +1196,9 @@ public class JsonSchemaTransformer
       return null;
     }
 
-    Pair<IJsonType, JsonSchemaTransformer> pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
+    IFile urlFile = _host.getFileSystem().getIFile( url );
+    Pair<IJsonType, JsonSchemaTransformer> pair = JsonSchemaTransformerSession.instance()
+      .getCachedBaseType( urlFile );
     IJsonType baseType = pair == null ? null : pair.getFirst();
     if( baseType == null )
     {
@@ -1208,8 +1210,7 @@ public class JsonSchemaTransformer
         if( protocol != null && protocol.equals( "file" ) )
         {
           // use use IFile if url is a file e.g., IDE file system change caching
-          IFile file = _host.getFileSystem().getIFile( url );
-          input = file.openInputStream();
+          input = urlFile.openInputStream();
         }
         else
         {
@@ -1243,8 +1244,8 @@ public class JsonSchemaTransformer
       {
         name = name.substring( 0, iDot );
       }
-      transform( _host, name, url, jsonObject );
-      pair = JsonSchemaTransformerSession.instance().getCachedBaseType( url );
+      transform( _host, name, urlFile, jsonObject );
+      pair = JsonSchemaTransformerSession.instance().getCachedBaseType( urlFile );
     }
     return pair;
   }

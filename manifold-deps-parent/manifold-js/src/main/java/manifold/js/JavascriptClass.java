@@ -29,9 +29,6 @@ import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawExpression;
-import manifold.api.gen.SrcRawStatement;
-import manifold.api.gen.SrcStatementBlock;
 import manifold.api.type.SourcePosition;
 import manifold.js.parser.Parser;
 import manifold.js.parser.Tokenizer;
@@ -56,7 +53,10 @@ public class JavascriptClass
   {
     ClassNode classNode = programNode.getFirstChild( ClassNode.class );
 
-    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class );
+    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class )
+      .imports( JavascriptClass.class )
+      .imports( SourcePosition.class );
+
     clazz.addAnnotation(
       new SrcAnnotationExpression( SourcePosition.class )
         .addArgument( "url", String.class, programNode.getUrl().toString() )
@@ -69,16 +69,13 @@ public class JavascriptClass
     {
       clazz.superClass( superClass );
     }
-    clazz.imports( JavascriptClass.class )
-      .imports( SourcePosition.class );
-
-    clazz.addField( new SrcField( "ENGINE", ScriptableObject.class )
+    clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC | Modifier.VOLATILE )
-      .initializer( new SrcRawExpression( ("null") ) ) );
+      .initializer( "null" ) );
 
-    clazz.addField( new SrcField( "TIMESTAMP", long.class )
+    clazz.addField( new SrcField( "UID", long.class )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC | Modifier.VOLATILE )
-      .initializer( new SrcRawExpression( ("0") ) ) );
+      .initializer( "0L" ) );
 
 
     clazz.addField( new SrcField( "_context", ScriptableObject.class ) );
@@ -115,12 +112,9 @@ public class JavascriptClass
       srcParameters = Collections.emptyList();
     }
 
-
     //impl
-    ctor.body( new SrcStatementBlock()
-      .addStatement(
-        new SrcRawStatement()
-          .rawText( "_context = JavascriptClass.initInstance(getEngine(), \"" + classNode.getName() + "\"" + generateArgList( srcParameters ) + ");" ) ) );
+    ctor.body( "_context = " + JavascriptClass.class.getSimpleName() +
+               ".initInstance(getScope(), \"" + classNode.getName() + "\"" + generateArgList( srcParameters ) + ");" );
 
     clazz.addConstructor( ctor );
   }
@@ -129,23 +123,20 @@ public class JavascriptClass
 
   private static void addUtilityMethods( SrcClass clazz, ClassNode classNode, String fqn )
   {
-    long timestamp = incUid();
+    long uid = incUid();
     SrcMethod m = new SrcMethod()
-      .name( "getEngine" )
+      .name( "getScope" )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .returns( ScriptableObject.class )
-      .body( new SrcStatementBlock()
-        .addStatement(
-          new SrcRawStatement()
-            .rawText( "if( " + timestamp + "L != TIMESTAMP ) {\n" +
-                      "      synchronized( " + classNode.getName() + ".class ) {\n" +
-                      "        if( " + timestamp + "L != TIMESTAMP ) {\n" +
-                      "          TIMESTAMP = " + timestamp + "L;\n" +
-                      "          ENGINE = JavascriptClass.init(\"" + fqn + "\");\n" +
-                      "        }\n" +
-                      "      }\n" +
-                      "    }\n" +
-                      "    return ENGINE;" ) ) );
+      .body( "if(" + uid + "L != UID) {\n" +
+         "      synchronized(" + classNode.getName() + ".class) {\n" +
+         "        if(" + uid + "L != UID) {\n" +
+         "          UID = " + uid + "L;\n" +
+         "          SCOPE = JavascriptClass.init(\"" + fqn + "\");\n" +
+         "        }\n" +
+         "      }\n" +
+         "    }\n" +
+         "    return SCOPE;" );
     clazz.addMethod( m );
   }
 
@@ -185,17 +176,14 @@ public class JavascriptClass
       //impl
       if( node.isStatic() )
       {
-        srcMethod.body( new SrcStatementBlock()
-          .addStatement(
-            new SrcRawStatement()
-              .rawText( "return JavascriptClass.invokeStatic(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" + generateArgList( parameters.toParamList() ) + ");" ) ) );
+        srcMethod.body( "return JavascriptClass.invokeStatic(getScope(), \"" +
+                        ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" +
+                        generateArgList( parameters.toParamList() ) + ");" );
       }
       else
       {
-        srcMethod.body( new SrcStatementBlock()
-          .addStatement(
-            new SrcRawStatement()
-              .rawText( "return JavascriptClass.invoke(_context, \"" + node.getName() + "\"" + generateArgList( parameters.toParamList() ) + ");" ) ) );
+        srcMethod.body( "return JavascriptClass.invoke(_context, \"" + node.getName() + "\"" +
+                        generateArgList( parameters.toParamList() ) + ");" );
       }
       clazz.addMethod( srcMethod );
     }
@@ -224,20 +212,14 @@ public class JavascriptClass
             .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
             .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) );
 
-        //impl
         if( node.isStatic() )
         {
-          setter.body( new SrcStatementBlock()
-            .addStatement(
-              new SrcRawStatement()
-                .rawText( "JavascriptClass.setStaticProp(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);" ) ) );
+          setter.body( "JavascriptClass.setStaticProp(getScope(), \"" +
+                       ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);" );
         }
         else
         {
-          setter.body( new SrcStatementBlock()
-            .addStatement(
-              new SrcRawStatement()
-                .rawText( "JavascriptClass.setProp(_context, \"" + name + "\", val);" ) ) );
+          setter.body( "JavascriptClass.setProp(_context, \"" + name + "\", val);" );
         }
         clazz.addMethod( setter );
       }
@@ -258,55 +240,57 @@ public class JavascriptClass
         //impl
         if( node.isStatic() )
         {
-          getter.body( new SrcStatementBlock()
-            .addStatement(
-              new SrcRawStatement()
-                .rawText( "return JavascriptClass.getStaticProp(getEngine(), \"" + ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");" ) ) );
+          getter.body( "return JavascriptClass.getStaticProp(getScope(), \"" +
+                       ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");" );
         }
         else
         {
-          getter.body( new SrcStatementBlock()
-            .addStatement(
-              new SrcRawStatement()
-                .rawText( "return JavascriptClass.getProp(_context, \"" + name + "\");" ) ) );
+          getter.body( "return JavascriptClass.getProp(_context, \"" + name + "\");" );
         }
         clazz.addMethod( getter );
       }
     }
   }
 
+  @SuppressWarnings("unused")
   public static <T> T invoke( ScriptableObject scope, String func, Object... args )
   {
     //noinspection unchecked
     return (T)ScriptableObject.callMethod( scope, func, args );
   }
 
+  @SuppressWarnings("unused")
   public static <T> T invokeStatic( ScriptableObject scope, String className, String func, Object... args )
   {
     //noinspection unchecked
     return (T)ScriptableObject.callMethod( (Scriptable)scope.get( className, scope ), func, args );
   }
 
+  @SuppressWarnings("unused")
   public static Object getProp( ScriptableObject scope, String prop )
   {
     return ScriptableObject.getProperty( scope, prop );
   }
 
+  @SuppressWarnings("unused")
   public static Object getStaticProp( ScriptableObject scope, String className, String prop )
   {
     return ScriptableObject.getProperty( (Scriptable)scope.get( className, scope ), prop );
   }
 
+  @SuppressWarnings("unused")
   public static void setProp( ScriptableObject scope, String prop, Object value )
   {
     ScriptableObject.putProperty( scope, prop, value );
   }
 
+  @SuppressWarnings("unused")
   public static void setStaticProp( ScriptableObject scope, String className, String prop, Object value )
   {
     ScriptableObject.putProperty( (Scriptable)scope.get( className, scope ), prop, value );
   }
 
+  @SuppressWarnings("unused")
   public static ScriptableObject init( String programName )
   {
     ScriptableObject scope = SharedScope.newStaticScope();
@@ -318,6 +302,7 @@ public class JavascriptClass
     return scope;
   }
 
+  @SuppressWarnings("unused")
   public static ScriptableObject initInstance( ScriptableObject scope, String name, Object... args )
   {
     return (ScriptableObject)Context.getCurrentContext().newObject( scope, name, args );

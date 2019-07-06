@@ -16,12 +16,12 @@
 
 package manifold.api.json.schema;
 
-import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import manifold.api.fs.IFile;
 import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.DynamicType;
 import manifold.api.json.IJsonParentType;
@@ -54,7 +54,7 @@ public class JsonUnionType extends JsonStructureType
   private final State _state;
 
 
-  public JsonUnionType( JsonSchemaType parent, URL source, String name, TypeAttributes attr )
+  public JsonUnionType( JsonSchemaType parent, IFile source, String name, TypeAttributes attr )
   {
     super( parent, source, name, attr );
     _state = new State();

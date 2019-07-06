@@ -16,24 +16,23 @@
 
 package manifold.api.yaml;
 
+import abc.yaml.Contact;
+import abc.yaml.Invoice;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
-import java.util.List;
 import javax.script.Bindings;
 import junit.framework.TestCase;
 import manifold.api.json.Yaml;
 import manifold.util.JsonUtil;
 import manifold.util.StreamUtil;
-import abc.yaml.Invoice;
-import abc.yaml.Contact;
 
 public class YamlTest extends TestCase
 {
   public void testYaml() throws IOException
   {
-    Bindings bindings = (Bindings) Yaml.fromYaml( StreamUtil.getContent( new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ) ) ) );
+    Bindings bindings = (Bindings)Yaml.fromYaml( StreamUtil.getContent( new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ) ) ) );
     System.out.println( JsonUtil.toJson( bindings ) );
   }
 
@@ -66,15 +65,15 @@ public class YamlTest extends TestCase
     String city2 = address2.getCity();
     String state2 = address2.getState();
     Integer postal2 = address2.getPostal();
-    Invoice.product products = (Invoice.product) invoice.getProduct();
-    Invoice.product.productItem product = products.get(0);
+    Invoice.product products = (Invoice.product)invoice.getProduct();
+    Invoice.product.productItem product = products.get( 0 );
     String sku = product.getSku();
     Integer quantity = product.getQuantity();
     String description = product.getDescription();
     Double price = product.getPrice();
     Double tax = invoice.getTax();
     Double total = invoice.getTotal();
-    assertEquals( 4443.52, Math.round( total * 100d )/100d );
+    assertEquals( 4443.52, Math.round( total * 100d ) / 100d );
     String comments = invoice.getComments();
     assertEquals( "Late afternoon is best. Backup contact is Nancy Billsmer @ 338-4338.", comments );
   }
@@ -82,15 +81,15 @@ public class YamlTest extends TestCase
   public void testJsonSchemaYaml()
   {
     Contact contact = Contact.builder()
-      .withName("Scott McKinney")
-      .withDateOfBirth( LocalDate.of(1986, 8, 9))
-      .withPrimaryAddress(Contact.Address.create("111 Main St.", "Cupertino", "CA")).build();
+      .withName( "Scott McKinney" )
+      .withDateOfBirth( LocalDate.of( 1986, 8, 9 ) )
+      .withPrimaryAddress( Contact.Address.create( "111 Main St.", "Cupertino", "CA" ) ).build();
     Contact.Address primaryAddress = contact.getPrimaryAddress();
     assertEquals( "111 Main St.", primaryAddress.getStreet_address() );
     assertEquals( "Cupertino", primaryAddress.getCity() );
     assertEquals( "CA", primaryAddress.getState() );
     assertEquals( "Scott McKinney", contact.getName() );
-    assertEquals( LocalDate.of(1986, 8, 9), contact.getDateOfBirth() );
+    assertEquals( LocalDate.of( 1986, 8, 9 ), contact.getDateOfBirth() );
     assertEquals( "{\n" +
                   "  \"Name\": \"Scott McKinney\",\n" +
                   "  \"DateOfBirth\": \"1986-08-09\",\n" +
@@ -108,4 +107,18 @@ public class YamlTest extends TestCase
                   "  state: CA\n", contact.write().toYaml() );
   }
 
+  public void testFragmentValue()
+  {
+    /*[>MyYamlObject.yaml<]
+    name: Scott
+    location:
+      planet: fubar
+      coordinates: 123456
+    */
+    MyYamlObject sample = MyYamlObject.fromSource();
+    assertEquals( "Scott", sample.getName() );
+    MyYamlObject.location location = sample.getLocation();
+    assertEquals( "fubar", location.getPlanet() );
+    assertEquals( 123456, (int)location.getCoordinates() );
+  }
 }

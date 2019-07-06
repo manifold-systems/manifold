@@ -73,6 +73,11 @@ public class SrcField extends SrcAnnotated<SrcField>
     _initializer = expr;
     return this;
   }
+  public SrcField initializer( String expr )
+  {
+    _initializer = new SrcRawExpression( expr );
+    return this;
+  }
 
   public boolean isEnumConst()
   {

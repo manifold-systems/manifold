@@ -27,6 +27,7 @@ import javax.script.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import manifold.api.type.FragmentValue;
 import manifold.api.type.JavaTypeManifold;
 import manifold.ext.DataBindings;
 import manifold.ext.RuntimeMethods;
@@ -112,6 +113,7 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( IJsonBindingsBacked.class.getName() ).append( ";\n" )
       .append( "import " ).append( IJsonList.class.getName() ).append( ";\n" )
       .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
+      .append( "import " ).append( FragmentValue.class.getName() ).append( ";\n" )
       .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
       .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );

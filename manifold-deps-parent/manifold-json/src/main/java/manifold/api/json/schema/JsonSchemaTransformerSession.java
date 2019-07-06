@@ -16,10 +16,10 @@
 
 package manifold.api.json.schema;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+import manifold.api.fs.IFile;
 import manifold.api.json.IJsonType;
 import manifold.util.Pair;
 
@@ -32,7 +32,7 @@ public class JsonSchemaTransformerSession
 {
   private static final ThreadLocal<JsonSchemaTransformerSession> INSTANCE = new ThreadLocal<>();
 
-  private Map<URL, Pair<IJsonType, JsonSchemaTransformer>> _baseTypeByUrl;
+  private Map<IFile, Pair<IJsonType, JsonSchemaTransformer>> _baseTypeByUrl;
   private Stack<JsonSchemaTransformer> _transformers;
 
   public static JsonSchemaTransformerSession instance()
@@ -64,11 +64,11 @@ public class JsonSchemaTransformerSession
     _transformers.pop();
   }
 
-  Pair<IJsonType, JsonSchemaTransformer> getCachedBaseType( URL url )
+  Pair<IJsonType, JsonSchemaTransformer> getCachedBaseType( IFile url )
   {
     return _baseTypeByUrl.get( url );
   }
-  void cacheBaseType( URL url, Pair<IJsonType, JsonSchemaTransformer> pair )
+  void cacheBaseType( IFile url, Pair<IJsonType, JsonSchemaTransformer> pair )
   {
     _baseTypeByUrl.put( url, pair );
   }
