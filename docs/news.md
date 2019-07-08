@@ -5,6 +5,12 @@ layout: default
 # News
 <br/><br/>
 
+## Manifold is "Trick #1" (5 July 2019)
+<br>
+Catch [Marco Behler's _**Five Minute Friday**_](https://www.youtube.com/watch?v=-x0QuhWJg-8) coverage of Manifold.
+<br/><br/> 
+
+
 ## JetBrains Marketplace is LIVE with Manifold (25 June 2019):
 <br>
 JetBrains Marketplace is [LIVE](https://blog.jetbrains.com/platform/2019/06/jetbrains-marketplace-is-live/) today along
