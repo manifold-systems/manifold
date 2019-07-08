@@ -9,9 +9,7 @@ layout: default
 <br>
 Catch [Marco Behler's _**Five Minute Friday**_](https://www.youtube.com/watch?v=-x0QuhWJg-8) coverage of Manifold.
 <p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
-    <source type="video/mp4" src="https://www.youtube.com/watch?v=-x0QuhWJg-8">
-  </video>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/-x0QuhWJg-8" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </p>
 <br/><br/> 
 
