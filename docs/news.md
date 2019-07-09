@@ -19,7 +19,7 @@ Manifold **JSON** changes
 * add `fromSource()` method for JSON/YAML types to enable quick usage of by-example JSON/YAML resource **data** e.g., 
 
 ```java
-// Conveniently the *data* in Preson.json directly and type-safely
+// Conveniently access the *data* in Preson.json directly and type-safely
 Person person = Person.fromSource();
 ``` 
 * enable JSON/YAML **fragments** e.g, as type-safe embedded comments, use `fromSource()` to gain type-safe access to resource data 
