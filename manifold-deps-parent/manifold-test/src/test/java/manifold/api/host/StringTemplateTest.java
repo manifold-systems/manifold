@@ -1,9 +1,14 @@
 package manifold.api.host;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import junit.framework.TestCase;
 import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.util.ReflectUtil;
 
 
 import static org.junit.Assert.assertNotEquals;
@@ -181,6 +186,18 @@ public class StringTemplateTest extends TestCase
 
     String value3 = "${\"hi\"}";
     assertEquals( "hi", value3 );
+  }
+
+  @Retention( RetentionPolicy.RUNTIME )
+  private @interface MyAnno
+  {
+    String value();
+  }
+  @MyAnno( "${verbatim}" )
+  public void testAnnotationsNotSupported()
+  {
+    Method m = Objects.requireNonNull( ReflectUtil.method( getClass(), "testAnnotationsNotSupported" ) ).getMethod();
+    assertEquals( "\${verbatim}", m.getAnnotation( MyAnno.class ).value() );
   }
 
   public void testInner()

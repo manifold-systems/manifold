@@ -200,6 +200,26 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   }
 
   @Override
+  public void visitAnnotation( JCTree.JCAnnotation jcAnno )
+  {
+    // Disable string templates inside annotations. Reasons:
+    // 1. spring framework has its own $ processing that interferes
+    // 2. annotation processors in IDEs won't work with it
+    // 3. there's not enough benefit to justify the cost of fixing the above problems
+    // See https://github.com/manifold-systems/manifold/issues/102
+
+    pushDisabled( true );
+    try
+    {
+      super.visitAnnotation( jcAnno );
+    }
+    finally
+    {
+      popDisabled( true );
+    }
+  }
+
+  @Override
   public void visitLiteral( JCTree.JCLiteral jcLiteral )
   {
     super.visitLiteral( jcLiteral );
