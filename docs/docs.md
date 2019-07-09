@@ -2231,7 +2231,138 @@ and the JavaScript manifold ([manifold-js](https://github.com/manifold-systems/m
 serve as decent reference implementations for wrapping existing code generators and binding to existing languages, 
 respectively.
 
+# Embedding with Fragments
 
+In addition to resource files you can also *embed* resource content directly in a Java source file as a type-safe
+resource *fragment*.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
+IDE plugin, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
+This means you can directly embed resources closer to where you used them in your code.  For instance, you can
+type-safely write a query in the query language your application uses directly in the Java method that uses the query.
+
+You can embed a fragment as a *declaration* or a *value*.
+
+## Type Declaration
+
+You can type-safely embed resources directly in your Java code as declarations.  Here's a simple example using
+Javascript:
+```java
+public class MyJavaClass {
+  void foo() {
+    /*[>Barker.js<]
+    function callBark(aBarker) {
+      aBarker.bark();
+    }
+    */
+    Barker.callBark(new Dog());
+    Barker.callBark(new Tree());
+    class Dog {
+      public String bark() {
+        return "ruff";
+      }
+    }
+    class Tree {
+      public String bark() {
+        return "rough";
+      }
+    }
+  }
+}
+``` 
+Notice the Javascript is embedded in a multiline comment. This is how you embed any kind of resource fragment as a type
+declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. Note
+a fragment must use `[>` and `<]` at the beginning of the comment to delimit the type name and extension.  A fragment
+covers the remainder of the comment and must follow the format of the declared extension.
+
+You can embed any Manifold enabled resource as a fragment type declaration.  Here's another example using JSON:
+```java
+void foo() {
+  /*[>Planet.json<]
+  {
+    "name": "Earth",
+    "system": {
+      "name": "Sol",
+      "mass": 1.0014
+    }
+  }
+  */
+  // Work with the content type-safely
+  Planet planet = Planet.fromSource();
+  String name = planet.getName();
+  Planet.system sys = planet.getSystem();
+  
+  // Make a REST call
+  Planet.request(endpoint).postOne(planet);
+  
+  // Use the JSON bindings 
+  Map<String, Object> jsonBindings = planet.getBindings();
+  
+  // Make a new Planet
+  Planet mars = Planet.builder()
+  .withName("Mars")
+  .withSystem(sys)
+  .build();
+  
+  // Transform to another format
+  String yaml = planet.writer().toYaml();
+}
+```
+ 
+## Scoping 
+A fragment can be embedded anywhere in your code.  The type declared in the fragment is scoped to the package of the
+enclosing class.  Thus in the example `Barker` is accessible anywhere in the enclosing `foo` method *as well as* foo's
+declaring class and other classes in its package.
+
+Note, even though the declared type is package scoped, for the sake of readability it is best to define the fragment
+nearest to its intended use. In a future release this level of scoping may be enforced.
+
+## Rich Editing
+If used with the Manifold IntelliJ IDEA plugin, you can edit fragments as if they were in a separate file with all the
+editor features you'd expect like highlighting, parser feedback, code completion, etc.  This is especially useful with
+GraphQL, SQL, and similar resources where editing a fragment in place provides a more fluid development experience. 
+ 
+## Value Fragments (experimental)
+Sometimes it's more convenient to use a fragment as a *value* as opposed to a type declaration. For example, you can
+create a GraphQL query as a fragment value and assign it to a variable:
+ 
+```java 
+var moviesByGenre = "[>.graphql<] query MoviesByGenre($genre: genre) { movies(genre: $genre) { title } }";
+var query = moviesByGenre.builder().withGenre(Action).build();
+var actionMovies = query.request(ENDPOINT).post();
+``` 
+
+Here a GraphQL query is embedded directly in a String literal as a fragment *value*.  The resulting type is based on
+the fragment type in use.  In this case the GraphQL type manifold provides a special type with the single purpose of
+exposing a query `builder` method matching the one the `MoviesByGenre` query defines.
+
+Note not all manifold resources can be used as fragment values. The fragment value concept is not always a good fit.
+For instance, the Properties manifold does not implement fragment values because a properties type is used statically.
+
+Note fragments as values will become more useful with multiline String literals via the new
+[Text Blocks](https://openjdk.java.net/jeps/355) feature in Java 13:
+```java
+var query = """
+  [>.graphql<]
+  query Movies($genre: Genre!, $title: String, $releaseDate: Date) {
+    movies(genre: $genre, title: $title, releaseDate: $releaseDate) {
+      id
+      title
+      genre
+      releaseDate
+    }
+  }
+  """;
+var result = query.create(Action).request(ENDPOINT).post();
+```    
+
+>**Note to Type Manifold service providers**
+>
+>To support fragments as *values* you must annotate your toplevel types with `@FragmentValue`.
+This annotation defines two parameters: `methodName` and `type`, where `methodName` specifies the name of a static 
+method to call on the top-level type that represents the type's value, and where `type` is the qualified name of the
+value type, which must be contravariant with the `methodName` return type. See the 
+[GraphQL type manifold implementation](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-graphql/src/main/java/manifold/graphql/type/GqlParentType.java)
+for a reference.
+ 
 # Extension Classes
 
 Similar to other languages such as 
