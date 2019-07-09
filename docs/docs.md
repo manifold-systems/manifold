@@ -2236,7 +2236,7 @@ respectively.
 In addition to resource files you can also *embed* resource content directly in a Java source file as a type-safe
 resource *fragment*.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
 IDE plugin, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
-This means you can directly embed resources closer to where you used them in your code.  For instance, you can
+This means you can directly embed resources closer to where you use them in your code.  For instance, you can
 type-safely write a query in the query language your application uses directly in the Java method that uses the query.
 
 You can embed a fragment as a *declaration* or a *value*.
@@ -2312,7 +2312,7 @@ A fragment can be embedded anywhere in your code.  The type declared in the frag
 enclosing class.  Thus in the example `Barker` is accessible anywhere in the enclosing `foo` method *as well as* foo's
 declaring class and other classes in its package.
 
-Note, even though the declared type is package scoped, for the sake of readability it is best to define the fragment
+>Note, even though the declared type is package scoped, for the sake of readability it is best to define the fragment
 nearest to its intended use. In a future release this level of scoping may be enforced.
 
 ## Rich Editing
