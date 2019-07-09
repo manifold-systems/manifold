@@ -5,6 +5,52 @@ layout: default
 # News
 <br/><br/>
 
+
+## Manifold 2019.1.7 released (8 July 2019)
+
+Manifold **core** changes 
+* support a **file fragment** as an r-value embedded in a Java String literal [a la F# type provider](https://fsharp.github.io/FSharp.Data/library/JsonProvider.html) 
+* support Manifold fragments values in Java 13 ***text blocks** 
+* this change is part of the broader [file fragment](http://manifold.systems/docs.html#embedding-with-fragments) set of
+changes supporting fragments in comments as type declarations and in String literals as values, to bring type-safe
+resources closer to your code 
+ 
+Manifold **JSON** changes 
+* add `fromSource()` method for JSON/YAML types to enable quick usage of by-example JSON/YAML resource **data** e.g., 
+
+```java
+// Conveniently the *data* in Preson.json directly and type-safely
+Person person = Person.fromSource();
+``` 
+* enable JSON/YAML **fragments** e.g, as type-safe embedded comments, use `fromSource()` to gain type-safe access to resource data 
+ 
+Manifold **Javascript** changes 
+* replace the deprecated nashorn dependency with latest **rhino** 
+* remove ScriptEngine usage, instead go straight to rhino 
+* using a shared global scope per thread to avoid expensive js initialization 
+* each program/class/template has its own scope which in turn delegates to the shared scope 
+* support javascript type-safely embedded in a string literal via file **fragments** e.g., 
+`int value = (int) "[>.js<] 3 + 4 + 5";` 
+* this is more a **proof of concept** to demonstrate: 
+1. the relative simplicity to enable any manifold resource for literal embedding 
+2. GraphQL is not the only manifold that can be embedded in a literal 
+3. to prepare for more languages such a **R** 
+4. to get the general feature in place and ready for java 13 where **text blocks** facilitate multiline scripts (intellij's **injection editing** makes this quite attractive) 
+ 
+Bug **fixes**: 
+* Fix [#102](https://github.com/manifold-systems/manifold/issues/102) 
+* other minor fixes and improvements 
+
+<br>
+
+><sub>Manifold release *2019.1.7* is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/2019.1.7/jar).</sub>
+>
+><sub>Manifold plugin for Intellij IDEA update *2019.1.7* available at [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/10057-manifold).</sub> 
+
+<br/><br/>
+
+
+
 ## Manifold is "Trick #1" (5 July 2019)
 <br>
 Catch [Marco Behler's _**Five Minute Friday**_](https://www.youtube.com/watch?v=-x0QuhWJg-8) coverage of Manifold.
