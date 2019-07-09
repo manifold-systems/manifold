@@ -10,7 +10,7 @@ layout: default
 
 Manifold **core** changes 
 * support a **file fragment** as an r-value embedded in a Java String literal [a la F# type provider](https://fsharp.github.io/FSharp.Data/library/JsonProvider.html) 
-* support Manifold fragments values in Java 13 ***text blocks** 
+* support Manifold fragments values in Java 13 **text blocks** 
 * this change is part of the broader [file fragment](http://manifold.systems/docs.html#embedding-with-fragments) set of
 changes supporting fragments in comments as type declarations and in String literals as values, to bring type-safe
 resources closer to your code 
