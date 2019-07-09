@@ -41,6 +41,7 @@ import manifold.util.Stack;
 
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 
 public class ManAttr_8 extends Attr implements ManAttr
 {
@@ -260,7 +261,10 @@ public class ManAttr_8 extends Attr implements ManAttr
       CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
         tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
       FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-        tree.pos().getStartPosition(), chars.toString(), DOUBLE_QUOTE_LITERAL );
+        tree.pos().getStartPosition(), chars.toString(),
+        chars.length() > 3 && chars.charAt( 1 ) == '"'
+        ? TEXT_BLOCK_LITERAL
+        : DOUBLE_QUOTE_LITERAL );
       if( fragment != null )
       {
         String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();

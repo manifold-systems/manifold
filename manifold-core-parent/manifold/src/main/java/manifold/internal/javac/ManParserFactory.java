@@ -199,7 +199,7 @@ public class ManParserFactory extends ParserFactory
           // todo: passing raw characters means we must parse string literal escaped chars esp. '"', '\n', unicode
           char[] buf = reader.getRawCharacters( token.pos, token.endPos );
           FragmentProcessor.instance().processString(
-            ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ), '"' );
+            ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ) );
         }
         return token;
       }
@@ -250,7 +250,7 @@ public class ManParserFactory extends ParserFactory
           {
             char[] buf = reader.getRawCharacters( token.pos, token.endPos );
             FragmentProcessor.instance().processString(
-              ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ), '"' );
+              ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ) );
           }
           return token;
         }

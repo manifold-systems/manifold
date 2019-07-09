@@ -83,6 +83,7 @@ import manifold.util.concurrent.ConcurrentHashSet;
 
 
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 
 /**
  */
@@ -392,7 +393,10 @@ public class ExtensionTransformer extends TreeTranslator
       CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
         tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
       FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-        tree.pos().getStartPosition(), chars.toString(), DOUBLE_QUOTE_LITERAL );
+        tree.pos().getStartPosition(), chars.toString(),
+        chars.length() > 3 && chars.charAt( 1 ) == '"'
+        ? TEXT_BLOCK_LITERAL
+        : DOUBLE_QUOTE_LITERAL );
       if( fragment != null )
       {
         String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();

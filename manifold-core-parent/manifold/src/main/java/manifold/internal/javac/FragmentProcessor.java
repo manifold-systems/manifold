@@ -60,9 +60,12 @@ public class FragmentProcessor
     }
   }
 
-  void processString( JavaFileObject sourceFile, int pos, String chars, char type )
+  void processString( JavaFileObject sourceFile, int pos, String chars )
   {
-    Fragment f = parseFragment( pos, chars, type == '`' ? HostKind.BACKTICK_LITERAL : HostKind.DOUBLE_QUOTE_LITERAL );
+    Fragment f = parseFragment( pos, chars,
+      chars.length() > 3 && chars.charAt( 1 ) == '"'
+      ? HostKind.TEXT_BLOCK_LITERAL
+      : HostKind.DOUBLE_QUOTE_LITERAL );
     if( f != null )
     {
       JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
@@ -88,13 +91,17 @@ public class FragmentProcessor
         end -= 2;   // end before '*/'
         break;
       case DOUBLE_QUOTE_LITERAL:
-      case BACKTICK_LITERAL:
         isString = true;
-        index += 1; // skip '"' or '`'
-        end -= 1;   // end before terminating '"' or '`'
+        index += 1; // skip "
+        end -= 1;   // end before terminating "
+        break;
+      case TEXT_BLOCK_LITERAL:
+        isString = true;
+        index += 3; // skip """
+        end -= 3;   // end before terminating """
         break;
     }
-    index = isString ? index : skipSpaces( chars, index, end );
+    index = skipSpaces( chars, index, end );
     if( index + 1 >= end )
     {
       return null;
@@ -103,26 +110,17 @@ public class FragmentProcessor
     if( FRAGMENT_START.charAt( 0 ) == chars.charAt( index++ ) &&
         FRAGMENT_START.charAt( 1 ) == chars.charAt( index++ ) )
     {
+      index = skipSpaces( chars, index, end );
       String name;
-      if( isString )
+      if( isString && index < end && chars.charAt( index ) == '.' )
       {
-        // Do not skip spaces for String literal
-
-        if( index < end && chars.charAt( index ) == '.' )
-        {
-          // Name is optional if fragment is in a String literal e.g., "[>.sql<] blah blah" // just the dot is ok
-          //(note the reason why the dot is needed for anonymity is so that multi-extension names can be distinguished
-          //esp. for template languages e.g., .html.mtl)
-          name = "";
-        }
-        else
-        {
-          name = parseName( chars, index, end );
-        }
+        // Name is optional if fragment is in a String literal e.g., "[>.sql<] blah blah" // just the dot is ok
+        //(note the reason why the dot is needed for anonymity is so multi-extension names can be distinguished
+        //esp. for template languages e.g., .html.mtl)
+        name = "";
       }
       else
       {
-        index = skipSpaces( chars, index, end );
         name = parseName( chars, index, end );
       }
 

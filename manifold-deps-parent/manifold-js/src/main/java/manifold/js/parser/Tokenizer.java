@@ -334,7 +334,7 @@ public class Tokenizer
   {
     nextChar(); //skip over `
     StringBuilder val = new StringBuilder();
-    while( !(_ch == '`') )
+    while( _ch != '`' )
     {
       if( reachedEOF() )
       {

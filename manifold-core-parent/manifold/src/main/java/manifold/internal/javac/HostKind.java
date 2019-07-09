@@ -20,7 +20,7 @@ import com.sun.tools.javac.parser.Tokens;
 
 public enum HostKind
 {
-  LINE_COMMENT, BLOCK_COMMENT, JAVADOC_COMMENT, DOUBLE_QUOTE_LITERAL, BACKTICK_LITERAL;
+  LINE_COMMENT, BLOCK_COMMENT, JAVADOC_COMMENT, DOUBLE_QUOTE_LITERAL, TEXT_BLOCK_LITERAL;
 
   static HostKind from( Tokens.Comment.CommentStyle s )
   {

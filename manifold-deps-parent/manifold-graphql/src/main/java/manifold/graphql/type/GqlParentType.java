@@ -173,7 +173,7 @@ class GqlParentType
     switch( ((IFileFragment)_file).getHostKind() )
     {
       case DOUBLE_QUOTE_LITERAL:
-      case BACKTICK_LITERAL:
+      case TEXT_BLOCK_LITERAL:
         break;
 
       default:
