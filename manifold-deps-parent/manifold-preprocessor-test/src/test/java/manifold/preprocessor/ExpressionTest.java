@@ -157,9 +157,8 @@ public class ExpressionTest {
      #endif
 
      #if FALSE && TRUE || FALSE
-    success = true;
+    fail();
      #endif
-      success = assertTrueAndFlip(success);
 
      #if FALSE && FALSE || TRUE
     success = true;
