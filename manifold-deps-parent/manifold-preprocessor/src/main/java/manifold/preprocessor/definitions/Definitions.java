@@ -110,6 +110,10 @@ public class Definitions
         source = source.getParent();
       }
       source = source.getParent();
+      if( source == null )
+      {
+        return null;
+      }
     }
 
     if( ((IDirectory)source).hasChildFile( BUILD_PROPERTIES ) )
