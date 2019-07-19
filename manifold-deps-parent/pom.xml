@@ -37,6 +37,8 @@
     <module>manifold-js-test</module>
     <module>manifold-json</module>
     <module>manifold-json-test</module>
+    <module>manifold-preprocessor</module>
+    <module>manifold-preprocessor-test</module>
     <module>manifold-properties</module>
     <module>manifold-properties-test</module>
     <module>manifold-templates</module>

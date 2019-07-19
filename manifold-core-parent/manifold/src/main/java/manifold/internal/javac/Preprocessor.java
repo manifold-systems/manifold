@@ -16,21 +16,55 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.util.Context;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import javax.tools.JavaFileObject;
+import manifold.api.type.IPreprocessor;
+import manifold.util.ServiceUtil;
+import manifold.util.concurrent.LocklessLazyVar;
+
+
 public class Preprocessor
 {
+  private static final Context.Key<Preprocessor> preprocessorKey = new Context.Key<>();
+  private static final LocklessLazyVar<List<IPreprocessor>> _registeredPreprocessors =
+    LocklessLazyVar.make( () -> {
+      Set<IPreprocessor> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, IPreprocessor.class, Preprocessor.class.getClassLoader() );
+      // sort according to preferred order
+      ArrayList<IPreprocessor> processors = new ArrayList<>( registered );
+      processors.sort( Comparator.comparingInt( p -> p.getPreferredOrder().ordinal() ) );
+      return processors;
+    } );
+
   private final ManParserFactory _parserFactory;
 
-  public Preprocessor( ManParserFactory parserFactory )
+  public static Preprocessor instance( Context context )
   {
-    _parserFactory = parserFactory;
+    Preprocessor instance = context.get( preprocessorKey );
+    if( instance == null )
+    {
+      instance = new Preprocessor( context );
+    }
+    return instance;
   }
 
-  public CharSequence process( CharSequence input )
+  private Preprocessor( Context context )
   {
-    // note, a preprocessor that needs to tokenize the input can use the Java scanner like this:
-    //Scanner scanner = ScannerFactory.instance( JavacPlugin.instance().getContext() ).newScanner( input, true );
+    _parserFactory = ManParserFactory.instance( context );
+  }
 
-    //## todo: provide service interface for preprocessor implementors
+  public CharSequence process( JavaFileObject sourceFile, CharSequence input )
+  {
+    for( IPreprocessor preprocessor: Objects.requireNonNull( _registeredPreprocessors.get() ) )
+    {
+      input = preprocessor.process( sourceFile.toUri(), input );
+    }
     return input;
   }
 }

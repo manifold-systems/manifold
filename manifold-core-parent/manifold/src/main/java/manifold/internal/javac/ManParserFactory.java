@@ -42,6 +42,7 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.STRINGLITERAL;
 public class ManParserFactory extends ParserFactory
 {
   private TaskEvent _taskEvent;
+  private final Preprocessor _preprocessor;
 
   public static ManParserFactory instance( Context ctx )
   {
@@ -58,6 +59,7 @@ public class ManParserFactory extends ParserFactory
   private ManParserFactory( Context ctx )
   {
     super( ctx );
+    _preprocessor = Preprocessor.instance( ctx );
     ReflectUtil.field( this, "scannerFactory" ).set( ManScannerFactory.instance( ctx, this ) );
   }
 
@@ -68,7 +70,7 @@ public class ManParserFactory extends ParserFactory
     chainedCall.set( true );
     try
     {
-      input = new Preprocessor( this ).process( input );
+      input = _preprocessor.process( _taskEvent.getSourceFile(), input );
       return super.newParser( input, keepDocComments, keepEndPos, keepLineMap );
     }
     finally
@@ -84,7 +86,7 @@ public class ManParserFactory extends ParserFactory
     if( chainedCall.get() == null || !chainedCall.get() )
     {
       // avoid preprocessing 2X
-      input = new Preprocessor( this ).process( input );
+      input = _preprocessor.process( _taskEvent.getSourceFile(), input );
     }
 
     try

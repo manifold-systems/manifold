@@ -59,6 +59,26 @@ public class JreUtil
     return !isJava8();
   }
 
+  public static boolean isJava10()
+  {
+    return JAVA_VERSION == 10;
+  }
+
+  @SuppressWarnings("unused")
+  public static boolean isJava10orLater()
+  {
+    return JAVA_VERSION >= 10;
+  }
+
+  public static boolean isJava11()
+  {
+    return JAVA_VERSION == 11;
+  }
+  public static boolean isJava11orLater()
+  {
+    return JAVA_VERSION >= 11;
+  }
+
   public static boolean isJava12()
   {
     return JAVA_VERSION == 12;
@@ -75,6 +95,42 @@ public class JreUtil
   public static boolean isJava13orLater()
   {
     return JAVA_VERSION >= 13;
+  }
+
+  public static boolean isJava14()
+  {
+    return JAVA_VERSION == 14;
+  }
+  public static boolean isJava14orLater()
+  {
+    return JAVA_VERSION >= 14;
+  }
+
+  public static boolean isJava15()
+  {
+    return JAVA_VERSION == 15;
+  }
+  public static boolean isJava15orLater()
+  {
+    return JAVA_VERSION >= 15;
+  }
+
+  public static boolean isJava16()
+  {
+    return JAVA_VERSION == 16;
+  }
+  public static boolean isJava16orLater()
+  {
+    return JAVA_VERSION >= 16;
+  }
+
+  public static boolean isJava17()
+  {
+    return JAVA_VERSION == 17;
+  }
+  public static boolean isJava17orLater()
+  {
+    return JAVA_VERSION >= 17;
   }
 
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
