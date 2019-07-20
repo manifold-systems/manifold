@@ -51,6 +51,13 @@ public class SimplePreprocessorTest
   {
   #if BBB
     #if AAA
+    /*
+    masked comment
+     */
+    // line comment 
+    """
+    text block
+    """
     String answer = "AAA";
     #elif BBB
         #if AAA

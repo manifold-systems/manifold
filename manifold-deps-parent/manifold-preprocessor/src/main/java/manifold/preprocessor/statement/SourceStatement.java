@@ -30,9 +30,28 @@ public class SourceStatement extends Statement
   @Override
   public void execute( StringBuilder result, CharSequence source, boolean visible, Definitions definitions )
   {
-    if( visible || getTokenType() == TokenType.Whitespace )
+    if( visible )
     {
       result.append( source.subSequence( getTokenStart(), getTokenEnd() ) );
+    }
+    else if( getTokenType() == TokenType.Whitespace ||
+             getTokenType() == TokenType.BlockComment ||
+             getTokenType() == TokenType.LineComment ||
+             getTokenType() == TokenType.TextBlock )
+    {
+      preserveNewLines( result, source );
+    }
+  }
+
+  private void preserveNewLines( StringBuilder result, CharSequence source )
+  {
+    for( int i = getTokenStart(); i < getTokenEnd(); i++ )
+    {
+      char c = source.charAt( i );
+      if( c == '\r' || c == '\n' || c == '\f' )
+      {
+        result.append( c );
+      }
     }
   }
 

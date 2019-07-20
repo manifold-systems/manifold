@@ -110,8 +110,20 @@ public class Tokenizer
         break;
 
       case '"':
+        if( _bufferIndex + 2 < _bufferEndOffset && charAt( _bufferIndex + 2 ) == '"' && charAt( _bufferIndex + 1 ) == '"' )
+        {
+          _tokenType = TokenType.TextBlock;
+          _tokenEndOffset = getTextBlockEnd( _bufferIndex + 2 );
+        }
+        else
+        {
+          _tokenType = TokenType.StringLiteral;
+          _tokenEndOffset = getClosingQuote( _bufferIndex + 1, c );
+        }
+        break;
+
       case '\'':
-        _tokenType = c == '"' ? TokenType.StringLiteral : TokenType.CharLiteral;
+        _tokenType = TokenType.CharLiteral;
         _tokenEndOffset = getClosingQuote( _bufferIndex + 1, c );
         break;
 
@@ -396,6 +408,22 @@ public class Tokenizer
     }
 
     return pos + 1;
+  }
+
+  private int getTextBlockEnd( int offset )
+  {
+    int pos = offset;
+
+    while( (pos = getClosingQuote( pos + 1, '"' )) < _bufferEndOffset )
+    {
+      if( pos + 1 < _bufferEndOffset && charAt( pos + 1 ) == '"' && charAt( pos ) == '"' )
+      {
+        pos += 2;
+        break;
+      }
+    }
+
+    return pos;
   }
 
   private void addError( @SuppressWarnings("SameParameterValue") String message, int pos )

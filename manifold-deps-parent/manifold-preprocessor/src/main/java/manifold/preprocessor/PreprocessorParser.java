@@ -97,6 +97,7 @@ public class PreprocessorParser
       case LineComment:
       case BlockComment:
       case StringLiteral:
+      case TextBlock:
       case CharLiteral:
       case Source:
       {

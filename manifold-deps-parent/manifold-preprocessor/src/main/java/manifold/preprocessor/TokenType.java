@@ -23,6 +23,7 @@ public enum TokenType
   BlockComment(),
   StringLiteral(),
   CharLiteral(),
+  TextBlock(),
   If("if"),
   Elif("elif"),
   Else("else"),
