@@ -1906,35 +1906,17 @@ For full-featured template engine functionality see project [ManTL](http://manif
 
 ## Dark Java
 
-Java is a statically compiled language, which generally means a Java program must be compiled to .class files before it
-can be executed -- the JVM cannot execute .java files directly.  Although the advantages of static compilation usually
-outweigh other means, there are times when it can be a burden.  One example involves targeting multiple runtime 
-environments a.k.a. multi-release distributions.  This is basically about releasing software for use with different Java
-runtime environments (JREs), like targeting both Java 8 and Java 9.  The main idea is for a product to function in two or
-more JREs, and if possible use new features in the latest Java release while still supporting older releases.  Multi-release is notoriously complicated in part 
-because Java's static compiler is version-specific -- either you compile with Java 8 or Java 9, conditional compilation is not directly supported.  As a consequence 
-many software vendors resort to reflection or deploy separate libraries for different JREs, neither of which is 
-desirable.  
-
-Java 9 attempts to mitigate the multi-release dilemma with a new feature: [Multi-release Jar files](http://openjdk.java.net/jeps/238). 
-What this feature does, essentially, is let you provide different versions of a .class file per JRE version in a single Jar file; 
-the Java 9 classloader knows how to find the proper class.  While this is a welcome improvement, much of the multi-release
-burden remains.  The general problem involves tooling -- how are you going to build your product?  Are you using Maven? 
-Gradle?  Ant??  What IDE do you use?  Can your IDE and your build tooling work with multiple compilers and target 
-multi-release Jars?  Even if your tooling can manage all of this, working with it tends to be overly complicated. Ideally 
-a complete multi-release solution would involve source code and nothing else; You should be able to conditionally access 
-classes based on the JRE version (or other runtime state) and not be concerned about building separate classes using 
-multiple compilers and jar files etc. 
-
-Dark Java provides this capability by avoiding static compilation altogether.  A Dark Java file is the same as a normal 
-Java file with the extension, `.darkj`, as the only difference.  The basic properties of a type manifold are what makes
-Dark Java work for multi-release:
-* You can reference a Dark Java class as a normal Java class directly from any Java file in your project 
-* The JRE compiles and loads a Dark Java class dynamically at runtime only if and when it is first used, otherwise it is ignored  
-
-To illustrate, the following example is statically compiled with Java 8.  It can be run with Java 8 or Java 9.  
-It demonstrates how you can target these JREs dynamically -- Java 8 with `Foo8` and Java 9 with `Foo9` using an interface 
-to abstract their use:
+A Dark Java file is a Java *resource* source file with the extension, `.darkj`. A Dark Java file is "dark" because the
+compiler does not produce a `.class` file for it.  The basic properties of a type manifold are what makes Dark Java
+interesting:
+* You can reference a Dark Java class as a normal Java class directly from any `.java` source file in your project
+* The JRE compiles and loads a Dark Java class *dynamically* at *runtime* only if and when it is first used, otherwise
+it is ignored 
+* Despite the absence of a `.class` file, you can access a Dark Java class using reflection
+ 
+To illustrate, the following example is statically compiled with Java 8; it runs with Java 8 or later.  
+It demonstrates how you can target Java versions dynamically -- Java 8 with `Foo8` and Java 9+ with `Foo9` using an
+interface to abstract their use:
 
 ```java
 public interface Foo {
@@ -1980,8 +1962,7 @@ public class Main {
 }
 ```
 
-This basic interface factory pattern can be used anywhere you need to use a Dark Java class for any dynamic 
-compilation use-case.  
+This basic interface factory pattern can be used anywhere late-bound compilation is desirable.
  
  
 ## Templating

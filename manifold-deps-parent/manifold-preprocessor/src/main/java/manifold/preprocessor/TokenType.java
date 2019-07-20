@@ -29,6 +29,8 @@ public enum TokenType
   Endif("endif"),
   Define("define"),
   Undef("undef"),
+  Error("error"),
+  Warning("warning"),
   Source();
 
   private String _directive;

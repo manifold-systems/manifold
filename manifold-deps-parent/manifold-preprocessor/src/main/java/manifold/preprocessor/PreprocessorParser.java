@@ -28,8 +28,10 @@ import manifold.internal.javac.JavacPlugin;
 import manifold.preprocessor.expression.EmptyExpression;
 import manifold.preprocessor.expression.Expression;
 import manifold.preprocessor.expression.Identifier;
+import manifold.preprocessor.expression.StringLiteral;
 import manifold.preprocessor.statement.DefineStatement;
 import manifold.preprocessor.statement.EmptyStatement;
+import manifold.preprocessor.statement.IssueStatement;
 import manifold.preprocessor.statement.FileStatement;
 import manifold.preprocessor.statement.IfStatement;
 import manifold.preprocessor.statement.SourceStatement;
@@ -108,6 +110,10 @@ public class PreprocessorParser
 
       case Undef:
         return parseUndefStatement();
+
+      case Error:
+      case Warning:
+        return parseIssueStatement( tokenType == Error );
 
       case If:
         return parseIfStatement();
@@ -364,6 +370,25 @@ public class PreprocessorParser
     return defineStmt;
   }
 
+  private IssueStatement parseIssueStatement( boolean isError )
+  {
+    Expression expr = _tokenizer.getExpression();
+    StringLiteral messageExpr;
+    if( !(expr instanceof StringLiteral) )
+    {
+      messageExpr = null;
+      addError( "Expecting a quoted messageExpr", expr.getStartOffset() );
+    }
+    else
+    {
+      messageExpr = (StringLiteral)expr;
+    }
+    IssueStatement issueStatement = new IssueStatement(
+      _tokenizer.getTokenStart(), _tokenizer.getTokenEnd(), messageExpr, isError );
+    _tokenizer.advance();
+    return issueStatement;
+  }
+
   private void addError( String message )
   {
     addError( message, _tokenizer.getTokenStart() );
@@ -409,6 +434,7 @@ public class PreprocessorParser
     }
   }
 
+  @SuppressWarnings("UnusedReturnValue")
   private TokenType popParsingIf( TokenType ifType )
   {
     switch( ifType )

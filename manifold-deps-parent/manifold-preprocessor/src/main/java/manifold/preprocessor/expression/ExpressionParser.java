@@ -135,6 +135,18 @@ public class ExpressionParser
       match( ExpressionTokenType.Identifier );
       return new Identifier( name, offset, endOffset );
     }
+    else if( match( ExpressionTokenType.StringLiteral, false ) )
+    {
+      int endOffset = _tokenizer.getTokenEnd();
+      String string = _tokenizer.getTokenText().toString();
+      match( ExpressionTokenType.StringLiteral );
+      StringLiteral stringLiteral = new StringLiteral( string, offset, endOffset );
+      if( string.charAt( string.length()-1 ) != '"' )
+      {
+        stringLiteral.error( "Missing closing quote for string literal", stringLiteral.getEndOffset()-1 );
+      }
+      return stringLiteral;
+    }
     return new EmptyExpression( offset );
   }
 

@@ -42,7 +42,7 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public class Definitions
 {
-  private static final String BUILD_PROPERTIES = "build.properties";
+  public static final String BUILD_PROPERTIES = "build.properties";
 
   private final IFile _definitionsSource;
   private final LocklessLazyVar<Definitions> _parent;

@@ -73,6 +73,12 @@ public class SimplePreprocessorTest
   }
 
   @Test
+  public void testNestedIf2()
+  {
+    assertEquals( "abcd", nested() );
+  }
+
+  @Test
   public void testEnvironmentDefinitions()
   {
     boolean success=false;
@@ -114,5 +120,27 @@ public class SimplePreprocessorTest
   public void testOptionalClass()
   {
     assertEquals( "hi", new OptionalClass().foo() );
+  }
+
+  private String nested()
+  {
+    #if BBB
+      StringBuilder sb = new StringBuilder();
+      #if BBB
+        sb.append("a");
+      #else
+        #error "boom"
+      #endif
+        sb.append("b");
+      #if AAA
+        sb.append("wrong");
+      #elif BBB
+        sb.append("c");
+      #endif
+      sb.append("d");
+    #elif CCC
+      sb.append("double dog wrong");
+    #endif
+    return sb.toString();
   }
 }
