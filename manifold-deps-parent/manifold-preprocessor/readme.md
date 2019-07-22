@@ -5,11 +5,10 @@ integrated into the Java compiler via the Javac _Plugin_ API. Unlike conventiona
 separate build steps or additional file I/O, instead it directly contributes as an efficient task, integral to the
 compilation pipeline.
 
-<p><img src="/images/compilerflow.png" alt="compiler flow" width="60%" height="60%"/></p>
+![](http://manifold.systems/images/compilerflow.png)
 
 The preprocessor 
-- is integrated with Javac, no separate build steps to run 
-- does not generate files 
+- filters code after the source file loads, but before it enters the parser
 - preserves line numbers for debugging
 - provides environmental symbols such as `JAVA_9_or_Later`
 - supports in-line usage such as `class MyClass #if(FOO) extends MySuper #endif {`
