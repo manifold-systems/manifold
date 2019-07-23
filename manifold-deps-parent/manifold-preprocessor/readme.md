@@ -90,14 +90,14 @@ public class MyClass #if EXPERIMENTAL implements NewFeature #endif {
 ``` 
   
 >Note additional symbols are available to the preprocessor to access JVM and compiler settings as well as custom
-build properties. These are covered below in the [Definitions](#definitions) section.
+build properties. These are covered below in the [Symbols](#symbols) section.
 
 ### `#undef`
 
 Use `#undef` to *undefine* a symbol so that when evaluated, such as in an `#if` expression, its value is `false`.
 
 A symbol can be defined either with the `#define` directive or other means including `-Akey[=value]` compiler arguments,
-`build.properties` files, and environment settings such as the Java source mode (see [Definintions](#definitions)).
+`build.properties` files, and environment settings such as the Java source mode (see [Symbols](#symbols)).
 Regardless of a symbol's origin or scope, the `#undef` can be used to undefine it, however its effects are limited to
 the scope of the containing file.
 
@@ -260,11 +260,11 @@ be defined:
 4. From compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.    
 
 Symbol scoping rules model a hierarchy of maps, where symbols are accessed in leaf-first order where the leaf
-definitions are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
+symbols are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
 correspond with 2 - 4 above.
 
-Note the effects of `#define` and `#undef` are limited to the file scope. This means `#define` definitions are not
-available to other files.  Similarly, parent definitions masked with `#undef` are unaffected in other files.
+Note the effects of `#define` and `#undef` are limited to the file scope. This means `#define` symbols are not
+available to other files.  Similarly, parent symbols masked with `#undef` are unaffected in other files.
 
 ### `build.properties` files
 
