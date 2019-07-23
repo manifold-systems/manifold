@@ -47,6 +47,11 @@ public class ParenthesizedExpression extends Expression
     return getExpression().evaluate( definitions );
   }
 
+  public String getValue( Definitions definitions )
+  {
+    return getExpression().getValue( definitions );
+  }
+
   @Override
   public String toString()
   {

@@ -2,17 +2,14 @@
 
 The Java Preprocessor is designed exclusively for *conditional compilation* of Java source code. It is directly
 integrated into the Java compiler via the Javac _Plugin_ API. Unlike conventional preprocessors it does *not* incur
-separate build steps or additional file I/O, instead it directly contributes as an efficient task, integral to the
-compilation pipeline.
+separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.
 
 ![](http://manifold.systems/images/compilerflow.png)
 
-The preprocessor 
-- filters code after the source file loads, but before it enters the parser
-- preserves line numbers for debugging
-- provides environmental symbols such as `JAVA_9_or_Later`
-- supports in-line usage such as `class MyClass #if(FOO) extends MySuper #endif {`
-- is fully supported by the Manifold IntelliJ plugin
+The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
+provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
+arguments, and environmental symbols such as `JAVA_9_or_Later` and `JPMS_NAMED`.  The preprocessor is also fully
+integrated into IntelliJ IDEA:  
 
 <todo: simple screencast for IJ plugin>
 
@@ -135,40 +132,201 @@ This example uses `#if` to conditionally compile code based on whether `JAVA_8` 
 #endif
 ``` 
 
-You can use more than symbols for condition expressions.  They support operators `&&` (and), `||` (or), and `!` (not) to
-evaluate whether multiple symbols have been defined. You can also group symbols and operators with parentheses.
+The full structure of an `#if` directive looks like this:
+```java
+#if <expression>
+<code>
+#elif <expression>
+<code>
+#else
+<code>
+#endif
+```
+Details concerning [`#elif`](#elif), [`#else`](#else), and [`#endif`](#endif) directives are covered in separate sections below.
+ 
+You can use more than symbols with `#if`; Condition expressions can have operators `&&` (and), `||` (or), and `!` (not)
+to evaluate whether multiple symbols have been defined. You can also group symbols and operators with parentheses.
 
-Expressions can also test for equality with `==` and `!=`. In this case if both operands involved have values e.g., 
-symbols defined via `build.properties` or `-Akey[=value]` javac arguments or String literals, the values are compared. 
+Expressions can also test for equality with `==` and `!=`. Two expressions are equal if:
+1. They are both undefined *or*
+2. They are both defined *and* their *string values* are the same
 
-### `#elif` <TODO:>
+The string value of a symbol defined with `#define` is the empty string `""`. Symbols defined with `build.properties`
+files or `-Akey[=value]` command line arguments may have values assigned to them explicitly.
 
-### `#else` <TODO:>
+>Note it is impossible for a symbol to have a `null` value. When referenced in an equality expression, if a symbol
+is not assigned a value, its value is the empty string `""`.
 
-### `#endif` <TODO:>
+### `#elif`
 
-### `#error` <TODO:> 
+Use `#elif` to divide an `#if` directive into multiple conditions. The first `true` condition in the series of `#if`/`#elif`
+directives determines which of the directives executes:
 
-### `#warning` <TODO:>
+```java
+public class MyClass {}
+  @Override 
+#if JAVA_8
+  public void myJava8Method() {}
+#elif JAVA_9
+  public void myJava9Method() {}
+#elif JAVA_10
+  public void myJava10Method() {}
+#else
+  public void myJava11Method() {}
+#endif  
+``` 
+
+Here if compiling with Java 10 source compatibility mode, only `myJava10Method()` will be compiled.
+  
+Note `#elif` is a more convenient and easier to read alternative to writing nested `#if` directives in `#else`:
+```java
+#if FOO
+  out.println("FOO");
+#else
+  #if BAR
+  out.println("BAR");  
+  #endif
+#endif
+```
+It's easier on the eye to use `#elif`:
+```java
+#if FOO
+  out.println("FOO");
+#elif BAR
+  out.println("BAR");  
+#endif
+```
+  
+### `#else`
+
+If none of the conditions are `true` for `#if` and `#elif` directives, the code between `#else` and `#endif` is
+compiled:
+
+```java
+#if DEV
+  out.println("DEV mode");
+#else
+  out.println("Customer mode");
+#endif  
+``` 
+
+### `#endif`
+
+The `#endif` directive marks the end of the series of directives beginning with `#if`.  See the [`#if`](#if) directive
+for more details and examples.
+   
+### `#error`
+
+Use the `#error` directive to generate a compiler error from a specific location in your code:
+
+```java
+#if MODE_A
+  out.println("MODE A");
+#elif MODE_B
+  out.println("MODE B");
+#elif MODE_C
+  out.println("MODE C");
+#else
+  #error "Expecting a MODE to be defined"
+#endif
+```
+
+You can also generate a compiler warning with the [`#warning`](#warning) directive.
+ 
+### `#warning`
+
+Use the `#warning` directive to generate a compiler warning from a specific location in your code:
+
+```java
+#if MODE_A
+  out.println("MODE A");
+#elif MODE_B
+  out.println("MODE B");
+#else
+  #warning "No MODE defined, defaulting to MODE_C"
+#endif
+```
+
+You can also generate a compiler error with the [`#error`](#error) directive.
 
 
-## Expressions <TODO:>
+## Symbols
+Similar to a variable in Java, a preprocessor symbol has a name and an optional value. There are four ways a symbol can
+be defined:
+1. Locally in the source file via `#define`
+2. Using a `build.properties` file in the directory ancestry beginning with the root source directory
+3. Using the `-Akey[=value]` option on the javac command line
+4. From compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.    
 
+Symbol scoping rules model a hierarchy of maps, where symbols are accessed in leaf-first order where the leaf
+definitions are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
+correspond with 2 - 4 above.
 
-## Definitions <TODO:>
-todo:
-- Default definitions are provided for
--- `build.properties` files in the source file's directory ancestry
--- `Custom compiler arguments provided by the `-Akey[=value]` javac command line options
--- Compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.
-- Line numbering is preserved
-- Only source files using preprocessor directives are processed
-- The Manifold IntelliJ plugin fully supports the preprocessor
-- The preprocessor is designed for single project, conditional compilation use-cases such as:
--- Targeting many Java versions
--- Targeting different platforms
--- Debug v. Production
--- Free v. Licenced, Standard v. Professional
--- Experimental features
--- Customer-specific patch releases
--- etc.
+Note the effects of `#define` and `#undef` are limited to the file scope. This means `#define` definitions are not
+available to other files.  Similarly, parent definitions masked with `#undef` are unaffected in other files.
+
+### `build.properties` files
+
+You can provide global symbols using `build.properties` files placed in the ancestry of directories beginning with a
+source root directory.  Although a symbol defined as a property can have a string value, sometimes it is preferable to
+design property names to have the value encoded in the name.
+
+Instead of this:
+
+```properties
+customer.type = ABC
+customer.level = Ultimate
+```
+
+Do this:
+
+```properties
+CUSTOMER_TYPE_ABC =
+CUSTUMER_LEVEL_ULTIMATE =
+```
+
+### Symbols as compiler arguments
+
+Similar to `build.properties` you can define symbols on the javac command line via the `-Akey[=value]` option.  For
+example:
+```
+javac -Acustomer.level=Ultimate ...
+```
+or
+```
+javac -ACUSTOMER_LEVEL_ULTIMATE ...
+```
+
+### Environmental symbols
+
+You get some symbols for free.  These symbols come from compiler, JVM, and IDE settings.  For instance, the Java source
+compatibility mode provided on the command line via `-source` or inherited from IDE settings translates to symbols
+having the following format:
+```
+JAVA_N
+JAVA_N_or_Later
+```
+Where `N` is the source version obtained from the environment.
+  
+Symbols for the JPMS mode are defined as:
+```java
+JPMS_NONE     // If compiling with Java 8, or Java 8 source compatibility
+JPMS_UNNAMED  // If compiling with Java 9 or later and no module-info.java file is defined
+JPMS_NAMED    // If compiling with Java 9 or later and a module-info.java file is defined
+```  
+
+Symbols for the operating system on which javac is running:
+```java
+OS_FREE_BSD
+OS_LINUX
+OS_MAC
+OS_SOLARIS
+OS_UNIX // Same as !OS_WINDOWS
+OS_WINDOWS
+```
+
+The O/S architecture:
+```java
+ARCH_32
+ARCH_64
+``` 

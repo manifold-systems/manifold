@@ -18,7 +18,7 @@ package manifold.preprocessor.expression;
 
 import manifold.preprocessor.definitions.Definitions;
 
-public class Identifier extends TerminalExpression implements IValue
+public class Identifier extends TerminalExpression
 {
   private final String _name;
 
@@ -42,7 +42,8 @@ public class Identifier extends TerminalExpression implements IValue
   @Override
   public String getValue( Definitions definitions )
   {
-    return definitions.getValue( _name );
+    String value = definitions.getValue( _name );
+    return value == null ? "" : value;
   }
 
   public String toString()

@@ -44,15 +44,14 @@ public class EqualityExpression extends Expression
     return children;
   }
 
+  /**
+   * True if operands evaluate to the same true/false value AND they have the same value
+   */
   @Override
   public boolean evaluate( Definitions definitions )
   {
-    if( _lhs instanceof IValue && _rhs instanceof IValue )
-    {
-      return _not != Objects.equals( ((IValue)_lhs).getValue( definitions ), ((IValue)_rhs).getValue( definitions ) );
-    }
-
-    return _not != (_lhs.evaluate( definitions ) == _rhs.evaluate( definitions ));
+    return _not != (_lhs.evaluate( definitions ) == _rhs.evaluate( definitions ) &&
+                    Objects.equals( _lhs.getValue( definitions ), _rhs.getValue( definitions ) ));
   }
 
   public String toString()

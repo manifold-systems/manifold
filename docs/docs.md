@@ -718,7 +718,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '2019.1.8'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only)
@@ -753,11 +753,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
+    compile group: 'systems.manifold', name: 'manifold-all', version: '2019.1.8'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-all to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '0.71-alpha'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-all', version: '2019.1.8'
 }
 
 tasks.withType(JavaCompile) {

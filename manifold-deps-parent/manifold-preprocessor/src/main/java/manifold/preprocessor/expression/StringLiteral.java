@@ -18,7 +18,7 @@ package manifold.preprocessor.expression;
 
 import manifold.preprocessor.definitions.Definitions;
 
-public class StringLiteral extends TerminalExpression implements IValue
+public class StringLiteral extends TerminalExpression
 {
   private final String _rawString;
 
@@ -41,7 +41,10 @@ public class StringLiteral extends TerminalExpression implements IValue
   @Override
   public String getValue( Definitions definitions )
   {
-    return unescape( _rawString );
+    String unquoted = _rawString.substring( 1, _rawString.length() > 1 && _rawString.endsWith( "\"" )
+                                            ? _rawString.length() - 1
+                                            : _rawString.length() );
+    return unescape( unquoted );
   }
 
   public String toString()

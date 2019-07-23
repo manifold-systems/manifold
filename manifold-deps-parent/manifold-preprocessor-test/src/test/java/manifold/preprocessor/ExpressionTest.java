@@ -21,6 +21,7 @@ import org.junit.Test;
 
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 #define TRUE
@@ -314,6 +315,59 @@ public class ExpressionTest {
      #if FALSE != FALSE && TRUE
     fail();
      #endif
+  }
+
+  @Test
+  public void testStrings()
+  {
+    #if "abc" == "abc"
+      String abc = "abc";
+    #else
+      String abc = "xyz";
+    #endif
+    assertEquals( "abc", abc );
+
+    #if "abc" != "abc"
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "xyz", abc );
+
+    #if MY_PROP1 == "abc"
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "abc", abc );
+
+    #if MY_PROP1 == MY_PROP1
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "abc", abc );
+
+    #if MY_PROP1 != MY_PROP1
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "xyz", abc );
+
+    #if MY_PROP1 == MY_PROP2
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "xyz", abc );
+
+    #if MY_BUILD_PROP == ""
+      abc = "abc";
+    #else
+      abc = "xyz";
+    #endif
+    assertEquals( "abc", abc );
   }
 
   private boolean assertTrueAndFlip( boolean cond )

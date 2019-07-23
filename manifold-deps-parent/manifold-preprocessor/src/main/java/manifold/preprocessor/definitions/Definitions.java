@@ -38,7 +38,7 @@ import manifold.util.concurrent.LocklessLazyVar;
  * </ul>
  * Note the effects of {@code #define} and {@code #undef} are limited to the file scope. This means {@code #define}
  * definitions are not available to other files.  Similarly, parent definitions masked with {@code #undef} are
- * visible in other files.
+ * not affected in other files.
  */
 public class Definitions
 {

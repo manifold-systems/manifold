@@ -37,6 +37,11 @@ public abstract class Expression
 
   public abstract boolean evaluate( Definitions definitions );
 
+  public String getValue( Definitions definitions )
+  {
+    return String.valueOf( evaluate( definitions ) );
+  }
+
   public int getStartOffset()
   {
     return _startOffset;
