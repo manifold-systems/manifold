@@ -45,6 +45,19 @@ String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```  
 
+### [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+Use familiar directives such as `#define` and `#if` to conditionally compile your Java projects. The preprocessor offers
+a simple and convenient way to support multiple build targets with a single codebase. [Check it out!](http://manifold.systems/images/preprocessor.mp4)
+```csharp
+#if JAVA_8_OR_LATER
+  @Override
+  public void setTime(LocalDateTime time) {...)
+#else
+  @Override
+  public void setTime(Calendar time) {...}
+#endif
+```  
+
 ### [Structural Typing](http://manifold.systems/docs.html#structural-interfaces)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [Check it out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java

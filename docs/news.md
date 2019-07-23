@@ -18,7 +18,7 @@ separate build steps or additional file I/O, instead it directly contributes to 
 <br>
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
 provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
-arguments, and environmental symbols such as `JAVA_9_or_Later` and `JPMS_NAMED`.  The preprocessor is also fully
+arguments, and environmental symbols such as `JAVA_9_OR_LATER` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA using the Manifold plugin:
 
 <br>

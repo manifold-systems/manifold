@@ -8,7 +8,7 @@ separate build steps or additional file I/O, instead it directly contributes to 
 
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
 provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
-arguments, and environmental symbols such as `JAVA_9_or_Later` and `JPMS_NAMED`.  The preprocessor is also fully
+arguments, and environmental symbols such as `JAVA_9_OR_LATER` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA using the [Manifold](https://plugins.jetbrains.com/plugin/10057-manifold) plugin:  
 
 <p><img src="http://manifold.systems/images/preprocessor.png" alt="echo method" width="70%" height="70%"/></p>
@@ -308,7 +308,7 @@ compatibility mode provided on the command line via `-source` or inherited from 
 having the following format:
 ```
 JAVA_N
-JAVA_N_or_Later
+JAVA_N_OR_LATER
 ```
 Where `N` is the source version obtained from the environment.
   
