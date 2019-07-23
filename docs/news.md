@@ -6,6 +6,44 @@ layout: default
 <br/><br/>
 
 
+## Announcing the all new Preprocessor for Java
+
+Manifold now provides a fully integrated <b>Java Preprocessor</b>.
+<br>
+The Java Preprocessor is designed exclusively for <i>conditional compilation</i> of Java source code. It is directly
+integrated into the Java compiler via the Javac Plugin API. Unlike conventional preprocessors it does <i>not</i> incur
+separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.
+<br>
+<p><img src="http://manifold.systems/images/compilerflow.png" alt="echo method" width="60%" height="60%"/></p>
+<br>
+The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
+provides advanced features such as tiered symbol definition via <i>build.properties</i> files, <i>-Akey[=value]</i> compiler
+arguments, and environmental symbols such as <i>JAVA_9_or_Later</i> and <i>JPMS_NAMED</i>.  The preprocessor is also fully
+integrated into IntelliJ IDEA using the Manifold plugin:
+
+<br>
+<p>
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+    <source type="video/mp4" src="/images/preprocessor.mp4">
+  </video>
+</p>
+<br>
+
+<p><a href="https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-preprocessor/readme.md">Learn More</a></p>
+<br/><br/>
+
+
+
+## Manifold 2019.1.8 released (23 July 2019)
+New Feature
+* the [Java Preprocessor](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-preprocessor/readme.md), a fully integrated preprocessor for Java
+* minor fixes and improvements
+
+Manifold version 2019.1.8 is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/2019.1.8/jar).
+<br/><br/>
+
+
+
 ## Manifold 2019.1.7 released (8 July 2019)
 
 Manifold **core** changes 
