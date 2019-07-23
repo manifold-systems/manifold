@@ -17,8 +17,8 @@ separate build steps or additional file I/O, instead it directly contributes to 
 <p><img src="http://manifold.systems/images/compilerflow.png" alt="echo method" width="60%" height="60%"/></p>
 <br>
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
-provides advanced features such as tiered symbol definition via <i>build.properties</i> files, <i>-Akey[=value]</i> compiler
-arguments, and environmental symbols such as <i>JAVA_9_or_Later</i> and <i>JPMS_NAMED</i>.  The preprocessor is also fully
+provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
+arguments, and environmental symbols such as `JAVA_9_or_Later` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA using the Manifold plugin:
 
 <br>
@@ -29,7 +29,9 @@ integrated into IntelliJ IDEA using the Manifold plugin:
 </p>
 <br>
 
-<p><a href="https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-preprocessor/readme.md">Learn More</a></p>
+<p>
+<a href="https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-preprocessor/readme.md"><b>Learn More</b></a>
+</p>
 <br/><br/>
 
 
