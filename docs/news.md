@@ -9,10 +9,10 @@ layout: default
 ## Announcing the all new Preprocessor for Java
 
 Manifold now provides a fully integrated <b>Java Preprocessor</b>.
-<br>
+<br><br>
 The Java Preprocessor is designed exclusively for <i>conditional compilation</i> of Java source code. It is directly
 integrated into the Java compiler via the Javac Plugin API. Unlike conventional preprocessors it does <i>not</i> incur
-separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.
+separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.<br>
 <br>
 <p><img src="http://manifold.systems/images/compilerflow.png" alt="echo method" width="60%" height="60%"/></p>
 <br>
