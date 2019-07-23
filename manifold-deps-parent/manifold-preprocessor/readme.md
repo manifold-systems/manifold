@@ -11,11 +11,7 @@ provides advanced features such as tiered symbol definition via `build.propertie
 arguments, and environmental symbols such as `JAVA_9_or_Later` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA:  
 
-<p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
-    <source type="video/mp4" src="http://manifold.systems/images/preprocessor.mp4">
-  </video>
-</p>
+<p><img src="http://manifold.systems/images/preprocessor.png" alt="echo method" width="60%" height="60%"/></p>
 
 ## Setup
 
