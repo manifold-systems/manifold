@@ -58,7 +58,8 @@ preprocessor supports the following directives:
 Use `#define` to define a symbol.  When a symbol evaluates it is either `true` or `false`, it is `true` if and only if
 it is defined.  You use symbols in expressions as conditions for compilation with `#if` and `#elif` directives. 
  
->Note you don't use `#define` as a means for constant values or macros as you would with C and C++.
+>Note the Manifold preprocessor is designed exclusively for conditional compilation, you can't use `#define` for
+constant values or macro substitution as you can with a C/C++ preprocessor.
 
 The preprocessor's symbols are not accessible to Java code, likewise variables in Java code are not accessible to the
 preprocessor. This means symbols specified with `#define` never conflict with fields or variables of the same name.
