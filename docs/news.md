@@ -23,7 +23,7 @@ integrated into IntelliJ IDEA using the Manifold plugin:
 
 <br>
 <p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
+  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
     <source type="video/mp4" src="/images/preprocessor.mp4">
   </video>
 </p>
