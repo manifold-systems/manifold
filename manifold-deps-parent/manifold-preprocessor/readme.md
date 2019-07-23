@@ -145,7 +145,7 @@ The full structure of an `#if` directive looks like this:
 ```
 Details concerning [`#elif`](#elif), [`#else`](#else), and [`#endif`](#endif) directives are covered in separate sections below.
  
-You can use more than symbols with `#if`; Condition expressions can have operators `&&` (and), `||` (or), and `!` (not)
+You can use more than symbols with `#if`. Condition expressions can have operators `&&` (and), `||` (or), and `!` (not)
 to evaluate whether multiple symbols have been defined. You can also group symbols and operators with parentheses.
 
 Expressions can also test for equality with `==` and `!=`. Two expressions are equal if:
