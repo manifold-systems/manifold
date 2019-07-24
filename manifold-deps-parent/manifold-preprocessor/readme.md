@@ -100,7 +100,7 @@ A symbol can be defined either with the `#define` directive or other means inclu
 Regardless of a symbol's origin or scope, the `#undef` can be used to undefine it, however its effects are limited to
 the scope of the containing file.
 
-```java
+```csharp
 package com.example;
   
 #define FOO
@@ -126,14 +126,14 @@ and has not been undefined with `#undef`.
 
 This example uses `#if` to conditionally compile code based on whether `JAVA_8` is defined: 
 
-```java
+```csharp
 #if JAVA_8
   out.println("Compiled with Java source version 8");
 #endif
 ``` 
 
 The full structure of an `#if` directive looks like this:
-```java
+```csharp
 #if <expression>
 <code>
 #elif <expression>
@@ -162,7 +162,7 @@ is not assigned a value, its value is the empty string `""`.
 Use `#elif` to divide an `#if` directive into multiple conditions. The first `true` condition in the series of `#if`/`#elif`
 directives determines which of the directives executes:
 
-```java
+```csharp
 public class MyClass {}
   @Override 
 #if JAVA_8
@@ -179,7 +179,7 @@ public class MyClass {}
 Here if compiling with Java 10 source compatibility mode, only `myJava10Method()` will be compiled.
   
 Note `#elif` is a more convenient and easier to read alternative to writing nested `#if` directives in `#else`:
-```java
+```csharp
 #if FOO
   out.println("FOO");
 #else
@@ -189,7 +189,7 @@ Note `#elif` is a more convenient and easier to read alternative to writing nest
 #endif
 ```
 It's easier on the eye to use `#elif`:
-```java
+```csharp
 #if FOO
   out.println("FOO");
 #elif BAR
@@ -202,7 +202,7 @@ It's easier on the eye to use `#elif`:
 If none of the conditions are `true` for `#if` and `#elif` directives, the code between `#else` and `#endif` is
 compiled:
 
-```java
+```csharp
 #if DEV
   out.println("DEV mode");
 #else
@@ -217,7 +217,7 @@ for more details and examples.
    
 >Note unlike conventional preprocessors, you can place more than one directive on the same line.  Here the `#if` and `#endif`
 >directives share the same line to conditionally implement an interface:
->```java
+>```csharp
 >public class MyClass #if(JAVA_8) implements MyInterface #endif {
 >  ...
 >}
@@ -227,7 +227,7 @@ for more details and examples.
 
 Use the `#error` directive to generate a compiler error from a specific location in your code:
 
-```java
+```csharp
 #if MODE_A
   out.println("MODE A");
 #elif MODE_B
@@ -245,7 +245,7 @@ You can also generate a compiler warning with the [`#warning`](#warning) directi
 
 Use the `#warning` directive to generate a compiler warning from a specific location in your code:
 
-```java
+```csharp
 #if MODE_A
   out.println("MODE A");
 #elif MODE_B
@@ -314,7 +314,7 @@ javac -ACUSTOMER_LEVEL_ULTIMATE ...
 You get some symbols for free.  These symbols come from compiler, JVM, and IDE settings.  For instance, the Java source
 compatibility mode provided on the command line via `-source` or inherited from IDE settings translates to symbols
 having the following format:
-```
+```java
 JAVA_N
 JAVA_N_OR_LATER
 ```
