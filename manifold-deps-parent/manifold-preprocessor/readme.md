@@ -54,7 +54,7 @@ preprocessor supports the following directives:
 * [`#error`](#error) 
 * [`#warning`](#warning)
 
->Note the nomenclature is borrowed from C and C# preprocessors for the sake of familiarity.
+>Note the nomenclature is borrowed from the C-family of preprocessors for the sake of familiarity.
  
 ### `#define`
 Use `#define` to define a symbol.  When a symbol evaluates it is either `true` or `false`, it is `true` if and only if
@@ -214,6 +214,14 @@ compiled:
 
 The `#endif` directive marks the end of the series of directives beginning with `#if`.  See the [`#if`](#if) directive
 for more details and examples.
+   
+>Note unlike conventional preprocessors, you can place more than one directive on the same line.  Here the `#if` and `#endif`
+>directives share the same line to conditionally implement an interface:
+>```java
+>public class MyClass #if(JAVA_8) implements MyInterface #endif {
+>  ...
+>}
+>```
    
 ### `#error`
 
