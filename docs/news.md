@@ -6,7 +6,7 @@ layout: default
 <br/><br/>
 
 
-## Announcing the all new Preprocessor for Java (23 July 2019)
+## A Preprocessor for Java (23 July 2019)
 
 Manifold now provides a fully integrated <b>Java Preprocessor</b>.
 <br><br>
