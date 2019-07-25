@@ -1036,7 +1036,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( changedFiles == null || changedFiles.isEmpty() )
       {
         // nothing to compile
-        return;
+        continue;
       }
 
       IManifoldHost host = _tp.getHost();
