@@ -7,8 +7,9 @@
 [![](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) supplements Java with useful features like Type-safe Metaprogramming, Structural
-Typing, Extension Methods, and a Preprocessor. Simply add Manifold to your project and begin taking advantage of it.
+[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming,
+Structural Typing, and Extension Methods to an integrated Template Engine and a Preprocessor. All fully supported in IntelliJ IDEA.
+Simply add Manifold to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
