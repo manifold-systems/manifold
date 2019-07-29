@@ -2,13 +2,17 @@
 layout: default
 ---
 
-<center>
-  <img src="https://i.imgur.com/No1RPUf.png" width="60%"/>
-</center>
+<div style="margin-top:40px">
+  <center>
+    <img src="https://i.imgur.com/No1RPUf.png" width="60%"/>
+  </center>
+</div>
 
-[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+<a href="https://github.com/manifold-systems/manifold"><img src="https://img.shields.io/badge/github-manifold-blue.svg" alt="github manifold"></a>
+[![Github](https://img.shields.io/badge/github-manifold-blue.svg)](https://github.com/manifold-systems/manifold)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all/badge.svg)](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all)
-[![](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
+[![IJ Plugin](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
+[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## What is Manifold?
 [Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming,
@@ -126,4 +130,4 @@ comprehensive support for IntelliJ features including code completion, navigatio
 incremental compilation, hotswap debugging, full-featured template editing, and more.
 
 ### [Learn More](http://manifold.systems/docs.html)
-[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+<br>
