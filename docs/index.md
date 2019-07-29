@@ -2,11 +2,7 @@
 layout: default
 ---
 
-<div style="margin-top:40px">
-  <center>
-    <img src="https://i.imgur.com/No1RPUf.png" width="60%"/>
-  </center>
-</div>
+<br>
 
 [![Github](https://img.shields.io/badge/github-manifold-blue.svg)](https://github.com/manifold-systems/manifold)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all/badge.svg)](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all)
