@@ -8,7 +8,6 @@ layout: default
   </center>
 </div>
 
-<a href="https://github.com/manifold-systems/manifold"><img src="https://img.shields.io/badge/github-manifold-blue.svg" alt="github manifold"></a>
 [![Github](https://img.shields.io/badge/github-manifold-blue.svg)](https://github.com/manifold-systems/manifold)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all/badge.svg)](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all)
 [![IJ Plugin](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
