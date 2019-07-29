@@ -130,18 +130,3 @@ incremental compilation, hotswap debugging, full-featured template editing, and 
 
 ### [Learn More](http://manifold.systems/docs.html)
 <br>
-<div class="container contact-container">
-  <div class="row ">
-    <div class="col-md-12">
-      <div class="index-demo live-demo text-center">
-        <h2>Contact Us</h2>
-        <p>
-          <a href="mailto:info@manifold.systems">info@manifold.systems</a> |
-          <a href="https://github.com/manifold-systems/manifold/issues">Issues</a> |
-          <a href="https://gitter.im/manifold-systems/community">Community</a>
-          <!--<a href="https://twitter.com/manifoldsystems">@manifoldsystems</a> |-->
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
