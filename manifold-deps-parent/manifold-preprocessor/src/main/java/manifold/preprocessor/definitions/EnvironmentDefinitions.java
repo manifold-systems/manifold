@@ -148,7 +148,7 @@ public class EnvironmentDefinitions
     map.put( JAVA_ + version, "" );
     for( int i = 2; i <= version; i++ )
     {
-      map.put( JAVA_ + version + _OR_LATER, "" );
+      map.put( JAVA_ + i + _OR_LATER, "" );
     }
   }
 
