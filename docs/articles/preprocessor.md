@@ -5,8 +5,10 @@ from [the Manifold project](https://github.com/manifold-systems/manifold). In th
 the preprocessor plugs directly into Java's compiler to provide seamless conditional compilation using familiar
 directives.
 
+
 # Preview
-Here's a quick preview to give you a taste of Manifold's preprocessor with a simple example.
+
+Here's a quick preview to give you a taste of Manifold's preprocessor.
 <br>
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
@@ -15,6 +17,7 @@ Here's a quick preview to give you a taste of Manifold's preprocessor with a sim
 </p>
 <br>
 We'll dive into what's going on here later in the article.
+  
   
 # Rationale
 
@@ -47,9 +50,11 @@ an either/or proposition -- given the option, some of your architecture can be r
 parts may be better off using a preprocessor. In any case having a preprocessor to fall back on is a nice convenience
 and deserves a spot in the Java tool chest. This is the rationale behind the new preprocessor from the Manifold project.
   
->Note Java does offer a very limited version of conditional compilation via compile-time constant conditions where the
-compiler excludes a branch of code that can never execute.  But this type of conditional compilation is restricted to
-method bodies and can only reference static final variables.  
+>Note Java does offer a very limited version of conditional compilation via compile-time constant conditions where
+unreachable branches of code are excluded from bytecode. But this type of conditional compilation is restricted to
+method bodies, can only reference static final variables, and requires all code to compile regardless of the conditions,
+far from a complete solution.  
+
 
 # Overview
 
@@ -76,14 +81,13 @@ C-family of preprocessors.  These include:
 I've hyperlinked Manifold's documentation for these guys.
 
 An extremely useful feature involves the symbols you can reference from `#if`.  Not only can you reference symbols
-you've defined with `#define`, but you also have a host of other symbol sources that are visible to all your project's
-files. These include symbols defined in `build.properties` files, which you can place in parent directories starting
-with the source root. You can also define symbols using javac's `-Akey[=value]` compiler arguments.  Last but not
-least the preprocessor provides builtin symbols reflecting environment settings such as `JAVA_9_OR_LATER` and
-`JPMS_NAMED`.
+you've defined with `#define`, you can also define and use symbols from a host of other sources that are visible to all
+your project's files. These include `build.properties` files, which you can place in parent directories starting
+with the source root, and javac's `-Akey[=value]` compiler arguments.  Additionally, the preprocessor provides builtin
+symbols reflecting environment settings such as `JAVA_9_OR_LATER` and `JPMS_NAMED`.
 
-Note unlike with `#define` symbols, you can define symbols with *values* using `build.properties` and `-Akey[=value]`
-compiler arguments.  In this case you can use *equality expressions* to test the value:
+Note unlike with `#define` symbols, you can define symbols with *string values* using `build.properties` and
+`-Akey[=value]` compiler arguments.  In this case you can use *equality expressions* `==` and `!=` to test the value:
 
 ```java
 #if FOO_VERSION == "1.2.0"
@@ -97,7 +101,7 @@ BAR_VERSION=2019.1.2
 EXPERIMENTAL=
 ```
 
-Additionally, the environment settings symbols can be extra useful if you target multiple Java versions:
+The environment settings symbols can be extra useful if you target multiple Java versions:
 ```java
 public class MyClass implements
 #if JAVA_11_OR_LATER
@@ -114,8 +118,7 @@ public class MyClass implements
 
 # A Simple Example
 
-Perhaps the best way to convey the strengths of the preprocessor is by example. Let's examine the screencast from
-the preview earlier in the article.
+Let's dive into the screencast from the preview earlier in the article.
 <br>
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
@@ -124,34 +127,33 @@ the preview earlier in the article.
 </p>
 <br>
 
-Here the screencast demonstrates the use of the preprocessor inside IntelliJ IDEA using the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
+Here the screencast demonstrates the preprocessor via IntelliJ IDEA using the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
 The example uses `#define` to define the `MY_API_X` symbol where valid values for `X` are `1` and `2`. Note in real life
 we would define this symbol in a `build.properties` file so other files can access it, but here we use `#define` to
 simplify the demo.
 
 The `#if` statements use the symbol to conditionally include or exclude code from compilation. As the value of the
-symbol changes you can see the code enabling/disabling to reflect the value. Note you can turn off this feature from the
+symbol changes you can see the code enabling/disabling to reflect the value. Note you can turn this feature off from the
 IntelliJ Settings view in the Manifold section, in this mode only the directives are shaded. In either case the
 command line compiler always respects the symbol values.
 
 Notice you can place preprocessor directives anywhere in the class: around `import` statements, classes, methods,
-fields, pretty much anywhere. This is what distinguishes the preprocessor from Java's compile-time constant based
-conditional compilation.
+fields, pretty much anywhere. This one of many features that distinguishes the preprocessor from Java's compile-time
+constant based conditional compilation.
 
 Another cool capability you won't find in conventional preprocessors is the use of multiple directives in a single line.
-You can see this in action in the `import` statement.  Sometimes the code reads better when directives share a line, of
-course this is subjective.
+You can see this in action in the `implements` clause.
  
 You can also comment out directives, a feature that is not well supported in many preprocessors.
 
 If you have a C++ background, you might be wondering where `#ifdef` and `#if defined` went. They're simply not needed
 because with this preprocessor a symbol evaluates to either `true` or `false`, depending on whether or not the symbol is
-defined. Only if you use the `==` or `!=` operator can you access a symbols *string value*, which as stated earlier can
-only be defined with `build.properties` or `-Akey[=value]` compiler arguments. Thus, only `#if` is necessary. Read more
-about this is the [docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor).
+defined. Only if you use the `==` or `!=` operator can you access a symbol's *string value*, which as stated earlier can
+only be defined with `build.properties` or `-Akey[=value]` compiler arguments. Thus, `#if` covers all the bases. Read
+more about this is the [docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor).
 
-Also of note is the `#elif` directive. This is not a new concept, but if you don't have a C++ background, it might seem
-odd. The simple explanation is there's no concise way to say `#else #if` as you would in Java:
+Also of note is the `#elif` directive. This is not a new concept, but if you don't have a C++ background, it may seem
+odd. The simple explanation is there's no concise way to say `else if` as you would in Java:
 
 ```
 #if FOO
@@ -176,14 +178,19 @@ It's easier on the eye to use `#elif`:
   out.println("BAZ");  
 #endif
 ```
-      
+
+Finally notice the use of `#error` to respond to an invalid state regarding `MY_API_X`.  This directive produces a
+compile-time error at the location of its use. It's perfect for detecting and reporting a misconfigured build at
+*compile-time*.
+ 
+ 
 # Conclusion
 
 Manifold reimagines the time-tested C/C++ preprocessor as a more effective means to meet today's conditional compilation
-demands.  Use it to easily and quickly build multiple targets from a single codebase. Define and use symbols from a
-variety of sources including properties files and environment settings to control which parts of your source belong in
-the target. With Manifold support in IntelliJ IDEA you can visualize exactly how your code reacts to preprocessor
-directives and symbols you use. [Try it out](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+demands. It directly integrates with your Java compiler so you can quickly and easily build multiple targets from a
+single codebase. You can define and use symbols from a variety of sources including properties files and environment
+settings to conditionally compile every aspect of your source code. Using plugin support for IntelliJ IDEA you can
+visualize exactly how your code reacts to the preprocessor directives and symbols you use. [Try it out](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 and [let us know what you think](https://gitter.im/manifold-systems/community)!
 
 Check out the [Manifold project](https://github.com/manifold-systems/manifold) for more Java goodness.   
