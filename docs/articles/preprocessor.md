@@ -155,7 +155,7 @@ more about this is the [docs](https://github.com/manifold-systems/manifold/tree/
 Also of note is the `#elif` directive. This is not a new concept, but if you don't have a C++ background, it may seem
 odd. The simple explanation is there's no concise way to say `else if` as you would in Java:
 
-```
+```java
 #if FOO
   out.println("FOO");
 #else
@@ -169,7 +169,7 @@ odd. The simple explanation is there's no concise way to say `else if` as you wo
 #endif
 ```
 It's easier on the eye to use `#elif`:
-```
+```java
 #if FOO
   out.println("FOO");
 #elif BAR
