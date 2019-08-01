@@ -11,7 +11,9 @@ provides advanced features such as tiered symbol definition via `build.propertie
 arguments, and environmental symbols such as `JAVA_9_OR_LATER` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA using the [Manifold](https://plugins.jetbrains.com/plugin/10057-manifold) plugin:  
 
-[<img src="http://manifold.systems/images/preprocessor_slide_1_play.png alt="preprocessor" width="70%" height="70%"/>](http://manifold.systems/images/preprocessor.mp4)
+<p>
+<a href="http://manifold.systems/images/preprocessor.mp4"><img src="http://manifold.systems/images/preprocessor_slide_1_play.png alt="preprocessor" width="70%" height="70%"/></a>
+</p>
 
 ## Setup
 
