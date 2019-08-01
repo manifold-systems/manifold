@@ -4,16 +4,14 @@ The Java Preprocessor is designed exclusively for *conditional compilation* of J
 integrated into the Java compiler via the Javac _Plugin_ API. Unlike conventional preprocessors it does *not* incur
 separate build steps or additional file I/O, instead it directly contributes to the compilation pipeline.
 
-<p><img src="http://manifold.systems/images/compilerflow.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/compilerflow.png" alt="javac" width="60%" height="60%"/></p>
 
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
 provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
 arguments, and environmental symbols such as `JAVA_9_OR_LATER` and `JPMS_NAMED`.  The preprocessor is also fully
 integrated into IntelliJ IDEA using the [Manifold](https://plugins.jetbrains.com/plugin/10057-manifold) plugin:  
 
-<p>
-<a href="http://manifold.systems/images/preprocessor.mp4"><img src="http://manifold.systems/images/preprocessor_slide_1_play.png alt="preprocessor" width="70%" height="70%"/></a>
-</p>
+[![preprocessor](http://manifold.systems/images/preprocessor_slide_1_play.png)](http://manifold.systems/images/preprocessor.mp4)
 
 ## Setup
 
