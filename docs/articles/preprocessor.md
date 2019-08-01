@@ -138,7 +138,7 @@ IntelliJ Settings view in the Manifold section, in this mode only the directives
 command line compiler always respects the symbol values.
 
 Notice you can place preprocessor directives anywhere in the class: around `import` statements, classes, methods,
-fields, pretty much anywhere. This one of many features that distinguishes the preprocessor from Java's compile-time
+fields, pretty much anywhere. This feature is one of many that distinguishes the preprocessor from Java's compile-time
 constant based conditional compilation.
 
 Another cool capability you won't find in conventional preprocessors is the use of multiple directives in a single line.
