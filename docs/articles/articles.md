@@ -7,6 +7,21 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Manifold: A _Preprocessor_ for Java</a></p>
+  <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
+     project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
+     provide seamless conditional compilation using familiar directives.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/shutterstock_232482730.jpg" alt="a"></a></p>
   </td>
   <td>
@@ -79,6 +94,21 @@ layout: default
  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
  <tr><td><p>Deutsche</p></td><td><p>&nbsp;</p></td></tr>
   
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" height="135" src="/images/shutterstock_232482730-350x234.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641">Manifold: Typsicherer Reflexionscode mit @Jailbreak</a></p>
+  <p>Fällt Euch die Arbeit mit Reflexionscode schwer? Der Reflexionscode an sich ist nicht typsicher, weshalb es später
+     zu Problemen kommen kann. Doch keine Panik, es gibt eine Alternative! Mit @Jailbreak aus dem Manifold-Projekt kann
+     man die Typsicherheit bewahren und sich der Effizienz seines Codes sicher sein.</p>
+  <p><small>jaxenter.de</small></p>
+  </td>
+ </tr>
+ 
+  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
  <tr>
   <td>
   <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
