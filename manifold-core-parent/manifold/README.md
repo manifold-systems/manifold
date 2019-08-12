@@ -4,10 +4,6 @@
 
 # Manifold : Core
 
-> **Code generators are the bane of modern architectures.**  Toward a solution Manifold provides the
-_**anti&#8209;code&nbsp;generator**_ framework.  Think of how a code generator works, then do the opposite.  This is
-Manifold. 
-
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
 as a universal *type* adapter to allow for a direct and seamless supply of types and features otherwise inaccessible to
 Java's type system. As such the Manifold core framework provide's a foundation and plugin SPI to dynamically resolve
