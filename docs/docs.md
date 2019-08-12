@@ -19,7 +19,7 @@ provides extension methods (like [C#](https://docs.microsoft.com/en-us/dotnet/cs
 structural typing (like [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html)),
 string interpolation (like [Kotlin](https://kotlinlang.org/docs/reference/basic-types.html#string-templates)),
 type-safe reflection (via [`@Jailbreak`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#type-safe-reflection-via-jailbreak)),
-and lot more.
+and a lot more.
 
 
 ## Type-safe Metaprogramming via _Type Manifolds_ 
