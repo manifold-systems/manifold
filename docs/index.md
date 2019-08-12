@@ -16,7 +16,7 @@ Simply add Manifold to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
-### [Meta-programming](http://manifold.systems/docs.html)
+### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold)
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
 and **YAML**. Remove the code gen step in your build process. [Check it out!](http://manifold.systems/images/graphql.mp4)
 ```java
@@ -28,7 +28,7 @@ User user = User.builder("myid", "mypassword", "Scott")
 User.request("http://api.example.com/users").postOne(user);
 ```
 
-### [Extensions](http://manifold.systems/docs.html#the-extension-manifold)
+### [Extensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
