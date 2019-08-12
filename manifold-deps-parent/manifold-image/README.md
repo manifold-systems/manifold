@@ -1,4 +1,4 @@
-# Manifold : Images
+# Manifold : Image
 
 User interfaces frequently use image resource files for one purpose or another.  Java supports most of the popular
 formats including png, jpg, gif, and bmp via a collection of utility classes such as `javax.swing.ImageIcon` and
