@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import manifold.templates.ManifoldTemplates;
 import manifold.util.ManExceptionUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

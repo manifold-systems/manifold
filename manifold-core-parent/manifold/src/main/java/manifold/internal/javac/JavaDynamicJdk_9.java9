@@ -74,10 +74,11 @@ public class JavaDynamicJdk_9 implements IDynamicJdk
   @Override
   public Symbol.ClassSymbol getTypeElement( Context ctx, Object moduleCtx, String fqn )
   {
+    Symbol.ClassSymbol classSym = null;
     if( moduleCtx instanceof JCTree.JCCompilationUnit )
     {
       Symbol.ModuleSymbol moduleSym = ((JCTree.JCCompilationUnit)moduleCtx).modle;
-      return JavacElements.instance( ctx ).getTypeElement( moduleSym, fqn );
+      classSym = JavacElements.instance( ctx ).getTypeElement( moduleSym, fqn );
     }
     else if( moduleCtx instanceof JavaFileManager.Location )
     {
@@ -89,11 +90,7 @@ public class JavaDynamicJdk_9 implements IDynamicJdk
           Name name = Names.instance( ctx ).fromString( moduleName );
 
           Symbol.ModuleSymbol moduleSym = Modules.instance( ctx ).getObservableModule( name );
-          return JavacElements.instance( ctx ).getTypeElement( moduleSym, fqn );
-        }
-        else
-        {
-          moduleCtx = null;
+          classSym = JavacElements.instance( ctx ).getTypeElement( moduleSym, fqn );
         }
       }
       catch( IOException ioe )
@@ -101,15 +98,13 @@ public class JavaDynamicJdk_9 implements IDynamicJdk
         throw new RuntimeException( ioe );
       }
     }
-
-    if( moduleCtx == null )
-    {
-      return JavacElements.instance( ctx ).getTypeElement( fqn );
-    }
-    else
+    else if( moduleCtx != null )
     {
       throw new IllegalArgumentException( "Unexpected moduleCtx type: " + moduleCtx.getClass().getTypeName() );
     }
+    return classSym == null
+           ? JavacElements.instance( ctx ).getTypeElement( fqn )
+           : classSym;
   }
 
   @Override

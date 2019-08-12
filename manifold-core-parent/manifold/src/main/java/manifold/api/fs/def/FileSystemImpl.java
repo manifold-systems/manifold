@@ -41,7 +41,7 @@ import manifold.api.fs.jar.JarFileDirectoryImpl;
 import manifold.api.fs.url.URLFileImpl;
 import manifold.api.host.IManifoldHost;
 import manifold.api.service.BaseService;
-import manifold.util.ManStringUtil;
+import manifold.api.util.ManStringUtil;
 
 public class FileSystemImpl extends BaseService implements IFileSystem
 {

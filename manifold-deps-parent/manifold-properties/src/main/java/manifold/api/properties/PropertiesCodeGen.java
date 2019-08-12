@@ -39,9 +39,9 @@ import manifold.api.gen.SrcSwitchCase;
 import manifold.api.gen.SrcSwitchStatement;
 import manifold.api.gen.SrcType;
 import manifold.api.type.SourcePosition;
-import manifold.util.StreamUtil;
-import manifold.util.cache.FqnCache;
-import manifold.util.cache.FqnCacheNode;
+import manifold.api.util.StreamUtil;
+import manifold.api.util.cache.FqnCache;
+import manifold.api.util.cache.FqnCacheNode;
 
 
 /**

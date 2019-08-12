@@ -31,7 +31,7 @@ import manifold.js.parser.Tokenizer;
 import manifold.js.parser.tree.ParseError;
 import manifold.js.parser.tree.ProgramNode;
 import manifold.js.parser.tree.template.JSTNode;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 
 
 class JavascriptCodeGen

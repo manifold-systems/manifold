@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import javax.lang.model.element.ElementKind;
-import manifold.util.ManClassUtil;
+import manifold.api.util.ManClassUtil;
 
 public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatement<T>
 {

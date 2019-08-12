@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 /**
  */

@@ -25,7 +25,7 @@ import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFileSystem;
 import manifold.api.host.IManifoldHost;
 import manifold.internal.javac.JavacPlugin;
-import manifold.util.SourcePathUtil;
+import manifold.api.util.SourcePathUtil;
 
 /**
  * {@link JavacManifoldHost} is exclusive to an instance of {@link JavacPlugin}. There can be multiple JavacTasks,

@@ -2,7 +2,7 @@ package manifold.collections.test.extensions.java.lang.Iterable;
 
 import manifold.collections.extensions.java.lang.Iterable.ManIterableExt;
 import manifold.test.api.ExtensionManifoldTest;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 import java.util.*;
 

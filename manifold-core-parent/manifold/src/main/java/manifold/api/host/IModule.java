@@ -16,7 +16,6 @@
 
 package manifold.api.host;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,7 +36,7 @@ import manifold.api.fs.IFileSystem;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
-import manifold.util.ServiceUtil;
+import manifold.api.util.ServiceUtil;
 
 /**
  * Java projects are typically organized according to a hierarchy of modules where each module defines

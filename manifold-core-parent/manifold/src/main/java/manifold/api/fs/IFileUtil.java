@@ -18,7 +18,7 @@ package manifold.api.fs;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 public class IFileUtil
 {

@@ -24,7 +24,7 @@ import com.sun.tools.javac.util.Log;
 import java.util.function.Supplier;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 
 /**
  */

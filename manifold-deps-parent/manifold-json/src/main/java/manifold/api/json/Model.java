@@ -17,7 +17,6 @@
 package manifold.api.json;
 
 import java.util.Set;
-import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.ext.DataBindings;
 import javax.tools.Diagnostic;
@@ -29,7 +28,7 @@ import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 
 /**
  */

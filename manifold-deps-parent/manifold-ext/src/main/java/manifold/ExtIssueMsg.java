@@ -16,7 +16,7 @@
 
 package manifold;
 
-import manifold.util.IssueMsg;
+import manifold.api.util.IssueMsg;
 
 /**
  */

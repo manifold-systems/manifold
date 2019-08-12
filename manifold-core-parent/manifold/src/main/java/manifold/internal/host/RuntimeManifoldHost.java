@@ -31,7 +31,7 @@ import manifold.api.fs.IDirectory;
 import manifold.api.host.IRuntimeManifoldHost;
 import manifold.internal.runtime.IjPluginIntegration;
 import manifold.internal.runtime.UrlClassLoaderWrapper;
-import manifold.util.SourcePathUtil;
+import manifold.api.util.SourcePathUtil;
 import manifold.util.concurrent.LockingLazyVar;
 
 /**

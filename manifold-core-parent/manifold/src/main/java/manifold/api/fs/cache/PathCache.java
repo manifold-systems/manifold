@@ -30,9 +30,9 @@ import manifold.api.fs.IFileUtil;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
-import manifold.util.JsonUtil;
-import manifold.util.ManClassUtil;
-import manifold.util.cache.FqnCache;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 /**

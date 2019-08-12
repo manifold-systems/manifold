@@ -48,7 +48,7 @@ a simple and convenient way to support multiple build targets with a single code
 #endif
 ```
 
-### [Structural Typing](http://manifold.systems/docs.html#structural-interfaces)
+### [Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [Check it out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java
 Map<String, Object> map = new HashMap<>();
@@ -58,7 +58,7 @@ Foo foo = thing.getFoo();
 out.println(thing.getClass()); // prints "java.util.HashMap"
 ```
 
-### [Type-safe Reflection](http://manifold.systems/docs.html#type-safe-reflection)
+### [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
 Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection. [Check it out!](http://manifold.systems/images/jailbreak.mp4)
 ```java
 @Jailbreak Foo foo = new Foo();
@@ -67,7 +67,7 @@ foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
-### [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
+### [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
 swallowing, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
 ```java
@@ -77,7 +77,7 @@ List<URL> urls = list
   .collect(Collectors.toList());
 ```
 
-### [String Templates](http://manifold.systems/docs.html#templating) (aka String Interpolation)
+### [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) (aka String Interpolation)
 Embed variables and expressions in String literals, no more clunky string concat! [Check it out!](http://manifold.systems/images/string_interpolation.mp4)
 ```java
 int hour = 15;
@@ -87,7 +87,7 @@ String result = "The hour is $hour"; // Yes!!!
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ```
 
-### [Template Files with *ManTL*](http://manifold.systems/manifold-templates.html)
+### [Template Files with *ManTL*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
 Supports type-safe inclusion of other templates, shared layouts, and more. [Check it out!](http://manifold.systems/images/mantl.mp4)
 ```java
@@ -111,7 +111,7 @@ A template file `abc/example/UserSample.html.mtl`
 </html>
 ```
 
-### [Libraries](http://manifold.systems/docs.html#extension-libraries)
+### [Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
 ```java
 File file = new File(path);

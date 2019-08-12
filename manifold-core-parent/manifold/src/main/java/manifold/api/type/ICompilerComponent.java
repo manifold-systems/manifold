@@ -17,8 +17,14 @@
 package manifold.api.type;
 
 import com.sun.tools.javac.api.BasicJavacTask;
+import manifold.internal.javac.TypeProcessor;
 
 public interface ICompilerComponent
 {
-  void init( BasicJavacTask javacTask );
+  void init( BasicJavacTask javacTask, TypeProcessor typeProcessor );
+
+  default boolean isSuppressed( String issueKey )
+  {
+    return false;
+  }
 }

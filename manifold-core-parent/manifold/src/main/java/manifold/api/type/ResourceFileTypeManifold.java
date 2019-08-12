@@ -37,10 +37,10 @@ import manifold.api.host.IModule;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.service.BaseService;
-import manifold.util.ManClassUtil;
-import manifold.util.StreamUtil;
-import manifold.util.cache.FqnCache;
-import manifold.util.cache.IllegalTypeNameException;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.StreamUtil;
+import manifold.api.util.cache.FqnCache;
+import manifold.api.util.cache.IllegalTypeNameException;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 

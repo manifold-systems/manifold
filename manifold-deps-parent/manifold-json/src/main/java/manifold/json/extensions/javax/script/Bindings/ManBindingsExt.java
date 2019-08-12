@@ -18,7 +18,6 @@ package manifold.json.extensions.javax.script.Bindings;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import javax.script.Bindings;
@@ -27,8 +26,8 @@ import manifold.ext.DataBindings;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
-import manifold.util.JsonUtil;
-import manifold.util.Pair;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.Pair;
 
 /**
  * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, and XML and to conveniently

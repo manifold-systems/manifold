@@ -18,7 +18,7 @@ package manifold.api.gen;
 
 import com.sun.tools.javac.code.Type;
 import java.lang.reflect.Array;
-import manifold.util.ManEscapeUtil;
+import manifold.api.util.ManEscapeUtil;
 
 /**
  */

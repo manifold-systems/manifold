@@ -36,7 +36,7 @@ import com.sun.tools.javac.util.Name;
 import java.io.IOException;
 import manifold.api.type.FragmentValue;
 import manifold.util.ReflectUtil;
-import manifold.util.Stack;
+import manifold.api.util.Stack;
 
 
 import static com.sun.tools.javac.code.TypeTag.CLASS;

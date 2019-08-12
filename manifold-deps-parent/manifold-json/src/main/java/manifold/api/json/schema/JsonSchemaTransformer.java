@@ -43,11 +43,11 @@ import manifold.api.json.JsonListType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
-import manifold.util.DebugLogUtil;
-import manifold.util.JsonUtil;
-import manifold.util.Pair;
-import manifold.util.StreamUtil;
-import manifold.util.cache.FqnCache;
+import manifold.api.util.DebugLogUtil;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.Pair;
+import manifold.api.util.StreamUtil;
+import manifold.api.util.cache.FqnCache;
 
 
 /**

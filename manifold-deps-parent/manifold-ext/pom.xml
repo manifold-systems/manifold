@@ -30,6 +30,8 @@
              <manifestEntries>
                <!--class files as source must be available for MapStructExt-->
                <Contains-Sources>class</Contains-Sources>
+               <!--JPMS module name-->
+               <Automatic-Module-Name>manifold.ext</Automatic-Module-Name>
              </manifestEntries>
            </archive>
          </configuration>

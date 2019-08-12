@@ -18,7 +18,7 @@ package manifold.text.extensions.java.lang.String;
 
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.CharPredicate;
+import manifold.ext.api.CharPredicate;
 
 /**
  * Adapted from kotlin.text.String

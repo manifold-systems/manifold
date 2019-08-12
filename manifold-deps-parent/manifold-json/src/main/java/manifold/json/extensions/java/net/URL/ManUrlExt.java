@@ -36,8 +36,8 @@ import javax.script.Bindings;
 import manifold.api.json.Json;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.JsonUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  * Adds extension methods to URL for handling JSON, plain text, and binary content.

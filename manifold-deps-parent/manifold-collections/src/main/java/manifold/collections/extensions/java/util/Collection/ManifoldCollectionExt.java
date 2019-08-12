@@ -24,8 +24,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -34,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.ManObjectUtil;
+import manifold.api.util.ManObjectUtil;
 
 @Extension
 public class ManifoldCollectionExt

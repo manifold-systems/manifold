@@ -23,8 +23,8 @@ import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import manifold.util.AbstractIterator;
-import manifold.util.Stack;
+import manifold.api.util.AbstractIterator;
+import manifold.api.util.Stack;
 
 /**
  * This class is intended to implement different file traversal methods.
@@ -379,7 +379,7 @@ public class FileTreeWalk implements Iterable<File>
   {
     if( depth <= 0 )
     {
-      throw new IllegalArgumentException( "depth must be positive, but was $depth." );
+      throw new IllegalArgumentException( "depth must be positive, but was " + depth + "." );
     }
     return new FileTreeWalk( _start, _direction, _onEnter, _onLeave, _onFail, depth );
   }

@@ -27,7 +27,7 @@ import manifold.api.json.schema.JsonSchemaTransformerSession;
 import manifold.api.json.schema.JsonSchemaType;
 import manifold.api.json.schema.JsonUnionType;
 import manifold.api.json.schema.TypeAttributes;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

@@ -40,7 +40,7 @@ import manifold.api.type.TypeName;
 import manifold.internal.javac.GeneratedJavaStubFileObject;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.internal.javac.SourceSupplier;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 import manifold.util.concurrent.LocklessLazyVar;
 
 

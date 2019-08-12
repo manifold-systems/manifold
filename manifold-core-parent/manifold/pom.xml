@@ -14,11 +14,6 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-bootstrap-plugin</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
       <artifactId>manifold-util</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -27,6 +22,13 @@
   <build>
     <plugins>
       <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <proc>none</proc>
+        </configuration>
+      </plugin>
+      
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
@@ -34,6 +36,8 @@
             <manifestEntries>
               <!--darkj files as source must be available for error handling-->
               <Contains-Sources>darkj</Contains-Sources>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

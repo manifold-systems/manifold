@@ -3,11 +3,11 @@ package manifold.util;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import junit.framework.TestCase;
-import manifold.util.xml.XmlAttribute;
-import manifold.util.xml.XmlElement;
-import manifold.util.xml.XmlNamedPart;
-import manifold.util.xml.XmlParser;
-import manifold.util.xml.XmlTerminal;
+import manifold.api.util.xml.XmlAttribute;
+import manifold.api.util.xml.XmlElement;
+import manifold.api.util.xml.XmlNamedPart;
+import manifold.api.util.xml.XmlParser;
+import manifold.api.util.xml.XmlTerminal;
 
 public class XmlParserTest extends TestCase
 {

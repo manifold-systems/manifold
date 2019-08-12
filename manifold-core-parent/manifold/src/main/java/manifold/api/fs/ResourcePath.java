@@ -19,9 +19,9 @@ package manifold.api.fs;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import manifold.util.DynamicArray;
-import manifold.util.ManObjectUtil;
-import manifold.util.ManStringUtil;
+import manifold.api.util.DynamicArray;
+import manifold.api.util.ManObjectUtil;
+import manifold.api.util.ManStringUtil;
 
 public class ResourcePath
 {

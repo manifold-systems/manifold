@@ -24,6 +24,11 @@
         <version>${project.version}</version>
       </dependency>
       <dependency>
+        <groupId>systems.manifold</groupId>
+        <artifactId>manifold-strings</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <scope>compile</scope>
@@ -48,7 +53,7 @@
                 <compilerArgs>
                   <!--Allow for bootstrapping, needed to enable runtime features of Manifold:
                       structural typing used in the MapStruct extensions-->
-                  <arg>-Xplugin:Manifold strings</arg>
+                  <arg>-Xplugin:Manifold</arg>
                 </compilerArgs>
                 <forceJavacCompilerUse>true</forceJavacCompilerUse> <!-- release plugin needs this -->
                 <fork>true</fork> <!-- When run with -X, dumps a javac script and arg file to target/test-classes.  Very useful for debugging. -->

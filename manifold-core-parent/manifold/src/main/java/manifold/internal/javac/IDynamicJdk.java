@@ -27,7 +27,7 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import javax.tools.Diagnostic;
 import manifold.util.JreUtil;
-import manifold.util.PerfLogUtil;
+import manifold.api.util.PerfLogUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

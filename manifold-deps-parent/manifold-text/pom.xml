@@ -40,6 +40,8 @@
             <manifestEntries>
               <!--class files as source must be available for extension method classes-->
               <Contains-Sources>java,class</Contains-Sources>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.text</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

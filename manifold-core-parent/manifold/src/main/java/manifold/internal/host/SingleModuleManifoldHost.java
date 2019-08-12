@@ -24,7 +24,7 @@ import manifold.api.fs.def.FileSystemImpl;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeSystemListener;
 import manifold.internal.javac.JavaParser;
-import manifold.util.BytecodeOptions;
+import manifold.api.util.BytecodeOptions;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

@@ -16,10 +16,10 @@ full-featured ManTL template editing, and more.
 ## Sample Projects
 
 Clone the [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project) to for a nice
-demonstration of features.
+breadthwise demonstration of features.
 
 Clone the [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app) to learn
-more about *schema-first* design with GraphQL using Manifold.
+more about application design with GraphQL using Manifold.
 
 Clone the [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api) to quickly
 begin experimenting with a JSON Schema REST API using Manifold.
@@ -307,16 +307,19 @@ double next = JsProgram.nextNumber();
 System.out.println(next); // prints '1'
 ```
 
-## [String Templates](http://manifold.systems/docs.html#templating) (string interpolation)
+## [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) (aka string interpolation)
 ### Enabling
-By default String templates are _disabled_.  Enable the feature with the `strings` Manifold plugin argument.
 
-Maven:
+Enable the feature with the `manifold-strings` dependency:
 ```xml
-<compilerArgs>
-  <arg>-Xplugin:Manifold strings</arg>
-</compilerArgs>
+<dependency>
+  <groupId>systems.manifold</groupId>
+  <artifactId>manifold-strings</artifactId>
+  <!-- it is best to use the latest release -->
+  <version>2019.1.10</version>
+</dependency>
 ```
+
 ### Using
 A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
 use `$` to embed a simple variable:
@@ -377,7 +380,7 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 }
 ```
 
-## [@Structural - Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces)
+## [@Structural - Structural Interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces.
 ```java
 @Structural
@@ -404,7 +407,7 @@ Coordinate coord = (Coordinate)map;
 double x = coord.getX();
 ``` 
   
-## [@Jailbreak - Type-safe Reflection](http://manifold.systems/docs.html#type-safe-reflection)
+## [@Jailbreak - Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
 Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection.
 ### Basic
 ```java
@@ -452,7 +455,7 @@ com.abc. @Jailbreak SecretClass secretClass =
 secretClass._data = "hey";
 ```
 
-## [@Self - The Self Type](http://manifold.systems/docs.html#the-self-type)
+## [@Self - The Self Type](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#the-self-type-via-self)
 
 Manifold supports the *Self* type via the `@Self` annotation. Use `@Self` with method return types, parameter types, and
 field types to enforce `subtype of this` where suitable.  Use `@Self` as a simpler, more versatile alternative to Java's
@@ -562,8 +565,9 @@ List<MyNode> = myNode.getChildren(); // wunderbar!
 
 ### Self + Extensions
 
-You can use `@Self` with [extension methods]((http://manifold.systems/docs.html#extension-classes)) too.  Here we make
-an extension method as a means to conveniently chain additions to `Map` while preserving its concrete type:
+You can use `@Self` with [extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension)
+too.  Here we make an extension method as a means to conveniently chain additions to `Map` while preserving its concrete
+type:
 
 ```java
 public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
@@ -605,9 +609,9 @@ public class DoublyNode extends SinglyNode {
 }
 ```
 
-## [Checked Exception Suppression](http://manifold.systems/docs.html#checked-exception-suppression)
-Simply add the `exceptions` plugin argument: `-Xplugin:Manifold strings` *`exceptions`*. Now checked exceptions
-behave like unchecked exceptions!  No more compiler errors, no more boilerplate `try`/`catch` nonsense.
+## [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
+Simply add the `manifold-exceptions` dependency to your project. Now checked exceptions behave like unchecked
+exceptions!  No more compiler errors, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
 ```java
 List<String> strings = ...;
 List<URL> urls = list
@@ -615,44 +619,19 @@ List<URL> urls = list
   .collect(Collectors.toList());
 ```
 
-To use Checked Exception Suppression you must add the `exceptions` plugin option to your build configuration.
-### Maven:
+To use Checked Exception handling you must add the `manifold-exceptions` dependency to your build configuration:
 ```xml
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-compiler-plugin</artifactId>
-  <version>3.8.0</version>
-  <configuration>
-    <encoding>UTF-8</encoding>
-    <compilerArgs>
-
-      <!-- Add the Manifold plugin, with string templates and checked exception suppression enabled -->
-      <arg>-Xplugin:Manifold strings exceptions</arg>
-
-    </compilerArgs>
-  </configuration>
-</plugin>
+<dependency>
+  <groupId>systems.manifold</groupId>
+  <artifactId>manifold-exceptions</artifactId>
+  <!-- it is best to use the latest release -->
+  <version>2019.1.10</version>
+</dependency>
 ```
 
-### Gradle:
-tasks.withType(JavaCompile) {
-    // Add the Manifold plugin, with string templates and checked exception suppression enabled
-    options.compilerArgs += '-Xplugin:Manifold strings exceptions'
-    options.fork = true
-}
+## [ManTL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions) (Superfast **type-safe** templates)
 
-### Intellij:
-If your IntelliJ project is **NOT** defined with Maven or Gradle, you can add the plugin arguments in the Settings window e.g.,
-<kbd>Settings</kbd> ➜ <kbd>Build, Execution, Deployment</kbd> ➜ <kbd>Compiler</kbd> ➜ <kbd>Java Compiler</kbd> ➜ <kbd>Additional command line parameters:</kbd>
-`-Xplugin:"Manifold strings exceptions"  -processorpath /path/to/your/manifold-all-xxx.jar`
->Note the `-processorpath` argument is required for Java 9 and later, not Java 8.
-
-
-## [ManTL](http://manifold.systems/manifold-templates.html) (Superfast **type-safe** templates)
-
-ManTL has a separate [cheat sheet](http://manifold.systems/manifold-templates.html)
-
-## [Libraries](http://manifold.systems/docs.html#extension-libraries)
+## [Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
 ```java
 File file = new File(path);

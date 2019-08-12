@@ -32,7 +32,6 @@
   <modules>
     <module>manifold-core-parent</module>
     <module>manifold-deps-parent</module>
-    <module>manifold-bootstrap-plugin</module>
     <module>manifold-util</module>
     <module>manifold-all</module>
   </modules>
@@ -43,14 +42,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <scm.root>scm:git:git@github.com:manifold-systems</scm.root>
   </properties>
-
-  <!--<scm>-->
-    <!--<connection>${scm.root}/manifold.git</connection>-->
-    <!--<developerConnection>${scm.root}/manifold.git</developerConnection>-->
-    <!--<url>https://github.com/manifold-systems/manifold</url>-->
-    <!--<tag>HEAD</tag>-->
-  <!--</scm>-->
-
+  
   <scm>
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
@@ -98,18 +90,6 @@
   
   <build>
     <plugins>
-      <!--<plugin>-->
-        <!--<groupId>org.apache.maven.plugins</groupId>-->
-        <!--<artifactId>maven-release-plugin</artifactId>-->
-        <!--<version>2.5.3</version>-->
-        <!--<configuration>-->
-          <!--<autoVersionSubmodules>true</autoVersionSubmodules>-->
-          <!--<releaseProfiles>release</releaseProfiles>-->
-          <!--<tagNameFormat>v@{project.version}</tagNameFormat>-->
-          <!--<updateBranchVersions>false</updateBranchVersions>-->
-          <!--<updateWorkingCopyVersions>false</updateWorkingCopyVersions>-->
-        <!--</configuration>-->
-      <!--</plugin>-->
 
       <plugin>
         <groupId>org.sonatype.plugins</groupId>

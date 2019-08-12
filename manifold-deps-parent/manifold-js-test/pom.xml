@@ -18,6 +18,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <!-- ext is needed for testing file fragments (see JavascriptProgramTest) -->
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext</artifactId>
@@ -43,7 +48,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <compilerArgs>
-            <arg>-Xplugin:Manifold strings</arg>
+            <arg>-Xplugin:Manifold</arg>
           </compilerArgs>
         </configuration>
       </plugin>

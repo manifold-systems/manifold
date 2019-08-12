@@ -51,7 +51,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.SourceJavaFileObject;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 
 /**
  */

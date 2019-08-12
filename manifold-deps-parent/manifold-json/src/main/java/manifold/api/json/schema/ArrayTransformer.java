@@ -25,7 +25,7 @@ import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
 import manifold.api.json.Token;
 import manifold.internal.javac.IIssue;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 
 import static manifold.api.json.schema.JsonSchemaTransformer.JSCH_ITEMS;

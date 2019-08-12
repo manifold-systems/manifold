@@ -29,14 +29,14 @@ import java.util.regex.Pattern;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.def.FileFragmentImpl;
-import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.strings.api.DisableStringLiteralTemplates;
 import manifold.internal.javac.IIssue;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Token;
 import manifold.templates.tokenizer.Tokenizer;
-import manifold.util.ManClassUtil;
-import manifold.util.ManEscapeUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.ManEscapeUtil;
 
 
 import static manifold.templates.codegen.TemplateGen.DirType.*;

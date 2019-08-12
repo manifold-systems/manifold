@@ -26,10 +26,10 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
-import manifold.util.JsonUtil;
+import manifold.api.util.JsonUtil;
 import manifold.util.ManExceptionUtil;
-import manifold.util.ManStringUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.ManStringUtil;
+import manifold.api.util.StreamUtil;
 
 public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 {

@@ -27,8 +27,8 @@ import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
-import manifold.util.cache.FqnCache;
-import manifold.util.cache.FqnCacheNode;
+import manifold.api.util.cache.FqnCache;
+import manifold.api.util.cache.FqnCacheNode;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class PropertiesTypeManifold extends JavaTypeManifold<Model>

@@ -41,8 +41,9 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import manifold.api.type.ICompilerComponent;
 import manifold.util.ReflectUtil;
-import manifold.util.Stack;
+import manifold.api.util.Stack;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class ManLog_8 extends Log
@@ -159,19 +160,22 @@ public class ManLog_8 extends Log
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( source, pos, key, args ) );
     }
-    else if( !isSuppressedCheckedExceptionError( key ) )
+    else if( !isSuppressedError( key ) )
     {
       super.error( pos, key, args );
     }
   }
 
-  private boolean isSuppressedCheckedExceptionError( String key )
+  private boolean isSuppressedError( String key )
   {
-    return JavacPlugin.instance() != null &&
-           JavacPlugin.instance().isCheckedExceptionsOff() &&
-           key != null &&
-           (key.contains( "unreported.exception." ) ||
-            key.contains( "incompatible.thrown.types" ));
+    for( ICompilerComponent cc: JavacPlugin.instance().getTypeProcessor().getCompilerComponents() )
+    {
+      if( cc.isSuppressed( key ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   private DiagnosticHandler getDiagnosticHandler()

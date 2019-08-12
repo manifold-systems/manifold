@@ -35,6 +35,16 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-exceptions</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-graphql</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -106,6 +116,8 @@
             <manifestEntries>
               <!--class files as source must be available for extension method classes-->
               <Contains-Sources>java,class</Contains-Sources>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.all</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

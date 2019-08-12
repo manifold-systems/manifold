@@ -19,8 +19,8 @@ package manifold.text.extensions.java.lang.CharSequence;
 import java.util.Collection;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.CharPredicate;
-import manifold.util.Pair;
+import manifold.ext.api.CharPredicate;
+import manifold.api.util.Pair;
 
 /**
  */

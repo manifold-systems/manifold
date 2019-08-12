@@ -21,7 +21,7 @@ import manifold.ext.DataBindings;
 import manifold.ext.api.IListBacked;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
-import manifold.util.JsonUtil;
+import manifold.api.util.JsonUtil;
 
 /**
  * A base interface for all JSON and YAML types with methods to transform a JSON value List to/from JSON and YAML

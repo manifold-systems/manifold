@@ -19,7 +19,7 @@ package manifold.api.json;
 import java.io.StringReader;
 import java.util.List;
 import javax.script.ScriptException;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 public class DefaultParser implements IJsonParser
 {

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 //import jdk.internal.loader.Resource;
 //import jdk.internal.loader.URLClassPath;
 import manifold.util.ReflectUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  * This class facilitates dynamic class loading via Type Manifolds in a Java 9 *modular* configuration.

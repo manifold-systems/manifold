@@ -23,7 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import javax.script.Bindings;
 import manifold.ext.DataBindings;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 /*
   http://tools.ietf.org/html/rfc7159

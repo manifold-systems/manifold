@@ -18,7 +18,7 @@ package manifold.api.json;
 
 import java.io.IOException;
 import javax.script.Bindings;
-import manifold.util.JsonUtil;
+import manifold.api.util.JsonUtil;
 
 /**
  * This class is used as part of the JSON API. It defines methods to write this JSON object

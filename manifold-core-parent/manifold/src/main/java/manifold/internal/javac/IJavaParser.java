@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 import javax.tools.DiagnosticCollector;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 /**
  */

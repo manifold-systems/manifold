@@ -524,7 +524,7 @@ public class SrcClassUtil
 
   private Symbol.MethodSymbol findConstructor( IModule module, String fqn, BasicJavacTask javacTask )
   {
-    manifold.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
+    manifold.api.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
     Symbol.ClassSymbol cs = classSymbol.getFirst();
     Symbol.MethodSymbol ctor = null;
     for( Symbol sym: cs.getEnclosedElements() )

@@ -22,8 +22,8 @@ import java.net.URI;
 import java.nio.file.Path;
 import javax.tools.JavaFileManager;
 import javax.tools.SimpleJavaFileObject;
-import manifold.util.PathUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.PathUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  */

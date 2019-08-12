@@ -20,7 +20,7 @@ import com.sun.tools.javac.parser.Tokens;
 import java.util.ArrayList;
 import java.util.List;
 import javax.tools.JavaFileObject;
-import manifold.util.fingerprint.Fingerprint;
+import manifold.api.util.fingerprint.Fingerprint;
 
 /**
  * Process embedded type fragments. Dynamically adds virtual resource files to the type system as they are encountered,

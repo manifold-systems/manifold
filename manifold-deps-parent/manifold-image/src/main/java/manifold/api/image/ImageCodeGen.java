@@ -28,8 +28,8 @@ import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.type.SourcePosition;
-import manifold.util.ManClassUtil;
-import manifold.util.ManEscapeUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.ManEscapeUtil;
 
 /**
  */

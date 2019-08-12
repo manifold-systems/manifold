@@ -38,7 +38,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IManifoldHost;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 
 public abstract class CompiledTypeProcessor implements TaskListener
 {

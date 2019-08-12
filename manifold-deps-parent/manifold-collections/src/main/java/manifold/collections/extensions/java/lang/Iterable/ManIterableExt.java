@@ -30,10 +30,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.IndexedConsumer;
-import manifold.util.IndexedFunction;
-import manifold.util.IndexedPredicate;
-import manifold.util.Pair;
+import manifold.ext.api.IndexedConsumer;
+import manifold.ext.api.IndexedFunction;
+import manifold.ext.api.IndexedPredicate;
+import manifold.api.util.Pair;
 
 
 import static java.util.Collections.emptyList;

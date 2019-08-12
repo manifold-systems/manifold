@@ -34,7 +34,7 @@ import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.util.ManExceptionUtil;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 

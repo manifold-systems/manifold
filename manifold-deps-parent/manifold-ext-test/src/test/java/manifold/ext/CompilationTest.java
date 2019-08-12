@@ -28,10 +28,10 @@ import javax.tools.StandardLocation;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IDirectory;
 import manifold.internal.host.RuntimeManifoldHost;
-import manifold.util.IssueMsg;
-import manifold.util.Pair;
-import manifold.util.SourcePathUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.IssueMsg;
+import manifold.api.util.Pair;
+import manifold.api.util.SourcePathUtil;
+import manifold.api.util.StreamUtil;
 import org.junit.Ignore;
 import org.junit.Test;
 

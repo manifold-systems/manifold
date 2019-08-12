@@ -19,7 +19,7 @@ package manifold.api.json;
 import java.io.Reader;
 import java.util.Arrays;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  * This class is used as part of the JSON API. It provides methods to load an instance of a JSON interface from

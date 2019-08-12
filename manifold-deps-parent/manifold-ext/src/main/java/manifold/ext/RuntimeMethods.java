@@ -39,7 +39,7 @@ import manifold.ext.api.ICoercionProvider;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.util.ReflectUtil;
-import manifold.util.ServiceUtil;
+import manifold.api.util.ServiceUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;

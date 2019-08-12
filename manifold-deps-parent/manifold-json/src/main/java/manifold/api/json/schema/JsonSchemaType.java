@@ -40,10 +40,10 @@ import manifold.api.json.Token;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
-import manifold.util.JsonUtil;
-import manifold.util.ManClassUtil;
-import manifold.util.ManEscapeUtil;
-import manifold.util.ManStringUtil;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.ManEscapeUtil;
+import manifold.api.util.ManStringUtil;
 
 /**
  * The base JSON Schema type.

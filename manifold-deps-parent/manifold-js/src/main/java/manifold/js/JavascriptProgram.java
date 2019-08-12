@@ -42,7 +42,7 @@ import manifold.js.parser.tree.FunctionNode;
 import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
-import manifold.util.ManEscapeUtil;
+import manifold.api.util.ManEscapeUtil;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;

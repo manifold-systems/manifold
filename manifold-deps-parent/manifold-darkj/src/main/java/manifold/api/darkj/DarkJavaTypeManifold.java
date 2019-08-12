@@ -30,7 +30,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.host.IModule;
 import manifold.api.host.IRuntimeManifoldHost;
 import manifold.api.type.JavaTypeManifold;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  * Dark Java is dark because it's Java, yet it can't be "seen" at compile-time.

@@ -42,10 +42,10 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.host.SimpleModule;
 import manifold.util.JreUtil;
-import manifold.util.ManClassUtil;
+import manifold.api.util.ManClassUtil;
 import manifold.util.ReflectUtil;
-import manifold.util.cache.FqnCache;
-import manifold.util.cache.FqnCacheNode;
+import manifold.api.util.cache.FqnCache;
+import manifold.api.util.cache.FqnCacheNode;
 
 
 import static manifold.api.type.ContributorKind.Primary;

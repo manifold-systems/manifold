@@ -30,8 +30,8 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.internal.javac.SourceJavaFileObject;
-import manifold.util.JavacDiagnostic;
-import manifold.util.StreamUtil;
+import manifold.api.util.JavacDiagnostic;
+import manifold.api.util.StreamUtil;
 
 class FavsParser
 {

@@ -19,6 +19,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.snakeyaml</groupId>
       <artifactId>snakeyaml-engine</artifactId>
       <version>1.0</version>
@@ -35,6 +40,8 @@
             <manifestEntries>
               <!--class files as source must be available for extension method classes-->
               <Contains-Sources>java,class</Contains-Sources>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.json</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

@@ -49,7 +49,7 @@ import manifold.api.fs.IFile;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.JavacDiagnostic;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 

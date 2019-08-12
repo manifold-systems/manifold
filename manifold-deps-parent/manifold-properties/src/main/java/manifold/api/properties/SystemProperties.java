@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import manifold.api.host.IManifoldHost;
-import manifold.util.JsonUtil;
-import manifold.util.cache.FqnCache;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.cache.FqnCache;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

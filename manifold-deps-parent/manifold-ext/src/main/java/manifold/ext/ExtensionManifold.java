@@ -41,7 +41,7 @@ import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.api.Extension;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

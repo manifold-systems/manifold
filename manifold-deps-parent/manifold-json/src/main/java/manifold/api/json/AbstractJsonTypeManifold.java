@@ -33,8 +33,8 @@ import manifold.ext.DataBindings;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
-import manifold.util.JsonUtil;
-import manifold.util.ManClassUtil;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.ManClassUtil;
 
 /**
  * A base class for a Type Manifold modeled with a {@link JsonModel} e.g., parses its resource to a {@link Bindings}.

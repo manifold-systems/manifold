@@ -42,8 +42,8 @@ import manifold.api.type.IModel;
 import manifold.api.type.SourcePosition;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.util.ManClassUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.StreamUtil;
 
 public class Model implements IModel
 {

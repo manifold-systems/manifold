@@ -25,8 +25,8 @@ import java.time.LocalDate;
 import javax.script.Bindings;
 import junit.framework.TestCase;
 import manifold.api.json.Yaml;
-import manifold.util.JsonUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.StreamUtil;
 
 public class YamlTest extends TestCase
 {

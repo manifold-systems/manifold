@@ -39,7 +39,7 @@ import manifold.js.parser.tree.Node;
 import manifold.js.parser.tree.ParameterNode;
 import manifold.js.parser.tree.ProgramNode;
 import manifold.js.parser.tree.PropertyNode;
-import manifold.util.ManClassUtil;
+import manifold.api.util.ManClassUtil;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;

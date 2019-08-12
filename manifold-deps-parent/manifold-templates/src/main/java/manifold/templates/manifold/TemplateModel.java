@@ -28,8 +28,8 @@ import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.templates.codegen.TemplateGen;
-import manifold.util.JavacDiagnostic;
-import manifold.util.StreamUtil;
+import manifold.api.util.JavacDiagnostic;
+import manifold.api.util.StreamUtil;
 
 class TemplateModel extends AbstractSingleFileModel
 {

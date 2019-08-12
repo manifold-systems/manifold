@@ -28,7 +28,7 @@ import java.util.Set;
 import manifold.api.json.schema.FormatTypeResolvers;
 import manifold.api.json.schema.IJsonFormatTypeResolver;
 import manifold.api.json.schema.JsonFormatType;
-import manifold.util.ManStringUtil;
+import manifold.api.util.ManStringUtil;
 
 /**
  * For use with a GraphQL server to automatically transform JSON Manifold format resolvers to GraphQL Scalars e.g.,:

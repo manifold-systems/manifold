@@ -29,7 +29,7 @@ import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.IModel;
 import manifold.api.type.JavaTypeManifold;
-import manifold.util.cache.FqnCache;
+import manifold.api.util.cache.FqnCache;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import manifold.api.host.IModule;
-import manifold.util.ManStringUtil;
+import manifold.api.util.ManStringUtil;
 
 /**
  * Utility class to scan for certain manifest headers through the classpath.

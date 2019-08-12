@@ -18,7 +18,7 @@ package manifold.api.fs;
 
 import java.util.List;
 import manifold.api.fs.jar.IJarFileDirectory;
-import manifold.util.DynamicArray;
+import manifold.api.util.DynamicArray;
 
 public class IDirectoryUtil
 {

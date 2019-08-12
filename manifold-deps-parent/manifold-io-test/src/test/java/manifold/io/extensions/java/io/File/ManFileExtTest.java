@@ -2,7 +2,7 @@ package manifold.io.extensions.java.io.File;
 
 import manifold.io.FileTreeWalk;
 import manifold.test.api.ExtensionManifoldTest;
-import manifold.util.Stack;
+import manifold.api.util.Stack;
 
 import java.io.File;
 import java.io.IOException;

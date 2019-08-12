@@ -20,6 +20,7 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -32,16 +33,16 @@ import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
-import manifold.internal.javac.templ.StringLiteralTemplateProcessor;
-import manifold.util.ServiceUtil;
+import manifold.api.util.ServiceUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 /**
  */
 public class TypeProcessor extends CompiledTypeProcessor
 {
-  private Map<File, Set<String>> _typesCompiledByFile;
-  private Set<Object> _drivers;
+  private final Map<File, Set<String>> _typesCompiledByFile;
+  private final Set<Object> _drivers;
+  private SortedSet<ICompilerComponent> _compilerComponents;
 
   TypeProcessor( IManifoldHost host, BasicJavacTask javacTask )
   {
@@ -74,20 +75,14 @@ public class TypeProcessor extends CompiledTypeProcessor
 
   private void loadCompilerComponents( BasicJavacTask javacTask )
   {
-    SortedSet<ICompilerComponent> compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
-    loadBuiltin( compilerComponents );
-    ServiceUtil.loadRegisteredServices( compilerComponents, ICompilerComponent.class, getClass().getClassLoader() );
-    compilerComponents.forEach( cc -> cc.init( javacTask ) );
+    _compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
+    ServiceUtil.loadRegisteredServices( _compilerComponents, ICompilerComponent.class, getClass().getClassLoader() );
+    _compilerComponents.forEach( cc -> cc.init( javacTask, this ) );
   }
 
-  private void loadBuiltin( SortedSet<ICompilerComponent> compilerComponents )
+  public Collection<ICompilerComponent> getCompilerComponents()
   {
-    if( JavacPlugin.instance() == null || JavacPlugin.instance().isStringTemplatesEnabled() )
-    {
-      // string templates are Disabled by default, enable feature with "-Xplugin:Manifold strings"
-      // note, string templates are Enabled by default if compiling dynamically
-      compilerComponents.add( new StringLiteralTemplateProcessor( this ) );
-    }
+    return _compilerComponents;
   }
 
   @Override

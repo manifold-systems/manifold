@@ -27,7 +27,7 @@ import manifold.api.fs.IFile;
 import manifold.api.json.schema.IllegalSchemaTypeName;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  */

@@ -1,6 +1,6 @@
 package manifold.graphql.sample;
 
-import manifold.api.templ.DisableStringLiteralTemplates;
+import manifold.strings.api.DisableStringLiteralTemplates;
 import manifold.ext.api.Jailbreak;
 import manifold.graphql.request.Executor;
 import org.junit.Test;

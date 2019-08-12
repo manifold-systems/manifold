@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import javax.script.Bindings;
 import manifold.ext.DataBindings;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 
 
 import static manifold.api.json.schema.JsonSchemaTransformer.*;

@@ -39,9 +39,9 @@ import manifold.api.json.schema.LazyRefJsonType;
 import manifold.api.json.schema.TypeAttributes;
 import manifold.ext.RuntimeMethods;
 import manifold.internal.javac.IIssue;
-import manifold.util.JsonUtil;
-import manifold.util.ManEscapeUtil;
-import manifold.util.Pair;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.ManEscapeUtil;
+import manifold.api.util.Pair;
 
 /**
  * The main JSON type reflecting name/value pair bindings.

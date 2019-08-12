@@ -19,7 +19,7 @@ package manifold.internal.javac;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
 import java.util.Map;
-import manifold.util.Stack;
+import manifold.api.util.Stack;
 
 public class ParentTreePathScanner extends TreeScanner<Tree, Void>
 {

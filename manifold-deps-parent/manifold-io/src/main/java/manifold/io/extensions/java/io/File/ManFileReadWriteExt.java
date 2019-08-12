@@ -132,7 +132,7 @@ public class ManFileReadWriteExt
       long remaining = thiz.length();
       if( remaining > Integer.MAX_VALUE )
       {
-        throw new OutOfMemoryError( "File $thiz is too big ($remaining bytes) to fit in memory." );
+        throw new OutOfMemoryError( "File " + thiz + " is too big (" + remaining + " bytes) to fit in memory." );
       }
       byte[] result = new byte[(int)remaining];
       while( remaining > 0 )

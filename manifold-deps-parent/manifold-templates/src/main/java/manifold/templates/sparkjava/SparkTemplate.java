@@ -17,7 +17,7 @@
 package manifold.templates.sparkjava;
 
 import manifold.templates.runtime.BaseTemplate;
-import manifold.util.ManEscapeUtil;
+import manifold.api.util.ManEscapeUtil;
 import spark.Request;
 import spark.Response;
 

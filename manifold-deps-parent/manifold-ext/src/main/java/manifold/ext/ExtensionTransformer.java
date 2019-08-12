@@ -77,7 +77,7 @@ import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.JreUtil;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 

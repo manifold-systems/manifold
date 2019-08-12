@@ -51,8 +51,8 @@ import manifold.api.fs.IResource;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.util.JreUtil;
-import manifold.util.Pair;
-import manifold.util.SourcePathUtil;
+import manifold.api.util.Pair;
+import manifold.api.util.SourcePathUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

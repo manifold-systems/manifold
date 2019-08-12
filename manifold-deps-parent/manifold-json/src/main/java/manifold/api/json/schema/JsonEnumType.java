@@ -31,8 +31,8 @@ import manifold.api.json.JsonBasicType;
 import manifold.api.json.JsonStructureType;
 import manifold.api.json.Token;
 import manifold.ext.api.IBindingType;
-import manifold.util.JsonUtil;
-import manifold.util.Pair;
+import manifold.api.util.JsonUtil;
+import manifold.api.util.Pair;
 
 /**
  * Transform JSON Schema enum to Java enum:

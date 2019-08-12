@@ -18,11 +18,13 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.jvm.ClassWriter;
+import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.tools.JavaFileObject;
 import manifold.api.type.ISelfCompiledFile;
+import manifold.util.ReflectUtil;
 
 public class ManClassWriter extends ClassWriter
 {
@@ -41,6 +43,7 @@ public class ManClassWriter extends ClassWriter
   private ManClassWriter( Context ctx )
   {
     super( ctx );
+    ReflectUtil.field( JavaCompiler.instance( ctx ), "writer" ).set( this );
   }
 
   @Override

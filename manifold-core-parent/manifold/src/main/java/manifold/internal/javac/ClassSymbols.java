@@ -38,9 +38,9 @@ import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeSystemListener;
 import manifold.api.host.RefreshRequest;
-import manifold.util.ManClassUtil;
-import manifold.util.Pair;
-import manifold.util.SourcePathUtil;
+import manifold.api.util.ManClassUtil;
+import manifold.api.util.Pair;
+import manifold.api.util.SourcePathUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**

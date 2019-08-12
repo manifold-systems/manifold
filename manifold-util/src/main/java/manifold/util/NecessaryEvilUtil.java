@@ -16,9 +16,19 @@
 
 package manifold.util;
 
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import sun.misc.Unsafe;
 
 public class NecessaryEvilUtil
@@ -110,7 +120,8 @@ public class NecessaryEvilUtil
       //
       // Module: manifold jars
       //
-      Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( NecessaryEvilUtil.class );
+//      Object /*Module*/ manifoldModule = ReflectUtil.method( Class.class, "getModule" ).invoke( NecessaryEvilUtil.class );
+      Object /*Module*/ manifoldModule = ReflectUtil.field( "java.lang.Module", "EVERYONE_MODULE" ).getStatic();
 
       //
       // Module: java.base
@@ -165,4 +176,63 @@ public class NecessaryEvilUtil
       throw new RuntimeException( "Error initializing Manifold", e );
     }
   }
+
+  public static void openModule( Context context, String moduleName )
+  {
+    try
+    {
+      Symbol moduleToOpen = (Symbol)ReflectUtil.method( Symtab.instance( context ), "getModule", Name.class )
+        .invoke( Names.instance( context ).fromString( moduleName ) );
+
+      if( moduleToOpen == null )
+      {
+        // not modular java 9+
+        return;
+      }
+
+      moduleToOpen.complete();
+
+      Set<Symbol> rootModules = (Set<Symbol>)ReflectUtil.field(
+        ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( context ), "allModules" ).get();
+
+      for( Symbol rootModule: rootModules )
+      {
+        rootModule.complete();
+
+        List<Object> requires = (List<Object>)ReflectUtil.field( rootModule, "requires" ).get();
+        List<Object> newRequires = new ArrayList( requires );
+        Object addedRequires = ReflectUtil.constructor( "com.sun.tools.javac.code.Directive$RequiresDirective", ReflectUtil.type( "com.sun.tools.javac.code.Symbol$ModuleSymbol" ) ).newInstance( moduleToOpen );
+        newRequires.add( addedRequires );
+        requires = com.sun.tools.javac.util.List.from( newRequires );
+        ReflectUtil.field( rootModule, "requires" ).set( requires );
+
+        List<Object> exports = new ArrayList<>( (Collection)ReflectUtil.field( moduleToOpen, "exports" ).get() );
+        for( Symbol pkg : (Iterable<Symbol>)ReflectUtil.field( moduleToOpen, "enclosedPackages" ).get() )
+        {
+          if( pkg instanceof Symbol.PackageSymbol )
+          {
+            //System.err.println( "PACKAGE: " + pkg );
+            Object exp = ReflectUtil.constructor( "com.sun.tools.javac.code.Directive$ExportsDirective", Symbol.PackageSymbol.class, com.sun.tools.javac.util.List.class ).newInstance( pkg,
+              com.sun.tools.javac.util.List.of( rootModule ) );
+            exports.add( exp );
+
+            ((Map)ReflectUtil.field( rootModule, "visiblePackages" ).get()).put( ((Symbol.PackageSymbol)pkg).fullname, pkg );
+          }
+        }
+        ReflectUtil.field( moduleToOpen, "exports" ).set( com.sun.tools.javac.util.List.from( exports ) );
+
+        Set readModules = (Set)ReflectUtil.field( moduleToOpen, "readModules" ).get();
+        readModules.add( rootModule );
+        ReflectUtil.field( moduleToOpen, "readModules" ).set( readModules );
+      }
+
+    }
+    catch( Throwable e )
+    {
+      System.err.println( "Failed to reflectively add-exports " + moduleName + "/* to root module[s], you must add the following argument to jave.exe:\n" +
+                          "  --add-exports=" + moduleName + "/*=<root-module>\n" );
+      throw new RuntimeException( e );
+    }
+  }
+
 }

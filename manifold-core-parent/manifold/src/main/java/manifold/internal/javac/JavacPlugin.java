@@ -70,17 +70,16 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.type.ITypeManifold;
-import manifold.internal.BootstrapPlugin;
 import manifold.internal.host.JavacManifoldHost;
 import manifold.internal.runtime.Bootstrap;
-import manifold.util.IssueMsg;
-import manifold.util.JavacDiagnostic;
+import manifold.api.util.IssueMsg;
+import manifold.api.util.JavacDiagnostic;
 import manifold.util.JreUtil;
-import manifold.util.ManClassUtil;
+import manifold.api.util.ManClassUtil;
 import manifold.util.NecessaryEvilUtil;
-import manifold.util.Pair;
+import manifold.api.util.Pair;
 import manifold.util.ReflectUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
@@ -92,22 +91,25 @@ public class JavacPlugin implements Plugin, TaskListener
 {
   /** dynamic compilation mode */
   public static final String ARG_DYNAMIC = "dynamic";
-  /** static mode (deprecated, now the default) */
-  public static final String ARG_STATIC = "static";
-  /** enables string literal templating */
-  public static final String ARG_STRINGS = "strings";
-  /** turns off checked exceptions */
-  public static final String ARG_EXCEPTIONS = "exceptions";
   /** disables &lt;clinit&gt; bootstap */
   public static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
+  /** turns off checked exceptions (deprecated, use manifold-exceptions dependency) */
+  @Deprecated
+  public static final String ARG_EXCEPTIONS = "exceptions";
+  /** static mode (deprecated, now the default) */
+  @Deprecated
+  public static final String ARG_STATIC = "static";
+  /** enables string literal templating (deprecated, use manifold-strings dependency) */
+  @Deprecated
+  public static final String ARG_STRINGS = "strings";
   /** all plugin args */
   public static final String[] ARGS =
   {
+    ARG_NO_BOOTSTRAP,
     ARG_DYNAMIC,
     ARG_STATIC,
-    ARG_STRINGS,
     ARG_EXCEPTIONS,
-    ARG_NO_BOOTSTRAP,
+    ARG_STRINGS,
   };
 
   private static final String OTHER_SOURCE_FILES = "other.source.files";
@@ -206,6 +208,18 @@ public class JavacPlugin implements Plugin, TaskListener
       if( Arrays.stream( ARGS ).noneMatch( validArg -> validArg.equals( arg ) ) )
       {
         jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "Unrecognized Manifold plugin argument '" + arg + "'" );
+      }
+      else if( ARG_STATIC.equals( arg ) )
+      {
+        jpe.getMessager().printMessage( Diagnostic.Kind.MANDATORY_WARNING, "'static' mode is the default mode, please remove the 'static' argument to '-Xplugin:Manifold'" );
+      }
+      else if( ARG_STRINGS.equals( arg ) )
+      {
+        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "'strings' argument to '-Xplugin:Manifold' is deprecated, instead use *dependency* 'manifold-strings'" );
+      }
+      else if( ARG_EXCEPTIONS.equals( arg ) )
+      {
+        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "'exceptions' argument to '-Xplugin:Manifold' is deprecated, instead use *dependency* 'manifold-exceptions'" );
       }
     }
   }
@@ -323,13 +337,6 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private void tailorJavaCompiler( TaskEvent te )
   {
-//##todo: some features like the `exception` option use parts of the tailored compiler eg ManLog which don't require ext
-//    if( !isExtensionsEnabled() )
-//    {
-//      // No need to hook up all the extension stuff if it's not enabled
-//      return;
-//    }
-//
     CompilationUnitTree compilationUnit = te.getCompilationUnit();
     if( !(compilationUnit instanceof JCTree.JCCompilationUnit) )
     {
@@ -345,15 +352,22 @@ public class JavacPlugin implements Plugin, TaskListener
     // Both Java 8 and Java 9 alterations
     //
 
-    // Override javac's ClassWriter
-    ManClassWriter manClassWriter = ManClassWriter.instance( getContext() );
-    ReflectUtil.field( JavaCompiler.instance( getContext() ), "writer" ).set( manClassWriter );
+    // Override javac's Log for error suppression (@Jailbreak too, but that's only if extensions are enabled, see below)
+    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (IS_JAVA_8 ? 8 : 9),
+      "instance", Context.class ).invokeStatic( getContext() );
+
+    if( !isExtensionsEnabled() )
+    {
+      // No need to hook up all the extension stuff if it's not enabled
+      return;
+    }
 
     // Override javac's Attr
-    Attr manAttr = (Attr)(IS_JAVA_8
-      ? ReflectUtil.method( "manifold.internal.javac.ManAttr_8", "instance", Context.class ).invokeStatic( getContext() )
-      : ReflectUtil.method( "manifold.internal.javac.ManAttr_9", "instance", Context.class ).invokeStatic( getContext() ));
-    ReflectUtil.field( JavaCompiler.instance( getContext() ), "attr" ).set( manAttr );
+    Attr manAttr = (Attr)ReflectUtil.method( "manifold.internal.javac.ManAttr_" + (IS_JAVA_8 ? 8 : 9),
+      "instance", Context.class ).invokeStatic( getContext() );
+
+    // Override javac's ClassWriter
+    ManClassWriter.instance( getContext() );
 
     // Override javac's Resolve
     ManResolve.instance( _ctx );
@@ -388,7 +402,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     modules.add( module );
 
-    BootstrapPlugin.openModule( getContext(), "jdk.compiler" );
+    NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
 
     // Override javac's ClassFinder
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
@@ -975,16 +989,6 @@ public class JavacPlugin implements Plugin, TaskListener
   public boolean isStaticCompile()
   {
     return !_argPresent.get( ARG_DYNAMIC );
-  }
-
-  public boolean isStringTemplatesEnabled()
-  {
-    return _argPresent.get( ARG_STRINGS );
-  }
-
-  public boolean isCheckedExceptionsOff()
-  {
-    return _argPresent.get( ARG_EXCEPTIONS );
   }
 
   public boolean isNoBootstrapping()

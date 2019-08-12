@@ -21,7 +21,7 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.net.URL;
 import manifold.util.ReflectUtil;
-import manifold.util.StreamUtil;
+import manifold.api.util.StreamUtil;
 
 /**
  * A complete total and utter hack to inject the manifoldclass protocol into IntelliJ's PluginClassLoader,

@@ -39,11 +39,8 @@ Install the Manifold plugin from the JetBrains repository available directly via
 IntelliJ notifies you within 24 hours when an update is available and gives you the opportunity to sync.
 
 #### Q: How do I get String templates working, like `"Count: $count"`? 
-Just add the `strings` argument to the Manifold plugin:
-```java
--Xplugin:Manifold strings
-``` 
-See the [Setup](http://manifold.systems/docs.html#maven) docs for more info.
+Just add the `manifold-strings` dependency to your project along with the `-Xplugin:Manifold` javac argument. See the
+[Build](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings#build) docs for more info.
 
 ## Getting Help
 
