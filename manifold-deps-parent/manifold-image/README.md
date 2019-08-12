@@ -44,7 +44,7 @@ via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 ## Sample Project
 
@@ -52,11 +52,11 @@ Experiment with the [Manifold Sample Project](https://github.com/manifold-system
 
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
-<p><img src="/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
 Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
 
-<p><img src="/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Use code
 completion to conveniently access images. Perform rename refactors to quickly and safely make project-wide changes.
