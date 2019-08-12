@@ -1,5 +1,5 @@
 ---
-layout: docs_layout
+layout: default
 ---
 
 # Overview
