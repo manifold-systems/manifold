@@ -115,7 +115,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.10'
+    compile group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only)
@@ -150,11 +150,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.10'
+    compile group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-strings to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.10'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-strings', version: '2019.1.11'
 }
 
 tasks.withType(JavaCompile) {
@@ -184,7 +184,7 @@ rootProject.name = 'MyStringTemplatesProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.10</manifold.version>
+        <manifold.version>2019.1.11</manifold.version>
     </properties>
     
     <dependencies>
@@ -252,7 +252,7 @@ rootProject.name = 'MyStringTemplatesProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.10</manifold.version>
+        <manifold.version>2019.1.11</manifold.version>
     </properties>
     
     <dependencies>
