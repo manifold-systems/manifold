@@ -4,7 +4,7 @@ layout: default
 
 # Manifold F.A.Q.s - Frequently Asked Questions (and Answers)
 
-[Common Questions](#common-questions) • [Getting Help](#getting-help) • [Troubleshooting](#troubleshooting) • [History / Trivia](#history--trivia)
+[Common Questions](#common-questions) • [Getting Help](#getting-help) • [Troubleshooting](#troubleshooting)
 
 
 ## Common Questions
@@ -76,16 +76,3 @@ sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instru
 
 Please [let us know](https://github.com/manifold-systems/manifold/issues) if you can't get it working, we're happy to 
 help.  Or start a Manifold gitter [discussion](https://gitter.im/manifold-systems/community).
-
-## History / Trivia
-
-#### Q: Why is the name "Manifold"?
-
-The idea derives from the math / physics use of the term where a manifold allows a complicated geometry to be understood and experienced as a more familiar
-Euclidean space. For instance, although the Earth is not flat, it helps to think of it that way when we make and use maps.
-Otherwise we have to reason about triangles having more than 180 degree angle sums!  Applying that general principal to
-software, a manifold allows a domain of information foreign to a programming language's type system to be accessed directly as
-a set of first-class types.  A JSON file, for example, is much easier to deal with in Java as a set of type-safe classes.
-
-The common definition of the word also applies.  Manifold transforms Java's otherwise closed, Class-based type system
-into a virtually open system of manifold types.
