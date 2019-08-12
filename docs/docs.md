@@ -78,7 +78,7 @@ Manifold provides type manifolds for:
 More are in the works such as SQL, XML, and others.
 
 
-##Java Extensions via the _Extension_ Manifold
+## Java Extensions via the _Extension_ Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes including Java's
 own runtime classes such as `String`. You can add new methods, annotations, and interfaces to any type your project
