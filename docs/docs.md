@@ -7,7 +7,7 @@ layout: default
 [Manifold](https://manifold.systems/) plugs directly into Java to supplement it with powerful features you can use
 directly in your projects:
 
-* [**Type-safe Metaprogramming**](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold) -- _type-safe_ access to structured data (like [F# _type providers_](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/information-rich-themes-v4.pdf)).
+* [**Type-safe Metaprogramming**](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold) -- _type-safe_ access to structured data.
 Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
 [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), 
