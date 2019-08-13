@@ -6,6 +6,77 @@ layout: default
 <br/><br/>
 
 
+## Manifold 2019.1.11 released (12 August 2019)
+
+Some API and structural cleanup and documentation improvements 
+* Refined project readme.md files, standardized them, and overall shifted documentation focus more toward Manifold’s
+individual projects and away from the current monolithic docs 
+* JPMS related changes: 
+  * All manifold projects are defined as "automatic" modules now, with explicit names via "Automatic-Module-Name"
+  * API changes 
+    * renamed 'manifold' package 'manifold.util' to 'manifold.api.util' 
+    * renamed 'manifold.ext' package 'manifold.util' to 'manifold.ext.api' 
+* Removed 'bootstrap' plugin
+* Manifold JavacPlugin is now a self registered Plugin service
+* DEPRECATED: '-Xplugin:Manifold' arguments: 'strings' and 'exceptions' 
+  * replaced with new dependencies: 'manifold-strings' and 'manifold.exceptions' 
+  * renamed package 'manifold.api.templ' to 'manifold.strings.api' 
+* Sample application improvements
+  * where applicable restructure projects to use only the manifold component frameworks needed (instead of 'manifold-all')
+
+Bug fixes: 
+* Fix incremental compilation 
+  * fixes problem where types corresponding with resource files appeared to recompile (or not) randomly in IJ during an incremental build 
+  * fixes problem where manifold fragments would also appear to randomly recompile (or not) during an incremental build 
+* Fix -processorpath v. --processor-module-path involving JPMS named module(s) in a project 
+* Fix preprocessor issue where a Java file would not display preprocessor directives correctly in the presence of manifold fragments 
+* Fix preprocessor JAVA_N_OR_LATER behavior
+ 
+Manifold version 2019.1.11 is available for download on [Maven Central](https://search.maven.org/artifact/systems.manifold/manifold-all/2019.1.11/jar).
+<br/><br/>
+
+
+
+## New article at Jaxenter (5 August 2019):
+
+<table>
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">A Preprocessor for Java</a></p>
+  <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
+     project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
+     provide seamless conditional compilation using familiar directives.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+</table>
+<br/><br/>
+ 
+
+
+## Neuer Artikel bei Jaxenter (5. August 2019):
+
+<table>
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" height="135" src="/images/shutterstock_232482730-350x234.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641">Manifold: Typsicherer Reflexionscode mit @Jailbreak</a></p>
+  <p>Fällt Euch die Arbeit mit Reflexionscode schwer? Der Reflexionscode an sich ist nicht typsicher, weshalb es später
+     zu Problemen kommen kann. Doch keine Panik, es gibt eine Alternative! Mit @Jailbreak aus dem Manifold-Projekt kann
+     man die Typsicherheit bewahren und sich der Effizienz seines Codes sicher sein.</p>
+  <p><small>jaxenter.de</small></p>
+  </td>
+ </tr>
+</table>  
+<br/><br/>
+
+
+ 
 ## A Preprocessor for Java (23 July 2019)
 
 Manifold now provides a fully integrated <b>Java Preprocessor</b>.
