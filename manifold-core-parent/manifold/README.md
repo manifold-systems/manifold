@@ -31,8 +31,8 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 You can think of a type manifold as a **_just-in-time_ code generator**. Essentially the Manifold framework plugs in and
 overrides the compiler's type resolver so that, via the `ITypeManifold` SPI, a type manifold can claim ownership of
 type names as the compiler encounters them and dynamically provide source code corresponding with the types. As a
-consequence this core functionality serves as a far more productive alternative to conventional code generation
-techniques, a long overdue advancement for static typing. 
+consequence this core functionality serves as a productive alternative to conventional code generation techniques, a
+long overdue advancement for static typing. 
 
 To begin with, because the framework plugs directly into the compiler, a code generator as a type manifold *is no longer
 a separate build step*. What's more a type manifold generates code on-demand as the compiler asks for types. Not only
