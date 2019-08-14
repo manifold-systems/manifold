@@ -1,5 +1,5 @@
 ---
-layout: projects_layout
+layout: default
 ---
 
 # Overview
@@ -22,7 +22,7 @@ type-safe reflection (via [`@Jailbreak`](https://github.com/manifold-systems/man
 and a lot more.
 
 
-## Type-safe Metaprogramming via _Type Manifolds_ 
+# Type-safe Metaprogramming via _Type Manifolds_ 
 
 Bridging the worlds of information and programming, a *type manifold* acts as an adapter to automatically connect a
 structured data source to Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler
@@ -78,7 +78,7 @@ Manifold provides type manifolds for:
 More are in the works such as SQL, XML, and others.
 
 
-## Java Extensions via the _Extension_ Manifold
+# Java Extensions via the _Extension_ Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes including Java's
 own runtime classes such as `String`. You can add new methods, annotations, and interfaces to any type your project
@@ -136,7 +136,7 @@ languages. See the [Java Extension Manifold](https://github.com/manifold-systems
 for full coverage of these features.
 
 
-## Benefits
+# Benefits
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There are no code generation steps in
 the build, no extra .class files or .java targets to manage, no annotation processors, and no extra class loaders to
@@ -183,6 +183,48 @@ Changes you make are instantly available in your code:
 Install the plugin directly from IntelliJ via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
+
+# Projects
+
+The Manifold framework consists of the *core project* and a collection of *sub-projects* implementing SPIs provided
+by the core. Each project represents a separate *dependency* you can use directly in your project. See details in each
+projects' docs.
+
+### Core Framework
+* [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+
+### Resource Manifolds
+* [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+* [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+* [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
+* [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
+* [Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
+* [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)
+* [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
+
+### Java Extension Manifold
+* [Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+
+### Java Templates Framework
+* [Manifold : _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+
+### Java Compiler Extensions
+* [Manifold : _String Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) <small>(string interpolation)</small>
+* [Manifold : _[Un]checked_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
+
+### Java Preprocessor
+* [Manifold : _Preprocessor_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+
+### Java Extension Libraries 
+* [Manifold : _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+* [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)
+* [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)
+
+### Sample Projects
+* [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project)
+* [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app)
+* [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api)
+* [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app)
 
 # License
 

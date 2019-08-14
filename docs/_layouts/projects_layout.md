@@ -7,7 +7,7 @@ layout: default
 
 ### Projects
 
->The Manifold framework consists of the *core project* and a collection of *sub-projects* implementing SPIs provided
+The Manifold framework consists of the *core project* and a collection of *sub-projects* implementing SPIs provided
 by the core.
 
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
