@@ -1,5 +1,5 @@
 ---
-layout: default
+layout: projects_layout
 ---
 
 # Overview
