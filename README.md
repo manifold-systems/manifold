@@ -35,7 +35,7 @@ greeting.myMethod(); // Add your own methods to String!
 ### [**Ⓘ** Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 Use familiar directives such as `#define` and `#if` to conditionally compile your Java projects. The preprocessor offers
 a simple and convenient way to support multiple build targets with a single codebase. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/preprocessor.mp4)
-```csharp
+```java
 #if JAVA_8_OR_LATER
   @Override
   public void setTime(LocalDateTime time) {...)
@@ -45,7 +45,7 @@ a simple and convenient way to support multiple build targets with a single code
 #endif
 ```   
 
-### [**Ⓘ** Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural
+### [**Ⓘ** Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
 Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java
 Map<String, Object> map = new HashMap<>();
