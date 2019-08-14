@@ -4,7 +4,7 @@ layout: default
 
 # Manifold Cheat Sheet
 
->#### [IntelliJ IDEA](http://manifold.systems/docs.html#working-with-intellij)
+>#### [IntelliJ IDEA](http://manifold.systems/docs.html#ide--intellij-idea)
 >Manifold is best experienced in IntelliJ IDEA. The Manifold plugin provides comprehensive support for IntelliJ features 
 including code completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, 
 full-featured ManTL template editing, and more. 
@@ -629,7 +629,7 @@ To use Checked Exception handling you must add the `manifold-exceptions` depende
 </dependency>
 ```
 
-## [ManTL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions) (Superfast **type-safe** templates)
+## [ManTL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) (Superfast **type-safe** templates, and a lot more)
 
 ## [Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.

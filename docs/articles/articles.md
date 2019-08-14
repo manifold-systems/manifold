@@ -10,7 +10,7 @@ layout: default
   <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Manifold: A _Preprocessor_ for Java</a></p>
+  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html">Manifold: A _Preprocessor_ for Java</a></p>
   <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
      project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
      provide seamless conditional compilation using familiar directives.</p>
@@ -92,7 +92,7 @@ layout: default
  </tr>
  
  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
- <tr><td><p>Deutsche</p></td><td><p>&nbsp;</p></td></tr>
+ <tr><td><p><h3>Deutsche</h3></p></td><td><p>&nbsp;</p></td></tr>
   
  <tr>
   <td>

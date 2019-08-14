@@ -16,9 +16,9 @@ Simply add Manifold to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
-### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+### [**Ⓘ** Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
-and **YAML**. Remove the code gen step in your build process. [Check it out!](http://manifold.systems/images/graphql.mp4)
+and **YAML**. Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
@@ -28,17 +28,17 @@ User user = User.builder("myid", "mypassword", "Scott")
 User.request("http://api.example.com/users").postOne(user);
 ```
 
-### [Extensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code. [Check it out!](http://manifold.systems/images/ExtensionMethod.mp4)
+### [**Ⓘ** Extensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```
 
-### [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+### [**Ⓘ** Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 Use familiar directives such as `#define` and `#if` to conditionally compile your Java projects. The preprocessor offers
-a simple and convenient way to support multiple build targets with a single codebase. [Check it out!](http://manifold.systems/images/preprocessor.mp4)
-```java
+a simple and convenient way to support multiple build targets with a single codebase. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/preprocessor.mp4)
+```csharp
 #if JAVA_8_OR_LATER
   @Override
   public void setTime(LocalDateTime time) {...)
@@ -46,10 +46,10 @@ a simple and convenient way to support multiple build targets with a single code
   @Override
   public void setTime(Calendar time) {...}
 #endif
-```
+```   
 
-### [Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [Check it out!](http://manifold.systems/images/structural%20typing.mp4)
+### [**Ⓘ** Structural Typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural
+Unify disparate APIs. Bridge software components you do not control. Access maps through type-safe interfaces. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/structural%20typing.mp4)
 ```java
 Map<String, Object> map = new HashMap<>();
 MyThingInterface thing = (MyThingInterface) map; // O_o
@@ -57,9 +57,9 @@ thing.setFoo(new Foo());
 Foo foo = thing.getFoo();
 out.println(thing.getClass()); // prints "java.util.HashMap"
 ```
-
-### [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
-Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection. [Check it out!](http://manifold.systems/images/jailbreak.mp4)
+ 
+### [**Ⓘ** Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak)
+Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnerability of Java reflection. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/jailbreak.mp4) 
 ```java
 @Jailbreak Foo foo = new Foo();
 // Direct, *type-safe* access to *all* foo's members
@@ -67,7 +67,7 @@ foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
-### [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
+### [**Ⓘ** Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
 swallowing, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
 ```java
@@ -77,19 +77,19 @@ List<URL> urls = list
   .collect(Collectors.toList());
 ```
 
-### [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) (aka String Interpolation)
-Embed variables and expressions in String literals, no more clunky string concat! [Check it out!](http://manifold.systems/images/string_interpolation.mp4)
+### [**Ⓘ** String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)
+Embed variables and expressions in String literals, no more clunky string concat! [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/string_interpolation.mp4)
 ```java
 int hour = 15;
 // Simple variable access with '$'
 String result = "The hour is $hour"; // Yes!!!
 // Use expressions with '${}'
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
-```
-
-### [Template Files with *ManTL*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+``` 
+       
+### [**Ⓘ** Template Files with *ManTL*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
-Supports type-safe inclusion of other templates, shared layouts, and more. [Check it out!](http://manifold.systems/images/mantl.mp4)
+Supports type-safe inclusion of other templates, shared layouts, and more. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/mantl.mp4)
 ```java
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
@@ -111,7 +111,7 @@ A template file `abc/example/UserSample.html.mtl`
 </html>
 ```
 
-### [Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates#extension-libraries)
+### [**Ⓘ** Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries)
 Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
 ```java
 File file = new File(path);
@@ -119,10 +119,10 @@ File file = new File(path);
 String content = file.readText();
 ```
 
-### [IntelliJ](http://manifold.systems/docs.html#working-with-intellij)
-Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides
-comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring,
+### [**Ⓘ** IntelliJ](http://manifold.systems/docs.html#ide--intellij-idea)
+Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides 
+comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, 
 incremental compilation, hotswap debugging, full-featured template editing, and more.
 
-### [Learn More](http://manifold.systems/docs.html)
+### [**Ⓘ** Learn More](http://manifold.systems/docs.html)
 <br>
