@@ -8,7 +8,7 @@ to the [Manifold framework](http://manifold.systems/).
 
 Most contemporary JVM languages including Scala, [Kotlin](https://kotlinlang.org/docs/reference/exceptions.html), and [Ceylon](https://ceylon-lang.org/documentation/1.3/reference/statement/throw/),
 do not distinguish between checked and unchecked exceptions, they're all treated as unchecked.  Similarly, the .NET CLR
-does not have checked exceptions.  This is not a coincidence as there is an abundance of evidence to back up their
+does not have checked exceptions.  This is not a coincidence as there is an abundance of evidence to backup their
 collective decision not to follow Java's example. Since this subject can be rather controversial, I'll defer to one of
 my favorite language authors, Anders Hejlsberg, on the subject with [The Trouble with Checked Exceptions](https://www.artima.com/intv/handcuffs.html)
 and move on.
