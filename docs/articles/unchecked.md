@@ -72,7 +72,7 @@ tasks.withType(JavaCompile) {
 ```
 
 Now checked exceptions can safely rise unimpeded and you can avoid writing unsightly boilerplate madness. Additionally,
-you can use the [Manifold plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold), to write clean
+you can use the [Manifold plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold) to write clean
 code in a nice, fully Manifold-aware environment.  
 
 Enjoy!
