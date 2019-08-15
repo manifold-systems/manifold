@@ -484,7 +484,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -516,7 +515,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-graphql to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.11'

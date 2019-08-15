@@ -1106,7 +1106,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
     // Thus if you are not using structural typing, you **don't** need tools.jar
@@ -1142,7 +1141,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-ext to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'

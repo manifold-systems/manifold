@@ -102,7 +102,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-image', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -134,7 +133,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-image', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-image to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-image', version: '2019.1.11'

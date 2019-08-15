@@ -138,7 +138,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // tools.jar dependency (for Java 8 only)
     compile files("${System.properties['java.home']}/../lib/tools.jar")
@@ -173,7 +172,6 @@ repositories {
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold-darkj to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
