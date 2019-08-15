@@ -162,5 +162,6 @@ by the core framework. Each project represents a separate **dependency** you can
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
 <br>
+
 ### [**Ⓘ** Learn More](http://manifold.systems/docs.html)
 <br>
