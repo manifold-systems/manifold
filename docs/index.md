@@ -120,9 +120,47 @@ String content = file.readText();
 ```
 
 ### [**Ⓘ** IntelliJ](http://manifold.systems/docs.html#ide--intellij-idea)
-Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides 
-comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, 
-incremental compilation, hotswap debugging, full-featured template editing, and more.
+Use the [Manifold IntelliJ IDEA plugin]((https://plugins.jetbrains.com/plugin/10057-manifold) ) to fully leverage
+Manifold in your development cycle. The plugin provides comprehensive support for IntelliJ features including code
+completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
+template editing, integrated preprocessor, and more.
 
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
+
+### [**Ⓘ** Projects](http://manifold.systems/projects.html)
+The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
+by the core framework. Each project represents a separate **dependency** you can easily add to your project:
+
+[Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)<br>
+
+[Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
+[Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
+[Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)<br>
+[Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>
+[Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)<br>
+[Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)<br>
+[Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)<br>
+
+[Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
+
+[Manifold : _Templates (ManTL)_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
+
+[Manifold : _String Interpolation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)<br>
+[Manifold : _[Un]checked Exceptions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)<br>
+
+[Manifold : _Preprocessor_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)<br>
+
+[Manifold : _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)<br>
+[Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)<br>
+[Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)<br>
+
+[Manifold : _All&nbsp;&nbsp;(Über jar)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
+
+>Experiment with sample projects:<br>
+>* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
+>* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
+>* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
+>* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
+<br>
 ### [**Ⓘ** Learn More](http://manifold.systems/docs.html)
 <br>
