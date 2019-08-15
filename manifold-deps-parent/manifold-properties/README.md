@@ -99,9 +99,6 @@ repositories {
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-properties', version: '2019.1.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
-
-    // tools.jar dependency (for Java 8 only)
-    compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
 tasks.withType(JavaCompile) {
@@ -185,8 +182,8 @@ rootProject.name = 'MyPropertiesProject'
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>8</source>
+                    <target>8</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <!-- Configure manifold plugin-->
@@ -196,27 +193,6 @@ rootProject.name = 'MyPropertiesProject'
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <!-- Java 8 only, for tools.jar  -->
-        <profile>
-            <id>internal.tools-jar</id>
-            <activation>
-                <file>
-                    <exists>\${java.home}/../lib/tools.jar</exists>
-                </file>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.8.0</version>
-                    <scope>system</scope>
-                    <systemPath>\${java.home}/../lib/tools.jar</systemPath>
-                </dependency>
-              </dependencies>
-        </profile>
-    </profiles>
 </project>
 ```
 

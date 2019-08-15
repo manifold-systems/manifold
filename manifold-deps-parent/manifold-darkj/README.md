@@ -225,8 +225,8 @@ rootProject.name = 'MyDarkJavaProject'
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>8</source>
+                    <target>8</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <!-- Configure manifold plugin-->

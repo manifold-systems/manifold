@@ -1108,7 +1108,8 @@ dependencies {
     compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
-    // tools.jar dependency (for Java 8 only)
+    // tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
+    // Thus if you are not using structural typing, you **don't** need tools.jar
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 }
 
@@ -1193,8 +1194,8 @@ rootProject.name = 'MyJavaExtensionsProject'
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>8</source>
+                    <target>8</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <!-- Configure manifold plugin-->
@@ -1206,7 +1207,8 @@ rootProject.name = 'MyJavaExtensionsProject'
     </build>
 
     <profiles>
-        <!-- Java 8 only, for tools.jar  -->
+        <!-- tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
+             Thus if you are not using structural typing, you **don't** need tools.jar -->
         <profile>
             <id>internal.tools-jar</id>
             <activation>
