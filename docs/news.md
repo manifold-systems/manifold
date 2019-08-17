@@ -5,6 +5,25 @@ layout: default
 # News
 <br/><br/>
 
+## New article at Jaxenter (16 August 2019):
+
+<table>
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html">Say Goodbye to Checked Exceptions</a></p>
+  <p>Modern languages don’t do checked exceptions. But you don’t have to jump ship to share the experience. In this
+  article Scott McKinney shows you how to stick with Java and completely neutralize checked exceptions with a simple
+  new addition to the <a href="http://manifold.systems/">Manifold framework</a>.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+</table>
+<br/><br/>
+
+
 
 ## Manifold 2019.1.11 released (12 August 2019)
 

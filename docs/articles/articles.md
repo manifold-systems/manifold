@@ -7,10 +7,25 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html">Say Goodbye to Checked Exceptions</a></p>
+  <p>Modern languages don’t do checked exceptions. But you don’t have to jump ship to share the experience. In this
+  article Scott McKinney shows you how to stick with Java and completely neutralize checked exceptions with a simple
+  new addition to the <a href="http://manifold.systems/">Manifold framework</a>.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html">Manifold: A _Preprocessor_ for Java</a></p>
+  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html">A <i>Preprocessor</i> for Java</a></p>
   <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
      project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
      provide seamless conditional compilation using familiar directives.</p>
