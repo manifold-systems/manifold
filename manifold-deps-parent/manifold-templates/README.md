@@ -24,6 +24,7 @@ begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
     * [`extends`](#extends)
     * [`params`](#params)
     * [`include`](#include)
+    * [`nest`](#nest)
     * [`section`](#section)
     * [`layout`](#layout)
     * [`content`](#layout)
@@ -237,6 +238,7 @@ tr:nth-child(even) {
 | extends        | `<%@ extends class-name %>`                 | Extends a base class having features suitable for the template file                 |
 | params         | `<%@ params(parameter-list) %>`             | Parameters for the template, arguments passed via the `render(arg-list)`method      |
 | include        | `<%@ include template-name[(parameter-list)] [if <condition>]%>` | Include a separate template in the template                                         |
+| nest           | `<%@ nest template-name[(parameter-list)] [if <condition>]%>` | Nest a separate template in the template                                         |
 | section        | `<%@ section section-name(parameter-list) %>` | Creates a sub-template within the template, that can be called from other templates |
 | layout         | `<%@ layout template-name %>`               | Specifies the template in which the declaring template nests its content            |
 | content        | `<%@ content %>`                            | Used in a `layout` template, denotes where the content of a nested template renders |
@@ -348,7 +350,7 @@ You can then include it in another template as follows:
 <html>
   <head><title>PARAMS Example</title></head>
   <body>
-    <%@ include NameDisplay("Robert") %>
+    <%@ include NameDisplay("Bob") %>
     <%@ include NameDisplay("Scott") %>
   </body>
 </html>
@@ -359,7 +361,7 @@ Then, the following HTML will be generated:
 <html>
   <head><title>PARAMS Example</title></head>
   <body>
-    <p>Your name is: Robert </p>
+    <p>Your name is: Bob </p>
     <p>Your name is: Scott </p>
   </body>
 </html>
@@ -427,13 +429,49 @@ Can be condensed to the following:
 ```jsp
 <%@ include MyTemplate if(condition) %>
 ```
-(Note: In the above, parentheses are optional.)
+
+### `nest`
+
+The `nest` directive behaves like `include` but retains and distributes the indentation whitespace immediately preceding
+and following the `nest` directive. The indentation is applied to each line in the resulting nested template or section.
+This behavior facilitates code generation and other use-cases where indentation is significant.  
+
+For example, consider the following template `MyNesting.txt.mtl`:
+```jsp
+abc
+  <%@ nest Inner%>
+def
+```  
+which nests the template `Inner.txt.mtl`:
+```jsp
+some
+code
+```
+Rendering `MyNesting.txt.mtl` results in:
+```text
+abc
+  some
+  code
+def
+```
+
+#### Conditional Nest
+ManTL supports shorthand for conditional nesting of templates. The following syntax:
+```jsp
+<% if (condition) { %>
+  <%@ nest MyTemplate %>
+<% } %>
+```
+Can be condensed to the following:
+```jsp
+<%@ nest MyTemplate if(condition) %>
+```
 
 
 ### `section`
 
-The `section` directive creates a subsection of the current template that can be added using the `include` directive in 
-other templates.
+The `section` directive creates a subsection of the current template that can be added using the `include` and `nest`
+directives in other templates.
 
 The syntax of a `section` block:
 ```jsp
@@ -565,9 +603,9 @@ or render a template with no layout.  ManTL classes include two fluent helper me
 
 # Whitespace
 
-ManTL language constructs are silent with respect to the template's output.  That is to say, contiguous whitespace 
-characters leading and trailing a language construct are omitted from the template's generated content. Whitespace 
-characters include spaces, tabs, and new lines.
+With the exception of the `nest` directive ManTL language constructs are silent with respect to the template's output.
+That is to say, contiguous whitespace characters leading and trailing a language construct are omitted from the
+template's generated content. Whitespace characters include spaces, tabs, and new lines.
 ```jsp
   <%@ import java.util.ArrayList %>
   <% if(true) { <%>
@@ -575,7 +613,10 @@ Hi
   <% } %>
 ```
 The above template renders just one line of text consisting of the two characters in the word `Hi`; none of the 
-whitespace immediately preceding or following the language constructs are included.  
+whitespace immediately preceding or following the language constructs are included.
+
+>Note the [`nest`](#nest) directive retains indentation to support use-cases such as *code generation* where whitespace
+>is significant.   
   
 # Spark Java Support
 
