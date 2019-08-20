@@ -27,6 +27,7 @@ import java.util.Set;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import manifold.util.ReflectUtil;
 
 /**
@@ -93,12 +94,12 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
 
   public boolean hasLocation( Location location )
   {
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JavacPlugin.IS_JAVA_8 || !(fileManager instanceof StandardJavaFileManager) )
     {
       return fileManager.hasLocation( location );
     }
 
-    // Java 9 introduces JavacFileManager#getLocationAsPaths() for validation, but there is a bug in their code
+    // Java 9 introduces StandardJavaFileManager#getLocationAsPaths() for validation, but there is a bug in their code
     // where it does not check for empty iterable, which is what we do here
     boolean hasLocation = fileManager.hasLocation( location );
     if( hasLocation )
