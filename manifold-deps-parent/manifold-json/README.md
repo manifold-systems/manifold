@@ -544,7 +544,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -575,10 +575,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
 
     // Add manifold-json to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-json', version: '2019.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -608,7 +608,7 @@ rootProject.name = 'MyJsonProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -655,7 +655,7 @@ rootProject.name = 'MyJsonProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>

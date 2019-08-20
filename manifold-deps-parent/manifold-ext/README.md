@@ -1105,7 +1105,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.12'
 
     // tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
     // Thus if you are not using structural typing, you **don't** need tools.jar
@@ -1140,10 +1140,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.12'
 
     // Add manifold-ext to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -1173,7 +1173,7 @@ rootProject.name = 'MyJavaExtensionsProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -1242,7 +1242,7 @@ rootProject.name = 'MyJavaExtensionsProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>

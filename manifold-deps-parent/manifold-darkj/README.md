@@ -137,7 +137,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.12'
 
     // tools.jar dependency (for Java 8 only)
     compile files("${System.properties['java.home']}/../lib/tools.jar")
@@ -171,10 +171,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.12'
 
     // Add manifold-darkj to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -204,7 +204,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -272,7 +272,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>

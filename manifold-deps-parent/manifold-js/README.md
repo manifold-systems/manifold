@@ -176,7 +176,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-js', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-js', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -207,10 +207,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-js', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-js', version: '2019.1.12'
 
     // Add manifold-js to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-js', version: '2019.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-js', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -240,7 +240,7 @@ rootProject.name = 'MyJavascriptProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -287,7 +287,7 @@ rootProject.name = 'MyJavascriptProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>

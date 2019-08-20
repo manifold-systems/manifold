@@ -715,7 +715,7 @@ You also gain access to Manifold's provided extension libraries for I/O, Web, an
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-all</artifactId>
       <!-- it is best to use the latest release -->
-      <version>2019.1.11</version>
+      <version>2019.1.12</version>
     </dependency>
 ```
 
@@ -788,7 +788,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -819,10 +819,10 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.11'
+    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.12'
 
     // Add manifold-templates to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.12'
 }
 
 tasks.withType(JavaCompile) {
@@ -852,7 +852,7 @@ rootProject.name = 'MyTemplatesProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -899,7 +899,7 @@ rootProject.name = 'MyTemplatesProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.11</manifold.version>
+        <manifold.version>2019.1.12</manifold.version>
     </properties>
     
     <dependencies>
