@@ -29,19 +29,18 @@ import manifold.ext.api.This;
 /**
  * Interface extension for java.util.Map to add ICallHandler support.
  */
-@SuppressWarnings("unused")
 @Extension
 public abstract class MapStructExt implements ICallHandler
 {
-  @SuppressWarnings("unused")
-  public static <K, V> Object call( @This Map<K, V> thiz, Class iface, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
+  public static <K, V> Object call( @This Map<K, V> thiz, Class<?> iface, String name, String actualName,
+                                    Class<?> returnType, Class<?>[] paramTypes, Object[] args )
   {
     assert paramTypes.length == args.length;
 
     Object value = ICallHandler.UNHANDLED;
     if( returnType != void.class && paramTypes.length == 0 )
     {
-      value = getValue( thiz, name, actualName, returnType, paramTypes, args );
+      value = getValue( thiz, name, actualName );
     }
     if( value == ICallHandler.UNHANDLED )
     {
@@ -51,7 +50,7 @@ public abstract class MapStructExt implements ICallHandler
       }
       if( value == ICallHandler.UNHANDLED )
       {
-        value = invoke( thiz, name, returnType, paramTypes, args );
+        value = invoke( thiz, name, args );
       }
     }
     if( value == ICallHandler.UNHANDLED )
@@ -65,18 +64,18 @@ public abstract class MapStructExt implements ICallHandler
     return value;
   }
 
-  private static Object getValue( Map thiz, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object getValue( Map thiz, String name, String actualName )
   {
     Object value;
-    value = getValue( thiz, name, actualName, "get", returnType, paramTypes, args );
+    value = getValue( thiz, name, actualName, "get" );
     if( value == ICallHandler.UNHANDLED )
     {
-      value = getValue( thiz, name, actualName, "is", returnType, paramTypes, args );
+      value = getValue( thiz, name, actualName, "is" );
     }
     return value;
   }
 
-  private static Object getValue( Map thiz, String name, String actualName, String prefix, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object getValue( Map thiz, String name, String actualName, String prefix )
   {
     int getLen = prefix.length();
     if( name.length() > getLen && name.startsWith( prefix ) )
@@ -110,7 +109,7 @@ public abstract class MapStructExt implements ICallHandler
     return ICallHandler.UNHANDLED;
   }
 
-  private static Object setValue( Map thiz, String name, String actualName, Class[] paramTypes, Object[] args )
+  private static Object setValue( Map thiz, String name, String actualName, Class<?>[] paramTypes, Object[] args )
   {
     int setLen = "set".length();
     if( paramTypes.length == 1 && name.length() > setLen && name.startsWith( "set" ) )
@@ -161,7 +160,7 @@ public abstract class MapStructExt implements ICallHandler
     return ICallHandler.UNHANDLED;
   }
 
-  private static Object invoke( Map thiz, String name, Class returnType, Class[] paramTypes, Object[] args )
+  private static Object invoke( Map thiz, String name, Object[] args )
   {
     Object value = thiz.get( name );
     if( value == null )

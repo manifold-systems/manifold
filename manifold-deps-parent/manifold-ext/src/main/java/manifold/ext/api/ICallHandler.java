@@ -59,5 +59,5 @@ public interface ICallHandler
    * @param args The arguments from the call site
    * @return The result of the method call or UNHANDLED if the method is not dispatched.  Null if the method's return type is void.
    */
-  Object call( Class iface, String name, String actualName, Class returnType, Class[] paramTypes, Object[] args );
+  Object call( Class<?> iface, String name, String actualName, Class<?> returnType, Class<?>[] paramTypes, Object[] args );
 }
