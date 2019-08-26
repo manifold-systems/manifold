@@ -1,10 +1,9 @@
 # Java Access Control, Stop the Insanity!
 
-![crazy pills](http://manifold.systems/images/crazypills.png)
+![crazy pills](http://manifold.systems/images/crazypills.jpg)
 
-Java access modifiers `public`, `protected`, `package-private`, `private` are enforced *both* at compile-time and at
-runtime. Here Scott McKinney explains why this is insane and how access to internals could be made simpler and
-type-safe.
+Java access modifiers `protected`, `package-private`, and `private` are enforced *both* at compile-time and at runtime.
+Here Scott McKinney explains why this is insane and how access to internals could be made much simpler and type-safe.
 
 ## Crazy Talk
 
@@ -24,8 +23,8 @@ the spare bedroom window you leave wide open specifically for intruders, right? 
 your door is not a form of security, but is instead an indication of insanity.  
 
 The Java Reflection API is the sign posted on the JVM's front lawn. It explains precisely how to bypass Java's runtime
-access control; you can call any method you like using reflection. Therefore under normal circumstances Java runtime
-access control is not in any logical way a form of security.
+access control; you can call any method you like using reflection. Therefore under normal circumstances<sup>[1](#f1)</sup>
+Java runtime access control is not in any logical way a form of security.
 
 Repeat after me:
 * *Runtime access control is not security*
@@ -61,7 +60,7 @@ could generate reflection code for usages of `unsafe` variables, still a big win
 
 Of course all of this is make believe, `unsafe` will never see the light of day in Redwood City. But should we give up?
 [Was it over when the Germans bombed Pearl Harbor?](https://www.youtube.com/watch?v=Wv5c2YR1lVE) Heck no! Where there's
-a will there's a way... 
+a will, there's a way... 
 
 Increasingly the [Manifold framework](http://manifold.systems) picks up where Java leaves off in terms of type system
 shortcomings. In the case of access control Manifold provides a feature aptly named [Type-safe Reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak).
@@ -76,4 +75,5 @@ Additionally IntelliJ IDEA provides comprehensive support for Manifold via plugi
 and other features at [Manifold](http://manifold.systems).  
  
 
- 
+<small><a name="f1">1</a>: Standard JVMs in the context of conventional JDKs and application environments are the focus
+of this article.</small> 
