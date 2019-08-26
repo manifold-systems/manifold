@@ -1,6 +1,6 @@
 # Java Access Control, Stop the Insanity!
 
-![crazy pills](http://manifold.systems/images/crazypills.jpg)
+![crazy pills](http://manifold.systems/images/crazy-pills.jpg)
 
 Java access modifiers `protected`, `package-private`, and `private` are enforced *both* at compile-time and at runtime.
 Here Scott McKinney explains why this is insane and how access to internals could be made much simpler and type-safe.
