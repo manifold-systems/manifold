@@ -27,18 +27,23 @@ The Java Reflection API is the sign posted on the JVM's front lawn. It explains 
 access control; you can call any method you like using reflection. Therefore under normal circumstances Java runtime
 access control is not in any logical way a form of security.
 
+Repeat after me:
+* *Runtime access control is not security*
+* *My private fields will be accessed at runtime and this is okay because it is not my responsibility*
+
 ## Wishful Thinking
 
 As previously stated under normal circumstances there is no reason the JVM should prevent bytecode from accessing a
 type's internals since the compiler already does this for us. Furthermore there should be a way to use normal, type-safe
-syntax to access internals if that is the developer's intention. Nothing is accomplished by making it hard and slow and
-dangerous with reflection.
+syntax to access internals _**if that is the developer's intention.**_ Nothing is accomplished by making it hard and
+slow and dangerous with reflection.
 
 As a productive alternative the Java language could provide a simpler, type-safe syntax to access otherwise hidden
 symbols:
 ```java
 unsafe Foo foo = new Foo();
 foo.privateMethod();
+foo.privateField = null;
 ```
 The `unsafe` modifier informs the compiler of your *intention* to type-safely use internal symbols of `Foo`. As such
 the compiler grants `foo` with open access to `Foo`.  The advantages of this approach are significant:
@@ -46,7 +51,7 @@ the compiler grants `foo` with open access to `Foo`.  The advantages of this app
 * If the internals change, your code breaks at **compile-time**, not runtime
 * Your code is much **easier to read** and maintain
 * Your code is visible to **static analysis tooling** 
-* **Eliminates caching** and other complications associated with reflection
+* It **eliminates caching** and other complications associated with reflection
 
 All of this could be achieved with or without the cooperation of the JVM.  If access control were removed from runtime,
 great! Aside from the new `unsafe` modifier, nothing else is needed and performance is optimal.  Otherwise the compiler
@@ -64,6 +69,7 @@ It is nearly identical to the `unsafe` proposal:
 ```java
 @Jailbreak Foo foo = new Foo();
 foo.privateMethod();
+foo.privateField = null;
 ```       
 As with `unsafe` the `@Jailbreak` annotation grants `foo` full access to `Foo`, all type-safe and compiler friendly.
 Additionally IntelliJ IDEA provides comprehensive support for Manifold via plugin. Read more about Type-safe Reflection
