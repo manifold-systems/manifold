@@ -23,8 +23,8 @@ the spare bedroom window you leave wide open specifically for intruders, right? 
 your door is not a form of security, but is instead an indication of insanity.  
 
 The Java Reflection API is the sign posted on the JVM's front lawn. It explains precisely how to bypass access control;
-you can use it to call any method you like using reflection. Therefore under normal circumstances<sup>[1](#f1)</sup>
-JVM access control is not in any logical sense a form of security.
+you can call any method you like using reflection. Therefore under normal circumstances<sup>[1](#f1)</sup> JVM access
+control is not in any logical sense a form of security.
 
 Repeat after me:
 * *JVM access control is not security*
