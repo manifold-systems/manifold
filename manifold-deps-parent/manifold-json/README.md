@@ -526,75 +526,62 @@ String Templates](http://manifold.systems/docs.html#templating), and more.
 
 ## Gradle
 
-### Java 8
-Here is a sample `build.gradle` file using `manifold-json` with **Java 8**:
+Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
+version (8 - 12), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
 }
 
-group 'com.example'
-version '1.0-SNAPSHOT'
-
-targetCompatibility = 1.8
-sourceCompatibility = 1.8
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
-}
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs += '-Xplugin:Manifold'
-    options.fork = true
-}
-```
-Use with accompanying `settings.gradle` file:
-```groovy
-rootProject.name = 'MyJsonProject'
-```
-
-### Java 11+
-Here is a sample `build.gradle` file using `manifold-json` with **Java 11**:
-```groovy
-plugins {
-    id 'java'
-}
-
-group 'com.example'
+group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
 targetCompatibility = 11
 sourceCompatibility = 11
 
 repositories {
-    mavenCentral()
+    jcenter()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 dependencies {
     compile group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
+    testCompile group: 'junit', name: 'junit', version: '4.12'
 
-    // Add manifold-json to -processorpath for javac
+    // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-json', version: '2019.1.12'
 }
 
-tasks.withType(JavaCompile) {
-    options.compilerArgs += '-Xplugin:Manifold'
-    options.fork = true
+if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
+    sourceSets.main.allJava.files.any {it.name == "module-info.java"}) {
+    tasks.withType(JavaCompile) {
+        // if you DO define a module-info.java file:
+        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', it.classpath.asPath]
+    }
+} else {
+    tasks.withType(JavaCompile) {
+        // If you DO NOT define a module-info.java file:
+        options.compilerArgs += ['-Xplugin:Manifold']
+    }
+}
+
+tasks.compileJava {
+    classpath += files(sourceSets.main.output.resourcesDir) //adds build/resources/main to javac's classpath
+    dependsOn processResources
+}
+tasks.compileTestJava {
+    classpath += files(sourceSets.test.output.resourcesDir) //adds build/resources/test to test javac's classpath
+    dependsOn processTestResources
 }
 ```
 Use with accompanying `settings.gradle` file:
 ```groovy
-rootProject.name = 'MyJsonProject'
+rootProject.name = 'MyProject'
 ```
 
 ## Maven
 
 ### Java 8
-
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -641,7 +628,7 @@ rootProject.name = 'MyJsonProject'
 </project>
 ```
 
-### Java 11+
+### Java 9 or later
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
