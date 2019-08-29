@@ -765,7 +765,7 @@ versions 8 - 12.
 
 Here are some sample build configurations references.
 
->Note you can replace the `manifold-templates` dependency with **`manifold-all`** as a quick way to gain access to all of
+>Note you can replace the `manifold-templates` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
 Manifold's features.
 
 ## Gradle

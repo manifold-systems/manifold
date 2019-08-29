@@ -1082,7 +1082,7 @@ The `manifold-ext` dependency works with all build tooling, including Maven and 
 
 Here are some sample build configurations references.
 
->Note you can replace the `manifold-ext` dependency with **`manifold-all`** as a quick way to gain access to all of
+>Note you can replace the `manifold-ext` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
 Manifold's features.
 
 ## Gradle
