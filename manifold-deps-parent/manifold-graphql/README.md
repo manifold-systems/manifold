@@ -360,7 +360,6 @@ fully supports all type extensions.
 GraphQL specifies several standard scalar types, in addition to these Manifold provides several other non-standard, but
 commonly used types.  These include:
 
-<div>
 <style>
 table {
   font-family: arial, sans-serif;
@@ -404,7 +403,6 @@ tr:nth-child(even) {
 | **Binary**       | _string_     | `manifold.api.json.schema.OctetEncoding`      |
 | **Octet**        | _string_     | `manifold.api.json.schema.OctetEncoding`      |
 | **Base64**       | _string_     | `manifold.api.json.schema.Base64Encoding`     | 
-</div>
 
 Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
 `manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
