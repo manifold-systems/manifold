@@ -360,6 +360,7 @@ fully supports all type extensions.
 GraphQL specifies several standard scalar types, in addition to these Manifold provides several other non-standard, but
 commonly used types.  These include:
 
+<div>
 <style>
 table {
   font-family: arial, sans-serif;
@@ -403,6 +404,7 @@ tr:nth-child(even) {
 | **Binary**       | _string_     | `manifold.api.json.schema.OctetEncoding`      |
 | **Octet**        | _string_     | `manifold.api.json.schema.OctetEncoding`      |
 | **Base64**       | _string_     | `manifold.api.json.schema.Base64Encoding`     | 
+</div>
 
 Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
 `manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
@@ -441,6 +443,9 @@ Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really 
 completion to conveniently build queries and discover the schema's API.  Navigate to/from call-sites and GraphQL schema
 file elements.  Make changes to your query schema files and use the changes immediately, no compilation!  Find usages of
 any element in your schema files. Perform rename refactors to quickly and safely make project-wide changes.
+
+>**Note:** Don't forget to install the [JS GraphQL](https://plugins.jetbrains.com/plugin/8097-js-graphql) plugin
+for superb GraphQL file editing support in your project. It pairs well with the Manifold plugin.
 
 # Building
 
