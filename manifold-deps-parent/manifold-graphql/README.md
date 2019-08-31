@@ -426,15 +426,16 @@ via:
 
 ## Sample Project
 
-Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
+Experiment with the [Manifold GraphQL Sample Project](https://github.com/manifold-systems/manifold-sample-graphql-app)
+via:
 
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
 <p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
+Enter: <kbd>*https://github.com/manifold-systems/manifold-sample-graphql-app.git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProject_graphql.png" alt="echo method" width="60%" height="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Use code
 completion to conveniently build queries and discover the schema's API.  Navigate to/from call-sites and GraphQL schema
@@ -445,23 +446,23 @@ any element in your schema files. Perform rename refactors to quickly and safely
 
 ## Building this project
 
-The `manifold-graphql` project is defined with Maven.  To build it install Maven and run the following command.
-
+The `manifold-graphql` project is defined with Maven.  To build it install Maven and a Java 8 JDK and run the following
+command.
 ```
 mvn compile
 ```
 
 ## Using this project
 
-The `manifold-graphql` dependency works with all build tooling, including Maven and Gradle. It also works with Java
+The `manifold-graphql` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
 versions 8 - 12.
 
 Here are some sample build configurations references.
 
->Note you can replace the `manifold-graphql` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
-Manifold's features.  But `manifold-graphql` already brings in a lot of Manifold including
-[Extension Methods](http://manifold.systems/docs.html#extension-classes),
-String Templates](http://manifold.systems/docs.html#templating), and more.
+>Note you can replace the `manifold-graphql` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all)
+as a quick way to gain access to all of Manifold's features.  But `manifold-graphql` already brings in a lot of
+Manifold including [Extension Methods](http://manifold.systems/docs.html#extension-classes),
+[String Templates](http://manifold.systems/docs.html#templating), and more.
 
 ## Gradle
 

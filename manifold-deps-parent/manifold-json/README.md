@@ -487,15 +487,16 @@ via:
 
 ## Sample Project
 
-Experiment with the [Manifold Sample Project](https://github.com/manifold-systems/manifold-sample-project) via:
+Experiment with the [Manifold Sample REST API Project](https://github.com/manifold-systems/manifold-sample-rest-api)
+via:
 
 <kbd>File</kbd> ➜ <kbd>New</kbd> ➜ <kbd>Project from Version Control</kbd> ➜ <kbd>Git</kbd>
 
 <p><img src="http://manifold.systems/images/OpenSampleProjectMenu.png" alt="echo method" width="60%" height="60%"/></p>
 
-Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd>
+Enter: <kbd>https://github.com/manifold-systems/manifold-sample-rest-api.git</kbd>
 
-<p><img src="http://manifold.systems/images/OpenSampleProject.png" alt="echo method" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/OpenSampleProject_json.png" alt="echo method" width="60%" height="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Make changes to
 your JSON and YAML files and use the changes immediately in your code, no compilation step.  You can use features such
@@ -506,23 +507,23 @@ files. Additionally you can make and test changes in a live application or servi
 
 ## Building this project
 
-The `manifold-json` project is defined with Maven.  To build it install Maven and run the following command.
-
+The `manifold-json` project is defined with Maven.  To build it install Maven and a Java 8 JDK and run the following
+command.
 ```
 mvn compile
 ```
 
 ## Using this project
 
-The `manifold-json` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 12.
+The `manifold-json` dependency works with all build tooling, including Maven and Gradle. It fully supports Java versions
+8 - 12.
 
 Here are some sample build configurations references.
 
 >Note you can replace the `manifold-json` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
 Manifold's features.  But `manifold-json` already brings in a lot of Manifold including
 [Extension Methods](http://manifold.systems/docs.html#extension-classes),
-String Templates](http://manifold.systems/docs.html#templating), and more.
+[String Templates](http://manifold.systems/docs.html#templating), and more.
 
 ## Gradle
 
