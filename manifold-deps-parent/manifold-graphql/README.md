@@ -416,7 +416,7 @@ reinvent the wheel!
 
 >Note fragments are an experimental feature
 
-You can now *embed* resource content such as GraphQL directly in a Java as a type-safe resource _**fragment**_. This
+You can now *embed* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
 means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
 resource file.
 
