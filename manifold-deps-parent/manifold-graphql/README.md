@@ -23,6 +23,7 @@ begin experimenting with GraphQL using Manifold.
 * [Copying GraphQL Objects](#copying-graphql-objects)
 * [Types](#type)
 * [Scalar Types](#scalar-types)
+* [Embedding Queries with Fragments](#embedding-queries-with-fragments)
 * [IDE Support](#ide-support)
 * [Building](#building)
 * [License](#license)
@@ -410,6 +411,60 @@ Additionally, Manifold includes an API you can implement to provide your own cus
 
 >If you've implemented format type resolvers for JSON Schema, you can share them with your GraphQL APIs.  No need to
 reinvent the wheel!
+
+# Embedding Queries with Fragments
+
+>Note fragments are an experimental feature
+
+You can now *embed* resource content such as GraphQL directly in a Java as a type-safe resource _**fragment**_. This
+means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
+resource file.
+
+A fragment can be either a *declaration* or an *expression*.  A fragment declaration is embedded in a multi-line
+comment like this:
+```java
+/*[>MyQuery.graphql<]
+query Movies($title: String, $genre: Genre, $releaseDate: Date) {
+    movies(title: $title, genre: $genre, releaseDate: $releaseDate) {
+        id
+        title
+        genre
+        releaseDate
+    }
+}
+*/
+
+var query = MyQuery.Movies.builder().withGenre(Action).build();
+out.println(query.toString());
+```
+>Get the [JS GraphQL IntelliJ plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
+GraphQL fragments.
+ 
+A fragment expression is embedded in a String literal:
+```java
+var query = "[>.graphql<] query MovieQuery($genre: Genre){ movies(genre: $genre){ genre } }";
+var result = query.builder().build().request("").post();
+result.getMovies().forEach( e -> e.getGenre() );
+```
+
+With Java 13 [text block](https://openjdk.java.net/jeps/355) String literals you can easily author multi-line fragment
+expressions like this:
+```java
+var query = """
+  [>.graphql<]
+  query Movies($genre: Genre!, $title: String, $releaseDate: Date) {
+    movies(genre: $genre, title: $title, releaseDate: $releaseDate) {
+      id
+      title
+      genre
+      releaseDate
+    }
+  }
+  """;
+var result = query.create(Action).request(ENDPOINT).post();
+```  
+ 
+Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental].
 
 # IDE Support 
 
