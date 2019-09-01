@@ -464,7 +464,7 @@ var query = """
 var result = query.create(Action).request(ENDPOINT).post();
 ```  
  
-Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental].
+Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental).
 
 # IDE Support 
 
