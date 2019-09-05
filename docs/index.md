@@ -120,7 +120,7 @@ String content = file.readText();
 ```
 
 ### [IntelliJ](http://manifold.systems/docs.html#ide--intellij-idea)
-Use the [Manifold IntelliJ IDEA plugin]((https://plugins.jetbrains.com/plugin/10057-manifold) ) to fully leverage
+Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage
 Manifold in your development cycle. The plugin provides comprehensive support for IntelliJ features including code
 completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
 template editing, integrated preprocessor, and more.
