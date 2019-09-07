@@ -238,4 +238,4 @@ For the versions available, see the [tags on this repository](https://github.com
 
 # Authors
 
-* [Scott McKinney](https://www.linkedin.com/in/scott-mckinney-52295625/)
+* [Scott McKinney](mailto:scott@manifold.systems)

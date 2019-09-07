@@ -237,4 +237,4 @@ For the versions available, see the [tags on this repository](https://github.com
 
 # Author
 
-* [Scott McKinney](https://www.linkedin.com/in/scott-mckinney-52295625/) - *Manifold creator, principal engineer, and founder of [Manifold Systems, LLC](http://manifold.systems)*
+* [Scott McKinney](mailto:scott@manifold.systems)
