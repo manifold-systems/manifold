@@ -190,8 +190,7 @@ Manifold reimagines the time-tested C/C++ preprocessor as a more effective means
 demands. It directly integrates with your Java compiler so you can quickly and easily build multiple targets from a
 single codebase. You can define and use symbols from a variety of sources including properties files and environment
 settings to conditionally compile every aspect of your source code. Using plugin support for IntelliJ IDEA you can
-visualize exactly how your code reacts to the preprocessor directives and symbols you use. [Try it out](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
-and [let us know what you think](https://gitter.im/manifold-systems/community)!
+visualize exactly how your code reacts to the preprocessor directives and symbols you use. [Check it out](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor).
 
 Check out the [Manifold project](https://github.com/manifold-systems/manifold) for more Java goodness.   
 

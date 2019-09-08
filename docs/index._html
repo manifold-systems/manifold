@@ -14,7 +14,6 @@ layout: default
 <div style="margin-left:60px;margin-top:40px;margin-right:60px;margin-bottom:40px">
 <p md-pos="79-560">
   <a href="https://github.com/manifold-systems/manifold"><img src="https://img.shields.io/badge/github-manifold-blue.svg" alt="github manifold"></a>
-  <a href="https://gitter.im/manifold-systems/community?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge" md-pos="79-249"><img src="https://badges.gitter.im/manifold-systems/community.svg" alt="Gitter" md-pos="80-146" /></a>
   <a href="https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all" md-pos="250-438"><img src="https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all/badge.svg" alt="Maven Central" md-pos="251-357" /></a>
   <a href="https://plugins.jetbrains.com/plugin/10057-manifold" md-pos="439-559"><img src="https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg" alt="" md-pos="440-505" /></a>
 </p>
@@ -112,7 +111,6 @@ String content = file.readText();
   comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring,
   incremental compilation, hotswap debugging, full-featured template editing, and more.</p>
 <h3 id="learn-more" md-pos="5694-5741"><a href="#learn-more" name="learn-more"><a href="http://manifold.systems/docs.html" md-pos="5694-5741">Learn More</a></a></h3>
-<p md-pos="5742-5913"><a href="https://gitter.im/manifold-systems/community?utm_source=badge&amp;utm_medium=badge&amp;utm_campaign=pr-badge" md-pos="5742-5912"><img src="https://badges.gitter.im/manifold-systems/community.svg" alt="Gitter" md-pos="5743-5809" /></a></p>
 </div>
 
 <div class="container contact-container">
@@ -123,7 +121,6 @@ String content = file.readText();
         <p>
           <a href="mailto:info@manifold.systems">info@manifold.systems</a> |
           <a href="https://github.com/manifold-systems/manifold/issues">Issues</a> |
-          <a href="https://gitter.im/manifold-systems/community">Community</a>
           <!--<a href="https://twitter.com/manifoldsystems">@manifoldsystems</a> |-->
         </p>
       </div>

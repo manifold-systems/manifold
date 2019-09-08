@@ -50,10 +50,6 @@ We use github issues to track bugs, features, and other requests.  Please (prett
 discover a bug, have a feature request, or an idea go [here](https://github.com/manifold-systems/manifold/issues) and let us know. We'll
 respond within 24 hours and work in the Pacific Time Zone.
 
-**Discussion**
-If you have something to say beyond issue tracking, start a [discussion](https://gitter.im/manifold-systems/community)
-or checkout other discussions, don't be shy.
-
 **Private E-mail**
 If your question or issue is more pressing or confidential, don't hesitate to send an email to [info@manifold.systems](mailto:info@manifold.systems).
 We'll respond ASAP.
@@ -75,4 +71,4 @@ IntelliJ's UI. Please refer to the [Maven](http://manifold.systems/docs.html#mav
 sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instructions. 
 
 Please [let us know](https://github.com/manifold-systems/manifold/issues) if you can't get it working, we're happy to 
-help.  Or start a Manifold gitter [discussion](https://gitter.im/manifold-systems/community).
+help.

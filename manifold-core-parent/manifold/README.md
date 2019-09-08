@@ -1,9 +1,5 @@
 ![manifold framwork](http://manifold.systems/images/manifold_framework.png)
 
-[![Gitter](https://badges.gitter.im/manifold-systems/community.svg)](https://gitter.im/manifold-systems/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold-all/badge.svg)](https://maven-badges.herokuapp.com/maven-central/systems.manifold/manifold)
-[![](https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg)](https://plugins.jetbrains.com/plugin/10057-manifold)
-
 # Manifold : Core
 
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
@@ -290,10 +286,7 @@ You can use Manifold in one of two modes which you control as an optional argume
 Most projects benefit most using the default (static) mode. Dynamic mode in most cases should be reserved for specific
 type manifolds that are better suited to dynamic compilation.
 
-> Note if you're not sure which mode to use, try the default static mode -- it's usually the right choice. Also post
-questions at the Manifold [gitter](https://gitter.im/manifold-systems/community), we monitor the discussions there and
-provide direct help. And always feel free to send email to [info@manifold.systems](mailto:info@manifold.systems), we'll
-answer ASAP.
+> Note if you're not sure which mode to use, try the default static mode -- it's usually the right choice.
 
 General information considering the static v. dynamic mode:
 
