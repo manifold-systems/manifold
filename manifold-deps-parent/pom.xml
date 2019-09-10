@@ -45,6 +45,7 @@
     <module>manifold-properties-test</module>
     <module>manifold-strings</module>
     <module>manifold-strings-test</module>
+    <module>manifold-strings-test-excl</module>
     <module>manifold-templates</module>
     <module>manifold-templates-test</module>
     <module>manifold-test</module>

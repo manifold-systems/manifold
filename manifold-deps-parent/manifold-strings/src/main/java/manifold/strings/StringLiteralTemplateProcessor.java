@@ -16,6 +16,8 @@
 
 package manifold.strings;
 
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
@@ -29,16 +31,21 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Names;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.IntPredicate;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 import manifold.api.type.ICompilerComponent;
+import manifold.api.util.ServiceUtil;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.TypeProcessor;
 import manifold.strings.api.DisableStringLiteralTemplates;
 import manifold.api.util.Stack;
+import manifold.strings.api.ITemplateProcessorGate;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
@@ -46,6 +53,7 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   private BasicJavacTask _javacTask;
   private Stack<Boolean> _disabled;
   private ManDiagnosticHandler _manDiagnosticHandler;
+  private SortedSet<ITemplateProcessorGate> _processorGates;
 
   @Override
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
@@ -56,6 +64,14 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     _disabled.push( false );
 
     javacTask.addTaskListener( this );
+
+    loadTemplateProcessorGates();
+  }
+
+  private void loadTemplateProcessorGates()
+  {
+    _processorGates = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
+    ServiceUtil.loadRegisteredServices( _processorGates, ITemplateProcessorGate.class, getClass().getClassLoader() );
   }
 
   @Override
@@ -93,7 +109,10 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
       }
       
       JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)tree;
-      classDecl.accept( this );
+      if( !isTypeExcluded( classDecl, e.getCompilationUnit() ) )
+      {
+        classDecl.accept( this );
+      }
     }
   }
 
@@ -135,6 +154,24 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
         popDisabled( disable );
       }
     }
+  }
+
+  private boolean isTypeExcluded( JCTree.JCClassDecl classDef, CompilationUnitTree compilationUnit )
+  {
+    if( _processorGates.isEmpty() )
+    {
+      return false;
+    }
+
+    ExpressionTree pkgName = compilationUnit.getPackageName();
+    if( pkgName == null )
+    {
+      return false;
+    }
+
+    String simpleName = classDef.name.toString();
+    String fqn = pkgName.toString() + '.' + simpleName;
+    return _processorGates.stream().anyMatch( gate -> gate.exclude( fqn ) );
   }
 
   private Boolean getDisableAnnotationValue( JCTree.JCModifiers modifiers )

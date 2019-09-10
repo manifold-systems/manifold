@@ -7,25 +7,15 @@
     <version>2019.1.14-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-strings-test</artifactId>
+  <artifactId>manifold-strings-test-excl</artifactId>
 
-  <name>Manifold :: StringsTest</name>
+  <name>Manifold :: StringsTestExclusions</name>
   
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-strings</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-strings-test-excl</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
     </dependency>
   </dependencies>
   
