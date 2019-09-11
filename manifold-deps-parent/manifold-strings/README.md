@@ -1,5 +1,7 @@
 # Manifold : String Templates (aka String Interpolation)
 
+# Basics
+
 A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can use `$`
 to embed a simple variable:
 ```java
@@ -11,6 +13,10 @@ Or you can embed an expression of any complexity in curly braces:
 LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
 ```
+
+# Bypassing String Template Processing
+
+## `@DisableStringLiteralTemplates`
 
 If you need to turn the feature off in specific areas in your code, you can use the `@DisableStringLiteralTemplates` 
 annotation to control its use.  You can annotate a class, method, field, or local variable declaration to turn it on 
@@ -32,6 +38,20 @@ public class MyClass
 }
 ```
 
+## `ITemplateProcessorGate` SPI
+
+Additionally, you can exclude types from string template processing programmatically by implementing the
+[`ITemplateProcessorGate`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-strings/src/main/java/manifold/strings/api/ITemplateProcessorGate.java)
+SPI. This option mostly applies to use-cases where you don't have access to source code you are building e.g., generated
+source. Importantly, because the service provider is used at compile-time the provider class implementation must be
+precompiled. Typically this means you define the class in a separate module and then make a dependency on that module.
+To use the provider you register it in the `META-INF/services` directory in your `resources` path. See the
+[string template tests](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings-test-excl)
+for an example of this. See the [Java SPI documentation](https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html)
+for more details regarding Java services.
+ 
+## Escaping '$'
+
 Finally, you can use the `$` literally and bypass string templates using standard Java character escape syntax:
 ```java
 String verbatim = "It is \$hour o'clock"; // prints "It is $hour o'clock"
@@ -40,6 +60,8 @@ Or, if you prefer, you can use template syntax:
 ```java
 String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
 ``` 
+
+# Template Files
 
 Template **_files_** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
 
