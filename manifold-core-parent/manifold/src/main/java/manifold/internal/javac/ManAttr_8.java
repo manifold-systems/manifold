@@ -35,8 +35,8 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import java.io.IOException;
 import manifold.api.type.FragmentValue;
-import manifold.util.ReflectUtil;
 import manifold.api.util.Stack;
+import manifold.util.ReflectUtil;
 
 
 import static com.sun.tools.javac.code.TypeTag.CLASS;
@@ -185,6 +185,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     if( !(tree.meth instanceof JCTree.JCFieldAccess) )
     {
       super.visitApply( tree );
+      patchMethodType( tree );
       return;
     }
 
@@ -197,6 +198,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     try
     {
       super.visitApply( tree );
+      patchMethodType( tree );
 
       if( JAILBREAK_PRIVATE_FROM_SUPERS )
       {
@@ -234,6 +236,50 @@ public class ManAttr_8 extends Attr implements ManAttr
         _manLog.popSuspendIssues( tree );
       }
     }
+  }
+
+  @Override
+  public void visitBinary( JCTree.JCBinary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitBinary( tree );
+      return;
+    }
+
+    if( tree.getClass() != JCTree.JCBinary.class ) // ManJCBinary
+    {
+      // Handle binding expressions
+
+      visitBindingExpression( tree );
+      return;
+    }
+
+    if( handleOperatorOverloading( tree ) )
+    {
+      // Handle operator overloading
+      return;
+    }
+
+    super.visitBinary( tree );
+  }
+
+  @Override
+  public void visitUnary( JCTree.JCUnary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitUnary( tree );
+      return;
+    }
+
+    if( handleNegationOverloading( tree ) )
+    {
+      // Handle negation overloading
+      return;
+    }
+
+    super.visitUnary( tree );
   }
 
   /**

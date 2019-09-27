@@ -179,6 +179,7 @@ public class ManAttr_9 extends Attr implements ManAttr
     if( !(tree.meth instanceof JCTree.JCFieldAccess) )
     {
       super.visitApply( tree );
+      patchMethodType( tree );
       return;
     }
 
@@ -191,6 +192,7 @@ public class ManAttr_9 extends Attr implements ManAttr
     try
     {
       super.visitApply( tree );
+      patchMethodType( tree );
 
       if( JAILBREAK_PRIVATE_FROM_SUPERS )
       {
@@ -230,7 +232,53 @@ public class ManAttr_9 extends Attr implements ManAttr
     }
   }
 
-  // overrides to handle fragments in String literals
+  @Override
+  public void visitBinary( JCTree.JCBinary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitBinary( tree );
+      return;
+    }
+
+    if( tree.getClass() != JCTree.JCBinary.class ) // ManJCBinary
+    {
+      // Handle binding expressions
+
+      visitBindingExpression( tree );
+      return;
+    }
+
+    if( handleOperatorOverloading( tree ) )
+    {
+      // Handle operator overloading
+      return;
+    }
+
+    super.visitBinary( tree );
+  }
+
+  @Override
+  public void visitUnary( JCTree.JCUnary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitUnary( tree );
+      return;
+    }
+
+    if( handleNegationOverloading( tree ) )
+    {
+      // Handle negation overloading
+      return;
+    }
+
+    super.visitUnary( tree );
+  }
+
+  /**
+   * Overrides to handle fragments in String literals
+   */
   public void visitLiteral( JCTree.JCLiteral tree )
   {
     if( tree.typetag == CLASS && tree.value.toString().startsWith( "[>" ) )

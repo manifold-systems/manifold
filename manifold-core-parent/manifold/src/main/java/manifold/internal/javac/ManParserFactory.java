@@ -20,14 +20,12 @@ import com.sun.source.util.TaskEvent;
 import com.sun.tools.javac.parser.JavaTokenizer;
 import com.sun.tools.javac.parser.JavacParser;
 import com.sun.tools.javac.parser.JavadocTokenizer;
+import com.sun.tools.javac.parser.Lexer;
 import com.sun.tools.javac.parser.ParserFactory;
 import com.sun.tools.javac.parser.Scanner;
 import com.sun.tools.javac.parser.ScannerFactory;
 import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.util.Context;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.nio.CharBuffer;
 import manifold.util.ReflectUtil;
 
@@ -63,45 +61,21 @@ public class ManParserFactory extends ParserFactory
     ReflectUtil.field( this, "scannerFactory" ).set( ManScannerFactory.instance( ctx, this ) );
   }
 
-  private ThreadLocal<Boolean> chainedCall = new ThreadLocal<>();
   @Override
   public JavacParser newParser( CharSequence input, boolean keepDocComments, boolean keepEndPos, boolean keepLineMap )
   {
-    chainedCall.set( true );
-    try
-    {
-      input = _preprocessor.process( _taskEvent.getSourceFile(), input );
-      return super.newParser( input, keepDocComments, keepEndPos, keepLineMap );
-    }
-    finally
-    {
-      chainedCall.set( false );
-    }
+    return newParser( input, keepDocComments, keepEndPos, keepLineMap, false );
   }
 
-  // Java 9+
+  //override Java 9+
   @SuppressWarnings("unused")
   public JavacParser newParser( CharSequence input, boolean keepDocComments, boolean keepEndPos, boolean keepLineMap, boolean parseModuleInfo )
   {
-    if( chainedCall.get() == null || !chainedCall.get() )
-    {
-      // avoid preprocessing 2X
-      input = _preprocessor.process( _taskEvent.getSourceFile(), input );
-    }
-
-    try
-    {
-      // Call super.newParser(...);
-      //noinspection JavaLangInvokeHandleSignature
-      MethodHandle super_newParser = MethodHandles.lookup().findSpecial( ParserFactory.class, "newParser",
-        MethodType.methodType( JavacParser.class, CharSequence.class, boolean.class, boolean.class, boolean.class, boolean.class ),
-        ManParserFactory.class );
-      return (JavacParser)super_newParser.invoke( this, input, keepDocComments, keepEndPos, keepLineMap, parseModuleInfo );
-    }
-    catch( Throwable e )
-    {
-      throw new RuntimeException( e );
-    }
+    input = _preprocessor.process( _taskEvent.getSourceFile(), input );
+    Lexer lexer = ((ScannerFactory)ReflectUtil.field( this, "scannerFactory" ).get()).newScanner(input, keepDocComments);
+    return (JavacParser)ReflectUtil.constructor( "com.sun.tools.javac.parser.ManJavacParser",
+      ParserFactory.class, Lexer.class, boolean.class, boolean.class, boolean.class, boolean.class )
+      .newInstance( this, lexer, keepDocComments, keepLineMap, keepEndPos, parseModuleInfo );
   }
 
   void setTaskEvent( TaskEvent e )

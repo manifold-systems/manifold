@@ -233,7 +233,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
     {
       return;
     }
-    
+
     // mark processed
     _typesToProcess.put( fqn, true );
 

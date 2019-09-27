@@ -1,5 +1,6 @@
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.comp.Modules;
@@ -15,6 +16,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.List;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
@@ -56,19 +58,22 @@ public class JavaDynamicJdk_11 implements IDynamicJdk
   @Override
   public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym )
   {
-    return classSym.members().getSymbols();
+    Scope.WriteableScope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getSymbols();
   }
 
   @Override
   public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter )
   {
-    return classSym.members().getSymbols( filter );
+    Scope.WriteableScope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getSymbols( filter );
   }
 
   @Override
   public Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call )
   {
-    return classSym.members().getSymbolsByName( call );
+    Scope.WriteableScope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getSymbolsByName( call );
   }
 
   @Override
@@ -132,6 +137,17 @@ public class JavaDynamicJdk_11 implements IDynamicJdk
   public void setTargets( JCTree.JCLambda tree, List<Type> targets )
   {
     tree.target = (targets == null || targets.isEmpty()) ? null : targets.head;
+  }
+
+  @Override
+  public Symbol.OperatorSymbol getOperator( JCTree.JCExpression tree )
+  {
+    return ((JCTree.JCOperatorExpression)tree).operator;
+  }
+  @Override
+  public void setOperator( JCTree.JCExpression tree, Symbol.OperatorSymbol operator )
+  {
+    ((JCTree.JCOperatorExpression)tree).operator = operator;
   }
 
   @Override

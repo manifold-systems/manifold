@@ -1,0 +1,313 @@
+/*
+ * Copyright (c) 2019 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.sun.tools.javac.parser;
+
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.parser.Tokens.Token;
+import com.sun.tools.javac.parser.Tokens.TokenKind;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCBinary;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.TreeInfo;
+import com.sun.tools.javac.util.Assert;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+
+
+import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
+
+/**
+ * !!! IMPORTANT !!!
+ * <p/>
+ * If necessary, update this file if Java changes, probably never:
+ * Temporarily rename it to "ManJavacParser.java" as well as ManJCBinary_X files in a temporary package named
+ * "com.sun.tools.javac.parser".  Compile these with Java 8 (ManJCBinary_9 with Java 9), copy both the
+ * ManJavaParser.class and ManJCBinary_X.class files to *.clazz (note the ZZ) in the resource directory at
+ * manifold/internal/javac in the manifold.
+ * <p/>
+ * <p/>
+ * Subclass java parser to implement the "empty" (or adjacency) operator to support "Binding" expressions. See
+ * {@code term2()}, {@code term2Rest()}, and other overrides for details.
+ */
+public class ManJavacParser extends JavacParser
+{
+  private static final int infixPrecedenceLevels = 10;
+
+  private static Field field_mode = null;
+  private static Field field_parseModuleInfo = null;
+  static
+  {
+    try
+    {
+      field_mode = JavacParser.class.getDeclaredField( "mode" );
+      field_mode.setAccessible( true );
+
+      // Java 9+
+      //noinspection JavaReflectionMemberAccess
+      field_parseModuleInfo = JavacParser.class.getDeclaredField( "parseModuleInfo" );
+      field_parseModuleInfo.setAccessible( true );
+    }
+    catch( NoSuchFieldException ignore )
+    {
+    }
+  }
+  private static final boolean IS_JAVA_8 = field_parseModuleInfo == null;
+  private static Constructor ctor_ManJCBinary;
+  static
+  {
+    try
+    {
+      if( IS_JAVA_8 )
+      {
+        ctor_ManJCBinary = Class.forName( "com.sun.tools.javac.parser.ManJCBinary_8" )
+          .getDeclaredConstructor( JCTree.Tag.class, JCExpression.class, JCExpression.class, Symbol.OperatorSymbol.class );
+      }
+      else
+      {
+        ctor_ManJCBinary = Class.forName( "com.sun.tools.javac.parser.ManJCBinary_9" )
+          .getDeclaredConstructor( JCTree.Tag.class, JCExpression.class, JCExpression.class, Symbol.OperatorSymbol.class );
+      }
+      ctor_ManJCBinary.setAccessible( true );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public ManJavacParser( ParserFactory fac,
+                         Lexer S,
+                         boolean keepDocComments,
+                         boolean keepLineMap,
+                         boolean keepEndPositions,
+                         boolean parseModuleInfo )
+  {
+    super( fac, S, keepDocComments, keepLineMap, keepEndPositions );
+    if( parseModuleInfo && field_parseModuleInfo != null )
+    {
+      try
+      {
+        field_parseModuleInfo.set( this, true );
+      }
+      catch( IllegalAccessException e )
+      {
+        throw new RuntimeException( e );
+      }
+    }
+  }
+
+  public void nextToken() {
+    if( S == null ) return;
+    S.nextToken();
+    token = S.token();
+  }
+
+  /** Expression2   = Expression3 [Expression2Rest]
+   *  Type2         = Type3
+   *  TypeNoParams2 = TypeNoParams3
+   *
+   * <p/>
+   * Manifold: Allow for a binary expression to have an "empty" operator e.g., {@code foo bar}, where the types
+   * the operands can declare a "reaction", such an expression is called a binding expression. The "empty" operator's
+   * precedence is between '+' and '*', thus a binding expression can only have other binding expressions,
+   * multiplication expressions, and a subset of unary expressions as children (see {@code isBinderRhs() and
+   * {@code term2Rest()}.
+   */
+  JCExpression term2() {
+    JCExpression t = term3();
+    if ((get_mode() & EXPR) != 0 && prec(token.kind) >= TreeInfo.orPrec ||
+        get_mode() == EXPR && isBinderRhs()) {
+      set_mode( EXPR );
+      return term2Rest(t, TreeInfo.orPrec);
+    } else {
+      return t;
+    }
+  }
+
+  /*  Expression2Rest = {infixop Expression3}
+   *                  | Expression3 instanceof Type
+   *  infixop         = "||"
+   *                  | "&&"
+   *                  | "|"
+   *                  | "^"
+   *                  | "&"
+   *                  | "==" | "!="
+   *                  | "<" | ">" | "<=" | ">="
+   *                  | "<<" | ">>" | ">>>"
+   *                  | "+" | "-"
+   *                  | "*" | "/" | "%"
+   * <p/>
+   * Manifold: Handle binder expressions e.g., {@code ident unit}, involving the "empty" operator. See
+   * {@code term2()}.
+   */
+  JCExpression term2Rest(JCExpression t, int minprec) {
+    JCExpression[] odStack = newOdStack();
+    Token[] opStack = newOpStack();
+
+    // optimization, was odStack = new Tree[...]; opStack = new Tree[...];
+    int top = 0;
+    odStack[0] = t;
+    Token topOp = Tokens.DUMMY;
+    boolean binder = isBinderRhs();
+    while (binder || prec(token.kind) >= minprec) {
+      opStack[top] = topOp;
+      top++;
+      if( binder )
+      {
+        topOp = null;
+      }
+      else
+      {
+        topOp = token;
+        nextToken();
+      }
+      odStack[top] = (topOp != null && topOp.kind == INSTANCEOF) ? parseType() : term3();
+      binder = isBinderRhs();
+      while (top > 0 && (isSameOrHigher(topOp == null ? null : topOp.kind, binder ? null : token.kind))) {
+        odStack[top-1] = makeOp(topOp == null ? odStack[top].pos : topOp.pos, topOp == null ? null : topOp.kind, odStack[top-1],
+          odStack[top]);
+        top--;
+        topOp = opStack[top];
+      }
+    }
+    Assert.check( top == 0);
+    t = odStack[0];
+
+    if (t.hasTag(JCTree.Tag.PLUS)) {
+      t = foldStrings(t);
+    }
+
+    odStackSupply.add(odStack);
+    opStackSupply.add(opStack);
+    return t;
+  }
+
+
+  private boolean isSameOrHigher( TokenKind kind, TokenKind other )
+  {
+    if( kind == null )
+    {
+      return other == null || prec(other) < TreeInfo.mulPrec;
+    }
+    else
+    {
+      return other == null ? prec(kind) >= TreeInfo.mulPrec : prec(kind) >= prec(other);
+    }
+  }
+
+  /** Construct a binary or type test node.
+   */
+  private JCExpression makeOp(int pos,
+                              TokenKind topOp,
+                              JCExpression od1,
+                              JCExpression od2)
+  {
+    if (topOp == INSTANCEOF) {
+      return F.at(pos).TypeTest(od1, od2);
+    } else {
+      return topOp == null
+             ? ManBinary( od1, od2 )
+             : F.at(pos).Binary(optag(topOp), od1, od2);
+    }
+  }
+
+  private boolean isBinderRhs()
+  {
+    return
+      token.kind == IDENTIFIER ||
+      token.kind == INTLITERAL || token.kind == LONGLITERAL || token.kind == FLOATLITERAL || token.kind == DOUBLELITERAL || token.kind == STRINGLITERAL ||
+      token.kind == LPAREN; // for case (9 (x y z)) or ((a b)(c d))
+      // also note:
+      // - (a b (c d)) is illegal because conflicts with method call grammar b(c d), must be ((a b)(c d)) instead
+      // - ((a) b) is illegal because (a)b conflicts with type cast grammar, but ((a b) c) is ok
+  }
+
+  private JCBinary ManBinary( JCExpression lhs, JCExpression rhs) {
+    JCBinary tree;
+    try
+    {
+      tree = (JCBinary)ctor_ManJCBinary.newInstance( optag( STAR ), lhs, rhs, null );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+    tree.pos = F.pos;
+    return tree;
+  }
+
+  /**
+   * Manifold:
+   * Override to account for case: {@code (ident unit)}.  This otherwise conflicts with the parser's handling of parens
+   * for lambda parsing eg. {@code (int index) -> ...}. Hence the lookahead here for the '->' to distinguish from a
+   * binding expression.
+   */
+  @Override
+  ParensResult analyzeParens()
+  {
+    ParensResult parensResult = super.analyzeParens();
+    if( parensResult == ParensResult.EXPLICIT_LAMBDA ||
+        parensResult == ParensResult.IMPLICIT_LAMBDA )
+    {
+      int lookahead = 0;
+      while( !peekToken( lookahead, RPAREN ) )
+      {
+        lookahead++;
+      }
+      if( !peekToken( ++lookahead, ARROW ) )
+      {
+        parensResult = ParensResult.PARENS;
+      }
+    }
+    return parensResult;
+  }
+
+  private int get_mode()
+  {
+    try
+    {
+      return (int)field_mode.get( this );
+    }
+    catch( IllegalAccessException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+  private void set_mode( int mode )
+  {
+    try
+    {
+      field_mode.set( this, mode );
+    }
+    catch( IllegalAccessException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  private JCExpression[] newOdStack() {
+    if (odStackSupply.isEmpty())
+      return new JCExpression[infixPrecedenceLevels + 1];
+    return odStackSupply.remove(odStackSupply.size() - 1);
+  }
+
+  private Token[] newOpStack() {
+    if (opStackSupply.isEmpty())
+      return new Token[infixPrecedenceLevels + 1];
+    return opStackSupply.remove(opStackSupply.size() - 1);
+  }
+}

@@ -93,6 +93,11 @@
       <artifactId>manifold-text</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-science</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
     <!-- since we inherit slf4j from one of our dependencies (we don't care about the logging it does) add slf4j-nop
          to turn off logging so we can shade/rename org.slf4j.* packages (prevents JPMS collision) -->

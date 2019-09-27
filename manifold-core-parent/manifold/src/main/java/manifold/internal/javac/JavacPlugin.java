@@ -32,6 +32,7 @@ import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.parser.JavacParser;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -42,6 +43,7 @@ import com.sun.tools.javac.util.RichDiagnosticFormatter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -134,6 +136,7 @@ public class JavacPlugin implements Plugin, TaskListener
     {
     }
     IS_JAVA_8 = CLASSFINDER_CLASS == null;
+    loadJavacParserClass();
   }
 
   private static JavacPlugin INSTANCE;
@@ -408,11 +411,11 @@ public class JavacPlugin implements Plugin, TaskListener
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
   }
 
-  private boolean isExtensionsEnabled()
+  public boolean isExtensionsEnabled()
   {
     try
     {
-      Class.forName( "manifold.ext.api.Self" );
+      Class.forName( "manifold.ext.api.Extension" );
       return true;
     }
     catch( ClassNotFoundException e )
@@ -1075,6 +1078,37 @@ public class JavacPlugin implements Plugin, TaskListener
       String fqn = PathCache.qualifyName( pkg.toString(), _name );
       host.createdType( fragment, new String[] {fqn} );
       return true;
+    }
+  }
+
+  /*
+   * Total hack to load our ManJavacParser, which subclasses Java's JavacParser, but also must override package-private
+   * methods, so is loaded directly into the same classloader as JavacParser.
+   */
+  private static void loadJavacParserClass()
+  {
+    ClassLoader classLoader = JavacParser.class.getClassLoader();
+    if( null == ReflectUtil.method( classLoader, "findLoadedClass", String.class )
+      .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
+    {
+      InputStream is1 = JavacPlugin.class.getClassLoader().getResourceAsStream(
+        "manifold/javacparser/ManJavacParser.clazz" );
+      InputStream is2 = JavacPlugin.class.getClassLoader().getResourceAsStream(
+        "manifold/javacparser/ManJCBinary_" + (IS_JAVA_8 ? '8' : '9') + ".clazz" );
+      try
+      {
+        byte[] content = StreamUtil.getContent( is1 );
+        ReflectUtil.method( classLoader, "defineClass", String.class, byte[].class, int.class, int.class )
+          .invoke( "com.sun.tools.javac.parser.ManJavacParser", content, 0, content.length );
+
+        content = StreamUtil.getContent( is2 );
+        ReflectUtil.method( classLoader, "defineClass", String.class, byte[].class, int.class, int.class )
+          .invoke( "com.sun.tools.javac.parser.ManJCBinary_" + (IS_JAVA_8 ? '8' : '9'), content, 0, content.length );
+      }
+      catch( IOException e )
+      {
+        throw new RuntimeException( e );
+      }
     }
   }
 }

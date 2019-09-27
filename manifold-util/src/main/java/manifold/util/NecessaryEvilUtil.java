@@ -159,7 +159,7 @@ public class NecessaryEvilUtil
       if( HtmlDoclet == null )
       {
         // Warn and continue
-        System.out.println( "\nWARNING: Failed to find class 'jdk.javadoc.internal.doclets.formats.html.HtmlDoclet'\n" );
+        //System.out.println( "\nWARNING: Failed to find class 'jdk.javadoc.internal.doclets.formats.html.HtmlDoclet'\n" );
         return;
       }
       Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );

@@ -18,6 +18,7 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Filter;
@@ -49,6 +50,9 @@ public interface IDynamicJdk
 
   List<Type> getTargets( JCTree.JCLambda tree );
   void setTargets( JCTree.JCLambda tree, List<Type> targets );
+
+  Symbol getOperator( JCTree.JCExpression tree );
+  void setOperator( JCTree.JCExpression tree, Symbol.OperatorSymbol operator );
 
   void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
 

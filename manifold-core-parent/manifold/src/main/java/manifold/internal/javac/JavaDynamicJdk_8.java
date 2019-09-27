@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
@@ -28,6 +29,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+import java.util.Collections;
 import java.util.Locale;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -72,19 +74,22 @@ public class JavaDynamicJdk_8 implements IDynamicJdk
   @Override
   public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym )
   {
-    return classSym.members().getElements();
+    Scope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getElements();
   }
 
   @Override
   public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter )
   {
-    return classSym.members().getElements( filter );
+    Scope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getElements( filter );
   }
 
   @Override
   public Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call )
   {
-    return classSym.members().getElementsByName( call );
+    Scope members = classSym.members();
+    return members == null ? Collections.emptyList() : members.getElementsByName( call );
   }
 
   @Override
@@ -109,6 +114,24 @@ public class JavaDynamicJdk_8 implements IDynamicJdk
   public void setTargets( JCTree.JCLambda tree, List<Type> targets )
   {
     tree.targets = targets;
+  }
+
+  @Override
+  public Symbol getOperator( JCTree.JCExpression tree )
+  {
+    return tree instanceof JCTree.JCBinary ? ((JCTree.JCBinary)tree).operator : ((JCTree.JCUnary)tree).operator;
+  }
+  @Override
+  public void setOperator( JCTree.JCExpression tree, Symbol.OperatorSymbol operator )
+  {
+    if( tree instanceof JCTree.JCBinary )
+    {
+      ((JCTree.JCBinary)tree).operator = operator;
+    }
+    else
+    {
+      ((JCTree.JCUnary)tree).operator = operator;
+    }
   }
 
   @Override

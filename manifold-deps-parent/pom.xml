@@ -43,6 +43,8 @@
     <module>manifold-preprocessor-test</module>
     <module>manifold-properties</module>
     <module>manifold-properties-test</module>
+    <module>manifold-science</module>
+    <module>manifold-science-test</module>
     <module>manifold-strings</module>
     <module>manifold-strings-test</module>
     <module>manifold-strings-test-excl</module>

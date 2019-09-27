@@ -19,6 +19,7 @@
 
   <modules>
     <module>manifold</module>
+    <module>manifold-parser-ext</module>
   </modules>
 
 </project>
