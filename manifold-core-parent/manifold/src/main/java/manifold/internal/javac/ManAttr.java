@@ -230,9 +230,9 @@ public interface ManAttr
 
   default ArrayList<Node<JCExpression, Tag>> getBindingOperands( JCExpression tree, ArrayList<Node<JCExpression, Tag>> operands )
   {
-    if( tree instanceof JCBinary && tree.getClass() != JCBinary.class )
+    if( tree instanceof JCBinary && tree.getTag() == Tag.APPLY )
     {
-      // ManJCBinary
+      // Binding expr
 
       getBindingOperands( ((JCBinary)tree).lhs, operands );
       getBindingOperands( ((JCBinary)tree).rhs, operands );

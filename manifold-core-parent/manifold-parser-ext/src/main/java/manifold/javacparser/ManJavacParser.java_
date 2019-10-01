@@ -16,15 +16,12 @@
 
 package com.sun.tools.javac.parser;
 
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.parser.Tokens.Token;
 import com.sun.tools.javac.parser.Tokens.TokenKind;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Assert;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 
 
@@ -33,11 +30,12 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
 /**
  * !!! IMPORTANT !!!
  * <p/>
- * If necessary, update this file if Java changes, probably never:
- * Temporarily rename it to "ManJavacParser.java" as well as ManJCBinary_X files in a temporary package named
- * "com.sun.tools.javac.parser".  Compile these with Java 8 (ManJCBinary_9 with Java 9), copy both the
- * ManJavaParser.class and ManJCBinary_X.class files to *.clazz (note the ZZ) in the resource directory at
- * manifold/internal/javac in the manifold.
+ * If necessary, update this file if Java low-level expr grammar changes:
+ * Create a directory path mirroring the package "com.sun.tools.javac.parser", copy this there and remove underscore.
+ * Make necessary changes then compile the renamed file by itself, then copy/rename the ManJavaParser.class to *.clazz
+ * (note the zz) in the resource directory at manifold/internal/javac (overwrite the existing file there).  Finally,
+ * rename the file back to *.java_ and copy it back to the manifold.javacparser package, overwriting the existing
+ * file. lol.
  * <p/>
  * <p/>
  * Subclass java parser to implement the "empty" (or adjacency) operator to support "Binding" expressions. See
@@ -63,29 +61,6 @@ public class ManJavacParser extends JavacParser
     }
     catch( NoSuchFieldException ignore )
     {
-    }
-  }
-  private static final boolean IS_JAVA_8 = field_parseModuleInfo == null;
-  private static Constructor ctor_ManJCBinary;
-  static
-  {
-    try
-    {
-      if( IS_JAVA_8 )
-      {
-        ctor_ManJCBinary = Class.forName( "com.sun.tools.javac.parser.ManJCBinary_8" )
-          .getDeclaredConstructor( JCTree.Tag.class, JCExpression.class, JCExpression.class, Symbol.OperatorSymbol.class );
-      }
-      else
-      {
-        ctor_ManJCBinary = Class.forName( "com.sun.tools.javac.parser.ManJCBinary_9" )
-          .getDeclaredConstructor( JCTree.Tag.class, JCExpression.class, JCExpression.class, Symbol.OperatorSymbol.class );
-      }
-      ctor_ManJCBinary.setAccessible( true );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
     }
   }
 
@@ -218,10 +193,15 @@ public class ManJavacParser extends JavacParser
   {
     if (topOp == INSTANCEOF) {
       return F.at(pos).TypeTest(od1, od2);
-    } else {
-      return topOp == null
-             ? ManBinary( od1, od2 )
-             : F.at(pos).Binary(optag(topOp), od1, od2);
+    }
+    else
+    {
+      //Manifold: use APPLY for binding op.
+      //It is later changed to MUL after ManAttr processing so the expr will pass safely through javac until it is
+      //transformed to a pre/postBind() call.
+      JCTree.Tag optag = topOp == null ? JCTree.Tag.APPLY : optag( topOp );
+
+      return F.at( pos ).Binary( optag, od1, od2 );
     }
   }
 
@@ -234,20 +214,6 @@ public class ManJavacParser extends JavacParser
       // also note:
       // - (a b (c d)) is illegal because conflicts with method call grammar b(c d), must be ((a b)(c d)) instead
       // - ((a) b) is illegal because (a)b conflicts with type cast grammar, but ((a b) c) is ok
-  }
-
-  private JCBinary ManBinary( JCExpression lhs, JCExpression rhs) {
-    JCBinary tree;
-    try
-    {
-      tree = (JCBinary)ctor_ManJCBinary.newInstance( optag( STAR ), lhs, rhs, null );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-    tree.pos = F.pos;
-    return tree;
   }
 
   /**

@@ -28,23 +28,16 @@ import manifold.ext.api.IComparableWith;
 import manifold.science.api.ISequenceable;
 
 /**
+ * Models rational number as a fraction to maintain arbitrary precision.
  */
 final public class Rational extends Number implements ISequenceable<Rational, Rational, Void>, IComparableWith<Rational>, Serializable
 {
+  private static final int VERSION_1 = 1;
+
   public static final Rational ZERO = new Rational( BigInteger.ZERO, BigInteger.ONE, true );
   public static final Rational ONE = new Rational( BigInteger.ONE, BigInteger.ONE, true );
   public static final Rational TEN = new Rational( BigInteger.valueOf( 10 ), BigInteger.ONE, true );
   public static final Rational HALF = new Rational( BigInteger.ONE, BigInteger.valueOf( 2 ), true );
-  public static final Rational _3rd = new Rational( BigInteger.ONE, BigInteger.valueOf( 3 ), true );
-  public static final Rational _4th = new Rational( BigInteger.ONE, BigInteger.valueOf( 4 ), true );
-  public static final Rational _5th = new Rational( BigInteger.ONE, BigInteger.valueOf( 5 ), true );
-  public static final Rational _8th = new Rational( BigInteger.ONE, BigInteger.valueOf( 8 ), true );
-  public static final Rational _10th = new Rational( BigInteger.ONE, BigInteger.valueOf( 10 ), true );
-  public static final Rational _16th = new Rational( BigInteger.ONE, BigInteger.valueOf( 16 ), true );
-  public static final Rational _32nd = new Rational( BigInteger.ONE, BigInteger.valueOf( 32 ), true );
-  public static final Rational _64th = new Rational( BigInteger.ONE, BigInteger.valueOf( 64 ), true );
-
-  private static final int VERSION_1 = 1;
 
   private final BigInteger _numerator;
   private final BigInteger _denominator;
@@ -259,11 +252,6 @@ final public class Rational extends Number implements ISequenceable<Rational, Ra
     return equals( ZERO )
            ? BigDecimal.ZERO
            : new BigDecimal( _numerator ).divide( new BigDecimal( _denominator ), mc );
-  }
-
-  public boolean isInteger()
-  {
-    return _denominator.equals( BigInteger.ONE );
   }
 
   public Rational add( int i )
@@ -774,42 +762,16 @@ final public class Rational extends Number implements ISequenceable<Rational, Ra
     return Rational.get( _numerator.pow( exponent ), _denominator.pow( exponent ) );
   }
 
-  public Rational root( int iRoot )
-  {
-    return root( iRoot, 10 );
-  }
-  public Rational root( int n, int scale )
-  {
-    if( signum() < 0 )
-    {
-      throw new IllegalArgumentException( "nth root can only be calculated for positive numbers" );
-    }
-    if( signum() == 0 )
-    {
-      return ZERO;
-    }
-
-    BigInteger biScale = BigDecimal.ONE.movePointRight( scale ).toBigInteger();
-    Rational small = Rational.get( BigInteger.ONE, biScale );
-    Rational rRoot = Rational.get( n );
-
-    Rational prev = this;
-    Rational x = divide( rRoot );
-    while( x.subtract( prev ).abs().compareTo( small ) > 0 )
-    {
-      prev = x;
-      x = Rational.get( n - 1 )
-        .multiply( x )
-        .add( divide( x.pow( n - 1 ) ) )
-        .divide( rRoot );
-    }
-    return x;
-  }
-
+  @Deprecated
   public Rational sqrt()
   {
+    //todo: a rational impl
     return Rational.get( Math.sqrt( doubleValue() ) );
-    //return root( 2 );
+  }
+
+  public boolean isInteger()
+  {
+    return _denominator.equals( BigInteger.ONE );
   }
 
   @Override
@@ -820,10 +782,10 @@ final public class Rational extends Number implements ISequenceable<Rational, Ra
   }
 
   @Override
-  public Rational nextNthInSequence( Rational step, Void unit, int iIndex )
+  public Rational nextNthInSequence( Rational step, Void unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    return add( step.multiply( iIndex ) );
+    return add( step.multiply( index ) );
   }
 
   @Override
@@ -834,10 +796,10 @@ final public class Rational extends Number implements ISequenceable<Rational, Ra
   }
 
   @Override
-  public Rational previousNthInSequence( Rational step, Void unit, int iIndex )
+  public Rational previousNthInSequence( Rational step, Void unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    return subtract( step.multiply( iIndex ) );
+    return subtract( step.multiply( index ) );
   }
 
   @Override

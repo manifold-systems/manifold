@@ -174,7 +174,10 @@ public class ExtensionTransformer extends TreeTranslator
           // Replace with extension method call
           methodCall = replaceExtCall( methodCall, extMethod );
         }
-        
+
+        // Concrete type set in attr
+        methodCall.type = tree.type;
+
         result = methodCall;
       }
     }

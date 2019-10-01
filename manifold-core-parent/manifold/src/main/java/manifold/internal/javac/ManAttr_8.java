@@ -247,11 +247,12 @@ public class ManAttr_8 extends Attr implements ManAttr
       return;
     }
 
-    if( tree.getClass() != JCTree.JCBinary.class ) // ManJCBinary
+    if( tree.getTag() == JCTree.Tag.APPLY ) // binding expr
     {
       // Handle binding expressions
 
       visitBindingExpression( tree );
+      ReflectUtil.field( tree, "opcode" ).set( JCTree.Tag.MUL ); // pose as a MUL expr to pass binary expr checks
       return;
     }
 

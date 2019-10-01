@@ -216,6 +216,7 @@ public class ReflectUtil
         mr = method( superclass, name, params );
         if( mr != null )
         {
+          addMethodToCache( cls, mr._method );
           return mr;
         }
       }

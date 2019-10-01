@@ -119,6 +119,7 @@ public class ScienceUnitMathTest {
       Acceleration acc = new Acceleration( 2r, AccelerationUnit.BASE );
       Force force = new Force( a.toBaseNumber() * acc.toBaseNumber(), ForceUnit.BASE, unit * acc.getUnit() );
       assertEquals( force, a * acc );
+      assertEquals( 2 * force, force + force );
 
       // Mass * Velocity = Momentum
       Velocity v = new Velocity( 2r, VelocityUnit.BASE );

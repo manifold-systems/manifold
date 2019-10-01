@@ -47,8 +47,6 @@ public abstract class AbstractBinder<MS, B extends E, E, O>
 
   abstract protected Node<E, O> makeBinaryExpression( Node<E, O> left, Node<E, O> right, MS binderMethod );
 
-  abstract protected B leftAssociateMuls( B solution );
-
   @SuppressWarnings("WeakerAccess")
   public B bind( ArrayList<Node<E, O>> operands )
   {
@@ -72,7 +70,7 @@ public abstract class AbstractBinder<MS, B extends E, E, O>
       B solution = bind( reduced );
       if( solution != null )
       {
-        return leftAssociateMuls( solution );
+        return solution;
       }
     }
     return null;

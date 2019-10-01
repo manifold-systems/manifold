@@ -18,6 +18,10 @@ package manifold.science.util;
 
 public interface DimensionlessConstants
 {
-  Rational pi = Rational.get( "3.14159265358979323846264338327950288419716939937510" );
+  /** PI at 100 decimal places */
+  Rational pi = Rational.get(
+    "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679" );
+
+  /** The mole, abbreviated mol, is an SI unit which measures the number of particles in a specific substance. */
   Rational mol = Rational.get( "6.022140857e23" );
 }

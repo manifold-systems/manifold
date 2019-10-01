@@ -19,7 +19,7 @@ package manifold.science.api;
 public interface ISequenceable<E extends ISequenceable<E, S, U>, S, U> extends Comparable<E>
 {
   E nextInSequence( S step, U unit );
-  E nextNthInSequence( S step, U unit, int iIndex );
+  E nextNthInSequence( S step, U unit, int index );
   E previousInSequence( S step, U unit );
-  E previousNthInSequence( S step, U unit, int iIndex );
+  E previousNthInSequence( S step, U unit, int index );
 }

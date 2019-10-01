@@ -10,7 +10,7 @@ import static manifold.science.util.CommonConstants.KILO;
 
 public enum StorageCapacityUnit implements IUnit<StorageCapacity, StorageCapacityUnit>
 {
-  Bit( Rational._8th, "Bit", "bit" ),
+  Bit( Rational.get( 1, 8 ), "Bit", "bit" ),
   Nibble( Rational.HALF, "Nibble", "nibble" ),
   Byte( 1r, "Byte", "B" ),
   KB( KILO, "Kilobyte", "KB" ),

@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
 public class TestMe
 {
   @Test
-  public void blah()
+  public void testMisc()
   {
     Fuzz<String> bar = new Fuzz<>("2");
     Fuzz<String> baz = new Fuzz<>("3");
@@ -46,23 +46,21 @@ public class TestMe
     Rational z = x * y;
     assertEquals( y, z );
 
-//    int xx = 8;
-//    double yy = 2xx;
-
     assertTrue( 2 + 10 k / 2 * 3 + 6 * 2k + 1 == 2 + 10 k / 2 * 3 + 6 * 2k + 1 );
     assertEquals( Rational.get( 27002 ), 1 + 10 k / 2 * 3 + 6 * 2k + 1 );
 
     assertEquals( Rational.get( 123 ), 123r );
-
-//    Length length = 5 bar x;
-//    int h = bar 5;
   }
 
-  Integer asdf( Fuzz<String> x, Fuzz<String> y )
+  @Test
+  public void testInArgOfOverload()
   {
-    return x * y;
+    // tests javac internals re binding expr in arg position of an overloaded method,
+    // deals with speculative multi-pass attribution for method scoring (note assertEquals() is an overloaded method)
+    assertEquals( Rational.get( 5 ).toString(), (5r).toString() );
   }
-  static class Fuzz<T extends Comparable<T>> extends Number implements IComparableWith<Fuzz<T>>
+
+  static class Fuzz<T extends Comparable<T>> implements IComparableWith<Fuzz<T>>
   {
     T _s;
     public Fuzz( T s )
@@ -91,30 +89,6 @@ public class TestMe
     public int compareTo( Fuzz<T> o )
     {
       return _s.compareTo( o._s );
-    }
-
-    @Override
-    public int intValue()
-    {
-      return 0;
-    }
-
-    @Override
-    public long longValue()
-    {
-      return 0;
-    }
-
-    @Override
-    public float floatValue()
-    {
-      return 0;
-    }
-
-    @Override
-    public double doubleValue()
-    {
-      return 0;
     }
   }
 }

@@ -123,13 +123,4 @@ class JavacBinder extends AbstractBinder<Symbol.MethodSymbol, JCBinary, JCExpres
                   : _types.memberType( left._expr.type, binderMethod ).getReturnType();
     return new Node<>( binary, left._operatorLeft );
   }
-
-  @Override
-  protected JCBinary leftAssociateMuls( JCBinary solution )
-  {
-    //todo: either the operands in the tree are binding expressions or math (multiplication or division), if math,
-    //there are only other multiply/divide operands in the operands tree, thus the math tree can be restructured to be
-    // left-associative.
-    return solution;
-  }
 }
