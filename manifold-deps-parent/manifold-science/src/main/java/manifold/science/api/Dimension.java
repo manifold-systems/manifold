@@ -19,7 +19,7 @@ package manifold.science.api;
 import manifold.ext.api.IComparableWith;
 import manifold.science.util.Rational;
 
-public interface IDimension<S extends IDimension<S>> extends IComparableWith<S>
+public interface Dimension<S extends Dimension<S>> extends IComparableWith<S>
 {
   /**
    * Given a value produce a copy of this dimension with the given value

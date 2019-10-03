@@ -1,12 +1,12 @@
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.r;
 
-public enum ChargeUnit implements IUnit<Charge, ChargeUnit>
+public enum ChargeUnit implements Unit<Charge, ChargeUnit>
 {
   Coulomb( 1r, "Coulomb", "C" ),
   Elementary( "1.6021766208e-19"r, "Elementary", "e" );

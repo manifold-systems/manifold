@@ -18,9 +18,10 @@ package manifold.science.api;
 
 
 import java.util.Objects;
+import manifold.science.api.range.Sequenceable;
 import manifold.science.util.Rational;
 
-public abstract class AbstractMeasure<U extends IUnit<T, U>, T extends AbstractMeasure<U, T>> implements IDimension<T>, ISequenceable<T, Rational, U>
+public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMeasure<U, T>> implements Dimension<T>, Sequenceable<T, Rational, U>
 {
   private final Rational _value;
   private final U _dipslayUnit;

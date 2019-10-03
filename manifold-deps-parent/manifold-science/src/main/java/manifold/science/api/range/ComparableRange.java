@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright (c) 2019 - Manifold Systems LLC
  *
@@ -14,12 +16,17 @@
  * limitations under the License.
  */
 
-package manifold.science.api;
+package manifold.science.api.range;
 
-public interface ISequenceable<E extends ISequenceable<E, S, U>, S, U> extends Comparable<E>
+public final class ComparableRange<E extends Comparable<E>> extends AbstractRange<E, ComparableRange<E>>
 {
-  E nextInSequence( S step, U unit );
-  E nextNthInSequence( S step, U unit, int index );
-  E previousInSequence( S step, U unit );
-  E previousNthInSequence( S step, U unit, int index );
+  public ComparableRange( E left, E right )
+  {
+    this( left, right, true, true, false );
+  }
+
+  public ComparableRange( E left, E right, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  {
+    super( left, right, bLeftClosed, bRightClosed, bReverse );
+  }
 }

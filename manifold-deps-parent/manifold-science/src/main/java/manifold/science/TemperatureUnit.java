@@ -1,13 +1,13 @@
 package manifold.science;
 
 import java.util.function.Function;
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.r;
 
-public enum TemperatureUnit implements IUnit<Temperature, TemperatureUnit>
+public enum TemperatureUnit implements Unit<Temperature, TemperatureUnit>
 {
   Kelvin( degK -> degK, degK -> degK, "Kelvin", "K" ),
   Celcius( degC -> degC + "273.15"r, degK -> degK - "273.15"r, "Celcius", "°C" ),

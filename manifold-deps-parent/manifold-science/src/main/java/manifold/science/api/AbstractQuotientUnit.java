@@ -21,9 +21,9 @@ import manifold.science.util.Rational;
 
 import static manifold.science.util.Rational.ONE;
 
-public abstract class AbstractQuotientUnit<A extends IUnit,
-  B extends IUnit,
-  D extends IDimension<D>,
+public abstract class AbstractQuotientUnit<A extends Unit,
+  B extends Unit,
+  D extends Dimension<D>,
   U extends AbstractQuotientUnit<A, B, D, U>> extends AbstractBinaryUnit<A, B, D, U> {
 
   protected AbstractQuotientUnit( A leftUnit, B rightUnit )

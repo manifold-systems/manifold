@@ -17,8 +17,8 @@
 package manifold.science;
 
 import manifold.science.api.AbstractMeasure;
-import manifold.science.api.IDimension;
-import manifold.science.api.IUnit;
+import manifold.science.api.Dimension;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
@@ -29,8 +29,8 @@ import static manifold.science.util.DimensionlessConstants.pi;
 
 //!! Highly experimental!
 public abstract class Vector<M extends AbstractMeasure<U, M>,
-  U extends IUnit<M, U>,
-  V extends Vector<M, U, V>> implements IDimension<V>
+  U extends Unit<M, U>,
+  V extends Vector<M, U, V>> implements Dimension<V>
 {
   private final M _magnitude;
   private final Angle _angle;
@@ -185,7 +185,7 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
       case "!=":
         return !equals( that );
       default:
-        return IDimension.super.compareToWith( that, op );
+        return Dimension.super.compareToWith( that, op );
     }
   }
 }

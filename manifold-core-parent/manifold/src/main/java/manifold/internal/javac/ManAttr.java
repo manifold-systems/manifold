@@ -188,7 +188,7 @@ public interface ManAttr
 
       if( newTree == null )
       {
-        getLogger().error( tree.lhs.getStartPosition(),
+        getLogger().error( tree.lhs.pos,
           "proc.messager", "No reaction defined for types '" + tree.lhs.type + "' and '" + tree.rhs.type + "'" );
         return;
       }
@@ -314,7 +314,17 @@ public interface ManAttr
       return methodSymbol;
     }
     return getMethodSymbol( types, left, right, opName, sym, paramCount,
-      ( t1, t2 ) -> types.isAssignable( t1, t2 ) );
+      ( t1, t2 ) -> types.isAssignable( t1, t2 ) || isAssignableWithGenerics( types, t1, t2 ) );
+  }
+
+  static boolean isAssignableWithGenerics( Types types, Type t1, Type t2 )
+  {
+    if( t2 instanceof Type.TypeVar )
+    {
+      Type parameterizedParamType = types.asSuper( t1, t2.getUpperBound().tsym );
+      return parameterizedParamType != null;
+    }
+    return false;
   }
 
   static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount, BiPredicate<Type, Type> matcher )
@@ -345,8 +355,12 @@ public interface ManAttr
           return m;
         }
 
-        Type.MethodType parameterizedMethod = (Type.MethodType)types.memberType( left, m );
-        if( matcher.test( right, parameterizedMethod.argtypes.get( 0 ) ) )
+        Type parameterizedMethod = types.memberType( left, m );
+        while( parameterizedMethod instanceof Type.ForAll )
+        {
+          parameterizedMethod = parameterizedMethod.asMethodType();
+        }
+        if( matcher.test( right, parameterizedMethod.getParameterTypes().get( 0 ) ) )
         {
           return m;
         }

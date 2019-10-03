@@ -16,14 +16,14 @@
 
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
 import static manifold.science.util.DimensionlessConstants.*;
 
-public enum AngleUnit implements IUnit<Angle, AngleUnit>
+public enum AngleUnit implements Unit<Angle, AngleUnit>
 {
   Nano( 1n, "Nanoradian", "nrad" ),
   Milli( 1m, "Milliradian", "mrad" ),

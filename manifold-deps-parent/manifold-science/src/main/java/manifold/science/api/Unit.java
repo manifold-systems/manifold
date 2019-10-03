@@ -18,7 +18,7 @@ package manifold.science.api;
 
 import manifold.science.util.Rational;
 
-public interface IUnit<D extends IDimension<D>, U extends IUnit<D, U>> extends IDimension<U>
+public interface Unit<D extends Dimension<D>, U extends Unit<D, U>> extends Dimension<U>
 {
   String getUnitName();
   String getUnitSymbol();

@@ -16,14 +16,14 @@
 
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.r;
 import static manifold.science.util.CommonConstants.*;
 
-public enum LengthUnit implements IUnit<Length, LengthUnit>
+public enum LengthUnit implements Unit<Length, LengthUnit>
 {
   // Planck length
   Planck( "1.61605e-35"r, "Planck-length", "ℓP" ),

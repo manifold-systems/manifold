@@ -1,6 +1,6 @@
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
@@ -8,7 +8,7 @@ import static manifold.science.MetricScaleUnit.r;
 import static manifold.science.util.CommonConstants.KIBI;
 import static manifold.science.util.CommonConstants.KILO;
 
-public enum StorageCapacityUnit implements IUnit<StorageCapacity, StorageCapacityUnit>
+public enum StorageCapacityUnit implements Unit<StorageCapacity, StorageCapacityUnit>
 {
   Bit( Rational.get( 1, 8 ), "Bit", "bit" ),
   Nibble( Rational.HALF, "Nibble", "nibble" ),

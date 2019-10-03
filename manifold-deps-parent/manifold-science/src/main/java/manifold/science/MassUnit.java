@@ -16,13 +16,13 @@
 
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
 
-public enum MassUnit implements IUnit<Mass, MassUnit>
+public enum MassUnit implements Unit<Mass, MassUnit>
 {
   AtomicMass( "1.6605402e-27"r, "AMU", "amu" ),
   Nano( 1p, "Nanogram", "µg" ),

@@ -1,12 +1,12 @@
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.r;
 
-public enum SolidAngleUnit implements IUnit<SolidAngle, SolidAngleUnit>
+public enum SolidAngleUnit implements Unit<SolidAngle, SolidAngleUnit>
 {
   Steradian( 1r, "Steradian", "sr" );
 

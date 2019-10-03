@@ -16,13 +16,13 @@
 
 package manifold.science;
 
-import manifold.science.api.IUnit;
+import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
 
-public enum TimeUnit implements IUnit<Time, TimeUnit>
+public enum TimeUnit implements Unit<Time, TimeUnit>
 {
   // Ephemeris (SI) units
   Planck( "5.39056e-44"r, "Planck-time", "tP" ),

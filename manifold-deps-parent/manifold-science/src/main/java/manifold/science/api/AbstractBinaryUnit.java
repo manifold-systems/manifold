@@ -18,10 +18,10 @@ package manifold.science.api;
 
 import manifold.science.util.Rational;
 
-public abstract class AbstractBinaryUnit<A extends IUnit,
-  B extends IUnit,
-  D extends IDimension<D>,
-  U extends AbstractBinaryUnit<A, B, D, U>> implements IUnit<D, U>
+public abstract class AbstractBinaryUnit<A extends Unit,
+  B extends Unit,
+  D extends Dimension<D>,
+  U extends AbstractBinaryUnit<A, B, D, U>> implements Unit<D, U>
 {
   private final A _leftUnit;
   private final B _rightUnit;
