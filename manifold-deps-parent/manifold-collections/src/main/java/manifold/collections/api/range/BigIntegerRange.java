@@ -16,44 +16,44 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRange>
+public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRange>
 {
   @SuppressWarnings({"UnusedDeclaration"})
-  public BigDecimalRange( BigDecimal left, BigDecimal right )
+  public BigIntegerRange( BigInteger left, BigInteger right )
   {
-    this( left, right, BigDecimal.ONE, true, true, false );
+    this( left, right, BigInteger.ONE, true, true, false );
   }
 
-  public BigDecimalRange( BigDecimal left, BigDecimal right, BigDecimal step, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  public BigIntegerRange( BigInteger left, BigInteger right, BigInteger step, boolean leftClosed, boolean rightClosed, boolean reverse )
   {
-    super( left, right, step, bLeftClosed, bRightClosed, bReverse );
+    super( left, right, step, leftClosed, rightClosed, reverse );
 
-    if( step.compareTo( BigDecimal.ZERO ) <= 0 )
+    if( step.compareTo( BigInteger.ZERO ) <= 0 )
     {
       throw new IllegalArgumentException( "The step must be greater than 0: " + step );
     }
   }
 
   @Override
-  public Iterator<BigDecimal> iterateFromLeft()
+  public Iterator<BigInteger> iterateFromLeft()
   {
     return new ForwardIterator();
   }
 
   @Override
-  public Iterator<BigDecimal> iterateFromRight()
+  public Iterator<BigInteger> iterateFromRight()
   {
     return new ReverseIterator();
   }
 
   @Override
-  public BigDecimal getFromLeft( int iStepIndex )
+  public BigInteger getFromLeft( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -64,7 +64,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     {
       iStepIndex++;
     }
-    BigDecimal value = getLeftEndpoint().add( getStep().multiply( BigDecimal.valueOf( iStepIndex ) ) );
+    BigInteger value = getLeftEndpoint().add( getStep().multiply( BigInteger.valueOf( iStepIndex ) ) );
     int iComp = value.compareTo( getRightEndpoint() );
     if( isRightClosed() ? iComp <= 0 : iComp < 0 )
     {
@@ -75,7 +75,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
   }
 
   @Override
-  public BigDecimal getFromRight( int iStepIndex )
+  public BigInteger getFromRight( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -86,7 +86,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     {
       iStepIndex++;
     }
-    BigDecimal value = getRightEndpoint().subtract( getStep().multiply( BigDecimal.valueOf( iStepIndex ) ) );
+    BigInteger value = getRightEndpoint().subtract( getStep().multiply( BigInteger.valueOf( iStepIndex ) ) );
     int iComp = value.compareTo( getLeftEndpoint() );
     if( isLeftClosed() ? iComp >= 0 : iComp > 0 )
     {
@@ -96,9 +96,9 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     return null;
   }
 
-  private class ForwardIterator implements Iterator<BigDecimal>
+  private class ForwardIterator implements Iterator<BigInteger>
   {
-    private BigDecimal _csr;
+    private BigInteger _csr;
 
     public ForwardIterator()
     {
@@ -117,7 +117,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     }
 
     @Override
-    public BigDecimal next()
+    public BigInteger next()
     {
       int iComp = _csr.compareTo( getRightEndpoint() );
       if( iComp > 0 ||
@@ -125,7 +125,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
       {
         throw new NoSuchElementException();
       }
-      BigDecimal ret = _csr;
+      BigInteger ret = _csr;
       _csr = _csr.add( getStep() );
       return ret;
     }
@@ -137,9 +137,9 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     }
   }
 
-  private class ReverseIterator implements Iterator<BigDecimal>
+  private class ReverseIterator implements Iterator<BigInteger>
   {
-    private BigDecimal _csr;
+    private BigInteger _csr;
 
     public ReverseIterator()
     {
@@ -158,7 +158,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
     }
 
     @Override
-    public BigDecimal next()
+    public BigInteger next()
     {
       int iComp = _csr.compareTo( getLeftEndpoint() );
       if( iComp < 0 ||
@@ -166,7 +166,7 @@ public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRan
       {
         throw new NoSuchElementException();
       }
-      BigDecimal ret = _csr;
+      BigInteger ret = _csr;
       _csr = _csr.subtract( getStep() );
       return ret;
     }

@@ -16,9 +16,15 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 
+/**
+ * A range of {@link Comparable} elements defined by two endpoints.
+ *
+ * @param <E>  The type of elements in the range, must implement {@link Comparable}
+ * @param <ME> The range type (recursive)
+ */
 public interface Range<E extends Comparable<E>, ME extends Range<E, ME>>
 {
   /**
@@ -33,40 +39,31 @@ public interface Range<E extends Comparable<E>, ME extends Range<E, ME>>
 
   /**
    * @return True if this range <i>includes</i> the left endpoint.
-   * E.g., x >= foo indicates a left-closed range starting with and including
-   * foo. Conversely, x > foo is said to be left-open because the interface
-   * starts with, but excludes foo i.e., there is no minimum value defined in
-   * the range, rather the range is open with foo as the limit of minimum
-   * values.
    */
   boolean isLeftClosed();
 
   /**
    * @return True if this range <i>includes</i> the right endpoint.
-   * E.g., x <= foo indicates a right-closed range ending with and including
-   * foo. Conversely, x < foo is said to be right-open because the interface
-   * ends with, but excludes foo i.e., there is no maximum value defined in the
-   * range, rather the range is open with foo as the limit of maximum
-   * values.
    */
   boolean isRightClosed();
 
   /**
    * @param elem An element to test
+   *
    * @return True if elem is a proper element in the set of elements defining this range.
    */
   boolean contains( E elem );
 
   /**
    * @param range An range to test for containment
+   *
    * @return True if range's endpoints are proper elements in the set of elements defining this range.
    */
   boolean contains( ME range );
 
   /**
    * @return True if this range iterates from the right by default e.g.,
-   *   if the range is specified in reverse order: 10..1, Gosu will
-   *   create a reverse rangel
+   * if the range is specified in reverse order: 10..1, a reverse range results
    */
-  boolean isReverse();
+  boolean isReversed();
 }

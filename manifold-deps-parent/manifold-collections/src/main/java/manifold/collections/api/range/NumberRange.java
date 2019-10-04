@@ -16,13 +16,18 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
-import java.util.Iterator;
-
-/**
- */
-public abstract class AbstractIntIterator implements Iterator<Integer>
+public abstract class NumberRange<E extends Number & Comparable<E>, ME extends NumberRange<E, ME>> extends AbstractIterableRange<E, E, Void, ME>
 {
-  abstract public int nextInt();
+  @SuppressWarnings({"UnusedDeclaration"})
+  public NumberRange( E left, E right, E step )
+  {
+    this( left, right, step, true, true, false );
+  }
+
+  public NumberRange( E left, E right, E step, boolean leftClosed, boolean rightClosed, boolean reverse )
+  {
+    super( left, right, step, null, leftClosed, rightClosed, reverse );
+  }
 }

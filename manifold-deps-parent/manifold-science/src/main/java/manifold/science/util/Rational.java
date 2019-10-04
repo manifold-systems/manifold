@@ -25,12 +25,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
 import manifold.ext.api.IComparableWith;
-import manifold.science.api.range.Sequenceable;
+import manifold.collections.api.range.Sequential;
 
 /**
  * Models rational number as a fraction to maintain arbitrary precision.
  */
-final public class Rational extends Number implements Sequenceable<Rational, Rational, Void>, IComparableWith<Rational>, Serializable
+final public class Rational extends Number implements Sequential<Rational, Rational, Void>, IComparableWith<Rational>, Serializable
 {
   private static final int VERSION_1 = 1;
 

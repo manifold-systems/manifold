@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 import java.util.Iterator;
 
@@ -30,9 +30,9 @@ public abstract class AbstractIterableRange<E extends Comparable<E>, S, U, ME ex
     this( left, right, step, null, true, true, false );
   }
 
-  public AbstractIterableRange( E left, E right, S step, U unit, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  public AbstractIterableRange( E left, E right, S step, U unit, boolean leftClosed, boolean rightClosed, boolean reverse )
   {
-    super( left, right, bReverse ? bRightClosed : bLeftClosed, bReverse ? bLeftClosed : bRightClosed, bReverse );
+    super( left, right, reverse ? rightClosed : leftClosed, reverse ? leftClosed : rightClosed, reverse );
 
     _step = step;
     _unit = unit;
@@ -41,7 +41,7 @@ public abstract class AbstractIterableRange<E extends Comparable<E>, S, U, ME ex
   @Override
   public Iterator<E> iterator()
   {
-    if( isReverse() )
+    if( isReversed() )
     {
       return iterateFromRight();
     }

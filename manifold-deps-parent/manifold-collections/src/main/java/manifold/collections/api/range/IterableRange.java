@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 import java.util.Iterator;
 

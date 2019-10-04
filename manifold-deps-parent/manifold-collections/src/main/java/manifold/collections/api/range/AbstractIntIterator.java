@@ -16,17 +16,13 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
-public final class ComparableRange<E extends Comparable<E>> extends AbstractRange<E, ComparableRange<E>>
+import java.util.Iterator;
+
+/**
+ */
+public abstract class AbstractIntIterator implements Iterator<Integer>
 {
-  public ComparableRange( E left, E right )
-  {
-    this( left, right, true, true, false );
-  }
-
-  public ComparableRange( E left, E right, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
-  {
-    super( left, right, bLeftClosed, bRightClosed, bReverse );
-  }
+  abstract public int nextInt();
 }

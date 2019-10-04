@@ -18,10 +18,10 @@ package manifold.science.api;
 
 
 import java.util.Objects;
-import manifold.science.api.range.Sequenceable;
+import manifold.collections.api.range.Sequential;
 import manifold.science.util.Rational;
 
-public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMeasure<U, T>> implements Dimension<T>, Sequenceable<T, Rational, U>
+public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMeasure<U, T>> implements Dimension<T>, Sequential<T, Rational, U>
 {
   private final Rational _value;
   private final U _dipslayUnit;
@@ -127,9 +127,6 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
     return _value.compareTo( ((AbstractMeasure)that)._value );
   }
 
-  /**
-   * Implementation of ISequenceable
-   */
   @Override
   public T nextInSequence( Rational step, U unit )
   {

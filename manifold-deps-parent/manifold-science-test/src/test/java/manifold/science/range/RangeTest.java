@@ -23,10 +23,10 @@ import org.junit.Test;
 
 
 import static manifold.science.util.UnitConstants.m;
-import static manifold.science.util.RangeConstants.*;
+import static manifold.collections.api.range.RangeFun.*;
 import static org.junit.Assert.assertEquals;
 
-public class RangeToTest
+public class RangeTest
 {
   @Test
   public void testClosed()

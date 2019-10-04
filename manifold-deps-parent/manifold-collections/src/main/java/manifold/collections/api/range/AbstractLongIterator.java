@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright (c) 2019 - Manifold Systems LLC
  *
@@ -14,12 +16,13 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
-public interface Sequenceable<E extends Sequenceable<E, S, U>, S, U> extends Comparable<E>
+import java.util.Iterator;
+
+/**
+ */
+public abstract class AbstractLongIterator implements Iterator<Long>
 {
-  E nextInSequence( S step, U unit );
-  E nextNthInSequence( S step, U unit, int index );
-  E previousInSequence( S step, U unit );
-  E previousNthInSequence( S step, U unit, int index );
+  abstract public long nextLong();
 }

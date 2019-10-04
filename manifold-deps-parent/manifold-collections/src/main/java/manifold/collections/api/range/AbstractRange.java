@@ -16,48 +16,58 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 public abstract class AbstractRange<E extends Comparable<E>, ME extends AbstractRange<E, ME>> implements Range<E, ME>
 {
   final private E _left;
   final private E _right;
-  final private boolean _bLeftClosed;
-  final private boolean _bRightClosed;
-  final private boolean _bReverse;
+  final private boolean _leftClosed;
+  final private boolean _rightClosed;
+  final private boolean _reversed;
 
   public AbstractRange( E left, E right )
   {
     this( left, right, true, true, false );
   }
 
-  public AbstractRange( E left, E right, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  public AbstractRange( E left, E right, boolean leftClosed, boolean rightClosed, boolean reverse )
   {
     checkArgs( left, right );
+    _reversed = reverse;
+    if( reverse )
+    {
+      _left = right;
+      _right = left;
 
-    _left = left;
-    _right = right;
+      _leftClosed = rightClosed;
+      _rightClosed = leftClosed;
+    }
+    else
+    {
+      _left = left;
+      _right = right;
 
-    _bLeftClosed = bLeftClosed;
-    _bRightClosed = bRightClosed;
+      _leftClosed = leftClosed;
+      _rightClosed = rightClosed;
+    }
 
-    _bReverse = bReverse;
+    if( _left.compareTo( _right ) > 0 )
+    {
+      throw new IllegalArgumentException(
+        "The logical left endpoint is greater than the logical right endpoint: [" + left + ", " + right + "]" );
+    }
   }
 
   private void checkArgs( E left, E right )
   {
     if( left == null )
     {
-      throw new IllegalArgumentException( "Non-null value expected for left endpoint. Use BigIntegerRange for an range with an unbounded endpoint." );
+      throw new IllegalArgumentException( "Non-null value expected for left endpoint." );
     }
     if( right == null )
     {
-      throw new IllegalArgumentException( "Non-null value expected for right endpoint. Use BigIntegerRange for an range with an unbounded endpoint." );
-    }
-
-    if( left.compareTo( right ) > 0 )
-    {
-      throw new IllegalArgumentException( "The left endpoint is greater than the right endpoint: [" + left + ", " + right + "]" );
+      throw new IllegalArgumentException( "Non-null value expected for right endpoint." );
     }
   }
 
@@ -76,13 +86,13 @@ public abstract class AbstractRange<E extends Comparable<E>, ME extends Abstract
   @Override
   public boolean isLeftClosed()
   {
-    return _bLeftClosed;
+    return _leftClosed;
   }
 
   @Override
   public boolean isRightClosed()
   {
-    return _bRightClosed;
+    return _rightClosed;
   }
 
   @Override
@@ -112,9 +122,9 @@ public abstract class AbstractRange<E extends Comparable<E>, ME extends Abstract
   }
 
   @Override
-  public boolean isReverse()
+  public boolean isReversed()
   {
-    return _bReverse;
+    return _reversed;
   }
 
   @Override
@@ -135,7 +145,7 @@ public abstract class AbstractRange<E extends Comparable<E>, ME extends Abstract
     {
       return false;
     }
-    if( isReverse() != that.isReverse() )
+    if( isReversed() != that.isReversed() )
     {
       return false;
     }
@@ -158,14 +168,14 @@ public abstract class AbstractRange<E extends Comparable<E>, ME extends Abstract
     result = 31 * result + getRightEndpoint().hashCode();
     result = 31 * result + (isLeftClosed() ? 1 : 0);
     result = 31 * result + (isRightClosed() ? 1 : 0);
-    result = 31 * result + (isReverse() ? 1 : 0);
+    result = 31 * result + (isReversed() ? 1 : 0);
     return result;
   }
 
   @Override
   public String toString()
   {
-    if( isReverse() )
+    if( isReversed() )
     {
       return getRightEndpoint() + (isRightClosed() ? "" : "|") + ".." + (isLeftClosed() ? "" : "|") + getLeftEndpoint();
     }

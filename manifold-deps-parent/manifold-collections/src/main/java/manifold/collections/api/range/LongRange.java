@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -29,9 +29,9 @@ public final class LongRange extends NumberRange<Long, LongRange>
     this( left, right, 1, true, true, false );
   }
 
-  public LongRange( Long left, Long right, long lStep, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  public LongRange( Long left, Long right, long lStep, boolean leftClosed, boolean rightClosed, boolean reverse )
   {
-    super( left, right, lStep, bLeftClosed, bRightClosed, bReverse );
+    super( left, right, lStep, leftClosed, rightClosed, reverse );
 
     if( lStep <= 0 )
     {

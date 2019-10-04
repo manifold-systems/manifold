@@ -16,32 +16,44 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends AbstractIterableRange<E, S, U, SequenceableRange<E, S, U>>
+public final class BigDecimalRange extends NumberRange<BigDecimal, BigDecimalRange>
 {
-  public SequenceableRange( E left, E right, S step, U unit, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  @SuppressWarnings({"UnusedDeclaration"})
+  public BigDecimalRange( BigDecimal left, BigDecimal right )
   {
-    super( left, right, step, unit, bReverse ? bRightClosed : bLeftClosed, bReverse ? bLeftClosed : bRightClosed, bReverse );
+    this( left, right, BigDecimal.ONE, true, true, false );
+  }
+
+  public BigDecimalRange( BigDecimal left, BigDecimal right, BigDecimal step, boolean leftClosed, boolean rightClosed, boolean reverse )
+  {
+    super( left, right, step, leftClosed, rightClosed, reverse );
+
+    if( step.compareTo( BigDecimal.ZERO ) <= 0 )
+    {
+      throw new IllegalArgumentException( "The step must be greater than 0: " + step );
+    }
   }
 
   @Override
-  public Iterator<E> iterateFromLeft()
+  public Iterator<BigDecimal> iterateFromLeft()
   {
-    return new SequenceableIterator();
+    return new ForwardIterator();
   }
 
   @Override
-  public Iterator<E> iterateFromRight()
+  public Iterator<BigDecimal> iterateFromRight()
   {
-    return new ReverseSequenceableIterator();
+    return new ReverseIterator();
   }
 
   @Override
-  public E getFromLeft( int iStepIndex )
+  public BigDecimal getFromLeft( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -52,7 +64,7 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     {
       iStepIndex++;
     }
-    E value = getLeftEndpoint().nextNthInSequence( getStep(), getUnit(), iStepIndex );
+    BigDecimal value = getLeftEndpoint().add( getStep().multiply( BigDecimal.valueOf( iStepIndex ) ) );
     int iComp = value.compareTo( getRightEndpoint() );
     if( isRightClosed() ? iComp <= 0 : iComp < 0 )
     {
@@ -63,7 +75,7 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
   }
 
   @Override
-  public E getFromRight( int iStepIndex )
+  public BigDecimal getFromRight( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -74,7 +86,7 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     {
       iStepIndex++;
     }
-    E value = getRightEndpoint().previousNthInSequence( getStep(), getUnit(), iStepIndex );
+    BigDecimal value = getRightEndpoint().subtract( getStep().multiply( BigDecimal.valueOf( iStepIndex ) ) );
     int iComp = value.compareTo( getLeftEndpoint() );
     if( isLeftClosed() ? iComp >= 0 : iComp > 0 )
     {
@@ -84,11 +96,11 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     return null;
   }
 
-  private class SequenceableIterator implements Iterator<E>
+  private class ForwardIterator implements Iterator<BigDecimal>
   {
-    private E _csr;
+    private BigDecimal _csr;
 
-    public SequenceableIterator()
+    public ForwardIterator()
     {
       _csr = getLeftEndpoint();
       if( !isLeftClosed() && hasNext() )
@@ -100,16 +112,12 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     @Override
     public boolean hasNext()
     {
-      if( _csr == null )
-      {
-        return false;
-      }
       int iComp = _csr.compareTo( getRightEndpoint() );
       return iComp < 0 || (isRightClosed() && iComp == 0);
     }
 
     @Override
-    public E next()
+    public BigDecimal next()
     {
       int iComp = _csr.compareTo( getRightEndpoint() );
       if( iComp > 0 ||
@@ -117,8 +125,8 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
       {
         throw new NoSuchElementException();
       }
-      E ret = _csr;
-      _csr = _csr.nextInSequence( getStep(), getUnit() );
+      BigDecimal ret = _csr;
+      _csr = _csr.add( getStep() );
       return ret;
     }
 
@@ -129,11 +137,11 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     }
   }
 
-  private class ReverseSequenceableIterator implements Iterator<E>
+  private class ReverseIterator implements Iterator<BigDecimal>
   {
-    private E _csr;
+    private BigDecimal _csr;
 
-    public ReverseSequenceableIterator()
+    public ReverseIterator()
     {
       _csr = getRightEndpoint();
       if( !isRightClosed() && hasNext() )
@@ -145,17 +153,12 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
     @Override
     public boolean hasNext()
     {
-      if( _csr == null )
-      {
-        return false;
-      }
-
       int iComp = _csr.compareTo( getLeftEndpoint() );
       return iComp > 0 || (isLeftClosed() && iComp == 0);
     }
 
     @Override
-    public E next()
+    public BigDecimal next()
     {
       int iComp = _csr.compareTo( getLeftEndpoint() );
       if( iComp < 0 ||
@@ -163,8 +166,8 @@ public class SequenceableRange<E extends Sequenceable<E, S, U>, S, U> extends Ab
       {
         throw new NoSuchElementException();
       }
-      E ret = _csr;
-      _csr = _csr.previousInSequence( getStep(), getUnit() );
+      BigDecimal ret = _csr;
+      _csr = _csr.subtract( getStep() );
       return ret;
     }
 

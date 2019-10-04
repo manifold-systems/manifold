@@ -15,7 +15,7 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
+      <artifactId>manifold-collections</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

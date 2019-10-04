@@ -16,44 +16,45 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
-import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRange>
+public final class IntegerRange extends NumberRange<Integer, IntegerRange>
 {
-  @SuppressWarnings({"UnusedDeclaration"})
-  public BigIntegerRange( BigInteger left, BigInteger right )
+  public IntegerRange( Integer left, Integer right )
   {
-    this( left, right, BigInteger.ONE, true, true, false );
+    this( left, right, 1 );
   }
-
-  public BigIntegerRange( BigInteger left, BigInteger right, BigInteger step, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
+  public IntegerRange( Integer left, Integer right, int step )
   {
-    super( left, right, step, bLeftClosed, bRightClosed, bReverse );
+    this( left, right, step, true, true, false );
+  }
+  public IntegerRange( Integer left, Integer right, int step, boolean leftClosed, boolean rightClosed, boolean reverse )
+  {
+    super( left, right, step, leftClosed, rightClosed, reverse );
 
-    if( step.compareTo( BigInteger.ZERO ) <= 0 )
+    if( step <= 0 )
     {
       throw new IllegalArgumentException( "The step must be greater than 0: " + step );
     }
   }
 
   @Override
-  public Iterator<BigInteger> iterateFromLeft()
+  public Iterator<Integer> iterateFromLeft()
   {
     return new ForwardIterator();
   }
 
   @Override
-  public Iterator<BigInteger> iterateFromRight()
+  public Iterator<Integer> iterateFromRight()
   {
     return new ReverseIterator();
   }
 
   @Override
-  public BigInteger getFromLeft( int iStepIndex )
+  public Integer getFromLeft( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -63,10 +64,9 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     if( !isLeftClosed() )
     {
       iStepIndex++;
-    }
-    BigInteger value = getLeftEndpoint().add( getStep().multiply( BigInteger.valueOf( iStepIndex ) ) );
-    int iComp = value.compareTo( getRightEndpoint() );
-    if( isRightClosed() ? iComp <= 0 : iComp < 0 )
+    }    
+    int value = getLeftEndpoint() + getStep() * iStepIndex;
+    if( isRightClosed() ? value <= getRightEndpoint() : value < getRightEndpoint() )
     {
       return value;
     }
@@ -75,7 +75,7 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
   }
 
   @Override
-  public BigInteger getFromRight( int iStepIndex )
+  public Integer getFromRight( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -85,10 +85,9 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     if( !isRightClosed() )
     {
       iStepIndex++;
-    }
-    BigInteger value = getRightEndpoint().subtract( getStep().multiply( BigInteger.valueOf( iStepIndex ) ) );
-    int iComp = value.compareTo( getLeftEndpoint() );
-    if( isLeftClosed() ? iComp >= 0 : iComp > 0 )
+    }    
+    int value = getRightEndpoint() - getStep() * iStepIndex;
+    if( isLeftClosed() ? value >= getLeftEndpoint() : value > getLeftEndpoint() )
     {
       return value;
     }
@@ -96,9 +95,9 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     return null;
   }
 
-  private class ForwardIterator implements Iterator<BigInteger>
+  public class ForwardIterator extends AbstractIntIterator
   {
-    private BigInteger _csr;
+    private int _csr;
 
     public ForwardIterator()
     {
@@ -112,21 +111,24 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     @Override
     public boolean hasNext()
     {
-      int iComp = _csr.compareTo( getRightEndpoint() );
-      return iComp < 0 || (isRightClosed() && iComp == 0);
+      return _csr < getRightEndpoint() || (isRightClosed() && _csr == getRightEndpoint());
     }
 
     @Override
-    public BigInteger next()
+    public Integer next()
     {
-      int iComp = _csr.compareTo( getRightEndpoint() );
-      if( iComp > 0 ||
-          (!isRightClosed() && iComp == 0) )
+      return nextInt();
+    }
+
+    public int nextInt()
+    {
+      if( _csr > getRightEndpoint() ||
+          (!isRightClosed() && _csr == getRightEndpoint()) )
       {
         throw new NoSuchElementException();
       }
-      BigInteger ret = _csr;
-      _csr = _csr.add( getStep() );
+      int ret = _csr;
+      _csr = _csr + getStep();
       return ret;
     }
 
@@ -137,9 +139,9 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     }
   }
 
-  private class ReverseIterator implements Iterator<BigInteger>
+  private class ReverseIterator extends AbstractIntIterator
   {
-    private BigInteger _csr;
+    private int _csr;
 
     public ReverseIterator()
     {
@@ -153,21 +155,24 @@ public final class BigIntegerRange extends NumberRange<BigInteger, BigIntegerRan
     @Override
     public boolean hasNext()
     {
-      int iComp = _csr.compareTo( getLeftEndpoint() );
-      return iComp > 0 || (isLeftClosed() && iComp == 0);
+       return _csr > getLeftEndpoint() || (isLeftClosed() && _csr == getLeftEndpoint());
     }
 
     @Override
-    public BigInteger next()
+    public Integer next()
     {
-      int iComp = _csr.compareTo( getLeftEndpoint() );
-      if( iComp < 0 ||
-          (!isLeftClosed() && iComp == 0) )
+      return nextInt();
+    }
+
+    public int nextInt()
+    {
+      if( _csr < getLeftEndpoint() ||
+          (!isLeftClosed() && _csr == getLeftEndpoint()) )
       {
         throw new NoSuchElementException();
       }
-      BigInteger ret = _csr;
-      _csr = _csr.subtract( getStep() );
+      int ret = _csr;
+      _csr = _csr - getStep();
       return ret;
     }
 

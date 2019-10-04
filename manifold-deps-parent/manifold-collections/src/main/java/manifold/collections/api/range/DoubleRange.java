@@ -16,45 +16,47 @@
  * limitations under the License.
  */
 
-package manifold.science.api.range;
+package manifold.collections.api.range;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public final class IntegerRange extends NumberRange<Integer, IntegerRange>
+public final class DoubleRange extends NumberRange<Double, DoubleRange>
 {
-  public IntegerRange( Integer left, Integer right )
+  public DoubleRange( Double left, Double right )
   {
     this( left, right, 1 );
   }
-  public IntegerRange( Integer left, Integer right, int iStep )
-  {
-    this( left, right, iStep, true, true, false );
-  }
-  public IntegerRange( Integer left, Integer right, int iStep, boolean bLeftClosed, boolean bRightClosed, boolean bReverse )
-  {
-    super( left, right, iStep, bLeftClosed, bRightClosed, bReverse );
 
-    if( iStep <= 0 )
+  public DoubleRange( Double left, Double right, double step )
+  {
+    this( left, right, step, true, true, false );
+  }
+
+  public DoubleRange( Double left, Double right, double step, boolean leftClosed, boolean rightClosed, boolean reverse )
+  {
+    super( left, right, step, leftClosed, rightClosed, reverse );
+
+    if( step <= 0 )
     {
-      throw new IllegalArgumentException( "The step must be greater than 0: " + iStep );
+      throw new IllegalArgumentException( "The step must be greater than 0: " + step );
     }
   }
 
   @Override
-  public Iterator<Integer> iterateFromLeft()
+  public Iterator<Double> iterateFromLeft()
   {
     return new ForwardIterator();
   }
 
   @Override
-  public Iterator<Integer> iterateFromRight()
+  public Iterator<Double> iterateFromRight()
   {
     return new ReverseIterator();
   }
 
   @Override
-  public Integer getFromLeft( int iStepIndex )
+  public Double getFromLeft( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -64,8 +66,8 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     if( !isLeftClosed() )
     {
       iStepIndex++;
-    }    
-    int value = getLeftEndpoint() + getStep() * iStepIndex;
+    }
+    double value = getLeftEndpoint() + getStep() * iStepIndex;
     if( isRightClosed() ? value <= getRightEndpoint() : value < getRightEndpoint() )
     {
       return value;
@@ -75,7 +77,7 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
   }
 
   @Override
-  public Integer getFromRight( int iStepIndex )
+  public Double getFromRight( int iStepIndex )
   {
     if( iStepIndex < 0 )
     {
@@ -85,8 +87,8 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     if( !isRightClosed() )
     {
       iStepIndex++;
-    }    
-    int value = getRightEndpoint() - getStep() * iStepIndex;
+    }
+    double value = getRightEndpoint() - getStep() * iStepIndex;
     if( isLeftClosed() ? value >= getLeftEndpoint() : value > getLeftEndpoint() )
     {
       return value;
@@ -95,11 +97,11 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     return null;
   }
 
-  public class ForwardIterator extends AbstractIntIterator
+  public class ForwardIterator implements Iterator<Double>
   {
-    private int _csr;
+    private double _csr;
 
-    public ForwardIterator()
+    ForwardIterator()
     {
       _csr = getLeftEndpoint();
       if( !isLeftClosed() && hasNext() )
@@ -115,19 +117,14 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     }
 
     @Override
-    public Integer next()
-    {
-      return nextInt();
-    }
-
-    public int nextInt()
+    public Double next()
     {
       if( _csr > getRightEndpoint() ||
           (!isRightClosed() && _csr == getRightEndpoint()) )
       {
         throw new NoSuchElementException();
       }
-      int ret = _csr;
+      double ret = _csr;
       _csr = _csr + getStep();
       return ret;
     }
@@ -139,11 +136,11 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     }
   }
 
-  private class ReverseIterator extends AbstractIntIterator
+  private class ReverseIterator implements Iterator<Double>
   {
-    private int _csr;
+    private double _csr;
 
-    public ReverseIterator()
+    ReverseIterator()
     {
       _csr = getRightEndpoint();
       if( !isRightClosed() && hasNext() )
@@ -155,23 +152,18 @@ public final class IntegerRange extends NumberRange<Integer, IntegerRange>
     @Override
     public boolean hasNext()
     {
-       return _csr > getLeftEndpoint() || (isLeftClosed() && _csr == getLeftEndpoint());
+      return _csr > getLeftEndpoint() || (isLeftClosed() && _csr == getLeftEndpoint());
     }
 
     @Override
-    public Integer next()
-    {
-      return nextInt();
-    }
-
-    public int nextInt()
+    public Double next()
     {
       if( _csr < getLeftEndpoint() ||
           (!isLeftClosed() && _csr == getLeftEndpoint()) )
       {
         throw new NoSuchElementException();
       }
-      int ret = _csr;
+      double ret = _csr;
       _csr = _csr - getStep();
       return ret;
     }

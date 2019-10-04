@@ -28,9 +28,8 @@ public interface Dimension<S extends Dimension<S>> extends IComparableWith<S>
   S copy( Rational value );
 
   /**
-   * when adding two of the same dimension types, Gosu calls
-   * this method on each operand, adds the numbers, and then calls fromNumber()
-   * for the result.
+   * When adding two of the same dimension types, this method is called on each operand,
+   * adds the numbers, and then calls fromNumber() for the result.
    *
    * @return the number of units for this dimension instance.
    */
@@ -44,10 +43,9 @@ public interface Dimension<S extends Dimension<S>> extends IComparableWith<S>
   /**
    * Returns a separate instance of this type with the given number of units.
    * <p>
-   * The Gosu runtime calls this method when performing default operations.
-   * For instance, when adding two of the same dimension types, Gosu calls
-   * toNumber() on each operand, adds the numbers, and then calls fromNumber()
-   * for the result.
+   * This method is called when performing default operations. For instance, when adding two
+   * of the same dimension types, toNumber() is called on each operand, adds the numbers, and
+   * then calls fromNumber() for the result.
    *
    * @return a separate instance of this type given the number of units.
    */
