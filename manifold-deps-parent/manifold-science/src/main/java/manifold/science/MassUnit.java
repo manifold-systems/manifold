@@ -37,7 +37,7 @@ public enum MassUnit implements Unit<Mass, MassUnit>
   Newton( "0.101971621"r, "Newton", "N" ),
   Ounce( "0.0283495"r, "Ounce", "oz" ),
   TroyOunce( "0.0311035"r, "Troy Ounce", "ozt" ),
-  Pound( "0.453592"r, "Pound", "lb" ),
+  Pound( "0.45359237"r, "Pound", "lb" ),
   Stone( "6.35029"r, "Stone", "st" ),
   Ton( "907.185"r, "Ton (US, short)", "sht" ),
   TonUK( "1016.05"r, "Ton (UK, long)", "lt" ),

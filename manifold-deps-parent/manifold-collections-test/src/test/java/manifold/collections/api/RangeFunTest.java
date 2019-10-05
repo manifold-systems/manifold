@@ -53,14 +53,16 @@ public class RangeFunTest
     assertFalse( 5 inside 6 to 10 );
     assertFalse( 5 inside 10 to 6 );
     
-    assertTrue( 5 outside 6 to 10 );
+    assertTrue( 5 outside (6 to 10) );
     assertTrue( 5 outside 10 to 6 );
 
-    int left = -6;
-    int right = 10;
-    assertFalse( 5 outside left to right );
-    assertFalse( 5 outside right to left );
+    assertFalse( 5 outside (-6) to 10 );
+    assertFalse( 5 outside 10 to (-6) );
+
+    assertTrue( foo (8) );
   }
+
+  boolean foo(int i) { return true;}
 
   @Test
   public void testLong()

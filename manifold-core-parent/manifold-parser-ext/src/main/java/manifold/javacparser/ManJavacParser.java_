@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package com.sun.tools.javac.parser;
+package manifold.javacparser;
 
+import com.sun.tools.javac.parser.JavacParser;
+import com.sun.tools.javac.parser.Lexer;
+import com.sun.tools.javac.parser.ParserFactory;
+import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.parser.Tokens.Token;
 import com.sun.tools.javac.parser.Tokens.TokenKind;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.Assert;
+import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Field;
 
 
@@ -46,6 +51,7 @@ public class ManJavacParser extends JavacParser
   private static final int infixPrecedenceLevels = 10;
 
   private static Field field_mode = null;
+  private static Field field_endPosTable = null;
   private static Field field_parseModuleInfo = null;
   static
   {
@@ -53,6 +59,11 @@ public class ManJavacParser extends JavacParser
     {
       field_mode = JavacParser.class.getDeclaredField( "mode" );
       field_mode.setAccessible( true );
+
+      field_endPosTable = JavacParser.class.getDeclaredField( "endPosTable" );
+      field_endPosTable.setAccessible( true );
+
+
 
       // Java 9+
       //noinspection JavaReflectionMemberAccess
@@ -64,6 +75,9 @@ public class ManJavacParser extends JavacParser
     }
   }
 
+  private final Names _names;
+  private final AbstractEndPosTable _endPosTable;
+
   public ManJavacParser( ParserFactory fac,
                          Lexer S,
                          boolean keepDocComments,
@@ -72,6 +86,17 @@ public class ManJavacParser extends JavacParser
                          boolean parseModuleInfo )
   {
     super( fac, S, keepDocComments, keepLineMap, keepEndPositions );
+
+    _names = fac.names;
+    try
+    {
+      _endPosTable = (AbstractEndPosTable)field_endPosTable.get( this );
+    }
+    catch( IllegalAccessException e )
+    {
+      throw new RuntimeException( e );
+    }
+
     if( parseModuleInfo && field_parseModuleInfo != null )
     {
       try
@@ -150,7 +175,9 @@ public class ManJavacParser extends JavacParser
         topOp = token;
         nextToken();
       }
-      odStack[top] = (topOp != null && topOp.kind == INSTANCEOF) ? parseType() : term3();
+      odStack[top] = (topOp != null && topOp.kind == INSTANCEOF)
+                     ? parseType()
+                     : binder ? parseBinderOperand() : term3();
       binder = isBinderRhs();
       while (top > 0 && (isSameOrHigher(topOp == null ? null : topOp.kind, binder ? null : token.kind))) {
         odStack[top-1] = makeOp(topOp == null ? odStack[top].pos : topOp.pos, topOp == null ? null : topOp.kind, odStack[top-1],
@@ -171,6 +198,33 @@ public class ManJavacParser extends JavacParser
     return t;
   }
 
+  private JCExpression parseBinderOperand()
+  {
+    if( token.kind == LPAREN )
+    {
+      return term3();
+    }
+
+    if( token.kind == INTLITERAL ||
+        token.kind == LONGLITERAL ||
+        token.kind == FLOATLITERAL ||
+        token.kind == DOUBLELITERAL ||
+        token.kind == CHARLITERAL ||
+        token.kind == STRINGLITERAL )
+    {
+      set_mode( EXPR );
+      JCExpression t = literal( _names.empty );
+      return toP( t );
+    }
+
+    if( token.kind == IDENTIFIER )
+    {
+      JCExpression t = toP( F.at( token.pos ).Ident( ident() ) );
+      return toP( t );
+    }
+
+    return illegal();
+  }
 
   private boolean isSameOrHigher( TokenKind kind, TokenKind other )
   {
@@ -263,6 +317,10 @@ public class ManJavacParser extends JavacParser
     {
       throw new RuntimeException( e );
     }
+  }
+
+  private <T extends JCTree> T toP(T t) {
+    return _endPosTable.toP(t);
   }
 
   private JCExpression[] newOdStack() {
