@@ -386,6 +386,10 @@ manifold produces. For the typical use case your type manifold should extend `Ab
 
 See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
 
+>Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+projects uses operator overloading and unit expressions extensively.
+
 # Unit Expressions
 >Warning: **Experimental Feature**
 
@@ -514,12 +518,16 @@ test identity.  There is risk involved, however it is minimal risk given identit
 references, as opposed to primitives. Indeed most IDEs will provide warnings if using `==` between references because
 it is a common mistake.
  
+>Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+projects uses operator overloading and unit expressions extensively.
+   
 todo: more docs
 
 ## BigDecimal & BigInteger 
 
 Because `BigDecimal` and `BigInteger` already define all the arithmetic methods and negate method, they work
-out-of-the-box. You can conveniently use normal arithmetic expression on the *Big* numbers now!
+out-of-the-box. You can conveniently use normal arithmetic operators on the *Big* numbers now!
 
 todo: more docs  
 
