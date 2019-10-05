@@ -20,7 +20,7 @@ package manifold.ext.api;
  * Implement this Comparable extension to enable relational operators directly on your type.
  * <p/>
  * Note both {@code ==} and {@code !=} delegate to this interface, thus implementing this interface means those
- * operators are no longer test identity.  There is risk involved, however it is minimal risk given identity equality
+ * operators no longer test identity.  There is risk involved, however it is minimal risk given identity equality
  * is seldom used with references, as opposed to primitives.
  */
 @Structural

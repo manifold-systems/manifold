@@ -2,6 +2,8 @@
 
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
+* [Operator Overloading](#operator-overloading)
+* [Unit Expressions](#unit-expressions) via `@Extension`
 * [Structural interfaces](#structural-interfaces-via-structural) via `@Structural`
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
 * [The *Self* type](#the-self-type-via-self) via `@Self`
@@ -383,6 +385,143 @@ interface so that the `ExtensionManifold` can discover information about the cla
 manifold produces. For the typical use case your type manifold should extend `AbstractExtensionProducer`.
 
 See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
+
+# Unit Expressions
+>Warning: **Experimental Feature**
+
+Manifold seamlessly extends Java with a unique feature called *unit expressions*, sometimes called
+*binding expressions*.  It lets you write expressions in Java as you would on paper:
+
+```java
+// Type-safe and precise
+Force f = 1k kg * 9.807 m/s/s; // 1000 kilgrams * exceleration of Earth's gravity
+
+// Use a variety of unit constants
+if (9807 N == f) { ... }
+if (9807 kg m/s/s == f) { ... }
+
+// Mixing units works naturally
+Mass m = 10 lb + 10 kg; 
+
+// Easy to use
+Length distance = 100 mph * 3 hr;
+
+// Use unit expressions with the Range API  
+for( Mass m: 10kg to 100kg ) {
+  . . .
+}
+``` 
+
+Normally a binary expression in Java and most other languages involves two operands and an operator such as with
+addition:
+```java
+int sum = a + b;
+```
+
+But with a unit expression there is no operator:
+```java
+Mass m = 10 kg;
+```
+
+Here the operation is _declared_ between the _types_ of the operands with the following methods:
+```java
+public R postfixBind(T lhs);
+public R prefixBind(T rhs);
+``` 
+
+So in the example, `10` is a literal of type `int` and `kg` is a variable of type `MassUnit`. Since `MassUnit` defines
+the method:
+```java
+public Mass postfixBind(Number magnitude) {...}
+``` 
+The compiler can make a unit expression with the two operands with type `Mass`.
+
+>Note a type implements `postfixBind()` and `prefixBind()` *structurally*, meaning there is no interface defining the
+methods. This is necessary because a type may implement several different versions of each method. 
+
+## Operator Precedence
+
+The empty or sometimes called "adjacency" operator has a dynamic precedence. It favors a precedence between addition
+and multiplication, which means the following expression:
+
+```java
+a b * c
+```
+
+favors the following association:
+
+```java
+a (b*c)
+```
+
+*However*, that form may not parse if there is no binding operation defined between `a` and `b*c`. Instead if there a
+binding defined between `a` and `b` and if multiplication is supported between `a b` and `c`, then it parses as:
+
+```java
+(a b)*c
+``` 
+
+>As you can see unit expressions demand a level of flexibility beyond conventional parsers such as Java's. But Java is
+flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
+    
+todo: more docs
+
+
+# Operator Overloading
+
+Aside from String concatenation with the `+` operator Java doesn't overload operators and doesn't provide any means
+to overload an operator programmatically.  This is likely an equal and opposite reaction to the horrors experienced with
+C++ projects where all operators may be overloaded to behave in any desirable manner. But operator overloading can be
+beneficial if controlled responsibly. For instance, arithmetic operators on `BigDecimal` and `BigInteger` would be a
+welcome change.
+
+With that intention the Manifold extension framework plugs into Java to provide seamless operator overloading
+capability.  You can type-safely overload arithmetic, negation, and relational operators as described next.
+
+
+## Arithmetic and Negation Operators
+
+All arithmetic and negation operators may be overloaded piecemeal with multiple implementations of each method per type: 
+
+```java
+R negate();
+R add(T operand);
+R subtract(T operand);
+R multiply(T operand);
+R divide(T operand);
+R remainder(T operand);
+```
+
+>Note a type implements arithmetic methods *structurally*, meaning there is no interface defining the
+methods. This is necessary because a type may implement several different versions of each method. 
+
+todo: more docs
+
+## Relational Operators
+
+Relational operators `==`, `!=`, `>`, `>=`, `<`, `<=` must be implemented all together via the `IComparableWith`
+interface, which extends `Comparable` to provide an operator-specific API.                           
+ 
+```java
+boolean compareToWith( T that, String op );
+```
+
+`IComparableWith` provides a default implementation that delegates to the `Comparable` implementation that is suitable
+for most types. So normally you only need to add `IComparableWith` to your type's `implements` or `extends` clause.
+
+Note both `==` and `!=` delegate to this interface, thus implementing this interface means those operators no longer
+test identity.  There is risk involved, however it is minimal risk given identity equality is seldom used with
+references, as opposed to primitives. Indeed most IDEs will provide warnings if using `==` between references because
+it is a common mistake.
+ 
+todo: more docs
+
+## BigDecimal & BigInteger 
+
+Because `BigDecimal` and `BigInteger` already define all the arithmetic methods and negate method, they work
+out-of-the-box. You can conveniently use normal arithmetic expression on the *Big* numbers now!
+
+todo: more docs  
 
 
 # Structural Interfaces via `@Structural`
