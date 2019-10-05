@@ -3,7 +3,7 @@
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
 * [Operator Overloading](#operator-overloading)
-* [Unit Expressions](#unit-expressions) via `@Extension`
+* [Unit Expressions](#unit-expressions)
 * [Structural interfaces](#structural-interfaces-via-structural) via `@Structural`
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
 * [The *Self* type](#the-self-type-via-self) via `@Self`
