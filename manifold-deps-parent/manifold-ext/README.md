@@ -598,6 +598,8 @@ multiplication is supported between `a b` and `c`, then it parses as:
 (a b)*c
 ``` 
 
+For example, the expression `5kg * 2` demonstrates this example exactly.
+
 As you can see unit expressions demand a level of flexibility beyond conventional parsers such as Java's. But Java is
 flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
     
