@@ -66,7 +66,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.IncrementalCompile;
 import manifold.api.type.Precompile;
 import manifold.ext.api.Extension;
-import manifold.ext.api.IComparableWith;
+import manifold.ext.api.ComparableUsing;
 import manifold.ext.api.Jailbreak;
 import manifold.ext.api.Self;
 import manifold.ext.api.Structural;
@@ -143,21 +143,24 @@ public class ExtensionTransformer extends TreeTranslator
           {
             Symtab symbols = _tp.getSymtab();
             Names names = Names.instance( _tp.getContext() );
-            Symbol.ClassSymbol compareWithSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), IComparableWith.class.getName() );
-            Symbol.MethodSymbol haveSameValueMeth = resolveMethod( tree.pos(), names.fromString( "haveSameValue" ), compareWithSym.type,
+            Symbol.ClassSymbol compareWithSym = IDynamicJdk.instance().getTypeElement(
+              _tp.getContext(), _tp.getCompilationUnit(), ComparableUsing.class.getName() );
+            Symbol.MethodSymbol haveSameValueMeth = resolveMethod(
+              tree.pos(), names.fromString( "haveSameValue" ), compareWithSym.type,
               List.from( new Type[]{symbols.objectType, symbols.objectType, symbols.booleanType} ) );
             methodCall = make.Apply( List.nil(),
-              memberAccess( make, _tp.getElementUtil(), IComparableWith.class.getName() + ".haveSameValue" ),
+              memberAccess( make, _tp.getElementUtil(), ComparableUsing.class.getName() + ".haveSameValue" ),
               List.from( new JCExpression[]{receiver, arg, make.Literal( tree.getTag() == JCTree.Tag.NE )} ) );
             JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)methodCall.getMethodSelect();
             newMethodSelect.sym = haveSameValueMeth;
             newMethodSelect.type = haveSameValueMeth.type;
-            assignTypes( newMethodSelect.selected, compareWithSym );          }
+            assignTypes( newMethodSelect.selected, compareWithSym );          
+          }
           else
           {
             methodCall = make.Apply( List.nil(),
               make.Select( receiver, operatorMethod ),
-              List.from( new JCExpression[]{arg, getOp( make, tree.getTag() )} ) );
+              List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
           }
         }
         else
@@ -183,33 +186,24 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private JCExpression getOp( TreeMaker make, JCTree.Tag tag )
+  private JCExpression getRelationalOpEnumConst( TreeMaker make, JCTree tree )
   {
-    String op;
-    switch( tag )
-    {
-      case LT:
-        op = "<";
-        break;
-      case LE:
-        op = "<=";
-        break;
-      case GT:
-        op = ">";
-        break;
-      case GE:
-        op = ">=";
-        break;
-      case EQ:
-        op = "==";
-        break;
-      case NE:
-        op = "!=";
-        break;
-      default:
-        throw new IllegalStateException();
-    }
-    return make.Literal( op );
+    Symbol.ClassSymbol opClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(),
+      ComparableUsing.Operator.class.getCanonicalName() );
+
+    Names names = Names.instance( _tp.getContext() );
+    Symbol.VarSymbol operatorSym = resolveField(
+      tree.pos(), _tp.getContext(), names.fromString( tree.getTag().name() ), opClassSym.type );
+
+    JCTree.JCFieldAccess opEnumConst = (JCTree.JCFieldAccess)memberAccess( make, _tp.getElementUtil(),
+      ComparableUsing.Operator.class.getName() + "." + tree.getTag().name() );
+    opEnumConst.type = operatorSym.type;
+    opEnumConst.sym = operatorSym;
+    opEnumConst.pos = tree.pos;
+    assignTypes( opEnumConst.selected, opClassSym );
+    opEnumConst.selected.pos = tree.pos;
+
+    return opEnumConst;
   }
 
   /** Expand a boxing or unboxing conversion if needed. */
@@ -2205,5 +2199,14 @@ public class ExtensionTransformer extends TreeTranslator
     Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
     env.toplevel = compUnit;
     return rs.resolveInternalMethod( pos, env, qual, name, args, null );
+  }
+
+  private Symbol.VarSymbol resolveField( JCDiagnostic.DiagnosticPosition pos, Context ctx, Name name, Type qual )
+  {
+    Resolve rs = Resolve.instance( ctx );
+    AttrContext attrContext = new AttrContext();
+    Env<AttrContext> env = new AttrContextEnv( pos.getTree(), attrContext );
+    env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
+    return rs.resolveInternalField( pos, env, qual, name );
   }
 }

@@ -17,16 +17,16 @@
 package manifold.ext;
 
 import java.math.BigDecimal;
-import manifold.ext.api.IComparableWith;
+import manifold.ext.api.ComparableUsing;
 import org.junit.Test;
 
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class OperatorOverloadTest
 {
   @Test
-  public void testBigDecimalArithmetic()
+  public void testBigDecimal()
   {
     BigDecimal bd1 = new BigDecimal( "1.2" );
     BigDecimal bd2 = new BigDecimal( "2.4" );
@@ -40,44 +40,64 @@ public class OperatorOverloadTest
   }
 
   @Test
-  public void blah()
+  public void testFuzz()
   {
-    Fuzz<String> bar = new Fuzz<>("2");
-    Fuzz<String> baz = new Fuzz<>("3");
-    String s = (bar + baz) * "foo";
-    assertEquals( "23foo", s );
-    assertEquals( false, bar > baz );
-    assertEquals( true, bar < baz );
+    Fuzz bar = new Fuzz(3.0);
+    Fuzz baz = new Fuzz(12.0);
+    Fuzz boz = new Fuzz(5.0);
+
+    assertTrue( new Fuzz(15.0) == bar + baz );
+    assertTrue( new Fuzz(-9.0) == bar - baz );
+    assertTrue( new Fuzz(36.0) == bar * baz );
+    assertTrue( new Fuzz(4.0) == baz / bar );
+    assertTrue( new Fuzz(2.0) == baz % boz );
+    assertFalse( bar == baz );
+    assertTrue( bar != baz );
+    assertFalse( bar > baz );
+    assertFalse( bar >= baz );
+    assertTrue( bar < baz );
+    assertTrue( bar <= baz );
   }
 
-  Integer asdf( Fuzz<String> x, Fuzz<String> y )
+  static class Fuzz implements ComparableUsing<Fuzz>
   {
-    return x * y;
-  }
-  static class Fuzz<T extends Comparable<T>> implements IComparableWith<Fuzz<T>>
-  {
-    T _s;
-    public Fuzz( T s )
+    final double _value;
+
+    public Fuzz( double value )
     {
-      _s = s;
+      _value = value;
     }
 
-    public String add( Fuzz<T> op )
+    public Fuzz plus( Fuzz op )
     {
-      return _s.toString() + op._s.toString();
+      return new Fuzz( _value + op._value );
     }
 
-    public Integer multiply( Fuzz<T> op )
+    public Fuzz minus( Fuzz op )
     {
-      return 2;
+      return new Fuzz( _value - op._value );
     }
 
-    private void foo(T t){}
+    public Fuzz times( Fuzz op )
+    {
+      return new Fuzz( _value * op._value);
+    }
+
+    public Fuzz div( Fuzz op )
+    {
+      return new Fuzz( _value / op._value);
+    }
+
+    public Fuzz rem( Fuzz op )
+    {
+      return new Fuzz( _value % op._value);
+    }
 
     @Override
-    public int compareTo( Fuzz<T> o )
+    public int compareTo( Fuzz o )
     {
-      return _s.compareTo( o._s );
+      double diff = _value - o._value;
+      return diff == 0 ? 0 : diff < 0 ? -1 : 1;
     }
   }
 }

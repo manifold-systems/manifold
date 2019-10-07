@@ -37,22 +37,22 @@ public final class Length extends AbstractMeasure<LengthUnit, Length>
     return new Length( value, unit, unit );
   }
 
-  public Velocity divide( Time t ) {
+  public Velocity div( Time t ) {
     return new Velocity( toBaseNumber() / t.toBaseNumber(), VelocityUnit.BASE, VelocityUnit.get( getUnit(), t.getUnit() ) );
   }
-  public Time divide( Velocity v ) {
+  public Time div( Velocity v ) {
     return new Time( toBaseNumber() / v.toBaseNumber(), TimeUnit.BASE, v.getUnit().getTimeUnit() );
   }
 
-  public Area multiply( Length len ) {
+  public Area times( Length len ) {
     return new Area( toBaseNumber() * len.toBaseNumber(), AreaUnit.BASE, AreaUnit.get( getUnit(), len.getUnit() ) );
   }
 
-  public Volume multiply( Area area ) {
+  public Volume times( Area area ) {
     return new Volume( toBaseNumber() * area.toBaseNumber(), VolumeUnit.BASE, VolumeUnit.get( getUnit(), area.getUnit() ) );
   }
 
-  public Energy multiply( Force force ) {
+  public Energy times( Force force ) {
     return new Energy( toBaseNumber() * force.toBaseNumber(), EnergyUnit.BASE, EnergyUnit.get( force.getUnit(), getUnit() ) );
   }
 }

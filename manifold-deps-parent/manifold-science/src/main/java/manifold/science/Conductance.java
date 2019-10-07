@@ -23,7 +23,7 @@ public final class Conductance extends AbstractMeasure<ConductanceUnit, Conducta
     return new Conductance( value, unit );
   }
 
-  public Current multiply( Potential potential ) {
+  public Current times( Potential potential ) {
     return new Current( toBaseNumber() * potential.toBaseNumber(), CurrentUnit.BASE, getUnit().getCurrentUnit() );
   }
 }

@@ -67,7 +67,7 @@ public abstract class AbstractProductUnit<A extends Unit,
     return getLeftUnit().toNumber() * getRightUnit().toNumber();
   }
 
-  public B divide( A a ) {
+  public B div( A a ) {
     return getRightUnit();
   }
   // reifies to same type :(

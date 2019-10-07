@@ -57,7 +57,7 @@ public final class AreaUnit extends AbstractProductUnit<LengthUnit, LengthUnit, 
     return getWidthUnit() == getLengthUnit();
   }
 
-  public VolumeUnit multiply( LengthUnit lu ) {
+  public VolumeUnit times( LengthUnit lu ) {
     return VolumeUnit.get( lu, this );
   }
 }

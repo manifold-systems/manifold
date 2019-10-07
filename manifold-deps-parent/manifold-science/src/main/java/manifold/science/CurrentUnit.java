@@ -43,10 +43,10 @@ public final class CurrentUnit extends AbstractQuotientUnit<ChargeUnit, TimeUnit
     return getRightUnit();
   }
 
-  public ConductanceUnit divide( PotentialUnit p ) {
+  public ConductanceUnit div( PotentialUnit p ) {
     return ConductanceUnit.get( this, p );
   }
-  public PotentialUnit divide( ConductanceUnit cu ) {
+  public PotentialUnit div( ConductanceUnit cu ) {
     return cu.getPotentialUnit();
   }
 }

@@ -65,18 +65,18 @@ final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUni
   }
 
   public MomentumUnit postfixBind( MassUnit mass ) {
-    return multiply( mass );
+    return times( mass );
   }
 
-  public AccelerationUnit divide( TimeUnit t ) {
+  public AccelerationUnit div( TimeUnit t ) {
     return AccelerationUnit.get( this, t );
   }
 
-  public MomentumUnit multiply( MassUnit t ) {
+  public MomentumUnit times( MassUnit t ) {
     return MomentumUnit.get( t, this );
   }
 
-  public PowerUnit multiply( ForceUnit force ) {
+  public PowerUnit times( ForceUnit force ) {
     return force * getLengthUnit() / getTimeUnit();
   }
 }

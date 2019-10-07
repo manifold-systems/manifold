@@ -42,25 +42,25 @@ public final class Mass extends AbstractMeasure<MassUnit, Mass>
     return new Mass( value, unit );
   }
 
-  public Force multiply( Acceleration a ) {
+  public Force times( Acceleration a ) {
     return new Force( toBaseNumber() * a.toBaseNumber(), ForceUnit.BASE, ForceUnit.get( getUnit(), a.getUnit() ) );
   } 
   
-  public Momentum multiply( Velocity v ) {
+  public Momentum times( Velocity v ) {
     return new Momentum( toBaseNumber() * v.toBaseNumber(), MomentumUnit.BASE, MomentumUnit.get( getUnit(), v.getUnit() ) );
   }
 
-  public Pressure divide( Area area ) {
+  public Pressure div( Area area ) {
     return new Pressure( toBaseNumber() / area.toBaseNumber(), PressureUnit.BASE, PressureUnit.get( getUnit(), area.getUnit() ) );
   }
-  public Area divide( Pressure p ) {
+  public Area div( Pressure p ) {
     return new Area( toBaseNumber() / p.toBaseNumber(), AreaUnit.BASE, p.getUnit().getAreaUnit() );
   }
 
-  public Density divide( Volume volume ) {
+  public Density div( Volume volume ) {
     return new Density( toBaseNumber() / volume.toBaseNumber(), DensityUnit.BASE, DensityUnit.get( getUnit(), volume.getUnit() ) );
   }
-  public Volume divide( Density d ) {
+  public Volume div( Density d ) {
     return new Volume( toBaseNumber() / d.toBaseNumber(), VolumeUnit.BASE, d.getUnit().getVolumeUnit() );
   }
 }

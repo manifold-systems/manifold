@@ -159,19 +159,19 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
     return fromBaseNumber( toNumber() - (unit.toBaseUnits( step ) - unit.toBaseUnits( Rational.ZERO )) * index );
   }
 
-  public T add( T operand )
+  public T plus( T operand )
   {
-    return copy( toBaseNumber().add( operand.toBaseNumber() ) );
+    return copy( toBaseNumber().plus( operand.toBaseNumber() ) );
   }
-  public T subtract( T operand )
+  public T minus( T operand )
   {
-    return copy( toBaseNumber().subtract( operand.toBaseNumber() ) );
+    return copy( toBaseNumber().minus( operand.toBaseNumber() ) );
   }
-  public Rational divide( T operand )
+  public Rational div( T operand )
   {
     return toBaseNumber() / operand.toBaseNumber();
   }
-  public Rational remainder( T operand )
+  public Rational rem( T operand )
   {
     return toBaseNumber() % operand.toBaseNumber();
   }

@@ -23,7 +23,7 @@ public final class MagneticFluxDensity extends AbstractMeasure<MagneticFluxDensi
     return new MagneticFluxDensity( value, unit );
   }
 
-  public MagneticFlux multiply( Area area ) {
+  public MagneticFlux times( Area area ) {
     return new MagneticFlux( toBaseNumber() * area.toBaseNumber(), MagneticFluxUnit.BASE, getUnit().getMagneticFluxUnit() );
   }
 }

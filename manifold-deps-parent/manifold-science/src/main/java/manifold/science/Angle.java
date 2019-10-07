@@ -52,11 +52,11 @@ final public class Angle extends AbstractMeasure<AngleUnit, Angle>
     return new VelocityVector( v, this );
   }
 
-  public Frequency divide( Time time ) {
+  public Frequency div( Time time ) {
     return new Frequency( toBaseNumber() / time.toBaseNumber(), FrequencyUnit.BASE, FrequencyUnit.get( getUnit(), time.getUnit() ) );
   }
 
-  public Time divide( Frequency freq ) {
+  public Time div( Frequency freq ) {
     return new Time( toBaseNumber() / freq.toBaseNumber(), TimeUnit.BASE, freq.getUnit().getTimeUnit() );
   }
 }

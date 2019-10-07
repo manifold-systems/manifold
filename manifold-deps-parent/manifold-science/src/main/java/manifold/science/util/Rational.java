@@ -24,13 +24,13 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import manifold.ext.api.IComparableWith;
+import manifold.ext.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
 
 /**
  * Models rational number as a fraction to maintain arbitrary precision.
  */
-final public class Rational extends Number implements Sequential<Rational, Rational, Void>, IComparableWith<Rational>, Serializable
+final public class Rational extends Number implements Sequential<Rational, Rational, Void>, ComparableUsing<Rational>, Serializable
 {
   private static final int VERSION_1 = 1;
 
@@ -88,13 +88,13 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
       {
         if( denominatorIsDecimal )
         {
-          return get( new BigDecimal( numerator ) ).divide( get( new BigDecimal( denominator ) ) );
+          return get( new BigDecimal( numerator ) ).div( get( new BigDecimal( denominator ) ) );
         }
-        return get( new BigDecimal( numerator ) ).divide( new BigInteger( denominator ) );
+        return get( new BigDecimal( numerator ) ).div( new BigInteger( denominator ) );
       }
       else if( denominatorIsDecimal )
       {
-        return get( new BigInteger( numerator ) ).divide( get( new BigDecimal( denominator ) ) );
+        return get( new BigInteger( numerator ) ).div( get( new BigDecimal( denominator ) ) );
       }
       return get( new BigInteger( numerator ), new BigInteger( denominator ) );
     }
@@ -205,12 +205,12 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
 
   public Rational fractionPart()
   {
-    BigInteger remainder = _numerator.remainder( _denominator );
-    if( remainder.signum() == 0 )
+    BigInteger rem = _numerator.remainder( _denominator );
+    if( rem.signum() == 0 )
     {
       return ZERO;
     }
-    return Rational.get( remainder, _denominator );
+    return Rational.get( rem, _denominator );
   }
 
   @Override
@@ -254,27 +254,27 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
            : new BigDecimal( _numerator ).divide( new BigDecimal( _denominator ), mc );
   }
 
-  public Rational add( int i )
+  public Rational plus( int i )
   {
-    return i == 0 ? this : add( get( i ) );
+    return i == 0 ? this : plus( get( i ) );
   }
 
-  public Rational add( long l )
+  public Rational plus( long l )
   {
-    return l == 0 ? this : add( get( l ) );
+    return l == 0 ? this : plus( get( l ) );
   }
 
-  public Rational add( float f )
+  public Rational plus( float f )
   {
-    return f == 0 ? this : add( get( f ) );
+    return f == 0 ? this : plus( get( f ) );
   }
 
-  public Rational add( double d )
+  public Rational plus( double d )
   {
-    return d == 0 ? this : add( get( d ) );
+    return d == 0 ? this : plus( get( d ) );
   }
 
-  public Rational add( BigInteger bg )
+  public Rational plus( BigInteger bg )
   {
     if( signum() == 0 )
     {
@@ -290,12 +290,12 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
            : get( _numerator.add( _denominator.multiply( bg ) ), _denominator );
   }
 
-  public Rational add( BigDecimal bd )
+  public Rational plus( BigDecimal bd )
   {
-    return bd.signum() == 0 ? this : add( get( bd ) );
+    return bd.signum() == 0 ? this : plus( get( bd ) );
   }
 
-  public Rational add( Rational rational )
+  public Rational plus( Rational rational )
   {
     if( rational.signum() == 0 )
     {
@@ -325,63 +325,63 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
            : get( numerator, denominator );
   }
 
-  public Rational add( Number n )
+  public Rational plus( Number n )
   {
     if( n instanceof Rational )
     {
-      return add( (Rational)n );
+      return plus( (Rational)n );
     }
     else if( n instanceof BigDecimal )
     {
-      return add( (BigDecimal)n );
+      return plus( (BigDecimal)n );
     }
     else if( n instanceof BigInteger )
     {
-      return add( (BigInteger)n );
+      return plus( (BigInteger)n );
     }
     else if( n instanceof Double )
     {
-      return add( (double)n );
+      return plus( (double)n );
     }
     else if( n instanceof Float )
     {
-      return add( (float)n );
+      return plus( (float)n );
     }
     else if( n instanceof Integer )
     {
-      return add( (int)n );
+      return plus( (int)n );
     }
     else if( n instanceof Long )
     {
-      return add( (long)n );
+      return plus( (long)n );
     }
     else
     {
-      return add( Rational.get( String.valueOf( n ) ) );
+      return plus( Rational.get( String.valueOf( n ) ) );
     }
   }
 
-  public Rational subtract( int i )
+  public Rational minus( int i )
   {
-    return subtract( BigInteger.valueOf( i ) );
+    return minus( BigInteger.valueOf( i ) );
   }
 
-  public Rational subtract( long l )
+  public Rational minus( long l )
   {
-    return subtract( BigInteger.valueOf( l ) );
+    return minus( BigInteger.valueOf( l ) );
   }
 
-  public Rational subtract( float f )
+  public Rational minus( float f )
   {
-    return subtract( get( f ) );
+    return minus( get( f ) );
   }
 
-  public Rational subtract( double d )
+  public Rational minus( double d )
   {
-    return subtract( get( d ) );
+    return minus( get( d ) );
   }
 
-  public Rational subtract( BigInteger bi )
+  public Rational minus( BigInteger bi )
   {
     if( bi.signum() == 0 )
     {
@@ -394,12 +394,12 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return get( _numerator.subtract( _denominator.multiply( bi ) ), _denominator );
   }
 
-  public Rational subtract( BigDecimal bd )
+  public Rational minus( BigDecimal bd )
   {
-    return bd.signum() == 0 ? this : subtract( get( bd ) );
+    return bd.signum() == 0 ? this : minus( get( bd ) );
   }
 
-  public Rational subtract( Rational rational )
+  public Rational minus( Rational rational )
   {
     if( rational.signum() == 0 )
     {
@@ -407,7 +407,7 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     }
     if( signum() == 0 )
     {
-      return rational.negate();
+      return rational.unaryMinus();
     }
 
     BigInteger numerator;
@@ -427,79 +427,79 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
            : get( numerator, denominator );
   }
 
-  public Rational subtract( Number n )
+  public Rational minus( Number n )
   {
     if( n instanceof Rational )
     {
-      return subtract( (Rational)n );
+      return minus( (Rational)n );
     }
     else if( n instanceof BigDecimal )
     {
-      return subtract( (BigDecimal)n );
+      return minus( (BigDecimal)n );
     }
     else if( n instanceof BigInteger )
     {
-      return subtract( (BigInteger)n );
+      return minus( (BigInteger)n );
     }
     else if( n instanceof Double )
     {
-      return subtract( (double)n );
+      return minus( (double)n );
     }
     else if( n instanceof Float )
     {
-      return subtract( (float)n );
+      return minus( (float)n );
     }
     else if( n instanceof Integer )
     {
-      return subtract( (int)n );
+      return minus( (int)n );
     }
     else if( n instanceof Long )
     {
-      return subtract( (long)n );
+      return minus( (long)n );
     }
     else
     {
-      return subtract( Rational.get( String.valueOf( n ) ) );
+      return minus( Rational.get( String.valueOf( n ) ) );
     }
   }
 
-  public Rational multiply( int i )
+  public Rational times( int i )
   {
     if( i == 0 || signum() == 0 )
     {
       return ZERO;
     }
-    return multiply( BigInteger.valueOf( i ) );
+    return times( BigInteger.valueOf( i ) );
   }
 
-  public Rational multiply( long l )
+  public Rational times( long l )
   {
     if( l == 0 || signum() == 0 )
     {
       return ZERO;
     }
-    return multiply( BigInteger.valueOf( l ) );
+    return times( BigInteger.valueOf( l ) );
   }
 
-  public Rational multiply( float f )
+  public Rational times( float f )
   {
     if( f == 0 || signum() == 0 )
     {
       return ZERO;
     }
-    return multiply( get( f ) );
+    return times( get( f ) );
   }
 
-  public Rational multiply( double d )
+  public Rational times( double d )
   {
     if( d == 0 || signum() == 0 )
     {
       return ZERO;
     }
-    return multiply( get( d ) );
+    return times( get( d ) );
   }
 
-  public Rational multiply( BigInteger bi )
+  public Rational times( BigInteger bi )
   {
     if( signum() == 0 || bi.signum() == 0 )
     {
@@ -508,16 +508,16 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return get( bi.multiply( _numerator ), _denominator );
   }
 
-  public Rational multiply( BigDecimal bd )
+  public Rational times( BigDecimal bd )
   {
     if( signum() == 0 || bd.signum() == 0 )
     {
       return ZERO;
     }
-    return multiply( get( bd ) );
+    return times( get( bd ) );
   }
 
-  public Rational multiply( Rational rational )
+  public Rational times( Rational rational )
   {
     if( signum() == 0 || rational.signum() == 0 )
     {
@@ -527,63 +527,63 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
       _denominator.multiply( rational._denominator ) );
   }
 
-  public Rational multiply( Number n )
+  public Rational times( Number n )
   {
     if( n instanceof Rational )
     {
-      return multiply( (Rational)n );
+      return times( (Rational)n );
     }
     else if( n instanceof BigDecimal )
     {
-      return multiply( (BigDecimal)n );
+      return times( (BigDecimal)n );
     }
     else if( n instanceof BigInteger )
     {
-      return multiply( (BigInteger)n );
+      return times( (BigInteger)n );
     }
     else if( n instanceof Double )
     {
-      return multiply( (double)n );
+      return times( (double)n );
     }
     else if( n instanceof Float )
     {
-      return multiply( (float)n );
+      return times( (float)n );
     }
     else if( n instanceof Integer )
     {
-      return multiply( (int)n );
+      return times( (int)n );
     }
     else if( n instanceof Long )
     {
-      return multiply( (long)n );
+      return times( (long)n );
     }
     else
     {
-      return multiply( Rational.get( String.valueOf( n ) ) );
+      return times( Rational.get( String.valueOf( n ) ) );
     }
   }
 
-  public Rational divide( int i )
+  public Rational div( int i )
   {
-    return divide( BigInteger.valueOf( i ) );
+    return div( BigInteger.valueOf( i ) );
   }
 
-  public Rational divide( long l )
+  public Rational div( long l )
   {
-    return divide( BigInteger.valueOf( l ) );
+    return div( BigInteger.valueOf( l ) );
   }
 
-  public Rational divide( float f )
+  public Rational div( float f )
   {
-    return divide( get( f ) );
+    return div( get( f ) );
   }
 
-  public Rational divide( double d )
+  public Rational div( double d )
   {
-    return divide( get( d ) );
+    return div( get( d ) );
   }
 
-  public Rational divide( BigInteger bi )
+  public Rational div( BigInteger bi )
   {
     if( bi.equals( BigInteger.ZERO ) )
     {
@@ -596,7 +596,7 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return get( _numerator, _denominator.multiply( bi ) );
   }
 
-  public Rational divide( BigDecimal bd )
+  public Rational div( BigDecimal bd )
   {
     if( bd.signum() == 0 )
     {
@@ -606,10 +606,10 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     {
       return ZERO;
     }
-    return divide( get( bd ) );
+    return div( get( bd ) );
   }
 
-  public Rational divide( Rational rational )
+  public Rational div( Rational rational )
   {
     if( rational.equals( ZERO ) )
     {
@@ -619,126 +619,126 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     {
       return ZERO;
     }
-    return multiply( rational.invert() );
+    return times( rational.invert() );
   }
 
-  public Rational divide( Number n )
+  public Rational div( Number n )
   {
     if( n instanceof Rational )
     {
-      return divide( (Rational)n );
+      return div( (Rational)n );
     }
     else if( n instanceof BigDecimal )
     {
-      return divide( (BigDecimal)n );
+      return div( (BigDecimal)n );
     }
     else if( n instanceof BigInteger )
     {
-      return divide( (BigInteger)n );
+      return div( (BigInteger)n );
     }
     else if( n instanceof Double )
     {
-      return divide( (double)n );
+      return div( (double)n );
     }
     else if( n instanceof Float )
     {
-      return divide( (float)n );
+      return div( (float)n );
     }
     else if( n instanceof Integer )
     {
-      return divide( (int)n );
+      return div( (int)n );
     }
     else if( n instanceof Long )
     {
-      return divide( (long)n );
+      return div( (long)n );
     }
     else
     {
-      return divide( Rational.get( String.valueOf( n ) ) );
+      return div( Rational.get( String.valueOf( n ) ) );
     }
   }
 
-  public Rational remainder( int i )
+  public Rational rem( int i )
   {
-    return remainder( BigInteger.valueOf( i ) );
+    return rem( BigInteger.valueOf( i ) );
   }
 
-  public Rational remainder( long l )
+  public Rational rem( long l )
   {
-    return remainder( BigInteger.valueOf( l ) );
+    return rem( BigInteger.valueOf( l ) );
   }
 
-  public Rational remainder( float f )
+  public Rational rem( float f )
   {
-    return remainder( get( f ) );
+    return rem( get( f ) );
   }
 
-  public Rational remainder( double d )
+  public Rational rem( double d )
   {
-    return remainder( get( d ) );
+    return rem( get( d ) );
   }
 
-  public Rational remainder( BigInteger bi )
+  public Rational rem( BigInteger bi )
   {
     if( bi.equals( BigInteger.ZERO ) )
     {
       throw new ArithmeticException( "Divide by zero" );
     }
-    return remainder( get( bi ) );
+    return rem( get( bi ) );
   }
 
-  public Rational remainder( BigDecimal bd )
+  public Rational rem( BigDecimal bd )
   {
     if( bd.signum() == 0 )
     {
       throw new ArithmeticException( "Divide by zero" );
     }
-    return remainder( get( bd ) );
+    return rem( get( bd ) );
   }
 
-  public Rational remainder( Rational rational )
+  public Rational rem( Rational rational )
   {
-    Rational quotient = divide( rational );
-    return subtract( rational.multiply( quotient.toBigInteger() ) ).abs();
+    Rational quotient = div( rational );
+    return minus( rational.times( quotient.toBigInteger() ) ).abs();
   }
 
-  public Rational remainder( Number n )
+  public Rational rem( Number n )
   {
     if( n instanceof Rational )
     {
-      return remainder( (Rational)n );
+      return rem( (Rational)n );
     }
     else if( n instanceof BigDecimal )
     {
-      return remainder( (BigDecimal)n );
+      return rem( (BigDecimal)n );
     }
     else if( n instanceof BigInteger )
     {
-      return remainder( (BigInteger)n );
+      return rem( (BigInteger)n );
     }
     else if( n instanceof Double )
     {
-      return remainder( (double)n );
+      return rem( (double)n );
     }
     else if( n instanceof Float )
     {
-      return remainder( (float)n );
+      return rem( (float)n );
     }
     else if( n instanceof Integer )
     {
-      return remainder( (int)n );
+      return rem( (int)n );
     }
     else if( n instanceof Long )
     {
-      return remainder( (long)n );
+      return rem( (long)n );
     }
     else
     {
-      return remainder( Rational.get( String.valueOf( n ) ) );
+      return rem( Rational.get( String.valueOf( n ) ) );
     }
   }
 
-  public Rational negate()
+  public Rational unaryMinus()
   {
     return get( _numerator.negate(), _denominator );
   }
@@ -750,7 +750,7 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
 
   public Rational abs()
   {
-    return signum() >= 0 ? this : negate();
+    return signum() >= 0 ? this : unaryMinus();
   }
 
   public Rational pow( int exponent )
@@ -778,28 +778,28 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
   public Rational nextInSequence( Rational step, Void unit )
   {
     step = step == null ? Rational.ONE : step;
-    return add( step );
+    return plus( step );
   }
 
   @Override
   public Rational nextNthInSequence( Rational step, Void unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    return add( step.multiply( index ) );
+    return plus( step.times( index ) );
   }
 
   @Override
   public Rational previousInSequence( Rational step, Void unit )
   {
     step = step == null ? Rational.ONE : step;
-    return subtract( step );
+    return minus( step );
   }
 
   @Override
   public Rational previousNthInSequence( Rational step, Void unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    return subtract( step.multiply( index ) );
+    return minus( step.times( index ) );
   }
 
   @Override

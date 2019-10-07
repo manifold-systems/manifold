@@ -13,7 +13,7 @@ for( Mass m: 10kg to 100kg ) {
  
 ## Table of Contents
 * [Collections](#collections-extensions)
-* [Ranges](#collections-extensions)
+* New! [Ranges](#ranges)
 * [IDE Support](#ide-support)
 * [Building](#building)
 * [License](#license)
@@ -28,9 +28,77 @@ classes such as `List`, `Iterator`, and `Map`.  The new methods aim to add a bit
 
 todo: collections docs
 
-# Ranges   
+# Ranges  
 
-todo: range docs
+You can easily work with ranges using Manifold's [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
+Use the `RangeFun` constants to create ranges:
+```java
+if (2 inside 1 to 5) {
+  out.println("ok");
+}
+```
+Although `inside` and `to` look like new Java keywords, they are instead normal variables defined as constants in
+`RangeFun`. They use Manifold's unit expressions to type-safely build ranges with nice syntax.
+
+All `Number` types from `int` and `float` to `BigInteger`, `BigDecimal`, and `Rational` support *sequential* ranges that
+can be iterated:
+```java
+for (int i: 1 to 5) {
+  out.println(i);
+}
+``` 
+To iterate in reverse order, simply reorder the range endpoints:
+```java
+for (int i: 5 to 1) {
+  out.println(i);
+}
+``` 
+
+`RangeFun` also defines constants for iterating over a range with a *step*:
+```java
+for (int i: 5 to 1 step 2) {
+  out.println(i);
+}
+``` 
+
+If you are using [Dimensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+for the endpoints, you can use the `unit` constant to define unit increments: 
+```java
+for (Mass m: 2kg to 10kg unit oz) {
+  out.println(m);
+}
+``` 
+
+You can use variations of the `to` constant to exclude the range endpoints:
+```java
+for (int i: 1 _to 5) {
+  out.println(i); // 1 is excluded
+}
+for (int i: 1 to_ 5) {
+  out.println(i); // 5 is excluded
+}
+for (int i: 1 _to_ 5) {
+  out.println(i); // both 1 and 5 are excluded
+}
+``` 
+
+## Kinds of Ranges
+
+Use the `to` constant with any `Comparable`, `Sequential`, or `Number` type to create a range. A range consisting of
+`Sequential` endpoints is a `SequentialRange`, which means it can be iterated, while a range with just `Comparable`
+endpoints can only be tested for containment using the `inside` RangeFun constant:
+
+```java
+if ("scott" inside "n" to "zzz") {
+  out.println("ok");
+}
+```
+ 
+Note the `Sequential` interface along with several others are defined as part of the `manifold-collections` range API in
+the `manifold.collections.api.range` package.
+
+
+todo: more docs
 
  
 # IDE Support 

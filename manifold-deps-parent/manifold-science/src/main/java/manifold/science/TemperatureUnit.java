@@ -56,7 +56,7 @@ public enum TemperatureUnit implements Unit<Temperature, TemperatureUnit>
     return _fromK.apply( t.toBaseNumber() );
   }
 
-  public EnergyUnit multiply( HeatCapacityUnit c ) {
+  public EnergyUnit times( HeatCapacityUnit c ) {
     return c.getEnergyUnit();
   }
 }

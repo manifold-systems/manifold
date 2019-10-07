@@ -38,11 +38,11 @@ public final class MomentumUnit extends AbstractProductUnit<MassUnit, VelocityUn
     return getRightUnit();
   }
   
-  public EnergyUnit multiply( VelocityUnit v ) {
+  public EnergyUnit times( VelocityUnit v ) {
     return EnergyUnit.get( getMassUnit() * (getVelocityUnit() / v.getTimeUnit()), v.getLengthUnit() );
   }
     
-  public MassUnit divide( VelocityUnit w ) {
+  public MassUnit div( VelocityUnit w ) {
     return getMassUnit();
   }  
 }

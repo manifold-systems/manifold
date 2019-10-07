@@ -23,10 +23,10 @@ public final class Inductance extends AbstractMeasure<InductanceUnit, Inductance
     return new Inductance( value, unit );
   }
 
-  public Resistance divide( Time time ) {
+  public Resistance div( Time time ) {
     return new Resistance( toBaseNumber() / time.toBaseNumber(), ResistanceUnit.BASE, getUnit().getResistanceUnit() );
   }
-  public Time divide( Resistance resistance ) {
+  public Time div( Resistance resistance ) {
     return new Time( toBaseNumber() / resistance.toBaseNumber(), TimeUnit.BASE, getUnit().getTimeUnit() );
   }
 }

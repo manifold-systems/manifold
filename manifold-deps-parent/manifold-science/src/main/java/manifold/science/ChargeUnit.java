@@ -54,18 +54,18 @@ public enum ChargeUnit implements Unit<Charge, ChargeUnit>
     return len.toBaseNumber() / _coulombs;
   }
 
-  public CurrentUnit divide( TimeUnit time ) {
+  public CurrentUnit div( TimeUnit time ) {
     return CurrentUnit.get( this, time );
   }
 
-  public TimeUnit divide( CurrentUnit i ) {
+  public TimeUnit div( CurrentUnit i ) {
     return i.getTimeUnit();
   }
 
-  public CapacitanceUnit divide( PotentialUnit p ) {
+  public CapacitanceUnit div( PotentialUnit p ) {
     return CapacitanceUnit.get( this, p );
   }
-  public PotentialUnit divide( CapacitanceUnit cu ) {
+  public PotentialUnit div( CapacitanceUnit cu ) {
     return cu.getPotentialUnit();
   }
 }

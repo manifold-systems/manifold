@@ -16,10 +16,10 @@
 
 package manifold.science.api;
 
-import manifold.ext.api.IComparableWith;
+import manifold.ext.api.ComparableUsing;
 import manifold.science.util.Rational;
 
-public interface Dimension<S extends Dimension<S>> extends IComparableWith<S>
+public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
 {
   /**
    * Given a value produce a copy of this dimension with the given value
@@ -55,36 +55,36 @@ public interface Dimension<S extends Dimension<S>> extends IComparableWith<S>
    * Default arithmetic behavior.
    */
 
-  default S negate() {
-    return copy( toBaseNumber().negate() );
+  default S unaryMinus() {
+    return copy( toBaseNumber().unaryMinus() );
   }
 
-  default S add( S operand )
+  default S plus( S operand )
   {
-    return copy( toBaseNumber().add( operand.toBaseNumber() ) );
+    return copy( toBaseNumber().plus( operand.toBaseNumber() ) );
   }
-  default S subtract( S operand )
+  default S minus( S operand )
   {
-    return copy( toBaseNumber().subtract( operand.toBaseNumber() ) );
+    return copy( toBaseNumber().minus( operand.toBaseNumber() ) );
   }
-  default Rational divide( S operand )
+  default Rational div( S operand )
   {
     return toBaseNumber() / operand.toBaseNumber();
   }
-  default Rational remainder( S operand )
+  default Rational rem( S operand )
   {
     return toBaseNumber() % operand.toBaseNumber();
   }
 
-  default S multiply( Number operand )
+  default S times( Number operand )
   {
     return copy( toBaseNumber() * operand );
   }
-  default S divide( Number operand )
+  default S div( Number operand )
   {
     return copy( toBaseNumber() / operand );
   }
-  default S remainder( Number operand )
+  default S rem( Number operand )
   {
     return copy( toBaseNumber() % operand );
   }

@@ -23,14 +23,14 @@ public final class Potential extends AbstractMeasure<PotentialUnit, Potential>
     return new Potential( value, unit );
   }
 
-  public Power multiply( Current current ) {
+  public Power times( Current current ) {
     return new Power( toBaseNumber() * current.toBaseNumber(), PowerUnit.BASE, getUnit().getPowerUnit() );
   }
 
-  public Resistance divide( Current i ) {
+  public Resistance div( Current i ) {
     return new Resistance( toBaseNumber() / i.toBaseNumber(), ResistanceUnit.BASE, ResistanceUnit.get( getUnit(), i.getUnit() ) );
   }
-  public Current divide( Resistance r ) {
+  public Current div( Resistance r ) {
     return new Current( toBaseNumber() / r.toBaseNumber(), CurrentUnit.BASE, r.getUnit().getCurrentUnit() );
   }
 }

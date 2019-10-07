@@ -67,11 +67,11 @@ public final class VolumeUnit extends AbstractProductUnit<LengthUnit, AreaUnit, 
     return getAreaUnit().isSquare() && getAreaUnit().getWidthUnit() == getLengthUnit();
   }
 
-  public LengthUnit divide( AreaUnit len ) {
+  public LengthUnit div( AreaUnit len ) {
     return getLengthUnit();
   }
 
-  public MassUnit multiply( DensityUnit density ) {
+  public MassUnit times( DensityUnit density ) {
     return density.getMassUnit();
   }
 }

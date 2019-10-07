@@ -24,15 +24,15 @@ public final class Volume extends AbstractMeasure<VolumeUnit, Volume>
     return new Volume( value, unit );
   }
 
-  public Area divide( Length t ) {
+  public Area div( Length t ) {
     return new Area( toBaseNumber() / t.toBaseNumber(), AreaUnit.BASE, AreaUnit.get( t.getUnit() ) );
   }
   
-  public Length divide( Area area ) {
+  public Length div( Area area ) {
     return new Length( toBaseNumber() / area.toBaseNumber(), LengthUnit.BASE, area.getUnit().getWidthUnit() );
   }
   
-  public Mass multiply( Density density ) {
+  public Mass times( Density density ) {
     return new Mass( toBaseNumber() * density.toBaseNumber(), MassUnit.BASE, density.getUnit().getMassUnit() );
   }
 }

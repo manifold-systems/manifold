@@ -18,7 +18,7 @@ package manifold.science;
 
 import java.util.ArrayList;
 import java.util.List;
-import manifold.ext.api.IComparableWith;
+import manifold.ext.api.ComparableUsing;
 import manifold.science.util.Rational;
 import org.junit.Test;
 
@@ -60,7 +60,7 @@ public class TestMe
     assertEquals( Rational.get( 5 ).toString(), (5r).toString() );
   }
 
-  static class Fuzz<T extends Comparable<T>> implements IComparableWith<Fuzz<T>>
+  static class Fuzz<T extends Comparable<T>> implements ComparableUsing<Fuzz<T>>
   {
     T _s;
     public Fuzz( T s )
@@ -68,17 +68,17 @@ public class TestMe
       _s = s;
     }
 
-    public Fuzz<String> add( Fuzz<T> op )
+    public Fuzz<String> plus( Fuzz<T> op )
     {
       return new Fuzz<>( _s.toString() + op._s.toString() );
     }
 
-    public Integer multiply( Fuzz<T> op )
+    public Integer times( Fuzz<T> op )
     {
       return Integer.parseInt( _s.toString() ) * Integer.parseInt( op._s.toString() );
     }
 
-    public Fuzz<T> multiply( double op )
+    public Fuzz<T> times( double op )
     {
       return new Fuzz<>( (T)String.valueOf( op ) );
     }

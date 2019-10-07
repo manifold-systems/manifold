@@ -48,19 +48,19 @@ public final class PowerUnit extends AbstractQuotientUnit<EnergyUnit, TimeUnit, 
     return getRightUnit();
   }
   
-  public ForceUnit divide( VelocityUnit v ) {
+  public ForceUnit div( VelocityUnit v ) {
     return getEnergyUnit().getForceUnit();
   }
 
-  public VelocityUnit divide( ForceUnit force ) {
+  public VelocityUnit div( ForceUnit force ) {
     return getEnergyUnit().getForceUnit().getAccUnit().getVelocityUnit();
   }
 
-  public CurrentUnit divide( PotentialUnit potential ) {
+  public CurrentUnit div( PotentialUnit potential ) {
     return potential.getCurrentUnit();
   }
 
-  public PotentialUnit divide( CurrentUnit current ) {
+  public PotentialUnit div( CurrentUnit current ) {
     return PotentialUnit.get( this, current );
   }
 }

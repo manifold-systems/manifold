@@ -96,27 +96,27 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
   }
 
 
-  public LengthUnit multiply( VelocityUnit v ) {
+  public LengthUnit times( VelocityUnit v ) {
     return v.getLengthUnit();
   }
 
-  public VelocityUnit multiply( AccelerationUnit acc ) {
+  public VelocityUnit times( AccelerationUnit acc ) {
     return acc.getVelocityUnit();
   }
 
-  public ChargeUnit multiply( CurrentUnit current ) {
+  public ChargeUnit times( CurrentUnit current ) {
     return ChargeUnit.Coulomb;
   }
 
-  public AngleUnit multiply( FrequencyUnit frequency ) {
+  public AngleUnit times( FrequencyUnit frequency ) {
     return frequency.getAngleUnit();
   }
 
-  public EnergyUnit multiply( PowerUnit power ) {
+  public EnergyUnit times( PowerUnit power ) {
     return power.getEnergyUnit();
   }
 
-  public MomentumUnit multiply( ForceUnit force ) {
+  public MomentumUnit times( ForceUnit force ) {
     return force.getMassUnit() * (force.getAccUnit().getVelocityUnit().getLengthUnit()/this);
   }
 }

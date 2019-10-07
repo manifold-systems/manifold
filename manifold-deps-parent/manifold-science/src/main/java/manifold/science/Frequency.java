@@ -23,7 +23,7 @@ public final class Frequency extends AbstractMeasure<FrequencyUnit, Frequency>
     return new Frequency( value, unit );
   }
 
-  public Angle multiply( Time time ) {
+  public Angle times( Time time ) {
     return new Angle( toBaseNumber() * time.toBaseNumber(), AngleUnit.BASE, getUnit().getAngleUnit() );
   }
 }

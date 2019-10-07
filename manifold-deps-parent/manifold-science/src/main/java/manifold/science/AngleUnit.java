@@ -79,11 +79,11 @@ public enum AngleUnit implements Unit<Angle, AngleUnit>
     return angle.toBaseNumber() / _rads;
   }
 
-  public FrequencyUnit divide( TimeUnit time ) {
+  public FrequencyUnit div( TimeUnit time ) {
     return FrequencyUnit.get( this, time );
   }
 
-  public TimeUnit divide( FrequencyUnit freq ) {
+  public TimeUnit div( FrequencyUnit freq ) {
     return freq.getTimeUnit();
   }
 }

@@ -81,25 +81,25 @@ public enum MassUnit implements Unit<Mass, MassUnit>
     return w.toBaseNumber() / _kilograms;
   }
 
-  public MomentumUnit multiply( VelocityUnit velocity ) {
+  public MomentumUnit times( VelocityUnit velocity ) {
     return MomentumUnit.get( this, velocity );
   }
 
-  public ForceUnit multiply( AccelerationUnit acc ) {
+  public ForceUnit times( AccelerationUnit acc ) {
     return ForceUnit.get( this, acc );
   }
 
-  public PressureUnit divide( AreaUnit area ) {
+  public PressureUnit div( AreaUnit area ) {
     return PressureUnit.get( this, area );
   }
-  public AreaUnit divide( PressureUnit pressure ) {
+  public AreaUnit div( PressureUnit pressure ) {
     return pressure.getAreaUnit();
   }
 
-  public DensityUnit divide( VolumeUnit volume ) {
+  public DensityUnit div( VolumeUnit volume ) {
     return DensityUnit.get( this, volume );
   }
-  public VolumeUnit divide( DensityUnit d ) {
+  public VolumeUnit div( DensityUnit d ) {
     return d.getVolumeUnit();
   }
 }

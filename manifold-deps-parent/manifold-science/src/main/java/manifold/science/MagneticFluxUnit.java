@@ -40,11 +40,11 @@ public final class MagneticFluxUnit extends AbstractQuotientUnit<EnergyUnit, Cur
     return getRightUnit();
   }
 
-  public MagneticFluxDensityUnit divide( AreaUnit area ) {
+  public MagneticFluxDensityUnit div( AreaUnit area ) {
     return MagneticFluxDensityUnit.get( this, area );
   }
 
-  public AreaUnit divide( MagneticFluxDensityUnit mf ) {
+  public AreaUnit div( MagneticFluxDensityUnit mf ) {
     return mf.getAreaUnit();
   }
 }

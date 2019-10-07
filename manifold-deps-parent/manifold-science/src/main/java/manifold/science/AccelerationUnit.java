@@ -64,10 +64,10 @@ public final class AccelerationUnit extends AbstractQuotientUnit<VelocityUnit, T
   }
 
   public ForceUnit postfixBind( MassUnit mass ) {
-    return multiply( mass );
+    return times( mass );
   }
 
-  public ForceUnit multiply( MassUnit t ) {
+  public ForceUnit times( MassUnit t ) {
     return ForceUnit.get( t, this );
   }
 }

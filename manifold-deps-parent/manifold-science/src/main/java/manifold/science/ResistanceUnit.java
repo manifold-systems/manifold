@@ -40,7 +40,7 @@ public final class ResistanceUnit extends AbstractQuotientUnit<PotentialUnit, Cu
     return getRightUnit();
   }
 
-  public InductanceUnit multiply( TimeUnit t ) {
+  public InductanceUnit times( TimeUnit t ) {
     return InductanceUnit.get( this, t );
   }
 }

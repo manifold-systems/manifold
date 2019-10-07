@@ -23,18 +23,18 @@ public final class Charge extends AbstractMeasure<ChargeUnit, Charge>
     return new Charge( value, unit );
   }
 
-  public Current divide( Time time ) {
+  public Current div( Time time ) {
     return new Current( toBaseNumber() / time.toBaseNumber(), CurrentUnit.BASE, CurrentUnit.get( getUnit(), time.getUnit() ) );
   }
 
-  public Time divide( Current i ) {
+  public Time div( Current i ) {
     return new Time( toBaseNumber() / i.toBaseNumber(), TimeUnit.BASE, i.getUnit().getTimeUnit() );
   }
-  public Capacitance divide( Potential p ) {
+  public Capacitance div( Potential p ) {
     return new Capacitance( toBaseNumber() / p.toBaseNumber(), CapacitanceUnit.BASE, CapacitanceUnit.get( getUnit(), p.getUnit() ) );
   }
 
-  public Potential divide( Capacitance cap ) {
+  public Potential div( Capacitance cap ) {
     return new Potential( toBaseNumber() / cap.toBaseNumber(), PotentialUnit.BASE, cap.getUnit().getPotentialUnit() );
   }
 }

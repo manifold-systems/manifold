@@ -43,35 +43,35 @@ public final class Energy extends AbstractMeasure<EnergyUnit, Energy>
     return new Energy( value, unit );
   }
 
-  public Length divide( Force f ) {
+  public Length div( Force f ) {
     return new Length( toBaseNumber() / f.toBaseNumber(), Meter, getUnit().getLengthUnit() );
   }
   
-  public Force divide( Length len ) {
+  public Force div( Length len ) {
     return new Force( toBaseNumber() / len.toBaseNumber(), ForceUnit.BASE, getUnit().getForceUnit() );
   }
   
-  public Power divide( Time t ) {
+  public Power div( Time t ) {
     return new Power( toBaseNumber() / t.toBaseNumber(), PowerUnit.BASE, PowerUnit.get( getUnit(), t.getUnit() ) );
   }
 
-  public Time divide( Power power ) {
+  public Time div( Power power ) {
     return new Time( toBaseNumber() / power.toBaseNumber(), TimeUnit.BASE, power.getUnit().getTimeUnit() );
   }
   
-  public HeatCapacity divide( Temperature temperature ) {
+  public HeatCapacity div( Temperature temperature ) {
     return new HeatCapacity( toBaseNumber() / temperature.toBaseNumber(), HeatCapacityUnit.BASE, getUnit() / temperature.getUnit() );
   }
   
-  public Temperature divide( HeatCapacity c ) {
+  public Temperature div( HeatCapacity c ) {
     return new Temperature( toBaseNumber() / c.toBaseNumber(), TemperatureUnit.BASE, c.getUnit().getTemperatureUnit() );
   }
 
-  public MagneticFlux divide( Current i ) {
+  public MagneticFlux div( Current i ) {
     return new MagneticFlux( toBaseNumber() / i.toBaseNumber(), MagneticFluxUnit.BASE, MagneticFluxUnit.get( getUnit(), i.getUnit() ) );
   }
 
-  public Current divide( MagneticFlux mf ) {
+  public Current div( MagneticFlux mf ) {
     return new Current( toBaseNumber() / mf.toBaseNumber(), CurrentUnit.BASE, mf.getUnit().getCurrentUnit() );
   }
 }

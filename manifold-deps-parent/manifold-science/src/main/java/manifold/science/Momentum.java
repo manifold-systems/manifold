@@ -23,14 +23,14 @@ public final class Momentum extends AbstractMeasure<MomentumUnit, Momentum>
     return new Momentum( value, unit );
   }
 
-  public Energy multiply( Velocity v ) {
+  public Energy times( Velocity v ) {
     return new Energy( toBaseNumber() * v.toBaseNumber(), EnergyUnit.BASE, getUnit() * v.getUnit() );
   }
   
-  public Velocity divide( Mass mass ) {
+  public Velocity div( Mass mass ) {
     return new Velocity( toBaseNumber() / mass.toBaseNumber(), VelocityUnit.BASE, getUnit().getVelocityUnit() );
   }
-  public Mass divide( Velocity v ) {
+  public Mass div( Velocity v ) {
     return new Mass( toBaseNumber() / v.toBaseNumber(), MassUnit.BASE, getUnit().getMassUnit() );
   }
 }

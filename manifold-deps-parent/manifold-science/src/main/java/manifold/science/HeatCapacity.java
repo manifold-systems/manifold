@@ -23,7 +23,7 @@ public final class HeatCapacity extends AbstractMeasure<HeatCapacityUnit, HeatCa
     return new HeatCapacity( value, unit );
   }
 
-  public Energy multiply( Temperature temperature ) {
+  public Energy times( Temperature temperature ) {
     return new Energy( toBaseNumber() * temperature.toBaseNumber(), EnergyUnit.BASE, getUnit() * temperature.getUnit() );
   }
 }

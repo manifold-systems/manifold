@@ -43,7 +43,7 @@ public final class RangeFun
    * <pre><code>
    * import static manifold.collections.api.range.To.*;}
    * </code></pre>
-   * Then you can make range expressions on {@Sequential} values like this:
+   * Then you can make range expressions on {@link Sequential} values like this:
    * <pre><code>
    * for(int i: 1 to 10) {. . .}
    * for(Length len: 10ft to 100ft step 6 unit inch) {. . .}
@@ -53,7 +53,7 @@ public final class RangeFun
    * <pre><code>
    * if(num in 2 to 10) {...}
    * // same as...
-   * if(num >=2 && num <= 10) {...}
+   * if(num >= 2 && num <= 10) {...}
    * // and same as...
    * if((2 to 10).contains(num)) {...}
    * </code></pre>
@@ -90,18 +90,40 @@ public final class RangeFun
       _rightClosed = true;
     }
 
-    /** Sequential */
+    /** Comparable */
     
-    public <E extends Sequential<E, S, U>, S, U> From<E, S, U> postfixBind( E sequential )
+    public <E extends Comparable<E>> From_Comp<E> postfixBind( E comparable )
     {
-      return new From<>( sequential );
+      return new From_Comp<>( comparable );
     }
 
-    public class From<E extends Sequential<E, S, U>, S, U>
+    public class From_Comp<E extends Comparable<E>>
     {
       private E _start;
 
-      From( E sequential )
+      From_Comp( E sequential )
+      {
+        _start = sequential;
+      }
+
+      public ComparableRange<E> prefixBind( E end )
+      {
+        return new ComparableRange<>( _start, end, _leftClosed, _rightClosed, _start.compareTo( end ) > 0 );
+      }
+    }
+
+    /** Sequential */
+
+    public <E extends Sequential<E, S, U>, S, U> From_Seq<E, S, U> postfixBind( E sequential )
+    {
+      return new From_Seq<>( sequential );
+    }
+
+    public class From_Seq<E extends Sequential<E, S, U>, S, U>
+    {
+      private E _start;
+
+      From_Seq( E sequential )
       {
         _start = sequential;
       }
@@ -296,7 +318,7 @@ public final class RangeFun
     {
       private final RANGE _range;
 
-      public StepRange( RANGE range )
+      StepRange( RANGE range )
       {
         _range = range;
       }
@@ -326,7 +348,7 @@ public final class RangeFun
     {
       private final RANGE _range;
 
-      public UnitRange( RANGE range )
+      UnitRange( RANGE range )
       {
         _range = range;
       }
@@ -347,12 +369,12 @@ public final class RangeFun
       return INSTANCE;
     }
 
-    public <E extends Comparable<E>, S, U, RANGE extends AbstractIterableRange<E, S, U, RANGE>> InsideRange<E, S, U, RANGE> prefixBind( RANGE range )
+    public <E extends Comparable<E>, RANGE extends AbstractRange<E, RANGE>> InsideRange<E, RANGE> prefixBind( RANGE range )
     {
       return new InsideRange<>( range );
     }
 
-    public static class InsideRange<E extends Comparable<E>, S, U, RANGE extends AbstractIterableRange<E, S, U, RANGE>>
+    public static class InsideRange<E extends Comparable<E>, RANGE extends AbstractRange<E, RANGE>>
     {
       private final RANGE _range;
 
@@ -377,12 +399,12 @@ public final class RangeFun
       return INSTANCE;
     }
 
-    public <E extends Comparable<E>, S, U, RANGE extends AbstractIterableRange<E, S, U, RANGE>> OutsideRange<E, S, U, RANGE> prefixBind( RANGE range )
+    public <E extends Comparable<E>, RANGE extends AbstractRange<E, RANGE>> OutsideRange<E, RANGE> prefixBind( RANGE range )
     {
       return new OutsideRange<>( range );
     }
 
-    public static class OutsideRange<E extends Comparable<E>, S, U, RANGE extends AbstractIterableRange<E, S, U, RANGE>>
+    public static class OutsideRange<E extends Comparable<E>, RANGE extends AbstractRange<E, RANGE>>
     {
       private final RANGE _range;
 

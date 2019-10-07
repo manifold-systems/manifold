@@ -37,21 +37,21 @@ final public class Velocity extends AbstractMeasure<VelocityUnit, Velocity>
     return new Velocity( value, unit, unit );
   }
 
-  public Length multiply( Time t ) {
+  public Length times( Time t ) {
     return new Length( toBaseNumber() * t.toBaseNumber(), LengthUnit.BASE, getUnit().getLengthUnit() );
   }
 
-  public Acceleration divide( Time t ) {
+  public Acceleration div( Time t ) {
     return new Acceleration( toBaseNumber() / t.toBaseNumber(), AccelerationUnit.BASE, AccelerationUnit.get( getUnit(), t.getUnit() ) );
   }
-  public Time divide( Acceleration acc ) {
+  public Time div( Acceleration acc ) {
     return new Time( toBaseNumber() / acc.toBaseNumber(), TimeUnit.BASE, acc.getUnit().getTimeUnit() );
   }
-  public Momentum multiply( Mass mass ) {
+  public Momentum times( Mass mass ) {
     return new Momentum( toBaseNumber() * mass.toBaseNumber(), MomentumUnit.BASE, MomentumUnit.get( mass.getUnit(), getUnit() ) );
   }
 
-  public Power multiply( Force force ) {
+  public Power times( Force force ) {
     return new Power( toBaseNumber() * force.toBaseNumber(), PowerUnit.BASE, getUnit() * force.getUnit() );
   }
 }

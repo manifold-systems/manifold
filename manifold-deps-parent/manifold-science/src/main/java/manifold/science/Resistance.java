@@ -24,11 +24,11 @@ public final class Resistance extends AbstractMeasure<ResistanceUnit, Resistance
     return new Resistance( value, unit );
   }
 
-  public Potential multiply( Current current ) {
+  public Potential times( Current current ) {
     return new Potential( toBaseNumber() * current.toBaseNumber(), PotentialUnit.BASE, getUnit().getPotentialUnit() );
   }
   
-  public Inductance multiply( Time time ) {
+  public Inductance times( Time time ) {
     return new Inductance( toBaseNumber() * time.toBaseNumber(), InductanceUnit.BASE, getUnit() * time.getUnit() );
   }
 }

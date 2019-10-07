@@ -24,7 +24,7 @@ public final class Capacitance extends AbstractMeasure<CapacitanceUnit, Capacita
     return new Capacitance( value, unit );
   }
 
-  public Charge multiply( Potential potential ) {
+  public Charge times( Potential potential ) {
     return new Charge( toBaseNumber() * potential.toBaseNumber(), ChargeUnit.BASE, getUnit().getChargeUnit() );
   }
 }

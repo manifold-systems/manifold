@@ -23,16 +23,16 @@ public final class MagneticFlux extends AbstractMeasure<MagneticFluxUnit, Magnet
     return new MagneticFlux( value, unit );
   }
 
-  public Energy multiply( Current current ) {
+  public Energy times( Current current ) {
     return new Energy( toBaseNumber() * current.toBaseNumber(), EnergyUnit.BASE, getUnit().getEnergyUnit() );
   }
 
-  public MagneticFluxDensity divide( Area area ) {
+  public MagneticFluxDensity div( Area area ) {
     return new MagneticFluxDensity( toBaseNumber() / area.toBaseNumber(),
       MagneticFluxDensityUnit.BASE, MagneticFluxDensityUnit.get( getUnit(), area.getUnit() ) );
   }
 
-  public Area divide( MagneticFluxDensity mf ) {
+  public Area div( MagneticFluxDensity mf ) {
     return new Area( toBaseNumber() / mf.toBaseNumber(), AreaUnit.BASE, mf.getUnit().getAreaUnit() );
   }
 }

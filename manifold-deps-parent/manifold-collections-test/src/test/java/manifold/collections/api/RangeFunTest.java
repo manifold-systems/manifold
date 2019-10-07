@@ -18,6 +18,7 @@ package manifold.collections.api;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import manifold.collections.api.range.ComparableRange;
 import org.junit.Test;
 
 
@@ -112,5 +113,11 @@ public class RangeFunTest
       bdCheck = bdCheck + BigDecimal.ONE;
     }
     assertEquals( bd10 + BigDecimal.ONE, bdCheck );
+  }
+
+  @Test
+  public void testComparable()
+  {
+    assertTrue( "scott" inside "n" to "zzz" );
   }
 }

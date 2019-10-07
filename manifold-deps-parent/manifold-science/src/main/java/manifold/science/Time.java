@@ -44,27 +44,27 @@ final public class Time extends AbstractMeasure<TimeUnit, Time>
     return new Time( Rational.get( System.nanoTime() ), Nano );
   }
 
-  public Length multiply( Velocity r ) {
+  public Length times( Velocity r ) {
     return new Length( toBaseNumber() * r.toBaseNumber(), LengthUnit.BASE, r.getUnit().getLengthUnit() );
   }
 
-  public Velocity multiply( Acceleration acc ) {
+  public Velocity times( Acceleration acc ) {
     return new Velocity( toBaseNumber() * acc.toBaseNumber(), VelocityUnit.BASE, acc.getUnit().getVelocityUnit() );
   }
 
-  public Charge multiply( Current current ) {
+  public Charge times( Current current ) {
     return new Charge( toBaseNumber() * current.toBaseNumber(), ChargeUnit.BASE, current.getUnit().getChargeUnit() );
   }
 
-  public Angle multiply( Frequency frequency ) {
+  public Angle times( Frequency frequency ) {
     return new Angle( toBaseNumber() * frequency.toBaseNumber(), AngleUnit.BASE, frequency.getUnit().getAngleUnit() );
   }
 
-  public Energy multiply( Power power ) {
+  public Energy times( Power power ) {
     return new Energy( toBaseNumber() * power.toBaseNumber(), EnergyUnit.BASE, power.getUnit().getEnergyUnit() );
   }
 
-  public Momentum multiply( Force force ) {
+  public Momentum times( Force force ) {
     return new Momentum( toBaseNumber() * force.toBaseNumber(), MomentumUnit.BASE, getUnit() * force.getUnit() );
   }
 }

@@ -57,19 +57,19 @@ public final class ForceUnit extends AbstractProductUnit<MassUnit, AccelerationU
     return getRightUnit();
   }
         
-  public PowerUnit multiply( VelocityUnit v ) {
+  public PowerUnit times( VelocityUnit v ) {
     return PowerUnit.get( this * v.getLengthUnit(), v.getTimeUnit() );
   }
 
-  public EnergyUnit multiply( LengthUnit len ) {
+  public EnergyUnit times( LengthUnit len ) {
     return EnergyUnit.get( this, len );
   }
 
-  public MomentumUnit multiply( TimeUnit t ) {
+  public MomentumUnit times( TimeUnit t ) {
     return MomentumUnit.get( getMassUnit(), VelocityUnit.get( getAccUnit().getVelocityUnit().getLengthUnit(), t ) );
   }
   
-  public MassUnit divide( AccelerationUnit acc ) {
+  public MassUnit div( AccelerationUnit acc ) {
     return getMassUnit();
   }
 }

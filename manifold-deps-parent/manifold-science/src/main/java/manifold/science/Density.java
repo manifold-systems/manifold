@@ -26,7 +26,7 @@ public final class Density extends AbstractMeasure<DensityUnit, Density>
     return new Density( value, unit );
   }
 
-  public Mass multiply( Volume w ) {
+  public Mass times( Volume w ) {
     return new Mass( toBaseNumber() * w.toBaseNumber(), Kilogram, getUnit().getMassUnit() );
   }
 }

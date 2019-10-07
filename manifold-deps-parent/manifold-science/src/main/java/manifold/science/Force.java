@@ -39,22 +39,22 @@ public final class Force extends AbstractMeasure<ForceUnit, Force>
     return new Force( value, unit );
   }
 
-  public Power multiply( Velocity v ) {
+  public Power times( Velocity v ) {
     return new Power( toBaseNumber() * v.toBaseNumber(), PowerUnit.BASE, getUnit() * v.getUnit().getLengthUnit() / v.getUnit().getTimeUnit() );
   }
 
-  public Energy multiply( Length len ) {
+  public Energy times( Length len ) {
     return new Energy( toBaseNumber() * len.toBaseNumber(), EnergyUnit.BASE, getUnit() * len.getUnit() );
   }
 
-  public Momentum multiply( Time t ) {
+  public Momentum times( Time t ) {
     return new Momentum( toBaseNumber() * t.toBaseNumber(), MomentumUnit.BASE, getUnit() * t.getUnit() );
   }
 
-  public Acceleration divide( Mass w ) {
+  public Acceleration div( Mass w ) {
     return new Acceleration( toBaseNumber() / w.toBaseNumber(), AccelerationUnit.BASE, getUnit().getAccUnit() );
   }
-  public Mass divide( Acceleration acc ) {
+  public Mass div( Acceleration acc ) {
     return new Mass( toBaseNumber() / acc.toBaseNumber(), MassUnit.BASE, getUnit().getMassUnit() );
   }
 }

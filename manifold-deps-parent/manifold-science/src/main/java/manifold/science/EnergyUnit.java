@@ -59,31 +59,31 @@ public final class EnergyUnit extends AbstractProductUnit<ForceUnit, LengthUnit,
     return getRightUnit();
   }
 
-  public ForceUnit divide( LengthUnit w ) {
+  public ForceUnit div( LengthUnit w ) {
     return getForceUnit();
   }
   
-  public PowerUnit divide( TimeUnit time ) {
+  public PowerUnit div( TimeUnit time ) {
     return PowerUnit.get( this, time );
   }
 
-  public TimeUnit divide( PowerUnit power ) {
+  public TimeUnit div( PowerUnit power ) {
     return power.getTimeUnit();
   }
   
-  public HeatCapacityUnit divide( TemperatureUnit temperature ) {
+  public HeatCapacityUnit div( TemperatureUnit temperature ) {
     return HeatCapacityUnit.get( this, temperature );
   }
   
-  public TemperatureUnit divide( HeatCapacityUnit c ) {
+  public TemperatureUnit div( HeatCapacityUnit c ) {
     return c.getTemperatureUnit();
   }
 
-  public MagneticFluxUnit divide( CurrentUnit i ) {
+  public MagneticFluxUnit div( CurrentUnit i ) {
     return MagneticFluxUnit.get( this, i );
   }
 
-  public CurrentUnit divide( MagneticFluxUnit mf ) {
+  public CurrentUnit div( MagneticFluxUnit mf ) {
     return mf.getCurrentUnit();
   }
 }

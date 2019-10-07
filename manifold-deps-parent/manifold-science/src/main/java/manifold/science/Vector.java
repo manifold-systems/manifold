@@ -65,12 +65,12 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
     return _magnitude.fromBaseNumber( _magnitude.toBaseNumber() * Math.sin( _angle.to( Radian ).getValue().doubleValue() ) );
   }
 
-  public V negate()
+  public V unaryMinus()
   {
     return make( _magnitude, _angle + 180 Degree );
   }
 
-  public V add( V v )
+  public V plus( V v )
   {
     //todo: for better accuracty use magnitude and angle components instead of x, y coords
 
@@ -93,19 +93,19 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
     return make( _magnitude.fromBaseNumber( mag ), new Angle( angle, Radian, _angle.getUnit() ) );
   }
 
-  public V subtract( V v )
+  public V minus( V v )
   {
-    return add( -v );
+    return plus( -v );
   }
 
-  public Rational multiply( V v )
+  public Rational times( V v )
   {
     Rational x = getX().toBaseNumber() * v.getX().toBaseNumber();
     Rational y = getY().toBaseNumber() * v.getY().toBaseNumber();
     return x + y;
   }
 
-  public Rational divide( V v )
+  public Rational div( V v )
   {
     throw new UnsupportedOperationException();
   }
@@ -176,16 +176,8 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
   }
 
   @Override
-  public boolean compareToWith( V that, String op )
+  public EqualityMode equalityMode()
   {
-    switch( op )
-    {
-      case "==":
-        return equals( that );
-      case "!=":
-        return !equals( that );
-      default:
-        return Dimension.super.compareToWith( that, op );
-    }
+    return EqualityMode.Equals;
   }
 }

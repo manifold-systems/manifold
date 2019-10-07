@@ -23,11 +23,11 @@ public final class Area extends AbstractMeasure<AreaUnit, Area>
     return new Area( value, unit );
   }
 
-  public Volume multiply( Length t ) {
+  public Volume times( Length t ) {
     return new Volume( toBaseNumber() * t.toBaseNumber(), VolumeUnit.BASE, VolumeUnit.get( t.getUnit(), getUnit() ) );
   }
   
-  public Length divide( Length t ) {
+  public Length div( Length t ) {
     return new Length( toBaseNumber() / t.toBaseNumber(), LengthUnit.BASE, t.getUnit() );
   }
 }

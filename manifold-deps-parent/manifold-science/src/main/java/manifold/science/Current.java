@@ -26,14 +26,14 @@ public final class Current extends AbstractMeasure<CurrentUnit, Current>
     return new Current( value, unit );
   }
 
-  public Charge multiply( Time time ) {
+  public Charge times( Time time ) {
     return new Charge( toBaseNumber() * time.toBaseNumber(), Coulomb );
   }
 
-  public Conductance divide( Potential p ) {
+  public Conductance div( Potential p ) {
     return new Conductance( toBaseNumber() / p.toBaseNumber(), ConductanceUnit.BASE, ConductanceUnit.get( getUnit(), p.getUnit() ) );
   }
-  public Potential divide( Conductance c ) {
+  public Potential div( Conductance c ) {
     return new Potential( toBaseNumber() / c.toBaseNumber(), PotentialUnit.BASE, c.getUnit().getPotentialUnit() );
   }
 }

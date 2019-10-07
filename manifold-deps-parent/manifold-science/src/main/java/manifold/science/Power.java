@@ -23,23 +23,23 @@ public final class Power extends AbstractMeasure<PowerUnit, Power>
     return new Power( value, unit );
   }
 
-  public Energy multiply( Time time ) {
+  public Energy times( Time time ) {
     return new Energy( toBaseNumber() * time.toBaseNumber(), EnergyUnit.BASE, getUnit().getEnergyUnit() );
   }
 
-  public Force divide( Velocity v ) {
+  public Force div( Velocity v ) {
     return new Force( toBaseNumber() / v.toBaseNumber(), ForceUnit.BASE, getUnit().getEnergyUnit().getForceUnit() );
   }
 
-  public Velocity divide( Force force ) {
+  public Velocity div( Force force ) {
     return new Velocity( toBaseNumber() / force.toBaseNumber(), VelocityUnit.BASE, getUnit().getEnergyUnit().getForceUnit().getAccUnit().getVelocityUnit() );
   }
 
-  public Current divide( Potential potential ) {
+  public Current div( Potential potential ) {
     return new Current( toBaseNumber() / potential.toBaseNumber(), CurrentUnit.BASE, potential.getUnit().getCurrentUnit() );
   }
 
-  public Potential divide( Current current ) {
+  public Potential div( Current current ) {
     return new Potential( toBaseNumber() / current.toBaseNumber(), PotentialUnit.BASE, PotentialUnit.get( getUnit(), current.getUnit() ) );
   }
 }

@@ -108,26 +108,26 @@ public enum LengthUnit implements Unit<Length, LengthUnit>
   }
 
   public EnergyUnit postfixBind( ForceUnit f ) {
-    return multiply( f );
+    return times( f );
   }
 
-  public VelocityUnit divide( TimeUnit t ) {
+  public VelocityUnit div( TimeUnit t ) {
     return VelocityUnit.get( this, t );
   }
 
-  public TimeUnit divide( VelocityUnit v ) {
+  public TimeUnit div( VelocityUnit v ) {
     return v.getTimeUnit();
   }
 
-  public AreaUnit multiply( LengthUnit len ) {
+  public AreaUnit times( LengthUnit len ) {
     return AreaUnit.get( this, len );
   }
 
-  public VolumeUnit multiply( AreaUnit area ) {
+  public VolumeUnit times( AreaUnit area ) {
     return VolumeUnit.get( this, area );
   }
 
-  public EnergyUnit multiply( ForceUnit f ) {
+  public EnergyUnit times( ForceUnit f ) {
     return EnergyUnit.get( f, this );
   }
 }

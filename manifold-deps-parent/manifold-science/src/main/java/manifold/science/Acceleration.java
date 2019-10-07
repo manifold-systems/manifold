@@ -40,11 +40,11 @@ public final class Acceleration extends AbstractMeasure<AccelerationUnit, Accele
     return new Acceleration( value, unit );
   }
 
-  public Force multiply( Mass mass ) {
+  public Force times( Mass mass ) {
     return new Force( toBaseNumber() * mass.toBaseNumber(), ForceUnit.BASE, ForceUnit.get( mass.getUnit(), getUnit() ) );
   }
 
-  public Velocity multiply( Time time ) {
+  public Velocity times( Time time ) {
     return new Velocity( toBaseNumber() * time.toBaseNumber(), VelocityUnit.BASE, getUnit().getVelocityUnit() );
   }
 }

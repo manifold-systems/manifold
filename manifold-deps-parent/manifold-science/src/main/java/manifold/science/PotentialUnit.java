@@ -40,7 +40,7 @@ public final class PotentialUnit extends AbstractQuotientUnit<PowerUnit, Current
     return getRightUnit();
   }
 
-  public ResistanceUnit divide( CurrentUnit current ) {
+  public ResistanceUnit div( CurrentUnit current ) {
     return ResistanceUnit.get( this, current );
   }
 }

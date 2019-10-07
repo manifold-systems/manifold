@@ -24,7 +24,7 @@ public final class Pressure extends AbstractMeasure<PressureUnit, Pressure>
     return new Pressure( value, unit );
   }
 
-  public Mass multiply( Area w ) {
+  public Mass times( Area w ) {
     return new Mass( toBaseNumber() * w.toBaseNumber(), MassUnit.BASE, getUnit().getMassUnit() );
   }
 }

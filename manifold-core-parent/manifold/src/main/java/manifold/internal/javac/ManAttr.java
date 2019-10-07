@@ -45,14 +45,16 @@ public interface ManAttr
 {
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
+  String COMPARE_TO_USING = "compareToUsing";
+  String UNARY_MINUS = "unaryMinus";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
   {{
-    put( Tag.PLUS, "add" );
-    put( Tag.MINUS, "subtract" );
-    put( Tag.MUL, "multiply" );
-    put( Tag.DIV, "divide" );
-    put( Tag.MOD, "remainder" );
-    // note ==, !=, >, >=, <, <=  are covered via IComparableWith
+    put( Tag.PLUS, "plus" );
+    put( Tag.MINUS, "minus" );
+    put( Tag.MUL, "times" );
+    put( Tag.DIV, "div" );
+    put( Tag.MOD, "rem" );
+    // note ==, !=, >, >=, <, <=  are covered via ComparableUsing
   }};
 
   JCTree.JCMethodDecl peekMethodDef();
@@ -273,7 +275,7 @@ public interface ManAttr
       return null;
     }
 
-    return getMethodSymbol( types, expr, null, "negate", (Symbol.ClassSymbol)expr.tsym, 0 );
+    return getMethodSymbol( types, expr, null, UNARY_MINUS, (Symbol.ClassSymbol)expr.tsym, 0 );
   }
 
   static Symbol.MethodSymbol resolveOperatorMethod( Types types, Tag tag, Type left, Type right )
@@ -283,7 +285,7 @@ public interface ManAttr
     {
       if( isComparableOperator( tag ) )
       {
-        opName = "compareToWith";
+        opName = COMPARE_TO_USING;
       }
       else
       {
@@ -301,7 +303,7 @@ public interface ManAttr
       return null;
     }
 
-    int paramCount = opName.equals( "compareToWith" ) ? 2 : 1;
+    int paramCount = opName.equals( COMPARE_TO_USING ) ? 2 : 1;
     return getMethodSymbol( types, left, right, opName, (Symbol.ClassSymbol)left.tsym, paramCount );
   }
 

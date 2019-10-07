@@ -71,7 +71,7 @@ public abstract class AbstractQuotientUnit<A extends Unit,
     return getLeftUnit().toNumber() / getRightUnit().toNumber();
   }
 
-  public A multiply( B a ) {
+  public A times( B a ) {
     return getLeftUnit();
   }
 }

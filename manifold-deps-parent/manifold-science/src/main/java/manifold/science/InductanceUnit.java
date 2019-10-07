@@ -40,7 +40,7 @@ public final class InductanceUnit extends AbstractProductUnit<ResistanceUnit, Ti
     return getRightUnit();
   }
   
-  public ResistanceUnit divide( TimeUnit w ) {
+  public ResistanceUnit div( TimeUnit w ) {
     return getResistanceUnit();
   }
 }

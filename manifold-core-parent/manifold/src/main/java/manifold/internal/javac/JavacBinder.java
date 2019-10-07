@@ -126,9 +126,9 @@ class JavacBinder extends AbstractBinder<Symbol.MethodSymbol, JCBinary, JCExpres
     return new Node<>( binary, left._operatorLeft );
   }
 
-  private Type memberType( Type recieverType, Type argType, Symbol.MethodSymbol binderMethod )
+  private Type memberType( Type receiverType, Type argType, Symbol.MethodSymbol binderMethod )
   {
-    Type mt = _types.memberType( recieverType, binderMethod );
+    Type mt = _types.memberType( receiverType, binderMethod );
     if( mt instanceof Type.ForAll )
     {
       return resolveGenericReturnType( argType, (Type.ForAll)mt );

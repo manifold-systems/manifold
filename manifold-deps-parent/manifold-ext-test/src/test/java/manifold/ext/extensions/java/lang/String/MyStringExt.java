@@ -14,7 +14,7 @@ public abstract class MyStringExt
     System.out.println( thiz );
   }
 
-  public static String multiply( @This String thiz, String that )
+  public static String times( @This String thiz, String that )
   {
     return thiz + that;
   }
