@@ -519,8 +519,8 @@ projects uses operator overloading and unit expressions extensively.
 # Unit Expressions
 >Warning: **Experimental Feature**
 
-Manifold seamlessly extends Java with a unique feature called *unit expressions*, which let you write expressions in
-Java more naturally:
+Manifold seamlessly plugs into Java to provide a unique feature called *unit expressions*, which let you write
+expressions in Java more naturally:
 
 ```java
 // Type-safe and precise
