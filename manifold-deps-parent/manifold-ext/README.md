@@ -569,7 +569,7 @@ hand side of `10` and `MassUnit` defines the method:
 ```java
 public Mass postfixBind(Number magnitude) {...}
 ``` 
-The compiler can make a unit expression with the two operands of type `Mass`.
+the compiler builds a unit expression composed of the two operands resulting in type `Mass`.
 
 Notice there is no formal interface containing the `postfixBind()` and `prefixBind()` methods. Instead you implement
 them *structurally* simply by defining a method with the same name, parameter count, and non-void return type. This is
