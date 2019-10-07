@@ -578,21 +578,25 @@ of flexibility is otherwise not supported with Java's nominal type system.
 
 ## Operator Precedence
 
-The empty or sometimes called "adjacency" operator has a dynamic precedence. It favors a precedence between addition
-and multiplication, which means the following expression:
+The empty or sometimes called "adjacency" operator has a dynamic precedence. Statically, its precedence lies between
+addition and multiplication, thus the first line of parsing produces a static AST reflecting this order.  However,
+a second parse must be performed on unit expressions during type attribution to build the expression as intended. At
+this time the parser considers the operator as having an *equal* precedence with multiplication.
+
+To illustrate consider the following expression:
 
 ```java
 a b * c
 ```
 
-favors the following association:
+Having a precedence less than multiplication, statically, the empty operator results in this expression:
 
 ```java
 a (b*c)
 ```
 
-*However*, if there is no binding operation defined between `a` and `b*c`, but there is between `a` and `b`, and if
-multiplication is supported between `a b` and `c`, then it parses as:
+In a later stage when operand types are available the expression reparses to form a valid expression where `a` and `b`
+form a unit expression, which implements multiplication on `c`:
 
 ```java
 (a b)*c
