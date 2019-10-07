@@ -2,13 +2,13 @@
 
 Use the `manifold-science` framework to incorporate physical dimensions, units, and precise rational numbers into your
 application. Physical dimensions model real world quantities including everything from `Length` and `Mass` to
-`HeatCapacity` and `MagneticFluxDensity`. These classes provide an expressive, foolproof unit framework so you your
-calculations are always on target and accurate.
+`HeatCapacity` and `MagneticFluxDensity`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+these classes provide an expressive, foolproof unit framework for scientific applications.
 
-Conveniently write scientific expressions in Java as you would on paper:
+Conveniently express quantities of physical units in Java as you would on paper:
 ```java
 // Type-safe and precise
-Force f = 1k kg * 9.807 m/s/s; // 1000 kilgrams * exceleration of Earth's gravity
+Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
 
 // Use a variety of unit constants
 if (9807 N == f) { ... }
@@ -21,7 +21,7 @@ Mass m = 10 lb + 10 kg;
 Length distance = 100 mph * 3 hr;
 
 // Use unit expressions with the Range API  
-for( Mass m: 10kg to 100kg ) {
+for(Mass m: 10kg to 100kg) {
   . . .
 }
 ``` 
