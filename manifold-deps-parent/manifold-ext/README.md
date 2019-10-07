@@ -524,7 +524,7 @@ Java more naturally:
 
 ```java
 // Type-safe and precise
-Force f = 5kg * 9.807 m/s/s; // 1000 kilgrams * exceleration of Earth's gravity
+Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
 
 // Use a variety of unit constants
 if (49.035 N == f) { ... }
