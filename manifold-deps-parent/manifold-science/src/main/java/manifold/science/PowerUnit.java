@@ -6,6 +6,7 @@ import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
+import static manifold.science.util.CoercionConstants.r;
 import static manifold.science.TimeUnit.Second;
 
 public final class PowerUnit extends AbstractQuotientUnit<EnergyUnit, TimeUnit, Power, PowerUnit>

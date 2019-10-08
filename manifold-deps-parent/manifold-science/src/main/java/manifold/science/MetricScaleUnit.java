@@ -43,7 +43,6 @@ public enum MetricScaleUnit {
   m( MILLI, "milli", "m" ),
   c( CENTI, "centi", "c" ),
   de( DECI, "deci", "d" ), // 'de', not 'd' because conflicts with number literal float suffix
-  r( Rational.ONE, "", "" ), // a nice way to make Rational numbers from literals eg., 5r
   da( DECA, "Deca", "da" ),
   h( HECTO, "Hecto", "h" ),
   k( KILO, "Kilo", "k" ),

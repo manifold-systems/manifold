@@ -16,9 +16,6 @@
 
 package manifold.collections.api;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import manifold.collections.api.range.ComparableRange;
 import org.junit.Test;
 
 
@@ -88,36 +85,8 @@ public class RangeFunTest
   }
 
   @Test
-  public void testBigInteger()
-  {
-    BigInteger bi2 = BigInteger.valueOf( 2 );
-    BigInteger bi10 = BigInteger.valueOf( 10 );
-    BigInteger biCheck = bi2;
-    for( BigInteger value: bi2 to bi10 )
-    {
-      assertEquals( biCheck, value );
-      biCheck = biCheck + BigInteger.ONE;
-    }
-    assertEquals( bi10+ BigInteger.ONE, biCheck );
-  }
-
-  @Test
-  public void testBigDecimal()
-  {
-    BigDecimal bd2 = BigDecimal.valueOf( 2 );
-    BigDecimal bd10 = BigDecimal.valueOf( 10 );
-    BigDecimal bdCheck = bd2;
-    for( BigDecimal value: bd2 to bd10 )
-    {
-      assertEquals( bdCheck, value );
-      bdCheck = bdCheck + BigDecimal.ONE;
-    }
-    assertEquals( bd10 + BigDecimal.ONE, bdCheck );
-  }
-
-  @Test
   public void testComparable()
   {
-    assertTrue( "scott" inside "n" to "zzz" );
+    assertTrue( "scott" inside "N" to "z(" );
   }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.extensions.java.math.BigDecimal;
+package manifold.science.extensions.java.math.BigDecimal;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -63,6 +63,23 @@ public abstract class ManBigDecimalExt implements ComparableUsing<BigDecimal>
   /** Implements structural interface {@link ComparableUsing} to support relational operators {@code == != > >= < <=} */
   public static boolean compareToUsing( @This BigDecimal thiz, BigDecimal that, Operator op )
   {
-    return ComparableUsing.compareToUsing( (ComparableUsing<BigDecimal>)thiz, that, op );
+    switch( op )
+    {
+      case LT:
+        return thiz.compareTo( that ) < 0;
+      case LE:
+        return thiz.compareTo( that ) <= 0;
+      case GT:
+        return thiz.compareTo( that ) > 0;
+      case GE:
+        return thiz.compareTo( that ) >= 0;
+      case EQ:
+        return thiz.compareTo( that ) == 0;
+      case NE:
+        return thiz.compareTo( that ) != 0;
+
+      default:
+        throw new IllegalStateException();
+    }
   }
 }

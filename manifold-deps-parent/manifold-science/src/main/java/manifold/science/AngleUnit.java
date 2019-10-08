@@ -22,6 +22,7 @@ import manifold.science.util.Rational;
 
 import static manifold.science.MetricScaleUnit.*;
 import static manifold.science.util.DimensionlessConstants.*;
+import static manifold.science.util.CoercionConstants.r;
 
 public enum AngleUnit implements Unit<Angle, AngleUnit>
 {

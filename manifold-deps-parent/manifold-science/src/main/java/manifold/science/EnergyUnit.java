@@ -21,6 +21,7 @@ import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 import static manifold.science.MetricScaleUnit.*;
+import static manifold.science.util.CoercionConstants.r;
 
 public final class EnergyUnit extends AbstractProductUnit<ForceUnit, LengthUnit, Energy, EnergyUnit>
 {

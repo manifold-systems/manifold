@@ -19,19 +19,21 @@ package manifold.science.api;
 import manifold.ext.api.ComparableUsing;
 import manifold.science.util.Rational;
 
+/**
+ * {@code Dimension} is the basis for a physical dimension. It models a dimension has having a measure represented as a
+ * {@link Rational} value and common arithmetic operations which also serve as operator overloads.
+ * <p/>
+ * @param <S> Abstract dimension types are recursively defined to enforce type-safety
+ */
 public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
 {
   /**
    * Given a value produce a copy of this dimension with the given value
-   * @return
    */
   S copy( Rational value );
 
   /**
-   * When adding two of the same dimension types, this method is called on each operand,
-   * adds the numbers, and then calls fromNumber() for the result.
-   *
-   * @return the number of units for this dimension instance.
+   * @return the value for this dimension instance.
    */
   Rational toNumber();
 
@@ -41,19 +43,12 @@ public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
   }
 
   /**
-   * Returns a separate instance of this type with the given number of units.
-   * <p>
-   * This method is called when performing default operations. For instance, when adding two
-   * of the same dimension types, toNumber() is called on each operand, adds the numbers, and
-   * then calls fromNumber() for the result.
-   *
-   * @return a separate instance of this type given the number of units.
+   * @return a separate instance of this type with the given {@code value}.
    */
   S fromNumber( Rational value );
 
-  /*
-   * Default arithmetic behavior.
-   */
+
+  /* Default arithmetic behavior */
 
   default S unaryMinus() {
     return copy( toBaseNumber().unaryMinus() );

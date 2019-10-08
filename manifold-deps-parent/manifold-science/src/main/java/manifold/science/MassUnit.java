@@ -21,6 +21,7 @@ import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
+import static manifold.science.util.CoercionConstants.r;
 
 public enum MassUnit implements Unit<Mass, MassUnit>
 {

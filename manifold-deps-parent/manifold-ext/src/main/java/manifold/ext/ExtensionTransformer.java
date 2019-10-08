@@ -85,7 +85,7 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
-import static com.sun.tools.javac.code.Kinds.MTH;
+import static com.sun.tools.javac.code.TypeTag.BOT;
 import static com.sun.tools.javac.code.TypeTag.NONE;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -134,6 +134,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( operatorMethod != null )
       {
         operatorMethod = favorStringsWithNumberCoercion( tree, operatorMethod );
+        JCExpression equalityNullCheckTernary = null;
 
         JCTree.JCMethodInvocation methodCall;
         JCExpression receiver = swap ? tree.rhs : tree.lhs;
@@ -144,20 +145,43 @@ public class ExtensionTransformer extends TreeTranslator
         {
           if( tree.getTag() == JCTree.Tag.EQ || tree.getTag() == JCTree.Tag.NE )
           {
+            // Equality requires null check:
+            //
+            // a == b
+            // ? true/false
+            // : a == null || b == null
+            //   ? false/true
+            //   : a.compareTo( b, op );
+
             Symtab symbols = _tp.getSymtab();
-            Names names = Names.instance( _tp.getContext() );
-            Symbol.ClassSymbol compareWithSym = IDynamicJdk.instance().getTypeElement(
-              _tp.getContext(), _tp.getCompilationUnit(), ComparableUsing.class.getName() );
-            Symbol.MethodSymbol haveSameValueMeth = resolveMethod(
-              tree.pos(), names.fromString( "haveSameValue" ), compareWithSym.type,
-              List.from( new Type[]{symbols.objectType, symbols.objectType, symbols.booleanType} ) );
+
+            JCTree.JCBinary cond = make.Binary( JCTree.Tag.EQ, receiver, arg );
+            cond.type = symbols.booleanType;
+            setOperatorSymbol( symbols, cond, "==", symbols.objectType.tsym );
+
+            JCTree.JCLiteral nullLiteral = make.Literal( BOT, null );
+            nullLiteral.type = symbols.objectType;
+
+            JCTree.JCBinary eqNull1 = make.Binary( JCTree.Tag.EQ, receiver, nullLiteral );
+            eqNull1.type = symbols.booleanType;
+            setOperatorSymbol( symbols, eqNull1, "==", symbols.objectType.tsym );
+            JCTree.JCBinary eqNull2 = make.Binary( JCTree.Tag.EQ, arg, nullLiteral );
+            eqNull2.type = symbols.booleanType;
+            setOperatorSymbol( symbols, eqNull2, "==", symbols.objectType.tsym );
+            JCTree.JCBinary elsePart = make.Binary( JCTree.Tag.OR, eqNull1, eqNull2 );
+            elsePart.type = symbols.booleanType;
+            setOperatorSymbol( symbols, elsePart, "||", symbols.booleanType.tsym );
+
             methodCall = make.Apply( List.nil(),
-              memberAccess( make, _tp.getElementUtil(), ComparableUsing.class.getName() + ".haveSameValue" ),
-              List.from( new JCExpression[]{receiver, arg, make.Literal( tree.getTag() == JCTree.Tag.NE )} ) );
-            JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)methodCall.getMethodSelect();
-            newMethodSelect.sym = haveSameValueMeth;
-            newMethodSelect.type = haveSameValueMeth.type;
-            assignTypes( newMethodSelect.selected, compareWithSym );          
+              make.Select( receiver, operatorMethod ),
+              List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
+
+            JCTree.JCConditional elsePart2 = make.Conditional( elsePart, make.Literal( tree.getTag() == JCTree.Tag.NE ), methodCall );
+            elsePart2.type = symbols.booleanType;
+
+            equalityNullCheckTernary = make.Conditional( cond, make.Literal( tree.getTag() == JCTree.Tag.EQ ), elsePart2 );
+            equalityNullCheckTernary.type = symbols.booleanType;
+            equalityNullCheckTernary.pos = tree.pos;
           }
           else
           {
@@ -173,7 +197,7 @@ public class ExtensionTransformer extends TreeTranslator
         methodCall.setPos( tree.pos );
         methodCall.type = operatorMethod.getReturnType();
 
-        // If methodCall is an extension method, rewrite it accordingly
+        // If methodCall is an extension method, rewrite it
         Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
         if( extMethod != null )
         {
@@ -184,9 +208,19 @@ public class ExtensionTransformer extends TreeTranslator
         // Concrete type set in attr
         methodCall.type = tree.type;
 
-        result = methodCall;
+        result = equalityNullCheckTernary == null ? methodCall : equalityNullCheckTernary;
       }
     }
+  }
+
+  private void setOperatorSymbol( Symtab symbols, JCTree.JCBinary cond, String op, Symbol operandType )
+  {
+    Symbol.OperatorSymbol operatorSym = (Symbol.OperatorSymbol)IDynamicJdk.instance().getMembers( symbols.predefClass,
+      (Symbol s) -> s instanceof Symbol.OperatorSymbol &&
+                      s.name.toString().equals( op ) &&
+                      ((Symbol.MethodSymbol)s).params().get( 0 ).type.tsym == operandType )
+      .iterator().next(); // should be just one
+    IDynamicJdk.instance().setOperator( cond, operatorSym );
   }
 
   /**
@@ -778,7 +812,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( isExtensionMethod( tree.sym ) )
     {
       // Method references not supported on extension methods
-      
+
       _tp.report( tree, Diagnostic.Kind.ERROR,
         ExtIssueMsg.MSG_EXTENSION_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
     }

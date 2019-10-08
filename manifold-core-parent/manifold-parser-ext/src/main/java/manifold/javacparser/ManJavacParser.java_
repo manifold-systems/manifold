@@ -264,10 +264,7 @@ public class ManJavacParser extends JavacParser
     return
       token.kind == IDENTIFIER ||
       token.kind == INTLITERAL || token.kind == LONGLITERAL || token.kind == FLOATLITERAL || token.kind == DOUBLELITERAL || token.kind == STRINGLITERAL ||
-      token.kind == LPAREN; // for case (9 (x y z)) or ((a b)(c d))
-      // also note:
-      // - (a b (c d)) is illegal because conflicts with method call grammar b(c d), must be ((a b)(c d)) instead
-      // - ((a) b) is illegal because (a)b conflicts with type cast grammar, but ((a b) c) is ok
+      token.kind == LPAREN;
   }
 
   /**

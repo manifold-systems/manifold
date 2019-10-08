@@ -16,7 +16,6 @@
 
 package manifold.ext;
 
-import java.math.BigDecimal;
 import manifold.ext.api.ComparableUsing;
 import org.junit.Test;
 
@@ -25,20 +24,6 @@ import static org.junit.Assert.*;
 
 public class OperatorOverloadTest
 {
-  @Test
-  public void testBigDecimal()
-  {
-    BigDecimal bd1 = new BigDecimal( "1.2" );
-    BigDecimal bd2 = new BigDecimal( "2.4" );
-
-    assertEquals( new BigDecimal( "-1.2" ), -bd1 );
-    assertEquals( new BigDecimal( "3.6" ), bd1 + bd2 );
-    assertEquals( new BigDecimal( "-1.2" ), bd1 - bd2 );
-    assertEquals( new BigDecimal( "2.88" ), bd1 * bd2 );
-    assertEquals( new BigDecimal( "0.5" ), bd1 / bd2 );
-    assertEquals( new BigDecimal( "1.2" ), bd1 % bd2 );
-  }
-
   @Test
   public void testFuzz()
   {
