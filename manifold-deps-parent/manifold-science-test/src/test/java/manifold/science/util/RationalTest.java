@@ -24,7 +24,7 @@ import java.math.BigInteger;
 import org.junit.Test;
 
 
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 import static org.junit.Assert.*;
 
 public class RationalTest
@@ -32,6 +32,7 @@ public class RationalTest
   @Test
   public void testSimple()
   {
+    Rational x = 4.2r;
     assertEquals( "0 / 1", (0r).toString() );
     assertEquals( "1 / 1", (1r).toString() );
     assertEquals( "2 / 1", (2r).toString() );

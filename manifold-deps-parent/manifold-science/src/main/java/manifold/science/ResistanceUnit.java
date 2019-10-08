@@ -5,7 +5,7 @@ import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 
 public final class ResistanceUnit extends AbstractQuotientUnit<PotentialUnit, CurrentUnit, Resistance, ResistanceUnit>
 {

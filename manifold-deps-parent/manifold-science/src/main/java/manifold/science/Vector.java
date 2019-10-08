@@ -24,7 +24,7 @@ import manifold.science.util.Rational;
 
 import static manifold.science.AngleUnit.Degree;
 import static manifold.science.AngleUnit.Radian;
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 import static manifold.science.util.DimensionlessConstants.pi;
 
 //!! Highly experimental!

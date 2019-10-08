@@ -307,7 +307,7 @@ public interface ManAttr
     return getMethodSymbol( types, left, right, opName, (Symbol.ClassSymbol)left.tsym, paramCount );
   }
 
-  static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount )
+  public static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount )
   {
     Symbol.MethodSymbol methodSymbol = getMethodSymbol( types, left, right, opName, sym, paramCount,
       ( t1, t2 ) -> types.isSameType( t1, t2 ) );

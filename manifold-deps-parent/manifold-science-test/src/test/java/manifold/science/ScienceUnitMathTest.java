@@ -18,7 +18,7 @@ package manifold.science;
 
 import org.junit.Test;
 
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static manifold.science.util.UnitConstants.*;

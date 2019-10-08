@@ -85,6 +85,7 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
+import static com.sun.tools.javac.code.Kinds.MTH;
 import static com.sun.tools.javac.code.TypeTag.NONE;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -132,6 +133,8 @@ public class ExtensionTransformer extends TreeTranslator
 
       if( operatorMethod != null )
       {
+        operatorMethod = favorStringsWithNumberCoercion( tree, operatorMethod );
+
         JCTree.JCMethodInvocation methodCall;
         JCExpression receiver = swap ? tree.rhs : tree.lhs;
         JCExpression arg = swap ? tree.lhs : tree.rhs;
@@ -184,6 +187,55 @@ public class ExtensionTransformer extends TreeTranslator
         result = methodCall;
       }
     }
+  }
+
+  /**
+   * If the binding expression is of the form `A b` where `A` is a Float or Double *literal* and `b` defines a
+   * `R postfixBind(String)` where `R` is the same return type as the original binding expression, then get the
+   * token that was parsed for the Float or Double literal and use the String version of `postfixBind()`. This has
+   * the effect of preserving the value of the token, where otherwise it can be lost due to IEEE floating point
+   * encoding.
+   */
+  private Symbol.MethodSymbol favorStringsWithNumberCoercion( JCTree.JCBinary tree, Symbol.MethodSymbol operatorMethod )
+  {
+    String operatorMethodName = operatorMethod.name.toString();
+    if( !operatorMethodName.equals( "postfixBind" ) )
+    {
+      return operatorMethod;
+    }
+
+    if( tree.lhs instanceof JCTree.JCLiteral &&
+        (tree.lhs.getKind() == Tree.Kind.FLOAT_LITERAL || tree.lhs.getKind() == Tree.Kind.DOUBLE_LITERAL) )
+    {
+      Type rhsType = tree.rhs.type;
+      Symbol.MethodSymbol postfixBinding_string = ManAttr.getMethodSymbol(
+        _tp.getTypes(), rhsType, _tp.getSymtab().stringType, operatorMethodName, (Symbol.ClassSymbol)rhsType.tsym, 1 );
+
+      if( postfixBinding_string != null &&
+          postfixBinding_string.getParameters().get( 0 ).type.tsym == _tp.getSymtab().stringType.tsym &&
+          postfixBinding_string.getReturnType().equals( operatorMethod.getReturnType() ) )
+      {
+        try
+        {
+          CharSequence source = _tp.getCompilationUnit().getSourceFile().getCharContent( true );
+          int start = tree.lhs.pos;
+          int end = tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
+          String token = source.subSequence( start, end ).toString();
+          if( token.endsWith( "d" ) || token.endsWith( "f" ) )
+          {
+            token = token.substring( 0, token.length()-1 );
+          }
+          JCTree.JCLiteral temp = (JCTree.JCLiteral)tree.lhs;
+          tree.lhs = _tp.getTreeMaker().Literal( token );
+          tree.lhs.type = _tp.getSymtab().stringType;
+          tree.lhs.pos = temp.pos;
+
+          return postfixBinding_string;
+        }
+        catch( IOException ignore ) {}
+      }
+    }
+    return operatorMethod;
   }
 
   private JCExpression getRelationalOpEnumConst( TreeMaker make, JCTree tree )

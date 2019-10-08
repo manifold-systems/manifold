@@ -8,7 +8,7 @@ import manifold.science.util.Rational;
 import static manifold.science.LengthUnit.Inch;
 import static manifold.science.MassUnit.Kilogram;
 import static manifold.science.MassUnit.Pound;
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 
 public final class PressureUnit extends AbstractQuotientUnit<MassUnit, AreaUnit, Pressure, PressureUnit>
 {

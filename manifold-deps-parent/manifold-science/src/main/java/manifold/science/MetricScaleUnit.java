@@ -23,6 +23,15 @@ import manifold.science.util.Rational;
 
 import static manifold.science.util.CommonConstants.*;
 
+/**
+ * The range of the metric scale from Yocto to Yatta delcared in standard SI abbreviated form for use as units.
+ * Applicable to all Number types and String such as:
+ * <pre><code>
+ * 1.25M // 1.25 Million
+ * "1.25"M // 1.25 Million
+ * 1.25m // 1.25 milli or 0.00125
+ * </code></pre>
+ */
 public enum MetricScaleUnit {
   y( YOCTO, "yocto", "y" ),
   z( ZEPTO, "zepto", "z" ),

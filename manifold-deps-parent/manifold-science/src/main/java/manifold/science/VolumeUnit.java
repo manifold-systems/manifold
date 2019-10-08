@@ -7,7 +7,7 @@ import manifold.science.util.Rational;
 
 import static manifold.science.LengthUnit.Centi;
 import static manifold.science.LengthUnit.Meter;
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 import static manifold.science.util.CommonConstants.KILO;
 
 public final class VolumeUnit extends AbstractProductUnit<LengthUnit, AreaUnit, Volume, VolumeUnit>

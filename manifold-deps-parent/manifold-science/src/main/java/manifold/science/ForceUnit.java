@@ -22,7 +22,7 @@ import manifold.science.util.Rational;
 
 
 import static manifold.science.MassUnit.Kilogram;
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 
 public final class ForceUnit extends AbstractProductUnit<MassUnit, AccelerationUnit, Force, ForceUnit>
 {

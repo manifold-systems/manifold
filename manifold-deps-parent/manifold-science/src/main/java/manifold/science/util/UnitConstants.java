@@ -32,6 +32,9 @@ import manifold.science.TimeUnit;
 import manifold.science.VelocityUnit;
 import manifold.science.VolumeUnit;
 
+/**
+ * A collection of commonly used SI units specified as standard abbreviations
+ */
 public interface UnitConstants {
   LengthUnit mum = LengthUnit.Micro;
   LengthUnit mm = LengthUnit.Milli;

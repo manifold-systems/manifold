@@ -22,6 +22,10 @@ public interface DimensionlessConstants
   Rational pi = Rational.get(
     "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679" );
 
+  /** PHI at 100 decimal places */
+  Rational phi = Rational.get(
+    "1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374" );
+  
   /** The mole, abbreviated mol, is an SI unit which measures the number of particles in a specific substance. */
-  Rational mol = Rational.get( "6.022140857e23" );
+  Rational mol = Rational.get( "6.02214076e23" );
 }

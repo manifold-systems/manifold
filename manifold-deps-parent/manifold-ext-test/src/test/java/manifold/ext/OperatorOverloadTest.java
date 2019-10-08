@@ -51,12 +51,22 @@ public class OperatorOverloadTest
     assertTrue( new Fuzz(36.0) == bar * baz );
     assertTrue( new Fuzz(4.0) == baz / bar );
     assertTrue( new Fuzz(2.0) == baz % boz );
+    assertTrue( new Fuzz(-3.0) == -bar );
+
     assertFalse( bar == baz );
     assertTrue( bar != baz );
     assertFalse( bar > baz );
     assertFalse( bar >= baz );
     assertTrue( bar < baz );
     assertTrue( bar <= baz );
+    assertFalse( -bar == bar );
+    assertFalse( bar == -bar );
+    assertTrue( -bar != bar );
+    assertTrue( bar != -bar );
+    assertTrue( -bar < bar );
+    assertTrue( bar > -bar );
+    assertTrue( -bar <= bar );
+    assertTrue( bar >= -bar );
   }
 
   static class Fuzz implements ComparableUsing<Fuzz>
@@ -66,6 +76,11 @@ public class OperatorOverloadTest
     public Fuzz( double value )
     {
       _value = value;
+    }
+
+    public Fuzz unaryMinus()
+    {
+      return new Fuzz( -_value );
     }
 
     public Fuzz plus( Fuzz op )

@@ -4,7 +4,7 @@ import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
-import static manifold.science.MetricScaleUnit.r;
+import static manifold.science.util.CoercionConstants.r;
 import static manifold.science.util.CommonConstants.KIBI;
 import static manifold.science.util.CommonConstants.KILO;
 
