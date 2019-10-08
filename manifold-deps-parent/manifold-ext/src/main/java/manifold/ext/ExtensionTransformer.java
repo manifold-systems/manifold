@@ -42,7 +42,6 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Position;
 import java.io.File;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -77,6 +76,7 @@ import manifold.internal.javac.GeneratedJavaStubFileObject;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.ManAttr;
+import manifold.internal.javac.ManParserFactory;
 import manifold.internal.javac.OverloadOperatorSymbol;
 import manifold.internal.javac.TypeProcessor;
 import manifold.util.JreUtil;
@@ -249,24 +249,21 @@ public class ExtensionTransformer extends TreeTranslator
           postfixBinding_string.getParameters().get( 0 ).type.tsym == _tp.getSymtab().stringType.tsym &&
           postfixBinding_string.getReturnType().equals( operatorMethod.getReturnType() ) )
       {
-        try
+        // since the source may be preprocessed we attempt to get it in its preprocessed form
+        CharSequence source = ManParserFactory.getSource( _tp.getCompilationUnit().getSourceFile() );
+        int start = tree.lhs.pos;
+        int end = tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
+        String token = source.subSequence( start, end ).toString();
+        if( token.endsWith( "d" ) || token.endsWith( "f" ) )
         {
-          CharSequence source = _tp.getCompilationUnit().getSourceFile().getCharContent( true );
-          int start = tree.lhs.pos;
-          int end = tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
-          String token = source.subSequence( start, end ).toString();
-          if( token.endsWith( "d" ) || token.endsWith( "f" ) )
-          {
-            token = token.substring( 0, token.length()-1 );
-          }
-          JCTree.JCLiteral temp = (JCTree.JCLiteral)tree.lhs;
-          tree.lhs = _tp.getTreeMaker().Literal( token );
-          tree.lhs.type = _tp.getSymtab().stringType;
-          tree.lhs.pos = temp.pos;
-
-          return postfixBinding_string;
+          token = token.substring( 0, token.length()-1 );
         }
-        catch( IOException ignore ) {}
+        JCTree.JCLiteral temp = (JCTree.JCLiteral)tree.lhs;
+        tree.lhs = _tp.getTreeMaker().Literal( token );
+        tree.lhs.type = _tp.getSymtab().stringType;
+        tree.lhs.pos = temp.pos;
+
+        return postfixBinding_string;
       }
     }
     return operatorMethod;
@@ -661,34 +658,28 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
-    try
+
+    CharSequence source = ManParserFactory.getSource( enclosingClass.sym.sourcefile );
+    CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
+      tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
+    FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
+      tree.pos().getStartPosition(), chars.toString(),
+      chars.length() > 3 && chars.charAt( 1 ) == '"'
+      ? TEXT_BLOCK_LITERAL
+      : DOUBLE_QUOTE_LITERAL );
+    if( fragment != null )
     {
-      CharSequence source = enclosingClass.sym.sourcefile.getCharContent( true );
-      CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
-        tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
-      FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-        tree.pos().getStartPosition(), chars.toString(),
-        chars.length() > 3 && chars.charAt( 1 ) == '"'
-        ? TEXT_BLOCK_LITERAL
-        : DOUBLE_QUOTE_LITERAL );
-      if( fragment != null )
+      String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();
+      Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fragClass );
+      for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
       {
-        String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();
-        Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fragClass );
-        for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+        if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
         {
-          if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
-          {
-            return replaceStringLiteral( fragSym, tree, annotation );
-          }
+          return replaceStringLiteral( fragSym, tree, annotation );
         }
       }
     }
-    catch( IOException e )
-    {
-      System.err.print( "WARNING: " );
-      e.printStackTrace();
-    }
+
     return tree;
   }
 

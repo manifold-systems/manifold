@@ -1092,7 +1092,7 @@ public class JavacPlugin implements Plugin, TaskListener
       .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
     {
       InputStream is1 = JavacPlugin.class.getClassLoader().getResourceAsStream(
-        "manifold/javacparser/ManJavacParser.clazz" );
+        "manifold/internal/javac/ManJavacParser.clazz" );
       try
       {
         byte[] content = StreamUtil.getContent( is1 );

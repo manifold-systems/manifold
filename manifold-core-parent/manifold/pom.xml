@@ -17,11 +17,6 @@
       <artifactId>manifold-util</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-parser-ext</artifactId>
-      <version>${project.version}</version>
-    </dependency>
   </dependencies>
   
   <build>

@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package manifold.javacparser;
+package com.sun.tools.javac.parser;
 
-import com.sun.tools.javac.parser.JavacParser;
-import com.sun.tools.javac.parser.Lexer;
-import com.sun.tools.javac.parser.ParserFactory;
-import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.parser.Tokens.Token;
 import com.sun.tools.javac.parser.Tokens.TokenKind;
 import com.sun.tools.javac.tree.JCTree;
@@ -39,7 +35,7 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
  * Create a directory path mirroring the package "com.sun.tools.javac.parser", copy this there and remove underscore.
  * Make necessary changes then compile the renamed file by itself, then copy/rename the ManJavaParser.class to *.clazz
  * (note the zz) in the resource directory at manifold/internal/javac (overwrite the existing file there).  Finally,
- * rename the file back to *.java_ and copy it back to the manifold.javacparser package, overwriting the existing
+ * rename the file back to *.java_ and copy it back to the manifold.internal.javac package, overwriting the existing
  * file. lol.
  * <p/>
  * <p/>
@@ -86,7 +82,6 @@ public class ManJavacParser extends JavacParser
                          boolean parseModuleInfo )
   {
     super( fac, S, keepDocComments, keepLineMap, keepEndPositions );
-
     _names = fac.names;
     try
     {
@@ -316,7 +311,7 @@ public class ManJavacParser extends JavacParser
     }
   }
 
-  private <T extends JCTree> T toP(T t) {
+  protected <T extends JCTree> T toP( T t ) {
     return _endPosTable.toP(t);
   }
 

@@ -33,7 +33,6 @@ import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
-import java.io.IOException;
 import manifold.api.type.FragmentValue;
 import manifold.api.util.Stack;
 import manifold.util.ReflectUtil;
@@ -304,7 +303,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     try
     {
-      CharSequence source = getEnv().toplevel.sourcefile.getCharContent( true );
+      CharSequence source = ManParserFactory.getSource( getEnv().toplevel.sourcefile );
       CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
         tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
       FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
@@ -331,7 +330,7 @@ public class ManAttr_8 extends Attr implements ManAttr
           "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
       }
     }
-    catch( IOException e )
+    catch( Exception e )
     {
       getLogger().rawWarning( tree.pos().getStartPosition(),
         "Error parsing Manifold fragment.\n" +

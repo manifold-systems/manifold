@@ -27,6 +27,9 @@ import com.sun.tools.javac.parser.ScannerFactory;
 import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.util.Context;
 import java.nio.CharBuffer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.tools.JavaFileObject;
 import manifold.util.ReflectUtil;
 
 
@@ -39,6 +42,7 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.STRINGLITERAL;
  */
 public class ManParserFactory extends ParserFactory
 {
+  private static final Map<String, CharSequence> fileToProcessedInput = new ConcurrentHashMap<>();
   private TaskEvent _taskEvent;
   private final Preprocessor _preprocessor;
 
@@ -72,10 +76,20 @@ public class ManParserFactory extends ParserFactory
   public JavacParser newParser( CharSequence input, boolean keepDocComments, boolean keepEndPos, boolean keepLineMap, boolean parseModuleInfo )
   {
     input = _preprocessor.process( _taskEvent.getSourceFile(), input );
+    mapInput( _taskEvent.getSourceFile(), input );
     Lexer lexer = ((ScannerFactory)ReflectUtil.field( this, "scannerFactory" ).get()).newScanner(input, keepDocComments);
     return (JavacParser)ReflectUtil.constructor( "com.sun.tools.javac.parser.ManJavacParser",
       ParserFactory.class, Lexer.class, boolean.class, boolean.class, boolean.class, boolean.class )
       .newInstance( this, lexer, keepDocComments, keepLineMap, keepEndPos, parseModuleInfo );
+  }
+
+  public static CharSequence getSource( JavaFileObject file )
+  {
+    return fileToProcessedInput.get( file.getName() );
+  }
+  private void mapInput( JavaFileObject sourceFile, CharSequence input )
+  {
+    fileToProcessedInput.put( sourceFile.getName(), input );
   }
 
   void setTaskEvent( TaskEvent e )
