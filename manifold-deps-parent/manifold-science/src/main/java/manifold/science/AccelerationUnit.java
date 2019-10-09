@@ -26,15 +26,19 @@ public final class AccelerationUnit extends AbstractQuotientUnit<VelocityUnit, T
 
   public static final AccelerationUnit BASE = get( VelocityUnit.BASE, VelocityUnit.BASE.getTimeUnit() );
 
-  public static AccelerationUnit get( VelocityUnit velocityUnit, TimeUnit timeUnit ) {
+  public static AccelerationUnit get( VelocityUnit velocityUnit, TimeUnit timeUnit )
+  {
     return get( velocityUnit, timeUnit, null, null, null );
   }
-  public static AccelerationUnit get( VelocityUnit velocityUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+
+  public static AccelerationUnit get( VelocityUnit velocityUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     AccelerationUnit unit = new AccelerationUnit( velocityUnit, timeUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private AccelerationUnit( VelocityUnit velocityUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+  private AccelerationUnit( VelocityUnit velocityUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     super( velocityUnit, timeUnit, factor, name, symbol );
   }
 
@@ -44,30 +48,37 @@ public final class AccelerationUnit extends AbstractQuotientUnit<VelocityUnit, T
     return new Acceleration( Rational.get( amount ), this );
   }
 
-  public String getFullName() {
+  public String getFullName()
+  {
     return getVelocityUnit().getTimeUnit() == getTimeUnit()
            ? getVelocityUnit().getLengthUnit().getFullName() + "/" + getTimeUnit().getFullName() + "\u00B2"
            : getVelocityUnit().getFullName() + "/" + getTimeUnit().getFullName();
   }
 
-  public String getFullSymbol() {
+  public String getFullSymbol()
+  {
     return getVelocityUnit().getTimeUnit() == getTimeUnit()
            ? getVelocityUnit().getLengthUnit().getFullSymbol() + "/" + getTimeUnit().getFullSymbol() + "\u00B2"
            : getVelocityUnit().getFullSymbol() + "/" + getTimeUnit().getFullSymbol();
   }
 
-  public VelocityUnit getVelocityUnit() {
+  public VelocityUnit getVelocityUnit()
+  {
     return getLeftUnit();
   }
-  public TimeUnit getTimeUnit() {
+
+  public TimeUnit getTimeUnit()
+  {
     return getRightUnit();
   }
 
-  public ForceUnit postfixBind( MassUnit mass ) {
+  public ForceUnit postfixBind( MassUnit mass )
+  {
     return times( mass );
   }
 
-  public ForceUnit times( MassUnit t ) {
+  public ForceUnit times( MassUnit t )
+  {
     return ForceUnit.get( t, this );
   }
 }

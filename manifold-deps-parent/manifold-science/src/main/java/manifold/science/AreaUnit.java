@@ -13,18 +13,24 @@ public final class AreaUnit extends AbstractProductUnit<LengthUnit, LengthUnit, 
 
   public static final AreaUnit BASE = get( Meter, Meter );
 
-  public static AreaUnit get( LengthUnit squareUnit ) {
+  public static AreaUnit get( LengthUnit squareUnit )
+  {
     return get( squareUnit, squareUnit, null, null, null );
   }
-  public static AreaUnit get( LengthUnit widthUnit, LengthUnit lengthUnit ) {
+
+  public static AreaUnit get( LengthUnit widthUnit, LengthUnit lengthUnit )
+  {
     return get( widthUnit, lengthUnit, null, null, null );
   }
-  public static AreaUnit get( LengthUnit widthUnit, LengthUnit lengthUnit, Rational factor, String name, String symbol ) {
+
+  public static AreaUnit get( LengthUnit widthUnit, LengthUnit lengthUnit, Rational factor, String name, String symbol )
+  {
     AreaUnit unit = new AreaUnit( widthUnit, lengthUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
-   
-  private AreaUnit( LengthUnit widthUnit, LengthUnit lengthUnit, Rational factor, String name, String symbol ) {
+
+  private AreaUnit( LengthUnit widthUnit, LengthUnit lengthUnit, Rational factor, String name, String symbol )
+  {
     super( widthUnit, lengthUnit == null ? widthUnit : lengthUnit, factor, name, symbol );
   }
 
@@ -34,30 +40,37 @@ public final class AreaUnit extends AbstractProductUnit<LengthUnit, LengthUnit, 
     return new Area( Rational.get( amount ), this );
   }
 
-  public String getFullName() {
+  public String getFullName()
+  {
     return getLengthUnit() == null
            ? getLengthUnit() + "\u00B2"
            : getWidthUnit().getFullName() + "\u00D7" + getLengthUnit().getFullName();
   }
-  
-  public String getFullSymbol() {
+
+  public String getFullSymbol()
+  {
     return getLengthUnit() == null
            ? getLengthUnit() + "\u00B2"
            : getWidthUnit().getFullSymbol() + "\u00D7" + getLengthUnit().getFullSymbol();
   }
-  
-  public LengthUnit getWidthUnit() {
+
+  public LengthUnit getWidthUnit()
+  {
     return getLeftUnit();
   }
-  public LengthUnit getLengthUnit() {
+
+  public LengthUnit getLengthUnit()
+  {
     return getRightUnit();
   }
 
-  public boolean isSquare() {
+  public boolean isSquare()
+  {
     return getWidthUnit() == getLengthUnit();
   }
 
-  public VolumeUnit times( LengthUnit lu ) {
+  public VolumeUnit times( LengthUnit lu )
+  {
     return VolumeUnit.get( lu, this );
   }
 }

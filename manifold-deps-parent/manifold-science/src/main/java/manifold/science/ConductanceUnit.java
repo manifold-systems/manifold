@@ -11,14 +11,17 @@ public final class ConductanceUnit extends AbstractQuotientUnit<CurrentUnit, Pot
 {
   private static final UnitCache<ConductanceUnit> CACHE = new UnitCache<>();
 
-  public static final ConductanceUnit S = get( CurrentUnit.BASE, PotentialUnit.BASE, 1r, "Siemens", "S" );
+  public static final ConductanceUnit S = get( CurrentUnit.BASE, PotentialUnit.BASE, 1 r, "Siemens", "S" );
 
   public static final ConductanceUnit BASE = S;
 
-  public static ConductanceUnit get( CurrentUnit currentUnit, PotentialUnit potentialUnit ) {
+  public static ConductanceUnit get( CurrentUnit currentUnit, PotentialUnit potentialUnit )
+  {
     return get( currentUnit, potentialUnit, null, null, null );
   }
-  public static ConductanceUnit get( CurrentUnit currentUnit, PotentialUnit potentialUnit, Rational factor, String name, String symbol ) {
+
+  public static ConductanceUnit get( CurrentUnit currentUnit, PotentialUnit potentialUnit, Rational factor, String name, String symbol )
+  {
     ConductanceUnit unit = new ConductanceUnit( currentUnit, potentialUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
@@ -29,14 +32,18 @@ public final class ConductanceUnit extends AbstractQuotientUnit<CurrentUnit, Pot
     return new Conductance( Rational.get( amount ), this );
   }
 
-  private ConductanceUnit( CurrentUnit currentUnit, PotentialUnit potentialUnit, Rational factor, String name, String symbol ) {
+  private ConductanceUnit( CurrentUnit currentUnit, PotentialUnit potentialUnit, Rational factor, String name, String symbol )
+  {
     super( currentUnit, potentialUnit, factor, name, symbol );
   }
 
-  public CurrentUnit getCurrentUnit() {
+  public CurrentUnit getCurrentUnit()
+  {
     return getLeftUnit();
   }
-  public PotentialUnit getPotentialUnit() {
+
+  public PotentialUnit getPotentialUnit()
+  {
     return getRightUnit();
   }
 }

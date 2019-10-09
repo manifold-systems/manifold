@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -32,7 +32,8 @@ import static manifold.science.util.CommonConstants.*;
  * 1.25m // 1.25 milli or 0.00125
  * </code></pre>
  */
-public enum MetricScaleUnit {
+public enum MetricScaleUnit
+{
   y( YOCTO, "yocto", "y" ),
   z( ZEPTO, "zepto", "z" ),
   a( ATTO, "atto", "a" ),
@@ -61,51 +62,70 @@ public enum MetricScaleUnit {
   Zi( KIBI.pow( 7 ), "Zebi", "Zi" ),
   Y( KILO.pow( 8 ), "Yotta", "Y" ),
   Yi( KIBI.pow( 8 ), "Yobi", "Yi" );
-  
+
   private Rational _amount;
   private String _name;
   private String _symbol;
 
-  MetricScaleUnit( Rational amount, String name, String symbol ) {
+  MetricScaleUnit( Rational amount, String name, String symbol )
+  {
     _amount = amount;
     _name = name;
     _symbol = symbol;
   }
 
-  public Rational getAmount() {
+  public Rational getAmount()
+  {
     return _amount;
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-  public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational postfixBind( String value ) {
+  public Rational postfixBind( String value )
+  {
     return _amount * Rational.get( value );
   }
-  public Rational postfixBind( Integer value ) {
+
+  public Rational postfixBind( Integer value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( Long value ) {
+
+  public Rational postfixBind( Long value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( Float value ) {
+
+  public Rational postfixBind( Float value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( Double value ) {
+
+  public Rational postfixBind( Double value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( BigInteger value ) {
+
+  public Rational postfixBind( BigInteger value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( BigDecimal value ) {
+
+  public Rational postfixBind( BigDecimal value )
+  {
     return _amount * value;
   }
-  public Rational postfixBind( Rational value ) {
+
+  public Rational postfixBind( Rational value )
+  {
     return _amount * value;
   }
 }

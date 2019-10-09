@@ -18,11 +18,30 @@ package manifold.science.api;
 
 import manifold.science.util.Rational;
 
+/**
+ * Unit provides a base abstraction for postfix unit types such as length, time, mass, and velocity.
+ * <p/>
+ * @param <D> The {@link Dimension} type expressed using this unit type
+ * @param <U> This type (recursive to enforce type-safety).
+ */
 public interface Unit<D extends Dimension<D>, U extends Unit<D, U>> extends Dimension<U>
 {
+  /**
+   * @return The name of this unit, such as "Meter" or "Pound".
+   */
   String getUnitName();
+
+  /**
+   * @return The symbol for this unit. For example, SI units define "Meter" to have symbol "m".
+   */
   String getUnitSymbol();
+
+  /**
+   * @param theseUnits A magnitude of these units to convert to base units.
+   * @return The {@code theseUnits} converted to the base units of this unit type.
+   */
   Rational toBaseUnits( Rational theseUnits );
+
   Rational from( D dim );
 
   D makeDimension( Number amount );

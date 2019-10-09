@@ -77,11 +77,11 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
     Rational x = getX().toBaseNumber() + v.getX().toBaseNumber();
     Rational y = getY().toBaseNumber() + v.getY().toBaseNumber();
     // todo: add trig functions for Rational
-    Rational angle = x == 0r ? x : Math.atan( (y / x).doubleValue() ) r;
+    Rational angle = x == 0 r ? x : Math.atan( (y / x).doubleValue() ) r;
     Rational mag = (x * x + y * y).sqrt();
-    if( x < 0r )
+    if( x < 0 r )
     {
-      if( y < 0r )
+      if( y < 0 r )
       {
         angle = angle - pi;
       }
@@ -90,7 +90,7 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
         angle = angle + pi;
       }
     }
-    return make( _magnitude.fromBaseNumber( mag ), new Angle( angle, Radian, _angle.getUnit() ) );
+    return make( _magnitude.fromBaseNumber( mag ), new Angle( angle, Radian, _angle.getDisplayUnit() ) );
   }
 
   public V minus( V v )
@@ -118,12 +118,12 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
 
   public V fromNumber( Rational p0 )
   {
-    return make( _magnitude.make( p0, _magnitude.getUnit() ), _angle );
+    return make( _magnitude.make( p0, _magnitude.getDisplayUnit() ), _angle );
   }
 
   public V fromBaseNumber( Rational p0 )
   {
-    return make( _magnitude.make( p0, _magnitude.getBaseUnit(), _magnitude.getUnit() ), _angle );
+    return make( _magnitude.make( p0, _magnitude.getBaseUnit(), _magnitude.getDisplayUnit() ), _angle );
   }
 
   public Rational toNumber()

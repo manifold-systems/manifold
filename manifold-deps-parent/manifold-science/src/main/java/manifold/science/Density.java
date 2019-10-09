@@ -8,11 +8,20 @@ import static manifold.science.MassUnit.Kilogram;
 
 public final class Density extends AbstractMeasure<DensityUnit, Density>
 {
-  public Density( Rational value, DensityUnit unit, DensityUnit displayUnit ) {
-    super( value, unit, displayUnit, DensityUnit.BASE );
+  public Density( Rational value, DensityUnit unit, DensityUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Density( Rational value, DensityUnit unit ) {
+
+  public Density( Rational value, DensityUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public DensityUnit getBaseUnit()
+  {
+    return DensityUnit.BASE;
   }
 
   @Override
@@ -20,13 +29,15 @@ public final class Density extends AbstractMeasure<DensityUnit, Density>
   {
     return new Density( value, unit, displayUnit );
   }
+
   @Override
   public Density make( Rational value, DensityUnit unit )
   {
     return new Density( value, unit );
   }
 
-  public Mass times( Volume w ) {
-    return new Mass( toBaseNumber() * w.toBaseNumber(), Kilogram, getUnit().getMassUnit() );
+  public Mass times( Volume w )
+  {
+    return new Mass( toBaseNumber() * w.toBaseNumber(), Kilogram, getDisplayUnit().getMassUnit() );
   }
 }

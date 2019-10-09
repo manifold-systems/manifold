@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -35,6 +35,6 @@ public final class LengthVector extends Vector<Length, LengthUnit, LengthVector>
   public LengthVector copy( Rational magnitude )
   {
     return new LengthVector(
-      new Length( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getUnit() ), getAngle() );
+      new Length( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getDisplayUnit() ), getAngle() );
   }
 }

@@ -16,18 +16,22 @@ public final class FrequencyUnit extends AbstractQuotientUnit<AngleUnit, TimeUni
   private static final UnitCache<FrequencyUnit> CACHE = new UnitCache<>();
 
   public static final FrequencyUnit BASE = get( Radian, Second );
-  public static final FrequencyUnit Hertz = get( Turn, Second, 1r, "Hertz", "Hz" );
-  public static final FrequencyUnit RPM = get( Turn, Minute, 1r, "RPM", "rpm" );
+  public static final FrequencyUnit Hertz = get( Turn, Second, 1 r, "Hertz", "Hz" );
+  public static final FrequencyUnit RPM = get( Turn, Minute, 1 r, "RPM", "rpm" );
 
-  public static FrequencyUnit get( AngleUnit angleUnit, TimeUnit timeUnit ) {
+  public static FrequencyUnit get( AngleUnit angleUnit, TimeUnit timeUnit )
+  {
     return get( angleUnit, timeUnit, null, null, null );
   }
-  public static FrequencyUnit get( AngleUnit angleUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+
+  public static FrequencyUnit get( AngleUnit angleUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     FrequencyUnit unit = new FrequencyUnit( angleUnit, timeUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private FrequencyUnit( AngleUnit angleUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+  private FrequencyUnit( AngleUnit angleUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     super( angleUnit, timeUnit, factor, name, symbol );
   }
 
@@ -37,10 +41,13 @@ public final class FrequencyUnit extends AbstractQuotientUnit<AngleUnit, TimeUni
     return new Frequency( Rational.get( amount ), this );
   }
 
-  public AngleUnit getAngleUnit() {
+  public AngleUnit getAngleUnit()
+  {
     return getLeftUnit();
   }
-  public TimeUnit getTimeUnit() {
+
+  public TimeUnit getTimeUnit()
+  {
     return getRightUnit();
-  } 
+  }
 }

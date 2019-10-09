@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -39,15 +39,15 @@ public enum LengthUnit implements Unit<Length, LengthUnit>
   Deci( DECI, "Decimeter", "dm" ),
   Meter( Rational.ONE, "Meter", "m" ),
   Kilometer( KILO, "Kilometer", "km" ),
-  Megameter( KILO.pow(2), "Megameter", "Mm" ),
-  Gigameter( KILO.pow(3), "Gigameter", "Gm" ),
-  Terameter( KILO.pow(4), "Terameter", "Tm" ),
+  Megameter( KILO.pow( 2 ), "Megameter", "Mm" ),
+  Gigameter( KILO.pow( 3 ), "Gigameter", "Gm" ),
+  Terameter( KILO.pow( 4 ), "Terameter", "Tm" ),
 
   // UK
   Cubit( Rational.get( "0.4572" ), "Cubit", "cbt" ),
 
   // US Standard
-  Caliber( ".000254"r, "Caliber", "cal."),
+  Caliber( ".000254"r, "Caliber", "cal." ),
   Inch( "0.0254"r, "Inch", "in" ),
   Foot( 12 * "0.0254"r, "Foot", "ft" ),
   Yard( 3 * 12 * "0.0254"r, "Yard", "yd" ),
@@ -70,7 +70,8 @@ public enum LengthUnit implements Unit<Length, LengthUnit>
   final String _symbol;
 
 
-  LengthUnit( Rational meters, String name, String symbol ) {
+  LengthUnit( Rational meters, String name, String symbol )
+  {
     _meters = meters;
     _name = name;
     _symbol = symbol;
@@ -81,23 +82,28 @@ public enum LengthUnit implements Unit<Length, LengthUnit>
     return _meters;
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-  public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _meters * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _meters;
   }
 
-  public Rational from( Length len ) {
+  public Rational from( Length len )
+  {
     return len.toBaseNumber() / _meters;
   }
 
@@ -107,27 +113,33 @@ public enum LengthUnit implements Unit<Length, LengthUnit>
     return new Length( Rational.get( amount ), this );
   }
 
-  public EnergyUnit postfixBind( ForceUnit f ) {
+  public EnergyUnit postfixBind( ForceUnit f )
+  {
     return times( f );
   }
 
-  public VelocityUnit div( TimeUnit t ) {
+  public VelocityUnit div( TimeUnit t )
+  {
     return VelocityUnit.get( this, t );
   }
 
-  public TimeUnit div( VelocityUnit v ) {
+  public TimeUnit div( VelocityUnit v )
+  {
     return v.getTimeUnit();
   }
 
-  public AreaUnit times( LengthUnit len ) {
+  public AreaUnit times( LengthUnit len )
+  {
     return AreaUnit.get( this, len );
   }
 
-  public VolumeUnit times( AreaUnit area ) {
+  public VolumeUnit times( AreaUnit area )
+  {
     return VolumeUnit.get( this, area );
   }
 
-  public EnergyUnit times( ForceUnit f ) {
+  public EnergyUnit times( ForceUnit f )
+  {
     return EnergyUnit.get( f, this );
   }
 }

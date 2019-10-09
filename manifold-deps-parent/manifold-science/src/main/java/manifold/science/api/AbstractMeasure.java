@@ -21,104 +21,167 @@ import java.util.Objects;
 import manifold.collections.api.range.Sequential;
 import manifold.science.util.Rational;
 
+/**
+ * This class serves as the base class for "physical dimensions." See {@link manifold.science.Length},
+ * {@link manifold.science.Velocity}, {@link manifold.science.Mass}, etc. for examples.
+ * <p/>
+ * Instances of this class store the value (or magnitude) of the measure in terms of base units. Thus all arithmetic on
+ * measures are performed using Base units, which permits measures of differing input units to work in calculations. A
+ * measure instance also maintains a "display unit", which is used for display purposes and for working with other
+ * systems requiring specific units.
+ * <p/>
+ * @param <U> The unit corresponding with the type e.g., Length specifies LengthUnit.
+ * @param <T> This type. Note this type is recursive to enforce type-safety, normally the complicated generics are not
+ *           exposed to users of the library e.g., see the {@link manifold.science.Length} measure.
+ */
 public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMeasure<U, T>> implements Dimension<T>, Sequential<T, Rational, U>
 {
+  /** The magnitude stored in Base units */
   private final Rational _value;
-  private final U _dipslayUnit;
-  private final U _baseUnit;
 
-  public AbstractMeasure( Rational value, U unit, U displayUnit, U baseUnit )
+  /** The unit used to display the value of this instance */
+  private final U _displayUnit;
+
+  /**
+   * @param value       The value (or magnitude) of this measure instance
+   * @param unit        The unit corresponding to the provided {@code value}
+   * @param displayUnit The unit in which to display this measure
+   */
+  public AbstractMeasure( Rational value, U unit, U displayUnit )
   {
+    _displayUnit = displayUnit;
     _value = unit.toBaseUnits( value );
-    _dipslayUnit = displayUnit;
-    _baseUnit = baseUnit;
   }
 
+  /**
+   * The unit on which all instances of this type are based. For instance, a {@code Length} dimension might use Meters
+   * as the base unit because it is the SI standard.
+   */
+  public abstract U getBaseUnit();
+
+  /**
+   * Creates a new instance using the specified parameters.
+   */
   public abstract T make( Rational value, U unit, U displayUnit );
+
+  /**
+   * Creates a new instance using the specified parameters.
+   */
   public abstract T make( Rational value, U unit );
 
-  public T copy( U unit )
+  /**
+   * Copies this instance with a new display unit.
+   */
+  public T copy( U dsiplayUnit )
   {
-    return make( _value, _baseUnit, unit );
+    return make( _value, getBaseUnit(), dsiplayUnit );
   }
 
   @Override
   public T copy( Rational value )
   {
-    return make( value, getBaseUnit(), getUnit() );
+    return make( value, getBaseUnit(), getDisplayUnit() );
   }
 
+  /**
+   * @return The value of this measure in Base units.
+   */
   public Rational getValue()
   {
     return _value;
   }
 
-  public U getUnit()
+  /**
+   * @return The unit in which this measure displays.
+   */
+  public U getDisplayUnit()
   {
-    return _dipslayUnit;
-  }
-
-  public U getBaseUnit()
-  {
-    return _baseUnit;
+    return _displayUnit;
   }
 
   @Override
   public T fromNumber( Rational p0 )
   {
-    return make( p0, _dipslayUnit );
+    return make( p0, _displayUnit );
   }
 
   public T fromBaseNumber( Rational p0 )
   {
-    return make( p0, _baseUnit, _dipslayUnit );
+    return make( p0, getBaseUnit(), _displayUnit );
   }
 
+  /**
+   * @return The magnitude of this measure in terms of Display units.
+   */
   @Override
   public Rational toNumber()
   {
-    return toNumber( _dipslayUnit );
+    return toNumber( _displayUnit );
   }
 
+  /**
+   * @return The magnitude of this measure in terms of Base units.
+   */
   @Override
   public Rational toBaseNumber()
   {
     return _value;
   }
 
-  public T to( U unit )
+  /**
+   * Copy this measure using the specified {@code displayUnit}.
+   */
+  public T to( U displayUnit )
   {
-    return copy( unit );
+    return copy( displayUnit );
   }
 
+  /**
+   * Get the magnitude of this measure in terms of the specified {@code unit}.
+   */
   public Rational toNumber( U unit )
   {
+    //noinspection unchecked
     return unit.from( (T)this );
   }
 
   @Override
   public String toString()
   {
-    return toNumber( getUnit() )
-             .toBigDecimal().stripTrailingZeros().toPlainString() + " " + getUnit().getUnitSymbol();
+    return toNumber( getDisplayUnit() )
+             .toBigDecimal().stripTrailingZeros().toPlainString() + " " + getDisplayUnit().getUnitSymbol();
   }
 
   @Override
   public int hashCode()
   {
-    return 31 * _value.intValue() + _baseUnit.hashCode();
+    return Objects.hash( _value, _displayUnit );
   }
 
   @Override
   public boolean equals( Object o )
   {
-    if( o.getClass() != getClass() )
+    if( this == o )
+    {
+      return true;
+    }
+    if( getClass() != o.getClass() )
     {
       return false;
     }
-    AbstractMeasure that = (AbstractMeasure)o;
-    return Objects.equals( _baseUnit, that._baseUnit ) &&
-           Objects.equals( _value, that._value );
+    AbstractMeasure<?, ?> that = (AbstractMeasure<?, ?>)o;
+    return _value.equals( that._value ) &&
+           _displayUnit.equals( that._displayUnit );
+  }
+
+  /**
+   * Use {@link #compareTo(T)} to implement the {@code ==} operator as it does not take into account the
+   * {@code _displayUnit} which is inconsequential wrt the measure.
+   */
+  @Override
+  public EqualityMode equalityMode()
+  {
+    return EqualityMode.CompareTo;
   }
 
   @Override
@@ -131,7 +194,7 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   public T nextInSequence( Rational step, U unit )
   {
     step = step == null ? Rational.ONE : step;
-    unit = unit == null ? getUnit() : unit;
+    unit = unit == null ? getDisplayUnit() : unit;
     return fromBaseNumber( toBaseNumber() + (unit.toBaseUnits( step ) - unit.toBaseUnits( Rational.ZERO )) );
   }
 
@@ -139,7 +202,7 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   public T nextNthInSequence( Rational step, U unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    unit = unit == null ? getUnit() : unit;
+    unit = unit == null ? getDisplayUnit() : unit;
     return fromBaseNumber( toNumber() + (unit.toBaseUnits( step ) - unit.toBaseUnits( Rational.ZERO )) * index );
   }
 
@@ -147,7 +210,7 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   public T previousInSequence( Rational step, U unit )
   {
     step = step == null ? Rational.ONE : step;
-    unit = unit == null ? getUnit() : unit;
+    unit = unit == null ? getDisplayUnit() : unit;
     return fromBaseNumber( toNumber() - (unit.toBaseUnits( step ) - unit.toBaseUnits( Rational.ZERO )) );
   }
 
@@ -155,7 +218,7 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   public T previousNthInSequence( Rational step, U unit, int index )
   {
     step = step == null ? Rational.ONE : step;
-    unit = unit == null ? getUnit() : unit;
+    unit = unit == null ? getDisplayUnit() : unit;
     return fromBaseNumber( toNumber() - (unit.toBaseUnits( step ) - unit.toBaseUnits( Rational.ZERO )) * index );
   }
 
@@ -163,14 +226,17 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   {
     return copy( toBaseNumber().plus( operand.toBaseNumber() ) );
   }
+
   public T minus( T operand )
   {
     return copy( toBaseNumber().minus( operand.toBaseNumber() ) );
   }
+
   public Rational div( T operand )
   {
     return toBaseNumber() / operand.toBaseNumber();
   }
+
   public Rational rem( T operand )
   {
     return toBaseNumber() % operand.toBaseNumber();

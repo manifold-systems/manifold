@@ -16,8 +16,20 @@
 
 package manifold.science.api;
 
+import manifold.science.LengthUnit;
+import manifold.science.TimeUnit;
+import manifold.science.VelocityUnit;
 import manifold.science.util.Rational;
 
+/**
+ * Represents a binary unit of measure such as {@link VelocityUnit} which is the quotient of {@link LengthUnit} and
+ * {@link TimeUnit}.
+ * <p/>
+ * @param <A> The unit type on the left hand side
+ * @param <B> The unit type on the right hand side
+ * @param <D> The {@link Dimension} type expressed using this binary unit type
+ * @param <U> This type (recursive to enforce type-safety).
+ */
 public abstract class AbstractBinaryUnit<A extends Unit,
   B extends Unit,
   D extends Dimension<D>,
@@ -33,14 +45,17 @@ public abstract class AbstractBinaryUnit<A extends Unit,
   {
     this( leftUnit, rightUnit, null, null, null );
   }
+
   protected AbstractBinaryUnit( A leftUnit, B rightUnit, Rational factor )
   {
     this( leftUnit, rightUnit, factor, null, null );
   }
+
   protected AbstractBinaryUnit( A leftUnit, B rightUnit, Rational factor, String name )
   {
     this( leftUnit, rightUnit, factor, name, null );
   }
+
   protected AbstractBinaryUnit( A leftUnit, B rightUnit, Rational factor, String name, String symbol )
   {
     _leftUnit = leftUnit;

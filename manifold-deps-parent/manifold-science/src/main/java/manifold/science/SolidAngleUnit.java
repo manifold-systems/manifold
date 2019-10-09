@@ -8,7 +8,7 @@ import static manifold.science.util.CoercionConstants.r;
 
 public enum SolidAngleUnit implements Unit<SolidAngle, SolidAngleUnit>
 {
-  Steradian( 1r, "Steradian", "sr" );
+  Steradian( 1 r, "Steradian", "sr" );
 
   private final Rational _sr;
   private final String _name;
@@ -16,7 +16,8 @@ public enum SolidAngleUnit implements Unit<SolidAngle, SolidAngleUnit>
 
   public static final SolidAngleUnit BASE = Steradian;
 
-  SolidAngleUnit( Rational sr, String name, String symbol ) {
+  SolidAngleUnit( Rational sr, String name, String symbol )
+  {
     _sr = sr;
     _name = name;
     _symbol = symbol;
@@ -28,23 +29,28 @@ public enum SolidAngleUnit implements Unit<SolidAngle, SolidAngleUnit>
     return new SolidAngle( Rational.get( amount ), this );
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-   public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _sr * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _sr;
   }
 
-  public Rational from( SolidAngle len ) {
+  public Rational from( SolidAngle len )
+  {
     return len.toBaseNumber() / _sr;
   }
 }

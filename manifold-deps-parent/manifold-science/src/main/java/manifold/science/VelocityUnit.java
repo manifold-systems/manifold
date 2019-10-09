@@ -37,6 +37,7 @@ final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUni
   {
     return get( lengthUnit, timeUnit, null, null, null );
   }
+
   public static VelocityUnit get( LengthUnit lengthUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
   {
     VelocityUnit unit = new VelocityUnit( lengthUnit, timeUnit, factor, name, symbol );
@@ -64,19 +65,23 @@ final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUni
     return getRightUnit();
   }
 
-  public MomentumUnit postfixBind( MassUnit mass ) {
+  public MomentumUnit postfixBind( MassUnit mass )
+  {
     return times( mass );
   }
 
-  public AccelerationUnit div( TimeUnit t ) {
+  public AccelerationUnit div( TimeUnit t )
+  {
     return AccelerationUnit.get( this, t );
   }
 
-  public MomentumUnit times( MassUnit t ) {
+  public MomentumUnit times( MassUnit t )
+  {
     return MomentumUnit.get( t, this );
   }
 
-  public PowerUnit times( ForceUnit force ) {
+  public PowerUnit times( ForceUnit force )
+  {
     return force * getLengthUnit() / getTimeUnit();
   }
 }

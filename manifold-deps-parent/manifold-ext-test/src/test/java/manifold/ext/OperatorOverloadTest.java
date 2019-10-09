@@ -99,5 +99,11 @@ public class OperatorOverloadTest
       double diff = _value - o._value;
       return diff == 0 ? 0 : diff < 0 ? -1 : 1;
     }
+
+    @Override
+    public EqualityMode equalityMode()
+    {
+      return EqualityMode.CompareTo;
+    }
   }
 }

@@ -41,7 +41,7 @@ public class ScienceUnitMathTest {
       // Length / Time = Velocity
       Time time = 2s;
       time.toString();
-      Velocity velocity = new Velocity( a.toBaseNumber() / time.toBaseNumber(), VelocityUnit.BASE, unit / time.getUnit() );
+      Velocity velocity = new Velocity( a.toBaseNumber() / time.toBaseNumber(), VelocityUnit.BASE, unit / time.getDisplayUnit() );
       assertEquals( velocity, a / time );
 
       // Length / Velocity = Time
@@ -49,12 +49,12 @@ public class ScienceUnitMathTest {
 
       // Length * Area = Volume
       Area area = a * a;
-      assertEquals( new Volume( a.toBaseNumber() * area.toBaseNumber(), VolumeUnit.BASE, unit * area.getUnit() ), a * area );
+      assertEquals( new Volume( a.toBaseNumber() * area.toBaseNumber(), VolumeUnit.BASE, unit * area.getDisplayUnit() ), a * area );
 
       // Length * Force = Energy
       Force force = 2 kg m/s/s;
       assertEquals( 2 N, force );
-      assertEquals( new Energy( a.toBaseNumber() * force.toBaseNumber(), EnergyUnit.BASE, unit * force.getUnit() ), a * force );
+      assertEquals( new Energy( a.toBaseNumber() * force.toBaseNumber(), EnergyUnit.BASE, unit * force.getDisplayUnit() ), a * force );
     }
   }
 
@@ -73,31 +73,31 @@ public class ScienceUnitMathTest {
 
       // Time * Velocity = Length
       Length len = 1m;
-      Velocity velocity = new Velocity( len.toBaseNumber() / a.toBaseNumber(), VelocityUnit.BASE, len.getUnit() / unit );
+      Velocity velocity = new Velocity( len.toBaseNumber() / a.toBaseNumber(), VelocityUnit.BASE, len.getDisplayUnit() / unit );
       assertEquals( len, a * velocity );
 
       // Time * Acceleration = Velocity
-      Acceleration acceleration = new Acceleration( velocity.toBaseNumber() / a.toBaseNumber(), AccelerationUnit.BASE, velocity.getUnit() / unit );
+      Acceleration acceleration = new Acceleration( velocity.toBaseNumber() / a.toBaseNumber(), AccelerationUnit.BASE, velocity.getDisplayUnit() / unit );
       assertEquals( velocity, a * acceleration );
 
       // Time * Current = Charge
       Charge charge = 2 coulomb;
-      Current current = new Current( charge.toBaseNumber() / a.toBaseNumber(), CurrentUnit.BASE, charge.getUnit() / unit );
+      Current current = new Current( charge.toBaseNumber() / a.toBaseNumber(), CurrentUnit.BASE, charge.getDisplayUnit() / unit );
       assertEquals( charge, a * current );
 
       // Time * Frequency = Angle
       Frequency frequency = 2 Hz;
-      Angle angle = new Angle( a.toBaseNumber() * frequency.toBaseNumber(), AngleUnit.BASE, unit * frequency.getUnit() );
+      Angle angle = new Angle( a.toBaseNumber() * frequency.toBaseNumber(), AngleUnit.BASE, unit * frequency.getDisplayUnit() );
       assertEquals( angle, a * frequency );
 
       // Time * Power = Energy
       Power power = 2 watt;
-      Energy energy = new Energy( a.toBaseNumber() * power.toBaseNumber(), EnergyUnit.BASE, unit * power.getUnit() );
+      Energy energy = new Energy( a.toBaseNumber() * power.toBaseNumber(), EnergyUnit.BASE, unit * power.getDisplayUnit() );
       assertEquals( energy, a * power );
 
       // Time * Force = Momentum
       Force force = 2 N;
-      Momentum momentum = new Momentum( a.toBaseNumber() * force.toBaseNumber(), MomentumUnit.BASE, unit * force.getUnit() );
+      Momentum momentum = new Momentum( a.toBaseNumber() * force.toBaseNumber(), MomentumUnit.BASE, unit * force.getDisplayUnit() );
       assertEquals( momentum, a * force );
     }
   }
@@ -117,23 +117,23 @@ public class ScienceUnitMathTest {
 
       // Mass * Acceleration = Force
       Acceleration acc = new Acceleration( 2r, AccelerationUnit.BASE );
-      Force force = new Force( a.toBaseNumber() * acc.toBaseNumber(), ForceUnit.BASE, unit * acc.getUnit() );
+      Force force = new Force( a.toBaseNumber() * acc.toBaseNumber(), ForceUnit.BASE, unit * acc.getDisplayUnit() );
       assertEquals( force, a * acc );
       assertEquals( 2 * force, force + force );
 
       // Mass * Velocity = Momentum
       Velocity v = new Velocity( 2r, VelocityUnit.BASE );
-      Momentum momentum = new Momentum( a.toBaseNumber() *  v.toBaseNumber(), MomentumUnit.BASE, unit * v.getUnit() );
+      Momentum momentum = new Momentum( a.toBaseNumber() *  v.toBaseNumber(), MomentumUnit.BASE, unit * v.getDisplayUnit() );
       assertEquals( momentum, a * v );
 
       // Mass * Area = Pressure
       Area area = new Area( 2r, AreaUnit.BASE );
-      Pressure pressure = new Pressure( a.toBaseNumber() /  area.toBaseNumber(), PressureUnit.BASE, unit / area.getUnit() );
+      Pressure pressure = new Pressure( a.toBaseNumber() /  area.toBaseNumber(), PressureUnit.BASE, unit / area.getDisplayUnit() );
       assertEquals( pressure, a / area );
 
       // Mass * Volume = Density
       Volume volume = new Volume( 2r, VolumeUnit.BASE );
-      Density density = new Density( a.toBaseNumber() /  volume.toBaseNumber(), DensityUnit.BASE, unit / volume.getUnit() );
+      Density density = new Density( a.toBaseNumber() /  volume.toBaseNumber(), DensityUnit.BASE, unit / volume.getDisplayUnit() );
       assertEquals( density, a / volume );
     }
   }

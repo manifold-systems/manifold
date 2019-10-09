@@ -11,36 +11,44 @@ public final class InductanceUnit extends AbstractProductUnit<ResistanceUnit, Ti
 {
   private static final UnitCache<InductanceUnit> CACHE = new UnitCache<>();
 
-  public static final InductanceUnit H = get( ResistanceUnit.BASE, TimeUnit.BASE, 1r, "Henry", "H" );
+  public static final InductanceUnit H = get( ResistanceUnit.BASE, TimeUnit.BASE, 1 r, "Henry", "H" );
 
   public static final InductanceUnit BASE = H;
 
-  public static InductanceUnit get( ResistanceUnit resistanceUnit, TimeUnit timeUnit ) {
+  public static InductanceUnit get( ResistanceUnit resistanceUnit, TimeUnit timeUnit )
+  {
     return get( resistanceUnit, timeUnit, null, null, null );
   }
-  public static InductanceUnit get( ResistanceUnit resistanceUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+
+  public static InductanceUnit get( ResistanceUnit resistanceUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     InductanceUnit unit = new InductanceUnit( resistanceUnit, timeUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private InductanceUnit( ResistanceUnit resistanceUnit, TimeUnit timeUnit, Rational factor, String name, String symbol ) {
+  private InductanceUnit( ResistanceUnit resistanceUnit, TimeUnit timeUnit, Rational factor, String name, String symbol )
+  {
     super( resistanceUnit, timeUnit, factor, name, symbol );
   }
 
   @Override
   public Inductance makeDimension( Number amount )
   {
-    return  new Inductance( Rational.get( amount ), this );
+    return new Inductance( Rational.get( amount ), this );
   }
 
-  public ResistanceUnit getResistanceUnit() {
+  public ResistanceUnit getResistanceUnit()
+  {
     return getLeftUnit();
   }
-  public TimeUnit getTimeUnit() {
+
+  public TimeUnit getTimeUnit()
+  {
     return getRightUnit();
   }
-  
-  public ResistanceUnit div( TimeUnit w ) {
+
+  public ResistanceUnit div( TimeUnit w )
+  {
     return getResistanceUnit();
   }
 }

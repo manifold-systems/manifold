@@ -10,15 +10,19 @@ public final class HeatCapacityUnit extends AbstractQuotientUnit<EnergyUnit, Tem
 
   public static final HeatCapacityUnit BASE = get( EnergyUnit.BASE, TemperatureUnit.BASE );
 
-  public static HeatCapacityUnit get( EnergyUnit energyUnit, TemperatureUnit temperatureUnit ) {
+  public static HeatCapacityUnit get( EnergyUnit energyUnit, TemperatureUnit temperatureUnit )
+  {
     return get( energyUnit, temperatureUnit, null, null, null );
   }
-  public static HeatCapacityUnit get( EnergyUnit energyUnit, TemperatureUnit temperatureUnit, Rational factor, String name, String symbol ) {
+
+  public static HeatCapacityUnit get( EnergyUnit energyUnit, TemperatureUnit temperatureUnit, Rational factor, String name, String symbol )
+  {
     HeatCapacityUnit unit = new HeatCapacityUnit( energyUnit, temperatureUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
-  
-  private HeatCapacityUnit( EnergyUnit energyUnit, TemperatureUnit temperatureUnit, Rational factor, String name, String symbol ) {
+
+  private HeatCapacityUnit( EnergyUnit energyUnit, TemperatureUnit temperatureUnit, Rational factor, String name, String symbol )
+  {
     super( energyUnit, temperatureUnit, factor, name, symbol );
   }
 
@@ -28,10 +32,13 @@ public final class HeatCapacityUnit extends AbstractQuotientUnit<EnergyUnit, Tem
     return new HeatCapacity( Rational.get( amount ), this );
   }
 
-  public EnergyUnit getEnergyUnit() {
+  public EnergyUnit getEnergyUnit()
+  {
     return getLeftUnit();
   }
-  public TemperatureUnit getTemperatureUnit() {
+
+  public TemperatureUnit getTemperatureUnit()
+  {
     return getRightUnit();
   }
 }

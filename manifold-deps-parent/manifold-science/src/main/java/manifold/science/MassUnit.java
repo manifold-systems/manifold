@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -26,12 +26,12 @@ import static manifold.science.util.CoercionConstants.r;
 public enum MassUnit implements Unit<Mass, MassUnit>
 {
   AtomicMass( "1.6605402e-27"r, "AMU", "amu" ),
-  Nano( 1p, "Nanogram", "µg" ),
-  Micro( 1n, "Microgram", "µg" ),
-  Milli( 1u, "Milligram", "mg" ),
-  Gram( 1m, "Gram", "g" ),
-  Kilogram( 1r, "Kilogram", "kg" ),
-  Tonne( 1k, "Metric Ton", "tonne" ),
+  Nano( 1 p, "Nanogram", "µg" ),
+  Micro( 1 n, "Microgram", "µg" ),
+  Milli( 1 u, "Milligram", "mg" ),
+  Gram( 1 m, "Gram", "g" ),
+  Kilogram( 1 r, "Kilogram", "kg" ),
+  Tonne( 1 k, "Metric Ton", "tonne" ),
   Carat( ".0002"r, "Carat", "ct" ),
   Dram( ".001771845195312"r, "Dram", "dr" ),
   Grain( "6.47989e-5"r, "Grain", "gr" ),
@@ -45,12 +45,13 @@ public enum MassUnit implements Unit<Mass, MassUnit>
   Solar( "1.9889200011445836e30"r, "Solar Masses", "M☉" );
 
   public static final MassUnit BASE = Kilogram;
-  
+
   private Rational _kilograms; // as Kilograms
   private String _name;
   private String _symbol;
 
-  MassUnit( Rational kilograms, String name, String symbol ) {
+  MassUnit( Rational kilograms, String name, String symbol )
+  {
     _kilograms = kilograms;
     _name = name;
     _symbol = symbol;
@@ -62,45 +63,58 @@ public enum MassUnit implements Unit<Mass, MassUnit>
     return new Mass( Rational.get( amount ), this );
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-  public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _kilograms * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _kilograms;
   }
 
-  public Rational from( Mass w ) {
+  public Rational from( Mass w )
+  {
     return w.toBaseNumber() / _kilograms;
   }
 
-  public MomentumUnit times( VelocityUnit velocity ) {
+  public MomentumUnit times( VelocityUnit velocity )
+  {
     return MomentumUnit.get( this, velocity );
   }
 
-  public ForceUnit times( AccelerationUnit acc ) {
+  public ForceUnit times( AccelerationUnit acc )
+  {
     return ForceUnit.get( this, acc );
   }
 
-  public PressureUnit div( AreaUnit area ) {
+  public PressureUnit div( AreaUnit area )
+  {
     return PressureUnit.get( this, area );
   }
-  public AreaUnit div( PressureUnit pressure ) {
+
+  public AreaUnit div( PressureUnit pressure )
+  {
     return pressure.getAreaUnit();
   }
 
-  public DensityUnit div( VolumeUnit volume ) {
+  public DensityUnit div( VolumeUnit volume )
+  {
     return DensityUnit.get( this, volume );
   }
-  public VolumeUnit div( DensityUnit d ) {
+
+  public VolumeUnit div( DensityUnit d )
+  {
     return d.getVolumeUnit();
   }
 }

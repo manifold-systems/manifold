@@ -5,11 +5,20 @@ import manifold.science.util.Rational;
 
 public final class Resistance extends AbstractMeasure<ResistanceUnit, Resistance>
 {
-  public Resistance( Rational value, ResistanceUnit unit, ResistanceUnit displayUnit ) {
-    super( value, unit, displayUnit, ResistanceUnit.BASE );
+  public Resistance( Rational value, ResistanceUnit unit, ResistanceUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Resistance( Rational value, ResistanceUnit unit ) {
+
+  public Resistance( Rational value, ResistanceUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public ResistanceUnit getBaseUnit()
+  {
+    return ResistanceUnit.BASE;
   }
 
   @Override
@@ -24,11 +33,13 @@ public final class Resistance extends AbstractMeasure<ResistanceUnit, Resistance
     return new Resistance( value, unit );
   }
 
-  public Potential times( Current current ) {
-    return new Potential( toBaseNumber() * current.toBaseNumber(), PotentialUnit.BASE, getUnit().getPotentialUnit() );
+  public Potential times( Current current )
+  {
+    return new Potential( toBaseNumber() * current.toBaseNumber(), PotentialUnit.BASE, getDisplayUnit().getPotentialUnit() );
   }
-  
-  public Inductance times( Time time ) {
-    return new Inductance( toBaseNumber() * time.toBaseNumber(), InductanceUnit.BASE, getUnit() * time.getUnit() );
+
+  public Inductance times( Time time )
+  {
+    return new Inductance( toBaseNumber() * time.toBaseNumber(), InductanceUnit.BASE, getDisplayUnit() * time.getDisplayUnit() );
   }
 }

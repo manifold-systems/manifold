@@ -21,11 +21,20 @@ import manifold.science.util.Rational;
 
 public final class Force extends AbstractMeasure<ForceUnit, Force>
 {
-  public Force( Rational value, ForceUnit unit, ForceUnit displayUnit ) {
-    super( value, unit, displayUnit, ForceUnit.BASE );
+  public Force( Rational value, ForceUnit unit, ForceUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Force( Rational value, ForceUnit unit ) {
+
+  public Force( Rational value, ForceUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public ForceUnit getBaseUnit()
+  {
+    return ForceUnit.BASE;
   }
 
   @Override
@@ -33,28 +42,35 @@ public final class Force extends AbstractMeasure<ForceUnit, Force>
   {
     return new Force( value, unit, displayUnit );
   }
+
   @Override
   public Force make( Rational value, ForceUnit unit )
   {
     return new Force( value, unit );
   }
 
-  public Power times( Velocity v ) {
-    return new Power( toBaseNumber() * v.toBaseNumber(), PowerUnit.BASE, getUnit() * v.getUnit().getLengthUnit() / v.getUnit().getTimeUnit() );
+  public Power times( Velocity v )
+  {
+    return new Power( toBaseNumber() * v.toBaseNumber(), PowerUnit.BASE, getDisplayUnit() * v.getDisplayUnit().getLengthUnit() / v.getDisplayUnit().getTimeUnit() );
   }
 
-  public Energy times( Length len ) {
-    return new Energy( toBaseNumber() * len.toBaseNumber(), EnergyUnit.BASE, getUnit() * len.getUnit() );
+  public Energy times( Length len )
+  {
+    return new Energy( toBaseNumber() * len.toBaseNumber(), EnergyUnit.BASE, getDisplayUnit() * len.getDisplayUnit() );
   }
 
-  public Momentum times( Time t ) {
-    return new Momentum( toBaseNumber() * t.toBaseNumber(), MomentumUnit.BASE, getUnit() * t.getUnit() );
+  public Momentum times( Time t )
+  {
+    return new Momentum( toBaseNumber() * t.toBaseNumber(), MomentumUnit.BASE, getDisplayUnit() * t.getDisplayUnit() );
   }
 
-  public Acceleration div( Mass w ) {
-    return new Acceleration( toBaseNumber() / w.toBaseNumber(), AccelerationUnit.BASE, getUnit().getAccUnit() );
+  public Acceleration div( Mass w )
+  {
+    return new Acceleration( toBaseNumber() / w.toBaseNumber(), AccelerationUnit.BASE, getDisplayUnit().getAccUnit() );
   }
-  public Mass div( Acceleration acc ) {
-    return new Mass( toBaseNumber() / acc.toBaseNumber(), MassUnit.BASE, getUnit().getMassUnit() );
+
+  public Mass div( Acceleration acc )
+  {
+    return new Mass( toBaseNumber() / acc.toBaseNumber(), MassUnit.BASE, getDisplayUnit().getMassUnit() );
   }
 }

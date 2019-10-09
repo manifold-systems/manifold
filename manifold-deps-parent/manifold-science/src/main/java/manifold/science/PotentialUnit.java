@@ -11,19 +11,23 @@ public final class PotentialUnit extends AbstractQuotientUnit<PowerUnit, Current
 {
   private static final UnitCache<PotentialUnit> CACHE = new UnitCache<>();
 
-  public static final PotentialUnit V = get( PowerUnit.BASE, CurrentUnit.BASE, 1r, "Volt", "V" );
+  public static final PotentialUnit V = get( PowerUnit.BASE, CurrentUnit.BASE, 1 r, "Volt", "V" );
 
   public static final PotentialUnit BASE = V;
 
-  public static PotentialUnit get( PowerUnit powerUnit, CurrentUnit currentUnit ) {
+  public static PotentialUnit get( PowerUnit powerUnit, CurrentUnit currentUnit )
+  {
     return get( powerUnit, currentUnit, null, null, null );
   }
-  public static PotentialUnit get( PowerUnit powerUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol ) {
+
+  public static PotentialUnit get( PowerUnit powerUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol )
+  {
     PotentialUnit unit = new PotentialUnit( powerUnit, currentUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private PotentialUnit( PowerUnit powerUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol ) {
+  private PotentialUnit( PowerUnit powerUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol )
+  {
     super( powerUnit, currentUnit, factor, name, symbol );
   }
 
@@ -33,14 +37,18 @@ public final class PotentialUnit extends AbstractQuotientUnit<PowerUnit, Current
     return new Potential( Rational.get( amount ), this );
   }
 
-  public PowerUnit getPowerUnit() {
+  public PowerUnit getPowerUnit()
+  {
     return getLeftUnit();
   }
-  public CurrentUnit getCurrentUnit() {
+
+  public CurrentUnit getCurrentUnit()
+  {
     return getRightUnit();
   }
 
-  public ResistanceUnit div( CurrentUnit current ) {
+  public ResistanceUnit div( CurrentUnit current )
+  {
     return ResistanceUnit.get( this, current );
   }
 }

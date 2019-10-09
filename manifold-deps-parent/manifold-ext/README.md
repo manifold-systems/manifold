@@ -2,8 +2,8 @@
 
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
-* New! [Operator Overloading](#operator-overloading)
-* New! [Unit Expressions](#unit-expressions)
+* _**New!**_ [Operator Overloading](#operator-overloading)
+* _**New!**_ [Unit Expressions](#unit-expressions)
 * [Structural interfaces](#structural-interfaces-via-structural) via `@Structural`
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
 * [The *Self* type](#the-self-type-via-self) via `@Self`
@@ -395,7 +395,7 @@ projects uses operator overloading and unit expressions extensively.
 >Warning: **Experimental Feature**
 
 The Manifold extension framework plugs into Java to provide seamless operator overloading capability. You can
-type-safely overload arithmetic, negation, and relational operators for any non-primitive type by implementing one or
+type-safely provide arithmetic, negation, and relational operators for any non-primitive type by implementing one or
 more predefined operator methods. You can implement an operator method directly in your type or using [extension methods](#extension-classes-via-extension)
 if you do not control the type's definition. 
 
@@ -403,20 +403,20 @@ if you do not control the type's definition.
 
 A type `T` can overload operators by implementing one or more of the following methods: 
 
-**Unary Operators**
-* `-` : `T unaryMinus()`
-
-**Binary Operators**
+**Arithmetic**
 * `+` : `T plus(A addend)`
 * `-` : `T minus(S subtrahend)`
 * `*` : `P times(F factor)`
 * `/` : `Q div(D divisor)`
 * `%` : `R rem(D divisor)`
 
-There is no formal interface containing these methods. Instead you implement an operator method *structurally* simply by
-defining a method with the same name, parameter count, and non-void return type. This is necessary because a type may
-implement several different versions of the same method, which would otherwise not work with Java's nominal interface
-types. 
+**Negation**
+* `-` : `T unaryMinus()`
+
+Note these methods do not belong to a class or interface you implement. Instead you implement an operator method
+*structurally* simply by defining a method with the same name, parameter, and non-void return type. This is necessary
+because a type may implement several different versions of the same method, which would otherwise not work with Java's
+name-based interface types. 
 
 Here's a simple example demonstrating how to implement the `+` operator:
 ```java
@@ -435,7 +435,7 @@ var b = new Point(3, 4);
 var sum = a + b; // Point(4, 6)
 ```
 
-Since operator methods are structural, you can define multiple `plus()` methods:
+Since operator methods are structural, you can define *multiple* `plus()` methods:
 ```java
 public Point plus(int[] coord) {
   if(coord.length != 2) {
@@ -444,7 +444,6 @@ public Point plus(int[] coord) {
   return new Point(x + coord[0], y + coord[1]);
 }
 ```
-
    
 ## Relational Operators
 
@@ -453,7 +452,7 @@ to provide an operator-specific API.
 ```java
 boolean compareToUsing( T that, Operator op );
 ```
-Where `Operator` is an `enum` and specifies constants representing the relational operators:
+Where `Operator` is an `enum` which specifies constants for relational operators:
 
 **Relational Operators**
 * `>`&nbsp; : `Operator.GT`
@@ -463,9 +462,25 @@ Where `Operator` is an `enum` and specifies constants representing the relationa
 * `==` : `Operator.EQ`
 * `!=` : `Operator.NE`
 
-`ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to the `compareTo()`
-implementation that is suitable for most types. So normally you only need to add `ComparableUsing` to your type's
-`implements` or `extends` clause and implement `Comparable` as you normally would.
+`ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to `Comparable`'s `compareTo()`
+implementation which is suitable for most types. So normally you only need to add `ComparableUsing` to your type's
+`implements` or `extends` clause and implement just `Comparable` as you normally would. Thus adding relational operator
+support to the `Point` example we have:
+
+```java
+public class Point implements ComparableUsing<Point> {
+  public final int x, y;
+  public Point(int x, int y) {this.x = x; this.y = y;}
+  
+  public Point plus(Point that) {
+    return new Point(x + that.x, y + that.y);
+  }
+  
+  public int compareTo(Point that) {
+    return x
+  }
+}
+```
 
 ## Equality Operators
 

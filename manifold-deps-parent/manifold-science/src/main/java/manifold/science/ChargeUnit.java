@@ -8,7 +8,7 @@ import static manifold.science.util.CoercionConstants.r;
 
 public enum ChargeUnit implements Unit<Charge, ChargeUnit>
 {
-  Coulomb( 1r, "Coulomb", "C" ),
+  Coulomb( 1 r, "Coulomb", "C" ),
   Elementary( "1.6021766208e-19"r, "Elementary", "e" );
 
   public static final ChargeUnit BASE = Coulomb;
@@ -17,7 +17,8 @@ public enum ChargeUnit implements Unit<Charge, ChargeUnit>
   private final String _name;
   private final String _symbol;
 
-  ChargeUnit( Rational coulombs, String name, String symbol ) {
+  ChargeUnit( Rational coulombs, String name, String symbol )
+  {
     _coulombs = coulombs;
     _name = name;
     _symbol = symbol;
@@ -34,38 +35,48 @@ public enum ChargeUnit implements Unit<Charge, ChargeUnit>
     return new Charge( Rational.get( amount ), this );
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-   public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _coulombs * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _coulombs;
   }
 
-  public Rational from( Charge len ) {
+  public Rational from( Charge len )
+  {
     return len.toBaseNumber() / _coulombs;
   }
 
-  public CurrentUnit div( TimeUnit time ) {
+  public CurrentUnit div( TimeUnit time )
+  {
     return CurrentUnit.get( this, time );
   }
 
-  public TimeUnit div( CurrentUnit i ) {
+  public TimeUnit div( CurrentUnit i )
+  {
     return i.getTimeUnit();
   }
 
-  public CapacitanceUnit div( PotentialUnit p ) {
+  public CapacitanceUnit div( PotentialUnit p )
+  {
     return CapacitanceUnit.get( this, p );
   }
-  public PotentialUnit div( CapacitanceUnit cu ) {
+
+  public PotentialUnit div( CapacitanceUnit cu )
+  {
     return cu.getPotentialUnit();
   }
 }

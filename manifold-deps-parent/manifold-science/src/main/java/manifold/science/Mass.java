@@ -19,16 +19,22 @@ package manifold.science;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.util.Rational;
 
-
-import static manifold.science.MassUnit.Kilogram;
-
 public final class Mass extends AbstractMeasure<MassUnit, Mass>
 {
-  public Mass( Rational value, MassUnit unit, MassUnit displayUnit ) {
-    super( value, unit, displayUnit, Kilogram );
+  public Mass( Rational value, MassUnit unit, MassUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Mass( Rational value, MassUnit unit ) {
+
+  public Mass( Rational value, MassUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public MassUnit getBaseUnit()
+  {
+    return MassUnit.BASE;
   }
 
   @Override
@@ -36,31 +42,40 @@ public final class Mass extends AbstractMeasure<MassUnit, Mass>
   {
     return new Mass( value, unit, displayUnit );
   }
+
   @Override
   public Mass make( Rational value, MassUnit unit )
   {
     return new Mass( value, unit );
   }
 
-  public Force times( Acceleration a ) {
-    return new Force( toBaseNumber() * a.toBaseNumber(), ForceUnit.BASE, ForceUnit.get( getUnit(), a.getUnit() ) );
-  } 
-  
-  public Momentum times( Velocity v ) {
-    return new Momentum( toBaseNumber() * v.toBaseNumber(), MomentumUnit.BASE, MomentumUnit.get( getUnit(), v.getUnit() ) );
+  public Force times( Acceleration a )
+  {
+    return new Force( toBaseNumber() * a.toBaseNumber(), ForceUnit.BASE, ForceUnit.get( getDisplayUnit(), a.getDisplayUnit() ) );
   }
 
-  public Pressure div( Area area ) {
-    return new Pressure( toBaseNumber() / area.toBaseNumber(), PressureUnit.BASE, PressureUnit.get( getUnit(), area.getUnit() ) );
-  }
-  public Area div( Pressure p ) {
-    return new Area( toBaseNumber() / p.toBaseNumber(), AreaUnit.BASE, p.getUnit().getAreaUnit() );
+  public Momentum times( Velocity v )
+  {
+    return new Momentum( toBaseNumber() * v.toBaseNumber(), MomentumUnit.BASE, MomentumUnit.get( getDisplayUnit(), v.getDisplayUnit() ) );
   }
 
-  public Density div( Volume volume ) {
-    return new Density( toBaseNumber() / volume.toBaseNumber(), DensityUnit.BASE, DensityUnit.get( getUnit(), volume.getUnit() ) );
+  public Pressure div( Area area )
+  {
+    return new Pressure( toBaseNumber() / area.toBaseNumber(), PressureUnit.BASE, PressureUnit.get( getDisplayUnit(), area.getDisplayUnit() ) );
   }
-  public Volume div( Density d ) {
-    return new Volume( toBaseNumber() / d.toBaseNumber(), VolumeUnit.BASE, d.getUnit().getVolumeUnit() );
+
+  public Area div( Pressure p )
+  {
+    return new Area( toBaseNumber() / p.toBaseNumber(), AreaUnit.BASE, p.getDisplayUnit().getAreaUnit() );
+  }
+
+  public Density div( Volume volume )
+  {
+    return new Density( toBaseNumber() / volume.toBaseNumber(), DensityUnit.BASE, DensityUnit.get( getDisplayUnit(), volume.getDisplayUnit() ) );
+  }
+
+  public Volume div( Density d )
+  {
+    return new Volume( toBaseNumber() / d.toBaseNumber(), VolumeUnit.BASE, d.getDisplayUnit().getVolumeUnit() );
   }
 }

@@ -12,7 +12,7 @@ public enum StorageCapacityUnit implements Unit<StorageCapacity, StorageCapacity
 {
   Bit( Rational.get( 1, 8 ), "Bit", "bit" ),
   Nibble( Rational.HALF, "Nibble", "nibble" ),
-  Byte( 1r, "Byte", "B" ),
+  Byte( 1 r, "Byte", "B" ),
   KB( KILO, "Kilobyte", "KB" ),
   KiB( KIBI, "Kibibyte", "KiB" ),
   MB( KILO.pow( 2 ), "Megabyte", "MB" ),
@@ -36,7 +36,8 @@ public enum StorageCapacityUnit implements Unit<StorageCapacity, StorageCapacity
 
   public static final StorageCapacityUnit BASE = Byte;
 
-  StorageCapacityUnit( Rational bytes, String name, String symbol ) {
+  StorageCapacityUnit( Rational bytes, String name, String symbol )
+  {
     _bytes = bytes;
     _name = name;
     _symbol = symbol;
@@ -53,23 +54,28 @@ public enum StorageCapacityUnit implements Unit<StorageCapacity, StorageCapacity
     return _bytes;
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-   public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _bytes * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _bytes;
   }
 
-  public Rational from( StorageCapacity bytes ) {
+  public Rational from( StorageCapacity bytes )
+  {
     return bytes.toBaseNumber() / _bytes;
   }
 }

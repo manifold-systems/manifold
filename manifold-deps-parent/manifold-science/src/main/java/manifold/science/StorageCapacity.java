@@ -5,11 +5,20 @@ import manifold.science.util.Rational;
 
 public final class StorageCapacity extends AbstractMeasure<StorageCapacityUnit, StorageCapacity>
 {
-  public StorageCapacity( Rational value, StorageCapacityUnit unit, StorageCapacityUnit displayUnit ) {
-    super( value, unit, displayUnit, StorageCapacityUnit.BASE );
+  public StorageCapacity( Rational value, StorageCapacityUnit unit, StorageCapacityUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public StorageCapacity( Rational value, StorageCapacityUnit unit ) {
+
+  public StorageCapacity( Rational value, StorageCapacityUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public StorageCapacityUnit getBaseUnit()
+  {
+    return StorageCapacityUnit.BASE;
   }
 
   @Override
@@ -17,6 +26,7 @@ public final class StorageCapacity extends AbstractMeasure<StorageCapacityUnit, 
   {
     return new StorageCapacity( value, unit, displayUnit );
   }
+
   @Override
   public StorageCapacity make( Rational value, StorageCapacityUnit unit )
   {

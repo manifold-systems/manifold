@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -31,11 +31,24 @@ import manifold.science.TemperatureUnit;
 import manifold.science.TimeUnit;
 import manifold.science.VelocityUnit;
 import manifold.science.VolumeUnit;
+import manifold.science.api.Dimension;
 
 /**
- * A collection of commonly used SI units specified as standard abbreviations
+ * A collection of commonly used SI units specified as standard abbreviations.
+ * <p/>
+ * Import constants of this class like this:
+ * <pre><code>
+ *   import static manifold.science.util.UnitConstants.m;
+ * </code></pre>
+ * Then use them to conveniently express {@link Dimension} values like this:
+ * <pre><code>
+ *   Length distance = 90 mph * 25 min;
+ * </code></pre>
+ * Note unlike floating point literals, these expressions retain the precision of the literal decimal values
+ * value.
  */
-public interface UnitConstants {
+public interface UnitConstants
+{
   LengthUnit mum = LengthUnit.Micro;
   LengthUnit mm = LengthUnit.Milli;
   LengthUnit cm = LengthUnit.Centi;

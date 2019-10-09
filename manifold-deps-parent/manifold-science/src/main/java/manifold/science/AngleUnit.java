@@ -26,16 +26,16 @@ import static manifold.science.util.CoercionConstants.r;
 
 public enum AngleUnit implements Unit<Angle, AngleUnit>
 {
-  Nano( 1n, "Nanoradian", "nrad" ),
-  Milli( 1m, "Milliradian", "mrad" ),
-  Radian( 1r, "Radian", "rad" ),
-  Degree( pi/180, "Degree", "deg" ),
-  MOA( pi/10800, "MinuteOfArc", "moa" ),
-  ArcSecond( pi/648k, "ArcSecond", "arcsec" ),
-  MilliArcSecond( pi/648M, "MilliArcSecond", "mas" ),
-  Turn( 2*pi, "Turn", "cyc" ),
-  Gradian( pi/200, "Gradian", "grad" ),
-  Quadrant( pi/2, "Quadrant", "quad" );
+  Nano( 1 n, "Nanoradian", "nrad" ),
+  Milli( 1 m, "Milliradian", "mrad" ),
+  Radian( 1 r, "Radian", "rad" ),
+  Degree( pi / 180, "Degree", "deg" ),
+  MOA( pi / 10800, "MinuteOfArc", "moa" ),
+  ArcSecond( pi / 648 k, "ArcSecond", "arcsec" ),
+  MilliArcSecond( pi / 648 M, "MilliArcSecond", "mas" ),
+  Turn( 2 * pi, "Turn", "cyc" ),
+  Gradian( pi / 200, "Gradian", "grad" ),
+  Quadrant( pi / 2, "Quadrant", "quad" );
 
   private Rational _rads;
   private String _name;
@@ -43,7 +43,8 @@ public enum AngleUnit implements Unit<Angle, AngleUnit>
 
   public static AngleUnit BASE = Radian;
 
-  AngleUnit( Rational rads, String name, String symbol ) {
+  AngleUnit( Rational rads, String name, String symbol )
+  {
     _rads = rads;
     _name = name;
     _symbol = symbol;
@@ -60,31 +61,38 @@ public enum AngleUnit implements Unit<Angle, AngleUnit>
     return _rads;
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-   public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _rads * myUnits;
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _rads;
   }
 
-  public Rational from( Angle angle ) {
+  public Rational from( Angle angle )
+  {
     return angle.toBaseNumber() / _rads;
   }
 
-  public FrequencyUnit div( TimeUnit time ) {
+  public FrequencyUnit div( TimeUnit time )
+  {
     return FrequencyUnit.get( this, time );
   }
 
-  public TimeUnit div( FrequencyUnit freq ) {
+  public TimeUnit div( FrequencyUnit freq )
+  {
     return freq.getTimeUnit();
   }
 }

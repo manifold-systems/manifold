@@ -28,21 +28,21 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
   // Ephemeris (SI) units
   Planck( "5.39056e-44"r, "Planck-time", "tP" ),
   Femto( 1 fe, "Femtosecond", "fs" ),
-  Pico( 1p, "Picosecond", "ps" ),
-  Nano( 1n, "Nanosecond", "ns" ),
-  Micro( 1u, "Microsecond", "µs" ),
-  Milli( 1m, "Millisecond", "ms" ),
-  Second( 1r, "Second", "s" ),
-  Minute( 60r, "Minute", "min"  ),
-  Hour( 60r*60, "Hour", "hr" ),
-  Day( 24r*60*60, "Day", "day" ),
-  Week( 7r*24*60*60, "Week", "wk" ),
+  Pico( 1 p, "Picosecond", "ps" ),
+  Nano( 1 n, "Nanosecond", "ns" ),
+  Micro( 1 u, "Microsecond", "µs" ),
+  Milli( 1 m, "Millisecond", "ms" ),
+  Second( 1 r, "Second", "s" ),
+  Minute( 60 r, "Minute", "min" ),
+  Hour( 60 r * 60, "Hour", "hr" ),
+  Day( 24 r * 60 * 60, "Day", "day" ),
+  Week( 7 r * 24 * 60 * 60, "Week", "wk" ),
 
   // Mean Gregorian (ISO Calendar) units
-  Month( 31556952r/12, "Month", "mo" ),
-  Year( 31556952r, "Year", "yr" ),
-  Decade( 31556952r * 10, "Decade", "decade" ),
-  Century( 31556952r * 100, "Century", "century" ),
+  Month( 31556952 r / 12, "Month", "mo" ),
+  Year( 31556952 r, "Year", "yr" ),
+  Decade( 31556952 r * 10, "Decade", "decade" ),
+  Century( 31556952 r * 100, "Century", "century" ),
   Millennium( 31556952 k, "Millennium", "millennium" ),
   Era( 31556952 G, "Era", "era" ),
 
@@ -57,21 +57,25 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
   private String _symbol;
 
 
-  TimeUnit( Rational sec, String name, String symbol ) {
+  TimeUnit( Rational sec, String name, String symbol )
+  {
     _sec = sec;
     _name = name;
     _symbol = symbol;
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return _name;
   }
 
-  public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return _symbol;
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return _sec * myUnits;
   }
 
@@ -87,7 +91,8 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
     return new Time( Rational.get( amount ), this );
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return _sec;
   }
 
@@ -97,27 +102,33 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
   }
 
 
-  public LengthUnit times( VelocityUnit v ) {
+  public LengthUnit times( VelocityUnit v )
+  {
     return v.getLengthUnit();
   }
 
-  public VelocityUnit times( AccelerationUnit acc ) {
+  public VelocityUnit times( AccelerationUnit acc )
+  {
     return acc.getVelocityUnit();
   }
 
-  public ChargeUnit times( CurrentUnit current ) {
+  public ChargeUnit times( CurrentUnit current )
+  {
     return ChargeUnit.Coulomb;
   }
 
-  public AngleUnit times( FrequencyUnit frequency ) {
+  public AngleUnit times( FrequencyUnit frequency )
+  {
     return frequency.getAngleUnit();
   }
 
-  public EnergyUnit times( PowerUnit power ) {
+  public EnergyUnit times( PowerUnit power )
+  {
     return power.getEnergyUnit();
   }
 
-  public MomentumUnit times( ForceUnit force ) {
-    return force.getMassUnit() * (force.getAccUnit().getVelocityUnit().getLengthUnit()/this);
+  public MomentumUnit times( ForceUnit force )
+  {
+    return force.getMassUnit() * (force.getAccUnit().getVelocityUnit().getLengthUnit() / this);
   }
 }

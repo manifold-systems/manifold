@@ -28,19 +28,23 @@ public final class ForceUnit extends AbstractProductUnit<MassUnit, AccelerationU
 {
   private static final UnitCache<ForceUnit> CACHE = new UnitCache<>();
 
-  public static final ForceUnit N = get( Kilogram, AccelerationUnit.BASE, 1r, "Newton", "N" );
+  public static final ForceUnit N = get( Kilogram, AccelerationUnit.BASE, 1 r, "Newton", "N" );
 
   public static final ForceUnit BASE = N;
 
-  public static ForceUnit get( MassUnit massUnit, AccelerationUnit accUnit ) {
+  public static ForceUnit get( MassUnit massUnit, AccelerationUnit accUnit )
+  {
     return get( massUnit, accUnit, null, null, null );
   }
-  public static ForceUnit get( MassUnit massUnit, AccelerationUnit accUnit, Rational factor, String name, String symbol ) {
+
+  public static ForceUnit get( MassUnit massUnit, AccelerationUnit accUnit, Rational factor, String name, String symbol )
+  {
     ForceUnit unit = new ForceUnit( massUnit, accUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
-    
-  private ForceUnit( MassUnit massUnit, AccelerationUnit accUnit, Rational factor, String name, String symbol ) {
+
+  private ForceUnit( MassUnit massUnit, AccelerationUnit accUnit, Rational factor, String name, String symbol )
+  {
     super( massUnit, accUnit, factor, name, symbol );
   }
 
@@ -50,26 +54,33 @@ public final class ForceUnit extends AbstractProductUnit<MassUnit, AccelerationU
     return new Force( Rational.get( amount ), this );
   }
 
-  public MassUnit getMassUnit() {
+  public MassUnit getMassUnit()
+  {
     return getLeftUnit();
   }
-  public AccelerationUnit getAccUnit() {
+
+  public AccelerationUnit getAccUnit()
+  {
     return getRightUnit();
   }
-        
-  public PowerUnit times( VelocityUnit v ) {
+
+  public PowerUnit times( VelocityUnit v )
+  {
     return PowerUnit.get( this * v.getLengthUnit(), v.getTimeUnit() );
   }
 
-  public EnergyUnit times( LengthUnit len ) {
+  public EnergyUnit times( LengthUnit len )
+  {
     return EnergyUnit.get( this, len );
   }
 
-  public MomentumUnit times( TimeUnit t ) {
+  public MomentumUnit times( TimeUnit t )
+  {
     return MomentumUnit.get( getMassUnit(), VelocityUnit.get( getAccUnit().getVelocityUnit().getLengthUnit(), t ) );
   }
-  
-  public MassUnit div( AccelerationUnit acc ) {
+
+  public MassUnit div( AccelerationUnit acc )
+  {
     return getMassUnit();
   }
 }

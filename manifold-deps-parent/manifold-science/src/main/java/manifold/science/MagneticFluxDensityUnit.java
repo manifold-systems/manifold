@@ -11,19 +11,23 @@ public final class MagneticFluxDensityUnit extends AbstractQuotientUnit<Magnetic
 {
   private static final UnitCache<MagneticFluxDensityUnit> CACHE = new UnitCache<>();
 
-  public static final MagneticFluxDensityUnit T = get( MagneticFluxUnit.BASE, AreaUnit.BASE, 1r, "Tesla", "T" );
+  public static final MagneticFluxDensityUnit T = get( MagneticFluxUnit.BASE, AreaUnit.BASE, 1 r, "Tesla", "T" );
 
   public static final MagneticFluxDensityUnit BASE = T;
 
-  public static MagneticFluxDensityUnit get( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit ) {
+  public static MagneticFluxDensityUnit get( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit )
+  {
     return get( magneticfluxUnit, areaUnit, null, null, null );
   }
-  public static MagneticFluxDensityUnit get( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit, Rational factor, String name, String symbol ) {
+
+  public static MagneticFluxDensityUnit get( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit, Rational factor, String name, String symbol )
+  {
     MagneticFluxDensityUnit unit = new MagneticFluxDensityUnit( magneticfluxUnit, areaUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private MagneticFluxDensityUnit( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit, Rational factor, String name, String symbol ) {
+  private MagneticFluxDensityUnit( MagneticFluxUnit magneticfluxUnit, AreaUnit areaUnit, Rational factor, String name, String symbol )
+  {
     super( magneticfluxUnit, areaUnit, factor, name, symbol );
   }
 
@@ -33,10 +37,13 @@ public final class MagneticFluxDensityUnit extends AbstractQuotientUnit<Magnetic
     return new MagneticFluxDensity( Rational.get( amount ), this );
   }
 
-  public MagneticFluxUnit getMagneticFluxUnit() {
+  public MagneticFluxUnit getMagneticFluxUnit()
+  {
     return getLeftUnit();
   }
-  public AreaUnit getAreaUnit() {
+
+  public AreaUnit getAreaUnit()
+  {
     return getRightUnit();
   }
 }

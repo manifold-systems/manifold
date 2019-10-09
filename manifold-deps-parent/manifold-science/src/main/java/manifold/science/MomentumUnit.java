@@ -13,15 +13,19 @@ public final class MomentumUnit extends AbstractProductUnit<MassUnit, VelocityUn
 
   public static final MomentumUnit BASE = get( Kilogram, VelocityUnit.BASE );
 
-  public static MomentumUnit get( MassUnit massUnit, VelocityUnit velocityUnit ) {
+  public static MomentumUnit get( MassUnit massUnit, VelocityUnit velocityUnit )
+  {
     return get( massUnit, velocityUnit, null, null, null );
   }
-  public static MomentumUnit get( MassUnit massUnit, VelocityUnit velocityUnit, Rational factor, String name, String symbol ) {
+
+  public static MomentumUnit get( MassUnit massUnit, VelocityUnit velocityUnit, Rational factor, String name, String symbol )
+  {
     MomentumUnit unit = new MomentumUnit( massUnit, velocityUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
-  
-  private MomentumUnit( MassUnit massUnit, VelocityUnit velocityUnit, Rational factor, String name, String symbol ) {
+
+  private MomentumUnit( MassUnit massUnit, VelocityUnit velocityUnit, Rational factor, String name, String symbol )
+  {
     super( massUnit, velocityUnit, factor, name, symbol );
   }
 
@@ -31,18 +35,23 @@ public final class MomentumUnit extends AbstractProductUnit<MassUnit, VelocityUn
     return new Momentum( Rational.get( amount ), this );
   }
 
-  public MassUnit getMassUnit() {
+  public MassUnit getMassUnit()
+  {
     return getLeftUnit();
   }
-  public VelocityUnit getVelocityUnit() {
+
+  public VelocityUnit getVelocityUnit()
+  {
     return getRightUnit();
   }
-  
-  public EnergyUnit times( VelocityUnit v ) {
+
+  public EnergyUnit times( VelocityUnit v )
+  {
     return EnergyUnit.get( getMassUnit() * (getVelocityUnit() / v.getTimeUnit()), v.getLengthUnit() );
   }
-    
-  public MassUnit div( VelocityUnit w ) {
+
+  public MassUnit div( VelocityUnit w )
+  {
     return getMassUnit();
-  }  
+  }
 }

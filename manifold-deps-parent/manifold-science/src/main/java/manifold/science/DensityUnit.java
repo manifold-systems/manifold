@@ -13,15 +13,19 @@ public final class DensityUnit extends AbstractQuotientUnit<MassUnit, VolumeUnit
 
   public static final DensityUnit BASE = get( Kilogram, VolumeUnit.BASE );
 
-  public static DensityUnit get( MassUnit massUnit, VolumeUnit volumeUnit ) {
+  public static DensityUnit get( MassUnit massUnit, VolumeUnit volumeUnit )
+  {
     return get( massUnit, volumeUnit, null, null, null );
   }
-  public static DensityUnit get( MassUnit massUnit, VolumeUnit volumeUnit, Rational factor, String name, String symbol ) {
+
+  public static DensityUnit get( MassUnit massUnit, VolumeUnit volumeUnit, Rational factor, String name, String symbol )
+  {
     DensityUnit unit = new DensityUnit( massUnit, volumeUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private DensityUnit( MassUnit massUnit, VolumeUnit volumeUnit, Rational factor, String name, String symbol ) {
+  private DensityUnit( MassUnit massUnit, VolumeUnit volumeUnit, Rational factor, String name, String symbol )
+  {
     super( massUnit, volumeUnit, factor, name, symbol );
   }
 
@@ -31,10 +35,13 @@ public final class DensityUnit extends AbstractQuotientUnit<MassUnit, VolumeUnit
     return new Density( Rational.get( amount ), this );
   }
 
-  public MassUnit getMassUnit() {
+  public MassUnit getMassUnit()
+  {
     return getLeftUnit();
   }
-  public VolumeUnit getVolumeUnit() {
+
+  public VolumeUnit getVolumeUnit()
+  {
     return getRightUnit();
   }
 }

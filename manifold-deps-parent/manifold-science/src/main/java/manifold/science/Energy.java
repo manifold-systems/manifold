@@ -24,11 +24,20 @@ import static manifold.science.LengthUnit.Meter;
 
 public final class Energy extends AbstractMeasure<EnergyUnit, Energy>
 {
-  public Energy( Rational value, EnergyUnit unit, EnergyUnit displayUnit ) {
-    super( value, unit, displayUnit, EnergyUnit.BASE );
+  public Energy( Rational value, EnergyUnit unit, EnergyUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Energy( Rational value, EnergyUnit unit ) {
+
+  public Energy( Rational value, EnergyUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public EnergyUnit getBaseUnit()
+  {
+    return EnergyUnit.BASE;
   }
 
   @Override
@@ -43,35 +52,43 @@ public final class Energy extends AbstractMeasure<EnergyUnit, Energy>
     return new Energy( value, unit );
   }
 
-  public Length div( Force f ) {
-    return new Length( toBaseNumber() / f.toBaseNumber(), Meter, getUnit().getLengthUnit() );
-  }
-  
-  public Force div( Length len ) {
-    return new Force( toBaseNumber() / len.toBaseNumber(), ForceUnit.BASE, getUnit().getForceUnit() );
-  }
-  
-  public Power div( Time t ) {
-    return new Power( toBaseNumber() / t.toBaseNumber(), PowerUnit.BASE, PowerUnit.get( getUnit(), t.getUnit() ) );
+  public Length div( Force f )
+  {
+    return new Length( toBaseNumber() / f.toBaseNumber(), Meter, getDisplayUnit().getLengthUnit() );
   }
 
-  public Time div( Power power ) {
-    return new Time( toBaseNumber() / power.toBaseNumber(), TimeUnit.BASE, power.getUnit().getTimeUnit() );
-  }
-  
-  public HeatCapacity div( Temperature temperature ) {
-    return new HeatCapacity( toBaseNumber() / temperature.toBaseNumber(), HeatCapacityUnit.BASE, getUnit() / temperature.getUnit() );
-  }
-  
-  public Temperature div( HeatCapacity c ) {
-    return new Temperature( toBaseNumber() / c.toBaseNumber(), TemperatureUnit.BASE, c.getUnit().getTemperatureUnit() );
+  public Force div( Length len )
+  {
+    return new Force( toBaseNumber() / len.toBaseNumber(), ForceUnit.BASE, getDisplayUnit().getForceUnit() );
   }
 
-  public MagneticFlux div( Current i ) {
-    return new MagneticFlux( toBaseNumber() / i.toBaseNumber(), MagneticFluxUnit.BASE, MagneticFluxUnit.get( getUnit(), i.getUnit() ) );
+  public Power div( Time t )
+  {
+    return new Power( toBaseNumber() / t.toBaseNumber(), PowerUnit.BASE, PowerUnit.get( getDisplayUnit(), t.getDisplayUnit() ) );
   }
 
-  public Current div( MagneticFlux mf ) {
-    return new Current( toBaseNumber() / mf.toBaseNumber(), CurrentUnit.BASE, mf.getUnit().getCurrentUnit() );
+  public Time div( Power power )
+  {
+    return new Time( toBaseNumber() / power.toBaseNumber(), TimeUnit.BASE, power.getDisplayUnit().getTimeUnit() );
+  }
+
+  public HeatCapacity div( Temperature temperature )
+  {
+    return new HeatCapacity( toBaseNumber() / temperature.toBaseNumber(), HeatCapacityUnit.BASE, getDisplayUnit() / temperature.getDisplayUnit() );
+  }
+
+  public Temperature div( HeatCapacity c )
+  {
+    return new Temperature( toBaseNumber() / c.toBaseNumber(), TemperatureUnit.BASE, c.getDisplayUnit().getTemperatureUnit() );
+  }
+
+  public MagneticFlux div( Current i )
+  {
+    return new MagneticFlux( toBaseNumber() / i.toBaseNumber(), MagneticFluxUnit.BASE, MagneticFluxUnit.get( getDisplayUnit(), i.getDisplayUnit() ) );
+  }
+
+  public Current div( MagneticFlux mf )
+  {
+    return new Current( toBaseNumber() / mf.toBaseNumber(), CurrentUnit.BASE, mf.getDisplayUnit().getCurrentUnit() );
   }
 }

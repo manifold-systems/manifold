@@ -13,7 +13,7 @@ for( Mass m: 10kg to 100kg ) {
  
 ## Table of Contents
 * [Collections](#collections-extensions)
-* New! [Ranges](#ranges)
+* _**New!**_ [Ranges](#ranges)
 * [IDE Support](#ide-support)
 * [Building](#building)
 * [License](#license)

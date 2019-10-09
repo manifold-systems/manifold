@@ -11,19 +11,23 @@ public final class ResistanceUnit extends AbstractQuotientUnit<PotentialUnit, Cu
 {
   private static final UnitCache<ResistanceUnit> CACHE = new UnitCache<>();
 
-  public static final ResistanceUnit ohm = get( PotentialUnit.BASE, CurrentUnit.BASE, 1r, "Ohm", "Ω" );
+  public static final ResistanceUnit ohm = get( PotentialUnit.BASE, CurrentUnit.BASE, 1 r, "Ohm", "Ω" );
 
   public static final ResistanceUnit BASE = ohm;
 
-  public static ResistanceUnit get( PotentialUnit potentialUnit, CurrentUnit currentUnit ) {
+  public static ResistanceUnit get( PotentialUnit potentialUnit, CurrentUnit currentUnit )
+  {
     return get( potentialUnit, currentUnit, null, null, null );
   }
-  public static ResistanceUnit get( PotentialUnit potentialUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol ) {
+
+  public static ResistanceUnit get( PotentialUnit potentialUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol )
+  {
     ResistanceUnit unit = new ResistanceUnit( potentialUnit, currentUnit, factor, name, symbol );
     return CACHE.get( unit );
   }
 
-  private ResistanceUnit( PotentialUnit potentialUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol ) {
+  private ResistanceUnit( PotentialUnit potentialUnit, CurrentUnit currentUnit, Rational factor, String name, String symbol )
+  {
     super( potentialUnit, currentUnit, factor, name, symbol );
   }
 
@@ -33,14 +37,18 @@ public final class ResistanceUnit extends AbstractQuotientUnit<PotentialUnit, Cu
     return new Resistance( Rational.get( amount ), this );
   }
 
-  public PotentialUnit getPotentialUnit() {
+  public PotentialUnit getPotentialUnit()
+  {
     return getLeftUnit();
   }
-  public CurrentUnit getCurrentUnit() {
+
+  public CurrentUnit getCurrentUnit()
+  {
     return getRightUnit();
   }
 
-  public InductanceUnit times( TimeUnit t ) {
+  public InductanceUnit times( TimeUnit t )
+  {
     return InductanceUnit.get( this, t );
   }
 }

@@ -23,44 +23,62 @@ import manifold.ext.api.ComparableUsing;
 import manifold.ext.api.This;
 
 /**
- * Extends {@code BigDecimal} with arithmetic operator overloads and relational overloads
+ * Extends {@code BigDecimal} with arithmetic and relational operator implementations
  */
 @Extension
 public abstract class ManBigDecimalExt implements ComparableUsing<BigDecimal>
 {
-  /** Supports unary prefix operator {@code -} */
+  /**
+   * Supports unary prefix operator {@code -}
+   */
   public static BigDecimal unaryMinus( @This BigDecimal thiz )
   {
     return thiz.negate();
   }
 
-  /** Supports binary operator {@code +} */
+  /**
+   * Supports binary operator {@code +}
+   */
   public static BigDecimal plus( @This BigDecimal thiz, BigDecimal operand )
   {
     return thiz.add( operand );
   }
-  /** Supports binary operator {@code -} */
+
+  /**
+   * Supports binary operator {@code -}
+   */
   public static BigDecimal minus( @This BigDecimal thiz, BigDecimal operand )
   {
     return thiz.subtract( operand );
   }
-  /** Supports binary operator {@code *} */
+
+  /**
+   * Supports binary operator {@code *}
+   */
   public static BigDecimal times( @This BigDecimal thiz, BigDecimal operand )
   {
     return thiz.multiply( operand );
   }
-  /** Supports binary operator {@code /} */
+
+  /**
+   * Supports binary operator {@code /}
+   */
   public static BigDecimal div( @This BigDecimal thiz, BigDecimal operand )
   {
     return thiz.divide( operand, RoundingMode.HALF_EVEN );
   }
-  /** Supports binary operator {@code %} */
+
+  /**
+   * Supports binary operator {@code %}
+   */
   public static BigDecimal rem( @This BigDecimal thiz, BigDecimal operand )
   {
     return thiz.remainder( operand );
   }
 
-  /** Implements structural interface {@link ComparableUsing} to support relational operators {@code == != > >= < <=} */
+  /**
+   * Implements structural interface {@link ComparableUsing} to support relational operators {@code == != > >= < <=}
+   */
   public static boolean compareToUsing( @This BigDecimal thiz, BigDecimal that, Operator op )
   {
     switch( op )

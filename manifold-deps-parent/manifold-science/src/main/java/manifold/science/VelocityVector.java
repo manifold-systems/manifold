@@ -35,6 +35,6 @@ public final class VelocityVector extends Vector<Velocity, VelocityUnit, Velocit
   public VelocityVector copy( Rational magnitude )
   {
     return new VelocityVector(
-      new Velocity( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getUnit() ), getAngle() );
+      new Velocity( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getDisplayUnit() ), getAngle() );
   }
 }

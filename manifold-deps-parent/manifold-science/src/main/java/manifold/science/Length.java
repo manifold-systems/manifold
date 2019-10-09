@@ -21,38 +21,56 @@ import manifold.science.util.Rational;
 
 public final class Length extends AbstractMeasure<LengthUnit, Length>
 {
-  public Length( Rational value, LengthUnit unit, LengthUnit displayUnit ) {
-    super( value, unit, displayUnit, LengthUnit.Meter );
+  public Length( Rational value, LengthUnit unit, LengthUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Length( Rational value, LengthUnit unit ) {
+
+  public Length( Rational value, LengthUnit unit )
+  {
     this( value, unit, unit );
   }
 
   @Override
-  public Length make( Rational value, LengthUnit unit, LengthUnit displayUnit ) {
+  public LengthUnit getBaseUnit()
+  {
+    return LengthUnit.BASE;
+  }
+
+  @Override
+  public Length make( Rational value, LengthUnit unit, LengthUnit displayUnit )
+  {
     return new Length( value, unit, displayUnit );
   }
+
   @Override
-  public Length make( Rational value, LengthUnit unit ) {
+  public Length make( Rational value, LengthUnit unit )
+  {
     return new Length( value, unit, unit );
   }
 
-  public Velocity div( Time t ) {
-    return new Velocity( toBaseNumber() / t.toBaseNumber(), VelocityUnit.BASE, VelocityUnit.get( getUnit(), t.getUnit() ) );
-  }
-  public Time div( Velocity v ) {
-    return new Time( toBaseNumber() / v.toBaseNumber(), TimeUnit.BASE, v.getUnit().getTimeUnit() );
+  public Velocity div( Time t )
+  {
+    return new Velocity( toBaseNumber() / t.toBaseNumber(), VelocityUnit.BASE, VelocityUnit.get( getDisplayUnit(), t.getDisplayUnit() ) );
   }
 
-  public Area times( Length len ) {
-    return new Area( toBaseNumber() * len.toBaseNumber(), AreaUnit.BASE, AreaUnit.get( getUnit(), len.getUnit() ) );
+  public Time div( Velocity v )
+  {
+    return new Time( toBaseNumber() / v.toBaseNumber(), TimeUnit.BASE, v.getDisplayUnit().getTimeUnit() );
   }
 
-  public Volume times( Area area ) {
-    return new Volume( toBaseNumber() * area.toBaseNumber(), VolumeUnit.BASE, VolumeUnit.get( getUnit(), area.getUnit() ) );
+  public Area times( Length len )
+  {
+    return new Area( toBaseNumber() * len.toBaseNumber(), AreaUnit.BASE, AreaUnit.get( getDisplayUnit(), len.getDisplayUnit() ) );
   }
 
-  public Energy times( Force force ) {
-    return new Energy( toBaseNumber() * force.toBaseNumber(), EnergyUnit.BASE, EnergyUnit.get( force.getUnit(), getUnit() ) );
+  public Volume times( Area area )
+  {
+    return new Volume( toBaseNumber() * area.toBaseNumber(), VolumeUnit.BASE, VolumeUnit.get( getDisplayUnit(), area.getDisplayUnit() ) );
+  }
+
+  public Energy times( Force force )
+  {
+    return new Energy( toBaseNumber() * force.toBaseNumber(), EnergyUnit.BASE, EnergyUnit.get( force.getDisplayUnit(), getDisplayUnit() ) );
   }
 }

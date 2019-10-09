@@ -23,6 +23,7 @@ import manifold.science.util.Rational;
  * {@code Dimension} is the basis for a physical dimension. It models a dimension has having a measure represented as a
  * {@link Rational} value and common arithmetic operations which also serve as operator overloads.
  * <p/>
+ *
  * @param <S> Abstract dimension types are recursively defined to enforce type-safety
  */
 public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
@@ -48,9 +49,10 @@ public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
   S fromNumber( Rational value );
 
 
-  /* Default arithmetic behavior */
+  /* Default arithmetic implementation */
 
-  default S unaryMinus() {
+  default S unaryMinus()
+  {
     return copy( toBaseNumber().unaryMinus() );
   }
 
@@ -58,14 +60,17 @@ public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
   {
     return copy( toBaseNumber().plus( operand.toBaseNumber() ) );
   }
+
   default S minus( S operand )
   {
     return copy( toBaseNumber().minus( operand.toBaseNumber() ) );
   }
+
   default Rational div( S operand )
   {
     return toBaseNumber() / operand.toBaseNumber();
   }
+
   default Rational rem( S operand )
   {
     return toBaseNumber() % operand.toBaseNumber();
@@ -75,10 +80,12 @@ public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
   {
     return copy( toBaseNumber() * operand );
   }
+
   default S div( Number operand )
   {
     return copy( toBaseNumber() / operand );
   }
+
   default S rem( Number operand )
   {
     return copy( toBaseNumber() % operand );

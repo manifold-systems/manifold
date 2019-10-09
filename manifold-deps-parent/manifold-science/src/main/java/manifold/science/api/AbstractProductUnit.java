@@ -4,7 +4,7 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *   
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -16,58 +16,83 @@
 
 package manifold.science.api;
 
+import manifold.science.Area;
+import manifold.science.LengthUnit;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.util.Rational.ONE;
 
+/**
+ * Represents a binary product of unit types of measure such as {@link Area} which is the product of two {@link LengthUnit}s.
+ * <p/>
+ * @param <A> The unit type on the left hand side
+ * @param <B> The unit type on the right hand side
+ * @param <D> The {@link Dimension} type expressed using this binary product of unit types
+ * @param <U> This type (recursive to enforce type-safety).
+ */
 public abstract class AbstractProductUnit<A extends Unit,
   B extends Unit,
   D extends Dimension<D>,
-  U extends AbstractProductUnit<A, B, D, U>> extends AbstractBinaryUnit<A, B, D, U> {
-  
-  protected AbstractProductUnit( A leftUnit, B rightUnit ) {
-    this( leftUnit, rightUnit, null, null, null ); 
+  U extends AbstractProductUnit<A, B, D, U>> extends AbstractBinaryUnit<A, B, D, U>
+{
+
+  protected AbstractProductUnit( A leftUnit, B rightUnit )
+  {
+    this( leftUnit, rightUnit, null, null, null );
   }
-  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor ) {
+
+  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor )
+  {
     this( leftUnit, rightUnit, factor, null, null );
   }
-  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor, String name ) {
+
+  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor, String name )
+  {
     this( leftUnit, rightUnit, factor, name, null );
   }
-  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor, String name, String symbol ) {
+
+  protected AbstractProductUnit( A leftUnit, B rightUnit, Rational factor, String name, String symbol )
+  {
     super( leftUnit, rightUnit, factor, name, symbol );
   }
 
-  public String getUnitName() {
+  public String getUnitName()
+  {
     return super.getUnitName() == null
            ? getLeftUnit().getUnitName() + " " + getRightUnit().getUnitName()
            : super.getUnitName();
   }
 
-  public String getUnitSymbol() {
+  public String getUnitSymbol()
+  {
     return super.getUnitSymbol() == null
            ? getLeftUnit().getUnitSymbol() + "\u22C5" + getRightUnit().getUnitSymbol()
            : super.getUnitSymbol();
   }
 
-  public String getFullName() {
+  public String getFullName()
+  {
     return getLeftUnit().getFullName() + " " + getRightUnit().getFullName();
   }
 
-  public String getFullSymbol() {
+  public String getFullSymbol()
+  {
     return getLeftUnit().getFullSymbol() + "\u22C5" + getRightUnit().getFullSymbol();
   }
 
-  public Rational toBaseUnits( Rational myUnits ) {
+  public Rational toBaseUnits( Rational myUnits )
+  {
     return (getLeftUnit().toBaseUnits( ONE ) * getRightUnit().toBaseUnits( ONE )) * myUnits * getFactor();
   }
 
-  public Rational toNumber() {
+  public Rational toNumber()
+  {
     return getLeftUnit().toNumber() * getRightUnit().toNumber();
   }
 
-  public B div( A a ) {
+  public B div( A a )
+  {
     return getRightUnit();
   }
   // reifies to same type :(

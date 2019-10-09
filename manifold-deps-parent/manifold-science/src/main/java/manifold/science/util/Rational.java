@@ -28,7 +28,7 @@ import manifold.ext.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
 
 /**
- * Models rational number as a fraction to maintain arbitrary precision.
+ * Models rational numbers as a fraction to maintain arbitrary precision.
  */
 final public class Rational extends Number implements Sequential<Rational, Rational, Void>, ComparableUsing<Rational>, Serializable
 {
@@ -47,41 +47,49 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
   {
     return get( BigInteger.valueOf( numerator ), BigInteger.ONE );
   }
+
   public static Rational get( int numerator, int denominator )
   {
     return get( BigInteger.valueOf( numerator ), BigInteger.valueOf( denominator ) );
   }
+
   public static Rational get( long numerator )
   {
     return get( BigInteger.valueOf( numerator ), BigInteger.ONE );
   }
+
   public static Rational get( long numerator, long denominator )
   {
     return get( BigInteger.valueOf( numerator ), BigInteger.valueOf( denominator ) );
   }
+
   public static Rational get( float f )
   {
     return get( Float.toString( f ) );
   }
+
   public static Rational get( double d )
   {
     return get( Double.toString( d ) );
   }
+
   public static Rational get( BigInteger numerator )
   {
     return get( numerator, BigInteger.ONE );
   }
+
   public static Rational get( Number numerator )
   {
     return get( String.valueOf( numerator ) );
   }
+
   public static Rational get( String decimal )
   {
     int iDiv = decimal.indexOf( "/" );
     if( iDiv > 0 )
     {
       String numerator = decimal.substring( 0, iDiv ).trim();
-      String denominator = decimal.substring( iDiv+1 ).trim();
+      String denominator = decimal.substring( iDiv + 1 ).trim();
       boolean numeratorIsDecimal = isDecimalString( numerator );
       boolean denominatorIsDecimal = isDecimalString( denominator );
       if( numeratorIsDecimal )
@@ -133,10 +141,12 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     }
     return get( numerator, denominator );
   }
+
   public static Rational get( BigInteger numerator, BigInteger denominator )
   {
     return get( numerator, denominator, false );
   }
+
   private static Rational get( BigInteger numerator, BigInteger denominator, boolean reduced )
   {
     if( numerator.equals( BigInteger.ZERO ) )
@@ -199,7 +209,8 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return _denominator;
   }
 
-  public BigInteger wholePart() {
+  public BigInteger wholePart()
+  {
     return _numerator.divide( _denominator );
   }
 
@@ -802,12 +813,24 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return minus( step.times( index ) );
   }
 
+  public int signum()
+  {
+    return _numerator.signum();
+  }
+
   @Override
   public int compareTo( Rational that )
   {
     if( that == null )
     {
-      return -1;
+      throw new NullPointerException( "Null argument for comparison" );
+    }
+
+    // note: cast to Object to avoid using Rational's operator impl on == which is this method (avoids stack overflow)
+    //noinspection RedundantCast
+    if( (Object)this == (Object)that )
+    {
+      return 0;
     }
 
     int thisSign = signum();
@@ -821,9 +844,13 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return crossNum.compareTo( crossDen );
   }
 
-  public int signum()
+  /**
+   * Use {@code compareTo()} for {@code ==} and {@code !=} operators.
+   */
+  @Override
+  public EqualityMode equalityMode()
   {
-    return _numerator.signum();
+    return EqualityMode.CompareTo;
   }
 
   @Override
@@ -877,18 +904,20 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
       return _numerator.toString();
     }
     BigInteger whole = wholePart();
-    if( whole.signum() == 0  )
+    if( whole.signum() == 0 )
     {
       return fractionPart().toFractionString();
     }
     return whole + " " + fractionPart().abs().toFractionString();
   }
 
-  public String toDecimalString() {
+  public String toDecimalString()
+  {
     return toBigDecimal().toString();
   }
 
-  public String toPlainDecimalString() {
+  public String toPlainDecimalString()
+  {
     return toBigDecimal().toPlainString();
   }
 

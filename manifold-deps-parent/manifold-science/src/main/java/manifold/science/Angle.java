@@ -21,11 +21,20 @@ import manifold.science.util.Rational;
 
 final public class Angle extends AbstractMeasure<AngleUnit, Angle>
 {
-  public Angle( Rational value, AngleUnit unit, AngleUnit displayUnit ) {
-    super( value, unit, displayUnit, AngleUnit.BASE );
+  public Angle( Rational value, AngleUnit unit, AngleUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
   }
-  public Angle( Rational value, AngleUnit unit ) {
+
+  public Angle( Rational value, AngleUnit unit )
+  {
     this( value, unit, unit );
+  }
+
+  @Override
+  public AngleUnit getBaseUnit()
+  {
+    return AngleUnit.BASE;
   }
 
   @Override
@@ -33,6 +42,7 @@ final public class Angle extends AbstractMeasure<AngleUnit, Angle>
   {
     return new Angle( value, unit, displayUnit );
   }
+
   @Override
   public Angle make( Rational value, AngleUnit unit )
   {
@@ -40,23 +50,30 @@ final public class Angle extends AbstractMeasure<AngleUnit, Angle>
   }
 
   //@BinderSeparators( :accepted = {":"} )
-  public LengthVector postfixBind( Length len ) {
+  public LengthVector postfixBind( Length len )
+  {
     return new LengthVector( len, this );
   }
+
   //@BinderSeparators( :accepted = {":"} )
-  public TimeVector postfixBind( Time t ) {
+  public TimeVector postfixBind( Time t )
+  {
     return new TimeVector( t, this );
   }
+
   //@BinderSeparators( :accepted = {":"} )
-  public VelocityVector postfixBind( Velocity v ) {
+  public VelocityVector postfixBind( Velocity v )
+  {
     return new VelocityVector( v, this );
   }
 
-  public Frequency div( Time time ) {
-    return new Frequency( toBaseNumber() / time.toBaseNumber(), FrequencyUnit.BASE, FrequencyUnit.get( getUnit(), time.getUnit() ) );
+  public Frequency div( Time time )
+  {
+    return new Frequency( toBaseNumber() / time.toBaseNumber(), FrequencyUnit.BASE, FrequencyUnit.get( getDisplayUnit(), time.getDisplayUnit() ) );
   }
 
-  public Time div( Frequency freq ) {
-    return new Time( toBaseNumber() / freq.toBaseNumber(), TimeUnit.BASE, freq.getUnit().getTimeUnit() );
+  public Time div( Frequency freq )
+  {
+    return new Time( toBaseNumber() / freq.toBaseNumber(), TimeUnit.BASE, freq.getDisplayUnit().getTimeUnit() );
   }
 }
