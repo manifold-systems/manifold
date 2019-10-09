@@ -44,8 +44,7 @@ import manifold.science.api.Dimension;
  * <pre><code>
  *   Length distance = 90 mph * 25 min;
  * </code></pre>
- * Note unlike floating point literals, these expressions retain the precision of the literal decimal values
- * value.
+ * Note unlike floating point literals, these expressions retain the precision of the literal decimal values.
  */
 public interface UnitConstants
 {

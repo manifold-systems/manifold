@@ -30,8 +30,7 @@ import java.math.BigInteger;
  * <pre><code>
  *   Rational result = 3.0080111026763916015 r + 2.3456 r;
  * </code></pre>
- * Note unlike floating point literals, these expressions retain the precision of the literal decimal values
- * value.
+ * Note unlike floating point literals, these expressions retain the precision of the literal decimal values.
  */
 public interface CoercionConstants
 {
