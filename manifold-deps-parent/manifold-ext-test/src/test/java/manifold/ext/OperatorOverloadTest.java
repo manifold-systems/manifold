@@ -25,6 +25,17 @@ import static org.junit.Assert.*;
 public class OperatorOverloadTest
 {
   @Test
+  public void testComparable()
+  {
+    assertTrue( "A" < "B" );
+    assertTrue( "A" <= "B" );
+    assertTrue( "A" <= "A" );
+    assertTrue( "B" > "A" );
+    assertTrue( "B" >= "A" );
+    assertTrue( "B" >= "B" );
+  }
+
+  @Test
   public void testFuzz()
   {
     Fuzz bar = new Fuzz(3.0);

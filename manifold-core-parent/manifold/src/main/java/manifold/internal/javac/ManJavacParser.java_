@@ -39,8 +39,8 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
  * file. lol.
  * <p/>
  * <p/>
- * Subclass java parser to implement the "empty" (or adjacency) operator to support "Binding" expressions. See
- * {@code term2()}, {@code term2Rest()}, and other overrides for details.
+ * Subclass java parser to implement the "empty" operator to support "Binding" expressions. See {@code term2()},
+ * {@code term2Rest()}, and other overrides for details.
  */
 public class ManJavacParser extends JavacParser
 {

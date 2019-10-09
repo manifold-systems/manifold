@@ -30,34 +30,18 @@ import java.math.BigInteger;
  * for(Length len: 10ft to 100ft step 6 unit inch) {. . .}
  * for(var value: here to there) {. . .}
  * </code></pre>
- * To use this class simply import the {@code to} constants:
+ * and {@code if} statements:
  * <pre><code>
- * import static manifold.collections.api.range.To.*;}
+ *   if (2 inside 1 to 5) {...}
+ * </code></pre>
+ * To use this class simply import the `to`, `step`, and other constants via:
+ * <pre><code>
+ * import static manifold.collections.api.range.RangeFun.*;
  * </code></pre>
  */
 @SuppressWarnings("unused")
 public final class RangeFun
 {
-  /**
-   * To use these constants:
-   * <pre><code>
-   * import static manifold.collections.api.range.To.*;}
-   * </code></pre>
-   * Then you can make range expressions on {@link Sequential} values like this:
-   * <pre><code>
-   * for(int i: 1 to 10) {. . .}
-   * for(Length len: 10ft to 100ft step 6 unit inch) {. . .}
-   * for(Foo value: here to there) {. . .}
-   * </code></pre>
-   * Use the {@code in} constant to test for sequence membership:
-   * <pre><code>
-   * if(num in 2 to 10) {...}
-   * // same as...
-   * if(num >= 2 && num <= 10) {...}
-   * // and same as...
-   * if((2 to 10).contains(num)) {...}
-   * </code></pre>
-   */
   public static final Closed     to   = Closed.instance();    // both endpoints included
   public static final LeftOpen  _to   = LeftOpen.instance();  // left endpoint excluded
   public static final RightOpen  to_  = RightOpen.instance(); // right endpoint excluded

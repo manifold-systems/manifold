@@ -45,6 +45,7 @@ public interface ManAttr
 {
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
+  String COMPARE_TO = "compareTo";
   String COMPARE_TO_USING = "compareToUsing";
   String UNARY_MINUS = "unaryMinus";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
@@ -139,7 +140,17 @@ public interface ManAttr
     }
     if( overloadOperator != null )
     {
-      overloadOperator = new OverloadOperatorSymbol( overloadOperator, swapped );
+      if( overloadOperator.name.toString().equals( COMPARE_TO ) )
+      {
+        // pose with boolean return to satisfy type checker, this call will be transformed in ext transformer
+        Type.MethodType typePoseWithBooleanReturn = new Type.MethodType( overloadOperator.type.getParameterTypes(), syms().booleanType,
+          overloadOperator.type.getThrownTypes(), syms().methodClass );
+        overloadOperator = new OverloadOperatorSymbol( overloadOperator, typePoseWithBooleanReturn, swapped );
+      }
+      else
+      {
+        overloadOperator = new OverloadOperatorSymbol( overloadOperator, swapped );
+      }
       IDynamicJdk.instance().setOperator( tree, (Symbol.OperatorSymbol)overloadOperator );
       Type owntype = overloadOperator.type.isErroneous()
                      ? overloadOperator.type
@@ -304,10 +315,17 @@ public interface ManAttr
     }
 
     int paramCount = opName.equals( COMPARE_TO_USING ) ? 2 : 1;
-    return getMethodSymbol( types, left, right, opName, (Symbol.ClassSymbol)left.tsym, paramCount );
+    Symbol.MethodSymbol methodSymbol = getMethodSymbol( types, left, right, opName, (Symbol.ClassSymbol)left.tsym, paramCount );
+    if( methodSymbol == null && paramCount == 2 && !left.isPrimitive() && isRelationalOperator( tag ) )
+    {
+      // Support > >= < <= on any Comparable implementor
+      methodSymbol = getMethodSymbol( types, left, right, COMPARE_TO, (Symbol.ClassSymbol)left.tsym, 1 );
+
+    }
+    return methodSymbol;
   }
 
-  public static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount )
+  static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount )
   {
     Symbol.MethodSymbol methodSymbol = getMethodSymbol( types, left, right, opName, sym, paramCount,
       ( t1, t2 ) -> types.isSameType( t1, t2 ) );
@@ -403,6 +421,14 @@ public interface ManAttr
     return tag == Tag.EQ ||
            tag == Tag.NE ||
            tag == Tag.LT ||
+           tag == Tag.LE ||
+           tag == Tag.GT ||
+           tag == Tag.GE;
+  }
+
+  static boolean isRelationalOperator( Tag tag )
+  {
+    return tag == Tag.LT ||
            tag == Tag.LE ||
            tag == Tag.GT ||
            tag == Tag.GE;

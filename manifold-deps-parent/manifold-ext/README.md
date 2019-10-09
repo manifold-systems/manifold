@@ -565,34 +565,40 @@ projects uses operator overloading and unit expressions extensively.
 # Unit Expressions
 >Warning: **Experimental Feature**
 
-Manifold seamlessly plugs into Java to provide a pretty cool feature called *unit expressions*, which lets you write
-expressions in Java more naturally:
+Manifold seamlessly plugs into Java to provide a pretty cool feature called *unit expressions*, which extends the
+expressive flexibility of Java expressions:
 
+**Type-safe units**
 ```java
-// Type-safe and precise
 Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
-
-// Use a variety of unit constants
-if (49.035 N == f) { ... }
-if (49.035 kg m/s/s == f) { ... }
-
-// Mixing units works naturally
+```
+**Mix and match units**
+```java
+if (49.035 N == f) {...}
+if (f == 49.035 kg m/s/s) {...}
+```
+**Combine different units**
+```java
 Mass m = 10 lb + 10 kg; 
-
-// Easy to use
+```
+**Simpler and easier to read syntax**
+```java
 Length distance = 100 mph * 3 hr;
-
-// Use unit expressions with the Range API  
-for( Mass m: 10kg to 100kg ) {
-  . . .
-}
-
-// Conveniently work with money
+```
+**Easily make Ranges with `to` from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**  
+```java
+for( Mass m: 10kg to 100kg ) {...}
+```
+**Conveniently work with Money**
+```java
 Money payment = 1.5M USD;
 Money vat = 162k EUR;
 Money total = payment + vat; 
 ``` 
+>Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
+. 
 
+## How does it work?
 Normally a *binary* expression in Java and most other languages involves two operands and an operator such as `+` for
 addition:
 ```java
@@ -604,7 +610,7 @@ But with a unit expression there is no visible operator:
 Mass m = 10 kg;
 ```
 
-Instead the operation is _declared_ between the _types_ of the operands using the following methods:
+Instead the operation is _declared_ in the _types_ of the operands using the following methods:
 ```java
 public R postfixBind(T lhs);
 public R prefixBind(T rhs);
@@ -617,41 +623,41 @@ public Mass postfixBind(Number magnitude) {...}
 ``` 
 the compiler builds a unit expression consisting of the two operands resulting in type `Mass`.
 
-Notice there is no formal interface containing the `postfixBind()` and `prefixBind()` methods. Instead you implement
+Note `postfixBind()` and `prefixBind()` do not belong to a class or interface you implement. Instead you implement
 them *structurally* simply by defining a method with the same name, parameter count, and non-void return type. This is
 necessary because a type may implement different versions of the same method with different parameter types. This level
-of flexibility is otherwise not supported with Java's nominal type system. 
+of flexibility is otherwise not supported with Java's name-based type system. 
 
 ## Operator Precedence
 
-The empty or sometimes called "adjacency" operator has a dynamic precedence. Statically, its precedence lies between
-addition and multiplication, thus the first line of parsing produces a static AST reflecting this order.  However,
-a second parse must be performed on unit expressions during type attribution to build the expression as intended. At
-this time the parser considers the operator as having an *equal* precedence with multiplication.
+The empty or "binding" operator has a *phased* precedence. Lexically, its precedence lies between addition and
+multiplication, thus during the compiler's parsing phase it produces an untyped AST reflecting this order.  However,
+in the course of the compiler's type attribution phase the compiler restructures the expressions to reflect the bindings
+declared in `prefixBind()` and `postfixBind()` declared in the operand types, during which the compiler considers the
+empty operator as having a precedence *equal to* multiplication.
 
 To illustrate consider the following expression:
-
 ```java
 a b * c
 ```
 
-Having a precedence less than multiplication, statically, the empty operator results in this expression:
-
+The empty operator having a precedence less than multiplication, lexically, the expression parses like this:
 ```java
-a (b*c)
+a (b * c)
 ```
 
-In a later stage when operand types are available the expression reparses to form a valid expression where `a` and `b`
-form a unit expression, which implements multiplication on `c`:
-
+In a later stage when operand types are available the expression may restructure if:
+1. `a` and `b` have a binding relationship declared with `A.postfixBind(B)` or `B.prefixBind(A)` and
+2. the resulting `(a b)` expression implements multiplication with the type of `c`
 ```java
-(a b)*c
+(a b) * c
 ``` 
 
 For example, the expression `5kg * 2` reflects the structure of this example exactly.
 
-As you can see unit expressions demand a level of flexibility beyond conventional parsers such as Java's. But Java is
-flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
+As you can see unit expressions demand a level of flexibility beyond that of conventional parsers/compilers such as
+Java's. But Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this
+capability.
     
 ## More Than Units
 
@@ -660,45 +666,65 @@ What makes unit expressions work is simple, just a pair of methods you can imple
 public R postfixBind(T lhs);
 public R prefixBind(T rhs);
 ``` 
-If your type implements either of these, it is the basis of a potential "unit expression."  So it's a bit unfair to use
-the term "unit expression" to describe what is going on.  There's more to it.  To illustrate, let's say you want to make
-date literals such as:   
+If your type implements either of these, it is the basis of a potential "unit" expression. Thus, the application of
+these methods goes beyond just units. To illustrate, let's say you want to make date literal expressions such as:   
 ```java
-LocalMonthDate d1 = May 15;
+LocalMonthDay d1 = May 15;
 LocalYearMonth d2 = 2019 May;
 LocalDate d3 = 2019 May 15;
 ```
 Binding expressions easily accommodate this use-case.  Something like:
 ```java
+package com.example;
+
 public enum Month {
   January,
   February,
   March,
   April,
-  May; // etc.
+  May,
+  ... // etc.
   
-  public LocalMonthDate prefixBind(Integer date) {
-    return new LocalMonthDate(this, date);
+  public LocalMonthDay prefixBind(Integer date) {
+    return new LocalMonthDay(this, date);
   }
   
-  public LocalMonthYear postfixBind(Integer year) {
-    return new LocalMonthDate(this, date);
+  public LocalYearMonth postfixBind(Integer year) {
+    return new LocalMonthYear(this, date);
   }
 }
 ```
-In turn `LocalMonthDate` and `LocalYearMonth` can define binding methods to make `LocalDate`.
+In turn `LocalYearMonth` can define `LocalDate prefixBind(Integer)`. That's all there is to it. Now you have type-safe
+date literals:
+```java
+import static com.example.Month.*;
+...
+LocalDate date = 2019 October 9;
+```
 
-Essentially you can use binding expressions to leverage juxtaposition to provide more expressive power in your
-applications. The possibilities are endless...
+Essentially you can implement binding expressions to make use of juxtaposition wherever it can improve your design or
+test infrastructure.
 
 ## Science & Ranges
-Of course unit expressions are well suited as the basis for a library modeling physical dimensions such as length, time,
-mass, etc. Indeed this library exists as the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+Of course, as some of the examples illustrate, unit expressions are well suited as the basis for a library modeling
+physical dimensions such as length, time, mass, etc. Indeed such a library exists, check out the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 dependency.
 
 Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
 provided by the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-dependency.
+dependency. Simply by importing the static constants from `RangeRun` you can easily work with ranges:
+```java
+Range range = 1 to 5;
+```
+```java
+for (Rational csr: 5.2r to 15.7r step 0.3r) {...}
+```
+```java
+for (Mass mass: 10kg to 100kg unit oz) {...}
+```
+```java
+if ("Scott" inside "M" to "Z") {...}
+``` 
 
 # Structural Interfaces via `@Structural`
 

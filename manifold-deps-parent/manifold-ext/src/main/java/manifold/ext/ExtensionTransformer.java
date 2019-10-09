@@ -85,8 +85,7 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
-import static com.sun.tools.javac.code.TypeTag.BOT;
-import static com.sun.tools.javac.code.TypeTag.NONE;
+import static com.sun.tools.javac.code.TypeTag.*;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 
@@ -124,6 +123,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( op instanceof OverloadOperatorSymbol )
     {
       TreeMaker make = _tp.getTreeMaker();
+      Symtab symbols = _tp.getSymtab();
 
       // Handle operator overload expressions
 
@@ -134,7 +134,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( operatorMethod != null )
       {
         operatorMethod = favorStringsWithNumberCoercion( tree, operatorMethod );
-        JCExpression equalityNullCheckTernary = null;
+        JCExpression expr = null;
 
         JCTree.JCMethodInvocation methodCall;
         JCExpression receiver = swap ? tree.rhs : tree.lhs;
@@ -151,9 +151,7 @@ public class ExtensionTransformer extends TreeTranslator
             // ? true/false
             // : a == null || b == null
             //   ? false/true
-            //   : a.compareTo( b, op );
-
-            Symtab symbols = _tp.getSymtab();
+            //   : a.compareToUsing( b, op );
 
             JCTree.JCBinary cond = make.Binary( JCTree.Tag.EQ, receiver, arg );
             cond.type = symbols.booleanType;
@@ -179,38 +177,85 @@ public class ExtensionTransformer extends TreeTranslator
             JCTree.JCConditional elsePart2 = make.Conditional( elsePart, make.Literal( tree.getTag() == JCTree.Tag.NE ), methodCall );
             elsePart2.type = symbols.booleanType;
 
-            equalityNullCheckTernary = make.Conditional( cond, make.Literal( tree.getTag() == JCTree.Tag.EQ ), elsePart2 );
-            equalityNullCheckTernary.type = symbols.booleanType;
-            equalityNullCheckTernary.pos = tree.pos;
+            expr = make.Conditional( cond, make.Literal( tree.getTag() == JCTree.Tag.EQ ), elsePart2 );
+            expr.type = symbols.booleanType;
+            expr.pos = tree.pos;
+
+            methodCall = configMethod( tree, operatorMethod, methodCall );
+          }
+          else if( operatorMethod.name.toString().equals( "compareTo" ) )
+          {
+            // (x > y) generated as: (x.compareTo(y) > 0)
+
+            methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
+            methodCall.type = symbols.intType;
+            methodCall.pos = tree.pos;
+            
+            JCTree.JCLiteral zeroLiteral = make.Literal( INT, 0 );
+            zeroLiteral.type = symbols.intType;
+
+            JCTree.JCBinary compareToCond = make.Binary( tree.getTag(), methodCall, zeroLiteral );
+            compareToCond.type = symbols.booleanType;
+            setOperatorSymbol( symbols, compareToCond, relOpString( tree.getTag() ), symbols.intType.tsym );
+            compareToCond.pos = tree.pos;
+
+            expr = compareToCond;
           }
           else
           {
+            // (x > y) generated as: (x.compareToUsing(y, GT))
+
             methodCall = make.Apply( List.nil(),
               make.Select( receiver, operatorMethod ),
               List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
+
+            methodCall = configMethod( tree, operatorMethod, methodCall );
           }
         }
         else
         {
           methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
-        }
-        methodCall.setPos( tree.pos );
-        methodCall.type = operatorMethod.getReturnType();
 
-        // If methodCall is an extension method, rewrite it
-        Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
-        if( extMethod != null )
-        {
-          // Replace with extension method call
-          methodCall = replaceExtCall( methodCall, extMethod );
+          methodCall = configMethod( tree, operatorMethod, methodCall );
         }
 
-        // Concrete type set in attr
-        methodCall.type = tree.type;
-
-        result = equalityNullCheckTernary == null ? methodCall : equalityNullCheckTernary;
+        result = expr == null ? methodCall : expr;
       }
     }
+  }
+
+  private JCTree.JCMethodInvocation configMethod( JCTree.JCBinary tree, Symbol.MethodSymbol operatorMethod, JCTree.JCMethodInvocation methodCall )
+  {
+    methodCall.setPos( tree.pos );
+    methodCall.type = operatorMethod.getReturnType();
+
+    // If methodCall is an extension method, rewrite it
+    Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
+    if( extMethod != null )
+    {
+      // Replace with extension method call
+      methodCall = replaceExtCall( methodCall, extMethod );
+    }
+
+    // Concrete type set in attr
+    methodCall.type = tree.type;
+    return methodCall;
+  }
+
+  private String relOpString( JCTree.Tag tag )
+  {
+    switch(  tag )
+    {
+      case LT:
+        return "<";
+      case LE:
+        return "<=";
+      case GT:
+        return ">";
+      case GE:
+        return ">=";
+    }
+    throw new IllegalStateException( "Expecting only relational op, but found: " + tag );
   }
 
   private void setOperatorSymbol( Symtab symbols, JCTree.JCBinary cond, String op, Symbol operandType )

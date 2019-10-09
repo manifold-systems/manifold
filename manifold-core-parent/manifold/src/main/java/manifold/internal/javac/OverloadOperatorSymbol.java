@@ -17,6 +17,7 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.jvm.ByteCodes;
 import manifold.util.ReflectUtil;
 
@@ -28,6 +29,14 @@ public class OverloadOperatorSymbol extends Symbol.OperatorSymbol
   OverloadOperatorSymbol( MethodSymbol m, boolean swapped )
   {
     super( m.name, m.type, ByteCodes.nop, m.owner );
+    ReflectUtil.field( this, "flags_field" ).set( m.flags() );
+    _methodSymbol = m;
+    _swapped = swapped;
+  }
+
+  OverloadOperatorSymbol( MethodSymbol m, Type.MethodType fakeType, boolean swapped )
+  {
+    super( m.name, fakeType, ByteCodes.nop, m.owner );
     ReflectUtil.field( this, "flags_field" ).set( m.flags() );
     _methodSymbol = m;
     _swapped = swapped;
