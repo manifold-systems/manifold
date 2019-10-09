@@ -395,9 +395,14 @@ projects uses operator overloading and unit expressions extensively.
 >Warning: **Experimental Feature**
 
 The Manifold extension framework plugs into Java to provide seamless operator overloading capability. You can
-type-safely provide arithmetic, negation, and relational operators for any non-primitive type by implementing one or
-more predefined operator methods. You can implement an operator method directly in your type or using [extension methods](#extension-classes-via-extension)
-if you do not control the type's definition. 
+type-safely provide arithmetic, negation, and relational operators for any class by implementing one or more predefined
+operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
+to implement operators for classes you don't otherwise control. For example, using extension methods Manifold provides
+operator implementations for `BigDecimal` so you can write code like this:
+```java
+BigDecimal result = bigValue1 + bigValue2;
+```
+
 
 ## Arithmetic and Negation Operators
 
@@ -477,11 +482,14 @@ public class Point implements ComparableUsing<Point> {
   }
   
   public int compareTo(Point that) {
-    return x
+    return x - that.x;
   }
 }
 ```
-
+Now you can easily compare `Point`s like this:
+```java
+if (pt1 >= pt21) ...
+```
 ## Equality Operators
 
 You can conveniently control the behavior of `==` and `!=` by overriding `equalityMode()`. The options are provided in
@@ -493,10 +501,10 @@ the `EqualityMode` enum:
  */
 enum EqualityMode
 {
-  /** Uses {@code #compareTo()} method (default) */
+  /** Uses {@code #compareTo()} method */
   CompareTo,
 
-  /** Uses {@code equals()} method */
+  /** Uses {@code equals()} method (default) */
   Equals,
 
   /** Uses {@code identity} comparison, same as Java's {@code ==} behavior } */
@@ -506,6 +514,32 @@ enum EqualityMode
 
 If you need something more customized you can override `compareToUsing()` with your own logic for any of the operators.
  
+To enable `==` on `Point` more effectively, you can accept the default behavior of `ComparableUsing` and implement the
+`equals()` and `hashCode()` methods:
+ 
+```java
+public boolean equals(Object that) {
+  return getClass() == that.getClass() && 
+    x == ((Point)that).x && y == ((Point)that).y;
+}
+
+public int hashCode() {
+  return Objects.hash(x, y); 
+}
+```
+Sometimes it's better to use the `CompareTo` mode.  For instance, the `==` and `!=` implementations for `Rational`,
+`BigDecimal`, and `BigInteger` use `CompareTo` equality mode because in those classes `compareTo()` reflects
+equality in terms of the face value of the number e.g., 1.0 == 1.00, which is more desirable for most use-cases. As such
+simply override `equalityMode()`:
+```java
+@Override
+public EqualityMode equalityMode() {
+  return CompareTo;
+}
+```
+
+>Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object identity
+checks to short-circuit unnecessary calls and so your `equals()` implementation is not burdened with boilerplate code.
  
 ## BigDecimal & BigInteger 
 
@@ -517,9 +551,6 @@ These extensions are available in this `manifold-ext` framework.  Now you can pe
 operator expressions:
 
 ```java
-BigDecimal bd1 = new BigDecimal("3.14");
-BigDecimal bd2 = new BigDecimal("1.02");
-
 if (bd1 >= bd2) {
   BigDecimal result = bd1 + bd2;
   . . .
@@ -534,7 +565,7 @@ projects uses operator overloading and unit expressions extensively.
 # Unit Expressions
 >Warning: **Experimental Feature**
 
-Manifold seamlessly plugs into Java to provide a unique feature called *unit expressions*, which let you write
+Manifold seamlessly plugs into Java to provide a pretty cool feature called *unit expressions*, which lets you write
 expressions in Java more naturally:
 
 ```java
@@ -579,12 +610,12 @@ public R postfixBind(T lhs);
 public R prefixBind(T rhs);
 ``` 
 
-In the example, `10` is a literal of type `int` and `kg` is a variable of type `MassUnit`. Since `kg` is on the right
-hand side of `10` and `MassUnit` defines the method:
+In the example, `10` is a literal value of type `int` and `kg` is a variable of type `MassUnit`. Since `kg` is on the
+right-hand side of `10` and the `MassUnit` class defines the method:
 ```java
 public Mass postfixBind(Number magnitude) {...}
 ``` 
-the compiler builds a unit expression composed of the two operands resulting in type `Mass`.
+the compiler builds a unit expression consisting of the two operands resulting in type `Mass`.
 
 Notice there is no formal interface containing the `postfixBind()` and `prefixBind()` methods. Instead you implement
 them *structurally* simply by defining a method with the same name, parameter count, and non-void return type. This is
@@ -617,13 +648,57 @@ form a unit expression, which implements multiplication on `c`:
 (a b)*c
 ``` 
 
-For example, the expression `5kg * 2` demonstrates this example exactly.
+For example, the expression `5kg * 2` reflects the structure of this example exactly.
 
 As you can see unit expressions demand a level of flexibility beyond conventional parsers such as Java's. But Java is
 flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
     
-todo: more docs
+## More Than Units
 
+What makes unit expressions work is simple, just a pair of methods you can implement on any types you like: 
+```java
+public R postfixBind(T lhs);
+public R prefixBind(T rhs);
+``` 
+If your type implements either of these, it is the basis of a potential "unit expression."  So it's a bit unfair to use
+the term "unit expression" to describe what is going on.  There's more to it.  To illustrate, let's say you want to make
+date literals such as:   
+```java
+LocalMonthDate d1 = May 15;
+LocalYearMonth d2 = 2019 May;
+LocalDate d3 = 2019 May 15;
+```
+Binding expressions easily accommodate this use-case.  Something like:
+```java
+public enum Month {
+  January,
+  February,
+  March,
+  April,
+  May; // etc.
+  
+  public LocalMonthDate prefixBind(Integer date) {
+    return new LocalMonthDate(this, date);
+  }
+  
+  public LocalMonthYear postfixBind(Integer year) {
+    return new LocalMonthDate(this, date);
+  }
+}
+```
+In turn `LocalMonthDate` and `LocalYearMonth` can define binding methods to make `LocalDate`.
+
+Essentially you can use binding expressions to leverage juxtaposition to provide more expressive power in your
+applications. The possibilities are endless...
+
+## Science & Ranges
+Of course unit expressions are well suited as the basis for a library modeling physical dimensions such as length, time,
+mass, etc. Indeed this library exists as the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+dependency.
+
+Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
+provided by the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+dependency.
 
 # Structural Interfaces via `@Structural`
 

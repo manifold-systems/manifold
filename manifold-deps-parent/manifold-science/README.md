@@ -1,8 +1,8 @@
 # Manifold : Science
 
 Use the `manifold-science` framework to incorporate physical dimensions, units, and precise rational numbers into your
-application. Physical dimensions model real world quantities including everything from `Length` and `Mass` to
-`HeatCapacity` and `MagneticFluxDensity`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+application. Physical dimensions model quantities of things from `Length` and `Mass` to `HeatCapacity` and
+`MagneticFluxDensity`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 these classes provide an expressive, foolproof unit framework for scientific applications.
 
 Conveniently express quantities of physical units in Java as you would on paper:
