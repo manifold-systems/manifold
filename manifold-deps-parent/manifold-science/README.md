@@ -1,30 +1,46 @@
 # Manifold : Science
 
-Use the `manifold-science` framework to incorporate physical dimensions, units, and precise rational numbers into your
-application. Physical dimensions model quantities of things from `Length` and `Mass` to `HeatCapacity` and
-`MagneticFluxDensity`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+Use the `manifold-science` framework to incorporate physical and logical dimensions, units, and precise rational numbers
+into your application. `Dimension`s type-safely model quantities. These inlcude physical quantities such as `Length`,
+`Mass`, and `MagneticFluxDensity`, and abstract quantities such as `StorageCapacity` and `Money`. Together with
+[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 these classes provide an expressive, foolproof unit framework for scientific applications.
 
-Conveniently express quantities of physical units in Java as you would on paper:
+Conveniently express physical quantities in Java using *unit expressions*:
+
+**Simply import static constants or create your own constants for units**
 ```java
-// Type-safe and precise
+import static manifold.science.util.UnitConstants.*;
+```
+**Type-safe units**
+```java
 Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
-
-// Use a variety of unit constants
-if (9807 N == f) { ... }
-if (9807 kg m/s/s == f) { ... }
-
-// Mixing units works naturally
+```
+**Mix and match units**
+```java
+if (49.035 N == f) {...}
+if (f == 49.035 kg m/s/s) {...}
+```
+**Combine different units**
+```java
 Mass m = 10 lb + 10 kg; 
-
-// Easy to use
+```
+**Simpler and easier to read syntax**
+```java
 Length distance = 100 mph * 3 hr;
-
-// Use unit expressions with the Range API  
-for(Mass m: 10kg to 100kg) {
-  . . .
-}
+```
+**Easily make Ranges with `to` from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**  
+```java
+for( Mass m: 10kg to 100kg ) {...}
+```
+**Type-safely work with bits and bytes**
+```java
+StorageCapacity cap = 550 GB;
+StorageCapacity word = 8 Byte;
+boolean test = 8 Bits == 1 Byte;
 ``` 
+>Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
+
  
 ## Table of Contents
 * [Dimensions & Units](#dimensions--units)

@@ -406,7 +406,7 @@ BigDecimal result = bigValue1 + bigValue2;
 
 ## Arithmetic and Negation Operators
 
-A type `T` can overload operators by implementing one or more of the following methods: 
+A type `T` can support arithmetic operators by implementing one or more of the following methods: 
 
 **Arithmetic**
 * `+` : `T plus(A addend)`
@@ -452,7 +452,11 @@ public Point plus(int[] coord) {
    
 ## Relational Operators
 
-Relational operators must be implemented all together with the `ComparableUsing` interface, which extends `Comparable`
+You can implement relational operators using a combination of the `ComparableUsing` and/or `Comparable` interfaces.
+
+### `manifold.ext.api.ComparableUsing`
+
+Relational operators can be implemented all together with the `ComparableUsing` interface, which extends `Comparable`
 to provide an operator-specific API.                           
 ```java
 boolean compareToUsing( T that, Operator op );
@@ -467,10 +471,11 @@ Where `Operator` is an `enum` which specifies constants for relational operators
 * `==` : `Operator.EQ`
 * `!=` : `Operator.NE`
 
-`ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to `Comparable`'s `compareTo()`
-implementation which is suitable for most types. So normally you only need to add `ComparableUsing` to your type's
-`implements` or `extends` clause and implement just `Comparable` as you normally would. Thus adding relational operator
-support to the `Point` example we have:
+`ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to `Comparable`'s
+`compareTo()` implementation for the `>`, `>=`, `<`, `<=` subset of relational operators.  For the `==` and `!=` subset
+`ComparableUsing` delegates the type's `equals()` method (more on equality later).  This behavior is suitable for most
+types, so normally you only need to add `ComparableUsing` to your type's `implements` or `extends` clause and implement
+just `Comparable` as you normally would. Thus adding relational operator support to the `Point` example we have:
 
 ```java
 public class Point implements ComparableUsing<Point> {
@@ -490,10 +495,34 @@ Now you can easily compare `Point`s like this:
 ```java
 if (pt1 >= pt21) ...
 ```
+
+### `java.lang.Comparable`
+
+If you're not interested in supporting `==` and `!=` and your type implements the `Comparable` interface, it
+automatically supports the `>`, `>=`, `<`, `<=` subset of relational operators. For example, both `java.lang.String` and
+`java.time.LocalDate` implement the `compareTo()` method from `Comparable`, which means they can be used in relational
+expressions:
+
+```java
+String name1;
+String name2;
+...
+if (name1 > name2) {...}
+```   
+
+```java
+LocalDate date1;
+LocalDate date2;
+...
+if (date1 > date2) {...}
+```
+
 ## Equality Operators
 
-You can conveniently control the behavior of `==` and `!=` by overriding `equalityMode()`. The options are provided in
-the `EqualityMode` enum:     
+To implement the `==` and `!=` subset of relational operators you must implement the `ComparableUsing` interface. By
+default `ComparableUsing` delegates to your type's `equals()` method, but you can easily override this behavior by
+overriding the `equalityMode()` method in your `CopmarableUsing` implementation. The `EqualityMode` enum provides the
+available modes:     
 
 ```java
 /**
@@ -501,36 +530,41 @@ the `EqualityMode` enum:
  */
 enum EqualityMode
 {
-  /** Uses {@code #compareTo()} method */
+  /** Use the {@code #compareTo()} method to implement `==` and `!=` */
   CompareTo,
 
-  /** Uses {@code equals()} method (default) */
+  /** Use the {@code equals()} method to implement `==` and `!=` (default) */
   Equals,
 
-  /** Uses {@code identity} comparison, same as Java's {@code ==} behavior } */
+  /** Use {@code identity} comparison for `==` and `!=`, note this is the same as Java's normal {@code ==} behavior } */
   Identity
 }
 ```
 
-If you need something more customized you can override `compareToUsing()` with your own logic for any of the operators.
+If you need something more customized you can override `compareToUsing()` with your own logic for any of the operators,
+including `==` and `!=`.
  
-To enable `==` on `Point` more effectively, you can accept the default behavior of `ComparableUsing` and implement the
-`equals()` and `hashCode()` methods:
+To enable `==` on `Point` more effectively, you can accept the default behavior of `ComparableUsing` and implement
+`equals()`:
  
 ```java
 public boolean equals(Object that) {
   return getClass() == that.getClass() && 
     x == ((Point)that).x && y == ((Point)that).y;
 }
-
-public int hashCode() {
-  return Objects.hash(x, y); 
-}
 ```
+>Note always consider implementing `hashCode()` if you implement `equals()`, otherwise without `hashCode()` your type
+>may not function property when used with `Map`s and other data structures:
+>```java
+>public int hashCode() {
+>  return Objects.hash(x, y); 
+>}
+>```
+
 Sometimes it's better to use the `CompareTo` mode.  For instance, the `==` and `!=` implementations for `Rational`,
-`BigDecimal`, and `BigInteger` use `CompareTo` equality mode because in those classes `compareTo()` reflects
-equality in terms of the face value of the number e.g., 1.0 == 1.00, which is more desirable for most use-cases. As such
-simply override `equalityMode()`:
+`BigDecimal`, and `BigInteger` use the `CompareTo` mode because in those classes `compareTo()` reflects equality in
+terms of the *face value* of the number they model e.g., 1.0 == 1.00, which is desirable behavior in many use-cases. As
+such override `equalityMode()` to return `CompareTo`:
 ```java
 @Override
 public EqualityMode equalityMode() {
@@ -538,8 +572,8 @@ public EqualityMode equalityMode() {
 }
 ```
 
->Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object identity
-checks to short-circuit unnecessary calls and so your `equals()` implementation is not burdened with boilerplate code.
+Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object
+identity checks to short-circuit unnecessary calls and so your implementation is not burdened with boilerplate code.
  
 ## BigDecimal & BigInteger 
 
@@ -596,7 +630,6 @@ Money vat = 162k EUR;
 Money total = payment + vat; 
 ``` 
 >Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
-. 
 
 ## How does it work?
 Normally a *binary* expression in Java and most other languages involves two operands and an operator such as `+` for

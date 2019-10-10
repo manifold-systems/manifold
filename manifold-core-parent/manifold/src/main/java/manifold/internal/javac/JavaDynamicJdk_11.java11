@@ -4,6 +4,7 @@ import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.comp.Modules;
+import com.sun.tools.javac.comp.Operators;
 import com.sun.tools.javac.resources.CompilerProperties;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -18,9 +19,11 @@ import com.sun.tools.javac.util.List;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.Map;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import manifold.util.ReflectUtil;
 
 public class JavaDynamicJdk_11 implements IDynamicJdk
 {
@@ -126,6 +129,16 @@ public class JavaDynamicJdk_11 implements IDynamicJdk
       }
     }
     return null;
+  }
+
+  public void setOperatorSymbol( Context ctx, JCTree.JCBinary cond, JCTree.Tag tag, String op, Symbol operandType )
+  {
+    Operators operators = Operators.instance( ctx );
+    Symbol.OperatorSymbol operatorSym = (Symbol.OperatorSymbol)ReflectUtil.method( operators, "resolveBinary",
+      JCDiagnostic.DiagnosticPosition.class, JCTree.Tag.class, Type.class, Type.class )
+      .invoke( null, tag, operandType.type, operandType.type );
+
+    setOperator( cond, operatorSym );
   }
 
   @Override

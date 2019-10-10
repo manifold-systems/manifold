@@ -24,7 +24,10 @@ import org.junit.Test;
 
 
 import static manifold.science.MetricScaleUnit.*;
+import static manifold.science.StorageCapacityUnit.Bit;
+import static manifold.science.StorageCapacityUnit.Byte;
 import static manifold.science.util.CoercionConstants.r;
+import static manifold.science.StorageCapacityUnit.*;
 import static org.junit.Assert.*;
 
 public class TestMe
@@ -59,6 +62,16 @@ public class TestMe
     // tests javac internals re binding expr in arg position of an overloaded method,
     // deals with speculative multi-pass attribution for method scoring (note assertEquals() is an overloaded method)
     assertEquals( Rational.get( 5 ).toString(), (5r).toString() );
+  }
+
+  @Test
+  public void testStorage()
+  {
+    assertTrue(64Bit == 8Byte);
+    assertTrue(32Bit == 4Byte);
+    assertTrue(16Bit == 2Byte);
+    assertTrue(8Bit == 1Byte);
+    assertFalse(8Bit == 3Byte);
   }
 
   static class Fuzz<T extends Comparable<T>> implements ComparableUsing<Fuzz<T>>

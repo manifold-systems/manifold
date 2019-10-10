@@ -92,13 +92,13 @@ public interface ComparableUsing<T> extends Comparable<T>
    */
   enum EqualityMode
   {
-    /** Uses {@code #compareTo()} method */
+    /** Use the {@code #compareTo()} method to implement `==` and `!=` */
     CompareTo,
 
-    /** Uses {@code equals()} method (default) */
+    /** Use the {@code equals()} method to implement `==` and `!=` (default) */
     Equals,
 
-    /** Uses {@code identity} comparison, same as Java's {@code ==} behavior } */
+    /** Use {@code identity} comparison for `==` and `!=`, note this is the same as Java's normal {@code ==} behavior } */
     Identity
   }
 

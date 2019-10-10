@@ -105,6 +105,17 @@ public class JavaDynamicJdk_8 implements IDynamicJdk
     return Symtab.instance( ctx ).classes.get( name );
   }
 
+  public void setOperatorSymbol( Context ctx, JCTree.JCBinary cond, JCTree.Tag tag, String op, Symbol operandType )
+  {
+    Symbol.OperatorSymbol operatorSym = (Symbol.OperatorSymbol)IDynamicJdk.instance().getMembers(
+      Symtab.instance( ctx ).predefClass,
+      (Symbol s) -> s instanceof Symbol.OperatorSymbol &&
+                    s.name.toString().equals( op ) &&
+                    ((Symbol.MethodSymbol)s).params().get( 0 ).type.tsym == operandType )
+      .iterator().next(); // should be just one
+    setOperator( cond, operatorSym );
+  }
+
   @Override
   public List<Type> getTargets( JCTree.JCLambda tree )
   {

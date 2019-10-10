@@ -85,6 +85,8 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
+import static com.sun.tools.javac.code.Flags.*;
+import static com.sun.tools.javac.code.Flags.BLOCK;
 import static com.sun.tools.javac.code.TypeTag.*;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -109,6 +111,7 @@ public class ExtensionTransformer extends TreeTranslator
     return _tp;
   }
 
+  private int tempVarIndex = 0;
   public void visitBinary( JCTree.JCBinary tree )
   {
     super.visitBinary( tree );
@@ -119,7 +122,8 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    Symbol op = IDynamicJdk.instance().getOperator( tree );
+    IDynamicJdk dynJdk = IDynamicJdk.instance();
+    Symbol op = dynJdk.getOperator( tree );
     if( op instanceof OverloadOperatorSymbol )
     {
       TreeMaker make = _tp.getTreeMaker();
@@ -134,7 +138,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( operatorMethod != null )
       {
         operatorMethod = favorStringsWithNumberCoercion( tree, operatorMethod );
-        JCExpression expr = null;
+        JCTree expr = null;
 
         JCTree.JCMethodInvocation methodCall;
         JCExpression receiver = swap ? tree.rhs : tree.lhs;
@@ -143,9 +147,10 @@ public class ExtensionTransformer extends TreeTranslator
           Names.instance( _tp.getContext() ), arg, operatorMethod.params().get( 0 ).type );
         if( ManAttr.isComparableOperator( tree.getTag() ) )
         {
+          Context ctx = JavacPlugin.instance().getContext();
           if( tree.getTag() == JCTree.Tag.EQ || tree.getTag() == JCTree.Tag.NE )
           {
-            // Equality requires null check:
+            // Equality requires null check before calling compareTo/Using():
             //
             // a == b
             // ? true/false
@@ -153,22 +158,40 @@ public class ExtensionTransformer extends TreeTranslator
             //   ? false/true
             //   : a.compareToUsing( b, op );
 
+            tempVarIndex++;
+
+            Symbol owner = getEnclosingSymbol( tree, ctx );
+
+            List<JCTree.JCVariableDecl> tempVars = List.nil();
+            JCTree[] receiverTemp = tempify( tree, make, receiver, ctx, owner, "$receiverExprTemp" + tempVarIndex );
+            if( receiverTemp != null )
+            {
+              tempVars = tempVars.append( (JCTree.JCVariableDecl)receiverTemp[0] );
+              receiver = (JCExpression)receiverTemp[1];
+            }
+            JCTree[] argTemp = tempify( tree, make, arg, ctx, owner, "$argExprTemp" + tempVarIndex );
+            if( argTemp != null )
+            {
+              tempVars = tempVars.append( (JCTree.JCVariableDecl)argTemp[0] );
+              arg = (JCExpression)argTemp[1];
+            }
+
             JCTree.JCBinary cond = make.Binary( JCTree.Tag.EQ, receiver, arg );
             cond.type = symbols.booleanType;
-            setOperatorSymbol( symbols, cond, "==", symbols.objectType.tsym );
+            dynJdk.setOperatorSymbol( ctx, cond, JCTree.Tag.EQ, "==", symbols.objectType.tsym );
 
             JCTree.JCLiteral nullLiteral = make.Literal( BOT, null );
             nullLiteral.type = symbols.objectType;
 
             JCTree.JCBinary eqNull1 = make.Binary( JCTree.Tag.EQ, receiver, nullLiteral );
             eqNull1.type = symbols.booleanType;
-            setOperatorSymbol( symbols, eqNull1, "==", symbols.objectType.tsym );
+            dynJdk.setOperatorSymbol( ctx, eqNull1, JCTree.Tag.EQ, "==", symbols.objectType.tsym );
             JCTree.JCBinary eqNull2 = make.Binary( JCTree.Tag.EQ, arg, nullLiteral );
             eqNull2.type = symbols.booleanType;
-            setOperatorSymbol( symbols, eqNull2, "==", symbols.objectType.tsym );
+            dynJdk.setOperatorSymbol( ctx, eqNull2, JCTree.Tag.EQ, "==", symbols.objectType.tsym );
             JCTree.JCBinary elsePart = make.Binary( JCTree.Tag.OR, eqNull1, eqNull2 );
             elsePart.type = symbols.booleanType;
-            setOperatorSymbol( symbols, elsePart, "||", symbols.booleanType.tsym );
+            dynJdk.setOperatorSymbol( ctx, elsePart, JCTree.Tag.OR, "||", symbols.booleanType.tsym );
 
             methodCall = make.Apply( List.nil(),
               make.Select( receiver, operatorMethod ),
@@ -180,6 +203,15 @@ public class ExtensionTransformer extends TreeTranslator
             expr = make.Conditional( cond, make.Literal( tree.getTag() == JCTree.Tag.EQ ), elsePart2 );
             expr.type = symbols.booleanType;
             expr.pos = tree.pos;
+
+            if( !tempVars.isEmpty() )
+            {
+              JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
+                List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
+                .invoke( tempVars, expr );
+              letExpr.type = expr.type;
+              expr = letExpr;
+            }
 
             methodCall = configMethod( tree, operatorMethod, methodCall );
           }
@@ -196,7 +228,7 @@ public class ExtensionTransformer extends TreeTranslator
 
             JCTree.JCBinary compareToCond = make.Binary( tree.getTag(), methodCall, zeroLiteral );
             compareToCond.type = symbols.booleanType;
-            setOperatorSymbol( symbols, compareToCond, relOpString( tree.getTag() ), symbols.intType.tsym );
+            dynJdk.setOperatorSymbol( ctx, compareToCond, tree.getTag(), relOpString( tree.getTag() ), symbols.intType.tsym );
             compareToCond.pos = tree.pos;
 
             expr = compareToCond;
@@ -221,6 +253,28 @@ public class ExtensionTransformer extends TreeTranslator
 
         result = expr == null ? methodCall : expr;
       }
+    }
+  }
+
+  // Create a temporary variable and corresonding identifier to avoid cop
+  private JCTree[] tempify( JCTree.JCBinary tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
+  {
+    switch( expr.getTag() )
+    {
+      case LITERAL:
+      case IDENT:
+        return null;
+
+      default:
+        JCTree.JCVariableDecl tempVar = make.VarDef( make.Modifiers( FINAL | SYNTHETIC ),
+          Names.instance( ctx ).fromString( varName + tempVarIndex ), make.Type( expr.type ), expr );
+        tempVar.sym = new Symbol.VarSymbol( FINAL | SYNTHETIC, tempVar.name, expr.type, owner );
+        tempVar.type = tempVar.sym.type;
+        tempVar.pos = tree.pos;
+        JCExpression ident = make.Ident( tempVar );
+        ident.type = expr.type;
+        ident.pos = tree.pos;
+        return new JCTree[] {tempVar, ident};
     }
   }
 
@@ -256,16 +310,6 @@ public class ExtensionTransformer extends TreeTranslator
         return ">=";
     }
     throw new IllegalStateException( "Expecting only relational op, but found: " + tag );
-  }
-
-  private void setOperatorSymbol( Symtab symbols, JCTree.JCBinary cond, String op, Symbol operandType )
-  {
-    Symbol.OperatorSymbol operatorSym = (Symbol.OperatorSymbol)IDynamicJdk.instance().getMembers( symbols.predefClass,
-      (Symbol s) -> s instanceof Symbol.OperatorSymbol &&
-                      s.name.toString().equals( op ) &&
-                      ((Symbol.MethodSymbol)s).params().get( 0 ).type.tsym == operandType )
-      .iterator().next(); // should be just one
-    IDynamicJdk.instance().setOperator( cond, operatorSym );
   }
 
   /**
@@ -1701,6 +1745,35 @@ public class ExtensionTransformer extends TreeTranslator
       return (JCTree.JCClassDecl)tree;
     }
     return getEnclosingClass( _tp.getParent( tree ) );
+  }
+
+  private Symbol getEnclosingSymbol( Tree tree, Context ctx )
+  {
+    if( tree == null )
+    {
+      return null;
+    }
+    if( tree instanceof JCTree.JCClassDecl )
+    {
+      // should not really get here, but should be static block scope if possible
+      return new Symbol.MethodSymbol( STATIC | BLOCK,
+        Names.instance( ctx ).empty, null, ((JCTree.JCClassDecl)tree).sym );
+    }
+    if( tree instanceof JCTree.JCMethodDecl )
+    {
+      return ((JCTree.JCMethodDecl)tree).sym;
+    }
+    if( tree instanceof JCTree.JCVariableDecl )
+    {
+      Tree parent = _tp.getParent( tree );
+      if( parent instanceof JCTree.JCClassDecl )
+      {
+        // field initializers have a block scope
+        return new Symbol.MethodSymbol( (((JCTree.JCVariableDecl)tree).mods.flags & STATIC) | BLOCK,
+          Names.instance( ctx ).empty, null, ((JCTree.JCClassDecl)parent).sym );
+      }
+    }
+    return getEnclosingSymbol( _tp.getParent( tree ), ctx );
   }
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
