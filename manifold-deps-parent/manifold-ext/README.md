@@ -477,9 +477,10 @@ Where `Operator` is an `enum` which specifies constants for relational operators
 
 `ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to `Comparable`'s
 `compareTo()` implementation for the `>`, `>=`, `<`, `<=` subset of relational operators.  For the `==` and `!=` subset
-`ComparableUsing` delegates the type's `equals()` method (more on equality later).  This behavior is suitable for most
-types, so normally you only need to add `ComparableUsing` to your type's `implements` or `extends` clause and implement
-just `Comparable` as you normally would. Thus adding relational operator support to the `Point` example we have:
+`ComparableUsing` delegates to the type's `equals()` method (more on equality later).  This behavior is suitable for
+most types, so normally you only need to add `ComparableUsing` to your type's `implements` or `extends` clause and
+implement just `Comparable` as you normally would. Thus adding relational operator support to the `Point` example we
+have:
 
 ```java
 public class Point implements ComparableUsing<Point> {
@@ -681,9 +682,9 @@ of flexibility is otherwise not supported with Java's name-based type system.
 
 The empty or "binding" operator has a *phased* precedence. Lexically, its precedence lies between addition and
 multiplication, thus during the compiler's parsing phase it produces an untyped AST reflecting this order.  However,
-in the course of the compiler's type attribution phase the compiler restructures the expressions to reflect the bindings
-declared in `prefixBind()` and `postfixBind()` declared in the operand types, during which the compiler considers the
-empty operator as having a precedence *equal to* multiplication.
+in the course of the compiler's type attribution phase the compiler restructures the expressions to reflect binding
+operator methods `prefixBind()` and `postfixBind()` declared in the operand types, during which the compiler considers
+the binding operator as having a precedence *equal to* multiplication.
 
 To illustrate consider the following expression:
 ```java
@@ -702,11 +703,10 @@ In a later stage when operand types are available the expression may restructure
 (a b) * c
 ``` 
 
-For example, the expression `5kg * 2` reflects the structure of this example exactly.
+For example, the expression `5kg * 2` reflects this example exactly.
 
-As you can see unit expressions demand a level of flexibility beyond that of conventional parsers/compilers such as
-Java's. But Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this
-capability.
+As you can see unit expressions demand a level of flexibility beyond that of conventional compilers such as Java's. But
+Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
     
 ## More Than Units
 
