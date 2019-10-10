@@ -406,22 +406,27 @@ BigDecimal result = bigValue1 + bigValue2;
 
 ## Arithmetic and Negation Operators
 
-A type `T` can support arithmetic operators by implementing one or more of the following methods: 
+Any type can support arithmetic operators by implementing one or more of the following operator methods: 
 
 **Arithmetic**
-* `+` : `T plus(A addend)`
-* `-` : `T minus(S subtrahend)`
-* `*` : `P times(F factor)`
-* `/` : `Q div(D divisor)`
-* `%` : `R rem(D divisor)`
+
+| Operation | Method       |
+|:----------|:-------------|
+| `a + b`   | `a.plus(b)`  |
+| `a - b`   | `a.minus(b)` |
+| `a * b`   | `a.times(b)` |
+| `a / b`   | `a.div(b)`   |
+| `a % b`   | `a.rem(b)`   |
 
 **Negation**
-* `-` : `T unaryMinus()`
 
-Note these methods do not belong to a class or interface you implement. Instead you implement an operator method
-*structurally* simply by defining a method with the same name, parameter, and non-void return type. This is necessary
-because a type may implement several different versions of the same method, which would otherwise not work with Java's
-name-based interface types. 
+| Operation | Method           |
+|:----------|:-----------------|
+| `-a`      | `a.unaryMinsu()` |
+
+Note operator methods do not belong to a class or interface you implement. Instead you implement them *structurally*
+simply by defining a method with the same signature. Note you can implement several different versions of the same
+method differing by parameter type. 
 
 Here's a simple example demonstrating how to implement the `+` operator:
 ```java
@@ -461,15 +466,14 @@ to provide an operator-specific API.
 ```java
 boolean compareToUsing( T that, Operator op );
 ```
-Where `Operator` is an `enum` which specifies constants for relational operators:
+Where `Operator` is an `enum` which specifies constants for relational operators.
 
-**Relational Operators**
-* `>`&nbsp; : `Operator.GT`
-* `>=` : `Operator.GE`
-* `<`&nbsp; : `Operator.LT`
-* `<=` : `Operator.LE`
-* `==` : `Operator.EQ`
-* `!=` : `Operator.NE`
+| Operation | ComparableUsing Impl      | Comparable Impl       |
+|-----------|---------------------------|-----------------------|
+| `a > b`   | `a.compareToUsing(b, GT)` | `a.compareTo(b) > 0`  |
+| `a >= b`  | `a.compareToUsing(b, GE)` | `a.compareTo(b) >= 0` |
+| `a < b`   | `a.compareToUsing(b, LT)` | `a.compareTo(b) < 0`  |
+| `a <= b`  | `a.compareToUsing(b, LE)` | `a.compareTo(b) <= 0` |
 
 `ComparableUsing` provides a default implementation for `compareToUsing()` that delegates to `Comparable`'s
 `compareTo()` implementation for the `>`, `>=`, `<`, `<=` subset of relational operators.  For the `==` and `!=` subset
@@ -541,6 +545,21 @@ enum EqualityMode
 }
 ```
 
+Based the `EqualityMode` returned by your implementation of `CompareToUsing#equalityMode()`, the `==` and `!=` operators
+compile as: 
+
+| Operation | `Equals` <small>(default)</small> | `CompareTo`| `Identity` |
+|:----------|:-------------------|:--------------------------|:-----------|
+| `a == b`  | `a.equals(b, EQ)`  | `a.compareToUsing(b, EQ)` | `a == b`   |
+| `a != b`  | `!a.equals(b, NE)` | `a.compareToUsing(b, NE)` | `a != b`   |
+
+Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object
+identity checks to short-circuit unnecessary calls and so your implementation is not burdened with boilerplate code. For
+example, `a == b` using `Equals` mode translates to:
+```java
+a == b || a != null && b != null && a.equals(b)
+``` 
+
 If you need something more customized you can override `compareToUsing()` with your own logic for any of the operators,
 including `==` and `!=`.
  
@@ -571,9 +590,6 @@ public EqualityMode equalityMode() {
   return CompareTo;
 }
 ```
-
-Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object
-identity checks to short-circuit unnecessary calls and so your implementation is not burdened with boilerplate code.
  
 ## BigDecimal & BigInteger 
 
