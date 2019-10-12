@@ -22,18 +22,15 @@ User.request("http://api.example.com/users").postOne(user);
 ```
 
 ### [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-Use the [`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-dependency to add your own methods to existing Java classes, even `String`, `List`, and `File`. Eliminate boilerplate
-code. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
+Add your own methods to existing Java classes, even `String`, `List`, and `File`. Eliminate boilerplate code.
+[&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```  
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-Implement *operator* methods on any type to directly support arithmetic, relational, and unit operators using the
-[`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-dependency.
+Implement *operator* methods on any type to directly support arithmetic, relational, and unit operators.
 ```java
 // BigDecimal expressions
 if (bigDec1 > bigDec2) {
@@ -45,8 +42,8 @@ MyType value = myType1 + myType2;
 ```  
 
 ### [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-Unit or *binding* operations are unique to the Manifold framework from the [`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-dependency. They provide a powerfully concise syntax and can be applied to a wide range of applications.
+Unit or *binding* operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
+applied to a wide range of applications.
 ```java
 import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc
 ...
@@ -56,8 +53,7 @@ Mass infant = 9 lb + 8.71 oz;
 ```  
 
 ### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-Easily work with the `Range` API from the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-dependency using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
+Easily work with the `Range` API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
 Simply import the `RangeFun` constants to create ranges.
 ```java
 // imports the `to`, `step`, and other "binding" constants
