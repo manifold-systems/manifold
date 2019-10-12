@@ -3,9 +3,10 @@ layout: default
 ---
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming,
-Structural Typing, and Extension Methods to an integrated Template Engine and a Preprocessor. All fully supported in IntelliJ IDEA.
-Simply add Manifold to your project and begin taking advantage of it.
+[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe
+Metaprogramming, Extension Methods, Operator Overloading, and Unit Expressions to an integrated Template Engine and a
+Preprocessor. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of
+it.
 
 ## What can you do with Manifold?
 
@@ -21,12 +22,63 @@ User user = User.builder("myid", "mypassword", "Scott")
 User.request("http://api.example.com/users").postOne(user);
 ```
 
-### [Extensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-Add extension methods to existing Java classes, even String, List, and File. Eliminate boilerplate code. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
+### [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+Add your own methods to existing Java classes, even `String`, `List`, and `File`. Eliminate boilerplate code.
+[&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```
+
+### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+Implement *operator* methods on any type to directly support arithmetic, relational, and unit operators.
+```java
+// BigDecimal expressions
+if (bigDec1 > bigDec2) {
+  BigDecimal result = bigDec1 + bigDec2;
+  ...
+}
+// Implemnet operators for any type
+MyType value = myType1 + myType2;
+```  
+
+### [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+Unit or *binding* operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
+applied to a wide range of applications.
+```java
+import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc
+...
+Length distance = 100 mph * 3 hr;
+Force f = 5.2 kg m/s/s; // same as 5.2 N
+Mass infant = 9 lb + 8.71 oz;
+```  
+
+### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
+Easily work with the `Range` API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
+Simply import the `RangeFun` constants to create ranges.
+```java
+// imports the `to`, `step`, and other "binding" constants
+import static manifold.collections.api.range.RangeFun.*;
+...
+for (int i: 1 to 5) {
+  out.println(i);
+}
+
+for (Mass m: 0kg to 10kg step 22r unit g) {
+  out.println(m);
+}
+```
+
+### [Science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+Use the [manifold-science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+framework to type-safely incorporate units and precise measurements into your applications.
+```java
+import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
+...
+Velocity rate = 65mph;
+Time time = 1min + 3.7sec;
+Length distance = rate * time;
+```  
 
 ### [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 Use familiar directives such as `#define` and `#if` to conditionally compile your Java projects. The preprocessor offers
@@ -104,14 +156,6 @@ A template file `abc/example/UserSample.html.mtl`
 </html>
 ```
 
-### [Libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries)
-Leverage stock Manifold extension libraries for standard Java classes. Save time and reduce boilerplate code.
-```java
-File file = new File(path);
-// Use refreshing extensions to File
-String content = file.readText();
-```
-
 ### [IntelliJ](http://manifold.systems/docs.html#ide--intellij-idea)
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage
 Manifold in your development cycle. The plugin provides comprehensive support for IntelliJ features including code
@@ -120,6 +164,10 @@ template editing, integrated preprocessor, and more.
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
 
+>Note the Manifold Plugin for IntelliJ IDEA is **free** for use with IntelliJ IDEA **Community Edition** which like
+the Manifold project is free and open source. The plugin is also commercially available on a trial basis via the
+JetBrains Marketplace for use with IntelliJ IDEA **Ultimate Edition**.
+  
 ### [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project represents a separate **dependency** you can easily add to your project:

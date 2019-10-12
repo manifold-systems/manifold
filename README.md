@@ -3,9 +3,10 @@
 </center>
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming,
-Extension Methods, and Operator Overloading to an integrated Template Engine and a Preprocessor. All fully supported in IntelliJ IDEA.
-Simply add Manifold to your project and begin taking advantage of it.
+[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe
+Metaprogramming, Extension Methods, Operator Overloading, and Unit Expressions to an integrated Template Engine and a
+Preprocessor. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of
+it.
 
 ## What can you do with Manifold?
 
@@ -70,7 +71,7 @@ for (Mass m: 0kg to 10kg step 22r unit g) {
 
 ### [Science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 Use the [manifold-science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-framework to type-safely incorporate units & measures of arbitrary precision into your applications.
+framework to type-safely incorporate units and precise measurements into your applications.
 ```java
 import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
 ...
@@ -156,9 +157,16 @@ A template file `abc/example/UserSample.html.mtl`
 ```
 
 ### [IntelliJ](http://manifold.systems/docs.html#ide--intellij-idea)
-Use the Manifold IntelliJ IDEA plugin to fully leverage Manifold in your development cycle. The plugin provides 
-comprehensive support for IntelliJ features including code completion, navigation, usage searching, refactoring, 
-incremental compilation, hotswap debugging, full-featured template editing, and more.
+Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage
+Manifold in your development cycle. The plugin provides comprehensive support for IntelliJ features including code
+completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
+template editing, integrated preprocessor, and more.
+
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
+
+>Note the Manifold Plugin for IntelliJ IDEA is **free** for use with IntelliJ IDEA **Community Edition** which like
+the Manifold project is free and open source. The plugin is also commercially available on a trial basis via the
+JetBrains Marketplace for use with IntelliJ IDEA **Ultimate Edition**.
 
 ### [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
