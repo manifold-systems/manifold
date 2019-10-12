@@ -594,7 +594,7 @@ public EqualityMode equalityMode() {
 ## Unit Operators
 
 Unit or "binding" operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
-applied to wide range of applications. You implement the operator with the `prefixBind()` and `postfixBind()` methods:
+applied to a wide range of applications. You implement the operator with the `prefixBind()` and `postfixBind()` methods:
 
 | Operation  | Postfix Bind       | Prefix Bind       |
 |------------|--------------------|-------------------|
