@@ -395,8 +395,8 @@ projects uses operator overloading and unit expressions extensively.
 >Warning: **Experimental Feature**
 
 The Manifold extension framework plugs into Java to provide seamless operator overloading capability. You can
-type-safely provide arithmetic, negation, and relational operators for any class by implementing one or more predefined
-operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
+type-safely provide arithmetic, relational, and [unit](#unit-expressions) operators for any class by implementing one or
+more predefined operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
 to implement operators for classes you don't otherwise control. For example, using extension methods Manifold provides
 operator implementations for `BigDecimal` so you can write code like this:
 ```java
@@ -590,6 +590,21 @@ public EqualityMode equalityMode() {
   return CompareTo;
 }
 ```
+ 
+## Unit Operators
+
+Unit or "binding" operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
+applied to wide range of applications. You implement the operator with the `prefixBind()` and `postfixBind()` methods:
+
+| Operation  | Postfix Bind       | Prefix Bind       |
+|------------|--------------------|-------------------|
+| `a b`      | `b.postfixBind(a)` | `a.prefixBind(b)` |
+
+If the type of `a` implements `R prefixBind(B)` where `B` is assignable from the type of `b`, then `a b` compiles as the
+method call `a.prefixBind(b)` having type `R`. Otherwise, if the type of `b` implements `R postfixBind(A)` where `A` is
+assignable from the type of `a`, then `a b` compiles as the method call `b.postfixBind(a)` having type `R`.
+
+Read more about [unit expressions](#unit-expressions) later in this document.
  
 ## Operators by Extension Methods 
 
