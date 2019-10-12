@@ -151,6 +151,9 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
     return toNumber().toBigDecimal().stripTrailingZeros().toPlainString() + " " + getDisplayUnit().getSymbol();
   }
 
+  /**
+   * @return The measure as a mixed fraction such as {@code "2 1/8 kg"}
+   */
   public String toMixedString()
   {
     return toNumber().toMixedString() + " " + getDisplayUnit().getSymbol();

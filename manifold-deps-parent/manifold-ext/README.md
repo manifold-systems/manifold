@@ -741,7 +741,7 @@ public R postfixBind(T lhs);
 public R prefixBind(T rhs);
 ``` 
 If your type implements either of these, it is the basis of a potential "unit" expression. Thus, the application of
-these methods goes beyond just units. To illustrate, let's say you want to make date literal expressions such as:   
+these methods goes beyond just units. To illustrate, let's say you want to make date "literal" expressions such as:   
 ```java
 LocalMonthDay d1 = May 15;
 LocalYearMonth d2 = 2019 May;
@@ -764,12 +764,12 @@ public enum Month {
   }
   
   public LocalYearMonth postfixBind(Integer year) {
-    return new LocalMonthYear(this, date);
+    return new LocalYearMonth(this, date);
   }
 }
 ```
 In turn `LocalYearMonth` can define `LocalDate prefixBind(Integer)`. That's all there is to it. Now you have type-safe
-date literals:
+date expressions:
 ```java
 import static com.example.Month.*;
 ...

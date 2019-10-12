@@ -1,8 +1,9 @@
 # Manifold : Collections
 
 The `manifold-collections` dependency consists of [extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension)
-on Java's collection classes and the `Range` API, which leverages the unit (or binding) expressions from the [`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-dependency for convenient syntax. 
+on Java's collection classes and the `Range` API, which leverages the unit (or binding) expressions from the
+[`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext) dependency
+for concise syntax. 
 
 ```java
 // Use unit expressions with the Range API  
@@ -26,19 +27,24 @@ for( Mass m: 10kg to 100kg ) {
 The `manifold-collections` library uses the `manifold-ext` framework to provide extension methods for Java collection
 classes such as `List`, `Iterator`, and `Map`.  The new methods aim to add a bit more convenience to Java collections.
 
-todo: collections docs
+Simply add the `manifold-collections` dependency to your application to automatically access the extensions directly on
+the collection classes.  See the [Using this project](#using-this-project) section below for instructions to use this
+dependency with your build environment.
 
-# Ranges  
+# Ranges 
 
 You can easily work with ranges using Manifold's [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
-Use the `RangeFun` constants to create ranges:
+Simply import the the `RangeFun` constants to create ranges:
 ```java
+// imports the `to`, `step`, and other "binding" constants
+import static manifold.collections.api.range.RangeFun.*;
+
 if (2 inside 1 to 5) {
-  out.println("ok");
+  out.println("yer in");
 }
 ```
 Although `inside` and `to` look like new Java keywords, they are instead normal variables defined as constants in
-`RangeFun`. They use Manifold's unit expressions to type-safely build ranges with nice syntax.
+`RangeFun`. They use Manifold's unit expressions to type-safely build ranges with sensible syntax.
 
 All `Number` types from `int` and `float` to `BigInteger`, `BigDecimal`, and `Rational` support *sequential* ranges that
 can be iterated:
@@ -56,7 +62,7 @@ for (int i: 5 to 1) {
 
 `RangeFun` also defines constants for iterating over a range with a *step*:
 ```java
-for (int i: 5 to 1 step 2) {
+for (int i: 10 to 0 step 2) {
   out.println(i);
 }
 ``` 
@@ -89,16 +95,13 @@ Use the `to` constant with any `Comparable`, `Sequential`, or `Number` type to c
 endpoints can only be tested for containment using the `inside` RangeFun constant:
 
 ```java
-if ("scott" inside "n" to "zzz") {
+if ("ockham" inside "n" to "zzz") {
   out.println("ok");
 }
 ```
  
-Note the `Sequential` interface along with several others are defined as part of the `manifold-collections` range API in
-the `manifold.collections.api.range` package.
-
-
-todo: more docs
+Note the `Sequential`, `Range`, `SequentialRange` and others abstractions are defined as part of the Range API in the
+`manifold.collections.api.range` package.
 
  
 # IDE Support 

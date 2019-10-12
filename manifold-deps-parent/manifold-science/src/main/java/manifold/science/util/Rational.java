@@ -28,7 +28,26 @@ import manifold.ext.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
 
 /**
- * Models rational numbers as a fraction of BigIntegers to maintain arbitrary precision.
+ * Models rational numbers as an immutable fraction using {@link BigInteger} to maintain arbitrary precision. Note as a
+ * performance measure this class does <i>not</i> maintain its value in reduced form. You must call {@link #reduce()}
+ * to get a separate instance for the reduced form. Call {@link #isReduced()} to determine if an instance is in reduced
+ * form.
+ * <p/>
+ * This class implements arithmetic, negation, and relational operators via <i>operator overloading</i> provided by the
+ * manifold-ext dependency.
+ * <p/>
+ * Use the {@link CoercionConstants} and {@link manifold.science.MetricScaleUnit} classes to conveniently use literal
+ * values as {@code Rational} numbers:
+ * <pre><code>
+ *   import static manifold.science.MetricScaleUnit.M;
+ *   import static manifold.science.util.CoercionConstants.r;
+ *   ...
+ *   Rational pi = 3.14r;
+ *   Rational oneThird = 1r/3;
+ *   Rational yocto = "1/1000000000000000000000000"r;
+ *   Rational fiveMillion = 5M;
+ * </code></pre>
+ * <b>WARNING:</b> this class is under development and should be considered experimental.
  */
 final public class Rational extends Number implements Sequential<Rational, Rational, Void>, ComparableUsing<Rational>, Serializable
 {
@@ -185,6 +204,19 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     _reduced = reduced;
   }
 
+  /**
+   * @return {@code true} if this instance is in reduced form.
+   */
+  public boolean isReduced()
+  {
+    // calling reduce() has a side effect of setting _reduced to true if this instance is found to be in reduced form
+    return _reduced || reduce().isReduced() && _reduced;
+  }
+
+  /**
+   * @return If this instance is already in reduced form, returns this instance, otherwise returns the reduced form of
+   * this instance as a separate instance.
+   */
   public Rational reduce()
   {
     if( !_reduced )
@@ -911,14 +943,28 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return whole + " " + fractionPart().abs().toFractionString();
   }
 
+  /**
+   * Creates a {@link BigDecimal} and calls {@link BigDecimal#toString()}
+   */
   public String toDecimalString()
   {
     return toBigDecimal().toString();
   }
 
+  /**
+   * Creates a {@link BigDecimal} and calls {@link BigDecimal#toPlainString()}
+   */
   public String toPlainDecimalString()
   {
     return toBigDecimal().toPlainString();
+  }
+
+  /**
+   * Creates a {@link BigDecimal} and calls {@link BigDecimal#toEngineeringString()}
+   */
+  public String toEngineeringString()
+  {
+    return toBigDecimal().toEngineeringString();
   }
 
   @Override

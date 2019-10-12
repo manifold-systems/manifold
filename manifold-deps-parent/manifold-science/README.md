@@ -219,12 +219,38 @@ Utility classes providing useful constants are available in the `manifold.scienc
 The `Rational` class in the `manifold.science.util` package is similar to `BigDecimal` in that it can model rational
 numbers with arbitrary precision. However `Rational` differs from `BigDecimal` in that it models a rational number as 
 the quotient of two `BigIntenger` numbers.  This has the advantage of maintaining what is otherwise a repeating decimal
-for values such as `1/3`. For instance, the dividing a number by 3 then later multiplying that number by 3 should result
-in the original number, without rounding errors. While you can handle rounding with `BigDecimal`, using `Rational` can
-be less error prone especially when working with equations. For this reason, all the Dimensions and Units defined in the
-`manifold.science` package use `Rational`. [Feedback](https://github.com/manifold-systems/manifold/issues) on this
-subject is welcome!
- 
+for values such as `1/3`. For instance, dividing a number by 3 then later multiplying that number by 3 should result
+in the original number without rounding errors. While you can handle rounding with `BigDecimal`, using `Rational` can
+be less error prone in some cases especially when working with equations. For this reason, all the Dimensions and Units
+defined in the `manifold.science` package use `Rational`. [Feedback](https://github.com/manifold-systems/manifold/issues)
+on this subject is welcome!
+
+>Note as a performance measure this class does *not* maintain its value in reduced form. You must call `reduce()` to get
+a separate instance for the reduced form. Call `isReduced()` to determine if an instance is in reduced form.
+
+Use the `CoercionConstants` and `MetricScaleUnit` classes to conveniently use literal values as `Rational` numbers:
+```java
+  import static manifold.science.MetricScaleUnit.M;
+  import static manifold.science.util.CoercionConstants.r;
+  ...
+  Rational pi = 3.14159r;
+  Rational yocto = "1/1000000000000000000000000"r;
+  Rational fiveMillion = 5M;
+```
+`Rational` implements arithmetic, negation, and relational operators via [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+provided by the manifold-ext dependency. Operator overloading lets you can use `Rataional` numbers directly in
+arithmetic, negation, and relational expressions:
+```java
+Rational oneThird = 1r/3;
+Rational circumference = 3.14159r * 5.27r;
+
+if (oneThird > 1r/4) {...}
+if (3.14159r == pi) {...}
+``` 
+
+Note `Dimension` implements the `==` and `!=` operators with `compareTo()`.  Read more about implementing relational
+operators with [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading).
+
 # IDE Support 
 
 Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
