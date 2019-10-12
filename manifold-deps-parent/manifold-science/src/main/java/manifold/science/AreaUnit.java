@@ -54,6 +54,16 @@ public final class AreaUnit extends AbstractProductUnit<LengthUnit, LengthUnit, 
            : getWidthUnit().getFullSymbol() + "\u00D7" + getLengthUnit().getFullSymbol();
   }
 
+  @Override
+  public String getSymbol()
+  {
+    if( isSquare() )
+    {
+      return getWidthUnit().getSymbol() + "\u00B2"; // x squared
+    }
+    return super.getSymbol();
+  }
+
   public LengthUnit getWidthUnit()
   {
     return getLeftUnit();

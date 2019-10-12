@@ -14,27 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.science;
+package manifold.science.vector;
 
-import manifold.science.util.Rational;
+import org.junit.Test;
 
-public final class LengthVector extends Vector<Length, LengthUnit, LengthVector>
+
+import static manifold.science.util.AngleConstants.*;
+import static manifold.science.util.UnitConstants.m;
+
+public class VectorMathTest
 {
-  public LengthVector( Length magnitude, Angle angle )
-  {
-    super( magnitude, angle );
-  }
-
-  @Override
-  public LengthVector make( Length magnitude, Angle angle )
-  {
-    return new LengthVector( magnitude, angle );
-  }
-
-  @Override
-  public LengthVector copy( Rational magnitude )
-  {
-    return new LengthVector(
-      new Length( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getDisplayUnit() ), getAngle() );
+  @Test
+  public void testVectorAddition() {
+    LengthVector l = 1m E + 1m N + 1m W + 1m S;
+    System.out.println(l.getMagnitude().toNumber());
   }
 }

@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-package manifold.science;
+package manifold.science.util;
+
+import manifold.science.Angle;
+
 
 import static manifold.science.util.UnitConstants.deg;
 

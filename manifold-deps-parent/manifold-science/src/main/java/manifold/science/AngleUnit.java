@@ -16,7 +16,8 @@
 
 package manifold.science;
 
-import manifold.science.api.Unit;
+import manifold.science.api.AbstractPrimaryUnit;
+import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
@@ -24,66 +25,36 @@ import static manifold.science.MetricScaleUnit.*;
 import static manifold.science.util.DimensionlessConstants.*;
 import static manifold.science.util.CoercionConstants.r;
 
-public enum AngleUnit implements Unit<Angle, AngleUnit>
+public final class AngleUnit extends AbstractPrimaryUnit<Angle, AngleUnit>
 {
-  Nano( 1 n, "Nanoradian", "nrad" ),
-  Milli( 1 m, "Milliradian", "mrad" ),
-  Radian( 1 r, "Radian", "rad" ),
-  Degree( pi / 180, "Degree", "deg" ),
-  MOA( pi / 10800, "MinuteOfArc", "moa" ),
-  ArcSecond( pi / 648 k, "ArcSecond", "arcsec" ),
-  MilliArcSecond( pi / 648 M, "MilliArcSecond", "mas" ),
-  Turn( 2 * pi, "Turn", "cyc" ),
-  Gradian( pi / 200, "Gradian", "grad" ),
-  Quadrant( pi / 2, "Quadrant", "quad" );
-
-  private Rational _rads;
-  private String _name;
-  private String _symbol;
-
-  public static AngleUnit BASE = Radian;
-
-  AngleUnit( Rational rads, String name, String symbol )
+  private static final UnitCache<AngleUnit> CACHE = new UnitCache<>();
+  public static AngleUnit get( Rational radians, String name, String symbol )
   {
-    _rads = rads;
-    _name = name;
-    _symbol = symbol;
+    return CACHE.get( new AngleUnit( radians, name, symbol ) );
+  }
+
+  public static final AngleUnit Nano = get( 1n, "Nanoradian", "nrad" );
+  public static final AngleUnit Milli = get( 1m, "Milliradian", "mrad" );
+  public static final AngleUnit Radian = get( 1r, "Radian", "rad" );
+  public static final AngleUnit Degree = get( pi / 180, "Degree", "deg" );
+  public static final AngleUnit MOA = get( pi / 10800, "MinuteOfArc", "moa" );
+  public static final AngleUnit ArcSecond = get( pi / 648k, "ArcSecond", "arcsec" );
+  public static final AngleUnit MilliArcSecond = get( pi / 648M, "MilliArcSecond", "mas" );
+  public static final AngleUnit Turn = get( 2 * pi, "Turn", "cyc" );
+  public static final AngleUnit Gradian = get( pi / 200, "Gradian", "grad" );
+  public static final AngleUnit Quadrant = get( pi / 2, "Quadrant", "quad" );
+
+  public static final AngleUnit BASE = Radian;
+
+  private AngleUnit( Rational radians, String name, String symbol )
+  {
+    super( radians, name, symbol );
   }
 
   @Override
   public Angle makeDimension( Number amount )
   {
     return new Angle( Rational.get( amount ), this );
-  }
-
-  public Rational getRads()
-  {
-    return _rads;
-  }
-
-  public String getUnitName()
-  {
-    return _name;
-  }
-
-  public String getUnitSymbol()
-  {
-    return _symbol;
-  }
-
-  public Rational toBaseUnits( Rational myUnits )
-  {
-    return _rads * myUnits;
-  }
-
-  public Rational toNumber()
-  {
-    return _rads;
-  }
-
-  public Rational from( Angle angle )
-  {
-    return angle.toBaseNumber() / _rads;
   }
 
   public FrequencyUnit div( TimeUnit time )

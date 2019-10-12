@@ -1,50 +1,31 @@
 # Manifold : Science
 
-Use the `manifold-science` framework to incorporate physical and logical dimensions, units, and precise rational numbers
-into your application. `Dimension`s type-safely model quantities. These inlcude physical quantities such as `Length`,
-`Mass`, and `MagneticFluxDensity`, and abstract quantities such as `StorageCapacity` and `Money`. Together with
+>Warning: **Experimental Feature**
+
+Use the `manifold-science` framework to type-safely incorporate units & measures into your application. `Dimension`
+type-safely models quantities. The framework provides comprehensive support for physical quantities such as `Length`,
+`Mass`, and `Temperature`, as well as abstract quantities such as `StorageCapacity` and `Money`. Together with
 [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-these classes provide an expressive, foolproof unit framework for scientific applications.
+these classes provide an expressive units & measures foundation for a variety of applications.
 
-Conveniently express physical quantities in Java using *unit expressions*:
+Conveniently and type-safely express physical quantities of any type and unit of measure using *unit expressions*:
 
-**Simply import static constants or create your own constants for units**
 ```java
-import static manifold.science.util.UnitConstants.*;
+import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
+...
+Force f = 5 kg * 9.807 m/s/s; // result: 49.035 Newtons
+
+Area space = (20ft + 2in) * (37ft + 7.5in); // result: 758 37/48 ft²
 ```
-**Type-safe units**
-```java
-Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
-```
-**Mix and match units**
-```java
-if (49.035 N == f) {...}
-if (f == 49.035 kg m/s/s) {...}
-```
-**Combine different units**
-```java
-Mass m = 10 lb + 10 kg; 
-```
-**Simpler and easier to read syntax**
-```java
-Length distance = 100 mph * 3 hr;
-```
-**Easily make Ranges with `to` from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**  
-```java
-for( Mass m: 10kg to 100kg ) {...}
-```
-**Type-safely work with bits and bytes**
-```java
-StorageCapacity cap = 550 GB;
-StorageCapacity word = 8 Byte;
-boolean test = 8 Bits == 1 Byte;
-``` 
->Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
+>Note dimensions work directly in arithmetic expressions by integrating with [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+and [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
+both of these features are provided by the [`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+dependency.
 
  
 ## Table of Contents
-* [Dimensions & Units](#dimensions--units)
-* [Operator Overloading](#operator-overloading)
+* [Dimensions & Units API](#dimensions--units-api)
+* [Library](#library)
 * [Rational Numbers](#rational-numbers)
 * [IDE Support](#ide-support)
 * [Building](#building)
@@ -53,17 +34,196 @@ boolean test = 8 Bits == 1 Byte;
 * [Author](#author)
 
 
-# Dimensions & Units
+# Dimensions & Units API
 
-todo:
+Physical quantities have a fundamental *dimension* that is independent of units of measurement. The primary physical
+dimensions are: length, mass, time, electrical charge, temperature and luminous intensity. Derived physical dimensions
+include area, volume, velocity, force, energy, power and so on. The `manifold-science` framework provides an API to
+model both primary and derived dimensions. Using this API the framework supplies a class library consisting of all of
+the primary dimensions and many of the derived mechanical dimensions used with classical physics computations.
 
-# Operator Overloading   
+## API
 
-todo: 
+The foundational API of the science framework consists of a small set of base classes and interfaces defined in the
+`manifold.science.api` package.  
+
+## Measures
+
+`Dimension` interface is the root of the API. It models a dimension as having a unitless measure represented as a
+`Rational` value as well as common [operator methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+for arithmetic operations. Since common dimensions define a unit of measure you will rarely implement `Dimension`
+directly, instead you should extend `AbstractMeasure`.  This class adds a unit of measure to `Dimension` so you can
+extend it to reuse unit functionality common to all physical quantities.
+
+Instances of this class store the value (or magnitude) of the measure in terms of *base units*. Thus all arithmetic on
+measures are performed using base units, which permits measures of differing input units to work in calculations. A
+measure instance also maintains a *display unit*, which is used for display purposes and for working with other systems
+requiring specific units.
+
+For example, the `Length` dimension is defined like this:
+
+```java
+public final class Length extends AbstractMeasure<LengthUnit, Length> {
+  public Length(Rational value, LengthUnit unit, LengthUnit displayUnit) {
+    super(value, unit, displayUnit);
+  }
+
+  public Length(Rational value, LengthUnit unit) {
+    this( value, unit, unit );
+  }
+
+  @Override
+  public LengthUnit getBaseUnit() {
+    return LengthUnit.BASE;
+  }
+...
+}
+```   
+
+## Units
+
+The `Unit` interface provides a base abstraction for unit types. Primary unit types `Length`, `Mass`, `Time`, `Charge`,
+and `Temperature` implement `Unit` indirectly via `AbstractPrimaryUnit`. For instance, `LengthUnit`:
+
+```java
+public final class LengthUnit extends AbstractPrimaryUnit<Length, LengthUnit> {
+  ...
+  // SI Units
+  public static final LengthUnit Femto = get(FEMTO, "Femtometer", "fm");
+  public static final LengthUnit Pico = get(PICO, "Picometer", "pm");
+  public static final LengthUnit Angstrom = get(1e-10r, "Angstrom", "Å");
+  public static final LengthUnit Nano = get(NANO, "Nanometer", "nm");
+  public static final LengthUnit Micro = get(MICRO, "Micrometre", "µm");
+  public static final LengthUnit Milli = get(MILLI, "Millimeter", "mm");
+  public static final LengthUnit Centi = get(CENTI, "Centimeter", "cm");
+  public static final LengthUnit Deci = get(DECI, "Decimeter", "dm");
+  public static final LengthUnit Meter = get(1r, "Meter", "m");
+  public static final LengthUnit Kilometer = get(KILO, "Kilometer", "km");
+  public static final LengthUnit Megameter = get(KILO.pow(2), "Megameter", "Mm");
+  public static final LengthUnit Gigameter = get(KILO.pow(3), "Gigameter", "Gm");
+  public static final LengthUnit Terameter = get(KILO.pow(4), "Terameter", "Tm");
+
+  // US Standard
+  public static final LengthUnit Caliber = get(0.000254r, "Caliber", "cal.");
+  public static final LengthUnit Inch = get(0.0254r, "Inch", "in");
+  public static final LengthUnit Foot = get(12 * 0.0254r, "Foot", "ft");
+  public static final LengthUnit Yard = get(3 * 12 * 0.0254r, "Yard", "yd");
+  public static final LengthUnit Rod = get(5.0292r, "Rod", "rd");
+  public static final LengthUnit Chain = get(20.1168r, "Chain", "ch");
+  public static final LengthUnit Furlong = get(201.168r, "Furlong", "fur");
+  public static final LengthUnit Mile = get(1609.344r, "Mile", "mi");
+
+  // Navigation
+  public static final LengthUnit NauticalMile = get(1852r, "NauticalMile", "n.m.");
+
+  // Very large
+  public static final LengthUnit IAU = get(1.49597870e11r, "IAU-length", "au");
+  public static final LengthUnit LightYear = get(9.460730473e+15r, "LightYear", "ly");
+
+  // Very small
+  public static final LengthUnit Planck = get(1.61605e-35r, "Planck-length", "ℓP");
+
+  // Ancient
+  public static final LengthUnit Cubit = get(0.4572r, "Cubit", "cbt");
+  ...
+}
+```
+
+Derived unit types consist of products or quotients of other unit types, so they extend `AbstractProductUnit` and
+`AbstractQuotientUnit`.  For instance, `VelocityUnit` is the quotient of `LengthUnit` and `TimeUnit`, therefore it
+derives from `AbstractQuotientUnit`:
+
+```java
+final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUnit, Velocity, VelocityUnit> {
+  
+  public static final VelocityUnit BASE = get( Meter, Second );
+
+  ...
+}
+```  
+
+## Operator Methods
+
+You can use *all* Dimensions and Units directly in arithmetic, relational, and [unit (or "binding") expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
+
+The `Length` class, for example, implements method operators for all arithmetic, relational, and unit operators. This is
+what allows you to write expressions like this:
+```java
+ *   // commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
+ *   import static manifold.science.util.UnitConstants.*;
+ *   ...
+ *   Length l = 5m; // 5 meters
+ *   Length height = 5 ft + 9.5 in;
+ *   Area room = 20 ft * 15.5 ft;
+ *   Length distance = 80 mph * 2.3 hr;
+``` 
+
+See the documentation for [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+and [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+for detail about working with these features.
+ 
+# Library
+
+All of the primary dimensions and many of the derived dimensions are directly provided in the `manifold.science`
+package. These include:
+
+* `Acceleration` & `AccelerationUnit`
+* `Angle` & `AngleUnit`
+* `Area` & `AreaUnit`
+* `Capacitance` & `CapacitanceUnit`
+* `Charge` & `ChargeUnit`
+* `Conductance` & `ConductanceUnit`
+* `Current` & `CurrentUnit`
+* `Density` & `DensityUnit`
+* `Energy` & `EnergyUnit`
+* `Force` & `ForceUnit`
+* `Frequency` & `FrequencyUnit`
+* `HeatCapacity` & `HeatCapacityUnit`
+* `Inductance` & `InductanceUnit`
+* `Length` & `LengthUnit`
+* `MagneticFlux` & `MagneticFluxUnit`
+* `MagneticFluxDensity` & `MagneticFluxDensityUnit`
+* `Mass` & `MassUnit`
+* `MetricScaleUnit`
+* `Momentum` & `MomentumUnit`
+* `Potential` & `PotentialUnit`
+* `Power` & `PowerUnit`
+* `Pressure` & `PressureUnit`
+* `Resistance` & `ResistanceUnit`
+* `SolidAngle` & `SolidAngleUnit`
+* `StorageCapacity` & `StorageCapacityUnit`
+* `Temperature` & `TemperatureUnit`
+* `Time` & `TimeUnit`
+* `Velocity` & `VelocityUnit`
+* `Volume` & `VolumeUnit`
+
+A small library of experimental vector classes are available in the `manifold.science.vector` package. These classes
+support vector math and can be used directly within arithmetic expressions: 
+
+* `Vector`
+* `LengthVector`
+* `TimeVector`
+* `VelocityVector`
+ 
+Utility classes providing useful constants are available in the `manifold.science.util` package, these include:
+
+* `AngleConstants`
+* `CoercionConstants`
+* `DimensionlessConstants`
+* `MetricFactorConstants`
+* `Rational`
+* `UnitConstants`
 
 # Rational Numbers
 
-todo:
+The `Rational` class in the `manifold.science.util` package is similar to `BigDecimal` in that it can model rational
+numbers with arbitrary precision. However `Rational` differs from `BigDecimal` in that it models a rational number as 
+the quotient of two `BigIntenger` numbers.  This has the advantage of maintaining what is otherwise a repeating decimal
+for values such as `1/3`. For instance, the dividing a number by 3 then later multiplying that number by 3 should result
+in the original number, without rounding errors. While you can handle rounding with `BigDecimal`, using `Rational` can
+be less error prone especially when working with equations. For this reason, all the Dimensions and Units defined in the
+`manifold.science` package use `Rational`. [Feedback](https://github.com/manifold-systems/manifold/issues) on this
+subject is welcome!
  
 # IDE Support 
 
@@ -229,7 +389,7 @@ rootProject.name = 'MyExtProject'
             <id>internal.tools-jar</id>
             <activation>
                 <file>
-                    <exists>\${java.home}/../lib/tools.jar</exists>
+                    <exists>* ${java.home}/../lib/tools.jar</exists>
                 </file>
             </activation>
             <dependencies>
@@ -238,7 +398,7 @@ rootProject.name = 'MyExtProject'
                     <artifactId>tools</artifactId>
                     <version>1.8.0</version>
                     <scope>system</scope>
-                    <systemPath>\${java.home}/../lib/tools.jar</systemPath>
+                    <systemPath>* ${java.home}/../lib/tools.jar</systemPath>
                 </dependency>
               </dependencies>
         </profile>

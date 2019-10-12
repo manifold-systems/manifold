@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package manifold.science;
+package manifold.science.vector;
 
+import manifold.science.Angle;
+import manifold.science.AngleUnit;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.api.Dimension;
 import manifold.science.api.Unit;
@@ -72,7 +74,7 @@ public abstract class Vector<M extends AbstractMeasure<U, M>,
 
   public V plus( V v )
   {
-    //todo: for better accuracty use magnitude and angle components instead of x, y coords
+    //todo: for better accuracy use magnitude and angle components instead of x, y coords
 
     Rational x = getX().toBaseNumber() + v.getX().toBaseNumber();
     Rational y = getY().toBaseNumber() + v.getY().toBaseNumber();

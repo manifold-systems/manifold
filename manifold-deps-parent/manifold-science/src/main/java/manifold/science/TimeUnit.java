@@ -16,73 +16,74 @@
 
 package manifold.science;
 
-import manifold.science.api.Unit;
+import manifold.science.api.AbstractPrimaryUnit;
+import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
 import static manifold.science.util.CoercionConstants.r;
 
-public enum TimeUnit implements Unit<Time, TimeUnit>
+/**
+ * The second is the SI unit of time. All instances of {@code TimeUnit} are a factor of one second.
+ * <p/>
+ * <i>Atomic clocks, which keep time using transition energies in atoms, revolutionised timekeeping. NPL developed the
+ * first operational caesium-beam atomic clock in 1955. This clock was so accurate that it would only gain or lose one
+ * second in three hundred years. Modern atomic clocks can be as much as a million times more accurate than this, and
+ * underpin satellite technology, like GPS or the internet.</i>
+ * (ref. <a href="https://www.npl.co.uk/si-units/second">npl.co.uk</a>)
+ */
+public final class TimeUnit extends AbstractPrimaryUnit<Time, TimeUnit>
 {
-  // Ephemeris (SI) units
-  Planck( "5.39056e-44"r, "Planck-time", "tP" ),
-  Femto( 1 fe, "Femtosecond", "fs" ),
-  Pico( 1 p, "Picosecond", "ps" ),
-  Nano( 1 n, "Nanosecond", "ns" ),
-  Micro( 1 u, "Microsecond", "µs" ),
-  Milli( 1 m, "Millisecond", "ms" ),
-  Second( 1 r, "Second", "s" ),
-  Minute( 60 r, "Minute", "min" ),
-  Hour( 60 r * 60, "Hour", "hr" ),
-  Day( 24 r * 60 * 60, "Day", "day" ),
-  Week( 7 r * 24 * 60 * 60, "Week", "wk" ),
+  private static final UnitCache<TimeUnit> CACHE = new UnitCache<>();
+
+  /**
+   * Get or create a unit based on the {@code secondFactor}, which is a factor of the duration of one second. The
+   * specified unit is cached and will be returned for subsequent calls to this method if the {@code secondFactor}
+   * matches.
+   * <p/>
+   * @param secondFactor A factor of the the duration of one second.
+   * @param name The standard full name of the unit e.g., "Hour".
+   * @param symbol The standard symbol used for the unit e.g., "hr".
+   * @return The specified unit.
+   */
+  public static TimeUnit get( Rational secondFactor, String name, String symbol )
+  {
+    return CACHE.get( new TimeUnit( secondFactor, name, symbol ) );
+  }
+
+  // SI Units
+  public static final TimeUnit Femto = get( 1 fe, "Femtosecond", "fs" );
+  public static final TimeUnit Pico = get( 1 p, "Picosecond", "ps" );
+  public static final TimeUnit Nano = get( 1 n, "Nanosecond", "ns" );
+  public static final TimeUnit Micro = get( 1 u, "Microsecond", "µs" );
+  public static final TimeUnit Milli = get( 1 m, "Millisecond", "ms" );
+  public static final TimeUnit Second = get( 1 r, "Second", "s" );
+  public static final TimeUnit Minute = get( 60 r, "Minute", "min" );
+  public static final TimeUnit Hour = get( 60 r * 60, "Hour", "hr" );
+  public static final TimeUnit Day = get( 24 r * 60 * 60, "Day", "day" );
+  public static final TimeUnit Week = get( 7 r * 24 * 60 * 60, "Week", "wk" );
 
   // Mean Gregorian (ISO Calendar) units
-  Month( 31556952 r / 12, "Month", "mo" ),
-  Year( 31556952 r, "Year", "yr" ),
-  Decade( 31556952 r * 10, "Decade", "decade" ),
-  Century( 31556952 r * 100, "Century", "century" ),
-  Millennium( 31556952 k, "Millennium", "millennium" ),
-  Era( 31556952 G, "Era", "era" ),
+  public static final TimeUnit Month = get( 31556952 r / 12, "Month", "mo" );
+  public static final TimeUnit Year = get( 31556952 r, "Year", "yr" );
+  public static final TimeUnit Decade = get( 31556952 r * 10, "Decade", "decade" );
+  public static final TimeUnit Century = get( 31556952 r * 100, "Century", "century" );
+  public static final TimeUnit Millennium = get( 31556952 k, "Millennium", "millennium" );
+  public static final TimeUnit Era = get( 31556952 G, "Era", "era" );
 
   // Mean Tropical (Solar) units
-  TrMonth( "31556925.445/12"r, "Tropical Month", "tmo" ),
-  TrYear( "31556925.445"r, "Tropical Year", "tyr" );
+  public static final TimeUnit TrMonth = get( "31556925.445/12"r, "Tropical Month", "tmo" );
+  public static final TimeUnit TrYear = get( "31556925.445"r, "Tropical Year", "tyr" );
+
+  // Planck-time
+  public static final TimeUnit Planck = get( 5.39056e-44r, "Planck-time", "tP" );
 
   public static final TimeUnit BASE = Second;
 
-  private Rational _sec;
-  private String _name;
-  private String _symbol;
-
-
-  TimeUnit( Rational sec, String name, String symbol )
+  private TimeUnit( Rational sec, String name, String symbol )
   {
-    _sec = sec;
-    _name = name;
-    _symbol = symbol;
-  }
-
-  public String getUnitName()
-  {
-    return _name;
-  }
-
-  public String getUnitSymbol()
-  {
-    return _symbol;
-  }
-
-  public Rational toBaseUnits( Rational myUnits )
-  {
-    return _sec * myUnits;
-  }
-
-  @Override
-  public Rational from( Time t )
-  {
-    return t.toBaseNumber() / _sec;
+    super( sec, name, symbol );
   }
 
   @Override
@@ -91,16 +92,10 @@ public enum TimeUnit implements Unit<Time, TimeUnit>
     return new Time( Rational.get( amount ), this );
   }
 
-  public Rational toNumber()
-  {
-    return _sec;
-  }
-
   public Rational getSeconds()
   {
-    return _sec;
+    return toNumber();
   }
-
 
   public LengthUnit times( VelocityUnit v )
   {

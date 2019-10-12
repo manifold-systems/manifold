@@ -16,95 +16,88 @@
 
 package manifold.science;
 
-import manifold.science.api.Unit;
+import manifold.science.api.AbstractPrimaryUnit;
+import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.util.CoercionConstants.r;
-import static manifold.science.util.CommonConstants.*;
+import static manifold.science.util.MetricFactorConstants.*;
 
-public enum LengthUnit implements Unit<Length, LengthUnit>
+/**
+ * The meter is the SI unit of length. All instances of {@code LengthUnit} are a factor of one meter.
+ * <p/>
+ * <i>We measure distances by comparing objects or distances with standard lengths. Historically, we used pieces of
+ * metal or the wavelength of light from standard lamps as standard lengths. Since the speed of light in vacuum, c, is
+ * constant, in the SI we use the distance that light travels in a given time as our standard.</i>
+ * (ref. <a href="https://www.npl.co.uk/si-units/metre">npl.co.uk</a>)
+ */
+public final class LengthUnit extends AbstractPrimaryUnit<Length, LengthUnit>
 {
-  // Planck length
-  Planck( "1.61605e-35"r, "Planck-length", "ℓP" ),
+  private static final UnitCache<LengthUnit> CACHE = new UnitCache<>();
 
-  // Metric
-  Femto( FEMTO, "Femtometer", "fm" ),
-  Pico( PICO, "Picometer", "pm" ),
-  Angstrom( Rational.get( "1e-10" ), "Angstrom", "Å" ),
-  Nano( NANO, "Nanometer", "nm" ),
-  Micro( MICRO, "Micrometre", "µm" ),
-  Milli( MILLI, "Millimeter", "mm" ),
-  Centi( CENTI, "Centimeter", "cm" ),
-  Deci( DECI, "Decimeter", "dm" ),
-  Meter( Rational.ONE, "Meter", "m" ),
-  Kilometer( KILO, "Kilometer", "km" ),
-  Megameter( KILO.pow( 2 ), "Megameter", "Mm" ),
-  Gigameter( KILO.pow( 3 ), "Gigameter", "Gm" ),
-  Terameter( KILO.pow( 4 ), "Terameter", "Tm" ),
+  /**
+   * Get or create a unit based on the {@code meterFactor}, which is a factor of the length of one meter. The specified
+   * unit is cached and will be returned for subsequent calls to this method if the {@code meterFactor} matches.
+   * <p/>
+   * @param meterFactor A factor of the the length of one meter.
+   * @param name The standard full name of the unit e.g., "Foot".
+   * @param symbol The standard symbol used for the unit e.g., "ft".
+   * @return The specified unit.
+   */
+  public static LengthUnit get( Rational meterFactor, String name, String symbol )
+  {
+    return CACHE.get( new LengthUnit( meterFactor, name, symbol ) );
+  }
 
-  // UK
-  Cubit( Rational.get( "0.4572" ), "Cubit", "cbt" ),
+  // SI Units
+  public static final LengthUnit Femto = get(FEMTO, "Femtometer", "fm");
+  public static final LengthUnit Pico = get(PICO, "Picometer", "pm");
+  public static final LengthUnit Angstrom = get(1e-10r, "Angstrom", "Å");
+  public static final LengthUnit Nano = get(NANO, "Nanometer", "nm");
+  public static final LengthUnit Micro = get(MICRO, "Micrometre", "µm");
+  public static final LengthUnit Milli = get(MILLI, "Millimeter", "mm");
+  public static final LengthUnit Centi = get(CENTI, "Centimeter", "cm");
+  public static final LengthUnit Deci = get(DECI, "Decimeter", "dm");
+  public static final LengthUnit Meter = get(1r, "Meter", "m");
+  public static final LengthUnit Kilometer = get(KILO, "Kilometer", "km");
+  public static final LengthUnit Megameter = get(KILO.pow(2), "Megameter", "Mm");
+  public static final LengthUnit Gigameter = get(KILO.pow(3), "Gigameter", "Gm");
+  public static final LengthUnit Terameter = get(KILO.pow(4), "Terameter", "Tm");
 
   // US Standard
-  Caliber( ".000254"r, "Caliber", "cal." ),
-  Inch( "0.0254"r, "Inch", "in" ),
-  Foot( 12 * "0.0254"r, "Foot", "ft" ),
-  Yard( 3 * 12 * "0.0254"r, "Yard", "yd" ),
-  Rod( "5.0292"r, "Rod", "rd" ),
-  Chain( "20.1168"r, "Chain", "ch" ),
-  Furlong( "201.168"r, "Furlong", "fur" ),
-  Mile( "1609.344"r, "Mile", "mi" ),
+  public static final LengthUnit Caliber = get(0.000254r, "Caliber", "cal.");
+  public static final LengthUnit Inch = get(0.0254r, "Inch", "in");
+  public static final LengthUnit Foot = get(12 * 0.0254r, "Foot", "ft");
+  public static final LengthUnit Yard = get(3 * 12 * 0.0254r, "Yard", "yd");
+  public static final LengthUnit Rod = get(5.0292r, "Rod", "rd");
+  public static final LengthUnit Chain = get(20.1168r, "Chain", "ch");
+  public static final LengthUnit Furlong = get(201.168r, "Furlong", "fur");
+  public static final LengthUnit Mile = get(1609.344r, "Mile", "mi");
 
-  // International
-  NauticalMile( Rational.get( 1852 ), "NauticalMile", "n.m." ),
+  // Navigation
+  public static final LengthUnit NauticalMile = get(1852r, "NauticalMile", "n.m.");
 
-  // Very large units
-  IAU( Rational.get( "1.49597870e11" ), "IAU-length", "au" ),
-  LightYear( Rational.get( "9.460730473e+15" ), "LightYear", "ly" );
+  // Very large
+  public static final LengthUnit IAU = get(1.49597870e11r, "IAU-length", "au");
+  public static final LengthUnit LightYear = get(9.460730473e+15r, "LightYear", "ly");
 
+  // Very small
+  public static final LengthUnit Planck = get(1.61605e-35r, "Planck-length", "ℓP");
+
+  // Ancient
+  public static final LengthUnit Cubit = get(0.4572r, "Cubit", "cbt");
+  
   public static final LengthUnit BASE = Meter;
 
-  final Rational _meters;
-  final String _name;
-  final String _symbol;
-
-
-  LengthUnit( Rational meters, String name, String symbol )
+  private LengthUnit( Rational meters, String name, String symbol )
   {
-    _meters = meters;
-    _name = name;
-    _symbol = symbol;
+    super( meters, name, symbol );
   }
 
   public Rational getMeters()
   {
-    return _meters;
-  }
-
-  public String getUnitName()
-  {
-    return _name;
-  }
-
-  public String getUnitSymbol()
-  {
-    return _symbol;
-  }
-
-  public Rational toBaseUnits( Rational myUnits )
-  {
-    return _meters * myUnits;
-  }
-
-  public Rational toNumber()
-  {
-    return _meters;
-  }
-
-  public Rational from( Length len )
-  {
-    return len.toBaseNumber() / _meters;
+    return toNumber();
   }
 
   @Override

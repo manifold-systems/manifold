@@ -57,18 +57,20 @@ public abstract class AbstractProductUnit<A extends Unit,
     super( leftUnit, rightUnit, factor, name, symbol );
   }
 
-  public String getUnitName()
+  public String getName()
   {
-    return super.getUnitName() == null
-           ? getLeftUnit().getUnitName() + " " + getRightUnit().getUnitName()
-           : super.getUnitName();
+    String unitName = super.getName();
+    return unitName == null
+           ? getLeftUnit().getName() + " " + getRightUnit().getName()
+           : unitName;
   }
 
-  public String getUnitSymbol()
+  public String getSymbol()
   {
-    return super.getUnitSymbol() == null
-           ? getLeftUnit().getUnitSymbol() + "\u22C5" + getRightUnit().getUnitSymbol()
-           : super.getUnitSymbol();
+    String unitSymbol = super.getSymbol();
+    return unitSymbol == null
+           ? getLeftUnit().getSymbol() + "\u22C5" + getRightUnit().getSymbol()
+           : unitSymbol;
   }
 
   public String getFullName()

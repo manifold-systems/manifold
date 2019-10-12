@@ -18,6 +18,9 @@ package manifold.science;
 
 import manifold.science.api.AbstractMeasure;
 import manifold.science.util.Rational;
+import manifold.science.vector.LengthVector;
+import manifold.science.vector.TimeVector;
+import manifold.science.vector.VelocityVector;
 
 final public class Angle extends AbstractMeasure<AngleUnit, Angle>
 {

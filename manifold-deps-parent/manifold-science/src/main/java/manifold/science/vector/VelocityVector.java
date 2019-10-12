@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.science;
+package manifold.science.vector;
 
+import manifold.science.Angle;
+import manifold.science.Velocity;
+import manifold.science.VelocityUnit;
 import manifold.science.util.Rational;
 
 public final class VelocityVector extends Vector<Velocity, VelocityUnit, VelocityVector>

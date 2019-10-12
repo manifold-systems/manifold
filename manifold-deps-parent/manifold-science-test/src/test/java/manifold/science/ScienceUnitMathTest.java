@@ -16,6 +16,10 @@
 
 package manifold.science;
 
+import manifold.science.api.Dimension;
+import manifold.science.api.Unit;
+import manifold.science.api.UnitCache;
+import manifold.util.ReflectUtil;
 import org.junit.Test;
 
 import static manifold.science.util.CoercionConstants.r;
@@ -27,9 +31,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testLengthMath() {
-    for( LengthUnit unit : LengthUnit.values() ) {
+    for( LengthUnit unit : values(LengthUnit.class) ) {
       Length a = 1 unit;
-      for( LengthUnit unit2 : LengthUnit.values() ) {
+      for( LengthUnit unit2 : values(LengthUnit.class) ) {
         Length b = 1 unit2;
         assertEquals( new Length( a.toBaseNumber() + b.toBaseNumber(), LengthUnit.BASE, unit ), a + b );
         assertEquals( new Length( a.toBaseNumber() - b.toBaseNumber(), LengthUnit.BASE, unit ), a - b );
@@ -60,9 +64,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testTimeMath() {
-    for( TimeUnit unit : TimeUnit.values() ) {
+    for( TimeUnit unit : values( TimeUnit.class ) ) {
       Time a = 1 unit;
-      for( TimeUnit unit2 : TimeUnit.values() ) {
+      for( TimeUnit unit2 : values( TimeUnit.class ) ) {
         Time b = 1 unit2;
         assertEquals( new Time( a.toBaseNumber() + b.toBaseNumber(), TimeUnit.BASE, unit ), a + b );
         assertEquals( new Time( a.toBaseNumber() - b.toBaseNumber(), TimeUnit.BASE, unit ), a - b );
@@ -104,9 +108,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testMassMath() {
-    for( MassUnit unit : MassUnit.values() ) {
+    for( MassUnit unit : values( MassUnit.class ) ) {
       Mass a = 1 unit;
-      for( MassUnit unit2 : MassUnit.values() ) {
+      for( MassUnit unit2 : values( MassUnit.class ) ) {
         Mass b = 1 unit2;
         assertEquals( new Mass( a.toBaseNumber() + b.toBaseNumber(), MassUnit.BASE, unit ), a + b );
         assertEquals( new Mass( a.toBaseNumber() - b.toBaseNumber(), MassUnit.BASE, unit ), a - b );
@@ -140,9 +144,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testTemperatureMath() {
-    for( TemperatureUnit unit : TemperatureUnit.values() ) {
+    for( TemperatureUnit unit : values( TemperatureUnit.class ) ) {
       Temperature a = 1 unit;
-      for( TemperatureUnit unit2 : TemperatureUnit.values() ) {
+      for( TemperatureUnit unit2 : values( TemperatureUnit.class ) ) {
         Temperature b = 1 unit;
         assertEquals( new Temperature( a.toBaseNumber() + b.toBaseNumber(), TemperatureUnit.BASE, unit ), a + b );
         assertEquals( new Temperature( a.toBaseNumber() - b.toBaseNumber(), TemperatureUnit.BASE, unit ), a - b );
@@ -155,9 +159,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testChargeMath() {
-    for( ChargeUnit unit : ChargeUnit.values() ) {
+    for( ChargeUnit unit : values( ChargeUnit.class ) ) {
       Charge a = 1 unit;
-      for( ChargeUnit unit2 : ChargeUnit.values() ) {
+      for( ChargeUnit unit2 : values( ChargeUnit.class ) ) {
         Charge b = 1 unit;
         assertEquals( new Charge( a.toBaseNumber() + b.toBaseNumber(), ChargeUnit.BASE, unit ), a + b );
         assertEquals( new Charge( a.toBaseNumber() - b.toBaseNumber(), ChargeUnit.BASE, unit ), a - b );
@@ -170,9 +174,9 @@ public class ScienceUnitMathTest {
 
   @Test
   public void testAngleMath() {
-    for( AngleUnit unit : AngleUnit.values() ) {
+    for( AngleUnit unit : values( AngleUnit.class ) ) {
       Angle a = 1 unit;
-      for( AngleUnit unit2 : AngleUnit.values() ) {
+      for( AngleUnit unit2 : values( AngleUnit.class ) ) {
         Angle b = 1 unit2;
         assertEquals( new Angle( a.toBaseNumber() + b.toBaseNumber(), AngleUnit.BASE, unit ), a + b );
         assertEquals( new Angle( a.toBaseNumber() - b.toBaseNumber(), AngleUnit.BASE, unit ), a - b );
@@ -199,5 +203,11 @@ public class ScienceUnitMathTest {
     assertEquals( 5 N m, 5 kg m/s/s m );
     assertEquals( 5 N m, 5 J );
     assertEquals( 5 J, 5 kg m/s/s m );
+  }
+
+  private <D extends Dimension<D>, U extends Unit<D, U>> Iterable<U> values( Class<U> unitType )
+  {
+    UnitCache<U> cache = (UnitCache<U>)ReflectUtil.field( unitType, "CACHE" ).getStatic();
+    return cache.getCachedValues();
   }
 }

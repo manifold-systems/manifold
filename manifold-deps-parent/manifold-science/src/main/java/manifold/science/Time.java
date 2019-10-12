@@ -22,6 +22,19 @@ import manifold.science.util.Rational;
 
 import static manifold.science.TimeUnit.Nano;
 
+/**
+ * Models a measure of time in units of {@link TimeUnit}.
+ * <p/>
+ * Use values of {@code Time} directly in arithmetic expressions with other dimensions such as:
+ * <pre><code>
+ *   // commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
+ *   import static manifold.science.util.UnitConstants.*;
+ *   ...
+ *   Time duration = 5.2 hr;
+ *   Time mileTime = 4 min + 12.78 sec;
+ *   Length distance = 80 mph * 2.3 hr;
+ * </code></pre>
+ */
 final public class Time extends AbstractMeasure<TimeUnit, Time>
 {
   public Time( Rational value, TimeUnit unit, TimeUnit displayUnit )

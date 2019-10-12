@@ -20,11 +20,15 @@ import manifold.science.api.AbstractQuotientUnit;
 import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
+
+import static manifold.science.util.CoercionConstants.r;
+
 public final class AccelerationUnit extends AbstractQuotientUnit<VelocityUnit, TimeUnit, Acceleration, AccelerationUnit>
 {
   private static final UnitCache<AccelerationUnit> CACHE = new UnitCache<>();
 
   public static final AccelerationUnit BASE = get( VelocityUnit.BASE, VelocityUnit.BASE.getTimeUnit() );
+  public static final AccelerationUnit GRAVITY = get( VelocityUnit.BASE, VelocityUnit.BASE.getTimeUnit(), 9.80665r, "Gravity", "g" );
 
   public static AccelerationUnit get( VelocityUnit velocityUnit, TimeUnit timeUnit )
   {

@@ -16,6 +16,7 @@
 
 package manifold.science.util;
 
+import manifold.science.AccelerationUnit;
 import manifold.science.AngleUnit;
 import manifold.science.ChargeUnit;
 import manifold.science.CurrentUnit;
@@ -36,15 +37,27 @@ import manifold.science.api.Dimension;
 /**
  * A collection of commonly used SI units specified as standard abbreviations.
  * <p/>
- * Import constants of this class like this:
+ * Import constants of this class individually like this:
  * <pre><code>
  *   import static manifold.science.util.UnitConstants.m;
+ * </code></pre>
+ * Or import all of them like this:
+ * <pre><code>
+ *   import static manifold.science.util.UnitConstants.*;
  * </code></pre>
  * Then use them to conveniently express {@link Dimension} values like this:
  * <pre><code>
  *   Length distance = 90 mph * 25 min;
  * </code></pre>
- * Note unlike floating point literals, these expressions retain the precision of the literal decimal values.
+ * If you don't see the unit you're looking for here, make your own! Units are just types -- you can simply declare a
+ * constant of the unit type you want and use the constant as a unit qualifier:
+ * <pre><code>
+ *   ForceUnit lbf = slug ft/s/s;  // pound-force unit </code></pre>
+ * Now you can make expressions using {@code lbf} force units!
+ * <pre><code>
+ *   Force force = 72 lbf;
+ * </code></pre>
+ * Note unlike floating point literals, these expressions retain the precision of literal decimal values.
  */
 public interface UnitConstants
 {
@@ -71,8 +84,6 @@ public interface UnitConstants
   TimeUnit tmo = TimeUnit.TrMonth;
   TimeUnit tyr = TimeUnit.TrYear;
 
-  VelocityUnit mph = mi/hr;
-
   MassUnit amu = MassUnit.AtomicMass;
   MassUnit mug = MassUnit.Micro;
   MassUnit mg = MassUnit.Milli;
@@ -85,6 +96,7 @@ public interface UnitConstants
   MassUnit oz = MassUnit.Ounce;
   MassUnit ozt = MassUnit.TroyOunce;
   MassUnit lb = MassUnit.Pound;
+  MassUnit slug = MassUnit.Slug;
   MassUnit st = MassUnit.Stone;
   MassUnit sht = MassUnit.Ton;
   MassUnit lt = MassUnit.TonUK;
@@ -113,13 +125,18 @@ public interface UnitConstants
   AngleUnit deg = AngleUnit.Degree;
 
   TemperatureUnit dK = TemperatureUnit.Kelvin;
-  TemperatureUnit dC = TemperatureUnit.Celcius;
+  TemperatureUnit dC = TemperatureUnit.Celsius;
   TemperatureUnit dF = TemperatureUnit.Fahrenheit;
+
+  VelocityUnit mph = mi/hr;
+
+  AccelerationUnit ag = AccelerationUnit.GRAVITY;
 
   MomentumUnit Ns = kg m/s;
 
   ForceUnit N = kg m/s/s;
   ForceUnit dyn = g cm/s/s;
+  ForceUnit lbf = slug ft/s/s;
 
   EnergyUnit joule = N m;
   EnergyUnit J = joule;

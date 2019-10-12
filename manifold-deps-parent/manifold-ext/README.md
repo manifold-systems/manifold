@@ -496,9 +496,9 @@ public class Point implements ComparableUsing<Point> {
   }
 }
 ```
-Now you can easily compare `Point`s like this:
+Now you can easily compare `Point` values like this:
 ```java
-if (pt1 >= pt21) ...
+if (pt1 >= pt2) ...
 ```
 
 ### `java.lang.Comparable`
@@ -546,17 +546,16 @@ enum EqualityMode
 }
 ```
 
-Based the `EqualityMode` returned by your implementation of `CompareToUsing#equalityMode()`, the `==` and `!=` operators
-compile as: 
+Based on the `EqualityMode` returned by your implementation of `CompareToUsing#equalityMode()`, the `==` and `!=`
+operators compile using the following methods: 
 
 | Operation | `Equals` <small>(default)</small> | `CompareTo`| `Identity` |
 |:----------|:-------------------|:--------------------------|:-----------|
 | `a == b`  | `a.equals(b, EQ)`  | `a.compareToUsing(b, EQ)` | `a == b`   |
 | `a != b`  | `!a.equals(b, NE)` | `a.compareToUsing(b, NE)` | `a != b`   |
 
-Note Manifold generates efficient, null-safe code for `==` and `!=` that performs both `null` checks and object
-identity checks to short-circuit unnecessary calls and so your implementation is not burdened with boilerplate code. For
-example, `a == b` using `Equals` mode translates to:
+Note Manifold generates efficient, **null-safe** code for `==` and `!=`. For example, `a == b` using `Equals` mode
+compiles as:
 ```java
 a == b || a != null && b != null && a.equals(b)
 ``` 
@@ -569,12 +568,12 @@ To enable `==` on `Point` more effectively, you can accept the default behavior 
  
 ```java
 public boolean equals(Object that) {
-  return getClass() == that.getClass() && 
-    x == ((Point)that).x && y == ((Point)that).y;
+  return this == that || that != null && getClass() == that.getClass() && 
+         x == ((Point)that).x && y == ((Point)that).y;
 }
 ```
->Note always consider implementing `hashCode()` if you implement `equals()`, otherwise without `hashCode()` your type
->may not function property when used with `Map`s and other data structures:
+>Note always consider implementing `hashCode()` if you implement `equals()`, otherwise your type may not function
+>properly when used with `Map` and other data structures:
 >```java
 >public int hashCode() {
 >  return Objects.hash(x, y); 
@@ -592,15 +591,26 @@ public EqualityMode equalityMode() {
 }
 ```
  
-## BigDecimal & BigInteger 
+## Operators by Extension Methods 
 
 Using [extension methods](#extension-classes-via-extension) you can provide operator implementations for classes you
 don't otherwise control. For instance, Manifold provides operator extensions for
 [`BigDecimal`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigDecimal/ManBigDecimalExt.java)
 and [`BigInteger`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigInteger/ManBigIntegerExt.java).
-These extensions are available in this `manifold-ext` framework.  Now you can perform arithmetic and comparisons using
-operator expressions:
+These extensions are available in the `manifold-ext` dependency.  
 
+Here's what the `+` extension for `BigDecimal` looks like:
+```java
+@Extension
+public abstract class ManBigDecimalExt implements ComparableUsing<BigDecimal> {
+  /** Supports binary operator {@code +} */
+  public static BigDecimal plus(@This BigDecimal thiz, BigDecimal that) {
+    return thiz.add(that);
+  }
+  ...
+}
+```
+Now you can perform arithmetic and comparisons using operator expressions:
 ```java
 if (bd1 >= bd2) {
   BigDecimal result = bd1 + bd2;
@@ -617,24 +627,24 @@ projects uses operator overloading and unit expressions extensively.
 >Warning: **Experimental Feature**
 
 Manifold seamlessly plugs into Java to provide a pretty cool feature called *unit expressions*, which extends the
-expressive flexibility of Java expressions:
+expressive flexibility of Java:
 
+**Simple, type-safe, easy to read syntax**
+```java
+Length distance = 100 mph * 3 hr;
+```
 **Type-safe units**
 ```java
 Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
 ```
 **Mix and match units**
 ```java
-if (49.035 N == f) {...}
 if (f == 49.035 kg m/s/s) {...}
+if (49.035 N == f) {...}
 ```
 **Combine different units**
 ```java
 Mass m = 10 lb + 10 kg; 
-```
-**Simpler and easier to read syntax**
-```java
-Length distance = 100 mph * 3 hr;
 ```
 **Easily make Ranges with `to` from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**  
 ```java
@@ -682,28 +692,28 @@ of flexibility is otherwise not supported with Java's name-based type system.
 
 The empty or "binding" operator has a *phased* precedence. Lexically, its precedence lies between addition and
 multiplication, thus during the compiler's parsing phase it produces an untyped AST reflecting this order.  However,
-in the course of the compiler's type attribution phase the compiler restructures the expressions to reflect binding
-operator methods `prefixBind()` and `postfixBind()` declared in the operand types, during which the compiler considers
-the binding operator as having a precedence *equal to* multiplication.
+in the course of the compiler's type attribution phase the compiler restructures the AST to reflect binding operator
+methods `prefixBind()` and `postfixBind()` declared in the operand types, during which the compiler considers the
+binding operator as having a precedence *equal to* multiplication.
 
 To illustrate consider the following expression:
 ```java
 a b * c
 ```
 
-The empty operator having a precedence less than multiplication, lexically, the expression parses like this:
+The binding operator, having a lexical precedence less than multiplication, parses like this:
 ```java
 a (b * c)
 ```
 
 In a later stage when operand types are available the expression may restructure if:
 1. `a` and `b` have a binding relationship declared with `A.postfixBind(B)` or `B.prefixBind(A)` and
-2. the resulting `(a b)` expression implements multiplication with the type of `c`
+2. the type of the resulting `(a b)` expression implements multiplication with the type of `c`
 ```java
 (a b) * c
 ``` 
 
-For example, the expression `5kg * 2` reflects this example exactly.
+For example, the expression `5 kg * 2` reflects this example exactly.
 
 As you can see unit expressions demand a level of flexibility beyond that of conventional compilers such as Java's. But
 Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.

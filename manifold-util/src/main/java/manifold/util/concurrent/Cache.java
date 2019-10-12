@@ -121,6 +121,11 @@ public class Cache<K, V>
     return value;
   }
 
+  public Iterable<V> getCachedValues()
+  {
+    return _cacheImlp.values();
+  }
+
   public int getConfiguredSize()
   {
     return _size;

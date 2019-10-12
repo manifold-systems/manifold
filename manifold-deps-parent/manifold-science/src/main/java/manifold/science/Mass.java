@@ -19,6 +19,19 @@ package manifold.science;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.util.Rational;
 
+/**
+ * Models a measure of mass in units of {@link MassUnit}.
+ * <p/>
+ * Use values of {@code Mass} directly in arithmetic expressions with other dimensions such as:
+ * <pre><code>
+ *   // commonly used unit abbreviations e.g., m, ft, hr, kg, etc.
+ *   import static manifold.science.util.UnitConstants.*;
+ *   ...
+ *   Mass weight = 80.21 kg;
+ *   Mass infant = 9 lb + 8.71 oz;
+ *   Force f = 2120 kg * 9.807 m/s/s;
+ * </code></pre>
+ */
 public final class Mass extends AbstractMeasure<MassUnit, Mass>
 {
   public Mass( Rational value, MassUnit unit, MassUnit displayUnit )

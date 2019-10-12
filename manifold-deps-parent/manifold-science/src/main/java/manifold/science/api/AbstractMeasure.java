@@ -22,7 +22,7 @@ import manifold.collections.api.range.Sequential;
 import manifold.science.util.Rational;
 
 /**
- * This class serves as the base class for "physical dimensions." See {@link manifold.science.Length},
+ * This class serves as the base class for a measured quantity. See {@link manifold.science.Length},
  * {@link manifold.science.Velocity}, {@link manifold.science.Mass}, etc. for examples.
  * <p/>
  * Instances of this class store the value (or magnitude) of the measure in terms of base units. Thus all arithmetic on
@@ -148,8 +148,12 @@ public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMe
   @Override
   public String toString()
   {
-    return toNumber( getDisplayUnit() )
-             .toBigDecimal().stripTrailingZeros().toPlainString() + " " + getDisplayUnit().getUnitSymbol();
+    return toNumber().toBigDecimal().stripTrailingZeros().toPlainString() + " " + getDisplayUnit().getSymbol();
+  }
+
+  public String toMixedString()
+  {
+    return toNumber().toMixedString() + " " + getDisplayUnit().getSymbol();
   }
 
   @Override

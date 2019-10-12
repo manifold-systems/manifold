@@ -16,45 +16,66 @@
 
 package manifold.science;
 
-import manifold.science.api.Unit;
+import manifold.science.api.AbstractPrimaryUnit;
+import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.MetricScaleUnit.*;
 import static manifold.science.util.CoercionConstants.r;
 
-public enum MassUnit implements Unit<Mass, MassUnit>
+/**
+ * The kilogram is the SI unit of mass. All instances of {@code MassUnit} are a factor of one kilogram.
+ * <p/>
+ * <i>Since the revision of the SI on 20 May 2019, we can now compare the gravitational force on an object with an
+ * electromagnetic force using a Kibble balance. This allows the kilogram to be defined in term of a fixed numerical
+ * value of the Planck constant, a constant which will not change over time.</i>
+ * (ref. <a href="https://www.npl.co.uk/si-units/kilogram">npl.co.uk</a>)
+ */
+public final class MassUnit extends AbstractPrimaryUnit<Mass, MassUnit>
 {
-  AtomicMass( "1.6605402e-27"r, "AMU", "amu" ),
-  Nano( 1 p, "Nanogram", "µg" ),
-  Micro( 1 n, "Microgram", "µg" ),
-  Milli( 1 u, "Milligram", "mg" ),
-  Gram( 1 m, "Gram", "g" ),
-  Kilogram( 1 r, "Kilogram", "kg" ),
-  Tonne( 1 k, "Metric Ton", "tonne" ),
-  Carat( ".0002"r, "Carat", "ct" ),
-  Dram( ".001771845195312"r, "Dram", "dr" ),
-  Grain( "6.47989e-5"r, "Grain", "gr" ),
-  Newton( "0.101971621"r, "Newton", "N" ),
-  Ounce( "0.0283495"r, "Ounce", "oz" ),
-  TroyOunce( "0.0311035"r, "Troy Ounce", "ozt" ),
-  Pound( "0.45359237"r, "Pound", "lb" ),
-  Stone( "6.35029"r, "Stone", "st" ),
-  Ton( "907.185"r, "Ton (US, short)", "sht" ),
-  TonUK( "1016.05"r, "Ton (UK, long)", "lt" ),
-  Solar( "1.9889200011445836e30"r, "Solar Masses", "M☉" );
+  private static final UnitCache<MassUnit> CACHE = new UnitCache<>();
+
+  /**
+   * Get or create a unit based on the {@code kilogramFactor}, which is a factor of the mass of one kilogram. The
+   * specified unit is cached and will be returned for subsequent calls to this method if the {@code kilogramFactor}
+   * matches.
+   * <p/>
+   * @param kilogramFactor A factor of the the mass of one kilogram.
+   * @param name The standard full name of the unit e.g., "Pound".
+   * @param symbol The standard symbol used for the unit e.g., "lb".
+   * @return The specified unit.
+   */
+  public static MassUnit get( Rational kilogramFactor, String name, String symbol )
+  {
+    return CACHE.get( new MassUnit( kilogramFactor, name, symbol ) );
+  }
+
+  public static final MassUnit AtomicMass = get( 1.6605402e-27r, "AMU", "amu" );
+  public static final MassUnit Nano = get( 1 p, "Nanogram", "µg" );
+  public static final MassUnit Micro = get( 1 n, "Microgram", "µg" );
+  public static final MassUnit Milli = get( 1 u, "Milligram", "mg" );
+  public static final MassUnit Gram = get( 1 m, "Gram", "g" );
+  public static final MassUnit Kilogram = get( 1 r, "Kilogram", "kg" );
+  public static final MassUnit Tonne = get( 1 k, "Metric Ton", "tonne" );
+  public static final MassUnit Carat = get( 0.0002r, "Carat", "ct" );
+  public static final MassUnit Dram = get( 0.001771845195312r, "Dram", "dr" );
+  public static final MassUnit Grain = get( 6.47989e-5r, "Grain", "gr" );
+  public static final MassUnit Newton = get( 0.101971621r, "Newton", "N" );
+  public static final MassUnit Ounce = get( 0.0283495r, "Ounce", "oz" );
+  public static final MassUnit TroyOunce = get( 0.0311035r, "Troy Ounce", "ozt" );
+  public static final MassUnit Pound = get( 0.45359237r, "Pound", "lb" );
+  public static final MassUnit Slug = get( 14.593902937r, "Slug", "slug" );
+  public static final MassUnit Stone = get( 6.35029r, "Stone", "st" );
+  public static final MassUnit Ton = get( 907.185r, "Ton (US, short)", "sht" );
+  public static final MassUnit TonUK = get( 1016.05r, "Ton (UK, long)", "lt" );
+  public static final MassUnit Solar = get( 1.9889200011445836e30r, "Solar Masses", "M☉" );
 
   public static final MassUnit BASE = Kilogram;
 
-  private Rational _kilograms; // as Kilograms
-  private String _name;
-  private String _symbol;
-
-  MassUnit( Rational kilograms, String name, String symbol )
+  private MassUnit( Rational kilogramFactor, String name, String symbol )
   {
-    _kilograms = kilograms;
-    _name = name;
-    _symbol = symbol;
+    super( kilogramFactor, name, symbol );
   }
 
   @Override
@@ -62,32 +83,7 @@ public enum MassUnit implements Unit<Mass, MassUnit>
   {
     return new Mass( Rational.get( amount ), this );
   }
-
-  public String getUnitName()
-  {
-    return _name;
-  }
-
-  public String getUnitSymbol()
-  {
-    return _symbol;
-  }
-
-  public Rational toBaseUnits( Rational myUnits )
-  {
-    return _kilograms * myUnits;
-  }
-
-  public Rational toNumber()
-  {
-    return _kilograms;
-  }
-
-  public Rational from( Mass w )
-  {
-    return w.toBaseNumber() / _kilograms;
-  }
-
+  
   public MomentumUnit times( VelocityUnit velocity )
   {
     return MomentumUnit.get( this, velocity );

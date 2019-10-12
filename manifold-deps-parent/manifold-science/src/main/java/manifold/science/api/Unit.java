@@ -29,12 +29,12 @@ public interface Unit<D extends Dimension<D>, U extends Unit<D, U>> extends Dime
   /**
    * @return The name of this unit, such as "Meter" or "Pound".
    */
-  String getUnitName();
+  String getName();
 
   /**
    * @return The symbol for this unit. For example, SI units define "Meter" to have symbol "m".
    */
-  String getUnitSymbol();
+  String getSymbol();
 
   /**
    * @param theseUnits A magnitude of these units to convert to base units.
@@ -54,12 +54,12 @@ public interface Unit<D extends Dimension<D>, U extends Unit<D, U>> extends Dime
 
   default String getFullName()
   {
-    return getUnitName();
+    return getName();
   }
 
   default String getFullSymbol()
   {
-    return getUnitSymbol();
+    return getSymbol();
   }
 
   default D postfixBind( Number amount )

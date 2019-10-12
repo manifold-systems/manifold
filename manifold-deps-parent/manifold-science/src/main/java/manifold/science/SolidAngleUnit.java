@@ -1,56 +1,32 @@
 package manifold.science;
 
-import manifold.science.api.Unit;
+import manifold.science.api.AbstractPrimaryUnit;
+import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
 import static manifold.science.util.CoercionConstants.r;
 
-public enum SolidAngleUnit implements Unit<SolidAngle, SolidAngleUnit>
+public final class SolidAngleUnit extends AbstractPrimaryUnit<SolidAngle, SolidAngleUnit>
 {
-  Steradian( 1 r, "Steradian", "sr" );
+  private static final UnitCache<SolidAngleUnit> CACHE = new UnitCache<>();
+  public static SolidAngleUnit get( Rational seconds, String name, String symbol )
+  {
+    return CACHE.get( new SolidAngleUnit( seconds, name, symbol ) );
+  }
 
-  private final Rational _sr;
-  private final String _name;
-  private final String _symbol;
+  public static final SolidAngleUnit Steradian = get( 1r, "Steradian", "sr" );
 
   public static final SolidAngleUnit BASE = Steradian;
 
-  SolidAngleUnit( Rational sr, String name, String symbol )
+  private SolidAngleUnit( Rational sr, String name, String symbol )
   {
-    _sr = sr;
-    _name = name;
-    _symbol = symbol;
+    super( sr, name, symbol );
   }
 
   @Override
   public SolidAngle makeDimension( Number amount )
   {
     return new SolidAngle( Rational.get( amount ), this );
-  }
-
-  public String getUnitName()
-  {
-    return _name;
-  }
-
-  public String getUnitSymbol()
-  {
-    return _symbol;
-  }
-
-  public Rational toBaseUnits( Rational myUnits )
-  {
-    return _sr * myUnits;
-  }
-
-  public Rational toNumber()
-  {
-    return _sr;
-  }
-
-  public Rational from( SolidAngle len )
-  {
-    return len.toBaseNumber() / _sr;
   }
 }

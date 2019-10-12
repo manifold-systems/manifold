@@ -21,11 +21,11 @@ import java.math.BigInteger;
 import manifold.science.util.Rational;
 
 
-import static manifold.science.util.CommonConstants.*;
+import static manifold.science.util.MetricFactorConstants.*;
 
 /**
  * The range of the metric scale from Yocto to Yatta delcared in standard SI abbreviated form for use as units.
- * Applicable to all Number types and String such as:
+ * Postfix binds to all {@code Number} types and {@code String} such as:
  * <pre><code>
  * 1.25M // 1.25 Million
  * "1.25"M // 1.25 Million

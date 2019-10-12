@@ -18,7 +18,7 @@ package manifold.science.api;
 
 import manifold.util.concurrent.Cache;
 
-public class UnitCache<U extends AbstractBinaryUnit> extends Cache<U, U>
+public class UnitCache<U extends Unit> extends Cache<U, U>
 {
   public UnitCache()
   {

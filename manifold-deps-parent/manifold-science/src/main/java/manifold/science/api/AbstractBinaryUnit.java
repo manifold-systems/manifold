@@ -80,12 +80,12 @@ public abstract class AbstractBinaryUnit<A extends Unit,
     return _factor;
   }
 
-  public String getUnitName()
+  public String getName()
   {
     return _name;
   }
 
-  public String getUnitSymbol()
+  public String getSymbol()
   {
     return _symbol;
   }
@@ -99,7 +99,7 @@ public abstract class AbstractBinaryUnit<A extends Unit,
   @Override
   public String toString()
   {
-    return getUnitName();
+    return getName();
   }
 
   @Override

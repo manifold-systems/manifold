@@ -59,18 +59,18 @@ public abstract class AbstractQuotientUnit<A extends Unit,
     super( leftUnit, rightUnit, factor, name, symbol );
   }
 
-  public String getUnitName()
+  public String getName()
   {
-    return super.getUnitName() == null
-           ? getLeftUnit().getUnitName() + "/" + getRightUnit().getUnitName()
-           : super.getUnitName();
+    return super.getName() == null
+           ? getLeftUnit().getName() + "/" + getRightUnit().getName()
+           : super.getName();
   }
 
-  public String getUnitSymbol()
+  public String getSymbol()
   {
-    return super.getUnitSymbol() == null
-           ? getLeftUnit().getUnitSymbol() + "/" + getRightUnit().getUnitSymbol()
-           : super.getUnitSymbol();
+    return super.getSymbol() == null
+           ? getLeftUnit().getSymbol() + "/" + getRightUnit().getSymbol()
+           : super.getSymbol();
   }
 
   public String getFullName()

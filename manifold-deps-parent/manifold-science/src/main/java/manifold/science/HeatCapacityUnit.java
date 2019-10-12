@@ -4,11 +4,15 @@ import manifold.science.api.AbstractQuotientUnit;
 import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
+
+import static manifold.science.util.CoercionConstants.r;
+
 public final class HeatCapacityUnit extends AbstractQuotientUnit<EnergyUnit, TemperatureUnit, HeatCapacity, HeatCapacityUnit>
 {
   private static final UnitCache<HeatCapacityUnit> CACHE = new UnitCache<>();
 
   public static final HeatCapacityUnit BASE = get( EnergyUnit.BASE, TemperatureUnit.BASE );
+  public static final HeatCapacityUnit kB = get( EnergyUnit.BASE, TemperatureUnit.BASE, 1.380649e-23r, "Boltzmann-constant", "kB" );
 
   public static HeatCapacityUnit get( EnergyUnit energyUnit, TemperatureUnit temperatureUnit )
   {

@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-package manifold.science;
+package manifold.science.vector;
 
+import manifold.science.Angle;
+import manifold.science.Length;
+import manifold.science.LengthUnit;
 import manifold.science.util.Rational;
 
-public final class TimeVector extends Vector<Time, TimeUnit, TimeVector>
+public final class LengthVector extends Vector<Length, LengthUnit, LengthVector>
 {
-  public TimeVector( Time magnitude, Angle angle )
+  public LengthVector( Length magnitude, Angle angle )
   {
     super( magnitude, angle );
   }
 
   @Override
-  public TimeVector make( Time magnitude, Angle angle )
+  public LengthVector make( Length magnitude, Angle angle )
   {
-    return new TimeVector( magnitude, angle );
+    return new LengthVector( magnitude, angle );
   }
 
   @Override
-  public TimeVector copy( Rational magnitude )
+  public LengthVector copy( Rational magnitude )
   {
-    return new TimeVector(
-      new Time( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getDisplayUnit() ), getAngle() );
+    return new LengthVector(
+      new Length( magnitude, getMagnitude().getBaseUnit(), getMagnitude().getDisplayUnit() ), getAngle() );
   }
 }

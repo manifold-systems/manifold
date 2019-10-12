@@ -19,6 +19,20 @@ package manifold.science;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.util.Rational;
 
+/**
+ * Models a measure of length in units of {@link LengthUnit}.
+ * <p/>
+ * Use values of {@code Length} directly in arithmetic expressions with other dimensions such as:
+ * <pre><code>
+ *   // commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
+ *   import static manifold.science.util.UnitConstants.*;
+ *   ...
+ *   Length l = 5m; // 5 meters
+ *   Length height = 5 ft + 9.5 in;
+ *   Area room = 20 ft * 15.5 ft;
+ *   Length distance = 80 mph * 2.3 hr;
+ * </code></pre>
+ */
 public final class Length extends AbstractMeasure<LengthUnit, Length>
 {
   public Length( Rational value, LengthUnit unit, LengthUnit displayUnit )

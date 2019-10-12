@@ -28,7 +28,7 @@ import manifold.ext.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
 
 /**
- * Models rational numbers as a fraction to maintain arbitrary precision.
+ * Models rational numbers as a fraction of BigIntegers to maintain arbitrary precision.
  */
 final public class Rational extends Number implements Sequential<Rational, Rational, Void>, ComparableUsing<Rational>, Serializable
 {
