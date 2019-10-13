@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2019.1.15-SNAPSHOT</version>
+    <version>2019.1.16-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-properties-test</artifactId>

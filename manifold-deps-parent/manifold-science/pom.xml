@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2019.1.15-SNAPSHOT</version>
+    <version>2019.1.16-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-science</artifactId>
@@ -13,6 +13,11 @@
   <name>Manifold :: Science</name>
 
   <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-collections</artifactId>
