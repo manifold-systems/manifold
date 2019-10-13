@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2019.1.16-SNAPSHOT</version>
+  <version>2019.1.17-SNAPSHOT</version>
 
   <name>Manifold :: Parent</name>
   <description>
@@ -301,6 +301,10 @@
             <configuration>
               <encoding>UTF-8</encoding>
               <additionalparam>-Xdoclint:none</additionalparam>
+
+              <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
+              <excludePackageNames>manifold.science.*</excludePackageNames>
+              
             </configuration>
             <executions>
               <execution>
