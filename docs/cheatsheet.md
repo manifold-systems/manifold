@@ -316,7 +316,7 @@ Enable the feature with the `manifold-strings` dependency:
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-strings</artifactId>
   <!-- it is best to use the latest release -->
-  <version>2019.1.18</version>
+  <version>2019.1.19</version>
 </dependency>
 ```
 
@@ -625,7 +625,7 @@ To use Checked Exception handling you must add the `manifold-exceptions` depende
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-exceptions</artifactId>
   <!-- it is best to use the latest release -->
-  <version>2019.1.18</version>
+  <version>2019.1.19</version>
 </dependency>
 ```
 
