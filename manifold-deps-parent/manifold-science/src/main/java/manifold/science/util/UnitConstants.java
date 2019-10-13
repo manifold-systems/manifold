@@ -16,22 +16,22 @@
 
 package manifold.science.util;
 
-import manifold.science.AccelerationUnit;
-import manifold.science.AngleUnit;
-import manifold.science.ChargeUnit;
-import manifold.science.CurrentUnit;
-import manifold.science.EnergyUnit;
-import manifold.science.ForceUnit;
-import manifold.science.FrequencyUnit;
-import manifold.science.HeatCapacityUnit;
-import manifold.science.LengthUnit;
-import manifold.science.MassUnit;
-import manifold.science.MomentumUnit;
-import manifold.science.PowerUnit;
-import manifold.science.TemperatureUnit;
-import manifold.science.TimeUnit;
-import manifold.science.VelocityUnit;
-import manifold.science.VolumeUnit;
+import manifold.science.measures.AccelerationUnit;
+import manifold.science.measures.AngleUnit;
+import manifold.science.measures.ChargeUnit;
+import manifold.science.measures.CurrentUnit;
+import manifold.science.measures.EnergyUnit;
+import manifold.science.measures.ForceUnit;
+import manifold.science.measures.FrequencyUnit;
+import manifold.science.measures.HeatCapacityUnit;
+import manifold.science.measures.LengthUnit;
+import manifold.science.measures.MassUnit;
+import manifold.science.measures.MomentumUnit;
+import manifold.science.measures.PowerUnit;
+import manifold.science.measures.TemperatureUnit;
+import manifold.science.measures.TimeUnit;
+import manifold.science.measures.VelocityUnit;
+import manifold.science.measures.VolumeUnit;
 import manifold.science.api.Dimension;
 
 /**

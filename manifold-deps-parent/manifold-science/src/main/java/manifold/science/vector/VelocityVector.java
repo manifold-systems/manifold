@@ -16,9 +16,9 @@
 
 package manifold.science.vector;
 
-import manifold.science.Angle;
-import manifold.science.Velocity;
-import manifold.science.VelocityUnit;
+import manifold.science.measures.Angle;
+import manifold.science.measures.Velocity;
+import manifold.science.measures.VelocityUnit;
 import manifold.science.util.Rational;
 
 public final class VelocityVector extends Vector<Velocity, VelocityUnit, VelocityVector>

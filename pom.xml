@@ -303,7 +303,7 @@
               <additionalparam>-Xdoclint:none</additionalparam>
 
               <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
-              <excludePackageNames>manifold.science;manifold.science.util;manifold.science.vector</excludePackageNames>
+              <excludePackageNames>manifold.science.measures;manifold.science.util;manifold.science.vector</excludePackageNames>
               
             </configuration>
             <executions>

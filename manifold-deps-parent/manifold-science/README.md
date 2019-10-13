@@ -230,7 +230,7 @@ a separate instance for the reduced form. Call `isReduced()` to determine if an 
 
 Use the `CoercionConstants` and `MetricScaleUnit` classes to conveniently use literal values as `Rational` numbers:
 ```java
-  import static manifold.science.MetricScaleUnit.M;
+  import static manifold.science.measures.MetricScaleUnit.M;
   import static manifold.science.util.CoercionConstants.r;
   ...
   Rational pi = 3.14159r;

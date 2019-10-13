@@ -16,9 +16,9 @@
 
 package manifold.science.vector;
 
-import manifold.science.Angle;
-import manifold.science.Length;
-import manifold.science.LengthUnit;
+import manifold.science.measures.Angle;
+import manifold.science.measures.Length;
+import manifold.science.measures.LengthUnit;
 import manifold.science.util.Rational;
 
 public final class LengthVector extends Vector<Length, LengthUnit, LengthVector>

@@ -18,7 +18,7 @@ package manifold.science.range;
 
 import java.util.ArrayList;
 import java.util.List;
-import manifold.science.Length;
+import manifold.science.measures.Length;
 import org.junit.Test;
 
 

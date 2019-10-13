@@ -26,6 +26,7 @@ import java.math.BigInteger;
 import java.math.MathContext;
 import manifold.ext.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
+import manifold.science.measures.MetricScaleUnit;
 
 /**
  * Models rational numbers as an immutable fraction using {@link BigInteger} to maintain arbitrary precision. Note as a
@@ -36,10 +37,10 @@ import manifold.collections.api.range.Sequential;
  * This class implements arithmetic, negation, and relational operators via <i>operator overloading</i> provided by the
  * manifold-ext dependency.
  * <p/>
- * Use the {@link CoercionConstants} and {@link manifold.science.MetricScaleUnit} classes to conveniently use literal
+ * Use the {@link CoercionConstants} and {@link MetricScaleUnit} classes to conveniently use literal
  * values as {@code Rational} numbers:
  * <pre><code>
- *   import static manifold.science.MetricScaleUnit.M;
+ *   import static manifold.science.measures.MetricScaleUnit.M;
  *   import static manifold.science.util.CoercionConstants.r;
  *   ...
  *   Rational pi = 3.14r;

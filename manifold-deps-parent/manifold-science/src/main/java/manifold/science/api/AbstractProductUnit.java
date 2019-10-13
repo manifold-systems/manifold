@@ -16,8 +16,8 @@
 
 package manifold.science.api;
 
-import manifold.science.Area;
-import manifold.science.LengthUnit;
+import manifold.science.measures.Area;
+import manifold.science.measures.LengthUnit;
 import manifold.science.util.Rational;
 
 

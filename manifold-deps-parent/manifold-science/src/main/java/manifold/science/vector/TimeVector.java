@@ -16,9 +16,9 @@
 
 package manifold.science.vector;
 
-import manifold.science.Angle;
-import manifold.science.Time;
-import manifold.science.TimeUnit;
+import manifold.science.measures.Angle;
+import manifold.science.measures.Time;
+import manifold.science.measures.TimeUnit;
 import manifold.science.util.Rational;
 
 public final class TimeVector extends Vector<Time, TimeUnit, TimeVector>

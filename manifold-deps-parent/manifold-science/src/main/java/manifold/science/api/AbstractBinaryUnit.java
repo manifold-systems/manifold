@@ -16,9 +16,9 @@
 
 package manifold.science.api;
 
-import manifold.science.LengthUnit;
-import manifold.science.TimeUnit;
-import manifold.science.VelocityUnit;
+import manifold.science.measures.LengthUnit;
+import manifold.science.measures.TimeUnit;
+import manifold.science.measures.VelocityUnit;
 import manifold.science.util.Rational;
 
 /**

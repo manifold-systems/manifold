@@ -23,11 +23,10 @@ import manifold.science.util.Rational;
 import org.junit.Test;
 
 
-import static manifold.science.MetricScaleUnit.*;
-import static manifold.science.StorageCapacityUnit.Bit;
-import static manifold.science.StorageCapacityUnit.Byte;
+import static manifold.science.measures.MetricScaleUnit.*;
+import static manifold.science.measures.StorageCapacityUnit.Bit;
+import static manifold.science.measures.StorageCapacityUnit.Byte;
 import static manifold.science.util.CoercionConstants.r;
-import static manifold.science.StorageCapacityUnit.*;
 import static org.junit.Assert.*;
 
 public class TestMe

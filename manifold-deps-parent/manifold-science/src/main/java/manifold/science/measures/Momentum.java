@@ -1,0 +1,66 @@
+/*
+ * Copyright (c) 2019 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package manifold.science.measures;
+
+import manifold.science.api.AbstractMeasure;
+import manifold.science.util.Rational;
+
+public final class Momentum extends AbstractMeasure<MomentumUnit, Momentum>
+{
+  public Momentum( Rational value, MomentumUnit unit, MomentumUnit displayUnit )
+  {
+    super( value, unit, displayUnit );
+  }
+
+  public Momentum( Rational value, MomentumUnit unit )
+  {
+    this( value, unit, unit );
+  }
+
+  @Override
+  public MomentumUnit getBaseUnit()
+  {
+    return MomentumUnit.BASE;
+  }
+
+  @Override
+  public Momentum make( Rational value, MomentumUnit unit, MomentumUnit displayUnit )
+  {
+    return new Momentum( value, unit, displayUnit );
+  }
+
+  @Override
+  public Momentum make( Rational value, MomentumUnit unit )
+  {
+    return new Momentum( value, unit );
+  }
+
+  public Energy times( Velocity v )
+  {
+    return new Energy( toBaseNumber() * v.toBaseNumber(), EnergyUnit.BASE, getDisplayUnit() * v.getDisplayUnit() );
+  }
+
+  public Velocity div( Mass mass )
+  {
+    return new Velocity( toBaseNumber() / mass.toBaseNumber(), VelocityUnit.BASE, getDisplayUnit().getVelocityUnit() );
+  }
+
+  public Mass div( Velocity v )
+  {
+    return new Mass( toBaseNumber() / v.toBaseNumber(), MassUnit.BASE, getDisplayUnit().getMassUnit() );
+  }
+}

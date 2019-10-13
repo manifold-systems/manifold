@@ -19,11 +19,14 @@ package manifold.science.api;
 
 import java.util.Objects;
 import manifold.collections.api.range.Sequential;
+import manifold.science.measures.Length;
+import manifold.science.measures.Mass;
+import manifold.science.measures.Velocity;
 import manifold.science.util.Rational;
 
 /**
- * This class serves as the base class for a measured quantity. See {@link manifold.science.Length},
- * {@link manifold.science.Velocity}, {@link manifold.science.Mass}, etc. for examples.
+ * This class serves as the base class for a measured quantity. See {@link Length},
+ * {@link Velocity}, {@link Mass}, etc. for examples.
  * <p/>
  * Instances of this class store the value (or magnitude) of the measure in terms of base units. Thus all arithmetic on
  * measures are performed using Base units, which permits measures of differing input units to work in calculations. A
@@ -32,7 +35,7 @@ import manifold.science.util.Rational;
  * <p/>
  * @param <U> The unit corresponding with the type e.g., Length specifies LengthUnit.
  * @param <T> This type. Note this type is recursive to enforce type-safety, normally the complicated generics are not
- *           exposed to users of the library e.g., see the {@link manifold.science.Length} measure.
+ *           exposed to users of the library e.g., see the {@link Length} measure.
  */
 public abstract class AbstractMeasure<U extends Unit<T, U>, T extends AbstractMeasure<U, T>> implements Dimension<T>, Sequential<T, Rational, U>
 {

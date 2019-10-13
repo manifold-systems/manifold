@@ -16,16 +16,16 @@
 
 package manifold.science.vector;
 
-import manifold.science.Angle;
-import manifold.science.AngleUnit;
+import manifold.science.measures.Angle;
+import manifold.science.measures.AngleUnit;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.api.Dimension;
 import manifold.science.api.Unit;
 import manifold.science.util.Rational;
 
 
-import static manifold.science.AngleUnit.Degree;
-import static manifold.science.AngleUnit.Radian;
+import static manifold.science.measures.AngleUnit.Degree;
+import static manifold.science.measures.AngleUnit.Radian;
 import static manifold.science.util.CoercionConstants.r;
 import static manifold.science.util.DimensionlessConstants.pi;
 

@@ -19,6 +19,40 @@ package manifold.science;
 import manifold.science.api.Dimension;
 import manifold.science.api.Unit;
 import manifold.science.api.UnitCache;
+import manifold.science.measures.Acceleration;
+import manifold.science.measures.AccelerationUnit;
+import manifold.science.measures.Angle;
+import manifold.science.measures.AngleUnit;
+import manifold.science.measures.Area;
+import manifold.science.measures.AreaUnit;
+import manifold.science.measures.Charge;
+import manifold.science.measures.ChargeUnit;
+import manifold.science.measures.Current;
+import manifold.science.measures.CurrentUnit;
+import manifold.science.measures.Density;
+import manifold.science.measures.DensityUnit;
+import manifold.science.measures.Energy;
+import manifold.science.measures.EnergyUnit;
+import manifold.science.measures.Force;
+import manifold.science.measures.ForceUnit;
+import manifold.science.measures.Frequency;
+import manifold.science.measures.Length;
+import manifold.science.measures.LengthUnit;
+import manifold.science.measures.Mass;
+import manifold.science.measures.MassUnit;
+import manifold.science.measures.Momentum;
+import manifold.science.measures.MomentumUnit;
+import manifold.science.measures.Power;
+import manifold.science.measures.Pressure;
+import manifold.science.measures.PressureUnit;
+import manifold.science.measures.Temperature;
+import manifold.science.measures.TemperatureUnit;
+import manifold.science.measures.Time;
+import manifold.science.measures.TimeUnit;
+import manifold.science.measures.Velocity;
+import manifold.science.measures.VelocityUnit;
+import manifold.science.measures.Volume;
+import manifold.science.measures.VolumeUnit;
 import manifold.util.ReflectUtil;
 import org.junit.Test;
 
@@ -127,17 +161,17 @@ public class ScienceUnitMathTest {
 
       // Mass * Velocity = Momentum
       Velocity v = new Velocity( 2r, VelocityUnit.BASE );
-      Momentum momentum = new Momentum( a.toBaseNumber() *  v.toBaseNumber(), MomentumUnit.BASE, unit * v.getDisplayUnit() );
+      Momentum momentum = new Momentum( a.toBaseNumber() * v.toBaseNumber(), MomentumUnit.BASE, unit * v.getDisplayUnit() );
       assertEquals( momentum, a * v );
 
       // Mass * Area = Pressure
       Area area = new Area( 2r, AreaUnit.BASE );
-      Pressure pressure = new Pressure( a.toBaseNumber() /  area.toBaseNumber(), PressureUnit.BASE, unit / area.getDisplayUnit() );
+      Pressure pressure = new Pressure( a.toBaseNumber() / area.toBaseNumber(), PressureUnit.BASE, unit / area.getDisplayUnit() );
       assertEquals( pressure, a / area );
 
       // Mass * Volume = Density
       Volume volume = new Volume( 2r, VolumeUnit.BASE );
-      Density density = new Density( a.toBaseNumber() /  volume.toBaseNumber(), DensityUnit.BASE, unit / volume.getDisplayUnit() );
+      Density density = new Density( a.toBaseNumber() / volume.toBaseNumber(), DensityUnit.BASE, unit / volume.getDisplayUnit() );
       assertEquals( density, a / volume );
     }
   }
