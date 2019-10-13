@@ -29,6 +29,22 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <additionalparam>-Xdoclint:none</additionalparam>
+
+          <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
+          <excludePackageNames>manifold.science.*</excludePackageNames>
+
+        </configuration>
+        <executions>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
         <configuration>
           <archive>
