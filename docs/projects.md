@@ -32,6 +32,9 @@ by the core framework. This document serves as a quick reference to these projec
 ## Java Preprocessor
 * [Manifold : _Preprocessor_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 
+## Java Science
+* [Manifold : _Science_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+
 ## Java Extension Libraries 
 * [Manifold : _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 * [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)

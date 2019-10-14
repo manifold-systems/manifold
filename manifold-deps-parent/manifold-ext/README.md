@@ -734,6 +734,15 @@ For example, the expression `5 kg * 2` reflects this example exactly.
 As you can see unit expressions demand a level of flexibility beyond that of conventional compilers such as Java's. But
 Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
     
+## Type-safe and Simple
+
+There is nothing special about a unit, it is just a simple expression, most of the time just a variable. You can easily
+define your own aliases for units like the ones defined in `manifold.science.util.UnitConstants`.
+```java
+LengthUnit m = LengthUnit.Meter;
+Length twoMeters = 2 m;
+``` 
+
 ## More Than Units
 
 What makes unit expressions work is simple, just a pair of methods you can implement on any types you like: 
@@ -798,7 +807,7 @@ for (Rational csr: 5.2r to 15.7r step 0.3r) {...}
 for (Mass mass: 10kg to 100kg unit oz) {...}
 ```
 ```java
-if ("Scott" inside "M" to "Z") {...}
+if ("le matos" inside "a" to "m~") {...}
 ``` 
 
 # Structural Interfaces via `@Structural`

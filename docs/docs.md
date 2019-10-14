@@ -16,6 +16,8 @@ Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-
 directly and type-safely from Java without a code generator in your build and with comprehensive IDE support. 
 * [**Java Extensions**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext) --
 provides extension methods (like [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)),
+[operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading),
+[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
 structural typing (like [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html)),
 string interpolation (like [Kotlin](https://kotlinlang.org/docs/reference/basic-types.html#string-templates)),
 type-safe reflection (via [`@Jailbreak`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#type-safe-reflection-via-jailbreak)),
@@ -130,7 +132,9 @@ available on an extended class:
   </video>
 </p>
 
-There's a lot more to the extension manifold including [structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural),
+There's a lot more to the extension manifold including [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading),
+[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
+[structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural),
 which are similar to interfaces in the [Go](https://golang.org/) and [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html)
 languages. See the [Java Extension Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 for full coverage of these features.
@@ -214,6 +218,9 @@ projects' docs.
 
 ### Java Preprocessor
 * [Manifold : _Preprocessor_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+
+### Java Science
+* [Manifold : _Science_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 
 ### Java Extension Libraries 
 * [Manifold : _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
