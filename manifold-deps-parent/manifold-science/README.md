@@ -56,7 +56,7 @@ directly, instead you should extend `AbstractMeasure`.  This class adds a unit o
 extend it to reuse unit functionality common to all physical quantities.
 
 Instances of this class store the value (or magnitude) of the measure in terms of *base units*. Thus all arithmetic on
-measures are performed using base units, which permits measures of differing input units to work in calculations. A
+measures is performed using base units, which permits measures of differing input units to work in calculations. A
 measure instance also maintains a *display unit*, which is used for display purposes and for working with other systems
 requiring specific units.
 
