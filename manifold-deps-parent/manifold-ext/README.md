@@ -388,7 +388,7 @@ See the `manifold-ext-producer-sample` module for a sample type manifold impleme
 
 >Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-projects uses operator overloading and unit expressions extensively.
+projects use operator overloading and unit expressions extensively.
 
 # Operator Overloading
 
@@ -612,7 +612,8 @@ Using [extension methods](#extension-classes-via-extension) you can provide oper
 don't otherwise control. For instance, Manifold provides operator extensions for
 [`BigDecimal`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigDecimal/ManBigDecimalExt.java)
 and [`BigInteger`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/src/main/java/manifold/ext/extensions/java/math/BigInteger/ManBigIntegerExt.java).
-These extensions are available in the `manifold-ext` dependency.  
+These extensions are implemented in the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+dependency.  
 
 Here's what the `+` extension for `BigDecimal` looks like:
 ```java
@@ -635,7 +636,7 @@ if (bd1 >= bd2) {
 
 >Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-projects uses operator overloading and unit expressions extensively.
+projects use operator overloading and unit expressions extensively.
    
 
 # Unit Expressions

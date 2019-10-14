@@ -131,9 +131,13 @@ public class ExtensionTransformer extends TreeTranslator
 
       // Handle operator overload expressions
 
-      OverloadOperatorSymbol operator = (OverloadOperatorSymbol)op;
-      boolean swap = operator.isSwapped();
-      Symbol.MethodSymbol operatorMethod = operator.getMethod();
+      Symbol.MethodSymbol operatorMethod = (Symbol.MethodSymbol)op;
+      boolean swap = false;
+      while( operatorMethod instanceof OverloadOperatorSymbol )
+      {
+        swap = ((OverloadOperatorSymbol)operatorMethod).isSwapped();
+        operatorMethod = ((OverloadOperatorSymbol)operatorMethod).getMethod();
+      }
 
       if( operatorMethod != null )
       {
@@ -610,8 +614,11 @@ public class ExtensionTransformer extends TreeTranslator
 
       // Handle operator overload expressions
 
-      OverloadOperatorSymbol operator = (OverloadOperatorSymbol)op;
-      Symbol.MethodSymbol operatorMethod = operator.getMethod();
+      Symbol.MethodSymbol operatorMethod = (Symbol.MethodSymbol)op;
+      while( operatorMethod instanceof OverloadOperatorSymbol )
+      {
+        operatorMethod = ((OverloadOperatorSymbol)operatorMethod).getMethod();
+      }
 
       if( operatorMethod != null )
       {

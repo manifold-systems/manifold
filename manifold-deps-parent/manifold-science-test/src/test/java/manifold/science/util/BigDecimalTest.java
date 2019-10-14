@@ -22,6 +22,7 @@ import org.junit.Test;
 
 
 import static manifold.collections.api.range.RangeFun.*;
+import static manifold.science.util.CoercionConstants.bd;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -48,6 +49,12 @@ public class BigDecimalTest
     assertTrue( bd1 != bd2 );
     assertTrue( bd1 == new BigDecimal( "1.2" ) );
     assertTrue( new BigDecimal( "1.2" ) == bd1 );
+
+    assertEquals( 5bd, 2bd + 3bd );
+    assertEquals( -1bd, 2bd - 3bd );
+    assertEquals( 6bd, 2bd * 3bd );
+    assertEquals( 3bd, 6bd / 2bd );
+    assertEquals( 1bd, 3bd % 2bd );
   }
 
 
