@@ -238,8 +238,8 @@ Use the `CoercionConstants` and `MetricScaleUnit` classes to conveniently use li
   Rational fiveMillion = 5M;
 ```
 `Rational` implements arithmetic, negation, and relational operators via [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-provided by the manifold-ext dependency. Operator overloading lets you can use `Rataional` numbers directly in
-arithmetic, negation, and relational expressions:
+provided by the manifold-ext dependency. Operator overloading lets you use `Rataional` numbers directly in arithmetic,
+negation, and relational expressions:
 ```java
 Rational oneThird = 1r/3;
 Rational circumference = 3.14159r * 5.27r;

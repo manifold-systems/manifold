@@ -551,8 +551,8 @@ operators compile using the following methods:
 
 | Operation | `Equals` <small>(default)</small> | `CompareTo`| `Identity` |
 |:----------|:-------------------|:--------------------------|:-----------|
-| `a == b`  | `a.equals(b, EQ)`  | `a.compareToUsing(b, EQ)` | `a == b`   |
-| `a != b`  | `!a.equals(b, NE)` | `a.compareToUsing(b, NE)` | `a != b`   |
+| `a == b`  | `a.equals(b)`      | `a.compareToUsing(b, EQ)` | `a == b`   |
+| `a != b`  | `!a.equals(b)`     | `a.compareToUsing(b, NE)` | `a != b`   |
 
 Note Manifold generates efficient, **null-safe** code for `==` and `!=`. For example, `a == b` using `Equals` mode
 compiles as:

@@ -298,7 +298,7 @@ public class ManAttr_9 extends Attr implements ManAttr
   {
     try
     {
-      CharSequence source = getEnv().toplevel.sourcefile.getCharContent( true );
+      CharSequence source = ManParserFactory.getSource( getEnv().toplevel.sourcefile );
       CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
         tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
       FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
@@ -326,7 +326,7 @@ public class ManAttr_9 extends Attr implements ManAttr
           "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
       }
     }
-    catch( IOException e )
+    catch( Exception e )
     {
       getLogger().rawWarning( tree.pos().getStartPosition(),
         "Error parsing Manifold fragment.\n" +

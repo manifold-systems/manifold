@@ -308,7 +308,8 @@ public class ManClassesUrlConnection extends URLConnection
         else
         {
           DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
-          InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+          InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( _javaFqn,
+            Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
           if( cls != null )
           {
             return cls.getBytes();
@@ -334,7 +335,8 @@ public class ManClassesUrlConnection extends URLConnection
       {
         DiagnosticCollector<JavaFileObject> errorHandler = new DiagnosticCollector<>();
         StringJavaFileObject fileObj = new StringJavaFileObject( _javaFqn, source );
-        InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( fileObj, _javaFqn, Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
+        InMemoryClassJavaFileObject cls = RuntimeManifoldHost.get().getJavaParser().compile( fileObj, _javaFqn,
+          Arrays.asList( "-source", "8", "-g", "-nowarn", "-Xlint:none", "-proc:none", "-parameters" ), errorHandler );
         if( cls != null )
         {
           return cls.getBytes();
