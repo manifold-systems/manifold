@@ -642,10 +642,11 @@ projects use operator overloading and unit expressions extensively.
 # Unit Expressions
 >Warning: **Experimental Feature**
 
-Manifold seamlessly plugs into Java to provide a pretty cool feature called *unit expressions*, which extends the
-expressive flexibility of Java:
+As with [operator overloading](#operator-overloading) Manifold seamlessly plugs into Java to provide Unit (or *Binding*)
+Expressions.  This feature is unique to the Manifold framework and provides a powerfully concise syntax that can be
+applied to a wide range of applications.
 
-**Simple, type-safe, easy to read syntax**
+**Simple and easy to read syntax**
 ```java
 Length distance = 100 mph * 3 hr;
 ```
@@ -653,12 +654,12 @@ Length distance = 100 mph * 3 hr;
 ```java
 Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
 ```
-**Mix and match units**
+**Logically equivalent units are equal**
 ```java
-if (f == 49.035 kg m/s/s) {...}
-if (49.035 N == f) {...}
+force = 49.035 kg m/s/s;
+force == 49.035 N // true
 ```
-**Combine different units**
+**Maintain integrity with different units**
 ```java
 Mass m = 10 lb + 10 kg; 
 ```
@@ -668,9 +669,9 @@ for( Mass m: 10kg to 100kg ) {...}
 ```
 **Conveniently work with Money**
 ```java
-Money payment = 1.5M USD;
+Money payment = 1.5M USD; 
 Money vat = 162k EUR;
-Money total = payment + vat; 
+Money total = payment + vat; // naturally works with multiple currencies
 ``` 
 >Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
 
