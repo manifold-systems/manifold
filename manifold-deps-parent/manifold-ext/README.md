@@ -642,28 +642,40 @@ projects use operator overloading and unit expressions extensively.
 # Unit Expressions
 >Warning: **Experimental Feature**
 
-As with [operator overloading](#operator-overloading) Manifold seamlessly plugs into Java to provide Unit (or *Binding*)
-Expressions.  This feature is unique to the Manifold framework and provides a powerfully concise syntax that can be
-applied to a wide range of applications.
+Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into Java to provide Unit
+(or *Binding*) Expressions.  This feature is unique to the Manifold framework and provides a powerfully concise syntax
+that can be applied to a wide range of applications.
+
+Units are just normal identifiers, you can define them anywhere with fields and local variables and use them directly.
+Normally you import predefined unit constants like the ones provided in `UnitConstants` from the
+`manifold.science.util` package:
+```java
+import static manifold.science.util.UnitConstants.kg;
+import static manifold.science.util.UnitConstants.hr;
+import static manifold.science.util.UnitConstants.mph;
+. . .
+```
+Using imported constants such as `kg` for `Kilogram`, `hr` for `Hour`, `mph` for `Mile/Hour`, etc. you can
+begin working with unit expressions:
 
 **Simple and easy to read syntax**
 ```java
 Length distance = 100 mph * 3 hr;
 ```
-**Type-safe units**
+**Type-safe**
 ```java
-Force f = 5kg * 9.807 m/s/s; // 49.035 Newtons
+Force force = 5kg * 9.807 m/s/s; // 49.035 Newtons
 ```
 **Logically equivalent units are equal**
 ```java
-force = 49.035 kg m/s/s;
+var force = 49.035 kg m/s/s;
 force == 49.035 N // true
 ```
 **Maintain integrity with different units**
 ```java
 Mass m = 10 lb + 10 kg; 
 ```
-**Easily make Ranges with `to` from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**  
+**Easily make Ranges with the `to` constant from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**
 ```java
 for( Mass m: 10kg to 100kg ) {...}
 ```
@@ -676,34 +688,35 @@ Money total = payment + vat; // naturally works with multiple currencies
 >Note unit expressions and *operator overloading* are often used together, read more about [operator overloading](#operator-overloading).
 
 ## How does it work?
-Normally a *binary* expression in Java and most other languages involves two operands and an operator such as `+` for
-addition:
+Normally a *binary* expression in Java and most other languages involves two operands separated by an operator such as
+`+` for addition:
 ```java
 int sum = a + b;
 ```
 
-But with a unit expression there is no visible operator:
+But with a unit expression the operands are directly adjacent without an operator separating them:
 ```java
 Mass m = 10 kg;
 ```
 
-Instead the operation is _declared_ in the _types_ of the operands using the following methods:
+The operation is _declared_ in an operand's type with one of the following methods:
 ```java
-public R postfixBind(T lhs);
 public R prefixBind(T rhs);
+public R postfixBind(T lhs);
 ``` 
+Where either the left operand defines `prefixBind(T rhs)` or the right operand defines `postfixBind(T lhs)`.
 
 In the example, `10` is a literal value of type `int` and `kg` is a variable of type `MassUnit`. Since `kg` is on the
 right-hand side of `10` and the `MassUnit` class defines the method:
 ```java
 public Mass postfixBind(Number magnitude) {...}
 ``` 
-the compiler translates the operation as the method call `kg.postfixBind(10)` resulting in type `Mass`.
+the compiler translates the expression as the method call `kg.postfixBind(10)` resulting in type `Mass`.
 
 Note `postfixBind()` and `prefixBind()` do not belong to a class or interface you implement. Instead you implement
-them *structurally* simply by defining a method with the same name, parameter count, and non-void return type. This is
-necessary because a type may implement different versions of the same method with different parameter types. This level
-of flexibility is otherwise not supported with Java's name-based type system. 
+them *structurally* simply by defining a method with the same name, parameter, and non-void return type. This is
+necessary because a type may implement multiple versions of the same method. This level of flexibility is otherwise not
+supported with Java's name-based type system. 
 
 ## Operator Precedence
 
@@ -787,12 +800,11 @@ import static com.example.Month.*;
 LocalDate date = 2019 October 9;
 ```
 
-Essentially you can implement binding expressions to make use of juxtaposition wherever it can improve your design or
-test infrastructure.
+Essentially you can implement binding expressions to make use of juxtaposition wherever your imagination takes you.
 
 ## Science & Ranges
-Of course, as some of the examples illustrate, unit expressions are well suited as the basis for a library modeling
-physical dimensions such as length, time, mass, etc. Indeed such a library exists, check out the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+Of course, as some of the examples illustrate, unit expressions are especially well suited as the basis for a library
+modeling physical dimensions such as length, time, mass, etc. Indeed, check out the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 dependency.
 
 Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
@@ -805,7 +817,7 @@ Range range = 1 to 5;
 for (Rational csr: 5.2r to 15.7r step 0.3r) {...}
 ```
 ```java
-for (Mass mass: 10kg to 100kg unit oz) {...}
+for (Mass mass: 10kg to 100kg unit lb) {...}
 ```
 ```java
 if ("le matos" inside "a" to "m~") {...}
