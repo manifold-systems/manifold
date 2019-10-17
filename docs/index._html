@@ -18,8 +18,7 @@ layout: default
   <a href="https://plugins.jetbrains.com/plugin/10057-manifold" md-pos="439-559"><img src="https://img.shields.io/jetbrains/plugin/d/10057-manifold.svg" alt="" md-pos="440-505" /></a>
 </p>
 <h2 id="what-is-manifold" md-pos="564-581">What is Manifold?</h2>
-<p md-pos="582-914"><a href="http://manifold.systems" md-pos="582-617">Manifold</a> plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming,
-  Structural Typing, and Extension Methods to an integrated Template Engine and a Preprocessor. All fully supported in IntelliJ IDEA.
+<p md-pos="582-914"><a href="http://manifold.systems" md-pos="582-617">Manifold</a> plugs into Java to supplement it with game-changing features, from Type-safe Metaprogramming, Extension Methods, Operator Overloading, and Unit Expressions to an integrated Template Engine and a Preprocessor. All fully supported in IntelliJ IDEA.
   Simply add Manifold to your project and begin taking advantage of it.</p>
 <h2 id="what-can-you-do-with-manifold" md-pos="918-948">What can you do with Manifold?</h2>
 <h3 id="meta-programming" md-pos="954-1007"><a href="#meta-programming" name="meta-programming"><a href="http://manifold.systems/docs.html" md-pos="954-1007">Meta-programming</a></a></h3>
