@@ -16,6 +16,10 @@
 
 package manifold.science.measures;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalUnit;
 import manifold.science.api.AbstractPrimaryUnit;
 import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
@@ -33,7 +37,7 @@ import static manifold.science.util.CoercionConstants.r;
  * underpin satellite technology, like GPS or the internet.</i>
  * (ref. <a href="https://www.npl.co.uk/si-units/second">npl.co.uk</a>)
  */
-public final class TimeUnit extends AbstractPrimaryUnit<Time, TimeUnit>
+public final class TimeUnit extends AbstractPrimaryUnit<Time, TimeUnit> implements TemporalUnit
 {
   private static final UnitCache<TimeUnit> CACHE = new UnitCache<>();
 
@@ -42,48 +46,59 @@ public final class TimeUnit extends AbstractPrimaryUnit<Time, TimeUnit>
    * specified unit is cached and will be returned for subsequent calls to this method if the {@code secondFactor}
    * matches.
    * <p/>
-   * @param secondFactor A factor of the the duration of one second.
+   * @param secondFactor A factor of the duration of one second expressed as a {@link Rational}
+   * @param duration A factor of the duration of one second expressed as a {@link Duration}(for compatibility with {@link java.time}).
+   * @param fuzzyDuration {@code true} if the {@code duration} is possibly inexact.
+   * @param isDateBased {@code true} if the {@code duration} is date oriented i.e., is a function of non-constant spatial properties related to a calendar.
    * @param name The standard full name of the unit e.g., "Hour".
    * @param symbol The standard symbol used for the unit e.g., "hr".
    * @return The specified unit.
    */
-  public static TimeUnit get( Rational secondFactor, String name, String symbol )
+  public static TimeUnit get( Rational secondFactor, Duration duration, boolean fuzzyDuration, boolean isDateBased, String name, String symbol )
   {
-    return CACHE.get( new TimeUnit( secondFactor, name, symbol ) );
+    return CACHE.get( new TimeUnit( secondFactor, duration, fuzzyDuration, isDateBased, name, symbol ) );
   }
 
   // SI Units
-  public static final TimeUnit Femto = get( 1 fe, "Femtosecond", "fs" );
-  public static final TimeUnit Pico = get( 1 p, "Picosecond", "ps" );
-  public static final TimeUnit Nano = get( 1 n, "Nanosecond", "ns" );
-  public static final TimeUnit Micro = get( 1 u, "Microsecond", "µs" );
-  public static final TimeUnit Milli = get( 1 m, "Millisecond", "ms" );
-  public static final TimeUnit Second = get( 1 r, "Second", "s" );
-  public static final TimeUnit Minute = get( 60 r, "Minute", "min" );
-  public static final TimeUnit Hour = get( 60 r * 60, "Hour", "hr" );
-  public static final TimeUnit Day = get( 24 r * 60 * 60, "Day", "day" );
-  public static final TimeUnit Week = get( 7 r * 24 * 60 * 60, "Week", "wk" );
+  public static final TimeUnit Femto = get( 1 fe, Duration.ofNanos( 0 ), true, false, "Femtosecond", "fs" );
+  public static final TimeUnit Pico = get( 1 p, Duration.ofNanos( 0 ), true, false, "Picosecond", "ps" );
+  public static final TimeUnit Nano = get( 1 n, ChronoUnit.NANOS.getDuration(), false, false, "Nanosecond", "ns" );
+  public static final TimeUnit Micro = get( 1 u, ChronoUnit.MICROS.getDuration(), false, false, "Microsecond", "µs" );
+  public static final TimeUnit Milli = get( 1 m, ChronoUnit.MILLIS.getDuration(), false, false, "Millisecond", "ms" );
+  public static final TimeUnit Second = get( 1 r, ChronoUnit.SECONDS.getDuration(), false, false, "Second", "s" );
+  public static final TimeUnit Minute = get( 60 r, ChronoUnit.MINUTES.getDuration(), false, false, "Minute", "min" );
+  public static final TimeUnit Hour = get( 60 r * 60, ChronoUnit.HOURS.getDuration(), false, false, "Hour", "hr" );
+  public static final TimeUnit Day = get( 24 r * 60 * 60, ChronoUnit.DAYS.getDuration(), true, true, "Day", "day" );
+  public static final TimeUnit Week = get( 7 r * 24 * 60 * 60, ChronoUnit.WEEKS.getDuration(), true, true, "Week", "wk" );
 
   // Mean Gregorian (ISO Calendar) units
-  public static final TimeUnit Month = get( 31556952 r / 12, "Month", "mo" );
-  public static final TimeUnit Year = get( 31556952 r, "Year", "yr" );
-  public static final TimeUnit Decade = get( 31556952 r * 10, "Decade", "decade" );
-  public static final TimeUnit Century = get( 31556952 r * 100, "Century", "century" );
-  public static final TimeUnit Millennium = get( 31556952 k, "Millennium", "millennium" );
-  public static final TimeUnit Era = get( 31556952 G, "Era", "era" );
+  public static final TimeUnit Month = get( 31556952 r / 12, ChronoUnit.MONTHS.getDuration(), true, true, "Month", "mo" );
+  public static final TimeUnit Year = get( 31556952 r, ChronoUnit.YEARS.getDuration(), true, true, "Year", "yr" );
+  public static final TimeUnit Decade = get( 31556952 r * 10, ChronoUnit.DECADES.getDuration(), true, true, "Decade", "decade" );
+  public static final TimeUnit Century = get( 31556952 r * 100, ChronoUnit.CENTURIES.getDuration(), true, true, "Century", "century" );
+  public static final TimeUnit Millennium = get( 31556952 k, ChronoUnit.MILLENNIA.getDuration(), true, true, "Millennium", "millennium" );
+  public static final TimeUnit Era = get( 31556952 G, ChronoUnit.ERAS.getDuration(), true, true, "Era", "era" );
 
   // Mean Tropical (Solar) units
-  public static final TimeUnit TrMonth = get( "31556925.445/12"r, "Tropical Month", "tmo" );
-  public static final TimeUnit TrYear = get( "31556925.445"r, "Tropical Year", "tyr" );
+  public static final TimeUnit TrMonth = get( "31556925.445/12"r, Duration.ofSeconds( 2629743, 787080000 ), true, true, "Tropical Month", "tmo" );
+  public static final TimeUnit TrYear = get( "31556925.445"r, Duration.ofSeconds( 31556925, (long)4.45e8 ), true, true, "Tropical Year", "tyr" );
 
   // Planck-time
-  public static final TimeUnit Planck = get( 5.39056e-44r, "Planck-time", "tP" );
+  public static final TimeUnit Planck = get( 5.39056e-44r, Duration.ofNanos( 0 ), true, false, "Planck-time", "tP" );
 
   public static final TimeUnit BASE = Second;
 
-  private TimeUnit( Rational sec, String name, String symbol )
+  // For compatibility with java.time
+  private final Duration _duration;
+  private final boolean _fuzzyDuration;
+  private final boolean _isDateBased;
+
+  private TimeUnit( Rational sec, Duration duration, boolean fuzzyDuration, boolean isDateBase, String name, String symbol )
   {
     super( sec, name, symbol );
+    _duration = duration;
+    _fuzzyDuration = fuzzyDuration;
+    _isDateBased = isDateBase;
   }
 
   @Override
@@ -96,6 +111,50 @@ public final class TimeUnit extends AbstractPrimaryUnit<Time, TimeUnit>
   {
     return toNumber();
   }
+
+  //
+  // TemporalUnit Impl
+  //
+
+  @Override
+  public Duration getDuration()
+  {
+    return _duration;
+  }
+
+  @Override
+  public boolean isDurationEstimated()
+  {
+    return _fuzzyDuration;
+  }
+
+  @Override
+  public boolean isDateBased()
+  {
+    return _isDateBased;
+  }
+
+  @Override
+  public boolean isTimeBased()
+  {
+    return !_isDateBased;
+  }
+
+  @Override
+  public <R extends Temporal> R addTo( R temporal, long amount )
+  {
+    return (R)temporal.plus( amount, this );
+  }
+
+  @Override
+  public long between( Temporal temporal1Inclusive, Temporal temporal2Exclusive )
+  {
+    return temporal1Inclusive.until( temporal2Exclusive, this );
+  }
+
+  //
+  // Operators
+  //
 
   public LengthUnit times( VelocityUnit v )
   {

@@ -16,10 +16,18 @@
 
 package manifold.science.measures;
 
+import java.math.BigInteger;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
+import java.time.temporal.UnsupportedTemporalTypeException;
+import java.util.List;
 import manifold.science.api.AbstractMeasure;
 import manifold.science.util.Rational;
 
 
+import static java.time.temporal.ChronoUnit.NANOS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static manifold.science.measures.TimeUnit.Nano;
 
 /**
@@ -34,8 +42,14 @@ import static manifold.science.measures.TimeUnit.Nano;
  *   Time mileTime = 4 min + 12.78 sec;
  *   Length distance = 80 mph * 2.3 hr;
  * </code></pre>
+ * {@code Time} implements {@link TemporalAmount} so you can easily work with Java's {@link java.time} library:
+ * <code><pre>
+ *   LocalDateTime date = LocalDateTime.of( 2018, 10, 17, 17, 35 );
+ *   LocalDateTime yearLater = date + 1 yr;
+ *   LocalDateTime tomorrowOneHourLater = date + 1 day + 1 hr;
+ * </pre></code>
  */
-final public class Time extends AbstractMeasure<TimeUnit, Time>
+final public class Time extends AbstractMeasure<TimeUnit, Time> implements TemporalAmount
 {
   public Time( Rational value, TimeUnit unit, TimeUnit displayUnit )
   {
@@ -69,6 +83,70 @@ final public class Time extends AbstractMeasure<TimeUnit, Time>
   {
     return new Time( Rational.get( System.nanoTime() ), Nano );
   }
+
+  //
+  // TemporalAmount impl
+  //
+
+  @Override
+  public long get( TemporalUnit unit )
+  {
+    if( unit == SECONDS )
+    {
+      return toBaseNumber().wholePart().longValue();
+    }
+    else if( unit == NANOS )
+    {
+      return toBaseNumber().fractionPart().times( 1.0e9 ).longValue();
+    }
+    else
+    {
+      throw new UnsupportedTemporalTypeException( "Unsupported unit: " + unit );
+    }
+  }
+
+  @Override
+  public List<TemporalUnit> getUnits()
+  {
+    return getBaseUnit().getDuration().getUnits();
+  }
+
+  @Override
+  public Temporal addTo( Temporal temporal )
+  {
+    BigInteger wholePart = toBaseNumber().wholePart();
+    if( !wholePart.equals( BigInteger.ZERO ) )
+    {
+      temporal = temporal.plus( wholePart.longValue(), SECONDS );
+    }
+    Rational fractionPart = toBaseNumber().fractionPart();
+    if( !fractionPart.equals( Rational.ZERO ) )
+    {
+      temporal = temporal.plus( fractionPart.times( 1.0e9 ).longValue(), NANOS );
+    }
+    return temporal;
+  }
+
+  @Override
+  public Temporal subtractFrom( Temporal temporal )
+  {
+    BigInteger wholePart = toBaseNumber().wholePart();
+    if( !wholePart.equals( BigInteger.ZERO ) )
+    {
+      temporal = temporal.minus( wholePart.longValue(), SECONDS );
+    }
+    Rational fractionPart = toBaseNumber().fractionPart();
+    if( !fractionPart.equals( Rational.ZERO ) )
+    {
+      temporal = temporal.minus( fractionPart.times( 1.0e9 ).longValue(), NANOS );
+    }
+    return temporal;
+  }
+
+
+  //
+  // Operators
+  //
 
   public Length times( Velocity r )
   {

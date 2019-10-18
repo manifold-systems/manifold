@@ -19,19 +19,22 @@ package manifold.science.util;
 public interface DimensionlessConstants
 {
   /**
-   * PI at 100 decimal places
+   * Pi is the ratio: Circumference/Diameter.
    */
-  Rational pi = Rational.get(
-    "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679" );
+  Rational pi = Rational.get( "3.141592653589793" );
 
   /**
-   * PHI at 100 decimal places
+   * Phi is the ratio: A/B = B/C where A = B + C
    */
-  Rational phi = Rational.get(
-    "1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374" );
+  Rational phi = Rational.get( "1.618033988749895" );
 
   /**
-   * The mole, abbreviated mol, is an SI unit which measures the number of particles in a specific substance.
+   * Fine structure constant, the coupling constant for the electromagnetic force.
+   */
+  Rational kA = Rational.get( "0.0072973525693" );
+
+  /**
+   * The mole is a unit which measures the number of particles in a substance.
    */
   Rational mol = Rational.get( "6.02214076e23" );
 }
