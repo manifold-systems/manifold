@@ -3,10 +3,9 @@ layout: default
 ---
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, from Type-safe
-Metaprogramming, Extension Methods, Operator Overloading, and Unit Expressions to an integrated Template Engine and a
-Preprocessor. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of
-it.
+[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, including Type-safe
+Metaprogramming, Extension Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and
+more. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
