@@ -11,9 +11,9 @@ layout: default
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html">Java Access Control, Stop the Insanity!</a></p>
-  <p>Java access modifiers <i>protected</i>, <i>package</i>, and <i>private</i> are enforced <i><b>both</b></i> by
+  <p>Java access modifiers <code>protected</code>, <code>package</code>, and <code>private</code> are enforced <i>both</i> by
      the compiler and the JVM. Here Scott McKinney explains why this is <i>insane</i> and how access to internals could
-     be made much simpler and <i><b>type-safe</b></i>.</p>
+     be made much simpler and <i>type-safe</i>.</p>
   <p><small>jaxenter.com</small></p>
   </td>
  </tr>
@@ -55,7 +55,7 @@ layout: default
   <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Type-safe reflection code with `@Jailbreak`</a></p>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Type-safe reflection code with <code>@Jailbreak</code></a></p>
   <p>Ever overexpose fields and methods just so they can be accessed from tests? Ever write reflection code in order to
      access private class members? You can stop doing that now. Maintain integrity and type-safety with @Jailbreak from
      the Manifold project.</p>
