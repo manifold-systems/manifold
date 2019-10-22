@@ -7,7 +7,22 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html">Java Access Control, Stop the Insanity!</a></p>
+  <p>Java access modifiers `protected`, `package-private`, and `private` are enforced *both* by the compiler and the JVM.
+     Here Scott McKinney explains why this is <i>insane</i> and how access to internals could be made much simpler and
+     type-safe.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html">Say Goodbye to Checked Exceptions</a></p>
@@ -22,7 +37,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/shutterstock_1470545906.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html">A <i>Preprocessor</i> for Java</a></p>
@@ -37,7 +52,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/shutterstock_232482730.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Type-safe reflection code with `@Jailbreak`</a></p>
@@ -111,7 +126,38 @@ layout: default
   
  <tr>
   <td>
-  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" height="135" src="/images/shutterstock_232482730-350x234.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/manifold-gepruefte-exceptions-86344"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.de/manifold-gepruefte-exceptions-86344">Manifold: Adieu und auf Wiedersehen, geprüfte Exceptions</a></p>
+  <p>Moderne Sprachen setzen keine geprüften Exceptions ein. Aber man muss nicht das sinkende Schiff verlassen, um an
+  der Erfahrung teilzuhaben. In diesem Artikel zeigt uns Scott McKinney, wie man weiterhin bei Java bleiben kann und
+  geprüfte Exceptions vollständig neutralisiert: mit einer einfachen und neuen Ergänzung zum Manifold-Framework.</p>
+  <p><small>jaxenter.de</small></p>
+  </td>
+ </tr>
+ 
+  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.de/manifold-java-preprocessor-85925"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.de/manifold-java-preprocessor-85925">Manifold: Ein Präprozessor für Java</a></p>
+  <p>In diesem Artikel erfahrt Ihr, wie man mit dem neuen Präprozessor des Manifold-Projekts mehrere Ziele aus einer
+  einzigen Java-Codebasis erstellen kann. Scott McKinney, Gründer und Entwickler von Manifold Systems, erklärt, wie der
+  Präprozessor sich direkt mit dem Java-Compiler verbindet, um eine nahtlos bedingte Kompilierung mit bekannten
+  Directives zu ermöglichen.</p>
+  <p><small>jaxenter.de</small></p>
+  </td>
+ </tr>
+ 
+  <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
+  <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://jaxenter.de/reflexionscode-jailbreak-manifold-typsicherheit-84641">Manifold: Typsicherer Reflexionscode mit @Jailbreak</a></p>
