@@ -11,7 +11,7 @@ layout: default
   </td>
   <td>
   <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html">Java Access Control, Stop the Insanity!</a></p>
-  <p>Java access modifiers <pre>protected</pre>, <pre>package</pre>, and <pre>private</pre> are enforced <i>both</i> by
+  <p>Java access modifiers <i>protected</i>, <i>package</i>, and <i>private</i> are enforced <i><b>both</b></i> by
      the compiler and the JVM. Here Scott McKinney explains why this is <i>insane</i> and how access to internals could
      be made much simpler and <i><b>type-safe</b></i>.</p>
   <p><small>jaxenter.com</small></p>
