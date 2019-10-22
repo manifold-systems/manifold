@@ -42,12 +42,19 @@ import static manifold.science.measures.TimeUnit.Nano;
  *   Time mileTime = 4 min + 12.78 sec;
  *   Length distance = 80 mph * 2.3 hr;
  * </code></pre>
+ * Like all dimensions in the {@link manifold.science.measures} library, the {@code Time} dimension is unit-independent,
+ * which means you can work with any combination of {@link TimeUnit} such as {@code Second}, {@code Hour}, and
+ * {@code Day}, because all operations on {@code Time} are maintained internally using standard SI units.
+ * <pre><code>
+ * Time seconds = 12.7 s;
+ * seconds = seconds + 5.2 hr; // add hours to seconds
+ * </code></pre>
  * {@code Time} implements {@link TemporalAmount} so you can easily work with Java's {@link java.time} library:
- * <code><pre>
+ * <pre><code>
  *   LocalDateTime date = LocalDateTime.of( 2018, 10, 17, 17, 35 );
  *   LocalDateTime yearLater = date + 1 yr;
  *   LocalDateTime tomorrowOneHourLater = date + 1 day + 1 hr;
- * </pre></code>
+ * </code></pre>
  */
 final public class Time extends AbstractMeasure<TimeUnit, Time> implements TemporalAmount
 {

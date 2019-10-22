@@ -38,7 +38,7 @@ if (bigDec1 > bigDec2) {
   BigDecimal result = bigDec1 + bigDec2;
   ...
 }
-// Implemnet operators for any type
+// Implement operators for any type
 MyType value = myType1 + myType2;
 ```  
 
