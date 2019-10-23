@@ -52,7 +52,7 @@ metaprogramming and compile-time type-safety. This is the bedrock on which Manif
 
 ## Data Science Future
 
-Over the past couple of years Manifold's has steadily produced one "seemingly impossible" feature after another to
+Over the past couple of years Manifold has steadily produced one "seemingly impossible" feature after another to
 extend the Java platform's reach. At a distance these features may appear unrelated and that's fine, each feature
 can be used independently. But there is a method to the madness -- the features aim Java's reach toward a common goal. 
 
