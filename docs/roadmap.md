@@ -4,11 +4,13 @@ layout: default
 
 # Roadmap
  
- ## Table of Contents
- * [Long Term Goals](#long-term-goals)
- * [Short Term Goals](#short-term-goals)
- * [On the workbench](#features-on-the-workbench)
- * [On the pile](#features-on-the-pile-in-no-particular-order)
+![roadmap](http://manifold.systems/images/roadmap.jpg)
+ 
+## Table of Contents
+* [Long Term Goals](#long-term-goals)
+* [Short Term Goals](#short-term-goals)
+* [On the workbench](#features-on-the-workbench)
+* [On the pile](#features-on-the-pile-in-no-particular-order)
  
 # Long Term Goals
 
@@ -49,9 +51,9 @@ jump between your code and the data resources you code against. You can make cha
 see and use the effects of the changes *without* a compilation or build step. This type of functionality can make the
 difference between amazing developer productivity and project failure. Suddenly Java is a capable data science language.
 
-**In effect the _**type manifold**_ represents a breakthrough in programming language design as the convergence of dynamic
-metaprogramming and compile-time type-safety. This is the bedrock on which Manifold builds its data science framework for
-Java.**
+*In effect the _**type manifold**_ represents a breakthrough in programming language design as the convergence of dynamic
+metaprogramming and compile-time type-safety. This is the foundation on which Manifold builds its data science framework for
+Java.*
 
 ## Data Science (near) Future
 
@@ -161,22 +163,22 @@ and with IntelliJ language injection.
 *These are features that may be implemented real soon now*
 
 ### Operator overloading enhancements
-* https://github.com/manifold-systems/manifold/issues/126
+* [#126](https://github.com/manifold-systems/manifold/issues/126)
 
 ### New schema type manifolds 
-* https://github.com/manifold-systems/manifold/issues/113
-* https://github.com/manifold-systems/manifold/issues/112
-* https://github.com/manifold-systems/manifold/issues/111
+* [#113](https://github.com/manifold-systems/manifold/issues/113)
+* [#112](https://github.com/manifold-systems/manifold/issues/112)
+* [#111](https://github.com/manifold-systems/manifold/issues/111)
 
 ### Manifold "inliner" tool
-* https://github.com/manifold-systems/manifold/issues/95
+* [#95](https://github.com/manifold-systems/manifold/issues/95)
 
 ### Default parameter values
-* https://github.com/manifold-systems/manifold/issues/93
+* [#93](https://github.com/manifold-systems/manifold/issues/93)
 
 ### Android support
-* https://github.com/manifold-systems/manifold/issues/77
+* [#77](https://github.com/manifold-systems/manifold/issues/77)
 
 ### Eclipse support
-* https://github.com/manifold-systems/manifold/issues/18
+* [#18](https://github.com/manifold-systems/manifold/issues/18)
 
