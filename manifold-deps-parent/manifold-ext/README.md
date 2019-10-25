@@ -422,7 +422,7 @@ Any type can support arithmetic operators by implementing one or more of the fol
 
 | Operation | Method           |
 |:----------|:-----------------|
-| `-a`      | `a.unaryMinsu()` |
+| `-a`      | `a.unaryMinus()` |
 
 Note operator methods do not belong to a class or interface you implement. Instead you implement them *structurally*
 simply by defining a method with the same signature. Note you can implement several different versions of the same
