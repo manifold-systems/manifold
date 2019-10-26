@@ -954,7 +954,7 @@ public class TemplateGen
             int[] loc = makeText( lastTokenIndex, nextTokenType( i + 1, endPos ), token );
             if( loc != null )
             {
-              _sb.newLine( "                buffer.append(getTemplateText(), ${loc[0]}, ${loc[1]});" );
+              _sb.newLine( "                buffer.append(getTemplateText(), " + loc[0] + ", " + loc[1] + ");" );
               // sb.newLine( "                buffer.append(\"" ).append( text.replaceAll( "\"", "\\\\\"" ).replaceAll( "\r", "" ).replaceAll( "\n", "\\\\n" ) + "\");" );
               templateLineNumbers.add( token.getLine() );
             }
@@ -1145,7 +1145,7 @@ public class TemplateGen
       {
         _sb.newLine( "            if(" ).append( dir.conditional ).append( "){" );
       }
-      _sb.newLine( "            " ).append( dir.className ).append( ".withoutLayout().nestInto(buffer, \"${indentation}\"" ).append( safeTrailingString( dir.params ) ).append( ");" );
+      _sb.newLine( "            " ).append( dir.className ).append( ".withoutLayout().nestInto(buffer, \"" + indentation + "\"" ).append( safeTrailingString( dir.params ) ).append( ");" );
       if( dir.conditional != null )
       {
         _sb.newLine( "            " ).append( "}" );
