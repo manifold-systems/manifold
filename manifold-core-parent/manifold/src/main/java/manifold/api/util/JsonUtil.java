@@ -21,12 +21,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.Map;
-import javax.script.Bindings;
 
 /**
  */
 public class JsonUtil
 {
+  private static final String XML_ELEM_CONTENT = "textContent";
+
   public static String makeIdentifier( String name )
   {
     String identifier = ReservedWordMapping.getIdentifierForName( name );
@@ -269,7 +270,18 @@ public class JsonUtil
   public static String toXml( Object jsonValue )
   {
     StringBuilder sb = new StringBuilder();
-    toXml( jsonValue, "object", sb, 0 );
+    if( jsonValue instanceof Map )
+    {
+      toXml( jsonValue, "object", sb, 0 );
+    }
+    else if( jsonValue instanceof Iterable )
+    {
+      toXml( jsonValue, "list", sb, 0 );
+    }
+    else
+    {
+      toXml( jsonValue, "item", sb, 0 );
+    }
     return sb.toString();
   }
 
@@ -299,11 +311,30 @@ public class JsonUtil
    */
   private static void toXml( Map bindings, String name, StringBuilder target, int indent )
   {
-    indent( target, indent );
-    target.append( '<' ).append( name );
+    if( name != null )
+    {
+      indent( target, indent );
+      target.append( '<' ).append( name );
+    }
     if( bindings.size() > 0 )
     {
-      target.append( ">\n" );
+      if( name != null )
+      {
+        for( Object key: bindings.keySet() )
+        {
+          Object value = bindings.get( key );
+          if( value instanceof Pair )
+          {
+            value = ((Pair)value).getSecond();
+          }
+
+          if( !(value instanceof Map) && !(value instanceof Iterable) && !key.equals( XML_ELEM_CONTENT ) )
+          {
+            target.append( " " ).append( key ).append( "=\"" ).append( value ).append( '"' );
+          }
+        }
+      }
+      int count = 0;
       for( Object key: bindings.keySet() )
       {
         Object value = bindings.get( key );
@@ -314,21 +345,54 @@ public class JsonUtil
 
         if( value instanceof Map )
         {
+          if( name != null && count == 0 )
+          {
+            target.append( ">\n" );
+          }
+
           toXml( (Map)value, key.toString(), target, indent + 2 );
+
+          count++;
         }
         else if( value instanceof Iterable )
         {
+          if( name != null && count == 0 )
+          {
+            target.append( ">\n" );
+          }
+
           toXml( (Iterable)value, key.toString(), target, indent + 2 );
+
+          count++;
+        }
+        else if( value instanceof String && key.equals( XML_ELEM_CONTENT ) )
+        {
+          if( name != null && count == 0 )
+          {
+            target.append( ">\n" );
+          }
+
+          indent( target, indent + 2 );
+          target.append( value ).append( "\n" );
+
+          count++;
+        }
+      }
+      
+      if( name != null )
+      {
+        if( count == 0 )
+        {
+          target.append( "/>\n" );
         }
         else
         {
-          toXml( String.valueOf( value ), key.toString(), target, indent + 2 );
+          indent( target, indent );
+          target.append( "</" ).append( name ).append( ">\n" );
         }
       }
-      indent( target, indent );
-      target.append( "</" ).append( name ).append( ">\n" );
     }
-    else
+    else if( name != null )
     {
       target.append( "/>\n" );
     }
@@ -336,40 +400,25 @@ public class JsonUtil
 
   private static void toXml( Iterable value, String name, StringBuilder target, int indent )
   {
-    indent( target, indent );
-    target.append( "<" ).append( name );
-    Iterator iter = value.iterator();
-    if( iter.hasNext() )
+    for( Object comp: value )
     {
-      target.append( ">\n" );
-      while( iter.hasNext() )
+      if( comp instanceof Pair )
       {
-        Object comp = iter.next();
-        if( comp instanceof Pair )
-        {
-          comp = ((Pair)comp).getSecond();
-        }
-
-        if( comp instanceof Bindings )
-        {
-          toXml( ((Bindings)comp), "li", target, indent + 4 );
-        }
-        else if( comp instanceof Iterable )
-        {
-          toXml( ((Iterable)comp), "li", target, indent + 4 );
-        }
-        else
-        {
-          indent( target, indent + 4 );
-          target.append( "<li>" ).append( comp ).append( "</li>\n" );
-        }
+        comp = ((Pair)comp).getSecond();
       }
-      indent( target, indent + 2 );
-      target.append( "</" ).append( name ).append( ">\n" );
-    }
-    else
-    {
-      target.append( "/>\n" );
+
+      if( comp instanceof Map )
+      {
+        toXml( (Map)comp, name, target, indent );
+      }
+      else if( comp instanceof Iterable )
+      {
+        toXml( (Iterable)comp, name, target, indent );
+      }
+      else
+      {
+        toXml( String.valueOf( comp ), name, target, indent );
+      }
     }
   }
 

@@ -136,4 +136,57 @@ public class Loader<E>
       throw new RuntimeException( e );
     }
   }
+
+
+  public E fromXml( String xmlText )
+  {
+    return (E)Xml.fromXml( xmlText );
+  }
+
+  public E fromXmlUrl( String urlBase, String... urlSuffix )
+  {
+    try
+    {
+      StringBuilder url = new StringBuilder( urlBase );
+      if( urlSuffix != null )
+      {
+        Arrays.stream( urlSuffix ).forEach( url::append );
+      }
+
+      return (E)ManUrlExt.getXmlContent( new java.net.URL( url.toString() ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public E fromXmlUrl( java.net.URL url )
+  {
+    return (E)ManUrlExt.getXmlContent( url );
+  }
+
+  public E fromXmlFile( java.io.File file )
+  {
+    try
+    {
+      return fromXmlUrl( file.toURI().toURL() );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public E fromXmlReader( Reader reader )
+  {
+    try
+    {
+      return (E)Xml.fromXml( StreamUtil.getContent( reader ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
 }

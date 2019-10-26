@@ -18,6 +18,7 @@ package manifold.json.extensions.java.net.URL;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import manifold.api.json.Xml;
 import manifold.api.json.Yaml;
 import manifold.ext.api.Jailbreak;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
@@ -304,5 +305,16 @@ public class ManUrlExt
   public static Object getYamlContent( @This URL thiz )
   {
     return Yaml.fromYaml( getTextContent( thiz ) );
+  }
+
+  /**
+   * @return An XML object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
+   * content is not a XML document.
+   *
+   * @see manifold.api.json.Xml#fromXml(String)
+   */
+  public static Object getXmlContent( @This URL thiz )
+  {
+    return Xml.fromXml( getTextContent( thiz ) );
   }
 }

@@ -1,0 +1,122 @@
+/*
+ * Copyright (c) 2019 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package manifold.xml.api;
+
+import javax.script.Bindings;
+import manifold.api.json.Xml;
+import manifold.api.json.Yaml;
+import manifold.api.util.JsonUtil;
+import org.junit.Test;
+import abc.xml.Stuff;
+
+import static junit.framework.TestCase.assertEquals;
+
+public class XmlTest
+{
+  public void testManifold()
+  {
+    Stuff stuff = Stuff.fromSource();
+    String writeXml = stuff.write().toXml( (String)null );
+    assertEquals(
+      "  <stuff one=\"hello\" two=\"bye\">\n" +
+      "    my stuff\n" +
+      "    <other attr1=\"a\" attr2=\"b\">\n" +
+      "      <![CDATA[\n" +
+      "          <message> other things </message>\n" +
+      "        ]]>\n" +
+      "    </other>\n" +
+      "    <listElem foo=\"bar\"/>\n" +
+      "    <listElem fu=\"barf\"/>\n" +
+      "    <things one=\"hello\" two=\"bye\">\n" +
+      "      my things\n" +
+      "    </things>\n" +
+      "  </stuff>\n", writeXml );
+
+    stuff = Stuff.create();
+    stuff.setStuff( Stuff.stuff.create() );
+    stuff.getStuff().setTextContent( "hey now" );
+    stuff.getStuff().put( "custom", 8 );
+    assertEquals(
+      "  <stuff custom=\"8\">\n" +
+      "    hey now\n" +
+      "  </stuff>", stuff.write().toXml( (String)null ) );
+  }
+
+  @Test
+  public void testMe()
+  {
+    String xml =
+      "<stuff one='hello' two=\"bye\">\n" +
+      "  my stuff\n" +
+      "  <things one=\"hello\" two=\"bye\">\n" +
+      "    my things\n" +
+      "  </things>\n" +
+      "  <other one:a=\"a\" two=\"b\">\n" +
+      "    <![CDATA[\n" +
+      "      <message> other things </message>\n" +
+      "    ]]>\n" +
+      "  </other>\n" +
+      "  <listElem foo='bar'>\n" +
+      "  </listElem>\n" +
+      "  <listElem fu='barf'>\n" +
+      "  </listElem>\n" +
+      "</stuff>\n";
+
+    Bindings bindings = Xml.fromXml( xml, true );
+    String xmlFrom = JsonUtil.toXml( bindings );
+    //System.out.println(xmlFrom);
+  }
+
+  @Test
+  public void foo()
+  {
+    String yaml =
+      "--- #!<tag:clarkevans.com,2002:invoice>\n" +
+      "invoice: 34843\n" +
+      "date   : 2001-01-23\n" +
+      "bill-to: &id001\n" +
+      "  given  : Chris\n" +
+      "  family : Dumars\n" +
+      "  address:\n" +
+      "    lines: |\n" +
+      "      458 Walkman Dr.\n" +
+      "      Suite #292\n" +
+      "    city    : Royal Oak\n" +
+      "    state   : MI\n" +
+      "    postal  : 48046\n" +
+      "ship-to: *id001\n" +
+      "product:\n" +
+      "- sku         : BL394D\n" +
+      "  quantity    : 4\n" +
+      "  description : Basketball\n" +
+      "  price       : 450.00\n" +
+      "- sku         : BL4438H\n" +
+      "  quantity    : 1\n" +
+      "  description : Super Hoop\n" +
+      "  price       : 2392.00\n" +
+      "tax  : 251.42\n" +
+      "total: 4443.52\n" +
+      "comments:\n" +
+      "  Late afternoon is best.\n" +
+      "  Backup contact is Nancy\n" +
+      "  Billsmer @ 338-4338.";
+
+    Object bindings = Yaml.fromYaml( yaml );
+    String xml = JsonUtil.toXml( bindings );
+    //System.out.println(xml);
+  }
+}

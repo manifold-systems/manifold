@@ -843,7 +843,7 @@ public class JsonStructureType extends JsonSchemaType
 
     //## todo: this switch is ripe, should be configurable as part of AbstractJsonTypeManifold somehow?
     String methodName;
-    switch( file.getExtension() )
+    switch( file.getExtension().toLowerCase() )
     {
       case JsonTypeManifold.FILE_EXTENSION:
         methodName = "fromJson";
@@ -851,6 +851,9 @@ public class JsonStructureType extends JsonSchemaType
       case "yaml":
       case "yml":
         methodName = "fromYaml";
+        break;
+      case "xml":
+        methodName = "fromXml";
         break;
       default:
         throw new IllegalStateException();

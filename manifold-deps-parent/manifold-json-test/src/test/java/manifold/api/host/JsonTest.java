@@ -246,13 +246,8 @@ public class JsonTest extends TestCase
                   "  \"Name\": \"Joe Namath\"\n" +
                   "}", person.write().toJson() );
 
-    assertEquals( "<object>\n" +
-                  "  <Name>Joe Namath</Name>\n" +
-                  "</object>\n", person.write().toXml() );
-
-    assertEquals( "<person>\n" +
-                  "  <Name>Joe Namath</Name>\n" +
-                  "</person>\n", person.write().toXml( "person" ) );
+    assertEquals( "<object Name=\"Joe Namath\"/>\n", person.write().toXml() );
+    assertEquals( "<person Name=\"Joe Namath\"/>\n", person.write().toXml( "person" ) );
   }
 
   // root array with dissimilar component types (object and array)

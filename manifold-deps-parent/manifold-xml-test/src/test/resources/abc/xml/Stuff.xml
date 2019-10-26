@@ -1,0 +1,13 @@
+<stuff one='hello' two="bye">
+  my stuff
+  <things one="hello" two="bye">
+    my things
+  </things>
+  <other attr1="a" attr2="b">
+    <![CDATA[
+          <message> other things </message>
+        ]]>
+  </other>
+  <listElem foo='bar'/>
+  <listElem fu='barf'/>
+</stuff>

@@ -53,6 +53,8 @@
     <module>manifold-test</module>
     <module>manifold-text</module>
     <module>manifold-text-test</module>
+    <module>manifold-xml</module>
+    <module>manifold-xml-test</module>
     <module>manifold-yaml</module>
     <module>manifold-yaml-test</module>
   </modules>
