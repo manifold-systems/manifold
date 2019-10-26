@@ -9,7 +9,9 @@ layout: default
 ## Features on the workbench
 *These are features currently being built or refined*
 
-* Working on the [fragments](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental),
+* [#130: XML Manifold](https://github.com/manifold-systems/manifold/issues/130)
+
+* Working on [fragments](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental),
 getting [manifold templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) to work in Java 13 text blocks
 and with IntelliJ language injection.
 
