@@ -543,11 +543,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.22'
+    compile group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.23'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.22'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-graphql', version: '2019.1.23'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -594,7 +594,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.22</manifold.version>
+        <manifold.version>2019.1.23</manifold.version>
     </properties>
     
     <dependencies>
@@ -641,7 +641,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.22</manifold.version>
+        <manifold.version>2019.1.23</manifold.version>
     </properties>
     
     <dependencies>
