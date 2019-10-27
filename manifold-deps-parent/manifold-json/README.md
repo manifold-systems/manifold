@@ -21,12 +21,29 @@
   * [Union Types with `oneOf`/`anyOf`](#union-types-with-oneofanyof)
   * [Interfaces are _Structural_](#interfaces-are-_structural_)
 * [Extensions](#extensions)
-* [JSON & YAML Utilities](#json--yaml-utilities)
+* [JSON, XML, & YAML Utilities](#json-xml--yaml-utilities)
 * [IDE Support](#ide-support)
 * [Building](#building)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
+
+>#### *** JSON, XML, and YAML are Interchangeable ***
+>It is important to note, although the JSON manifold targets JSON and JSON schema files, it equally targets XML and YAML. In fact the
+>[XML manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml) and
+>[YAML manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml) are just
+>thin layers on top of the JSON manifold -- the types the JSON manifold projects from JSON files are the same exact
+>types the XML and YAML manifolds project. This means you can use JSON, XML, and YAML interchangeably. As covered in
+>this document you use the same objects to create, build, modify, load, request, write, and copy all three formats.
+>```java
+>import com.example.MyJson; // types-safely use the JSON resource file: /com/example/MyJson.json
+>
+>MyJson myJson  = myJson.fromSource();       // load the data in the file into an instance of MyJson
+>String xml = myJson.write().toXml();        // write the JSON as formatted XML
+>myJson = (MyJson) Xml.fromXml( xml, true ); // read the object back from XML!
+>```
+>Indeed, any mention of JSON and `.json` files in this document equally applies to XML and `.xml` files as well as YAML
+>and `.yml`/`.yaml` files.
 
 ## Overview
 The JSON type manifold provides comprehensive support for JSON resource files (extension `.json`).  You can define a 
@@ -75,7 +92,7 @@ Here is a simple `User` type defined in `resources/com/example/schemas/User.json
 
 ## Naming
 
-Most type manifolds, including the JSON and YAML manifolds, follow the Java naming convention where a type name is based on the
+Most type manifolds, including the JSON, XML, & YAML manifolds, follow the Java naming convention where a type name is based on the
 resource file name relative to its location in the resource path. Thus the JSON resource file `resources/com/example/schemas/User.json`
 has the Java type `com.example.schemas.User`.
 
@@ -134,7 +151,7 @@ heavier APIs.  After it is fully configured call the `build()` method to constru
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
 a variety of existing sources using `load()`.
 
-You can load a `User` instance from a YAML String:
+You can load a `User` instance from a JSON, XML, or YAML String:
 ```java
 // From a YAML string
 User user = User.load().fromYaml( 
@@ -149,6 +166,9 @@ Load from a file:
 ```java
 // From a JSON file
 User user = User.load().fromJsonFile("/path/to/MyUser.json");
+
+// From an XML file
+User user = User.load().fromJsonFile("/path/to/MyUser.xml");
 ```
 
 You can invoke a REST API to fetch a `User` using HTTP GET:
@@ -459,15 +479,15 @@ resolve against the extensions. This can be useful to seamlessly add hypermedia 
 [Generating Extension Classes](#generating-extension-classes) for more info.
 
 
-## JSON & YAML Utilities
-In addition to the JSON type manifold other forms of JSON and YAML support include:
+## JSON, XML, & YAML Utilities
+In addition to the JSON type manifold other forms of JSON, XML, and YAML support include:
 * Extension methods on `URL` and `Bindings` e.g.,
 ```json
 // Easily convert JSON for use as a HTTP query
 myUrl.append(query.getBindings().makeArguments());
 ```
-* The `Json`, `Yaml` and `JsonUtil` classes
-* The `OctetEncoding` and `Base64Encoding` classes facilitate sending/receiving binary information via JSON
+* The `Json`, `Xml`, `Yaml` and `JsonUtil` classes
+* The `OctetEncoding` and `Base64Encoding` classes facilitate sending/receiving binary information
 * Structural interfaces on `Bindings` -- you can define your own structural interfaces for improved type-safety on
 bindings (or maps)
 
@@ -499,8 +519,8 @@ Enter: <kbd>https://github.com/manifold-systems/manifold-sample-rest-api.git</kb
 <p><img src="http://manifold.systems/images/OpenSampleProject_json.png" alt="echo method" width="60%" height="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Make changes to
-your JSON and YAML files and use the changes immediately in your code, no compilation step.  You can use features such
-as Find Usages, Refactor/Rename, and Navigation directly between elements in JSON and YAML resources files and Java
+your JSON, XML, and YAML files and use the changes immediately in your code, no compilation step.  You can use features such
+as Find Usages, Refactor/Rename, and Navigation directly between elements in JSON, XML, and YAML resources files and Java
 files. Additionally you can make and test changes in a live application or service using IntelliJ's Hotswap debugger.
 
 # Building

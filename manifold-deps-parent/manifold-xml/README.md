@@ -1,6 +1,12 @@
 ﻿# Manifold : XML
 
-TODO
+The XML Manifold provides comprehensive support for XML formatted data.  Manifold can derive an API from sample data in
+XML format. You can also build robust [JSON Schema](https://json-schema.org/) APIs directly with XML.
+
+## XML, JSON, and YAML are _Interchangeable_
+
+Manifold enables you to use XML, JSON, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+project reference. _All_ that applies to JSON applies to XML.
 
 # IDE Support 
 
