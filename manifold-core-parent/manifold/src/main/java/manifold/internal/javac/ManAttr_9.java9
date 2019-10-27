@@ -11,16 +11,22 @@ import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.ArgumentAttr;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.DeferredAttr;
+import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Lower;
 import com.sun.tools.javac.comp.MemberEnter;
 import com.sun.tools.javac.comp.Modules;
+import com.sun.tools.javac.comp.Operators;
 import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.comp.TransTypes;
 import com.sun.tools.javac.comp.TypeEnter;
+import com.sun.tools.javac.jvm.ByteCodes;
 import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.resources.CompilerProperties;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Warner;
 import java.io.IOException;
 import manifold.api.type.FragmentValue;
 import manifold.util.ReflectUtil;
@@ -250,13 +256,62 @@ public class ManAttr_9 extends Attr implements ManAttr
       return;
     }
 
-    if( handleOperatorOverloading( tree ) )
+    ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", JCDiagnostic.DiagnosticPosition.class, Type.class );
+    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
+    Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
+    Type right = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
+
+    if( handleOperatorOverloading( tree, left, right ) )
     {
       // Handle operator overloading
       return;
     }
 
-    super.visitBinary( tree );
+    // Everything after left/right operand attribution (see super.visitBinary())
+    _visitBinary_Rest( tree, left, right );
+  }
+
+  private void _visitBinary_Rest( JCTree.JCBinary tree, Type left, Type right )
+  {
+    // Find operator.
+    Operators operators = Operators.instance( JavacPlugin.instance().getContext() );
+    Symbol operator = tree.operator =
+      (Symbol.OperatorSymbol)ReflectUtil.method( operators, "resolveBinary",
+        JCDiagnostic.DiagnosticPosition.class, JCTree.Tag.class, Type.class, Type.class )
+        .invoke( tree.pos(), tree.getTag(), left, right );
+
+    Type owntype = types().createErrorType( tree.type );
+    if( operator != operators.noOpSymbol &&
+        !left.isErroneous() &&
+        !right.isErroneous() )
+    {
+      owntype = operator.type.getReturnType();
+      int opc = ((Symbol.OperatorSymbol)operator).opcode;
+      // If both arguments are constants, fold them.
+      if( left.constValue() != null && right.constValue() != null )
+      {
+        Type ctype = (Type)ReflectUtil.method( cfolder(), "fold2", int.class, Type.class, Type.class ).invoke( opc, left, right );
+        if( ctype != null )
+        {
+          owntype = (Type)ReflectUtil.method( cfolder(), "coerce", Type.class, Type.class ).invoke( ctype, owntype );
+        }
+      }
+
+      // Check that argument types of a reference ==, != are
+      // castable to each other, (JLS 15.21).  Note: unboxing
+      // comparisons will not have an acmp* opc at this point.
+      if( (opc == ByteCodes.if_acmpeq || opc == ByteCodes.if_acmpne) )
+      {
+        if( !types().isCastable( left, right, new Warner( tree.pos() ) ) )
+        {
+          getLogger().error( tree.pos(), CompilerProperties.Errors.IncomparableTypes( left, right ) );
+        }
+      }
+
+      ReflectUtil.method( chk(), "checkDivZero", JCDiagnostic.DiagnosticPosition.class, Symbol.class, Type.class )
+        .invoke( tree.rhs.pos(), operator, right );
+    }
+    setResult( tree, owntype );
   }
 
   @Override

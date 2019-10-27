@@ -122,14 +122,8 @@ public interface ManAttr
     }
   }
 
-  default boolean handleOperatorOverloading( JCTree.JCBinary tree )
+  default boolean handleOperatorOverloading( JCBinary tree, Type left, Type right )
   {
-    // Attribute arguments
-    ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", JCDiagnostic.DiagnosticPosition.class, Type.class );
-    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
-    Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
-    Type right = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
-
     // Handle operator overloading
     boolean swapped = false;
     Symbol.MethodSymbol overloadOperator = ManAttr.resolveOperatorMethod( types(), tree.getTag(), left, right );

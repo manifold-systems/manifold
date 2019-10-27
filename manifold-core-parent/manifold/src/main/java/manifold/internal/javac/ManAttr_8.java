@@ -19,25 +19,34 @@ package manifold.internal.javac;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.OperatorSymbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotations;
 import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.DeferredAttr;
+import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Lower;
 import com.sun.tools.javac.comp.MemberEnter;
 import com.sun.tools.javac.comp.Resolve;
 import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.jvm.ByteCodes;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Warner;
 import manifold.api.type.FragmentValue;
 import manifold.api.util.Stack;
 import manifold.util.ReflectUtil;
 
 
+import static com.sun.tools.javac.code.Kinds.MTH;
+import static com.sun.tools.javac.code.Kinds.VAL;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -122,6 +131,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     return _shouldCheckSuperType( type, true );
   }
+
   private boolean _shouldCheckSuperType( Type type, boolean checkSuper )
   {
     return
@@ -144,6 +154,7 @@ public class ManAttr_8 extends Attr implements ManAttr
       _methodDefs.pop();
     }
   }
+
   public JCTree.JCMethodDecl peekMethodDef()
   {
     return _methodDefs.isEmpty() ? null : _methodDefs.peek();
@@ -170,6 +181,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     return _selects.isEmpty() ? null : _selects.peek();
   }
+
   public JCTree.JCAnnotatedType peekAnnotatedType()
   {
     return _annotatedTypes.isEmpty() ? null : _annotatedTypes.peek();
@@ -255,13 +267,67 @@ public class ManAttr_8 extends Attr implements ManAttr
       return;
     }
 
-    if( handleOperatorOverloading( tree ) )
+    ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", DiagnosticPosition.class, Type.class );
+    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
+    Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
+    Type right = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
+
+    if( handleOperatorOverloading( tree, left, right ) )
     {
       // Handle operator overloading
       return;
     }
 
-    super.visitBinary( tree );
+    // Everything after left/right operand attribution (see super.visitBinary())
+    _visitBinary_Rest( tree, left, right );
+  }
+
+  private void _visitBinary_Rest( JCTree.JCBinary tree, Type left, Type right )
+  {
+    // Find operator.
+    Symbol operator = tree.operator =
+      (Symbol)ReflectUtil.method( rs(), "resolveBinaryOperator",
+        DiagnosticPosition.class, JCTree.Tag.class, Env.class, Type.class, Type.class )
+        .invoke( tree.pos(), tree.getTag(), getEnv(), left, right );
+
+    Type owntype = types().createErrorType( tree.type );
+    if( operator.kind == MTH &&
+        !left.isErroneous() &&
+        !right.isErroneous() )
+    {
+      owntype = operator.type.getReturnType();
+      // This will figure out when unboxing can happen and
+      // choose the right comparison operator.
+      int opc = (int)ReflectUtil.method( chk(), "checkOperator",
+        DiagnosticPosition.class, OperatorSymbol.class, JCTree.Tag.class, Type.class, Type.class )
+        .invoke( tree.lhs.pos(), operator, tree.getTag(), left, right );
+
+      // If both arguments are constants, fold them.
+      if( left.constValue() != null && right.constValue() != null )
+      {
+        Type ctype = (Type)ReflectUtil.method( cfolder(), "fold2", int.class, Type.class, Type.class ).invoke( opc, left, right );
+        if( ctype != null )
+        {
+          owntype = (Type)ReflectUtil.method( cfolder(), "coerce", Type.class, Type.class ).invoke( ctype, owntype );
+        }
+      }
+
+      // Check that argument types of a reference ==, != are
+      // castable to each other, (JLS 15.21).  Note: unboxing
+      // comparisons will not have an acmp* opc at this point.
+      if( (opc == ByteCodes.if_acmpeq || opc == ByteCodes.if_acmpne) )
+      {
+        if( !types().isEqualityComparable( left, right,
+          new Warner( tree.pos() ) ) )
+        {
+          getLogger().error( tree.pos(), "incomparable.types", left, right );
+        }
+      }
+
+      ReflectUtil.method( chk(), "checkDivZero", DiagnosticPosition.class, Symbol.class, Type.class )
+        .invoke( tree.rhs.pos(), operator, right );
+    }
+    setResult( tree, owntype );
   }
 
   @Override
