@@ -38,7 +38,7 @@
 >```java
 >import com.example.MyJson; // types-safely use the JSON resource file: /com/example/MyJson.json
 >
->MyJson myJson  = myJson.fromSource();       // load the data in the file into an instance of MyJson
+>MyJson myJson  = MyJson.fromSource();       // load the data in the file into an instance of MyJson
 >String xml = myJson.write().toXml();        // write the JSON as formatted XML
 >myJson = (MyJson) Xml.fromXml( xml, true ); // read the object back from XML!
 >```
