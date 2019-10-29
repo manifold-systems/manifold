@@ -272,7 +272,7 @@ public class JsonUtil
     StringBuilder sb = new StringBuilder();
     if( jsonValue instanceof Map )
     {
-      toXml( jsonValue, "object", sb, 0 );
+      toXml( jsonValue, null, sb, 0 );
     }
     else if( jsonValue instanceof Iterable )
     {
@@ -289,6 +289,26 @@ public class JsonUtil
   {
     if( jsonValue instanceof Map )
     {
+      if( name == null )
+      {
+        Map map = (Map)jsonValue;
+        if( map.size() == 1 )
+        {
+          // single entry with no name implies root, defer to the root
+          Object rootKey = map.keySet().iterator().next();
+          Object rootValue = map.get( rootKey );
+          if( rootValue instanceof Pair )
+          {
+            rootValue = ((Pair)rootValue).getSecond();
+          }
+          toXml( rootValue, rootKey.toString(), target, indent );
+          return;
+        }
+        else
+        {
+          name = "object";
+        }
+      }
       toXml( (Map)jsonValue, name, target, indent );
     }
     else if( jsonValue instanceof Iterable )
@@ -311,27 +331,21 @@ public class JsonUtil
    */
   private static void toXml( Map bindings, String name, StringBuilder target, int indent )
   {
-    if( name != null )
-    {
-      indent( target, indent );
-      target.append( '<' ).append( name );
-    }
+    indent( target, indent );
+    target.append( '<' ).append( name );
     if( bindings.size() > 0 )
     {
-      if( name != null )
+      for( Object key: bindings.keySet() )
       {
-        for( Object key: bindings.keySet() )
+        Object value = bindings.get( key );
+        if( value instanceof Pair )
         {
-          Object value = bindings.get( key );
-          if( value instanceof Pair )
-          {
-            value = ((Pair)value).getSecond();
-          }
+          value = ((Pair)value).getSecond();
+        }
 
-          if( !(value instanceof Map) && !(value instanceof Iterable) && !key.equals( XML_ELEM_CONTENT ) )
-          {
-            target.append( " " ).append( key ).append( "=\"" ).append( value ).append( '"' );
-          }
+        if( !(value instanceof Map) && !(value instanceof Iterable) && !key.equals( XML_ELEM_CONTENT ) )
+        {
+          target.append( " " ).append( key ).append( "=\"" ).append( value ).append( '"' );
         }
       }
       int count = 0;
@@ -345,7 +359,7 @@ public class JsonUtil
 
         if( value instanceof Map )
         {
-          if( name != null && count == 0 )
+          if( count == 0 )
           {
             target.append( ">\n" );
           }
@@ -356,7 +370,7 @@ public class JsonUtil
         }
         else if( value instanceof Iterable )
         {
-          if( name != null && count == 0 )
+          if( count == 0 )
           {
             target.append( ">\n" );
           }
@@ -367,7 +381,7 @@ public class JsonUtil
         }
         else if( value instanceof String && key.equals( XML_ELEM_CONTENT ) )
         {
-          if( name != null && count == 0 )
+          if( count == 0 )
           {
             target.append( ">\n" );
           }
@@ -379,20 +393,17 @@ public class JsonUtil
         }
       }
       
-      if( name != null )
+      if( count == 0 )
       {
-        if( count == 0 )
-        {
-          target.append( "/>\n" );
-        }
-        else
-        {
-          indent( target, indent );
-          target.append( "</" ).append( name ).append( ">\n" );
-        }
+        target.append( "/>\n" );
+      }
+      else
+      {
+        indent( target, indent );
+        target.append( "</" ).append( name ).append( ">\n" );
       }
     }
-    else if( name != null )
+    else
     {
       target.append( "/>\n" );
     }

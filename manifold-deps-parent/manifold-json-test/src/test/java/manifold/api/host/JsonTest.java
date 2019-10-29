@@ -246,7 +246,6 @@ public class JsonTest extends TestCase
                   "  \"Name\": \"Joe Namath\"\n" +
                   "}", person.write().toJson() );
 
-    assertEquals( "<object Name=\"Joe Namath\"/>\n", person.write().toXml() );
     assertEquals( "<person Name=\"Joe Namath\"/>\n", person.write().toXml( "person" ) );
   }
 

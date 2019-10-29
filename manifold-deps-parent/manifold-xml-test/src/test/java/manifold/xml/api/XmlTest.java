@@ -27,66 +27,65 @@ import static junit.framework.TestCase.assertEquals;
 
 public class XmlTest
 {
+  @Test
   public void testManifold()
   {
     Stuff stuff = Stuff.fromSource();
     String writeXml = stuff.write().toXml( (String)null );
     assertEquals(
-      "  <stuff one=\"hello\" two=\"bye\">\n" +
-      "    my stuff\n" +
-      "    <other attr1=\"a\" attr2=\"b\">\n" +
-      "      <![CDATA[\n" +
-      "          <message> other things </message>\n" +
+      "<stuff one=\"hello\" two=\"bye\">\n" +
+      "  my stuff\n" +
+      "  <things one=\"hello\" two=\"bye\">\n" +
+      "    my things\n" +
+      "  </things>\n" +
+      "  <other attr1=\"a\" attr2=\"b\">\n" +
+      "    <![CDATA[\r\n" +
+      "          <message> other things </message>\r\n" +
       "        ]]>\n" +
-      "    </other>\n" +
-      "    <listElem foo=\"bar\"/>\n" +
-      "    <listElem fu=\"barf\"/>\n" +
-      "    <things one=\"hello\" two=\"bye\">\n" +
-      "      my things\n" +
-      "    </things>\n" +
-      "  </stuff>\n", writeXml );
+      "  </other>\n" +
+      "  <listElem foo=\"bar\"/>\n" +
+      "  <listElem fu=\"barf\"/>\n" +
+      "</stuff>\n", writeXml );
 
     stuff = Stuff.create();
     stuff.setStuff( Stuff.stuff.create() );
     stuff.getStuff().setTextContent( "hey now" );
     stuff.getStuff().put( "custom", 8 );
     assertEquals(
-      "  <stuff custom=\"8\">\n" +
-      "    hey now\n" +
-      "  </stuff>", stuff.write().toXml( (String)null ) );
+      "<stuff custom=\"8\">\n" +
+      "  hey now\n" +
+      "</stuff>\n", stuff.write().toXml() );
   }
 
   @Test
-  public void testMe()
+  public void testXmlToBindingsToXml()
   {
     String xml =
-      "<stuff one='hello' two=\"bye\">\n" +
+      "<stuff one=\"hello\" two=\"bye\">\n" +
       "  my stuff\n" +
       "  <things one=\"hello\" two=\"bye\">\n" +
       "    my things\n" +
       "  </things>\n" +
       "  <other one:a=\"a\" two=\"b\">\n" +
-      "    <![CDATA[\n" +
-      "      <message> other things </message>\n" +
-      "    ]]>\n" +
+      "    <![CDATA[\r\n" +
+      "          <message> other things </message>\r\n" +
+      "        ]]>\n" +
       "  </other>\n" +
-      "  <listElem foo='bar'>\n" +
-      "  </listElem>\n" +
-      "  <listElem fu='barf'>\n" +
-      "  </listElem>\n" +
+      "  <listElem foo=\"bar\"/>\n" +
+      "  <listElem fu=\"barf\"/>\n" +
       "</stuff>\n";
 
     Bindings bindings = Xml.fromXml( xml, true );
-    String xmlFrom = JsonUtil.toXml( bindings );
-    //System.out.println(xmlFrom);
+    String toXml = JsonUtil.toXml( bindings );
+    assertEquals( xml, toXml );
   }
 
   @Test
-  public void foo()
+  public void testYamlToXMlBindingsEqual()
   {
     String yaml =
       "--- #!<tag:clarkevans.com,2002:invoice>\n" +
-      "invoice: 34843\n" +
+      "invoice: '34843'\n" +
       "date   : 2001-01-23\n" +
       "bill-to: &id001\n" +
       "  given  : Chris\n" +
@@ -97,26 +96,27 @@ public class XmlTest
       "      Suite #292\n" +
       "    city    : Royal Oak\n" +
       "    state   : MI\n" +
-      "    postal  : 48046\n" +
+      "    postal  : '48046'\n" +
       "ship-to: *id001\n" +
       "product:\n" +
       "- sku         : BL394D\n" +
-      "  quantity    : 4\n" +
+      "  quantity    : '4'\n" +
       "  description : Basketball\n" +
-      "  price       : 450.00\n" +
+      "  price       : '450.00'\n" +
       "- sku         : BL4438H\n" +
-      "  quantity    : 1\n" +
+      "  quantity    : '1'\n" +
       "  description : Super Hoop\n" +
-      "  price       : 2392.00\n" +
-      "tax  : 251.42\n" +
-      "total: 4443.52\n" +
+      "  price       : '2392.00'\n" +
+      "tax  : '251.42'\n" +
+      "total: '4443.52'\n" +
       "comments:\n" +
       "  Late afternoon is best.\n" +
       "  Backup contact is Nancy\n" +
       "  Billsmer @ 338-4338.";
 
-    Object bindings = Yaml.fromYaml( yaml );
-    String xml = JsonUtil.toXml( bindings );
-    //System.out.println(xml);
+    Bindings yamlBindings = (Bindings)Yaml.fromYaml( yaml );
+    String xml = JsonUtil.toXml( yamlBindings );
+    Bindings xmlBindings = Xml.fromXml( xml );
+    assertEquals( yamlBindings, xmlBindings.get( "object" ) );
   }
 }

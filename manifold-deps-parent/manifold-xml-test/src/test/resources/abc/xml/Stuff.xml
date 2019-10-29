@@ -1,4 +1,4 @@
-<stuff one='hello' two="bye">
+<stuff one="hello" two="bye">
   my stuff
   <things one="hello" two="bye">
     my things
@@ -8,6 +8,6 @@
           <message> other things </message>
         ]]>
   </other>
-  <listElem foo='bar'/>
-  <listElem fu='barf'/>
+  <listElem foo="bar"/>
+  <listElem fu="barf"/>
 </stuff>
