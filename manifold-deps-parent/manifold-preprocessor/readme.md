@@ -370,7 +370,7 @@ mvn compile
 ## Using this project
 
 The `manifold-preprocessor` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions
-8 - 12.
+8 - 13.
 
 Here are some sample build configurations references.
 
@@ -380,7 +380,7 @@ Manifold's features.
 ## Gradle
 
 Here is a sample `build.gradle` script using `manifold-preprocessor`. Change `targetCompatibility` and
-`sourceCompatibility` compatibility to your desired Java version (8 - 12), the script takes care of the rest. 
+`sourceCompatibility` compatibility to your desired Java version (8 - 13), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'

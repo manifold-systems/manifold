@@ -70,7 +70,7 @@ mvn compile
 
 ## Using this project
 
-The `manifold-properties` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 12.
+The `manifold-properties` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 13.
 
 Here are some sample build configurations references.
 
@@ -80,7 +80,7 @@ Manifold's features.
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 12), the script takes care of the rest. 
+version (8 - 13), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'

@@ -495,7 +495,7 @@ mvn compile
 ## Using this project
 
 The `manifold-graphql` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
-versions 8 - 12.
+versions 8 - 13.
 
 Here are some sample build configurations references.
 
@@ -507,7 +507,7 @@ Manifold including [Extension Methods](http://manifold.systems/docs.html#extensi
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 12), the script takes care of the rest. 
+version (8 - 13), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
