@@ -138,7 +138,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.24'
+    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.25'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
@@ -147,7 +147,7 @@ dependencies {
         compile files( "${System.properties['java.home']}/../lib/tools.jar" )
     }
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.24'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-darkj', version: '2019.1.25'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -194,7 +194,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.24</manifold.version>
+        <manifold.version>2019.1.25</manifold.version>
     </properties>
     
     <dependencies>
@@ -262,7 +262,7 @@ rootProject.name = 'MyDarkJavaProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.24</manifold.version>
+        <manifold.version>2019.1.25</manifold.version>
     </properties>
     
     <dependencies>
