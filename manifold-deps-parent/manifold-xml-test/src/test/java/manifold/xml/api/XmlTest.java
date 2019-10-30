@@ -39,9 +39,9 @@ public class XmlTest
       "    my things\n" +
       "  </things>\n" +
       "  <other attr1=\"a\" attr2=\"b\">\n" +
-      "    <![CDATA[\r\n" +
-      "          <message> other things </message>\r\n" +
-      "        ]]>\n" +
+      "    <![CDATA[\n" +
+      "      <message> other things </message>\n" +
+      "    ]]>\n" +
       "  </other>\n" +
       "  <listElem foo=\"bar\"/>\n" +
       "  <listElem fu=\"barf\"/>\n" +
@@ -66,10 +66,10 @@ public class XmlTest
       "  <things one=\"hello\" two=\"bye\">\n" +
       "    my things\n" +
       "  </things>\n" +
-      "  <other one:a=\"a\" two=\"b\">\n" +
-      "    <![CDATA[\r\n" +
-      "          <message> other things </message>\r\n" +
-      "        ]]>\n" +
+      "  <other attr1=\"a\" attr2=\"b\">\n" +
+      "    <![CDATA[\n" +
+      "      <message> other things </message>\n" +
+      "    ]]>\n" +
       "  </other>\n" +
       "  <listElem foo=\"bar\"/>\n" +
       "  <listElem fu=\"barf\"/>\n" +
