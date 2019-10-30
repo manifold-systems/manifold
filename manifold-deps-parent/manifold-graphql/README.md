@@ -361,24 +361,6 @@ fully supports all type extensions.
 GraphQL specifies several standard scalar types, in addition to these Manifold provides several other non-standard, but
 commonly used types.  These include:
 
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-td, th {
-  border: 1px solid #eeeeee;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #f8f8f8;
-}
-</style>
-
 | Name             | Persists&nbsp;As  | Java Type                                     |
 |------------------|--------------|-----------------------------------------------|
 | **Byte**         | _byte_       | `byte` or `java.lang.Byte` if nullable        |

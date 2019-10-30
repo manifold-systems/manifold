@@ -300,24 +300,6 @@ inner interfaces or enum types.  An nested interface type has all the same featu
 ## `format` Types
 As you can see from the `User` example Manifold supports standard JSON Schema `format` types.  These include:
 
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-td, th {
-  border: 1px solid #eeeeee;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #f8f8f8;
-}
-</style>
-
 | Format           | JSON Type    | Java Type                                     |
 |------------------|--------------|-----------------------------------------------|
 | `"date-time"`    | `"string"`   | `java.time.LocalDateTime`                     |

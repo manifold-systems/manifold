@@ -214,24 +214,6 @@ Directives have the following syntax:
 
 Here is a summary of all the ManTL directives. More detailed descriptions follow.
 
-<style>
-table {
-  font-family: arial, sans-serif;
-  border-collapse: collapse;
-  width: 100%;
-}
-
-td, th {
-  border: 1px solid #eeeeee;
-  text-align: left;
-  padding: 8px;
-}
-
-tr:nth-child(even) {
-  background-color: #f8f8f8;
-}
-</style>
-
 | Directive&nbsp;&nbsp;&nbsp;&nbsp;      | Syntax              | Description                                                                         |
 |----------------|---------------------------------------------|-------------------------------------------------------------------------------------|
 | import         | `<%@ import type-name %>`                   | Imports Java types for use in template directives, statements, and expressions      |
