@@ -9,6 +9,7 @@ directly in your projects:
 
 * [**Type-safe Metaprogramming**](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold) -- _type-safe_ access to structured data.
 Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
+[XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), 
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
 [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), 
 [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js),
@@ -70,6 +71,7 @@ Manifold provides type manifolds for:
 
 *   [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 *   [JSON and JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+*   [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
 *   [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
 *   [Properties files](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
 *   [Image files](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
@@ -170,6 +172,8 @@ The plugin currently supports most high-level IntelliJ features including:
 * Usage searching
 * Rename/Move refactoring
 * Quick navigation
+* Operator overloading
+* Unit expressions
 * Structural typing
 * Type-safe reflection with `@Jailbreak`
 * Self type support with `@Self`
@@ -199,6 +203,7 @@ projects' docs.
 
 ### Resource Manifolds
 * [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+* [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
 * [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 * [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
 * [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
