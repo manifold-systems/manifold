@@ -863,7 +863,9 @@ public class ExtensionTransformer extends TreeTranslator
 
     eraseGenericStructuralVarargs( tree );
 
-    if( _tp.isGenerate() )
+    if( _tp.isGenerate() &&
+        // handle compiler-generated call to iterator(), sometimes a structural interface is involved here (lists in JSON)
+        !isStructuralIteratorCall( tree ) )
     {
       // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
       return;
@@ -889,6 +891,13 @@ public class ExtensionTransformer extends TreeTranslator
     {
       result = tree;
     }
+  }
+
+  private boolean isStructuralIteratorCall( JCTree.JCMethodInvocation tree )
+  {
+    return tree.meth instanceof JCTree.JCFieldAccess &&
+           ((JCTree.JCFieldAccess)tree.meth).sym.name.toString().equals( "iterator" ) &&
+           isStructuralMethod( tree );
   }
 
   @Override
@@ -1800,6 +1809,8 @@ public class ExtensionTransformer extends TreeTranslator
     JCExpression methodSelect = theCall.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
+      int pos = theCall.pos;
+
       Symtab symbols = _tp.getSymtab();
       Names names = Names.instance( _tp.getContext() );
       Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
@@ -1816,21 +1827,29 @@ public class ExtensionTransformer extends TreeTranslator
       JCTree.JCFieldAccess ifaceClassExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, thisArg.type.tsym.getQualifiedName().toString() + ".class" );
       ifaceClassExpr.type = symbols.classType;
       ifaceClassExpr.sym = symbols.classType.tsym;
+      ifaceClassExpr.pos = pos;
       assignTypes( ifaceClassExpr.selected, thisArg.type.tsym );
+      ifaceClassExpr.selected.pos = pos;
       newArgs.add( ifaceClassExpr );
 
       JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".constructProxy" ), List.from( newArgs ) );
-      makeProxyCall.setPos( theCall.pos );
+      makeProxyCall.setPos( pos );
       makeProxyCall.type = thisArg.type;
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
       newMethodSelect.sym = makeInterfaceProxyMethod;
       newMethodSelect.type = makeInterfaceProxyMethod.type;
+      newMethodSelect.pos = pos;
       assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+      newMethodSelect.selected.pos = pos;
 
       JCTypeCast cast = make.TypeCast( thisArg.type, makeProxyCall );
       cast.type = thisArg.type;
+      cast.pos = pos;
 
       ((JCTree.JCFieldAccess)theCall.meth).selected = cast;
+
+      theCall.pos = pos;
+
       return theCall;
     }
     return null;
@@ -1843,6 +1862,8 @@ public class ExtensionTransformer extends TreeTranslator
     Names names = Names.instance( _tp.getContext() );
     Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
 
+    int pos = expression.pos;
+    
     Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( expression.pos(), names.fromString( "assignStructuralIdentity" ), reflectMethodClassSym.type,
       List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
@@ -1852,19 +1873,24 @@ public class ExtensionTransformer extends TreeTranslator
     JCTree.JCFieldAccess ifaceClassExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, type.tsym.getQualifiedName().toString() + ".class" );
     ifaceClassExpr.type = symbols.classType;
     ifaceClassExpr.sym = symbols.classType.tsym;
+    ifaceClassExpr.pos = pos;
     assignTypes( ifaceClassExpr.selected, type.tsym );
+    ifaceClassExpr.selected.pos = pos;
     newArgs.add( ifaceClassExpr );
 
     JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".assignStructuralIdentity" ), List.from( newArgs ) );
     makeProxyCall.type = symbols.objectType;
-    makeProxyCall.setPos( expression.pos );
+    makeProxyCall.setPos( pos );
     JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
     newMethodSelect.sym = makeInterfaceProxyMethod;
     newMethodSelect.type = makeInterfaceProxyMethod.type;
+    newMethodSelect.pos = pos;
     assignTypes( newMethodSelect.selected, reflectMethodClassSym );
+    newMethodSelect.selected.pos = pos;
 
     JCTypeCast castCall = make.TypeCast( symbols.objectType, makeProxyCall );
     castCall.type = symbols.objectType;
+    castCall.pos = pos;
 
     return castCall;
 
@@ -1885,6 +1911,7 @@ public class ExtensionTransformer extends TreeTranslator
       BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask();
       Symbol.ClassSymbol extensionClassSym = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionFqn ).getFirst();
       assignTypes( m.selected, extensionClassSym );
+      m.selected.pos = tree.pos;
       m.sym = method;
       m.type = method.type;
 
@@ -1919,6 +1946,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)extCall.getMethodSelect();
       newMethodSelect.sym = method;
       newMethodSelect.type = method.type;
+      newMethodSelect.pos = tree.pos;
       assignTypes( newMethodSelect.selected, method.owner );
       return extCall;
     }
@@ -1982,11 +2010,12 @@ public class ExtensionTransformer extends TreeTranslator
           List.from( newArgs ) );
       reflectCall.setPos( tree.pos );
       reflectCall.type = returnType;
+      reflectCall.pos = tree.pos;
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)reflectCall.getMethodSelect();
       newMethodSelect.sym = reflectMethodSym;
       newMethodSelect.type = reflectMethodSym.type;
       assignTypes( newMethodSelect.selected, reflectMethodClassSym );
-
+      newMethodSelect.pos = tree.pos;
       return reflectCall;
     }
     return tree;
@@ -2161,6 +2190,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       // class is publicly accessible, assume we can use class literal
       classExpr = _tp.getTreeMaker().ClassLiteral( type );
+      classExpr.pos = tree.pos;
     }
     else
     {
@@ -2187,6 +2217,7 @@ public class ExtensionTransformer extends TreeTranslator
     Symbol.MethodSymbol typeMethodSymbol = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( "type" ), reflectMethodClassSym.type, List.of( _tp.getSymtab().stringType ) );
     newMethodSelect.sym = typeMethodSymbol;
     newMethodSelect.type = typeMethodSymbol.type;
+    newMethodSelect.pos = tree.pos;
     assignTypes( newMethodSelect.selected, reflectMethodClassSym );
 
     return typeCall;

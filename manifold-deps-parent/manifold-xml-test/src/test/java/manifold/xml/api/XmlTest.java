@@ -16,11 +16,14 @@
 
 package manifold.xml.api;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import javax.script.Bindings;
 import manifold.api.json.Xml;
 import manifold.api.json.Yaml;
 import manifold.api.util.JsonUtil;
 import org.junit.Test;
+import abc.xml.Catelog;
 import abc.xml.Stuff;
 
 import static junit.framework.TestCase.assertEquals;
@@ -119,4 +122,35 @@ public class XmlTest
     Bindings xmlBindings = Xml.fromXml( xml );
     assertEquals( yamlBindings, xmlBindings.get( "object" ) );
   }
+
+  @Test
+  public void testArrayInForeachLoop()
+  {
+    ArrayList<String> brands = new ArrayList<>();
+    Catelog catelog = Catelog.fromSource();
+    catelog.getProductListing().getProduct().forEach(p -> {
+      if (p.getDepartment().equals("Men's")) {
+        brands.add(p.getBrand());
+      }
+    });
+    assertEquals(Arrays.asList("Joe's", "Squarepants"), brands);
+
+    brands.clear();
+    for (Catelog.ProductListing.Product.ProductItem p : catelog.getProductListing().getProduct()) {
+      if( p.getDepartment().equals("Men's") ) {
+        brands.add(p.getBrand());
+      }
+    }
+    assertEquals(Arrays.asList("Joe's", "Squarepants"), brands);
+
+    brands.clear();
+    Catelog.ProductListing.Product list = catelog.getProductListing().getProduct();
+    for (Catelog.ProductListing.Product.ProductItem p : list) {
+      if( p.getDepartment().equals("Men's") ) {
+        brands.add(p.getBrand());
+      }
+    }
+    assertEquals(Arrays.asList("Joe's", "Squarepants"), brands);
+  }
+
 }
