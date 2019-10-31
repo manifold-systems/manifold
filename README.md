@@ -10,8 +10,8 @@ more. All fully supported in IntelliJ IDEA. Simply add Manifold to your project 
 ## What can you do with Manifold?
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**
-and **YAML**. Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as **GraphQL**, **JSON Schema**,
+**XML**, and **YAML**. Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 ```java
 // Use your User.json schema file directly as a type, no code gen!
 User user = User.builder("myid", "mypassword", "Scott")
@@ -174,6 +174,7 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)<br>
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
+[Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)<br>
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>
