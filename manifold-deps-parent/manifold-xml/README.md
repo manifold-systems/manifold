@@ -1,12 +1,252 @@
 ﻿# Manifold : XML
 
-The XML Manifold provides comprehensive support for XML formatted data.  Manifold can derive an API from sample data in
-XML format. You can also build robust [JSON Schema](https://json-schema.org/) APIs directly with XML.
+>Warning: **Experimental Feature**
 
-## XML, JSON, and YAML are _Interchangeable_
+Manifold plugs into the Java compiler to enable you to use XML and Java seamlessly -- XML files are types. You use XML
+directly in Java type-safely without a code generator or extra build steps.
 
-Manifold enables you to use XML, JSON, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
-project reference. _All_ that applies to JSON applies to XML.
+>#### XML, JSON, and YAML are _Interchangeable_
+>You can use XML, JSON, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+>project reference. _All_ that applies to JSON applies to XML.
+
+## Table of Contents
+* [Overview](#overview)
+* [Naming](#naming)
+* [Fluent API](#fluent-api)
+* [Creating & Building JSON](#creating--building-xml)
+* [Loading XML](#loading-xml)
+* [Request REST API services](#request-rest-api-services)
+* [Writing XML](#writing-xml)
+* [Copying XML](#copying-xml)
+* [Using XML with JSON Schema](#using-xml-with-json-schema)
+* [IDE Support](#ide-support)
+* [Building](#building)
+* [License](#license)
+* [Versioning](#versioning)
+* [Author](#author)
+
+## Overview
+The XML type manifold provides comprehensive support for XML resource files (extension `.xml`).  You can define an 
+XML API using a sample XML resource file. You can also define a [JSON Schema](https://json-schema.org/) version 4 or 
+later and use that as the schema for your XML files. Your XML resource files serve as the **single source of truth**
+regarding XML APIs.  You use XML-expressed types *directly* in your code without maintaining a separate set of classes
+or wedging a code generator into your build.
+
+Here is a sample XML file `resources/com/example/Catelog.xml`:
+```xml
+<ProductListing season="Fall">
+    <Store name="Valley #2">
+        <Address city="Cupertino" state="CA" postal="95014">
+            <Line order="1">1101 Broadway Dr</Line>
+            <Line order="2">Suite #123</Line>
+        </Address>
+    </Store>
+    <Product department="Men's" brand="Joe's" price="65.00"
+        description="Joe’s® 430™ Athletic Cut Jeans">
+        <Size waste="26-42" inseam="28-38" cut="Athletic"/>
+    </Product>
+    <Product department="Men's" brand="Squarepants" price="35.00"
+        description="Squarepants® Unround™ Pants">
+        <Size waste="25-49" inseam="25-36" cut="Athletic"/>
+    </Product>
+    <Product department="Jewelry" brand="RiteTwice" price="100.00"
+        description="RiteTwice® The 5 o'clock watch">
+        <Size wrist="XS-XL"/>
+    </Product>
+</ProductListing>
+```
+
+## Naming
+
+Most type manifolds, including the XML, JSON & YAML manifolds, follow the Java naming convention where a type name is based on the
+resource file name relative to its location in the resource path. Thus the XML resource file `resources/com/example/Catelog.xml`
+has the Java type `com.example.Catelog`.
+
+## Fluent API
+
+XML types are defined as a set of fluent _interface_ APIs.  For example, the `Catelog` XML type is an interface and
+provides type-safe methods to:
+* **create** a `Catelog`
+* **build** a `Catelog`
+* **modify** properties of a `Catelog`  
+* **load** a `Catelog` from a string, a file, or a URL using HTTP GET
+* **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
+* **write** a `Catelog` as formatted JSON, YAML, or XML
+* **copy** a `Catelog`
+* **cast** to `Catelog` from any structurally compatible type including `Map`s, all *without proxies*
+
+## Creating & Building XML
+You create an instance of a XML type using either the `create()` method or the `builder()` method. Note if you want to
+load data from preexisting XML files or even load directly from the sample data you can use the `load()` method or
+the `fromSource()` method, discussed later in this document. 
+
+The `create()` method defines parameters matching the `required` properties defined in the JSON Schema, if the type is
+plain XML or no `required` properties are specified, `create()` has no parameters.
+
+Since `Catelog` is a plain XML file, as opposed to a JSON Schema structured XML file, you can use create an empty
+instance of `Catelog` with `create()` and then modify it using _setter_ methods to change properties:
+```java
+import com.example.Catelog;
+...
+Catelog catelog = Catelog.create();
+catelog.setProductListing( makeProductListing() );
+```
+
+Alternatively, you can use `builder()` to fluently build a new instance:
+```java
+var listing = Catelog.ProductListing.builder()
+  .withSeason("Spring")
+  .withStore(Store.builder()
+    .withName("Valley #2")
+    .withAddress(Store.Address.builder()
+      .withCity("Cupertino")
+      .withState("CA")
+      .withPostal("95104")
+      .withLine(lines)
+      .build())
+    .build())
+  .withProduct(loadProducts())
+  .build();
+catelog.setProductListing(listing);
+```
+
+You can initialize several properties in a chain of `with` calls in the builder. This saves a bit of typing with
+heavier APIs.  After it is fully configured call the `build()` method to construct the type.
+
+> Note if using JSON Schema `with` methods also serve as a means to initialize values for `readOnly` properties.
+
+## Loading XML
+In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
+a variety of existing sources using `fromSource()` and `load()`.
+
+You can load the contents of the file directly using `fromSource()`.
+```java
+// Load from the contents of the Catelog type's origin file 
+Catelog catelog = Catelog.fromSource();
+```
+You can load a `Catelog` instance from a XML, JSON, or YAML String:
+```java
+// From a JSON String
+Catelog catelog = Catelog.load().fromJson("..."); 
+```
+Load from a file:
+```java
+// From an XML file
+Catelog catelog = Catelog.load().fromXmlFile("/path/to/WinterCatelog.xml");
+
+// From an JSON file
+Catelog catelog = Catelog.load().fromJsonFile("/path/to/SummerCatelog.json");
+```
+Invoke a REST API to load a `Catelog` using HTTP GET:
+```java
+// From HTTP GET
+Catelog catelog = Catelog.load().fromJsonUrl("http://api.example.com/catelog/$catelogId");
+```
+
+## Request REST API services
+Use the `request()` static method to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE:
+```java
+String id = "2019.fall";
+Catelog catelog = Catelog.request("http://api.example.com/catelogs").getOne("/$id");
+```
+The `request()` methods provides support for all basic REST API client usage:
+```java
+Requester<Catelog> req = Catelog.request("http://api.example.com/catelogs");
+
+// Get all Catelogs via HTTP GET
+List<Catelog> catelogs = req.getMany();
+
+// Add a Catelog with HTTP POST
+Catelog catelog = Catelog.builder()
+  .withSeason("Spring")
+  .withStore(Store.builder() 
+  . . .
+req.postOne(catelog);
+
+// Get a Catelog with HTTP GET
+String id = catelog.getId();
+catelog = req.getOne("/$id");
+
+// Update a Catelog with HTTP PUT
+catelog.getStore().setName("Valley #2");
+req.putOne("/$id", catelog);
+
+// Delete a Catelog with HTTP DELETE
+req.delete("/$id");
+```
+
+## Writing XML
+An instance of an XML API object can be written as formatted text with `write()`:
+* `toXml()` - produces an XML formatted String
+* `toJson()` - produces a JSON formatted String
+* `toYaml()` - produces a YAML formatted String
+
+The following example produces a JSON formatted string:
+```java
+Catelog catelog = Catelog.builder()
+  .withSeason("Fall")
+  .withStore(Store.builder() 
+  . . .
+String json = catelog.write().toJson();
+System.out.println(json);
+```
+Output:
+```json
+{
+  "ProductListing": {
+    "season": "Fall",
+    "Store": {
+      "name": "Valley #2",
+      "Address": {
+        "city": "Cupertino", "state": "CA", "postal": "95014",
+        "Line": [
+          {"order": "1", "textContent": "1101 Broadway Dr"},
+          {"order": "2", "textContent": "Suite #123"}
+        ]
+      }
+    },
+    "Product": [
+      {
+        "department": "Men's", "brand": "Joe's", "price": "65.00",
+        "description": "Joe\u2019s\u00ae 430\u2122 Athletic Cut Jeans",
+        "Size": {"waste": "26-42", "inseam": "28-38", "cut": "Athletic"}
+      },
+      {
+        "department": "Men's", "brand": "Squarepants", "price": "35.00",
+        "description": "Squarepants\u00ae Unround\u2122 Pants",
+        "Size": {"waste": "25-49", "inseam": "25-36", "cut": "Athletic"}
+      },
+      {
+        "department": "Jewelry", "brand": "RiteTwice", "price": "100.00",
+        "description": "RiteTwice\u00ae The 5 o'clock watch",
+        "Size": {"wrist": "XS-XL"}
+      }
+    ]
+  }
+}
+```
+
+## Copying XML
+Use the `copy()` method to make a deep copy of any XML API object:
+```java
+Catelog catelog = . . .;
+...
+Catelog copy = catelog.copy();
+```
+Alternatively, you can use the `copier()` static method for a richer set of features:
+```java
+Catelog copy = Catelog.copier(catelog).withProductListing(. . .).copy();
+```
+`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
+`builder()` it maintains the integrity of the schema's declared mutability -- you can't change
+`readOnly` fields after the `copy()` method constructs the object.
+
+# Using XML with JSON Schema
+
+You can use XML, JSON, and YAML interchangeably, via the universal JSON API. This means you can also use XML with any
+JSON Schema API.  You can also define a JSON Schema API using XML.  As such please refer to the
+[**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+project reference regarding API usage specific to JSON Schema. _All_ that applies to JSON Schema applies to XML.
 
 # IDE Support 
 
