@@ -60,6 +60,12 @@ public class Xml
     DataBindings children = new DataBindings();
     parent.put( elem.getName().getRawText(), withTokens ? makeTokensValue( elem, children ) : children );
 
+    // Attributes
+    for( Map.Entry<String, XmlAttribute> entry: elem.getAttributes().entrySet() )
+    {
+      children.put( entry.getKey(), withTokens ? makeTokensValue( entry.getValue() ) : entry.getValue().getValue() );
+    }
+    
     // Element text
     if( elem.getRawContent() != null )
     {
@@ -86,11 +92,6 @@ public class Xml
         List<Object> listValues = list.stream().map( e -> e.get( entry.getKey() ) ).collect( Collectors.toList() );
         children.put( entry.getKey(), withTokens ? makeTokensValue( listValues )  : listValues );
       }
-    }
-    // Attributes
-    for( Map.Entry<String, XmlAttribute> entry: elem.getAttributes().entrySet() )
-    {
-      children.put( entry.getKey(), withTokens ? makeTokensValue( entry.getValue() ) : entry.getValue().getValue() );
     }
     return parent;
   }
