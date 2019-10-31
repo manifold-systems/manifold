@@ -1,20 +1,20 @@
 <ProductListing season="Fall">
   <Store name="Valley #2">
     <Address city="Cupertino" state="CA" postal="95014">
-      1101 Broadway Dr
-      Suite #123
+      <Line order="1">1101 Broadway Dr</Line>
+      <Line order="2">Suite #123</Line>
     </Address>
   </Store>
-  <Product department="Men's" brand="Joe's" price="65.00">
-    Joe’s® 430™ Athletic Cut Jeans
-    <Size waste="26-42" inseem="28-38" cut="Athletic"/>
+  <Product department="Men's" brand="Joe's" price="65.00"
+           description="Joe’s® 430™ Athletic Cut Jeans">
+    <Size waste="26-42" inseam="28-38" cut="Athletic"/>
   </Product>
-  <Product department="Men's" brand="Squarepants" price="35.00">
-    Squarepants® Unround™ Pants
-    <Size waste="25-49" inseem="25-36" cut="Athletic"/>
+  <Product department="Men's" brand="Squarepants" price="35.00"
+           description="Squarepants® Unround™ Pants">
+    <Size waste="25-49" inseam="25-36" cut="Athletic"/>
   </Product>
-  <Product department="Jewelry" brand="RiteTwice" price="100.00">
-    RiteTwice® The 5 o'clock watch
+  <Product department="Jewelry" brand="RiteTwice" price="100.00"
+           description="RiteTwice® The 5 o'clock watch">
     <Size wrist="XS-XL"/>
   </Product>
 </ProductListing>
