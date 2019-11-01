@@ -138,7 +138,7 @@ Supports type-safe inclusion of other templates, shared layouts, and more. [&nbs
 List<User> users = ...;
 String content = abc.example.UserSample.render(users);
 ```
-A template file `abc/example/UserSample.html.mtl`
+A template file *abc/example/UserSample.html.mtl*
 ```html
 <%@ import java.util.List %>
 <%@ import com.example.User %>
