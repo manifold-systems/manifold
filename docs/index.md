@@ -22,7 +22,7 @@ User.request("http://api.example.com/users").postOne(user);
 ```
 
 ### [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-Add your own methods to existing Java classes, even `String`, `List`, and `File`. Eliminate boilerplate code.
+Add your own methods to existing Java classes, even *String*, *List*, and *File*. Eliminate boilerplate code.
 [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/ExtensionMethod.mp4)
 ```java
 String greeting = "hello";
@@ -53,8 +53,8 @@ Mass infant = 9 lb + 8.71 oz;
 ```  
 
 ### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-Easily work with the `Range` API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
-Simply import the `RangeFun` constants to create ranges.
+Easily work with the *Range* API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
+Simply import the *RangeFun* constants to create ranges.
 ```java
 // imports the `to`, `step`, and other "binding" constants
 import static manifold.collections.api.range.RangeFun.*;
@@ -80,7 +80,7 @@ Length distance = rate * time;
 ```  
 
 ### [Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
-Use familiar directives such as `#define` and `#if` to conditionally compile your Java projects. The preprocessor offers
+Use familiar directives such as **#define** and **#if** to conditionally compile your Java projects. The preprocessor offers
 a simple and convenient way to support multiple build targets with a single codebase. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/preprocessor.mp4)
 ```java
 #if JAVA_8_OR_LATER
@@ -113,7 +113,7 @@ foo.privateField = value;
 
 ### [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
-swallowing, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
+swallowing. No more *try*/*catch*/*wrap*/*rethrow* boilerplate!
 ```java
 List<String> strings = ...;
 List<URL> urls = list
