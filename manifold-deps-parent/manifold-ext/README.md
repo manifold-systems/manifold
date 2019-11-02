@@ -526,7 +526,7 @@ if (date1 > date2) {...}
 
 To implement the `==` and `!=` subset of relational operators you must implement the `ComparableUsing` interface. By
 default `ComparableUsing` delegates to your type's `equals()` method, but you can easily override this behavior by
-overriding the `equalityMode()` method in your `CopmarableUsing` implementation. The `EqualityMode` enum provides the
+overriding the `equalityMode()` method in your `ComparableUsing` implementation. The `EqualityMode` enum provides the
 available modes:     
 
 ```java
