@@ -35,7 +35,8 @@ import manifold.ext.DataBindings;
 
 public class Xml
 {
-  private static final String XML_ELEM_CONTENT = "textContent";
+  public static final String XML_DEFAULT_ROOT = "root_object";
+  public static final String XML_ELEM_CONTENT = "textContent";
 
   public static Bindings fromXml( String xml )
   {
@@ -46,7 +47,16 @@ public class Xml
     try( InputStream inputStream = new BufferedInputStream( new ByteArrayInputStream( xml.getBytes() ) ) )
     {
       XmlElement elem = XmlParser.parse( inputStream );
-      return transform( new DataBindings(), elem, withTokens );
+      DataBindings bindings = transform( new DataBindings(), elem, withTokens );
+      if( bindings.size() == 1 )
+      {
+        Object root = bindings.get( XML_DEFAULT_ROOT );
+        if( root instanceof DataBindings )
+        {
+          bindings = (DataBindings)bindings.get( XML_DEFAULT_ROOT );
+        }
+      }
+      return bindings;
     }
     catch( IOException e )
     {

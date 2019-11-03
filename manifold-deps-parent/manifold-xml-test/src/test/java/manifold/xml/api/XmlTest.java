@@ -120,7 +120,7 @@ public class XmlTest
     Bindings yamlBindings = (Bindings)Yaml.fromYaml( yaml );
     String xml = JsonUtil.toXml( yamlBindings );
     Bindings xmlBindings = Xml.fromXml( xml );
-    assertEquals( yamlBindings, xmlBindings.get( "object" ) );
+    assertEquals( yamlBindings, xmlBindings );
   }
 
   @Test

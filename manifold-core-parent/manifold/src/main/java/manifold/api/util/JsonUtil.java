@@ -306,7 +306,8 @@ public class JsonUtil
         }
         else
         {
-          name = "object";
+          //todo: factor out Xml.XML_DEFAULT_ROOT
+          name = "root_object";
         }
       }
       toXml( (Map)jsonValue, name, target, indent );
