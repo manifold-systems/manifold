@@ -119,4 +119,38 @@ public class Writer
     JsonUtil.toXml( _value, name, sb, 0 );
     return sb.toString();
   }
+  /**
+   * Serializes this instance to an CSV formatted String
+   *
+   * @return This instance serialized to an CSV formatted String
+   */
+  public String toCsv()
+  {
+    return JsonUtil.toCsv( _value );
+  }
+  public void toCsv( Appendable target )
+  {
+    try
+    {
+      target.append( JsonUtil.toCsv( _value ) );
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  /**
+   * Serializes this instance to an CSV formatted String
+   *
+   * @param name the root name for the CSV
+   *
+   * @return This instance serialized to an CSV formatted String
+   */
+  public String toCsv( String name )
+  {
+    StringBuilder sb = new StringBuilder();
+    JsonUtil.toCsv( _value, name, sb, 0 );
+    return sb.toString();
+  }
 }

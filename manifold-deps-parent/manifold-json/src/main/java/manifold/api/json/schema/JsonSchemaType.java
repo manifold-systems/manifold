@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Objects;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
+import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
@@ -36,6 +37,7 @@ import manifold.api.json.Json;
 import manifold.api.json.JsonBasicType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.JsonListType;
+import manifold.api.json.JsonTypeManifold;
 import manifold.api.json.Token;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
@@ -55,6 +57,8 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 {
   @SuppressWarnings("WeakerAccess")
   protected static final String FIELD_FILE_URL = "__FILE_URL_";
+  @SuppressWarnings("unused")
+  protected static final String FROM_SOURCE_METHOD = "fromSource";
 
   /**
    * Since we use clone() to copy, assignment to these fields must be reflected across all copies,
@@ -70,6 +74,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     private boolean _bSchemaType;
     private ResolveState _resolveState;
     private Token _token;
+    private boolean _synthetic;
 
     private State( String name, JsonSchemaType parent, IFile file )
     {
@@ -234,6 +239,15 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     _state._bSchemaType = true;
   }
 
+  protected boolean isSyntheticSchema()
+  {
+    return _state._synthetic;
+  }
+  protected void setSyntheticSchema( boolean synthetic )
+  {
+    _state._synthetic = synthetic;
+  }
+
   @Override
   public TypeAttributes getTypeAttributes()
   {
@@ -319,6 +333,81 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     {
       sb.append( ' ' );
     }
+  }
+
+  protected void addFromSourceMethod( StringBuilder sb, int indent )
+  {
+    IFile file = getIFile();
+    if( (isSchemaType() && !isSyntheticSchema()) || !isParentRoot() )
+    {
+      return;
+    }
+
+    //noinspection unused
+    String typeName = getIdentifier();
+    indent( sb, indent );
+    sb.append( "static $typeName $FROM_SOURCE_METHOD() {\n" );
+    indent( sb, indent );
+
+    //## todo: this switch is ripe, should be configurable as part of AbstractJsonTypeManifold somehow?
+    String methodName;
+    switch( file.getExtension().toLowerCase() )
+    {
+      case JsonTypeManifold.FILE_EXTENSION:
+        methodName = "fromJson";
+        break;
+      case "yaml":
+      case "yml":
+        methodName = "fromYaml";
+        break;
+      case "xml":
+        methodName = "fromXml";
+        break;
+      case "csv":
+      case "tsv":
+      case "tab":
+        methodName = "fromCsv";
+        break;
+      default:
+        throw new IllegalStateException();
+    }
+
+    if( file instanceof FileFragmentImpl )
+    {
+      // include fragment directly as string literal
+
+      sb.append( "  return load()." ).append( methodName )
+        .append( "(\"" ).append( getContentForLiteral( (FileFragmentImpl)file ) ).append( "\");\n" );
+    }
+    else
+    {
+      // avoid using a string literal, file could be very large, instead reference the corresponding resource file
+
+      //## todo: using getFqn(), which may not correspond with resource file name
+      //noinspection unused
+      String resourceFile = '/' + getFqn( this ).replace( '.', '/' ) + '.' + file.getExtension();
+      sb.append( "  return load()." ).append( methodName ).append( "Reader" )
+        .append( "(new java.io.InputStreamReader($typeName.class.getResourceAsStream(\"$resourceFile\")));\n" );
+    }
+    indent( sb, indent );
+    sb.append( "}\n" );
+  }
+
+  private String getContentForLiteral( FileFragmentImpl file )
+  {
+    String content = file.getContent();
+    return ManEscapeUtil.escapeForJavaStringLiteral( content );
+  }
+
+  protected void addRequestMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
+  {
+    indent( sb, indent );
+    //noinspection unused
+    sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(String urlBase) {\n" );
+    indent( sb, indent );
+    sb.append( "  return new Requester<>(urlBase);\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
   }
 
   protected void addTypeReferenceAnnotation( StringBuilder sb, int indent, JsonSchemaType type )

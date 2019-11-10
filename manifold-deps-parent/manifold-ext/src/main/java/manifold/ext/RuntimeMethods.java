@@ -32,6 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
+import manifold.api.util.ManClassUtil;
 import manifold.ext.api.IBindingType;
 import manifold.ext.api.IBindingsBacked;
 import manifold.ext.api.ICallHandler;
@@ -150,7 +151,7 @@ public class RuntimeMethods
 
     if( type.isPrimitive() )
     {
-      type = box( type );
+      type = ManClassUtil.box( type );
     }
 
     Class<?> valueClass = value.getClass();
@@ -371,43 +372,6 @@ public class RuntimeMethods
       }
     }
     return ICallHandler.UNHANDLED;
-  }
-
-  private static Class<?> box( Class<?> type )
-  {
-    if( type == boolean.class )
-    {
-      return Boolean.class;
-    }
-    if( type == byte.class )
-    {
-      return Byte.class;
-    }
-    if( type == char.class )
-    {
-      return Character.class;
-    }
-    if( type == short.class )
-    {
-      return Short.class;
-    }
-    if( type == int.class )
-    {
-      return Integer.class;
-    }
-    if( type == long.class )
-    {
-      return Long.class;
-    }
-    if( type == float.class )
-    {
-      return Float.class;
-    }
-    if( type == double.class )
-    {
-      return Double.class;
-    }
-    throw new IllegalStateException();
   }
 
   private static Method findMethod( Class<?> iface, String name, Class[] paramTypes )

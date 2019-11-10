@@ -37,6 +37,10 @@ public class Loader<E>
     return (E)Json.fromJson( jsonText );
   }
 
+  //
+  // JSON methods
+  //
+
   public E fromJsonUrl( String urlBase, String... urlSuffix )
   {
     try
@@ -84,6 +88,10 @@ public class Loader<E>
     }
   }
 
+
+  //
+  // YAML methods
+  //
 
   public E fromYaml( String yamlText )
   {
@@ -138,6 +146,10 @@ public class Loader<E>
   }
 
 
+  //
+  // XML methods
+  //
+
   public E fromXml( String xmlText )
   {
     return (E)Xml.fromXml( xmlText );
@@ -183,6 +195,63 @@ public class Loader<E>
     try
     {
       return (E)Xml.fromXml( StreamUtil.getContent( reader ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+
+  //
+  // CSV methods
+  //
+
+  public E fromCsv( String csvText )
+  {
+    return (E)Csv.fromCsv( csvText );
+  }
+
+  public E fromCsvUrl( String urlBase, String... urlSuffix )
+  {
+    try
+    {
+      StringBuilder url = new StringBuilder( urlBase );
+      if( urlSuffix != null )
+      {
+        Arrays.stream( urlSuffix ).forEach( url::append );
+      }
+
+      return (E)ManUrlExt.getCsvContent( new java.net.URL( url.toString() ) );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public E fromCsvUrl( java.net.URL url )
+  {
+    return (E)ManUrlExt.getCsvContent( url );
+  }
+
+  public E fromCsvFile( java.io.File file )
+  {
+    try
+    {
+      return fromCsvUrl( file.toURI().toURL() );
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public E fromCsvReader( Reader reader )
+  {
+    try
+    {
+      return (E)Csv.fromCsv( StreamUtil.getContent( reader ) );
     }
     catch( Exception e )
     {

@@ -26,9 +26,9 @@ import java.util.Map;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 
 /**
- * This class defines methods to simplify making HTTP requests involved with basic REST API calls supporting via GET,
- * POST, PUT, PATCH, and DELETE and handles responses in JSON/JSON Schema, YAML, XML, or plain text.  An instance of
- * this class may be use for multiple get/post/etc. requests.
+ * This class defines methods to simplify making HTTP requests involved with basic REST API calls supporting GET,
+ * POST, PUT, PATCH, and DELETE and handles responses in JSON & JSON Schema, YAML, XML, CSV, or plain text.  An instance
+ * of this class may be used for multiple get/post/etc. requests.
  * <p/>
  * Normally you use this class via the JSON API {@code request(url)} method to manage simple HTTP request API calls:
  * <pre><code>
@@ -58,7 +58,7 @@ public class Requester<T>
 
   public enum Format
   {
-    Json, Yaml, Text
+    Json, Yaml, Xml, Csv, Text
   }
 
   /**
@@ -84,7 +84,7 @@ public class Requester<T>
 
   /**
    * Set the default format expected in the response. The response will be parsed according to this setting.
-   * @param format Json, Yaml, or Plain text. Default is Json.
+   * @param format Json, Yaml, Xml, Csv, or Plain text. Default is Json.
    */
   public Requester<T> withResponseFormat( Format format )
   {
@@ -195,7 +195,7 @@ public class Requester<T>
    *
    * @param arguments A JSON value object, sent in the URL as JSON encoded arguments, nullable
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or
    * Bindings of String/JSON value)
@@ -251,7 +251,7 @@ public class Requester<T>
    *
    * @param arguments A JSON value object, sent in the URL as JSON encoded arguments, nullable
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or
    * Bindings of String/JSON value)
@@ -286,7 +286,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -320,7 +320,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -354,7 +354,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -388,7 +388,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -422,7 +422,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -456,7 +456,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param payload   A JSON value object, sent as JSON encoded text in the request's message body
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -499,7 +499,7 @@ public class Requester<T>
    * @param <R>       The expected type of the response
    * @param arguments A JSON value object, sent in the URL as JSON encoded arguments, nullable
    * @param urlSuffix A suffix, such as "/108", nullable
-   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
+   * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, {@code Xml}, {@code Csv}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
    */
@@ -520,6 +520,14 @@ public class Requester<T>
       case Yaml:
         _headers.put( "Accept", "application/x-yaml, application/yaml, text/yaml;q=0.9" );
         return Request.send( ( url, p, m ) -> ManUrlExt.sendYamlRequest( url, m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _urlBase, urlSuffix );
+      case Xml:
+        _headers.put( "Accept", "application/xml" );
+        return Request.send( ( url, p, m ) -> ManUrlExt.sendXmlRequest( url, m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _urlBase, urlSuffix );
+      case Csv:
+        _headers.put( "Accept", "text/csv" );
+        return Request.send( ( url, p, m ) -> ManUrlExt.sendCsvRequest( url, m, jsonValue, _headers, _timeout ),
           method, jsonValue, _urlBase, urlSuffix );
       case Text:
         return Request.send( ( url, p, m ) -> ManUrlExt.sendPlainTextRequest( url, m, jsonValue, _headers, _timeout ),

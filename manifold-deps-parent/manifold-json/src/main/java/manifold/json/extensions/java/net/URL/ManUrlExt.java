@@ -18,6 +18,7 @@ package manifold.json.extensions.java.net.URL;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import manifold.api.json.Csv;
 import manifold.api.json.Xml;
 import manifold.api.json.Yaml;
 import manifold.ext.api.Jailbreak;
@@ -233,6 +234,16 @@ public class ManUrlExt
   {
     return Yaml.fromYaml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+  public static Object sendXmlRequest( @This URL url, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Xml.fromXml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+  }
+  public static Object sendCsvRequest( @This URL url, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Csv.fromCsv( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+  }
 
   /**
    * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a YAML response.
@@ -316,5 +327,16 @@ public class ManUrlExt
   public static Object getXmlContent( @This URL thiz )
   {
     return Xml.fromXml( getTextContent( thiz ) );
+  }
+
+  /**
+   * @return An CSV object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
+   * content is not a CSV document.
+   *
+   * @see manifold.api.json.Csv#fromCsv(String)
+   */
+  public static Object getCsvContent( @This URL thiz )
+  {
+    return Csv.fromCsv( getTextContent( thiz ) );
   }
 }

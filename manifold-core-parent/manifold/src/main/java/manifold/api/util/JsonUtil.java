@@ -17,6 +17,7 @@
 package manifold.api.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -440,6 +441,151 @@ public class JsonUtil
     target.append( '<' ).append( name ).append( ">" );
     target.append( value );
     target.append( "</" ).append( name ).append( ">\n" );
+  }
+
+
+  public static String toCsv( Object jsonValue )
+  {
+    StringBuilder sb = new StringBuilder();
+    if( jsonValue instanceof Map )
+    {
+      toCsv( jsonValue, null, sb, 0 );
+    }
+    else if( jsonValue instanceof Iterable )
+    {
+      toCsv( jsonValue, "list", sb, 0 );
+    }
+    else
+    {
+      toCsv( jsonValue, "item", sb, 0 );
+    }
+    return sb.toString();
+  }
+
+  public static void toCsv( Object jsonValue, String name, StringBuilder target, int indent )
+  {
+    if( jsonValue instanceof Map )
+    {
+      if( name == null )
+      {
+        Map map = (Map)jsonValue;
+        if( map.size() == 1 )
+        {
+          // single entry with no name implies root, defer to the root
+          Object rootKey = map.keySet().iterator().next();
+          Object rootValue = map.get( rootKey );
+          if( rootValue instanceof Pair )
+          {
+            rootValue = ((Pair)rootValue).getSecond();
+          }
+          toCsv( rootValue, rootKey.toString(), target, indent );
+          return;
+        }
+        else
+        {
+          //todo: factor out Csv.CSV_DEFAULT_ROOT
+          name = "root_object";
+        }
+      }
+      // a single row of data consisting of the name/value pairs in the map
+      toCsv( Collections.singletonList( jsonValue ), name, target, indent );
+    }
+    else if( jsonValue instanceof Iterable )
+    {
+      // A list of data
+
+      toCsv( (Iterable)jsonValue, name, target, indent );
+    }
+    else
+    {
+      // a single row of data consisting of just one column of the name/value pair
+
+      toCsv( Collections.singletonList( jsonValue ), name, target, indent );
+    }
+  }
+
+  private static void toCsv( Iterable value, String name, StringBuilder target, int indent )
+  {
+    Iterator iterator = value.iterator();
+    if( iterator.hasNext() )
+    {
+      // Csv header
+
+      Object comp = iterator.next();
+      if( comp instanceof Pair )
+      {
+        comp = ((Pair)comp).getSecond();
+      }
+
+      if( comp instanceof Map )
+      {
+        // row of data
+
+        int i = 0;
+        for( Object key: ((Map)comp).keySet() )
+        {
+          if( i > 0 )
+          {
+            target.append( ',' );
+          }
+          appendCsvValue( target, key );
+          i++;
+        }
+        target.append( '\n' );
+      }
+      else if( comp instanceof Iterable )
+      {
+        // single column of data
+
+        appendCsvValue( target, name ).append( '\n' );
+      }
+    }
+    else
+    {
+      return;
+    }
+
+    for( Object comp: value )
+    {
+      // Csv records
+
+      if( comp instanceof Pair )
+      {
+        comp = ((Pair)comp).getSecond();
+      }
+
+      if( comp instanceof Map )
+      {
+        int i = 0;
+        for( Object v: ((Map)comp).values() )
+        {
+          if( i > 0 )
+          {
+            target.append( ',' );
+          }
+          appendCsvValue( target, v );
+          i++;
+        }
+      }
+      else if( comp instanceof Iterable )
+      {
+        // Lists of lists not supported with CSV, just dumping text for each element to a single value
+        target.append( '"' );
+        ((Iterable<?>)comp).forEach( e -> target.append( "\"\"" ).append( value ).append( "\"\"," ) );
+        target.append( "\"\n" );
+      }
+      else
+      {
+        // single column of data
+        appendCsvValue( target, value ).append( '\n' );
+      }
+    }
+  }
+
+  private static StringBuilder appendCsvValue( StringBuilder target, Object value )
+  {
+    target.append( '"' ).append( String.valueOf( value ).replace( "\"", "\"\"" ) ).append( '"' );
+    return target;
   }
 
   public static <E extends Map<String, Object>> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )

@@ -186,6 +186,44 @@ public class ManBindingsExt
   }
 
   /**
+   * Serializes this {@link Bindings} instance to CSV nested in a root element named {@code "object"}
+   *
+   * @see #toCsv(Bindings, String)
+   * @see #toCsv(Bindings, String, StringBuilder, int)
+   */
+  public static String toCsv( @This Bindings thiz )
+  {
+    return toCsv( thiz, "object" );
+  }
+
+  /**
+   * Serializes this {@link Bindings} instance to CSV with in a root element with the specified {@code name}
+   *
+   * @param name The name of the root element to nest the Bindings CSV
+   *
+   * @see #toCsv(Bindings, String, StringBuilder, int)
+   */
+  public static String toCsv( @This Bindings thiz, String name )
+  {
+    StringBuilder sb = new StringBuilder();
+    toCsv( thiz, name, sb, 0 );
+    return sb.toString();
+  }
+
+  /**
+   * Serializes this {@link Bindings} instance into an CSV formatted StringBuilder {@code target}
+   * with the specified {@code indent} of spaces.
+   *
+   * @param name   The name of the root element to nest the Bindings CSV
+   * @param target A {@link StringBuilder} to write the CSV in
+   * @param indent The margin of spaces to indent the CSV
+   */
+  public static void toCsv( @This Bindings thiz, String name, StringBuilder target, int indent )
+  {
+    JsonUtil.toCsv( thiz, name, target, indent );
+  }
+
+  /**
    * Make a JSON-compatible URL with the arguments from this {@link Bindings}. URL encodes
    * the arguments in UTF-8 and appends them to the list using standard URL query
    * delimiters.

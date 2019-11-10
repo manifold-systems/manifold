@@ -31,6 +31,7 @@ import manifold.api.json.schema.TypeAttributes;
 import manifold.ext.RuntimeMethods;
 
 /**
+ *
  */
 public class JsonListType extends JsonSchemaType
 {
@@ -62,7 +63,7 @@ public class JsonListType extends JsonSchemaType
     {
       _state._componentType = ((LazyRefJsonType)_state._componentType).resolve();
     }
-    for( Map.Entry<String, IJsonParentType> entry : new HashSet<>( _state._innerTypes.entrySet() ) )
+    for( Map.Entry<String, IJsonParentType> entry: new HashSet<>( _state._innerTypes.entrySet() ) )
     {
       IJsonType type = entry.getValue();
       if( type instanceof JsonSchemaType )
@@ -99,7 +100,7 @@ public class JsonListType extends JsonSchemaType
         List<IJsonType> definitions = getDefinitions();
         if( definitions != null )
         {
-          for( IJsonType child : definitions )
+          for( IJsonType child: definitions )
           {
             if( child.getName().equals( name ) )
             {
@@ -209,7 +210,7 @@ public class JsonListType extends JsonSchemaType
       return;
     }
 
-    for( IJsonType constituentType: getConstuents( componentType, new LinkedHashSet<>() ) )
+    for( IJsonType constituentType: getConstituents( componentType, new LinkedHashSet<>() ) )
     {
       sb.append( '\n' );
       String specificPropertyType = getConstituentQn( constituentType, componentType );
@@ -265,7 +266,7 @@ public class JsonListType extends JsonSchemaType
     }
   }
 
-  private Set<IJsonType> getConstuents( IJsonType type, Set<IJsonType> constituents )
+  private Set<IJsonType> getConstituents( IJsonType type, Set<IJsonType> constituents )
   {
     if( type instanceof JsonUnionType )
     {
@@ -273,7 +274,7 @@ public class JsonListType extends JsonSchemaType
     }
     else if( type instanceof JsonListType )
     {
-      getConstuents( ((JsonListType)type).getComponentType(), constituents );
+      getConstituents( ((JsonListType)type).getComponentType(), constituents );
     }
     return constituents;
   }
@@ -288,6 +289,12 @@ public class JsonListType extends JsonSchemaType
 
     // Provide a loader(...) method, returns Loader<typeName> with methods for loading content from String, URL, file, etc.
     addLoadMethod( sb, indent, typeName );
+
+    // Provide a requester(urlBase) method, returns Requester<typeName> with for performing HTTP requests using HTTP GET, POST, PUT, PATCH, & DELETE
+    addRequestMethod( sb, indent, typeName );
+
+    // Allow non-schema files to load from themselves easily, also corresponds with @FragmentValue added to toplevel class
+    addFromSourceMethod( sb, indent );
   }
 
   private void addLoadMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )

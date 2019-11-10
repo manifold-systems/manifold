@@ -48,9 +48,6 @@ import manifold.api.util.Pair;
  */
 public class JsonStructureType extends JsonSchemaType
 {
-  @SuppressWarnings("unused")
-  private static final String FROM_SOURCE_METHOD = "fromSource";
-
   private static final class State
   {
     private List<IJsonType> _superTypes;
@@ -824,66 +821,7 @@ public class JsonStructureType extends JsonSchemaType
     addRequestMethod( sb, indent, typeName );
 
     // Allow non-schema json files to load from themselves easily, also corresponds with @FragmentValue added to toplevel class
-    addInstanceMethod( sb, indent );
-  }
-
-  private void addInstanceMethod( StringBuilder sb, int indent )
-  {
-    IFile file = getIFile();
-    if( isSchemaType() || !isParentRoot() )
-    {
-      return;
-    }
-
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent );
-    sb.append( "static $typeName $FROM_SOURCE_METHOD() {\n" );
-    indent( sb, indent );
-
-    //## todo: this switch is ripe, should be configurable as part of AbstractJsonTypeManifold somehow?
-    String methodName;
-    switch( file.getExtension().toLowerCase() )
-    {
-      case JsonTypeManifold.FILE_EXTENSION:
-        methodName = "fromJson";
-        break;
-      case "yaml":
-      case "yml":
-        methodName = "fromYaml";
-        break;
-      case "xml":
-        methodName = "fromXml";
-        break;
-      default:
-        throw new IllegalStateException();
-    }
-
-    if( file instanceof FileFragmentImpl )
-    {
-      // include fragment directly as string literal
-
-      sb.append( "  return load()." ).append( methodName )
-        .append( "(\"" ).append( getContentForLiteral( (FileFragmentImpl)file ) ).append( "\");\n" );
-    }
-    else
-    {
-      // avoid using a string literal, file could be very large, instead reference the corresponding resource file
-
-      //## todo: using getFqn(), which may not correspond with resource file name
-      //noinspection unused
-      String resourceFile = '/' + getFqn( this ).replace( '.', '/' ) + '.' + file.getExtension();
-      sb.append( "  return load()." ).append( methodName ).append( "Reader" )
-        .append( "(new java.io.InputStreamReader($typeName.class.getResourceAsStream(\"$resourceFile\")));\n" );
-    }
-    indent( sb, indent );
-    sb.append( "}\n" );
-  }
-
-  private String getContentForLiteral( FileFragmentImpl file )
-  {
-    String content = file.getContent();
-    return ManEscapeUtil.escapeForJavaStringLiteral( content );
+    addFromSourceMethod( sb, indent );
   }
 
   private void addBuilderMethod( StringBuilder sb, int indent )
@@ -1222,17 +1160,6 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( "static " ).append( "Loader<$typeName>" ).append( " load() {\n" );
     indent( sb, indent );
     sb.append( "  return new Loader<>();\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
-  }
-
-  private void addRequestMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
-  {
-    indent( sb, indent );
-    //noinspection unused
-    sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(String urlBase) {\n" );
-    indent( sb, indent );
-    sb.append( "  return new Requester<>(urlBase);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }

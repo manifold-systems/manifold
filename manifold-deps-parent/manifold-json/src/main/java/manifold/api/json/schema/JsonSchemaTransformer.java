@@ -150,16 +150,32 @@ public class JsonSchemaTransformer
       }
 
       IJsonType type = transformer.transformType( null, source, name, bindings, null );
-      if( type instanceof JsonSchemaType && cachedType != null )
+      if( type instanceof JsonSchemaType )
       {
-        // move issues from errant cached type to the actual type
-        moveIssuesFromErrantType( (JsonSchemaType)type, (ErrantType)cachedType );
+        checkSynthetic( (JsonSchemaType)type, jsonValue );
+        if( cachedType != null )
+        {
+          // move issues from errant cached type to the actual type
+          moveIssuesFromErrantType( (JsonSchemaType)type, (ErrantType)cachedType );
+        }
       }
       return type;
     }
     finally
     {
       session.popTransformer( transformer );
+    }
+  }
+
+  private static void checkSynthetic( JsonSchemaType type, Object jsonObj )
+  {
+    if( jsonObj instanceof Bindings )
+    {
+      Object value = ((Bindings)jsonObj).get( "synthetic" );
+      if( value instanceof Boolean )
+      {
+        type.setSyntheticSchema( (Boolean)value );
+      }
     }
   }
 

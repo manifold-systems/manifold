@@ -57,6 +57,8 @@
     <module>manifold-xml-test</module>
     <module>manifold-yaml</module>
     <module>manifold-yaml-test</module>
+    <module>manifold-csv</module>
+    <module>manifold-csv-test</module>
   </modules>
 
   <build>

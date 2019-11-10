@@ -203,8 +203,6 @@ public class Json
       else if( compType == null )
       {
         // Empty list implies dynamic component type
-        System.out.println( "\nWarning: there are no sample elements in list: " + name +
-                            "\nThe component type for this list will be Dynamic.\n" );
         compType = DynamicType.instance();
       }
       ((JsonListType)type).setComponentType( compType );
