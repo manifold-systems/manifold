@@ -88,8 +88,6 @@ public class CsvTokenizer
     int line = _line;
     StringBuilder value = new StringBuilder();
 
-    _prevToken = null;
-
     // is quoted?
     boolean quoted = false;
 
@@ -224,16 +222,23 @@ public class CsvTokenizer
     while( true )
     {
       CsvToken token = nextToken();
+      if( token.isEmpty() )
+      {
+        // all header fields must be non-empty
+        return false;
+      }
+
       header.add( new DataStats( token ) );
       if( token.isLastInRecord() )
       {
         break;
       }
     }
+    int fieldCount = 0;
     int diffCount = 0;
     int row = 0;
     int i = 0;
-    while( row < 10 )
+    while( row < 100 )
     {
       if( i == header.size() )
       {
@@ -243,10 +248,17 @@ public class CsvTokenizer
 
       CsvToken token = nextToken();
       DataStats stats = header.get( i );
-      if( !stats.isSimilar( token ) )
+      if( !token.isEmpty() )
       {
-        diffCount++;
+        // empty values are excluded from analysis
+
+        fieldCount++;
+        if( !stats.isSimilar( token ) )
+        {
+          diffCount++;
+        }
       }
+
       if( token.isLastInRecord() )
       {
         boolean emptyLine = i == 0 && token.getValue().isEmpty();
@@ -268,8 +280,7 @@ public class CsvTokenizer
         i++;
       }
     }
-    int totalFields = row * header.size();
-    return totalFields != 0 && diffCount * 100 / totalFields > 60;
+    return fieldCount != 0 && diffCount * 100 / fieldCount > 60;
   }
 
   private List<Class> inferDataTypes()

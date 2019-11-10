@@ -102,6 +102,11 @@ public class CsvToken
     return _separatorChar;
   }
 
+  public boolean isEmpty()
+  {
+    return getData().isEmpty();
+  }
+
   public boolean isLastInRecord()
   {
     return _separatorChar == '\n' || _separatorChar == '\0';
