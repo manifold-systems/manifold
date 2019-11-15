@@ -41,7 +41,9 @@ import manifold.api.csv.parser.CsvHeader;
 import manifold.api.csv.parser.CsvParser;
 import manifold.api.csv.parser.CsvRecord;
 import manifold.api.csv.parser.CsvToken;
+import manifold.strings.api.DisableStringLiteralTemplates;
 
+@DisableStringLiteralTemplates
 public class Csv
 {
   /**
@@ -288,7 +290,7 @@ public class Csv
       }
     }
     DataBindings typeBindings = new DataBindings();
-    typeBindings.put( "\$schema", "http://json-schema.org/draft-04/schema#" );
+    typeBindings.put( "$schema", "http://json-schema.org/draft-04/schema#" );
     typeBindings.put( "synthetic", true ); // indicates this schema is not directly in the data file
     typeBindings.put( "type", "array" );
     DataBindings items = new DataBindings();
