@@ -174,7 +174,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-collections', version: '2019.1.26'
+    compile group: 'systems.manifold', name: 'manifold-collections', version: '2019.1.27'
     testCompile group: 'junit', name: 'junit', version: '4.12'
                        
     if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
@@ -183,7 +183,7 @@ dependencies {
         compile files( "${System.properties['java.home']}/../lib/tools.jar" )
     }
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2019.1.26'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2019.1.27'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -230,7 +230,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.26</manifold.version>
+        <manifold.version>2019.1.27</manifold.version>
     </properties>
     
     <dependencies>
@@ -299,7 +299,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.26</manifold.version>
+        <manifold.version>2019.1.27</manifold.version>
     </properties>
     
     <dependencies>
