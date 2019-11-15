@@ -17,16 +17,27 @@
 package manifold.api.json;
 
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import javax.script.Bindings;
 import javax.script.ScriptException;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
-import manifold.api.json.schema.JsonSchemaTransformer;
-import manifold.api.json.schema.JsonSchemaTransformerSession;
-import manifold.api.json.schema.JsonSchemaType;
-import manifold.api.json.schema.JsonUnionType;
-import manifold.api.json.schema.TypeAttributes;
+import manifold.api.json.codegen.DynamicType;
+import manifold.api.json.codegen.IJsonParentType;
+import manifold.api.json.codegen.IJsonType;
+import manifold.api.json.codegen.JsonBasicType;
+import manifold.api.json.codegen.JsonListType;
+import manifold.api.json.codegen.JsonStructureType;
+import manifold.api.json.parser.IJsonParser;
+import manifold.api.json.parser.Token;
+import manifold.api.json.codegen.schema.JsonSchemaTransformer;
+import manifold.api.json.codegen.schema.JsonSchemaTransformerSession;
+import manifold.api.json.codegen.schema.JsonSchemaType;
+import manifold.api.json.codegen.schema.JsonUnionType;
+import manifold.api.json.codegen.schema.TypeAttributes;
+import manifold.api.util.ManEscapeUtil;
 import manifold.api.util.Pair;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -71,6 +82,194 @@ public class Json
         }
       }
     };
+
+  /**
+   * Serializes this Map instance to a JSON formatted String
+   */
+  public static String toJson( Map thisMap )
+  {
+    StringBuilder sb = new StringBuilder();
+    toJson( thisMap, sb, 0 );
+    return sb.toString();
+  }
+
+  /**
+   * Serializes this Map instance into a JSON formatted StringBuilder with the specified indent of spaces
+   */
+  public static void toJson( Map thisMap, StringBuilder sb, int indent )
+  {
+    int iKey = 0;
+    if( isNewLine( sb ) )
+    {
+      indent( sb, indent );
+    }
+    sb.append( "{\n" );
+    if( thisMap.size() > 0 )
+    {
+      for( Object key : thisMap.keySet() )
+      {
+        indent( sb, indent + 2 );
+        sb.append( '\"' ).append( key ).append( '\"' ).append( ": " );
+        Object value = thisMap.get( key );
+        if( value instanceof Map )
+        {
+          toJson( (Map)value, sb, indent + 2 );
+        }
+        else if( value instanceof Iterable )
+        {
+          listToJson( sb, indent + 2, (Iterable)value );
+        }
+        else
+        {
+          appendValue( sb, value );
+        }
+        appendCommaNewLine( sb, iKey < thisMap.size() - 1 );
+        iKey++;
+      }
+    }
+    indent( sb, indent );
+    sb.append( "}" );
+  }
+
+  protected static void indent( StringBuilder sb, int indent )
+  {
+    int i = 0;
+    while( i < indent )
+    {
+      sb.append( ' ' );
+      i++;
+    }
+  }
+
+  public static StringBuilder appendValue( StringBuilder sb, Object comp )
+  {
+    if( comp instanceof String )
+    {
+      sb.append( '\"' );
+      sb.append( ManEscapeUtil.escapeForJavaStringLiteral( (String)comp ) );
+      sb.append( '\"' );
+    }
+    else if( comp instanceof Integer ||
+             comp instanceof Long ||
+             comp instanceof Double ||
+             comp instanceof Float ||
+             comp instanceof Short ||
+             comp instanceof Character ||
+             comp instanceof Byte ||
+             comp instanceof Boolean )
+    {
+      sb.append( comp );
+    }
+    else if( comp == null )
+    {
+      sb.append( "null" );
+    }
+    else
+    {
+      throw new IllegalStateException( "Unsupported expando type: " + comp.getClass() );
+    }
+    return sb;
+  }
+
+  /**
+   * Build a JSON string from the specified {@code value}. The {@code value} must be a valid JSON value:
+   * <lu>
+   *   <li>primitive, boxed primitive, or {@code String}</li>
+   *   <li>{@code Iterable} of JSON values</li>
+   *   <li>{@code Map} of JSON values</li>
+   * </lu>
+   * @return A JSON String reflecting the specified {@code value}
+   */
+  public static String toJson( Object value )
+  {
+    StringBuilder target = new StringBuilder();
+    toJson( target, 0, value );
+    return target.toString();
+  }
+  /**
+   * Build a JSON string in the specified {@code target} from the specified {@code value} with the provided left
+   * {@code margin}. The {@code value} must be a valid JSON value:
+   * <lu>
+   *   <li>primitive, boxed primitive, or {@code String}</li>
+   *   <li>{@code Iterable} of JSON values</li>
+   *   <li>{@code Map} of JSON values</li>
+   * </lu>
+   */
+  public static void toJson( StringBuilder target, int margin, Object value )
+  {
+    if( value instanceof Pair )
+    {
+      value = ((Pair)value).getSecond();
+    }
+    if( value instanceof Map )
+    {
+      toJson( ((Map)value), target, margin );
+    }
+    else if( value instanceof Iterable )
+    {
+      listToJson( target, margin, (Iterable)value );
+    }
+    else
+    {
+      appendValue( target, value );
+    }
+  }
+
+  private static boolean isNewLine( StringBuilder sb )
+  {
+    return sb.length() > 0 && sb.charAt( sb.length() - 1 ) == '\n';
+  }
+
+  public static void listToJson( StringBuilder sb, int indent, Iterable value )
+  {
+    sb.append( '[' );
+    int i = 0;
+    for( Iterator iter = value.iterator(); iter.hasNext(); )
+    {
+      Object comp = iter.next();
+      if( i == 0 )
+      {
+        sb.append( "\n" );
+      }
+      if( comp instanceof Map )
+      {
+        toJson( (Map)comp, sb, indent + 2 );
+      }
+      else if( comp instanceof Iterable )
+      {
+        listToJson( sb, indent + 2, (Iterable)comp );
+      }
+      else
+      {
+        indent( sb, indent + 2 );
+        appendValue( sb, comp );
+      }
+      appendCommaNewLine( sb, iter.hasNext() );
+      i++;
+    }
+    indent( sb, indent );
+    sb.append( "]" );
+  }
+
+  /**
+   * Serializes a JSON-compatible List into a JSON formatted StringBuilder with the specified indent of spaces
+   */
+  public static String listToJson( Iterable list )
+  {
+    StringBuilder sb = new StringBuilder();
+    listToJson( sb, 0, list );
+    return sb.toString();
+  }
+
+
+  private static void appendCommaNewLine( StringBuilder sb, boolean bComma )
+  {
+    if( bComma )
+    {
+      sb.append( ',' );
+    }
+    sb.append( "\n" );
+  }
 
   /**
    * Parse the JSON string as a javax.script.Bindings instance.

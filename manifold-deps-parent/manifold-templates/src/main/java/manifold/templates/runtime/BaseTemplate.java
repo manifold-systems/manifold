@@ -24,6 +24,9 @@ import manifold.util.ManExceptionUtil;
 import manifold.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * The base class for all generated template classes.  You can derive your own base class from this one to
  * provide application-specific functionality. See {@link manifold.templates.sparkjava.SparkTemplate}.
@@ -35,7 +38,7 @@ public abstract class BaseTemplate
     () -> {
       try
       {
-        InputStreamReader reader = new InputStreamReader( getTemplateResourceAsStream() );
+        InputStreamReader reader = new InputStreamReader( getTemplateResourceAsStream(), UTF_8 );
         return StreamUtil.getContent( reader ).replace( "\r\n", "\n" );
       }
       catch( Exception e )

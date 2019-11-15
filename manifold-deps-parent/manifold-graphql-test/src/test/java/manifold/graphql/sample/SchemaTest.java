@@ -16,7 +16,7 @@
 
 package manifold.graphql.sample;
 
-import manifold.ext.DataBindings;
+import manifold.api.json.DataBindings;
 import manifold.graphql.sample.movies.Role;
 import org.junit.Test;
 

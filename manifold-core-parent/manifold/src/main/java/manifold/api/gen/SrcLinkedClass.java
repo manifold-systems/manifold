@@ -26,10 +26,13 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
-import manifold.api.util.JsonUtil;
+import manifold.api.util.ManIdentifierUtil;
 import manifold.util.ManExceptionUtil;
 import manifold.api.util.ManStringUtil;
 import manifold.api.util.StreamUtil;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 {
@@ -125,8 +128,8 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
   public static String makeIdentifier( String name, boolean capitalize )
   {
     String identifier = capitalize
-                        ? ManStringUtil.capitalize( JsonUtil.makeIdentifier( name ) )
-                        : JsonUtil.makeIdentifier( name );
+                        ? ManStringUtil.capitalize( ManIdentifierUtil.makeIdentifier( name ) )
+                        : ManIdentifierUtil.makeIdentifier( name );
     return handleSpecialCases( identifier );
   }
 
@@ -146,7 +149,7 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
     int offset = findOffset( file, line, column );
     try
     {
-      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
       return content.startsWith( startSymbol, offset );
     }
     catch( IOException ioe )
@@ -161,7 +164,7 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
       f -> {
         try
         {
-          String content = StreamUtil.getContent( new InputStreamReader( f.openInputStream() ) );
+          String content = StreamUtil.getContent( new InputStreamReader( f.openInputStream(), UTF_8 ) );
           ArrayList<Integer> lineOffsetList = new ArrayList<>();
           lineOffsetList.add( 0 );
           for( int index = content.indexOf( '\n' ) + 1; index > 0; index = content.indexOf( '\n', index ) + 1 )

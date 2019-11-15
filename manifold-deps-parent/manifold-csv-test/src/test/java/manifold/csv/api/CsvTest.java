@@ -17,9 +17,14 @@
 package manifold.csv.api;
 
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import org.junit.Test;
+import abc.csv.Nnndss;
+import abc.csv.Nnndss.NnndssItem;
 import abc.csv.insurance_sample_comma;
 import abc.csv.insurance_sample_comma.insurance_sample_commaItem;
+
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -34,6 +39,15 @@ public class CsvTest
     for (insurance_sample_commaItem item : items) {
       assertNotNull(item.getPolicyID());
       assertNotNull(item.getTiv_2012());
+    }
+  }
+
+  @Test
+  public void testStuff() throws IOException, URISyntaxException
+  {
+    Nnndss nnndss = Nnndss.fromSource();
+    for( NnndssItem item: nnndss) {
+      Integer value = item.getInvasive_pneumococcal_disease__age___5___Confirmed__Current_week();
     }
   }
 

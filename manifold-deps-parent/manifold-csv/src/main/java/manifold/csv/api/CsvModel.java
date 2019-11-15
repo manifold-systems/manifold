@@ -21,9 +21,12 @@ import java.io.InputStreamReader;
 import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
-import manifold.api.json.Csv;
+import manifold.api.csv.Csv;
 import manifold.api.json.JsonModel;
 import manifold.api.util.StreamUtil;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  *
@@ -40,7 +43,7 @@ class CsvModel extends JsonModel
   {
     try
     {
-      return Csv.fromCsv( StreamUtil.getContent( new InputStreamReader( getFile().openInputStream() ) ), true );
+      return Csv.fromCsv( StreamUtil.getContent( new InputStreamReader( getFile().openInputStream(), UTF_8 ) ), true );
     }
     catch( IOException e )
     {

@@ -19,7 +19,7 @@ package manifold.graphql.request;
 import java.util.Map;
 import javax.script.Bindings;
 import manifold.api.json.IJsonBindingsBacked;
-import manifold.ext.DataBindings;
+import manifold.api.json.DataBindings;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 

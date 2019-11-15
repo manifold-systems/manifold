@@ -45,6 +45,9 @@ import manifold.ext.api.This;
 import manifold.api.util.ManClassUtil;
 import manifold.api.util.StreamUtil;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Model implements IModel
 {
   private static final String FAVS_EXTENSIONS = "favs.extensions.";
@@ -104,7 +107,7 @@ public class Model implements IModel
     String content;
     try
     {
-      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
     }
     catch( IOException e )
     {

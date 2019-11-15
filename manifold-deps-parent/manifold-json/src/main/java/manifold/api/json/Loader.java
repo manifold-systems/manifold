@@ -18,6 +18,9 @@ package manifold.api.json;
 
 import java.io.Reader;
 import java.util.Arrays;
+import manifold.api.csv.Csv;
+import manifold.api.xml.Xml;
+import manifold.api.yaml.Yaml;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.api.util.StreamUtil;
 

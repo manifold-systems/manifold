@@ -44,6 +44,9 @@ import manifold.api.util.cache.IllegalTypeNameException;
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LocklessLazyVar;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * A base class for a type manifold that is based on a resource file type, typically discernible by the file extension.
  *
@@ -446,7 +449,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     {
       try( InputStream inputStream = file.openInputStream() )
       {
-        return StreamUtil.getContent( new InputStreamReader( inputStream ) ); //.replace( "\r\n", "\n" );
+        return StreamUtil.getContent( new InputStreamReader( inputStream, UTF_8 ) ); //.replace( "\r\n", "\n" );
       }
       catch( Exception e )
       {

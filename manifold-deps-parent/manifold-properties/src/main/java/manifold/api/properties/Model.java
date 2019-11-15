@@ -24,7 +24,7 @@ import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
-import manifold.api.util.JsonUtil;
+import manifold.api.util.ManIdentifierUtil;
 import manifold.api.util.cache.FqnCache;
 
 /**
@@ -64,7 +64,7 @@ class Model extends AbstractSingleFileModel
       Properties properties = new Properties();
       properties.load( propertiesStream );
 
-      FqnCache<String> cache = new FqnCache<>( fqn, true, JsonUtil::makeIdentifier );
+      FqnCache<String> cache = new FqnCache<>( fqn, true, ManIdentifierUtil::makeIdentifier );
 
       for( String key : properties.stringPropertyNames() )
       {

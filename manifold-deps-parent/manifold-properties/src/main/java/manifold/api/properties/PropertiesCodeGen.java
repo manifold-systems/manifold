@@ -44,6 +44,9 @@ import manifold.api.util.cache.FqnCache;
 import manifold.api.util.cache.FqnCacheNode;
 
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+
 /**
  *
  */
@@ -321,7 +324,7 @@ class PropertiesCodeGen
     {
       try( InputStream inputStream = _file.openInputStream() )
       {
-        return StreamUtil.getContent( new InputStreamReader( inputStream ) ); //.replace( "\r\n", "\n" );
+        return StreamUtil.getContent( new InputStreamReader( inputStream, UTF_8 ) ); //.replace( "\r\n", "\n" );
       }
       catch( Exception e )
       {

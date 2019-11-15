@@ -31,6 +31,9 @@ import manifold.templates.codegen.TemplateGen;
 import manifold.api.util.JavacDiagnostic;
 import manifold.api.util.StreamUtil;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 class TemplateModel extends AbstractSingleFileModel
 {
   private String _source;
@@ -52,7 +55,7 @@ class TemplateModel extends AbstractSingleFileModel
 
     try
     {
-      String templateSource = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      String templateSource = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
       templateSource = templateSource.replace( "\r\n", "\n" );
       TemplateGen generator = new TemplateGen();
       _source = generator.generateCode( getFqn(), templateSource, file, file.toURI(), file.getName() );

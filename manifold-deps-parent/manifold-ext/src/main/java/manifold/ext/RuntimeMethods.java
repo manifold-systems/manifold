@@ -166,6 +166,12 @@ public class RuntimeMethods
       return result;
     }
 
+    if( value instanceof String && ((String)value).isEmpty() )
+    {
+      // empty string is null e.g., CSV empty values are empty strings
+      return null;
+    }
+
     Object boxedValue = coerceBoxed( value, type );
     if( boxedValue != null )
     {

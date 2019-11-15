@@ -18,12 +18,14 @@ package manifold.api.json;
 
 import java.util.Set;
 import javax.script.ScriptException;
-import manifold.ext.DataBindings;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
+import manifold.api.json.codegen.IJsonType;
+import manifold.api.json.codegen.JsonListType;
+import manifold.api.json.codegen.JsonStructureType;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;

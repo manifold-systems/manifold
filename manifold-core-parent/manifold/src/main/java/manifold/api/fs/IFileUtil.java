@@ -20,6 +20,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import manifold.api.util.StreamUtil;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class IFileUtil
 {
 
@@ -95,7 +98,7 @@ public class IFileUtil
     try
     {
       int offset = 0;
-      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
       for( int i = 1; i < line; i++ )
       {
         if( content.length() > offset )

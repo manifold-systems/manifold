@@ -44,6 +44,9 @@ import manifold.internal.javac.TypeProcessor;
 import manifold.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  */
 public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeProcessor
@@ -124,12 +127,12 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
 
               if( file.getExtension().equalsIgnoreCase( "java" ) )
               {
-                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
                 return content.contains( "@Extension" ) && content.contains( Extension.class.getPackage().getName() );
               }
               else // .class file
               {
-                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+                String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
                 return content.contains( Extension.class.getName().replace( '.', '/' ) );
               }
             }

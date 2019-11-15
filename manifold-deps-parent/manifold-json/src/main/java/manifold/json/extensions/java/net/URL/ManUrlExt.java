@@ -18,9 +18,9 @@ package manifold.json.extensions.java.net.URL;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import manifold.api.json.Csv;
-import manifold.api.json.Xml;
-import manifold.api.json.Yaml;
+import manifold.api.csv.Csv;
+import manifold.api.xml.Xml;
+import manifold.api.yaml.Yaml;
 import manifold.ext.api.Jailbreak;
 import manifold.json.extensions.javax.script.Bindings.ManBindingsExt;
 import java.io.IOException;
@@ -38,7 +38,6 @@ import javax.script.Bindings;
 import manifold.api.json.Json;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
-import manifold.api.util.JsonUtil;
 import manifold.api.util.StreamUtil;
 
 /**
@@ -175,7 +174,7 @@ public class ManUrlExt
 
   private static void sendJsonValue( Object jsonValue, HttpURLConnection conn ) throws IOException
   {
-    String json = JsonUtil.toJson( jsonValue );
+    String json = Json.toJson( jsonValue );
     byte[] bytes = json.getBytes( StandardCharsets.UTF_8 );
     conn.setFixedLengthStreamingMode( bytes.length );
     conn.setDoOutput( true );
@@ -234,11 +233,33 @@ public class ManUrlExt
   {
     return Yaml.fromYaml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+
+  /**
+   * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a XML response.
+   *
+   * @param httpMethod The HTTP method to use: "GET", "POST", "PUT", or "PATCH"
+   * @param jsonValue A JSON value to send (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @return A JSON bindings value parsed from the XML response.
+   *
+   * @see #sendRequest(URL, String, Object, Map, int)
+   */
   public static Object sendXmlRequest( @This URL url, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
     return Xml.fromXml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+
+  /**
+   * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a CSV response.
+   *
+   * @param httpMethod The HTTP method to use: "GET", "POST", "PUT", or "PATCH"
+   * @param jsonValue A JSON value to send (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @return A JSON bindings value parsed from the CSV response.
+   *
+   * @see #sendRequest(URL, String, Object, Map, int)
+   */
   public static Object sendCsvRequest( @This URL url, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
@@ -246,7 +267,7 @@ public class ManUrlExt
   }
 
   /**
-   * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a YAML response.
+   * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a plain text response.
    *
    * @param httpMethod The HTTP method to use: "GET", "POST", "PUT", or "PATCH"
    * @param jsonValue A JSON value to send (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
@@ -311,7 +332,7 @@ public class ManUrlExt
    * @return A YAML object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
    * content is not a YAML document.
    *
-   * @see manifold.api.json.Yaml#fromYaml(String)
+   * @see Yaml#fromYaml(String)
    */
   public static Object getYamlContent( @This URL thiz )
   {
@@ -322,7 +343,7 @@ public class ManUrlExt
    * @return An XML object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
    * content is not a XML document.
    *
-   * @see manifold.api.json.Xml#fromXml(String)
+   * @see Xml#fromXml(String)
    */
   public static Object getXmlContent( @This URL thiz )
   {
@@ -333,7 +354,7 @@ public class ManUrlExt
    * @return An CSV object reflecting the contents of this URL, otherwise a {@link RuntimeException} results if the
    * content is not a CSV document.
    *
-   * @see manifold.api.json.Csv#fromCsv(String)
+   * @see Csv#fromCsv(String)
    */
   public static Object getCsvContent( @This URL thiz )
   {

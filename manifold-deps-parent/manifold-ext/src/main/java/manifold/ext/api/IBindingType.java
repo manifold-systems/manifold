@@ -16,14 +16,16 @@
 
 package manifold.ext.api;
 
+import javax.script.Bindings;
+
 /**
- * JSON {@code enum} types implement this so dynamic proxies can marshal calls to JSON bindings.
+ * {@code enum} types implement this so dynamic proxies can marshal calls to {@link Bindings}.
  */
 public interface IBindingType
 {
   /**
-   * Produce a value suitable for a {@link javax.script.Bindings} value e.g., a simple JSON value like a string or a
-   * number.
+   * Produce a value suitable for a {@link Bindings} value e.g., a simple value like a string or
+   * number or another Bindings or List of such values.
    */
   Object toBindingValue();
 }

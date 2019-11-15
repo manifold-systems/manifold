@@ -310,14 +310,14 @@ As you can see from the `User` example Manifold supports standard JSON Schema `f
 | `"int32"`        | `"integer"`  | `int` or `java.lang.Integer` if nullable      |
 | `"big-integer"`  | `"string"`   | `java.math.BigInteger`                        |
 | `"big-decimal"`  | `"string"`   | `java.math.BigDecimal`                        |
-| `"binary"`       | `"string"`   | `manifold.api.json.schema.OctetEncoding`      |
-| `"byte"`         | `"string"`   | `manifold.api.json.schema.Base64Encoding`     | 
+| `"binary"`       | `"string"`   | `manifold.api.json.codegen.schema.OctetEncoding`      |
+| `"byte"`         | `"string"`   | `manifold.api.json.codegen.schema.Base64Encoding`     | 
 
 Other standard format types not listed here are supported but remain as `java.lang.String` or whichever `type` is 
 specified along with the `format`.
 
 Additionally, Manifold includes an API you can implement to provide your own custom formats.  Implement the 
-`manifold.api.json.schema.IJsonFormatTypeResolver` interface as a 
+`manifold.api.json.codegen.schema.IJsonFormatTypeResolver` interface as a 
 [service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
 
 

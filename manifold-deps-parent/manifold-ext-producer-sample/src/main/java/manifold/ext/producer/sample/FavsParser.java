@@ -33,6 +33,9 @@ import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
 import manifold.api.util.StreamUtil;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 class FavsParser
 {
   private static final FavsParser INSTANCE = new FavsParser();
@@ -92,7 +95,7 @@ class FavsParser
     String content;
     try
     {
-      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
     }
     catch( IOException e )
     {

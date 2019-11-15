@@ -14,14 +14,13 @@ import javax.script.Bindings;
 
 import abc.*;
 import junit.framework.TestCase;
-import manifold.api.json.schema.Base64Encoding;
-import manifold.api.json.schema.OctetEncoding;
+import manifold.api.json.codegen.schema.Base64Encoding;
+import manifold.api.json.codegen.schema.OctetEncoding;
 import manifold.util.ReflectUtil;
-import org.junit.Assert;
+
 
 import static abc.Person.*;
 import static abc.Person.Address.*;
-import static java.lang.System.out;
 import static org.junit.Assert.assertArrayEquals;
 
 /**

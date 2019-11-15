@@ -19,9 +19,8 @@ package manifold.xml.api;
 import java.util.ArrayList;
 import java.util.Arrays;
 import javax.script.Bindings;
-import manifold.api.json.Xml;
-import manifold.api.json.Yaml;
-import manifold.api.util.JsonUtil;
+import manifold.api.xml.Xml;
+import manifold.api.yaml.Yaml;
 import org.junit.Test;
 import abc.xml.Catelog;
 import abc.xml.Stuff;
@@ -79,7 +78,7 @@ public class XmlTest
       "</stuff>\n";
 
     Bindings bindings = Xml.fromXml( xml, true );
-    String toXml = JsonUtil.toXml( bindings );
+    String toXml = Xml.toXml( bindings );
     assertEquals( xml, toXml );
   }
 
@@ -118,7 +117,7 @@ public class XmlTest
       "  Billsmer @ 338-4338.";
 
     Bindings yamlBindings = (Bindings)Yaml.fromYaml( yaml );
-    String xml = JsonUtil.toXml( yamlBindings );
+    String xml = Xml.toXml( yamlBindings );
     Bindings xmlBindings = Xml.fromXml( xml );
     assertEquals( yamlBindings, xmlBindings );
   }

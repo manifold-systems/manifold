@@ -25,9 +25,9 @@ import graphql.schema.GraphQLScalarType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import manifold.api.json.schema.FormatTypeResolvers;
-import manifold.api.json.schema.IJsonFormatTypeResolver;
-import manifold.api.json.schema.JsonFormatType;
+import manifold.api.json.codegen.schema.FormatTypeResolvers;
+import manifold.api.json.codegen.schema.IJsonFormatTypeResolver;
+import manifold.api.json.codegen.schema.JsonFormatType;
 import manifold.api.util.ManStringUtil;
 
 /**

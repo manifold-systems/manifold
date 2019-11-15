@@ -18,7 +18,9 @@ package manifold.api.json;
 
 import java.io.IOException;
 import javax.script.Bindings;
-import manifold.api.util.JsonUtil;
+import manifold.api.csv.Csv;
+import manifold.api.xml.Xml;
+import manifold.api.yaml.Yaml;
 
 /**
  * This class is used as part of the JSON API. It defines methods to write this JSON object
@@ -48,13 +50,13 @@ public class Writer
    */
   public String toJson()
   {
-    return JsonUtil.toJson( _value );
+    return Json.toJson( _value );
   }
   public void toJson( Appendable target )
   {
     try
     {
-      target.append( JsonUtil.toJson( _value ) );
+      target.append( Json.toJson( _value ) );
     }
     catch( IOException e )
     {
@@ -92,13 +94,13 @@ public class Writer
    */
   public String toXml()
   {
-    return JsonUtil.toXml( _value );
+    return Xml.toXml( _value );
   }
   public void toXml( Appendable target )
   {
     try
     {
-      target.append( JsonUtil.toXml( _value ) );
+      target.append( Xml.toXml( _value ) );
     }
     catch( IOException e )
     {
@@ -116,9 +118,10 @@ public class Writer
   public String toXml( String name )
   {
     StringBuilder sb = new StringBuilder();
-    JsonUtil.toXml( _value, name, sb, 0 );
+    Xml.toXml( _value, name, sb, 0 );
     return sb.toString();
   }
+
   /**
    * Serializes this instance to an CSV formatted String
    *
@@ -126,13 +129,13 @@ public class Writer
    */
   public String toCsv()
   {
-    return JsonUtil.toCsv( _value );
+    return Csv.toCsv( _value );
   }
   public void toCsv( Appendable target )
   {
     try
     {
-      target.append( JsonUtil.toCsv( _value ) );
+      target.append( Csv.toCsv( _value ) );
     }
     catch( IOException e )
     {
@@ -141,7 +144,7 @@ public class Writer
   }
 
   /**
-   * Serializes this instance to an CSV formatted String
+   * Serializes this instance to a CSV formatted String
    *
    * @param name the root name for the CSV
    *
@@ -150,7 +153,7 @@ public class Writer
   public String toCsv( String name )
   {
     StringBuilder sb = new StringBuilder();
-    JsonUtil.toCsv( _value, name, sb, 0 );
+    Csv.toCsv( _value, name, sb, 0 );
     return sb.toString();
   }
 }

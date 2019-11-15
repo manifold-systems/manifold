@@ -18,15 +18,19 @@ package manifold.json.extensions.javax.script.Bindings;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import javax.script.Bindings;
-import manifold.api.json.Yaml;
-import manifold.ext.DataBindings;
+import manifold.api.csv.Csv;
+import manifold.api.json.Json;
+import manifold.api.xml.Xml;
+import manifold.api.yaml.Yaml;
+import manifold.api.json.DataBindings;
 import manifold.ext.api.Extension;
 import manifold.ext.api.This;
 import manifold.json.extensions.java.net.URL.ManUrlExt;
-import manifold.api.util.JsonUtil;
 import manifold.api.util.Pair;
 
 /**
@@ -69,7 +73,7 @@ public class ManBindingsExt
    */
   public static void toJson( @This Bindings thiz, StringBuilder target, int margin )
   {
-    JsonUtil.toJson( thiz, target, margin );
+    Json.toJson( thiz, target, margin );
   }
 
   /**
@@ -126,7 +130,7 @@ public class ManBindingsExt
         else
         {
           indent( target, indent + 4 );
-          JsonUtil.appendValue( target, comp );
+          Json.appendValue( target, comp );
         }
         appendCommaNewLine( target, i < iSize - 1 );
         i++;
@@ -182,7 +186,7 @@ public class ManBindingsExt
    */
   public static void toXml( @This Bindings thiz, String name, StringBuilder target, int indent )
   {
-    JsonUtil.toXml( thiz, name, target, indent );
+    Xml.toXml( thiz, name, target, indent );
   }
 
   /**
@@ -220,7 +224,7 @@ public class ManBindingsExt
    */
   public static void toCsv( @This Bindings thiz, String name, StringBuilder target, int indent )
   {
-    JsonUtil.toCsv( thiz, name, target, indent );
+    Csv.toCsv( thiz, name, target, indent );
   }
 
   /**
@@ -332,6 +336,29 @@ public class ManBindingsExt
   public static <E extends Bindings> E deepCopy( @This Bindings thiz, Function<Integer, E> bindingsSupplier )
   {
     //noinspection unchecked
-    return (E)JsonUtil.deepCopyValue( thiz, bindingsSupplier );
+    return (E)deepCopyValue( thiz, bindingsSupplier );
+  }
+
+  @Extension
+  public static <E extends Map<String, Object>> Object deepCopyValue( Object value, Function<Integer, E> bindingsSupplier )
+  {
+    if( value instanceof Map )
+    {
+      Map<String, Object> dataMap = (Map)value;
+      Map<String, Object> copy = bindingsSupplier.apply( dataMap.size() );
+      dataMap.forEach( ( k, v ) -> copy.put( k, deepCopyValue( v, bindingsSupplier ) ) );
+      return copy;
+    }
+
+    if( value instanceof Iterable )
+    {
+      //noinspection unchecked
+      Iterable<Object> list = (Iterable<Object>)value;
+      List<Object> copy = new ArrayList<>();
+      list.forEach( e -> copy.add( deepCopyValue( e, bindingsSupplier ) ) );
+      return copy;
+    }
+
+    return value;
   }
 }

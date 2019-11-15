@@ -32,6 +32,9 @@ import manifold.api.host.IRuntimeManifoldHost;
 import manifold.api.type.JavaTypeManifold;
 import manifold.api.util.StreamUtil;
 
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 /**
  * Dark Java is dark because it's Java, yet it can't be "seen" at compile-time.
  * It satisfies the use-case where you need to write Java software against
@@ -176,7 +179,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   {
     try
     {
-      return StreamUtil.getContent( new InputStreamReader( model.getFile().openInputStream() ) );
+      return StreamUtil.getContent( new InputStreamReader( model.getFile().openInputStream(), UTF_8 ) );
     }
     catch( IOException ioe )
     {

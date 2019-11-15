@@ -24,10 +24,14 @@ import java.util.List;
 import java.util.StringTokenizer;
 import javax.script.ScriptException;
 import manifold.api.fs.IFile;
-import manifold.api.json.schema.IllegalSchemaTypeName;
+import manifold.api.json.parser.Token;
+import manifold.api.json.codegen.schema.IllegalSchemaTypeName;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
 import manifold.api.util.StreamUtil;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  */
@@ -73,7 +77,7 @@ public class JsonIssueContainer implements IIssueContainer
     try
     {
       int offset = 0;
-      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream() ) );
+      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
       for( int i = 1; i < lineNum; i++ )
       {
         if( content.length() > offset )

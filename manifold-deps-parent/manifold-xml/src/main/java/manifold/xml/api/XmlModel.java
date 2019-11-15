@@ -23,8 +23,11 @@ import javax.script.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.JsonModel;
-import manifold.api.json.Xml;
+import manifold.api.xml.Xml;
 import manifold.api.util.StreamUtil;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  *
@@ -41,7 +44,7 @@ class XmlModel extends JsonModel
   {
     try
     {
-      return Xml.fromXml( StreamUtil.getContent( new InputStreamReader( getFile().openInputStream() ) ), true );
+      return Xml.fromXml( StreamUtil.getContent( new InputStreamReader( getFile().openInputStream(), UTF_8 ) ), true );
     }
     catch( IOException e )
     {

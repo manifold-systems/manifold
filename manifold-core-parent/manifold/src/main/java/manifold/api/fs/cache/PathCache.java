@@ -30,7 +30,7 @@ import manifold.api.fs.IFileUtil;
 import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
-import manifold.api.util.JsonUtil;
+import manifold.api.util.ManIdentifierUtil;
 import manifold.api.util.ManClassUtil;
 import manifold.api.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
@@ -173,7 +173,7 @@ public class PathCache
     String fqn;
     if( pkg.length() > 0 )
     {
-      fqn = pkg + '.' + JsonUtil.makeIdentifier( resourceName );
+      fqn = pkg + '.' + ManIdentifierUtil.makeIdentifier( resourceName );
     }
     else
     {

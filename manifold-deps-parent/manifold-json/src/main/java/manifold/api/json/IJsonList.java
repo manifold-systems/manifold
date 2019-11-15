@@ -17,11 +17,10 @@
 package manifold.api.json;
 
 import java.util.List;
-import manifold.ext.DataBindings;
+import javax.script.Bindings;
 import manifold.ext.api.IListBacked;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
-import manifold.api.util.JsonUtil;
 
 /**
  * A base interface for all JSON and YAML types with methods to transform a JSON value List to/from JSON and YAML
@@ -46,7 +45,7 @@ public interface IJsonList<T> extends IListBacked<T>
   default IJsonList<T> copy()
   {
     //noinspection unchecked
-    return (IJsonList<T>)JsonUtil.deepCopyValue(getList(), DataBindings::new);
+    return (IJsonList<T>)Bindings.deepCopyValue(getList(), DataBindings::new);
   }
 
   /** For Internal Use Only */

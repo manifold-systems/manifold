@@ -22,8 +22,8 @@ import java.util.Map;
 import javax.script.Bindings;
 import junit.framework.TestCase;
 import manifold.api.json.Json;
-import manifold.api.json.Yaml;
-import manifold.ext.DataBindings;
+import manifold.api.yaml.Yaml;
+import manifold.api.json.DataBindings;
 
 public class ManBindingsExtTest extends TestCase
 {

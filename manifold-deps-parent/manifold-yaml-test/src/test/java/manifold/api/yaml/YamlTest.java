@@ -24,16 +24,19 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import javax.script.Bindings;
 import junit.framework.TestCase;
-import manifold.api.json.Yaml;
-import manifold.api.util.JsonUtil;
+import manifold.api.json.Json;
 import manifold.api.util.StreamUtil;
+
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class YamlTest extends TestCase
 {
   public void testYaml() throws IOException
   {
-    Bindings bindings = (Bindings)Yaml.fromYaml( StreamUtil.getContent( new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ) ) ) );
-    System.out.println( JsonUtil.toJson( bindings ) );
+    Bindings bindings = (Bindings)Yaml.fromYaml( StreamUtil.getContent(
+      new InputStreamReader( getClass().getResourceAsStream( "/abc/yaml/Invoice.yaml" ), UTF_8 ) ) );
+    System.out.println( Json.toJson( bindings ) );
   }
 
   public void testSampleYaml() throws FileNotFoundException

@@ -178,10 +178,11 @@ public class FqnCache<T> extends FqnCacheNode<T> implements IFqnCache<T>
         }
         else
         {
-          if( theRest.charAt( theRest.length() - 1 ) != '>' )
-          {
-            throw new IllegalTypeNameException( "\"" + theRest + "\" does not end with '>'" );
-          }
+//todo: this prevents some names from working e.g., csv header column names tend to be pretty arbitrary and long and not very identifier-like
+//          if( theRest.charAt( theRest.length() - 1 ) != '>' )
+//          {
+//            throw new IllegalTypeNameException( "\"" + theRest + "\" does not end with '>'" );
+//          }
           part = theRest;
           theRest = null;
         }

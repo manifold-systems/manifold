@@ -27,13 +27,14 @@ import javax.script.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import manifold.api.json.codegen.IJsonParentType;
+import manifold.api.json.codegen.IJsonType;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.JavaTypeManifold;
-import manifold.ext.DataBindings;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
-import manifold.api.util.JsonUtil;
+import manifold.api.util.ManIdentifierUtil;
 import manifold.api.util.ManClassUtil;
 
 /**
@@ -102,7 +103,7 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
     String pkg = ManClassUtil.getPackage( topLevelFqn );
     sb.append( "package " ).append( pkg ).append( ";\n\n" )
       .append( "import " ).append( Json.class.getName() ).append( ";\n" )
-      .append( "import " ).append( JsonUtil.class.getName() ).append( ";\n" )
+      .append( "import " ).append( ManIdentifierUtil.class.getName() ).append( ";\n" )
       .append( "import " ).append( Bindings.class.getName() ).append( ";\n" )
       .append( "import " ).append( Loader.class.getName() ).append( ";\n" )
       .append( "import " ).append( Requester.class.getName() ).append( ";\n" )
