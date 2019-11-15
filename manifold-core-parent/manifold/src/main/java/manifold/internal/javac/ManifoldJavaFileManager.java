@@ -200,7 +200,8 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       recurse );
     if( kinds.contains( JavaFileObject.Kind.SOURCE ) && (location == StandardLocation.SOURCE_PATH || location == StandardLocation.CLASS_PATH || location instanceof ManPatchModuleLocation) )
     {
-      Set<TypeName> children =((SimpleModule)getHost().getSingleModule()).getChildrenOfNamespace( packageName );
+      SimpleModule compilingModule = (SimpleModule)getHost().getSingleModule(); // note, a null module indicates JavacPlugin is not initialized at ENTER phase yet
+      Set<TypeName> children = compilingModule == null ? null : compilingModule.getChildrenOfNamespace( packageName );
       if( children == null || children.isEmpty() )
       {
         return list;
