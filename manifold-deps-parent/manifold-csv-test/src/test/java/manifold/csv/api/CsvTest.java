@@ -17,38 +17,69 @@
 package manifold.csv.api;
 
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import org.junit.Test;
 import abc.csv.Nnndss;
 import abc.csv.Nnndss.NnndssItem;
+import abc.csv.CsvTestSchema;
+import abc.csv.CsvTestSchema.CsvTestSchemaItem;
 import abc.csv.insurance_sample_comma;
 import abc.csv.insurance_sample_comma.insurance_sample_commaItem;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import org.junit.Test;
 
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 public class CsvTest
 {
   @Test
-  public void testManifold()
+  public void testSimpleCsvManifold()
   {
     insurance_sample_comma items = insurance_sample_comma.fromSource();
-    assertEquals(17, items.size());
-    for (insurance_sample_commaItem item : items) {
-      assertNotNull(item.getPolicyID());
-      assertNotNull(item.getTiv_2012());
+    assertEquals( 17, items.size() );
+    for( insurance_sample_commaItem item: items )
+    {
+      assertNotNull( item.getPolicyID() );
+      assertNotNull( item.getTiv_2012() );
     }
   }
 
   @Test
-  public void testStuff() throws IOException, URISyntaxException
+  public void testAdvancedFormat() throws IOException, URISyntaxException
   {
     Nnndss nnndss = Nnndss.fromSource();
-    for( NnndssItem item: nnndss) {
+    for( NnndssItem item: nnndss )
+    {
       Integer value = item.getInvasive_pneumococcal_disease__age___5___Confirmed__Current_week();
     }
   }
 
+  @Test
+  public void testCsvLoadedFromJsonSchema()
+  {
+    CsvTestSchema test = CsvTestSchema.load().fromCsvReader( new InputStreamReader( CsvTest.class.getResourceAsStream( "/abc/csv/CsvTestSchemaData.csv" ) ) );
+    CsvTestSchemaItem item = test.get( 0 );
+    assertEquals( "hello", item.getAString() );
+    assertEquals( 5, item.getAInteger() );
+    assertEquals( 3.14d, item.getANumber(), 0 );
+    assertEquals( true, item.getABoolean() );
+    assertEquals( CsvTestSchema.MyEnum.red, item.getAEnumRef() );
+    assertEquals( 9223372036854775807L, (long)item.getALong() );
+    assertEquals( LocalDateTime.parse( "2007-12-03T10:15:30" ), item.getADateTime() );
+    assertEquals( LocalDate.parse( "2007-12-03" ), item.getADate() );
+    assertEquals( LocalTime.parse( "10:15:30" ), item.getATime() );
+    assertEquals( Instant.ofEpochMilli( 99999999 ), item.getAInstant() );
+    assertEquals( new BigInteger( "9223372036854775807123" ), item.getABigInteger() );
+    assertEquals( new BigDecimal( "9223372036854775807123.456" ), item.getABigDecimal() );
+    assertEquals( "hello", new String( item.getAOctetEncoded().getBytes() ) );
+    assertEquals( "scott", new String( item.getABase64Encoded().getBytes() ) );
+  }
 }

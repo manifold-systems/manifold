@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Test schema for CSV, for standard and formatted data types",
+  "definitions": {
+    "MyEnum": {
+      "enum": ["red", "orange", 6, 9.0, null]
+    }
+  },
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "aString": {
+        "type": "string"
+      },
+      "aInteger": {
+        "type": "integer"
+      },
+      "aNumber": {
+        "type": "number"
+      },
+      "aBoolean": {
+        "type": "boolean"
+      },
+      "aEnumRef" : {
+        "$ref": "#/definitions/MyEnum"
+      },
+      "aLong": {
+        "type": "string",
+        "format": "int64"
+      },
+      "aDateTime": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "aDate": {
+        "type": "string",
+        "format": "date"
+      },
+      "aTime": {
+        "type": "string",
+        "format": "time"
+      },
+      "aInstant": {
+        "type": "string",
+        "format": "utc-millisec"
+      },
+      "aBigInteger": {
+        "type": "string",
+        "format": "big-integer"
+      },
+      "aBigDecimal": {
+        "type": "string",
+        "format": "big-decimal"
+      },
+      "aOctetEncoded": {
+        "type": "string",
+        "format": "binary"
+      },
+      "aBase64Encoded": {
+        "type": "string",
+        "format": "byte"
+      }
+    }
+  }
+}

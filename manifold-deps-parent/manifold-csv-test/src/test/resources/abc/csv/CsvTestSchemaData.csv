@@ -1,0 +1,2 @@
+aString,aInteger,aNumber,aBoolean,aEnumRef,aLong,aDateTime,aDate,aTime,aInstant,aBigInteger,aBigDecimal,aOctetEncoded,aBase64Encoded
+hello,5,3.14,true,red,9223372036854775807,2007-12-03T10:15:30,2007-12-03,10:15:30,99999999,9223372036854775807123,9223372036854775807123.456,68656c6c6f,c2NvdHQ=
