@@ -83,7 +83,7 @@ the `fromSource()` method, discussed later in this document.
 The `create()` method defines parameters matching the `required` properties defined in the JSON Schema, if the type is
 plain XML or no `required` properties are specified, `create()` has no parameters.
 
-Since `Catelog` is a plain XML file, as opposed to a JSON Schema structured XML file, you can use create an empty
+Since `Catelog` is a plain XML file, as opposed to a JSON Schema structured XML file, you can create an empty
 instance of `Catelog` with `create()` and then modify it using _setter_ methods to change properties:
 ```java
 import com.example.Catelog;
