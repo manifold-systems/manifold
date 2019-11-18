@@ -5,6 +5,16 @@
 Manifold plugs into the Java compiler enabling you to use CSV data seamlessly -- CSV files are types. You use CSV
 directly and type-safely without a code generator or extra build steps.
 
+```java
+// Type-safely use resource file "resources/com/example/Sales.csv" without a code generator in your build
+import com.example.Sales;
+
+Sales sales = Sales.fromSource();
+for(Sales.SalesItem item: sales) {
+  out.println(item.getCustomer());
+  ...
+}
+```
 
 >#### CSV, JSON, XML, and YAML are _Interchangeable_
 >You can use CSV, JSON, XML, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
@@ -14,6 +24,7 @@ directly and type-safely without a code generator or extra build steps.
 * [Overview](#overview)
 * [Naming](#naming)
 * [Header, separators, spaces, etc.](#header-separators-spaces-etc)
+* [Type Inference](#type-inference)
 * [Fluent API](#fluent-api)
 * [Creating & Building JSON](#creating--building-csv)
 * [Loading CSV](#loading-csv)
@@ -93,6 +104,30 @@ used as a means to include the separator character and linebreak characters dire
 this feature. Note unquoted data may treat the double quote character normally, while quoted data must escape it using
 pair of double quotes (`""`).  
 
+## Type Inference
+
+Field types are inferred by finding patterns in samples of columnar data. Fields can have the following basic types:
+* `String`
+* `Integer`
+* `Long`
+* `Double`
+* `Boolean`
+* `BigInteger`
+* `BigDecimal`
+* `LocalDateTime`
+* `LocalDate`
+* `LocalTime`   
+
+For direct control over data types and formatting you can provide a *JSON Schema* resource file for the CSV format. As
+such you can use additional types such as enum classes, provide custom data types and formats, and verify the CSV data
+conforms to the schema.
+```java
+// A type-safe JSON Schema resource file "resources/com/example/MySalesSchema.json" modeling sales data for CSV files
+import com.example.MySalesSchema;
+...
+MySalesSchema sales = MySalesSchema.load().fromCsvFile("/path/to/sales.csv");
+```
+ 
 ## Fluent API
 
 CSV types are defined as a set of fluent _interface_ APIs.  For example, the `Sales` CSV type is an interface and
@@ -149,6 +184,10 @@ You can load the contents of the file directly using `fromSource()`.
 ```java
 // Load from the contents of the Sales type's origin file 
 Sales sales = Sales.fromSource();
+for(Sales.SalesItem item: sales) {
+  out.println(item.getCustomer());
+  ...
+}
 ```
 You can load a `Sales` instance from a CSV, JSON, or YAML String:
 ```java
