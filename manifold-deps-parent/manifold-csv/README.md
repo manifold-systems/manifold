@@ -13,6 +13,7 @@ directly and type-safely without a code generator or extra build steps.
 ## Table of Contents
 * [Overview](#overview)
 * [Naming](#naming)
+* [Header, separators, spaces, etc.](#header-separators-spaces-etc)
 * [Fluent API](#fluent-api)
 * [Creating & Building JSON](#creating--building-csv)
 * [Loading CSV](#loading-csv)
