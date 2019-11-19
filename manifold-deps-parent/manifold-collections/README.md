@@ -16,7 +16,7 @@ for( Mass m: 10kg to 100kg ) {
 * [Collections](#collections-extensions)
 * _**New!**_ [Ranges](#ranges)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -133,7 +133,7 @@ completion to conveniently access extension methods. Create extension methods us
 changes to your extensions and use the changes immediately, no compilation! Use extensions provided by extension library
 dependencies. Find usages of any extension. Use the `Range` API and unit expressions with complete type-safety.
 
-# Building
+# Setup
 
 ## Building this project
 

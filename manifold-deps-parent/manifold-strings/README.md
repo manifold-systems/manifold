@@ -97,7 +97,7 @@ Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really 
 completion to conveniently access symbols within a string literal. Jump to symbol references, perform rename refactors,
 etc.
 
-# Building
+# Setup
 
 ## Building this project
 

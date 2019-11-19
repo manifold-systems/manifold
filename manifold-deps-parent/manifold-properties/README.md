@@ -58,7 +58,7 @@ completion to conveniently access properties. Make changes to your Properties fi
 compilation!  Find usages of any element in your Properties files. Perform rename refactors to quickly and safely make
 project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

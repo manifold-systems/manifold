@@ -8,7 +8,7 @@
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
 * [The *Self* type](#the-self-type-via-self) via `@Self`
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -1503,7 +1503,7 @@ changes to your extensions and use the changes immediately, no compilation! Use 
 dependencies. Find usages of any extension. Use structural interfaces, `@Jailbreak`, `@Self`, etc. Perform rename
 refactors to quickly and safely make project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

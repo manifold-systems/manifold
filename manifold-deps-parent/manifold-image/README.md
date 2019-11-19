@@ -61,7 +61,7 @@ Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Use code
 completion to conveniently access images. Perform rename refactors to quickly and safely make project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

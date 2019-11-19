@@ -9,7 +9,7 @@ the same.
 * [No More Catch-n-Wrap](#no-more-catch-n-wrap)
 * [Lambdas](#lambdas)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -80,7 +80,7 @@ Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really 
 installed IntelliJ is aware of all things Manifold, including checked exception handling e.g., the editor won't complain
 about checked exceptions.
 
-# Building
+# Setup
 
 ## Building this project
 

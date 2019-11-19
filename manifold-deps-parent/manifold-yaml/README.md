@@ -37,7 +37,7 @@ completion to conveniently build queries and discover the schema's API.  Navigat
 file elements.  Make changes to your YAML/schema files and use the changes immediately, no compilation!  Find usages of
 any element in your YAML/schema files. Perform rename refactors to quickly and safely make project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

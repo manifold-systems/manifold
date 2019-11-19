@@ -20,7 +20,7 @@ directly in Java type-safely without a code generator or extra build steps.
 * [Copying XML](#copying-xml)
 * [Using XML with JSON Schema](#using-xml-with-json-schema)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -275,7 +275,7 @@ Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity.
 
-# Building
+# Setup
 
 ## Building this project
 

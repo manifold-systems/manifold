@@ -25,7 +25,7 @@ begin experimenting with GraphQL using Manifold.
 * [Scalar Types](#scalar-types)
 * [Embedding Queries with Fragments](#embedding-queries-with-fragments)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -482,7 +482,7 @@ any element in your schema files. Perform rename refactors to quickly and safely
 >**Note:** Don't forget to install the [JS GraphQL](https://plugins.jetbrains.com/plugin/8097-js-graphql) plugin
 for superb GraphQL file editing support in your project. It pairs well with the Manifold plugin.
 
-# Building
+# Setup
 
 ## Building this project
 

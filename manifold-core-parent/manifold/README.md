@@ -16,7 +16,7 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
 * [Using `@Precompile`](#using-precompile)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -535,7 +535,7 @@ Use the sample projects for nice working examples of how to configure and use Ma
 * [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 * [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
 
-# Building
+# Setup
 
 ## Building this project
 

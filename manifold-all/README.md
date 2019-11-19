@@ -9,7 +9,7 @@ dependencies into a single JAR.
 Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA to really boost your
 productivity. 
 
-# Building
+# Setup
 
 ## Building this project
 

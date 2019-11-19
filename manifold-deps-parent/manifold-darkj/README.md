@@ -3,7 +3,7 @@
 ## Table of Contents
 * [Usage](#usage)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -98,7 +98,7 @@ completion to conveniently access Dark Java. Make changes to your Dark Java file
 compilation!  Find usages of any element in your Dark Java files. Perform rename refactors to quickly and safely make
 project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

@@ -5,7 +5,7 @@
 * [Directives](#directives)
 * [Symbols](#directives)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -357,7 +357,7 @@ Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really 
 fully supports the Manifold Preprocessor. It provides an interactive mode in which you can see the effects of the
 directives and symbols you define and use in your code. 
 
-# Building
+# Setup
 
 ## Building this project
 

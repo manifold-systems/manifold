@@ -2,6 +2,17 @@
 layout: default
 ---
 
+## Table of Contents
+* [Overview](#overview)
+* [Type-safe Metaprogramming](#type-safe-metaprogramming-via-_type-manifolds_)
+* [Java Extensions via the _Extension_ Manifold](#java-extensions-via-the-_extension_-manifold)
+* [Benefits](#benefits)
+* [Projects](#projects)
+* [IDE Support](#ide----intellij-idea)
+* [Setup](#setup)
+* [License](#license)
+* [Author](#author)
+
 # Overview
 
 [Manifold](https://manifold.systems/) plugs directly into Java to supplement it with powerful features you can use
@@ -232,11 +243,68 @@ projects' docs.
 * [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)
 * [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)
 
+### Manifold "Fat" Jar
+[Manifold : _All&nbsp;&nbsp;(Über jar)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)
+
 ### Sample Projects
 * [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project)
 * [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app)
 * [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api)
 * [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app)
+
+# Setup
+
+Manifold is designed to work with most build systems, including Maven and Gradle.
+
+The Manifold root project consists of several sub-projects you can include separately in your build, see [Projects](#projects)
+above for a complete listing. You can also integrate all Manifold dependencies into your build using the "Fat" Jar
+dependency, [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all).
+
+Setup instructions are consistent for each sub-project/dependency.  Here are direct links:
+
+* Setup for [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#setup)
+
+<hr/>
+
+* Setup for [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql#setup)
+* Setup for [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml#setup)
+* Setup for [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json#setup)
+* Setup for [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml#setup)
+* Setup for [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties#setup)
+* Setup for [Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image#setup)
+* Setup for [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj#setup)
+* Setup for [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates#setup)
+
+<hr/>
+
+* Setup for [Manifold : _String Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings#setup)
+* Setup for [Manifold : _[Un]checked_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Preprocessor_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Science_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science#setup)
+
+<hr/>
+ 
+* Setup for [Manifold : _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#setup)
+* Setup for [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io#setup)
+* Setup for [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text#setup)
+
+<hr/>
+
+* Setup for [Manifold : _All_](https://github.com/manifold-systems/manifold/tree/master/manifold-all#setup)
 
 # License
 

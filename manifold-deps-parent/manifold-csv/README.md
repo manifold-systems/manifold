@@ -32,7 +32,7 @@ for(Sales.SalesItem item: sales) {
 * [Copying CSV](#copying-csv)
 * [Using CSV with JSON Schema](#using-csv-with-json-schema)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -269,7 +269,7 @@ Enter: <kbd>https://github.com/manifold-systems/manifold-sample-project.git</kbd
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity.
 
-# Building
+# Setup
 
 ## Building this project
 

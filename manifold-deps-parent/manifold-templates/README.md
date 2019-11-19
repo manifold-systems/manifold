@@ -36,7 +36,7 @@ begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
   * [Sample Application](#sample-application)
 * [Provided Manifold Features](#provided-manifold-features)  
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#authors)
@@ -730,7 +730,7 @@ Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really 
 ManTL is supported in the Manifold plugin. Use it to author professional quality templates with the full expressive
 power of Java in IntelliJ.
 
-# Building
+# Setup
 
 ## Building this project
 

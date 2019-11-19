@@ -136,7 +136,7 @@ completion to conveniently access javascript. Make changes to your Javascript fi
 no compilation!  Find usages of any element in your Javascript files. Perform rename refactors to quickly and safely
 make project-wide changes.
 
-# Building
+# Setup
 
 ## Building this project
 

@@ -23,7 +23,7 @@
 * [Extensions](#extensions)
 * [JSON, XML, & YAML Utilities](#json-xml--yaml-utilities)
 * [IDE Support](#ide-support)
-* [Building](#building)
+* [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -505,7 +505,7 @@ your JSON, XML, and YAML files and use the changes immediately in your code, no 
 as Find Usages, Refactor/Rename, and Navigation directly between elements in JSON, XML, and YAML resources files and Java
 files. Additionally you can make and test changes in a live application or service using IntelliJ's Hotswap debugger.
 
-# Building
+# Setup
 
 ## Building this project
 
