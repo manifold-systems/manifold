@@ -39,7 +39,7 @@ for(Sales.SalesItem item: sales) {
 
 ## Overview
 The CSV type manifold provides comprehensive support for CSV resource files, supporting extensions `csv`, `tsv`, `psv`, 
-tab`). You can define a CSV API using a sample CSV resource file. You can also define a [JSON Schema](https://json-schema.org/) version 4 or 
+`tab`. You can define a CSV API using a sample CSV resource file. You can also define a [JSON Schema](https://json-schema.org/) version 4 or 
 later and use that as the schema to provide extra type information for your CSV files. Your CSV resource files serve as the **single source of truth**
 regarding CSV data and API.  You use CSV-expressed types *directly* in your code without maintaining a separate set of classes
 or wedging a code generator into your build.
@@ -98,10 +98,11 @@ empty lines.
                    
 ### Quotes
 
-Since most CSV formats support double quoted data -- data that begins and ends with the double quote character. It is 
-used as a means to include the separator character and linebreak characters directly in data, the CSV manifold supports
-this feature. Note unquoted data may treat the double quote character normally, while quoted data must escape it using
-pair of double quotes (`""`).  
+Many CSV dialects support quoted data.  The CSV manifold considers data that begins and ends with the double quote
+character as quoted data where the data between the quotes is taken as-is, minus the enclosing quotes. It is useful as
+a means to directly include the separator character and linebreak characters in data. Note unquoted data may treat the
+double quote character normally, while quoted data must escape it with another quote (`""`) to distinguish it from a
+closing quote.   
 
 ## Type Inference
 
