@@ -65,10 +65,10 @@ methods matching the CSV header row, if provided.
 
 ## Header, separators, spaces, etc.
 
-Although a standard for the CSV format exists with [RFC 4180](https://tools.ietf.org/html/rfc4180), there a many
+Although a standard for the CSV format exists with [RFC 4180](https://tools.ietf.org/html/rfc4180), there are many
 differing versions of the format in use. Additionally, some aspects of CSV are unspecific and make parsing CSV difficult
 without supplemental information and/or applying heuristics on samples of the data. The CSV manifold infers much of this
-information vai sampling.
+information via sampling.
 
 ### Header row 
 
