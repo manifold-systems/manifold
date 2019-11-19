@@ -8,7 +8,7 @@ layout: default
 * [Java Extensions via the _Extension_ Manifold](#java-extensions-via-the-_extension_-manifold)
 * [Benefits](#benefits)
 * [Projects](#projects)
-* [IDE Support](#ide----intellij-idea)
+* [IDE Support](#ide-support)
 * [Setup](#setup)
 * [License](#license)
 * [Author](#author)
@@ -171,7 +171,7 @@ Benefits of this approach include:
 Additionally, Manifold is just a dependency you can drop into your existing project -- you can begin using
 it incrementally without having to rewrite classes or conform to a new way of doing things.
 
-# IDE -- IntelliJ IDEA
+# IDE Support
 
 Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.
 
