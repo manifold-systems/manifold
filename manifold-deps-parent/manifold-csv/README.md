@@ -28,7 +28,6 @@ for(Sales.SalesItem item: sales) {
 * [Fluent API](#fluent-api)
 * [Creating & Building JSON](#creating--building-csv)
 * [Loading CSV](#loading-csv)
-* [Request REST API services](#request-rest-api-services)
 * [Writing CSV](#writing-csv)
 * [Copying CSV](#copying-csv)
 * [Using CSV with JSON Schema](#using-csv-with-json-schema)
@@ -120,7 +119,7 @@ Field types are inferred by finding patterns in samples of columnar data. Fields
 
 For direct control over data types and formatting you can provide a *JSON Schema* resource file for the CSV format. As
 such you can use additional types such as enum classes, provide custom data types and formats, and verify the CSV data
-conforms to the schema.
+conforms to schema constraints.
 ```java
 // A type-safe JSON Schema resource file "resources/com/example/MySalesSchema.json" modeling sales data for CSV files
 import com.example.MySalesSchema;
@@ -132,14 +131,13 @@ MySalesSchema sales = MySalesSchema.load().fromCsvFile("/path/to/sales.csv");
 
 CSV types are defined as a set of fluent _interface_ APIs.  For example, the `Sales` CSV type is an interface and
 provides type-safe methods to:
-* **create** a `Sales` list
+* **create** a `Sales` list or `SalesItem`
 * **build** a `SalesItem`
 * **modify** properties of a `SalesItem`  
 * **load** a `Sales` list from a string, a CSV file, or a URL using HTTP GET
-* **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
-* **write** a `Sales` list as formatted CSV, XML, JSON, & YAML
-* **copy** a `Sales`
-* **cast** to `Sales` from any structurally compatible type including `Map`s, all *without proxies*
+* **write** a `Sales` and `SalesItem` as formatted CSV, XML, JSON, & YAML
+* **copy** a `Sales` and `SalesItem`
+* **cast** to `SalesItem` from any structurally compatible type including `Map`s, all *without proxies*
 
 ## Creating & Building CSV
 You create an instance of a CSV type using either the `create()` method or the `builder()` method. Note if you want to
@@ -158,7 +156,7 @@ Sales sales = Sales.create();
 sales.setCustomer( "" );
 ```
 
-Alternatively, you can use `builder()` to fluently build a new instance:
+You can use `builder()` to fluently build a new `SalesItem` instance:
 ```java
 var salesItem = Sales.SalesItem.builder()
   .withCustomer("Purdue University")
@@ -205,39 +203,7 @@ Sales sales = Sales.load().fromJsonFile("/path/to/Sales.json");
 Invoke a REST API to load a `Sales` using HTTP GET:
 ```java
 // From HTTP GET
-Sales sales = Sales.load().fromJsonUrl("http://api.example.com/sales/$salesId");
-```
-
-## Request REST API services
-Use the `request()` static method to conveniently navigate an HTTP REST API with GET, POST, PUT, PATCH, & DELETE:
-```java
-String id = "2019.q3";
-Sales sales = Sales.request("http://api.example.com/sales").getOne("/$id");
-```
-The `request()` methods provides support for all basic REST API client usage:
-```java
-Requester<Sales> req = Sales.request("http://api.example.com/sales");
-
-// Get all Sales via HTTP GET
-List<Sales> sales = req.getMany();
-
-// Add a SalesItem with HTTP POST
-var salesItem = Sales.SalesItem.builder()
-  .withCustomer("Forest Charcoal, Inc.")
-  .withDiscount(0.05) 
-  . . .
-req.postOne(salesItem);
-
-// Get a SalesItem with HTTP GET
-String id = salesItem.getId();
-sales = req.getOne("/$id");
-
-// Update a Sales with HTTP PUT
-sales.getStore().setName("Valley #2");
-req.putOne("/$id", sales);
-
-// Delete a Sales with HTTP DELETE
-req.delete("/$id");
+Sales sales = Sales.load().fromJsonUrl("http://api.example.com/sales/$Id");
 ```
 
 ## Writing CSV
@@ -249,59 +215,20 @@ An instance of a CSV API object can be written as formatted text with `write()`:
 
 The following example produces a JSON formatted string:
 ```java
-Sales sales = Sales.builder()
-  .withSeason("Fall")
-  .withStore(Store.builder() 
-  . . .
 String json = sales.write().toJson();
 System.out.println(json);
-```
-Output:
-```json
-{
-  "ProductListing": {
-    "season": "Fall",
-    "Store": {
-      "name": "Valley #2",
-      "Address": {
-        "city": "Cupertino", "state": "CA", "postal": "95014",
-        "Line": [
-          {"order": "1", "textContent": "1101 Broadway Dr"},
-          {"order": "2", "textContent": "Suite #123"}
-        ]
-      }
-    },
-    "Product": [
-      {
-        "department": "Men's", "brand": "Joe's", "price": "65.00",
-        "description": "Joe\u2019s\u00ae 430\u2122 Athletic Cut Jeans",
-        "Size": {"waste": "26-42", "inseam": "28-38", "cut": "Athletic"}
-      },
-      {
-        "department": "Men's", "brand": "Squarepants", "price": "35.00",
-        "description": "Squarepants\u00ae Unround\u2122 Pants",
-        "Size": {"waste": "25-49", "inseam": "25-36", "cut": "Athletic"}
-      },
-      {
-        "department": "Jewelry", "brand": "RiteTwice", "price": "100.00",
-        "description": "RiteTwice\u00ae The 5 o'clock watch",
-        "Size": {"wrist": "XS-XL"}
-      }
-    ]
-  }
-}
 ```
 
 ## Copying CSV
 Use the `copy()` method to make a deep copy of any CSV API object:
 ```java
-Sales sales = . . .;
+SalesItem salesItem = . . .;
 ...
-Sales copy = sales.copy();
+SalesItem copy = salesItem.copy();
 ```
 Alternatively, you can use the `copier()` static method for a richer set of features:
 ```java
-Sales copy = Sales.copier(sales).withProductListing(. . .).copy();
+SalesItem copy = SalesItem.copier(salesItem).withDiscount(0.25).copy();
 ```
 `copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
 `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
@@ -309,11 +236,9 @@ Sales copy = Sales.copier(sales).withProductListing(. . .).copy();
 
 # Using CSV with JSON Schema
 
-You can use CSV, JSON, and YAML interchangeably, via the universal JSON API. This means you can also use CSV with any
-JSON Schema API.  You can also define a JSON Schema API using CSV.  As such please refer to the
-[**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
-project reference regarding API usage specific to JSON Schema. _All_ that applies to JSON Schema applies to CSV.
-
+You can use CSV, JSON, and YAML interchangeably using the JSON manifold's universal JSON API. This means you can also
+use CSV with any JSON Schema API or REST API.  As such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+project reference regarding API usage specific to JSON Schema.
 
 
 # IDE Support 
