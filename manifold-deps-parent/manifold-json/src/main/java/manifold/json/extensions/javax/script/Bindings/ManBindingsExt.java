@@ -34,8 +34,8 @@ import manifold.json.extensions.java.net.URL.ManUrlExt;
 import manifold.api.util.Pair;
 
 /**
- * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, and XML and to conveniently
- * use the Bindings for JSON and YAML Web services.
+ * Extends {@link Bindings} with methods to transform the Bindings contents to JSON, YAML, CSV, and XML and to conveniently
+ * use the Bindings for JSON Web services.
  */
 @Extension
 public class ManBindingsExt

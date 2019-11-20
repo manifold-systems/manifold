@@ -234,7 +234,7 @@ query.request(ENDPOINT).withTimeout(...)
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
 a variety of existing sources using `load()`.
 
-You can load a `MovieQuery` instance from a variety of formats including JSON and YAML:
+You can load a `MovieQuery` instance from a variety of formats including JSON, XML, and YAML:
 ```java
 MovieQuery query = MovieQuery.load().fromYaml(
   "genre: Action\n" +

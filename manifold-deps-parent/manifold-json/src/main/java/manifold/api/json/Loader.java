@@ -26,7 +26,7 @@ import manifold.api.util.StreamUtil;
 
 /**
  * This class is used as part of the JSON API. It provides methods to load an instance of a JSON interface from
- * potential JSON and YAML sources such as String, File, and URL (via HTTP GET).
+ * potential JSON, XML, CSV, and YAML sources such as String, File, and URL (via HTTP GET).
  * <p/>
  * See {@link Requester}, obtained from a JSON API object's {@code send()} method, for methods to send an HTTP request
  * using GET, POST, PUT, PATCH, & DELETE.

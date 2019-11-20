@@ -336,7 +336,7 @@ to your project separately depending on its needs.
     - java.io.Reader
     - java.io.Writer
 
-*   **Web/JSON/YAML**
+*   **Web/JSON**
  
     Defined in module `manifold-json` this library extends:
     - java.net.URL

@@ -13,7 +13,8 @@ more. All fully supported in IntelliJ IDEA. Simply add Manifold to your project 
 Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
-[**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), and
+[**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and
 [**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml). Remove the code
 gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 ```java

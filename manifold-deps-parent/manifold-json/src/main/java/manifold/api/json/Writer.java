@@ -24,7 +24,7 @@ import manifold.api.yaml.Yaml;
 
 /**
  * This class is used as part of the JSON API. It defines methods to write this JSON object
- * in various forms of formatted text including JSON, YAML, and XML.
+ * in various forms of formatted text including JSON, YAML, CSV, and XML.
  */
 public class Writer
 {

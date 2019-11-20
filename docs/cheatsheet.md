@@ -230,6 +230,7 @@ An instance of a JSON API object can be written as formatted text with `write()`
 * `toJson()` - produces a JSON formatted String
 * `toYaml()` - produces a YAML formatted String
 * `toXml()` - produces an XML formatted String
+* `toCsv()` - produces a CSV formatted String
 
 The following example produces a JSON formatted string:
 ```java

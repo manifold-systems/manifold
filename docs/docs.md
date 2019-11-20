@@ -23,6 +23,7 @@ Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-
 [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), 
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
 [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), 
+[CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), 
 [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js),
 [Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates), etc.
 directly and type-safely from Java without a code generator in your build and with comprehensive IDE support. 
@@ -84,6 +85,7 @@ Manifold provides type manifolds for:
 *   [JSON and JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 *   [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
 *   [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
+*   [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
 *   [Properties files](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
 *   [Image files](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
 *   [Dark Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)
@@ -196,7 +198,7 @@ The plugin currently supports most high-level IntelliJ features including:
 The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds, extension
 methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
 Likewise, jump directly from references to data source elements and find usages of them in your code.
-Watch your JSON/YAML, images, properties, templates, and custom type manifolds come alive as types.
+Watch your JSON/YAML/XML/CSV, images, properties, templates, and custom type manifolds come alive as types.
 Changes you make are instantly available in your code:
 
 Install the plugin directly from IntelliJ via:

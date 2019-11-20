@@ -5,8 +5,8 @@
 Manifold plugs into the Java compiler to enable you to use XML and Java seamlessly -- XML files are types. You use XML
 directly in Java type-safely without a code generator or extra build steps.
 
->#### XML, JSON, and YAML are _Interchangeable_
->You can use XML, JSON, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+>#### XML, JSON, CSV, and YAML are _Interchangeable_
+>You can use XML, JSON, CSV, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 >project reference. _All_ that applies to JSON applies to XML.
 
 ## Table of Contents
@@ -58,7 +58,7 @@ Here is a sample XML file `resources/com/example/Catelog.xml`:
 
 ## Naming
 
-Most type manifolds, including the XML, JSON & YAML manifolds, follow the Java naming convention where a type name is based on the
+Most type manifolds, including the XML, JSON, CSV, & YAML manifolds, follow the Java naming convention where a type name is based on the
 resource file name relative to its location in the resource path. Thus the XML resource file `resources/com/example/Catelog.xml`
 has the Java type `com.example.Catelog`.
 
@@ -71,7 +71,7 @@ provides type-safe methods to:
 * **modify** properties of a `Catelog`  
 * **load** a `Catelog` from a string, a file, or a URL using HTTP GET
 * **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
-* **write** a `Catelog` as formatted JSON, YAML, or XML
+* **write** a `Catelog` as formatted JSON, YAML, CSV, or XML
 * **copy** a `Catelog`
 * **cast** to `Catelog` from any structurally compatible type including `Map`s, all *without proxies*
 
@@ -124,7 +124,7 @@ You can load the contents of the file directly using `fromSource()`.
 // Load from the contents of the Catelog type's origin file 
 Catelog catelog = Catelog.fromSource();
 ```
-You can load a `Catelog` instance from a XML, JSON, or YAML String:
+You can load a `Catelog` instance from a XML, JSON, CSV, or YAML String:
 ```java
 // From a JSON String
 Catelog catelog = Catelog.load().fromJson("..."); 
@@ -180,6 +180,7 @@ An instance of an XML API object can be written as formatted text with `write()`
 * `toXml()` - produces an XML formatted String
 * `toJson()` - produces a JSON formatted String
 * `toYaml()` - produces a YAML formatted String
+* `toCsv()` - produces a CSV formatted String
 
 The following example produces a JSON formatted string:
 ```java
@@ -243,7 +244,7 @@ Catelog copy = Catelog.copier(catelog).withProductListing(. . .).copy();
 
 # Using XML with JSON Schema
 
-You can use XML, JSON, and YAML interchangeably, via the universal JSON API. This means you can also use XML with any
+You can use XML, JSON, CSV, and YAML interchangeably, via the universal JSON API. This means you can also use XML with any
 JSON Schema API.  You can also define a JSON Schema API using XML.  As such please refer to the
 [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 project reference regarding API usage specific to JSON Schema. _All_ that applies to JSON Schema applies to XML.

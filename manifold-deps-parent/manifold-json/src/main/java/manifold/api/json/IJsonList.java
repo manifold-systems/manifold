@@ -23,8 +23,8 @@ import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 
 /**
- * A base interface for all JSON and YAML types with methods to transform a JSON value List to/from JSON and YAML
- * and to conveniently use the List for JSON and YAML Web services / APIs.
+ * A base interface for all JSON bindings types with methods to transform a JSON value List to/from JSON, YAML, CSV, and XML
+ * and to conveniently use the List for Web services / APIs.
  */
 @Structural(factoryClass = IJsonList.Factory.class)
 public interface IJsonList<T> extends IListBacked<T>
@@ -35,7 +35,7 @@ public interface IJsonList<T> extends IListBacked<T>
     return new Loader<>();
   }
 
-  /** Writer is a fluent API to write this JSON object in various formats including JSON, YAML, and XML */
+  /** Writer is a fluent API to write this JSON object in various formats including JSON, YAML, CSV, and XML */
   default Writer write()
   {
     return new Writer( getList() );

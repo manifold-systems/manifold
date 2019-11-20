@@ -315,7 +315,7 @@ whether or not you use them directly in your code e.g., if your code is an API. 
 
 # Embedding with Fragments (experimental)
 
-You can now *embed* resource content such as JSON, GraphQL, XML, YAML, etc. directly in a Java source file as a type-safe
+You can now *embed* resource content such as JSON, GraphQL, XML, YAML, CSV, etc. directly in a Java source file as a type-safe
 resource _**fragment**_.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
 IDE plugin, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
 This means you can directly embed resources closer to where you use them in your code.  For instance, you can

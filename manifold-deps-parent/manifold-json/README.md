@@ -21,19 +21,19 @@
   * [Union Types with `oneOf`/`anyOf`](#union-types-with-oneofanyof)
   * [Interfaces are _Structural_](#interfaces-are-_structural_)
 * [Extensions](#extensions)
-* [JSON, XML, & YAML Utilities](#json-xml--yaml-utilities)
+* [JSON, XML, CSV, & YAML Utilities](#json-xml--yaml-utilities)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
 
->#### *** JSON, XML, and YAML are Interchangeable ***
+>#### *** JSON, XML, CSV, and YAML are Interchangeable ***
 >It is important to note, although the JSON manifold targets JSON and JSON schema files, it equally targets XML and YAML. In fact the
 >[XML manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml) and
 >[YAML manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml) are just
 >thin layers on top of the JSON manifold -- the types the JSON manifold projects from JSON files are the same exact
->types the XML and YAML manifolds project. This means you can use JSON, XML, and YAML interchangeably. As covered in
+>types the XML and YAML manifolds project. This means you can use JSON, XML, CSV, and YAML interchangeably. As covered in
 >this document you use the same objects to create, build, modify, load, request, write, and copy all three formats.
 >```java
 >import com.example.MyJson; // types-safely use the JSON resource file: /com/example/MyJson.json
@@ -92,7 +92,7 @@ Here is a simple `User` type defined in `resources/com/example/schemas/User.json
 
 ## Naming
 
-Most type manifolds, including the JSON, XML, & YAML manifolds, follow the Java naming convention where a type name is based on the
+Most type manifolds, including the JSON, XML, CSV, & YAML manifolds, follow the Java naming convention where a type name is based on the
 resource file name relative to its location in the resource path. Thus the JSON resource file `resources/com/example/schemas/User.json`
 has the Java type `com.example.schemas.User`.
 
@@ -108,7 +108,7 @@ provides type-safe methods to:
 * **modify** properties of a `User`  
 * **load** a `User` from a string, a file, or a URL using HTTP GET
 * **request** Web service operations using HTTP GET, POST, PUT, PATCH, & DELETE
-* **write** a `User` as formatted JSON, YAML, or XML
+* **write** a `User` as formatted JSON, CSV, YAML, or XML
 * **copy** a `User`
 * **cast** to `User` from any structurally compatible type including `Map`s, all *without proxies*
 
@@ -151,7 +151,7 @@ heavier APIs.  After it is fully configured call the `build()` method to constru
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 
 a variety of existing sources using `load()`.
 
-You can load a `User` instance from a JSON, XML, or YAML String:
+You can load a `User` instance from a JSON, XML, CSV, or YAML String:
 ```java
 // From a YAML string
 User user = User.load().fromYaml( 
@@ -213,6 +213,7 @@ An instance of a JSON API object can be written as formatted text with `write()`
 * `toJson()` - produces a JSON formatted String
 * `toYaml()` - produces a YAML formatted String
 * `toXml()` - produces an XML formatted String
+* `toCsv()` - produces a CSV formatted String
 
 The following example produces a JSON formatted string:
 ```java
@@ -461,8 +462,8 @@ resolve against the extensions. This can be useful to seamlessly add hypermedia 
 [Generating Extension Classes](#generating-extension-classes) for more info.
 
 
-## JSON, XML, & YAML Utilities
-In addition to the JSON type manifold other forms of JSON, XML, and YAML support include:
+## JSON, XML, CSV, & YAML Utilities
+In addition to the JSON type manifold other forms of JSON, XML, CSV, and YAML support include:
 * Extension methods on `URL` and `Bindings` e.g.,
 ```json
 // Easily convert JSON for use as a HTTP query
@@ -501,8 +502,8 @@ Enter: <kbd>https://github.com/manifold-systems/manifold-sample-rest-api.git</kb
 <p><img src="http://manifold.systems/images/OpenSampleProject_json.png" alt="echo method" width="60%" height="60%"/></p>
 
 Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Make changes to
-your JSON, XML, and YAML files and use the changes immediately in your code, no compilation step.  You can use features such
-as Find Usages, Refactor/Rename, and Navigation directly between elements in JSON, XML, and YAML resources files and Java
+your JSON, XML, CSV, and YAML files and use the changes immediately in your code, no compilation step.  You can use features such
+as Find Usages, Refactor/Rename, and Navigation directly between elements in JSON, XML, CSV, and YAML resources files and Java
 files. Additionally you can make and test changes in a live application or service using IntelliJ's Hotswap debugger.
 
 # Setup
