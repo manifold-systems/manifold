@@ -30,6 +30,12 @@ public class ManIdentifierUtil
     for( int i = 0; i < name.length(); i++ )
     {
       char c = name.charAt( i );
+      if( sb.length() == 0 && Character.isWhitespace( c ) )
+      {
+        // skip leading whitespace
+        continue;
+      }
+
       if( i == 0 && c >= '0' && c <= '9' )
       {
         sb.append( '_' ).append( c );

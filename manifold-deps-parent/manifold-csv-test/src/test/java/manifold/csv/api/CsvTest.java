@@ -23,6 +23,8 @@ import abc.csv.CsvTestSchema;
 import abc.csv.CsvTestSchema.CsvTestSchemaItem;
 import abc.csv.insurance_sample_comma;
 import abc.csv.insurance_sample_comma.insurance_sample_commaItem;
+import abc.csv.Cake;
+import abc.csv.Cake.CakeItem;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -32,6 +34,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import org.junit.Test;
 
 
@@ -81,5 +84,22 @@ public class CsvTest
     assertEquals( new BigDecimal( "9223372036854775807123.456" ), item.getABigDecimal() );
     assertEquals( "hello", new String( item.getAOctetEncoded().getBytes() ) );
     assertEquals( "scott", new String( item.getABase64Encoded().getBytes() ) );
+  }
+
+  @Test
+  public void testIndentedFile()
+  {
+    Object[][] data =
+    {
+      {"scott",39,"chocolate"},
+      {"bob",37,"strawberry"},
+    };
+    Cake cake = Cake.fromSource();
+    for(int i = 0; i < cake.size(); i++) {
+      CakeItem item = cake.get(i);
+      assertEquals(data[i][0], item.getName());
+      assertEquals(data[i][1], item.getAge());
+      assertEquals(data[i][2], item.getCake());
+    }
   }
 }

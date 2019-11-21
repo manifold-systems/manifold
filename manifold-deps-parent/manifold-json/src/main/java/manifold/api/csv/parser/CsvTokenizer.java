@@ -39,6 +39,7 @@ public class CsvTokenizer
   private CharSequence _content;
   private Boolean _hasHeader;
   private char _separator;
+  private boolean _indented;
   private boolean _whitespace; // leading/trailing whitespace significant?
   private List<Class> _types;
   private boolean _sampling;
@@ -157,9 +158,13 @@ public class CsvTokenizer
           }
           else
           {
-            int end = _content.charAt( _pos - 1 ) == '\r' ? _pos - 1 : _pos;
+            int end = _pos == 0
+                      ? 0
+                      : _content.charAt( _pos - 1 ) == '\r'
+                        ? _pos - 1
+                        : _pos;
             int length = end - offset;
-            boolean emptyLine = length == 0 && (_prevToken == null || _prevToken.isLastInRecord());
+            boolean emptyLine = length <= 0 && (_prevToken == null || _prevToken.isLastInRecord());
             if( !emptyLine )
             {
               return _prevToken = new CsvToken( NotQuoted, value.toString(), line, offset, length, _pos, c );
@@ -172,12 +177,20 @@ public class CsvTokenizer
           return new CsvToken( quoted ? Quoted : NotQuoted, value.toString(), line, offset, _pos - offset, _pos, c );
 
         default:
-          value.append( c );
+          if( !skipFileIndentation( c ) )
+          {
+            value.append( c );
+          }
       }
 
       c = nextChar();
     }
 
+  }
+
+  public boolean skipFileIndentation( char c )
+  {
+    return _indented && Character.isWhitespace( c ) && (_prevToken == null || _prevToken.isLastInRecord());
   }
 
   private boolean isPossibleSeparator( char c )
@@ -202,10 +215,28 @@ public class CsvTokenizer
     return c;
   }
 
+  private char skipToEofIfOnlyWhitespaceLeft( char c )
+  {
+    int savePos = _pos;
+    char saveC = c;
+    while( Character.isWhitespace( c ) )
+    {
+      c = _rawNextChar();
+      if( c == '\0' ) // EOF
+      {
+        return c;
+      }
+    }
+    _pos = savePos;
+    return saveC;
+  }
+
   private void sample()
   {
     _sampling = true;
     _separator = inferSeparator();
+    resetPos();
+    _indented = inferIndented();
     resetPos();
     _whitespace = inferRetainLeadingTrailingWhitespace();
     resetPos();
@@ -214,6 +245,36 @@ public class CsvTokenizer
     _types = inferDataTypes();
     resetPos();
     _sampling = false;
+  }
+
+  private boolean inferIndented()
+  {
+    boolean saveWhitespace = _whitespace;
+    _whitespace = true;
+
+    boolean indented = true;
+    int row = 0;
+    boolean newline = true;
+    while( row < 100 )
+    {
+      CsvToken token = nextToken();
+      if( newline )
+      {
+        indented = indented && countLeadingSpaces( token ) > 0;
+      }
+      newline = false;
+      if( token.isLastInRecord() )
+      {
+        if( token.isEof() )
+        {
+          break;
+        }
+        newline = true;
+        row++;
+      }
+    }
+    _whitespace = saveWhitespace;
+    return indented;
   }
 
   private boolean inferHeader()
@@ -626,24 +687,16 @@ public class CsvTokenizer
     return true;
   }
 
-  private void mapSpacesToOccurrences( Map<Integer, Integer> spacesToOccurrance )
+  private void mapSpacesToOccurrences( Map<Integer, Integer> spacesToOccurrence )
   {
     _whitespace = true;
     int row = 0;
-    boolean first = true;
-    while( row < 10 )
+    while( row < 100 )
     {
       CsvToken token = nextToken();
-      if( !first )
-      {
-        int count = countLeadingSpaces( token );
-        Integer existing = spacesToOccurrance.get( count );
-        spacesToOccurrance.put( count, existing == null ? count : existing + 1 );
-      }
-      else
-      {
-        first = false;
-      }
+      int count = countLeadingSpaces( token );
+      Integer existing = spacesToOccurrence.get( count );
+      spacesToOccurrence.put( count, existing == null ? count : existing + 1 );
 
       if( token.isLastInRecord() )
       {
@@ -651,7 +704,6 @@ public class CsvTokenizer
         {
           break;
         }
-        first = true;
         row++;
       }
     }
@@ -767,18 +819,17 @@ public class CsvTokenizer
     if( c == '\r' )
     {
       c = _rawNextChar();
-      if( c == '\n' )
+      if( c != '\n' )
       {
-        return c;
-      }
-      else
-      {
+        // always return '\n' as linebreak
         c = '\n';
         _pos--;
       }
-      // always return '\n' as line break,
-      // even though other characters may be involved
-      return c;
+    }
+
+    if( c == '\n' )
+    {
+      c = skipToEofIfOnlyWhitespaceLeft( c );
     }
 
     return c;

@@ -100,7 +100,7 @@ public class CsvTokenizerTest
         rows++;
       }
     }
-    assertEquals( 1470, rows );
+    assertEquals( 1469, rows );
   }
 
   @Test
@@ -129,6 +129,51 @@ public class CsvTokenizerTest
     byte[] content = StreamUtil.getContent( stream );
     CsvTokenizer tokenizer = new CsvTokenizer( new String( content ) );
     assertFalse( tokenizer.hasHeader() );
+  }
+
+  @Test
+  public void testEmptyLeadingLinebreak() throws IOException
+  {
+    InputStream stream = CsvTokenizerTest.class.getResourceAsStream( "/sample/csv/empty_leading_linebreak.csv" );
+    byte[] content = StreamUtil.getContent( stream );
+    CsvTokenizer tokenizer = new CsvTokenizer( new String( content ) );
+    assertFalse( tokenizer.hasHeader() );
+  }
+
+  @Test
+  public void testTrailingWhitespace() throws IOException
+  {
+    InputStream stream = CsvTokenizerTest.class.getResourceAsStream( "/sample/csv/trailing_whitespace.csv" );
+    byte[] content = StreamUtil.getContent( stream );
+    CsvTokenizer tokenizer = new CsvTokenizer( new String( content ) );
+    assertTrue( tokenizer.hasHeader() );
+    assertEquals( "hello", tokenizer.nextToken().getData() );
+    assertEquals( "bye", tokenizer.nextToken().getData() );
+    assertTrue( tokenizer.isEol() );
+    assertEquals( "data data", tokenizer.nextToken().getData() );
+    assertEquals( "more data", tokenizer.nextToken().getData() );
+    assertTrue( tokenizer.isEof() );
+  }
+
+  @Test
+  public void testLeadingWhitespace() throws IOException
+  {
+    InputStream stream = CsvTokenizerTest.class.getResourceAsStream( "/sample/csv/leading_whitespace.csv" );
+    byte[] content = StreamUtil.getContent( stream );
+    CsvTokenizer tokenizer = new CsvTokenizer( new String( content ) );
+    assertTrue( tokenizer.hasHeader() );
+    assertEquals( "name", tokenizer.nextToken().getData() );
+    assertEquals( "age", tokenizer.nextToken().getData() );
+    assertEquals( "cake", tokenizer.nextToken().getData() );
+    assertTrue( tokenizer.isEol() );
+    assertEquals( "scott", tokenizer.nextToken().getData() );
+    assertEquals( "29", tokenizer.nextToken().getData() );
+    assertEquals( "chocolate", tokenizer.nextToken().getData() );
+    assertTrue( tokenizer.isEol() );
+    assertEquals( "bob", tokenizer.nextToken().getData() );
+    assertEquals( "27", tokenizer.nextToken().getData() );
+    assertEquals( "strawberry", tokenizer.nextToken().getData() );
+    assertTrue( tokenizer.isEof() );
   }
 
   @Test
