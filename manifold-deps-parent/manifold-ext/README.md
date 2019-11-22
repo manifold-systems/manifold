@@ -2,8 +2,8 @@
 
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
-* _**New!**_ [Operator Overloading](#operator-overloading)
-* _**New!**_ [Unit Expressions](#unit-expressions)
+* [Operator Overloading](#operator-overloading)
+* [Unit Expressions](#unit-expressions)
 * [Structural interfaces](#structural-interfaces-via-structural) via `@Structural`
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
 * [The *Self* type](#the-self-type-via-self) via `@Self`
