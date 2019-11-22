@@ -3,9 +3,10 @@
 </center>
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, including Type-safe
-Metaprogramming, Extension Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and
-more. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of it.
+[Manifold](http://manifold.systems) plugins into Java and supplements it with powerful features, including Type-safe Metaprogramming, Extension
+Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and more. All fully supported
+in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing project and begin
+taking advantage of it.
 
 ## What can you do with Manifold?
 
@@ -17,8 +18,22 @@ Use the framework to gain direct, type-safe access to <i>any</i> type of metadat
 [**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and
 [**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml). Remove the code
 gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+
+**GraphQL:** Use types defined in your `movies.graphql` and `queries.graphql` files *directly*, no code gen!
 ```java
-// Use your User.json schema file directly as a type, no code gen!
+var query = MovieQuery.builder(Action).build();
+var result = query.request("http://com.example/graphql").post();
+var actionMovies = result.getMovies();
+for (var movie : actionMovies) {
+  out.println(
+    "Title: " + movie.getTitle() + "\n" +
+    "Genre: " + movie.getGenre() + "\n" +
+    "Year: " + movie.getReleaseDate().getYear() + "\n");
+}
+```
+
+**JSON:** Use your `User.json` schema file directly as a type, no code gen!
+```java
 User user = User.builder("myid", "mypassword", "Scott")
   .withGender(male)
   .withDob(LocalDate.of(1987, 6, 15))

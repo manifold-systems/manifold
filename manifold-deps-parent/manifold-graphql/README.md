@@ -419,10 +419,12 @@ query Movies($title: String, $genre: Genre, $releaseDate: Date) {
 var query = MyQuery.Movies.builder().withGenre(Action).build();
 out.println(query.toString());
 ```
->Get the [JS GraphQL IntelliJ plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
-GraphQL fragments.
+>**IntelliJ users...**
+>
+>Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
+>GraphQL fragments, it pairs exceptionally well with the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
  
-A fragment expression is embedded in a String literal:
+A fragment *expression* is embedded in a String literal:
 ```java
 var query = "[>.graphql<] query MovieQuery($genre: Genre){ movies(genre: $genre){ genre } }";
 var result = query.builder().build().request("").post();

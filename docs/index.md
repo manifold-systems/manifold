@@ -3,22 +3,46 @@ layout: default
 ---
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugs into Java to supplement it with game-changing features, including Type-safe
-Metaprogramming, Extension Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and
-more. All fully supported in IntelliJ IDEA. Simply add Manifold to your project and begin taking advantage of it.
+Manifold [plugins into](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html) Java
+and supplements it with powerful features, including:
+* [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+* [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+* [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+* [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+* [A Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+* ...and more
+
+All fully supported in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing
+project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as
+Use the framework to gain direct, type-safe access to <i>any</i> type of resource, such as
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
-[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and
-[**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml). Remove the code gen
-step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv),
+[**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), and even
+other languages such as [**Javascript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml).
+Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+
+**GraphQL:** Use types defined in your `movies.graphql` and `queries.graphql` files *directly*, no code gen!
 ```java
-// Use your User.json schema file directly as a type, no code gen!
+var query = MovieQuery.builder(Action).build();
+var result = query.request("http://com.example/graphql").post();
+var actionMovies = result.getMovies();
+for (var movie : actionMovies) {
+  out.println(
+    "Title: " + movie.getTitle() + "\n" +
+    "Genre: " + movie.getGenre() + "\n" +
+    "Year: " + movie.getReleaseDate().getYear() + "\n");
+}
+```
+
+**JSON:** Use your `User.json` schema file directly as a type, no code gen!
+```java
 User user = User.builder("myid", "mypassword", "Scott")
   .withGender(male)
   .withDob(LocalDate.of(1987, 6, 15))
@@ -136,7 +160,7 @@ String result = "The hour is $hour"; // Yes!!!
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
        
-### [Template Files with *ManTL*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+### [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
 Supports type-safe inclusion of other templates, shared layouts, and more. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/mantl.mp4)
 ```java
