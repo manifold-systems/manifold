@@ -61,7 +61,7 @@ provides comprehensive support for the Manifold framework. All types and feature
 Manifold SPIs are fully supported. You can edit resources such as JSON and GraphQL files and immediately use the changes
 in Java without a compilation step. Features like code completion, resource/code navigation, deterministic usage
 searching, refactoring/renaming, incremental compilation, hotswap debugging, etc. work seamlessly with *all* type
-manifolds past, present, and future. This represents an unimaginable leap in productivity compared with the conventional
+manifolds past, present, and future. This represents a tremendous leap in productivity compared with the conventional
 code generation world where the burden is on the code generator author or third party to invest in one-off IDE tooling
 projects, which typically results in poor or no IDE representation. Thus another big advantage type manifolds possess
 over conventional code generators is:
