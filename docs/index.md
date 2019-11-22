@@ -28,7 +28,7 @@ Use the framework to gain direct, type-safe access to <i>any</i> type of resourc
 other languages such as [**Javascript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml).
 Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 
-**GraphQL:** Use types defined in your `movies.graphql` and `queries.graphql` files *directly*, no code gen!
+**GraphQL:** Use types defined in your **movies.graphql** and **queries.graphql** files *directly*, no code gen!
 ```java
 var query = MovieQuery.builder(Action).build();
 var result = query.request("http://com.example/graphql").post();
@@ -41,7 +41,7 @@ for (var movie : actionMovies) {
 }
 ```
 
-**JSON:** Use your `User.json` schema file directly as a type, no code gen!
+**JSON:** Use your **User.json** schema file directly as a type, no code gen!
 ```java
 User user = User.builder("myid", "mypassword", "Scott")
   .withGender(male)
