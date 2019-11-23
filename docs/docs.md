@@ -40,14 +40,14 @@ and a lot more.
 
 # Type-safe Metaprogramming via _Type Manifolds_ 
 
-Bridging the worlds of information and programming, a *type manifold* acts as an adapter to automatically connect a
-structured data source to Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler
-enabling a type manifold to transform structured data into a data _type_ directly accessible in your Java code
-eliminating code generation build steps otherwise required with conventional tools. Additionally the Manifold plugin
-for IntelliJ IDEA provides comprehensive integration for type manifolds. Types are always in sync; changes you make to
-structured data are immediately available in the type system _without a compilation step_.  Code completion, navigation,
-usage searching, refactoring, incremental compilation, hotswap debugging -- all seamlessly integrated.  With type
-manifolds a data source is a virtual data _type_.
+Bridging the worlds of data and code, a *type manifold* acts as an adapter to automatically connect data resources to
+Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler enabling a type manifold to
+transform structured data into a data _type_ directly accessible in your Java code eliminating code generation build
+steps otherwise required with conventional tools. Additionally the [Manifold plugin for IntelliJ IDEA](#ide-support)
+provides comprehensive integration for type manifolds. Types are always in sync; changes you make to resources are
+immediately available in the type system _without a compilation step_.  Code completion, navigation, usage searching,
+refactoring, incremental compilation, hotswap debugging -- all seamlessly integrated.  With type manifolds a data file
+is a virtual data _type_.
 
 To illustrate, consider this simple properties resource file:
 
@@ -58,7 +58,7 @@ chocolate.milk = Milk chocolate
 chocolate.dark = Dark chocolate
 ``` 
 
-Normally in Java you access a properties resources like this:
+Normally in Java you access a properties file like this:
 
 ```java
 Properties myProperties = new Properties();
@@ -77,8 +77,8 @@ String myMessage = MyProperties.chocolate.milk;
 
 Concise and type-safe, with no additional build steps to engage.
 
-Almost any type of data source imaginable is a potential type manifold. These include resource files, schemas, query
-languages, database definitions, templates, spreadsheets, web services, and programming languages.
+Any data resource is a potential type manifold, including file schemas, query languages, database definitions, 
+data services, templates, spreadsheets, and programming languages.
 
 Manifold provides type manifolds for:
 
@@ -91,10 +91,7 @@ Manifold provides type manifolds for:
 *   [Image files](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
 *   [Dark Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)
 *   [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
-*   [ManTL (Template Files)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
-
-More are in the works such as SQL, XML, and others.
-
+*   [Java Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 
 # Java Extensions via the _Extension_ Manifold
 
@@ -138,9 +135,8 @@ Here we've added a new `echo()` method to `String`, so we use it like this:
 
 Extensions eliminate a lot of intermediate code such as "Util" and "Manager" libraries as well as Factory classes. As a
 consequence extensions naturally promote higher levels of object-orientation, which result in more readable and
-maintainable code. Perhaps the most beneficial aspect of extensions, however, relate more to your overall experience
-with your development environment.  For instance, code-completion conveniently presents all the extension methods
-available on an extended class:
+maintainable code. Additionally, with the Manifold IntelliJ plugin you can use code-completion which conveniently
+presents all the extension methods available on an extended class:
 
 <p>
   <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();">
@@ -159,20 +155,21 @@ for full coverage of these features.
 # Benefits
 
 Manifold's core technology is a dramatic departure from conventional Java tooling. There are no code generation steps in
-the build, no extra .class files or .java targets to manage, no annotation processors, and no extra class loaders to
-engage at runtime.
+the build, no extra build target files to manage, no annotation processors, and no extra class loaders to engage at
+runtime.
 
 Benefits of this approach include:
 
 *   **Zero turnaround** -- direct, type-safe access to structured data
 *   **Lightweight** -- requires no special compilers, annotation processors, or runtime agents
-*   **Efficient, dynamic** -- Manifold only produces types as they are needed
+*   **Efficient** -- Manifold only produces types as they are needed
 *   **Simple, open API** -- use the Manifold API to build your own components and extensions
-*   **No code generation build step** -- integrates directly with the Java compiler, incremental
+*   **No code generation build step** -- integrates directly with the Java compiler
+*   **Incremental** -- only builds types that have changed
 *   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** support -- all manifold types and extensions work with IntelliJ
 
-Additionally, Manifold is just a dependency you can drop into your existing project -- you can begin using
-it incrementally without having to rewrite classes or conform to a new way of doing things.
+Manifold is just a dependency you can drop into your existing project -- you can begin using it incrementally without
+having to rewrite classes or conform to a new way of doing things.
 
 # IDE Support
 
@@ -196,11 +193,11 @@ The plugin currently supports most high-level IntelliJ features including:
 * Preprocessor (conditional compilation)
 * Professional template file editor
 
-The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds, extension
-methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
-Likewise, jump directly from references to data source elements and find usages of them in your code.
-Watch your JSON/YAML/XML/CSV, images, properties, templates, and custom type manifolds come alive as types.
-Changes you make are instantly available in your code:
+The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds,
+extension methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
+Likewise, jump directly from references to resource elements and find usages of them in your code. Watch your
+JSON/YAML/XML/CSV, images, properties, templates, and custom type manifolds come alive as types. Changes you make are
+instantly available in your code.
 
 Install the plugin directly from IntelliJ via:
 
@@ -213,7 +210,7 @@ by the core. Each project represents a separate *dependency* you can use directl
 projects' docs.
 
 ### Core Framework
-* [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold)
+* [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 
 ### Resource Manifolds
 * [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
@@ -270,7 +267,7 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 
 <hr/>
 
-* Setup for [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold#setup)
+* Setup for [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#setup)
 
 <hr/>
 

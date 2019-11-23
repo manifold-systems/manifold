@@ -86,7 +86,7 @@ proxy for a specific structural interface.
 
 # Anatomy of a Type Manifold
 
-Almost any data source is a potential type manifold.  These include file schemas, query languages, database definitions, 
+Any data resource is a potential type manifold.  These include file schemas, query languages, database definitions, 
 data services, templates, spreadsheets, programming languages, and more.  So while the Manifold team provides several 
 type manifolds out of the box the domain of possible type manifolds is virtually unlimited.  Importantly, their is 
 nothing special about the ones we provide -- you can build type manifolds using the same public API with which ours

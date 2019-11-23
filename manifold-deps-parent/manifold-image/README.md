@@ -4,7 +4,7 @@ User interfaces frequently use image resource files for one purpose or another. 
 formats including png, jpg, gif, and bmp via a collection of utility classes such as `javax.swing.ImageIcon` and
 `javax.scene.image.Image`.
   
-As with any library, access to the underlying data source is indirect. Here we manually create an `ImageIcon` with a raw
+As with any library, access to the underlying data resource is indirect. Here we manually create an `ImageIcon` with a raw
 String naming the image file.  This is error prone because there is no type-safety connecting the String with the file
 on disk -- your build process will not catch typos or file rename related errors:
 
