@@ -230,5 +230,20 @@ layout: default
   <p><small>jaxenter.de</small></p>
   </td>
  </tr>
+
+
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ <tr><td><p><h3>Miscellany</h3></p></td><td><p>&nbsp;</p></td></tr> 
  
+  <tr>
+   <td>
+   <p><a href="/talks/manifold2019.pptx"><img width="240" height="135" src="/images/manifold2019talk.png" alt="a"></a></p>
+   </td>
+   <td>
+   <p><a href="/talks/manifold2019.pptx">Manifold: X-ray Vision for Java</a></p>
+   <p>Slide deck for a talk presenting Manifold as a the reinvention and replacement for conventional code generators.</p>
+   <p><small>manifold.systems</small></p>
+   </td>
+  </tr>
+  
 </table>
