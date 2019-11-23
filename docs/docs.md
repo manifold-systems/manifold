@@ -9,7 +9,8 @@ layout: default
 * [Benefits](#benefits)
 * [Projects](#projects)
 * [IDE Support](#ide-support)
-* [Setup](#setup)
+* [**Setup**](#setup)
+* [Download](#download)
 * [License](#license)
 * [Author](#author)
 
@@ -18,7 +19,7 @@ layout: default
 [Manifold](https://manifold.systems/) plugs directly into Java to supplement it with powerful features you can use
 directly in your projects:
 
-* [**Type-safe Metaprogramming**](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold) -- _type-safe_ access to structured data.
+* [**Type-safe Metaprogramming**](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold) -- _type-safe_ access to structured data.
 Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), 
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
@@ -212,7 +213,7 @@ by the core. Each project represents a separate *dependency* you can use directl
 projects' docs.
 
 ### Core Framework
-* [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+* [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold)
 
 ### Resource Manifolds
 * [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
@@ -265,7 +266,11 @@ dependency, [`manifold-all`](https://github.com/manifold-systems/manifold/tree/m
 
 Setup instructions are consistent for each sub-project/dependency.  Here are direct links:
 
-* Setup for [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#setup)
+* Setup for [Manifold : _All_](https://github.com/manifold-systems/manifold/tree/master/manifold-all#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold#setup)
 
 <hr/>
 
@@ -306,9 +311,59 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 * Setup for [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io#setup)
 * Setup for [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text#setup)
 
+
+# Download
+
+For the convenience of non-maven/non-gradle users you can directly download latest release binaries below. Note, if you
+plan to build your project *without* Maven or Gradle using select binaries (as opposed to manifold-all), your classpath
+must include the transitive closure of binaries in terms of the *dependencies* declared in corresponding project's POM
+file. Additionally, you will need to adapt your build to reflect the Maven or Gradle setup instructions from the list
+above.
+
+* Download [manifold : _All_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
+
 <hr/>
 
-* Setup for [Manifold : _All_](https://github.com/manifold-systems/manifold/tree/master/manifold-all#setup)
+* Download [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _GraphQL_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-graphql&v=RELEASE)
+* Download [Manifold : _XML_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-xml&v=RELEASE)
+* Download [Manifold : _JSON_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-json&v=RELEASE)
+* Download [Manifold : _CSV_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-csv&v=RELEASE)
+* Download [Manifold : _YAML_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-yaml&v=RELEASE)
+* Download [Manifold : _Properties_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-properties&v=RELEASE)
+* Download [Manifold : _Image_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-image&v=RELEASE)
+* Download [Manifold : _Dark Java_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-darkj&v=RELEASE)
+* Download [Manifold : _JavaScript_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-js&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _Java Extension_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _Templates_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-templates&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _String Templates_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-strings&v=RELEASE)
+* Download [Manifold : _[Un]checked_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-exceptions&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _Preprocessor_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _Science_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-science&v=RELEASE)
+
+<hr/>
+ 
+* Download [Manifold : _Collections_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE)
+* Download [Manifold : _I/0_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-io&v=RELEASE)
+* Download [Manifold : _Text_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-text&v=RELEASE)
 
 # License
 

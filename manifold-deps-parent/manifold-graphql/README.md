@@ -499,12 +499,15 @@ mvn compile
 The `manifold-graphql` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
 versions 8 - 13.
 
-Here are some sample build configurations references.
-
 >Note you can replace the `manifold-graphql` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all)
 as a quick way to gain access to all of Manifold's features.  But `manifold-graphql` already brings in a lot of
 Manifold including [Extension Methods](http://manifold.systems/docs.html#extension-classes),
 [String Templates](http://manifold.systems/docs.html#templating), and more.
+
+## Binaries
+
+If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#Download).
+
 
 ## Gradle
 

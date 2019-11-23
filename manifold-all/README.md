@@ -24,7 +24,9 @@ mvn compile
 The `manifold-all` dependency works with all build tooling, including Maven and Gradle. It also works with Java
 versions 8 - 13.
 
-Here are some sample build configurations references.
+## Binaries
+
+If you are *not* using Maven or Gradle, you can download the latest `manifold-all` release here: [manifold-all](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE)
 
 ## Gradle
 
