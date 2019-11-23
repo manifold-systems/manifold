@@ -19,7 +19,7 @@ layout: default
 [Manifold](https://manifold.systems/) plugs directly into Java to supplement it with powerful features you can use
 directly in your projects:
 
-* [**Type-safe Metaprogramming**](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold) -- _type-safe_ access to structured data.
+* [**Type-safe Metaprogramming**](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold) -- _type-safe_ access to structured data.
 Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), 
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
