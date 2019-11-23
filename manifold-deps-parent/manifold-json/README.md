@@ -528,7 +528,7 @@ Manifold's features.  But `manifold-json` already brings in a lot of Manifold in
 
 ## Binaries
 
-If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#Download).
+If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#download).
 
 
 ## Gradle

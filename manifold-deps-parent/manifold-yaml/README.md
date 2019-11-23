@@ -59,7 +59,7 @@ String Templates](http://manifold.systems/docs.html#templating), and more.
 
 ## Binaries
 
-If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#Download).
+If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#download).
 
 
 ## Gradle
