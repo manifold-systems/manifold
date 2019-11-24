@@ -296,6 +296,7 @@ GraphQL provides several useful type abstractions these include:
 * `enum`
 * `union`
 * `scalar`
+* `fragment`
 * `query`
 * `mutation`
 * `subscription`
@@ -335,6 +336,12 @@ conditional access to union properties.
 ### `scalar`
 The manifold API fully supports GraphQL scalars and also provides a host of non-standard but commonly used types. See
 _Scalar Types_ below.
+ 
+### `fragment`
+Not to be confused with [Manifold Fragments](#embedding-queries-with-fragments), a GraphQL fragment is generally a query
+you can directly reference inside other queries so you don't have to copy and paste the same set of fields. Instead you
+simply reference the name of the fragment. This not only helps reduce the size of queries, but also prevents copy/paste
+errors and makes your queries more readable.
  
 ### `query`
 Similar to the `type` abstraction, the manifold API exposes a `query` as a structural interface. Non-null query
@@ -395,6 +402,10 @@ Additionally, Manifold includes an API you can implement to provide your own cus
 reinvent the wheel!
 
 # Embedding Queries with Fragments
+
+<small>
+(Note this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
+</small><br>
 
 >Note fragments are an experimental feature
 
