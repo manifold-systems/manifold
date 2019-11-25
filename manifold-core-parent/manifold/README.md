@@ -4,7 +4,7 @@
 
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
 as a universal *type* adapter to allow for a direct and seamless supply of types and features otherwise inaccessible to
-Java's type system. As such the Manifold core framework provide's a foundation and plugin SPI to dynamically resolve
+Java's type system. As such the Manifold core framework provides a foundation and plugin SPI to dynamically resolve
 type names and produce corresponding Java sources, and to more generally augment Java's type system. Such a plugin is
 called a *type manifold* and implements the `ITypeManifold` SPI. 
 
