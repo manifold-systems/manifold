@@ -8,9 +8,9 @@ layout: default
  
 ## Features on the workbench
 
-#### VS Code support for Java (which is Eclipse)
+#### Manifold plugin for VS Code (which is Eclipse)
 * [#142](https://github.com/manifold-systems/manifold/issues/142)
-#### Eclipse support
+#### Manifold plugin for Eclipse
 * [#18](https://github.com/manifold-systems/manifold/issues/18)
 <br>
 
