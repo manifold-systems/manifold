@@ -16,6 +16,8 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
 * [Using `@Precompile`](#using-precompile)
 * [IDE Support](#ide-support)
+* [Projects](#projects)
+* [Sample Projects](#sample-projects)
 * [Setup](#setup)
 * [License](#license)
 * [Versioning](#versioning)
@@ -491,10 +493,19 @@ enabled in your module:
 @Precompile
 ```
 
-# IDE Support
+# IDE Support 
 
-Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA to really boost your
-productivity. 
+Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+
+## Install
+
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ
+via:
+
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
+
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+
 
 # Projects
 The Manifold framework consists of the core project and a collection of sub-projects implementing SPIs provided
@@ -504,6 +515,7 @@ by the core. Each project represents a separate **dependency** you can easily ad
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)<br>
+[Manifold : _CSV_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)<br>
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>

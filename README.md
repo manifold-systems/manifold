@@ -11,7 +11,7 @@ taking advantage of it.
 ## What can you do with Manifold?
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
-Use the framework to gain direct, type-safe access to <i>any</i> type of metadata, such as
+Use the framework to gain direct, type-safe access to *any* type of resource, such as
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
