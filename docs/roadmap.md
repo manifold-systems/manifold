@@ -8,13 +8,15 @@ layout: default
  
 ## Features on the workbench
 
-#### CSV Manifold
-* [#113](https://github.com/manifold-systems/manifold/issues/113)
+#### VS Code support for Java (which is Eclipse)
+* [#142](https://github.com/manifold-systems/manifold/issues/142)
+#### Eclipse support
+* [#18](https://github.com/manifold-systems/manifold/issues/18)
 <br>
 
 
 ## Features on the pile (in no particular order)
-
+ 
 #### Operator overloading enhancements
 * [#126](https://github.com/manifold-systems/manifold/issues/126)
 
@@ -29,7 +31,4 @@ layout: default
 
 #### Android support
 * [#77](https://github.com/manifold-systems/manifold/issues/77)
-
-#### Eclipse support
-* [#18](https://github.com/manifold-systems/manifold/issues/18)
 

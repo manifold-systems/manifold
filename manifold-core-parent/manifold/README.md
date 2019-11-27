@@ -201,7 +201,7 @@ public class ImageCodeGen {
 Here the image manifold utilizes `SrcClass` to build a Java source model of image classes.  `SrcClass` is a
 source code production utility in the Manifold API.  It's simple and handles basic code generation use-cases.
 Feel free to use other Java source code generation tooling if `SrcClass` does not suit your use-case, because
-ultimately you're only job here is to produce a `String` consisting of Java source for your class.
+ultimately your only job here is to produce a `String` consisting of Java source for your class.
 
 
 **Model Subclass**
