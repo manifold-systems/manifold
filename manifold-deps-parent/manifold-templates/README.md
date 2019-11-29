@@ -45,7 +45,7 @@ begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
  
 # Usage
 
-After incorporating the `manifold-templates` dependency in your build (see the [Building](#building) section), you can
+After incorporating the `manifold-templates` dependency in your build (see the [Building](#setup) section), you can
 begin using ManTL by placing a new file with the `mtl` extension in your _resources_ directory (nb: not in your source
 directory). The file can have any sort of string content, as well as [dynamic content](#syntax) and [directives](#directives)
 that change how the template behaves.
