@@ -18,7 +18,7 @@ for(Sales.SalesItem item: sales) {
 
 >#### CSV, JSON, XML, and YAML are _Interchangeable_
 >You can use CSV, JSON, XML, and YAML interchangeably, as such please refer to the [**JSON and JSON Schema**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
->project reference. _All_ that applies to JSON applies to XML.
+>project reference.
 
 ## Table of Contents
 * [Overview](#overview)
