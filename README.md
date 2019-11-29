@@ -3,10 +3,18 @@
 </center>
 
 ## What is Manifold?
-[Manifold](http://manifold.systems) plugins into Java and supplements it with powerful features, including Type-safe Metaprogramming, Extension
-Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and more. All fully supported
-in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing project and begin
-taking advantage of it.
+Manifold [plugins into](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html) Java
+and supplements it with powerful features, including:
+* [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+* [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+* [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+* [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+* [A Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+* ...and more
+
+All fully supported in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing
+project and begin taking advantage of it.
 
 ## What can you do with Manifold?
 
@@ -15,9 +23,10 @@ Use the framework to gain direct, type-safe access to *any* type of resource, su
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
-[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and
-[**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml). Remove the code
-gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
+[**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv),
+[**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), and even
+other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-javascript).
+Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 
 **GraphQL:** Use types defined in your `movies.graphql` and `queries.graphql` files *directly*, no code gen!
 ```java
@@ -47,7 +56,7 @@ Add your own methods to existing Java classes, even `String`, `List`, and `File`
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
-```  
+```
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 Implement *operator* methods on any type to directly support arithmetic, relational, and unit operators.
@@ -57,7 +66,7 @@ if (bigDec1 > bigDec2) {
   BigDecimal result = bigDec1 + bigDec2;
   ...
 }
-// Implemnet operators for any type
+// Implement operators for any type
 MyType value = myType1 + myType2;
 ```  
 
@@ -127,13 +136,13 @@ Access private features with <b>@Jailbreak</b> to avoid the drudgery and vulnera
 ```java
 @Jailbreak Foo foo = new Foo();
 // Direct, *type-safe* access to *all* foo's members
-foo.privateMethod(x, y, z); 
+foo.privateMethod(x, y, z);
 foo.privateField = value;
 ```
 
 ### [Checked Exception Handling](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 You now have an option to make checked exceptions behave like unchecked exceptions!  No more unintended exception
-swallowing, no more boilerplate `try`/`catch`/`wrap`/`rethrow` nonsense.
+swallowing. No more *try*/*catch*/*wrap*/*rethrow* boilerplate!
 ```java
 List<String> strings = ...;
 List<URL> urls = list
@@ -151,7 +160,7 @@ String result = "The hour is $hour"; // Yes!!!
 result = "It is ${hour > 12 ? hour-12 : hour} o'clock";
 ``` 
        
-### [Template Files with *ManTL*](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+### [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 Author template files with the full expressive power of Java, use your templates directly in your code as types.
 Supports type-safe inclusion of other templates, shared layouts, and more. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/mantl.mp4)
 ```java
@@ -194,8 +203,8 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)<br>
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
-[Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)<br>
+[Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _CSV_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)<br>
 [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)<br>
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>
@@ -203,9 +212,9 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)<br>
 [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)<br>
 
-[Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
+[Manifold : _Java Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Templates (ManTL)_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
+[Manifold : _Java Template Engine_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
 
 [Manifold : _String Interpolation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)<br>
 [Manifold : _[Un]checked Exceptions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)<br>
@@ -218,7 +227,7 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)<br>
 [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)<br>
 
-[Manifold : _All&nbsp;&nbsp;(Über jar)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
+[Manifold : _All&nbsp;&nbsp;(Fat JAR)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
 
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>

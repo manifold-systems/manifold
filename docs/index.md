@@ -19,7 +19,7 @@ project and begin taking advantage of it.
 ## What can you do with Manifold?
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
-Use the framework to gain direct, type-safe access to <i>any</i> type of resource, such as
+Use the framework to gain direct, type-safe access to *any* type of resource, such as
 [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
@@ -195,7 +195,7 @@ template editing, integrated preprocessor, and more.
 >Note the Manifold Plugin for IntelliJ IDEA is **free** for use with IntelliJ IDEA **Community Edition** which like
 the Manifold project is free and open source. The plugin is also commercially available on a trial basis via the
 JetBrains Marketplace for use with IntelliJ IDEA **Ultimate Edition**.
-  
+
 ### [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project represents a separate **dependency** you can easily add to your project:
@@ -212,9 +212,9 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)<br>
 [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)<br>
 
-[Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
+[Manifold : _Java Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Templates (ManTL)_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
+[Manifold : _Java Template Engine_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
 
 [Manifold : _String Interpolation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)<br>
 [Manifold : _[Un]checked Exceptions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)<br>
@@ -227,7 +227,7 @@ by the core framework. Each project represents a separate **dependency** you can
 [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)<br>
 [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)<br>
 
-[Manifold : _All&nbsp;&nbsp;(Über jar)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
+[Manifold : _All&nbsp;&nbsp;(Fat JAR)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
 
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
