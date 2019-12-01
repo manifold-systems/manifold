@@ -25,7 +25,7 @@ Use the framework to gain direct, type-safe access to *any* type of resource, su
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 [**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv),
 [**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml), and even
-other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-javascript).
+other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js).
 Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 
 **GraphQL:** Use types defined in your `movies.graphql` and `queries.graphql` files *directly*, no code gen!
