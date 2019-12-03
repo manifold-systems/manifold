@@ -27,6 +27,9 @@ begin experimenting with a JSON Schema REST API using Manifold.
 Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to get hooked
 on ManTL templates with the Manifold IntelliJ plugin.
 
+Clone the [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project) to
+learn how to setup a Manifold project with Gradle.
+
 ## Screencasts
 
 * [GraphQL](http://manifold.systems/images/graphql.mp4)

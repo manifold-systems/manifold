@@ -546,6 +546,7 @@ Use the sample projects for nice working examples of how to configure and use Ma
 * [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
 * [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 * [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
+* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 
 # Setup
 
