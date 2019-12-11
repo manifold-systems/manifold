@@ -7,6 +7,22 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://jaxenter.com/manifold-operator-overloading-java-163232.html"><img width="240" height="135" src="/images/math.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/manifold-operator-overloading-java-163232.html">Operator Overloading for Java</a></p>
+  <p>Finally you can use <i>BigDecimal</i> and other Java types directly in arithmetic and relational operations by
+  incorporating a feature called operator overloading into your project. In this article, Scott McKinney walks you
+  through this new capability provided by the Manifold project. Along the way he discusses other interesting features
+  built atop operator overloading including unit expressions.</p>
+  <p><small>jaxenter.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
   </td>
   <td>
