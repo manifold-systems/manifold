@@ -424,7 +424,7 @@ class GqlParentType
     block.addStatement( "$simpleName thiz = ($simpleName)new DataBindings();" );
     for( NamedNode node: getDefinitions( definition ) )
     {
-      String name = remove$( node.getName() );
+      String name = makeIdentifier( remove$( node.getName() ), false );
       //noinspection unused
       String Prop = makeIdentifier( name, true );
       if( isRequiredVar( node ) )
@@ -455,7 +455,7 @@ class GqlParentType
         sb.append( ", " );
       }
       //noinspection unused
-      sb.append( param.getSimpleName() );
+      sb.append( makeIdentifier( param.getSimpleName(), false ) );
     }
     sb.append( ");" );
     method.body( sb.toString() );
@@ -469,7 +469,7 @@ class GqlParentType
       {
         Type type = getType( node );
         SrcType srcType = makeSrcType( type, false );
-        method.addParam( remove$( node.getName() ), srcType );
+        method.addParam( makeIdentifier( remove$( node.getName() ), false ), srcType );
       }
     }
   }
