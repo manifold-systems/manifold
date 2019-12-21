@@ -42,6 +42,10 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   private Map<String, IResource> _resources;
   private List<IDirectory> _childDirs;
   private List<IFile> _childFiles;
+  private String _name;
+  private IDirectory _parent;
+  private URI _uri;
+  private ResourcePath _path;
 
   public JarFileDirectoryImpl( IFileSystem fileSystem, File file )
   {
@@ -218,21 +222,25 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   @Override
   public IDirectory getParent()
   {
-    File parentFile = _file.getParentFile();
-    if( parentFile != null )
+    if( _parent == null )
     {
-      return getFileSystem().getIDirectory( parentFile );
+      File parentFile = _file.getParentFile();
+      if( parentFile != null )
+      {
+        _parent = getFileSystem().getIDirectory( parentFile );
+      }
+      else
+      {
+        return null;
+      }
     }
-    else
-    {
-      return null;
-    }
+    return _parent;
   }
 
   @Override
   public String getName()
   {
-    return _file.getName();
+    return _name == null ? _name = _file.getName() : _name;
   }
 
   @Override
@@ -250,13 +258,13 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
   @Override
   public URI toURI()
   {
-    return _file.toURI();
+    return _uri == null ? _uri = _file.toURI() : _uri;
   }
 
   @Override
   public ResourcePath getPath()
   {
-    return ResourcePath.parse( _file.getAbsolutePath() );
+    return _path == null ? _path = ResourcePath.parse( _file.getAbsolutePath() ) : _path;
   }
 
   @Override

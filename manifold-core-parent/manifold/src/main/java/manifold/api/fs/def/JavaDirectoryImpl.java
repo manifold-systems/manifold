@@ -63,9 +63,14 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
   {
     if( _fileRetrievalStrategy instanceof CachingFileRetrievalStrategy )
     {
-      synchronized( FileSystemImpl.CACHED_FILE_SYSTEM_LOCK )
+      getFileSystem().getLock().lock();
+      try
       {
         ((CachingFileRetrievalStrategy)_fileRetrievalStrategy).clearCache();
+      }
+      finally
+      {
+        getFileSystem().getLock().unlock();
       }
     }
   }
@@ -211,20 +216,30 @@ public class JavaDirectoryImpl extends JavaResourceImpl implements IDirectory
     @Override
     public List<IDirectory> listDirs()
     {
-      synchronized( FileSystemImpl.CACHED_FILE_SYSTEM_LOCK )
+      getFileSystem().getLock().lock();
+      try
       {
         refreshIfNecessary();
         return _directories;
+      }
+      finally
+      {
+        getFileSystem().getLock().unlock();
       }
     }
 
     @Override
     public List<IFile> listFiles()
     {
-      synchronized( FileSystemImpl.CACHED_FILE_SYSTEM_LOCK )
+      getFileSystem().getLock().lock();
+      try
       {
         refreshIfNecessary();
         return _files;
+      }
+      finally
+      {
+        getFileSystem().getLock().unlock();
       }
     }
 

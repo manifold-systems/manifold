@@ -30,6 +30,11 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-highjump</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext</artifactId>
       <version>${project.version}</version>
     </dependency>

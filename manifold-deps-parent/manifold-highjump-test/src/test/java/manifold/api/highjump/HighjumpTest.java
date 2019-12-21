@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2019 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.api.fs;
+package manifold.api.highjump;
 
-import java.net.URL;
+import java.util.Collections;
+import manifold.internal.runtime.Bootstrap;
+import org.junit.Test;
 
-public interface IProtocolAdapter
+public class HighjumpTest
 {
-  String[] getSupportedProtocols();
-
-  IDirectory getIDirectory( URL url );
-
-  IFile getIFile( URL url );
+  @Test
+  public void testSimple()
+  {
+//    Object result = Highjump.instance().evaluate( "2 + 2", Collections.emptyList(), Collections.emptyList(), null );
+//    result = Highjump.instance().evaluate( "3 + 2", Collections.emptyList(), Collections.emptyList(), null );
+//    System.out.println( result );
+  }
 }

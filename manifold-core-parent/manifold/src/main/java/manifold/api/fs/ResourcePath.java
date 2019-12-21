@@ -25,7 +25,6 @@ import manifold.api.util.ManStringUtil;
 
 public class ResourcePath
 {
-
   public static final String WINDOWS_NETWORK_ROOT = "\\\\";
 
   protected final ResourcePath _parent;

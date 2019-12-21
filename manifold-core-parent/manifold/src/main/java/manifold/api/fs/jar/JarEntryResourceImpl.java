@@ -17,7 +17,6 @@
 package manifold.api.fs.jar;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.jar.JarEntry;
@@ -29,13 +28,15 @@ import manifold.api.fs.ResourcePath;
 public abstract class JarEntryResourceImpl implements IResource
 {
   private IFileSystem _fs;
-  protected JarEntry _entry;
+  JarEntry _entry;
   protected IJarFileDirectory _parent;
-  protected JarFileDirectoryImpl _jarFile;
+  JarFileDirectoryImpl _jarFile;
   protected String _name;
-  private boolean _exists = false;
+  private boolean _exists;
+  private ResourcePath _path;
+  private URI _uri;
 
-  protected JarEntryResourceImpl( IFileSystem fs, String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
+  JarEntryResourceImpl( IFileSystem fs, String name, IJarFileDirectory parent, JarFileDirectoryImpl jarFile )
   {
     _fs = fs;
     _name = name;
@@ -54,7 +55,7 @@ public abstract class JarEntryResourceImpl implements IResource
     setExists();
   }
 
-  protected void setExists()
+  private void setExists()
   {
     _exists = true;
     if( getParent() instanceof JarEntryResourceImpl )
@@ -82,7 +83,7 @@ public abstract class JarEntryResourceImpl implements IResource
   }
 
   @Override
-  public boolean delete() throws IOException
+  public boolean delete()
   {
     throw new UnsupportedOperationException();
   }
@@ -90,14 +91,18 @@ public abstract class JarEntryResourceImpl implements IResource
   @Override
   public URI toURI()
   {
-    try
+    if( _uri == null )
     {
-      return new URI( "jar:" + _jarFile.toURI().toString() + "!/" + getEntryName().replace( " ", "%20" ) );
+      try
+      {
+        _uri = new URI( "jar:" + _jarFile.toURI().toString() + "!/" + getEntryName().replace( " ", "%20" ) );
+      }
+      catch( URISyntaxException e )
+      {
+        throw new RuntimeException( e );
+      }
     }
-    catch( URISyntaxException e )
-    {
-      throw new RuntimeException( e );
-    }
+    return _uri;
   }
 
   private String getEntryName()
@@ -122,7 +127,7 @@ public abstract class JarEntryResourceImpl implements IResource
   @Override
   public ResourcePath getPath()
   {
-    return _parent.getPath().join( _name );
+    return _path == null ? _path = _parent.getPath().join( _name ) : _path;
   }
 
   @Override

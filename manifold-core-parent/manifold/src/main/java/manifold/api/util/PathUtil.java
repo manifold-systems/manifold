@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -279,7 +280,14 @@ public class PathUtil
 
   public static IFile getIFile( IFileSystem fs, Path classFile )
   {
-    return fs.getFileFactory().getIFile( classFile.toUri() );
+    try
+    {
+      return fs.getIFile( classFile.toUri().toURL() );
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
   public static void delete( Path path )
