@@ -1310,39 +1310,65 @@ class GqlParentType
   {
     addSourcePositionAnnotation( srcClass, node, name.get(), srcAnno );
   }
-
-  //todo: there is a bug in graphql-java where the line number info is off by one (+1)
-  // see https://github.com/graphql-java/graphql-java/issues/1512
-  private static Boolean GRAPHQL_LINE_OFFSET_BUG = null;
+  
   private SourceLocation getActualSourceLocation( SrcLinkedClass srcClass, Node node )
   {
-    String startSymbol = getStartSymbol( node );
-    SourceLocation loc = node.getSourceLocation();
-    if( GRAPHQL_LINE_OFFSET_BUG == null )
-    {
-      GRAPHQL_LINE_OFFSET_BUG = !srcClass.verifyOffset( loc.getLine(), loc.getColumn(), startSymbol );
-      if( GRAPHQL_LINE_OFFSET_BUG &&
-          !srcClass.verifyOffset( loc.getLine() - 1, loc.getColumn(), startSymbol ) )
+    final SourceLocation[] loc = {node.getSourceLocation()};
+    srcClass.processContent( loc[0].getLine(), loc[0].getColumn(), ( content, offset) -> {
+      int endComment;
+      if( content.startsWith( "\"\"\"" ) )
       {
-        GRAPHQL_LINE_OFFSET_BUG = null;
-        System.out.println( "GRAPHQL_LINE_OFFSET_BUG check failure" );
-        return loc;
+        endComment = content.indexOf( "\"\"\"", offset + 3 );
+        if( endComment > 0 )
+        {
+          endComment += 3;
+        }
+      }
+      else
+      {
+        endComment = offset;
+      }
+      loc[0] = adjustLocation( node, content, offset, endComment );
+    } );
+    return loc[0];
+  }
+
+  private SourceLocation adjustLocation( Node node, String content, Integer offset, int commentEnd )
+  {
+    SourceLocation loc = node.getSourceLocation();
+    String name;
+    if( node instanceof NamedNode && !content.startsWith( name = ((NamedNode)node).getName(), offset ) ||
+        node instanceof OperationDefinition && !content.startsWith( name = ((OperationDefinition)node).getName(), offset )  )
+    {
+      int nameStart = content.indexOf( ' ' + name, commentEnd );
+      if( nameStart > 0 )
+      {
+        nameStart++; // skip space
+        int line = loc.getLine();
+        int lastLinebreak = 0;
+        for( int i = offset; i < nameStart; i++ )
+        {
+          if( content.charAt( i ) == '\n' )
+          {
+            line++;
+            lastLinebreak = i;
+          }
+        }
+
+        int column;
+        if( lastLinebreak > 0 )
+        {
+          column = nameStart - lastLinebreak;
+        }
+        else
+        {
+          column = loc.getColumn();
+          column += nameStart - commentEnd;
+        }
+        loc = new SourceLocation( line, column, loc.getSourceName() );
       }
     }
-
-    int line = loc.getLine();
-    if( line > 1 && GRAPHQL_LINE_OFFSET_BUG )
-    {
-      // adjust for the graphql-java line location bug
-      line--;
-    }
-
-    //todo: the column offset is the start of the declaration, not the name, so we account for that here,
-    // remove if/when graphql-java changes this
-    int columnOffset = startSymbol.isEmpty() ? 0 : startSymbol.length() + 1;
-    int column = loc.getColumn() + columnOffset;
-
-    return new SourceLocation( line, column );
+    return loc;
   }
 
   private void addSourcePositionAnnotation( SrcLinkedClass srcClass, Node node, String name, SrcAnnotated srcAnno )

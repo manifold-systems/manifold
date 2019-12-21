@@ -22,6 +22,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.type.ActualName;
@@ -41,6 +42,7 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 
   private IFile _linkedFile;
   private Map<IFile, int[]> _resFileToContent;
+  private String _fileContent;
 
   public SrcLinkedClass( String fqn, Kind kind, IFile linkedFile )
   {
@@ -149,8 +151,22 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
     int offset = findOffset( file, line, column );
     try
     {
-      String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
+      String content = getFileContent();
       return content.startsWith( startSymbol, offset );
+    }
+    catch( IOException ioe )
+    {
+      throw new RuntimeException( ioe );
+    }
+  }
+
+  public void processContent( int line, int column, BiConsumer<String, Integer> contentHandler )
+  {
+    IFile file = getLinkedFile();
+    int offset = findOffset( file, line, column );
+    try
+    {
+      contentHandler.accept( getFileContent(), offset );
     }
     catch( IOException ioe )
     {
@@ -164,7 +180,7 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
       f -> {
         try
         {
-          String content = StreamUtil.getContent( new InputStreamReader( f.openInputStream(), UTF_8 ) );
+          String content = getFileContent();
           ArrayList<Integer> lineOffsetList = new ArrayList<>();
           lineOffsetList.add( 0 );
           for( int index = content.indexOf( '\n' ) + 1; index > 0; index = content.indexOf( '\n', index ) + 1 )
@@ -200,5 +216,12 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
       offset += ((IFileFragment)file).getOffset();
     }
     return offset;
+  }
+
+  private String getFileContent() throws IOException
+  {
+    return _fileContent == null
+           ? _fileContent = StreamUtil.getContent( new InputStreamReader( getLinkedFile().openInputStream(), UTF_8 ) )
+           : _fileContent;
   }
 }
