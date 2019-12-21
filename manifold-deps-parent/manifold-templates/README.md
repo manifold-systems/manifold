@@ -697,7 +697,7 @@ You also gain access to Manifold's provided extension libraries for I/O, Web, an
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-all</artifactId>
       <!-- it is best to use the latest release -->
-      <version>2019.1.29</version>
+      <version>2019.1.30</version>
     </dependency>
 ```
 
@@ -774,11 +774,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.29'
+    compile group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.30'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.29'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-templates', version: '2019.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -825,7 +825,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.29</manifold.version>
+        <manifold.version>2019.1.30</manifold.version>
     </properties>
     
     <dependencies>
@@ -872,7 +872,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.29</manifold.version>
+        <manifold.version>2019.1.30</manifold.version>
     </properties>
     
     <dependencies>

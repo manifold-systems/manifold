@@ -312,11 +312,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-csv', version: '2019.1.29'
+    compile group: 'systems.manifold', name: 'manifold-csv', version: '2019.1.30'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2019.1.29'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2019.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -363,7 +363,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.29</manifold.version>
+        <manifold.version>2019.1.30</manifold.version>
     </properties>
     
     <dependencies>
@@ -410,7 +410,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2019.1.29</manifold.version>
+        <manifold.version>2019.1.30</manifold.version>
     </properties>
     
     <dependencies>
