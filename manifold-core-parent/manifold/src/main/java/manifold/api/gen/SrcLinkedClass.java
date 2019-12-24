@@ -145,21 +145,6 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
     return identifier;
   }
 
-  public boolean verifyOffset( int line, int column, String startSymbol )
-  {
-    IFile file = getLinkedFile();
-    int offset = findOffset( file, line, column );
-    try
-    {
-      String content = getFileContent();
-      return content.startsWith( startSymbol, offset );
-    }
-    catch( IOException ioe )
-    {
-      throw new RuntimeException( ioe );
-    }
-  }
-
   public void processContent( int line, int column, BiConsumer<String, Integer> contentHandler )
   {
     IFile file = getLinkedFile();
@@ -220,8 +205,23 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 
   private String getFileContent() throws IOException
   {
-    return _fileContent == null
-           ? _fileContent = StreamUtil.getContent( new InputStreamReader( getLinkedFile().openInputStream(), UTF_8 ) )
-           : _fileContent;
+    if( _fileContent != null )
+    {
+      return _fileContent;
+    }
+
+    AbstractSrcClass enclosingClass = getEnclosingClass();
+    if( enclosingClass instanceof SrcLinkedClass )
+    {
+      return ((SrcLinkedClass)enclosingClass).getFileContent();
+    }
+    else if( enclosingClass == null )
+    {
+      return _fileContent == null
+             ? _fileContent = StreamUtil.getContent( new InputStreamReader( getLinkedFile().openInputStream(), UTF_8 ) )
+             : _fileContent;
+    }
+
+    throw new IllegalStateException();
   }
 }
