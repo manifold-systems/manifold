@@ -40,6 +40,14 @@ public class XmlElement extends XmlNamedPart
     _attributes = Collections.emptyMap();
   }
 
+  XmlElement( XMLParser.PrologContext ctx, XmlElement parent )
+  {
+    super( parent, ctx.start.getStartIndex(), ctx.stop.getStopIndex() - ctx.start.getStartIndex() + 1, ctx.start.getLine() );
+    setName( new XmlTerminal( ctx.getStart(), this ) );
+    _children = Collections.emptyList();
+    _attributes = Collections.emptyMap();
+  }
+
   public List<XmlElement> getChildren()
   {
     return _children;

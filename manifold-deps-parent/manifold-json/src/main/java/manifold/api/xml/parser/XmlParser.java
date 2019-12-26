@@ -24,6 +24,7 @@ import manifold.api.xml.parser.antlr.XMLParserBaseListener;
 import manifold.api.xml.parser.antlr.gen.XMLLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -37,6 +38,7 @@ public class XmlParser
     return new XmlParser( inputStream )._root;
   }
 
+  @SuppressWarnings("WeakerAccess")
   public static XMLParser.DocumentContext parseRaw( InputStream inputStream )
   {
     try
@@ -69,15 +71,35 @@ public class XmlParser
 
   private class XmlBuilder extends XMLParserBaseListener
   {
-    private Stack<Pair<XMLParser.ElementContext, XmlElement>> _elements = new Stack<>();
+    private XmlElement _prolog;
+    private Stack<Pair<ParserRuleContext, XmlElement>> _elements = new Stack<>();
     private XmlAttribute _attribute;
+
+    @Override
+    public void enterProlog( XMLParser.PrologContext ctx )
+    {
+      _prolog = new XmlElement( ctx, null );
+      _elements.push( new Pair<>( ctx, _prolog ) );
+    }
+
+    @Override
+    public void exitProlog( XMLParser.PrologContext ctx )
+    {
+      _elements.pop();
+    }
 
     public void enterElement( XMLParser.ElementContext ctx )
     {
       XmlElement parent = _elements.isEmpty() ? null : _elements.peek().getSecond();
-      XmlElement xmlElement = new XmlElement( ctx, parent );
-      if( parent != null )
+      XmlElement xmlElement;
+      if( parent == null )
       {
+        xmlElement = new XmlRootElement( ctx, _prolog );
+        _prolog = null;
+      }
+      else
+      {
+        xmlElement = new XmlElement( ctx, parent );
         parent.addChild( xmlElement );
       }
       _elements.push( new Pair<>( ctx, xmlElement ) );
@@ -90,11 +112,11 @@ public class XmlParser
     @Override
     public void exitElement( XMLParser.ElementContext ctx )
     {
-      Pair<XMLParser.ElementContext, XmlElement> popped = _elements.pop();
+      Pair<ParserRuleContext, XmlElement> popped = _elements.pop();
       if( popped.getFirst() != ctx )
       {
         throw new IllegalStateException( "Unbalanced elements, expecting '" + ctx.Name( 0 ) +
-                                         "' but found '" + popped.getFirst().Name( 0 ) + "'" );
+                                         "' but found '" + popped.getFirst() + "'" );
       }
     }
 

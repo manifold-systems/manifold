@@ -18,11 +18,13 @@ package manifold.api.host;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import junit.framework.TestCase;
 import manifold.api.xml.parser.XmlAttribute;
 import manifold.api.xml.parser.XmlElement;
 import manifold.api.xml.parser.XmlNamedPart;
 import manifold.api.xml.parser.XmlParser;
+import manifold.api.xml.parser.XmlRootElement;
 import manifold.api.xml.parser.XmlTerminal;
 
 public class XmlParserTest extends TestCase
@@ -83,6 +85,22 @@ public class XmlParserTest extends TestCase
                     "    ]]>", other.getRawContent().getRawText() );
       assertEquals( "<message> other things </message>", other.getContent() );
       assertEquals( 0, other.getChildren().size() );
+  }
+
+  public void testProlog()
+  {
+    final String xml =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+      "<nothing/>";
+    XmlRootElement nothing = (XmlRootElement)XmlParser.parse( new ByteArrayInputStream( xml.getBytes( StandardCharsets.UTF_8 ) ) );
+    final XmlElement prolog = nothing.getProlog();
+    final Map<String, XmlAttribute> attributes = prolog.getAttributes();
+    assertEquals( 2, attributes.size() );
+    final XmlAttribute version = attributes.get( "version" );
+    assertEquals( "1.0", version.getValue() );
+    final XmlAttribute encoding = attributes.get( "encoding" );
+    assertEquals( "UTF-8", encoding.getValue() );
+    assertEquals( "nothing", nothing.getName().getRawText() );
   }
 
   private void assertPartsMatchSourceLocations( String xml, XmlNamedPart node )

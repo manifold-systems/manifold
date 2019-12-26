@@ -123,6 +123,17 @@ public class XmlTest
   }
 
   @Test
+  public void testProlog()
+  {
+    final String xml =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+      "<nothing/>";
+    Bindings bindings = Xml.fromXml( xml, true );
+    String toXml = Xml.toXml( bindings );
+    assertEquals( "<nothing/>\n", toXml );
+  }
+
+  @Test
   public void testArrayInForeachLoop()
   {
     ArrayList<String> brands = new ArrayList<>();
