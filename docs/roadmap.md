@@ -9,7 +9,7 @@ layout: default
 ## Features on the workbench
 
 >I've suspended work on new features and will be spending most of my time writing tests, fixing bugs, improving
->performance, and writing papers.
+>performance, and writing.
 
 <br>
 
