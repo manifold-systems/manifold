@@ -11,7 +11,7 @@ layout: default
 >I've suspended work on new features and will be spending most of my time writing tests, fixing bugs, improving
 >performance, and writing papers.
 
-><br>
+<br>
 
 ## Features on the pile (in no particular order)
  
