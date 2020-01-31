@@ -8,12 +8,10 @@ layout: default
  
 ## Features on the workbench
 
-#### Manifold plugin for VS Code (which is Eclipse)
-* [#142](https://github.com/manifold-systems/manifold/issues/142)
-#### Manifold plugin for Eclipse
-* [#18](https://github.com/manifold-systems/manifold/issues/18)
-<br>
+>I've suspended work on new features and will be spending most of my time writing tests, fixing bugs, improving
+>performance, and writing papers.
 
+><br>
 
 ## Features on the pile (in no particular order)
  
@@ -31,4 +29,10 @@ layout: default
 
 #### Android support
 * [#77](https://github.com/manifold-systems/manifold/issues/77)
+
+#### Manifold plugin for VS Code (which is Eclipse)
+* [#142](https://github.com/manifold-systems/manifold/issues/142)
+
+#### Manifold plugin for Eclipse
+* [#18](https://github.com/manifold-systems/manifold/issues/18)
 
