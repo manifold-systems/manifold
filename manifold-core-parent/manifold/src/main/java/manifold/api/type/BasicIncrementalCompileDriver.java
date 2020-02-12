@@ -21,22 +21,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("unused")
 public class BasicIncrementalCompileDriver implements IIncrementalCompileDriver
 {
   private final boolean _incremental;
-  private final Map<File, Set<String>> _typesToFile;
 
   public BasicIncrementalCompileDriver( boolean incremental )
   {
     _incremental = incremental;
-    _typesToFile = new ConcurrentHashMap<>();
   }
 
   @Override
@@ -60,16 +55,5 @@ public class BasicIncrementalCompileDriver implements IIncrementalCompileDriver
       paths.add( tokenizer.nextToken() );
     }
     return paths.stream().map( File::new ).collect( Collectors.toList() );
-  }
-
-  @Override
-  public void mapTypesToFile( Set<String> set, File iFile )
-  {
-    _typesToFile.put( iFile, set );
-  }
-
-  public Map<File, Set<String>> getTypesToFile()
-  {
-    return _typesToFile;
   }
 }

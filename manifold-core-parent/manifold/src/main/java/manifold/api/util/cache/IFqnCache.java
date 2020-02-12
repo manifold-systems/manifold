@@ -47,9 +47,4 @@ public interface IFqnCache<T>
   boolean visitDepthFirst( Predicate<T> visitor );
 
   boolean visitNodeDepthFirst( Predicate<FqnCacheNode> visitor );
-
-  /**
-   * @param visitor returns whether or not to continue visiting children of T
-   */
-  boolean visitBreadthFirst( Predicate<T> visitor );
 }

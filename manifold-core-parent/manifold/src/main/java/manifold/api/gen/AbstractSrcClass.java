@@ -27,6 +27,7 @@ import manifold.api.util.ManClassUtil;
 public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatement<T>
 {
   private String _package;
+  private String _originalSimpleName;
   private List<String> _imports;
   private final AbstractSrcClass.Kind _kind;
   private SrcType _superClass;
@@ -51,17 +52,49 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
   public AbstractSrcClass( String fqn, AbstractSrcClass enclosingClass, AbstractSrcClass.Kind kind )
   {
     super( enclosingClass );
-    fullName( fqn );
     _enclosingClass = enclosingClass;
+    _package = ManClassUtil.getPackage( fqn );
+    _originalSimpleName = ManClassUtil.getShortClassName( fqn );
+    disambiguateSimpleName( fqn );
     _kind = kind;
     _imports = new ArrayList<>();
     _typeVars = new ArrayList<>();
   }
 
-  private T fullName( String fqn )
+  /**
+   * A nested class name must not duplicate an enclosing class name. If a duplicate is found,
+   * the name is changed to a qualified name of the form: "EnclosingName_NestedName"
+   */
+  private void disambiguateSimpleName( String fqn )
   {
-    _package = ManClassUtil.getPackage( fqn );
-    return name( ManClassUtil.getShortClassName( fqn ) );
+    String simpleName = ManClassUtil.getShortClassName( fqn );
+    if( duplicatesEnclosing( simpleName ) )
+    {
+      simpleName = _enclosingClass.getSimpleName() + '_' + simpleName;
+    }
+    name( simpleName );
+  }
+
+  private boolean duplicatesEnclosing( String simpleName )
+  {
+    if( _enclosingClass != null )
+    {
+      return _enclosingClass.getSimpleName().equals( simpleName ) ||
+             _enclosingClass.duplicatesEnclosing( simpleName );
+    }
+    return false;
+  }
+
+  public String getDisambiguatedNameInNest( String name )
+  {
+    for( AbstractSrcClass inner: getInnerClasses() )
+    {
+      if( name.equals( inner._originalSimpleName ) )
+      {
+        return inner.getSimpleName();
+      }
+    }
+    return name;
   }
 
   public T superClass( SrcType superClass )

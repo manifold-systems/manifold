@@ -155,6 +155,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private Map<String, Boolean> _argPresent;
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
+  private boolean _isIncremental;
 
   public static JavacPlugin instance()
   {
@@ -1015,6 +1016,15 @@ public class JavacPlugin implements Plugin, TaskListener
         iterator.remove();
       }
     }
+  }
+
+  public boolean isIncremental()
+  {
+    return _isIncremental || String.valueOf( true ).equals( System.getProperty( "manifold.compiler.incremental" ) );
+  }
+  public void setIncremental()
+  {
+    _isIncremental = true;
   }
 
   private class FileFragmentResource

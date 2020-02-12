@@ -47,7 +47,6 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -1333,38 +1332,42 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    Set<Object> drivers = findDrivers( tree );
-
-    // Keep track of Manifold types compiled, for hotswap compile drivers
-    addCompiledResourceTypeByFile( drivers, tree );
+    // Keep track of Manifold types compiled, for hotswap compile drivers, and more generally for JPS build management
+    // e.g., to keep track of resource file to .class files so subsequent incremental build can delete .class files and
+    // recompile changed resources.
+    mapResourceFileToTargetClassFiles( tree );
 
     // Ensure modified resource files are compiled, stemming from incremental compilation only
-    incrementalCompile( drivers );
+    incrementalCompile( tree );
   }
 
   private Set<Object> findDrivers( JCTree.JCClassDecl tree )
   {
-    Set<Object> drivers = new HashSet<>();
-    for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
+    if( isIncremental() )
     {
-      if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
+      // an incremental build has a driver per module per test/production/etc. target, where each driver maintains
+      // changed resource files for that target only. This helps with forcing the types corresponding with the resources
+      // to compile, but only ones that pertain to the target (where the generated _Manifold_Temp_Main_.java is). The
+      // compilation is done in incrementalCompile().
+
+      Set<Object> drivers = new HashSet<>();
+      for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
       {
-        getIncrementalCompileDrivers( anno, drivers );
+        if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
+        {
+          getIncrementalCompileDrivers( anno, drivers );
+        }
       }
+      _tp.addDrivers( drivers );
     }
-    _tp.addDrivers( drivers );
-    addFileFragmentDriver();
+
     return _tp.getDrivers();
   }
 
-  private void addFileFragmentDriver()
+  private boolean isIncremental()
   {
-    Class<?> type = ReflectUtil.type( "manifold.ij.jps.IjFileFragmentIncrementalCompileDriver" );
-    if( type != null )
-    {
-      Object driver = ReflectUtil.method( type, "getInstance" ).invokeStatic();
-      _tp.addDrivers( Collections.singleton( driver ) );
-    }
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    return javacPlugin != null && javacPlugin.isIncremental();
   }
 
   private void getIncrementalCompileDrivers( JCTree.JCAnnotation anno, Set<Object> drivers )
@@ -1397,10 +1400,13 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private void incrementalCompile( Set<Object> drivers )
+  private void incrementalCompile( JCTree.JCClassDecl tree )
   {
+    Set<Object> drivers = findDrivers( tree );
     for( Object driver: drivers )
     {
+      JavacPlugin.instance().setIncremental();
+
       //noinspection unchecked
       Collection<File> changedFiles = (Collection<File>)ReflectUtil.method( driver, "getChangedFiles" ).invoke();
       if( changedFiles == null || changedFiles.isEmpty() )
@@ -1419,7 +1425,12 @@ public class ExtensionTransformer extends TreeTranslator
           Set<String> types = Arrays.stream( tm.getTypesForFile( file ) ).collect( Collectors.toSet() );
           if( types.size() > 0 )
           {
-            ReflectUtil.method( driver, "mapTypesToFile", Set.class, File.class ).invoke( types, file.toJavaFile() );
+            Map<File, Set<String>> typesToFile = getTypesToFile();
+            if( typesToFile != null )
+            {
+              typesToFile.put( file.toJavaFile(), types );
+            }
+
             for( String fqn: types )
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
@@ -1434,7 +1445,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private void addCompiledResourceTypeByFile( Set<Object> drivers, JCTree.JCClassDecl tree )
+  private void mapResourceFileToTargetClassFiles( JCTree.JCClassDecl tree )
   {
     if( tree.sym == null )
     {
@@ -1454,10 +1465,11 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
+    Map<File, Set<String>> typesCompiledByFile = new HashMap<>();
     Set<IFile> resourceFiles = ((GeneratedJavaStubFileObject)sourcefile).getResourceFiles();
-    File file;
     for( IFile ifile: resourceFiles )
     {
+      File file;
       try
       {
         while( ifile instanceof IFileFragment )
@@ -1471,7 +1483,6 @@ public class ExtensionTransformer extends TreeTranslator
         continue;
       }
 
-      Map<File, Set<String>> typesCompiledByFile = _tp.getTypesCompiledByFile();
       Set<String> types = typesCompiledByFile.get( file );
       if( types == null )
       {
@@ -1482,7 +1493,7 @@ public class ExtensionTransformer extends TreeTranslator
       types.add( sb.toString() );
     }
 
-    addIndirectCompiledTypesToBuildForMapping( drivers );
+    mapResourceFileToTargetClassFiles( typesCompiledByFile );
   }
 
   private void make$name( Symbol.ClassSymbol sym, StringBuilder sb )
@@ -1499,38 +1510,47 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private void addIndirectCompiledTypesToBuildForMapping( Set<Object> drivers )
+  private void mapResourceFileToTargetClassFiles( Map<File, Set<String>> typesCompiledByFile )
   {
-    Map<File, Set<String>> typesCompiledByFile = _tp.getTypesCompiledByFile();
     if( typesCompiledByFile.isEmpty() )
     {
       // nothing to add
       return;
     }
 
-    for( Object driver: drivers )
-    {
-      // Keep track of compiled Manifold types during a Rebuild.
-      //
-      // Generally, since Manifold types are magically added to the build as
-      // they are referenced, they need to be mapped in the JPS compilation
-      // process to support hotswap debugging, etc.
+    // Keep track of compiled Manifold types during a Rebuild.
+    //
+    // Generally, since Manifold types are magically added to the build as
+    // they are referenced, they need to be mapped in the JPS compilation
+    // process to support hotswap debugging, etc.
 
-      //noinspection unchecked
-      Map<File, Set<String>> map = (Map)ReflectUtil.method( driver, "getTypesToFile" ).invoke();
-      typesCompiledByFile.forEach( ( file, types ) -> {
-        Set<String> existingTypes = map.get( file );
+    Map<File, Set<String>> typesToFile = getTypesToFile();
+    if( typesToFile != null )
+    {
+      typesCompiledByFile.forEach( (file, types) -> {
+        Set<String> existingTypes = typesToFile.get( file );
         if( existingTypes != null )
         {
           existingTypes.addAll( types );
         }
         else
         {
-          map.put( file, types );
+          typesToFile.put( file, types );
         }
       } );
-      typesCompiledByFile.clear();
     }
+  }
+
+  private Map<File, Set<String>> getTypesToFile()
+  {
+    //## todo: maybe make this a service so it is not specific to IntelliJ
+    Class<?> type = ReflectUtil.type( "manifold.ij.jps.IjChangedResourceFiles" );
+    if( type == null )
+    {
+      // not compiling with IJ
+      return null;
+    }
+    return (Map<File, Set<String>>)ReflectUtil.method( type, "getTypesToFile" ).invokeStatic();
   }
 
   private void verifyExtensionInterfaces( JCTree.JCClassDecl tree )

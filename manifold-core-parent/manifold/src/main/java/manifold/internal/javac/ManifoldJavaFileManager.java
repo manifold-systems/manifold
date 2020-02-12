@@ -27,13 +27,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.tools.DiagnosticListener;
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeSystemListener;
@@ -49,6 +54,7 @@ import manifold.api.util.cache.FqnCacheNode;
 
 
 import static manifold.api.type.ContributorKind.Primary;
+import static manifold.api.type.ContributorKind.Supplemental;
 
 /**
  */
@@ -331,12 +337,75 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       }
     }
 
+    if( isFilteredFromIncrementalCompilation( fqn ) )
+    {
+      return null;
+    }
+
     JavaFileObject fo = module.produceFile( fqn, location, errorHandler );
 
     // note we cache even if file is null, fqn cache is also a miss cache
     _generatedFiles.add( fqn, fo == null ? MISS_FO : fo);
 
     return fo;
+  }
+
+  private boolean isFilteredFromIncrementalCompilation( String fqn )
+  {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin == null || !javacPlugin.isIncremental() )
+    {
+      // not performing incremental compilation, compile everything
+      return false;
+    }
+
+    // changed files indicates incremental compilation, thus if fqn is not present in changes, use .class file
+    List<File> changedFiles = getChangedResourceFiles();
+    IManifoldHost host = getHost();
+    Set<IFile> changes = changedFiles.stream().map( ( File f ) -> host.getFileSystem().getIFile( f ) )
+      .collect( Collectors.toSet() );
+    for( ITypeManifold tm: host.getSingleModule().getTypeManifolds() )
+    {
+      if( tm.getContributorKind() == Supplemental && tm.isType( fqn ) )
+      {
+        // do not filter extension classes, they must be augmented in memory (the extended .class file does not have extensions)
+        return false;
+      }
+
+      for( IFile file: tm.findFilesForType( fqn ) )
+      {
+        if( file instanceof IFileFragment )
+        {
+          // do not filter fragments, they are a fragment of a .java file
+          return false;
+        }
+      }
+
+      for( IFile file: changes )
+      {
+        Set<String> types = Arrays.stream( tm.getTypesForFile( file ) ).collect( Collectors.toSet() );
+        if( types.contains( fqn ) )
+        {
+          //## todo: cache the types for changed files so we don't have to recompute them for each call to this method
+          // the resource file changed, recompile the type[s]
+          return false;
+        }
+      }
+    }
+
+    // no files changed corresponding with the type, do not compile it, instead use the existing .class file
+    return true;
+  }
+
+  public static List<File> getChangedResourceFiles()
+  {
+    List<File> changedFiles = Collections.emptyList();
+    Class<?> type = ReflectUtil.type( "manifold.ij.jps.IjChangedResourceFiles" );
+    if( type != null )
+    {
+      changedFiles = (List<File>)ReflectUtil.method( type, "getChangedFiles" ).invokeStatic();
+    }
+    return changedFiles;
   }
 
   private Set<String> makeNames( Iterable<JavaFileObject> list )

@@ -204,7 +204,7 @@ class GqlParentType
       .modifiers( Flags.PUBLIC )
       .name( "builder" )
       .returns( new SrcType( identifier + ".Builder" ) );
-    addRequiredParameters( operation, method );
+    addRequiredParameters( srcClass, operation, method );
     StringBuilder sb = new StringBuilder();
     sb.append( "return $identifier.builder(" );
     int count = 0;
@@ -352,7 +352,7 @@ class GqlParentType
     {
       String actualName = ensure$included( varDef );
       String propName = makeIdentifier( remove$( actualName ), true );
-      SrcType type = makeSrcType( varDef.getType(), false );
+      SrcType type = makeSrcType( enclosingType, varDef.getType(), false );
       //noinspection unused
       StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
       //noinspection unused
@@ -417,7 +417,7 @@ class GqlParentType
       .modifiers( Modifier.STATIC )
       .name( "create" )
       .returns( simpleName );
-    addRequiredParameters( definition, method );
+    addRequiredParameters( srcClass, definition, method );
     srcClass.addMethod( method );
 
     SrcStatementBlock block = new SrcStatementBlock();
@@ -442,7 +442,7 @@ class GqlParentType
       .modifiers( Modifier.STATIC )
       .name( "builder" )
       .returns( new SrcType( "Builder" ) );
-    addRequiredParameters( definition, method );
+    addRequiredParameters( srcClass, definition, method );
     srcClass.addMethod( method );
 
     StringBuilder sb = new StringBuilder();
@@ -461,14 +461,14 @@ class GqlParentType
     method.body( sb.toString() );
   }
 
-  private void addRequiredParameters( Definition definition, AbstractSrcMethod method )
+  private void addRequiredParameters( SrcLinkedClass owner, Definition definition, AbstractSrcMethod method )
   {
     for( NamedNode node: getDefinitions( definition ) )
     {
       if( isRequiredVar( node ) )
       {
         Type type = getType( node );
-        SrcType srcType = makeSrcType( type, false );
+        SrcType srcType = makeSrcType( owner, type, false );
         method.addParam( makeIdentifier( remove$( node.getName() ), false ), srcType );
       }
     }
@@ -491,7 +491,7 @@ class GqlParentType
         .body( "return _result;" ) );
     enclosingType.addInnerClass( srcClass );
 
-    addRequiredParameters( definition, ctor );
+    addRequiredParameters( enclosingType, definition, ctor );
     ctor.body( addBuilderConstructorBody( ctor ) );
 
     addWithMethods( srcClass, definition );
@@ -526,7 +526,7 @@ class GqlParentType
 
       Type type = getType( node );
       String propName = makeIdentifier( node.getName(), true );
-      addWithMethod( srcClass, node, propName, makeSrcType( type, false ) );
+      addWithMethod( srcClass, node, propName, makeSrcType( srcClass, type, false ) );
     }
   }
 
@@ -1029,12 +1029,7 @@ class GqlParentType
       fieldDef = ((ObjectTypeDefinition)ctx).getFieldDefinitions().stream()
         .filter( e -> e.getName().equals( fieldName ) ).findFirst();
     }
-    else if( ctx instanceof InterfaceTypeDefinition )
-    {
-      fieldDef = ((InterfaceTypeDefinition)ctx).getFieldDefinitions().stream()
-        .filter( e -> e.getName().equals( fieldName ) ).findFirst();
-    }
-    else if( ctx instanceof UnionTypeDefinition && fieldName.equals( "__typename" ) )
+    else if( fieldName.equals( "__typename" ) )
     {
       // The discriminator for the union
       String propName = name;
@@ -1061,6 +1056,11 @@ class GqlParentType
 
       return;
     }
+    else if( ctx instanceof InterfaceTypeDefinition )
+    {
+      fieldDef = ((InterfaceTypeDefinition)ctx).getFieldDefinitions().stream()
+        .filter( e -> e.getName().equals( fieldName ) ).findFirst();
+    }
     else
     {
       throw new UnsupportedOperationException( ctx.getName() );
@@ -1078,7 +1078,7 @@ class GqlParentType
     if( childSelections == null || childSelections.getSelections().isEmpty() )
     {
       String propName = name;
-      SrcType type1 = makeSrcType( type, false );
+      SrcType type1 = makeSrcType( srcClass, type, false );
       propName = makeIdentifier( propName, true );
       //noinspection unused
       StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
@@ -1101,8 +1101,32 @@ class GqlParentType
     }
     else
     {
+      // inner interface of Result interface
+      String identifier = makeIdentifier( name, false );
+      String fqn = srcClass.getName() + '.' + identifier;
+      SrcLinkedClass srcInnerResult = new SrcLinkedClass( fqn, srcClass, Interface );
+      srcInnerResult
+        .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+        .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+          .addArgument( "factoryClass", Class.class, srcInnerResult.getSimpleName() + ".ProxyFactory.class" ) )
+        .modifiers( Modifier.PUBLIC );
+      addActualNameAnnotation( srcInnerResult, name, false );
+      addSourcePositionAnnotation( srcClass, field, name, srcInnerResult );
+      addProxyFactory( srcInnerResult );
+
+      for( Selection member: childSelections.getSelections() )
+      {
+        TypeDefinition typeDef = findTypeDefinition( type );
+        if( typeDef != null )
+        {
+          addQuerySelection( srcInnerResult, typeDef, member );
+        }
+      }
+      srcClass.addInnerClass( srcInnerResult );
+
+      // getter property
       String propName = name;
-      SrcType type1 = convertSrcType( type, name );
+      SrcType type1 = convertSrcType( srcClass, type, srcInnerResult.getSimpleName() );
       propName = makeIdentifier( propName, true );
       //noinspection unused
       StringBuilder propertyType = type1.render( new StringBuilder(), 0, false );
@@ -1122,29 +1146,6 @@ class GqlParentType
 //      addActualNameAnnotation( setter, name, true );
 //      addSourcePositionAnnotation( srcClass, field, name, setter );
 //      srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
-
-      // inner interface of Result interface
-      String identifier = makeIdentifier( name, false );
-      String fqn = srcClass.getName() + '.' + identifier;
-      SrcLinkedClass srcInnerResult = new SrcLinkedClass( fqn, srcClass, Interface )
-        .addInterface( IJsonBindingsBacked.class.getSimpleName() )
-        .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-          .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
-        .modifiers( Modifier.PUBLIC );
-      addActualNameAnnotation( srcInnerResult, name, false );
-      addSourcePositionAnnotation( srcClass, field, name, srcInnerResult );
-      addProxyFactory( srcInnerResult );
-
-      for( Selection member: childSelections.getSelections() )
-      {
-        TypeDefinition typeDef = findTypeDefinition( type );
-        if( typeDef != null )
-        {
-          addQuerySelection( srcInnerResult, typeDef, member );
-        }
-      }
-
-      srcClass.addInnerClass( srcInnerResult );
     }
   }
 
@@ -1209,7 +1210,7 @@ class GqlParentType
   private void addMember( SrcLinkedClass srcClass, NamedNode member, Type type, String name,
                           Predicate<String> duplicateChecker )
   {
-    SrcType srcType = makeSrcType( type, false );
+    SrcType srcType = makeSrcType( srcClass, type, false );
     String propName = makeIdentifier( name, true );
     if( !propName.equals( name ) && duplicateChecker.test( propName ) )
     {
@@ -1427,19 +1428,19 @@ class GqlParentType
     return type;
   }
 
-  private String convertType( Type type, String component )
+  private String convertType( SrcLinkedClass owner, Type type, String component )
   {
     ListType listType = getListType( type );
     if( listType != null )
     {
-      return List.class.getSimpleName() + '<' + convertType( listType.getType(), component ) + '>';
+      return List.class.getSimpleName() + '<' + convertType( owner, listType.getType(), component ) + '>';
     }
-    return component;
+    return owner.getDisambiguatedNameInNest( component );
   }
 
-  private SrcType convertSrcType( Type type, String component )
+  private SrcType convertSrcType( SrcLinkedClass owner, Type type, String component )
   {
-    SrcType srcType = new SrcType( convertType( type, component ) );
+    SrcType srcType = new SrcType( convertType( owner, type, component ) );
     if( type instanceof NonNullType )
     {
       srcType.addAnnotation( new SrcAnnotationExpression( NotNull.class.getSimpleName() ) );
@@ -1447,17 +1448,17 @@ class GqlParentType
     return srcType;
   }
 
-  private SrcType makeSrcType( Type type, boolean typeParam )
+  private SrcType makeSrcType( SrcLinkedClass owner, Type type, boolean typeParam )
   {
     SrcType srcType;
     if( type instanceof ListType )
     {
       srcType = new SrcType( "List" );
-      srcType.addTypeParam( makeSrcType( ((ListType)type).getType(), true ) );
+      srcType.addTypeParam( makeSrcType( owner, ((ListType)type).getType(), true ) );
     }
     else if( type instanceof TypeName )
     {
-      String typeName = getJavaClassName( (TypeName)type, typeParam );
+      String typeName = getJavaClassName( owner, (TypeName)type, typeParam );
       srcType = new SrcType( typeName );
       if( !typeParam )
       {
@@ -1468,7 +1469,7 @@ class GqlParentType
     else if( type instanceof NonNullType )
     {
       Type theType = ((NonNullType)type).getType();
-      srcType = makeSrcType( theType, typeParam );
+      srcType = makeSrcType( owner, theType, typeParam );
       if( !typeParam && !srcType.isPrimitive() )
       {
         srcType.addAnnotation( new SrcAnnotationExpression( NotNull.class.getSimpleName() ) );
@@ -1481,13 +1482,13 @@ class GqlParentType
     return srcType;
   }
 
-  private String getJavaClassName( TypeName type, boolean boxed )
+  private String getJavaClassName( SrcLinkedClass owner, TypeName type, boolean boxed )
   {
     ScalarTypeDefinition scalarType = findScalarTypeDefinition( type );
     if( scalarType == null )
     {
       // not a scalar type, therefore it must be a 'type'
-      return makeIdentifier( type.getName(), false );
+      return makeIdentifier( owner.getDisambiguatedNameInNest( type.getName() ), false );
     }
 
     Class<?> cls = getJavaClass( type, boxed );

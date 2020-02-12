@@ -40,14 +40,12 @@ import manifold.util.concurrent.ConcurrentHashSet;
  */
 public class TypeProcessor extends CompiledTypeProcessor
 {
-  private final Map<File, Set<String>> _typesCompiledByFile;
   private final Set<Object> _drivers;
   private SortedSet<ICompilerComponent> _compilerComponents;
 
   TypeProcessor( IManifoldHost host, BasicJavacTask javacTask )
   {
     super( host, javacTask );
-    _typesCompiledByFile = new ConcurrentHashMap<>();
     _drivers = new ConcurrentHashSet<>();
     loadCompilerComponents( javacTask );
   }
@@ -67,11 +65,6 @@ public class TypeProcessor extends CompiledTypeProcessor
 //    }
 //    return false;
 //  }
-
-  public Map<File, Set<String>> getTypesCompiledByFile()
-  {
-    return _typesCompiledByFile;
-  }
 
   private void loadCompilerComponents( BasicJavacTask javacTask )
   {
