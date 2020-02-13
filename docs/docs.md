@@ -312,11 +312,23 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 
 # Download
 
-For the convenience of non-maven/non-gradle users you can directly download latest release binaries below. Note, if you
-plan to build your project *without* Maven or Gradle using select binaries (as opposed to manifold-all), your classpath
-must include the transitive closure of binaries in terms of the *dependencies* declared in corresponding project's POM
-file. Additionally, you will need to adapt your build to reflect the Maven or Gradle setup instructions from the list
-above.
+For the convenience of non-maven/non-gradle users you can directly download latest release binaries below. 
+
+>**WARNING** If you plan to build your project **without** Maven or Gradle using select binaries (as opposed to manifold-all), 
+your classpath **must** include the **transitive closure** of binaries in terms of the **dependencies** declared in corresponding
+project's POM file. Additionally, you will need to adapt your build to reflect the Maven or Gradle setup instructions
+from the list above.
+>
+>For instance, to use the *manifold-preprocessor* jar using **Ant** your project needs:
+>* [Manifold : _Preprocessor_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
+>* [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
+>* [Manifold : _Util_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
+>* [Antlr : Runtime](https://www.antlr.org/download/antlr-runtime-4.7.jar)  
+>
+>As such your *javac* command line should include:
+>```text
+>javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2020.1.1.jar;<jar-path>/manifold-2020.1.1.jar;<jar-path>/manifold-util-2020.1.1.jar;<jar-path>/antlr-runtime-4.7.jar
+>```
 
 * Download [manifold : _All_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
 
@@ -362,6 +374,11 @@ above.
 * Download [Manifold : _Collections_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-collections&v=RELEASE)
 * Download [Manifold : _I/0_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-io&v=RELEASE)
 * Download [Manifold : _Text_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-text&v=RELEASE)
+
+<hr/>
+ 
+* Download [Manifold : Util](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
+  * [Antlr : Runtime](https://www.antlr.org/download/antlr-runtime-4.7.jar) _Note the antlr runtime library is a dependency of manifold-util_
 
 # License
 
