@@ -58,6 +58,7 @@ import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,6 +70,7 @@ import java.util.stream.Collectors;
 import javax.script.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
+import manifold.api.gen.AbstractSrcClass;
 import manifold.api.gen.AbstractSrcMethod;
 import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -81,24 +83,24 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
+import manifold.api.json.DataBindings;
 import manifold.api.json.IJsonBindingsBacked;
 import manifold.api.json.Loader;
 import manifold.api.json.codegen.schema.FormatTypeResolvers;
 import manifold.api.json.codegen.schema.IJsonFormatTypeResolver;
 import manifold.api.json.codegen.schema.JsonFormatType;
-import manifold.strings.api.DisableStringLiteralTemplates;
 import manifold.api.type.ActualName;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.SourcePosition;
-import manifold.api.json.DataBindings;
+import manifold.api.util.ManEscapeUtil;
+import manifold.api.util.ManStringUtil;
+import manifold.api.util.Pair;
 import manifold.ext.RuntimeMethods;
 import manifold.ext.api.IBindingType;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.graphql.request.Executor;
-import manifold.api.util.ManEscapeUtil;
-import manifold.api.util.ManStringUtil;
-import manifold.api.util.Pair;
+import manifold.strings.api.DisableStringLiteralTemplates;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -386,8 +388,10 @@ class GqlParentType
 
   private void addRequestMethod( SrcLinkedClass srcClass, OperationDefinition operation )
   {
-    //noinspection unused
     String query = ManEscapeUtil.escapeForJavaStringLiteral( AstPrinter.printAstCompact( operation ) );
+    String fragments = getFragments( srcClass );
+    //noinspection UnusedAssignment
+    query += " " + fragments;
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Flags.DEFAULT )
@@ -396,6 +400,21 @@ class GqlParentType
       .returns( new SrcType( "Executor<Result>" ) )
       .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
+  }
+
+  private String getFragments( SrcLinkedClass srcClass )
+  {
+    //noinspection unchecked
+    Map<String, FragmentDefinition> fragments = (Map)srcClass.getUserData( "fragments" );
+    if( fragments == null )
+    {
+      return "";
+    }
+
+    StringBuilder sb = new StringBuilder();
+    fragments.values().forEach( fragment ->
+      sb.append( ManEscapeUtil.escapeForJavaStringLiteral( AstPrinter.printAstCompact( fragment ) ) ).append( " " ) );
+    return sb.toString();
   }
 
   private void addLoadMethod( SrcLinkedClass srcClass )
@@ -994,10 +1013,12 @@ class GqlParentType
     }
     else if( selection instanceof FragmentSpread )
     {
-      FragmentDefinition fragment = _fragments.get( ((FragmentSpread)selection).getName() );
+      String name = ((FragmentSpread)selection).getName();
+      FragmentDefinition fragment = _fragments.get( name );
       TypeDefinition fragmentCtx = findTypeDefinition( fragment.getTypeCondition() );
       if( fragmentCtx != null )
       {
+        mapFragmentUsageToQuery( srcClass, name, fragment );
         for( Selection fragSelection: fragment.getSelectionSet().getSelections() )
         {
           addQuerySelection( srcClass, fragmentCtx, fragSelection );
@@ -1016,6 +1037,26 @@ class GqlParentType
         }
       }
     }
+  }
+
+  private void mapFragmentUsageToQuery( SrcLinkedClass srcClass, String name, FragmentDefinition fragment )
+  {
+    SrcLinkedClass operation = findOperation( srcClass );
+    //noinspection unchecked
+    Map<String, FragmentDefinition> fragments = (Map)operation.computeOrGetUserData( "fragments",
+      key -> new LinkedHashMap<String, FragmentDefinition>() );
+    fragments.put( name, fragment );
+  }
+
+  private SrcLinkedClass findOperation( SrcLinkedClass srcClass )
+  {
+    AbstractSrcClass enclosingClass = srcClass.getEnclosingClass();
+    if( enclosingClass == null || enclosingClass.getEnclosingClass() == null )
+    {
+      // srcClass should be a query or mutation
+      return srcClass;
+    }
+    return findOperation( (SrcLinkedClass)enclosingClass );
   }
 
   private void addQueryField( SrcLinkedClass srcClass, TypeDefinition ctx, Field field )
@@ -1311,7 +1352,7 @@ class GqlParentType
   {
     addSourcePositionAnnotation( srcClass, node, name.get(), srcAnno );
   }
-  
+
   private SourceLocation getActualSourceLocation( SrcLinkedClass srcClass, Node node )
   {
     final SourceLocation[] loc = {node.getSourceLocation()};

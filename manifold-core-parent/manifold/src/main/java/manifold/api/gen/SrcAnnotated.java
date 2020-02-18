@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  */
@@ -208,7 +209,16 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
 
   public Object getUserData( String tag )
   {
-    return _userData.get( tag );
+    return _userData.isEmpty() ? null : _userData.get( tag );
+  }
+
+  public Object computeOrGetUserData( String tag, Function<String, ?> supplier )
+  {
+    if( _userData.isEmpty() )
+    {
+      _userData = new HashMap<>();
+    }
+    return _userData.computeIfAbsent( tag, supplier );
   }
 
   public Object removeUserData( String tag )

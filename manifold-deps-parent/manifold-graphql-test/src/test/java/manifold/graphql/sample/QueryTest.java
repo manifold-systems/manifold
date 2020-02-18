@@ -13,9 +13,7 @@ import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
 import static manifold.internal.javac.FragmentProcessor.ANONYMOUS_FRAGMENT_PREFIX;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @DisableStringLiteralTemplates
 public class QueryTest
@@ -79,6 +77,18 @@ public class QueryTest
     String query = request._reqArgs.getQuery();
     String expected = "query ActorQuery($title:String!,$genre:Genre) {actors(title:$title,genre:$genre) {... on Person {id name} ... on Animal {id name kind}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
+  }
+
+  @Test
+  public void testGraphQLFragmentIncludedWithQuery()
+  {
+    CompareRoles compareRoles = CompareRoles.builder("", "").build();
+    @Jailbreak Executor<CompareRoles.Result> request = compareRoles.request("");
+    // ensure the fragment used in the query is included with the query
+    assertTrue( request._reqArgs.getQuery().contains( "fragment comparisonFields" ) );
+    // ensure only the fragment used in the query is included
+    // e.g., the 'otherComparisonFields' fragments should not be included
+    assertFalse( request._reqArgs.getQuery().contains( "fragment otherComparisonFields" ) );
   }
 
   @Test

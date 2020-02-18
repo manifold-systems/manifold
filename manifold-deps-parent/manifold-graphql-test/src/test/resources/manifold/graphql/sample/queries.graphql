@@ -111,6 +111,34 @@ query OneReview($id: ID!) {
   }
 }
 
+query CompareRoles($id1: ID!, $id2: ID!)
+{
+  leftComparison: role(id: $id1) {
+    actor {
+      ...comparisonFields
+    }
+  }
+  rightComparison: role(id: $id2) {
+    actor {
+      ...comparisonFields
+    }
+  }
+}
+
+fragment comparisonFields on Actor {
+  name
+  ... on Person {
+    height
+  }
+}
+
+fragment otherComparisonFields on Actor {
+  name
+  ... on Person {
+    height
+  }
+}
+
 #
 # Mutations
 #
