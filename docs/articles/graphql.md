@@ -10,7 +10,7 @@ this pioneering framework injects seamless GraphQL awareness into your Java proj
 Here's a quick screencast to give you a sense of how it all works. The article covers what's happening here, but watch
 closely. Notice the `.graphql` schema and query files are used _*directly*_ from Java. You can type-safely use queries
 without awkward code generation steps, without maintaining POJOs, and without compiling between GraphQL changes. Perhaps
-equally stunning is the high level of integration available in the IDE -- you can navigate from Java types and methods
+equally desirable is the high level of integration available in the IDE -- you can navigate from Java types and methods
 directly to and from corresponding definitions in GraphQL files. You can deterministically search and refactor usages as
 well. In essence with Manifold your Java project speaks fluent GraphQL to deliver a truly seamless developer experience.        
 <br>
@@ -138,22 +138,17 @@ With the query results in hand you can type-safely process them.
 ```java
 for (var actionMovie: result.getMovies()) {
   out.println( 
-    "Title: ${actionMovie.getTitle()}\n" +
-    "Genre: ${actionMovie.getGenre()}\n" +
-    "Year: ${actionMovie.getReleaseDate().getYear()}\n" +
-    "Starring: ${actionMovie.getStarring().getName()}\n" );
+    "Title: " + actionMovie.getTitle() + "\n" +
+    "Genre: " + actionMovie.getGenre()} + "\n" +
+    "Year: " + actionMovie.getReleaseDate().getYear() + "\n" +
+    "Starring: " + actionMovie.getStarring().getName() );
 }
 ``` 
-
->Note the usage of string interpolation with **$**, this is an optional feature Manifold provides. See the
->[documentation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) for
->details. 
-
  
 # Using Mutations
 
 GraphQL mutations look and behave the same as queries. Here's the *ReviewMutation* used in [MovieClient.java](https://github.com/manifold-systems/manifold-sample-graphql-app/blob/master/src/main/java/manifold/graphql/sample/client/MovieClient.java)
-from the sample application, you can find it in the [queries.graphql](https://github.com/manifold-systems/manifold-sample-graphql-app/blob/master/src/main/resources/manifold/graphql/sample/schema/queries.graphql)
+from the sample application, it's defined in the [queries.graphql](https://github.com/manifold-systems/manifold-sample-graphql-app/blob/master/src/main/resources/manifold/graphql/sample/schema/queries.graphql)
 file.
 ```graphql
 mutation ReviewMutation($movieId: ID!, $review: ReviewInput!) {
@@ -260,9 +255,9 @@ structure the information they need. And, importantly, to do it all type-safely.
 
 Here I've demonstrated how you can use Manifold to seamlessly tap into GraphQL type-safely from Java. At last Java has
 potential for flexibility at a level normally reserved for dynamic languages such as JavaScript. Unlike dynamic
-languages, however, the flexibility offered by Manifold exists statically when you need it most: while you're writing
-code. This enables IDEs such as IntelliJ IDEA to perform efficient, deterministic analysis on the type information
-Manifold provides. As a consequence GraphQL feels light, connected, and approachable.
+languages, however, the flexibility offered by Manifold exists statically when and where you need it most: while you're
+writing code! This enables IDEs such as IntelliJ IDEA to perform efficient, deterministic analysis on the type
+information Manifold provides. As a consequence GraphQL feels light, connected, and approachable.
 
 I'm hopeful to have piqued your interest and that you'll dig a little deeper into the [GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql).
 Thanks for reading!
