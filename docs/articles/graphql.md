@@ -16,7 +16,7 @@ usages as well. In essence with Manifold your Java project speaks fluent GraphQL
 experience.        
 <br>
 <p>
-  <video height="60%" width="60%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
+  <video height="80%" width="80%" controls="controls" preload="auto" onclick="this.paused ? this.play() : this.pause();" autoplay loop>
     <source type="video/mp4" src="/images/graphql.mp4">
   </video>
 </p>
