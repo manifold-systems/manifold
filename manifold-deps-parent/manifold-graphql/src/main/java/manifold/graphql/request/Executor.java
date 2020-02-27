@@ -16,8 +16,9 @@
 
 package manifold.graphql.request;
 
-import javax.script.Bindings;
 import manifold.api.json.Requester;
+
+import javax.script.Bindings;
 
 /**
  * Based on:
@@ -123,6 +124,11 @@ public class Executor<T>
   public T post( Requester.Format format )
   {
     return (T)((Bindings)_requester.postOne( "", _reqArgs.getBindings(), format )).get( "data" );
+  }
+
+  public Bindings postBindings( Requester.Format format )
+  {
+    return ((Bindings)_requester.postOne( "", _reqArgs.getBindings(), format ));
   }
 
   /**
