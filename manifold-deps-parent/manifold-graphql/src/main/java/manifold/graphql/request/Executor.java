@@ -16,31 +16,33 @@
 
 package manifold.graphql.request;
 
+import java.util.List;
 import javax.script.Bindings;
 import manifold.api.json.Requester;
 
 /**
- * Based on:
- *
- * How to make GraphQL HTTP request using cUrl
+ * Based on: "How to make GraphQL HTTP request using cUrl"
+ * <p/>
  * Based on the GET/POST and the Content-Type header, it expects the input params differently.
  * This behaviour was ported from express-graphql.
- *
- * So given the following query:
- *
+ * <p/>
+ * So given the following operation:
+ * <pre><code>
  * mutation M {
  *   newTodo: createTodo(text: "This is a mutation example") {
  *     text
  *     done
  *   }
  * }
+ * </code></pre>
+ * <pre>
  * using GET
  * $ curl -g -GET 'http://localhost:8080/graphql?query=mutation+M{newTodo:createTodo(text:"This+is+a+mutation+example"){text+done}}'
  * using POST + Content-Type: application/graphql
  * $ curl -XPOST http://localhost:8080/graphql -H 'Content-Type: application/graphql' -d 'mutation M { newTodo: createTodo(text: "This is a mutation example") { text done } }'
  * using POST + Content-Type: application/json
  * $ curl -XPOST http://localhost:8080/graphql -H 'Content-Type: application/json' -d '{"query": "mutation M { newTodo: createTodo(text: \"This is a mutation example\") { text done } }"}'
- * 
+ * </pre>
  * @param <T>
  */
 public class Executor<T>
@@ -106,10 +108,19 @@ public class Executor<T>
   }
 
   /**
+   * Make an HTTP POST request to {@code url}.  The {@code payload}, if non-null, is sent as JSON encoded
+   * text in the request's message body.
+   *
+   * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @throws GqlRequestException If the response contains errors, wraps them in a list of {@link GqlError} and throws
    */
-  public T post()
+  public T post() throws GqlRequestException
   {
-    return (T)((Bindings)_requester.postOne( _reqArgs.getBindings() )).get( "data" );
+    Bindings response = _requester.postOne( _reqArgs.getBindings() );
+    handleErrors( response );
+    //noinspection unchecked
+    return (T)response.get( "data" );
   }
 
   /**
@@ -119,17 +130,31 @@ public class Executor<T>
    * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @throws GqlRequestException If the response contains errors, wraps them in a list of {@link GqlError} and throws
    */
-  public T post( Requester.Format format )
+  public T post( Requester.Format format ) throws GqlRequestException
   {
-    return (T)((Bindings)_requester.postOne( "", _reqArgs.getBindings(), format )).get( "data" );
+    Bindings response = _requester.postOne( "", _reqArgs.getBindings(), format );
+    handleErrors( response );
+    //noinspection unchecked
+    return (T)response.get( "data" );
   }
 
   /**
+   * Make an HTTP GET request to {@code url}.  The {@code payload}, if non-null, is sent as JSON encoded
+   * text in the request's message body.
+   *
+   * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @throws GqlRequestException If the response contains errors, wraps them in a list of {@link GqlError} and throws
    */
-  public T get()
+  public T get() throws GqlRequestException
   {
-    return (T)((Bindings)_requester.getOne( _reqArgs.getBindings() )).get( "data" );
+    Bindings response = _requester.getOne( _reqArgs.getBindings() );
+    handleErrors( response );
+    //noinspection unchecked
+    return (T)response.get( "data" );
   }
 
   /**
@@ -139,9 +164,24 @@ public class Executor<T>
    * @param format    The expected format of the response.  One of: {@code Json}, {@code Yaml}, or {@code Plain}
    *
    * @return A JSON value parsed from the {@code format} specified encoded response (primitive/boxed type, String, List of JSON values, or Bindings of String/JSON value)
+   *
+   * @throws GqlRequestException If the response contains errors, wraps them in a list of {@link GqlError} and throws
    */
-  public T get( Requester.Format format )
+  public T get( Requester.Format format ) throws GqlRequestException
   {
-    return (T)((Bindings)_requester.getOne( "", _reqArgs.getBindings(), format )).get( "data" );
+    Bindings response = _requester.getOne( "", _reqArgs.getBindings(), format );
+    handleErrors( response );
+    //noinspection unchecked
+    return (T)response.get( "data" );
+  }
+
+  private void handleErrors( Bindings response )
+  {
+    //noinspection unchecked
+    List<GqlError> errors = (List)response.get( "errors" );
+    if( errors != null )
+    {
+      throw new GqlRequestException( errors );
+    }
   }
 }
