@@ -8,7 +8,7 @@ this pioneering framework injects seamless GraphQL awareness into your Java proj
 # Preview
 
 Here's a quick screencast to give you a sense of how it all works. The article covers what's happening here, but watch
-closely. Notice the `.graphql` schema and query files are used _*directly*_ from Java. You can type-safely use queries
+closely. Notice the `.graphql` schema and query files are used _**directly**_ from Java. You can type-safely use queries
 without engaging code generation steps, without maintaining POJOs, and without compiling between GraphQL changes.
 Perhaps equally desirable is the high level of integration available in the IDE -- you can navigate from Java types and
 methods directly to and from corresponding definitions in GraphQL files. You can deterministically search and refactor
@@ -256,9 +256,9 @@ the information they need. And, importantly, to do it all type-safely.
 
 As more service providers embrace GraphQL, pressures mount for a solid Java solution particularly on the
 client. Here I've demonstrated how the GraphQL Manifold reaches beyond expectations to provide truly seamless, type-safe
-GraphQL access from Java. Indeed, the metaprogramming wizardry within Manifold results in a developer experience normally
-reserved for dynamic languages such as Javascript. Even better, the flexibility offered by Manifold exists _statically_
-when and where you need it most: while you're writing code in your IDE! As a consequence GraphQL feels light, connected,
+GraphQL access from Java. Indeed, its extraordinary metaprogramming faculties afford a level of flexibility normally
+reserved for dynamic languages such as Javascript. Most importantly, these capabilities exist _statically_ when and where
+you need them most: while you're writing code in your IDE! As a consequence GraphQL feels light, connected,
 and approachable.
 
 I'm hopeful to have piqued your interest and that you'll dig a little deeper into the [GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql).
