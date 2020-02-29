@@ -254,7 +254,7 @@ An API for APIs. That's essentially what GraphQL is. In hindsight it's the obvio
 ailments plaguing service providers -- a declarative language enabling service consumers to precisely structure
 the information they need. And, importantly, to do it all type-safely.
 
-As more service providers embrace GraphQL pressures mount for a solid Java solution particularly on the
+As more service providers embrace GraphQL, pressures mount for a solid Java solution particularly on the
 client. Here I've demonstrated how the GraphQL Manifold reaches beyond expectations to provide truly seamless, type-safe
 GraphQL access from Java. Indeed, the metaprogramming wizardry within Manifold results in a developer experience normally
 reserved for dynamic languages such as Javascript. Even better, the flexibility offered by Manifold exists _statically_
