@@ -234,7 +234,7 @@ is used in code.
 
 It's pretty simple. You embed a query definition in a comment like this:
 
-<p><img src="http://manifold.systems/images/fragment_declaration.png" alt="declaration fragment" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/fragment_declaration.png" alt="declaration fragment" width="80%" height="80%"/></p>
 
 The `[>MyQuery.graphql<]` tag tells Java this is an embedded fragment of resource type *graphql* with name *MyQuery*, as
 if it were defined in a resource file of the same name. As such, you reference the fragment by its declared name,
@@ -250,15 +250,16 @@ your productivity with these features enabled in IntelliJ can vastly improve you
   
 # New Life
  
-An API for APIs. That's essentially what GraphQL is. In hindsight it's the obvious solution to maintenance and
-performance problems troubling service providers -- a declarative language to enable service consumers to precisely
-structure the information they need. And, importantly, to do it all type-safely.
+An API for APIs. That's essentially what GraphQL is. In hindsight it's the obvious remedy to maintenance and performance
+ailments plaguing service providers -- a declarative language enabling service consumers to precisely structure
+the information they need. And, importantly, to do it all type-safely.
 
-Here I've demonstrated how you can use Manifold to seamlessly tap into GraphQL type-safely from Java. At last Java has
-potential for flexibility at a level normally reserved for dynamic languages such as JavaScript. Unlike dynamic
-languages, however, the flexibility offered by Manifold exists statically when and where you need it most: while you're
-writing code! This enables IDEs such as IntelliJ IDEA to perform efficient, deterministic analysis on the type
-information Manifold provides. As a consequence GraphQL feels light, connected, and approachable.
+As more service providers embrace GraphQL pressures mount for a solid Java solution particularly on the
+client. Here I've demonstrated how the GraphQL Manifold reaches beyond expectations to provide truly seamless, type-safe
+GraphQL access from Java. Indeed, the metaprogramming wizardry within Manifold results in a developer experience normally
+reserved for dynamic languages such as Javascript. Even better, the flexibility offered by Manifold exists _statically_
+when and where you need it most: while you're writing code in your IDE! As a consequence GraphQL feels light, connected,
+and approachable.
 
 I'm hopeful to have piqued your interest and that you'll dig a little deeper into the [GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql).
 Thanks for reading!

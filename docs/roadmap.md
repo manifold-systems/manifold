@@ -8,8 +8,9 @@ layout: default
  
 ## Features on the workbench
 
->I've suspended work on new features and will be spending most of my time writing tests, fixing bugs, improving
->performance, and writing.
+>Manifold has grown quite a bit recently, so it's time to suspend work on new features and get the house in order. As
+>such efforts are now shifting toward writing tests, fixing bugs, improving performance, and writing articles. New
+>feature work will pick up soon. 
 
 <br>
 
