@@ -27,7 +27,7 @@ experience.
 
 # Setting Up a Client
 
-I'm going to use Manifold's sample GraphQL application for this article. But in general you can follow these simple
+I'm going to use Manifold's sample GraphQL application for this article, but in general you can follow these simple
 steps to setup any project and configure your development environment for GraphQL with Manifold.
  
 * **Configure your build to use the Manifold libraries**
