@@ -3,14 +3,14 @@
 GraphQL has taken the API world by storm, due in no small part to its uniquely expressive API query language. But using
 it type-safely from Java poses a challenge, as language barriers tend to do. Fortunately the [GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 eliminates the language divide to provide Java with unrestrained access to GraphQL. Here Scott McKinney demonstrates how
-this pioneering framework injects seamless GraphQL awareness into your Java project.
+this pioneering framework can inject seamless GraphQL awareness into any Java project.
 
 # Preview
 
 Here's a quick screencast to give you a sense of how it all works. The article covers what's happening here, but watch
 closely. Notice the `.graphql` schema and query files are used _**directly**_ from Java. You can type-safely use queries
 without engaging code generation steps, without maintaining POJOs, and without compiling between GraphQL changes.
-Perhaps equally desirable is the high level of integration available in the IDE -- you can navigate from Java types and
+Perhaps equally impressive is the high level of integration available in the IDE -- you can navigate from Java types and
 methods directly to and from corresponding definitions in GraphQL files. You can deterministically search and refactor
 usages as well. In essence with Manifold your Java project speaks fluent GraphQL to deliver a truly seamless developer
 experience.        
