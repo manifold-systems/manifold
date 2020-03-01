@@ -119,7 +119,7 @@ schema maps directly to the *Action* Java enum constant, so you can statically i
 ```java
 import static graphql.movies.Genre.Action;
 ```
-In the same way Manifold maps the entire schema directly into Java's type system -- types, inputs, interfaces, enums,
+In the same way, Manifold maps the entire schema directly into Java's type system -- types, inputs, interfaces, enums,
 unions, queries, mutations, etc. are all type-safely accessible from Java. **Importantly there are no code generation
 build steps involved, no POJOs to maintain, and no compilation required between GraphQL changes.** Instead Manifold
 plugs into the Java compiler to make it all happen as if by magic. As the preview above demonstrates you simply drop a
@@ -129,7 +129,7 @@ You can easily execute a query against a server endpoint using an HTTP POST requ
 ```java
 var result = query.request("http://localhost:4567/graphql").post();
 ```
-Here the sample GraphQL app server runs locally on port 4567 and handles the *graphql* endpoint. Notice the request API
+Here, the sample GraphQL app server runs locally on port 4567 and handles the *graphql* endpoint. Notice the request API
 is conveniently built directly into the query model.
 
 >Note, the examples leverage type inference using the _**var**_ keyword provided with Java 11. You can also specify the
@@ -193,7 +193,7 @@ var review = ReviewInput.builder(5)
   .withComment("Topnotch racing film.")
   .build();
 ```
-Having built the *ReviewInput* the next step involves passing it along in a *ReviewMutation*, again using a *builder()*
+Having built the *ReviewInput*, the next step involves passing it along in a *ReviewMutation*, again using a *builder()*
 method. Since *ID* and *review* are defined as non-null parameters to the mutation definition, the *builder()* method
 reflects them as required parameters.
 ```java
