@@ -1,9 +1,10 @@
 # GraphQL Made Easy
 
-GraphQL has taken the API world by storm, due in no small part to its uniquely expressive API query language. But using
-it type-safely from Java poses a challenge, as language barriers tend to do. Fortunately the [GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
-eliminates the language divide to provide Java with unrestrained access to GraphQL. Here Scott McKinney demonstrates how
-this pioneering framework can inject seamless GraphQL awareness into any Java project.
+GraphQL has thoroughly captivated the API world, due in no small part to its uniquely expressive API query language. But
+using it type-safely from Java poses a challenge, as language barriers tend to do. Fortunately, the
+[GraphQL Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+eliminates the language divide granting Java with comprehensive GraphQL fluency. Here Scott McKinney demonstrates how
+this pioneering framework can boost your productivity with seamless, type-safe GraphQL support. 
 
 # Preview
 
