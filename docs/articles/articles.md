@@ -14,6 +14,7 @@ layout: default
   <p>GraphQL has thoroughly captivated the API world, due in no small part to its uniquely expressive API query
   language. But using it type-safely from Java poses a challenge, as language barriers tend to do. Scott McKinney
   demonstrates how to reach beyond expectations and provide truly seamless, type-safe GraphQL access from Java.</p>
+  <p><small>jaxenter.com</small></p>
   </td>
  </tr>
  
