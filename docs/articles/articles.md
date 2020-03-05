@@ -7,6 +7,20 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href="https://jaxenter.com/graphql-made-easy-169181.html"><img width="240" height="135" src="/images/graphql.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://jaxenter.com/graphql-made-easy-169181.html">GraphQL Made Easy</a></p>
+  <p>GraphQL has thoroughly captivated the API world, due in no small part to its uniquely expressive API query
+  language. But using it type-safely from Java poses a challenge, as language barriers tend to do. Scott McKinney
+  demonstrates how to reach beyond expectations and provide truly seamless, type-safe GraphQL access from Java.</p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/manifold-operator-overloading-java-163232.html"><img width="240" height="135" src="/images/math.png" alt="a"></a></p>
   </td>
   <td>
