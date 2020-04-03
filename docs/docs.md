@@ -320,14 +320,14 @@ project's POM file. Additionally, you will need to adapt your build to reflect t
 from the list above.
 >
 >For instance, to use the *manifold-preprocessor* jar using **Ant** your project needs:
->* [manifold-preprocessor-2020.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
->* [manifold-2020.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
->* [manifold-util-2020.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
+>* [manifold-preprocessor-2020.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
+>* [manifold-2020.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
+>* [manifold-util-2020.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
 >* [antlr-runtime-4.7.jar](https://www.antlr.org/download/antlr-runtime-4.7.jar)  
 >
 >As such your *javac* command line should include:
 >```text
->javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2020.1.3.jar;<jar-path>/manifold-2020.1.3.jar;<jar-path>/manifold-util-2020.1.3.jar;<jar-path>/antlr-runtime-4.7.jar
+>javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2020.1.4.jar;<jar-path>/manifold-2020.1.4.jar;<jar-path>/manifold-util-2020.1.4.jar;<jar-path>/antlr-runtime-4.7.jar
 >```
 
 * Download [manifold : _All_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
