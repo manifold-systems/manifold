@@ -160,6 +160,37 @@ for(Entry<String, String> entry: map.entrySet()) {
 }
 ```
 
+## Extending Manifold Types
+
+Types produced from type manifolds such as the GraphQL and JSON Manifolds can be extended too. For instance, a GraphQL
+file called `movies.graphql` in the `abc/res` resource directory results in a type named `abc.res.movies`. Likewise, a
+`Person` type defined in file is an inner class of `movies` with name `abc.res.movies.Person`. Thus an extension on the
+`Person` inner type uses the same technique explained in the previous section on Inner Classes.   
+
+```java
+package myproject.extensions.abc.res.movies;
+
+import abc.res.movies.Person;
+import manifold.ext.api.Extension;
+import manifold.ext.api.This;
+
+@Extension
+public class MyMoviesExt
+{
+  @Extension
+  public static class Person {
+    public static String myPersonMethod(@This Person thiz) {
+      return "myPersonMethod";
+    }
+  }
+}
+``` 
+
+>Note, this type of extension facilitates [Domain Model](https://en.wikipedia.org/wiki/Domain_model) design principles.
+>You can add behavior to data objects such as GraphQL types in the form of extension methods. As such both data and
+>behavior are logically incorporated.
+                                    
+
 ## Static Dispatching
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
