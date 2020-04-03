@@ -25,12 +25,14 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import manifold.api.fs.IResource;
@@ -118,7 +120,7 @@ public class ClassSymbols
       }
 
       _javacTool = JavacTool.create();
-      StandardJavaFileManager fm = _javacTool.getStandardFileManager( null, null, Charset.forName( "UTF-8" ) );
+      StandardJavaFileManager fm = _javacTool.getStandardFileManager( null, null, StandardCharsets.UTF_8 );
 
       try
       {
@@ -191,28 +193,30 @@ public class ClassSymbols
 
   public SrcClass makeSrcClassStub( String fqn )
   {
-    return makeSrcClassStub( fqn, null );
+    return makeSrcClassStub( fqn, null, null );
   }
 
-  public SrcClass makeSrcClassStub( String fqn, JavaFileManager.Location location )
+  public SrcClass makeSrcClassStub( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    BasicJavacTask javacTask = location != null && JavacPlugin.instance() != null ? JavacPlugin.instance().getJavacTask() : getJavacTask_PlainFileMgr();
-    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, location, fqn );
+    BasicJavacTask javacTask = /*location != null && JavacPlugin.instance() != null ? JavacPlugin.instance().getJavacTask() :*/ getJavacTask_PlainFileMgr();
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbol( javacTask, (JavaFileManager.Location)null /*location*/, fqn );
     if( pair == null )
     {
-      throw new IllegalStateException( "Failed to find class, '" + fqn + "'" );
+      //## todo: revisit this, but for now we need to return null to handle inner class extensions
+      return null;
+//      throw new IllegalStateException( "Failed to find class, '" + fqn + "'" );
     }
     Symbol.ClassSymbol classSymbol = pair.getFirst();
     if( classSymbol == null )
     {
       // For the case where the class is generated from a type manifold esp. from a IExtensionClassProducer
-      return makeSrcClassStubFromProducedClass( fqn, location );
+      return makeSrcClassStubFromProducedClass( fqn, location, errorHandler );
     }
 
-    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), getJavacTask_PlainFileMgr() );
+    return SrcClassUtil.instance().makeStub( fqn, classSymbol, pair.getSecond(), getJavacTask_PlainFileMgr(), _module, location, errorHandler );
   }
 
-  private SrcClass makeSrcClassStubFromProducedClass( String fqn, JavaFileManager.Location location )
+  private SrcClass makeSrcClassStubFromProducedClass( String fqn, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     BasicJavacTask[] task = new BasicJavacTask[1];
     Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = getClassSymbolForProducedClass( fqn, task );
@@ -223,7 +227,7 @@ public class ClassSymbols
 
     Symbol.ClassSymbol classSymbol = pair.getFirst();
 
-    return SrcClassUtil.instance().makeStub( _module, fqn, classSymbol, pair.getSecond(), task[0] );
+    return SrcClassUtil.instance().makeStub( fqn, classSymbol, pair.getSecond(), task[0], _module, location, errorHandler );
   }
 
   private Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbolForProducedClass( String fqn, BasicJavacTask[] task )

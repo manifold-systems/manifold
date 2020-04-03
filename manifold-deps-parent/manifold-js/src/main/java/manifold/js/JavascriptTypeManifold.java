@@ -50,7 +50,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make( errorHandler );
     return srcClass.render( new StringBuilder(), 0).toString();

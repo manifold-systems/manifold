@@ -1718,7 +1718,9 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null &&
               !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
-              !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) )
+              !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) &&
+              (tree.sym.enclClass() == null || !param.type.tsym.isEnclosedBy( extendClassSym )) // handle inner class extension method
+            )
           {
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
           }

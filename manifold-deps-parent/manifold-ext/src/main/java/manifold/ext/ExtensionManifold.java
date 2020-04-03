@@ -240,9 +240,9 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return new ExtCodeGen( location, model, topLevelFqn, existing ).make( errorHandler );
+    return new ExtCodeGen( location, model, topLevelFqn, genStubs, existing ).make( location, errorHandler );
   }
 
   @Override

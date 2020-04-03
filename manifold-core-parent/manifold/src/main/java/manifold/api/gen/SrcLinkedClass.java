@@ -23,40 +23,60 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
+import manifold.api.host.IModule;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.util.ManExceptionUtil;
 import manifold.api.util.ManStringUtil;
 import manifold.api.util.StreamUtil;
+import manifold.util.ManExceptionUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 {
-  @SuppressWarnings("WeakerAccess")
   protected static final String FIELD_FILE_URL = "__FILE_URL_";
 
   private IFile _linkedFile;
   private Map<IFile, int[]> _resFileToContent;
   private String _fileContent;
 
+
   public SrcLinkedClass( String fqn, Kind kind, IFile linkedFile )
   {
-    super( fqn, kind );
-    _linkedFile = linkedFile;
-    addFileField();
+    this( fqn, kind, linkedFile, null, null, null );
   }
 
   public SrcLinkedClass( String fqn, AbstractSrcClass enclosingClass, Kind kind )
   {
-    super( fqn, enclosingClass, kind );
+    this( fqn, enclosingClass, kind, null, null, null, null );
   }
 
-  @SuppressWarnings("WeakerAccess")
+  /**
+   * Use this constructor to automatically handle extension methods on inner classes
+   */
+  public SrcLinkedClass( String fqn, Kind kind, IFile linkedFile,
+                         JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    this( fqn, null, kind, linkedFile, location, module, errorHandler );
+  }
+  public SrcLinkedClass( String fqn, AbstractSrcClass enclosingClass, Kind kind, IFile linkedFile,
+                         JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    super( fqn, enclosingClass, kind, location, module, errorHandler );
+    if( enclosingClass == null )
+    {
+      _linkedFile = linkedFile;
+      addFileField();
+    }
+  }
+
   protected void addFileField()
   {
     IFile linkedFile = getLinkedFile();
@@ -191,7 +211,7 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
     }
     catch( ArrayIndexOutOfBoundsException ex )
     {
-      System.err.print( "WARNING: ");
+      System.err.print( "WARNING: " );
       ex.printStackTrace();
       offset = 0;
     }

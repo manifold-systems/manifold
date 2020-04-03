@@ -97,7 +97,8 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, T model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing,
+                               T model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     String pkg = ManClassUtil.getPackage( topLevelFqn );
@@ -118,7 +119,9 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
       .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
     model.report( errorHandler );
-    model.getType().render( this, sb, 0, true );
+    IJsonParentType type = model.getType();
+    type.prepareToRender( location, getModule(), errorHandler );
+    type.render( this, sb, 0, true );
     return sb.toString();
   }
 }

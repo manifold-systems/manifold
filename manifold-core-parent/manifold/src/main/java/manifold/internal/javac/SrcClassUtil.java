@@ -35,6 +35,9 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import manifold.api.gen.SrcAnnotated;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcClass;
@@ -67,20 +70,30 @@ public class SrcClassUtil
     return INSTANCE;
   }
 
-  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask )
+  public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return makeStub( module, fqn, classSymbol, compilationUnit, javacTask, true );
+    return makeStub( fqn, classSymbol, compilationUnit, javacTask, module, location, errorHandler, true );
   }
 
-  public SrcClass makeStub( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, boolean withMembers )
+  public SrcClass makeStub( String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler,
+                            boolean withMembers )
   {
-    return makeSrcClass( module, fqn, classSymbol, compilationUnit, javacTask, withMembers );
+    return makeSrcClass( fqn, null, classSymbol, compilationUnit, javacTask, module, location, errorHandler, withMembers );
   }
 
-  private SrcClass makeSrcClass( IModule module, String fqn, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, boolean withMembers )
+  private SrcClass makeSrcClass( String fqn, SrcClass enclosing, Symbol.ClassSymbol classSymbol, CompilationUnitTree compilationUnit, BasicJavacTask javacTask, IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler, boolean withMembers )
   {
-    SrcClass srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ) )
-      .modifiers( classSymbol.getModifiers() );
+    SrcClass srcClass;
+    if( enclosing == null )
+    {
+      srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ), location, module, errorHandler )
+        .modifiers( classSymbol.getModifiers() );
+    }
+    else
+    {
+      srcClass = new SrcClass( fqn, enclosing, SrcClass.Kind.from( classSymbol.getKind() ) )
+        .modifiers( classSymbol.getModifiers() );
+    }
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
     {
       for( ImportTree imp: compilationUnit.getImports() )
@@ -191,7 +204,7 @@ public class SrcClassUtil
 
   private void addInnerClass( IModule module, SrcClass srcClass, Symbol sym, BasicJavacTask javacTask )
   {
-    SrcClass innerClass = makeSrcClass( module, sym.getQualifiedName().toString(), (Symbol.ClassSymbol)sym, null, javacTask, true );
+    SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), srcClass, (Symbol.ClassSymbol)sym, null, javacTask, module, null, null, true );
     srcClass.addInnerClass( innerClass );
   }
 

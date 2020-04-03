@@ -23,12 +23,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
+import manifold.api.host.IModule;
 import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.IJsonList;
 import manifold.api.json.codegen.IJsonParentType;
@@ -40,12 +45,15 @@ import manifold.api.json.codegen.JsonListType;
 import manifold.api.json.JsonTypeManifold;
 import manifold.api.json.parser.Token;
 import manifold.api.type.ActualName;
+import manifold.api.type.ContributorKind;
+import manifold.api.type.ITypeManifold;
 import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
 import manifold.api.util.ManIdentifierUtil;
 import manifold.api.util.ManClassUtil;
 import manifold.api.util.ManEscapeUtil;
 import manifold.api.util.ManStringUtil;
+import manifold.internal.host.SingleModuleManifoldHost;
 
 /**
  * The base JSON Schema type.
@@ -55,7 +63,6 @@ import manifold.api.util.ManStringUtil;
  */
 public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 {
-  @SuppressWarnings("WeakerAccess")
   protected static final String FIELD_FILE_URL = "__FILE_URL_";
   @SuppressWarnings("unused")
   protected static final String FROM_SOURCE_METHOD = "fromSource";
@@ -75,6 +82,10 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     private ResolveState _resolveState;
     private Token _token;
     private boolean _synthetic;
+
+    private IModule _module;
+    private JavaFileManager.Location _location;
+    private DiagnosticListener<JavaFileObject> _errorHandler;
 
     private State( String name, JsonSchemaType parent, IFile file )
     {
@@ -100,6 +111,17 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   {
     _state = new State( name, parent, source );
     _typeAttributes = attr;
+  }
+
+  /**
+   * exclusive to top-level types (facilitates inner class extensions)
+   */
+  @Override
+  public void prepareToRender( JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    _state._location = location;
+    _state._module = module;
+    _state._errorHandler = errorHandler;
   }
 
   public String getFqn()
@@ -166,7 +188,6 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     }
   }
 
-  @SuppressWarnings("WeakerAccess")
   protected boolean isParentRoot()
   {
     return getParent() == null ||
@@ -243,6 +264,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
   {
     return _state._synthetic;
   }
+  @SuppressWarnings("WeakerAccess")
   protected void setSyntheticSchema( boolean synthetic )
   {
     _state._synthetic = synthetic;
@@ -465,7 +487,6 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     renderFileField( sb, indent, null );
   }
 
-  @SuppressWarnings("WeakerAccess")
   protected void renderFileField( StringBuilder sb, int indent, String modifiers )
   {
     indent( sb, indent );
@@ -561,14 +582,28 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return getFqn() + '.' + getIdentifier();
   }
 
+  protected String getActualFqn( AbstractJsonTypeManifold tm )
+  {
+    if( getParent() == null )
+    {
+      String pkg = getPackage( tm, this );
+      return pkg.isEmpty() ? getIdentifier() : pkg + '.' + getIdentifier();
+    }
+    return getParent().getActualFqn( tm ) + '.' + getIdentifier();
+  }
+
   private String getPackage( JsonSchemaType type )
+  {
+    return getPackage( getTm(), type );
+  }
+  private String getPackage( AbstractJsonTypeManifold tm, JsonSchemaType type )
   {
     if( type.getParent() != null )
     {
       return getPackage( type.getParent() );
     }
     IFile file = type.getFile();
-    String[] types = getTm().getTypesForFile( file );
+    String[] types = (tm != null ? tm : getTm()).getTypesForFile( file );
     String fqn = Arrays.stream( types ).filter( e -> e.endsWith( type.getIdentifier() ) ).findFirst().orElse( null );
     return ManClassUtil.getPackage( fqn );
   }
@@ -644,6 +679,49 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       }
     }
     return rawSpecificPropertyType;
+  }
+
+  public JavaFileManager.Location getLocation()
+  {
+    return _state._location != null ? _state._location : getParent() != null ? getParent().getLocation() : null;
+  }
+  public IModule getModule()
+  {
+    return _state._module != null ? _state._module : getParent() != null ? getParent().getModule() : null;
+  }
+  public DiagnosticListener<JavaFileObject> getErrorHandler()
+  {
+    return _state._errorHandler != null ? _state._errorHandler : getParent() != null ? getParent().getErrorHandler() : null;
+  }
+
+  public void renderInner( AbstractJsonTypeManifold tm, StringBuilder sb, int indent, boolean mutable )
+  {
+    StringBuilder innerSb = new StringBuilder();
+    render( tm, innerSb, indent, mutable );
+    if( getParent() != null )
+    {
+      if( getModule() != null && getLocation() != null )
+      {
+        // Location can be null within an IDE plugin. In this case the IDE must supplement classes its own way on its AST.
+        //
+        // add extensions to inner types
+        innerSb = contributeInner( getActualFqn( tm ), innerSb );
+      }
+    }
+    sb.append( innerSb );
+  }
+
+  private StringBuilder contributeInner( String fqnInner, StringBuilder innerSource )
+  {
+    Set<ITypeManifold> sps = getModule().findTypeManifoldsFor( fqnInner );
+    for( ITypeManifold sp: sps )
+    {
+      if( sp.getContributorKind() == ContributorKind.Supplemental )
+      {
+        innerSource = new StringBuilder( sp.contribute( getLocation(), fqnInner, false, innerSource.toString(), getErrorHandler() ) );
+      }
+    }
+    return innerSource;
   }
 
   @Override

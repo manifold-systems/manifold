@@ -33,7 +33,7 @@ import manifold.api.host.IRuntimeManifoldHost;
  * <lu>
  *   <li>Define a domain of types via {@link #getTypeNames(String)}</li>
  *   <li>Resolve types in that domain via {@link #isType(String)}, {@link #isTopLevelType(String)}, and {@link #isPackage(String)}</li>
- *   <li>Contribute source toward a given type projection via {@link #contribute(JavaFileManager.Location, String, String, DiagnosticListener)}</li>
+ *   <li>Contribute source toward a given type projection via {@link #contribute(JavaFileManager.Location, String, boolean, String, DiagnosticListener)}</li>
  * </lu>
  * <p/>
  * Separate instances of a given implementation of this interface exist per {@link manifold.api.host.IModule}.
@@ -109,7 +109,7 @@ public interface ITypeManifold extends IFileConnected, ISelfCompiled
   /**
    * Contribute source corresponding with the fqn.
    */
-  String contribute( JavaFileManager.Location location, String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler );
+  String contribute( JavaFileManager.Location location, String fqn, boolean genStubs, String existing, DiagnosticListener<JavaFileObject> errorHandler );
 
   Collection<String> getAllTypeNames();
 

@@ -20,8 +20,15 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import javax.lang.model.element.ElementKind;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import manifold.api.host.IModule;
+import manifold.api.type.ContributorKind;
+import manifold.api.type.ITypeManifold;
 import manifold.api.util.ManClassUtil;
 
 public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatement<T>
@@ -43,6 +50,11 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
   private List<AbstractSrcClass> _innerClasses = new ArrayList<>();
   private List<SrcType> _typeVars;
 
+  private IModule _module;
+  private JavaFileManager.Location _location;
+  private DiagnosticListener<JavaFileObject> _errorHandler;
+  private boolean _binary;
+
 
   public AbstractSrcClass( String fqn, AbstractSrcClass.Kind kind )
   {
@@ -50,6 +62,12 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
   }
 
   public AbstractSrcClass( String fqn, AbstractSrcClass enclosingClass, AbstractSrcClass.Kind kind )
+  {
+    this( fqn, enclosingClass, kind, null, null, null );
+  }
+
+  public AbstractSrcClass( String fqn, AbstractSrcClass enclosingClass, AbstractSrcClass.Kind kind,
+                           JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
     super( enclosingClass );
     _enclosingClass = enclosingClass;
@@ -59,6 +77,10 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     _kind = kind;
     _imports = new ArrayList<>();
     _typeVars = new ArrayList<>();
+
+    _location = location;
+    _module = module;
+    _errorHandler = errorHandler;
   }
 
   /**
@@ -240,7 +262,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     return _superClass;
   }
 
-  public AbstractSrcClass getEnclosingClass()
+  public AbstractSrcClass<?> getEnclosingClass()
   {
     return _enclosingClass;
   }
@@ -310,6 +332,36 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     return _typeVars;
   }
 
+  /**
+   * Is the source obtained from decompiling a binary form? If so, this usually
+   * means the source will not be compiled to disk, but instead is used only in
+   * the javac compiler to pose an existing type e.g., for extensions. The calls
+   * to extension methods are rewritten to forward to extension class code.
+   * </p>
+   * The distinction is important because a binary-derived source can be stubbed.
+   */
+  public boolean isBinary()
+  {
+    return _binary || getEnclosingClass() != null && getEnclosingClass().isBinary();
+  }
+  public void setBinary( boolean binary )
+  {
+    _binary = binary;
+  }
+
+  public JavaFileManager.Location getLocation()
+  {
+    return getEnclosingClass() != null ? getEnclosingClass().getLocation() : _location;
+  }
+  public IModule getModule()
+  {
+    return getEnclosingClass() != null ? getEnclosingClass().getModule() : _module;
+  }
+  public DiagnosticListener<JavaFileObject> getErrorHandler()
+  {
+    return getEnclosingClass() != null ? getEnclosingClass().getErrorHandler() : _errorHandler;
+  }
+
   public StringBuilder render()
   {
     return render( 0 );
@@ -331,19 +383,53 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
       renderPackage( sb );
     }
 
+    StringBuilder sbType = new StringBuilder();
+
     if( _kind == AbstractSrcClass.Kind.Enum )
     {
-      renderEnum( sb, indent );
+      renderEnum( sbType, indent );
     }
     else if( _kind == AbstractSrcClass.Kind.Annotation )
     {
-      renderAnnotation( sb, indent );
+      renderAnnotation( sbType, indent );
     }
     else
     {
-      renderClassOrInterface( sb, indent );
+      renderClassOrInterface( sbType, indent );
     }
+
+    if( getEnclosingClass() != null )
+    {
+      // add extensions to inner types
+      supplementInner( getName(), sbType );
+    }
+    sb.append( sbType );
     return sb;
+  }
+
+  /**
+   * Add extensions to inner classes
+   */
+  private void supplementInner( String fqnInner, StringBuilder innerSource )
+  {
+    if( getModule() == null || getLocation() == null )
+    {
+      // Location can be null within an IDE plugin. In this case the IDE must supplement classes its own way on its AST.
+      return;
+    }
+
+    Set<ITypeManifold> sps = getModule().findTypeManifoldsFor( fqnInner );
+    for( ITypeManifold sp: sps )
+    {
+      if( sp.getContributorKind() == ContributorKind.Supplemental )
+      {
+        String source = sp.contribute( getLocation(), fqnInner, isBinary(), innerSource.toString(), getErrorHandler() );
+        if( source != null )
+        {
+          innerSource.replace( 0, innerSource.length(), source );
+        }
+      }
+    }
   }
 
   private void renderPackage( StringBuilder sb )

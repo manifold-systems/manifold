@@ -25,6 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -38,6 +39,7 @@ import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.host.IManifoldHost;
+import manifold.api.host.IModule;
 import manifold.api.type.IModel;
 import manifold.api.type.SourcePosition;
 import manifold.ext.api.Extension;
@@ -142,9 +144,9 @@ public class Model implements IModel
     return null;
   }
 
-  public String makeSource( String extensionClassFqn, DiagnosticListener<JavaFileObject> errorHandler )
+  String makeSource( String extensionClassFqn, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass = new SrcClass( extensionClassFqn, SrcClass.Kind.Class )
+    SrcClass srcClass = new SrcClass( extensionClassFqn, SrcClass.Kind.Class, location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( Extension.class ) )
       .modifiers( Modifier.PUBLIC );
     int i = 0;
@@ -155,7 +157,6 @@ public class Model implements IModel
           .initializer( new SrcRawExpression( String.class, file.getPath().getFileSystemPathString() ) )
           .modifiers( Modifier.STATIC | Modifier.FINAL ) );
     }
-    //noinspection ConstantConditions
     for( Map.Entry<Token, Token> entry : FavsParser.instance().parseFavsForType( _favsFiles, _extensionFqn, errorHandler ).entrySet() )
     {
       SrcMethod method = new SrcMethod()

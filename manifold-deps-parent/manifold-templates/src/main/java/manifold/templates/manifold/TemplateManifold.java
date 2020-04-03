@@ -70,7 +70,7 @@ public class TemplateManifold extends JavaTypeManifold<TemplateModel>
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, TemplateModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     String source = model.getSource();
     model.report( errorHandler );

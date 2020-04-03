@@ -331,7 +331,7 @@ public class JsonListType extends JsonSchemaType
   {
     for( IJsonParentType child: _state._innerTypes.values() )
     {
-      child.render( getTm(), sb, indent + 2, mutable );
+      child.renderInner( getTm(), sb, indent + 2, mutable );
     }
     List<IJsonType> definitions = getDefinitions();
     if( definitions != null )
@@ -340,7 +340,7 @@ public class JsonListType extends JsonSchemaType
       {
         if( child instanceof IJsonParentType )
         {
-          ((IJsonParentType)child).render( getTm(), sb, indent + 2, mutable );
+          ((IJsonParentType)child).renderInner( getTm(), sb, indent + 2, mutable );
         }
       }
     }

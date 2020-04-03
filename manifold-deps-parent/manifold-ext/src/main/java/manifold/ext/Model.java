@@ -18,6 +18,7 @@ package manifold.ext;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Stack;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
@@ -31,13 +32,14 @@ public class Model implements IModel
   private final ExtensionManifold _sp;
   private final String _fqnExtended;
   private Set<IFile> _files;
-  private int _processing;
+  private Stack<String> _processing;
 
 
   Model( String extendedFqn, Set<IFile> files, ExtensionManifold sp )
   {
     _fqnExtended = extendedFqn;
     _files = new HashSet<>( files );
+    _processing = new Stack<>();
     _sp = sp;
   }
 
@@ -96,17 +98,21 @@ public class Model implements IModel
     return _sp;
   }
 
-  public boolean isProcessing()
+  public boolean isProcessing( String fqn )
   {
-    return _processing > 0;
+    return _processing.contains( fqn );
   }
-  void pushProcessing()
+  void pushProcessing( String fqn )
   {
-    _processing++;
+    _processing.push( fqn );
   }
-  void popProcessing()
+  void popProcessing( String fqn )
   {
-    _processing--;
+    String popped = _processing.pop();
+    if( !popped.equals( fqn ) )
+    {
+      throw new IllegalStateException( "Unbalanced stack operation" );
+    }
   }
 
   void report( DiagnosticListener<JavaFileObject> errorHandler )

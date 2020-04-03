@@ -188,7 +188,7 @@ public class DarkJavaTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     return getSource( model );
   }

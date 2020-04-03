@@ -16,8 +16,6 @@
 
 package manifold.ext.extensions.java.util.Map;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
 import javax.script.Bindings;
@@ -25,6 +23,7 @@ import manifold.ext.RuntimeMethods;
 import manifold.ext.api.Extension;
 import manifold.ext.api.ICallHandler;
 import manifold.ext.api.This;
+import manifold.util.ReflectUtil;
 
 /**
  * Interface extension for java.util.Map to add ICallHandler support.
@@ -40,16 +39,19 @@ public abstract class MapStructExt implements ICallHandler
     Object value = ICallHandler.UNHANDLED;
     if( returnType != void.class && paramTypes.length == 0 )
     {
+      // call getter
       value = getValue( thiz, name, actualName );
     }
     if( value == ICallHandler.UNHANDLED )
     {
       if( returnType == void.class )
       {
+        // call setter
         value = setValue( thiz, name, actualName, paramTypes, args );
       }
       if( value == ICallHandler.UNHANDLED )
       {
+        // invoke single method implementor e.g., a lambda
         value = invoke( thiz, name, args );
       }
     }
@@ -167,21 +169,7 @@ public abstract class MapStructExt implements ICallHandler
     {
       return ICallHandler.UNHANDLED;
     }
-    try
-    {
-      for( Method m: value.getClass().getMethods() )
-      {
-        if( !m.isDefault() && !Modifier.isStatic( m.getModifiers() ) )
-        {
-          m.setAccessible( true );
-          return m.invoke( value, args );
-        }
-      }
-      return ICallHandler.UNHANDLED;
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
+    //noinspection ConstantConditions
+    return ReflectUtil.lambdaMethod( value.getClass() ).invoke( value, args );
   }
 }

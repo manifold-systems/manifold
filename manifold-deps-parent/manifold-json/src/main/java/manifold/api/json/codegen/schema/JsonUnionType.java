@@ -34,7 +34,7 @@ import manifold.util.concurrent.LocklessLazyVar;
  */
 public class JsonUnionType extends JsonStructureType
 {
-  private final class State
+  private static final class State
   {
     private Map<String, IJsonType> _constituentTypes;
   }

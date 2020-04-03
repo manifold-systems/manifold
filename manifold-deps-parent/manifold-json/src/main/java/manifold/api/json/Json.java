@@ -386,12 +386,12 @@ public class Json
       IJsonType compType = ((JsonListType)type).getComponentType();
       if( !((List)jsonObj).isEmpty() )
       {
-        name += "Item";
+        String nameItem = name + "Item";
         int i = 0;
         boolean isDissimilar = isDissimilar( (List)jsonObj );
         for( Object elem : (List)jsonObj )
         {
-          IJsonType csr = transformJsonObject( host, name + (isDissimilar ? i++ : ""), (JsonSchemaType)type, elem );
+          IJsonType csr = transformJsonObject( host, nameItem + (isDissimilar ? i++ : ""), (JsonSchemaType)type, elem );
           if( compType != null && csr != compType && compType != DynamicType.instance() )
           {
             csr = mergeTypes( compType, csr );

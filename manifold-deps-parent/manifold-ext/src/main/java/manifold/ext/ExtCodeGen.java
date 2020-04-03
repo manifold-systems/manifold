@@ -25,9 +25,11 @@ import com.sun.tools.javac.util.Context;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -60,13 +62,15 @@ class ExtCodeGen
   private JavaFileManager.Location _location;
   private final Model _model;
   private final String _fqn;
+  private final boolean _genStubs;
   private String _existingSource;
 
-  ExtCodeGen( JavaFileManager.Location location, Model model, String topLevelFqn, String existingSource )
+  ExtCodeGen( JavaFileManager.Location location, Model model, String topLevelFqn, boolean genStubs, String existingSource )
   {
     _location = location;
     _model = model;
     _fqn = topLevelFqn;
+    _genStubs = genStubs;
     _existingSource = existingSource;
   }
 
@@ -75,7 +79,7 @@ class ExtCodeGen
     return _model.getTypeManifold().getModule();
   }
 
-  String make( DiagnosticListener<JavaFileObject> errorHandler )
+  String make( JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcExtended;
     if( !_existingSource.isEmpty() )
@@ -84,7 +88,8 @@ class ExtCodeGen
     }
     else
     {
-      srcExtended = ClassSymbols.instance( getModule() ).makeSrcClassStub( _fqn );
+      srcExtended = ClassSymbols.instance( getModule() ).makeSrcClassStub( _fqn, location, errorHandler );
+      srcExtended.setBinary( true );
     }
     return addExtensions( srcExtended, errorHandler );
   }
@@ -113,31 +118,36 @@ class ExtCodeGen
     boolean interfaceExtensions = false;
     boolean annotationExtensions = false;
     Set<String> allExtensions = findAllExtensions();
-    _model.pushProcessing();
+    _model.pushProcessing( _fqn );
     try
     {
-      for( String extensionFqn : allExtensions )
+      for( Iterator<String> iterator = allExtensions.iterator(); iterator.hasNext(); )
       {
+        String extensionFqn = iterator.next();
         //## todo: if fqn (the extension class) is source file, delegate the call to makeSrcClassStub() to the host somehow
         //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
-        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn, null ); // _location );
+        SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn ); // _location );
         if( srcExtension != null )
         {
-          for( AbstractSrcMethod method : srcExtension.getMethods() )
+          for( AbstractSrcMethod method: srcExtension.getMethods() )
           {
             addExtensionMethod( method, extendedClass, errorHandler );
             methodExtensions = true;
           }
-          for( SrcType iface : srcExtension.getInterfaces() )
+          for( SrcType iface: srcExtension.getInterfaces() )
           {
             addExtensionInteface( iface, extendedClass );
             interfaceExtensions = true;
           }
-          for( SrcAnnotationExpression anno : srcExtension.getAnnotations() )
+          for( SrcAnnotationExpression anno: srcExtension.getAnnotations() )
           {
             addExtensionAnnotation( anno, extendedClass );
             annotationExtensions = true;
           }
+        }
+        else
+        {
+          iterator.remove();
         }
       }
       if( !_existingSource.isEmpty() )
@@ -152,7 +162,7 @@ class ExtCodeGen
     }
     finally
     {
-      _model.popProcessing();
+      _model.popProcessing( _fqn );
     }
   }
 
@@ -233,7 +243,7 @@ class ExtCodeGen
 
   private Set<String> findAllExtensions()
   {
-    if( _model.isProcessing() )
+    if( _model.isProcessing( _fqn ) )
     {
       // short-circuit e.g., extension producers
       return Collections.emptySet();
@@ -255,10 +265,27 @@ class ExtCodeGen
       {
         if( f != null )
         {
-          fqns.add( f );
+          String innerExtFqn = findInnerClassInExtension( f );
+          fqns.add( innerExtFqn );
         }
       }
     }
+  }
+
+  private String findInnerClassInExtension( String extensionFqn )
+  {
+    String toplevel = _model.getFqn();
+    if( toplevel.length() == _fqn.length() )
+    {
+      return extensionFqn;
+    }
+
+    int index = _fqn.indexOf( toplevel );
+    if( index >= 0 )
+    {
+      return extensionFqn + _fqn.substring( toplevel.length() );
+    }
+    return extensionFqn;
   }
 
   private void findExtensionsFromExtensionClassProviders( Set<String> fqns )
@@ -270,6 +297,7 @@ class ExtCodeGen
           tm instanceof IExtensionClassProducer )
       {
         Set<String> extensionClasses = ((IExtensionClassProducer)tm).getExtensionClasses( _model.getFqn() );
+        extensionClasses = extensionClasses.stream().map( e -> findInnerClassInExtension( e ) ).collect( Collectors.toSet() );
         fqns.addAll( extensionClasses );
       }
     }
@@ -311,7 +339,7 @@ class ExtCodeGen
 //    }
 
     // the class is a produced class, therefore we must delegate the calls since calls are not replaced
-    boolean delegateCalls = !_existingSource.isEmpty();
+    boolean delegateCalls = !_existingSource.isEmpty() && !_genStubs;
 
     boolean isInstanceExtensionMethod = isInstanceExtensionMethod( method, extendedType );
 
@@ -486,7 +514,7 @@ class ExtCodeGen
         SrcType superClass = extendedType.getSuperClass();
         if( superClass != null && superClass.getName().equals( Object.class.getName() ) )
         {
-          SrcClass superSrcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( superClass.getName(), null );
+          SrcClass superSrcClass = ClassSymbols.instance( getModule() ).makeSrcClassStub( superClass.getName() );
           duplicate = findMethod( method, superSrcClass );
         }
       }
@@ -496,7 +524,7 @@ class ExtCodeGen
         //## inheriting default interface methods, which must not be shadowed by an extension.
         for( SrcType iface: extendedType.getInterfaces() )
         {
-          SrcClass superIface = ClassSymbols.instance( getModule() ).makeSrcClassStub( iface.getName(), null );
+          SrcClass superIface = ClassSymbols.instance( getModule() ).makeSrcClassStub( iface.getName() );
           duplicate = findMethod( method, superIface );
           if( duplicate != null )
           {

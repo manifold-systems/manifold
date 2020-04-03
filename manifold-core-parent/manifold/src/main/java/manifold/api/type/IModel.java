@@ -23,7 +23,7 @@ import manifold.api.host.IManifoldHost;
 
 /**
  * For use with {@link ResourceFileTypeManifold}. Implementors of {@link IModel} store and manage
- * state necessary to generate source code in the context of {@link ResourceFileTypeManifold#contribute(javax.tools.JavaFileManager.Location, String, String, IModel, DiagnosticListener)}
+ * state necessary to generate source code in the context of {@link ResourceFileTypeManifold#contribute(javax.tools.JavaFileManager.Location, String, boolean, String, IModel, DiagnosticListener)}
  */
 public interface IModel
 {
@@ -60,7 +60,7 @@ public interface IModel
   /**
    * @return True if the model is processing or otherwise in an unsettled state
    */
-  default boolean isProcessing()
+  default boolean isProcessing( String fqn )
   {
     return false;
   }

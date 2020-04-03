@@ -163,7 +163,7 @@ public abstract class SimpleModule implements IModule
         else
         {
           found = sp;
-          result = sp.contribute( location, fqn, result, errorHandler );
+          result = sp.contribute( location, fqn, false, result, errorHandler );
         }
       }
     }
@@ -171,7 +171,7 @@ public abstract class SimpleModule implements IModule
     {
       if( sp.getContributorKind() == ContributorKind.Supplemental )
       {
-        result = sp.contribute( location, fqn, result, errorHandler );
+        result = sp.contribute( location, fqn, false, result, errorHandler );
       }
     }
 

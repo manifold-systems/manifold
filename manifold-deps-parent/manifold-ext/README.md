@@ -121,6 +121,45 @@ public static <E, R> Stream<R> map(@This Collection<E> thiz, Function<? super E,
 Here `map` is a generic extension method having type variable `R` and conveying `Collection`'s type
 variable `E`.
 
+
+## Inner Classes
+
+Extend an inner class by first creating an extension on the outermost class enclosing the inner class. Then add a 
+nest of inner classes to match the inner class you want to extend. You add extension methods etc. to the inner class
+just as you would a top-level class.
+
+Here's an example adding an extension method to `Map.Entry`.
+```java
+package myproject.extensions.java.util.Map;
+
+import java.util.Map;
+import manifold.ext.api.Extension;
+import manifold.ext.api.This;
+
+@Extension
+public class MyMapExt
+{
+  public static <K,V> String myMapMethod(@This Map<K,V> thiz) {
+    return "myMapMethod";
+  }
+
+  @Extension
+  public static class Entry {
+    public static <K,V> String myEntryMethod(@This Map.Entry<K,V> thiz) {
+      return "myEntryMethod";
+    }
+  }
+}
+```     
+
+With this extension in place you can call the `myEntryMethod` directly on the `Map.Entry` interface:
+```java                  
+Map<String, String> map = getMap();
+for(Entry<String, String> entry: map.entrySet()) {
+  entry.myEntryMethod();
+}
+```
+
 ## Static Dispatching
 
 An extension class does not physically alter its extended class; the methods defined in an extension are
@@ -386,10 +425,6 @@ manifold produces. For the typical use case your type manifold should extend `Ab
 
 See the `manifold-ext-producer-sample` module for a sample type manifold implementing `IExtensionClassProvider`.
 
->Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-projects use operator overloading and unit expressions extensively.
-
 # Operator Overloading
 
 >Warning: **Experimental Feature**
@@ -403,6 +438,9 @@ operator implementations for `BigDecimal` so you can write code like this:
 BigDecimal result = bigValue1 + bigValue2;
 ```
 
+>Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+projects use operator overloading and unit expressions extensively.
 
 ## Arithmetic and Negation Operators
 

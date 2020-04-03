@@ -20,6 +20,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcAnnotationExpression;
@@ -38,6 +41,7 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcSwitchCase;
 import manifold.api.gen.SrcSwitchStatement;
 import manifold.api.gen.SrcType;
+import manifold.api.host.IModule;
 import manifold.api.type.SourcePosition;
 import manifold.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;
@@ -66,9 +70,10 @@ class PropertiesCodeGen
     _content = assignContent();
   }
 
-  SrcClass make()
+  SrcClass make( IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass = new SrcClass( _fqn, SrcClass.Kind.Class ).imports( SourcePosition.class );
+    SrcClass srcClass = new SrcClass( _fqn, SrcClass.Kind.Class, location, module, errorHandler )
+      .imports( SourcePosition.class );
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
 

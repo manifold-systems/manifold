@@ -11,4 +11,11 @@ public class MyPersonExt
   public static String foobar( @This abc.Person thiz ) {
     return "foobar";
   }
+
+  @Extension
+  public static class Hobby {
+    public static String hi(@This abc.Person.Hobby thiz) {
+      return "hi";
+    }
+  }
 }

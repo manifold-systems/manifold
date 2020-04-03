@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
@@ -727,5 +728,18 @@ public class JsonTest extends TestCase
       "  ]\n" +
       "}",
       good.write().toJson() );
+  }
+
+  public void testInnerClassExtension()
+  {
+    Person person = Person.fromSource();
+    assertEquals("hi", person.getHobby().hi());
+
+    Map<String, String> map = new HashMap<>();
+    map.put( "hi", "bye" );
+    assertEquals( "fuebar", map.fuebar() );
+    for( Map.Entry<String, String> s: map.entrySet() ) {
+      assertEquals("innerFoo", s.innerFoo());
+    }
   }
 }

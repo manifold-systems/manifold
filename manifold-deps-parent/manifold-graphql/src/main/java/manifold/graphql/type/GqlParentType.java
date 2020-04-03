@@ -68,6 +68,9 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.script.Bindings;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.gen.AbstractSrcClass;
@@ -83,6 +86,7 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
+import manifold.api.host.IModule;
 import manifold.api.json.DataBindings;
 import manifold.api.json.IJsonBindingsBacked;
 import manifold.api.json.Loader;
@@ -150,9 +154,19 @@ class GqlParentType
            _operations.containsKey( childName );
   }
 
-  void render( StringBuilder sb )
+  Definition getChild( String childName )
   {
-    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _file )
+    Definition def = _registry.getType( childName ).orElse( null );
+    if( def == null )
+    {
+      def = _operations.get( childName );
+    }
+    return def;
+  }
+
+  void render( StringBuilder sb, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _file, location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .addAnnotation( new SrcAnnotationExpression( FragmentValue.class.getSimpleName() )
         .addArgument( "methodName", String.class, "fragmentValue" )
@@ -1419,6 +1433,7 @@ class GqlParentType
     srcClass.addSourcePositionAnnotation( srcAnno, name, loc.getLine(), loc.getColumn() );
   }
 
+  @SuppressWarnings("unused")
   private String getStartSymbol( Node node )
   {
     String start = "";

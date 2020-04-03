@@ -56,6 +56,7 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, Set<Constructor>> _constructorsByClass = new ConcurrentWeakHashMap<>();
   private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
+  private static final String LAMBDA_METHOD = "lambda method";
 
   //private static final ConcurrentHashMap<String, Boolean> _openPackages = new ConcurrentHashMap<>();
 
@@ -228,6 +229,87 @@ public class ReflectUtil
         {
           addMethodToCache( cls, mr._method );
           return mr;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get a {@link MethodRef} to from the specified {@code name} without regard to parameter types. If more than one
+   * method has the {@code name}, the first one encountered is used, in no particular order. This method should be used
+   * only when the named method is <i>not</i> overloaded. Typical use:
+   * <p/>
+   * <pre> methodByName(LocalTime.class, "isAfter").invoke(source, time) </pre>
+   *
+   * @param cls    The class containing the method
+   * @param name   The name of the method or a '|' separated list of names, where the first found is used
+   *
+   * @return A reference to the specified method or null if not found
+   */
+  public static MethodRef methodFromName( Class<?> cls, String name )
+  {
+    MethodRef mr = getMethodFromCacheUsingNameOnly( cls, name );
+    if( mr != null )
+    {
+      return mr;
+    }
+
+    for( Method method: cls.getDeclaredMethods() )
+    {
+      if( method.getName().equals( name ) )
+      {
+        return addMethodToCache( cls, method );
+      }
+    }
+
+    Class superclass = cls.getSuperclass();
+    if( superclass != null )
+    {
+      mr = methodFromName( superclass, name );
+      if( mr != null )
+      {
+        addMethodToCache( cls, mr._method );
+        return mr;
+      }
+    }
+
+    for( Class iface: cls.getInterfaces() )
+    {
+      mr = methodFromName( iface, name );
+      if( mr != null )
+      {
+        addMethodToCache( cls, mr._method );
+        return mr;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Get a {@link MethodRef} corresponding with the functional interface implemented by {@code lambdaClass}.
+   * <p/>
+   * <pre> lambdaMethod(function.getClass()).invoke(function, args) </pre>
+   *
+   * @return A reference to the specified method or null if not found
+   */
+  public static MethodRef lambdaMethod( Class<?> lambdaClass )
+  {
+    MethodRef mr = getMethodFromCacheUsingNameOnly( lambdaClass, LAMBDA_METHOD );
+    if( mr != null )
+    {
+      return mr;
+    }
+
+    for( Class iface: lambdaClass.getInterfaces() )
+    {
+      for( Method m: iface.getMethods() )
+      {
+        if( (m.getModifiers() & (Modifier.ABSTRACT | Modifier.PUBLIC)) == (Modifier.ABSTRACT | Modifier.PUBLIC) )
+        {
+          return addMethodToCache( lambdaClass, m, LAMBDA_METHOD );
         }
       }
     }
@@ -720,22 +802,26 @@ public class ReflectUtil
 
   private static MethodRef addMethodToCache( Class cls, Method m )
   {
+    return addMethodToCache( cls, m, m.getName() );
+  }
+  private static MethodRef addMethodToCache( Class cls, Method m, String name )
+  {
     setAccessible( m );
-    addRawMethodToCache( cls, m );
+    addRawMethodToCache( cls, m, name );
     return new MethodRef( m );
   }
 
-  private static void addRawMethodToCache( Class cls, Method m )
+  private static void addRawMethodToCache( Class cls, Method m, String name )
   {
     ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
     if( methodsByName == null )
     {
       _methodsByName.put( cls, methodsByName = new ConcurrentHashMap<>() );
     }
-    ConcurrentHashSet<Method> methods = methodsByName.get( m.getName() );
+    ConcurrentHashSet<Method> methods = methodsByName.get( name );
     if( methods == null )
     {
-      methodsByName.put( m.getName(), methods = new ConcurrentHashSet<>( 2 ) );
+      methodsByName.put( name, methods = new ConcurrentHashSet<>( 2 ) );
     }
     methods.add( m );
   }
@@ -779,6 +865,30 @@ public class ReflectUtil
             return m;
           }
         }
+      }
+    }
+    return null;
+  }
+
+  private static MethodRef getMethodFromCacheUsingNameOnly( Class cls, String name )
+  {
+    Method m = getRawMethodFromCacheUsingNameOnly( cls, name );
+    if( m != null )
+    {
+      return new MethodRef( m );
+    }
+    return null;
+  }
+
+  private static Method getRawMethodFromCacheUsingNameOnly( Class cls, String name )
+  {
+    ConcurrentMap<String, ConcurrentHashSet<Method>> methodsByName = _methodsByName.get( cls );
+    if( methodsByName != null )
+    {
+      ConcurrentHashSet<Method> methods = methodsByName.get( name );
+      if( methods != null )
+      {
+        return methods.iterator().next();
       }
     }
     return null;

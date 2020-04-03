@@ -74,9 +74,9 @@ public class ExtensionProducerSampleTypeManifold extends AbstractExtensionProduc
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model,
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, Model model,
                                DiagnosticListener<JavaFileObject> errorHandler )
   {
-    return model.makeSource( topLevelFqn, errorHandler );
+    return model.makeSource( topLevelFqn, location, getModule(), errorHandler );
   }
 }

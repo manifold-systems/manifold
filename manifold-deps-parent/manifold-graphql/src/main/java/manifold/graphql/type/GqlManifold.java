@@ -16,12 +16,16 @@
 
 package manifold.graphql.type;
 
+import graphql.language.Definition;
+import graphql.language.Node;
+import graphql.language.OperationDefinition;
 import graphql.language.ScalarTypeDefinition;
 import graphql.language.SchemaDefinition;
 import graphql.language.TypeDefinition;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.StringTokenizer;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -54,7 +58,30 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
       return false;
     }
 
-    return type.hasChild( relativeInner );
+    Definition typeDef = null;
+    for( StringTokenizer tokenizer = new StringTokenizer( relativeInner, "." ); tokenizer.hasMoreTokens(); )
+    {
+      String innerName = tokenizer.nextToken();
+      typeDef = typeDef == null ? type.getChild( innerName ) : getChildDefinition( typeDef, innerName );
+      if( typeDef == null )
+      {
+        // special case so Builder classes can have extension methods applied
+        return innerName.equals( "Builder" ) && !tokenizer.hasMoreTokens();
+      }
+    }
+    return typeDef != null;
+  }
+
+  private Definition getChildDefinition( Definition def, String name )
+  {
+    for( Node child: def.getNamedChildren().getChildren( name ) )
+    {
+      if( child instanceof TypeDefinition || child instanceof OperationDefinition )
+      {
+        return (Definition)child;
+      }
+    }
+    return null;
   }
 
   TypeDefinition findTypeDefinition( String simpleName )
@@ -91,11 +118,11 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, GqlModel model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, GqlModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
     model.report( errorHandler );
-    model.getType().render( sb );
+    model.getType().render( sb, location, getModule(), errorHandler );
     return sb.toString();
   }
 }

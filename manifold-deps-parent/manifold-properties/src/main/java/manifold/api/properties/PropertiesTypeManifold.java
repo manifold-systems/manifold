@@ -66,10 +66,10 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   }
 
   @Override
-  protected String contribute( JavaFileManager.Location location, String topLevelFqn, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
+  protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
-    SrcClass srcClass = new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get( 0 ), topLevelFqn ).make();
+    SrcClass srcClass = new PropertiesCodeGen( model.getCache(), files.isEmpty() ? null : files.get( 0 ), topLevelFqn ).make( getModule(), location, errorHandler );
     StringBuilder sb = srcClass.render( new StringBuilder(), 0 );
     return sb.toString();
   }

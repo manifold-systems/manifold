@@ -143,7 +143,7 @@ public class HighjumpTypeManifold extends BaseService implements ITypeManifold
   }
 
   @Override
-  public String contribute( JavaFileManager.Location location, String fqn, String existing, DiagnosticListener<JavaFileObject> errorHandler )
+  public String contribute( JavaFileManager.Location location, String fqn, boolean genStubs, String existing, DiagnosticListener<JavaFileObject> errorHandler )
   {
     if( fqn.startsWith( FQN_SYMBOL_PREFIX ) )
     {
