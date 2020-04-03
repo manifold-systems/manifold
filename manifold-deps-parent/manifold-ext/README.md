@@ -164,7 +164,7 @@ for(Entry<String, String> entry: map.entrySet()) {
 
 Types produced from type manifolds such as the GraphQL and JSON Manifolds can be extended too. For instance, a GraphQL
 file called `movies.graphql` in the `abc/res` resource directory results in a type named `abc.res.movies`. Likewise, a
-`Person` type defined in file is an inner class of `movies` with name `abc.res.movies.Person`. Thus an extension on the
+`Person` type defined in the file is an inner class of `movies` with name `abc.res.movies.Person`. Thus an extension on the
 `Person` inner type uses the same technique explained in the previous section on Inner Classes.   
 
 ```java
