@@ -6,15 +6,22 @@ layout: default
  
 ![roadmap](http://manifold.systems/images/roadmap.jpg)
  
-## Features on the workbench
+## On the workbench
 
->Manifold has grown quite a bit recently, so it's time to suspend work on new features and get the house in order. As
->such efforts are now shifting toward writing tests, fixing bugs, improving performance, and writing articles. New
->feature work will pick up soon. 
+I've taken a bit of a detour recently to experiment with supporting the [Gosu](https://github.com/gosu-lang/gosu-lang)
+programming language as a type manifold. My employer, Guidewire Software, uses the language heavily, as do their
+customers. Some manage Gosu assets in excess of a million lines. As the language's author I'm excited at the
+prospect of using Manifold to improve and extend Gosu.
 
+**My goals**:
+* **One compiler.** Use `javac` as Gosu's compiler. Manifold makes this relatively easy.
+* **Java interop.** Sharing javac's type system via Manifold should lead to comprehensive Java/Gosu interop.
+* **Performance.** Use javac's type system to avoid the overhead of having to reparse/reprocess types otherwise involved
+with two compilers.
+* **Type system expansion.** Utilize all the types made available from Manifold; GraphQL, JSON, and Properties in particular.  
 <br>
 
-## Features on the pile (in no particular order)
+## On the pile (in no particular order)
  
 #### Operator overloading enhancements
 * [#126](https://github.com/manifold-systems/manifold/issues/126)
