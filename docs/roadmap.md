@@ -21,6 +21,9 @@ with two compilers.
 * **Type system expansion.** Utilize all the types made available from Manifold; GraphQL, JSON, and Properties in particular.  
 <br>
 
+Note this is a very temporary detour.  I'll soon return to the normal Manifold grind, adding bugs.. er features and
+fixing bugs ;)
+
 ## On the pile (in no particular order)
  
 #### Operator overloading enhancements
