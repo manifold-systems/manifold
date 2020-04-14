@@ -61,18 +61,18 @@ public class SourceSupplier
                                         e.getContributorKind() == ContributorKind.Partial );
   }
 
-  public boolean isSelfCompile()
+  public boolean isSelfCompile( String fqn )
   {
     return _sps == null || _sps.isEmpty() ||
-           _sps.stream().anyMatch( tm -> tm.isSelfCompile( _fqn ) );
+           _sps.stream().anyMatch( tm -> tm.isSelfCompile( fqn ) );
   }
 
-  public byte[] compile()
+  public byte[] compile( String fqn )
   {
     return _sps.stream()
-      .filter( tm -> tm.isSelfCompile( _fqn ) )
+      .filter( tm -> tm.isSelfCompile( fqn ) )
       .findFirst().orElseThrow( IllegalStateException::new )
-      .compile( _fqn );
+      .compile( fqn );
   }
 
   public Set<IFile> getResourceFiles()

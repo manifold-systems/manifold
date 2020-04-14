@@ -360,6 +360,12 @@ public class JavacPlugin implements Plugin, TaskListener
     ReflectUtil.method( "manifold.internal.javac.ManLog_" + (IS_JAVA_8 ? 8 : 9),
       "instance", Context.class ).invokeStatic( getContext() );
 
+    // Override javac's ClassWriter
+    ManClassWriter.instance( getContext() );
+
+    // Override javac's Check
+    ManCheck.instance( getContext() );
+
     if( !isExtensionsEnabled() )
     {
       // No need to hook up all the extension stuff if it's not enabled
@@ -369,9 +375,6 @@ public class JavacPlugin implements Plugin, TaskListener
     // Override javac's Attr
     Attr manAttr = (Attr)ReflectUtil.method( "manifold.internal.javac.ManAttr_" + (IS_JAVA_8 ? 8 : 9),
       "instance", Context.class ).invokeStatic( getContext() );
-
-    // Override javac's ClassWriter
-    ManClassWriter.instance( getContext() );
 
     // Override javac's Resolve
     ManResolve.instance( _ctx );
@@ -815,36 +818,56 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private List<String> fetchOtherInputFiles()
   {
-    if( System.getProperty( OTHER_SOURCE_FILES ) != null && System.getProperty( OTHER_SOURCE_LIST ) != null )
+    Map<String, String> options = JavacProcessingEnvironment.instance( getContext() ).getOptions();
+
+    String otherSourceFiles = getOtherSourceFilesProperty( options );
+    String otherSourceList = getOtherSourceListProperty( options );
+    if( otherSourceFiles != null && otherSourceList != null )
     {
       throw new IllegalArgumentException( String.format( "Properties %s and %s may not be set simultaneously; please choose one or the other.", OTHER_SOURCE_FILES, OTHER_SOURCE_LIST ) );
     }
 
     List<String> files = Collections.emptyList();
 
-    String property = System.getProperty( OTHER_SOURCE_FILES, "" );
-    if( !property.isEmpty() )
+    if( otherSourceFiles != null && !otherSourceFiles.isEmpty() )
     {
-      files = Arrays.asList( property.split( " " ) );
+      files = Arrays.asList( otherSourceFiles.split( " " ) );
     }
-
-    String filepath = System.getProperty( OTHER_SOURCE_LIST, "" );
-    if( !filepath.isEmpty() )
+    else if( otherSourceList != null && !otherSourceList.isEmpty() )
     {
       try
       {
-        files = Files.readAllLines( new File( filepath ).toPath() )
+        files = Files.readAllLines( new File( otherSourceList ).toPath() )
           .stream()
           .filter( s -> !s.isEmpty() )
           .collect( Collectors.toList() );
       }
       catch( IOException e )
       {
-        throw new IllegalStateException( String.format( "Unable to read source list from %s", filepath ), e );
+        throw new IllegalStateException( String.format( "Unable to read source list from %s", otherSourceList ), e );
       }
     }
 
     return files;
+  }
+
+  private String getOtherSourceFilesProperty( Map<String, String> options )
+  {
+    String otherSourceFiles = options.get( OTHER_SOURCE_FILES );
+    if( otherSourceFiles == null )
+    {
+      otherSourceFiles = System.getProperty( OTHER_SOURCE_FILES );
+    }
+    return otherSourceFiles;
+  }
+  private String getOtherSourceListProperty( Map<String, String> options )
+  {
+    String otherSourceList = options.get( OTHER_SOURCE_LIST );
+    if( otherSourceList == null )
+    {
+      otherSourceList = System.getProperty( OTHER_SOURCE_LIST );
+    }
+    return otherSourceList;
   }
 
   private void initialize( TaskEvent e )

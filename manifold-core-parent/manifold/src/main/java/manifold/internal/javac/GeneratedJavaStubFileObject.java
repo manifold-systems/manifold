@@ -67,15 +67,15 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
   }
 
   @Override
-  public boolean isSelfCompile()
+  public boolean isSelfCompile( String fqn )
   {
-    return _sourceSupplier.isSelfCompile();
+    return _sourceSupplier.isSelfCompile( fqn );
   }
 
   @Override
-  public byte[] compile()
+  public byte[] compile( String fqn )
   {
-    return _sourceSupplier.compile();
+    return _sourceSupplier.compile( fqn );
   }
 
   @Override

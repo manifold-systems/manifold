@@ -50,9 +50,9 @@ public class ManClassWriter extends ClassWriter
   public void writeClassFile( OutputStream out, Symbol.ClassSymbol c ) throws StringOverflow, IOException, PoolOverflow
   {
     JavaFileObject sourceFile = c.sourcefile;
-    if( sourceFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)sourceFile).isSelfCompile() )
+    if( sourceFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)sourceFile).isSelfCompile( c.getQualifiedName().toString() ) )
     {
-      out.write( ((ISelfCompiledFile)sourceFile).compile() );
+      out.write( ((ISelfCompiledFile)sourceFile).compile( c.getQualifiedName().toString() ) );
     }
     else
     {

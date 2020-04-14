@@ -301,9 +301,9 @@ public class ManClassesUrlConnection extends URLConnection
       long before = System.nanoTime();
       try
       {
-        if( _javaSrcFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)_javaSrcFile).isSelfCompile() )
+        if( _javaSrcFile instanceof ISelfCompiledFile && ((ISelfCompiledFile)_javaSrcFile).isSelfCompile( _javaFqn ) )
         {
-          return ((ISelfCompiledFile)_javaSrcFile).compile();
+          return ((ISelfCompiledFile)_javaSrcFile).compile( _javaFqn );
         }
         else
         {
