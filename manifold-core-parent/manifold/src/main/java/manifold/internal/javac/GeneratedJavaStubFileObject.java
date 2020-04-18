@@ -72,6 +72,11 @@ public class GeneratedJavaStubFileObject extends SimpleJavaFileObject implements
     return _sourceSupplier.isSelfCompile( fqn );
   }
 
+  public void parse( String fqn )
+  {
+    _sourceSupplier.parse( fqn );
+  }
+
   @Override
   public byte[] compile( String fqn )
   {

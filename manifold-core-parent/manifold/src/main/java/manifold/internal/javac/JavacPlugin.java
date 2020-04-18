@@ -155,6 +155,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private Map<String, Boolean> _argPresent;
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
+  private Set<String> _javaSourcePath;
   private boolean _isIncremental;
 
   public static JavacPlugin instance()
@@ -189,6 +190,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     _host = new JavacManifoldHost();
     _fileFragmentResources = new ArrayList<>();
+    _javaSourcePath = Collections.emptySet();
     hijackJavacFileManager();
     task.addTaskListener( this );
   }
@@ -263,7 +265,6 @@ public class JavacPlugin implements Plugin, TaskListener
     return false;
   }
 
-  @SuppressWarnings("WeakerAccess")
   public Context getContext()
   {
     return _javacTask.getContext();
@@ -281,7 +282,6 @@ public class JavacPlugin implements Plugin, TaskListener
     return _manFileManager;
   }
 
-  @SuppressWarnings({"WeakerAccess", "unused"})
   public BasicJavacTask getJavacTask()
   {
     return _javacTask;
@@ -317,10 +317,15 @@ public class JavacPlugin implements Plugin, TaskListener
     return _typeProcessor;
   }
 
-  @SuppressWarnings("WeakerAccess")
   public IssueReporter getIssueReporter()
   {
     return _issueReporter;
+  }
+
+  @SuppressWarnings("unused")
+  public Set<String> getJavaSourcePath()
+  {
+    return _javaSourcePath;
   }
 
   private void hijackJavacFileManager()
@@ -412,6 +417,7 @@ public class JavacPlugin implements Plugin, TaskListener
     NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
 
     // Override javac's ClassFinder
+    //noinspection ConstantConditions
     ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
   }
 
@@ -638,6 +644,7 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     Set<String> sourcePath = new HashSet<>();
     deriveSourcePath( _javaInputFiles, sourcePath );
+    _javaSourcePath = new HashSet<>( sourcePath );
     deriveAdditionalSourcePath( _otherInputFiles, sourcePath );
     maybeAddResourcePath( _javaInputFiles, sourcePath );
     return sourcePath;

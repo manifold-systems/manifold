@@ -67,6 +67,14 @@ public class SourceSupplier
            _sps.stream().anyMatch( tm -> tm.isSelfCompile( fqn ) );
   }
 
+  public void parse( String fqn )
+  {
+    _sps.stream()
+      .filter( tm -> tm.isSelfCompile( fqn ) )
+      .findFirst().orElseThrow( IllegalStateException::new )
+      .parse( fqn );
+  }
+
   public byte[] compile( String fqn )
   {
     return _sps.stream()

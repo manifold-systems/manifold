@@ -162,6 +162,11 @@ public abstract class CompiledTypeProcessor implements TaskListener
     reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
 
+  public Map<String, Boolean> getTypesToProcess()
+  {
+    return _typesToProcess;
+  }
+
   void addTypesToProcess( Set<String> types )
   {
     types.forEach( e -> _typesToProcess.put( e, false ) );

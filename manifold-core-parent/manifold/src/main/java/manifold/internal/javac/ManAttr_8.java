@@ -25,7 +25,6 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotations;
 import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.DeferredAttr;
 import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Lower;
@@ -36,11 +35,11 @@ import com.sun.tools.javac.jvm.ByteCodes;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Warner;
 import manifold.api.type.FragmentValue;
+import manifold.api.type.ISelfCompiledFile;
 import manifold.api.util.Stack;
 import manifold.util.ReflectUtil;
 
@@ -428,5 +427,23 @@ public class ManAttr_8 extends Attr implements ManAttr
     }
 
     return null;
+  }
+
+  @Override
+  public void attribClass( DiagnosticPosition pos, Symbol.ClassSymbol c )
+  {
+    if( c.sourcefile instanceof ISelfCompiledFile )
+    {
+      ISelfCompiledFile sourcefile = (ISelfCompiledFile)c.sourcefile;
+      String fqn = c.getQualifiedName().toString();
+      if( sourcefile.isSelfCompile( fqn ) )
+      {
+        // signal the self-compiled class to fully parse and report errors
+        // (note its source in javac is just a stub)
+        sourcefile.parse( fqn );
+      }
+    }
+
+    super.attribClass( pos, c );
   }
 }

@@ -29,6 +29,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Warner;
 import java.io.IOException;
 import manifold.api.type.FragmentValue;
+import manifold.api.type.ISelfCompiledFile;
 import manifold.util.ReflectUtil;
 import manifold.api.util.Stack;
 
@@ -413,5 +414,22 @@ public class ManAttr_9 extends Attr implements ManAttr
     }
 
     return null;
+  }
+
+  @Override
+  public void attribClass( JCDiagnostic.DiagnosticPosition pos, Symbol.ClassSymbol c) {
+    if( c.sourcefile instanceof ISelfCompiledFile )
+    {
+      ISelfCompiledFile sourcefile = (ISelfCompiledFile)c.sourcefile;
+      String fqn = c.getQualifiedName().toString();
+      if( sourcefile.isSelfCompile( fqn ) )
+      {
+        // signal the self-compiled class to fully parse and report errors
+        // (note its source in javac is just a stub)
+        sourcefile.parse( fqn );
+      }
+    }
+
+    super.attribClass( pos, c );
   }
 }
