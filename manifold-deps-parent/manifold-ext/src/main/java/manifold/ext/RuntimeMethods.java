@@ -456,7 +456,7 @@ public class RuntimeMethods
     return proxyFactory;
   }
 
-  private static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )
+  public static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )
   {
     // The self-proxy strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via
     // ICallHandler
