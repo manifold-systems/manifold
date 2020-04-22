@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.api.ClientCodeWrapper;
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.util.Context;
 import java.io.File;
@@ -24,10 +25,8 @@ import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
-import javax.tools.FileObject;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
+import javax.tools.*;
+
 import manifold.util.ReflectUtil;
 
 /**
@@ -94,20 +93,26 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
 
   public boolean hasLocation( Location location )
   {
-    if( JavacPlugin.IS_JAVA_8 || !(fileManager instanceof StandardJavaFileManager) )
+    boolean hasLocation = fileManager.hasLocation( location );
+
+    if( JavacPlugin.IS_JAVA_8 )
     {
-      return fileManager.hasLocation( location );
+      return hasLocation;
     }
 
     // Java 9 introduces StandardJavaFileManager#getLocationAsPaths() for validation, but there is a bug in their code
     // where it does not check for empty iterable, which is what we do here
-    boolean hasLocation = fileManager.hasLocation( location );
     if( hasLocation )
     {
-      Iterable iter = getLocationAsPaths( location );
-      if( iter == null || !iter.iterator().hasNext() )
+      ReflectUtil.LiveMethodRef getLocationAsPaths = findStandardJavaFileManagerMethod(
+        fileManager, "getLocationAsPaths", Location.class );
+      if( getLocationAsPaths != null )
       {
-        hasLocation = false;
+        Iterable iter = getLocationAsPaths( location );
+        if( iter == null || !iter.iterator().hasNext() )
+        {
+          hasLocation = false;
+        }
       }
     }
     return hasLocation;
@@ -116,26 +121,44 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
   @Override
   public Iterable<? extends File> getLocation( Location location )
   {
-    if( fileManager instanceof JavacFileManager )
-    {
-      return ((JavacFileManager)fileManager).getLocation( location );
-    }
+    ReflectUtil.LiveMethodRef getLocation = findStandardJavaFileManagerMethod(
+      fileManager, "getLocation", Location.class );
 
-    return super.getLocation( location );
+    //noinspection unchecked
+    return (Iterable)getLocation.invoke( location );
   }
 
   // exclusive to Java 9
   public Iterable<? extends Path> getLocationAsPaths( Location location )
   {
-    try
+    ReflectUtil.LiveMethodRef getLocationAsPaths = findStandardJavaFileManagerMethod(
+      fileManager, "getLocationAsPaths", Location.class );
+
+    //noinspection unchecked
+    return (Iterable)getLocationAsPaths.invoke( location );
+  }
+
+  public ReflectUtil.LiveMethodRef findStandardJavaFileManagerMethod( JavaFileManager fm, String name, Class... params )
+  {
+    ReflectUtil.LiveMethodRef getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+
+    // Some build systems (Gradle 6.x) may use ClientCodeWrapper variant, WrappedJavaFileManager, as opposed to the
+    // expected WrappedStandardJavaFileManager, thus we must find the wrapped StandardJavaFileManager and delegate the
+    // call.
+
+    while( getLocationAsPaths == null && fm.getClass().getEnclosingClass() == ClientCodeWrapper.class )
     {
-      //noinspection unchecked
-      return (Iterable)ReflectUtil.method( fileManager, "getLocationAsPaths", Location.class ).invoke( location );
+      fm = (JavaFileManager)ReflectUtil.field( fm, "clientJavaFileManager" ).get();
+      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
     }
-    catch( Exception e )
+
+    while( getLocationAsPaths == null && fm instanceof ForwardingJavaFileManager )
     {
-      throw new RuntimeException( e );
+      fm = (JavaFileManager)ReflectUtil.field( fm, "fileManager" ).get();
+      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
     }
+
+    return getLocationAsPaths;
   }
 
   public int isSupportedOption( String option )
