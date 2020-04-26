@@ -62,32 +62,35 @@ public class ManUrlExt
    */
   public static URL makeUrl( String url, Object jsonValue )
   {
+    boolean firstParam = url.indexOf( '?' ) < 0;
     StringBuilder sb = new StringBuilder();
     if( jsonValue instanceof Bindings )
     {
       for( Map.Entry entry: ((Bindings)jsonValue).entrySet() )
       {
-        sb.append( sb.length() == 0 ? '?' : '&' )
+        sb.append( firstParam ? '?' : '&' )
           .append( entry.getKey() )
           .append( '=' );
         Object value = entry.getValue();
         value = valueToJson( value );
         sb.append( value );
+        firstParam = false;
       }
     }
     else if( jsonValue instanceof List )
     {
       for( Object value: (List)jsonValue )
       {
-        sb.append( sb.length() == 0 ? '?' : '&' );
+        sb.append( firstParam ? '?' : '&' );
         value = valueToJson( value );
         sb.append( value );
+        firstParam = false;
       }
     }
     else if( jsonValue != null )
     {
       String value = encode( String.valueOf( jsonValue ) );
-      sb.append( '?' ).append( value );
+      sb.append( firstParam ? '?' : '&' ).append( value );
     }
 
     try

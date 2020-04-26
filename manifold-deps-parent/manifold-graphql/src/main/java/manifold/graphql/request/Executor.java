@@ -68,6 +68,15 @@ public class Executor<T>
   }
 
   /**
+   * Add a {@code name=value} parameter to the request URL.
+   */
+  public Executor<T> withParam( String name, String value )
+  {
+    _requester.withParam( name, value );
+    return this;
+  }
+
+  /**
    * Set the Basic Authorization header using the provided {@code username} and {@code password}
    */
   @SuppressWarnings("unused")

@@ -23,10 +23,28 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!--SparkJava (provides a server for testing) -->
+    <dependency>
+      <groupId>com.sparkjava</groupId>
+      <artifactId>spark-core</artifactId>
+      <version>2.7.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.13</version>
+    </dependency>
+
   </dependencies>
 
   <build>

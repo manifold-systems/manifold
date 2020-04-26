@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +55,7 @@ public class Requester<T>
   private final String _urlBase;
   private Format _format;
   private Map<String, String> _headers;
+  private Map<String, String> _parameters;
   private int _timeout;
 
   public enum Format
@@ -79,6 +81,7 @@ public class Requester<T>
     _urlBase = urlBase;
     _format = Format.Json;
     _headers = new HashMap<>();
+    _parameters = Collections.emptyMap();
     _timeout = 0;
   }
 
@@ -99,6 +102,19 @@ public class Requester<T>
   public Requester<T> withHeader( String name, String value )
   {
     _headers.put( name, value );
+    return this;
+  }
+
+  /**
+   * Add a {@code name=value} parameter to the request URL.
+   */
+  public Requester<T> withParam( String name, String value )
+  {
+    if( _parameters.isEmpty() )
+    {
+      _parameters = new HashMap<>( 2 );
+    }
+    _parameters.put( name, value );
     return this;
   }
 
@@ -511,6 +527,7 @@ public class Requester<T>
 
   private <R> R request( String urlSuffix, Http method, Format format, Object jsonValue )
   {
+    urlSuffix = appendParams( urlSuffix );
     switch( format )
     {
       case Json:
@@ -534,6 +551,26 @@ public class Requester<T>
           method, jsonValue, _urlBase, urlSuffix );
     }
     throw new IllegalArgumentException( "format: " + format );
+  }
+
+  private String appendParams( String urlSuffix )
+  {
+    if( _parameters.isEmpty() )
+    {
+      return urlSuffix;
+    }
+
+    boolean firstParam = urlSuffix.indexOf( '?' ) < 0;
+    StringBuilder sb = new StringBuilder( urlSuffix );
+    for( Map.Entry<String, String> entry: _parameters.entrySet() )
+    {
+      sb.append( firstParam ? '?' : '&' )
+        .append( entry.getKey() )
+        .append( '=' )
+        .append( entry.getValue() );
+      firstParam = false;
+    }
+    return sb.toString();
   }
 
   @FunctionalInterface
