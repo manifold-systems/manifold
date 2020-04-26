@@ -4,7 +4,7 @@
 
 ## What is Manifold?
 Manifold [plugins into](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html) Java
-and supplements it with powerful features, including:
+to supplement it with powerful features, including:
 * [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)

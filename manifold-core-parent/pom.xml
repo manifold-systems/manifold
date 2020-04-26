@@ -12,7 +12,7 @@
 
   <name>Manifold :: CoreParent</name>
   <description>
-    Manifold plugins into Java and supplements it with powerful features, including Type-safe Metaprogramming, Extension
+    Manifold plugins into Java to supplement it with powerful features, including Type-safe Metaprogramming, Extension
     Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and more. All fully supported
     in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing project and begin
     taking advantage of it.
