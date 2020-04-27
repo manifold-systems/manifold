@@ -21,14 +21,17 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import abc.Dummy;
+import spark.Spark;
 
 import static org.junit.Assert.assertEquals;
 
 public class RequesterTest
 {
   @BeforeClass
-  public static void init() {
+  public static void init()
+  {
     TestServer.main(new String[0]);
+    Spark.awaitInitialization();
   }
 
   @AfterClass
