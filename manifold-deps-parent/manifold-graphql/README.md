@@ -420,7 +420,7 @@ reinvent the wheel!
 
 <small>
 (Note this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
-</small><br>
+</small><br><br>
 
 >Note fragments are an experimental feature
 
