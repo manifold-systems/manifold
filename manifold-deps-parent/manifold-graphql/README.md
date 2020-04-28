@@ -418,11 +418,9 @@ reinvent the wheel!
 
 # Embedding Queries with Fragments
 
-<small>
-(Note this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
-</small><br>
+>Note, this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
 
->Note fragments are an experimental feature
+>Warning: fragments are an experimental feature
 
 You can now *embed* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
 means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
