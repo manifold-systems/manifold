@@ -18,6 +18,8 @@ package manifold.graphql.request;
 
 import java.util.List;
 import javax.script.Bindings;
+
+import manifold.api.json.Endpoint;
 import manifold.api.json.Requester;
 
 /**
@@ -53,6 +55,13 @@ public class Executor<T>
   public Executor( String url, String operation, String query, Bindings variables )
   {
     _requester = new Requester<>( url );
+    _requester.withHeader( "Content-Type", "application/json" );
+    _reqArgs = GqlRequestBody.create( query, variables );
+  }
+
+  public Executor( Endpoint endpoint, String operation, String query, Bindings variables )
+  {
+    _requester = new Requester<>( endpoint );
     _requester.withHeader( "Content-Type", "application/json" );
     _reqArgs = GqlRequestBody.create( query, variables );
   }

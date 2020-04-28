@@ -18,6 +18,7 @@ begin experimenting with GraphQL using Manifold.
 * [Execute Queries](#execute-queries)
 * [Execute Mutations](#execute-mutations)
 * [HTTP Request Configuration](#http-request-configuration)
+* [Configuring Proxies](#configuring-proxies)
 * [Loading a GraphQL Object](#loading-a-graphql-object)
 * [Writing GraphQL Objects](#writing-graphql-objects)
 * [Copying GraphQL Objects](#copying-graphql-objects)
@@ -229,6 +230,20 @@ query.request(ENDPOINT).withHeader(...)
 // Set a timeout
 query.request(ENDPOINT).withTimeout(...)
 ```
+
+## Configuring Proxies
+
+If your endpoint involves a proxy server, you can setup an `Endpoint` class.
+
+```java
+private static final Endpoint ENDPOINT = 
+  new Endpoint("https://example.com/graphql", "http://my.proxy.com", 4321);
+...
+var result = query.request(ENDPOINT).post();
+```
+An `Endpoint` lets you specify the GraphQL endpoint URL along with a proxy server address, port, and type. Simpler
+constructors allow you to omit the port and/or type, which default to `8080` and `HTTP`. You can also use `Endpoint`
+without a proxy using just a URL.
 
 ## Loading a GraphQL Object
 In addition to creating an object from scratch with `create()` and `build()` you can also load an instance from 

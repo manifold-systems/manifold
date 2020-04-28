@@ -9,6 +9,7 @@
 * [Creating & Building JSON](#creating--building-json)
 * [Loading JSON](#loading-json)
 * [Request REST API services](#request-rest-api-services)
+* [Configuring Proxies](#configuring-proxies)
 * [Writing JSON](#writing-json)
 * [Copying JSON](#copying-json)
 * [Properties Marked `readOnly` or `writeOnly`](#properties-marked-readonly-or-writeonly)
@@ -207,6 +208,21 @@ req.putOne("/$id", user);
 // Delete a User with HTTP DELETE
 req.delete("/$id");
 ```
+
+## Configuring Proxies
+
+If your endpoint involves a proxy server, you can setup an `Endpoint` class.
+
+```java
+private static final Endpoint ENDPOINT = new Endpoint("http://api.example.com/users", "http://my.proxy.com", 4321);
+...
+Requester<User> req = User.request(ENDPOINT);
+...
+req.postOne(user);
+```
+An `Endpoint` lets you specify the REST endpoint URL along with a proxy server address, port, and type. Simpler
+constructors allow you to omit the port and/or type, which default to `8080` and `HTTP`. You can also use `Endpoint`
+without a proxy using just a URL.
 
 ## Writing JSON
 An instance of a JSON API object can be written as formatted text with `write()`:

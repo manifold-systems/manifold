@@ -16,15 +16,12 @@
 
 package manifold.api.json;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import manifold.json.extensions.java.net.URL.ManUrlExt;
 
 /**
  * This class defines methods to simplify making HTTP requests involved with basic REST API calls supporting GET,
@@ -52,7 +49,7 @@ import manifold.json.extensions.java.net.URL.ManUrlExt;
  */
 public class Requester<T>
 {
-  private final String _urlBase;
+  private final Endpoint _endpoint;
   private Format _format;
   private Map<String, String> _headers;
   private Map<String, String> _parameters;
@@ -78,7 +75,15 @@ public class Requester<T>
    */
   public Requester( String urlBase )
   {
-    _urlBase = urlBase;
+    _endpoint = new Endpoint( urlBase );
+    _format = Format.Json;
+    _headers = new HashMap<>();
+    _parameters = Collections.emptyMap();
+    _timeout = 0;
+  }
+  public Requester( Endpoint endpoint )
+  {
+    _endpoint = endpoint;
     _format = Format.Json;
     _headers = new HashMap<>();
     _parameters = Collections.emptyMap();
@@ -532,23 +537,23 @@ public class Requester<T>
     {
       case Json:
         _headers.put( "Accept", "application/json" );
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendJsonRequest( url, m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _urlBase, urlSuffix );
+        return Request.send( ( endpoint, p, m ) -> endpoint.sendJsonRequest( m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _endpoint, urlSuffix );
       case Yaml:
         _headers.put( "Accept", "application/x-yaml, application/yaml, text/yaml;q=0.9" );
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendYamlRequest( url, m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _urlBase, urlSuffix );
+        return Request.send( ( endpoint, p, m ) -> endpoint.sendYamlRequest( m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _endpoint, urlSuffix );
       case Xml:
         _headers.put( "Accept", "application/xml" );
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendXmlRequest( url, m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _urlBase, urlSuffix );
+        return Request.send( ( endpoint, p, m ) -> endpoint.sendXmlRequest( m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _endpoint, urlSuffix );
       case Csv:
         _headers.put( "Accept", "text/csv" );
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendCsvRequest( url, m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _urlBase, urlSuffix );
+        return Request.send( ( endpoint, p, m ) -> endpoint.sendCsvRequest( m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _endpoint, urlSuffix );
       case Text:
-        return Request.send( ( url, p, m ) -> ManUrlExt.sendPlainTextRequest( url, m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _urlBase, urlSuffix );
+        return Request.send( ( endpoint, p, m ) -> endpoint.sendPlainTextRequest( m, jsonValue, _headers, _timeout ),
+          method, jsonValue, _endpoint, urlSuffix );
     }
     throw new IllegalArgumentException( "format: " + format );
   }
@@ -576,24 +581,17 @@ public class Requester<T>
   @FunctionalInterface
   private interface Request
   {
-    Object send( URL url, Object payload, String method );
+    Object send( Endpoint endpoint, Object payload, String method );
 
-    static <R> R send( Request sender, Http method, Object jsonValue, String urlBase, String urlSuffix )
+    static <R> R send( Request sender, Http method, Object jsonValue, Endpoint endpoint, String urlSuffix )
     {
       if( urlSuffix != null )
       {
-        urlBase += urlSuffix;
+        endpoint = endpoint.withUrlSuffix( urlSuffix );
       }
 
-      try
-      {
-        //noinspection unchecked
-        return (R)sender.send( new URL( urlBase ), jsonValue, method.name() );
-      }
-      catch( MalformedURLException e )
-      {
-        throw new RuntimeException( e );
-      }
+      //noinspection unchecked
+      return (R)sender.send( endpoint, jsonValue, method.name() );
     }
   }
 

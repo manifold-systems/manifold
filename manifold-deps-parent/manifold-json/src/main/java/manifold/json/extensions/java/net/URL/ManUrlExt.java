@@ -16,6 +16,7 @@
 
 package manifold.json.extensions.java.net.URL;
 
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import manifold.api.csv.Csv;
@@ -28,10 +29,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 import javax.script.Bindings;
@@ -151,13 +148,18 @@ public class ManUrlExt
   private static String sendRequest( URL url, String httpMethod, Object jsonValue,
                                      Map<String, String> headers, int timeout )
   {
+    return sendRequest( url, Proxy.NO_PROXY, httpMethod, jsonValue, headers, timeout );
+  }
+  private static String sendRequest( URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                     Map<String, String> headers, int timeout )
+  {
     try
     {
       if( jsonValue != null && (httpMethod.equals( "GET") || httpMethod.equals( "DELETE" )) )
       {
         url = makeUrl( url.toString(), jsonValue );
       }
-      HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+      HttpURLConnection conn = (HttpURLConnection)url.openConnection( proxy );
       conn.setRequestMethod( httpMethod );
       conn.setRequestProperty( "Content-Type", "application/x-www-form-urlencoded" );
       headers.forEach( conn::setRequestProperty );
@@ -215,6 +217,11 @@ public class ManUrlExt
   {
     return Json.fromJson( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+  public static Object sendJsonRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Json.fromJson( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+  }
 
   /**
    * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a YAML response.
@@ -236,6 +243,11 @@ public class ManUrlExt
   {
     return Yaml.fromYaml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+  public static Object sendYamlRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Yaml.fromYaml( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+  }
 
   /**
    * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a XML response.
@@ -252,6 +264,11 @@ public class ManUrlExt
   {
     return Xml.fromXml( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
+  public static Object sendXmlRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Xml.fromXml( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+  }
 
   /**
    * Use HTTP GET, POST, PUT, or PATCH to send JSON bindings to a URL with a CSV response.
@@ -267,6 +284,11 @@ public class ManUrlExt
                                         Map<String, String> headers, int timeout )
   {
     return Csv.fromCsv( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+  }
+  public static Object sendCsvRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                        Map<String, String> headers, int timeout )
+  {
+    return Csv.fromCsv( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -288,6 +310,11 @@ public class ManUrlExt
                                              Map<String, String> headers, int timeout )
   {
     return sendRequest( url, httpMethod, jsonValue, headers, timeout );
+  }
+  public static String sendPlainTextRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
+                                             Map<String, String> headers, int timeout )
+  {
+    return sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout );
   }
 
   /**

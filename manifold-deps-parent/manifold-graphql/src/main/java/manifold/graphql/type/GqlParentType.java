@@ -88,6 +88,7 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
 import manifold.api.json.DataBindings;
+import manifold.api.json.Endpoint;
 import manifold.api.json.IJsonBindingsBacked;
 import manifold.api.json.Loader;
 import manifold.api.json.codegen.schema.FormatTypeResolvers;
@@ -358,7 +359,7 @@ class GqlParentType
     addBuilder( srcClass, operation );
     addCreateMethod( srcClass, operation );
     addBuilderMethod( srcClass, operation );
-    addRequestMethod( srcClass, operation );
+    addRequestMethods( srcClass, operation );
     addLoadMethod( srcClass );
     addCopier( srcClass, operation );
     addCopierMethod( srcClass );
@@ -400,7 +401,7 @@ class GqlParentType
     return name;
   }
 
-  private void addRequestMethod( SrcLinkedClass srcClass, OperationDefinition operation )
+  private void addRequestMethods( SrcLinkedClass srcClass, OperationDefinition operation )
   {
     String query = ManEscapeUtil.escapeForJavaStringLiteral( AstPrinter.printAstCompact( operation ) );
     String fragments = getFragments( srcClass );
@@ -413,6 +414,14 @@ class GqlParentType
       .addParam( "url", String.class )
       .returns( new SrcType( "Executor<Result>" ) )
       .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      ) );
+    srcClass.addMethod( new SrcMethod()
+      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
+      .modifiers( Flags.DEFAULT )
+      .name( "request" )
+      .addParam( "endpoint", Endpoint.class )
+      .returns( new SrcType( "Executor<Result>" ) )
+      .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
   }
 
@@ -733,6 +742,7 @@ class GqlParentType
   private void addImports( SrcLinkedClass srcClass )
   {
     srcClass.addImport( Bindings.class );
+    srcClass.addImport( Endpoint.class );
     srcClass.addImport( Executor.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( IBindingType.class );

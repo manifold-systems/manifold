@@ -53,7 +53,6 @@ import manifold.api.util.ManIdentifierUtil;
 import manifold.api.util.ManClassUtil;
 import manifold.api.util.ManEscapeUtil;
 import manifold.api.util.ManStringUtil;
-import manifold.internal.host.SingleModuleManifoldHost;
 
 /**
  * The base JSON Schema type.
@@ -421,13 +420,21 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     return ManEscapeUtil.escapeForJavaStringLiteral( content );
   }
 
-  protected void addRequestMethod( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
+  protected void addRequestMethods( StringBuilder sb, int indent, @SuppressWarnings("unused") String typeName )
   {
     indent( sb, indent );
     //noinspection unused
     sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(String urlBase) {\n" );
     indent( sb, indent );
     sb.append( "  return new Requester<>(urlBase);\n" );
+    indent( sb, indent );
+    sb.append( "}\n" );
+
+    indent( sb, indent );
+    //noinspection unused
+    sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(Endpoint endpoint) {\n" );
+    indent( sb, indent );
+    sb.append( "  return new Requester<>(endpoint);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }

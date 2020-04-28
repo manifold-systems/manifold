@@ -821,7 +821,7 @@ public class JsonStructureType extends JsonSchemaType
     addLoadMethod( sb, indent, typeName );
 
     // Provide a requester(urlBase) method, returns Requester<typeName> with for performing HTTP requests using HTTP GET, POST, PUT, PATCH, & DELETE
-    addRequestMethod( sb, indent, typeName );
+    addRequestMethods( sb, indent, typeName );
 
     // Allow non-schema json files to load from themselves easily, also corresponds with @FragmentValue added to toplevel class
     addFromSourceMethod( sb, indent );
