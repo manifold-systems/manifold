@@ -13,6 +13,7 @@ layout: default
 * [Download](#download)
 * [License](#license)
 * [Author](#author)
+* (_New!_) [Forum](#forum)
 
 # Overview
 
@@ -394,3 +395,7 @@ For more information contact: [admin@manifold.systems](mailto:admin@manifold.sys
 # Author
 
 * [Scott McKinney](mailto:scott@manifold.systems)
+
+# Forum
+Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
+a discussion, ask questions, provide feedback, etc. Someone is usually there to help.

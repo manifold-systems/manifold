@@ -16,6 +16,9 @@ to supplement it with powerful features, including:
 All fully supported in Java 8 - 13 with comprehensive support in IntelliJ IDEA. Simply add Manifold to your existing
 project and begin taking advantage of it.
 
+> _**New:**_ Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to
+> start a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
+
 ## What can you do with Manifold?
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
@@ -236,6 +239,10 @@ by the core framework. Each project represents a separate **dependency** you can
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
 >* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 <br>
+
+### Forum
+Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
+a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
 ### [Learn More](http://manifold.systems/docs.html)
 <br>
