@@ -132,7 +132,6 @@ public class UrlClassLoaderWrapper
       {
         wrapReaders();
       }
-      IjPluginIntegration.addUrlToIntelliJPluginClassLoader( _loader, url );
     }
     catch( Exception e )
     {

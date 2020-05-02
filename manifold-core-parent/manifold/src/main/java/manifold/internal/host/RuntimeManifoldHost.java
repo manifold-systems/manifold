@@ -29,7 +29,6 @@ import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import manifold.api.fs.IDirectory;
 import manifold.api.host.IRuntimeManifoldHost;
-import manifold.internal.runtime.IjPluginIntegration;
 import manifold.internal.runtime.UrlClassLoaderWrapper;
 import manifold.api.util.SourcePathUtil;
 import manifold.util.concurrent.LockingLazyVar;
@@ -162,13 +161,7 @@ public class RuntimeManifoldHost extends SingleModuleManifoldHost implements IRu
           }
         }
       }
-      ClassLoader parent = loader.getParent();
-      if( parent == null )
-      {
-        // IntelliJ's PluginClassLoader is special
-        parent = IjPluginIntegration.getParent( loader );
-      }
-      loader = parent;
+      loader = loader.getParent();
     }
 //    addBootstrapClasses( ll );
     return ll;
