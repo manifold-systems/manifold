@@ -13,6 +13,16 @@
 * [Versioning](#versioning)
 * [Author](#author)
 
+Add the `manifold-ext` dependency to your project to enable a broad set of functionality to improve your development
+experience with Java.
+Use [extension classes](#extension-classes-via-extension) to add new methods and other features to existing classes.
+Enable types to participate as operands in arithmetic and other expressions with [operator overloading](#operator-overloading).
+Experiment with [unit expressions](#unit-expressions) as a new way to improve readability and to avoid costly
+unit-related errors.
+Escape the rigidity of nominal typing with [structural interfaces](#structural-interfaces-via-structural).
+Avoid the tedium and error-prone nature of Java reflection using [type-safe reflection](#type-safe-reflection-via-jailbreak).
+Utilize the [self](#the-self-type-via-self) type as a simple alternative to reflective generic types.
+ 
 # Extension Classes via `@Extension`
 
 Similar to other languages such as [C#](https://docs.microsoft.com/en-us/dotnet/csharp/csharp),
@@ -22,17 +32,20 @@ class is a normal Java class you define as a container for features you want to 
 you can't modify directly, such as `java.lang.String`:
 
 ```java
+// package name ends with "extensions." + extended class name
 package extensions.java.lang.String;
 
 import manifold.ext.api.*;
 
+// Defines methods logically added to String
 @Extension
 public class MyStringExtension {
-
+  // Add print() instance method to String via @This
   public static void print(@This String thiz) {
     System.out.println(thiz);
   }
 
+  // Add lineSeparator() static method to String via @Extension
   @Extension
   public static String lineSeparator() {
     return System.lineSeparator();

@@ -19,18 +19,8 @@ package manifold.internal.javac;
 import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
-import java.io.File;
-import java.util.List;
-import java.util.Set;
-import manifold.api.fs.IFile;
-import manifold.api.fs.IFileSystem;
-import manifold.api.host.IModule;
-import manifold.api.type.ITypeManifold;
-import manifold.internal.host.JavacManifoldHost;
+
 import manifold.util.ReflectUtil;
-
-
-import static manifold.api.type.ContributorKind.Supplemental;
 
 public class ManCheck extends Check
 {
@@ -59,60 +49,10 @@ public class ManCheck extends Check
   @Override
   public void reportDeferredDiagnostics()
   {
-    compileRemainingTypes();
+    // compile manifold types that were not referenced directly or indirectly from explicitly compiled Java files
+    StaticCompiler.instance().compileRemainingTypes_ByFile();
+    StaticCompiler.instance().compileRemainingTypes_ByTypeNameRegexes();
+
     super.reportDeferredDiagnostics();
-  }
-
-  private void compileRemainingTypes()
-  {
-    if( _enterGuard )
-    {
-      return;
-    }
-    _enterGuard = true;
-
-    List<String> others = JavacPlugin.instance().getOtherInputFiles();
-    JavacManifoldHost host = JavacPlugin.instance().getHost();
-    IFileSystem fs = host.getFileSystem();
-    for( String path: others )
-    {
-      IFile file = fs.getIFile( new File( path ) );
-      if( file.exists() )
-      {
-        IModule module = host.getSingleModule();
-        Set<ITypeManifold> tms = module.findTypeManifoldsFor( file,
-          tm -> tm.getContributorKind() != Supplemental );
-        if( tms.isEmpty() )
-        {
-          //todo: add compiler error
-          continue;
-        }
-        ITypeManifold tm = tms.iterator().next();
-        String[] types = tm.getTypesForFile( file );
-        if( types == null || types.length == 0 )
-        {
-          //todo: add compile error
-          continue;
-        }
-
-        tm.enterPostJavaCompilation();
-
-        // Cause the types to compile
-        for( String fqn: types )
-        {
-          // place gosu class in JavaCompiler's todo list
-          ClassSymbols.instance( module ).getClassSymbol( JavacPlugin.instance().getJavacTask(), fqn );
-        }
-      }
-    }
-
-    JavaCompiler javaCompiler = JavaCompiler.instance( JavacPlugin.instance().getContext() );
-    if( !javaCompiler.todo.isEmpty() )
-    {
-      // compile gosu classes we just loaded
-      ReflectUtil.method( javaCompiler, "compile2" ).invoke();
-    }
-
-    _enterGuard = false;
   }
 }

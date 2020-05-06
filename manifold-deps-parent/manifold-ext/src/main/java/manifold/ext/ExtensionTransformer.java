@@ -1280,8 +1280,7 @@ public class ExtensionTransformer extends TreeTranslator
         .filter( tm -> tm.getContributorKind() != ContributorKind.Supplemental )
         .forEach( tm ->
           {
-            boolean match = !all && tm.handlesFileExtension( ext );
-            if( all || match )
+            if( all || tm.handlesFileExtension( ext ) )
             {
               String classname = tm.getClass().getTypeName();
               Set<String> regexes = typeNames.computeIfAbsent( classname, e -> new HashSet<>() );
@@ -1307,6 +1306,7 @@ public class ExtensionTransformer extends TreeTranslator
             // the type will be compiled to disk.
             IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fqn );
           }
+          break;
         }
       }
     }

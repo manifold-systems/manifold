@@ -34,10 +34,13 @@ import java.lang.annotation.RetentionPolicy;
  * <pre><code>
  * &#64;Precompile() </code></pre>
  * compiles all types from all type manifolds used in the module.
+ *
+ * @deprecated Use -Amanifold.resource.&lt;file-ext&gt;=[type-name-regex] javac command line arguments.
  */
 @SuppressWarnings("unused")
 @Retention(RetentionPolicy.SOURCE)
 @Repeatable(Precompiles.class)
+@Deprecated
 public @interface Precompile
 {
   /**
@@ -49,7 +52,7 @@ public @interface Precompile
   Class<? extends ITypeManifold> typeManifold() default ITypeManifold.class;
 
   /**
-   * An file extension name e.g., {@code "json"}, handled by the Type Manifold class defining the domain of types to compile.
+   * A file extension name e.g., {@code "json"}, handled by the Type Manifold class defining the domain of types to compile.
    * This value is an alternative to {@link #typeManifold()} as a simple way to indirectly specify the {@link ITypeManifold}.
    * If both arguments are present, {@link #typeManifold()} has precedence.
    * <p/>
@@ -58,9 +61,9 @@ public @interface Precompile
   String fileExtension() default "*";
 
   /**
-   * A regular expression defining the range of types that should be compiled
-   * from {@code typeManifold} via {@link ITypeManifold#getAllTypeNames()}.
-   * The default value {@code "*."} compiles <i>all</i> types.
+   * A regular expression defining the range of types that should be compiled from {@link #typeManifold} or
+   * {@link #fileExtension} via {@link ITypeManifold#getAllTypeNames()}. The default value {@code ".*"} compiles
+   * <i>all</i> types originating from the specified type manifold.
    */
   String typeNames() default ".*";
 }

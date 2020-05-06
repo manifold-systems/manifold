@@ -13,8 +13,9 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [The API](#the-api)
 * [Anatomy of a Type Manifold](#anatomy-of-a-type-manifold)
 * [Modes](#modes)
+* [Static Compilation](#static-compilation)
+* [Programming Language Manifolds](#programming-language-manifolds)
 * [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
-* [Using `@Precompile`](#using-precompile)
 * [IDE Support](#ide-support)
 * [Projects](#projects)
 * [Sample Projects](#sample-projects)
@@ -311,9 +312,147 @@ sources when you build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
-> Note, you can use `@Precompile` to instruct the Java compiler to compile a set of specified types regardless of 
-whether or not you use them directly in your code e.g., if your code is an API.  See [Using @Precompile](#using-precompile).
+> Note, you can use `javac` command line arguments to statically compile a set of specified types whether or not you use
+> them directly in your code e.g., if type-safe resources are part of an API.  See [Static Compilation](#static-compilation)
+> next.
  
+# Static Compilation
+
+By default Manifold compiles resource types to disk as the Java compiler encounters them in your code. Thus, a resource that
+is never referenced as a type is not compiled. For example, if you have hundreds of JSON resource files, but
+your project only uses a handful with Manifold, compiling the others could significantly impact build time. There are cases,
+however, where *your* code may not be the only consumer of resource types, but you still want resource types to
+statically compile. For instance, you could provide an API that defines a query model in terms of GraphQL files --
+*consumers* of your project must access the query types. Although Manifold still works in situations like this (see
+[Modes](#modes) above), it does so by compiling types *dynamically* at runtime, which entails a performance bump the
+first time each type loads. If need be, you can avoid the runtime compilation cost using static compilation with `javac`
+command line options.
+
+Manifold provides `-Akey=value` javac command line options to statically compile resources either by _type name_ using
+regular expressions or by _file name_ using file system paths. Constraining by type name is the simplest and more
+flexible of the two, especially in terms of build systems such as Maven and Gradle.
+
+## By Type Name
+
+Use the `-Amanifold.source.<file-ext>=<type-name-regex>` javac command line option to specify Manifold types that should
+statically compile, whether or not they are referenced elsewhere in Java source. 
+
+An easy way to tell the Java compiler to compile *all* the files corresponding with all the type manifolds enabled in
+your project:
+```java
+javac -Amanifold.source.*=.* ...
+```
+The `*` wildcard selects all type manifolds and the `.*` regular expression selects all types for each type manifold,
+therefore all types expressible through Manifold are statically compiled to disk with javac. 
+
+You can limit compilation to types relating to a specific file extension. For instance, if you are using the [JSON manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
+and you want all your JSON files to be statically compiled:
+```
+javac -Amanifold.source.json=.* ...
+```
+
+Define several arguments and use any regular expression to refine the set of types to compile:
+```
+javac -Amanifold.source.json=.* -Amanifold.source.gql=^com\.example\..*Queries$ ...
+```
+This tells the compiler to compile all JSON files and to compile [GraphQL types](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+in package `com.example` ending with `Queries`.
+
+If need be, you can use regular expressions to invert or "black list" inclusions.
+```
+javac -Amanifold.source.gql=^(?!(com\.example\..*Queries)).*$ ...
+```
+Here all GraphQL types compile _except_ those in package `com.example` ending with `Queries`.
+ 
+Using the `class:` prefix you can constrain compilation by the class name of a type manifold. This is useful for
+type manifolds not based on files or file extensions. 
+```
+javac -Amanifold.source.class:com.example.MySpecialTypeManifold=.* ...
+```
+>Note, as a reminder, the javac command line arguments are additive with respect to types compiled to disk. As a general
+>rule Manifold types referenced in Java source are _always_ compiled, regardless of command line argument constraints.
+
+## By File Name
+
+Using path-based javac `-Akey=value` argument you can enumerate resource files that should compile statically regardless
+of whether or not the files are referenced in your code.
+```
+javac -Aother.source.files=/myproject/src/main/resources/com/example/Queryies.gql /myproject/src/main/resources/com/example/Mutations.gql ...
+``` 
+
+Use `other.source.list` to specify a file that contains a list of resource files that should compile statically
+regardless of whether or not the files are referenced in your code. The file contains a single resource path per line.
+```
+javac -Aother.source.list=/myproject/target/otherfiles.txt ...
+```
+
+## Build Tooling
+
+If you define your project with **Maven**, you can statically compile with javac arguments like this:
+```xml
+  <!-- Configure Manifold as a Javac plugin -->
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>3.8.0</version>
+    <configuration>
+      <source>8</source>
+      <target>8</target>
+      <encoding>UTF-8</encoding>
+      <compilerArgs>
+        <arg>-Xplugin:Manifold</arg>
+        <arg>-Amanifold.source.json=.*</arg>
+        <arg>-Amanifold.source.gql=^com\.example\..*Queries$</arg>
+      </compilerArgs>
+    </configuration>
+  </plugin>
+```
+
+Similarly, with Gradle you add the arguments like this:
+```groovy
+compileJava {
+  options.compilerArgs += 
+    ['-Xplugin:Manifold',
+     '-Amanifold.source.json=.*', 
+     '-Amanifold.source.gql=^com\\.example\\..*Queries$']
+}
+```
+
+## Exposing Resource Types
+
+Another benefit from statically compiling resources relates to resource exposure. If your resources are statically
+compiled, they are available for use as .class files, not only from your own code, but also from potential consumers
+of your code. This is an important distinction to make because if you _don't_ statically compile resources that are
+intended for use outside your project, say as part of an API you provide, those resources are not discoverable from
+another module using Manifold unless you explicitly expose them from your JAR-based artifact. You can do that using the
+`Contains-Sources` manifest entry.
+
+```xml
+  <plugin>
+     <groupId>org.apache.maven.plugins</groupId>
+     <artifactId>maven-jar-plugin</artifactId>
+     <configuration>
+       <archive>
+         <manifestEntries>
+           <!--expose GraphQL files if they are NOT statically compiled in your project-->
+           <Contains-Sources>gql</Contains-Sources>
+           <!--JPMS module name-->
+           <Automatic-Module-Name>mymodule</Automatic-Module-Name>
+         </manifestEntries>
+       </archive>
+     </configuration>
+   </plugin>
+```
+Although Manifold could use the entire class path as the domain of potential type-safe resources, doing so may impact
+performance. That's why you must opt-in your module's resources for externally use. It bears repeating, if you
+statically compile all the resources intended for use outside your project, you _**do not**_ need to declare them in
+your JAR -- they are already available as .class files.  
+
+
+# Programming Language Manifolds
+
+todo: use the Javascript manifold as a simple impl, and the Gosu manifold as a more complex one as reference material for
+this section  
 
 # Embedding with Fragments (experimental)
 
@@ -447,51 +586,6 @@ value type, which must be contravariant with the `methodName` return type. See t
 [GraphQL type manifold implementation](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-graphql/src/main/java/manifold/graphql/type/GqlParentType.java)
 for a reference.
 
-
-# Using `@Precompile`
-
-By default a Type Manifold compiles a resource type only if you use it somewhere in your code.  Normally this is 
-desirable because if you don't use it as a Java class, why compile it?  There are cases, however, where *your*
-code may not be the only code that potentially uses the resources.  For instance, if your project provides an API
-in terms of JSON Schema files, there's a good chance your project doesn't use the JSON directly -- but consumers of your API do.
-A similar case involves a mutli-module Java 11 project where a module provides resource files, but only dependent modules
-use them as Manifold types.  Although Manifold works in both of these situations, it compiles the types dynamically,
-which entails a one time performance bump the first time each class is used at runtime. For cases like these you can
-avoid dynamic compilation using the `@Precompile` annotation.
-
-You can annotate any class in your project/module with `@Precompile`. For example, if you are using the JSON manifold,
-you can instruct the Java compiler to compile all `.json` files regardless of whether or not your module uses them as
-types:
-```java
-@Precompile(fileExtension = "json")
-public class Main {
-  ...
-}
-```
-
-You can refine `@Precompile` to compile only files matching a regex pattern:
-```java
-@Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
-```
-This tells the compiler to precompile YAML files in package `com.abc` starting with `"My"`.
-
-You can also specify the type manifold class.  This example is logically the same as the previous one:
-```java
-@Precompile(typeManifold = YamlTypeManifold.class, typeNames = "com.abc.(My)+")
-```
-
-You can also stack `@Precompile`:
-```java
-@Precompile(fileExtension = "json", typeNames = "com.abc.(My)+")
-@Precompile(fileExtension = "yml", typeNames = "com.abc.(My)+")
-```
-This tells the compiler to precompile all JSON and YAML files in package `com.abc` starting with `"My"`.
-
-Finally, an easy way to tell the Java compiler to compile *all* the files corresponding with all the type manifolds
-enabled in your module:
-```java
-@Precompile
-```
 
 # IDE Support 
 

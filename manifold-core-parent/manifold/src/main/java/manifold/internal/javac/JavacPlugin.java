@@ -114,6 +114,8 @@ public class JavacPlugin implements Plugin, TaskListener
     ARG_STRINGS,
   };
 
+  /** javac command line arguments for static compilation */
+  private static final String MANIFOLD_SOURCE_MAPPING = "manifold.source.";
   private static final String OTHER_SOURCE_FILES = "other.source.files";
   private static final String OTHER_SOURCE_LIST = "other.source.list";
 
@@ -146,6 +148,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private JavaFileManager _fileManager;
   private BasicJavacTask _javacTask;
   private Set<Pair<String, JavaFileObject>> _javaInputFiles;
+  private Map<String, String> _otherSourceMappings;
   private List<String> _otherInputFiles;
   private TypeProcessor _typeProcessor;
   private IssueReporter _issueReporter;
@@ -293,6 +296,11 @@ public class JavacPlugin implements Plugin, TaskListener
     return _javaInputFiles;
   }
 
+  public Map<String, String> getOtherSourceMappings()
+  {
+    return _otherSourceMappings;
+  }
+
   @SuppressWarnings("unused")
   public List<String> getOtherInputFiles()
   {
@@ -336,6 +344,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _fileManager = getContext().get( JavaFileManager.class );
       _javaInputFiles = new HashSet<>();
       _otherInputFiles = fetchOtherInputFiles();
+      _otherSourceMappings = fetchManifoldSourceMappings();
       _typeProcessor = new TypeProcessor( getHost(), _javacTask );
       _issueReporter = new IssueReporter( _javacTask::getContext );
       _seenModules = new HashMap<>();
@@ -856,6 +865,26 @@ public class JavacPlugin implements Plugin, TaskListener
     }
 
     return files;
+  }
+
+  private Map<String, String> fetchManifoldSourceMappings()
+  {
+    Map<String, String> sourceMappings = new HashMap<>();
+    Map<String, String> options = JavacProcessingEnvironment.instance( getContext() ).getOptions();
+    for( Map.Entry<String, String> option: options.entrySet() )
+    {
+      String key = option.getKey();
+      if( key.startsWith( MANIFOLD_SOURCE_MAPPING ) )
+      {
+        // class:tm-class-name -> type-name-regex
+        // or
+        // file-ext -> type-name-regex
+
+        String fqnOrExt = key.substring( MANIFOLD_SOURCE_MAPPING.length() );
+        sourceMappings.put( fqnOrExt, option.getValue() );
+      }
+    }
+    return sourceMappings;
   }
 
   private String getOtherSourceFilesProperty( Map<String, String> options )
