@@ -891,7 +891,7 @@ dependency.
 
 Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
 provided by the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-dependency. Simply by importing the static constants from `RangeRun` you can easily work with ranges:
+dependency. Simply by importing the static constants from `RangeFun` you can easily work with ranges:
 ```java
 Range range = 1 to 5;
 ```
