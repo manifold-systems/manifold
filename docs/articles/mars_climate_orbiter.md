@@ -98,7 +98,8 @@ There's much more to Manifold's treatment of physical quantities, but the intent
 use the framework to strengthen an API with type-safety around physical quantity usage. Of course, you can use the
 framework anywhere in your code where type-safe quantities could improve your development experience. Hopefully you'll
 never have to experience a unit failure of the Mars Climate Orbiter caliber!  
-
+<br>
+<br>
 <a class="anchor" id="1"></a>
 _<sup>1</sup>The receiving system's API (SIS) was defined in terms of raw data to be deserialized from a file. The
 format of the file was not type-safe and did not include a unit of measure._ 
