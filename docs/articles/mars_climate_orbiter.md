@@ -1,11 +1,11 @@
-# Type-safe, Error-proof Unit Expressions for Java (and you)
+# Type-safe Unit Expressions for Java (and you)
 
->The famous unit error involving NASA's Mars Climate Orbiter provides a sobering reminder that units of measure are
->often overlooked in the context of type-safety. Although the mishap did not involve Java, we can use it to illustrate
->how a Java API can be vulnerable in its use of physical quantities and how the [Manifold framework](https://github.com/manifold-systems/manifold)
->can be used toward a general solution. In particular, this article briefly demonstrates how Manifold's [operator overlaoding](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+>Units of measure are often overlooked in the context of type-safety. We need look no further than the infamous unit
+>error involving NASA's Mars Climate Orbiter to illustrate why type-safety around units matters. Here we model the failure
+>in simple terms to show how a Java API can be vulnerable in its use of physical quantities. This article briefly
+>demonstrates how the Manifold framework's [extension](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 >and [science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
->libraries can be used to introduce type-safe units and quantities into your code. 
+>libraries can be applied toward a general solution using type-safe units and quantities. 
 
 <p><img src="http://manifold.systems/images/m98-14-stg3ign.jpg" alt="echo method" width="60%" height="60%"/></p>
 
@@ -61,16 +61,14 @@ orbiter.performManeuver(momentum);
 Momentum momentum = new Momentum(222.41108075988, MomentumUnit.NEWTON_SECONDS);
 orbiter.performManeuver(momentum);
 ```
-Both calls apply the same quantity of Momentum, which is a big win. But how do we work with Momentum? One advantage of
-using primitive types is that they're easy use. We want the best of both worlds. Manifold delivers via operator
-overloading using the [Extension library](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext).
-It introduces type-safe _units expressions_:
+Both calls apply the same quantity of Momentum, which is a big win. But how do we *work* with Momentum? One advantage of
+using primitive types is that they're easy use. Manifold maintains ease of use with type-safe [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions):
 ```java
 Momentum momentum = 50 lbf s;
 // or
 Momentum momentum = 222.41108075988 N s;
 ```
-Additionally, with the aid of [operator overlaoding](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+Additionally, with the aid of Manifold-provided [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 we have the convenience of type-safe arithmetic across the entire spectrum of physical dimensions. For instance, the
 science library defines the product of `Force` and `Time` as a quantity of `Momentum`.
 ```java
@@ -83,8 +81,8 @@ Equality and relational expressions are equally handy:
 out.println(50 lbf s > 222 N s); // true
 ```
 Eventually, physical calculations lead to interfacing with the outside world. Whether that's displaying results on a
-screen or interacting with a spacecraft, the software must produce _specific_ quantities to share. Thus, we need simple,
-type-safe unit conversions and numeric data access. All the physical dimension classes provide a common interface:
+screen or interacting with a spacecraft, the software must produce _specific_ quantities to share. Manifold's physical
+dimension classes provide a common interface for unit conversions and data access:
 ```java
 log("Burning: ${momentum.to(N s)}");
 Time duration = 10 s;
