@@ -51,7 +51,7 @@ public void performManeuver(Momentum momentum) {
 }
 ```  
 The `Momentum` type is taken from the Manifold framework's [Science library](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science).
-A quantities of `Momentum` is expressed in terms of `MomentumUnit`. Further, `Momentum` stores its value in terms of SI
+A quantity of `Momentum` is expressed in terms of `MomentumUnit`. Further, `Momentum` stores its value in terms of SI
 units, while remembering the type of unit used to create an instance. As such, all calculations are inherently
 unit-independent. We can now call `performManeuver()` with our preferred unit of measure:
 ```java
@@ -89,6 +89,11 @@ Time duration = 10 s;
 Force force = momentum / duration;
 device.burn(force.fpValue(), duration.fpValue());
 ```
+
+>It's worth mentioning the [Manifold Plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold)
+provides comprehensive support for all of the framework's features. Download it free for Community Edition and there's
+a free trial for Ultimate Edition.
+
 There's much more to Manifold's treatment of physical quantities, but the intent here is to briefly demonstrate how to
 use the framework to strengthen an API with type-safety around physical quantity usage. Of course, you can use the
 framework anywhere in your code where type-safe quantities could improve your development experience. Hopefully you'll
