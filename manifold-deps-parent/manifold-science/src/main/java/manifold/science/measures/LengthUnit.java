@@ -125,10 +125,18 @@ public final class LengthUnit extends AbstractPrimaryUnit<Length, LengthUnit>
   {
     return AreaUnit.get( this, len );
   }
+  public AreaUnit postfixBind( LengthUnit f )
+  {
+    return times( f );
+  }
 
   public VolumeUnit times( AreaUnit area )
   {
     return VolumeUnit.get( this, area );
+  }
+  public VolumeUnit postfixBind( AreaUnit f )
+  {
+    return times( f );
   }
 
   public EnergyUnit times( ForceUnit f )

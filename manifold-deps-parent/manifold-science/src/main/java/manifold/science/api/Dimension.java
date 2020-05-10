@@ -19,6 +19,8 @@ package manifold.science.api;
 import manifold.ext.api.ComparableUsing;
 import manifold.science.util.Rational;
 
+import java.io.Serializable;
+
 /**
  * {@code Dimension} is the basis for a physical dimension. It models a dimension has having a measure represented as a
  * {@link Rational} value and common arithmetic operations which also serve as operator overloads.
@@ -26,7 +28,7 @@ import manifold.science.util.Rational;
  *
  * @param <S> Abstract dimension types are recursively defined to enforce type-safety
  */
-public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>
+public interface Dimension<S extends Dimension<S>> extends ComparableUsing<S>, Serializable
 {
   /**
    * Given a value produce a copy of this dimension with the given value

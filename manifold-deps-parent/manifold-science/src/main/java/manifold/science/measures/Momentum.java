@@ -63,4 +63,9 @@ public final class Momentum extends AbstractMeasure<MomentumUnit, Momentum>
   {
     return new Mass( toBaseNumber() / v.toBaseNumber(), MassUnit.BASE, getDisplayUnit().getMassUnit() );
   }
+
+  public Force div( Time t )
+  {
+    return new Force( toBaseNumber() / t.toBaseNumber(), ForceUnit.BASE, getDisplayUnit() / t.getDisplayUnit() );
+  }
 }

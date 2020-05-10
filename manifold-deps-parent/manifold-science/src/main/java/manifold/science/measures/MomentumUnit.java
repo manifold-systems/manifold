@@ -70,4 +70,9 @@ public final class MomentumUnit extends AbstractProductUnit<MassUnit, VelocityUn
   {
     return getMassUnit();
   }
+
+  public ForceUnit div( TimeUnit t )
+  {
+    return ForceUnit.get( getMassUnit(), getVelocityUnit() / t );
+  }
 }

@@ -78,6 +78,10 @@ public final class ForceUnit extends AbstractProductUnit<MassUnit, AccelerationU
   {
     return MomentumUnit.get( getMassUnit(), VelocityUnit.get( getAccUnit().getVelocityUnit().getLengthUnit(), t ) );
   }
+  public MomentumUnit prefixBind( TimeUnit t )
+  {
+    return times( t );
+  }
 
   public MassUnit div( AccelerationUnit acc )
   {

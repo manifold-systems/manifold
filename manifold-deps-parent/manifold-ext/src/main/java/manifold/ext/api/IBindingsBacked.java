@@ -28,7 +28,7 @@ import javax.script.Bindings;
 public interface IBindingsBacked
 {
   /**
-   * The {@link Bindings} object used to store name/value pairs corresponding with gettter/setter methods.
+   * The {@link Bindings} object used to store name/value pairs corresponding with getter/setter methods.
    */
   Bindings getBindings();
 }
