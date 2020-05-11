@@ -1,7 +1,10 @@
 # Type-safe Unit Expressions for Java (and you)
 
+<small>Scott McKinney</small>
+<br>
+
 >Unit type-safety, or lack thereof, can have real consequences, sometimes disastrous ones. This article
->briefly demonstrates how the Manifold framework's [extension](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+>briefly demonstrates how the [Manifold](https://github.com/manifold-systems/manifold) framework's [extension](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 >and [science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 >libraries can be applied toward a general solution using type-safe units and quantities. 
 
@@ -34,7 +37,7 @@ public void performManeuver(double momentum) {
     // fire thrusters and stuff
 }
 ```  
-Perhaps this is the real tragedy? Sure, the documentation requires SI units, but the documentation doesn't compile code.
+Perhaps this is the real tragedy? Sure, the documentation specifies SI units, but the documentation doesn't compile code.
 Javac will make darn sure callers pass a double, but it knows not of linear momentum or SI units, unless you tell it.
 
 As a general rule, if the compiler can enforce what otherwise must be documented, favor the compiler! So let's replace
@@ -100,3 +103,5 @@ There's much more to Manifold's treatment of physical quantities. The intent her
 type-safety with respect to API usage of physical quantities and how to apply Manifold toward making improvements. Of
 course, you can use the framework anywhere in your code where type-safe quantities could improve your development
 experience. Hopefully, you'll never have to experience a unit failure of the Mars Climate Orbiter caliber!
+
+> Visit [Manifold](http://manifold.systems/) to learn more. 
