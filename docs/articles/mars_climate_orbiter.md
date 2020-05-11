@@ -24,9 +24,9 @@ Whoops! The report also reveals several missed opportunities that could have oth
 gaps in communication were viewed as central to the point of failure. But one must wonder, if the problem manifested in
 software, why wasn't more attention placed there? 
 
-To rehash, one system provided quantities of linear momentum as pound seconds (lbf s) for another system expecting
-Newton seconds (N s). The receiving system's API, consisting of a data format, failed to model the quantities
-type-safely, instead the API accepted raw numeric data. A simplified illustration:
+To rehash, one system provided quantities of linear momentum as pound-seconds (lbf s) for another system expecting
+newton-seconds (N s). The receiving system's API, consisting of a data format, failed to model the quantities
+type-safely. Instead, the API accepted raw numeric data. A simplified illustration:
 ```java
 /**
  * Position the orbiter for optimal trajectory. Don't mess this up!
@@ -106,4 +106,5 @@ type-safety with respect to API usage of physical quantities and how to apply Ma
 course, you can use the framework anywhere in your code where type-safe quantities could improve your development
 experience. Hopefully, you'll never have to experience a unit failure of the Mars Climate Orbiter caliber!
 
+> The sample code from this article is [available on github]().
 > Visit [Manifold](http://manifold.systems/) to learn more. 

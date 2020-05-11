@@ -21,13 +21,13 @@ import manifold.science.api.UnitCache;
 import manifold.science.util.Rational;
 
 
-import static manifold.science.measures.MassUnit.Kilogram;
+import static manifold.science.util.CoercionConstants.r;
 
 public final class MomentumUnit extends AbstractProductUnit<MassUnit, VelocityUnit, Momentum, MomentumUnit>
 {
   private static final UnitCache<MomentumUnit> CACHE = new UnitCache<>();
 
-  public static final MomentumUnit BASE = get( Kilogram, VelocityUnit.BASE );
+  public static final MomentumUnit BASE = get( MassUnit.BASE, VelocityUnit.BASE, 1 r, "newton-second", "N⋅s" );
 
   public static MomentumUnit get( MassUnit massUnit, VelocityUnit velocityUnit )
   {
