@@ -106,5 +106,6 @@ type-safety with respect to API usage of physical quantities and how to apply Ma
 course, you can use the framework anywhere in your code where type-safe quantities could improve your development
 experience. Hopefully, you'll never have to experience a unit failure of the Mars Climate Orbiter caliber!
 
-> The sample code from this article is [available on github]().
+> The sample code from this article is [available on github](https://github.com/manifold-systems/mars-orbiter-article).
+>
 > Visit [Manifold](http://manifold.systems/) to learn more. 
