@@ -89,12 +89,14 @@ out.println(50 lbf s > 222 N s); // true
 ```
 Eventually, physical calculations lead to interfacing with the outside world. Whether that's displaying results on a
 screen or interacting with a spacecraft, the software delivers _specific_ values. Manifold's physical dimension
-classes provide a common interface for unit conversions and data access:
+classes provide a common interface for unit conversions and data access. You can also use string interpolation to easily
+format output:
 ```java
-log("Burning: ${momentum.to(N s)}");
+Momentum momentum = 222.41108075988 N s;
 Time duration = 10 s;
 Force force = momentum / duration;
-device.burn(force.toNumber(), duration.toNumber());
+out.println("$duration burn at $force");
+out.println("$duration burn at ${force.to(lbf)}");
 ```
 >Note, the [Manifold Plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold) provides
 >comprehensive support for all of the framework's features. It is free for use with IDEA Community Edition.
