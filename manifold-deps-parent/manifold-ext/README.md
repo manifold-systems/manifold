@@ -686,6 +686,11 @@ If the type of `a` implements `R prefixBind(B)` where `B` is assignable from the
 method call `a.prefixBind(b)` having type `R`. Otherwise, if the type of `b` implements `R postfixBind(A)` where `A` is
 assignable from the type of `a`, then `a b` compiles as the method call `b.postfixBind(a)` having type `R`.
 
+For instance, the unit operator enables concise, type-safe expressions of physical quantities: 
+```java
+Mass weight = 65 kg;
+Length distance = 70 mph * 3.5 hr;
+```
 Read more about [unit expressions](#unit-expressions) later in this document.
  
 ## Operators by Extension Methods 
