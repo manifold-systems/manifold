@@ -91,6 +91,7 @@ import manifold.api.json.DataBindings;
 import manifold.api.json.Endpoint;
 import manifold.api.json.IJsonBindingsBacked;
 import manifold.api.json.Loader;
+import manifold.api.json.Requester;
 import manifold.api.json.codegen.schema.FormatTypeResolvers;
 import manifold.api.json.codegen.schema.IJsonFormatTypeResolver;
 import manifold.api.json.codegen.schema.JsonFormatType;
@@ -423,6 +424,14 @@ class GqlParentType
       .returns( new SrcType( "Executor<Result>" ) )
       .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
+    srcClass.addMethod( new SrcMethod()
+      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
+      .modifiers( Flags.DEFAULT )
+      .name( "request" )
+      .addParam( "requester", new SrcType( "Supplier<Requester<Bindings>>" ) )
+      .returns( new SrcType( "Executor<Result>" ) )
+      .body( "return new Executor<Result>(requester, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      ) );
   }
 
   private String getFragments( SrcLinkedClass srcClass )
@@ -744,6 +753,7 @@ class GqlParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( Endpoint.class );
     srcClass.addImport( Executor.class );
+    srcClass.addImport( Requester.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( IBindingType.class );
     srcClass.addImport( IJsonBindingsBacked.class );
@@ -752,6 +762,7 @@ class GqlParentType
     srcClass.addImport( Loader.class );
     srcClass.addImport( Map.class );
     srcClass.addImport( RuntimeMethods.class );
+    srcClass.addImport( Supplier.class );
     srcClass.addImport( NotNull.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
