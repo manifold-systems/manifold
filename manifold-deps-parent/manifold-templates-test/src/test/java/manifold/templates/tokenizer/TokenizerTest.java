@@ -2,7 +2,7 @@ package manifold.templates.tokenizer;
 
 import java.util.Collections;
 import java.util.List;
-import manifold.strings.api.DisableStringLiteralTemplates;
+import manifold.api.DisableStringLiteralTemplates;
 import manifold.templates.tokenizer.Token.TokenType;
 import org.junit.Test;
 

@@ -41,7 +41,7 @@ import manifold.api.csv.parser.CsvHeader;
 import manifold.api.csv.parser.CsvParser;
 import manifold.api.csv.parser.CsvRecord;
 import manifold.api.csv.parser.CsvToken;
-import manifold.strings.api.DisableStringLiteralTemplates;
+import manifold.api.DisableStringLiteralTemplates;
 
 @DisableStringLiteralTemplates
 public class Csv

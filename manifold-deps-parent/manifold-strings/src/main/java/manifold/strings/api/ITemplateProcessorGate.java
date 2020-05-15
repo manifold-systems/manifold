@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package manifold.strings.api;
+
+import manifold.api.DisableStringLiteralTemplates;
 
 /**
  * An <a href="https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html">SPI</a> to gate template

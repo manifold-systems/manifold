@@ -19,6 +19,13 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+      <!-- 'optional' means this dependency is hidden i.e., not transitive -->
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
       <version>13.0</version>

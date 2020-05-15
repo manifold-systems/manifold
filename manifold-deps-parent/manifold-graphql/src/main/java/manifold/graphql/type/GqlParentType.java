@@ -87,11 +87,7 @@ import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.api.json.DataBindings;
-import manifold.api.json.Endpoint;
-import manifold.api.json.IJsonBindingsBacked;
-import manifold.api.json.Loader;
-import manifold.api.json.Requester;
+import manifold.api.json.*;
 import manifold.api.json.codegen.schema.FormatTypeResolvers;
 import manifold.api.json.codegen.schema.IJsonFormatTypeResolver;
 import manifold.api.json.codegen.schema.JsonFormatType;
@@ -106,7 +102,7 @@ import manifold.ext.api.IBindingType;
 import manifold.ext.api.IProxyFactory;
 import manifold.ext.api.Structural;
 import manifold.graphql.request.Executor;
-import manifold.strings.api.DisableStringLiteralTemplates;
+import manifold.api.DisableStringLiteralTemplates;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -350,6 +346,7 @@ class GqlParentType
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addInterface( new SrcType( "BaseQuery<$identifier.Result>" ) )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
         .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
@@ -734,6 +731,7 @@ class GqlParentType
     String fqn = enclosingType.getName() + ".Result";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
+      .addInterface( QueryResult.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
         .addArgument( "factoryClass", Class.class, "Result.ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
@@ -753,6 +751,8 @@ class GqlParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( Endpoint.class );
     srcClass.addImport( Executor.class );
+    srcClass.addImport( BaseQuery.class );
+    srcClass.addImport( QueryResult.class );
     srcClass.addImport( Requester.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( IBindingType.class );

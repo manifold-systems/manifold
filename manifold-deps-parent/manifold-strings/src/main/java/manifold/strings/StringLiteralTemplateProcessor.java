@@ -43,7 +43,7 @@ import manifold.api.type.ICompilerComponent;
 import manifold.api.util.ServiceUtil;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.TypeProcessor;
-import manifold.strings.api.DisableStringLiteralTemplates;
+import manifold.api.DisableStringLiteralTemplates;
 import manifold.api.util.Stack;
 import manifold.strings.api.ITemplateProcessorGate;
 
