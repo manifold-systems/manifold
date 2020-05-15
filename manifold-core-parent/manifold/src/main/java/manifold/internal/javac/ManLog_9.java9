@@ -15,6 +15,7 @@ import com.sun.tools.javac.comp.TypeEnter;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.jvm.Gen;
+import com.sun.tools.javac.main.Arguments;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
@@ -59,7 +60,7 @@ public class ManLog_9 extends Log
   {
     super( ctx );
     ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
-    try { ReflectUtil.field( diagnosticHandler, "this$0" ).set( this ); } catch( Exception ignore ){}
+    ensureDiagnosticHandlersEnclosingClassIsThis( diagnosticHandler );
     ReflectUtil.field( this, "source" ).set( source );
     ReflectUtil.field( this, "writers" ).set( writers );
     _suspendedIssues = new HashMap<>();
@@ -68,11 +69,17 @@ public class ManLog_9 extends Log
     reassignLog( ctx );
   }
 
+  private void ensureDiagnosticHandlersEnclosingClassIsThis( DiagnosticHandler diagnosticHandler )
+  {
+    try { ReflectUtil.field( diagnosticHandler, "this$0" ).set( this ); } catch( Exception ignore ){}
+  }
+
   private void reassignLog( Context ctx )
   {
     Object[] earlyAttrHolders = {
       Annotate.instance( ctx ),
       ArgumentAttr.instance( ctx ),
+      Arguments.instance( ctx ),
       Check.instance( ctx ),
       ClassReader.instance( ctx ),
       ClassWriter.instance( ctx ),
@@ -129,6 +136,9 @@ public class ManLog_9 extends Log
   {
     super.popDiagnosticHandler( handler );
     _suspendedIssues.remove( handler );
+
+    DiagnosticHandler diagnosticHandler = (DiagnosticHandler) ReflectUtil.field( this, "diagnosticHandler" ).get();
+    ensureDiagnosticHandlersEnclosingClassIsThis( diagnosticHandler );
   }
 
   public void error( JCDiagnostic.DiagnosticPosition pos, JCDiagnostic.Error errorKey )

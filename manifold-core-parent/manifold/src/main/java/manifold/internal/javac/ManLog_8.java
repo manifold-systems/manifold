@@ -73,18 +73,17 @@ public class ManLog_8 extends Log
   {
     super( ctx, errWriter, warnWriter, noticeWriter );
     ReflectUtil.field( this, "diagnosticHandler" ).set( diagnosticHandler );
-    try
-    {
-      ReflectUtil.field( diagnosticHandler, "this$0" ).set( this );
-    }
-    catch( Exception ignore )
-    {
-    }
+    ensureDiagnosticHandlersEnclosingClassIsThis( diagnosticHandler );
     ReflectUtil.field( this, "source" ).set( source );
     _suspendedIssues = new HashMap<>();
     _extensionTransformerClass = LocklessLazyVar.make(
       () -> ReflectUtil.type( "manifold.ext.ExtensionTransformer" ) );
     reassignLog( ctx );
+  }
+
+  private void ensureDiagnosticHandlersEnclosingClassIsThis( DiagnosticHandler diagnosticHandler )
+  {
+    try { ReflectUtil.field( diagnosticHandler, "this$0" ).set( this ); } catch( Exception ignore ){}
   }
 
   private void reassignLog( Context ctx )
@@ -146,6 +145,9 @@ public class ManLog_8 extends Log
   {
     super.popDiagnosticHandler( handler );
     _suspendedIssues.remove( handler );
+
+    DiagnosticHandler diagnosticHandler = (DiagnosticHandler) ReflectUtil.field( this, "diagnosticHandler" ).get();
+    ensureDiagnosticHandlersEnclosingClassIsThis( diagnosticHandler );
   }
 
   public void error( JCDiagnostic.DiagnosticPosition pos, String key, Object... args )

@@ -16,7 +16,12 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.comp.AttrContext;
+import com.sun.tools.javac.comp.CompileStates;
+import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.Todo;
 import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.util.Assert;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileSystem;
 import manifold.api.host.IModule;
@@ -81,7 +86,7 @@ class StaticCompiler
         // Cause the types to compile
         for( String fqn: types )
         {
-          // place gosu class in JavaCompiler's todo list
+          // place resource types in JavaCompiler's todo list
           ClassSymbols.instance( module ).getClassSymbol( JavacPlugin.instance().getJavacTask(), fqn );
         }
       }
@@ -90,8 +95,8 @@ class StaticCompiler
     JavaCompiler javaCompiler = JavaCompiler.instance( JavacPlugin.instance().getContext() );
     if( !javaCompiler.todo.isEmpty() )
     {
-      // compile gosu classes we just loaded
-      ReflectUtil.method( javaCompiler, "compile2" ).invoke();
+      // compile resource types we just loaded
+      compileTodo( javaCompiler );
     }
 
     _enterGuard = false;
@@ -137,11 +142,50 @@ class StaticCompiler
     JavaCompiler javaCompiler = JavaCompiler.instance( JavacPlugin.instance().getContext() );
     if( !javaCompiler.todo.isEmpty() )
     {
-      // compile gosu classes we just loaded
-      ReflectUtil.method( javaCompiler, "compile2" ).invoke();
+      // compile resource types we just loaded
+      compileTodo( javaCompiler );
     }
 
     _enterGuard = false;
+  }
+
+  private void compileTodo( JavaCompiler javac )
+  {
+    Todo todo = javac.todo;
+    String compilePolicy = ((Enum<?>) ReflectUtil.field( javac, "compilePolicy" ).get()).name();
+    switch( compilePolicy )
+    {
+      case "ATTR_ONLY":
+        javac.attribute( todo );
+        break;
+
+      case "CHECK_ONLY":
+        javac.flow( javac.attribute( todo ) );
+        break;
+
+      case "SIMPLE":
+        javac.generate( javac.desugar( javac.flow( javac.attribute( todo ) ) ) );
+        break;
+
+      case "BY_FILE":
+      {
+        Queue<Queue<Env<AttrContext>>> q = todo.groupByFile();
+        while( !q.isEmpty() &&
+          !(boolean)ReflectUtil.method( javac, "shouldStop", CompileStates.CompileState.class ).invoke( CompileStates.CompileState.ATTR ) )
+        {
+          javac.generate( javac.desugar( javac.flow( javac.attribute( q.remove() ) ) ) );
+        }
+      }
+      break;
+
+      case "BY_TODO":
+        while( !todo.isEmpty() )
+          javac.generate( javac.desugar( javac.flow( javac.attribute( todo.remove() ) ) ) );
+        break;
+
+      default:
+        Assert.error( "unknown compile policy" );
+    }
   }
 
   private Collection<String> computeNamesToPrecompile( Collection<String> allTypeNames, Set<String> regexes )
