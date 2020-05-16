@@ -101,11 +101,11 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-properties', version: '2020.1.11'
+    compile group: 'systems.manifold', name: 'manifold-properties', version: '2020.1.12'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-properties', version: '2020.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-properties', version: '2020.1.12'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -152,7 +152,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.11</manifold.version>
+        <manifold.version>2020.1.12</manifold.version>
     </properties>
     
     <dependencies>
@@ -199,7 +199,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.11</manifold.version>
+        <manifold.version>2020.1.12</manifold.version>
     </properties>
     
     <dependencies>
