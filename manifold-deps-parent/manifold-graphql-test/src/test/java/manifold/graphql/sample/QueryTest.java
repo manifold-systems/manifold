@@ -55,6 +55,7 @@ public class QueryTest
     String query = request._reqArgs.getQuery();
     String expected = "query MovieQuery($title:String,$genre:Genre,$releaseDate:Date,$actors:[ActorInput!]) {movies(title:$title,genre:$genre,releaseDate:$releaseDate,actors:$actors) {id title genre releaseDate starring {typename:__typename ... on Actor {id name} ... on Animal {kind}} cast {id name type actor {id name}}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
+    assertEquals( expected.replaceAll( "\\s+", "" ), movieQuery.queryDefinition().replaceAll( "\\s+", "" ) );
   }
 
   @Test
@@ -86,6 +87,7 @@ public class QueryTest
     @Jailbreak Executor<CompareRoles.Result> request = compareRoles.request("");
     // ensure the fragment used in the query is included with the query
     assertTrue( request._reqArgs.getQuery().contains( "fragment comparisonFields" ) );
+    assertTrue( compareRoles.fragmentDefinitions().contains( "fragment comparisonFields" ) );
     // ensure only the fragment used in the query is included
     // e.g., the 'otherComparisonFields' fragments should not be included
     assertFalse( request._reqArgs.getQuery().contains( "fragment otherComparisonFields" ) );

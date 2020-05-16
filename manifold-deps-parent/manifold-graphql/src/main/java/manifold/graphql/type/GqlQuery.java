@@ -16,6 +16,18 @@
 
 package manifold.graphql.type;
 
-public interface BaseQuery<R extends QueryResult>
+import manifold.ext.api.IBindingsBacked;
+
+public interface GqlQuery<R extends QueryResult> extends IBindingsBacked
 {
+  /**
+   * @return The GraphQL query definition.
+   */
+  String queryDefinition();
+
+  /**
+   * @return The GraphQL fragment definitions referenced from the query definition.
+   * Empty string if none are used.
+   */
+  String fragmentDefinitions();
 }
