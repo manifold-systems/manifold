@@ -15,6 +15,15 @@ Related issues:
 * [#77](https://github.com/manifold-systems/manifold/issues/77)
 * [#10](https://github.com/manifold-systems/manifold/issues/10)
 
+More generally, these changes contribute toward the option of using Manifold in a _pure static_ mode, where the runtime
+is ultra-slim, and none of Manifold's dynamic behavior is available. This mode will be available via a javac command
+line option e.g., `-Amanifold.pure.static=true`.  See [#181](https://github.com/manifold-systems/manifold/issues/181)
+for a bit of insight.
+ 
+>**Warning:** This set of changes is going to break some existing APIs. For instance, some API classes of the form
+>`manifold.xxx.api.XxxFoo` will become `manifold.xxx.rt.api.XxxFoo`.
+>If you are concerned, please open a discussion in Manifold [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
+ 
 ## On the pile (in no particular order)
  
 #### Operator overloading enhancements
