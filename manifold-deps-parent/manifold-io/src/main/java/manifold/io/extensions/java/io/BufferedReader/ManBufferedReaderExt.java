@@ -20,8 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 /**
  */

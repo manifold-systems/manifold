@@ -16,7 +16,7 @@
 
 package manifold.api.json;
 
-import manifold.api.json.parser.Token;
+import manifold.json.rt.parser.Token;
 import manifold.internal.javac.IIssue;
 
 /**

@@ -16,7 +16,7 @@
 
 package manifold.ext;
 
-import manifold.ext.api.ComparableUsing;
+import manifold.ext.rt.api.ComparableUsing;
 import org.junit.Test;
 
 

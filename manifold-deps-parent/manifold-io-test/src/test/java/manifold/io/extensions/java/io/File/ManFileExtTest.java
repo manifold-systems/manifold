@@ -1,8 +1,8 @@
 package manifold.io.extensions.java.io.File;
 
 import manifold.io.FileTreeWalk;
+import manifold.rt.api.util.Stack;
 import manifold.test.api.ExtensionManifoldTest;
-import manifold.api.util.Stack;
 
 import java.io.File;
 import java.io.IOException;

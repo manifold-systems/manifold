@@ -1,7 +1,7 @@
 package manifold.templates.directives;
 
-import manifold.templates.ManifoldTemplates;
-import manifold.templates.runtime.ILayout;
+import manifold.templates.rt.ManifoldTemplates;
+import manifold.templates.rt.runtime.ILayout;
 import org.junit.Test;
 import directives.layouts.*;
 

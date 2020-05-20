@@ -1,8 +1,8 @@
 package manifold.ext.extensions.abc.benis_png;
 
 import abc.IMyStructuralInterface;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 import abc.benis_png;
 

@@ -16,7 +16,7 @@ import junit.framework.TestCase;
 import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Structural;
 
 /**
  */

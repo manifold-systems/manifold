@@ -38,10 +38,10 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
 import manifold.api.type.ResourceFileTypeManifold;
-import manifold.ext.api.Extension;
+import manifold.ext.rt.api.Extension;
 import manifold.internal.javac.IssueReporter;
 import manifold.internal.javac.TypeProcessor;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 

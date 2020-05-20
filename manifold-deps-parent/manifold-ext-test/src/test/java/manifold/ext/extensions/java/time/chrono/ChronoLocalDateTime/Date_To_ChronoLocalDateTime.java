@@ -16,7 +16,7 @@
 
 package manifold.ext.extensions.java.time.chrono.ChronoLocalDateTime;
 
-import manifold.ext.api.IProxyFactory;
+import manifold.ext.rt.api.IProxyFactory;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

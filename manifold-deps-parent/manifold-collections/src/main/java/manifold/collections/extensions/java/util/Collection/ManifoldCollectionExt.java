@@ -30,9 +30,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
-import manifold.api.util.ManObjectUtil;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
+import manifold.rt.api.util.ManObjectUtil;
 
 @Extension
 public class ManifoldCollectionExt

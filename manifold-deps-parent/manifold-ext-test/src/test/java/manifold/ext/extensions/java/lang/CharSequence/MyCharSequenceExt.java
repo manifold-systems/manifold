@@ -16,9 +16,9 @@
 
 package manifold.ext.extensions.java.lang.CharSequence;
 
-import manifold.ext.api.Extension;
-import manifold.ext.api.Self;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Self;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class MyCharSequenceExt

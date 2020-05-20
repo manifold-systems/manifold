@@ -19,23 +19,33 @@
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-graphql</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-collections</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-strings</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-exceptions</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-graphql</artifactId>
-      <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -43,26 +53,5 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-
-      <!--
-        Enable bootstrapping by removing the `no-bootstrap` -Xplugin arg present in the parent pom.
-        This is necessary because this module uses structural typing, which is a runtime feature of
-        Manifold.
-      -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <compilerArgs>
-            <arg>-Xplugin:Manifold</arg>
-          </compilerArgs>
-        </configuration>
-      </plugin>
-
-    </plugins>
-  </build>
   
 </project>

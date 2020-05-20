@@ -20,9 +20,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
+ * @deprecated Use -Amanifold.resource.&lt;file-ext&gt;=[type-name-regex] javac command line arguments.
  */
 @SuppressWarnings("unused")
 @Retention(RetentionPolicy.SOURCE)
+@Deprecated
 public @interface Precompiles
 {
   Precompile[] value();

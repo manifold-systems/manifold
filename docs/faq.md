@@ -51,6 +51,17 @@ is sensitive to the version of Java you are using, generally whether you are usi
 [Setup](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings#setup) docs for
 complete instructions.
 
+#### Q: I defined some useful *extension methods*. How can I share them as a dependency?
+The module with your extension methods must declare that it should be processed for extension methods. Do that with the
+`Contains-Sources` manifest entry. For instance, from Maven:
+```xml
+  <manifestEntries>
+      <!--class files as source must be available for extension method classes-->
+      <Contains-Sources>java,class</Contains-Sources>
+  </manifestEntries>
+```
+Please see the documentation for making [extension libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries).
+
 ## Getting Help
 
 #### Q: Where can I find help?

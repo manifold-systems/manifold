@@ -16,6 +16,7 @@
 
 package manifold.api.json;
 
+import manifold.json.rt.api.Requester;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;

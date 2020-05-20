@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.tools.JavaFileObject;
 import manifold.api.type.IPreprocessor;
-import manifold.api.util.ServiceUtil;
+import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 

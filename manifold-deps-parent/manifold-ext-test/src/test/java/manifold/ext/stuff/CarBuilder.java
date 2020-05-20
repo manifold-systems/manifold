@@ -16,7 +16,7 @@
 
 package manifold.ext.stuff;
 
-import manifold.ext.api.Self;
+import manifold.ext.rt.api.Self;
 
 import java.awt.*;
 

@@ -21,7 +21,7 @@ import java.math.BigInteger;
 import java.util.Objects;
 import manifold.api.json.codegen.schema.Type;
 import manifold.api.json.codegen.schema.TypeAttributes;
-import manifold.ext.RuntimeMethods;
+import manifold.ext.rt.RuntimeMethods;
 
 /**
  */

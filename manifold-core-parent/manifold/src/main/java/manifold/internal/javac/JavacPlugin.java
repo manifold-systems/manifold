@@ -77,11 +77,11 @@ import manifold.internal.runtime.Bootstrap;
 import manifold.api.util.IssueMsg;
 import manifold.api.util.JavacDiagnostic;
 import manifold.util.JreUtil;
-import manifold.api.util.ManClassUtil;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.util.NecessaryEvilUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 
@@ -113,6 +113,14 @@ public class JavacPlugin implements Plugin, TaskListener
     ARG_EXCEPTIONS,
     ARG_STRINGS,
   };
+
+  /**
+   * Instructs manifold to generate code for execution in a static runtime environment where no dynamic manifold
+   * behavior is allowed.
+   * <p/>
+   * Usage: <pre> javac -Amanifold.pure.static=true ... </pre>
+   */
+  public static final String MANIFOLD_PURE_STATIC = "manifold.pure.static";
 
   /** javac command line arguments for static compilation */
   private static final String MANIFOLD_SOURCE_MAPPING = "manifold.source.";
@@ -159,6 +167,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
+  private String _bootclasspath;
   private boolean _isIncremental;
 
   public static JavacPlugin instance()
@@ -194,8 +203,31 @@ public class JavacPlugin implements Plugin, TaskListener
     _host = new JavacManifoldHost();
     _fileFragmentResources = new ArrayList<>();
     _javaSourcePath = Collections.emptySet();
+    assignBootclasspath();
     hijackJavacFileManager();
     task.addTaskListener( this );
+  }
+
+  private void assignBootclasspath()
+  {
+    try
+    {
+      String[] args = (String[]) ReflectUtil.field( _javacTask, "args" ).get();
+      boolean found = false;
+      for( String arg: args )
+      {
+        if( arg != null && arg.equalsIgnoreCase( "-bootclasspath" ) )
+        {
+          found = true;
+        }
+        else if( found )
+        {
+          _bootclasspath = arg;
+          break;
+        }
+      }
+    }
+    catch( Exception igonre ) {}
   }
 
   private void processArgs( JavacProcessingEnvironment jpe, String[] args )
@@ -336,6 +368,11 @@ public class JavacPlugin implements Plugin, TaskListener
     return _javaSourcePath;
   }
 
+  public String getBootclasspath()
+  {
+    return _bootclasspath;
+  }
+
   private void hijackJavacFileManager()
   {
     if( !(_fileManager instanceof ManifoldJavaFileManager) && _manFileManager == null )
@@ -434,7 +471,7 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     try
     {
-      Class.forName( "manifold.ext.api.Extension" );
+      Class.forName( "manifold.ext.rt.api.Extension" );
       return true;
     }
     catch( ClassNotFoundException e )

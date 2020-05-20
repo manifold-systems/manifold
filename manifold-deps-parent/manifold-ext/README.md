@@ -35,7 +35,7 @@ you can't modify directly, such as `java.lang.String`:
 // package name ends with "extensions." + extended class name
 package extensions.java.lang.String;
 
-import manifold.ext.api.*;
+import manifold.ext.rt.api.Extension;import manifold.ext.rt.api.This;
 
 // Defines methods logically added to String
 @Extension
@@ -65,7 +65,7 @@ should define your extension class as `foo.widget.extensions.java.lang.String`. 
 directly rooted in the `extensions` package, however it is still best to qualify extension classes with your project
 or module name to prevent naming collisions.
 
-Additionally, an extension class must be annotated with `manifold.ext.api.Extension`, which distinguishes
+Additionally, an extension class must be annotated with `manifold.ext.rt.api.Extension`, which distinguishes
 extension classes from other classes that may reside in the same package.
 
 ## Extension Method Basics
@@ -74,7 +74,7 @@ An extension method must be declared `static` and non-`private`. As the receiver
 parameter of an extension _instance_ method must have the same type as the extended class. The
 `MyStringExtension` example illustrates this; the first parameter of instance method `print` is
 `java.lang.String`. Note the parameter name _thiz_ is conventional, you can use any name you like.
-Finally, the receiver parameter must be annotated with `manifold.ext.api.This` to distinguish it from 
+Finally, the receiver parameter must be annotated with `manifold.ext.rt.api.This` to distinguish it from 
 regular methods in the class.
 
 That's all there is to it. You can use extensions just like normal methods on the extended class:
@@ -85,7 +85,7 @@ name.print();
 ```
 
 You can define `static` extension methods too. Since static methods don't have a receiver, the method
-itself must be annotated with `manifold.ext.api.Extension`:
+itself must be annotated with `manifold.ext.rt.api.Extension`:
 
 ```java
 @Extension
@@ -146,8 +146,8 @@ Here's an example adding an extension method to `Map.Entry`.
 package myproject.extensions.java.util.Map;
 
 import java.util.Map;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class MyMapExt
@@ -184,8 +184,8 @@ file called `movies.graphql` in the `abc/res` resource directory results in a ty
 package myproject.extensions.abc.res.movies;
 
 import abc.res.movies.Person;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class MyMoviesExt
@@ -423,7 +423,7 @@ to your project separately depending on its needs.
  
     Defined in module `manifold-json` this library extends:
     - java.net.URL
-    - javax.script.Bindings
+    - manifold.rt.api.Bindings
 
 > 
 > **&#x1f6c8;** **IMPORTANT!**  
@@ -541,7 +541,7 @@ public Point plus(int[] coord) {
 
 You can implement relational operators using a combination of the `ComparableUsing` and/or `Comparable` interfaces.
 
-### `manifold.ext.api.ComparableUsing`
+### `manifold.ext.rt.api.ComparableUsing`
 
 Relational operators can be implemented all together with the `ComparableUsing` interface, which extends `Comparable`
 to provide an operator-specific API.                           
@@ -1166,10 +1166,10 @@ src
 ---- resources
 ------ META-INF
 -------- services
----------- manifold.ext.api.IProxyFactory
+---------- manifold.ext.rt.api.IProxyFactory
 ```
 Following standard Java [ServiceLoader protocol](https://docs.oracle.com/javase/7/docs/api/java/util/ServiceLoader.html)
-you create a text file called `manifold.ext.api.IProxyFactory` in the `service` directory under your `META-INF` directory.
+you create a text file called `manifold.ext.rt.api.IProxyFactory` in the `service` directory under your `META-INF` directory.
 The file should contain the fully qualified name of your proxy factory class (the one that implements `IProxyFactory`) followed
 by a new blank line:
 ```
@@ -1195,7 +1195,7 @@ a proxy factory for `Point`, other classes go through the default dynamic proxy 
  
 ## Dynamic Typing with `ICallHandler`
 
-Manifold supports a form of dynamic typing via `manifold.ext.api.ICallHandler`:  
+Manifold supports a form of dynamic typing via `manifold.ext.rt.api.ICallHandler`:  
 
 ```java
 public interface ICallHandler {

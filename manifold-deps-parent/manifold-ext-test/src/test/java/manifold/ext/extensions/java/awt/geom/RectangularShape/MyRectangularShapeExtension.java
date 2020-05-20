@@ -4,8 +4,8 @@ import abc.Coordinate;
 import abc.IGenericThing;
 import java.awt.geom.RectangularShape;
 import java.util.List;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 /**
  */

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>2020.1.12-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-graphql-rt</artifactId>
+
+  <name>Manifold :: GraphQL Runtime</name>
+
+  <dependencies>
+    <!-- 'provided' scoped manifold-ext for use with structural typing exercised in some API classes -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>16.0.2</version>
+    </dependency>
+
+    <!--
+      graphql-java as a 'provided' dependency is needed for GqlScalars, which is an optional server-oriented feature.
+      As such, a GraphQL server provides the graphql-java dependency.
+    -->
+    <dependency>
+      <groupId>com.graphql-java</groupId>
+      <artifactId>graphql-java</artifactId>
+      <version>13.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.graphql.rt</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+</project>

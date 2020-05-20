@@ -22,13 +22,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringTokenizer;
-import javax.script.ScriptException;
+import manifold.rt.api.ScriptException;
 import manifold.api.fs.IFile;
-import manifold.api.json.parser.Token;
+import manifold.json.rt.parser.Token;
 import manifold.api.json.codegen.schema.IllegalSchemaTypeName;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

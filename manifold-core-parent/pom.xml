@@ -21,6 +21,7 @@
 
   <modules>
     <module>manifold</module>
+    <module>manifold-rt</module>
   </modules>
 
 </project>

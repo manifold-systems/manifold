@@ -43,7 +43,7 @@ import manifold.api.gen.SrcSwitchStatement;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
 import manifold.api.type.SourcePosition;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;
 import manifold.api.util.cache.FqnCacheNode;
 

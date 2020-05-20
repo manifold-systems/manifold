@@ -12,11 +12,26 @@
   <name>Manifold :: XmlTest</name>
   
   <dependencies>
+    <!-- 'provided' scope on manifold-xml to restrict its use to compile-time -->
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-xml</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
+    <!-- manifold-xml-rt used both for compile-time and runtime -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-xml-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- yaml-rt here to sample test interop between xml and yaml -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-yaml-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- junit for tests -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -1,8 +1,8 @@
 package manifold.graphql.sample;
 
 import manifold.api.DisableStringLiteralTemplates;
-import manifold.ext.api.Jailbreak;
-import manifold.graphql.request.Executor;
+import manifold.ext.rt.api.Jailbreak;
+import manifold.graphql.rt.api.request.Executor;
 import org.junit.Test;
 
 import static manifold.graphql.sample.movies.ReviewInput;

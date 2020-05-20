@@ -35,24 +35,24 @@ import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcMemberAccessExpression;
 import manifold.api.host.IModule;
 import manifold.api.json.AbstractJsonTypeManifold;
-import manifold.api.json.IJsonList;
+import manifold.json.rt.api.IJsonList;
 import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
-import manifold.api.json.Json;
+import manifold.api.json.JsonTransformer;
 import manifold.api.json.codegen.JsonBasicType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.codegen.JsonListType;
 import manifold.api.json.JsonTypeManifold;
-import manifold.api.json.parser.Token;
+import manifold.json.rt.parser.Token;
 import manifold.api.type.ActualName;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.SourcePosition;
 import manifold.api.type.TypeReference;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.ManClassUtil;
-import manifold.api.util.ManEscapeUtil;
-import manifold.api.util.ManStringUtil;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManEscapeUtil;
+import manifold.rt.api.util.ManStringUtil;
 
 /**
  * The base JSON Schema type.
@@ -302,7 +302,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       IJsonType innerType = other.findChild( name );
       if( innerType != null )
       {
-        innerType = Json.mergeTypes( e.getValue(), innerType );
+        innerType = JsonTransformer.mergeTypes( e.getValue(), innerType );
       }
       else
       {

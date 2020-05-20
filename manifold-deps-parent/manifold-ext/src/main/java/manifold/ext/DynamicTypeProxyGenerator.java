@@ -21,7 +21,8 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import manifold.api.type.ActualName;
 import manifold.ext.api.AbstractDynamicTypeProxy;
-import manifold.ext.api.ICallHandler;
+import manifold.ext.rt.api.ICallHandler;
+import manifold.ext.rt.RuntimeMethods;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 
 /**

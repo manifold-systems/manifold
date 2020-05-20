@@ -17,7 +17,7 @@
 package manifold.api.json;
 
 import java.util.Set;
-import javax.script.ScriptException;
+import manifold.rt.api.ScriptException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -31,6 +31,8 @@ import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
+import manifold.json.rt.Json;
+import manifold.json.rt.api.DataBindings;
 
 /**
  */
@@ -62,7 +64,7 @@ class Model extends AbstractSingleFileModel
       jsonValue = new DataBindings();
     }
 
-    IJsonType type = Json.transformJsonObject( getHost(), getFile().getBaseName(), null, jsonValue );
+    IJsonType type = JsonTransformer.transformJsonObject( getHost(), getFile().getBaseName(), null, jsonValue );
     _type = getStructureType( type );
   }
 

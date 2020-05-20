@@ -1,6 +1,6 @@
 package abc;
 
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Structural;
 
 /**
  */

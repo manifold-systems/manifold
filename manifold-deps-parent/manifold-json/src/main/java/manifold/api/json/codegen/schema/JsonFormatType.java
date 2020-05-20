@@ -19,17 +19,30 @@ package manifold.api.json.codegen.schema;
 import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
 import manifold.api.json.codegen.JsonBasicType;
+import manifold.json.rt.api.IJsonFormatTypeCoercer;
+import manifold.rt.api.util.Pair;
+import manifold.util.concurrent.ConcurrentWeakValueHashMap;
+
+import java.util.Map;
 
 /**
  * This type facilitates mapping a Java type to a JSON {@code "format"} type such as {@code "date-time}.
  * <p>
- * Implement the {@link IJsonFormatTypeResolver} service provider to map your own formats with Java types.
+ * Implement the {@link IJsonFormatTypeCoercer} service provider to map your own formats with Java types.
  */
 public class JsonFormatType implements IJsonType
 {
+  private static final Map<Pair<String, Class<?>>, JsonFormatType> PROTOTYPES = new ConcurrentWeakValueHashMap<>();
+
   private final String _format;
   private final Class<?> _javaType;
   private final TypeAttributes _typeAttributes;
+
+  public static JsonFormatType getPrototype( String format, Class<?> javaType )
+  {
+    return PROTOTYPES.computeIfAbsent( new Pair<>( format, javaType ),
+      key -> new JsonFormatType( key.getFirst(), key.getSecond() ) );
+  }
 
   JsonFormatType( String format, Class<?> javaType )
   {

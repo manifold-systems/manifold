@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -31,11 +31,13 @@ import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.JavaTypeManifold;
-import manifold.ext.RuntimeMethods;
-import manifold.ext.api.IProxyFactory;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.RuntimeMethods;
+import manifold.ext.rt.api.IProxyFactory;
+import manifold.ext.rt.api.Structural;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.ManClassUtil;
+import manifold.json.rt.Json;
+import manifold.json.rt.api.*;
+import manifold.rt.api.util.ManClassUtil;
 
 /**
  * A base class for a Type Manifold modeled with a {@link JsonModel} e.g., parses its resource to a {@link Bindings}.

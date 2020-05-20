@@ -18,7 +18,7 @@ package manifold.api.fs;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

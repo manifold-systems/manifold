@@ -15,6 +15,11 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -24,11 +29,6 @@
       <version>${project.version}</version>
       <!-- 'optional' means this dependency is hidden i.e., not transitive -->
       <optional>true</optional>
-    </dependency>
-    <dependency>
-      <groupId>org.snakeyaml</groupId>
-      <artifactId>snakeyaml-engine</artifactId>
-      <version>1.0</version>
     </dependency>
   </dependencies>
 

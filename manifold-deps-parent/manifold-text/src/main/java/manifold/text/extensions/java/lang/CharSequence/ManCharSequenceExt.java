@@ -17,10 +17,10 @@
 package manifold.text.extensions.java.lang.CharSequence;
 
 import java.util.Collection;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
-import manifold.ext.api.CharPredicate;
-import manifold.api.util.Pair;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
+import manifold.ext.rt.api.CharPredicate;
+import manifold.rt.api.util.Pair;
 
 /**
  */

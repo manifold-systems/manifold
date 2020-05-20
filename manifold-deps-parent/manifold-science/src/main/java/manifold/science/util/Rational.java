@@ -24,7 +24,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
-import manifold.ext.api.ComparableUsing;
+import manifold.ext.rt.api.ComparableUsing;
 import manifold.collections.api.range.Sequential;
 import manifold.science.measures.MetricScaleUnit;
 

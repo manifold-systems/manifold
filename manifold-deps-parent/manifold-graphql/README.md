@@ -405,12 +405,12 @@ commonly used types.  These include:
 | **Instant**      | _integer_    | `java.time.Instant`                           |
 | **BigInteger**   | _string_     | `java.math.BigInteger`                        |
 | **BigDecimal**   | _string_     | `java.math.BigDecimal`                        |
-| **Binary**       | _string_     | `manifold.api.json.codegen.schema.OctetEncoding`      |
-| **Octet**        | _string_     | `manifold.api.json.codegen.schema.OctetEncoding`      |
-| **Base64**       | _string_     | `manifold.api.json.codegen.schema.Base64Encoding`     | 
+| **Binary**       | _string_     | `manifold.json.rt.api.OctetEncoding`      |
+| **Octet**        | _string_     | `manifold.json.rt.api.OctetEncoding`      |
+| **Base64**       | _string_     | `manifold.json.rt.api.Base64Encoding`     | 
 
 Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
-`manifold.api.json.codegen.schema.IJsonFormatTypeResolver` interface as a 
+`IJsonFormatTypeCoercer` interface as a 
 [service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
 
 >If you've implemented format type resolvers for JSON Schema, you can share them with your GraphQL APIs.  No need to

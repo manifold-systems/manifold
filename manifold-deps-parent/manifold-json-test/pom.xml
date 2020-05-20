@@ -21,10 +21,23 @@
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-json</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-json</artifactId>
+      <artifactId>manifold-json-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- xml-rt for verifying json/xml interop -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-xml-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- yaml-rt for verifying json/yaml interop -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-yaml-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

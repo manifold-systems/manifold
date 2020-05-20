@@ -27,7 +27,7 @@ import com.sun.tools.javac.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 
 
 class JavacBinder extends AbstractBinder<Symbol.MethodSymbol, JCBinary, JCExpression, Tag>

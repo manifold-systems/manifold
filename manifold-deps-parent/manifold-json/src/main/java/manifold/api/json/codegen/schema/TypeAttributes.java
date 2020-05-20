@@ -21,9 +21,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
-import javax.script.Bindings;
-import manifold.api.json.DataBindings;
-import manifold.api.util.Pair;
+import manifold.rt.api.Bindings;
+import manifold.json.rt.api.DataBindings;
+import manifold.rt.api.util.Pair;
 
 
 import static manifold.api.json.codegen.schema.JsonSchemaTransformer.*;

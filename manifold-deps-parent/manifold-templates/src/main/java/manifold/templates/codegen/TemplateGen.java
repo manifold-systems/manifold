@@ -35,8 +35,8 @@ import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;
 import manifold.templates.tokenizer.Token;
 import manifold.templates.tokenizer.Tokenizer;
-import manifold.api.util.ManClassUtil;
-import manifold.api.util.ManEscapeUtil;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManEscapeUtil;
 
 
 import static manifold.templates.codegen.TemplateGen.DirType.*;
@@ -586,8 +586,8 @@ public class TemplateGen
     {
       _sb.append( "package " ).append( packageName + ";\n" )
         .newLine( "import java.io.IOException;" )
-        .newLine( "import manifold.templates.ManifoldTemplates;" )
-        .newLine( "import manifold.templates.runtime.*;\n" );
+        .newLine( "import manifold.templates.rt.ManifoldTemplates;" )
+        .newLine( "import manifold.templates.rt.runtime.*;\n" );
       addImports( dirList );
       makeClassContent();
     }

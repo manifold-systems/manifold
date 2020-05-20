@@ -30,8 +30,8 @@ were the only `.favs` file, `ExtensionProducerSampleTypeManifold` would create
 two Extension classes:
 
 ```java
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class ManIntegerExt {
@@ -46,8 +46,8 @@ public class ManIntegerExt {
 ``` 
 and 
 ```java
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class ManMyClassExt {

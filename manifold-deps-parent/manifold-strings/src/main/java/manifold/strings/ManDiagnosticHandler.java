@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashSet;
 import java.util.Set;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 public class ManDiagnosticHandler extends Log.DiagnosticHandler
 {

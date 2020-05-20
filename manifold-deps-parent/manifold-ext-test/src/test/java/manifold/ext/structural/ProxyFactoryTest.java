@@ -26,7 +26,7 @@ import manifold.ext.extensions.java.time.chrono.ChronoLocalDateTime.Date_To_Chro
 
 /**
  * Tests registered IProxyFactory service, see {@link Date_To_ChronoLocalDateTime} and its
- * registered service in {@code META-INF/services/manifold.ext.api.IProxyFactory}
+ * registered service in {@code META-INF/services/manifold.ext.rt.api.IDynamicProxyFactory}
  */
 public class ProxyFactoryTest extends TestCase
 {

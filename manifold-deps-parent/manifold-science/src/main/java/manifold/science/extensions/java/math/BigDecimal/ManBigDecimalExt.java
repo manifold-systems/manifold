@@ -18,9 +18,9 @@ package manifold.science.extensions.java.math.BigDecimal;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import manifold.ext.api.Extension;
-import manifold.ext.api.ComparableUsing;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.ComparableUsing;
+import manifold.ext.rt.api.This;
 
 /**
  * Extends {@code BigDecimal} with arithmetic and relational operator implementations

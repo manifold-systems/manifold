@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-util</artifactId>
+      <artifactId>manifold-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

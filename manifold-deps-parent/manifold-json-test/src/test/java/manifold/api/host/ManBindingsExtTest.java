@@ -19,11 +19,11 @@ package manifold.api.host;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import junit.framework.TestCase;
-import manifold.api.json.Json;
-import manifold.api.yaml.Yaml;
-import manifold.api.json.DataBindings;
+import manifold.json.rt.Json;
+import manifold.json.rt.api.DataBindings;
+import manifold.json.rt.api.IJsonBindingsCodec;
 
 public class ManBindingsExtTest extends TestCase
 {
@@ -92,7 +92,8 @@ public class ManBindingsExtTest extends TestCase
    // assertEquals( "{\n}\n", empty.toYaml() );
 
     DataBindings sample = makeSampleBindings();
-    assertEquals( sample, Yaml.fromYaml( sample.toYaml() ) );
+    IJsonBindingsCodec yaml = IJsonBindingsCodec.get( "YAML" );
+    assertEquals( sample, yaml.decode( sample.toYaml() ) );
   }
 
   private DataBindings makeSampleBindings()

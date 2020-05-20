@@ -16,6 +16,9 @@
 
 package manifold.io;
 
+import manifold.rt.api.util.AbstractIterator;
+import manifold.rt.api.util.Stack;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -23,8 +26,6 @@ import java.util.Iterator;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import manifold.api.util.AbstractIterator;
-import manifold.api.util.Stack;
 
 /**
  * This class is intended to implement different file traversal methods.

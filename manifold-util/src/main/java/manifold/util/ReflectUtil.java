@@ -60,6 +60,11 @@ public class ReflectUtil
 
   //private static final ConcurrentHashMap<String, Boolean> _openPackages = new ConcurrentHashMap<>();
 
+  static
+  {
+    NecessaryEvilUtil.disableJava9IllegalAccessWarning();
+  }
+
   /**
    * Searches the class loader of this class for the specified name, if not found searches
    * the current thread's context class loader.

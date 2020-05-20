@@ -17,23 +17,21 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.BasicJavacTask;
-import java.io.File;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
-import manifold.api.util.ServiceUtil;
+import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 /**

@@ -14,6 +14,12 @@
     <dependencies>
       <dependency>
         <groupId>systems.manifold</groupId>
+        <artifactId>manifold-ext</artifactId>
+        <version>${project.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>systems.manifold</groupId>
         <artifactId>manifold-ext-middle-test</artifactId>
         <version>${project.version}</version>
         <scope>test</scope>
@@ -22,11 +28,13 @@
         <groupId>systems.manifold</groupId>
         <artifactId>manifold-image</artifactId>
         <version>${project.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>systems.manifold</groupId>
         <artifactId>manifold-strings</artifactId>
         <version>${project.version}</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

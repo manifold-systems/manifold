@@ -1,6 +1,6 @@
 package manifold.templates.directives;
 
-import manifold.templates.runtime.BaseTemplate;
+import manifold.templates.rt.runtime.BaseTemplate;
 
 public abstract class ExtendsTesterTemplate extends BaseTemplate
 {

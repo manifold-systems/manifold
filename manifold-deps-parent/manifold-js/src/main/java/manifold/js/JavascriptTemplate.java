@@ -17,39 +17,53 @@
 package manifold.js;
 
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import manifold.api.gen.AbstractSrcMethod;
-import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcField;
-import manifold.api.gen.SrcMethod;
-import manifold.api.gen.SrcParameter;
-import manifold.js.parser.TemplateParser;
-import manifold.js.parser.TemplateTokenizer;
-import manifold.js.parser.tree.template.JSTNode;
-import manifold.js.parser.tree.template.RawStringNode;
+
+import manifold.api.DisableStringLiteralTemplates;
+import manifold.api.fs.IFile;
+import manifold.api.gen.*;
+import manifold.api.type.ResourceFileTypeManifold;
+import manifold.js.rt.JsRuntime;
+import manifold.js.rt.parser.tree.template.JSTNode;
+import manifold.js.rt.parser.tree.template.RawStringNode;
+import manifold.rt.api.util.ManEscapeUtil;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
-
-import static manifold.js.JavascriptProgram.generateArgList;
-import static manifold.js.JavascriptProgram.makeSrcParameters;
+import static manifold.js.JavascriptProgram.*;
 
 public class JavascriptTemplate
 {
   static SrcClass genClass( String fqn, JSTNode jstNode )
   {
-    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class );
+    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class )
+      .addImport( JsRuntime.class );
+
+    IFile file = loadSrcForName( fqn, JavascriptTypeManifold.JS );
+    String url;
+    try
+    {
+      url = file.toURI().toURL().toString();
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    String source = ResourceFileTypeManifold.getContent( file );
+    source = ManEscapeUtil.escapeForJavaStringLiteral( source );
 
     clazz.addField( new SrcField( "TEMPLATE_NODE", JSTNode.class )
+      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class ) )
       .modifiers( Modifier.STATIC | Modifier.FINAL )
-      .initializer( JavascriptTemplate.class.getTypeName() + ".initNode(\"" + fqn + "\")" ) );
+      .initializer( JsRuntime.class.getSimpleName() + ".initNode(\"" + fqn + "\",\"" + source + "\",\"" + url + "\")" ) );
 
     clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
       .modifiers( Modifier.STATIC | Modifier.FINAL )
-      .initializer( JavascriptTemplate.class.getTypeName() + ".initEngine(TEMPLATE_NODE)" ) );
+      .initializer( JsRuntime.class.getSimpleName() + ".initEngine(TEMPLATE_NODE)" ) );
 
     AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
       .name( "renderToString" )
@@ -87,25 +101,5 @@ public class JavascriptTemplate
     {
       throw new RuntimeException( e );
     }
-  }
-
-  private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
-
-  @SuppressWarnings("unused")
-  public static ScriptableObject initEngine( JSTNode templateNode )
-  {
-    ScriptableObject scope = SharedScope.newStaticScope();
-    String name = "template_" + _counter.get();
-    _counter.set( _counter.get() + 1 );
-    Context.getCurrentContext().evaluateString( scope, templateNode.genCode(), name, 1, null );
-    return scope;
-  }
-
-  @SuppressWarnings("unused")
-  public static JSTNode initNode( String programName )
-  {
-    TemplateParser parser = new TemplateParser(
-      new TemplateTokenizer( JavascriptProgram.loadSrcForName( programName, JavascriptTypeManifold.JST ), true ) );
-    return (JSTNode)parser.parse();
   }
 }

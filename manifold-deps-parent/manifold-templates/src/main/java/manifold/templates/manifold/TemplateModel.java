@@ -29,7 +29,7 @@ import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.templates.codegen.TemplateGen;
 import manifold.api.util.JavacDiagnostic;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

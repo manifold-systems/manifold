@@ -20,8 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import manifold.api.util.DynamicArray;
-import manifold.api.util.ManObjectUtil;
-import manifold.api.util.ManStringUtil;
+import manifold.rt.api.util.ManObjectUtil;
+import manifold.rt.api.util.ManStringUtil;
 
 public class ResourcePath
 {

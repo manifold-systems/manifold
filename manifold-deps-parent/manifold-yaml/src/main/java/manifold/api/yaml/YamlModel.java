@@ -21,6 +21,7 @@ import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.JsonModel;
 import manifold.api.type.ResourceFileTypeManifold;
+import manifold.api.yaml.rt.Yaml;
 
 /**
  */

@@ -32,8 +32,8 @@ import manifold.api.host.IModule;
 import manifold.api.type.ActualName;
 import manifold.api.type.SourcePosition;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.ManStringUtil;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.ManStringUtil;
+import manifold.rt.api.util.StreamUtil;
 import manifold.util.ManExceptionUtil;
 
 

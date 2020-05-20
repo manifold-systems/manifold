@@ -20,6 +20,8 @@ import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
+
+import manifold.api.DisableStringLiteralTemplates;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.def.FileFragmentImpl;
@@ -34,17 +36,12 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.ITypeManifold;
+import manifold.api.type.ResourceFileTypeManifold;
 import manifold.api.type.SourcePosition;
-import manifold.internal.host.RuntimeManifoldHost;
-import manifold.js.parser.Parser;
-import manifold.js.parser.Tokenizer;
-import manifold.js.parser.tree.FunctionNode;
-import manifold.js.parser.tree.Node;
-import manifold.js.parser.tree.ParameterNode;
-import manifold.js.parser.tree.ProgramNode;
-import manifold.api.util.ManEscapeUtil;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Function;
+import manifold.internal.javac.JavacPlugin;
+import manifold.js.rt.JsRuntime;
+import manifold.js.rt.parser.tree.*;
+import manifold.rt.api.util.ManEscapeUtil;
 import org.mozilla.javascript.ScriptableObject;
 
 
@@ -53,6 +50,7 @@ public class JavascriptProgram
   static SrcClass genProgram( String fqn, ProgramNode programNode, IFile file )
   {
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class ).superClass( JavascriptProgram.class )
+      .imports( JsRuntime.class )
       .imports( SourcePosition.class )
       .imports( FragmentValue.class );
 
@@ -73,23 +71,36 @@ public class JavascriptProgram
       }
       clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
         .modifiers( Modifier.STATIC )
-        .initializer( "initDirect(\"" + ManEscapeUtil.escapeForJava(
+        .initializer( JsRuntime.class.getSimpleName() + ".initDirect(\"" + ManEscapeUtil.escapeForJava(
           ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\")" ) );
 
       AbstractSrcMethod<SrcMethod> srcMethod = new SrcMethod()
         .name( "fragmentValue" )
         .modifiers( Modifier.STATIC | Modifier.PUBLIC )
         .returns( Object.class.getSimpleName() );
-      srcMethod.body( "return evaluate(\"" + ManEscapeUtil.escapeForJava(
+      srcMethod.body( "return " + JsRuntime.class.getSimpleName() + ".evaluate(\"" + ManEscapeUtil.escapeForJava(
         ((FileFragmentImpl)file).getContent() ) + "\", \"" + url + "\");" );
       clazz.addMethod( srcMethod );
 
     }
     else
     {
+      String url;
+      try
+      {
+        url = file.toURI().toURL().toString();
+      }
+      catch( MalformedURLException e )
+      {
+        throw new RuntimeException( e );
+      }
+      String source = ResourceFileTypeManifold.getContent( file );
+      source = ManEscapeUtil.escapeForJavaStringLiteral( source );
+
       clazz.addField( new SrcField( "SCOPE", ScriptableObject.class )
+        .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class ) )
         .modifiers( Modifier.STATIC )
-        .initializer( "init(\"" + fqn + "\")" ) );
+        .initializer( JsRuntime.class.getSimpleName() + ".initProg(\"" + fqn + "\",\"" + source + "\",\"" + url + "\")" ) );
     }
 
     clazz.addConstructor( new SrcConstructor().modifiers( Modifier.PRIVATE ).body( new SrcStatementBlock() ) );
@@ -106,7 +117,7 @@ public class JavascriptProgram
           .addArgument( "feature", String.class, node.getName() )
           .addArgument( "offset", int.class, absoluteOffset( node.getStart().getOffset(), file ) )
           .addArgument( "length", int.class, node.getEnd().getOffset() - node.getStart().getOffset() ) )
-        .body( "return invoke(SCOPE, \"" + node.getName() + "\"" +
+        .body( "return " + JsRuntime.class.getSimpleName() + ".invokeProg(SCOPE, \"" + node.getName() + "\"" +
                generateArgList( makeSrcParameters( node, srcMethod ) ) + ");" );
       clazz.addMethod( srcMethod );
     }
@@ -116,7 +127,9 @@ public class JavascriptProgram
   static List<SrcParameter> makeSrcParameters( Node node, SrcAnnotated srcMethod )
   {
     ParameterNode paramNode = node.getFirstChild( ParameterNode.class );
-    List<SrcParameter> srcParameters = paramNode != null ? paramNode.toParamList() : Collections.emptyList();
+    List<SrcParameter> srcParameters = paramNode != null
+      ? JavascriptClass.toParamList( paramNode )
+      : Collections.emptyList();
     for( SrcParameter srcParameter: srcParameters )
     {
       srcMethod.addParam( srcParameter );
@@ -133,53 +146,6 @@ public class JavascriptProgram
       sb.append( srcParameter.getSimpleName() );
     }
     return sb.toString();
-  }
-
-  @SuppressWarnings("unused")
-  public static <T> T invoke( ScriptableObject scope, String func, Object... args )
-  {
-    try
-    {
-      Function renderToString = (Function)scope.get( func, scope );
-      //noinspection unchecked
-      return (T)renderToString.call( Context.getCurrentContext(), scope, scope, args );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static ScriptableObject init( String programName )
-  {
-    ScriptableObject scope = SharedScope.newStaticScope();
-    Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
-    Node programNode = parser.parse();
-    Context.getCurrentContext().evaluateString( scope, programNode.genCode(), programName, 1, null );
-    return scope;
-  }
-
-  private static ThreadLocal<Integer> _counter = ThreadLocal.withInitial( () -> 0 );
-
-  @SuppressWarnings("unused")
-  public static ScriptableObject initDirect( String source, String url )
-  {
-    ScriptableObject scope = SharedScope.newStaticScope();
-    Parser parser = new Parser( new Tokenizer( source, url ) );
-    Node programNode = parser.parse();
-    Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "direct_" + _counter.get(), 1, null );
-    _counter.set( _counter.get() + 1 );
-    return scope;
-  }
-
-  @SuppressWarnings("unused")
-  protected static Object evaluate( String source, String url )
-  {
-    ScriptableObject scope = SharedScope.newStaticScope();
-    Parser parser = new Parser( new Tokenizer( source, url ) );
-    Node programNode = parser.parse();
-    return Context.getCurrentContext().evaluateString( scope, programNode.genCode(), "evaluate_js", 1, null );
   }
 
   static IFile loadSrcForName( String fqn, String fileExt )
@@ -200,7 +166,7 @@ public class JavascriptProgram
 
   private static ITypeManifold findJavascriptManifold( String fileExt )
   {
-    ITypeManifold tm = RuntimeManifoldHost.get().getSingleModule().getTypeManifolds().stream()
+    ITypeManifold tm = JavacPlugin.instance().getHost().getSingleModule().getTypeManifolds().stream()
       .filter( e -> e.handlesFileExtension( fileExt ) )
       .findFirst().orElse( null );
     if( tm == null )

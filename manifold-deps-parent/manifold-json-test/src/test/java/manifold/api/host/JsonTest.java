@@ -11,12 +11,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 
 import abc.*;
 import junit.framework.TestCase;
-import manifold.api.json.codegen.schema.Base64Encoding;
-import manifold.api.json.codegen.schema.OctetEncoding;
+import manifold.json.rt.api.Base64Encoding;
+import manifold.json.rt.api.OctetEncoding;
 import manifold.util.ReflectUtil;
 
 

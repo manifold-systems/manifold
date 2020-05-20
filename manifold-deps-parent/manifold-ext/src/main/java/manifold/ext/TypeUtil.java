@@ -21,7 +21,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.util.Context;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Structural;
 import manifold.internal.javac.TypeProcessor;
 
 /**

@@ -273,7 +273,7 @@ A practical example of the `extends` directive:
 package demo;
 
 import model.Contact;
-import manifold.templates.runtime.BaseTemplate;
+import manifold.templates.rt.runtime.BaseTemplate;
 
 public class ExampleTemplate extends BaseTemplate {
 
@@ -610,7 +610,7 @@ A simple "Hello World!" Spark application making use of ManTL:
 ```java
 package app;
 
-import manifold.templates.ManifoldTemplates;
+import manifold.templates.rt.ManifoldTemplates;
 import views.Index;
 import views.layout.DefaultLayout;
 
@@ -639,12 +639,12 @@ code completion, usage searching, refactoring, navigation, incremental compilati
 
 ### SparkTemplate Base Class
 
-Manifold provides base class `manifold.templates.sparkjava.SparkTemplate` for use with the `extends` directive
+Manifold provides base class `manifold.templates.rt.sparkjava.SparkTemplate` for use with the `extends` directive
 in your templates (or, more commonly, you extend this class and add more of your own application functionality).  This
 class provides various convenience methods to get the HTTP `Request`, `Response`, etc. and it also automatically escapes
 all string content for HTML, to help prevent malicious user input from causing a security issue in your application.
 
-If you wish, you can output raw HTML in a template that extends `manifold.templates.sparkjava.SparkTemplate` using the
+If you wish, you can output raw HTML in a template that extends `manifold.templates.rt.sparkjava.SparkTemplate` using the
 `raw()` function:
 
 ```jsp

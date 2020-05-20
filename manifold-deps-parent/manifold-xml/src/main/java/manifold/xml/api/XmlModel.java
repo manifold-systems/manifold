@@ -19,12 +19,12 @@ package manifold.xml.api;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Set;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.JsonModel;
-import manifold.api.xml.Xml;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
+import manifold.xml.rt.Xml;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

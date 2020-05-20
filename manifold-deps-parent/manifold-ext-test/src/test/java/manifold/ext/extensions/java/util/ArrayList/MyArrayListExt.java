@@ -1,8 +1,8 @@
 package manifold.ext.extensions.java.util.ArrayList;
 
 import java.util.ArrayList;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 /**
  */

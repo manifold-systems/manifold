@@ -25,12 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.json.AbstractJsonTypeManifold;
-import manifold.api.json.Json;
+import manifold.api.json.JsonTransformer;
 import manifold.api.json.codegen.schema.JsonSchemaType;
 import manifold.api.json.codegen.schema.JsonUnionType;
 import manifold.api.json.codegen.schema.LazyRefJsonType;
 import manifold.api.json.codegen.schema.TypeAttributes;
-import manifold.ext.RuntimeMethods;
+import manifold.ext.rt.RuntimeMethods;
 
 /**
  *
@@ -148,7 +148,7 @@ public class JsonListType extends JsonSchemaType
 
     if( !getComponentType().equalsStructurally( other.getComponentType() ) )
     {
-      IJsonType componentType = Json.mergeTypes( getComponentType(), other.getComponentType() );
+      IJsonType componentType = JsonTransformer.mergeTypes( getComponentType(), other.getComponentType() );
       if( componentType != null )
       {
         mergedType.setComponentType( componentType );

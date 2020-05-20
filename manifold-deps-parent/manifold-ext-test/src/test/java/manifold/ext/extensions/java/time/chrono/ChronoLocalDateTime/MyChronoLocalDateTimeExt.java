@@ -16,8 +16,8 @@
 
 package manifold.ext.extensions.java.time.chrono.ChronoLocalDateTime;
 
-import manifold.ext.api.Extension;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Structural;
 
 @Extension
 @Structural(factoryClass = Date_To_ChronoLocalDateTime.class)

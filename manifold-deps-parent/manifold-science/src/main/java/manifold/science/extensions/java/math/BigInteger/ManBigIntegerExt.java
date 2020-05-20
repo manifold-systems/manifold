@@ -17,9 +17,9 @@
 package manifold.science.extensions.java.math.BigInteger;
 
 import java.math.BigInteger;
-import manifold.ext.api.Extension;
-import manifold.ext.api.ComparableUsing;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.ComparableUsing;
+import manifold.ext.rt.api.This;
 
 /**
  * Extends {@code BigInteger} with arithmetic and relational operator implementations

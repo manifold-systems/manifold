@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Stack;
 import manifold.api.fs.IFile;
 import manifold.api.json.codegen.IJsonType;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 
 /**
  * Manages a cache of base types per URL for a given Json parser/transformer session.  Note

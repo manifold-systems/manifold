@@ -43,7 +43,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import manifold.api.type.ICompilerComponent;
 import manifold.util.ReflectUtil;
-import manifold.api.util.Stack;
+import manifold.rt.api.util.Stack;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class ManLog_8 extends Log

@@ -40,12 +40,11 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Warner;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.ISelfCompiledFile;
-import manifold.api.util.Stack;
+import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;
 
 
 import static com.sun.tools.javac.code.Kinds.MTH;
-import static com.sun.tools.javac.code.Kinds.VAL;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;

@@ -249,7 +249,7 @@ to your project separately depending on your needs.
  
     Defined in module `manifold-json` this library extends:
     - java.net.URL
-    - javax.script.Bindings
+    - manifold.rt.api.Bindings
 
 ## Summary
 

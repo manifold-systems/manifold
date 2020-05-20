@@ -17,17 +17,17 @@
 package manifold.api.json.codegen.schema;
 
 import java.util.Map;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import manifold.api.json.codegen.ErrantType;
 import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.codegen.JsonStructureType;
-import manifold.api.json.parser.Token;
-import manifold.api.json.DataBindings;
+import manifold.json.rt.parser.Token;
+import manifold.json.rt.api.DataBindings;
 import manifold.internal.javac.IIssue;
 import manifold.api.util.DebugLogUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 
 
 import static manifold.api.json.codegen.schema.JsonSchemaTransformer.JSCH_TYPE;

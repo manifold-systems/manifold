@@ -29,7 +29,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.host.IModule;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
-import manifold.api.util.ManClassUtil;
+import manifold.rt.api.util.ManClassUtil;
 
 public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatement<T>
 {

@@ -40,11 +40,11 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaFileObject;
 import manifold.api.type.ICompilerComponent;
-import manifold.api.util.ServiceUtil;
+import manifold.rt.api.util.ServiceUtil;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.TypeProcessor;
 import manifold.api.DisableStringLiteralTemplates;
-import manifold.api.util.Stack;
+import manifold.rt.api.util.Stack;
 import manifold.strings.api.ITemplateProcessorGate;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener

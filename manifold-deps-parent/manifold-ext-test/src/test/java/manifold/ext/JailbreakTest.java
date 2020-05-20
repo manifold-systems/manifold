@@ -3,7 +3,7 @@ package manifold.ext;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import junit.framework.TestCase;
-import manifold.ext.api.Jailbreak;
+import manifold.ext.rt.api.Jailbreak;
 import manifold.ext.stuff.Leaf;
 import manifold.ext.stuff.Sample;
 import manifold.util.ReflectUtil;

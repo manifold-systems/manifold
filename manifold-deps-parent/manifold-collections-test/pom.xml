@@ -12,6 +12,14 @@
   <name>Manifold :: CollectionsTest</name>
   
   <dependencies>
+    <!-- 'provided' scoped manifold-ext for method extensions   -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext-test</artifactId>

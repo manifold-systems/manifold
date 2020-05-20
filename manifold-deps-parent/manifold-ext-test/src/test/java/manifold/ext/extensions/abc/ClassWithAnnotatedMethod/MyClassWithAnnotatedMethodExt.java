@@ -17,8 +17,8 @@
 package manifold.ext.extensions.abc.ClassWithAnnotatedMethod;
 
 import abc.ClassWithAnnotatedMethod;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 @Extension
 public class MyClassWithAnnotatedMethodExt

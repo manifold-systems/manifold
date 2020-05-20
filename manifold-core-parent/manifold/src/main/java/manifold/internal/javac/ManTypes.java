@@ -53,7 +53,7 @@ import manifold.util.ReflectUtil;
 public class ManTypes extends Types
 {
   private static final String TYPES_FIELD = "types";
-  private static final String SELF_TYPE_NAME = "manifold.ext.api.Self";
+  private static final String SELF_TYPE_NAME = "manifold.ext.rt.api.Self";
 
   private final Symtab _syms;
   private final Attr _attr;

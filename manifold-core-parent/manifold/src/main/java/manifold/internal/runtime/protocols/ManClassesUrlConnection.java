@@ -37,7 +37,7 @@ import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.InMemoryClassJavaFileObject;
 import manifold.internal.javac.JavaCompileIssuesException;
 import manifold.internal.javac.StringJavaFileObject;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 import manifold.api.util.PerfLogUtil;
 
 /**

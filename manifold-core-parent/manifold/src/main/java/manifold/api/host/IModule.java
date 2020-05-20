@@ -36,7 +36,7 @@ import manifold.api.fs.IFileSystem;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
-import manifold.api.util.ServiceUtil;
+import manifold.rt.api.util.ServiceUtil;
 
 /**
  * Java projects are typically organized according to a hierarchy of modules where each module defines

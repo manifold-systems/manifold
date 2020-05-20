@@ -29,10 +29,10 @@ import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.codegen.IJsonType;
 import manifold.api.json.codegen.JsonBasicType;
 import manifold.api.json.codegen.JsonStructureType;
-import manifold.api.json.parser.Token;
-import manifold.ext.api.IBindingType;
+import manifold.json.rt.parser.Token;
+import manifold.ext.rt.api.IBindingType;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 
 /**
  * Transform JSON Schema enum to Java enum:

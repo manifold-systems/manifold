@@ -31,7 +31,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

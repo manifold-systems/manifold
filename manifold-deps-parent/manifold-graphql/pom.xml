@@ -15,6 +15,11 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-graphql-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-json</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -30,11 +35,6 @@
       <artifactId>graphql-java</artifactId>
       <version>13.0</version>
     </dependency>
-    <dependency>
-      <groupId>org.jetbrains</groupId>
-      <artifactId>annotations</artifactId>
-      <version>16.0.2</version>
-    </dependency>
   </dependencies>
 
   <build>
@@ -45,8 +45,6 @@
         <configuration>
           <archive>
             <manifestEntries>
-              <!--class files as source must be available for extension method classes-->
-              <Contains-Sources>java,class</Contains-Sources>
               <!--JPMS module name-->
               <Automatic-Module-Name>manifold.graphql</Automatic-Module-Name>
             </manifestEntries>

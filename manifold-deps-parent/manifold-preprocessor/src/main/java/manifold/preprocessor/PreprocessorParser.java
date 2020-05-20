@@ -37,7 +37,7 @@ import manifold.preprocessor.statement.IfStatement;
 import manifold.preprocessor.statement.SourceStatement;
 import manifold.preprocessor.statement.Statement;
 import manifold.preprocessor.statement.UndefStatement;
-import manifold.api.util.Stack;
+import manifold.rt.api.util.Stack;
 
 
 import static manifold.preprocessor.TokenType.*;

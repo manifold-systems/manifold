@@ -34,6 +34,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
@@ -47,8 +48,8 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;

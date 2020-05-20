@@ -9,12 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import junit.framework.TestCase;
-import manifold.ext.api.Self;
+import manifold.ext.rt.api.Self;
 import manifold.ext.stuff.Car;
 import manifold.ext.stuff.CarBuilder;
-
-
-import static java.lang.System.out;
 
 public class SelfTypeTest extends TestCase
 {

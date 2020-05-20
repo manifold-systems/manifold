@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 import manifold.io.FilePathComponents;
 import manifold.io.FileTreeWalk;
 

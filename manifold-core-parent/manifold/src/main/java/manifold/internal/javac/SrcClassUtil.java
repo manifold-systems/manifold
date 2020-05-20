@@ -537,7 +537,7 @@ public class SrcClassUtil
 
   private Symbol.MethodSymbol findConstructor( IModule module, String fqn, BasicJavacTask javacTask )
   {
-    manifold.api.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
+    manifold.rt.api.util.Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( module ).getClassSymbol( javacTask, fqn );
     Symbol.ClassSymbol cs = classSymbol.getFirst();
     Symbol.MethodSymbol ctor = null;
     for( Symbol sym: cs.getEnclosedElements() )
@@ -598,6 +598,32 @@ public class SrcClassUtil
         // Since java 10 we have to keep these out of stubbed java source
         continue;
       }
+
+      if( fqn.equals( "android.annotation.Nullable" ) )
+      {
+        // retarded android bullshit
+//        fqn = "androidx.annotation.RecentlyNullable";
+        continue;
+      }
+      else if( fqn.equals( "android.annotation.NonNull" ) )
+      {
+        // retarded android bullshit
+//        fqn = "androidx.annotation.RecentlyNonNull";
+        continue;
+      }
+      else if( fqn.equals( "androidx.annotation.RecentlyNullable" ) )
+      {
+        // retarded android bullshit
+//        fqn = "androidx.annotation.RecentlyNullable";
+        continue;
+      }
+      else if( fqn.equals( "androidx.annotation.RecentlyNonNull" ) )
+      {
+        // retarded android bullshit
+//        fqn = "androidx.annotation.RecentlyNonNull";
+        continue;
+      }
+
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
       for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
       {

@@ -26,7 +26,7 @@ import manifold.api.json.AbstractJsonTypeManifold;
 import manifold.api.json.codegen.DynamicType;
 import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
-import manifold.api.json.Json;
+import manifold.api.json.JsonTransformer;
 import manifold.api.json.codegen.JsonStructureType;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -109,7 +109,7 @@ public class JsonUnionType extends JsonStructureType
     IJsonType mergedType = null;
     for( IJsonType c: getConstituents() )
     {
-      mergedType = Json.mergeTypesNoUnion( c, type );
+      mergedType = JsonTransformer.mergeTypesNoUnion( c, type );
       if( mergedType != null && mergedType != DynamicType.instance() )
       {
         break;

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.function.Function;
 import junit.framework.TestCase;
 import manifold.IMyStruct;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Structural;
 
 /**
  */

@@ -14,12 +14,25 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
       <artifactId>manifold-ext-producer-sample</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-json</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

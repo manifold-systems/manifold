@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ package manifold.js;
 
 
 import java.lang.reflect.Modifier;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import manifold.api.fs.IFile;
@@ -29,19 +31,17 @@ import manifold.api.gen.SrcConstructor;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
+import manifold.api.type.ResourceFileTypeManifold;
 import manifold.api.type.SourcePosition;
-import manifold.js.parser.Parser;
-import manifold.js.parser.Tokenizer;
-import manifold.js.parser.tree.ClassFunctionNode;
-import manifold.js.parser.tree.ClassNode;
-import manifold.js.parser.tree.ConstructorNode;
-import manifold.js.parser.tree.Node;
-import manifold.js.parser.tree.ParameterNode;
-import manifold.js.parser.tree.ProgramNode;
-import manifold.js.parser.tree.PropertyNode;
-import manifold.api.util.ManClassUtil;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.Scriptable;
+import manifold.js.rt.JsRuntime;
+import manifold.js.rt.parser.tree.ClassFunctionNode;
+import manifold.js.rt.parser.tree.ClassNode;
+import manifold.js.rt.parser.tree.ConstructorNode;
+import manifold.js.rt.parser.tree.ParameterNode;
+import manifold.js.rt.parser.tree.ProgramNode;
+import manifold.js.rt.parser.tree.PropertyNode;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManEscapeUtil;
 import org.mozilla.javascript.ScriptableObject;
 
 
@@ -54,7 +54,7 @@ public class JavascriptClass
     ClassNode classNode = programNode.getFirstChild( ClassNode.class );
 
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class )
-      .imports( JavascriptClass.class )
+      .imports( JsRuntime.class )
       .imports( SourcePosition.class );
 
     clazz.addAnnotation(
@@ -113,7 +113,7 @@ public class JavascriptClass
     }
 
     //impl
-    ctor.body( "_context = " + JavascriptClass.class.getSimpleName() +
+    ctor.body( "_context = " + JsRuntime.class.getSimpleName() +
                ".initInstance(getScope(), \"" + classNode.getName() + "\"" + generateArgList( srcParameters ) + ");" );
 
     clazz.addConstructor( ctor );
@@ -124,6 +124,18 @@ public class JavascriptClass
   private static void addUtilityMethods( SrcClass clazz, ClassNode classNode, String fqn )
   {
     long uid = incUid();
+    IFile file = loadSrcForName( fqn, JavascriptTypeManifold.JS );
+    String url;
+    try
+    {
+      url = file.toURI().toURL().toString();
+    }
+    catch( MalformedURLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    String content = ResourceFileTypeManifold.getContent( file );
+    content = ManEscapeUtil.escapeForJavaStringLiteral( content );
     SrcMethod m = new SrcMethod()
       .name( "getScope" )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
@@ -132,7 +144,7 @@ public class JavascriptClass
          "      synchronized(" + classNode.getName() + ".class) {\n" +
          "        if(" + uid + "L != UID) {\n" +
          "          UID = " + uid + "L;\n" +
-         "          SCOPE = JavascriptClass.init(\"" + fqn + "\");\n" +
+         "          SCOPE = " + JsRuntime.class.getSimpleName() + ".init(\"" + fqn + "\", \"" + content + "\", \"" + url + "\");\n" +
          "        }\n" +
          "      }\n" +
          "    }\n" +
@@ -168,7 +180,7 @@ public class JavascriptClass
 
       // params
       ParameterNode parameters = node.getFirstChild( ParameterNode.class );
-      for( SrcParameter srcParameter: parameters.toParamList() )
+      for( SrcParameter srcParameter: toParamList( parameters ) )
       {
         srcMethod.addParam( srcParameter );
       }
@@ -176,17 +188,28 @@ public class JavascriptClass
       //impl
       if( node.isStatic() )
       {
-        srcMethod.body( "return JavascriptClass.invokeStatic(getScope(), \"" +
+        srcMethod.body( "return " + JsRuntime.class.getSimpleName() + ".invokeStatic(getScope(), \"" +
                         ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" +
-                        generateArgList( parameters.toParamList() ) + ");" );
+                        generateArgList( toParamList( parameters ) ) + ");" );
       }
       else
       {
-        srcMethod.body( "return JavascriptClass.invoke(_context, \"" + node.getName() + "\"" +
-                        generateArgList( parameters.toParamList() ) + ");" );
+        srcMethod.body( "return " + JsRuntime.class.getSimpleName() + ".invoke(_context, \"" + node.getName() + "\"" +
+                        generateArgList( toParamList( parameters ) ) + ");" );
       }
       clazz.addMethod( srcMethod );
     }
+  }
+
+  public static List<SrcParameter> toParamList( ParameterNode parameters )
+  {
+    ArrayList<String> params = parameters.getParams();
+    List<SrcParameter> parameterInfoBuilders = new ArrayList<>( params.size() );
+    for( int i = 0; i < params.size(); i++ )
+    {
+      parameterInfoBuilders.add( new SrcParameter( params.get( i ), parameters.getTypes().get( i ) ) );
+    }
+    return parameterInfoBuilders;
   }
 
   private static void addProperties( String fqn, SrcClass clazz, ClassNode classNode, IFile file )
@@ -214,12 +237,12 @@ public class JavascriptClass
 
         if( node.isStatic() )
         {
-          setter.body( "JavascriptClass.setStaticProp(getScope(), \"" +
+          setter.body( JsRuntime.class.getSimpleName() + ".setStaticProp(getScope(), \"" +
                        ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\", val);" );
         }
         else
         {
-          setter.body( "JavascriptClass.setProp(_context, \"" + name + "\", val);" );
+          setter.body( JsRuntime.class.getSimpleName() + ".setProp(_context, \"" + name + "\", val);" );
         }
         clazz.addMethod( setter );
       }
@@ -240,72 +263,16 @@ public class JavascriptClass
         //impl
         if( node.isStatic() )
         {
-          getter.body( "return JavascriptClass.getStaticProp(getScope(), \"" +
+          getter.body( "return " + JsRuntime.class.getSimpleName() + ".getStaticProp(getScope(), \"" +
                        ManClassUtil.getShortClassName( fqn ) + "\", \"" + name + "\");" );
         }
         else
         {
-          getter.body( "return JavascriptClass.getProp(_context, \"" + name + "\");" );
+          getter.body( "return " + JsRuntime.class.getSimpleName() + ".getProp(_context, \"" + name + "\");" );
         }
         clazz.addMethod( getter );
       }
     }
-  }
-
-  @SuppressWarnings("unused")
-  public static <T> T invoke( ScriptableObject scope, String func, Object... args )
-  {
-    //noinspection unchecked
-    return (T)ScriptableObject.callMethod( scope, func, args );
-  }
-
-  @SuppressWarnings("unused")
-  public static <T> T invokeStatic( ScriptableObject scope, String className, String func, Object... args )
-  {
-    //noinspection unchecked
-    return (T)ScriptableObject.callMethod( (Scriptable)scope.get( className, scope ), func, args );
-  }
-
-  @SuppressWarnings("unused")
-  public static Object getProp( ScriptableObject scope, String prop )
-  {
-    return ScriptableObject.getProperty( scope, prop );
-  }
-
-  @SuppressWarnings("unused")
-  public static Object getStaticProp( ScriptableObject scope, String className, String prop )
-  {
-    return ScriptableObject.getProperty( (Scriptable)scope.get( className, scope ), prop );
-  }
-
-  @SuppressWarnings("unused")
-  public static void setProp( ScriptableObject scope, String prop, Object value )
-  {
-    ScriptableObject.putProperty( scope, prop, value );
-  }
-
-  @SuppressWarnings("unused")
-  public static void setStaticProp( ScriptableObject scope, String className, String prop, Object value )
-  {
-    ScriptableObject.putProperty( (Scriptable)scope.get( className, scope ), prop, value );
-  }
-
-  @SuppressWarnings("unused")
-  public static ScriptableObject init( String programName )
-  {
-    ScriptableObject scope = SharedScope.newStaticScope();
-    Parser parser = new Parser( new Tokenizer( loadSrcForName( programName, JavascriptTypeManifold.JS ) ) );
-    Node programNode = parser.parse();
-    ClassNode classNode = programNode.getFirstChild( ClassNode.class );
-    String script = classNode.genCode();
-    Context.getCurrentContext().evaluateString( scope, script, programName, 1, null );
-    return scope;
-  }
-
-  @SuppressWarnings("unused")
-  public static ScriptableObject initInstance( ScriptableObject scope, String name, Object... args )
-  {
-    return (ScriptableObject)Context.getCurrentContext().newObject( scope, name, args );
   }
 
   private static Object absoluteOffset( int offset, IFile file )

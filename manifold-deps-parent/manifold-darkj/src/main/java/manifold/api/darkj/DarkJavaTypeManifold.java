@@ -30,7 +30,7 @@ import javax.tools.JavaFileObject;
 import manifold.api.host.IModule;
 import manifold.api.host.IRuntimeManifoldHost;
 import manifold.api.type.JavaTypeManifold;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

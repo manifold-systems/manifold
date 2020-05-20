@@ -16,7 +16,7 @@
 
 package manifold.science.api;
 
-import manifold.ext.api.ComparableUsing;
+import manifold.ext.rt.api.ComparableUsing;
 import manifold.science.util.Rational;
 
 import java.io.Serializable;

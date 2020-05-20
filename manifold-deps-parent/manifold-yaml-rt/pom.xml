@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>2020.1.12-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-yaml-rt</artifactId>
+
+  <name>Manifold :: Yaml Runtime</name>
+
+  <dependencies>
+    <!-- 'provided' dependency on manifold-ext to use extension methods and jailbreak -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-ext</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- json-rt for json interop with yaml -->
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <!-- snakeyaml is the yaml parser backend -->
+    <dependency>
+      <groupId>org.snakeyaml</groupId>
+      <artifactId>snakeyaml-engine</artifactId>
+      <version>1.0</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.yaml.rt</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

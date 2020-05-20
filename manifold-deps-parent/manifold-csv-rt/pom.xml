@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>2020.1.12-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-csv-rt</artifactId>
+
+  <name>Manifold :: CSV Runtime</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
+</project>

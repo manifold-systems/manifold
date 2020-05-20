@@ -47,7 +47,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.host.SimpleModule;
 import manifold.util.JreUtil;
-import manifold.api.util.ManClassUtil;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.util.ReflectUtil;
 import manifold.api.util.cache.FqnCache;
 import manifold.api.util.cache.FqnCacheNode;

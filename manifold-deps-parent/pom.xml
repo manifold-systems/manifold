@@ -29,19 +29,23 @@
     <module>manifold-exceptions</module>
     <module>manifold-exceptions-test</module>
     <module>manifold-ext</module>
+    <module>manifold-ext-rt</module>
     <module>manifold-ext-test</module>
     <module>manifold-ext-middle-test</module>
     <module>manifold-ext-producer-sample</module>
     <module>manifold-ext-producer-sample-test</module>
     <module>manifold-graphql</module>
+    <module>manifold-graphql-rt</module>
     <module>manifold-graphql-test</module>
     <module>manifold-io</module>
     <module>manifold-io-test</module>
     <module>manifold-image</module>
     <module>manifold-image-test</module>
     <module>manifold-js</module>
+    <module>manifold-js-rt</module>
     <module>manifold-js-test</module>
     <module>manifold-json</module>
+    <module>manifold-json-rt</module>
     <module>manifold-json-test</module>
     <module>manifold-preprocessor</module>
     <module>manifold-preprocessor-test</module>
@@ -53,15 +57,19 @@
     <module>manifold-strings-test</module>
     <module>manifold-strings-test-excl</module>
     <module>manifold-templates</module>
+    <module>manifold-templates-rt</module>
     <module>manifold-templates-test</module>
     <module>manifold-test</module>
     <module>manifold-text</module>
     <module>manifold-text-test</module>
     <module>manifold-xml</module>
+    <module>manifold-xml-rt</module>
     <module>manifold-xml-test</module>
     <module>manifold-yaml</module>
+    <module>manifold-yaml-rt</module>
     <module>manifold-yaml-test</module>
     <module>manifold-csv</module>
+    <module>manifold-csv-rt</module>
     <module>manifold-csv-test</module>
   </modules>
 

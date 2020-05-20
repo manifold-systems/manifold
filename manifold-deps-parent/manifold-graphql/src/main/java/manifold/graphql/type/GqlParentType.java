@@ -59,7 +59,7 @@ import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -79,21 +79,20 @@ import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.api.json.*;
-import manifold.api.json.codegen.schema.FormatTypeResolvers;
-import manifold.api.json.codegen.schema.IJsonFormatTypeResolver;
-import manifold.api.json.codegen.schema.JsonFormatType;
+import manifold.graphql.rt.api.GqlQuery;
+import manifold.graphql.rt.api.QueryResult;
+import manifold.json.rt.api.*;
 import manifold.api.type.ActualName;
 import manifold.api.type.FragmentValue;
 import manifold.api.type.SourcePosition;
-import manifold.api.util.ManEscapeUtil;
-import manifold.api.util.ManStringUtil;
-import manifold.api.util.Pair;
-import manifold.ext.RuntimeMethods;
-import manifold.ext.api.IBindingType;
-import manifold.ext.api.IProxyFactory;
-import manifold.ext.api.Structural;
-import manifold.graphql.request.Executor;
+import manifold.rt.api.util.ManEscapeUtil;
+import manifold.rt.api.util.ManStringUtil;
+import manifold.rt.api.util.Pair;
+import manifold.ext.rt.RuntimeMethods;
+import manifold.ext.rt.api.IBindingType;
+import manifold.ext.rt.api.IProxyFactory;
+import manifold.ext.rt.api.Structural;
+import manifold.graphql.rt.api.request.Executor;
 import manifold.api.DisableStringLiteralTemplates;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -1642,17 +1641,17 @@ class GqlParentType
     return cls;
   }
 
-  private java.lang.Class<?> findFormatType( String scalarName )
+  private java.lang.Class<?> findFormatType( String formatName )
   {
-    for( IJsonFormatTypeResolver resolver: Objects.requireNonNull( FormatTypeResolvers.get() ) )
+    for( IJsonFormatTypeCoercer coercer: IJsonFormatTypeCoercer.get() )
     {
-      JsonFormatType resolvedType = resolver.resolveType( scalarName );
-      if( resolvedType != null )
+      Class<?> javaType = coercer.getFormats().get( formatName );
+      if( javaType != null )
       {
-        return resolvedType.getJavaType();
+        return javaType;
       }
     }
-    return findJsonEquivalent( scalarName );
+    return findJsonEquivalent( formatName );
   }
 
   private Class<?> findJsonEquivalent( String scalarName )

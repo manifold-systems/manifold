@@ -84,7 +84,7 @@ public Point plus(int[] coord) {
 
 You can implement relational operators using a combination of the `ComparableUsing` and/or `Comparable` interfaces.
 
-### `manifold.ext.api.ComparableUsing`
+### `manifold.ext.rt.api.ComparableUsing`
 
 Relational operators can be implemented all together with the `ComparableUsing` interface, which extends `Comparable`
 to provide an operator-specific API.                           

@@ -1,7 +1,7 @@
 package manifold.ext.extensions.java.lang.StringBuffer;
 
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 /**
  */

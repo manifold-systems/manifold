@@ -28,24 +28,24 @@ import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Constructor;
 import java.util.Map;
 import javax.lang.model.type.NoType;
-import manifold.ext.api.ICallHandler;
-import manifold.ext.api.IProxyFactory;
+import manifold.ext.rt.api.ICallHandler;
+import manifold.ext.rt.api.IDynamicProxyFactory;
+import manifold.ext.rt.api.IProxyFactory;
 import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.util.ManExceptionUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
-class DynamicProxyFactory implements IProxyFactory
+public class DynamicProxyFactory implements IDynamicProxyFactory
 {
   private static final String STRUCTURAL_PROXY = "_structuralproxy_";
   private static final Map<Class, Boolean> ICALL_HANDLER_MAP = new ConcurrentWeakHashMap<>();
 
-  private Constructor _ctor;
-
-  DynamicProxyFactory( Class iface, Class rootClass )
+  @Override
+  public IProxyFactory makeProxyFactory( Class iface, Class rootClass )
   {
     String relativeProxyName = rootClass.getCanonicalName().replace( '.', '_' ) + STRUCTURAL_PROXY + iface.getCanonicalName().replace( '.', '_' );
     Class proxyClass;
@@ -57,20 +57,31 @@ class DynamicProxyFactory implements IProxyFactory
     {
       proxyClass = StructuralTypeProxyGenerator.makeProxy( iface, rootClass, relativeProxyName );
     }
-    _ctor = proxyClass.getConstructors()[0];
-    ReflectUtil.setAccessible( _ctor );
+    Constructor constructor = proxyClass.getConstructors()[0];
+    ReflectUtil.setAccessible( constructor );
+    return new Factory( constructor );
   }
 
-  @Override
-  public Object proxy( Object target, Class iface )
+  public static class Factory implements IProxyFactory
   {
-    try
+    private final Constructor _constructor;
+
+    public Factory( Constructor constructor )
     {
-      return _ctor.newInstance( target );
+      _constructor = constructor;
     }
-    catch( Exception e )
+
+    @Override
+    public Object proxy( Object target, Class iface )
     {
-      throw ManExceptionUtil.unchecked( e );
+      try
+      {
+        return _constructor.newInstance( target );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
     }
   }
 

@@ -23,10 +23,14 @@ import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -40,9 +44,10 @@ import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
 import manifold.api.host.ITypeSystemListener;
 import manifold.api.host.RefreshRequest;
-import manifold.api.util.ManClassUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.Pair;
 import manifold.api.util.SourcePathUtil;
+import manifold.util.JreUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -80,7 +85,7 @@ public class ClassSymbols
       init();
 
       StringWriter errors = new StringWriter();
-      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, makeJavacArgs(), null, null );
       if( errors.getBuffer().length() > 0 )
       {
         // report errors to console
@@ -95,7 +100,7 @@ public class ClassSymbols
         _wfm = new ManifoldJavaFileManager( _module.getHost(), _fm, null, false );
       }
       StringWriter errors = new StringWriter();
-      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" ), null, null );
+      BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, makeJavacArgs(), null, null );
       if( errors.getBuffer().length() > 0 )
       {
         // report errors to console
@@ -103,6 +108,11 @@ public class ClassSymbols
       }
       return task;
     } );
+  }
+
+  private List<String> makeJavacArgs()
+  {
+    return Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" );
   }
 
   private void init()
@@ -126,6 +136,10 @@ public class ClassSymbols
       {
         fm.setLocation( StandardLocation.SOURCE_PATH, _module.getCollectiveSourcePath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
         fm.setLocation( StandardLocation.CLASS_PATH, _module.getCollectiveJavaClassPath().stream().map( IResource::toJavaFile ).filter( f -> !SourcePathUtil.excludeFromTestPath( f.getAbsolutePath() ) ).collect( Collectors.toList() ) );
+        if( JreUtil.isJava8() )
+        {
+          fm.setLocation( StandardLocation.PLATFORM_CLASS_PATH, extendBootclasspath( fm.getLocation( StandardLocation.PLATFORM_CLASS_PATH ) ) );
+        }
         _fm = fm;
       }
       catch( IOException e )
@@ -133,6 +147,28 @@ public class ClassSymbols
         throw new RuntimeException( e );
       }
     }
+  }
+
+  private Iterable<? extends File> extendBootclasspath( Iterable<? extends File> existing )
+  {
+    if( JavacPlugin.instance() == null )
+    {
+      return existing;
+    }
+    String bootclasspath = JavacPlugin.instance().getBootclasspath();
+    if( bootclasspath == null || bootclasspath.isEmpty() )
+    {
+      return existing;
+    }
+
+    List<File> bootcp = new ArrayList<>();
+    existing.forEach( f -> bootcp.add( f ) );
+    String[] split = bootclasspath.split( ";" );
+    for( int i = 0; i < split.length; i++ )
+    {
+      bootcp.add( i, new File( split[i] ) );
+    }
+    return bootcp;
   }
 
   public BasicJavacTask getJavacTask_PlainFileMgr()

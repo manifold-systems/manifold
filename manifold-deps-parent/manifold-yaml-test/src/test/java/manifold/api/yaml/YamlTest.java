@@ -22,10 +22,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import junit.framework.TestCase;
-import manifold.api.json.Json;
-import manifold.api.util.StreamUtil;
+import manifold.api.json.JsonTransformer;
+import manifold.api.yaml.rt.Yaml;
+import manifold.json.rt.Json;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

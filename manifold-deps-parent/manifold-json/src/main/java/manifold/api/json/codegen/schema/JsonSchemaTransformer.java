@@ -29,24 +29,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
-import javax.script.Bindings;
+
+import manifold.json.rt.api.IJsonFormatTypeCoercer;
+import manifold.rt.api.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.json.codegen.DynamicType;
 import manifold.api.json.codegen.ErrantType;
 import manifold.api.json.codegen.IJsonParentType;
 import manifold.api.json.codegen.IJsonType;
-import manifold.api.json.Json;
 import manifold.api.json.codegen.JsonBasicType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.codegen.JsonListType;
 import manifold.api.json.codegen.JsonStructureType;
-import manifold.api.json.parser.Token;
+import manifold.json.rt.Json;
+import manifold.json.rt.parser.Token;
 import manifold.internal.javac.IIssue;
 import manifold.api.util.DebugLogUtil;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.Pair;
-import manifold.api.util.StreamUtil;
+import manifold.rt.api.util.Pair;
+import manifold.rt.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;
 
 
@@ -707,13 +709,14 @@ public class JsonSchemaTransformer
   private JsonFormatType resolveFormatType( Bindings jsonObj )
   {
     JsonFormatType resolvedType = null;
-    for( IJsonFormatTypeResolver resolver: Objects.requireNonNull( FormatTypeResolvers.get() ) )
+    for( IJsonFormatTypeCoercer formatCoercer: IJsonFormatTypeCoercer.get() )
     {
       Object format = jsonObj.get( JSCH_FORMAT );
       format = format instanceof Pair ? ((Pair)format).getSecond() : format;
-      resolvedType = resolver.resolveType( (String)format );
-      if( resolvedType != null )
+      Class<?> javaType = formatCoercer.getFormats().get( (String)format );
+      if( javaType != null )
       {
+        resolvedType = JsonFormatType.getPrototype( (String)format, javaType );
         break;
       }
     }

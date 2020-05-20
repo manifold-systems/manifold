@@ -31,7 +31,7 @@ import manifold.api.host.AbstractTypeSystemListener;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
 import manifold.api.util.ManIdentifierUtil;
-import manifold.api.util.ManClassUtil;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.api.util.cache.FqnCache;
 import manifold.util.concurrent.ConcurrentHashSet;
 

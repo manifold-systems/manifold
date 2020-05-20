@@ -17,15 +17,15 @@
 package manifold.api.json.codegen.schema;
 
 import java.util.List;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import manifold.api.json.codegen.DynamicType;
 import manifold.api.json.codegen.ErrantType;
 import manifold.api.json.codegen.IJsonType;
 import manifold.api.json.JsonIssue;
 import manifold.api.json.codegen.JsonListType;
-import manifold.api.json.parser.Token;
+import manifold.json.rt.parser.Token;
 import manifold.internal.javac.IIssue;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.Pair;
 
 
 import static manifold.api.json.codegen.schema.JsonSchemaTransformer.JSCH_ITEMS;

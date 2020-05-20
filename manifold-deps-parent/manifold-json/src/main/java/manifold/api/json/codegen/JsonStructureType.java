@@ -27,23 +27,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.script.Bindings;
+import manifold.rt.api.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.json.AbstractJsonTypeManifold;
-import manifold.api.json.Json;
+import manifold.api.json.JsonTransformer;
 import manifold.api.json.JsonIssue;
-import manifold.api.json.parser.Token;
+import manifold.json.rt.Json;
+import manifold.json.rt.parser.Token;
 import manifold.api.json.codegen.schema.JsonEnumType;
 import manifold.api.json.codegen.schema.JsonSchemaTransformer;
 import manifold.api.json.codegen.schema.JsonSchemaType;
 import manifold.api.json.codegen.schema.JsonUnionType;
 import manifold.api.json.codegen.schema.LazyRefJsonType;
 import manifold.api.json.codegen.schema.TypeAttributes;
-import manifold.ext.RuntimeMethods;
+import manifold.ext.rt.RuntimeMethods;
 import manifold.internal.javac.IIssue;
-import manifold.api.util.ManEscapeUtil;
-import manifold.api.util.Pair;
+import manifold.rt.api.util.ManEscapeUtil;
+import manifold.rt.api.util.Pair;
 
 /**
  * The main JSON type reflecting name/value pair bindings.
@@ -385,7 +386,7 @@ public class JsonStructureType extends JsonSchemaType
       {
         try
         {
-          type = Json.mergeTypes( existingType, type );
+          type = JsonTransformer.mergeTypes( existingType, type );
           if( type == null )
           {
             // if the existing type is dynamic, override it with a more specific type,
@@ -462,7 +463,7 @@ public class JsonStructureType extends JsonSchemaType
       IJsonType memberType = other.findMemberType( memberName );
       if( memberType != null )
       {
-        memberType = Json.mergeTypes( e.getValue(), memberType );
+        memberType = JsonTransformer.mergeTypes( e.getValue(), memberType );
       }
       else
       {

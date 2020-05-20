@@ -17,7 +17,7 @@
 package manifold.ext;
 
 import junit.framework.TestCase;
-import manifold.ext.api.Self;
+import manifold.ext.rt.api.Self;
 
 public class SelfTypeOverrideTest extends TestCase
 {

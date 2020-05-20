@@ -42,10 +42,10 @@ import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.type.IModel;
 import manifold.api.type.SourcePosition;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
-import manifold.api.util.ManClassUtil;
-import manifold.api.util.StreamUtil;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.StreamUtil;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;

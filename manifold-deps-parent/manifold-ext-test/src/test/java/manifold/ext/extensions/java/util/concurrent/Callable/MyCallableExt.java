@@ -1,7 +1,7 @@
 package manifold.ext.extensions.java.util.concurrent.Callable;
 
-import manifold.ext.api.Extension;
-import manifold.ext.api.Structural;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Structural;
 
 /**
  */

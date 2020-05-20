@@ -17,9 +17,9 @@
 package manifold.collections.extensions.java.util.stream.Stream;
 
 import java.util.function.Supplier;
-import java.util.stream.Collector;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 import java.util.*;
 import java.util.function.Function;

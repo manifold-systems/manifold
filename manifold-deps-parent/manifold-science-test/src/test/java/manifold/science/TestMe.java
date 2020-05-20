@@ -18,7 +18,7 @@ package manifold.science;
 
 import java.util.ArrayList;
 import java.util.List;
-import manifold.ext.api.ComparableUsing;
+import manifold.ext.rt.api.ComparableUsing;
 import manifold.science.util.Rational;
 import org.junit.Test;
 

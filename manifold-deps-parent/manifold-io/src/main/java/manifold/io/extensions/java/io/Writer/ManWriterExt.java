@@ -18,8 +18,8 @@ package manifold.io.extensions.java.io.Writer;
 
 import java.io.BufferedWriter;
 import java.io.Writer;
-import manifold.ext.api.Extension;
-import manifold.ext.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 
 import static manifold.io.extensions.java.io.File.ManFileExt.DEFAULT_BUFFER_SIZE;
