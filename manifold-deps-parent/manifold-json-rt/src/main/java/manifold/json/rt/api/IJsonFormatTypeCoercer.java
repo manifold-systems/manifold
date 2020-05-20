@@ -20,6 +20,7 @@ import manifold.ext.rt.CoercionProviders;
 import manifold.ext.rt.api.ICoercionProvider;
 import manifold.json.rt.DefaultCoercer;
 import manifold.rt.api.util.Pair;
+import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import java.util.*;
@@ -42,9 +43,17 @@ import java.util.stream.Collectors;
  */
 public interface IJsonFormatTypeCoercer extends ICoercionProvider
 {
+  LocklessLazyVar<Set<ICoercionProvider>> _coercionProviders =
+    LocklessLazyVar.make( () -> {
+      Set<ICoercionProvider> registered = new HashSet<>();
+      //!! for IJ plugin: need the classloader from here
+      ServiceUtil.loadRegisteredServices( registered, ICoercionProvider.class, IJsonFormatTypeCoercer.class.getClassLoader() );
+      return registered;
+    } );
+
   LocklessLazyVar<List<IJsonFormatTypeCoercer>> _instances =
     LocklessLazyVar.make( () ->
-      CoercionProviders.get().stream()
+      _coercionProviders.get().stream()
         .filter( e -> e instanceof IJsonFormatTypeCoercer )
         .map( e -> (IJsonFormatTypeCoercer)e )
         .collect( Collectors.toList() ) );

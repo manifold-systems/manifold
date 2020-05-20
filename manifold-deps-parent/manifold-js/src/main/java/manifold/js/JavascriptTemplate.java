@@ -38,12 +38,12 @@ import static manifold.js.JavascriptProgram.*;
 
 public class JavascriptTemplate
 {
-  static SrcClass genClass( String fqn, JSTNode jstNode )
+  static SrcClass genClass( JavascriptModel model, String fqn, JSTNode jstNode )
   {
     SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class )
       .addImport( JsRuntime.class );
 
-    IFile file = loadSrcForName( fqn, JavascriptTypeManifold.JS );
+    IFile file = loadSrcForName( model, fqn, JavascriptTypeManifold.JS );
     String url;
     try
     {

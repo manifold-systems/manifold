@@ -114,14 +114,6 @@ public class JavacPlugin implements Plugin, TaskListener
     ARG_STRINGS,
   };
 
-  /**
-   * Instructs manifold to generate code for execution in a static runtime environment where no dynamic manifold
-   * behavior is allowed.
-   * <p/>
-   * Usage: <pre> javac -Amanifold.pure.static=true ... </pre>
-   */
-  public static final String MANIFOLD_PURE_STATIC = "manifold.pure.static";
-
   /** javac command line arguments for static compilation */
   private static final String MANIFOLD_SOURCE_MAPPING = "manifold.source.";
   private static final String OTHER_SOURCE_FILES = "other.source.files";

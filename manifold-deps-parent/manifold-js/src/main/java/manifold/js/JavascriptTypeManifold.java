@@ -34,7 +34,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
 
   public void init( IModule module )
   {
-    init( module, (fqn, files) -> new JavascriptModel( getModule().getHost(), fqn, files ) );
+    init( module, (fqn, files) -> new JavascriptModel( getModule(), fqn, files ) );
   }
 
   @Override
@@ -52,7 +52,7 @@ public class JavascriptTypeManifold extends JavaTypeManifold<JavascriptModel>
   @Override
   protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, JavascriptModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcClass srcClass = new JavascriptCodeGen( model.getFiles().iterator().next(), topLevelFqn ).make( errorHandler );
+    SrcClass srcClass = new JavascriptCodeGen( model, topLevelFqn ).make( errorHandler );
     return srcClass.render( new StringBuilder(), 0).toString();
   }
 }

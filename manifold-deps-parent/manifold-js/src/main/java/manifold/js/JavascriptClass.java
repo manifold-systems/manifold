@@ -45,11 +45,9 @@ import manifold.rt.api.util.ManEscapeUtil;
 import org.mozilla.javascript.ScriptableObject;
 
 
-import static manifold.js.JavascriptProgram.*;
-
 public class JavascriptClass
 {
-  static SrcClass genClass( String fqn, ProgramNode programNode, IFile file )
+  static SrcClass genClass( String fqn, JavascriptModel model, ProgramNode programNode, IFile file )
   {
     ClassNode classNode = programNode.getFirstChild( ClassNode.class );
 
@@ -81,7 +79,7 @@ public class JavascriptClass
     clazz.addField( new SrcField( "_context", ScriptableObject.class ) );
 
     addConstructor( clazz, classNode, file );
-    addUtilityMethods( clazz, classNode, fqn );
+    addUtilityMethods( clazz, model, classNode, fqn );
     addMethods( fqn, clazz, classNode, file );
     addProperties( fqn, clazz, classNode, file );
 
@@ -99,7 +97,7 @@ public class JavascriptClass
     List<SrcParameter> srcParameters;
     if( constructor != null )
     {
-      srcParameters = makeSrcParameters( constructor, ctor );
+      srcParameters = JavascriptProgram.makeSrcParameters( constructor, ctor );
       ctor.addAnnotation(
         new SrcAnnotationExpression( SourcePosition.class )
           .addArgument( "url", String.class, classNode.getProgramNode().getUrl().toString() )
@@ -114,17 +112,17 @@ public class JavascriptClass
 
     //impl
     ctor.body( "_context = " + JsRuntime.class.getSimpleName() +
-               ".initInstance(getScope(), \"" + classNode.getName() + "\"" + generateArgList( srcParameters ) + ");" );
+               ".initInstance(getScope(), \"" + classNode.getName() + "\"" + JavascriptProgram.generateArgList( srcParameters ) + ");" );
 
     clazz.addConstructor( ctor );
   }
 
   private static ThreadLocal<Long> uid = new ThreadLocal<>();
 
-  private static void addUtilityMethods( SrcClass clazz, ClassNode classNode, String fqn )
+  private static void addUtilityMethods( SrcClass clazz, JavascriptModel model, ClassNode classNode, String fqn )
   {
     long uid = incUid();
-    IFile file = loadSrcForName( fqn, JavascriptTypeManifold.JS );
+    IFile file = JavascriptProgram.loadSrcForName( model, fqn, JavascriptTypeManifold.JS );
     String url;
     try
     {
@@ -190,12 +188,12 @@ public class JavascriptClass
       {
         srcMethod.body( "return " + JsRuntime.class.getSimpleName() + ".invokeStatic(getScope(), \"" +
                         ManClassUtil.getShortClassName( fqn ) + "\", \"" + node.getName() + "\"" +
-                        generateArgList( toParamList( parameters ) ) + ");" );
+                        JavascriptProgram.generateArgList( toParamList( parameters ) ) + ");" );
       }
       else
       {
         srcMethod.body( "return " + JsRuntime.class.getSimpleName() + ".invoke(_context, \"" + node.getName() + "\"" +
-                        generateArgList( toParamList( parameters ) ) + ");" );
+                        JavascriptProgram.generateArgList( toParamList( parameters ) ) + ");" );
       }
       clazz.addMethod( srcMethod );
     }

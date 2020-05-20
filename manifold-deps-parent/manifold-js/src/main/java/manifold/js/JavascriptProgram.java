@@ -38,7 +38,6 @@ import manifold.api.type.FragmentValue;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.api.type.SourcePosition;
-import manifold.internal.javac.JavacPlugin;
 import manifold.js.rt.JsRuntime;
 import manifold.js.rt.parser.tree.*;
 import manifold.rt.api.util.ManEscapeUtil;
@@ -148,9 +147,9 @@ public class JavascriptProgram
     return sb.toString();
   }
 
-  static IFile loadSrcForName( String fqn, String fileExt )
+  static IFile loadSrcForName( JavascriptModel model, String fqn, String fileExt )
   {
-    List<IFile> filesForType = findJavascriptManifold( fileExt ).findFilesForType( fqn );
+    List<IFile> filesForType = findJavascriptManifold( model, fileExt ).findFilesForType( fqn );
     if( filesForType.isEmpty() )
     {
       throw new IllegalStateException( "Could not find a ." + fileExt + " file for type: " + fqn );
@@ -164,9 +163,9 @@ public class JavascriptProgram
     return filesForType.get( 0 );
   }
 
-  private static ITypeManifold findJavascriptManifold( String fileExt )
+  private static ITypeManifold findJavascriptManifold( JavascriptModel model, String fileExt )
   {
-    ITypeManifold tm = JavacPlugin.instance().getHost().getSingleModule().getTypeManifolds().stream()
+    ITypeManifold tm = model.getModule().getTypeManifolds().stream()
       .filter( e -> e.handlesFileExtension( fileExt ) )
       .findFirst().orElse( null );
     if( tm == null )

@@ -18,17 +18,16 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.model.JavacElements;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Map;
 
 import manifold.api.host.NoBootstrap;
 import manifold.internal.runtime.Bootstrap;
+import manifold.rt.api.IBootstrap;
 
 
 /**
@@ -74,30 +73,16 @@ class BootstrapInserter extends TreeTranslator
   private boolean okToInsertBootstrap( JCTree.JCClassDecl tree )
   {
     return !annotatedWith_NoBootstrap( tree.getModifiers().getAnnotations() ) &&
-           !isExclusivelyStaticManifold() &&
            !JavacPlugin.instance().isNoBootstrapping() &&
            !alreadyHasBootstrap( tree ) &&
            !skipForOtherReasons( tree );
   }
 
-  private boolean isExclusivelyStaticManifold()
-  {
-    return isAndroid() || isManifoldPureStatic();
-  }
-
-  private boolean isManifoldPureStatic()
-  {
-    Map<String, String> options = JavacProcessingEnvironment.instance( _javacJacker.getContext() ).getOptions();
-    return Boolean.parseBoolean( options.get( JavacPlugin.MANIFOLD_PURE_STATIC ) );
-  }
-
-  private boolean isAndroid()
-  {
-    String bootclasspath = _javacJacker.getBootclasspath();
-    return bootclasspath != null &&
-      (bootclasspath.contains( "/android.jar" ) ||
-        bootclasspath.contains( "\\android.jar" ));
-  }
+//  private boolean isManifoldPureStatic()
+//  {
+//    Map<String, String> options = JavacProcessingEnvironment.instance( _javacJacker.getContext() ).getOptions();
+//    return Boolean.parseBoolean( options.get( JavacPlugin.MANIFOLD_PURE_STATIC ) );
+//  }
 
   // If an annotation processor is active, a class can be processed multiple times,
   // so we check to see if we've already added the bootstrap block.
@@ -156,7 +141,7 @@ class BootstrapInserter extends TreeTranslator
     TreeMaker make = _javacJacker.getTreeMaker();
     JavacElements javacElems = _javacJacker.getJavacElements();
 
-    JCTree.JCMethodInvocation bootstrapInitCall = make.Apply( List.nil(), memberAccess( make, javacElems, Bootstrap.class.getName() + ".init" ), List.nil() );
+    JCTree.JCMethodInvocation bootstrapInitCall = make.Apply( List.nil(), memberAccess( make, javacElems, IBootstrap.class.getName() + ".dasBoot" ), List.nil() );
     return make.Block( Modifier.STATIC, List.of( make.Exec( bootstrapInitCall ) ) );
   }
 

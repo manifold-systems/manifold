@@ -38,13 +38,14 @@ import manifold.api.util.JavacDiagnostic;
 
 class JavascriptCodeGen
 {
-
+  private final JavascriptModel _model;
   private final IFile _file;
   private final String _fqn;
 
-  JavascriptCodeGen( IFile file, String topLevelFqn )
+  JavascriptCodeGen( JavascriptModel model, String topLevelFqn )
   {
-    _file = file;
+    _model = model;
+    _file = model.getFiles().iterator().next();
     _fqn = topLevelFqn;
   }
 
@@ -65,7 +66,7 @@ class JavascriptCodeGen
     if( Objects.equals( _file.getExtension(), "jst" ) )
     {
       TemplateParser parser = new TemplateParser( new TemplateTokenizer( _fqn, content, url, true ) );
-      return JavascriptTemplate.genClass( _fqn, (JSTNode)parser.parse() );
+      return JavascriptTemplate.genClass( _model, _fqn, (JSTNode)parser.parse() );
     }
     else
     {
@@ -76,7 +77,7 @@ class JavascriptCodeGen
 
       if( parser.isES6Class() )
       {
-        return JavascriptClass.genClass( _fqn, programNode, _file );
+        return JavascriptClass.genClass( _fqn, _model, programNode, _file );
       }
       else
       {

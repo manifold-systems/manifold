@@ -20,15 +20,18 @@ import java.net.MalformedURLException;
 import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
+import manifold.api.host.IModule;
 import manifold.api.type.AbstractSingleFileModel;
 
 public class JavascriptModel extends AbstractSingleFileModel
 {
+  private final IModule _module;
   private String _url;
 
-  JavascriptModel( IManifoldHost host, String fqn, Set<IFile> files )
+  JavascriptModel( IModule module, String fqn, Set<IFile> files )
   {
-    super( host, fqn, files );
+    super( module.getHost(), fqn, files );
+    _module = module;
     assignUrl();
   }
 
@@ -42,6 +45,11 @@ public class JavascriptModel extends AbstractSingleFileModel
     {
       throw new RuntimeException( e );
     }
+  }
+
+  public IModule getModule()
+  {
+    return _module;
   }
 
   public String getUrl()

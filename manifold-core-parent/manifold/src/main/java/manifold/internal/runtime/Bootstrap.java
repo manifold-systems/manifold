@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.Hashtable;
 import java.util.Map;
 import manifold.internal.host.RuntimeManifoldHost;
+import manifold.rt.api.IBootstrap;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 /**
@@ -32,7 +33,7 @@ import manifold.util.concurrent.ConcurrentWeakHashMap;
  *   <li>Initializes the RuntimeManifoldHost</li>
  * </ul>
  */
-public class Bootstrap
+public class Bootstrap implements IBootstrap
 {
   private static final Map<ClassLoader, Boolean> LOADER_TO_CAN_WRAP = new ConcurrentWeakHashMap<>();
 
@@ -200,6 +201,12 @@ public class Bootstrap
       protocols = protocols.replace( PROTOCOL_PACKAGE + '|', "" );
       System.setProperty( strProtocolProp, protocols );
     }
+  }
+
+  @Override
+  public boolean boot()
+  {
+    return Bootstrap.init();
   }
 
   // flag to prevent re-entry
