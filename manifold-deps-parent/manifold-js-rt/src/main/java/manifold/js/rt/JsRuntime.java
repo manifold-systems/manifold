@@ -128,7 +128,7 @@ public class JsRuntime
   }
 
   @SuppressWarnings("unused")
-  protected static Object evaluate( String source, String url )
+  public static Object evaluate( String source, String url )
   {
     ScriptableObject scope = SharedScope.newStaticScope();
     Parser parser = new Parser( new Tokenizer( source, url ) );
