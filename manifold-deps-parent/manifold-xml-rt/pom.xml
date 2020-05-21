@@ -18,6 +18,11 @@
       <artifactId>manifold-json-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.antlr</groupId>
+      <artifactId>antlr4-runtime</artifactId>
+      <version>4.7.2</version>
+    </dependency>
   </dependencies>
 
   <build>
