@@ -39,7 +39,8 @@ public class JreUtil
       }
     }
     int major = Integer.parseInt( sb.toString() );
-    major = major == 1 ? 8 : major;
+    // note, android's major is 0, but is really 8 (ish)
+    major = major <= 1 ? 8 : major;
     return major;
   }
 
