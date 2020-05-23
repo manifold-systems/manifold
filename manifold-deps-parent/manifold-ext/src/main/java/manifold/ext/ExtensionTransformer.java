@@ -2210,7 +2210,7 @@ public class ExtensionTransformer extends TreeTranslator
     type = types.erasure( type );
 
     JCExpression classExpr;
-    if( type.isPrimitive() ||
+    if( isPrimitiveOrPrimitiveArray( type ) ||
         (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )
     {
       // class is publicly accessible, assume we can use class literal
@@ -2225,6 +2225,15 @@ public class ExtensionTransformer extends TreeTranslator
     return classExpr;
   }
 
+  private boolean isPrimitiveOrPrimitiveArray( Type type )
+  {
+    while( type instanceof Type.ArrayType )
+    {
+      type = ((Type.ArrayType)type).getComponentType();
+    }
+    return type.isPrimitive();
+  }
+
   private JCExpression classForNameCall( Type type, JCTree tree )
   {
     TreeMaker make = _tp.getTreeMaker();
@@ -2232,20 +2241,32 @@ public class ExtensionTransformer extends TreeTranslator
 
     JCTree.JCMethodInvocation typeCall = make.Apply( List.nil(),
       memberAccess( make, javacElems, ReflectUtil.class.getName() + ".type" ),
-      List.of( make.Literal( type.tsym.getQualifiedName().toString() ) ) );
+      List.of( make.Literal( makeLiteralName( type ) ) ) );
     typeCall.setPos( Position.NOPOS );
     typeCall.type = _tp.getSymtab().classType;
     JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)typeCall.getMethodSelect();
 
     Symbol.ClassSymbol reflectMethodClassSym =
       IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), ReflectUtil.class.getName() );
-    Symbol.MethodSymbol typeMethodSymbol = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( "type" ), reflectMethodClassSym.type, List.of( _tp.getSymtab().stringType ) );
+    Symbol.MethodSymbol typeMethodSymbol = resolveMethod( tree.pos(),
+      Names.instance( _tp.getContext() ).fromString( "type" ),
+      reflectMethodClassSym.type, List.of( _tp.getSymtab().stringType ) );
     newMethodSelect.sym = typeMethodSymbol;
     newMethodSelect.type = typeMethodSymbol.type;
     newMethodSelect.pos = tree.pos;
     assignTypes( newMethodSelect.selected, reflectMethodClassSym );
 
     return typeCall;
+  }
+
+  private String makeLiteralName( Type type )
+  {
+    StringBuilder sb = new StringBuilder();
+    for( ;type instanceof Type.ArrayType; type = ((Type.ArrayType)type).getComponentType() )
+    {
+      sb.append( "[]" );
+    }
+    return type.tsym.flatName() + sb.toString();
   }
 
   private void assignTypes( JCExpression m, Symbol symbol )

@@ -2,6 +2,8 @@ package manifold.ext;
 
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import junit.framework.TestCase;
 import manifold.ext.rt.api.Jailbreak;
 import manifold.ext.stuff.Leaf;
@@ -166,5 +168,18 @@ public class JailbreakTest extends TestCase
 
     s._booleanField = true;
     assertFalse( !s._booleanField );
+  }
+
+  public void testParams()
+  {
+    @Jailbreak Sample s = new Sample();
+    assertSame( 5, s.primParam( 5 ) );
+    assertSame( "hi", s.classParam( "hi" ) );
+    int[][] primArrayParam = new int[][]{{1},{2}};
+    assertSame( primArrayParam, s.primArrayParam( primArrayParam ) );
+    String[][] classArrayParam = new String[][]{{"a"},{"b"}};
+    assertSame( classArrayParam, s.classArrayParam( classArrayParam ) );
+    HashMap.Entry<String, String> entry = new HashMap.SimpleEntry<>( "k", "v" );
+    assertSame( entry, s.innerClassParam( entry ) );
   }
 }

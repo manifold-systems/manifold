@@ -17,13 +17,7 @@
 package manifold.util;
 
 import java.io.IOException;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -69,7 +63,7 @@ public class ReflectUtil
    * Searches the class loader of this class for the specified name, if not found searches
    * the current thread's context class loader.
    *
-   * @param fqn The qualified name of the type e.g., {@code "java.lang.String"}
+   * @param fqn The qualified name of the type e.g., {@code "java.lang.String"} or {@code "java.lang.String[]"}
    *
    * @return The {@code Class} corresponding with {@code fqn} or null if not found
    */
@@ -79,15 +73,7 @@ public class ReflectUtil
   }
   public static Class<?> type( String fqn, boolean useCallChain )
   {
-    try
-    {
-      //openPackage( fqn, null );
-      return Class.forName( fqn );
-    }
-    catch( ClassNotFoundException e )
-    {
-      return type( fqn, Thread.currentThread().getContextClassLoader(), useCallChain );
-    }
+    return type( fqn, ReflectUtil.class.getClassLoader(), useCallChain );
   }
 
   /**
@@ -106,8 +92,20 @@ public class ReflectUtil
   {
     try
     {
-      //openPackage( fqn, cl );
-      return Class.forName( fqn, false, cl );
+      int dims = 0;
+      int iBracket = fqn.indexOf( '[' );
+      if( iBracket > 0 )
+      {
+        dims = (fqn.length() - iBracket)/2;
+        fqn = fqn.substring( 0, iBracket );
+      }
+      //openPackage( fqn, null );
+      Class<?> cls = Class.forName( fqn, false, cl );
+      if( dims > 0 )
+      {
+        cls = Array.newInstance( cls, new int[dims] ).getClass();
+      }
+      return cls;
     }
     catch( ClassNotFoundException e )
     {
@@ -135,13 +133,7 @@ public class ReflectUtil
         continue;
       }
       attempted.add( cl );
-      try
-      {
-        return Class.forName( fqn, false, cl );
-      }
-      catch( ClassNotFoundException ignore )
-      {
-      }
+      return type( fqn, cl, false );
     }
     return null;
   }
