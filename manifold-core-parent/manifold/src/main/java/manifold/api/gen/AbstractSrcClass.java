@@ -559,11 +559,6 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderFields( StringBuilder sb, int indent )
   {
-    if( _fields.isEmpty() )
-    {
-      return;
-    }
-
     sb.append( "\n" ).append( indent( sb, indent ) ).append( "// fields //\n" );
     for( SrcField field : _fields )
     {
@@ -573,11 +568,6 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderMethods( StringBuilder sb, int indent )
   {
-    if( _methods.isEmpty() )
-    {
-      return;
-    }
-
     sb.append( "\n" ).append( indent( sb, indent ) ).append( "// methods //\n" );
     for( AbstractSrcMethod method : _methods )
     {
@@ -587,11 +577,6 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderStaticBlocks( StringBuilder sb, int indent )
   {
-    if( _staticBlocks.isEmpty() )
-    {
-      return;
-    }
-
     sb.append( "\n" ).append( indent( sb, indent ) ).append( "// static blocks //\n" );
     for( SrcStatementBlock block : _staticBlocks )
     {
@@ -603,11 +588,6 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderConstructors( StringBuilder sb, int indent )
   {
-    if( _constructors.isEmpty() )
-    {
-      return;
-    }
-
     sb.append( "\n" ).append( indent( sb, indent ) ).append( "// constructors //\n" );
     for( SrcConstructor ctor : _constructors )
     {
@@ -617,29 +597,23 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderProperties( StringBuilder sb, int indent )
   {
-    if( !_getProperties.isEmpty() )
+    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// properties //\n" );
+    for( Map.Entry<String, SrcGetProperty> entry : _getProperties.entrySet() )
     {
-      sb.append( "\n" ).append( indent( sb, indent ) ).append( "// properties //\n" );
-      for( Map.Entry<String, SrcGetProperty> entry : _getProperties.entrySet() )
+      entry.getValue().render( sb, indent );
+      SrcSetProperty srcSetProperty = _setProperties.get( entry.getKey() );
+      if( srcSetProperty != null )
+      {
+        srcSetProperty.render( sb, indent );
+      }
+      sb.append( "\n" );
+    }
+    for( Map.Entry<String, SrcSetProperty> entry : _setProperties.entrySet() )
+    {
+      SrcGetProperty srcGetProperty = _getProperties.get( entry.getKey() );
+      if( srcGetProperty == null )
       {
         entry.getValue().render( sb, indent );
-        SrcSetProperty srcSetProperty = _setProperties.get( entry.getKey() );
-        if( srcSetProperty != null )
-        {
-          srcSetProperty.render( sb, indent );
-        }
-        sb.append( "\n" );
-      }
-    }
-    if( !_setProperties.isEmpty() )
-    {
-      for( Map.Entry<String, SrcSetProperty> entry : _setProperties.entrySet() )
-      {
-        SrcGetProperty srcGetProperty = _getProperties.get( entry.getKey() );
-        if( srcGetProperty == null )
-        {
-          entry.getValue().render( sb, indent );
-        }
       }
     }
   }
@@ -668,11 +642,6 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   private void renderInnerClasses( StringBuilder sb, int indent )
   {
-    if( _innerClasses.isEmpty() )
-    {
-      return;
-    }
-
     sb.append( "\n" ).append( indent( sb, indent ) ).append( "// inner classes //\n" );
     for( AbstractSrcClass innerClass : _innerClasses )
     {

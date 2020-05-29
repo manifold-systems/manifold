@@ -14,20 +14,8 @@
  * limitations under the License.
  */
 
-package manifold.graphql.rt.api;
+package manifold.graphql.type;
 
-import manifold.ext.rt.api.IBindingsBacked;
-
-public interface GqlQuery<R extends QueryResult> extends IBindingsBacked
+public interface BaseQuery<R>
 {
-  /**
-   * @return The GraphQL query definition.
-   */
-  String queryDefinition();
-
-  /**
-   * @return The GraphQL fragment definitions referenced from the query definition.
-   * Empty string if none are used.
-   */
-  String fragmentDefinitions();
 }

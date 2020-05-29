@@ -55,7 +55,14 @@ import java.lang.Class;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -79,7 +86,6 @@ import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.graphql.rt.api.GqlQuery;
 import manifold.graphql.rt.api.QueryResult;
 import manifold.json.rt.api.*;
 import manifold.api.type.ActualName;
@@ -316,7 +322,7 @@ class GqlParentType
 
   private void addProxyFactory( SrcLinkedClass enclosingType )
   {
-    String fqn = enclosingType.getName() + ".Factory";
+    String fqn = enclosingType.getName() + ".ProxyFactory";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Class )
       .addInterface( new SrcType( "IProxyFactory<Map, ${enclosingType.getSimpleName()}>" ) )
       .addMethod( new SrcMethod()
@@ -337,7 +343,9 @@ class GqlParentType
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
-      .addInterface( new SrcType( "GqlQuery<$identifier.Result>" ) )
+      .addInterface( new SrcType( "BaseQuery<$identifier.Result>" ) )
+      .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, operation.getName(), false );
     addSourcePositionAnnotation( srcClass, operation, operation::getName, srcClass );
@@ -346,12 +354,11 @@ class GqlParentType
     addBuilder( srcClass, operation );
     addCreateMethod( srcClass, operation );
     addBuilderMethod( srcClass, operation );
-    addQueryAndFragmentMethods( srcClass, operation );
     addRequestMethods( srcClass, operation );
     addLoadMethod( srcClass );
     addCopier( srcClass, operation );
     addCopierMethod( srcClass );
-    addCopyMethod( srcClass, true );
+    addCopyMethod( srcClass );
 
     for( VariableDefinition varDef: operation.getVariableDefinitions() )
     {
@@ -389,32 +396,19 @@ class GqlParentType
     return name;
   }
 
-  private void addQueryAndFragmentMethods( SrcLinkedClass srcClass, OperationDefinition operation )
+  private void addRequestMethods( SrcLinkedClass srcClass, OperationDefinition operation )
   {
     String query = ManEscapeUtil.escapeForJavaStringLiteral( AstPrinter.printAstCompact( operation ) );
     String fragments = getFragments( srcClass );
-    srcClass.addMethod( new SrcMethod()
-      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
-      .modifiers( Flags.DEFAULT )
-      .name( "queryDefinition" )
-      .returns( String.class )
-      .body( "return \"$query\";" ) );
-    srcClass.addMethod( new SrcMethod()
-      .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
-      .modifiers( Flags.DEFAULT )
-      .name( "fragmentDefinitions" )
-      .returns( String.class )
-      .body( "return \"$fragments\";" ) );
-  }
-  private void addRequestMethods( SrcLinkedClass srcClass, OperationDefinition operation )
-  {
+    //noinspection UnusedAssignment
+    query += " " + fragments;
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Flags.DEFAULT )
       .name( "request" )
       .addParam( "url", String.class )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", queryDefinition() + ' ' + fragmentDefinitions(), getBindings());"
+      .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
@@ -422,7 +416,7 @@ class GqlParentType
       .name( "request" )
       .addParam( "endpoint", Endpoint.class )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", queryDefinition() + ' ' + fragmentDefinitions(), getBindings());"
+      .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
@@ -430,7 +424,7 @@ class GqlParentType
       .name( "request" )
       .addParam( "requester", new SrcType( "Supplier<Requester<Bindings>>" ) )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(requester, \"${operation.getOperation().name().toLowerCase()}\", queryDefinition() + ' ' + fragmentDefinitions(), getBindings());"
+      .body( "return new Executor<Result>(requester, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
       ) );
   }
 
@@ -461,7 +455,7 @@ class GqlParentType
     srcClass.addMethod( method );
   }
 
-  private void addCreateMethod( SrcLinkedClass srcClass, Definition<?> definition )
+  private void addCreateMethod( SrcLinkedClass srcClass, Definition definition )
   {
     String simpleName = srcClass.getSimpleName();
     SrcMethod method = new SrcMethod( srcClass )
@@ -472,18 +466,8 @@ class GqlParentType
     srcClass.addMethod( method );
 
     SrcStatementBlock block = new SrcStatementBlock();
-    if( definition instanceof OperationDefinition )
-    {
-      // A non-operation definition is not a structural interface, therefore it must have a concrete instance
-      block.addStatement( "$simpleName thiz = new Factory().proxy(new DataBindings(), $simpleName.class);" );
-    }
-    else
-    {
-      // A non-operation definition, such as a query, is a *structural* interface, therefore its runtime instance is the
-      // bindings itself
-      block.addStatement( "$simpleName thiz = ($simpleName)new DataBindings();" );
-    }
-    for( NamedNode<?> node: getDefinitions( definition ) )
+    block.addStatement( "$simpleName thiz = ($simpleName)new DataBindings();" );
+    for( NamedNode node: getDefinitions( definition ) )
     {
       String name = makeIdentifier( remove$( node.getName() ), false );
       //noinspection unused
@@ -621,16 +605,13 @@ class GqlParentType
     enclosingType.addMethod( method );
   }
 
-  private void addCopyMethod( SrcLinkedClass enclosingType, boolean structural )
+  private void addCopyMethod( SrcLinkedClass enclosingType )
   {
-    String simpleName = enclosingType.getSimpleName();
     SrcMethod method = new SrcMethod( enclosingType )
       .modifiers( Flags.DEFAULT )
       .name( "copy" )
-      .returns( new SrcType( simpleName ) )
-      .body( structural
-             ? "return (${enclosingType.getSimpleName()})getBindings().deepCopy();"
-             : "return new Factory().proxy( getBindings().deepCopy(), $simpleName.class );" );
+      .returns( new SrcType( enclosingType.getSimpleName() ) )
+      .body( "return (${enclosingType.getSimpleName()})getBindings().deepCopy();" );
     enclosingType.addMethod( method );
   }
 
@@ -749,7 +730,7 @@ class GqlParentType
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
       .addInterface( QueryResult.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-        .addArgument( "factoryClass", Class.class, "Result.Factory.class" ) )
+        .addArgument( "factoryClass", Class.class, "Result.ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
 
     addProxyFactory( srcClass );
@@ -767,7 +748,7 @@ class GqlParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( Endpoint.class );
     srcClass.addImport( Executor.class );
-    srcClass.addImport( GqlQuery.class );
+    srcClass.addImport( BaseQuery.class );
     srcClass.addImport( QueryResult.class );
     srcClass.addImport( Requester.class );
     srcClass.addImport( DataBindings.class );
@@ -805,7 +786,7 @@ class GqlParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-        .addArgument( "factoryClass", Class.class, identifier + ".Factory.class" ) )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
     addUnionInterfaces( type, srcClass );
     addActualNameAnnotation( srcClass, type.getName(), false );
@@ -819,7 +800,7 @@ class GqlParentType
     addLoadMethod( srcClass );
     addCopier( srcClass, type );
     addCopierMethod( srcClass );
-    addCopyMethod( srcClass, false );
+    addCopyMethod( srcClass );
 
     List<FieldDefinition> fieldDefinitions = type.getFieldDefinitions();
     for( FieldDefinition member: fieldDefinitions )
@@ -867,7 +848,7 @@ class GqlParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-        .addArgument( "factoryClass", Class.class, identifier + ".Factory.class" ) )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
     addUnionInterfaces( type, srcClass );
     addActualNameAnnotation( srcClass, type.getName(), false );
@@ -913,7 +894,7 @@ class GqlParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-        .addArgument( "factoryClass", Class.class, identifier + ".Factory.class" ) )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
     addUnionInterfaces( type, srcClass );
     addActualNameAnnotation( srcClass, type.getName(), false );
@@ -1001,7 +982,7 @@ class GqlParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-        .addArgument( "factoryClass", Class.class, identifier + ".Factory.class" ) )
+        .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
     addUnionInterfaces( type, srcClass );
     String lub = findLub( type );
@@ -1200,7 +1181,7 @@ class GqlParentType
       srcInnerResult
         .addInterface( IJsonBindingsBacked.class.getSimpleName() )
         .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
-          .addArgument( "factoryClass", Class.class, srcInnerResult.getSimpleName() + ".Factory.class" ) )
+          .addArgument( "factoryClass", Class.class, srcInnerResult.getSimpleName() + ".ProxyFactory.class" ) )
         .modifiers( Modifier.PUBLIC );
       addActualNameAnnotation( srcInnerResult, name, false );
       addSourcePositionAnnotation( srcClass, field, name, srcInnerResult );
