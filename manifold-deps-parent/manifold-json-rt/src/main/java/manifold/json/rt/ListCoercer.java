@@ -14,39 +14,35 @@
  * limitations under the License.
  */
 
-package manifold.json.rt.api;
+package manifold.json.rt;
 
+import manifold.ext.rt.api.ICallHandler;
+import manifold.ext.rt.api.ICoercionProvider;
+import manifold.ext.rt.api.IListBacked;
 import manifold.json.rt.api.IJsonList;
+import manifold.json.rt.api.JsonList;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class JsonList<T> implements IJsonList<T>
+public class ListCoercer implements ICoercionProvider
 {
-  private final List _list;
-  private final Class<T> _finalComponentType;
-
-  public JsonList( Class<T> finalComponentType )
+  @Override
+  public Object coerce( Object value, Class<?> type )
   {
-    _list = new ArrayList<>();
-    _finalComponentType = finalComponentType;
-  }
-
-  public JsonList( List jsonList, Class<T> finalComponentType )
-  {
-    _list = jsonList;
-    _finalComponentType = finalComponentType;
+    if( value instanceof List && !(value instanceof IJsonList) && !IListBacked.class.isAssignableFrom( type ) )
+    {
+      return new JsonList( (List)value, type );
+    }
+    return ICallHandler.UNHANDLED;
   }
 
   @Override
-  public List getList()
+  public Object toBindingValue( Object value )
   {
-    return _list;
-  }
-
-  @Override
-  public Class<?> getFinalComponentType()
-  {
-    return _finalComponentType;
+    if( value instanceof JsonList )
+    {
+      return ((JsonList) value).getList();
+    }
+    return ICallHandler.UNHANDLED;
   }
 }

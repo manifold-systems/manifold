@@ -37,14 +37,12 @@ import manifold.rt.api.util.ManClassUtil;
 import manifold.ext.rt.api.*;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.ReflectUtil;
-import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class RuntimeMethods
 {
   private static Map<Class, Map<Class, IProxyFactory<?,?>>> PROXY_CACHE = new ConcurrentHashMap<>();
-  private static final Map<Object, Set<Class>> ID_MAP = new ConcurrentWeakHashMap<>();
   private static final LocklessLazyVar<Set<IProxyFactory>> _registeredProxyFactories =
     LocklessLazyVar.make( () -> {
       Set<IProxyFactory> registered = new HashSet<>();
@@ -65,66 +63,10 @@ public class RuntimeMethods
     return createNewProxy( root, iface );
   }
 
-  @SuppressWarnings("UnusedDeclaration")
-  public static Object assignStructuralIdentity( Object obj, Class iface )
-  {
-    if( obj != null )
-    {
-      //## note: we'd like to avoid the operation if the obj not a ICallHandler,
-      // but that is an expensive structural check, more expensive than this call...
-      //  if( obj is a ICallHandler )
-      //  {
-      Set<Class> ifaces = ID_MAP.computeIfAbsent( obj, k -> new ConcurrentHashSet<>() );
-      ifaces.add( iface );
-      //   }
-    }
-    return obj;
-  }
-
   /**
-   * Facilitates ICallHandler where the receiver of the method call structurally implements a method,
-   * but the association of the structural interface with the receiver is lost.  For example:
-   * <pre>
-   *   Person person = Person.create(); // Person is a JsonTypeManifold interface; the runtime type of person here is really just a Map (or Binding)
-   *   IMyStructureThing thing = (IMyStructureThing)person; // Extension method[s] satisfying IMyStructureThing on Person make this work e.g., via MyPersonExt extension methods class
-   *   thing.foo(); // foo() is an extension method on Person e.g., defined in MyPersonExt, however the runtime type of thing is just a Map (or Binding) thus the Person type identity is lost
-   * </pre>
-   */
-  //## todo: this is inefficient, we should consider caching the methods by signature along with the interfaces
-  public static Object invokeUnhandled( Object thiz, Class proxiedIface, String name, Class returnType, Class[] paramTypes, Object[] args )
-  {
-    Set<Class> ifaces = ID_MAP.get( thiz );
-    if( ifaces != null )
-    {
-      for( Class iface: ifaces )
-      {
-        if( iface == proxiedIface )
-        {
-          continue;
-        }
-
-        Method m = findMethod( iface, name, paramTypes );
-        if( m != null )
-        {
-          try
-          {
-            Object result = m.invoke( constructProxy( thiz, iface ), args );
-            result = coerce( result, returnType );
-            return result;
-          }
-          catch( Exception e )
-          {
-            throw new RuntimeException( e );
-          }
-        }
-      }
-    }
-    return ICallHandler.UNHANDLED;
-  }
-
-  /**
-   * Coerce the value from a JSON bindings value to more type-safe a Java value, using {@link ICoercionProvider}
-   * where applicable. Note for List the {@code type} corresponds with the deepest component type of the list.
+   * Coerce a value e.g., from a JSON bindings, to a more specific a Java value, using {@link ICoercionProvider}
+   * where applicable. Note, for {@code List} the {@code type} corresponds with the deepest component type of the list,
+   * see {@code ListCoercer}.
    */
   public static Object coerce( Object value, Class<?> type )
   {
@@ -137,18 +79,14 @@ public class RuntimeMethods
       return null;
     }
 
-    if( IBindingsBacked.class.isAssignableFrom( type ) )
-    {
-      return value;
-    }
-
     if( value instanceof List )
     {
-      Class<?> finalType = type;
-      //noinspection unchecked
-      return ((List)value).stream()
-      .map( e -> coerce( e, finalType ) )
-      .collect( Collectors.toList() );
+      Object result = callCoercionProviders( value, type );
+      if( result != ICallHandler.UNHANDLED )
+      {
+        return result;
+      }
+      return value;
     }
 
     if( type.isPrimitive() )
@@ -166,12 +104,6 @@ public class RuntimeMethods
     if( result != ICallHandler.UNHANDLED )
     {
       return result;
-    }
-
-    if( value instanceof String && ((String)value).isEmpty() )
-    {
-      // empty string is null e.g., CSV empty values are empty strings
-      return null;
     }
 
     Object boxedValue = coerceBoxed( value, type );
@@ -547,7 +479,12 @@ public class RuntimeMethods
 
     if( arg instanceof IBindingsBacked )
     {
-      return arg;
+      return ((IBindingsBacked)arg).getBindings();
+    }
+
+    if( arg instanceof IListBacked )
+    {
+      return ((IListBacked) arg).getList();
     }
 
     if( arg instanceof List )

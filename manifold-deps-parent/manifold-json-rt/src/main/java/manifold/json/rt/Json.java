@@ -16,6 +16,8 @@
 
 package manifold.json.rt;
 
+import manifold.ext.rt.api.IBindingsBacked;
+import manifold.ext.rt.api.IListBacked;
 import manifold.json.rt.api.IJsonParser;
 import manifold.rt.api.util.ManEscapeUtil;
 import manifold.rt.api.util.Pair;
@@ -93,6 +95,9 @@ public class Json
         indent( sb, indent + 2 );
         sb.append( '\"' ).append( key ).append( '\"' ).append( ": " );
         Object value = thisMap.get( key );
+
+        value = toBindings( value );
+
         if( value instanceof Map )
         {
           toJson( (Map)value, sb, indent + 2 );
@@ -113,7 +118,20 @@ public class Json
     sb.append( "}" );
   }
 
-  protected static void indent( StringBuilder sb, int indent )
+  public static Object toBindings( Object value )
+  {
+    if( value instanceof IBindingsBacked )
+    {
+      value = ((IBindingsBacked) value).getBindings();
+    }
+    else if( value instanceof IListBacked )
+    {
+      value = ((IListBacked) value).getList();
+    }
+    return value;
+  }
+
+  public static void indent( StringBuilder sb, int indent )
   {
     int i = 0;
     while( i < indent )
@@ -179,10 +197,15 @@ public class Json
    */
   public static void toJson( StringBuilder target, int margin, Object value )
   {
+    value = toBindings( value );
+
     if( value instanceof Pair )
     {
       value = ((Pair)value).getSecond();
     }
+
+    value = toBindings( value );
+
     if( value instanceof Map )
     {
       toJson( ((Map)value), target, margin );
@@ -213,6 +236,9 @@ public class Json
       {
         sb.append( "\n" );
       }
+
+      comp = toBindings( comp );
+
       if( comp instanceof Map )
       {
         toJson( (Map)comp, sb, indent + 2 );

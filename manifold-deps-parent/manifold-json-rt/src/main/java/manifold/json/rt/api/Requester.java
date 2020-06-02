@@ -16,6 +16,8 @@
 
 package manifold.json.rt.api;
 
+import manifold.json.rt.Json;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
@@ -40,8 +42,6 @@ import java.util.Map;
  * user.setName("Scott");
  * req.putOne("/$id", user);
  * </code></pre>
- * Note this class is intended for <i>basic</i> REST API use and is designed to supplement more capable REST API
- * frameworks such as Spring.
  *
  * @param <T> The type corresponding with the HTTP requests made from this class.  For instance, this type is returned
  *            from GET calls and is also the type of the payload sent for POST, PUT, and PATCH calls. Since DELETE calls
@@ -532,30 +532,36 @@ public class Requester<T>
 
   private <R> R request( String urlSuffix, Http method, Format format, Object jsonValue )
   {
+    jsonValue = Json.toBindings( jsonValue );
     urlSuffix = appendParams( urlSuffix );
+    Endpoint endpoint = urlSuffix != null ? _endpoint.withUrlSuffix( urlSuffix ) : _endpoint;
+    Object result;
     switch( format )
     {
       case Json:
         _headers.put( "Accept", "application/json" );
-        return Request.send( ( endpoint, p, m ) -> endpoint.sendJsonRequest( m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _endpoint, urlSuffix );
+        result = endpoint.sendJsonRequest( method.name(), jsonValue, _headers, _timeout );
+        break;
       case Yaml:
         _headers.put( "Accept", "application/x-yaml, application/yaml, text/yaml;q=0.9" );
-        return Request.send( ( endpoint, p, m ) -> endpoint.sendYamlRequest( m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _endpoint, urlSuffix );
+        result = endpoint.sendYamlRequest( method.name(), jsonValue, _headers, _timeout );
+        break;
       case Xml:
         _headers.put( "Accept", "application/xml" );
-        return Request.send( ( endpoint, p, m ) -> endpoint.sendXmlRequest( m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _endpoint, urlSuffix );
+        result = endpoint.sendXmlRequest( method.name(), jsonValue, _headers, _timeout );
+        break;
       case Csv:
         _headers.put( "Accept", "text/csv" );
-        return Request.send( ( endpoint, p, m ) -> endpoint.sendCsvRequest( m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _endpoint, urlSuffix );
+        result = endpoint.sendCsvRequest( method.name(), jsonValue, _headers, _timeout );
+        break;
       case Text:
-        return Request.send( ( endpoint, p, m ) -> endpoint.sendPlainTextRequest( m, jsonValue, _headers, _timeout ),
-          method, jsonValue, _endpoint, urlSuffix );
+        result = endpoint.sendPlainTextRequest( method.name(), jsonValue, _headers, _timeout );
+        break;
+      default:
+        throw new IllegalArgumentException( "format: " + format );
     }
-    throw new IllegalArgumentException( "format: " + format );
+    //noinspection unchecked
+    return (R)result;
   }
 
   private String appendParams( String urlSuffix )
@@ -576,23 +582,6 @@ public class Requester<T>
       firstParam = false;
     }
     return sb.toString();
-  }
-
-  @FunctionalInterface
-  private interface Request
-  {
-    Object send( Endpoint endpoint, Object payload, String method );
-
-    static <R> R send( Request sender, Http method, Object jsonValue, Endpoint endpoint, String urlSuffix )
-    {
-      if( urlSuffix != null )
-      {
-        endpoint = endpoint.withUrlSuffix( urlSuffix );
-      }
-
-      //noinspection unchecked
-      return (R)sender.send( endpoint, jsonValue, method.name() );
-    }
   }
 
   private enum Http

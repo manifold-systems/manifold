@@ -365,6 +365,13 @@ public class JsonListType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "  public List getList() {return _list;}\n" );
     indent( sb, indent );
+    sb.append( "  public Class getFinalComponentType() {return ${getPropertyType( getComponentType() )}.class;}\n" );
+    indent( sb, indent );
+    sb.append( "  public int hashCode() {return _list.hashCode();}\n" );
+    indent( sb, indent );
+    sb.append( "  public boolean equals(Object obj) {return obj instanceof List " +
+      "? getList().equals(obj) " +
+      ": obj instanceof IJsonList && getList().equals(((IJsonList)obj).getList());}" );
     sb.append( "}\n" );
   }
 

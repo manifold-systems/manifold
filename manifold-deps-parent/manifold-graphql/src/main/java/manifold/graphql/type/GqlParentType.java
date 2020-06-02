@@ -66,6 +66,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import manifold.graphql.rt.api.GqlQuery;
 import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -86,7 +88,7 @@ import manifold.api.gen.SrcSetProperty;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.graphql.rt.api.QueryResult;
+import manifold.graphql.rt.api.GqlQueryResult;
 import manifold.json.rt.api.*;
 import manifold.api.type.ActualName;
 import manifold.api.type.FragmentValue;
@@ -332,8 +334,14 @@ class GqlParentType
         .addParam( "map", Map.class.getSimpleName() )
         .addParam( "iface", new SrcType( "Class<${enclosingType.getSimpleName()}>" ) )
         .body( new SrcStatementBlock()
-          .addStatement( "Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings(map);" )
-          .addStatement( "return new ${enclosingType.getSimpleName()}() {public Bindings getBindings() {return bindings;}};" ) ) );
+          .addStatement( "DataBindings bindings = map instanceof DataBindings ? (DataBindings)map : new DataBindings(map);" )
+          .addStatement( "return new ${enclosingType.getSimpleName()}() {" +
+              "public DataBindings getBindings() {return bindings;}" +
+              "public int hashCode() {return getBindings().hashCode();}" +
+              "public boolean equals(Object obj) {return obj instanceof Bindings " +
+                "? obj.equals(getBindings()) " +
+                ": obj instanceof IJsonBindingsBacked && getBindings().equals(((IJsonBindingsBacked)obj).getBindings());}" +
+            "};" ) ) );
     enclosingType.addInnerClass( srcClass );
   }
 
@@ -343,7 +351,7 @@ class GqlParentType
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
-      .addInterface( new SrcType( "BaseQuery<$identifier.Result>" ) )
+      .addInterface( new SrcType( "GqlQuery<$identifier.Result>" ) )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
         .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
@@ -477,7 +485,7 @@ class GqlParentType
         block.addStatement( "thiz.set$Prop($name);" );
       }
     }
-    block.addStatement( "return thiz;" );
+    block.addStatement( "return new ProxyFactory().proxy((Map)thiz, $simpleName.class);" );
     method.body( block );
   }
 
@@ -611,7 +619,7 @@ class GqlParentType
       .modifiers( Flags.DEFAULT )
       .name( "copy" )
       .returns( new SrcType( enclosingType.getSimpleName() ) )
-      .body( "return (${enclosingType.getSimpleName()})getBindings().deepCopy();" );
+      .body( "return new ProxyFactory().proxy(getBindings().deepCopy(), ${enclosingType.getSimpleName()}.class);" );
     enclosingType.addMethod( method );
   }
 
@@ -727,8 +735,7 @@ class GqlParentType
   {
     String fqn = enclosingType.getName() + ".Result";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( IJsonBindingsBacked.class.getSimpleName() )
-      .addInterface( QueryResult.class.getSimpleName() )
+      .addInterface( GqlQueryResult.class.getSimpleName() )
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
         .addArgument( "factoryClass", Class.class, "Result.ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
@@ -748,8 +755,8 @@ class GqlParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( Endpoint.class );
     srcClass.addImport( Executor.class );
-    srcClass.addImport( BaseQuery.class );
-    srcClass.addImport( QueryResult.class );
+    srcClass.addImport( GqlQuery.class );
+    srcClass.addImport( GqlQueryResult.class );
     srcClass.addImport( Requester.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( IBindingType.class );

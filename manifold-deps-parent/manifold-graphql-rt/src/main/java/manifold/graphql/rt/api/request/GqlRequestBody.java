@@ -56,11 +56,11 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
     public GqlRequestBody proxy( Map map, Class<GqlRequestBody> iface )
     {
       //noinspection unchecked
-      Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings( map );
+      DataBindings bindings = map instanceof Bindings ? (DataBindings)map : new DataBindings( map );
 
       // DO NOT CHANGE THIS TO A LAMBDA, YOU WILL HAVE BAD LUCK FOR 9 YEARS
       //noinspection Convert2Lambda
-      return new GqlRequestBody() {public Bindings getBindings() {return bindings;}};
+      return new GqlRequestBody() {public DataBindings getBindings() {return bindings;}};
     }
   }
 }

@@ -54,7 +54,7 @@ public interface IJsonList<T> extends IListBacked<T>
     @Override
     public IJsonList proxy( List target, Class<IJsonList> iface )
     {
-      return new JsonList( target );
+      return new JsonList( target, Object.class );
     }
   }
 }

@@ -38,6 +38,8 @@ import manifold.json.rt.parser.Token;
 import manifold.json.rt.parser.TokenType;
 import manifold.rt.api.util.Pair;
 
+import static manifold.json.rt.Json.toBindings;
+
 public class Csv
 {
   /**
@@ -52,6 +54,7 @@ public class Csv
   public static String toCsv( Object jsonValue )
   {
     StringBuilder sb = new StringBuilder();
+    jsonValue = toBindings( jsonValue );
     if( jsonValue instanceof Map )
     {
       toCsv( jsonValue, null, sb, 0 );
@@ -78,6 +81,7 @@ public class Csv
    */
   public static void toCsv( Object jsonValue, String name, StringBuilder target, int indent )
   {
+    jsonValue = toBindings( jsonValue );
     if( jsonValue instanceof Map )
     {
       if( name == null )
@@ -126,6 +130,7 @@ public class Csv
       // Csv header
 
       Object comp = iterator.next();
+      comp = toBindings( comp );
       if( comp instanceof Pair )
       {
         comp = ((Pair)comp).getSecond();
@@ -167,6 +172,8 @@ public class Csv
       {
         comp = ((Pair)comp).getSecond();
       }
+
+      comp = toBindings( comp );
 
       if( comp instanceof Map )
       {

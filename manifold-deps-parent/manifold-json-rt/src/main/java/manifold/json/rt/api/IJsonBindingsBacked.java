@@ -17,7 +17,6 @@
 package manifold.json.rt.api;
 
 import manifold.ext.rt.api.IBindingsBacked;
-import manifold.json.rt.api.Writer;
 
 /**
  * A base interface for all common structured data types with methods to transform bindings to/from JSON, YAML, XML,
@@ -25,6 +24,9 @@ import manifold.json.rt.api.Writer;
  */
 public interface IJsonBindingsBacked extends IBindingsBacked
 {
+  @Override
+  DataBindings getBindings();
+
   /**
    * A fluent method to write this JSON object in various formats including JSON, YAML, XML, and CSV
    */

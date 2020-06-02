@@ -617,7 +617,7 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent + 4 );
     //noinspection unused
     String componentType = getPropertyType( getComponentType( type ) );
-    sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(getBindings().get(\"$key\"), ${componentType}.class);\n" );
+    sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $propertyType.class);\n" );
     indent( sb, indent + 2 );
     sb.append( "}\n" );
   }
@@ -703,14 +703,16 @@ public class JsonStructureType extends JsonSchemaType
         indent( sb, indent + 4 );
         if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
         {
-          sb.append( "return ($specificPropertyType)getBindings().get(\"$key\");\n" );
+          String rawSpecificPropertyType = removeGenerics( specificPropertyType );
+          sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() )
+        .append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $rawSpecificPropertyType.class);\n" );
         }
         else
         {
           //noinspection unused
           String rawSpecificPropertyType = removeGenerics( specificPropertyType );
           sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() )
-            .append( ".coerce(getBindings().get(\"$key\"), $rawSpecificPropertyType.class);\n" );
+            .append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $rawSpecificPropertyType.class);\n" );
         }
         indent( sb, indent + 2 );
         sb.append( "}\n" );
@@ -881,12 +883,17 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent += 2 );
     sb.append( "class Proxy implements $typeName {\n" );
     indent( sb, indent );
-    sb.append( "  private final Bindings _bindings;\n" );
+    sb.append( "  private final DataBindings _bindings;\n" );
     indent( sb, indent );
-    sb.append( "  private Proxy(Bindings bindings) {_bindings = bindings;}\n" );
+    sb.append( "  private Proxy(Bindings bindings) {_bindings = bindings instanceof DataBindings ? (DataBindings)bindings : new DataBindings(bindings);}\n" );
     indent( sb, indent );
-    sb.append( "  public Bindings getBindings() {return _bindings;}\n" );
+    sb.append( "  public DataBindings getBindings() {return _bindings;}\n" );
     indent( sb, indent );
+    sb.append( "  public int hashCode() {return _bindings.hashCode();}\n" );
+    indent( sb, indent );
+    sb.append( "  public boolean equals(Object obj) {return obj instanceof Bindings " +
+      "? obj.equals(getBindings()) " +
+      ": obj instanceof IJsonBindingsBacked && getBindings().equals(((IJsonBindingsBacked)obj).getBindings());}" );
     sb.append( "}\n" );
   }
 
@@ -966,7 +973,7 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent );
     sb.append( "public $typeName build() {\n" );
     indent( sb, indent + 2 );
-    sb.append( "return ($typeName)_bindings;\n" );
+    sb.append( "return new ProxyFactory().proxy(_bindings, $typeName.class);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }
@@ -1131,7 +1138,7 @@ public class JsonStructureType extends JsonSchemaType
       }
     }
     indent( sb, indent + 2 );
-    sb.append( "return ($typeName)bindings_;\n" );
+    sb.append( "return new ProxyFactory().proxy(bindings_, $typeName.class);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }

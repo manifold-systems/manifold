@@ -34,11 +34,11 @@ public class JsonTest extends TestCase
     StrangeUriFormats.nc_VehicleType vt = StrangeUriFormats.nc_VehicleType.create();
     uriFormats.setNc_Vehicle( vt );
     StrangeUriFormats.nc_VehicleType resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_Vehicle();
-    assertSame( resVt, vt );
+    assertEquals( resVt, vt );
 
     uriFormats.setNc_VehicleAsnc_VehicleType( vt );
     resVt = (StrangeUriFormats.nc_VehicleType)uriFormats.getNc_VehicleAsnc_VehicleType();
-    assertSame( resVt, vt );
+    assertEquals( resVt, vt );
 
     StrangeUriFormats.nc_VehicleType lvt = (StrangeUriFormats.nc_VehicleType)Collections.singletonList( vt );
     uriFormats.setNc_VehicleAsnc_VehicleType( lvt );
@@ -65,33 +65,33 @@ public class JsonTest extends TestCase
     myDef = OneOf.MyDef.create();
     oneOf.setThingAsMyDef(myDef);
     OneOf.MyDef myDefRes = oneOf.getThingAsMyDef();
-    assertSame( myDef, myDefRes );
+    assertEquals( myDef, myDefRes );
 
     OneOf.thing.Option0 thingOption0 = OneOf.thing.Option0.create("fred");
     thingOption0.setLastName("flintstone");
     thingOption0.setSport("bowling");
     oneOf.setThingAsOption0(thingOption0);
     OneOf.thing.Option0 resThingOption0 = oneOf.getThingAsOption0();
-    assertSame( thingOption0, resThingOption0 );
+    assertEquals( thingOption0, resThingOption0 );
 
     OneOf.thing.Option1 thingOption1 = OneOf.thing.Option1.create();
     thingOption1.setPrice(5);
     thingOption1.setVehicle("ferrari");
     oneOf.setThingAsOption1(thingOption1);
     OneOf.thing.Option1 resThingOption1 = oneOf.getThingAsOption1();
-    assertSame( thingOption1, resThingOption1 );
+    assertEquals( thingOption1, resThingOption1 );
 
     OneOf_TopLevel.Option0 topLevelOption0 = OneOf_TopLevel.Option0.create("Bob");
     oneOf.setTopLevelAsOption0( topLevelOption0 );
     OneOf_TopLevel.Option0 resTopLevelOption0 = oneOf.getTopLevelAsOption0();
-    assertSame( topLevelOption0, resTopLevelOption0 );
-    assertSame( topLevelOption0, oneOf.getTopLevel() );
+    assertEquals( topLevelOption0, resTopLevelOption0 );
+    assertEquals( topLevelOption0, oneOf.getTopLevel() );
 
     OneOf_TopLevel.Option1 topLevelOption1 = OneOf_TopLevel.Option1.create();
     oneOf.setTopLevelAsOption1( topLevelOption1 );
     OneOf_TopLevel.Option1 resTopLevelOption1 = oneOf.getTopLevelAsOption1();
-    assertSame( topLevelOption1, resTopLevelOption1 );
-    assertSame( topLevelOption1, oneOf.getTopLevel() );
+    assertEquals( topLevelOption1, resTopLevelOption1 );
+    assertEquals( topLevelOption1, oneOf.getTopLevel() );
 
     List<OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0> topLevelArrayOption0 = Collections.singletonList( OneOf_TopLevel_Array.OneOf_TopLevel_ArrayItem.Option0.create("Scott") );
     oneOf.setTopLevelArrayAsOption0( topLevelArrayOption0 );
@@ -119,7 +119,7 @@ public class JsonTest extends TestCase
     AllOf_Hierarchy.shipping_address shipping_address = AllOf_Hierarchy.shipping_address.create("111 Main St.", "Cupertino", "CA", AllOf_Hierarchy.shipping_address.type.residential);
     shipping_address.setType(AllOf_Hierarchy.shipping_address.type.residential);
     all.setShipping_address(shipping_address);
-    assertSame( shipping_address, all.getShipping_address() );
+    assertEquals( shipping_address, all.getShipping_address() );
   }
 
   public void testAllRef()
@@ -141,7 +141,7 @@ public class JsonTest extends TestCase
     outside.setGamma( Collections.singletonList( alpha ) );
     junk.setOutside( outside );
     Outside result = junk.getOutside();
-    assertSame( result, outside );
+    assertEquals( result, outside );
   }
 
   public void testRecursion()
@@ -229,11 +229,7 @@ public class JsonTest extends TestCase
     dims.setHeight( 5.0 );
     thing.setDimensions( dims );
     Product.ProductItem.dimensions dims2 = thing.getDimensions();
-    assertSame( dims, dims2 );
-
-    Bindings bindings = (Bindings)thing;
-    dims2 = (Product.ProductItem.dimensions)bindings.get( "dimensions" );
-    assertSame( dims, dims2 );
+    assertEquals( dims, dims2 );
   }
 
   public void testStructuralInterfaceCasting()
@@ -300,11 +296,11 @@ public class JsonTest extends TestCase
 
     hasEnum.setBar( HasEnum.bar._4_0 );
     assertEquals( HasEnum.bar._4_0, hasEnum.getBar() );
-    assertEquals( 4.0, ((Map)hasEnum).get( "bar" ) );
+    assertEquals( 4.0, hasEnum.getBindings().get( "bar" ) );
 
     hasEnum.setFoo( HasEnum.MyEnum.red );
     assertEquals( HasEnum.MyEnum.red, hasEnum.getFoo() );
-    assertEquals( "red", ((Map)hasEnum).get( "foo" ) );
+    assertEquals( "red", hasEnum.getBindings().get( "foo" ) );
 
     assertEquals( 6, HasEnum.baz.values().length );
     assertEquals( "red", HasEnum.baz.red.name() );
@@ -369,14 +365,32 @@ public class JsonTest extends TestCase
     assertNull( hasFormats.getTheDateAndTime() );
     hasFormats.setTheDateAndTime( value );
     assertEquals( value, hasFormats.getTheDateAndTime() );
-    String actualValue = (String)((Map)hasFormats).get( "TheDateAndTime" );
+    String actualValue = (String)hasFormats.getBindings().get( "TheDateAndTime" );
     assertEquals( value, LocalDateTime.parse( actualValue ) );
 
     assertNull( hasFormats.getAnotherDateTime() );
     hasFormats.setAnotherDateTime( value );
     assertEquals( value, hasFormats.getAnotherDateTime() );
-    actualValue = (String)((Map)hasFormats).get( "AnotherDateTime" );
+    actualValue = (String)hasFormats.getBindings().get( "AnotherDateTime" );
     assertEquals( value, LocalDateTime.parse( actualValue ) );
+  }
+  public void testDateTimeArrayFormat()
+  {
+    HasFormats hasFormats = HasFormats.create();
+    hasFormats.setTheDateAndTimeArray( Arrays.asList( LocalDateTime.of(2000, 2, 20, 1, 2) ) );
+    hasFormats.getTheDateAndTimeArray().add( LocalDateTime.of(2000, 2, 20, 1, 3) );
+    assertEquals( LocalDateTime.of(2000, 2, 20, 1, 2), hasFormats.getTheDateAndTimeArray().get( 0 ) );
+    assertEquals( Arrays.asList( LocalDateTime.of(2000, 2, 20, 1, 2), LocalDateTime.of(2000, 2, 20, 1, 3) ), hasFormats.getTheDateAndTimeArray() );
+  }
+  public void testDateTimeArray2Format()
+  {
+    HasFormats hasFormats = HasFormats.create();
+    HasFormats.MyObj scott = HasFormats.MyObj.builder().withName( "scott" ).build();
+    hasFormats.setTheDateAndTimeArray2( Arrays.asList( scott ) );
+    HasFormats.MyObj bob = HasFormats.MyObj.builder().withName( "bob" ).build();
+    hasFormats.getTheDateAndTimeArray2().add( bob );
+    assertEquals( scott, hasFormats.getTheDateAndTimeArray2().get( 0 ) );
+    assertEquals( Arrays.asList( scott, bob ), hasFormats.getTheDateAndTimeArray2() );
   }
   public void testDateFormat()
   {
@@ -386,7 +400,7 @@ public class JsonTest extends TestCase
     assertNull( hasFormats.getTheDate() );
     hasFormats.setTheDate( value );
     assertEquals( value, hasFormats.getTheDate() );
-    String actualValue = (String)((Map)hasFormats).get( "TheDate" );
+    String actualValue = (String)hasFormats.getBindings().get( "TheDate" );
     assertEquals( value, LocalDate.parse( actualValue ) );
   }
   public void testTimeFormat()
@@ -397,7 +411,7 @@ public class JsonTest extends TestCase
     assertNull( hasFormats.getTheTime() );
     hasFormats.setTheTime( value );
     assertEquals( value, hasFormats.getTheTime() );
-    String actualValue = (String)((Map)hasFormats).get( "TheTime" );
+    String actualValue = (String)hasFormats.getBindings().get( "TheTime" );
     assertEquals( value, LocalTime.parse( actualValue ) );
   }
   public void testUtiMillisec()
@@ -408,7 +422,7 @@ public class JsonTest extends TestCase
     assertNull( hasFormats.getTheTimestamp() );
     hasFormats.setTheTimestamp( value );
     assertEquals( value, hasFormats.getTheTimestamp() );
-    long actualValue = (long)((Map)hasFormats).get( "TheTimestamp" );
+    long actualValue = (long)hasFormats.getBindings().get( "TheTimestamp" );
     assertEquals( value, Instant.ofEpochMilli( actualValue ) );
   }
   public void testInt64()
@@ -418,7 +432,7 @@ public class JsonTest extends TestCase
     assertEquals( null, hasFormats.getInt64() );
     hasFormats.setInt64( (Long)Long.MAX_VALUE );
     assertEquals( (Long)Long.MAX_VALUE, hasFormats.getInt64() );
-    assertTrue( ((Map)hasFormats).get( "int64" ) instanceof Long );
+    assertTrue( hasFormats.getBindings().get( "int64" ) instanceof Long );
   }
 
   public void testBigInteger()
@@ -429,13 +443,13 @@ public class JsonTest extends TestCase
     assertNull( hasBig.getBigInt() );
     hasBig.setBigInt( value );
     assertEquals( value, hasBig.getBigInt() );
-    String actualValue = (String)((Map)hasBig).get( "bigInt" );
+    String actualValue = (String)hasBig.getBindings().get( "bigInt" );
     assertEquals( value, new BigInteger( actualValue ) );
 
     assertNull( hasBig.getAnotherBigInt() );
     hasBig.setAnotherBigInt( value );
     assertEquals( value, hasBig.getAnotherBigInt() );
-    actualValue = (String)((Map)hasBig).get( "anotherBigInt" );
+    actualValue = (String)hasBig.getBindings().get( "anotherBigInt" );
     assertEquals( value, new BigInteger( actualValue ) );
   }
   public void testBigDecimal()
@@ -446,13 +460,13 @@ public class JsonTest extends TestCase
     assertNull( hasBig.getBigDec() );
     hasBig.setBigDec( value );
     assertEquals( value, hasBig.getBigDec() );
-    String actualValue = (String)((Map)hasBig).get( "bigDec" );
+    String actualValue = (String)hasBig.getBindings().get( "bigDec" );
     assertEquals( value, new BigDecimal( actualValue ) );
 
     assertNull( hasBig.getAnotherBigDec() );
     hasBig.setAnotherBigDec( value );
     assertEquals( value, hasBig.getAnotherBigDec() );
-    actualValue = (String)((Map)hasBig).get( "anotherBigDec" );
+    actualValue = (String)hasBig.getBindings().get( "anotherBigDec" );
     assertEquals( value, new BigDecimal( actualValue ) );
   }
 
@@ -528,21 +542,21 @@ public class JsonTest extends TestCase
     hasBinary.setByteFormat( Base64Encoding.encoded( base64 ) );
     assertEquals( base64, hasBinary.getByteFormat().toString() );
     assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
-    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+    assertEquals( base64, hasBinary.getBindings().get( "byteFormat" ) );
     // repeat to test releasing of memory
     assertEquals( base64, hasBinary.getByteFormat().toString() );
     assertEquals( text, new String( hasBinary.getByteFormat().getBytes() ) );
-    assertEquals( base64, ((Bindings)hasBinary).get( "byteFormat" ) );
+    assertEquals( base64, hasBinary.getBindings().get( "byteFormat" ) );
 
     String octet = OctetEncoding.decoded( text.getBytes() ).toString();
     hasBinary.setBinaryFormat( OctetEncoding.encoded( octet ) );
     assertEquals( octet, hasBinary.getBinaryFormat().toString() );
     assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
-    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+    assertEquals( octet, hasBinary.getBindings().get( "binaryFormat" ) );
     // repeat to test releasing of memory
     assertEquals( octet, hasBinary.getBinaryFormat().toString() );
     assertEquals( text, new String( hasBinary.getBinaryFormat().getBytes() ) );
-    assertEquals( octet, ((Bindings)hasBinary).get( "binaryFormat" ) );
+    assertEquals( octet, hasBinary.getBindings().get( "binaryFormat" ) );
   }
 
   public void testReadOnly()
@@ -559,7 +573,7 @@ public class JsonTest extends TestCase
     readOnlyEtc.getTheTimestamp_ReadOnly();
     readOnlyEtc.getBindings();
     readOnlyEtc.getClass();
-    assertEquals( 10, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("get") ).count() );
+    assertEquals( 11, Arrays.stream( HasReadOnlyEtc.class.getMethods() ).filter( m -> m.getName().startsWith("get") ).count() );
 
     readOnlyEtc.setInteger_WriteOnly(8);
     readOnlyEtc.setString_WriteOnly("hi");

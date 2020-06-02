@@ -57,10 +57,6 @@ public abstract class MapStructExt implements ICallHandler
     }
     if( value == ICallHandler.UNHANDLED )
     {
-      value = RuntimeMethods.invokeUnhandled( thiz, iface, name, returnType, paramTypes, args );
-    }
-    if( value == ICallHandler.UNHANDLED )
-    {
       throw new RuntimeException( "Missing method: " + name + "(" + Arrays.toString( paramTypes ) + ")" );
     }
     return value;

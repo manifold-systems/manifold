@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import manifold.ext.rt.api.IBindingsBacked;
 import manifold.rt.api.Bindings;
 
 /**
@@ -81,6 +83,10 @@ public class DataBindings implements Bindings
    */
   public Object put( String name, Object value )
   {
+    if( value instanceof IBindingsBacked )
+    {
+      throw new IllegalArgumentException( "Non-raw bindings: " + value );
+    }
     checkKey( name );
     return _map.put( name, value );
   }
@@ -261,6 +267,11 @@ public class DataBindings implements Bindings
   @Override
   public boolean equals( Object o )
   {
+    if( o instanceof IBindingsBacked )
+    {
+      o = ((IBindingsBacked) o).getBindings();
+    }
+
     if( this == o )
     {
       return true;

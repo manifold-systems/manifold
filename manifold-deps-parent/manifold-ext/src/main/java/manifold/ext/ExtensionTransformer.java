@@ -1884,41 +1884,12 @@ public class ExtensionTransformer extends TreeTranslator
   {
     TreeMaker make = _tp.getTreeMaker();
     Symtab symbols = _tp.getSymtab();
-    Names names = Names.instance( _tp.getContext() );
-    Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
 
-    int pos = expression.pos;
-    
-    Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( expression.pos(), names.fromString( "assignStructuralIdentity" ), reflectMethodClassSym.type,
-      List.from( new Type[]{symbols.objectType, symbols.classType} ) );
-
-    JavacElements javacElems = _tp.getElementUtil();
-    ArrayList<JCExpression> newArgs = new ArrayList<>();
-    newArgs.add( expression );
-    JCTree.JCFieldAccess ifaceClassExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, type.tsym.getQualifiedName().toString() + ".class" );
-    ifaceClassExpr.type = symbols.classType;
-    ifaceClassExpr.sym = symbols.classType.tsym;
-    ifaceClassExpr.pos = pos;
-    assignTypes( ifaceClassExpr.selected, type.tsym );
-    ifaceClassExpr.selected.pos = pos;
-    newArgs.add( ifaceClassExpr );
-
-    JCTree.JCMethodInvocation makeProxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".assignStructuralIdentity" ), List.from( newArgs ) );
-    makeProxyCall.type = symbols.objectType;
-    makeProxyCall.setPos( pos );
-    JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)makeProxyCall.getMethodSelect();
-    newMethodSelect.sym = makeInterfaceProxyMethod;
-    newMethodSelect.type = makeInterfaceProxyMethod.type;
-    newMethodSelect.pos = pos;
-    assignTypes( newMethodSelect.selected, reflectMethodClassSym );
-    newMethodSelect.selected.pos = pos;
-
-    JCTypeCast castCall = make.TypeCast( symbols.objectType, makeProxyCall );
+    JCTypeCast castCall = make.TypeCast( symbols.objectType, expression );
     castCall.type = symbols.objectType;
-    castCall.pos = pos;
+    castCall.pos = expression.pos;
 
     return castCall;
-
   }
 
   private JCTree.JCMethodInvocation replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method )

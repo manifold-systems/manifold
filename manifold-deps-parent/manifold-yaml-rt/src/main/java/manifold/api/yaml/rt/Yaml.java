@@ -41,7 +41,7 @@ public class Yaml
     return fromYaml( yaml, false, false );
   }
 
-  public static Object fromYaml( String yaml, boolean withBigNumbers, boolean withTokens )
+  public static Object fromYaml( String yaml, @SuppressWarnings( "unused" ) boolean withBigNumbers, boolean withTokens )
   {
     try
     {

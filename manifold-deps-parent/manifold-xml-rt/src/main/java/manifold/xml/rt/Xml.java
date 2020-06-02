@@ -25,9 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import manifold.rt.api.Bindings;
 
-import manifold.json.rt.Json;
 import manifold.json.rt.api.DataBindings;
 import manifold.json.rt.parser.Token;
 import manifold.json.rt.parser.TokenType;
@@ -37,7 +37,10 @@ import manifold.xml.rt.parser.XmlParser;
 import manifold.xml.rt.parser.XmlTerminal;
 import manifold.xml.rt.parser.XmlElement;
 
-public class Xml extends Json
+import static manifold.json.rt.Json.indent;
+import static manifold.json.rt.Json.toBindings;
+
+public class Xml
 {
   public static final String XML_DEFAULT_ROOT = "root_object";
   public static final String XML_ELEM_CONTENT = "textContent";
@@ -45,6 +48,9 @@ public class Xml extends Json
   public static String toXml( Object jsonValue )
   {
     StringBuilder sb = new StringBuilder();
+
+    jsonValue = toBindings( jsonValue );
+
     if( jsonValue instanceof Map )
     {
       toXml( jsonValue, null, sb, 0 );
@@ -62,6 +68,8 @@ public class Xml extends Json
 
   public static void toXml( Object jsonValue, String name, StringBuilder target, int indent )
   {
+    jsonValue = toBindings( jsonValue );
+
     if( jsonValue instanceof Map )
     {
       if( name == null )
@@ -119,6 +127,8 @@ public class Xml extends Json
           value = ((Pair)value).getSecond();
         }
 
+        value = toBindings( value );
+
         if( !(value instanceof Map) && !(value instanceof Iterable) && !key.equals( XML_ELEM_CONTENT ) )
         {
           target.append( " " ).append( key ).append( "=\"" ).append( value ).append( '"' );
@@ -132,6 +142,8 @@ public class Xml extends Json
         {
           value = ((Pair)value).getSecond();
         }
+
+        value = toBindings( value );
 
         if( value instanceof Map )
         {
@@ -193,6 +205,8 @@ public class Xml extends Json
       {
         comp = ((Pair)comp).getSecond();
       }
+
+      comp = toBindings( comp );
 
       if( comp instanceof Map )
       {

@@ -11,11 +11,31 @@
     "MyUtcMillisec": {
       "type": "number",
       "format": "utc-millisec"
+    },
+    "MyObj": {
+      "type": "object",
+      "properties": {
+        "name":  {
+          "type": "string"
+        }
+      }
     }
   },
   "properties": {
     "TheDateAndTime" : {
       "$ref": "#/definitions/MyDateTime"
+    },
+    "TheDateAndTimeArray" : {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MyDateTime"
+      }
+    },
+    "TheDateAndTimeArray2" : {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/MyObj"
+      }
     },
     "TheTimestamp": {
       "$ref": "#/definitions/MyUtcMillisec"

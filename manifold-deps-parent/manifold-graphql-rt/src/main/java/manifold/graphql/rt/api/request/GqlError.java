@@ -19,6 +19,8 @@ package manifold.graphql.rt.api.request;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import manifold.json.rt.api.JsonList;
 import manifold.rt.api.Bindings;
 import manifold.json.rt.api.DataBindings;
 import manifold.json.rt.api.IJsonBindingsBacked;
@@ -60,7 +62,7 @@ public interface GqlError extends IJsonBindingsBacked
   default List<Location> getLocations()
   {
     //noinspection unchecked
-    return (List<Location>)getBindings().get( "locations" );
+    return new JsonList<>( (List<Location>)getBindings().get( "locations" ), Location.class );
   }
 
   @Structural(factoryClass = GqlError.Location.ProxyFactory.class)
@@ -81,11 +83,11 @@ public interface GqlError extends IJsonBindingsBacked
       public Location proxy( Map map, Class<Location> iface )
       {
         //noinspection unchecked
-        Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings( map );
+        DataBindings bindings = map instanceof Bindings ? (DataBindings)map : new DataBindings( map );
 
         // DO NOT CHANGE THIS TO A LAMBDA, YOU WILL HAVE BAD LUCK FOR 9 YEARS
         //noinspection Convert2Lambda
-        return new Location() {public Bindings getBindings() {return bindings;}};
+        return new Location() {public DataBindings getBindings() {return bindings;}};
       }
     }
   }
@@ -96,11 +98,11 @@ public interface GqlError extends IJsonBindingsBacked
     public GqlError proxy( Map map, Class<GqlError> iface )
     {
       //noinspection unchecked
-      Bindings bindings = map instanceof Bindings ? (Bindings)map : new DataBindings( map );
+      DataBindings bindings = map instanceof Bindings ? (DataBindings)map : new DataBindings( map );
 
       // DO NOT CHANGE THIS TO A LAMBDA, YOU WILL HAVE BAD LUCK FOR 9 YEARS
       //noinspection Convert2Lambda
-      return new GqlError() {public Bindings getBindings() {return bindings;}};
+      return new GqlError() {public DataBindings getBindings() {return bindings;}};
     }
   }
 }

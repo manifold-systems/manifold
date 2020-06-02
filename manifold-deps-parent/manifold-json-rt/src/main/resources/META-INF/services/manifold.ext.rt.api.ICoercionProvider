@@ -1,3 +1,5 @@
 manifold.json.rt.DefaultCoercer
 manifold.json.rt.BinaryCoercer
 manifold.json.rt.BigNumberCoercer
+manifold.json.rt.BindingsCoercer
+manifold.json.rt.ListCoercer

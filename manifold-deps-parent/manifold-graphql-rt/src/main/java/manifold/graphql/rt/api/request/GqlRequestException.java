@@ -16,6 +16,8 @@
 
 package manifold.graphql.rt.api.request;
 
+import manifold.json.rt.api.JsonList;
+
 import java.util.List;
 
 /**
@@ -29,7 +31,7 @@ public class GqlRequestException extends RuntimeException
   public GqlRequestException( List<GqlError> errors )
   {
     super( errors.size() == 1 ? errors.get( 0 ).getMessage() : "GraphQL request errors found" );
-    _errors = errors;
+    _errors = new JsonList<>( errors, GqlError.class );
   }
 
   public List<GqlError> getErrors()
