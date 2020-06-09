@@ -12,7 +12,7 @@ your project to use Manifold.
 >plugin. 
 
 ## Get the Manifold plugin
-The the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
+Get the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
 You must restart Android Studio to enable the plugin. 
  
 ## Java 8 Source and Target Compatibility 

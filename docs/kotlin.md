@@ -21,7 +21,7 @@ completion, etc.
  
 ## Get the Manifold plugin
 
-The the Manifold plugin directly from within IntelliJ IDEA or Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
+Get the Manifold plugin directly from within IntelliJ IDEA or Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
 You must restart Android Studio to enable the plugin. 
 
 ## The Kotlin sample application
