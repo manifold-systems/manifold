@@ -129,8 +129,8 @@ implementation 'systems.manifold:manifold-text:2020.1.13'
 ## Resources
 
 If you use a [type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
-that is based on resource files such as GraphQL, JSON, Templates, etc. you must create a `resources` directory to
-contain the files.  Do **not** place them in the `res` or `assets` directories.
+that is based on resource files such as GraphQL, JSON, Templates, etc. you must place the resource files in the 
+`source` directory along with your Java files.  Do **not** place them in the `res` or `assets` directories.
  
-<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="60%" height="60%"/></p> 
+<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
 
