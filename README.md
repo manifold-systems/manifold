@@ -16,8 +16,8 @@ All fully supported in **Java 8 - 14** with comprehensive IDE support in **Intel
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  
-> * Manifold supports **Android Studio**! [Read more about it](http://manifold.systems/android.html).
-> * Manifold supports **Kotlin**! [Read more about it](http://manifold.systems/kotlin.html).
+> * Manifold supports **Android Studio**! [Learn more](http://manifold.systems/android.html).
+> * Manifold supports **Kotlin**! [Learn more](http://manifold.systems/kotlin.html).
 
 ## What can you do with Manifold?
 
