@@ -286,12 +286,12 @@ is determined by the following criteria:
 compilation
 * Use of the `dynamic` argument to the Manifold javac plugin e.g., `-Xplugin:Manifold` vs. `-Xplugin:Manifold dynamic`
 
-> |                      |`static` |`dynamic`|`mixed`  |
-> |----------------------|---------|---------|---------|
-> | `compileOnly` scope  | &#10003;|         |         |
-> | `dynamic` plugin arg |         | &#10003;|         |
+|                      |`static` |`dynamic`|`mixed`  |
+|----------------------|---------|---------|---------|
+| `compileOnly` scope  | &#10003;|         |         |
+| `dynamic` plugin arg |         | &#10003;|         |
 
->Note, `static` is the recommended configuration for Manifold. Using it results in smaller, faster, more versatile
+>Note, `static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
 >projects.
 
 * **`static`**: Compiles all resource types statically at compile-time. Distributes only Manifold runtime dependencies.
@@ -385,8 +385,8 @@ compile-time, so you always use it with default scoping so it is packaged with y
 
 See [Setup]() for examples of using Manifold statically.
 
->Note, the static configuration is the recommended configuration for Manifold. Using it results in smaller, faster,
->more versatile projects.
+>Note, `static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
+>projects.
    
 ### Dynamic Configuration
 
