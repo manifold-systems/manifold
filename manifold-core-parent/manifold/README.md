@@ -448,14 +448,14 @@ javac -Amanifold.source.json=.* ...
 
 Define several arguments and use any regular expression to refine the set of types to compile:
 ```
-javac -Amanifold.source.json=.* -Amanifold.source.gql=^com\.example\..*Queries$ ...
+javac -Amanifold.source.json=.* -Amanifold.source.graphql=^com\.example\..*Queries$ ...
 ```
 This tells the compiler to compile all JSON files and to compile [GraphQL types](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 in package `com.example` ending with `Queries`.
 
 If need be, you can use regular expressions to invert or "black list" inclusions.
 ```
-javac -Amanifold.source.gql=^(?!(com\.example\..*Queries)).*$ ...
+javac -Amanifold.source.graphql=^(?!(com\.example\..*Queries)).*$ ...
 ```
 Here all GraphQL types compile _except_ those in package `com.example` ending with `Queries`.
  
@@ -497,7 +497,7 @@ If you define your project with **Maven**, you can explicitly compile resources 
       <compilerArgs>
         <arg>-Xplugin:Manifold</arg>
         <arg>-Amanifold.source.json=.*</arg>
-        <arg>-Amanifold.source.gql=^com\.example\..*Queries$</arg>
+        <arg>-Amanifold.source.graphql=^com\.example\..*Queries$</arg>
       </compilerArgs>
     </configuration>
   </plugin>
@@ -509,7 +509,7 @@ compileJava {
   options.compilerArgs += 
     ['-Xplugin:Manifold',
      '-Amanifold.source.json=.*', 
-     '-Amanifold.source.gql=^com\\.example\\..*Queries$']
+     '-Amanifold.source.graphql=^com\\.example\\..*Queries$']
 }
 ```
 
