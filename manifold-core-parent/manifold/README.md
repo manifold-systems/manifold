@@ -12,7 +12,7 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [The Big Picture](#the-big-picture)
 * [The API](#the-api)
 * [Anatomy of a Type Manifold](#anatomy-of-a-type-manifold)
-* [Compilation Models](#compilation-models)
+* [Configuring Manifold](#configuring-manifold)
 * [Explicit Resource Compilation](#explicit-resource-compilation)
 * [Modes](#modes)
 * [Programming Language Manifolds](#programming-language-manifolds)
@@ -278,7 +278,7 @@ These serve as decent reference implementations for wrapping parsers and binding
 >provides manifold.api.type.ITypeManifold with com.abc.MyTypeManifold
 >```
 
-# Configuration Types
+# Configuring Manifold
 
 There are three ways you can configure Manifold in your build: *static*, *dynamic*, and *mixed*. Each configuration type
 is determined by the following criteria:
@@ -301,8 +301,8 @@ compilation
     is the same a Java type. 
     * **Zero startup time**. The dynamic compilation subsystem and other services exclusive to compilation are not
     present at runtime, therefore Manifold has ZERO impact on startup time.  
-    * **Footprint**. Since only runtime modules are distributed in this model, the resulting runtime footprint is more
-    than 10x smaller than dynamic and mixed compilation models, which translates to faster downloads.
+    * **Footprint**. Since only runtime modules are distributed in this configuration, the resulting runtime footprint is more
+    than 10x smaller than dynamic and mixed configurations, which translates to faster downloads.
     * **Android**. Applications using Manifold statically fully support Android. 
     * **Kotlin**. Applications using Manifold statically fully support Kotlin and other JVM languages. 
     
@@ -323,7 +323,7 @@ at compile-time. Both compile-time and runtime binaries are included in your dis
     * Larger footprint. Dynamic services used at compile-time are also distributed with the runtime, the additional
     files significantly impact the overall footprint (more than 10x). 
     * Limited use. Only Java SE environments are supported. Other JVM environments such as Android and Kotlin are not
-     supported using this compilation model. 
+     supported using this configuration. 
     
 * **`mixed`**: Compiles project resource types statically such as resource files, and compiles dynamic resource types
 dynamically such as Dark Java and dynamic structural interface bridges.  Both compile-time and runtime binaries are
@@ -341,9 +341,9 @@ included in your distribution.
     * Larger footprint. Dynamic services used at compile-time are also distributed with the runtime, the additional
     files significantly impact the overall footprint (more than 10x). 
     * Limited use. Only Java SE environments are supported. Other JVM environments such as Android and Kotlin are not
-     supported using this compilation model.
+     supported using this configuration.
       
->Compilation model by supported features
+>Configurations by supported features
 >
 > |                  |`static` |`dynamic`|`mixed` |
 > |------------------|---------|---------|---------|
@@ -358,7 +358,7 @@ included in your distribution.
 >**All Manifold resource types such as GraphQL and JSON are fully supported with Kotlin, however Manifold Java
 >Extension features such as @Jailbreak, unit expressions, and the preprocessor are specific to the Java compiler.  
 
-## Configuring Compilation Models
+## Configuring Dependencies
 
 Manifold components are structured to support both static and dynamic use.  For instance, the Manifold _core_ component
 consists of two modules: `manifold` and `manifold-rt`, where `manifold` contains all the compile-time functionality and
@@ -385,7 +385,7 @@ compile-time, so you always use it with default scoping so it is packaged with y
 
 See [Setup]() for examples of using Manifold statically.
 
->Note, the static compilation model is the recommended configuration for Manifold. Using it results in smaller, faster,
+>Note, the static configuration is the recommended configuration for Manifold. Using it results in smaller, faster,
 >more versatile projects.
    
 ### Dynamic Configuration
@@ -403,7 +403,7 @@ See [Setup]() for examples of using Manifold dynamically.
 
 See [Setup]() for examples using Manifold both statically and dynamically.
 
->Note, the only difference between dynamic and mixed compilation models is the `dynamic` Manifold plugin argument, which
+>Note, the only difference between dynamic and mixed configuration is the `dynamic` Manifold plugin argument, which
 >prevents Manifold from compiling resource types to disk.
  
 # Explicit Resource Compilation
@@ -423,6 +423,9 @@ cost using _explicit_ static compilation with `javac` command line options.
 Similar to javac's source file list, Manifold provides `-Akey=value` javac command line options to explicitly compile
 resources either by _type name_ using regular expressions or by _file name_ using file system paths. Constraining by
 type name is the simplest and more flexible of the two, especially in terms of build systems such as Maven and Gradle.
+
+>See the [Sample Kotlin App](https://github.com/manifold-systems/manifold-sample-kotlin-app) for an example of using
+>explicit resource compilation.
 
 ## By Type Name
 
