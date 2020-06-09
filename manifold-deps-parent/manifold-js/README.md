@@ -184,13 +184,13 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-js:2020.1.12-SNAPSHOT'
-    implementation 'systems.manifold:manifold-js-rt:2020.1.12-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-js:2020.1.13-SNAPSHOT'
+    implementation 'systems.manifold:manifold-js-rt:2020.1.13-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-js:2020.1.12-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-js:2020.1.13-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -228,7 +228,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.12</manifold.version>
+        <manifold.version>2020.1.13</manifold.version>
     </properties>
     
     <dependencies>
@@ -281,7 +281,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.12</manifold.version>
+        <manifold.version>2020.1.13</manifold.version>
     </properties>
     
     <dependencies>

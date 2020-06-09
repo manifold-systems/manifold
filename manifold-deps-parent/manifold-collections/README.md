@@ -174,14 +174,14 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-ext:2020.1.12-SNAPSHOT'
-    implementation 'systems.manifold:manifold-collections:2020.1.12'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.13-SNAPSHOT'
+    implementation 'systems.manifold:manifold-collections:2020.1.13'
                        
-    testCompileOnly 'systems.manifold:manifold-collections:2020.1.12-SNAPSHOT'
+    testCompileOnly 'systems.manifold:manifold-collections:2020.1.13-SNAPSHOT'
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.12'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.13'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -228,7 +228,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.12</manifold.version>
+        <manifold.version>2020.1.13</manifold.version>
     </properties>
     
     <dependencies>
@@ -303,7 +303,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.12</manifold.version>
+        <manifold.version>2020.1.13</manifold.version>
     </properties>
     
     <dependencies>
