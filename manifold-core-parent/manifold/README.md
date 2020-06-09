@@ -278,9 +278,21 @@ These serve as decent reference implementations for wrapping parsers and binding
 >provides manifold.api.type.ITypeManifold with com.abc.MyTypeManifold
 >```
 
-# Compilation Models
+# Configuration Types
 
-Manifold provides three compilation models you can configure in your build:
+There are three ways you can configure Manifold in your build: *static*, *dynamic*, and *mixed*. Each configuration type
+is determined by the following criteria:
+* Use of `compileOnly` (or `provided`) scoping on *all* Manifold dependencies your project uses that are specific to
+compilation
+* Use of the `dynamic` argument to the Manifold javac plugin e.g., `-Xplugin:Manifold` vs. `-Xplugin:Manifold dynamic`
+
+> |                      |`static` |`dynamic`|`mixed`  |
+> |----------------------|---------|---------|---------|
+> | `compileOnly` scope  | &#10003;|         |         |
+> | `dynamic` plugin arg |         | &#10003;|         |
+
+>Note, `static` is the recommended configuration for Manifold. Using it results in smaller, faster, more versatile
+>projects.
 
 * **`static`**: Compiles all resource types statically at compile-time. Distributes only Manifold runtime dependencies.
 
@@ -314,7 +326,8 @@ at compile-time. Both compile-time and runtime binaries are included in your dis
      supported using this compilation model. 
     
 * **`mixed`**: Compiles project resource types statically such as resource files, and compiles dynamic resource types
-dynamically such as Dark Java and dynamic structural interface bridges.  
+dynamically such as Dark Java and dynamic structural interface bridges.  Both compile-time and runtime binaries are
+included in your distribution.
 
     **Advantages**:
     * **Dynamic**. Supports features such as structural typing without having to build static bridges. Additionally,
@@ -341,7 +354,8 @@ dynamically such as Dark Java and dynamic structural interface bridges.
 > | Android          | &#10003;|         |         |
 > | Kotlin**         | &#10003;|         |         |
 > | Dynamic Java     |         | &#10003;| &#10003;|
-> **All Manifold resource types such as GraphQL and JSON are fully supported with Kotlin, however Manifold Java
+>
+>**All Manifold resource types such as GraphQL and JSON are fully supported with Kotlin, however Manifold Java
 >Extension features such as @Jailbreak, unit expressions, and the preprocessor are specific to the Java compiler.  
 
 ## Configuring Compilation Models
@@ -365,7 +379,7 @@ compile-time, so you always use it with default scoping so it is packaged with y
 * Add the `-Xplugin:Manifold` javac argument
 * If using Kotlin or other alternative JVM language, put Manifold resources in a separate Java compiled module and add
 `-Amanifold.source.<file-ext>=<type-name-regex>` javac arguments to explicitly compile the resources. See
-[Explicit Resource Compilation](Explicit Resource Compilation) below.
+[Explicit Resource Compilation](#explicit-resource-compilation) below.
 * Use _compile-only_ (Gradle) or _provided_ (Maven) scoping for Manifold dependencies exclusive to compile-time features
 * Use default scoping for "rt" dependencies and any dependencies that are needed at runtime
 
