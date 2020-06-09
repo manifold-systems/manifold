@@ -29,7 +29,7 @@ public class ListCoercer implements ICoercionProvider
   @Override
   public Object coerce( Object value, Class<?> type )
   {
-    if( value instanceof List && !(value instanceof IJsonList) && !IListBacked.class.isAssignableFrom( type ) )
+    if( value instanceof List && !IListBacked.class.isAssignableFrom( type ) )
     {
       return new JsonList( (List)value, type );
     }

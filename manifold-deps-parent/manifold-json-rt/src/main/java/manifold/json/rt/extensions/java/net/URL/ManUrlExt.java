@@ -21,7 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import manifold.ext.rt.api.Jailbreak;
 import manifold.json.rt.Json;
-import manifold.json.rt.api.IJsonBindingsCodec;
+import manifold.json.rt.api.IJsonBindingsTranslator;
 import manifold.json.rt.extensions.manifold.rt.api.Bindings.ManBindingsExt;
 import java.io.IOException;
 import java.io.InputStream;
@@ -239,14 +239,14 @@ public class ManUrlExt
   public static Object sendYamlRequest( @This URL url, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Yaml = IJsonBindingsCodec.get( "YAML" );
-    return Yaml.decode( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Yaml = IJsonBindingsTranslator.get( "YAML" );
+    return Yaml.toBindings( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
   public static Object sendYamlRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Yaml = IJsonBindingsCodec.get( "YAML" );
-    return Yaml.decode( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Yaml = IJsonBindingsTranslator.get( "YAML" );
+    return Yaml.toBindings( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -262,14 +262,14 @@ public class ManUrlExt
   public static Object sendXmlRequest( @This URL url, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Xml = IJsonBindingsCodec.get( "XML" );
-    return Xml.decode( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Xml = IJsonBindingsTranslator.get( "XML" );
+    return Xml.toBindings( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
   public static Object sendXmlRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Xml = IJsonBindingsCodec.get( "XML" );
-    return Xml.decode( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Xml = IJsonBindingsTranslator.get( "XML" );
+    return Xml.toBindings( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -285,14 +285,14 @@ public class ManUrlExt
   public static Object sendCsvRequest( @This URL url, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Csv = IJsonBindingsCodec.get( "CSV" );
-    return Csv.decode( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Csv = IJsonBindingsTranslator.get( "CSV" );
+    return Csv.toBindings( sendRequest( url, httpMethod, jsonValue, headers, timeout ) );
   }
   public static Object sendCsvRequest( @This URL url, Proxy proxy, String httpMethod, Object jsonValue,
                                         Map<String, String> headers, int timeout )
   {
-    IJsonBindingsCodec Csv = IJsonBindingsCodec.get( "CSV" );
-    return Csv.decode( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
+    IJsonBindingsTranslator Csv = IJsonBindingsTranslator.get( "CSV" );
+    return Csv.toBindings( sendRequest( url, proxy, httpMethod, jsonValue, headers, timeout ) );
   }
 
   /**
@@ -366,8 +366,8 @@ public class ManUrlExt
    */
   public static Object getYamlContent( @This URL thiz )
   {
-    IJsonBindingsCodec Yaml = IJsonBindingsCodec.get( "YAML" );
-    return Yaml.decode( getTextContent( thiz ) );
+    IJsonBindingsTranslator Yaml = IJsonBindingsTranslator.get( "YAML" );
+    return Yaml.toBindings( getTextContent( thiz ) );
   }
 
   /**
@@ -376,8 +376,8 @@ public class ManUrlExt
    */
   public static Object getXmlContent( @This URL thiz )
   {
-    IJsonBindingsCodec Xml = IJsonBindingsCodec.get( "XML" );
-    return Xml.decode( getTextContent( thiz ) );
+    IJsonBindingsTranslator Xml = IJsonBindingsTranslator.get( "XML" );
+    return Xml.toBindings( getTextContent( thiz ) );
   }
 
   /**
@@ -386,7 +386,7 @@ public class ManUrlExt
    */
   public static Object getCsvContent( @This URL thiz )
   {
-    IJsonBindingsCodec Csv = IJsonBindingsCodec.get( "CSV" );
-    return Csv.decode( getTextContent( thiz ) );
+    IJsonBindingsTranslator Csv = IJsonBindingsTranslator.get( "CSV" );
+    return Csv.toBindings( getTextContent( thiz ) );
   }
 }

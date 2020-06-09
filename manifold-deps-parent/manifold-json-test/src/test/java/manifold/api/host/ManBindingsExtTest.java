@@ -23,7 +23,7 @@ import manifold.rt.api.Bindings;
 import junit.framework.TestCase;
 import manifold.json.rt.Json;
 import manifold.json.rt.api.DataBindings;
-import manifold.json.rt.api.IJsonBindingsCodec;
+import manifold.json.rt.api.IJsonBindingsTranslator;
 
 public class ManBindingsExtTest extends TestCase
 {
@@ -92,8 +92,8 @@ public class ManBindingsExtTest extends TestCase
    // assertEquals( "{\n}\n", empty.toYaml() );
 
     DataBindings sample = makeSampleBindings();
-    IJsonBindingsCodec yaml = IJsonBindingsCodec.get( "YAML" );
-    assertEquals( sample, yaml.decode( sample.toYaml() ) );
+    IJsonBindingsTranslator yaml = IJsonBindingsTranslator.get( "YAML" );
+    assertEquals( sample, yaml.toBindings( sample.toYaml() ) );
   }
 
   private DataBindings makeSampleBindings()

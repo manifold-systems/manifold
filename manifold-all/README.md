@@ -6,8 +6,7 @@ dependencies into a single JAR.
 
 # IDE Support
 
-Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA to really boost your
-productivity. 
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 # Setup
 
@@ -22,7 +21,7 @@ mvn compile
 ## Using this project
 
 The `manifold-all` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 13.
+versions 8 - 14.
 
 ## Binaries
 
@@ -31,7 +30,7 @@ If you are *not* using Maven or Gradle, you can download the latest `manifold-al
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 13), the script takes care of the rest. 
+version (8 - 14), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'

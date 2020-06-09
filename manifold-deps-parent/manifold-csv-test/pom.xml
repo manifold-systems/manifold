@@ -22,7 +22,6 @@
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-csv-rt</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>

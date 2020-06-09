@@ -97,8 +97,8 @@ public class Loader<E>
 
   public E fromYaml( String yamlText )
   {
-    IJsonBindingsCodec yaml = IJsonBindingsCodec.get( "YAML" );
-    return (E)yaml.decode( yamlText );
+    IJsonBindingsTranslator yaml = IJsonBindingsTranslator.get( "YAML" );
+    return (E)yaml.toBindings( yamlText );
   }
 
   public E fromYamlUrl( String urlBase, String... urlSuffix )
@@ -140,8 +140,8 @@ public class Loader<E>
   {
     try
     {
-      IJsonBindingsCodec yaml = IJsonBindingsCodec.get( "YAML" );
-      return (E)yaml.decode( StreamUtil.getContent( reader ) );
+      IJsonBindingsTranslator yaml = IJsonBindingsTranslator.get( "YAML" );
+      return (E)yaml.toBindings( StreamUtil.getContent( reader ) );
     }
     catch( Exception e )
     {
@@ -156,8 +156,8 @@ public class Loader<E>
 
   public E fromXml( String xmlText )
   {
-    IJsonBindingsCodec xml = IJsonBindingsCodec.get( "XML" );
-    return (E)xml.decode( xmlText );
+    IJsonBindingsTranslator xml = IJsonBindingsTranslator.get( "XML" );
+    return (E)xml.toBindings( xmlText );
   }
 
   public E fromXmlUrl( String urlBase, String... urlSuffix )
@@ -199,8 +199,8 @@ public class Loader<E>
   {
     try
     {
-      IJsonBindingsCodec xml = IJsonBindingsCodec.get( "XML" );
-      return (E)xml.decode( StreamUtil.getContent( reader ) );
+      IJsonBindingsTranslator xml = IJsonBindingsTranslator.get( "XML" );
+      return (E)xml.toBindings( StreamUtil.getContent( reader ) );
     }
     catch( Exception e )
     {
@@ -215,8 +215,8 @@ public class Loader<E>
 
   public E fromCsv( String csvText )
   {
-    IJsonBindingsCodec csv = IJsonBindingsCodec.get( "CSV" );
-    return (E)csv.decode( csvText );
+    IJsonBindingsTranslator csv = IJsonBindingsTranslator.get( "CSV" );
+    return (E)csv.toBindings( csvText );
   }
 
   public E fromCsvUrl( String urlBase, String... urlSuffix )
@@ -258,8 +258,8 @@ public class Loader<E>
   {
     try
     {
-      IJsonBindingsCodec csv = IJsonBindingsCodec.get( "CSV" );
-      return (E)csv.decode( StreamUtil.getContent( reader ) );
+      IJsonBindingsTranslator csv = IJsonBindingsTranslator.get( "CSV" );
+      return (E)csv.toBindings( StreamUtil.getContent( reader ) );
     }
     catch( Exception e )
     {

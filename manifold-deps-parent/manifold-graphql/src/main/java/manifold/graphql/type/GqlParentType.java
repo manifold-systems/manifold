@@ -416,7 +416,7 @@ class GqlParentType
       .name( "request" )
       .addParam( "url", String.class )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      .body( "return new Executor<Result>(url, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings(), Result.class);"
       ) );
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
@@ -424,7 +424,7 @@ class GqlParentType
       .name( "request" )
       .addParam( "endpoint", Endpoint.class )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      .body( "return new Executor<Result>(endpoint, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings(), Result.class);"
       ) );
     srcClass.addMethod( new SrcMethod()
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
@@ -432,7 +432,7 @@ class GqlParentType
       .name( "request" )
       .addParam( "requester", new SrcType( "Supplier<Requester<Bindings>>" ) )
       .returns( new SrcType( "Executor<Result>" ) )
-      .body( "return new Executor<Result>(requester, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings());"
+      .body( "return new Executor<Result>(requester, \"${operation.getOperation().name().toLowerCase()}\", \"$query\", getBindings(), Result.class);"
       ) );
   }
 
@@ -1418,7 +1418,7 @@ class GqlParentType
   {
     SourceLocation loc = node.getSourceLocation();
     String name;
-    if( node instanceof NamedNode && !content.startsWith( name = ((NamedNode)node).getName(), offset ) ||
+    if( node instanceof NamedNode && !content.startsWith( name = ensure$included( (NamedNode)node ), offset ) ||
         node instanceof OperationDefinition && !content.startsWith( name = ((OperationDefinition)node).getName(), offset )  )
     {
       int nameStart = content.indexOf( ' ' + name, commentEnd );

@@ -18,6 +18,8 @@ package manifold.graphql.rt.api.request;
 
 import java.util.List;
 import java.util.function.Supplier;
+
+import manifold.ext.rt.RuntimeMethods;
 import manifold.rt.api.Bindings;
 
 import manifold.json.rt.api.Endpoint;
@@ -51,27 +53,35 @@ import manifold.json.rt.api.Requester;
 public class Executor<T>
 {
   private final GqlRequestBody _reqArgs;
-  private Requester<Bindings> _requester;
+  private final Requester<Bindings> _requester;
 
-  public Executor( String url, String operation, String query, Bindings variables )
+  public Executor( String url, String operation, String query, Bindings variables, Class<T> resultType )
   {
-    _requester = new Requester<>( url );
+    _requester = new Requester<>( url, result -> coerce( (Class<T>) resultType, result ) );
     _requester.withHeader( "Content-Type", "application/json" );
     _reqArgs = GqlRequestBody.create( query, variables );
   }
 
-  public Executor( Endpoint endpoint, String operation, String query, Bindings variables )
+  public Executor( Endpoint endpoint, String operation, String query, Bindings variables, Class<T> resultType )
   {
-    _requester = new Requester<>( endpoint );
+    _requester = new Requester<>( endpoint, result -> coerce( resultType, result ) );
     _requester.withHeader( "Content-Type", "application/json" );
     _reqArgs = GqlRequestBody.create( query, variables );
   }
 
-  public Executor( Supplier<Requester<Bindings>> requester, String operation, String query, Bindings variables )
+  public Executor( Supplier<Requester<Bindings>> requester, String operation, String query, Bindings variables, Class<T> resultType )
   {
     _requester = requester.get();
+    _requester.withCoercer( result -> coerce( resultType, result ) );
     _requester.withHeader( "Content-Type", "application/json" );
     _reqArgs = GqlRequestBody.create( query, variables );
+  }
+
+  private Object coerce( Class<T> resultType, Object result )
+  {
+    Bindings response = (Bindings) result;
+    handleErrors( response );
+    return RuntimeMethods.coerce( response.get( "data" ), resultType );
   }
 
   /**
@@ -143,10 +153,7 @@ public class Executor<T>
    */
   public T post() throws GqlRequestException
   {
-    Bindings response = _requester.postOne( _reqArgs.getBindings() );
-    handleErrors( response );
-    //noinspection unchecked
-    return (T)response.get( "data" );
+    return _requester.postOne( _reqArgs.getBindings() );
   }
 
   /**
@@ -161,10 +168,7 @@ public class Executor<T>
    */
   public T post( Requester.Format format ) throws GqlRequestException
   {
-    Bindings response = _requester.postOne( "", _reqArgs.getBindings(), format );
-    handleErrors( response );
-    //noinspection unchecked
-    return (T)response.get( "data" );
+    return _requester.postOne( "", _reqArgs.getBindings(), format );
   }
 
   /**
@@ -177,10 +181,7 @@ public class Executor<T>
    */
   public T get() throws GqlRequestException
   {
-    Bindings response = _requester.getOne( _reqArgs.getBindings() );
-    handleErrors( response );
-    //noinspection unchecked
-    return (T)response.get( "data" );
+    return (T)_requester.getOne( _reqArgs.getBindings() );
   }
 
   /**
@@ -195,10 +196,7 @@ public class Executor<T>
    */
   public T get( Requester.Format format ) throws GqlRequestException
   {
-    Bindings response = _requester.getOne( "", _reqArgs.getBindings(), format );
-    handleErrors( response );
-    //noinspection unchecked
-    return (T)response.get( "data" );
+    return (T)_requester.getOne( "", _reqArgs.getBindings(), format );
   }
 
   private void handleErrors( Bindings response )

@@ -23,21 +23,20 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A service interface for encoding/decoding JSON bindings to a variety of data formats such as
- * JSON, XML, YAML, and CSV.
+ * A service interface for translating JSON bindings to a data format such as JSON, XML, YAML, and CSV.
  */
-public interface IJsonBindingsCodec
+public interface IJsonBindingsTranslator
 {
-  LocklessLazyVar<Set<IJsonBindingsCodec>> CODECS =
+  LocklessLazyVar<Set<IJsonBindingsTranslator>> CODECS =
     LocklessLazyVar.make( () -> {
-      Set<IJsonBindingsCodec> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, IJsonBindingsCodec.class, IJsonBindingsCodec.class.getClassLoader() );
+      Set<IJsonBindingsTranslator> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, IJsonBindingsTranslator.class, IJsonBindingsTranslator.class.getClassLoader() );
       return registered;
     } );
 
-  static IJsonBindingsCodec get( String name )
+  static IJsonBindingsTranslator get( String name )
   {
-    return IJsonBindingsCodec.CODECS.get().stream()
+    return IJsonBindingsTranslator.CODECS.get().stream()
       .filter( e -> e.getName().equals( name ) )
       .findFirst().orElseThrow( () -> new RuntimeException( "Missing JSON bindings encoder for : " + name ) );
   }
@@ -47,16 +46,11 @@ public interface IJsonBindingsCodec
    */
   String getName();
 
-  String encode( Object jsonValue );
-  void encode( Object jsonValue, StringBuilder target );
-  void encode( Object jsonValue, String name, StringBuilder target, int indent );
+  String fromBindings( Object bindingsValue );
+  void fromBindings( Object bindingsValue, StringBuilder target );
+  void fromBindings( Object bindingsValue, String name, StringBuilder target, int indent );
 
-  Object decode( String encoded );
-  Object decode( String encoded, boolean withTokens );
-  Object decode( String encoded, boolean withBigNumbers, boolean withTokens );
-
-  default StringBuilder appendValue( StringBuilder sb, Object comp )
-  {
-    throw new UnsupportedOperationException();
-  }
+  Object toBindings( String translation );
+  Object toBindings( String translation, boolean withTokens );
+  Object toBindings( String translation, boolean withBigNumbers, boolean withTokens );
 }

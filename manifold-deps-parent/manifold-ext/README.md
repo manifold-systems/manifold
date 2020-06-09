@@ -1562,11 +1562,11 @@ type enforces that a `SinglyNode` cannot be mistaken for `DoublyNode`, hence the
 
 # IDE Support 
 
-Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ## Install
 
-Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) directly from within the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
@@ -1603,10 +1603,15 @@ mvn compile
 ## Using this project
 
 The `manifold-ext` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions
-8 - 13.
+8 - 14.
 
->Note you can replace the `manifold-ext` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
-Manifold's features.
+This project consists of two modules:
+* `manifold-ext`
+* `manifold-ext-rt`
+
+For optimal performance and to work with Android and other JVM languages it is recommended to:
+* Add a _compile-only_ scoped dependency on `manifold-ext` (Gradle: "compileOnly", Maven: "provided")
+* Add a default scoped dependency on `manifold-ext-rt` (Gradle: "implementation", Maven: "compile")
 
 ## Binaries
 
@@ -1616,13 +1621,13 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 13), the script takes care of the rest.  
+version (8 - 14), the script takes care of the rest.  
 ```groovy
 plugins {
     id 'java'
 }
 
-group 'systems.manifold'
+group 'com.example'
 version '1.0-SNAPSHOT'
 
 targetCompatibility = 11
@@ -1633,15 +1638,17 @@ repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
+configurations {
+    // give tests access to compileOnly dependencies
+    testImplementation.extendsFrom compileOnly
+}
+
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-ext', version: '2020.1.12'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.12'
+    implementation 'systems.manifold:manifold-ext-rt:2020.1.12'
+    
+    testCompile 'junit:junit:4.12'
                        
-    if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
-        // tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
-        // Thus if you are *not* using structural typing, you **don't** need tools.jar
-        compile files( "${System.properties['java.home']}/../lib/tools.jar" )
-    }
     // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2020.1.12'
 }
@@ -1657,15 +1664,6 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
         // If you DO NOT define a module-info.java file:
         options.compilerArgs += ['-Xplugin:Manifold']
     }
-}
-
-tasks.compileJava {
-    classpath += files(sourceSets.main.output.resourcesDir) //adds build/resources/main to javac's classpath
-    dependsOn processResources
-}
-tasks.compileTestJava {
-    classpath += files(sourceSets.test.output.resourcesDir) //adds build/resources/test to test javac's classpath
-    dependsOn processTestResources
 }
 ```
 Use with accompanying `settings.gradle` file:
@@ -1698,6 +1696,12 @@ rootProject.name = 'MyExtProject'
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-ext</artifactId>
             <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-ext-rt</artifactId>
+            <version>${manifold.version}</version>
         </dependency>
     </dependencies>
 
@@ -1720,28 +1724,6 @@ rootProject.name = 'MyExtProject'
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <!-- tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
-             Thus if you are not using structural typing, you **don't** need tools.jar -->
-        <profile>
-            <id>internal.tools-jar</id>
-            <activation>
-                <file>
-                    <exists>\${java.home}/../lib/tools.jar</exists>
-                </file>
-            </activation>
-            <dependencies>
-                <dependency>
-                    <groupId>com.sun</groupId>
-                    <artifactId>tools</artifactId>
-                    <version>1.8.0</version>
-                    <scope>system</scope>
-                    <systemPath>\${java.home}/../lib/tools.jar</systemPath>
-                </dependency>
-              </dependencies>
-        </profile>
-    </profiles>
 </project>
 ```
 
@@ -1766,6 +1748,12 @@ rootProject.name = 'MyExtProject'
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-ext</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-ext-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>

@@ -35,8 +35,9 @@ public class BindingsCoercer implements ICoercionProvider
   @Override
   public Object coerce( Object o, Class<?> proxyClass )
   {
-    if( IBindingsBacked.class.isAssignableFrom( proxyClass ) && o instanceof Bindings ||
-        IListBacked.class.isAssignableFrom( proxyClass ) && o instanceof List && !(o instanceof IListBacked) )
+    if( IBindingsBacked.class.isAssignableFrom( proxyClass )
+        && (o instanceof Bindings || (o instanceof List && List.class.isAssignableFrom( proxyClass )))
+        || IListBacked.class.isAssignableFrom( proxyClass ) && o instanceof List && !(o instanceof IListBacked) )
     {
       IProxyFactory factory = (IProxyFactory) ReflectUtil.constructor( proxyClass.getName() + "$ProxyFactory" ).newInstance();
       return factory.proxy( o, proxyClass );

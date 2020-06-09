@@ -15,7 +15,7 @@ maintenance, and commercial server integrations.
 
 For more information contact: [admin@manifold.systems](mailto:admin@manifold.systems)
 
-## Manifold IntelliJ IDEA Plugin
+## Plugin for IntelliJ IDEA and Android Studio
 
-The [Manifold Plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold) is available separately via
+The [Manifold Plugin](https://plugins.jetbrains.com/plugin/10057-manifold) is available separately via
 the [JetBrains Marketplace](https://plugins.jetbrains.com/).

@@ -70,9 +70,9 @@ public class Writer
    */
   public String toYaml()
   {
-    IJsonBindingsCodec yaml = IJsonBindingsCodec.get( "YAML" );
+    IJsonBindingsTranslator yaml = IJsonBindingsTranslator.get( "YAML" );
     StringBuilder sb = new StringBuilder();
-    yaml.encode( _value, sb );
+    yaml.fromBindings( _value, sb );
     return sb.toString();
   }
   public void toYaml( Appendable target )
@@ -94,15 +94,15 @@ public class Writer
    */
   public String toXml()
   {
-    IJsonBindingsCodec xml = IJsonBindingsCodec.get( "XML" );
-    return xml.encode( _value );
+    IJsonBindingsTranslator xml = IJsonBindingsTranslator.get( "XML" );
+    return xml.fromBindings( _value );
   }
   public void toXml( Appendable target )
   {
     try
     {
-      IJsonBindingsCodec xml = IJsonBindingsCodec.get( "XML" );
-      target.append( xml.encode( _value ) );
+      IJsonBindingsTranslator xml = IJsonBindingsTranslator.get( "XML" );
+      target.append( xml.fromBindings( _value ) );
     }
     catch( IOException e )
     {
@@ -119,9 +119,9 @@ public class Writer
    */
   public String toXml( String name )
   {
-    IJsonBindingsCodec xml = IJsonBindingsCodec.get( "XML" );
+    IJsonBindingsTranslator xml = IJsonBindingsTranslator.get( "XML" );
     StringBuilder sb = new StringBuilder();
-    xml.encode( _value, name, sb, 0 );
+    xml.fromBindings( _value, name, sb, 0 );
     return sb.toString();
   }
 
@@ -132,15 +132,15 @@ public class Writer
    */
   public String toCsv()
   {
-    IJsonBindingsCodec csv = IJsonBindingsCodec.get( "CSV" );
-    return csv.encode( _value );
+    IJsonBindingsTranslator csv = IJsonBindingsTranslator.get( "CSV" );
+    return csv.fromBindings( _value );
   }
   public void toCsv( Appendable target )
   {
     try
     {
-      IJsonBindingsCodec csv = IJsonBindingsCodec.get( "CSV" );
-      target.append( csv.encode( _value ) );
+      IJsonBindingsTranslator csv = IJsonBindingsTranslator.get( "CSV" );
+      target.append( csv.fromBindings( _value ) );
     }
     catch( IOException e )
     {
@@ -157,9 +157,9 @@ public class Writer
    */
   public String toCsv( String name )
   {
-    IJsonBindingsCodec csv = IJsonBindingsCodec.get( "CSV" );
+    IJsonBindingsTranslator csv = IJsonBindingsTranslator.get( "CSV" );
     StringBuilder sb = new StringBuilder();
-    csv.encode( _value, name, sb, 0 );
+    csv.fromBindings( _value, name, sb, 0 );
     return sb.toString();
   }
 }

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * This class defines methods to simplify making HTTP requests involved with basic REST API calls supporting GET,
@@ -50,6 +51,7 @@ import java.util.Map;
 public class Requester<T>
 {
   private final Endpoint _endpoint;
+  private Function<Object, Object> _resultCoercer;
   private Format _format;
   private Map<String, String> _headers;
   private Map<String, String> _parameters;
@@ -75,7 +77,12 @@ public class Requester<T>
    */
   public Requester( String urlBase )
   {
+    this( urlBase, result -> result );
+  }
+  public Requester( String urlBase, Function<Object, Object> resultCoercer )
+  {
     _endpoint = new Endpoint( urlBase );
+    _resultCoercer = resultCoercer;
     _format = Format.Json;
     _headers = new HashMap<>();
     _parameters = Collections.emptyMap();
@@ -83,11 +90,22 @@ public class Requester<T>
   }
   public Requester( Endpoint endpoint )
   {
+    this( endpoint, result -> result );
+  }
+  public Requester( Endpoint endpoint, Function<Object, Object> resultCoercer )
+  {
     _endpoint = endpoint;
+    _resultCoercer = resultCoercer;
     _format = Format.Json;
     _headers = new HashMap<>();
     _parameters = Collections.emptyMap();
     _timeout = 0;
+  }
+
+  public Requester<T> withCoercer( Function<Object, Object> resultCoercer )
+  {
+    _resultCoercer = resultCoercer;
+    return this;
   }
 
   /**
@@ -535,7 +553,7 @@ public class Requester<T>
     jsonValue = Json.toBindings( jsonValue );
     urlSuffix = appendParams( urlSuffix );
     Endpoint endpoint = urlSuffix != null ? _endpoint.withUrlSuffix( urlSuffix ) : _endpoint;
-    Object result;
+    Object result = null;
     switch( format )
     {
       case Json:
@@ -561,6 +579,7 @@ public class Requester<T>
         throw new IllegalArgumentException( "format: " + format );
     }
     //noinspection unchecked
+    result = _resultCoercer.apply( result );
     return (R)result;
   }
 

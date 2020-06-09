@@ -10,7 +10,7 @@ layout: default
 ## Common Questions
 
 #### Q: Does Manifold support Java 11? 13? 8?
-Yes.  Manifold fully supports Java 8 - 13.  Manifold also fully supports the Java Platform Module System (JPMS).  See the
+Yes.  Manifold fully supports Java 8 - 14.  Manifold also fully supports the Java Platform Module System (JPMS).  See the
 [Setup Guide](http://manifold.systems/docs.html#setup) for more info.
 
 #### Q: Manifold is somehow using Java internal APIs to do its magic. Could it break in a future version of Java?
@@ -26,12 +26,14 @@ github, free for use via Apache License 2.0.
 Yes.  Please refer to the [Setup](http://manifold.systems/docs.html#setup) instructions. 
 
 #### Q: Does Manifold provide IDE support?
-Yes.  [IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold) provides comprehensive support for Manifold.
-Download / Update the plugin directly from within IntelliJ:
+Yes.  The [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) provides comprehensive support for
+**IntelliJ IDEA** and **Android Studio**.
+
+Download / Update the plugin directly from within the IDE:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold` 
   
->Note: IntelliJ notifies you within 24 hours when an update is available and gives you the opportunity to sync.
+>Note: The IDE notifies you within 24 hours when an update is available and gives you the opportunity to sync.
 
 #### Q: Do I really need a license for the IntelliJ plugin?
 The [IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold/) is offered separately via the JetBrains

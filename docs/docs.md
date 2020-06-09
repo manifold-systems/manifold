@@ -13,7 +13,7 @@ layout: default
 * [Download](#download)
 * [License](#license)
 * [Author](#author)
-* (_New!_) [Forum](#forum)
+* [Forum](#forum)
 
 # Overview
 
@@ -44,11 +44,12 @@ and a lot more.
 Bridging the worlds of data and code, a *type manifold* acts as an adapter to automatically connect data resources to
 Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler enabling a type manifold to
 transform structured data into a data _type_ directly accessible in your Java code eliminating code generation build
-steps otherwise required with conventional tools. Additionally the [Manifold plugin for IntelliJ IDEA](#ide-support)
-provides comprehensive integration for type manifolds. Types are always in sync; changes you make to resources are
-immediately available in the type system _without a compilation step_.  Code completion, navigation, usage searching,
-refactoring, incremental compilation, hotswap debugging -- all seamlessly integrated.  With type manifolds a data file
-is a virtual data _type_.
+steps otherwise required with conventional tools. Additionally, the [Manifold plugin](#ide-support)
+provides comprehensive integration for type manifolds in both [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
+and [Android Studio](https://developer.android.com/studio). Types are always in sync; changes you make to resources are
+immediately available in your code _without a compilation step_.  Code completion, navigation, usage searching,
+deterministic refactoring, incremental compilation, hotswap debugging -- all seamlessly integrated.  With type manifolds
+a data resource is a virtual data _type_.
 
 To illustrate, consider this simple properties resource file:
 
@@ -167,16 +168,17 @@ Benefits of this approach include:
 *   **Simple, open API** -- use the Manifold API to build your own components and extensions
 *   **No code generation build step** -- integrates directly with the Java compiler
 *   **Incremental** -- only builds types that have changed
-*   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** support -- all manifold types and extensions work with IntelliJ
+*   **[IntelliJ IDEA](https://www.jetbrains.com/idea/download)** -- fully supported
+*   **[Android Studio](https://developer.android.com/studio)** -- fully supported
 
-Manifold is just a dependency you can drop into your existing project -- you can begin using it incrementally without
+Manifold is just a dependency you can drop into your existing project. You can begin using it incrementally without
 having to rewrite classes or conform to a new way of doing things.
 
 # IDE Support
 
-Use the [Manifold IntelliJ IDEA plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to experience Manifold to its fullest.
+Use Manifold to its fullest in **IntelliJ IDEA** and **Android Studio** using the [Manifold IDE plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
 
-The plugin currently supports most high-level IntelliJ features including:
+The plugin provides comprehensive support for IDE features including:
 * Feature highlighting
 * Error reporting
 * Code completion
@@ -192,15 +194,15 @@ The plugin currently supports most high-level IntelliJ features including:
 * Incremental compilation
 * Hotswap debugging
 * Preprocessor (conditional compilation)
-* Professional template file editor
+* Professional template file editing
 
-The IntelliJ plugin provides comprehensive support for Manifold. Use code completion to discover and use type manifolds,
-extension methods and structural interfaces. Jump directly from usages of extension methods to their declarations.
-Likewise, jump directly from references to resource elements and find usages of them in your code. Watch your
-JSON/YAML/XML/CSV, images, properties, templates, and custom type manifolds come alive as types. Changes you make are
-instantly available in your code.
+Use code completion to discover and use type manifolds such as GraphQL and to access extension methods and structural
+interfaces. Jump directly from usages of extension methods to their declarations. Jump directly from call sites to
+resource elements and find usages of them in your code. Watch your GraphQL, JSON, XML, YAML, CSV, images, properties,
+templates, and custom type manifolds come alive as types. Changes you make in resource files are instantly available in
+your code, _without compiling_.
 
-Install the plugin directly from IntelliJ via:
+Install the plugin directly from the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
@@ -245,9 +247,6 @@ projects' docs.
 * [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)
 * [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)
 
-### Manifold "Fat" Jar
-[Manifold : _All&nbsp;&nbsp;(Über jar)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)
-
 ### Sample Projects
 * [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project)
 * [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app)
@@ -260,14 +259,10 @@ projects' docs.
 Manifold is designed to work with most build systems, including Maven and Gradle.
 
 The Manifold root project consists of several sub-projects you can include separately in your build, see [Projects](#projects)
-above for a complete listing. You can also integrate all Manifold dependencies into your build using the "Fat" Jar
-dependency, [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all).
+above for a complete listing. If you're targeting Android using Android Studio, see [Using Manifold with Android Studio](http://manifold.systems/android.html)
+for additional setup information.
 
 Setup instructions are consistent for each sub-project/dependency.  Here are direct links:
-
-* Setup for [Manifold : _All_](https://github.com/manifold-systems/manifold/tree/master/manifold-all#setup)
-
-<hr/>
 
 * Setup for [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#setup)
 
@@ -315,25 +310,20 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 
 For the convenience of non-maven/non-gradle users you can directly download latest release binaries below. 
 
->**WARNING** If you plan to build your project **without** Maven or Gradle using select binaries (as opposed to manifold-all), 
-your classpath **must** include the **transitive closure** of binaries in terms of the **dependencies** declared in corresponding
-project's POM file. Additionally, you will need to adapt your build to reflect the Maven or Gradle setup instructions
-from the list above.
+>**WARNING** If you plan to build your project **without** Maven or Gradle using select binaries, your classpath
+>**must** include the **transitive closure** of binaries in terms of the **dependencies** declared in corresponding
+>project's POM file. Additionally, you will need to adapt your build to reflect the Maven or Gradle setup instructions
+>from the list above.
 >
 >For instance, to use the *manifold-preprocessor* jar using **Ant** your project needs:
 >* [manifold-preprocessor-2020.1.12.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
 >* [manifold-2020.1.12.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
 >* [manifold-util-2020.1.12.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
->* [antlr-runtime-4.7.jar](https://www.antlr.org/download/antlr-runtime-4.7.jar)  
 >
 >As such your *javac* command line should include:
 >```text
->javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2020.1.12.jar;<jar-path>/manifold-2020.1.12.jar;<jar-path>/manifold-util-2020.1.12.jar;<jar-path>/antlr-runtime-4.7.jar
+>javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2020.1.12.jar;<jar-path>/manifold-2020.1.12.jar;<jar-path>/manifold-util-2020.1.12.jar
 >```
-
-* Download [manifold : _All_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-all&v=RELEASE):
-
-<hr/>
 
 * Download [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
 
@@ -379,7 +369,6 @@ from the list above.
 <hr/>
  
 * Download [Manifold : Util](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
-  * [Antlr : Runtime](https://www.antlr.org/download/antlr-runtime-4.7.jar) _Note the antlr runtime library is a dependency of manifold-util_
 
 # License
 

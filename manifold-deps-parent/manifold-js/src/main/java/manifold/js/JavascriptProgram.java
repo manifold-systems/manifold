@@ -48,7 +48,7 @@ public class JavascriptProgram
 {
   static SrcClass genProgram( String fqn, ProgramNode programNode, IFile file )
   {
-    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class ).superClass( JavascriptProgram.class )
+    SrcClass clazz = new SrcClass( fqn, SrcClass.Kind.Class )
       .imports( JsRuntime.class )
       .imports( SourcePosition.class )
       .imports( FragmentValue.class );

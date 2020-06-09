@@ -251,12 +251,11 @@ project reference regarding API usage specific to JSON Schema. _All_ that applie
 
 # IDE Support 
 
-Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ## Install
 
-Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ
-via:
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) directly from within the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
@@ -288,10 +287,15 @@ mvn compile
 
 ## Using this project
 
-The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 13.
+The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 14.
 
->Note you can replace the `manifold-xml` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
-Manifold's features.
+This project consists of two modules:
+* `manifold-xml`
+* `manifold-xml-rt`
+
+For optimal performance and to work with Android and other JVM languages it is recommended to:
+* Add a _compile-only_ scoped dependency on `manifold-xml` (Gradle: "compileOnly", Maven: "provided")
+* Add a default scoped dependency on `manifold-xml-rt` (Gradle: "implementation", Maven: "compile")
 
 ## Binaries
 
@@ -301,7 +305,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 13), the script takes care of the rest. 
+version (8 - 14), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -319,11 +323,13 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-xml', version: '2020.1.12'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly 'systems.manifold:manifold-xml:2020.1.12-SNAPSHOT'
+    implementation 'systems.manifold:manifold-xml-rt:2020.1.12-SNAPSHOT'
+
+    testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-xml', version: '2020.1.12'
+    annotationProcessor 'systems.manifold:manifold-xml:2020.1.12-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -337,15 +343,6 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
         // If you DO NOT define a module-info.java file:
         options.compilerArgs += ['-Xplugin:Manifold']
     }
-}
-
-tasks.compileJava {
-    classpath += files(sourceSets.main.output.resourcesDir) //adds build/resources/main to javac's classpath
-    dependsOn processResources
-}
-tasks.compileTestJava {
-    classpath += files(sourceSets.test.output.resourcesDir) //adds build/resources/test to test javac's classpath
-    dependsOn processTestResources
 }
 ```
 Use with accompanying `settings.gradle` file:
@@ -377,6 +374,12 @@ rootProject.name = 'MyProject'
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-xml</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-xml-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>
@@ -424,6 +427,12 @@ rootProject.name = 'MyProject'
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-xml</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-xml-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>

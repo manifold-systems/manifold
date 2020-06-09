@@ -20,6 +20,7 @@ import manifold.json.rt.api.IJsonList;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class JsonList<T> implements IJsonList<T>
 {
@@ -48,5 +49,23 @@ public class JsonList<T> implements IJsonList<T>
   public Class<?> getFinalComponentType()
   {
     return _finalComponentType;
+  }
+
+  @Override
+  public boolean equals( Object o )
+  {
+    return Objects.equals( _list, o );
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash( _list );
+  }
+
+  @Override
+  public String toString()
+  {
+    return _list.toString();
   }
 }

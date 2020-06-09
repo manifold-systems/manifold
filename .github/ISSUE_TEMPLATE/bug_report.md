@@ -22,7 +22,7 @@ If applicable, add screenshots to help explain your problem (drag/drop them here
 **Desktop (please complete the following information):**
 - OS Type & Version: 
 - Java/JDK version:
-- IntelliJ IDEA version:
+- IDE version (IntelliJ IDEA or Android Studio):
 - Manifold version:
 - Manifold IntelliJ plugin version: 
 

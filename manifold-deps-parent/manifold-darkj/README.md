@@ -70,11 +70,11 @@ This basic interface factory pattern can be used anywhere late-bound compilation
  
 # IDE Support 
 
-Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ## Install
 
-Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ via:
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) directly from within the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
@@ -110,11 +110,13 @@ mvn compile
 
 ## Using this project
 
-The `manifold-darkj` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 13.
+The `manifold-darkj` dependency works with all build tooling, including Maven and Gradle. It also works with Java
+versions 8 - 14.
 
->Note you can replace the `manifold-darkj` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
-Manifold's features.
-
+>Note, since Dark Java is a dynamic compilation feature, you must include Manifold dependencies in both compile-time
+>and runtime. As a consequence, the Manifold runtime compilation services add a bit of overhead in terms of
+>application initialization time and footprint.  
+ 
 ## Binaries
 
 If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#download).
@@ -123,7 +125,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 13), the script takes care of the rest. 
+version (8 - 14), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -141,7 +143,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-darkj', version: '2020.1.12'
+    implementation group: 'systems.manifold', name: 'manifold-darkj', version: '2020.1.12'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     if (JavaVersion.current() == JavaVersion.VERSION_1_8) {

@@ -16,9 +16,9 @@
 
 package manifold.api.yaml.rt;
 
-import manifold.json.rt.api.IJsonBindingsCodec;
+import manifold.json.rt.api.IJsonBindingsTranslator;
 
-public class YamlBindingsCodec implements IJsonBindingsCodec
+public class YamlBindingsTranslator implements IJsonBindingsTranslator
 {
   @Override
   public String getName()
@@ -27,40 +27,40 @@ public class YamlBindingsCodec implements IJsonBindingsCodec
   }
 
   @Override
-  public String encode( Object jsonValue )
+  public String fromBindings( Object bindingsValue )
   {
     StringBuilder target = new StringBuilder();
-    Yaml.toYaml( jsonValue, target );
+    Yaml.toYaml( bindingsValue, target );
     return target.toString();
   }
 
   @Override
-  public void encode( Object jsonValue, StringBuilder target )
+  public void fromBindings( Object bindingsValue, StringBuilder target )
   {
-    Yaml.toYaml( jsonValue, target );
+    Yaml.toYaml( bindingsValue, target );
   }
 
   @Override
-  public void encode( Object jsonValue, String name, StringBuilder target, int indent )
+  public void fromBindings( Object bindingsValue, String name, StringBuilder target, int indent )
   {
-    Yaml.toYaml( jsonValue, target );
+    Yaml.toYaml( bindingsValue, target );
   }
 
   @Override
-  public Object decode( String encoded )
+  public Object toBindings( String translation )
   {
-    return Yaml.fromYaml( encoded );
+    return Yaml.fromYaml( translation );
   }
 
   @Override
-  public Object decode( String encoded, boolean withTokens )
+  public Object toBindings( String translation, boolean withTokens )
   {
-    return Yaml.fromYaml( encoded, false, withTokens );
+    return Yaml.fromYaml( translation, false, withTokens );
   }
 
   @Override
-  public Object decode( String encoded, boolean withBigNumbers, boolean withTokens )
+  public Object toBindings( String translation, boolean withBigNumbers, boolean withTokens )
   {
-    return Yaml.fromYaml( encoded, withBigNumbers, withTokens );
+    return Yaml.fromYaml( translation, withBigNumbers, withTokens );
   }
 }

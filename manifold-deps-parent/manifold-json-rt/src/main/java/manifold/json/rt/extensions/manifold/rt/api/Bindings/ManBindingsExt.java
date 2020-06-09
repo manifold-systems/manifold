@@ -28,7 +28,7 @@ import manifold.json.rt.Json;
 import manifold.json.rt.api.DataBindings;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
-import manifold.json.rt.api.IJsonBindingsCodec;
+import manifold.json.rt.api.IJsonBindingsTranslator;
 import manifold.json.rt.extensions.java.net.URL.ManUrlExt;
 import manifold.rt.api.util.Pair;
 
@@ -83,8 +83,8 @@ public class ManBindingsExt
    */
   public static void toYaml( @This Bindings thiz, StringBuilder target )
   {
-    IJsonBindingsCodec Yaml = IJsonBindingsCodec.get( "YAML" );
-    Yaml.encode( thiz, target );
+    IJsonBindingsTranslator Yaml = IJsonBindingsTranslator.get( "YAML" );
+    Yaml.fromBindings( thiz, target );
   }
 
   private static boolean isNewLine( StringBuilder sb )
@@ -186,8 +186,8 @@ public class ManBindingsExt
    */
   public static void toXml( @This Bindings thiz, String name, StringBuilder target, int indent )
   {
-    IJsonBindingsCodec Xml = IJsonBindingsCodec.get( "XML" );
-    Xml.encode( thiz, name, target, indent );
+    IJsonBindingsTranslator Xml = IJsonBindingsTranslator.get( "XML" );
+    Xml.fromBindings( thiz, name, target, indent );
   }
 
   /**
@@ -225,8 +225,8 @@ public class ManBindingsExt
    */
   public static void toCsv( @This Bindings thiz, String name, StringBuilder target, int indent )
   {
-    IJsonBindingsCodec Csv = IJsonBindingsCodec.get( "CSV" );
-    Csv.encode( thiz, name, target, indent );
+    IJsonBindingsTranslator Csv = IJsonBindingsTranslator.get( "CSV" );
+    Csv.fromBindings( thiz, name, target, indent );
   }
 
   /**

@@ -244,12 +244,11 @@ project reference regarding API usage specific to JSON Schema.
 
 # IDE Support 
 
-Manifold is best experienced using [IntelliJ IDEA](https://www.jetbrains.com/idea/download).
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ## Install
 
-Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) for IntelliJ IDEA directly from IntelliJ
-via:
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) directly from within the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
@@ -281,10 +280,16 @@ mvn compile
 
 ## Using this project
 
-The `manifold-csv` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 13.
+The `manifold-csv` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions
+8 - 14.
 
->Note you can replace the `manifold-csv` dependency with [`manifold-all`](https://github.com/manifold-systems/manifold/tree/master/manifold-all) as a quick way to gain access to all of
-Manifold's features.
+This project consists of two modules:
+* `manifold-csv`
+* `manifold-csv-rt`
+
+For optimal performance and to work with Android and other JVM languages it is recommended to:
+* Add a _compile-only_ scoped dependency on `manifold-csv` (Gradle: "compileOnly", Maven: "provided")
+* Add a default scoped dependency on `manifold-csv-rt` (Gradle: "implementation", Maven: "compile")
 
 ## Binaries
 
@@ -294,7 +299,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 13), the script takes care of the rest. 
+version (8 - 14), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -311,9 +316,15 @@ repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
+configurations {
+    // give tests access to compileOnly dependencies
+    testImplementation.extendsFrom compileOnly
+}
+
 dependencies {
-    compile group: 'systems.manifold', name: 'manifold-csv', version: '2020.1.12'
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compileOnly 'systems.manifold:manifold-csv:2020.1.12'
+    implementation 'systems.manifold:manifold-csv-rt:2020.1.12'
+    testCompile 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2020.1.12'
@@ -331,15 +342,6 @@ if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
         options.compilerArgs += ['-Xplugin:Manifold']
     }
 }
-
-tasks.compileJava {
-    classpath += files(sourceSets.main.output.resourcesDir) //adds build/resources/main to javac's classpath
-    dependsOn processResources
-}
-tasks.compileTestJava {
-    classpath += files(sourceSets.test.output.resourcesDir) //adds build/resources/test to test javac's classpath
-    dependsOn processTestResources
-}
 ```
 Use with accompanying `settings.gradle` file:
 ```groovy
@@ -350,7 +352,7 @@ rootProject.name = 'MyProject'
 
 ### Java 8
 
-```csv
+```xml
 <?csv version="1.0" encoding="UTF-8"?>
 <project csvns="http://maven.apache.org/POM/4.0.0" csvns:xsi="http://www.w3.org/2001/CSVSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -370,6 +372,12 @@ rootProject.name = 'MyProject'
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-csv</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-csv-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>
@@ -397,7 +405,7 @@ rootProject.name = 'MyProject'
 ```
 
 ### Java 9 or later
-```csv
+```xml
 <?csv version="1.0" encoding="UTF-8"?>
 <project csvns="http://maven.apache.org/POM/4.0.0" csvns:xsi="http://www.w3.org/2001/CSVSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -417,6 +425,12 @@ rootProject.name = 'MyProject'
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-csv</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-csv-rt</artifactId>
             <version>${manifold.version}</version>
         </dependency>
     </dependencies>

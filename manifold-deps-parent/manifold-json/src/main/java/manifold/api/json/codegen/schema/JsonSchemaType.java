@@ -426,7 +426,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     //noinspection unused
     sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(String urlBase) {\n" );
     indent( sb, indent );
-    sb.append( "  return new Requester<>(urlBase);\n" );
+    sb.append( "  return new Requester<>(urlBase, result -> RuntimeMethods.coerce( result, $typeName.class));\n" );
     indent( sb, indent );
     sb.append( "}\n" );
 
@@ -434,7 +434,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     //noinspection unused
     sb.append( "static " ).append( "Requester<$typeName>" ).append( " request(Endpoint endpoint) {\n" );
     indent( sb, indent );
-    sb.append( "  return new Requester<>(endpoint);\n" );
+    sb.append( "  return new Requester<>(endpoint, result -> RuntimeMethods.coerce( result, $typeName.class));\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }
