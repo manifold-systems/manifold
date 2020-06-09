@@ -19,11 +19,15 @@ identical. For instance, you can make GraphQL changes and instantly access them 
 between. Use IntelliJ or Android Studio to deterministically refactor/rename, find Kotlin usages from GraphQL, code
 completion, etc. 
  
+## Get the Manifold plugin
+
+The the Manifold plugin directly from within IntelliJ IDEA or Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
+You must restart Android Studio to enable the plugin. 
 
 ## The Kotlin sample application
 
 The [Kotlin sample application](https://github.com/manifold-systems/manifold-sample-kotlin-app) best illustrates how to
-setup your environment and build for use with Manifold. Use it as a reference to use Manifold your own Kotlin app.
+setup your environment and build for use with Manifold. Use it as a reference to use Manifold with your own Kotlin app.
 
 
 

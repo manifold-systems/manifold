@@ -16,8 +16,8 @@ All fully supported in **Java 8 - 14** with comprehensive IDE support in **Intel
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  
-> * Manifold supports **Android Studio**! [Read more about it]().
-> * Manifold supports **Kotlin**! [Read more about it]().
+> * Manifold supports **Android Studio**! [Learn more](http://manifold.systems/android.html).
+> * Manifold supports **Kotlin**! [Learn more](http://manifold.systems/kotlin.html).
 
 ## What can you do with Manifold?
 
@@ -237,6 +237,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
 >* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
+>* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 
 ### [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start

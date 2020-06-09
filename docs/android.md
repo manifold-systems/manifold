@@ -5,12 +5,16 @@ layout: default
 # Using Manifold with Android Studio
 
 Android Studio's support for [Java 8 features](https://developer.android.com/studio/write/java8-support.html) enables
-Android applications to work directly with Manifold. This document provides necessary Gradle configuration to help you
-setup your project to use Manifold.
+Android applications to work directly with Manifold. This document provides configuration information to help you setup
+your project to use Manifold.
 
 >Note, you can also develop Android applications with IntelliJ IDEA using the Android plugin along with the Manifold
 >plugin. 
 
+## Get the Manifold plugin
+The the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
+You must restart Android Studio to enable the plugin. 
+ 
 ## Java 8 Source and Target Compatibility 
 Since Manifold requires Java 8 or later, set your project's source and target compatibility values to Java 8:
 
@@ -125,8 +129,8 @@ implementation 'systems.manifold:manifold-text:2020.1.13'
 ## Resources
 
 If you use a [type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
-that is based on resource files such as GraphQL, JSON, Templates, etc. you must create a `resources` directory to
-contain the files.  Do **not** place them in the `res` or `assets` directories.
+that is based on resource files such as GraphQL, JSON, Templates, etc. you must place the resource files in the 
+`source` directory along with your Java files.  Do **not** place them in the `res` or `assets` directories.
  
-<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="60%" height="60%"/></p> 
+<p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
 
