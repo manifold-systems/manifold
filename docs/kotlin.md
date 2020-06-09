@@ -8,7 +8,7 @@ Although Manifold is a _Java_ compiler plugin, you can reap many of its benefits
 For instance, Manifold support for [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), and
-[**Templates**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) work
+[**Templates**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) works
 equally well with other JVM languages such as Kotlin.
 
 These features are called [_type manifolds_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
