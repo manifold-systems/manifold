@@ -5,12 +5,16 @@ layout: default
 # Using Manifold with Android Studio
 
 Android Studio's support for [Java 8 features](https://developer.android.com/studio/write/java8-support.html) enables
-Android applications to work directly with Manifold. This document provides necessary Gradle configuration to help you
-setup your project to use Manifold.
+Android applications to work directly with Manifold. This document provides configuration information to help you setup
+your project to use Manifold.
 
 >Note, you can also develop Android applications with IntelliJ IDEA using the Android plugin along with the Manifold
 >plugin. 
 
+## Get the Manifold plugin
+The the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
+You must restart Android Studio to enable the plugin. 
+ 
 ## Java 8 Source and Target Compatibility 
 Since Manifold requires Java 8 or later, set your project's source and target compatibility values to Java 8:
 
