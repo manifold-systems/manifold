@@ -530,7 +530,7 @@ another module using Manifold unless you explicitly expose them from your JAR-ba
        <archive>
          <manifestEntries>
            <!--expose GraphQL files if they are NOT statically compiled in your project-->
-           <Contains-Sources>gql</Contains-Sources>
+           <Contains-Sources>graphql</Contains-Sources>
            <!--JPMS module name-->
            <Automatic-Module-Name>mymodule</Automatic-Module-Name>
          </manifestEntries>
