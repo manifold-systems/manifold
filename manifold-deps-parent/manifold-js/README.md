@@ -165,6 +165,10 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 
 ## Gradle
 
+>Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
+
+>Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
+
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
 version (8 - 14), the script takes care of the rest. 
 ```groovy
@@ -181,6 +185,11 @@ sourceCompatibility = 11
 repositories {
     jcenter()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+}
+
+configurations {
+    // give tests access to compileOnly dependencies
+    testImplementation.extendsFrom compileOnly
 }
 
 dependencies {
