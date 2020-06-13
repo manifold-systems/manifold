@@ -35,7 +35,8 @@ you can't modify directly, such as `java.lang.String`:
 // package name ends with "extensions." + extended class name
 package extensions.java.lang.String;
 
-import manifold.ext.rt.api.Extension;import manifold.ext.rt.api.This;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
 
 // Defines methods logically added to String
 @Extension
@@ -52,7 +53,12 @@ public class MyStringExtension {
   }
 }
 ```
+The `MyStringExtension` extension methods are directly available on `String`:
+```java
+"Hello World!".print();
 
+String separator = String.lineSeparator();
+```
 All extension classes must be sub-rooted in the `extensions` package where the remainder of the package
 must be the qualified name of the extended class. As the example illustrates, an extension
 class on `java.lang.String` must reside directly in a package equal to or ending with `extensions.java.lang.String`. Note this
