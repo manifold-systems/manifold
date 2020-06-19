@@ -171,7 +171,7 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   {
     return isType( topLevel ) &&
            (isInnerToPrimaryManifold( topLevel, relativeInner ) ||
-            isInnerToJavaClass( topLevel, relativeInner ));
+           (!isPrimaryManifold( topLevel ) && isInnerToJavaClass( topLevel, relativeInner )));
   }
 
   private boolean isInnerToPrimaryManifold( String topLevel, String relativeInner )
@@ -180,6 +180,13 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
       tm -> tm.getContributorKind() == ContributorKind.Primary &&
             tm instanceof ResourceFileTypeManifold &&
             ((ResourceFileTypeManifold)tm).isInnerType( topLevel, relativeInner ) );
+    return !tms.isEmpty();
+  }
+
+  private boolean isPrimaryManifold( String topLevel )
+  {
+    Set<ITypeManifold> tms = getModule().findTypeManifoldsFor( topLevel,
+      tm -> tm.getContributorKind() == ContributorKind.Primary );
     return !tms.isEmpty();
   }
 
