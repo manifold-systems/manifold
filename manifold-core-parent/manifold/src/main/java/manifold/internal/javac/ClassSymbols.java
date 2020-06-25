@@ -21,6 +21,8 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 
@@ -47,7 +49,9 @@ import manifold.api.host.RefreshRequest;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.Pair;
 import manifold.api.util.SourcePathUtil;
+import manifold.rt.api.util.Stack;
 import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 /**
@@ -101,6 +105,18 @@ public class ClassSymbols
       }
       StringWriter errors = new StringWriter();
       BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, makeJavacArgs(), null, null );
+      if( _wfm instanceof ManifoldJavaFileManager )
+      {
+        if( JreUtil.isJava9orLater() )
+        {
+          // Java 9+ requires a module when resolving a symbol, it's always 'noModule' with this particular java task
+          Stack stack = new Stack();
+          stack.push( ReflectUtil.field( Symtab.instance( task.getContext() ), "noModule" ).get() );
+          task.getContext().put( ManifoldJavaFileManager.MODULE_CTX, stack );
+        }
+        ((ManifoldJavaFileManager)_wfm).setContext( task.getContext() );
+      }
+
       if( errors.getBuffer().length() > 0 )
       {
         // report errors to console
@@ -188,6 +204,11 @@ public class ClassSymbols
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, JavaFileManager.Location location, String fqn )
   {
     return getClassSymbol( javacTask.getContext(), location, fqn );
+  }
+
+  public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, Object moduleSymbol, String fqn )
+  {
+    return getClassSymbol( javacTask.getContext(), moduleSymbol, fqn );
   }
 
   public Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> getClassSymbol( BasicJavacTask javacTask, TypeProcessor tp, String fqn )

@@ -46,6 +46,7 @@ import manifold.api.host.RefreshRequest;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.TypeName;
 import manifold.internal.host.SimpleModule;
+import manifold.rt.api.util.Stack;
 import manifold.util.JreUtil;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.util.ReflectUtil;
@@ -61,6 +62,7 @@ import static manifold.api.type.ContributorKind.Supplemental;
 class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> implements ITypeSystemListener
 {
   private static final JavaFileObject MISS_FO = new MissFileObject();
+  static final Context.Key<Stack> MODULE_CTX = new Context.Key<Stack>() {};
 
   private final IManifoldHost _host;
   private final boolean _fromJavaC;
@@ -77,11 +79,22 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     _fromJavaC = fromJavaC;
     _classFiles = new FqnCache<>();
     _generatedFiles = new FqnCache<>();
+    if( JreUtil.isJava9orLater() )
+    {
+      ctx.put( MODULE_CTX, new Stack() );
+    }
     if( ctx.get(JavaFileManager.class) == null )
     {
       ctx.put( JavaFileManager.class, fileManager );
     }
     _host.addTypeSystemListenerAsWeakRef( null, this );
+  }
+
+  @Override
+  public void setContext( Context context )
+  {
+    super.setContext( context );
+    _ctx = context;
   }
 
   public IManifoldHost getHost()
@@ -342,12 +355,84 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       return null;
     }
 
-    JavaFileObject fo = module.produceFile( fqn, location, errorHandler );
+    JavaFileObject fo;
+    pushLocation( location );
+    try
+    {
+      fo = module.produceFile( fqn, location, errorHandler );
+    }
+    finally
+    {
+      popLocation( location );
+    }
 
     // note we cache even if file is null, fqn cache is also a miss cache
     _generatedFiles.add( fqn, fo == null ? MISS_FO : fo);
 
     return fo;
+  }
+
+  private void pushLocation( JavaFileManager.Location location )
+  {
+    if( JavacPlugin.instance() == null || !JreUtil.isJava9orLater() )
+    {
+      return;
+    }
+
+    if( location == null )
+    {
+      throw new IllegalStateException( "null Location" );
+    }
+
+    /*Symbol.ModuleSymbol*/ Object module = inferModule( location );
+    _ctx.get( MODULE_CTX ).push( module );
+  }
+
+  private void popLocation( JavaFileManager.Location location )
+  {
+    if( JavacPlugin.instance() == null || !JreUtil.isJava9orLater() )
+    {
+      return;
+    }
+
+    Object top = _ctx.get( MODULE_CTX ).pop();
+    if( top != inferModule( location ) )
+    {
+      throw new IllegalStateException( "stack not balanced" );
+    }
+  }
+
+  private /*Symbol.ModuleSymbol*/ Object inferModule( JavaFileManager.Location location )
+  {
+    /*Modules*/ Object modules = ReflectUtil.method( "com.sun.tools.javac.comp.Modules", "instance", Context.class ).invokeStatic( _ctx );
+    Object defaultModule = ReflectUtil.method( modules, "getDefaultModule" ).invoke();
+    if( defaultModule == ReflectUtil.field( Symtab.instance( _ctx ), "noModule" ).get() )
+    {
+      return defaultModule;
+    }
+    Set<?>/*<Symbol.ModuleSymbol>*/ rootModules = (Set<?>)ReflectUtil.method( modules, "getRootModules" ).invoke();
+
+    Object moduleSym = null;
+    if( location instanceof ManPatchLocation )
+    {
+      String moduleName = ((ManPatchLocation)location).inferModuleName( _ctx );
+      if( moduleName != null )
+      {
+        Name name = Names.instance( _ctx ).fromString( moduleName );
+        moduleSym = ReflectUtil.method( modules, "getObservableModule", Name.class ).invoke( name );
+        if( moduleSym == null )
+        {
+          throw new IllegalStateException( "null module symbol for module: '" + moduleName + "'" );
+        }
+      }
+    }
+
+    if( rootModules.size() == 1 )
+    {
+      return rootModules.iterator().next();
+    }
+
+    throw new IllegalStateException( "no module inferred" );
   }
 
   private boolean isFilteredFromIncrementalCompilation( String fqn )

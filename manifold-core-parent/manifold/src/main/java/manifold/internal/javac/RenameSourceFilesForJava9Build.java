@@ -50,10 +50,24 @@ import static manifold.util.ManExceptionUtil.unchecked;
  */
 public class RenameSourceFilesForJava9Build
 {
-  public static void main( String[] args ) throws URISyntaxException, IOException
+  public static class _8_will_become_java_files
   {
-    int javaNum = 8; // will become .java files
-    int textNum = 9; // wil become .javaX files
+    public static void main( String[] args ) throws IOException, URISyntaxException
+    {
+      doIt( 8, 9 );
+    }
+  }
+  public static class _9_will_become_java_files
+  {
+    public static void main( String[] args ) throws IOException, URISyntaxException
+    {
+      doIt( 9, 8 );
+    }
+  }
+  private static void doIt( int javaNum, int textNum ) throws URISyntaxException, IOException
+  {
+//    int javaNum = 8; // will become .java files
+//    int textNum = 9; // wil become .javaX files
 
     URI uri = RenameSourceFilesForJava9Build.class.getProtectionDomain().getCodeSource().getLocation().toURI();
     Path target_classes_ = Paths.get( uri );

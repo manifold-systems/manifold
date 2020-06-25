@@ -1075,7 +1075,7 @@ public class ExtensionTransformer extends TreeTranslator
   public void visitAnnotation( JCTree.JCAnnotation tree )
   {
     super.visitAnnotation( tree );
-    if( !Self.class.getTypeName().equals( tree.getAnnotationType().type.tsym.toString() ) )
+    if( tree.getAnnotationType().type == null || !Self.class.getTypeName().equals( tree.getAnnotationType().type.tsym.toString() ) )
     {
       return;
     }
