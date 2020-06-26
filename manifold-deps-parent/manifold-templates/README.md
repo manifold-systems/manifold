@@ -697,7 +697,7 @@ You also gain access to Manifold's provided extension libraries for I/O, Web, an
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-all</artifactId>
       <!-- it is best to use the latest release -->
-      <version>2020.1.14</version>
+      <version>2020.1.15</version>
     </dependency>
 ```
 
@@ -787,15 +787,15 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold:2020.1.14-SNAPSHOT'
-    compileOnly 'systems.manifold:manifold-ext:2020.1.14-SNAPSHOT'
-    compileOnly 'systems.manifold:manifold-templates:2020.1.14-SNAPSHOT'
-    implementation 'systems.manifold:manifold-templates-rt:2020.1.14-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold:2020.1.15-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.15-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-templates:2020.1.15-SNAPSHOT'
+    implementation 'systems.manifold:manifold-templates-rt:2020.1.15-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-templates:2020.1.14-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-templates:2020.1.15-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -833,7 +833,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>
@@ -898,7 +898,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>

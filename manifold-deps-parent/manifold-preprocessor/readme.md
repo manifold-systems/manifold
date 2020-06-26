@@ -402,11 +402,11 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-preprocessor:2020.1.14'
+    compileOnly 'systems.manifold:manifold-preprocessor:2020.1.15'
     testCompile 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-preprocessor:2020.1.14'
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2020.1.15'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -444,7 +444,7 @@ rootProject.name = 'MyPreprocessorProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>
@@ -492,7 +492,7 @@ rootProject.name = 'MyPreprocessorProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>

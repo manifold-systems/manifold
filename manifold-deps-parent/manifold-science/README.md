@@ -328,13 +328,13 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-ext:2020.1.14-SNAPSHOT'
-    implementation 'systems.manifold:manifold-science:2020.1.14-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.15-SNAPSHOT'
+    implementation 'systems.manifold:manifold-science:2020.1.15-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-science:2020.1.14-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-science:2020.1.15-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -372,7 +372,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>
@@ -447,7 +447,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.14</manifold.version>
+        <manifold.version>2020.1.15</manifold.version>
     </properties>
     
     <dependencies>
