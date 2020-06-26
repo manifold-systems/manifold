@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.rt;
+package manifold.ext.rt;
 
 import manifold.rt.api.IBootstrap;
 import manifold.util.NecessaryEvilUtil;
 
-public class BootstrapRt implements IBootstrap
+public class BootstrapExtRt implements IBootstrap
 {
   private boolean _booted;
 
