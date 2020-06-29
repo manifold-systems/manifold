@@ -169,6 +169,12 @@ Use with accompanying `settings.gradle` file:
 ```groovy
 rootProject.name = 'MyProject'
 ```
+If you are using `module-info` files, you must declare a *static* dependency on `manifold`.
+```java
+module MyProject {
+    requires static manifold;
+}
+```
 
 ## Maven
 
@@ -275,6 +281,12 @@ rootProject.name = 'MyProject'
         </plugins>
     </build>
 </project>
+```
+If you are using `module-info` files, you must declare a *static* dependency on `manifold`.
+```java
+module my.strings.app {
+    requires static manifold;
+}
 ```
 
 # License

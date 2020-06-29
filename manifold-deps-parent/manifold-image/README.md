@@ -135,6 +135,14 @@ Use with accompanying `settings.gradle` file:
 ```groovy
 rootProject.name = 'MyProject'
 ```
+If you are using `module-info` files, you must declare a *static* dependency on `manifold`.  Additionally, since
+`manifold-images` uses Java's `ImageIcon` class, you also need a runtime dependency on `java.desktop`.
+```java
+module MyProject {
+    requires java.desktop;
+    requires static manifold;
+}
+```
 
 ## Maven
 
@@ -241,6 +249,14 @@ rootProject.name = 'MyProject'
         </plugins>
     </build>
 </project>
+```
+If you are using `module-info` files, you must declare a *static* dependency on `manifold`.  Additionally, since
+`manifold-images` uses Java's `ImageIcon` class, you also need a runtime dependency on `java.desktop`.
+```java
+module my.image.app {
+    requires java.desktop;
+    requires static manifold;
+}
 ```
 
 # License
