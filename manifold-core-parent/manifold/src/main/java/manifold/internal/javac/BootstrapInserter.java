@@ -74,8 +74,25 @@ class BootstrapInserter extends TreeTranslator
   {
     return !annotatedWith_NoBootstrap( tree.getModifiers().getAnnotations() ) &&
            !JavacPlugin.instance().isNoBootstrapping() &&
+           isExtensionsEnabled() &&
            !alreadyHasBootstrap( tree ) &&
            !skipForOtherReasons( tree );
+  }
+
+  /**
+   * Check for existence of manifold-ext in the project. If not in use, no need to bootstrap
+   */
+  public boolean isExtensionsEnabled()
+  {
+    try
+    {
+      Class.forName( "manifold.ext.rt.api.Extension" );
+      return true;
+    }
+    catch( ClassNotFoundException e )
+    {
+      return false;
+    }
   }
 
 //  private boolean isManifoldPureStatic()

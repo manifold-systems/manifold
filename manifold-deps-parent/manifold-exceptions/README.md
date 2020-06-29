@@ -129,6 +129,9 @@ configurations {
 
 dependencies {
     compileOnly 'systems.manifold:manifold-exceptions:2020.1.16-SNAPSHOT'
+    // Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
+    //   -Xplugin:Manifold no-bootstrap
+    implementation 'systems.manifold:manifold-rt:2020.1.16-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
@@ -181,6 +184,13 @@ rootProject.name = 'MyProject'
             <version>${manifold.version}</version>
             <scope>provided</scope>
         </dependency>
+        <!-- Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
+             -Xplugin:Manifold no-bootstrap -->
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-rt</artifactId>
+            <version>${manifold.version}</version>
+        </dependency>
     </dependencies>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
@@ -228,6 +238,13 @@ rootProject.name = 'MyProject'
             <artifactId>manifold-exceptions</artifactId>
             <version>${manifold.version}</version>
             <scope>provided</scope>
+        </dependency>
+        <!-- Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
+             -Xplugin:Manifold no-bootstrap -->
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-rt</artifactId>
+            <version>${manifold.version}</version>
         </dependency>
     </dependencies>
 
