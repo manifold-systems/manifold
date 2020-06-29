@@ -128,15 +128,15 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-exceptions:2020.1.16-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-exceptions:2020.1.17-SNAPSHOT'
     // Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
     //   -Xplugin:Manifold no-bootstrap
-    implementation 'systems.manifold:manifold-rt:2020.1.16-SNAPSHOT'
+    implementation 'systems.manifold:manifold-rt:2020.1.17-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2020.1.16'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2020.1.17'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -174,7 +174,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.16</manifold.version>
+        <manifold.version>2020.1.17</manifold.version>
     </properties>
     
     <dependencies>
@@ -229,7 +229,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.16</manifold.version>
+        <manifold.version>2020.1.17</manifold.version>
     </properties>
     
     <dependencies>
