@@ -17,6 +17,10 @@
 package manifold.exceptions;
 
 import java.net.URL;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import junit.framework.TestCase;
 
 public class CheckedExceptionSuppressorTest extends TestCase
@@ -24,5 +28,12 @@ public class CheckedExceptionSuppressorTest extends TestCase
   public void testSimple()
   {
     new URL( "http://example.com/test" );
+
+    List<String> strings = Arrays.asList( "http://example.com", "https://google.com" );
+    List<URL> urls = strings.stream()
+      .map(URL::new) // Mmm, life is good
+      .collect( Collectors.toList());
+    urls.forEach(System.out::println);
+
   }
 }
