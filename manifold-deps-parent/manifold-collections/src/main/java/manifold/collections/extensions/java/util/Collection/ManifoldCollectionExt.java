@@ -144,27 +144,11 @@ public class ManifoldCollectionExt
 
   public static <E> List<E> toList( @This Collection<E> thiz )
   {
-    if( thiz.isEmpty() )
-    {
-      return Collections.emptyList();
-    }
-    else if( thiz.size() == 1 )
-    {
-      return Collections.singletonList( thiz.first() );
-    }
     return new ArrayList<>( thiz );
   }
 
   public static <E> Set<E> toSet( @This Collection<E> thiz )
   {
-    if( thiz.isEmpty() )
-    {
-      return Collections.emptySet();
-    }
-    else if( thiz.size() == 1 )
-    {
-      return Collections.singleton( thiz.first() );
-    }
     return new LinkedHashSet<>( thiz );
   }
 

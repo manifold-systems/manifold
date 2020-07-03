@@ -249,7 +249,10 @@ public class ManIterableExtTest extends ExtensionManifoldTest {
 
   public void testSubtract() {
     Iterable<String> iter = makeTestIterable();
-    assertEquals(new HashSet<>(Arrays.asList("kyle", "luca")), iter.subtract( Arrays.asList("scott", "carson") ) );
+    assertEquals( new HashSet<>( Arrays.asList( "kyle", "luca" ) ), iter.subtract( Arrays.asList( "scott", "carson" ) ) );
+
+    assertEquals( Collections.emptySet(), Collections.emptySet().subtract( Arrays.asList( "foo", "bar" ) ) );
+    assertEquals( Collections.emptySet(), Collections.singleton( "foo" ).subtract( Arrays.asList( "foo", "bar" ) ) );
   }
 
   public void testToList() {
