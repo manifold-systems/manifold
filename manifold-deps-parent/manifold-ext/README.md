@@ -904,7 +904,7 @@ Another application of units involves the [Range API](https://github.com/manifol
 provided by the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 dependency. Simply by importing the static constants from `RangeFun` you can easily work with ranges:
 ```java
-Range range = 1 to 5;
+IntegerRange range = 1 to 5;
 ```
 ```java
 for (Rational csr: 5.2r to 15.7r step 0.3r) {...}
