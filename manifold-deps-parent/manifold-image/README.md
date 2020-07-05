@@ -259,6 +259,11 @@ module my.image.app {
 }
 ```
 
+# Javadoc
+
+`manifold-image`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2020.1.17)
+
 # License
 
 ## Open Source

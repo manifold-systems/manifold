@@ -21,6 +21,7 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [Projects](#projects)
 * [Sample Projects](#sample-projects)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -977,6 +978,14 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Javadoc 
+
+`manifold`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold/2020.1.17)
+
+`manifold-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-rt/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-rt/2020.1.17)
 
 # License
 

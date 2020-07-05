@@ -25,6 +25,7 @@
 * [JSON, XML, CSV, & YAML Utilities](#json-xml--yaml-utilities)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -721,6 +722,14 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-json`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json/2020.1.17)
+
+`manifold-json-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json-rt/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json-rt/2020.1.17)
 
 # License
 

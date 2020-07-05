@@ -6,6 +6,7 @@
 * [Symbols](#directives)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -533,6 +534,12 @@ rootProject.name = 'MyPreprocessorProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-preprocessor`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2020.1.17)
+
 
 # License
 

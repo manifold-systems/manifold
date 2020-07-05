@@ -29,6 +29,7 @@ dependency.
 * [Rational Numbers](#rational-numbers)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -493,6 +494,12 @@ rootProject.name = 'MyExtProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-science`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-science/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-science/2020.1.17)
+
 
 # License
 

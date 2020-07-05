@@ -245,6 +245,12 @@ module my.properties.app {
 }
 ```
 
+# Javadoc
+
+`manifold-properties`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-properties/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-properties/2020.1.17)
+
+
 # License
 
 ## Open Source

@@ -238,6 +238,15 @@ rootProject.name = 'MyProject'
 </project>
 ```
 
+# Javadoc
+
+`manifold-yaml`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml/2020.1.17)
+
+`manifold-yaml-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml-rt/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml-rt/2020.1.17)
+
+
 # License
 
 ## Open Source

@@ -10,6 +10,7 @@ the same.
 * [Lambdas](#lambdas)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -277,6 +278,11 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-exceptions`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2020.1.17)
 
 # License
 

@@ -9,6 +9,7 @@
 * [The *Self* type](#the-self-type-via-self) via `@Self`
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -1795,6 +1796,14 @@ rootProject.name = 'MyExtProject'
     </build>
 </project>
 ```
+
+# Javadoc 
+
+`manifold-ext`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2020.1.17)
+
+`manifold-ext-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2020.1.17)
 
 # License
 

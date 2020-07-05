@@ -37,6 +37,7 @@ begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
 * [Provided Manifold Features](#provided-manifold-features)  
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#authors)
@@ -956,6 +957,12 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-templates`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates/2020.1.17)
+
 
 # License
 

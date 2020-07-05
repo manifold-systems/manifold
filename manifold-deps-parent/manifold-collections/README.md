@@ -17,6 +17,7 @@ for( Mass m: 10kg to 100kg ) {
 * [Ranges](#ranges)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -353,6 +354,10 @@ rootProject.name = 'MyExtProject'
 ```
 
 # License
+# Javadoc 
+
+`manifold-collections`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-collections/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-collections/2020.1.17)
 
 ## Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  

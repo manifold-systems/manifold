@@ -27,6 +27,7 @@ begin experimenting with GraphQL using Manifold.
 * [Embedding Queries with Fragments](#embedding-queries-with-fragments)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
+* [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
@@ -708,6 +709,14 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Javadoc
+
+`manifold-graphql`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2020.1.17)
+
+`manifold-graphql-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2020.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2020.1.17)
 
 # License
 
