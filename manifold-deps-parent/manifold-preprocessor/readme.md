@@ -3,7 +3,7 @@
 ## Table of Contents
 * [Overview](#overview)
 * [Directives](#directives)
-* [Symbols](#directives)
+* [Symbols](#symbols)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
