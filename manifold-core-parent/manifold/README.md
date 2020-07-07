@@ -468,10 +468,21 @@ javac -Amanifold.source.class:com.example.MySpecialTypeManifold=.* ...
 >Note, as a reminder, the javac command line arguments are additive with respect to types compiled to disk. As a general
 >rule Manifold types referenced in Java source are _always_ compiled, regardless of command line argument constraints.
 
+## Adding Source Paths
+
+If you use the `-Amanifold.source.<ext>=<regex` argument, but your resources reside a directory other than Java source
+directories or `resource` directories, you can specify additional source paths that are exclusive to Manifold type
+compilation using the `-Amanifold.source=<paths>` argument.
+```
+javac -Amanifold.source=/myproject/src/main/stuff ...
+```  
+This example adds `/myproject/src/main/stuff` as an additional Manifold source path. Your `-Amanifold.source.<ext>=<regex`
+arguments apply to this directory.
+
 ## By File Name
 
-Using path-based javac `-Akey=value` argument you can enumerate resource files that should compile statically regardless
-of whether or not the files are referenced in your code.
+Using path-based javac `-Aother.source.files` argument you can enumerate resource files that should compile statically
+regardless of whether or not the files are referenced in your code.
 ```
 javac -Aother.source.files=/myproject/src/main/resources/com/example/Queryies.gql /myproject/src/main/resources/com/example/Mutations.gql ...
 ``` 

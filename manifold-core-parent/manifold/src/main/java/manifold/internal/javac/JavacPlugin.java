@@ -115,7 +115,8 @@ public class JavacPlugin implements Plugin, TaskListener
   };
 
   /** javac command line arguments for static compilation */
-  private static final String MANIFOLD_SOURCE_MAPPING = "manifold.source.";
+  private static final String MANIFOLD_SOURCE = "manifold.source";
+  private static final String MANIFOLD_SOURCE_MAPPING = MANIFOLD_SOURCE + '.';
   private static final String OTHER_SOURCE_FILES = "other.source.files";
   private static final String OTHER_SOURCE_LIST = "other.source.list";
 
@@ -159,6 +160,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
+  private List<String> _manifoldSourcePath;
   private String _bootclasspath;
   private boolean _isIncremental;
 
@@ -372,6 +374,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _ctx = _javacTask.getContext();
       _fileManager = getContext().get( JavaFileManager.class );
       _javaInputFiles = new HashSet<>();
+      _manifoldSourcePath = fetchManifoldSource();
       _otherInputFiles = fetchOtherInputFiles();
       _otherSourceMappings = fetchManifoldSourceMappings();
       _typeProcessor = new TypeProcessor( getHost(), _javacTask );
@@ -685,6 +688,7 @@ public class JavacPlugin implements Plugin, TaskListener
     _javaSourcePath = new HashSet<>( sourcePath );
     deriveAdditionalSourcePath( _otherInputFiles, sourcePath );
     maybeAddResourcePath( _javaInputFiles, sourcePath );
+    sourcePath.addAll( _manifoldSourcePath );
     return sourcePath;
   }
 
@@ -861,6 +865,18 @@ public class JavacPlugin implements Plugin, TaskListener
     return typeIndex > 0 ? sourceFile.substring( 0, typeIndex - 1 ) : null;
   }
 
+  private List<String> fetchManifoldSource()
+  {
+    Map<String, String> options = JavacProcessingEnvironment.instance( getContext() ).getOptions();
+    String manifoldSourceProperty = getManifoldSourceProperty( options );
+    List<String> dirs = Collections.emptyList();
+    if( manifoldSourceProperty != null && !manifoldSourceProperty.isEmpty() )
+    {
+      dirs = Arrays.asList( manifoldSourceProperty.split( " " ) );
+    }
+    return dirs;
+  }
+
   private List<String> fetchOtherInputFiles()
   {
     Map<String, String> options = JavacProcessingEnvironment.instance( getContext() ).getOptions();
@@ -916,6 +932,15 @@ public class JavacPlugin implements Plugin, TaskListener
     return sourceMappings;
   }
 
+  private String getManifoldSourceProperty( Map<String, String> options )
+  {
+    String manifoldSourceFiles = options.get( MANIFOLD_SOURCE );
+    if( manifoldSourceFiles == null )
+    {
+      manifoldSourceFiles = System.getProperty( MANIFOLD_SOURCE );
+    }
+    return manifoldSourceFiles;
+  }
   private String getOtherSourceFilesProperty( Map<String, String> options )
   {
     String otherSourceFiles = options.get( OTHER_SOURCE_FILES );
