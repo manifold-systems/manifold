@@ -1,6 +1,7 @@
 package manifold.ext;
 
 import abc.ClassWithAnnotatedMethod;
+import abc.ClassWithConstants;
 import abc.Coordinate;
 import abc.IGenericThing;
 import java.awt.Rectangle;
@@ -154,6 +155,58 @@ public class SimpleTest extends TestCase
   {
     List<String> l = Arrays.asList( "hi", "bye" );
     assertEquals( "hi, bye", String.valueOf( l ) );
+  }
+
+  public void testCompileTimeConstantFieldInitializersPreserved()
+  {
+    // verify test extension exists on Integer
+    assertEquals( "myMethod", Integer.getInteger( "1" ).myMethod() );
+
+    assertEquals( 0x7fffffff, Integer.MAX_VALUE );
+    assertEquals( 0x80000000, Integer.MIN_VALUE );
+    assertEquals( 4, Integer.BYTES );
+
+    assertEquals( "myMethod", new ClassWithConstants().myMethod() );
+
+    assertTrue( ClassWithConstants.BOOL_VALUE1 );
+    assertFalse( ClassWithConstants.BOOL_VALUE2 );
+    assertTrue( ClassWithConstants.BOOL_VALUE3 );
+
+    assertEquals( 10, ClassWithConstants.BYTE_VALUE1 );
+    assertEquals( Byte.MAX_VALUE, ClassWithConstants.BYTE_VALUE2 );
+
+    assertEquals( 1000, ClassWithConstants.SHORT_VALUE1 );
+    assertEquals( -1000, ClassWithConstants.SHORT_VALUE2 );
+    assertEquals( Short.MAX_VALUE, ClassWithConstants.SHORT_VALUE3 );
+
+    assertEquals( 32768, ClassWithConstants.INT_VALUE1 );
+    assertEquals( -32769, ClassWithConstants.INT_VALUE2 );
+    assertEquals( Integer.MAX_VALUE, ClassWithConstants.INT_VALUE3 );
+    assertEquals( Integer.MAX_VALUE, ClassWithConstants.INT_VALUE4 );
+
+    assertEquals( 8575799808933029326L, ClassWithConstants.LONG_VALUE1 );
+    assertEquals( 8575799808933029326L, ClassWithConstants.LONG_VALUE2 );
+
+    assertEquals( 3.4028235e+38f, ClassWithConstants.FLOAT_VALUE1 );
+    assertEquals( Float.MIN_VALUE, ClassWithConstants.FLOAT_VALUE2 );
+    assertEquals( Float.MIN_VALUE, ClassWithConstants.FLOAT_VALUE3 );
+
+    assertEquals( 1.7976931348623157e+308, ClassWithConstants.DOUBLE_VALUE1 );
+    assertEquals( Double.MAX_VALUE, ClassWithConstants.DOUBLE_VALUE2 );
+
+    assertEquals( 's', ClassWithConstants.CHAR_VALUE1 );
+    assertEquals( '\n', ClassWithConstants.CHAR_VALUE2 );
+    assertEquals( '\u263A', ClassWithConstants.CHAR_VALUE3 );
+    assertEquals( '\u263A', ClassWithConstants.CHAR_VALUE4 );
+
+    assertNull( ClassWithConstants.STRING_VALUE0 );
+    assertEquals( "", ClassWithConstants.STRING_VALUE1 );
+    assertEquals( "abc", ClassWithConstants.STRING_VALUE2 );
+    assertEquals( "\u263Aabc\u263A\ndef", ClassWithConstants.STRING_VALUE3 );
+    assertEquals( "\u263Aabc\u263A\ndef", ClassWithConstants.STRING_VALUE4 );
+
+    assertNull( ClassWithConstants.OBJ_VALUE1 );
+    assertTrue( ClassWithConstants.OBJ_VALUE2 instanceof ClassWithConstants );
   }
 
   private double foo( Coordinate c )

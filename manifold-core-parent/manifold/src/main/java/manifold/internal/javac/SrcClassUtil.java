@@ -44,11 +44,11 @@ import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
+import manifold.rt.api.util.ManEscapeUtil;
 import manifold.util.ReflectUtil;
 
 
@@ -142,7 +142,7 @@ public class SrcClassUtil
         }
         else if( sym instanceof Symbol.VarSymbol )
         {
-          addField( srcClass, sym );
+          addField( srcClass, (Symbol.VarSymbol)sym );
         }
         else if( sym instanceof Symbol.MethodSymbol )
         {
@@ -208,10 +208,9 @@ public class SrcClassUtil
     srcClass.addInnerClass( innerClass );
   }
 
-  private void addField( SrcClass srcClass, Symbol sym )
+  private void addField( SrcClass srcClass, Symbol.VarSymbol sym )
   {
-    Symbol.VarSymbol field = (Symbol.VarSymbol)sym;
-    SrcField srcField = new SrcField( field.name.toString(), makeSrcType( field.type, sym, TargetType.FIELD, -1 ) );
+    SrcField srcField = new SrcField( sym.name.toString(), makeSrcType( sym.type, sym, TargetType.FIELD, -1 ) );
     if( sym.isEnum() )
     {
       srcField.enumConst();
@@ -219,13 +218,48 @@ public class SrcClassUtil
     }
     else
     {
-      srcField.modifiers( field.getModifiers() );
+      srcField.modifiers( sym.getModifiers() );
       if( Modifier.isFinal( (int)srcField.getModifiers() ) )
       {
-        srcField.initializer( new SrcRawExpression( getValueForType( sym.type ) ) );
+        Object constValue = sym.getConstantValue();
+        if( constValue == null )
+        {
+          constValue = getValueForType( sym.type );
+        }
+        else
+        {
+          constValue = "(" + sym.type + ")" + qualifyConstantValue( constValue );
+        }
+        srcField.initializer( (String)constValue );
       }
       srcClass.addField( srcField );
     }
+  }
+
+  private String qualifyConstantValue( Object constValue )
+  {
+    String value = String.valueOf( constValue );
+    if( constValue instanceof Long )
+    {
+      value += "L";
+    }
+    else if( constValue instanceof Float )
+    {
+      value += "f";
+    }
+    else if( constValue instanceof Double )
+    {
+      value += "d";
+    }
+    else if( constValue instanceof String )
+    {
+      value = '"' + ManEscapeUtil.escapeForJavaStringLiteral( value ) + '"';
+    }
+    else if( constValue instanceof Character )
+    {
+      value = "'" + ManEscapeUtil.escapeForJava( (char)constValue ) + "'";
+    }
+    return value;
   }
 
   private void addMethod( IModule module, SrcClass srcClass, Symbol.MethodSymbol method, BasicJavacTask javacTask )
@@ -447,7 +481,6 @@ public class SrcClassUtil
         }
         else
         {
-          //noinspection ConstantConditions
           TypeAnnotationPosition posCopy = getTypeAnnotationPosition( attrLocationCopy );
           annotateType( srcType.getBounds().get( 0 ), Collections.singletonList( new Attribute.TypeCompound( attr.type, attr.values, posCopy ) ) );
         }
@@ -458,7 +491,6 @@ public class SrcClassUtil
   public static TypeAnnotationPosition getTypeAnnotationPosition( List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy )
   {
     TypeAnnotationPosition posCopy;
-    //noinspection ConstantConditions
     if( isJava8() )
     {
       posCopy = (TypeAnnotationPosition)ReflectUtil.constructor( "com.sun.tools.javac.code.TypeAnnotationPosition" ).newInstance();
@@ -467,7 +499,8 @@ public class SrcClassUtil
     else
     {
       posCopy = (TypeAnnotationPosition)ReflectUtil
-        .method( TypeAnnotationPosition.class, "methodReceiver", List.class ).invokeStatic( attrLocationCopy );
+        .method( TypeAnnotationPosition.class, "methodReceiver", List.class )
+        .invokeStatic( attrLocationCopy );
     }
     return posCopy;
   }
@@ -658,21 +691,49 @@ public class SrcClassUtil
     return new SrcType( sb.toString() );
   }
 
+  // These values substitute NON-compile-time constant initializers, thus they are never used at runtime (because
+  // extension stub classes are not used at runtime).
   private String getValueForType( Type type )
   {
-    if( type.toString().equals( "boolean" ) )
+    String value;
+    if( type.isPrimitive() )
     {
-      return "false";
-    }
-    else if( type.isPrimitive() )
-    {
-      return "0";
+      switch( type.getKind() )
+      {
+        case BOOLEAN:
+          value = "(boolean)Boolean.valueOf(true)";
+          break;
+        case BYTE:
+          value = "(byte)Byte.valueOf((byte)0)";
+          break;
+        case SHORT:
+          value = "(short)Short.valueOf((short)0)";
+          break;
+        case INT:
+          value = "(int)Integer.valueOf(0)";
+          break;
+        case LONG:
+          value = "(long)Long.valueOf(0)";
+          break;
+        case CHAR:
+          value = "(char)Character.valueOf((char)0)";
+          break;
+        case FLOAT:
+          value = "(float)Float.valueOf(0f)";
+          break;
+        case DOUBLE:
+          value = "(double)Double.valueOf(0d)";
+          break;
+        default:
+          throw new IllegalStateException();
+      }
     }
     else
     {
       String fqn = type.toString();
-      return "(" + fqn  + ")null"; // cast to disambiguate when used as an argument
+      value = "(" + fqn  + ")null"; // cast to disambiguate when used as an argument
     }
+    return value;
   }
 
 }
