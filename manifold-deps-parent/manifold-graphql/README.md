@@ -566,13 +566,13 @@ configurations {
 }
 
 dependencies {
-     compileOnly 'systems.manifold:manifold-graphql:2020.1.18-SNAPSHOT'
-     implementation 'systems.manifold:manifold-graphql-rt:2020.1.18-SNAPSHOT'
+     compileOnly 'systems.manifold:manifold-graphql:2020.1.19-SNAPSHOT'
+     implementation 'systems.manifold:manifold-graphql-rt:2020.1.19-SNAPSHOT'
  
      testImplementation 'junit:junit:4.12'
  
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2020.1.18-SNAPSHOT'
+     annotationProcessor 'systems.manifold:manifold-graphql:2020.1.19-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -610,7 +610,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.18</manifold.version>
+        <manifold.version>2020.1.19</manifold.version>
     </properties>
     
     <dependencies>
@@ -663,7 +663,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.18</manifold.version>
+        <manifold.version>2020.1.19</manifold.version>
     </properties>
     
     <dependencies>
@@ -713,10 +713,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-graphql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2020.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2020.1.18)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2020.1.19/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2020.1.19)
 
 `manifold-graphql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2020.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2020.1.18)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2020.1.19/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2020.1.19)
 
 # License
 
