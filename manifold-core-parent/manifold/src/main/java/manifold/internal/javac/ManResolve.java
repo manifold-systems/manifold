@@ -36,6 +36,8 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 import javax.tools.JavaFileObject;
+
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -68,7 +70,7 @@ public class ManResolve extends Resolve
     _attr = Attr.instance( context );
     ReflectUtil.field( this, "log" ).set( ReflectUtil.field( _attr, "log" ).get() );
 
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       reassignEarlyHolders8( context );
     }
@@ -137,7 +139,7 @@ public class ManResolve extends Resolve
       return true;
     }
 
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       return false;
     }

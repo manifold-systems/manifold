@@ -22,7 +22,6 @@ import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 
@@ -41,6 +40,8 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
+
+import com.sun.tools.javac.util.Options;
 import manifold.api.fs.IResource;
 import manifold.api.gen.SrcClass;
 import manifold.api.host.IModule;
@@ -128,7 +129,25 @@ public class ClassSymbols
 
   private List<String> makeJavacArgs()
   {
-    return Arrays.asList( "-proc:none", "-source", "1.8", "-Xprefer:source" );
+    return new ArrayList<String>() {{
+      add( "-proc:none" );
+      add( "-Xprefer:source" );
+
+      // add "--release 8" if compiling say from Java 11 but targeting Java 8 with "--release 8" which runs against the
+      // actual Java 8 JRE classes, not the Java 11 ones. Otherwise there is trouble if we bring in JRE 11 sources here,
+      // which have Java 11 features that won't compile with source level 8.
+      JavacPlugin javacPlugin = JavacPlugin.instance();
+      String release = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() ).get( "--release" );
+      if( "8".equals( release ) )
+      {
+        add( "--release" );
+        add( "8" );
+      }
+      else
+      {
+        add( "-source" ); add( "1.8" );
+      }
+    }};
   }
 
   private void init()

@@ -72,6 +72,7 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.fs.def.FileFragmentImpl;
 import manifold.api.type.ITypeManifold;
+import manifold.api.util.JavacUtil;
 import manifold.internal.host.JavacManifoldHost;
 import manifold.internal.runtime.Bootstrap;
 import manifold.api.util.IssueMsg;
@@ -123,7 +124,6 @@ public class JavacPlugin implements Plugin, TaskListener
   private static Class<?> CLASSFINDER_CLASS = null;
   private static Class<?> MODULES_CLASS = null;
   private static Class<?> MODULEFINDER_CLASS = null;
-  public static boolean IS_JAVA_8;
 
   static
   {
@@ -138,7 +138,6 @@ public class JavacPlugin implements Plugin, TaskListener
     catch( Throwable ignore )
     {
     }
-    IS_JAVA_8 = CLASSFINDER_CLASS == null;
     loadJavacParserClass();
   }
 
@@ -190,7 +189,6 @@ public class JavacPlugin implements Plugin, TaskListener
     _javacTask = (BasicJavacTask)task;
 
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
-    IS_JAVA_8 = jpe.getSourceVersion() == SourceVersion.RELEASE_8;
 
     processArgs( jpe, args );
 
@@ -403,7 +401,7 @@ public class JavacPlugin implements Plugin, TaskListener
     //
 
     // Override javac's Log for error suppression (@Jailbreak too, but that's only if extensions are enabled, see below)
-    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (IS_JAVA_8 ? 8 : 9),
+    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (JreUtil.isJava8() ? 8 : 9),
       "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's ClassWriter
@@ -419,7 +417,7 @@ public class JavacPlugin implements Plugin, TaskListener
     }
 
     // Override javac's Attr
-    Attr manAttr = (Attr)ReflectUtil.method( "manifold.internal.javac.ManAttr_" + (IS_JAVA_8 ? 8 : 9),
+    Attr manAttr = (Attr)ReflectUtil.method( "manifold.internal.javac.ManAttr_" + (JreUtil.isJava8() ? 8 : 9),
       "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's Resolve
@@ -433,7 +431,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
     ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
 
-    if( IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       return;
     }
@@ -457,9 +455,12 @@ public class JavacPlugin implements Plugin, TaskListener
 
     NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
 
-    // Override javac's ClassFinder
-    //noinspection ConstantConditions
-    ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
+    if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
+    {
+      // Override javac's ClassFinder
+      //noinspection ConstantConditions
+      ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
+    }
   }
 
   public boolean isExtensionsEnabled()
@@ -486,7 +487,7 @@ public class JavacPlugin implements Plugin, TaskListener
     // Assign our file manager to javac's various components
     try
     {
-      if( IS_JAVA_8 )
+      if( JreUtil.isJava8() )
       {
         ReflectUtil.field( ClassReader.instance( getContext() ), "fileManager" ).set( _manFileManager );
       }

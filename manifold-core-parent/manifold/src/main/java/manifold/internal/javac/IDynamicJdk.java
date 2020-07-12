@@ -69,7 +69,7 @@ public interface IDynamicJdk
         try
         {
           String fqnIssueReporter;
-          if( JavacPlugin.IS_JAVA_8 )
+          if( JreUtil.isJava8() )
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_8";
           }

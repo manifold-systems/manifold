@@ -121,7 +121,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   @Override
   public boolean hasLocation( Location location )
   {
-    return !JavacPlugin.IS_JAVA_8 && location == ReflectUtil.field( StandardLocation.class, "PATCH_MODULE_PATH" ).getStatic()
+    return !JreUtil.isJava8() && location == ReflectUtil.field( StandardLocation.class, "PATCH_MODULE_PATH" ).getStatic()
            || super.hasLocation( location );
   }
 

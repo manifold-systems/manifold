@@ -27,6 +27,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import javax.tools.*;
 
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 /**
@@ -95,7 +96,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
   {
     boolean hasLocation = fileManager.hasLocation( location );
 
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       return hasLocation;
     }

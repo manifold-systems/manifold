@@ -48,6 +48,8 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.RichDiagnosticFormatter;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
+
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 public class ManTypes extends Types
@@ -80,7 +82,7 @@ public class ManTypes extends Types
     _attr = Attr.instance( ctx );
     _syms = Symtab.instance( ctx );
     _transTypes = (ManTransTypes)TransTypes.instance( ctx );
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       reassignEarlyHolders8( ctx );
     }
@@ -218,7 +220,7 @@ public class ManTypes extends Types
 
   private Type replaceSelfTypesWithQualifier( Type receiverType, Type type, java.util.List<TypeAnnotationPosition> selfPosList )
   {
-    if( JavacPlugin.IS_JAVA_8 )
+    if( JreUtil.isJava8() )
     {
       if( type.getClass().getTypeName().equals( "com.sun.tools.javac.code.Type.AnnotatedType" ) ||
           type.getClass().getTypeName().equals( "com.sun.tools.javac.code.Type$AnnotatedType" ) )
