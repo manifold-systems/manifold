@@ -101,12 +101,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-properties:2020.1.19-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-properties:2020.1.20-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-properties:2020.1.19-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-properties:2020.1.20-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -150,7 +150,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.19</manifold.version>
+        <manifold.version>2020.1.20</manifold.version>
     </properties>
     
     <dependencies>
@@ -198,7 +198,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.19</manifold.version>
+        <manifold.version>2020.1.20</manifold.version>
     </properties>
     
     <dependencies>
@@ -248,7 +248,7 @@ module my.properties.app {
 # Javadoc
 
 `manifold-properties`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-properties/2020.1.19/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-properties/2020.1.19)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-properties/2020.1.20/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-properties/2020.1.20)
 
 
 # License
