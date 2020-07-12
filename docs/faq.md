@@ -43,27 +43,16 @@ discounts apply and are available from the JetBrains Marketplace.
 
 > *Update:* The Manifold plugin is free for use with IDEA Community Edition version 2020.1 and later. Due to limitations
 > with JetBrains Marketplace licensing, earlier CE versions require a license after the 30 day trial. If you are a student
-> or faculty member, you may qualify for a discount, please contact [JetBrains sales](https://www.jetbrains.com/support/sales/#department=american&tab=email-sales)
+> or faculty member, you may qualify for a free license, please contact [admin@manifld.systems](mailto:admin@manifold.systems)
 > for more information. Student discounts and other JetBrains offers apply and will be directly supported as the
-> JetBrains Marketplace develops.
+> JetBrains Marketplace develops. Please contact [JetBrains sales](https://www.jetbrains.com/support/sales/#department=american&tab=email-sales)
+> for questions concerning the Marketplace.
 
 #### Q: How do I get manifold-*fill-in-blank* working with my project? 
-Add the manifold-*fill-in-blank* dependency to your project along with the `-Xplugin:Manifold` javac argument, the setup
-is sensitive to the version of Java you are using, generally whether you are using Java 8 or 9+. See the
-[Setup](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings#setup) docs for
-complete instructions.
-
-#### Q: I defined some useful *extension methods*. How can I share them as a dependency?
-The module with your extension methods must declare that it should be processed for extension methods. Do that with the
-`Contains-Sources` manifest entry. For instance, from Maven:
-```xml
-  <manifestEntries>
-      <!--class files as source must be available for extension method classes-->
-      <Contains-Sources>java,class</Contains-Sources>
-  </manifestEntries>
-```
-Please see the documentation for making [extension libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries).
-
+Add the manifold-*fill-in-blank* dependency[s] to your project along with the `-Xplugin:Manifold` javac argument, the
+setup is sensitive to the version of Java you are using, generally whether you are using Java 8 or 9+. See the
+[Setup](http://manifold.systems/docs.html#setup) docs for complete instructions.
+ 
 ## Getting Help
 
 #### Q: Where can I find help?
@@ -86,7 +75,7 @@ page.  There is always another article on the way, check back for more.
 
 ## Troubleshooting
 
-#### Q: I updated to the latest Manifold IntelliJ plugin and now IntelliJ is complaining with error messages.  What is wrong?
+#### Q: I updated to the latest Manifold IntelliJ plugin and now IntelliJ is complaining with error messages.  What's wrong?
 You probably need to update your project dependencies to use the latest manifold release.  If your project's
 dependencies are out of sync, the plugin tells you which version of manifold you need with in a warning message
 when you load your project.  You can find the latest releases [here](https://github.com/manifold-systems/manifold/tags).
@@ -97,3 +86,19 @@ sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instru
 
 Please [make some noise](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa) if you can't get it
 working, chances are you're not alone and help will arrive soon.
+
+#### Q: I defined some useful *extension methods*, but they aren't showing up in my other project. How can I share them as a dependency?
+The module with your extension methods must declare that it should be processed for extension methods. Do that with the
+`Contains-Sources` JAR *manifest entry*. For instance, from Maven:
+```xml
+  <manifestEntries>
+      <!--class files as source must be available for extension method classes-->
+      <Contains-Sources>java,class</Contains-Sources>
+  </manifestEntries>
+```
+Please see the documentation for making [extension libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries).
+
+### Q: I defined a new *extension class* with some extension methods, IntelliJ flags usage of them as errors. What's wrong?
+Sometimes IntelliJ's cache is out of sync with extensions. The simplest remedy is to refresh the project from source
+control using the *Refresh* (&#x1f5d8;) tool command:
+<p><img src="http://manifold.systems/images/scm_refresh.png" alt="scm refresh" width="60%" height="60%"/></p>
