@@ -101,4 +101,4 @@ Please see the documentation for making [extension libraries](https://github.com
 ### Q: I defined a new *extension class* with some extension methods, IntelliJ flags usage of them as errors. What's wrong?
 Sometimes IntelliJ's cache is out of sync with extensions. The simplest remedy is to refresh the project from source
 control using the *Refresh* (&#x1f5d8;) tool command:
-<p><img src="http://manifold.systems/images/scm_refresh.png" alt="scm refresh" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/scm_refresh.png" alt="scm refresh" width="40%" height="40%"/></p>
