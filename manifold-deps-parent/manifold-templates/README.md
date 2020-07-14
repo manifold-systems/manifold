@@ -672,35 +672,12 @@ A sample Spark application is available here:
 # Provided Manifold Features
 
 Because ManTL is a [Type Manifold](http://manifold.systems/docs.html#what-is-a-type-manifold) you can leverage other 
-aspects of Manifold in your code, including the [Properties Manifold](http://manifold.systems/docs.html#properties-files), 
-[Image Manifold](http://manifold.systems/docs.html#image-files), and others.  For instance, just as you have type-safe 
-access to `mtl` template files, you also have type-safe access to Java `properties` files and image files such as `png`, 
-`gif`, and `jpg`.
+aspects of Manifold in your code, including the [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql), 
+[JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), and others.
 
 You can create and use [Manifold Extensions](http://manifold.systems/docs.html#extension-classes) too.  Instead of 
 writing `Util` and `Helper` classes you can write your own extension methods for any Java class. Then use IntelliJ
 code completion to improve your development experience with the extended classes.
-
-Use other extension features such as  [@Jailbreak](http://manifold.systems/docs.html#type-safe-reflection) for type-safe 
-reflection and avoid the dangers of writing and maintaining reflection code in your app.  Use [@Self](http://manifold.systems/docs.html#the-self-type)
-to improve the usability of your *Builder* classes -- avoid complicated recursive generic types and the like.
-
-Utilize [Structural Interfaces](http://manifold.systems/docs.html#structural-interfaces) in your code to avoid the penalties
-and tedium involved with reflection and proxies.  Structural interfaces are also quite powerful when combined with other 
-Manifold features such as Extension methods -- layer a unified API over different, but similar architectures.
-
-To utilize even more of Manifold's features you can replace your `manifold-templates` dependency with `manifold-all`. 
-This change enables type-safe access to other type manifolds such as JSON and YAML files, JSON Schema, CSV and more.  
-You also gain access to Manifold's provided extension libraries for I/O, Web, and Collections.
-
-```xml
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-all</artifactId>
-      <!-- it is best to use the latest release -->
-      <version>2020.1.20</version>
-    </dependency>
-```
 
 # IDE Support 
 
