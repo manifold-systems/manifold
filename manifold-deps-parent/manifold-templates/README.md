@@ -963,6 +963,9 @@ rootProject.name = 'MyProject'
 `manifold-templates`:<br>
 [![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates/2020.1.20/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates/2020.1.20)
 
+`manifold-templates-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-templates-rt/2020.1.20/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-templates-rt/2020.1.20)
+
 
 # License
 
