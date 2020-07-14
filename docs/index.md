@@ -120,7 +120,7 @@ a simple and convenient way to support multiple build targets with a single code
 ```java
 #if JAVA_8_OR_LATER
   @Override
-  public void setTime(LocalDateTime time) {...)
+  public void setTime(LocalDateTime time) {...}
 #else
   @Override
   public void setTime(Calendar time) {...}
