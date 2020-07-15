@@ -43,7 +43,7 @@ and a lot more.
 
 Bridging the worlds of data and code, a *type manifold* acts as an adapter to automatically connect data resources to
 Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler enabling a type manifold to
-transform structured data into a data _type_ directly accessible in your Java code eliminating code generation build
+transform structured data into data _types_ directly accessible in your Java code eliminating code generation build
 steps otherwise required with conventional tools. Additionally, the [Manifold plugin](#ide-support)
 provides comprehensive integration for type manifolds in both [IntelliJ IDEA](https://www.jetbrains.com/idea/download)
 and [Android Studio](https://developer.android.com/studio). Types are always in sync; changes you make to resources are
