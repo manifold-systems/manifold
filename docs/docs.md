@@ -4,8 +4,8 @@ layout: default
 
 ## Table of Contents
 * [Overview](#overview)
-* [Type-safe Metaprogramming](#type-safe-metaprogramming-via-_type-manifolds_)
-* [Java Extensions via the _Extension_ Manifold](#java-extensions-via-the-_extension_-manifold)
+* [Type-safe Metaprogramming](#type-safe-metaprogramming-with-type-manifolds)
+* [Java Extensions with the _Extension_ Manifold](#the-extension-manifold)
 * [Benefits](#benefits)
 * [Projects](#projects)
 * [IDE Support](#ide-support)
@@ -39,7 +39,7 @@ type-safe reflection (via [`@Jailbreak`](https://github.com/manifold-systems/man
 and a lot more.
 
 
-# Type-safe Metaprogramming via _Type Manifolds_ 
+# Type-safe Metaprogramming with Type Manifolds
 
 Bridging the worlds of data and code, a *type manifold* acts as an adapter to automatically connect data resources to
 Java's type system.  The core Manifold framework seamlessly plugs into the Java compiler enabling a type manifold to
@@ -95,7 +95,7 @@ Manifold provides type manifolds for:
 *   [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
 *   [Java Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 
-# Java Extensions via the _Extension_ Manifold
+# The Extension Manifold
 
 The extension manifold is a special kind of type manifold that lets you augment existing Java classes including Java's
 own runtime classes such as `String`. You can add new methods, annotations, and interfaces to any type your project
