@@ -229,8 +229,6 @@ by the core framework. Each project consists of one or more **dependencies** you
 [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)<br>
 [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)<br>
 
-[Manifold : _All&nbsp;&nbsp;(Fat JAR)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
-
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
 >* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>

@@ -42,12 +42,10 @@ by the core framework. This document serves as a quick reference to these projec
 * [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)
 * [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)
 
-## Über JAR (Fat JAR)
-* [Manifold : _All_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)
-
 ## Sample Projects
 * [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project)
 * [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app)
 * [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api)
 * [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app)
+* [Manifold sample Kotlin App project](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 * [Manifold sample Gradle Project](https://github.com/manifold-systems/manifold-simple-gradle-project)

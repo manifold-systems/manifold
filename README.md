@@ -229,15 +229,13 @@ by the core framework. Each project consists of one or more **dependencies** you
 [Manifold : _I/0_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-io)<br>
 [Manifold : _Text_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-text)<br>
 
-[Manifold : _All&nbsp;&nbsp;(Fat JAR)_](https://github.com/manifold-systems/manifold/tree/master/manifold-all)<br>
-
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
 >* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
->* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 >* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
+>* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 
 ### [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
