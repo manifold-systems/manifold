@@ -407,6 +407,47 @@ See [Setup]() for examples using Manifold both statically and dynamically.
 >Note, the only difference between dynamic and mixed configuration is the `dynamic` Manifold plugin argument, which
 >prevents Manifold from compiling resource types to disk.
  
+### Runtime Dependencies
+
+If a project uses any manifold runtime dependencies ("rt" dependencies) by default manifold inserts a static block into
+all your classes to automatically initialize some runtime services:
+```java
+static {
+  IBootstrap.dasBoot();
+}
+``` 
+The `dasBoot()` call invokes all registered `IBootstrap` services. The number and nature of the implementations
+depends on what your application does with manifold. For instance, if you are using manifold *dynamically*, this call
+initializes the dynamic compilation services among other tasks. Most projects, however, use manifold *statically* which
+means `dasBoot()` typically does only the following:
+
+1. Disables the Java 9 warning "An illegal reflective access operation has occurred", because that message has a history
+of unnecessarily alarming users. This is a noop when running on Java 8 / Android.
+2. Dynamically open the java.base module to the manifold module for common reflection access, which is a noop running on
+Java 8 / Android
+
+Note `dasBoot()` performs these tasks one time, subsequent calls simply return i.e., there is no performance penalty.
+
+If you know your code will never run on Java 9+ and/or you don't mind the Java 9+ warning message, you can eliminate the
+`dasBoot()` static initializer via the `no-bootstrap plugin` argument:
+  
+**Gradle**
+```groovy
+options.compilerArgs += ['-Xplugin:Manifold no-bootstrap']
+```  
+**Maven**
+```xml
+<compilerArgs>
+    <arg>-Xplugin:Manifold no-bootstrap</arg>
+</compilerArgs>
+```
+If you need finer grained control over which classes have the static block, you can use the `@NoBootstrap` annotation
+to filter specific classes.
+
+>Note, compile-only dependencies such as `manifold-preprocessor`, `manifold-exceptions`, and `manifold-strings` don't
+>involve any runtime dependencies, thus if your project's exposure to manifold is limited to these dependencies, the
+>static block is never inserted in any of your project's classes.
+>
 # Explicit Resource Compilation
 
 By default Manifold compiles resource types to disk _as the Java compiler encounters them in your code_. As a consequence,
