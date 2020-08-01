@@ -177,14 +177,14 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-ext:2020.1.20-SNAPSHOT'
-    implementation 'systems.manifold:manifold-collections:2020.1.20'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.21-SNAPSHOT'
+    implementation 'systems.manifold:manifold-collections:2020.1.21'
                        
-    testCompileOnly 'systems.manifold:manifold-collections:2020.1.20-SNAPSHOT'
+    testCompileOnly 'systems.manifold:manifold-collections:2020.1.21-SNAPSHOT'
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.20'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.21'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -231,7 +231,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.20</manifold.version>
+        <manifold.version>2020.1.21</manifold.version>
     </properties>
     
     <dependencies>
@@ -306,7 +306,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.20</manifold.version>
+        <manifold.version>2020.1.21</manifold.version>
     </properties>
     
     <dependencies>
@@ -357,7 +357,7 @@ rootProject.name = 'MyExtProject'
 # Javadoc 
 
 `manifold-collections`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-collections/2020.1.20/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-collections/2020.1.20)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-collections/2020.1.21/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-collections/2020.1.21)
 
 ## Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
