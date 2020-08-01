@@ -111,7 +111,8 @@ class BootstrapInserter extends TreeTranslator
         {
           String staticBlock = def.toString();
           return staticBlock.startsWith( "static" ) &&
-                 staticBlock.contains( Bootstrap.class.getName() + ".init" );
+                 staticBlock.contains( IBootstrap.class.getSimpleName() ) &&
+                 staticBlock.contains( ".dasBoot" );
         }
         return false;
       } );
