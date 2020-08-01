@@ -81,6 +81,7 @@ import manifold.internal.javac.ManAttr;
 import manifold.internal.javac.ManParserFactory;
 import manifold.internal.javac.OverloadOperatorSymbol;
 import manifold.internal.javac.TypeProcessor;
+import manifold.rt.api.Array;
 import manifold.util.JreUtil;
 import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
@@ -1716,7 +1717,15 @@ public class ExtensionTransformer extends TreeTranslator
           _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_THIS_FIRST.get() );
         }
 
-        if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
+        if( extendedClassName.equals( Array.class.getTypeName() ) )
+        {
+          if( !param.type.tsym.getQualifiedName().toString().equals( Object.class.getName() ) )
+          {
+            // Array extensions must use `Object` as @This param to handle both primitive and reference arrays
+            _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_OBJECT_FOR_THIS.get( Object.class.getSimpleName() ) );
+          }
+        }
+        else if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
         {
           Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null &&

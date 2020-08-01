@@ -347,7 +347,7 @@ public class SrcClassUtil
     }
 
     java.util.List<Attribute.TypeCompound> targetedTypeAttrs = typeAttributes.stream()
-      .filter( attr -> attr.getPosition().type == targetType && isTargetIndex( targetType, attr, index ) )
+      .filter( attr -> attr.position.type == targetType && isTargetIndex( targetType, attr, index ) )
       .collect( Collectors.toList() );
 
     annotateType( srcType, targetedTypeAttrs );
@@ -358,6 +358,10 @@ public class SrcClassUtil
   {
     if( isJava8() )
     {
+      if( type instanceof Type.ArrayType )
+      {
+        return typeNoAnnotations( ((Type.ArrayType)type).getComponentType().unannotatedType() ) + "[]";
+      }
       return type.toString();
     }
 
@@ -418,10 +422,10 @@ public class SrcClassUtil
     switch( targetType )
     {
       case METHOD_FORMAL_PARAMETER:
-        return attr.getPosition().parameter_index == index;
+        return attr.position.parameter_index == index;
 
       case THROWS:
-        return attr.getPosition().type_index == index;
+        return attr.position.type_index == index;
 
       default:
         return index < 0;
@@ -444,7 +448,7 @@ public class SrcClassUtil
       }
       else if( isClassType( srcType ) )
       {
-        TypeAnnotationPosition attrPos = attr.getPosition();
+        TypeAnnotationPosition attrPos = attr.position;
         List<TypeAnnotationPosition.TypePathEntry> attrLocation = attrPos == null ? List.nil() : attrPos.location;
         if( attrLocation.isEmpty() )
         {
@@ -467,7 +471,11 @@ public class SrcClassUtil
       }
       else if( "?".equals( srcType.getName() ) && !srcType.getBounds().isEmpty() )
       {
-        TypeAnnotationPosition attrPos = attr.getPosition();
+        TypeAnnotationPosition attrPos = attr.position;
+        if( attrPos == null )
+        {
+          return;
+        }
         List<TypeAnnotationPosition.TypePathEntry> attrLocation = attrPos.location;
         List<TypeAnnotationPosition.TypePathEntry> attrLocationCopy = null;
         if( !attrLocation.isEmpty() )

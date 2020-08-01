@@ -181,6 +181,13 @@ public class ManTypes extends Types
     java.util.List<TypeAnnotationPosition> selfPos = findSelfAnnotationLocation( memberSym );
     if( selfPos != null )
     {
+      if( qualifier instanceof Type.ArrayType && isSelfComponentType( memberSym ) )
+      {
+//        while( qualifier instanceof Type.ArrayType )
+//        {
+          qualifier = ((Type.ArrayType)qualifier).getComponentType();
+//        }
+      }
       // Replace self type with qualifier type
       memberType = replaceSelfTypesWithQualifier( qualifier, memberType, selfPos );
     }
@@ -216,6 +223,32 @@ public class ManTypes extends Types
       .filter( attr -> attr.type.toString().equals( SELF_TYPE_NAME ) )
       .map( Attribute.TypeCompound::getPosition )
       .collect( Collectors.toList() );
+  }
+
+  private boolean isSelfComponentType( Symbol sym )
+  {
+    if( sym == null )
+    {
+      return false;
+    }
+
+    SymbolMetadata metadata = sym.getMetadata();
+    if( metadata == null || metadata.isTypesEmpty() )
+    {
+      return false;
+    }
+
+    List<Attribute.TypeCompound> typeAttributes = metadata.getTypeAttributes();
+    if( typeAttributes.isEmpty() )
+    {
+      return false;
+    }
+
+    return typeAttributes.stream()
+      .anyMatch( attr ->
+          attr.type.toString().equals( SELF_TYPE_NAME ) &&
+          !attr.values.isEmpty() &&
+          (boolean)attr.values.head.snd.getValue() );
   }
 
   private Type replaceSelfTypesWithQualifier( Type receiverType, Type type, java.util.List<TypeAnnotationPosition> selfPosList )
@@ -292,6 +325,7 @@ public class ManTypes extends Types
         {
           if( selfLocationCopy.isEmpty() )
           {
+            receiverType = boxedTypeOrType( receiverType ); // type params cannot be primitive
             typeParam = receiverType;
           }
           else
@@ -454,7 +488,7 @@ public class ManTypes extends Types
   }
 
   /**
-   * Override to keep track of when/if implemetation() is in scope, if ManTypes#memberType() should not try to
+   * Override to keep track of when/if implementation() is in scope, if ManTypes#memberType() should not try to
    * substitute the qualifier type for @Self because the qualifier is not really a call site, rather it is the
    * declaring class of the method being checked for override etc.  Thus we need to let the normal signature flow
    * through.

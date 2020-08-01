@@ -37,6 +37,7 @@ import manifold.api.host.IModule;
 import manifold.api.host.RefreshKind;
 import manifold.api.host.RefreshRequest;
 import manifold.api.service.BaseService;
+import manifold.rt.api.Array;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;
@@ -281,6 +282,9 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     }
 
     Set<String> fqns = getModule().getPathCache().getFqnForFile( file );
+
+    maybeAddHostArrayClass( fqns );
+
     Set<String> aliasedFqns = new HashSet<>();
     if( fqns != null )
     {
@@ -294,6 +298,23 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
       }
     }
     return aliasedFqns.toArray( new String[aliasedFqns.size()] );
+  }
+
+  private void maybeAddHostArrayClass( Set<String> fqns )
+  {
+    if( fqns == null )
+    {
+      return;
+    }
+
+    String arrayFqn = getModule().getHost().getArrayTypeName();
+    if( arrayFqn != null && !arrayFqn.isEmpty() )
+    {
+      if( fqns.contains( Array.class.getTypeName() ) )
+      {
+        fqns.add( arrayFqn );
+      }
+    }
   }
 
   public IModule getModule()

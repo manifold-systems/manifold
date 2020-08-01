@@ -45,4 +45,9 @@ public interface IManifoldHost extends IService
   IFileSystem getFileSystem();
 
   JavaParser getJavaParser();
+
+  default String getArrayTypeName()
+  {
+    return null;
+  }
 }

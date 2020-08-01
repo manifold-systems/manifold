@@ -2,11 +2,43 @@
 
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
+  * [Basics](#extension-method-basics)
+  * [Generics](#generics)
+  * [Inner Classes](#inner-classes)
+  * [Arrays](#extending-arrays)
+  * [Manifold Types](#extending-manifold-types)
+  * [Static Dispatching](#static-dispatching)
+  * [Accessibility & Scopes](#accessibility-and-scope)
+  * [Adding Annotations](#annotation-extensions)
+  * [Adding Interfaces](#extension-interfaces)
+  * [Extension Libraries](#extension-libraries)
+  * [Generating Extensions](#generating-extension-classes)
 * [Operator Overloading](#operator-overloading)
+  * [Arithmetic and Negation Operators](#arithmetic-and-negation-operators)
+  * [Relational Operators](#relational-operators)
+  * [Equality Operators](#equality-operators)
+  * [Unit Operators](#unit-operators)
+  * [Operators by Extension Methods](#operators-by-extension-methods)
 * [Unit Expressions](#unit-expressions)
-* [Structural interfaces](#structural-interfaces-via-structural) via `@Structural`
-* [Type-safe reflection](#type-safe-reflection-via-jailbreak) via `@Jailbreak`
+  * [How does it work?](#how-does-it-work)
+  * [Operator Precedence](#operator-precedence)
+  * [Type-safe & Simple](#type-safe-and-simple)
+  * [More Than Units](#more-than-units)
+  * [Science & Ranges](#science--ranges)
+* [Structural interfaces](#structural-interfaces-via-structural) with `@Structural`
+  * [Assignability and Variance](#Type Assignability and Variance)
+  * [Implementation by Field](#implementation-by-field)
+  * [Implementation by Extension](#implementation-by-extension)
+  * [Implementation by Proxy](#implementation-by-proxy)
+  * [Dynamic Typing](#dynamic-typing-with-icallhandler)
+* [Type-safe reflection](#type-safe-reflection-via-jailbreak) with `@Jailbreak`
+  * [Basics](#using-the-jailbreak-extension)
+  * [Using `jailbreak()`](#using-the-jailbreak-extension)
 * [The *Self* type](#the-self-type-via-self) via `@Self`
+  * [Builders](#builders)
+  * [Self + Generics](#self--generics)
+  * [Self + Extensions](#self--extensions)
+  * [Overriding Methods](#overriding-methods)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -180,6 +212,70 @@ for(Entry<String, String> entry: map.entrySet()) {
 }
 ```
 
+## Extending Arrays
+
+Java has no base type for the array class; there's no "java.lang.Array" to add extension methods to. Therefore, Manifold
+provides a substitute type for the sole purpose of adding extension methods, namely `manifold.rt.api.Array`. Extension
+classes extending this class effectively extend Java's array class.
+
+```java
+package myproject.extensions.manifold.rt.api.Array;
+
+import java.lang.reflect.Array;
+import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.This;
+
+@Extension
+public class MyArrayExtension {
+  public static final String myMethod(@This Object array) {
+    return "Size of array: " + Array.getLength(array);
+  }
+}
+
+// usage
+String[] strings = new String[] {"a", "b", "c"};
+strings.myMethod();
+```
+
+Manifold provides the builtin Array extension class, `ManArrayExt`, which provides the following methods:
+```java
+  List<@Self(true) Object> toList()
+  boolean isEmpty()
+  boolean isNullOrEmpty()
+  @Self Object copy()
+  @Self Object copy(int newLength)
+  @Self Object copyTo(@Self Object to)
+  @Self Object copyRange(int from, int to)
+  @Self Object copyRangeTo(int from, int to, @Self Object target, int targetIndex)
+  Stream<@Self(true) Object> stream()
+  void forEach(IndexedConsumer<? super @Self(true) Object> action)
+  Spliterator<@Self(true) Object> spliterator()
+  int binarySearch(@Self(true) Object key)
+  int binarySearch(int from, int to, @Self(true) Object key)
+  int binarySearch(@Self(true) Object key, Comparator<? super @Self(true) Object> comparator)
+  int binarySearch(int from, int to, @Self(true) Object key, Comparator<? super @Self(true) Object> comparator)
+  int hashCode()
+  boolean equals(@Self Object that)
+```
+
+Note the use of `@Self` in many of the extension methods. It provides type-safe access to the array's component type as
+well as to the array type itself. For instance, the `toList()` method provides type inference and enforces the array's
+component type as the `List` type argument:
+```java
+String[] array = {"a", "b", "c"};
+List<String> list = array.toList();
+```
+Note also the use of type `Object` instead of some "Array" type. Using `Object` annotated with `@Self` supports both
+reference arrays and primitive arrays with type inference,.
+```java
+// reference array
+String[] array = {"a", "b", "c"};
+String[] copy = array.copy();
+
+// primitive array
+int[] array = {1, 2, 3};
+int[] copy = array.copy();
+```
 ## Extending Manifold Types
 
 Types produced from type manifolds such as the GraphQL and JSON Manifolds can be extended too. For instance, a GraphQL

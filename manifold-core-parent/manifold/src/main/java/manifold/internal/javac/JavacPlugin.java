@@ -63,7 +63,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
-import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -1000,6 +999,9 @@ public class JavacPlugin implements Plugin, TaskListener
         break;
 
       case ANALYZE:
+        // Extend array class
+        ArrayTypeExtender.extend( getContext(), e.getCompilationUnit() );
+
         if( _javacTask.getContext() != _ctx )
         {
           // If annotation processors are present, javac creates a whole new JavaCompiler and ctx before Analyze phase...

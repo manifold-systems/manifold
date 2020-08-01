@@ -176,6 +176,23 @@ public class SrcType extends SrcAnnotated<SrcType>
   {
     return _bound;
   }
+  public void addBound( SrcType bound )
+  {
+    if( _bound.isEmpty() )
+    {
+      _bound = new ArrayList<>( 2 );
+    }
+    _bound.add( bound );
+  }
+
+  public String getSuperOrExtends()
+  {
+    return _superOrExtends;
+  }
+  public void setSuperOrExtends( String superOrExtends )
+  {
+    _superOrExtends = superOrExtends;
+  }
 
   public SrcType getComponentType()
   {

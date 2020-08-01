@@ -576,7 +576,14 @@ class ExtCodeGen
       return false;
     }
     // checking only for simple name for cases where the name cannot be resolved yet e.g., extension method on another source producer type
-    return param.getType().getName().endsWith( extendedType.getSimpleName() );
+    return param.getType().getName().endsWith( extendedType.getSimpleName() ) ||
+      isArrayExtension( param, extendedType );
+  }
+
+  private boolean isArrayExtension( SrcParameter param, SrcClass extendedType )
+  {
+    return extendedType.getName().equals( "manifold.rt.api.Array" ) &&
+      param.getType().getFqName().equals( Object.class.getTypeName() );
   }
 
 //  private Symbol.MethodSymbol resolveMethod( Context ctx, JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, com.sun.tools.javac.util.List<Type> args )
