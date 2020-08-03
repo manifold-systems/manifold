@@ -26,7 +26,7 @@
   * [More Than Units](#more-than-units)
   * [Science & Ranges](#science--ranges)
 * [Structural interfaces](#structural-interfaces-via-structural) with `@Structural`
-  * [Assignability and Variance](#Type Assignability and Variance)
+  * [Assignability and Variance](#type-assignability-and-variance)
   * [Implementation by Field](#implementation-by-field)
   * [Implementation by Extension](#implementation-by-extension)
   * [Implementation by Proxy](#implementation-by-proxy)
