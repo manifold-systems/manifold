@@ -265,7 +265,7 @@ component type as the `List` type argument:
 String[] array = {"a", "b", "c"};
 List<String> list = array.toList();
 ```
-Note also the use of type `Object` instead of some "Array" type. Using `Object` annotated with `@Self` supports both
+Note also the use of type `Object` instead of an array type. Using `Object` annotated with `@Self` supports both
 reference arrays and primitive arrays with type inference,.
 ```java
 // reference array
