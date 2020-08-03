@@ -370,6 +370,35 @@ public class ExpressionTest {
     assertEquals( "abc", abc );
   }
 
+  @Test
+  public void testRelationalExpr()
+  {
+    String abc = "bad";
+    #if year.old < year.current
+      abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    #if year.old <= year.current
+      abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    #if year.old > year.current
+      abc = "bad";
+    #endif
+
+    assertEquals( "good", abc );
+
+    #if year.old >= year.current
+      abc = "bad";
+    #endif
+
+    assertEquals( "good", abc );
+  }
+
   private boolean assertTrueAndFlip( boolean cond )
   {
     assertTrue( cond );

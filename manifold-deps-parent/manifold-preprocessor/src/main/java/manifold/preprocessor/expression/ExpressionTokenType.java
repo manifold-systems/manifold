@@ -27,7 +27,11 @@ enum ExpressionTokenType
   Or( "||" ),
   Not( "!" ),
   Equals( "==" ),
-  NotEquals( "!=" );
+  NotEquals( "!=" ),
+  gt( ">" ),
+  ge( ">=" ),
+  lt( "<" ),
+  le( "<=" );
 
   private String _token;
 
@@ -41,12 +45,7 @@ enum ExpressionTokenType
     _token = token;
   }
 
-  boolean getToken()
-  {
-    return _token != null;
-  }
-
-  String getDirective()
+  String getToken()
   {
     return _token;
   }

@@ -143,6 +143,9 @@ files or `-Akey[=value]` command line arguments may have values assigned to them
 >Note it is impossible for a symbol to have a `null` value. When referenced in an equality expression, if a symbol
 is not assigned a value, its value is the empty string `""`.
 
+Additionally, you can compare numeric symbol values using relational expressions with `>`, `>=`, `<`, `<=`. If either of
+the operands is not a number value, a compile-time error results indicating the value is not allowed in the expression.
+ 
 ### `#elif`
 
 Use `#elif` to divide an `#if` directive into multiple conditions. The first `true` condition in the series of `#if`/`#elif`

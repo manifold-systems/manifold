@@ -86,15 +86,40 @@ public class ExpressionParser
   {
     int offset = skipWhitespace();
 
-    Expression lhs = parseUnaryExpression();
+    Expression lhs = parseRelationalExpression();
     while( true )
     {
       boolean not = false;
       if( match( ExpressionTokenType.Equals ) ||
           (not = match( ExpressionTokenType.NotEquals )) )
       {
-        Expression rhs = parseUnaryExpression();
+        Expression rhs = parseRelationalExpression();
         lhs = new EqualityExpression( lhs, rhs, not, offset, rhs.getEndOffset() );
+      }
+      else
+      {
+        break;
+      }
+    }
+    return lhs;
+  }
+
+  private Expression parseRelationalExpression()
+  {
+    int offset = skipWhitespace();
+
+    Expression lhs = parseUnaryExpression();
+    while( true )
+    {
+      skipWhitespace();
+      ExpressionTokenType tokenType = _tokenizer.getTokenType();
+      if( match( ExpressionTokenType.gt ) ||
+          match( ExpressionTokenType.ge ) ||
+          match( ExpressionTokenType.lt ) ||
+          match( ExpressionTokenType.le ) )
+      {
+        Expression rhs = parseUnaryExpression();
+        lhs = new RelationalExpression( lhs, rhs, tokenType.getToken(), offset, rhs.getEndOffset() );
       }
       else
       {

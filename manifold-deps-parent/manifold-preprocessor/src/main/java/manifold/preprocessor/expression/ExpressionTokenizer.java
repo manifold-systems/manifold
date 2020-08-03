@@ -121,6 +121,34 @@ class ExpressionTokenizer
         }
         break;
 
+      case '>':
+        if( _bufferIndex + 1 != _bufferEndOffset &&
+            charAt( _bufferIndex + 1 ) == '=' )
+        {
+          _tokenType = ge;
+          _tokenEndOffset = _bufferIndex + 2;
+        }
+        else
+        {
+          _tokenType = gt;
+          _tokenEndOffset = _bufferIndex + 1;
+        }
+        break;
+
+      case '<':
+        if( _bufferIndex + 1 != _bufferEndOffset &&
+            charAt( _bufferIndex + 1 ) == '=' )
+        {
+          _tokenType = le;
+          _tokenEndOffset = _bufferIndex + 2;
+        }
+        else
+        {
+          _tokenType = lt;
+          _tokenEndOffset = _bufferIndex + 1;
+        }
+        break;
+
       case '!':
         if( _bufferIndex + 1 != _bufferEndOffset &&
             charAt( _bufferIndex + 1 ) == '=' )
