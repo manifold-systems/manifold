@@ -6,6 +6,7 @@ import java.util.List;
 import manifold.api.DisableStringLiteralTemplates;
 import manifold.ext.rt.api.Jailbreak;
 import manifold.graphql.rt.api.request.Executor;
+import manifold.json.rt.api.Requester;
 import org.junit.Test;
 
 
@@ -132,5 +133,15 @@ public class QueryTest
   {
     Object value = "[>.graphql<] query MyOneAnimal2($id: ID!) { animal(id: $id) { id name } }";
     assertTrue( value.getClass().getSimpleName().startsWith( ANONYMOUS_FRAGMENT_PREFIX ) );
+  }
+
+  @Test
+  public void testBearerAuthorization()
+  {
+    MovieQuery query = MovieQuery.builder().build();
+    @Jailbreak Executor exec = query.request( "" ).withBearerAuthorization( "xyz" );
+    @Jailbreak Requester req = exec._requester;
+    String bearerAuth = (String)req._headers.get( "Authorization" );
+    assertEquals( "Bearer xyz", bearerAuth );
   }
 }
