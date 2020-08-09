@@ -10,7 +10,7 @@ layout: default
 
 Manifold gained a lot ground in recent months. Notably, the structure of the Manifold project changed to support compile-only
 usage where possible. Since much of Manifold operates within the Java compiler plugin, this was merely an exercise in
-separating modules into compile-only and runtime modules (the new modules ending with `-rt`). As a result your projects
+separating modules into compile-only and runtime modules (the new modules ending with *-rt*). As a result your projects
 can limit most of Manifold usage to compile-only dependencies, significantly reducing the runtime footprint. Big win!
 
 This restructure was primarily motivated by a couple of big, long awaited features, namely [Android Studio support](http://manifold.systems/android.html)
@@ -23,10 +23,10 @@ Kotlin and other JVM language applications.
 
 More recently the following features were implemented:
 - [#204](https://github.com/manifold-systems/manifold/issues/204) - support relational expressions in the preprocessor
-- [#198](https://github.com/manifold-systems/manifold/issues/198) - support `--release 8` (or lower) from JDK 9+
+- [#198](https://github.com/manifold-systems/manifold/issues/198) - support *--release 8* (or lower) from JDK 9+
 - [#189](https://github.com/manifold-systems/manifold/issues/189) - support [Array type extensions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extending-arrays)
 - Support for [explicit resource compilation](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#explicit-resource-compilation)
-via javac command line argument to specify additional source paths: `-Amanifold.source=<paths>`.
+via javac command line argument to specify additional source paths: *-Amanifold.source=<paths>*.
 
   
 ## On the workbench
