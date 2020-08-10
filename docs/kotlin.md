@@ -8,17 +8,18 @@ Although Manifold is a _Java_ compiler plugin, you can reap many of its benefits
 For instance, Manifold support for [**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml), and
-[**Templates**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) works
-equally well with other JVM languages such as Kotlin.
+[**Templates**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates) applies
+equally to other JVM languages such as Kotlin.
 
 These features are called [_type manifolds_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
 and they work by automatically transforming resources such as *.graphql*, *.json*, and *.xml* files directly to Java
-types without a code generation step or compiling between changes in your IDE. The only difference with Kotlin is the
-resource files must be placed in a separate Java module. The indirection allows Manifold to transform the resources into
-Java types behind the scenes. Perhaps the most important detail is that via the Manifold IDE plugin, Kotlin can use
-Manifold just as effectively as Java. The development experience is identical. For instance, you can make GraphQL
-changes and instantly access them in Kotlin code, no compilation in between. Use IntelliJ or Android Studio to
-deterministically refactor/rename, find Kotlin usages from GraphQL, code completion, etc. 
+types without a code generation step or compiling between changes in your IDE. With Kotlin these resources must be placed
+in a separate Java module, the indirection allows Manifold to transform the resources into types accessible from Kotlin.
+Perhaps the most important detail involves the Manifold IDE plugin. The development experience is identical to Java's.
+For instance, you can drop a *.graphql* schema file into your project and immediately use the types it defines. Create your own
+*.graphql* query files and type-safely access them from Kotlin. Instantly use changes. All without compiling. Use IntelliJ or
+Android Studio to deterministically refactor/rename, find Kotlin usages from GraphQL, navigate to GraphQL declarations,
+code completion, etc. The same applies to all Manifold-enabled types including JSON, XML, Templates, etc.
  
 ## Get the Manifold plugin
 
