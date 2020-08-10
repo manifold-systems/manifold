@@ -88,7 +88,7 @@ Mass infant = 9 lb + 8.71 oz;
 ```  
 
 ### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-Easily work with the *Range* API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
+Easily work with the *Range* API using [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
 Simply import the *RangeFun* constants to create ranges.
 ```java
 // imports the `to`, `step`, and other "binding" constants
