@@ -31,5 +31,12 @@ You must restart Android Studio to enable the plugin.
 The [Kotlin sample application](https://github.com/manifold-systems/manifold-sample-kotlin-app) best illustrates how to
 setup your environment and build for use with Manifold. Use it as a reference to use Manifold with your own Kotlin app.
 
-
+>Note, Kotlin support is limited to [type manifolds](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture).
+>Other Manifold features are exclusive to the Java language, these include [the preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor),
+>[structural typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural),
+>[extension classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension),
+>[operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading),
+>[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
+>[type-safe reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-safe-reflection-via-jailbreak),
+>and [the Self type](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#the-self-type-via-self).  
 
