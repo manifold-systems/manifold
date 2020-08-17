@@ -131,11 +131,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   @Override
   public Location getLocationForModule( Location location, String moduleName ) throws IOException
   {
+    Location locationForModule = super.getLocationForModule( location, moduleName );
     if( location == ReflectUtil.field( StandardLocation.class, "PATCH_MODULE_PATH" ).getStatic() )
     {
-      return new ManPatchModuleLocation( moduleName );
+      return new ManPatchModuleLocation( moduleName, locationForModule );
     }
-    return super.getLocationForModule( location, moduleName );
+    return locationForModule;
   }
 
   /**
@@ -214,7 +215,9 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
   public Iterable<JavaFileObject> list( Location location, String packageName, Set<JavaFileObject.Kind> kinds, boolean recurse ) throws IOException
   {
-    Iterable<JavaFileObject> list = super.list( location, packageName,
+    Iterable<JavaFileObject> list = super.list(
+      location instanceof ManPatchModuleLocation ? ((ManPatchModuleLocation)location).getLocationForModule() : location,
+      packageName,
       new HashSet<>( kinds ), // make a copy because this super call likes to remove the SOURCE kind in a multi-module project
       recurse );
     if( kinds.contains( JavaFileObject.Kind.SOURCE ) && (location == StandardLocation.SOURCE_PATH || location == StandardLocation.CLASS_PATH || location instanceof ManPatchModuleLocation) )

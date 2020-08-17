@@ -21,16 +21,29 @@ import javax.tools.JavaFileManager;
 public class ManPatchModuleLocation implements JavaFileManager.Location
 {
   private final String _moduleName;
+  private final JavaFileManager.Location _locationForModule;
 
-  ManPatchModuleLocation( String moduleName )
+  /**
+   * @param moduleName The name of the (potentially) patched module.
+   * @param locationForModule The location of the patched module (if the module is patched via --patch-module on the
+   *                          command line), otherwise null. Note this location is to be used with
+   *                          ManifoldJavaFileManager#list() to preserve patched java classes.
+   */
+  ManPatchModuleLocation( String moduleName, JavaFileManager.Location locationForModule )
   {
     _moduleName = moduleName;
+    _locationForModule = locationForModule;
   }
 
   @Override
   public String getName()
   {
     return _moduleName;
+  }
+
+  public JavaFileManager.Location getLocationForModule()
+  {
+    return _locationForModule == null ? this : _locationForModule;
   }
 
   @Override
