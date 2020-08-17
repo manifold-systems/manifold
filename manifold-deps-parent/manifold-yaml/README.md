@@ -94,13 +94,13 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-yaml:2020.1.23-SNAPSHOT'
-    implementation 'systems.manifold:manifold-yaml-rt:2020.1.23-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-yaml:2020.1.24-SNAPSHOT'
+    implementation 'systems.manifold:manifold-yaml-rt:2020.1.24-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-yaml:2020.1.23-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-yaml:2020.1.24-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -138,7 +138,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.23</manifold.version>
+        <manifold.version>2020.1.24</manifold.version>
     </properties>
     
     <dependencies>
@@ -191,7 +191,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.23</manifold.version>
+        <manifold.version>2020.1.24</manifold.version>
     </properties>
     
     <dependencies>
@@ -241,10 +241,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-yaml`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml/2020.1.23/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml/2020.1.23)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml/2020.1.24/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml/2020.1.24)
 
 `manifold-yaml-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml-rt/2020.1.23/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml-rt/2020.1.23)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml-rt/2020.1.24/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml-rt/2020.1.24)
 
 
 # License
