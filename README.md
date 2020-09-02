@@ -35,7 +35,7 @@ Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;i
 them with code completion.
 ```java
 var query = MovieQuery.builder(Action).build();
-var result = query.request("http://com.example/graphql").post();
+var result = query.request("http://example.com/graphql").post();
 var actionMovies = result.getMovies();
 for (var movie : actionMovies) {
   out.println(
@@ -120,7 +120,7 @@ a simple and convenient way to support multiple build targets with a single code
 ```java
 #if JAVA_8_OR_LATER
   @Override
-  public void setTime(LocalDateTime time) {...)
+  public void setTime(LocalDateTime time) {...}
 #else
   @Override
   public void setTime(Calendar time) {...}
