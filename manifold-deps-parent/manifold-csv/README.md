@@ -253,9 +253,6 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
-</iframe>
-
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
 
 ## Sample Project
