@@ -206,6 +206,11 @@ Install the plugin directly from the IDE via:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
+Get the plugin from JetBrains Marketplace:
+
+<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
+</iframe>
+
 # Projects
 
 The Manifold framework consists of the *core project* and a collection of *sub-projects* implementing SPIs provided

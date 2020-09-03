@@ -198,6 +198,11 @@ template editing, integrated preprocessor, and more.
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
 
+Get the plugin from JetBrains Marketplace:
+
+<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
+</iframe>
+
 ### [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project consists of one or more **dependencies** you can easily add to your project:
