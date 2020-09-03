@@ -329,13 +329,13 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-ext:2020.1.25-SNAPSHOT'
-    implementation 'systems.manifold:manifold-science:2020.1.25-SNAPSHOT'
+    compileOnly 'systems.manifold:manifold-ext:2020.1.26-SNAPSHOT'
+    implementation 'systems.manifold:manifold-science:2020.1.26-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
 
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-science:2020.1.25-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-science:2020.1.26-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -373,7 +373,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.25</manifold.version>
+        <manifold.version>2020.1.26</manifold.version>
     </properties>
     
     <dependencies>
@@ -448,7 +448,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.25</manifold.version>
+        <manifold.version>2020.1.26</manifold.version>
     </properties>
     
     <dependencies>
@@ -498,7 +498,7 @@ rootProject.name = 'MyExtProject'
 # Javadoc
 
 `manifold-science`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-science/2020.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-science/2020.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-science/2020.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-science/2020.1.26)
 
 
 # License
