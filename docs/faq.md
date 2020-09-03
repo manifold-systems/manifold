@@ -32,6 +32,9 @@ Yes.  The [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold)
 Download / Update the plugin directly from within the IDE:
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold` 
+
+<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
+</iframe>
   
 >Note: The IDE notifies you within 24 hours when an update is available and gives you the opportunity to sync.
 
