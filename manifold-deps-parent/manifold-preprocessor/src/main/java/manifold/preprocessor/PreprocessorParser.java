@@ -173,17 +173,18 @@ public class PreprocessorParser
 
       ArrayList<IfStatement> elifs = parseElifs();
 
+      int elseStart = _tokenizer.getTokenType() == Else ? _tokenizer.getTokenStart() : -1;
       ArrayList<Statement> elseBlock = parseElse();
 
       IfStatement ifStmt;
       if( _tokenizer.getTokenType() == Endif )
       {
-        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenEnd(), ifExpr, ifBlock, elifs, elseBlock );
+        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenEnd(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
         _tokenizer.advance();
       }
       else
       {
-        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenStart(), ifExpr, ifBlock, elifs, elseBlock );
+        ifStmt = new IfStatement( If, ifStart, _tokenizer.getTokenStart(), ifExpr, ifBlock, elifs, elseBlock, elseStart );
         addError( "Expecting '#endif' to close '#if'" );
       }
 
@@ -214,7 +215,8 @@ public class PreprocessorParser
           elifEnd = stmt.getTokenEnd();
           elifIfBlock.add( stmt );
         }
-        IfStatement elif = new IfStatement( Elif, elifStart, elifEnd, elifExpr, elifIfBlock, Collections.emptyList(), Collections.emptyList() );
+        IfStatement elif = new IfStatement( Elif, elifStart, elifEnd, elifExpr, elifIfBlock,
+          Collections.emptyList(), Collections.emptyList(), -1 );
         elifs.add( elif );
       }
       return elifs;
@@ -265,17 +267,18 @@ public class PreprocessorParser
 
       ArrayList<IfStatement> elifs = parseElifs();
 
+      int elseStart = _tokenizer.getTokenType() == Else ? _tokenizer.getTokenStart() : -1;
       ArrayList<Statement> elseBlock = parseElse();
 
       IfStatement ifStmt;
       if( _tokenizer.getTokenType() == Endif )
       {
-        ifStmt = new IfStatement( If, elifStart, _tokenizer.getTokenEnd(), elifExpr, ifBlock, elifs, elseBlock );
+        ifStmt = new IfStatement( If, elifStart, _tokenizer.getTokenEnd(), elifExpr, ifBlock, elifs, elseBlock, elseStart );
         _tokenizer.advance();
       }
       else
       {
-        ifStmt = new IfStatement( If, elifStart, _tokenizer.getTokenStart(), elifExpr, ifBlock, elifs, elseBlock );
+        ifStmt = new IfStatement( If, elifStart, _tokenizer.getTokenStart(), elifExpr, ifBlock, elifs, elseBlock, elseStart );
         addError( "Expecting '#endif' to close '#if'" );
       }
 
@@ -306,13 +309,13 @@ public class PreprocessorParser
       if( _tokenizer.getTokenType() == Endif )
       {
         ifStmt = new IfStatement( If, elseStart, _tokenizer.getTokenEnd(), new EmptyExpression( elseEnd ),
-          Collections.emptyList(), Collections.emptyList(), elseBlock );
+          Collections.emptyList(), Collections.emptyList(), elseBlock, -1 );
         _tokenizer.advance();
       }
       else
       {
         ifStmt = new IfStatement( If, elseStart, _tokenizer.getTokenStart(), new EmptyExpression( elseEnd ),
-          Collections.emptyList(), Collections.emptyList(), elseBlock );
+          Collections.emptyList(), Collections.emptyList(), elseBlock, -1 );
         addError( "Expecting '#endif' to close '#if'" );
       }
 
@@ -332,7 +335,7 @@ public class PreprocessorParser
     _tokenizer.advance();
 
     return new IfStatement( If, endifStart, endifEnd, new EmptyExpression( endifStart ),
-      Collections.emptyList(), Collections.emptyList(), Collections.emptyList() );
+      Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), -1 );
   }
 
   private DefineStatement parseDefineStatement()

@@ -42,6 +42,8 @@ public class IssueStatement extends Statement
   @Override
   public void execute( StringBuilder result, CharSequence source, boolean visible, Definitions definitions )
   {
+    preserveMaskedOutSpace( result, source );
+
     if( !visible )
     {
       return;

@@ -28,20 +28,24 @@ public class IfStatement extends Statement
   private final List<Statement> _ifBlock;
   private final List<IfStatement> _elifs;
   private final List<Statement> _elseBlock;
+  private final int _elseStart;
 
   public IfStatement( TokenType tokenType, int start, int end, Expression expr,
-                      List<Statement> ifBlock, List<IfStatement> elifs, List<Statement> elseBlock )
+                      List<Statement> ifBlock, List<IfStatement> elifs, List<Statement> elseBlock, int elseStart )
   {
     super( tokenType, start, end );
     _expr = expr;
     _ifBlock = ifBlock;
     _elifs = elifs;
+    _elseStart = elseStart;
     _elseBlock = elseBlock;
   }
 
   @Override
   public void execute( StringBuilder result, CharSequence source, boolean visible, Definitions definitions )
   {
+    preserveMaskedOutSpace( result, source, getTokenStart(), _expr.getEndOffset() );
+
     boolean ifCond = visible && evalExpr( definitions );
     for( Statement stmt: _ifBlock )
     {
@@ -56,9 +60,20 @@ public class IfStatement extends Statement
       elif.execute( result, source, elifCond, definitions );
     }
 
+    if( _elseStart >= 0 )
+    {
+      preserveMaskedOutSpace( result, source, _elseStart, _elseStart + "#else".length() );
+    }
+
     for( Statement stmt: _elseBlock )
     {
       stmt.execute( result, source, visible && !ifCond && !elifPassed, definitions );
+    }
+
+    int endIfStart = getTokenEnd() - "#endif".length();
+    if( endIfStart >= 0 && source.subSequence( endIfStart, getTokenEnd() ).toString().equals( "#endif" ) )
+    {
+      preserveMaskedOutSpace( result, source, endIfStart, getTokenEnd() );
     }
   }
 

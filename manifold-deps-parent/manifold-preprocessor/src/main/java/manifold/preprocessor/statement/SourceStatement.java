@@ -34,24 +34,9 @@ public class SourceStatement extends Statement
     {
       result.append( source.subSequence( getTokenStart(), getTokenEnd() ) );
     }
-    else if( getTokenType() == TokenType.Whitespace ||
-             getTokenType() == TokenType.BlockComment ||
-             getTokenType() == TokenType.LineComment ||
-             getTokenType() == TokenType.TextBlock )
+    else
     {
-      preserveNewLines( result, source );
-    }
-  }
-
-  private void preserveNewLines( StringBuilder result, CharSequence source )
-  {
-    for( int i = getTokenStart(); i < getTokenEnd(); i++ )
-    {
-      char c = source.charAt( i );
-      if( c == '\r' || c == '\n' || c == '\f' )
-      {
-        result.append( c );
-      }
+      preserveMaskedOutSpace( result, source );
     }
   }
 
