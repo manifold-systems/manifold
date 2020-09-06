@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.api.type;
+package manifold.rt.api;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,7 +29,7 @@ import java.lang.annotation.RetentionPolicy;
 public @interface IncrementalCompile
 {
   /**
-   * The qualified name of the driver class, which must implement {@link IIncrementalCompileDriver}.
+   * The qualified name of the driver class, which must implement {@code IIncrementalCompileDriver}.
    * Note this is not a {@code Class<? extends IIncrementalCompileDriver>} because the driver
    * class is likely not in the classpath of the compiler.
    */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package manifold.api.type;
+package manifold.rt.api;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
+ * @deprecated Use -Amanifold.resource.&lt;file-ext&gt;=[type-name-regex] javac command line arguments.
  */
 @SuppressWarnings("unused")
 @Retention(RetentionPolicy.SOURCE)
-public @interface TypeReferences
+@Deprecated
+public @interface Precompiles
 {
-  TypeReference[] value();
+  Precompile[] value();
 }

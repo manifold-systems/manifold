@@ -38,7 +38,7 @@ import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Warner;
-import manifold.api.type.FragmentValue;
+import manifold.rt.api.FragmentValue;
 import manifold.api.type.ISelfCompiledFile;
 import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;

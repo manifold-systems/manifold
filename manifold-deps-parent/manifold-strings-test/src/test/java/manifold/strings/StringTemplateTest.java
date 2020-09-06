@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import junit.framework.TestCase;
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.util.ReflectUtil;
 
 

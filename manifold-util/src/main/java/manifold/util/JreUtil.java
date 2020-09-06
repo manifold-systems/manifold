@@ -18,6 +18,8 @@ package manifold.util;
 
 public class JreUtil
 {
+  private static final boolean MANIFOLD_COMPILING_JAVA9DEFINED = System.getenv( "manifold.compiling.java9defined" ) != null;
+
   public static final int JAVA_VERSION = getJavaVersion();
   private static Boolean _modular;
   private static Boolean _modularRuntime;
@@ -41,6 +43,11 @@ public class JreUtil
     int major = Integer.parseInt( sb.toString() );
     // note, android's major is 0, but is really 8 (ish)
     major = major <= 1 ? 8 : major;
+    if( major == 8 && MANIFOLD_COMPILING_JAVA9DEFINED )
+    {
+      // total hack for compiling *.java9 files
+      major = 9;
+    }
     return major;
   }
 

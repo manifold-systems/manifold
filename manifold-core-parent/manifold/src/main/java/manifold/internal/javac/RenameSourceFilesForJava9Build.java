@@ -50,20 +50,31 @@ import static manifold.util.ManExceptionUtil.unchecked;
  */
 public class RenameSourceFilesForJava9Build
 {
-  public static class _8_will_become_java_files
+  public static class              _8_will_become_java_files // REMEMBER TO UN-DEFINE ENV VAR!!!!!!!!!!
   {
     public static void main( String[] args ) throws IOException, URISyntaxException
     {
       doIt( 8, 9 );
     }
   }
-  public static class _9_will_become_java_files
+
+  /**
+   * IMPORTANT: define env var:
+   *
+   *  <pre>
+   *   set manifold.compiling.java9defined=true
+   *  </pre>
+   *
+   *  when compiling with Java 9.
+   */
+  public static class              _9_will_become_java_files // REMEMBER TO DEFINE ENV VAR!!!!!!!!!!
   {
     public static void main( String[] args ) throws IOException, URISyntaxException
     {
       doIt( 9, 8 );
     }
   }
+
   private static void doIt( int javaNum, int textNum ) throws URISyntaxException, IOException
   {
 //    int javaNum = 8; // will become .java files

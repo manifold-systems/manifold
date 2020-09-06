@@ -24,7 +24,7 @@ import java.util.Set;
 import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
-import manifold.api.util.ManIdentifierUtil;
+import manifold.rt.api.util.ManIdentifierUtil;
 import manifold.api.util.cache.FqnCache;
 
 /**

@@ -325,10 +325,7 @@ public class SrcClassUtil
     List<Attribute.TypeCompound> annotationMirrors = type.getAnnotationMirrors();
     if( annotationMirrors != null && !annotationMirrors.isEmpty() )
     {
-      String unannotatedType = isJava8()
-                               ? ReflectUtil.method( type, "unannotatedType" ).invoke().toString()
-                               : ReflectUtil.method( type, "cloneWithMetadata", ReflectUtil.type( "com.sun.tools.javac.code.TypeMetadata" ) )
-                                 .invoke( ReflectUtil.field( "com.sun.tools.javac.code.TypeMetadata", "EMPTY" ).getStatic() ).toString();
+      String unannotatedType = unannotatedType( type ).toString();
       srcType = new SrcType( unannotatedType );
     }
     else
@@ -354,13 +351,21 @@ public class SrcClassUtil
     return srcType;
   }
 
+  private Type unannotatedType( Type type )
+  {
+    return isJava8()
+           ? (Type)ReflectUtil.method( type, "unannotatedType" ).invoke()
+           : (Type)ReflectUtil.method( type, "cloneWithMetadata", ReflectUtil.type( "com.sun.tools.javac.code.TypeMetadata" ) )
+             .invoke( ReflectUtil.field( "com.sun.tools.javac.code.TypeMetadata", "EMPTY" ).getStatic() );
+  }
+
   private String typeNoAnnotations( Type type )
   {
     if( isJava8() )
     {
       if( type instanceof Type.ArrayType )
       {
-        return typeNoAnnotations( ((Type.ArrayType)type).getComponentType().unannotatedType() ) + "[]";
+        return typeNoAnnotations( unannotatedType( ((Type.ArrayType)type).getComponentType() ) ) + "[]";
       }
       return type.toString();
     }

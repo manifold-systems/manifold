@@ -1,6 +1,6 @@
 package manifold.templates.misc;
 
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

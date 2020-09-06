@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.api.fs.IFile;
 import manifold.api.gen.*;
 import manifold.api.type.ResourceFileTypeManifold;

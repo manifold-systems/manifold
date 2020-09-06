@@ -31,7 +31,7 @@ import manifold.api.json.codegen.JsonBasicType;
 import manifold.api.json.codegen.JsonStructureType;
 import manifold.json.rt.parser.Token;
 import manifold.ext.rt.api.IBindingType;
-import manifold.api.util.ManIdentifierUtil;
+import manifold.rt.api.util.ManIdentifierUtil;
 import manifold.rt.api.util.Pair;
 
 /**

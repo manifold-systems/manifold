@@ -41,7 +41,7 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.host.IManifoldHost;
 import manifold.api.host.IModule;
 import manifold.api.type.IModel;
-import manifold.api.type.SourcePosition;
+import manifold.rt.api.SourcePosition;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.rt.api.util.ManClassUtil;

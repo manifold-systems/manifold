@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.def.FileFragmentImpl;
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.internal.javac.IIssue;
 import manifold.templates.manifold.TemplateIssue;
 import manifold.templates.manifold.TemplateIssueContainer;

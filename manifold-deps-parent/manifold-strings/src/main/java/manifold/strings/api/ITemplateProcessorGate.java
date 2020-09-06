@@ -16,7 +16,7 @@
 
 package manifold.strings.api;
 
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 
 /**
  * An <a href="https://docs.oracle.com/javase/8/docs/api/java/util/ServiceLoader.html">SPI</a> to gate template

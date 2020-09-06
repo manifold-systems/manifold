@@ -32,7 +32,7 @@ import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcParameter;
 import manifold.api.type.ResourceFileTypeManifold;
-import manifold.api.type.SourcePosition;
+import manifold.rt.api.SourcePosition;
 import manifold.js.rt.JsRuntime;
 import manifold.js.rt.parser.tree.ClassFunctionNode;
 import manifold.js.rt.parser.tree.ClassNode;

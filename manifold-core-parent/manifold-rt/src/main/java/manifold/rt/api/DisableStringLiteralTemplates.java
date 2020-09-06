@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.api;
+package manifold.rt.api;
 
 /**
  * Use this annotation to disable string template processing if you need to use the {@code '$'} literally within string

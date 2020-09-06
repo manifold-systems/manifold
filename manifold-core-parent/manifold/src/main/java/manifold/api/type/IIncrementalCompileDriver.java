@@ -16,6 +16,8 @@
 
 package manifold.api.type;
 
+import manifold.rt.api.IncrementalCompile;
+
 import java.io.File;
 import java.util.Collection;
 

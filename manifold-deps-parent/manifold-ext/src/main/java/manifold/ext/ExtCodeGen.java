@@ -48,6 +48,7 @@ import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
+import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.internal.javac.ClassSymbols;

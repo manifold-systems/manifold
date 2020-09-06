@@ -27,7 +27,7 @@ import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcType;
-import manifold.api.type.SourcePosition;
+import manifold.rt.api.SourcePosition;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.ManEscapeUtil;
 

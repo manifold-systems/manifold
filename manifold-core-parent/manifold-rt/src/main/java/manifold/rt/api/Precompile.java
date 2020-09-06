@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.api.type;
+package manifold.rt.api;
 
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -44,16 +44,16 @@ import java.lang.annotation.RetentionPolicy;
 public @interface Precompile
 {
   /**
-   * The fully qualified name of the Type Manifold class defining the domain of types to compile from.
+   * The Type Manifold class defining the domain of types to compile from.
    * <p/>
    * Use {@link #fileExtension()} as a convenient alternative way to specify the type manifold via a file extension
    * it handles.
    */
-  Class<? extends ITypeManifold> typeManifold() default ITypeManifold.class;
+  Class<?> typeManifold() default Object.class;
 
   /**
    * A file extension name e.g., {@code "json"}, handled by the Type Manifold class defining the domain of types to compile.
-   * This value is an alternative to {@link #typeManifold()} as a simple way to indirectly specify the {@link ITypeManifold}.
+   * This value is an alternative to {@link #typeManifold()} as a simple way to indirectly specify the {@code ITypeManifold}.
    * If both arguments are present, {@link #typeManifold()} has precedence.
    * <p/>
    * The default wildcard value {@code "*"} precompiles types from <i>all</i> type manifolds used in the module
@@ -62,7 +62,7 @@ public @interface Precompile
 
   /**
    * A regular expression defining the range of types that should be compiled from {@link #typeManifold} or
-   * {@link #fileExtension} via {@link ITypeManifold#getAllTypeNames()}. The default value {@code ".*"} compiles
+   * {@link #fileExtension} via {@code ITypeManifold#getAllTypeNames()}. The default value {@code ".*"} compiles
    * <i>all</i> types originating from the specified type manifold.
    */
   String typeNames() default ".*";

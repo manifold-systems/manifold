@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.StringTokenizer;
 
 import manifold.json.rt.api.IJsonFormatTypeCoercer;
@@ -46,7 +45,7 @@ import manifold.json.rt.Json;
 import manifold.json.rt.parser.Token;
 import manifold.internal.javac.IIssue;
 import manifold.api.util.DebugLogUtil;
-import manifold.api.util.ManIdentifierUtil;
+import manifold.rt.api.util.ManIdentifierUtil;
 import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;

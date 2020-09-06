@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * See the <a href="http://manifold.systems/docs.html#type-safe-reflection">Type-safe Reflection</a> documentation for
  * more information.
  * <p/>
- * See also {@link manifold.ext.extensions.java.lang.Object.ManObjectExt#jailbreak(Object)}
+ * See also {@code manifold.ext.extensions.java.lang.Object.ManObjectExt#jailbreak(Object)}
  */
 @Retention(RetentionPolicy.CLASS)
 @Target({ElementType.TYPE_USE})

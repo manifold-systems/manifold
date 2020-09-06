@@ -1,6 +1,6 @@
 package manifold;
 
-import manifold.api.type.ActualName;
+import manifold.rt.api.ActualName;
 import manifold.ext.rt.api.Structural;
 
 /**

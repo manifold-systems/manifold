@@ -3,7 +3,7 @@ package manifold.graphql.sample;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import manifold.api.DisableStringLiteralTemplates;
+import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.ext.rt.api.Jailbreak;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.json.rt.api.Requester;

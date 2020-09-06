@@ -25,8 +25,7 @@ import com.sun.tools.javac.util.List;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
-import manifold.api.host.NoBootstrap;
-import manifold.internal.runtime.Bootstrap;
+import manifold.rt.api.NoBootstrap;
 import manifold.rt.api.IBootstrap;
 
 

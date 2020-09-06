@@ -25,6 +25,8 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import javax.lang.model.type.NoType;
+
+import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Structural;
 import manifold.ext.rt.RuntimeMethods;
 import manifold.internal.host.RuntimeManifoldHost;
