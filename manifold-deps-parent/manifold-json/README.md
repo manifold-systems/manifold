@@ -542,8 +542,8 @@ This project consists of two modules:
 * `manifold-json-rt`
 
 For optimal performance and to work with Android and other JVM languages it is recommended to:
-* Add a _compile-only_ scoped dependency on `manifold-json` (Gradle: "compileOnly", Maven: "provided")
-* Add a default scoped dependency on `manifold-json-rt` (Gradle: "implementation", Maven: "compile")
+* Add a dependency on `manifold-json-rt` (Gradle: "implementation", Maven: "compile")
+* Add `manifold-json` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
 
 ## Binaries
 
@@ -580,11 +580,8 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-json:2020.1.27-SNAPSHOT'
     implementation 'systems.manifold:manifold-json-rt:2020.1.27-SNAPSHOT'
-
     testImplementation 'junit:junit:4.12'
-
     // Add manifold to -processorpath for javac
     annotationProcessor 'systems.manifold:manifold-json:2020.1.27-SNAPSHOT'
 }
@@ -609,7 +606,6 @@ rootProject.name = 'MyProject'
 
 ## Maven
 
-### Java 8
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -627,65 +623,6 @@ rootProject.name = 'MyProject'
     </properties>
     
     <dependencies>
-        <dependency>
-            <groupId>systems.manifold</groupId>
-            <artifactId>manifold-json</artifactId>
-            <version>${manifold.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>systems.manifold</groupId>
-            <artifactId>manifold-json-rt</artifactId>
-            <version>${manifold.version}</version>
-        </dependency>
-    </dependencies>
-
-    <!--Add the -Xplugin:Manifold argument for the javac compiler-->
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                    <encoding>UTF-8</encoding>
-                    <compilerArgs>
-                        <!-- Configure manifold plugin-->
-                        <arg>-Xplugin:Manifold</arg>
-                    </compilerArgs>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-</project>
-```
-
-### Java 9 or later
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
-    <groupId>com.example</groupId>
-    <artifactId>my-json-app</artifactId>
-    <version>0.1-SNAPSHOT</version>
-
-    <name>My Json App</name>
-
-    <properties>
-        <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.27</manifold.version>
-    </properties>
-    
-    <dependencies>
-        <dependency>
-            <groupId>systems.manifold</groupId>
-            <artifactId>manifold-json</artifactId>
-            <version>${manifold.version}</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-json-rt</artifactId>
@@ -708,7 +645,7 @@ rootProject.name = 'MyProject'
                         <!-- Configure manifold plugin-->
                         <arg>-Xplugin:Manifold</arg>
                     </compilerArgs>
-                    <!-- Add the processor path for the plugin (required for Java 9+) -->
+                    <!-- Add the processor path for the plugin -->
                     <annotationProcessorPaths>
                         <path>
                             <groupId>systems.manifold</groupId>
