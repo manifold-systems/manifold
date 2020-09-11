@@ -8,13 +8,16 @@ layout: default
  
 ## Recently Completed
 
-Manifold gained a lot of ground in recent months. Notably, the structure of the Manifold project changed to support compile-only
-usage where possible. Since much of Manifold operates within the Java compiler plugin, this was merely an exercise in
-separating modules into compile-only and runtime modules (the new modules ending with *-rt*). As a result your projects
-can limit most of Manifold usage to compile-only dependencies, significantly reducing the runtime footprint. Big win!
+Manifold gained a lot of ground in recent months. Notably, the structure of the Manifold framework changed to support compile-only
+usage where possible. Since much of Manifold operates exclusively within the Java compiler, the changes amount to
+separating purely compile-time behavior from runtime behavior by introducing new runtime modules ending with *-rt*. As a result you
+can limit compile-time Manifold usage to the annotation processor path and completely avoid runtime dependencies, which significantly
+reduces your project's Manifold footprint. Big win!
+
+>Note, revised build instructions are available in the `readme.md` files.
 
 This restructure was primarily motivated by a couple of big, long awaited features, namely [Android Studio support](http://manifold.systems/android.html)
-and [Kotlin support](http://manifold.systems/kotlin.html), which are now available for use. Manifold is now fully supported in Android
+and [Kotlin support](http://manifold.systems/kotlin.html), which are now available for use. Manifold now fully supports Android
 applications and Android Studio. Additionally, type manifolds such as [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
