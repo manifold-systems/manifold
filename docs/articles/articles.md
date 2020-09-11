@@ -7,6 +7,21 @@ layout: default
 <table>
  <tr>
   <td>
+  <p><a href=https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" height="135" src="/images/jetbrains.png" alt="a"></a></p>
+  </td>
+  <td>
+  <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/">An Interview With Scott McKinney, Author of the Manifold Plugin</a></p>
+  <p>Today we are speaking with Scott McKinny of Manifold Systems (scott@manifold.systems), the author of the Manifold
+  plugin for IntelliJ Platform-based IDEs. As a Java compiler plugin, Manifold adds new capabilities directly and
+  seamlessly to the Java language such as type-safe metaprogramming, extension methods, operator overloading, and more.</p>
+  <p><small>jetbrains.com</small></p>
+  </td>
+ </tr>
+ 
+ <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
+ 
+ <tr>
+  <td>
   <p><a href="https://jaxenter.com/java-type-safe-171944.html"><img width="240" height="135" src="/images/mco.jpg" alt="a"></a></p>
   </td>
   <td>
