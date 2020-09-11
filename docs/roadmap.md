@@ -8,7 +8,7 @@ layout: default
  
 ## Recently Completed
 
-Manifold gained a lot ground in recent months. Notably, the structure of the Manifold project changed to support compile-only
+Manifold gained a lot of ground in recent months. Notably, the structure of the Manifold project changed to support compile-only
 usage where possible. Since much of Manifold operates within the Java compiler plugin, this was merely an exercise in
 separating modules into compile-only and runtime modules (the new modules ending with *-rt*). As a result your projects
 can limit most of Manifold usage to compile-only dependencies, significantly reducing the runtime footprint. Big win!
