@@ -7,7 +7,7 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a href=https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" height="135" src="/images/jetbrains.png" alt="a"></a></p>
+  <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" height="135" src="/images/jetbrains.png" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/">An Interview With Scott McKinney, Author of the Manifold Plugin</a></p>
