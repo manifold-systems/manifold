@@ -15,6 +15,8 @@ your project to use Manifold.
 Get the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
 You must restart Android Studio to enable the plugin. 
 
+Or select the following link to install the plugin directly into your running Android Studio or IntelliJ IDEA:
+
 <iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
 </iframe>
  
