@@ -14,11 +14,6 @@ your project to use Manifold.
 ## Get the Manifold plugin
 Get the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
 You must restart Android Studio to enable the plugin. 
-
-Or select the following link to install the plugin directly into your running Android Studio or IntelliJ IDEA:
-
-<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
-</iframe>
  
 ## Java 8 Source and Target Compatibility 
 Set your project's source and target compatibility values to Java 8:
@@ -36,7 +31,7 @@ android {
 ```
 
 ## Javac Plugin
-Add the `-Xplugin:Manifold` javac argument to connect Manifold with the compiler.
+Add the *-Xplugin:Manifold* javac argument to connect Manifold with the compiler.
 
 ```groovy
 // Manifold Javac plugin
@@ -47,7 +42,7 @@ getTasks().withType(JavaCompile) {
 
 ## Manifold Dependencies
 You can conveniently copy/paste from the following list of the latest Manifold dependencies. Note the distinction
-between `annotationProcessor` and `implementation` scoping. Manifold dependencies that operate exclusively within the
+between *annotationProcessor* and *implementation* scoping. Manifold dependencies that operate exclusively within the
 Java compiler are only accessible from the processor path, therefore they have no impact on your runtime distribution.
 
 #### Manifold core
@@ -136,7 +131,7 @@ implementation 'systems.manifold:manifold-text:2020.1.27'
 
 If you use a [type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
 that is based on resource files such as GraphQL, JSON, Templates, etc. you must place the resource files in the 
-`source` directory along with your Java files.  Do **not** place them in the `res` or `assets` directories.
+*source* directory along with your Java files.  Do **not** place them in the *res* or *assets* directories.
  
 <p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
 
