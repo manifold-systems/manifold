@@ -14,9 +14,12 @@ your project to use Manifold.
 ## Get the Manifold plugin
 Get the Manifold plugin directly from within Android Studio via `Settings | Plugins | Marketplace | search "Manifold"`.
 You must restart Android Studio to enable the plugin. 
+
+<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
+</iframe>
  
 ## Java 8 Source and Target Compatibility 
-Since Manifold requires Java 8 or later, set your project's source and target compatibility values to Java 8:
+Set your project's source and target compatibility values to Java 8:
 
 ```groovy
 android {
@@ -41,73 +44,74 @@ getTasks().withType(JavaCompile) {
 ```    
 
 ## Manifold Dependencies
-You can conveniently copy/paste from the following list of the latest Manifold dependencies. Do not change the
-`compileOnly` and `implementation` scoping of the dependencies, keep them exactly as they are provided here.
+You can conveniently copy/paste from the following list of the latest Manifold dependencies. Note the distinction
+between `annotationProcessor` and `implementation` scoping. Manifold dependencies that operate exclusively within the
+Java compiler are only accessible from the processor path, therefore they have no impact on your runtime distribution.
 
 #### Manifold core
 ```groovy
-compileOnly 'systems.manifold:manifold:2020.1.27'
+annotationProcessor 'systems.manifold:manifold:2020.1.27'
 implementation 'systems.manifold:manifold-rt:2020.1.27'
 ```
 #### Manifold : Extensions
 ```groovy
-compileOnly 'systems.manifold:manifold-ext:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-ext:2020.1.27'
 implementation 'systems.manifold:manifold-ext-rt:2020.1.27'
 ```
 #### Manifold : GraphQL
 ```groovy
-compileOnly 'systems.manifold:manifold-graphql:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-graphql:2020.1.27'
 implementation 'systems.manifold:manifold-graphql-rt:2020.1.27'
 ```
 #### Manifold : JSON
 ```groovy
-compileOnly 'systems.manifold:manifold-json:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-json:2020.1.27'
 implementation 'systems.manifold:manifold-json-rt:2020.1.27'
 ```
 #### Manifold : XML
 ```groovy
-compileOnly 'systems.manifold:manifold-xml:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-xml:2020.1.27'
 implementation 'systems.manifold:manifold-xml-rt:2020.1.27'
 ```
 #### Manifold : YAML
 ```groovy
-compileOnly 'systems.manifold:manifold-yaml:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-yaml:2020.1.27'
 implementation 'systems.manifold:manifold-yaml-rt:2020.1.27'
 ```
 #### Manifold : CSV
 ```groovy
-compileOnly 'systems.manifold:manifold-csv:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-csv:2020.1.27'
 implementation 'systems.manifold:manifold-csb-rt:2020.1.27'
 ```
 #### Manifold : Properties
 ```groovy
-compileOnly 'systems.manifold:manifold-properties:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-properties:2020.1.27'
 ```
 #### Manifold : Image
 ```groovy
-compileOnly 'systems.manifold:manifold-image:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-image:2020.1.27'
 ```
 #### Manifold : JavaScript
 ```groovy
-compileOnly 'systems.manifold:manifold-js:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-js:2020.1.27'
 implementation 'systems.manifold:manifold-js-rt:2020.1.27'
 ```
 #### Manifold : Templates
 ```groovy
-compileOnly 'systems.manifold:manifold-templates:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-templates:2020.1.27'
 implementation 'systems.manifold:manifold-templates-rt:2020.1.27'
 ```
 #### Manifold : String Interpolation
 ```groovy
-compileOnly 'systems.manifold:manifold-strings:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-strings:2020.1.27'
 ```
 #### Manifold : (Un)checked Exceptions
 ```groovy
-compileOnly 'systems.manifold:manifold-exceptions:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-exceptions:2020.1.27'
 ```
 #### Manifold : Preprocessor
 ```groovy
-compileOnly 'systems.manifold:manifold-preprocessor:2020.1.27'
+annotationProcessor 'systems.manifold:manifold-preprocessor:2020.1.27'
 ```
 #### Manifold : Science
 ```groovy
