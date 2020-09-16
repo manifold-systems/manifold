@@ -12,7 +12,7 @@ Manifold plugs into Java to supplement it with powerful features, including:
 * [A Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 * ...and more
 
-All fully supported in **Java 8 - 14** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in **Java 8 - 15** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  

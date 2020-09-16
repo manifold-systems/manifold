@@ -14,7 +14,7 @@
   <description>
     Manifold plugs into Java to supplement it with powerful features, including Type-safe Metaprogramming, Extension
     Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and more. All fully supported
-    in Java 8 - 14 with comprehensive support in IntelliJ IDEA and Android Studio. Simply add Manifold to your existing
+    in Java 8 - 15 with comprehensive support in IntelliJ IDEA and Android Studio. Simply add Manifold to your existing
     project and begin taking advantage of it.
   </description>
   <url>http://manifold.systems/</url>
