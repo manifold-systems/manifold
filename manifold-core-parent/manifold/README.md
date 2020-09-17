@@ -747,10 +747,10 @@ exposing a query `builder` method matching the one the `MoviesByGenre` query def
 Note not all manifold resources can be used as fragment values. The fragment value concept is not always a good fit.
 For instance, the Properties manifold does not implement fragment values because a properties type is used statically.
 
-Note fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/355)
+Note fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/378)
 feature in Java 15:
 
-<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="60%" height="60%"/></p>
+<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
 
 >**Note to Type Manifold service providers**
 >

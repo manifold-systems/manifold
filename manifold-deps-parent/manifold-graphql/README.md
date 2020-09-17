@@ -454,22 +454,10 @@ var result = query.builder().build().request("").post();
 result.getMovies().forEach( e -> e.getGenre() );
 ```
 
-With Java 15 [text block](https://openjdk.java.net/jeps/355) String literals you can easily author multi-line fragment
+With Java 15 [text block](https://openjdk.java.net/jeps/378) String literals you can easily author multi-line fragment
 expressions like this:
-```java
-var query = """
-  [>.graphql<]
-  query Movies($genre: Genre!, $title: String, $releaseDate: Date) {
-    movies(genre: $genre, title: $title, releaseDate: $releaseDate) {
-      id
-      title
-      genre
-      releaseDate
-    }
-  }
-  """;
-var result = query.create(Action).request(ENDPOINT).post();
-```  
+
+<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
  
 Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental).
 
