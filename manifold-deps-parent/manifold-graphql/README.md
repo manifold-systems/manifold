@@ -421,8 +421,6 @@ reinvent the wheel!
 
 >Note, this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
 
->Warning: fragments are an experimental feature
-
 You can now *embed* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
 means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
 resource file.
@@ -444,7 +442,7 @@ query Movies($title: String, $genre: Genre, $releaseDate: Date) {
 var query = MyQuery.Movies.builder().withGenre(Action).build();
 out.println(query.toString());
 ```
->**IntelliJ users...**
+>**IntelliJ and Android Studio users...**
 >
 >Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
 >GraphQL fragments, it pairs exceptionally well with the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
@@ -456,7 +454,7 @@ var result = query.builder().build().request("").post();
 result.getMovies().forEach( e -> e.getGenre() );
 ```
 
-With Java 13 [text block](https://openjdk.java.net/jeps/355) String literals you can easily author multi-line fragment
+With Java 15 [text block](https://openjdk.java.net/jeps/355) String literals you can easily author multi-line fragment
 expressions like this:
 ```java
 var query = """

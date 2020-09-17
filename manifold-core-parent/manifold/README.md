@@ -730,7 +730,7 @@ If used with the Manifold IntelliJ IDEA plugin or the Android Studio plugin, you
 editor features you'd expect like highlighting, parser feedback, code completion, etc.  This is especially useful with
 GraphQL, SQL, and similar resources where editing a fragment in place provides a more fluid development experience. 
  
-## Value Fragments (experimental)
+## Value Fragments
 Sometimes it's more convenient to use a fragment as a *value* as opposed to a type declaration. For example, you can
 create a GraphQL query as a fragment value and assign it to a variable:
  
@@ -747,22 +747,10 @@ exposing a query `builder` method matching the one the `MoviesByGenre` query def
 Note not all manifold resources can be used as fragment values. The fragment value concept is not always a good fit.
 For instance, the Properties manifold does not implement fragment values because a properties type is used statically.
 
-Note fragments as values will become more useful with multiline String literals via the new
-[Text Blocks](https://openjdk.java.net/jeps/355) feature in Java 13:
-```java
-var query = """
-  [>.graphql<]
-  query Movies($genre: Genre!, $title: String, $releaseDate: Date) {
-    movies(genre: $genre, title: $title, releaseDate: $releaseDate) {
-      id
-      title
-      genre
-      releaseDate
-    }
-  }
-  """;
-var result = query.create(Action).request(ENDPOINT).post();
-```    
+Note fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/355)
+feature in Java 15:
+
+<p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="60%" height="60%"/></p>
 
 >**Note to Type Manifold service providers**
 >
