@@ -97,8 +97,18 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
       }
       else
       {
-        JarEntryFileImpl resource = getOrCreateFile( name );
-        resource.setEntry( e );
+        try
+        {
+          JarEntryFileImpl resource = getOrCreateFile( name );
+          resource.setEntry( e );
+        }
+        catch( UnsupportedOperationException uoe )
+        {
+          // Better to support this case with a message than to blow up with an exception.
+          // For instance, an Uber Jar file sometimes results in an odd configuration having both a META-INF directory
+          // _and_ file.
+          System.err.println( uoe.getMessage() );
+        }
       }
     }
     else
@@ -153,7 +163,9 @@ public class JarFileDirectoryImpl implements IJarFileDirectory
     IResource resource = _resources.get( relativeName );
     if( resource instanceof IDirectory )
     {
-      throw new UnsupportedOperationException( "The requested resource " + relativeName + " is now being accessed as a file, but was previously accessed as a directory." );
+      throw new UnsupportedOperationException(
+        "Unsupported: The requested resource '" + relativeName + "' from '" + getName() + "'" +
+        " is now being accessed as a file, but was previously accessed as a directory." );
     }
     JarEntryFileImpl result = (JarEntryFileImpl)resource;
     if( result == null )
