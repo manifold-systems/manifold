@@ -864,6 +864,11 @@ class GqlParentType
     addBuilder( srcClass, type );
     addCreateMethod( srcClass, type );
     addBuilderMethod( srcClass, type );
+    addLoadMethod( srcClass );
+    addCopier( srcClass, type );
+    addCopierMethod( srcClass );
+    addCopyMethod( srcClass );
+
     List<InputValueDefinition> inputValueDefinitions = type.getInputValueDefinitions();
     for( InputValueDefinition member: inputValueDefinitions )
     {

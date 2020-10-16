@@ -36,4 +36,18 @@ public class MutationTest {
     String expected = "mutation ReviewMutation($movie: ID!, $review: ReviewInput!) { createReview(movie: $movie, review: $review) { id stars comment } }";
     assertEquals( expected.replaceAll("\\s+",""), query.replaceAll("\\s+","") );
   }
+
+  @Test
+  public void testReviewInputCopy() {
+    ReviewInput input = ReviewInput
+      .builder(4)
+      .withComment("Superb")
+      .build();
+    // test copy
+    ReviewInput inputCopy = input.copy();
+    assertEquals( input, inputCopy );
+    ReviewInput inputCopierCopy = ReviewInput.copier( input ).withComment( "Excellent" ).copy();
+    inputCopy.setComment( "Excellent" );
+    assertEquals( inputCopy, inputCopierCopy );
+  }
 }
