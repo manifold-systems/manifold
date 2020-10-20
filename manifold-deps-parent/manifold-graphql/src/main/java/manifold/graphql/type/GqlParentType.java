@@ -1059,7 +1059,7 @@ class GqlParentType
     {
       String name = ((FragmentSpread)selection).getName();
       FragmentDefinition fragment = _fragments.get( name );
-      TypeDefinition fragmentCtx = findTypeDefinition( fragment.getTypeCondition() );
+      TypeDefinition fragmentCtx = fragment == null ? null : findTypeDefinition( fragment.getTypeCondition() );
       if( fragmentCtx != null )
       {
         mapFragmentUsageToQuery( srcClass, name, fragment );
