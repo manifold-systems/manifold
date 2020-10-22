@@ -90,27 +90,35 @@ public class ReflectUtil
   }
   public static Class<?> type( String fqn, ClassLoader cl, boolean useCallChain )
   {
+    int dims = 0;
+    int iBracket = fqn.indexOf( '[' );
+    String componentFqn = fqn;
+    if( iBracket > 0 )
+    {
+      dims = (fqn.length() - iBracket)/2;
+      componentFqn = fqn.substring( 0, iBracket );
+    }
+    //openPackage( fqn, null );
+    Class<?> cls = null;
     try
     {
-      int dims = 0;
-      int iBracket = fqn.indexOf( '[' );
-      if( iBracket > 0 )
-      {
-        dims = (fqn.length() - iBracket)/2;
-        fqn = fqn.substring( 0, iBracket );
-      }
-      //openPackage( fqn, null );
-      Class<?> cls = Class.forName( fqn, false, cl );
-      if( dims > 0 )
-      {
-        cls = Array.newInstance( cls, new int[dims] ).getClass();
-      }
-      return cls;
+      cls = Class.forName( componentFqn, false, cl );
     }
     catch( ClassNotFoundException e )
     {
-      return useCallChain ? findInCallChain( fqn ) : null;
+      ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+      if( cl != contextClassLoader && contextClassLoader != null )
+      {
+        return type( fqn, contextClassLoader, useCallChain );
+      }
+
+      cls = useCallChain ? findInCallChain( fqn ) : null;
     }
+    if( cls != null && dims > 0 )
+    {
+      cls = Array.newInstance( cls, new int[dims] ).getClass();
+    }
+    return cls;
   }
 
   private static Class<?> findInCallChain( String fqn )
