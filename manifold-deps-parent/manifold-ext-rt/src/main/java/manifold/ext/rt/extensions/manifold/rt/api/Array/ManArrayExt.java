@@ -171,17 +171,11 @@ public class ManArrayExt
     }
     return Arrays.binarySearch( (Object[])array, from, to, key );
   }
-
-  //todo: put this back after IJ fixes https://youtrack.jetbrains.com/issue/IDEA-247069
-  // public static int binarySearch( @This Object array, @Self(true) Object key, Comparator<? super @Self(true) Object> comparator )
-  public static int binarySearch( @This Object array, @Self(true) Object key, Comparator<@Self(true) Object> comparator )
+  public static int binarySearch( @This Object array, @Self(true) Object key, Comparator<? super @Self(true) Object> comparator )
   {
     return Arrays.binarySearch( (Object[])array, key, comparator );
   }
-
-  //todo: put this back after IJ fixes https://youtrack.jetbrains.com/issue/IDEA-247069
-  // public static int binarySearch( @This Object array, int from, int to, @Self(true) Object key, Comparator<? super @Self(true) Object> comparator )
-  public static int binarySearch( @This Object array, int from, int to, @Self(true) Object key, Comparator<@Self(true) Object> comparator )
+  public static int binarySearch( @This Object array, int from, int to, @Self(true) Object key, Comparator<? super @Self(true) Object> comparator )
   {
     return Arrays.binarySearch( (Object[])array, from, to, key, comparator );
   }
