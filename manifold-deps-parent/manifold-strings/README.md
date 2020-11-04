@@ -189,7 +189,19 @@ module MyProject {
     <properties>
         <!-- set latest manifold version here --> 
         <manifold.version>2020.1.31</manifold.version>
-    </properties>
+    </properties> 
+            
+    <dependencies>
+        <!-- Note the manifold dependency is not necessary for manifold-strings, however it enables the feature when
+             using IntelliJ IDEA and/or Android Studio (see annotationProcessorPaths below) -->
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold</artifactId>
+            <version>${manifold.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+  
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
     <build>
