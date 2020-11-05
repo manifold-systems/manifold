@@ -999,8 +999,8 @@ public class JavacPlugin implements Plugin, TaskListener
         break;
 
       case ANALYZE:
-        // Extend array class
-        ArrayTypeExtender.extend( getContext(), e.getCompilationUnit() );
+        // Add extension methods to javac's array type
+        extendArrayType( e );
 
         if( _javacTask.getContext() != _ctx )
         {
@@ -1013,6 +1013,19 @@ public class JavacPlugin implements Plugin, TaskListener
           injectManFileManager();
         }
         break;
+    }
+  }
+
+  public void extendArrayType( TaskEvent e )
+  {
+    try
+    {
+      ArrayTypeExtender.extend( getContext(), e.getCompilationUnit() );
+    }
+    catch( Exception ignore )
+    {
+      // although this method is invoked during the ANALYZE phase, the compiler's state may still be in the ENTER phase,
+      // Java 9+ throws in this case (we ignore for now)
     }
   }
 
