@@ -38,6 +38,14 @@ via javac command line argument to specify additional source paths: *-Amanifold.
  to fortify existing features until I figure out what is next. Visit the Manifold [Slack group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
  and give a shout if you have a preference.
  
+ **Update:** _2020/11/5_
+ 
+ Still working with clients to make Manifold's current set of features more rugged and versatile. But this train has no
+ brakes, work has started on [#126](https://github.com/manifold-systems/manifold/issues/126): _Operator overloading enhancements_.
+ Expect overload support for at least compound assignment operators (`+=`, `*=`, etc.), increment operators (`++`, `--`),
+ and the index operator (`[]`) to support `map["key"] = value` etc. Comment on [#126](https://github.com/manifold-systems/manifold/issues/126) if you have
+ question or concerns, or discuss on [slack](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
+ 
 ## On the pile (in no particular order)
 
 #### Extension method specialization 
