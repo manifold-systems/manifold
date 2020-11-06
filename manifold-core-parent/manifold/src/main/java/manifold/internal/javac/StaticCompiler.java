@@ -73,50 +73,59 @@ class StaticCompiler
       return;
     }
     _enterGuard = true;
-
-    List<String> others = JavacPlugin.instance().getOtherInputFiles();
-    JavacManifoldHost host = JavacPlugin.instance().getHost();
-    IFileSystem fs = host.getFileSystem();
-    Context ctx = JavacPlugin.instance().getContext();
-    for( String path: others )
+    try
     {
-      IFile file = fs.getIFile( new File( path ) );
-      if( file.exists() )
+      List<String> others = JavacPlugin.instance().getOtherInputFiles();
+      if( others.isEmpty() )
       {
-        IModule module = host.getSingleModule();
-        Set<ITypeManifold> tms = module.findTypeManifoldsFor( file,
-          tm -> tm.getContributorKind() != Supplemental );
-        if( tms.isEmpty() )
-        {
-          //todo: add compiler error
-          continue;
-        }
-        ITypeManifold tm = tms.iterator().next();
-        String[] types = tm.getTypesForFile( file );
-        if( types == null || types.length == 0 )
-        {
-          //todo: add compile error
-          continue;
-        }
+        return;
+      }
 
-        tm.enterPostJavaCompilation();
-
-        // Cause the types to compile by entering ClassSymbols into javac's "todos"
-        if( !enterClassSymbols( module, ctx, Arrays.asList( types ) ) )
+      JavacManifoldHost host = JavacPlugin.instance().getHost();
+      IFileSystem fs = host.getFileSystem();
+      Context ctx = JavacPlugin.instance().getContext();
+      for( String path : others )
+      {
+        IFile file = fs.getIFile( new File( path ) );
+        if( file.exists() )
         {
-          return;
+          IModule module = host.getSingleModule();
+          Set<ITypeManifold> tms = module.findTypeManifoldsFor( file,
+            tm -> tm.getContributorKind() != Supplemental );
+          if( tms.isEmpty() )
+          {
+            //todo: add compiler error
+            continue;
+          }
+          ITypeManifold tm = tms.iterator().next();
+          String[] types = tm.getTypesForFile( file );
+          if( types == null || types.length == 0 )
+          {
+            //todo: add compile error
+            continue;
+          }
+
+          tm.enterPostJavaCompilation();
+
+          // Cause the types to compile by entering ClassSymbols into javac's "todos"
+          if( !enterClassSymbols( module, ctx, Arrays.asList( types ) ) )
+          {
+            return;
+          }
         }
       }
-    }
 
-    JavaCompiler javaCompiler = JavaCompiler.instance( JavacPlugin.instance().getContext() );
-    if( !javaCompiler.todo.isEmpty() )
+      JavaCompiler javaCompiler = JavaCompiler.instance( JavacPlugin.instance().getContext() );
+      if( !javaCompiler.todo.isEmpty() )
+      {
+        // compile resource types we just loaded
+        compileTodo( javaCompiler );
+      }
+    }
+    finally
     {
-      // compile resource types we just loaded
-      compileTodo( javaCompiler );
+      _enterGuard = false;
     }
-
-    _enterGuard = false;
   }
 
   void compileRemainingTypes_ByTypeNameRegexes()
@@ -126,44 +135,53 @@ class StaticCompiler
       return;
     }
     _enterGuard = true;
-
-    Map<String, String> others = JavacPlugin.instance().getOtherSourceMappings();
-    Map<ITypeManifold, Set<String>> classToRegex = new HashMap<>();
-    for( Map.Entry<String, String> entry: others.entrySet() )
+    try
     {
-      mapTypeManifoldToTypeNameRegexes( classToRegex, entry.getKey(), entry.getValue() );
-    }
-
-    IModule module = JavacPlugin.instance().getHost().getSingleModule();
-    Context ctx = JavacPlugin.instance().getContext();
-    for( Map.Entry<ITypeManifold, Set<String>> mapping: classToRegex.entrySet() )
-    {
-      ITypeManifold tm = mapping.getKey();
-      Collection<String> types = computeNamesToPrecompile( tm.getAllTypeNames(), mapping.getValue() );
-      if( types.isEmpty() )
-      {
-        //todo: add compile error
-        continue;
-      }
-
-      // signal the type manifold for post Java compilation
-      tm.enterPostJavaCompilation();
-
-      // Cause the types to compile by entering ClassSymbols into javac's "todos"
-      if( !enterClassSymbols( module, ctx, types ) )
+      Map<String, String> others = JavacPlugin.instance().getOtherSourceMappings();
+      if( others.isEmpty() )
       {
         return;
       }
-    }
 
-    JavaCompiler javaCompiler = JavaCompiler.instance( ctx );
-    if( !javaCompiler.todo.isEmpty() )
+      Map<ITypeManifold, Set<String>> classToRegex = new HashMap<>();
+      for( Map.Entry<String, String> entry : others.entrySet() )
+      {
+        mapTypeManifoldToTypeNameRegexes( classToRegex, entry.getKey(), entry.getValue() );
+      }
+
+      IModule module = JavacPlugin.instance().getHost().getSingleModule();
+      Context ctx = JavacPlugin.instance().getContext();
+      for( Map.Entry<ITypeManifold, Set<String>> mapping : classToRegex.entrySet() )
+      {
+        ITypeManifold tm = mapping.getKey();
+        Collection<String> types = computeNamesToPrecompile( tm.getAllTypeNames(), mapping.getValue() );
+        if( types.isEmpty() )
+        {
+          //todo: add compile error
+          continue;
+        }
+
+        // signal the type manifold for post Java compilation
+        tm.enterPostJavaCompilation();
+
+        // Cause the types to compile by entering ClassSymbols into javac's "todos"
+        if( !enterClassSymbols( module, ctx, types ) )
+        {
+          return;
+        }
+      }
+
+      JavaCompiler javaCompiler = JavaCompiler.instance( ctx );
+      if( !javaCompiler.todo.isEmpty() )
+      {
+        // compile resource types we just loaded
+        compileTodo( javaCompiler );
+      }
+    }
+    finally
     {
-      // compile resource types we just loaded
-      compileTodo( javaCompiler );
+      _enterGuard = false;
     }
-
-    _enterGuard = false;
   }
 
   private boolean enterClassSymbols( IModule module, Context ctx, Collection<String> types )
