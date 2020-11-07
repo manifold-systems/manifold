@@ -117,6 +117,8 @@ import static manifold.api.gen.SrcLinkedClass.makeIdentifier;
  */
 class GqlParentType
 {
+  private static final String ANONYMOUS_TYPE = "Anonymous_";
+
   private final String _fqn;
   private final SchemaDefinition _schemaDefinition;
   private final TypeDefinitionRegistry _registry;
@@ -125,6 +127,7 @@ class GqlParentType
   private final IFile _file;
   private final GqlManifold _gqlManifold;
   private final Map<TypeDefinition, Set<UnionTypeDefinition>> _typeToUnions;
+  private int _anonCount;
 
   GqlParentType( String fqn, SchemaDefinition schemaDefinition, TypeDefinitionRegistry registry,
                  Map<String, OperationDefinition> operations, Map<String, FragmentDefinition> fragments,
@@ -145,6 +148,7 @@ class GqlParentType
     return _fqn;
   }
 
+  @SuppressWarnings( "unused" )
   boolean hasChild( String childName )
   {
     return _registry.getType( childName ).isPresent() ||
@@ -347,7 +351,8 @@ class GqlParentType
 
   private void addQueryType( OperationDefinition operation, SrcLinkedClass enclosingType )
   {
-    String identifier = makeIdentifier( operation.getName(), false );
+    String name = getOperationName( operation );
+    String identifier = makeIdentifier( name, false );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( IJsonBindingsBacked.class.getSimpleName() )
@@ -355,7 +360,7 @@ class GqlParentType
       .addAnnotation( new SrcAnnotationExpression( Structural.class.getSimpleName() )
         .addArgument( "factoryClass", Class.class, identifier + ".ProxyFactory.class" ) )
       .modifiers( Modifier.PUBLIC );
-    addActualNameAnnotation( srcClass, operation.getName(), false );
+    addActualNameAnnotation( srcClass, name, false );
     addSourcePositionAnnotation( srcClass, operation, operation::getName, srcClass );
     addProxyFactory( srcClass );
     addQueryResultType( operation, getRoot( operation.getOperation() ), srcClass );
@@ -395,6 +400,13 @@ class GqlParentType
     enclosingType.addInnerClass( srcClass );
   }
 
+  @NotNull
+  private String getOperationName( OperationDefinition operation )
+  {
+    String name = operation.getName();
+    return (name == null || name.isEmpty()) ? ANONYMOUS_TYPE + _anonCount++ : name;
+  }
+
   private String remove$( String name )
   {
     if( name.charAt( 0 ) == '$' )
@@ -406,6 +418,7 @@ class GqlParentType
 
   private void addRequestMethods( SrcLinkedClass srcClass, OperationDefinition operation )
   {
+    //noinspection unused
     String query = ManEscapeUtil.escapeForJavaStringLiteral( AstPrinter.printAstCompact( operation ) );
     String fragments = getFragments( srcClass );
     //noinspection UnusedAssignment
