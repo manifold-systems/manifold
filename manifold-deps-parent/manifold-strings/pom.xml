@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2020.1.34-SNAPSHOT</version>
+    <version>2020.1.34</version>
   </parent>
 
   <artifactId>manifold-strings</artifactId>
