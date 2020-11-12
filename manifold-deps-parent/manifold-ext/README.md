@@ -17,6 +17,7 @@
   * [Arithmetic and Negation Operators](#arithmetic-and-negation-operators)
   * [Relational Operators](#relational-operators)
   * [Equality Operators](#equality-operators)
+  * [Index Operator](#index-operator)
   * [Unit Operators](#unit-operators)
   * [Operators by Extension Methods](#operators-by-extension-methods)
 * [Unit Expressions](#unit-expressions)
@@ -812,6 +813,13 @@ The index operator can be overloaded to provide more concise syntax for ordered 
 | `a[b]`      | `a.get(b)`       |
 | `a[b] = c`  | `a.set(b, c)`    |
   
+The indexed assignment expression `a[b] = c` follows the Java language rule that an assignment expression's
+value is equal to the assigned value.
+```java
+var value = a[b] = c;
+```
+Here `value` is equal to `c`, regardless of what the `set(b, c)` operator method returns. 
+
 >Note, Manifold provides convenient extension methods for indexed access to `List`, `Map`, `String`, and other data
 >structures.
 >```java          
