@@ -787,6 +787,22 @@ final public class Rational extends Number implements Sequential<Rational, Ratio
     return get( _numerator.negate(), _denominator );
   }
 
+  /**
+   * Supports unary increment operator {@code ++}
+   */
+  public Rational inc()
+  {
+    return plus( ONE );
+  }
+
+  /**
+   * Supports unary decrement operator {@code --}
+   */
+  public Rational dec()
+  {
+    return minus( ONE );
+  }
+
   public Rational invert()
   {
     return get( _denominator, _numerator );

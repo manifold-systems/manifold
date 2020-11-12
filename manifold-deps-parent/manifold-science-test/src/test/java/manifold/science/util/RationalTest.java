@@ -106,5 +106,19 @@ public class RationalTest
     assertEquals( 5r, numb );
   }
 
+  public void testUnary()
+  {
+    Rational x = 3r;
+    assertEquals( Rational.get( -3 ), -x );
+    x = 3r;
+    assertEquals( Rational.get( 3 ), x-- );
+    x = 3r;
+    assertEquals( Rational.get( 2 ), --x );
+    x = 3r;
+    assertEquals( Rational.get( 3 ), x++ );
+    x = 3r;
+    assertEquals( Rational.get( 4 ), ++x );
+  }
+
   private void foo( Object s ) {}
 }

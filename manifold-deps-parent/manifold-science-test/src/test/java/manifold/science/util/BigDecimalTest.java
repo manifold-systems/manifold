@@ -23,6 +23,7 @@ import org.junit.Test;
 
 import static manifold.collections.api.range.RangeFun.*;
 import static manifold.science.util.CoercionConstants.bd;
+import static manifold.science.util.CoercionConstants.r;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -57,7 +58,21 @@ public class BigDecimalTest
     assertEquals( 1bd, 3bd % 2bd );
   }
 
-
+  @Test
+  public void testUnary()
+  {
+    BigDecimal x = 3bd;
+    assertEquals( BigDecimal.valueOf( -3 ), -x );
+    x = 3bd;
+    assertEquals( BigDecimal.valueOf( 3 ), x-- );
+    x = 3bd;
+    assertEquals( BigDecimal.valueOf( 2 ), --x );
+    x = 3bd;
+    assertEquals( BigDecimal.valueOf( 3 ), x++ );
+    x = 3bd;
+    assertEquals( BigDecimal.valueOf( 4 ), ++x );
+  }
+  
   @Test
   public void testBigIntegerRange()
   {

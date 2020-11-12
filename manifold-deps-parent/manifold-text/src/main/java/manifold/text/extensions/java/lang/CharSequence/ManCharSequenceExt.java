@@ -926,4 +926,18 @@ public class ManCharSequenceExt
     return thiz.indexOf( ch, 0, ignoreCase ) >= 0;
   }
 
+  /**
+   * Implement the <b>index operator</b> to enable indexed access to characters such as {@code text[i]}.
+   *
+   * @param      index   the index of the {@code char} value.
+   * @return     the {@code char} value at the specified index of this string.
+   *             The first {@code char} value is at index {@code 0}.
+   * @exception  IndexOutOfBoundsException  if the {@code index}
+   *             argument is negative or not less than the length of this
+   *             string.
+   */
+  public static char get( @This CharSequence thiz, int index )
+  {
+    return thiz.charAt( index );
+  }
 }

@@ -36,6 +36,22 @@ public abstract class ManBigIntegerExt implements ComparableUsing<BigInteger>
   }
 
   /**
+   * Supports unary increment operator {@code ++}
+   */
+  public static BigInteger inc( @This BigInteger thiz )
+  {
+    return thiz.add( BigInteger.ONE );
+  }
+
+  /**
+   * Supports unary decrement operator {@code --}
+   */
+  public static BigInteger dec( @This BigInteger thiz )
+  {
+    return thiz.subtract( BigInteger.ONE );
+  }
+
+  /**
    * Supports binary operator {@code +}
    */
   public static BigInteger plus( @This BigInteger thiz, BigInteger operand )

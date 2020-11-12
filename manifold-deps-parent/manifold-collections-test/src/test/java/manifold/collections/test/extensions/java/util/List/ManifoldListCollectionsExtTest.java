@@ -3,10 +3,7 @@ package manifold.collections.test.extensions.java.util.List;
 import manifold.collections.extensions.java.util.List.ManifoldListCollectionExt;
 import manifold.test.api.ExtensionManifoldTest;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 /**
  */
@@ -83,6 +80,30 @@ public class ManifoldListCollectionsExtTest extends ExtensionManifoldTest {
     assertNull( list.singleOrNull() );
     assertEquals( "one", Collections.singletonList("one").singleOrNull() );
     assertNull( empty().singleOrNull() );
+  }
+
+  public void testIndexedAssignment()
+  {
+    List<String> list = makeTestList();
+    list[1] = "foo";
+    String foo = list[1];
+    assertEquals( "foo", foo );
+
+    testIndexedCompountAssign();
+  }
+
+  public void testIndexedCompountAssign()
+  {
+    List<Integer> intList = new ArrayList<>();
+    intList.add( 1 );
+    intList[0] += 2;
+    assertEquals( (Integer)3, intList[0] );
+    int i = intList[0]++;
+    assertEquals( 3, i );
+    assertEquals( (Integer)4, intList[0] );
+    i = ++intList[0];
+    assertEquals( 5, i );
+    assertEquals( (Integer)5, intList[0] );
   }
 
   private List<String> empty() {

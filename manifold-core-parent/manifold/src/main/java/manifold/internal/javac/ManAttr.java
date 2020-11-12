@@ -38,7 +38,7 @@ import java.util.function.BiPredicate;
 import manifold.internal.javac.AbstractBinder.Node;
 import manifold.util.ReflectUtil;
 
-
+import static com.sun.tools.javac.code.TypeTag.ERROR;
 import static manifold.util.JreUtil.isJava8;
 
 public interface ManAttr
@@ -48,6 +48,8 @@ public interface ManAttr
   String COMPARE_TO = "compareTo";
   String COMPARE_TO_USING = "compareToUsing";
   String UNARY_MINUS = "unaryMinus";
+  String INC = "inc";
+  String DEC = "dec";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
   {{
     put( Tag.PLUS, "plus" );
@@ -99,6 +101,11 @@ public interface ManAttr
     return (Symtab)ReflectUtil.field( this, "syms" ).get();
   }
 
+  default Object _pkind()
+  {
+    return ReflectUtil.method( this, "pkind" ).invoke();
+  }
+
   default void patchMethodType( JCTree.JCMethodInvocation tree )
   {
     if( tree.meth.type == null )
@@ -122,7 +129,7 @@ public interface ManAttr
     }
   }
 
-  default boolean handleOperatorOverloading( JCBinary tree, Type left, Type right )
+  default boolean handleOperatorOverloading( JCExpression tree, Type left, Type right )
   {
     // Handle operator overloading
     boolean swapped = false;
@@ -157,31 +164,83 @@ public interface ManAttr
     return false;
   }
 
-  default boolean handleNegationOverloading( JCTree.JCUnary tree )
+  default boolean handleUnaryOverloading( JCTree.JCUnary tree )
   {
-    if( tree.getTag() != Tag.NEG )
-    {
-      return false;
-    }
-
     // Attribute arguments
     ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", JCDiagnostic.DiagnosticPosition.class, Type.class );
     ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
-    Type expr = (Type)checkNonVoid.invoke( tree.arg.pos(), attribExpr.invoke( tree.arg, getEnv() ) );
+    Type exprType = tree.getTag().isIncOrDecUnaryOp()
+      ? (Type)attribExpr.invoke( tree.arg, getEnv() )
+      : (Type)checkNonVoid.invoke( tree.arg.pos(), attribExpr.invoke( tree.arg, getEnv() ) );
 
     // Handle operator overloading
-    Symbol.MethodSymbol overloadOperator = ManAttr.resolveNegationMethod( types(), tree.getTag(), expr );
+    Symbol.MethodSymbol overloadOperator = ManAttr.resolveUnaryMethod( types(), tree.getTag(), exprType );
     if( overloadOperator != null )
     {
       overloadOperator = new OverloadOperatorSymbol( overloadOperator, false );
       IDynamicJdk.instance().setOperator( tree, (Symbol.OperatorSymbol)overloadOperator );
       Type owntype = overloadOperator.type.isErroneous()
                      ? overloadOperator.type
-                     : types().memberType( expr, overloadOperator ).getReturnType();
+                     : types().memberType( exprType, overloadOperator ).getReturnType();
       setResult( tree, owntype );
       return true;
     }
     return false;
+  }
+
+  default boolean handleIndexedOverloading( JCTree.JCArrayAccess tree )
+  {
+    boolean handled = true;
+    Type owntype = types().createErrorType(tree.type);
+    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
+    Type indexedType = (Type)attribExpr.invoke( tree.indexed, getEnv() );
+    Type indexType = (Type)attribExpr.invoke( tree.index, getEnv() );
+    if( types().isArray( indexedType ) )
+    {
+      owntype = types().elemtype( indexedType );
+      if( !types().isAssignable( indexType, syms().intType ) )
+      {
+        IDynamicJdk.instance().logError( getLogger(), tree.pos(), "incomparable.types", indexType, syms().intType );
+      }
+      handled = false;
+    }
+    else if( !indexedType.hasTag( ERROR ) )
+    {
+      // Handle index operator overloading
+      Symbol.MethodSymbol indexGetMethod = resolveIndexGetMethod( types(), indexedType, indexType );
+      if( indexGetMethod != null )
+      {
+        owntype = indexGetMethod.type.isErroneous()
+          ? indexGetMethod.type
+          : types().memberType( indexedType, indexGetMethod ).getReturnType();
+      }
+      else
+      {
+        IDynamicJdk.instance().logError( getLogger(), tree.pos(), "array.req.but.found", indexedType );
+        handled = false;
+      }
+    }
+
+    setResult( tree, owntype, "VAR" );
+    return handled;
+  }
+
+  default void ensureIndexedAssignmentIsWritable( JCTree.JCExpression lhs )
+  {
+    if( lhs instanceof JCTree.JCArrayAccess )
+    {
+      // Ensure there is a set() index operator method defined on a[b] in:  a[b] = c, where a[b] is not an array
+
+      JCTree.JCArrayAccess arrayAccess = (JCTree.JCArrayAccess)lhs;
+      if( !types().isArray( arrayAccess.indexed.type ) )
+      {
+        Symbol.MethodSymbol indexSetMethod = ManAttr.resolveIndexSetMethod( types(), arrayAccess.indexed.type, arrayAccess.index.type );
+        if( indexSetMethod == null )
+        {
+          IDynamicJdk.instance().logError( getLogger(), arrayAccess, "array.req.but.found", arrayAccess.indexed.type );
+        }
+      }
+    }
   }
 
   default void visitBindingExpression( JCTree.JCBinary tree )
@@ -220,18 +279,37 @@ public interface ManAttr
   // although this is only called for bonding expressions, so is somewhat infrequent
   default void setResult( JCTree.JCExpression tree, Type owntype )
   {
+    setResult( tree, owntype, "VAL" );
+  }
+  default void setResult( JCTree.JCExpression tree, Type owntype, String valVar )
+  {
     if( isJava8() )
     {
-      Object VAL = ReflectUtil.field( "com.sun.tools.javac.code.Kinds", "VAL" ).getStatic();
+      int VALorVAR = (int)ReflectUtil.field( "com.sun.tools.javac.code.Kinds", valVar ).getStatic();
+      if( valVar.equals( "VAR" ) )
+      {
+        if( ((int)_pkind() & VALorVAR) == 0 )
+        {
+          owntype =  types().capture( owntype );
+        }
+      }
       ReflectUtil.field( this, "result" ).set( ReflectUtil.method( this, "check", JCTree.class, Type.class, int.class, ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" ) )
-        .invoke( tree, owntype, VAL, ReflectUtil.field( this, "resultInfo" ).get() ) );
+        .invoke( tree, owntype, VALorVAR, ReflectUtil.field( this, "resultInfo" ).get() ) );
     }
     else
     {
       Class<?> kindSelectorClass = ReflectUtil.type( "com.sun.tools.javac.code.Kinds$KindSelector" );
       Object VAL = ReflectUtil.field( kindSelectorClass, "VAL" ).getStatic();
+      Object VALorVAR = ReflectUtil.field( kindSelectorClass, valVar ).getStatic();
+      if( valVar.equals( "VAR" ) )
+      {
+        if( !(boolean)ReflectUtil.method( _pkind(), "contains", kindSelectorClass ).invoke( VAL ) )
+        {
+          owntype = types().capture( owntype );
+        }
+      }
       ReflectUtil.field( this, "result" ).set( ReflectUtil.method( this, "check", JCTree.class, Type.class, kindSelectorClass, ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" ) )
-        .invoke( tree, owntype, VAL, ReflectUtil.field( this, "resultInfo" ).get() ) );
+        .invoke( tree, owntype, VALorVAR, ReflectUtil.field( this, "resultInfo" ).get() ) );
     }
   }
 
@@ -268,7 +346,7 @@ public interface ManAttr
     return operands;
   }
 
-  static Symbol.MethodSymbol resolveNegationMethod( Types types, Tag tag, Type expr )
+  static Symbol.MethodSymbol resolveUnaryMethod( Types types, Tag tag, Type expr )
   {
     if( expr instanceof Type.TypeVar )
     {
@@ -280,7 +358,81 @@ public interface ManAttr
       return null;
     }
 
-    return getMethodSymbol( types, expr, null, UNARY_MINUS, (Symbol.ClassSymbol)expr.tsym, 0 );
+    String op;
+    switch( tag )
+    {
+      case NEG:
+        op = UNARY_MINUS;
+        break;
+      case POSTINC:
+      case PREINC:
+        op = INC;
+        break;
+      case POSTDEC:
+      case PREDEC:
+        op = DEC;
+        break;
+      default:
+        return null;
+    }
+    return getMethodSymbol( types, expr, null, op, (Symbol.ClassSymbol)expr.tsym, 0 );
+  }
+
+  static Symbol.MethodSymbol resolveIndexGetMethod( Types types, Type indexedType, Type indexType )
+  {
+    if( indexedType instanceof Type.TypeVar )
+    {
+      indexedType = types.erasure( indexedType );
+    }
+
+    if( !(indexedType.tsym instanceof Symbol.ClassSymbol) )
+    {
+      return null;
+    }
+
+    if( !(indexType.tsym instanceof Symbol.ClassSymbol) )
+    {
+      return null;
+    }
+
+    return getMethodSymbol( types, indexedType, indexType, "get", (Symbol.ClassSymbol)indexedType.tsym, 1 );
+  }
+
+  static Symbol.MethodSymbol resolveIndexSetMethod( Types types, Type indexedType, Type indexType )
+  {
+    if( indexedType instanceof Type.TypeVar )
+    {
+      indexedType = types.erasure( indexedType );
+    }
+
+    if( !(indexedType.tsym instanceof Symbol.ClassSymbol) )
+    {
+      return null;
+    }
+
+    if( !(indexType.tsym instanceof Symbol.ClassSymbol) )
+    {
+      return null;
+    }
+
+    Symbol.MethodSymbol getMethod = getMethodSymbol( types, indexedType, indexType, "get", (Symbol.ClassSymbol)indexedType.tsym, 1 );
+    if( getMethod != null )
+    {
+      Type elemType = getMethod.type.isErroneous()
+        ? getMethod.type
+        : types.memberType( indexedType, getMethod ).getReturnType();
+
+      Symbol.MethodSymbol setMethod = getMethodSymbol( types, indexedType, indexType, "set", (Symbol.ClassSymbol)indexedType.tsym, 2 );
+      if( setMethod != null )
+      {
+        Type param2 = types.memberType( indexedType, setMethod ).getParameterTypes().get( 1 );
+        if( types.isAssignable( elemType, param2 ) || isAssignableWithGenerics( types, elemType, param2 ) )
+        {
+          return setMethod;
+        }
+      }
+    }
+    return null;
   }
 
   static Symbol.MethodSymbol resolveOperatorMethod( Types types, Tag tag, Type left, Type right )
@@ -341,7 +493,8 @@ public interface ManAttr
     return false;
   }
 
-  static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym, int paramCount, BiPredicate<Type, Type> matcher )
+  static Symbol.MethodSymbol getMethodSymbol( Types types, Type left, Type right, String opName, Symbol.ClassSymbol sym,
+                                              int paramCount, BiPredicate<Type, Type> matcher )
   {
     if( sym == null )
     {
@@ -376,7 +529,10 @@ public interface ManAttr
         }
         if( matcher.test( right, parameterizedMethod.getParameterTypes().get( 0 ) ) )
         {
-          return m;
+//          if( !"void".equals( m.getReturnType().tsym.name.toString() ) )
+//          {
+            return m;
+//          }
         }
       }
     }

@@ -37,6 +37,22 @@ public abstract class ManBigDecimalExt implements ComparableUsing<BigDecimal>
   }
 
   /**
+   * Supports unary increment operator {@code ++}
+   */
+  public static BigDecimal inc( @This BigDecimal thiz )
+  {
+    return thiz.add( BigDecimal.ONE );
+  }
+
+  /**
+   * Supports unary decrement operator {@code --}
+   */
+  public static BigDecimal dec( @This BigDecimal thiz )
+  {
+    return thiz.subtract( BigDecimal.ONE );
+  }
+
+  /**
    * Supports binary operator {@code +}
    */
   public static BigDecimal plus( @This BigDecimal thiz, BigDecimal operand )

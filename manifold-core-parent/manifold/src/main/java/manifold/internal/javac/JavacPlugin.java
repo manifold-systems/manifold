@@ -1037,6 +1037,7 @@ public class JavacPlugin implements Plugin, TaskListener
       case PARSE:
       {
         addInputFile( e );
+        processParse( e );
         break;
       }
 
@@ -1108,6 +1109,17 @@ public class JavacPlugin implements Plugin, TaskListener
       }
     }
     _typeProcessor.addTypesToProcess( typesToProcess );
+  }
+
+  private void processParse( TaskEvent e )
+  {
+    for( Tree classDecl : e.getCompilationUnit().getTypeDecls() )
+    {
+      if( classDecl instanceof JCTree.JCClassDecl )
+      {
+        ((JCTree.JCClassDecl)classDecl).accept( new ParseProcessor( this ) );
+      }
+    }
   }
 
   private void insertBootstrap( JCTree.JCClassDecl tree )

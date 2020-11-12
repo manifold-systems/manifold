@@ -601,42 +601,70 @@ Any type can support arithmetic operators by implementing one or more of the fol
 | `a / b`   | `a.div(b)`   |
 | `a % b`   | `a.rem(b)`   |
 
+**Compound assignment**
+
+| Operation | Method           |
+|:----------|:-----------------|
+| `a += b`  | `a = a.plus(b)`  |
+| `a -= b`  | `a = a.minus(b)` |
+| `a *= b`  | `a = a.times(b)` |
+| `a /= b`  | `a = a.div(b)`   |
+| `a %= b`  | `a = a.rem(b)`   |
+
 **Negation**
 
 | Operation | Method           |
 |:----------|:-----------------|
 | `-a`      | `a.unaryMinus()` |
 
-Note operator methods do not belong to a class or interface you implement. Instead you implement them *structurally*
-simply by defining a method with the same signature. Note you can implement several different versions of the same
-method differing by parameter type. 
+**Increment and decrement**
 
-Here's a simple example demonstrating how to implement the `+` operator:
+| Operation | Method           |
+|:----------|:-----------------|
+| `a++`     | `a.inc()`        |
+| `a--`     | `a.dec()`        |
+| `++a`     | `a.inc()`        |
+| `--a`     | `a.dec()`        |
+
+Implementations of `inc()` and `dec()` simply return the result of adding or subtracting `a` and "one". The compiler
+plugin takes care of both assigning the result to `a` and the particulars regarding prefix and postfix operations. For
+instance, `a++` is generated like this:
 ```java
-public class Point {
-  public final int x, y;
-  public Point(int x, int y) {this.x = x; this.y = y;}
-  
-  public Point plus(Point that) {
-    return new Point(x + that.x, y + that.y);
-  }
-}
+var temp = a;
+a = a.inc();
+temp; // result
+```                                                                         
 
-var a = new Point(1, 2);
-var b = new Point(3, 4);
-
-var sum = a + b; // Point(4, 6)
-```
-
-Since operator methods are structural, you can define *multiple* `plus()` methods:
-```java
-public Point plus(int[] coord) {
-  if(coord.length != 2) {
-    throw new IllegalArgumentException();
-  }
-  return new Point(x + coord[0], y + coord[1]);
-}
-```
+>Note, operator methods do not belong to a class or interface you implement. Instead you implement them *structurally*
+>simply by defining a method with the same signature. Note you can implement several different versions of the same
+>method differing by parameter type. 
+>
+>Here's a simple example demonstrating how to implement the `+` operator:
+>```java
+>public class Point {
+>  public final int x, y;
+>  public Point(int x, int y) {this.x = x; this.y = y;}
+>  
+>  public Point plus(Point that) {
+>    return new Point(x + that.x, y + that.y);
+>  }
+>}
+>
+>var a = new Point(1, 2);
+>var b = new Point(3, 4);
+>
+>var sum = a + b; // Point(4, 6)
+>```
+>
+>Since operator methods are structural, you can define *multiple* `plus()` methods:
+>```java
+>public Point plus(int[] coord) {
+>  if(coord.length != 2) {
+>    throw new IllegalArgumentException();
+>  }
+>  return new Point(x + coord[0], y + coord[1]);
+>}
+>```
    
 ## Relational Operators
 
@@ -773,7 +801,30 @@ public EqualityMode equalityMode() {
   return CompareTo;
 }
 ```
+
+## Index Operator
+
+The index operator can be overloaded to provide more concise syntax for ordered or keyed data structures such as `List`,
+`Map`, `CharSequence`, and others. 
  
+| Operation   | Method           |
+|:------------|:-----------------|
+| `a[b]`      | `a.get(b)`       |
+| `a[b] = c`  | `a.set(b, c)`    |
+  
+>Note, Manifold provides convenient extension methods for indexed access to `List`, `Map`, `String`, and other data
+>structures.
+>```java          
+>String name = "Fred";
+>char c = name[0];
+> 
+>List<String> list = ...;
+>String first = list[0];
+>
+>Map<String, String> map = ...;
+>map[key] = value;
+>```                           
+
 ## Unit Operators
 
 Unit or "binding" operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be

@@ -41,6 +41,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Position;
+
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -96,6 +97,7 @@ import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 
 /**
+ *
  */
 public class ExtensionTransformer extends TreeTranslator
 {
@@ -109,13 +111,73 @@ public class ExtensionTransformer extends TreeTranslator
     _tp = typeProcessor;
   }
 
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings( "WeakerAccess" )
   public TypeProcessor getTypeProcessor()
   {
     return _tp;
   }
 
+
+  @Override
+  public void visitIndexed( JCTree.JCArrayAccess tree )
+  {
+    super.visitIndexed( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( _tp.getTypes().isArray( tree.indexed.type ) )
+    {
+      return;
+    }
+
+    // replace with indexedExpr.get(indexExpr)
+
+    Symbol.MethodSymbol operatorMethod = ManAttr.resolveIndexGetMethod( _tp.getTypes(),
+      tree.indexed.type, tree.index.type );
+
+    if( operatorMethod != null )
+    {
+      Tree parent = _tp.getParent( tree );
+      if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCUnary )
+      {
+        switch( ((JCTree.JCUnary)parent).getTag() )
+        {
+          case POSTDEC:
+          case POSTINC:
+          case PREDEC:
+          case PREINC:
+            return;
+        }
+      }
+
+      TreeMaker make = _tp.getTreeMaker();
+
+      JCTree.JCMethodInvocation methodCall;
+      JCExpression receiver = tree.indexed;
+      JCExpression arg = tree.index;
+      arg = boxUnboxIfNeeded( _tp.getTypes(), _tp.getTreeMaker(),
+        Names.instance( _tp.getContext() ), arg, operatorMethod.params().get( 0 ).type );
+      methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
+      methodCall = configMethod( tree, operatorMethod, methodCall );
+
+      result = methodCall;
+    }
+  }
+
   private int tempVarIndex = 0;
+
   public void visitBinary( JCTree.JCBinary tree )
   {
     super.visitBinary( tree );
@@ -204,6 +266,7 @@ public class ExtensionTransformer extends TreeTranslator
             methodCall = make.Apply( List.nil(),
               make.Select( receiver, operatorMethod ),
               List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
+            methodCall = configMethod( tree, operatorMethod, methodCall );
 
             JCTree.JCConditional elsePart2 = make.Conditional( elsePart, make.Literal( tree.getTag() == JCTree.Tag.NE ), methodCall );
             elsePart2.type = symbols.booleanType;
@@ -220,8 +283,6 @@ public class ExtensionTransformer extends TreeTranslator
               letExpr.type = expr.type;
               expr = letExpr;
             }
-
-            methodCall = configMethod( tree, operatorMethod, methodCall );
           }
           else if( operatorMethod.name.toString().equals( "compareTo" ) )
           {
@@ -230,7 +291,7 @@ public class ExtensionTransformer extends TreeTranslator
             methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
             methodCall.type = symbols.intType;
             methodCall.pos = tree.pos;
-            
+
             JCTree.JCLiteral zeroLiteral = make.Literal( INT, 0 );
             zeroLiteral.type = symbols.intType;
 
@@ -265,13 +326,22 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   // Create a temporary variable and corresonding identifier to avoid cop
-  private JCTree[] tempify( JCTree.JCBinary tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
+  private JCTree[] tempify( JCTree.JCExpression tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
+  {
+    return tempify( false, tree, make, expr, ctx, owner, varName );
+  }
+
+  private JCTree[] tempify( boolean force, JCTree.JCExpression tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
   {
     switch( expr.getTag() )
     {
       case LITERAL:
       case IDENT:
-        return null;
+        if( !force )
+        {
+          return null;
+        }
+        // fall through...
 
       default:
         JCTree.JCVariableDecl tempVar = make.VarDef( make.Modifiers( FINAL | SYNTHETIC ),
@@ -282,22 +352,17 @@ public class ExtensionTransformer extends TreeTranslator
         JCExpression ident = make.Ident( tempVar );
         ident.type = expr.type;
         ident.pos = tree.pos;
-        return new JCTree[] {tempVar, ident};
+        return new JCTree[]{tempVar, ident};
     }
   }
 
-  private JCTree.JCMethodInvocation configMethod( JCTree.JCBinary tree, Symbol.MethodSymbol operatorMethod, JCTree.JCMethodInvocation methodCall )
+  private JCTree.JCMethodInvocation configMethod( JCTree.JCExpression tree, Symbol.MethodSymbol operatorMethod, JCTree.JCMethodInvocation methodCall )
   {
     methodCall.setPos( tree.pos );
     methodCall.type = operatorMethod.getReturnType();
 
     // If methodCall is an extension method, rewrite it
-    Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
-    if( extMethod != null )
-    {
-      // Replace with extension method call
-      methodCall = replaceExtCall( methodCall, extMethod );
-    }
+    methodCall = maybeReplaceWithExtensionMethod( methodCall );
 
     // Concrete type set in attr
     methodCall.type = tree.type;
@@ -306,7 +371,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private String relOpString( JCTree.Tag tag )
   {
-    switch(  tag )
+    switch( tag )
     {
       case LT:
         return "<";
@@ -336,15 +401,15 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     if( tree.lhs instanceof JCTree.JCLiteral &&
-        (tree.lhs.getKind() == Tree.Kind.FLOAT_LITERAL || tree.lhs.getKind() == Tree.Kind.DOUBLE_LITERAL) )
+      (tree.lhs.getKind() == Tree.Kind.FLOAT_LITERAL || tree.lhs.getKind() == Tree.Kind.DOUBLE_LITERAL) )
     {
       Type rhsType = tree.rhs.type;
       Symbol.MethodSymbol postfixBinding_string = ManAttr.getMethodSymbol(
         _tp.getTypes(), rhsType, _tp.getSymtab().stringType, operatorMethodName, (Symbol.ClassSymbol)rhsType.tsym, 1 );
 
       if( postfixBinding_string != null &&
-          postfixBinding_string.getParameters().get( 0 ).type.tsym == _tp.getSymtab().stringType.tsym &&
-          postfixBinding_string.getReturnType().equals( operatorMethod.getReturnType() ) )
+        postfixBinding_string.getParameters().get( 0 ).type.tsym == _tp.getSymtab().stringType.tsym &&
+        postfixBinding_string.getReturnType().equals( operatorMethod.getReturnType() ) )
       {
         // since the source may be preprocessed we attempt to get it in its preprocessed form
         CharSequence source = ManParserFactory.getSource( _tp.getCompilationUnit().getSourceFile() );
@@ -353,7 +418,7 @@ public class ExtensionTransformer extends TreeTranslator
         String token = source.subSequence( start, end ).toString();
         if( token.endsWith( "d" ) || token.endsWith( "f" ) )
         {
-          token = token.substring( 0, token.length()-1 );
+          token = token.substring( 0, token.length() - 1 );
         }
         JCTree.JCLiteral temp = (JCTree.JCLiteral)tree.lhs;
         tree.lhs = _tp.getTreeMaker().Literal( token );
@@ -386,62 +451,91 @@ public class ExtensionTransformer extends TreeTranslator
     return opEnumConst;
   }
 
-  /** Expand a boxing or unboxing conversion if needed. */
-  <T extends JCTree> T boxUnboxIfNeeded( Types types, TreeMaker make, Names names, T tree, Type type) {
+  /**
+   * Expand a boxing or unboxing conversion if needed.
+   */
+  <T extends JCTree> T boxUnboxIfNeeded( Types types, TreeMaker make, Names names, T tree, Type type )
+  {
     boolean havePrimitive = tree.type.isPrimitive();
-    if (havePrimitive == type.isPrimitive())
+    if( havePrimitive == type.isPrimitive() )
+    {
       return tree;
-    if (havePrimitive) {
-      Type unboxedTarget = types.unboxedType(type);
-      if (!unboxedTarget.hasTag(NONE)) {
-        if (!types.isSubtype(tree.type, unboxedTarget)) //e.g. Character c = 89;
-          tree.type = unboxedTarget.constType(tree.type.constValue());
-        return (T)boxPrimitive(types, make, names, (JCExpression)tree, type);
-      } else {
-        tree = (T)boxPrimitive(types, make, names, (JCExpression)tree);
+    }
+    if( havePrimitive )
+    {
+      Type unboxedTarget = types.unboxedType( type );
+      if( !unboxedTarget.hasTag( NONE ) )
+      {
+        if( !types.isSubtype( tree.type, unboxedTarget ) ) //e.g. Character c = 89;
+        {
+          tree.type = unboxedTarget.constType( tree.type.constValue() );
+        }
+        return (T)boxPrimitive( types, make, names, (JCExpression)tree, type );
       }
-    } else {
-      tree = (T)unbox(types, make, names, (JCExpression)tree, type);
+      else
+      {
+        tree = (T)boxPrimitive( types, make, names, (JCExpression)tree );
+      }
+    }
+    else
+    {
+      tree = (T)unbox( types, make, names, (JCExpression)tree, type );
     }
     return tree;
   }
 
-  /** Box up a single primitive expression. */
-  private JCExpression boxPrimitive( Types types, TreeMaker make, Names names, JCExpression tree ) {
-    return boxPrimitive(types, make, names, tree, types.boxedClass(tree.type).type);
+  /**
+   * Box up a single primitive expression.
+   */
+  private JCExpression boxPrimitive( Types types, TreeMaker make, Names names, JCExpression tree )
+  {
+    return boxPrimitive( types, make, names, tree, types.boxedClass( tree.type ).type );
   }
 
-  /** Box up a single primitive expression. */
-  private JCExpression boxPrimitive( Types types, TreeMaker make, Names names, JCExpression tree, Type box ) {
-    make.at(tree.pos());
-    Symbol valueOfSym = resolveMethod(tree.pos(),
+  /**
+   * Box up a single primitive expression.
+   */
+  private JCExpression boxPrimitive( Types types, TreeMaker make, Names names, JCExpression tree, Type box )
+  {
+    make.at( tree.pos() );
+    Symbol valueOfSym = resolveMethod( tree.pos(),
       names.valueOf,
       box,
       List.<Type>nil()
-        .prepend(tree.type));
-    return make.App(make.QualIdent(valueOfSym), List.of(tree));
+        .prepend( tree.type ) );
+    return make.App( make.QualIdent( valueOfSym ), List.of( tree ) );
   }
 
-  /** Unbox an object to a primitive value. */
-  private JCExpression unbox( Types types, TreeMaker make, Names names, JCExpression tree, Type primitive ) {
-    Type unboxedType = types.unboxedType(tree.type);
-    if (unboxedType.hasTag(NONE)) {
+  /**
+   * Unbox an object to a primitive value.
+   */
+  private JCExpression unbox( Types types, TreeMaker make, Names names, JCExpression tree, Type primitive )
+  {
+    Type unboxedType = types.unboxedType( tree.type );
+    if( unboxedType.hasTag( NONE ) )
+    {
       unboxedType = primitive;
-      if (!unboxedType.isPrimitive())
-        throw new AssertionError(unboxedType);
-      make.at(tree.pos());
-      tree = make.TypeCast(types.boxedClass(unboxedType).type, tree);
-    } else {
-      // There must be a conversion from unboxedType to primitive.
-      if (!types.isSubtype(unboxedType, primitive))
-        throw new AssertionError(tree);
+      if( !unboxedType.isPrimitive() )
+      {
+        throw new AssertionError( unboxedType );
+      }
+      make.at( tree.pos() );
+      tree = make.TypeCast( types.boxedClass( unboxedType ).type, tree );
     }
-    make.at(tree.pos());
-    Symbol valueSym = resolveMethod(tree.pos(),
-      unboxedType.tsym.name.append(names.Value), // x.intValue()
+    else
+    {
+      // There must be a conversion from unboxedType to primitive.
+      if( !types.isSubtype( unboxedType, primitive ) )
+      {
+        throw new AssertionError( tree );
+      }
+    }
+    make.at( tree.pos() );
+    Symbol valueSym = resolveMethod( tree.pos(),
+      unboxedType.tsym.name.append( names.Value ), // x.intValue()
       tree.type,
-      List.<Type>nil());
-    return make.App(make.Select(tree, valueSym));
+      List.<Type>nil() );
+    return make.App( make.Select( tree, valueSym ) );
   }
 
   /**
@@ -499,7 +593,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     tree.type = eraseStructureType( tree.type );
     ArrayList<Type> types = new ArrayList<>();
-    for( Type target: IDynamicJdk.instance().getTargets( tree ) )
+    for( Type target : IDynamicJdk.instance().getTargets( tree ) )
     {
       types.add( eraseStructureType( target ) );
     }
@@ -564,6 +658,11 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
+    if( handleIndexedAssignment( tree ) )
+    {
+      return;
+    }
+
     if( isJailbreakReceiver( tree ) )
     {
       result = replaceWithReflection( tree );
@@ -572,6 +671,73 @@ public class ExtensionTransformer extends TreeTranslator
     {
       result = tree;
     }
+  }
+
+  private boolean handleIndexedAssignment( JCTree.JCAssign tree )
+  {
+    if( !(tree.lhs instanceof JCTree.JCArrayAccess) )
+    {
+      return false;
+    }
+
+    JCTree.JCArrayAccess lhs = (JCTree.JCArrayAccess)tree.lhs;
+    if( _tp.getTypes().isArray( lhs.indexed.type ) )
+    {
+      return false;
+    }
+
+    // replace  foo[bar] = baz  with  foo.set(bar, baz)
+
+    Symbol.MethodSymbol operatorMethod = ManAttr.resolveIndexSetMethod( _tp.getTypes(),
+      lhs.indexed.type, lhs.index.type );
+
+    Context ctx = JavacPlugin.instance().getContext();
+    if( operatorMethod != null )
+    {
+      TreeMaker make = _tp.getTreeMaker();
+
+      tempVarIndex++;
+
+      List<JCTree.JCVariableDecl> tempVars = List.nil();
+      JCExpression rhs = tree.rhs;
+      JCTree[] rhsTemp = tempify( tree, make, rhs, ctx, getEnclosingSymbol( tree, ctx ), "setRhsTempVar" + tempVarIndex );
+      if( rhsTemp != null )
+      {
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)rhsTemp[0] );
+        rhs = (JCExpression)rhsTemp[1];
+      }
+
+      JCTree.JCMethodInvocation setCall;
+      JCExpression receiver = lhs.indexed;
+      JCExpression arg = lhs.index;
+      Type parameterizedMethod = _tp.getTypes().memberType( lhs.indexed.type, operatorMethod );
+      while( parameterizedMethod instanceof Type.ForAll )
+      {
+        parameterizedMethod = parameterizedMethod.asMethodType();
+      }
+
+      arg = boxUnboxIfNeeded( _tp.getTypes(), _tp.getTreeMaker(),
+        Names.instance( _tp.getContext() ), arg, parameterizedMethod.getParameterTypes().get( 0 ) );
+      setCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg, rhs ) );
+      setCall = configMethod( lhs, operatorMethod, setCall );
+
+      JCTree[] setCallTemp = tempify( true, tree, make, setCall, ctx, getEnclosingSymbol( tree, ctx ), "$setCallTempVar" + tempVarIndex );
+      //noinspection ConstantConditions
+      tempVars = tempVars.append( (JCTree.JCVariableDecl)setCallTemp[0] );
+
+      // Need let expr so that we can return the RHS value as required by java assignment op.
+      // Note, the set() method can return whatever it wants, it is ignored here,
+      // this allows us to support eg. List.set(int, T) where this method returns the previous value
+      JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
+        List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
+        .invoke( tempVars, rhs );
+      letExpr.type = lhs.type;
+
+      result = letExpr;
+      return true;
+    }
+
+    return false;
   }
 
   @Override
@@ -612,54 +778,303 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     Symbol op = IDynamicJdk.instance().getOperator( tree );
-    if( op instanceof OverloadOperatorSymbol ) // handle negation overload
+    boolean isOverload = op instanceof OverloadOperatorSymbol;
+    TreeMaker make = _tp.getTreeMaker();
+
+    // Handle operator overload expressions
+    Symbol.MethodSymbol operatorMethod = (Symbol.MethodSymbol)op;
+    while( operatorMethod instanceof OverloadOperatorSymbol )
     {
-      TreeMaker make = _tp.getTreeMaker();
-
-      // Handle operator overload expressions
-
-      Symbol.MethodSymbol operatorMethod = (Symbol.MethodSymbol)op;
-      while( operatorMethod instanceof OverloadOperatorSymbol )
-      {
-        operatorMethod = ((OverloadOperatorSymbol)operatorMethod).getMethod();
-      }
-
-      if( operatorMethod != null )
-      {
-        JCTree.JCMethodInvocation methodCall;
-        JCExpression receiver = tree.getExpression();
-        methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.nil() );
-        methodCall.setPos( tree.pos );
-        methodCall.type = operatorMethod.getReturnType();
-
-        // If methodCall is an extension method, rewrite it accordingly
-        Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
-        if( extMethod != null )
-        {
-          // Replace with extension method call
-          methodCall = replaceExtCall( methodCall, extMethod );
-        }
-
-        result = methodCall;
-      }
+      operatorMethod = ((OverloadOperatorSymbol)operatorMethod).getMethod();
     }
-    else if( isJailbreakReceiver( tree ) )
+
+    if( isOverload && operatorMethod != null && tree.getTag() == JCTree.Tag.NEG )
+    {
+      genUnaryMinus( tree, make, operatorMethod );
+      return;
+    }
+
+    if( (isOverload && operatorMethod != null) ||
+        (tree.arg instanceof JCTree.JCArrayAccess &&
+          !_tp.getTypes().isArray( ((JCTree.JCArrayAccess)tree.arg).indexed.type )) )
+    {
+      switch( tree.getTag() )
+      {
+        case PREINC:
+        case PREDEC:
+        case POSTINC:
+        case POSTDEC:
+          genUnaryIncDec( tree, make, isOverload ? operatorMethod : null );
+          break;
+        default:
+          throw new IllegalStateException();
+      }
+      return;
+    }
+
+    if( isJailbreakReceiver( tree ) )
     {
       Tree.Kind kind = tree.getKind();
       if( kind == Tree.Kind.POSTFIX_INCREMENT || kind == Tree.Kind.POSTFIX_DECREMENT ||
-          kind == Tree.Kind.PREFIX_INCREMENT || kind == Tree.Kind.PREFIX_DECREMENT )
+        kind == Tree.Kind.PREFIX_INCREMENT || kind == Tree.Kind.PREFIX_DECREMENT )
       {
         // ++, -- operators not supported with jailbreak access to fields, only direct assignment
         _tp.report( tree, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_INCREMENT_OP_NOT_ALLOWED_REFLECTION.get() );
         Types types = Types.instance( ((BasicJavacTask)_tp.getJavacTask()).getContext() );
         tree.type = types.createErrorType( tree.type );
       }
-      result = tree;
+    }
+
+    result = tree;
+  }
+
+  // indexed[index]--
+  //
+  //var tempIndexed = indexed;
+  //var tempIndex = index;
+  //var tempReturn = tempIndexed[tempIndex]  or  tempIndexed.get(tempIndex)
+  //methodCall = tempReturn.dec()
+  //var tempAssign = tempIndexed[tempIndex] = methodCall  or  tempIndexed.set(tempIndex, methodCall)
+  //
+  //tempReturn
+  private void genUnaryIncDec( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
+  {
+    boolean isPost = tree.getTag() == JCTree.Tag.POSTDEC || tree.getTag() == JCTree.Tag.POSTINC;
+
+    tempVarIndex++;
+
+    List<JCTree.JCVariableDecl> tempVars = List.nil();
+    JCExpression receiver = tree.arg;
+    Context ctx = JavacPlugin.instance().getContext();
+    JCExpression answer;
+
+    if( receiver instanceof JCTree.JCArrayAccess )
+    {
+      // the LHS is indexed eg. indexed[index]--
+      // note indexed[index] could be either an array or an expression using indexed operator overloading
+
+      // store the index in a temp var
+      JCExpression index = ((JCTree.JCArrayAccess)receiver).index;
+      JCTree[] indexTemp = tempify( tree, make, index, ctx, getEnclosingSymbol( tree, ctx ), "$indexExprTemp" + tempVarIndex );
+      if( indexTemp != null )
+      {
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)indexTemp[0] );
+        index = (JCExpression)indexTemp[1];
+      }
+
+      // store indexed in a temp var
+      JCTree[] indexedTemp = tempify( true, tree, make, ((JCTree.JCArrayAccess)receiver).indexed, ctx, getEnclosingSymbol( tree, ctx ), "$indexedExprTemp" + tempVarIndex );
+      tempVars = tempVars.append( (JCTree.JCVariableDecl)indexedTemp[0] );
+      receiver = (JCExpression)indexedTemp[1];
+
+      // store value of indexed[index] in a temp var
+      Symbol.MethodSymbol indexedGetMethod = ManAttr.resolveIndexGetMethod( _tp.getTypes(), receiver.type, index.type );
+      if( indexedGetMethod != null )
+      {
+        // indexed[index] uses indexed operator overloading (get/set by index)
+
+        JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( receiver, indexedGetMethod ), List.of( index ) );
+        methodCall.setPos( tree.pos );
+        methodCall.type = tree.arg.type;
+        methodCall = maybeReplaceWithExtensionMethod( methodCall );
+
+        JCTree[] oldValTemp = tempify( true, tree, make, methodCall, ctx, getEnclosingSymbol( tree, ctx ), "$oldValueTemp" + tempVarIndex );
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)oldValTemp[0] );
+        answer = (JCExpression)oldValTemp[1];
+      }
+      else
+      {
+        // indexed[index] is a normal array access expression
+
+        JCTree.JCArrayAccess arrayAccess = make.Indexed( receiver, index );
+        arrayAccess.setPos( tree.pos );
+        arrayAccess.type = tree.arg.type;
+
+        JCTree[] oldValTemp = tempify( true, tree, make, arrayAccess, ctx, getEnclosingSymbol( tree, ctx ), "$oldValueTemp" + tempVarIndex );
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)oldValTemp[0] );
+        answer = (JCExpression)oldValTemp[1];
+      }
+
+      // make the expression for the incremented/decremented value.
+      // this is either the inc/dec call, which may be a provided inc/dec operator overload,
+      //    or
+      // if indexed[index] uses indexed operator overloading and evaluates to a primitive type,
+      // this is a binary expression "indexed[index] + 1"
+      JCExpression incDecValue = makeUnaryIncDecCall( tree, make, operatorMethod, answer );
+
+      // assign the incremented/decremented value to the indexed[index]
+      Symbol.MethodSymbol indexedSetMethod = ManAttr.resolveIndexSetMethod( _tp.getTypes(), receiver.type, index.type );
+      if( indexedSetMethod != null )
+      {
+        // incDecValue = indexed.set(index, incDecValue)
+
+        JCTree[] incDecTempValue = tempify( true, tree, make, incDecValue, ctx, getEnclosingSymbol( tree, ctx ), "$assignExprTemp2" + tempVarIndex );
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)incDecTempValue[0] );
+        incDecValue = (JCExpression)incDecTempValue[1];
+
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( receiver, indexedSetMethod ), List.of( index, incDecValue ) );
+        setCall.setPos( tree.pos );
+        setCall.type = tree.arg.type;
+
+        // If methodCall is an extension method, rewrite it accordingly
+        setCall = maybeReplaceWithExtensionMethod( setCall );
+        if( !isPost )
+        {
+          answer = incDecValue;
+        }
+
+        incDecValue = setCall;
+      }
+      else
+      {
+        // indexed[index] = incDecValue
+
+        JCTree.JCArrayAccess arrayAccess = make.Indexed( receiver, index );
+        arrayAccess.setPos( tree.pos );
+        arrayAccess.type = tree.arg.type;
+
+        JCTree.JCAssign assign = make.Assign( arrayAccess, incDecValue );
+        assign.type = arrayAccess.type;
+        assign.setPos( tree.pos );
+        JCTree[] assignTempVar = tempify( true, tree, make, assign, ctx, getEnclosingSymbol( tree, ctx ), "$assignExprTemp2" + tempVarIndex );
+        tempVars = tempVars.append( (JCTree.JCVariableDecl)assignTempVar[0] );
+        if( !isPost )
+        {
+          answer = (JCExpression)assignTempVar[1];
+        }
+
+        incDecValue = assign;
+      }
+
+      // use a temp var to evaluate the assignment in a compound expression
+      JCTree[] assignTempVar = tempify( true, tree, make, incDecValue, ctx, getEnclosingSymbol( tree, ctx ), "$assignExprTemp" + tempVarIndex );
+      tempVars = tempVars.append( (JCTree.JCVariableDecl)assignTempVar[0] );
     }
     else
     {
-      result = tree;
+      // not an array (not indexed)
+
+      JCTree[] oldValTemp = tempify( true, tree, make, receiver, ctx, getEnclosingSymbol( tree, ctx ), "$oldValueTemp" + tempVarIndex );
+      tempVars = tempVars.append( (JCTree.JCVariableDecl)oldValTemp[0] );
+      answer = (JCExpression)oldValTemp[1];
+
+      JCTree.JCExpression methodCall = makeUnaryIncDecCall( tree, make, operatorMethod, answer );
+
+      JCTree.JCAssign assign = make.Assign( receiver, methodCall );
+      assign.type = answer.type;
+      assign.setPos( tree.pos );
+      JCTree[] assignTempVar = tempify( true, tree, make, assign, ctx, getEnclosingSymbol( tree, ctx ), "$assignExprTemp" + tempVarIndex );
+      tempVars = tempVars.append( (JCTree.JCVariableDecl)assignTempVar[0] );
+      if( !isPost )
+      {
+        answer = (JCExpression)assignTempVar[1];
+      }
     }
+
+    // note, the "let" expression provides the following needed features:
+    // - ensures we don't compile an expression multiple times, instead the expressions are initializers of the vars
+    // - a way to have a compound expression, for instance "temp = a = a.ref" lets us perform the assignment as an expr
+    // - handle postfix inc/dec value where the value of the postfix expr is the lhs beforehand
+    JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
+      List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
+      .invoke( tempVars, answer );
+    letExpr.type = tree.arg.type;
+
+    result = letExpr;
+  }
+
+  private JCTree.JCMethodInvocation maybeReplaceWithExtensionMethod( JCTree.JCMethodInvocation methodCall )
+  {
+    // If methodCall is an extension method, rewrite it accordingly
+    Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
+    if( extMethod != null )
+    {
+      // Replace with extension method call
+      methodCall = replaceExtCall( methodCall, extMethod );
+    }
+    return methodCall;
+  }
+
+  private JCTree.JCExpression makeUnaryIncDecCall( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod, JCExpression operand )
+  {
+    if( operatorMethod == null )
+    {
+      Type unboxedType = _tp.getTypes().unboxedType( operand.type );
+      if( unboxedType != null && !unboxedType.hasTag( NONE ) )
+      {
+        operand = unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( JavacPlugin.instance().getContext() ), operand, unboxedType );
+      }
+
+      //
+      // the only way operatorMethod can be null is when the inc/dec operand is indexed, but not an array and the indexed elems are primitive
+      JCTree.JCExpression one = make.Literal( 1 );
+      one.pos = tree.pos;
+      one = make.TypeCast( operand.type, one );
+      one.pos = tree.pos;
+      JCTree.JCBinary binary = make.Binary(
+        tree.getTag() == JCTree.Tag.PREINC || tree.getTag() == JCTree.Tag.POSTINC
+        ? JCTree.Tag.PLUS
+        : JCTree.Tag.MINUS, operand, one );
+      binary.pos = tree.pos;
+      binary.type = operand.type;
+      Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
+      env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
+      env.enclClass = getEnclosingClass( tree );
+      binary.operator = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( binary.getTag() == JCTree.Tag.PLUS ? "+" : "-" ), _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      return binary;
+
+      // maybe unbox here?
+    }
+    else
+    {
+      JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( operand, operatorMethod ), List.nil() );
+      methodCall.setPos( tree.pos );
+      methodCall.type = operatorMethod.getReturnType();
+
+      // If methodCall is an extension method, rewrite it accordingly
+      methodCall = maybeReplaceWithExtensionMethod( methodCall );
+      return methodCall;
+    }
+  }
+
+  // --indexed[index]
+  //
+  //var tempIndexed = indexed;
+  //var tempIndex = index;
+  //var tempReturn = tempIndexed[tempIndex]  or  tempIndexed.get(tempIndex)
+  //methodCall = tempReturn.dec()
+  //var tempAssign = tempIndexed[tempIndex] = methodCall  or  tempIndexed.set(tempIndex, methodCall)
+  //
+  //tempReturn
+  private void genUnaryPreIncDec( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
+  {
+    JCTree.JCMethodInvocation methodCall;
+    methodCall = make.Apply( List.nil(), make.Select( tree.arg, operatorMethod ), List.nil() );
+    methodCall.setPos( tree.pos );
+    methodCall.type = operatorMethod.getReturnType();
+
+    // If methodCall is an extension method, rewrite it accordingly
+    methodCall = maybeReplaceWithExtensionMethod( methodCall );
+
+    JCTree.JCAssign assign = make.Assign( tree.arg, methodCall );
+    assign.type = tree.arg.type;
+    assign.setPos( tree.pos );
+
+    result = assign;
+  }
+
+  public void genUnaryMinus( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
+  {
+    JCTree.JCMethodInvocation methodCall;
+    JCExpression receiver = tree.getExpression();
+    methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.nil() );
+    methodCall.setPos( tree.pos );
+    methodCall.type = operatorMethod.getReturnType();
+
+    // If methodCall is an extension method, rewrite it accordingly
+    methodCall = maybeReplaceWithExtensionMethod( methodCall );
+
+    result = methodCall;
   }
 
   @Override
@@ -752,7 +1167,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     String literal = (String)tree.getValue();
     if( !literal.contains( FragmentProcessor.FRAGMENT_START ) ||
-        !literal.contains( FragmentProcessor.FRAGMENT_END ) )
+      !literal.contains( FragmentProcessor.FRAGMENT_END ) )
     {
       return tree;
     }
@@ -765,13 +1180,13 @@ public class ExtensionTransformer extends TreeTranslator
     FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
       tree.pos().getStartPosition(), chars.toString(),
       chars.length() > 3 && chars.charAt( 1 ) == '"'
-      ? TEXT_BLOCK_LITERAL
-      : DOUBLE_QUOTE_LITERAL );
+        ? TEXT_BLOCK_LITERAL
+        : DOUBLE_QUOTE_LITERAL );
     if( fragment != null )
     {
       String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();
       Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fragClass );
-      for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+      for( Attribute.Compound annotation : fragSym.getAnnotationMirrors() )
       {
         if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
         {
@@ -792,7 +1207,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     String methodName = null;
     String type = null;
-    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair : attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
       if( argName.toString().equals( "methodName" ) )
@@ -868,8 +1283,8 @@ public class ExtensionTransformer extends TreeTranslator
     eraseGenericStructuralVarargs( tree );
 
     if( _tp.isGenerate() &&
-        // handle compiler-generated call to iterator(), sometimes a structural interface is involved here (lists in JSON)
-        !isStructuralIteratorCall( tree ) )
+      // handle compiler-generated call to iterator(), sometimes a structural interface is involved here (lists in JSON)
+      !isStructuralIteratorCall( tree ) )
     {
       // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
       return;
@@ -900,8 +1315,8 @@ public class ExtensionTransformer extends TreeTranslator
   private boolean isStructuralIteratorCall( JCTree.JCMethodInvocation tree )
   {
     return tree.meth instanceof JCTree.JCFieldAccess &&
-           ((JCTree.JCFieldAccess)tree.meth).sym.name.toString().equals( "iterator" ) &&
-           isStructuralMethod( tree );
+      ((JCTree.JCFieldAccess)tree.meth).sym.name.toString().equals( "iterator" ) &&
+      isStructuralMethod( tree );
   }
 
   @Override
@@ -941,7 +1356,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     if( sym instanceof Symbol.MethodSymbol )
     {
-      for( Attribute.Compound annotation: sym.getAnnotationMirrors() )
+      for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
       {
         if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
         {
@@ -952,7 +1367,7 @@ public class ExtensionTransformer extends TreeTranslator
     return false;
   }
 
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings( "WeakerAccess" )
   public static boolean isJailbreakReceiver( JCTree tree )
   {
     if( tree instanceof JCTree.JCMethodInvocation )
@@ -1007,7 +1422,7 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   // called reflectively from manifold core
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings( "WeakerAccess" )
   public static boolean isJailbreakReceiver( JCTree.JCFieldAccess fieldAccess )
   {
     Symbol sym = null;
@@ -1032,7 +1447,7 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   // Called reflectively from manifold core
-  @SuppressWarnings("WeakerAccess")
+  @SuppressWarnings( "WeakerAccess" )
   public static boolean isJailbreakSymbol( Symbol sym )
   {
     if( sym == null )
@@ -1126,8 +1541,8 @@ public class ExtensionTransformer extends TreeTranslator
   private boolean isDeclaringClassOrExtension( JCTree annotated, String fqn, JCTree.JCClassDecl enclosingClass )
   {
     if( enclosingClass.sym.getQualifiedName().toString().equals( fqn ) ||
-        _tp.getTypes().isAssignable( IDynamicJdk.instance().getTypeElement(
-          _tp.getContext(), _tp.getCompilationUnit(), fqn ).asType(), enclosingClass.sym.type ) )
+      _tp.getTypes().isAssignable( IDynamicJdk.instance().getTypeElement(
+        _tp.getContext(), _tp.getCompilationUnit(), fqn ).asType(), enclosingClass.sym.type ) )
     {
       return true;
     }
@@ -1146,7 +1561,7 @@ public class ExtensionTransformer extends TreeTranslator
         if( declMethod != null )
         {
           List<JCTree.JCVariableDecl> parameters = declMethod.getParameters();
-          for( JCTree.JCVariableDecl param: parameters )
+          for( JCTree.JCVariableDecl param : parameters )
           {
             if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
             {
@@ -1192,7 +1607,7 @@ public class ExtensionTransformer extends TreeTranslator
       // @Self allowed only on return type and parameters of an instance method
       return !((JCTree.JCMethodDecl)parent).getModifiers()
         .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
-             isExtensionClass( getEnclosingClass( parent ) );
+        isExtensionClass( getEnclosingClass( parent ) );
     }
 
     if( parent instanceof JCTree.JCVariableDecl )
@@ -1203,7 +1618,7 @@ public class ExtensionTransformer extends TreeTranslator
         // @Self allowed only on class var, not local var
         return !((JCTree.JCVariableDecl)parent).getModifiers()
           .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
-               isExtensionClass( getEnclosingClass( parent ) );
+          isExtensionClass( getEnclosingClass( parent ) );
       }
     }
     return isSelfInMethodDeclOrFieldDecl( parent, anno );
@@ -1226,7 +1641,7 @@ public class ExtensionTransformer extends TreeTranslator
   private void precompileClasses( JCTree.JCClassDecl tree )
   {
     Map<String, Set<String>> typeNames = new HashMap<>();
-    for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
+    for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
     {
       if( anno.getAnnotationType().type.toString().equals( Precompile.class.getCanonicalName() ) )
       {
@@ -1251,7 +1666,7 @@ public class ExtensionTransformer extends TreeTranslator
     String typeManifoldClassName = null;
     String regex = ".*";
     String ext = "*";
-    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair : attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
       switch( argName.toString() )
@@ -1284,28 +1699,28 @@ public class ExtensionTransformer extends TreeTranslator
       _tp.getHost().getSingleModule().getTypeManifolds().stream()
         .filter( tm -> tm.getContributorKind() != ContributorKind.Supplemental )
         .forEach( tm ->
+        {
+          if( all || tm.handlesFileExtension( ext ) )
           {
-            if( all || tm.handlesFileExtension( ext ) )
-            {
-              String classname = tm.getClass().getTypeName();
-              Set<String> regexes = typeNames.computeIfAbsent( classname, e -> new HashSet<>() );
-              regexes.add( regex );
-            }
-          } );
+            String classname = tm.getClass().getTypeName();
+            Set<String> regexes = typeNames.computeIfAbsent( classname, e -> new HashSet<>() );
+            regexes.add( regex );
+          }
+        } );
     }
   }
 
   private void precompile( Map<String, Set<String>> typeNames )
   {
-    for( ITypeManifold tm: _tp.getHost().getSingleModule().getTypeManifolds() )
+    for( ITypeManifold tm : _tp.getHost().getSingleModule().getTypeManifolds() )
     {
-      for( Map.Entry<String, Set<String>> entry: typeNames.entrySet() )
+      for( Map.Entry<String, Set<String>> entry : typeNames.entrySet() )
       {
         String typeManifoldClassName = entry.getKey();
         if( tm.getClass().getName().equals( typeManifoldClassName ) )
         {
           Collection<String> namesToPrecompile = computeNamesToPrecompile( tm.getAllTypeNames(), entry.getValue() );
-          for( String fqn: namesToPrecompile )
+          for( String fqn : namesToPrecompile )
           {
             // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
             // the type will be compiled to disk.
@@ -1320,7 +1735,7 @@ public class ExtensionTransformer extends TreeTranslator
   private Collection<String> computeNamesToPrecompile( Collection<String> allTypeNames, Set<String> regexes )
   {
     Set<String> matchingTypes = new HashSet<>();
-    for( String fqn: allTypeNames )
+    for( String fqn : allTypeNames )
     {
       if( regexes.stream().anyMatch( fqn::matches ) )
       {
@@ -1356,7 +1771,7 @@ public class ExtensionTransformer extends TreeTranslator
       // compilation is done in incrementalCompile().
 
       Set<Object> drivers = new HashSet<>();
-      for( JCTree.JCAnnotation anno: tree.getModifiers().getAnnotations() )
+      for( JCTree.JCAnnotation anno : tree.getModifiers().getAnnotations() )
       {
         if( anno.getAnnotationType().type.toString().equals( IncrementalCompile.class.getCanonicalName() ) )
         {
@@ -1385,7 +1800,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     String fqnDriver = null;
     Integer driverId = null;
-    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair : attribute.values )
     {
       Name argName = pair.fst.getSimpleName();
       if( argName.toString().equals( "driverInstance" ) )
@@ -1408,7 +1823,7 @@ public class ExtensionTransformer extends TreeTranslator
   private void incrementalCompile( JCTree.JCClassDecl tree )
   {
     Set<Object> drivers = findDrivers( tree );
-    for( Object driver: drivers )
+    for( Object driver : drivers )
     {
       JavacPlugin.instance().setIncremental();
 
@@ -1423,9 +1838,9 @@ public class ExtensionTransformer extends TreeTranslator
       IManifoldHost host = _tp.getHost();
       Set<IFile> changes = changedFiles.stream().map( ( File f ) -> host.getFileSystem().getIFile( f ) )
         .collect( Collectors.toSet() );
-      for( ITypeManifold tm: host.getSingleModule().getTypeManifolds() )
+      for( ITypeManifold tm : host.getSingleModule().getTypeManifolds() )
       {
-        for( IFile file: changes )
+        for( IFile file : changes )
         {
           Set<String> types = Arrays.stream( tm.getTypesForFile( file ) ).collect( Collectors.toSet() );
           if( types.size() > 0 )
@@ -1436,7 +1851,7 @@ public class ExtensionTransformer extends TreeTranslator
               typesToFile.put( file.toJavaFile(), types );
             }
 
-            for( String fqn: types )
+            for( String fqn : types )
             {
               // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
               // the type will be compiled to disk.
@@ -1472,7 +1887,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     Map<File, Set<String>> typesCompiledByFile = new HashMap<>();
     Set<IFile> resourceFiles = ((GeneratedJavaStubFileObject)sourcefile).getResourceFiles();
-    for( IFile ifile: resourceFiles )
+    for( IFile ifile : resourceFiles )
     {
       File file;
       try
@@ -1532,7 +1947,7 @@ public class ExtensionTransformer extends TreeTranslator
     Map<File, Set<String>> typesToFile = getTypesToFile();
     if( typesToFile != null )
     {
-      typesCompiledByFile.forEach( (file, types) -> {
+      typesCompiledByFile.forEach( ( file, types ) -> {
         Set<String> existingTypes = typesToFile.get( file );
         if( existingTypes != null )
         {
@@ -1566,7 +1981,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     outer:
-    for( JCExpression iface: tree.getImplementsClause() )
+    for( JCExpression iface : tree.getImplementsClause() )
     {
       final Symbol.TypeSymbol ifaceSym = iface.type.tsym;
       if( ifaceSym == _tp.getSymtab().objectType.tsym )
@@ -1574,7 +1989,7 @@ public class ExtensionTransformer extends TreeTranslator
         continue;
       }
 
-      for( Attribute.Compound anno: ifaceSym.getAnnotationMirrors() )
+      for( Attribute.Compound anno : ifaceSym.getAnnotationMirrors() )
       {
         if( anno.type.toString().equals( Structural.class.getName() ) )
         {
@@ -1730,19 +2145,19 @@ public class ExtensionTransformer extends TreeTranslator
         {
           Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null &&
-              !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
-              !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) &&
-              (tree.sym.enclClass() == null || !param.type.tsym.isEnclosedBy( extendClassSym )) // handle inner class extension method
-            )
+            !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
+            !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) &&
+            (tree.sym.enclClass() == null || !param.type.tsym.isEnclosedBy( extendClassSym )) // handle inner class extension method
+          )
           {
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
           }
         }
       }
       else if( i == 0 &&
-               Modifier.isStatic( (int)methodModifiers ) &&
-               Modifier.isPublic( (int)methodModifiers ) &&
-               param.type.toString().equals( extendedClassName ) )
+        Modifier.isStatic( (int)methodModifiers ) &&
+        Modifier.isPublic( (int)methodModifiers ) &&
+        param.type.toString().equals( extendedClassName ) )
       {
         _tp.report( param, Diagnostic.Kind.WARNING, ExtIssueMsg.MSG_MAYBE_MISSING_THIS.get() );
       }
@@ -1829,7 +2244,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
   {
-    for( JCTree.JCAnnotation anno: annotations )
+    for( JCTree.JCAnnotation anno : annotations )
     {
       if( anno.getAnnotationType().type.toString().equals( annoClass.getCanonicalName() ) )
       {
@@ -1987,7 +2402,7 @@ public class ExtensionTransformer extends TreeTranslator
 
       List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)m.sym).getParameters();
       ArrayList<JCExpression> paramTypes = new ArrayList<>();
-      for( Symbol.VarSymbol param: parameters )
+      for( Symbol.VarSymbol param : parameters )
       {
         JCExpression classExpr = makeClassExpr( tree, param.type );
         paramTypes.add( classExpr );
@@ -2040,7 +2455,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     Tree parent = _tp.getParent( tree );
     if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree ||
-        parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
+      parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
     {
       // handled in visitAssign() or visitAssignOp()
       return tree;
@@ -2051,7 +2466,7 @@ public class ExtensionTransformer extends TreeTranslator
       Tree.Kind kind = parent.getKind();
 
       if( kind != Tree.Kind.UNARY_MINUS && kind != Tree.Kind.UNARY_PLUS &&
-          kind != Tree.Kind.LOGICAL_COMPLEMENT && kind != Tree.Kind.BITWISE_COMPLEMENT )
+        kind != Tree.Kind.LOGICAL_COMPLEMENT && kind != Tree.Kind.BITWISE_COMPLEMENT )
       {
         // supporting -, +, !, ~  not supporting --, ++
         _tp.report( (JCTree)parent, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_INCREMENT_OP_NOT_ALLOWED_REFLECTION.get() );
@@ -2147,7 +2562,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     List<Symbol.VarSymbol> parameters = ((Symbol.MethodSymbol)tree.constructor).getParameters();
     ArrayList<JCExpression> paramTypes = new ArrayList<>();
-    for( Symbol.VarSymbol param: parameters )
+    for( Symbol.VarSymbol param : parameters )
     {
       paramTypes.add( makeClassExpr( tree, param.type ) );
     }
@@ -2192,7 +2607,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     JCExpression classExpr;
     if( isPrimitiveOrPrimitiveArray( type ) ||
-        (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )
+      (JreUtil.isJava8() && type.tsym.getModifiers().contains( javax.lang.model.element.Modifier.PUBLIC )) )
     {
       // class is publicly accessible, assume we can use class literal
       classExpr = _tp.getTreeMaker().ClassLiteral( type );
@@ -2243,7 +2658,7 @@ public class ExtensionTransformer extends TreeTranslator
   private String makeLiteralName( Type type )
   {
     StringBuilder sb = new StringBuilder();
-    for( ;type instanceof Type.ArrayType; type = ((Type.ArrayType)type).getComponentType() )
+    for( ; type instanceof Type.ArrayType; type = ((Type.ArrayType)type).getComponentType() )
     {
       sb.append( "[]" );
     }
@@ -2284,7 +2699,7 @@ public class ExtensionTransformer extends TreeTranslator
       return null;
     }
 
-    for( Attribute.Compound annotation: sym.getAnnotationMirrors() )
+    for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
     {
       if( annotation.type.toString().equals( ExtensionMethod.class.getName() ) )
       {
@@ -2308,7 +2723,7 @@ public class ExtensionTransformer extends TreeTranslator
         }
         Types types = Types.instance( javacTask.getContext() );
         outer:
-        for( Symbol elem: IDynamicJdk.instance().getMembers( extClassSym ) )
+        for( Symbol elem : IDynamicJdk.instance().getMembers( extClassSym ) )
         {
           if( elem instanceof Symbol.MethodSymbol && elem.flatName().toString().equals( sym.name.toString() ) )
           {

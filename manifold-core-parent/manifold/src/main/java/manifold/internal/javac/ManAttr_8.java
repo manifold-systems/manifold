@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
@@ -248,6 +249,34 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   @Override
+  public void visitIndexed( JCTree.JCArrayAccess tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitIndexed( tree );
+      return;
+    }
+
+    ManAttr.super.handleIndexedOverloading( tree );
+  }
+
+  @Override
+  public void visitAssign( JCTree.JCAssign tree )
+  {
+    super.visitAssign( tree );
+
+    ensureIndexedAssignmentIsWritable( tree.lhs );
+  }
+
+  @Override
+  public void visitAssignop( JCTree.JCAssignOp tree )
+  {
+    super.visitAssignop( tree );
+
+    ensureIndexedAssignmentIsWritable( tree.lhs );
+  }
+
+  @Override
   public void visitBinary( JCTree.JCBinary tree )
   {
     if( !JavacPlugin.instance().isExtensionsEnabled() )
@@ -337,9 +366,8 @@ public class ManAttr_8 extends Attr implements ManAttr
       return;
     }
 
-    if( handleNegationOverloading( tree ) )
+    if( handleUnaryOverloading( tree ) )
     {
-      // Handle negation overloading
       return;
     }
 
