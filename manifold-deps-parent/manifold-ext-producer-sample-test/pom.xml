@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2020.1.34</version>
+    <version>2020.1.34-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-ext-producer-sample-test</artifactId>
