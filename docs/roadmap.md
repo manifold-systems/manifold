@@ -61,9 +61,6 @@ Please see [Operator Overloading](https://github.com/manifold-systems/manifold/t
 #### Extension method specialization 
 * [207](https://github.com/manifold-systems/manifold/issues/207)
 
-#### Operator overloading enhancements
-* [#126](https://github.com/manifold-systems/manifold/issues/126)
-
 #### New schema type manifolds 
 * [#111](https://github.com/manifold-systems/manifold/issues/111)
 
