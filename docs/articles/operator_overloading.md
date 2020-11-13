@@ -268,4 +268,16 @@ if (bd1 >= bd2) {
 >Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 modules use operator overloading and unit expressions extensively.
+
+
+##Update: _2020/11/13_
+>
+>Release 2020.1.35 adds additional operator overloading support for:
+>
+>* infix/postfix increment/decrement operators  `++` and `--`
+>* compound assignment: operators `+=`, `-=`, `*=`, `/=`, `%=`, 
+>* index operator `[]`, both access and assignment
+>
+>Please see [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading) documentation for details.
+
    

@@ -14,7 +14,7 @@
   * [Extension Libraries](#extension-libraries)
   * [Generating Extensions](#generating-extension-classes)
 * [Operator Overloading](#operator-overloading)
-  * [Arithmetic and Negation Operators](#arithmetic-and-negation-operators)
+  * [Arithmetic Operators](#arithmetic-operators)
   * [Relational Operators](#relational-operators)
   * [Equality Operators](#equality-operators)
   * [Index Operator](#index-operator)
@@ -588,7 +588,7 @@ BigDecimal result = bigValue1 + bigValue2;
 and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 projects use operator overloading and unit expressions extensively.
 
-## Arithmetic and Negation Operators
+## Arithmetic Operators
 
 Any type can support arithmetic operators by implementing one or more of the following operator methods: 
 
