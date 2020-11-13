@@ -46,6 +46,16 @@ via javac command line argument to specify additional source paths: *-Amanifold.
  and the index operator (`[]`) to support `map["key"] = value` etc. Comment on [#126](https://github.com/manifold-systems/manifold/issues/126) if you have
  question or concerns, or discuss on [slack](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
  
+ **Update:** _2020/11/13_
+
+Release 2020.1.35 implements operator overloading for:
+
+* infix/postfix increment/decrement operators  `++` and `--`
+* compound assignment: operators `+=`, `-=`, `*=`, `/=`, `%=`, 
+* index operator `[]`, both access and assignment
+
+Please see [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading) documentation for details.
+  
 ## On the pile (in no particular order)
 
 #### Extension method specialization 
