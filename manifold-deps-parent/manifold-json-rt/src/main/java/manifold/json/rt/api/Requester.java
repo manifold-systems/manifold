@@ -102,6 +102,31 @@ public class Requester<T>
     _timeout = 0;
   }
 
+  public Endpoint getEndpoint()
+  {
+    return _endpoint;
+  }
+
+  public Format getFormat()
+  {
+    return _format;
+  }
+
+  public int getTimeout()
+  {
+    return _timeout;
+  }
+
+  public Map<String, String> getHeaders()
+  {
+    return Collections.unmodifiableMap( _headers );
+  }
+
+  public Map<String, String> getParameters()
+  {
+    return Collections.unmodifiableMap( _parameters );
+  }
+
   public Requester<T> withCoercer( Function<Object, Object> resultCoercer )
   {
     _resultCoercer = resultCoercer;

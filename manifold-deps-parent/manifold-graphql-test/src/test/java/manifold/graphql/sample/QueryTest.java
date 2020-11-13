@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import manifold.rt.api.DisableStringLiteralTemplates;
-import manifold.ext.rt.api.Jailbreak;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.json.rt.api.Requester;
 import org.junit.Test;
@@ -52,8 +51,8 @@ public class QueryTest
     assertEquals( "Le Mans", movieQuery.getTitle() );
     assertEquals( LocalDate.of(1971, 6, 3), movieQuery.getReleaseDate() );
 
-    @Jailbreak Executor<MovieQuery.Result> request = movieQuery.request( "" );
-    String query = request._reqArgs.getQuery();
+    Executor<MovieQuery.Result> request = movieQuery.request( "" );
+    String query = request.getRequestBody().getQuery();
     String expected = "query MovieQuery($title:String,$genre:Genre,$releaseDate:Date,$actors:[ActorInput!]) {movies(title:$title,genre:$genre,releaseDate:$releaseDate,actors:$actors) {id title genre releaseDate starring {typename:__typename ... on Actor {id name} ... on Animal {kind}} cast {id name type actor {id name}}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
   }
@@ -74,8 +73,8 @@ public class QueryTest
     assertEquals( Drama, actorQuery.getGenre() );
     assertEquals( "The Getaway", actorQuery.getTitle() );
 
-    @Jailbreak Executor<ActorQuery.Result> request = actorQuery.request( "" );
-    String query = request._reqArgs.getQuery();
+    Executor<ActorQuery.Result> request = actorQuery.request( "" );
+    String query = request.getRequestBody().getQuery();
     String expected = "query ActorQuery($title:String!,$genre:Genre) {actors(title:$title,genre:$genre) {... on Person {id name} ... on Animal {id name kind}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
   }
@@ -84,12 +83,12 @@ public class QueryTest
   public void testGraphQLFragmentIncludedWithQuery()
   {
     CompareRoles compareRoles = CompareRoles.builder("", "").build();
-    @Jailbreak Executor<CompareRoles.Result> request = compareRoles.request("");
+    Executor<CompareRoles.Result> request = compareRoles.request("");
     // ensure the fragment used in the query is included with the query
-    assertTrue( request._reqArgs.getQuery().contains( "fragment comparisonFields" ) );
+    assertTrue( request.getRequestBody().getQuery().contains( "fragment comparisonFields" ) );
     // ensure only the fragment used in the query is included
     // e.g., the 'otherComparisonFields' fragments should not be included
-    assertFalse( request._reqArgs.getQuery().contains( "fragment otherComparisonFields" ) );
+    assertFalse( request.getRequestBody().getQuery().contains( "fragment otherComparisonFields" ) );
   }
 
   @Test
@@ -139,9 +138,8 @@ public class QueryTest
   public void testBearerAuthorization()
   {
     MovieQuery query = MovieQuery.builder().build();
-    @Jailbreak Executor exec = query.request( "" ).withBearerAuthorization( "xyz" );
-    @Jailbreak Requester req = exec._requester;
-    String bearerAuth = (String)req._headers.get( "Authorization" );
+    Executor exec = query.request( "" ).withBearerAuthorization( "xyz" );
+    String bearerAuth = (String)exec.getHeaders().get( "Authorization" );
     assertEquals( "Bearer xyz", bearerAuth );
   }
 }

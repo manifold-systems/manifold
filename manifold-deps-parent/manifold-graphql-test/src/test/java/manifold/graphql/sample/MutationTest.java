@@ -1,7 +1,6 @@
 package manifold.graphql.sample;
 
 import manifold.rt.api.DisableStringLiteralTemplates;
-import manifold.ext.rt.api.Jailbreak;
 import manifold.graphql.rt.api.request.Executor;
 import org.junit.Test;
 
@@ -31,8 +30,8 @@ public class MutationTest {
     assertEquals(4, review.getReview().getStars());
     assertEquals("Superb", review.getReview().getComment());
 
-    @Jailbreak Executor<ReviewMutation.Result> request = review.request("");
-    String query = request._reqArgs.getQuery();
+    Executor<ReviewMutation.Result> request = review.request("");
+    String query = request.getRequestBody().getQuery();
     String expected = "mutation ReviewMutation($movie: ID!, $review: ReviewInput!) { createReview(movie: $movie, review: $review) { id stars comment } }";
     assertEquals( expected.replaceAll("\\s+",""), query.replaceAll("\\s+","") );
   }

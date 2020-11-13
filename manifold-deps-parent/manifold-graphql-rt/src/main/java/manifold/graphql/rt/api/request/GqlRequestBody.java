@@ -23,6 +23,10 @@ import manifold.json.rt.api.DataBindings;
 import manifold.ext.rt.api.IProxyFactory;
 import manifold.ext.rt.api.Structural;
 
+/**
+ * Wraps the GraphQL request body consisting of both the query and variables.
+ * @param <V> the query type as defined in the GraphQL query schema
+ */
 @Structural(factoryClass = GqlRequestBody.ProxyFactory.class)
 public interface GqlRequestBody<V> extends IJsonBindingsBacked
 {
@@ -36,12 +40,18 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
     return (GqlRequestBody<V>)bindings;
   }
 
+  /**
+   * The static query defined in the GraphQL query schema.
+   */
   @SuppressWarnings("unused") // used for tests
   default String getQuery()
   {
     return (String)getBindings().get( "query" );
   }
 
+  /**
+   * The query variable constraints.
+   */
   @SuppressWarnings("unused")
   default V getVariables()
   {

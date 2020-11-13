@@ -17,6 +17,7 @@
 package manifold.graphql.rt.api.request;
 
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import manifold.ext.rt.RuntimeMethods;
@@ -82,6 +83,48 @@ public class Executor<T>
     Bindings response = (Bindings) result;
     handleErrors( response );
     return RuntimeMethods.coerce( response.get( "data" ), resultType );
+  }
+
+  /**
+   * Access the full GraphQL request body, which includes {@code query} and {@code variables} bindings.
+   *
+   * @return the GraphQL request body consisting of bindings for both the query and variables.
+   */
+  public GqlRequestBody getRequestBody()
+  {
+    return _reqArgs;
+  }
+
+  /**
+   * Access an unmodifiable view of the GraphQL request headers.
+   */
+  public Map<String, String> getHeaders()
+  {
+    return _requester.getHeaders();
+  }
+
+  /**
+   * Access the GraphQL request endpoint.
+   */
+  public Endpoint getEndpoint()
+  {
+    return _requester.getEndpoint();
+  }
+
+  /**
+   * Access the GraphQL request format.
+   */
+  public Requester.Format getFormat()
+  {
+    return _requester.getFormat();
+  }
+
+  /**
+   * Access the GraphqL request timeout.
+   */
+  public int getTimeout()
+  {
+    return _requester.getTimeout();
   }
 
   /**
