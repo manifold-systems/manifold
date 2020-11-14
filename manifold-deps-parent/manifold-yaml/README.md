@@ -89,8 +89,8 @@ repositories {
 }
 
 configurations {
-    // give tests access to compileOnly dependencies
-    testImplementation.extendsFrom compileOnly
+    // give tests access to annotationProcessor dependencies
+    testImplementation.extendsFrom annotationProcessor
 }
 
 dependencies {
