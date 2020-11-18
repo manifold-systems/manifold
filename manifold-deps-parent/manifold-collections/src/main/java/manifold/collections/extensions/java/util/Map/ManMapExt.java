@@ -69,7 +69,7 @@ public class ManMapExt
    * <p>
    * @see Map#put(Object, Object)
    * <p>
-   * @param entries key/value pairs, for use with the {@code key to value} binding expression syntax via {@link Pair#TO}.
+   * @param entries key/value pairs, for use with the {@code key and value} binding expression syntax via {@link Pair#and}.
    * @return a new read-only, ordered map with the specified contents.
    * @throws UnsupportedOperationException if the <tt>put</tt> operation
    *         is not supported by this map
