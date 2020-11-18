@@ -48,7 +48,7 @@ via javac command line argument to specify additional source paths: *-Amanifold.
  
  **Update:** _2020/11/13_
 
-Release 2020.1.35 implements operator overloading for:
+Release 2020.1.36 implements operator overloading for:
 
 * infix/postfix increment/decrement operators  `++` and `--`
 * compound assignment: operators `+=`, `-=`, `*=`, `/=`, `%=`, 
