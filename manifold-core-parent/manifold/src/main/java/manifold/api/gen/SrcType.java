@@ -37,6 +37,7 @@ public class SrcType extends SrcAnnotated<SrcType>
   private boolean _isEnum;
   private boolean _isInterface;
   private boolean _isAnnotation;
+  private boolean _isEllipsis;
 
   public SrcType( Class type )
   {
@@ -124,6 +125,11 @@ public class SrcType extends SrcAnnotated<SrcType>
   public void setAnnotation( boolean isAnno )
   {
     _isAnnotation = isAnno;
+  }
+
+  public void setEllipsis( boolean isEllipsis )
+  {
+    _isEllipsis = isEllipsis;
   }
 
   /**
@@ -353,6 +359,10 @@ public class SrcType extends SrcAnnotated<SrcType>
     for( int i = 0; i < _arrayDims; i++ )
     {
       sb.append( "[]" );
+    }
+    if( _isEllipsis )
+    {
+      sb.append( "..." );
     }
     return sb;
   }
