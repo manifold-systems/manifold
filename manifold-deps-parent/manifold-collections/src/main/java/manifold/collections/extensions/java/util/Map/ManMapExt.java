@@ -18,7 +18,10 @@ package manifold.collections.extensions.java.util.Map;
 
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
+import manifold.rt.api.util.Pair;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Extension
@@ -48,5 +51,44 @@ public class ManMapExt
   public static <K,V> V set( @This Map<K,V> thiz, K key, V value )
   {
     return thiz.put( key, value );
+  }
+
+  /**
+   * For use with the {@code key and value} binding expression syntax using {@link Pair#and}.
+   * <br>
+   * <pre><code>
+   * import static manifold.rt.api.util.Pair.and;
+   * Map&lt;String, Integer&gt; scores =
+   *   mapOf("Moe" and 100, "Larry" and 107, "Curly" and 111);
+   * </code></pre>
+   * Returns a new read-only map with the specified contents, given as a list of pairs where the first value is the key and the second is the value.
+   * <p/>
+   * If multiple pairs have the same key, the resulting map will contain the value from the last of those pairs.
+   * <p/>
+   * Entries of the map are iterated in the order they were specified.
+   * <p>
+   * @see Map#put(Object, Object)
+   * <p>
+   * @param entries key/value pairs, for use with the {@code key to value} binding expression syntax via {@link Pair#TO}.
+   * @return a new read-only, ordered map with the specified contents.
+   * @throws UnsupportedOperationException if the <tt>put</tt> operation
+   *         is not supported by this map
+   * @throws ClassCastException if the class of the specified key or value
+   *         prevents it from being stored in this map
+   * @throws NullPointerException if the specified key or value is null
+   *         and this map does not permit null keys or values
+   * @throws IllegalArgumentException if some property of the specified key
+   *         or value prevents it from being stored in this map
+   */
+  @SafeVarargs
+  @Extension
+  public static <K,V> Map<K,V> mapOf( Pair<K,V>... entries )
+  {
+    LinkedHashMap<K,V> map = new LinkedHashMap<>( entries.length );
+    for( Pair<K,V> pair : entries )
+    {
+      map.put( pair.getFirst(), pair.getSecond() );
+    }
+    return Collections.unmodifiableMap( map );
   }
 }

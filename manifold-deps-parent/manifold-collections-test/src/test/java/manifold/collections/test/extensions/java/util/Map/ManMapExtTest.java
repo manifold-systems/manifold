@@ -16,12 +16,13 @@
 
 package manifold.collections.test.extensions.java.util.Map;
 
-import manifold.collections.extensions.java.util.Map.ManMapExt;
 import manifold.test.api.ExtensionManifoldTest;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+import static manifold.rt.api.util.Pair.and;
 
 public class ManMapExtTest extends ExtensionManifoldTest
 {
@@ -37,6 +38,24 @@ public class ManMapExtTest extends ExtensionManifoldTest
     assertEquals( 2, map.size() );
     assertEquals( new Foo<>( "A" ), map["a"] );
     assertEquals( new Foo<>( "B" ), map["b"] );
+  }
+
+  public void testMapOf()
+  {
+    Map<String, Integer> map = Map.mapOf( "Moe" and 100, "Larry" and 107, "Curly" and 111 );
+    assertEquals( 3, map.size() );
+    assertEquals( (Integer)100, map.get( "Moe") );
+    assertEquals( (Integer)107, map.get( "Larry") );
+    assertEquals( (Integer)111, map.get( "Curly") );
+    try
+    {
+      // test map is unmodifiable
+      map.put( "x", 0 );
+      fail();
+    }
+    catch( Exception ignore )
+    {
+    }
   }
 
   static class Foo<T>
