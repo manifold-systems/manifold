@@ -538,6 +538,32 @@ public class ExtensionTransformer extends TreeTranslator
     return make.App( make.Select( tree, valueSym ) );
   }
 
+//## todo: handle case where casting to a generic structural interface:  (StructuralInterface<Foo>)thing
+//  @Override
+//  public void visitTypeApply( JCTree.JCTypeApply tree )
+//  {
+//    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+//    {
+//      super.visitTypeApply( tree );
+//      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+//      return;
+//    }
+//
+//    boolean isStructural = TypeUtil.isStructuralInterface( _tp, tree.clazz.type.tsym );
+//
+//    super.visitTypeApply( tree );
+//
+//    if( isStructural )
+//    {
+//      Symbol.ClassSymbol objectSym = getObjectClass();
+//      JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
+//      objIdent.type = objectSym.type;
+//      objIdent.pos = tree.pos;
+//
+//      result = objIdent;
+//    }
+//  }
+
   /**
    * Erase all structural interface type literals to Object
    */

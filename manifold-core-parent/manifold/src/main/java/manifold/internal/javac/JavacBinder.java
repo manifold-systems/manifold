@@ -140,9 +140,17 @@ class JavacBinder extends AbstractBinder<Symbol.MethodSymbol, JCBinary, JCExpres
   {
     Type.MethodType mt = forAll.asMethodType();
     Type paramType = mt.getParameterTypes().get( 0 );
-    paramType = paramType instanceof Type.TypeVar ? paramType.getUpperBound() : paramType;
-    Type parameterizedParamType = _types.asSuper( argType, paramType.tsym );
     Map<Type.TypeVar, Type> map = new HashMap<>();
+    if( paramType instanceof Type.TypeVar )
+    {
+      if( argType.isPrimitive() )
+      {
+        argType = _types.boxedClass( argType ).type;
+      }
+      fetchTypeVars( paramType, argType, map );
+      paramType = paramType.getUpperBound();
+    }
+    Type parameterizedParamType = _types.asSuper( argType, paramType.tsym );
     fetchTypeVars( paramType, parameterizedParamType, map );
     return _types.subst( mt.getReturnType(),
       List.from( map.keySet() ),
