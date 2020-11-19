@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - Manifold Systems LLC
+ * Copyright (c) 2020 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 
-package com.sun.tools.javac.parser;
+package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Source;
+import com.sun.tools.javac.parser.JavacParser;
+import com.sun.tools.javac.parser.Lexer;
+import com.sun.tools.javac.parser.ParserFactory;
+import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.parser.Tokens.Token;
 import com.sun.tools.javac.parser.Tokens.TokenKind;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.TreeInfo;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Assert;
+import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 
 import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
@@ -49,6 +57,10 @@ public class ManJavacParser extends JavacParser
   private static Field field_mode = null;
   private static Field field_endPosTable = null;
   private static Field field_parseModuleInfo = null;
+  private static Field field_PATTERN_MATCHING_IN_INSTANCEOF = null;
+  private static Method method_selectExprMode = null;
+  private static Method method_checkSourceLevel = null;
+  private static Method method_BindingPattern = null;
   static
   {
     try
@@ -59,14 +71,26 @@ public class ManJavacParser extends JavacParser
       field_endPosTable = JavacParser.class.getDeclaredField( "endPosTable" );
       field_endPosTable.setAccessible( true );
 
-
-
       // Java 9+
       //noinspection JavaReflectionMemberAccess
       field_parseModuleInfo = JavacParser.class.getDeclaredField( "parseModuleInfo" );
       field_parseModuleInfo.setAccessible( true );
+
+      // Java 15+
+      method_selectExprMode = JavacParser.class.getDeclaredMethod( "selectExprMode" );
+      method_selectExprMode.setAccessible( true );
+
+      Class<?> featureClass = Class.forName( Source.class.getTypeName() + "$Feature", false, JavacParser.class.getClassLoader() );
+      method_checkSourceLevel = JavacParser.class.getDeclaredMethod( "checkSourceLevel", int.class, featureClass );
+
+      field_PATTERN_MATCHING_IN_INSTANCEOF = featureClass.getDeclaredField( "PATTERN_MATCHING_IN_INSTANCEOF" );
+      field_PATTERN_MATCHING_IN_INSTANCEOF.setAccessible( true );
+
+      method_BindingPattern = TreeMaker.class.getDeclaredMethod( "BindingPattern", Name.class, JCTree.class );
+      method_BindingPattern.setAccessible( true );
+
     }
-    catch( NoSuchFieldException ignore )
+    catch( Exception ignore )
     {
     }
   }
@@ -135,6 +159,7 @@ public class ManJavacParser extends JavacParser
 
   /*  Expression2Rest = {infixop Expression3}
    *                  | Expression3 instanceof Type
+   *                  | Expression3 instanceof Pattern
    *  infixop         = "||"
    *                  | "&&"
    *                  | "|"
@@ -160,20 +185,35 @@ public class ManJavacParser extends JavacParser
     boolean binder = isBinderRhs();
     while (binder || prec(token.kind) >= minprec) {
       opStack[top] = topOp;
-      top++;
-      if( binder )
-      {
-        topOp = null;
+      if (token.kind == INSTANCEOF) {
+        int pos = token.pos;
+        nextToken();
+        JCTree pattern = parseType();
+        if (token.kind == IDENTIFIER) {
+          checkSourceLevel_InstanceOf();
+          try {
+            pattern = toP( (JCTree)method_BindingPattern.invoke( F.at( token.pos ), ident(), pattern ) );
+          } catch( Exception ignore ) {
+            // a Java release prior to BindingPattern will have a compile error from the extra identifier
+          }
+        }
+        odStack[top] = F.at(pos).TypeTest(odStack[top], pattern);
       }
       else
       {
-        topOp = token;
-        nextToken();
+        top++;
+        if( binder )
+        {
+          topOp = null;
+        }
+        else
+        {
+          topOp = token;
+          nextToken();
+        }
+        odStack[top] = binder ? parseBinderOperand() : term3();
+        binder = isBinderRhs();
       }
-      odStack[top] = (topOp != null && topOp.kind == INSTANCEOF)
-                     ? parseType()
-                     : binder ? parseBinderOperand() : term3();
-      binder = isBinderRhs();
       while (top > 0 && (isSameOrHigher(topOp == null ? null : topOp.kind, binder ? null : token.kind))) {
         odStack[top-1] = makeOp(topOp == null ? odStack[top].pos : topOp.pos, topOp == null ? null : topOp.kind, odStack[top-1],
           odStack[top]);
@@ -191,6 +231,17 @@ public class ManJavacParser extends JavacParser
     odStackSupply.add(odStack);
     opStackSupply.add(opStack);
     return t;
+  }
+
+  private void checkSourceLevel_InstanceOf()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_PATTERN_MATCHING_IN_INSTANCEOF);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
   }
 
   private JCExpression parseBinderOperand()
@@ -240,18 +291,12 @@ public class ManJavacParser extends JavacParser
                               JCExpression od1,
                               JCExpression od2)
   {
-    if (topOp == INSTANCEOF) {
-      return F.at(pos).TypeTest(od1, od2);
-    }
-    else
-    {
-      //Manifold: use APPLY for binding op.
-      //It is later changed to MUL after ManAttr processing so the expr will pass safely through javac until it is
-      //transformed to a pre/postBind() call.
-      JCTree.Tag optag = topOp == null ? JCTree.Tag.APPLY : optag( topOp );
+    //Manifold: use APPLY for binding op.
+    //It is later changed to MUL after ManAttr processing so the expr will pass safely through javac until it is
+    //transformed to a pre/postBind() call.
+    JCTree.Tag optag = topOp == null ? JCTree.Tag.APPLY : optag( topOp );
 
-      return F.at( pos ).Binary( optag, od1, od2 );
-    }
+    return F.at( pos ).Binary( optag, od1, od2 );
   }
 
   private boolean isBinderRhs()
@@ -303,9 +348,16 @@ public class ManJavacParser extends JavacParser
   {
     try
     {
-      field_mode.set( this, mode );
+      if( method_selectExprMode != null )
+      {
+        method_selectExprMode.invoke( this );
+      }
+      else
+      {
+        field_mode.set( this, mode );
+      }
     }
-    catch( IllegalAccessException e )
+    catch( Exception e )
     {
       throw new RuntimeException( e );
     }
