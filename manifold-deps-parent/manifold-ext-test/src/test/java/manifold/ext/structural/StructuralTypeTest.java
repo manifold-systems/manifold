@@ -79,6 +79,26 @@ public class StructuralTypeTest extends TestCase
     assertEquals( point.hashCode(), coord.hashCode() );
   }
 
+  // tests that if a ternary expression's type is structural that it is transformed properly during
+  // manifold transformation/generation
+  public void testTernary()
+  {
+    Point point = new Point( 8, 9 );
+    Coordinate c = (Coordinate)new Point( 1, 2 );
+
+    Coordinate pt = point.x > 0
+      // Cast is significant here as it is erased during transformation, bc during generation the ternary expr type is
+      // determined from the least upper bound of the ternary branch expressions.
+      ? (Coordinate)point
+      : c;
+    assertSame( (Coordinate)point, pt );
+
+    pt = point.x > 0 ?
+      c:
+      (Coordinate)point;
+    assertSame( c, pt );
+  }
+
   public void testGetClassUsesRawValues()
   {
     Coordinate coord = (Coordinate) new Point( 8, 9 );

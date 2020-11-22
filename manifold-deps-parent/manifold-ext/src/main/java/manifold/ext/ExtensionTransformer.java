@@ -1124,6 +1124,25 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
+  @Override
+  public void visitConditional( JCTree.JCConditional tree )
+  {
+    super.visitConditional( tree );
+
+    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    {
+      // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
+      return;
+    }
+
+    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) )
+    {
+      // erase type if structural interface
+      Symbol.ClassSymbol objectSym = getObjectClass();
+      tree.type = objectSym.type;
+    }
+  }
+
   public void visitVarDef( JCTree.JCVariableDecl tree )
   {
     super.visitVarDef( tree );
