@@ -50,84 +50,84 @@ Java compiler are only accessible from the processor path, therefore they have n
 
 #### Manifold core
 ```groovy
-annotationProcessor 'systems.manifold:manifold:2020.1.38'
-implementation 'systems.manifold:manifold-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold:2020.1.40'
+implementation 'systems.manifold:manifold-rt:2020.1.40'
 ```
 #### Manifold : Extensions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-ext:2020.1.38'
-implementation 'systems.manifold:manifold-ext-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-ext:2020.1.40'
+implementation 'systems.manifold:manifold-ext-rt:2020.1.40'
 ```
 #### Manifold : GraphQL
 ```groovy
-annotationProcessor 'systems.manifold:manifold-graphql:2020.1.38'
-implementation 'systems.manifold:manifold-graphql-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-graphql:2020.1.40'
+implementation 'systems.manifold:manifold-graphql-rt:2020.1.40'
 ```
 #### Manifold : JSON
 ```groovy
-annotationProcessor 'systems.manifold:manifold-json:2020.1.38'
-implementation 'systems.manifold:manifold-json-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-json:2020.1.40'
+implementation 'systems.manifold:manifold-json-rt:2020.1.40'
 ```
 #### Manifold : XML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-xml:2020.1.38'
-implementation 'systems.manifold:manifold-xml-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-xml:2020.1.40'
+implementation 'systems.manifold:manifold-xml-rt:2020.1.40'
 ```
 #### Manifold : YAML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-yaml:2020.1.38'
-implementation 'systems.manifold:manifold-yaml-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-yaml:2020.1.40'
+implementation 'systems.manifold:manifold-yaml-rt:2020.1.40'
 ```
 #### Manifold : CSV
 ```groovy
-annotationProcessor 'systems.manifold:manifold-csv:2020.1.38'
-implementation 'systems.manifold:manifold-csb-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-csv:2020.1.40'
+implementation 'systems.manifold:manifold-csb-rt:2020.1.40'
 ```
 #### Manifold : Properties
 ```groovy
-annotationProcessor 'systems.manifold:manifold-properties:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-properties:2020.1.40'
 ```
 #### Manifold : Image
 ```groovy
-annotationProcessor 'systems.manifold:manifold-image:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-image:2020.1.40'
 ```
 #### Manifold : JavaScript
 ```groovy
-annotationProcessor 'systems.manifold:manifold-js:2020.1.38'
-implementation 'systems.manifold:manifold-js-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-js:2020.1.40'
+implementation 'systems.manifold:manifold-js-rt:2020.1.40'
 ```
 #### Manifold : Templates
 ```groovy
-annotationProcessor 'systems.manifold:manifold-templates:2020.1.38'
-implementation 'systems.manifold:manifold-templates-rt:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-templates:2020.1.40'
+implementation 'systems.manifold:manifold-templates-rt:2020.1.40'
 ```
 #### Manifold : String Interpolation
 ```groovy
-annotationProcessor 'systems.manifold:manifold-strings:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-strings:2020.1.40'
 ```
 #### Manifold : (Un)checked Exceptions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-exceptions:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-exceptions:2020.1.40'
 ```
 #### Manifold : Preprocessor
 ```groovy
-annotationProcessor 'systems.manifold:manifold-preprocessor:2020.1.38'
+annotationProcessor 'systems.manifold:manifold-preprocessor:2020.1.40'
 ```
 #### Manifold : Science
 ```groovy
-implementation 'systems.manifold:manifold-science:2020.1.38'
+implementation 'systems.manifold:manifold-science:2020.1.40'
 ```
 #### Manifold : Collections Extension
 ```groovy
-implementation 'systems.manifold:manifold-collections:2020.1.38'
+implementation 'systems.manifold:manifold-collections:2020.1.40'
 ```
 #### Manifold : IO Extensions
 ```groovy
-implementation 'systems.manifold:manifold-io:2020.1.38'
+implementation 'systems.manifold:manifold-io:2020.1.40'
 ```
 #### Manifold : Text Extensions
 ```groovy
-implementation 'systems.manifold:manifold-text:2020.1.38'
+implementation 'systems.manifold:manifold-text:2020.1.40'
 ```
 
 ## Resources
