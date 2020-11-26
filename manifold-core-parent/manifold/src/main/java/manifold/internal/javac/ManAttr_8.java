@@ -16,7 +16,6 @@
 
 package manifold.internal.javac;
 
-import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
@@ -24,17 +23,11 @@ import com.sun.tools.javac.code.Symbol.OperatorSymbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.TypeAnnotations;
-import com.sun.tools.javac.comp.Annotate;
-import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.DeferredAttr;
-import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.comp.Lower;
-import com.sun.tools.javac.comp.MemberEnter;
-import com.sun.tools.javac.comp.Resolve;
-import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ByteCodes;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic.DiagnosticPosition;
 import com.sun.tools.javac.util.Name;
@@ -46,6 +39,7 @@ import manifold.util.ReflectUtil;
 
 
 import static com.sun.tools.javac.code.Kinds.MTH;
+import static com.sun.tools.javac.code.Kinds.VAL;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -263,9 +257,40 @@ public class ManAttr_8 extends Attr implements ManAttr
   @Override
   public void visitAssign( JCTree.JCAssign tree )
   {
-    super.visitAssign( tree );
+    Class<?> ResultInfo_Class = ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" );
+    Type owntype = (Type)ReflectUtil.method( this, "attribTree", JCTree.class, Env.class, ResultInfo_Class )
+      .invoke( tree.lhs, getEnv().dup( tree ), ReflectUtil.field( this, "varInfo" ).get() );
+
+    if( tree.lhs.type != null && tree.lhs.type.isPrimitive() )
+    {
+      // always cast rhs for the case where the original statement was a compound assign involving a primitive type
+      // (manifold transforms a += b to a = a + b, so that we can simply use plus() to handle both addition and compound
+      // assign addition, however:
+      //   short a = 0;
+      //   a += (byte)b;
+      // blows up if we don't cast the rhs of the resulting
+      // transformation:  a += (byte)b;  parse==>  a = a + (byte)b;  attr==>  a = (short) (a + (byte)b);
+      tree.rhs = makeCast( tree.rhs, tree.lhs.type );
+    }
+
+    Type capturedType = types().capture( owntype );
+    attribExpr( tree.rhs, getEnv(), owntype );
+    setResult( tree, capturedType );
+    ReflectUtil.field( this, "result" ).set( ReflectUtil.method( this, "check", JCTree.class, Type.class, int.class, ResultInfo_Class )
+      .invoke( tree, capturedType, VAL, ReflectUtil.field( this, "resultInfo" ).get() ) );
 
     ensureIndexedAssignmentIsWritable( tree.lhs );
+  }
+
+  private JCTree.JCTypeCast makeCast( JCTree.JCExpression expression, Type type )
+  {
+    TreeMaker make = JavacPlugin.instance().getTreeMaker();
+
+    JCTree.JCTypeCast castCall = make.TypeCast( type, expression );
+    castCall.type = type;
+    castCall.pos = expression.pos;
+
+    return castCall;
   }
 
   @Override

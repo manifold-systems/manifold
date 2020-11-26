@@ -203,6 +203,22 @@ public class OperatorOverloadTest
     assertEquals( new FooIncDec( 6 ), i );
   }
 
+  @Test
+  public void testCastWithCompoundAssign()
+  {
+    // always cast rhs for the case where the original statement was a compound assign involving a primitive type
+    // (manifold transforms a += b to a = a + b, so that we can simply use plus() to handle both addition and compound
+    // assign addition, however:
+    //   short a = 0;
+    //   a += (byte)b;
+    // blows up if we don't cast the rhs of the resulting
+    // transformation:  a += (byte)b;  parse==>  a = a + (byte)b;  attr==>  a = (short) (a + (byte)b);
+
+    short a = 0;
+    a += (byte)1;
+    assertEquals( 1, a );
+  }
+
   static class FooIncDec
   {
     int _value;

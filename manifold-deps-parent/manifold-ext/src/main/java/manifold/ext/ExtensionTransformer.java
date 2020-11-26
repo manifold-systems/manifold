@@ -1181,8 +1181,9 @@ public class ExtensionTransformer extends TreeTranslator
 
     if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) )
     {
-      tree.expr = replaceCastExpression( tree.getExpression(), tree.type );
-      tree.type = getObjectClass().type;
+      Type objectType = _tp.getSymtab().objectType;
+      tree.expr = makeCast( tree.getExpression(), objectType );
+      tree.type = objectType;
     }
     result = tree;
   }
@@ -2350,13 +2351,12 @@ public class ExtensionTransformer extends TreeTranslator
     return null;
   }
 
-  private JCExpression replaceCastExpression( JCExpression expression, Type type )
+  private JCTypeCast makeCast( JCExpression expression, Type type )
   {
     TreeMaker make = _tp.getTreeMaker();
-    Symtab symbols = _tp.getSymtab();
 
-    JCTypeCast castCall = make.TypeCast( symbols.objectType, expression );
-    castCall.type = symbols.objectType;
+    JCTypeCast castCall = make.TypeCast( type, expression );
+    castCall.type = type;
     castCall.pos = expression.pos;
 
     return castCall;
