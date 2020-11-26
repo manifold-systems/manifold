@@ -129,6 +129,16 @@ public class SimplePreprocessorTest
     assertEquals( "hi", new OptionalClass().foo() );
   }
 
+  @Test
+  public void testOperatorOverloadingNotEnabled()
+  {
+    short a = 0;
+    // tests that visitAssignop() is not enabled in ParseProcessor, otherwise this fails if manifold-ext is not enabled
+    // (it transforms what ParseProcessor does to be legal)
+    a += (byte)1;
+    assertEquals( 1, a );
+  }
+  
   private String nested()
   {
     #if BBB

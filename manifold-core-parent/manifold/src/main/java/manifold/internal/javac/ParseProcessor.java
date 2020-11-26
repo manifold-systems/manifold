@@ -16,8 +16,6 @@
 
 package manifold.internal.javac;
 
-import com.sun.source.util.TaskEvent;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -36,11 +34,15 @@ public class ParseProcessor extends TreeTranslator
   {
     super.visitAssignop( tree );
 
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      // operator overloading requires manifold-ext
+      return;
+    }
+
     // transform a += b  to  a = a + b, so that operator overloading can use plus() to implement this
 
     TreeMaker make = _javacPlugin.getTreeMaker();
-    JavacElements javacElems = _javacPlugin.getJavacElements();
-
     JCTree.Tag binop = tree.getTag().noAssignOp();
 
     JCTree.JCBinary binary = make.Binary( binop, tree.lhs, tree.rhs );
