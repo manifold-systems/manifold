@@ -246,7 +246,7 @@ public class Executor<T>
   {
     //noinspection unchecked
     List<GqlError> errors = (List)response.get( "errors" );
-    if( errors != null )
+    if( errors != null && !errors.isEmpty() )
     {
       throw new GqlRequestException( errors );
     }
