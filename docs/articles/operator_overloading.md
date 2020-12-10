@@ -272,7 +272,7 @@ modules use operator overloading and unit expressions extensively.
 
 ##Update: _2020/11/13_
 >
->Release 2020.1.40 adds additional operator overloading support for:
+>Release 2020.1.41 adds additional operator overloading support for:
 >
 >* infix/postfix increment/decrement operators  `++` and `--`
 >* compound assignment: operators `+=`, `-=`, `*=`, `/=`, `%=`, 

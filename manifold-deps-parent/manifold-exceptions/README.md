@@ -131,10 +131,10 @@ configurations {
 dependencies {
     // Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
     //   -Xplugin:Manifold no-bootstrap
-    implementation 'systems.manifold:manifold-rt:2020.1.40-SNAPSHOT'
+    implementation 'systems.manifold:manifold-rt:2020.1.41-SNAPSHOT'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2020.1.40'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2020.1.41'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -170,7 +170,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.40</manifold.version>
+        <manifold.version>2020.1.41</manifold.version>
     </properties>
     
     <dependencies>
@@ -216,7 +216,7 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-exceptions`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2020.1.40/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2020.1.40)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2020.1.41/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2020.1.41)
 
 # License
 

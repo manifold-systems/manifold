@@ -177,10 +177,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-collections:2020.1.40'
+    implementation 'systems.manifold:manifold-collections:2020.1.41'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.40'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-collections', version: '2020.1.41'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -225,7 +225,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.40</manifold.version>
+        <manifold.version>2020.1.41</manifold.version>
     </properties>
     
     <dependencies>
@@ -270,7 +270,7 @@ rootProject.name = 'MyExtProject'
 # Javadoc 
 
 `manifold-collections`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-collections/2020.1.40/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-collections/2020.1.40)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-collections/2020.1.41/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-collections/2020.1.41)
 
 ## Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
