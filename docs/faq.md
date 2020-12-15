@@ -40,16 +40,9 @@ Download / Update the plugin directly from within the IDE:
 
 #### Q: Do I really need a license for the IntelliJ plugin?
 The [IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold/) is offered separately via the JetBrains
-Marketplace. It is *free* for use with IntelliJ IDEA *Community Edition* and is licensed for use with IntelliJ IDEA
-*Ultimate Edition* after a 30 day free trial. The plugin remains free for students and faculty using Ultimate. Other
-discounts apply and are available from the JetBrains Marketplace.
-
-> *Update:* The Manifold plugin is free for use with IDEA Community Edition version 2020.1 and later. Due to limitations
-> with JetBrains Marketplace licensing, earlier CE versions require a license after the 30 day trial. If you are a student
-> or faculty member, you may qualify for a free license, please contact [admin@manifld.systems](mailto:admin@manifold.systems)
-> for more information. Student discounts and other JetBrains offers apply and will be directly supported as the
-> JetBrains Marketplace develops. Please contact [JetBrains sales](https://www.jetbrains.com/support/sales/#department=american&tab=email-sales)
-> for questions concerning the Marketplace.
+Marketplace. It is *free* for use with IntelliJ IDEA *Community Edition* after a 30 day free trial. Similarly, it is
+free for use with IntelliJ IDEA *Ultimate Edition* after a 30 day free trial, however after the trial the plugin lightly
+nags about the trial expiration, but you can continue to use it if you don't want to purchase the license.
 
 #### Q: How do I get manifold-*fill-in-blank* working with my project? 
 Add the manifold-*fill-in-blank* dependency[s] to your project along with the `-Xplugin:Manifold` javac argument, the
