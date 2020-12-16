@@ -52,6 +52,11 @@ setup is sensitive to the version of Java you are using, generally whether you a
 ## Getting Help
 
 #### Q: Where can I find help?
+
+**Discussions**
+Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
+a discussion, ask questions, provide feedback, etc.
+
 **Report A Bug**
 The Manifold project uses github issues to track bugs, features, and other requests.  If you discover a bug, have a
 feature request, or an idea go [here](https://github.com/manifold-systems/manifold/issues) and let it be known. Expect a
@@ -59,10 +64,6 @@ response within 24 hours.
 
 **Private E-mail**
 If your question or issue is more pressing or confidential, don't hesitate to send an email to [info@manifold.systems](mailto:info@manifold.systems).
-
-**Discussions**
-Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
-a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
 #### Q: I've read the docs page.  Can I learn more about Manifold elsewhere?
 
