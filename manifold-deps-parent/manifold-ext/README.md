@@ -196,7 +196,6 @@ public class MyMapExt
     return "myMapMethod";
   }
 
-  @Extension
   public static class Entry {
     public static <K,V> String myEntryMethod(@This Map.Entry<K,V> thiz) {
       return "myEntryMethod";
