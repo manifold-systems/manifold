@@ -2,6 +2,7 @@
 
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
+  * [The `extensions` Package](#the-extensions-package)
   * [Basics](#extension-method-basics)
   * [Generics](#generics)
   * [Inner Classes](#inner-classes)
@@ -92,7 +93,10 @@ The `MyStringExtension` extension methods are directly available on `String`:
 "Hello World!".print();
 
 String separator = String.lineSeparator();
-```
+```                       
+
+## The `extensions` Package
+
 All extension classes must be sub-rooted in the `extensions` package where the remainder of the package
 must be the qualified name of the extended class. As the example illustrates, an extension
 class on `java.lang.String` must reside directly in a package equal to or ending with `extensions.java.lang.String`. Note this
