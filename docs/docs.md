@@ -254,10 +254,11 @@ projects' docs.
 
 ### Sample Projects
 * [Manifold sample project](https://github.com/manifold-systems/manifold-sample-project)
-* [Manifold sample GraphQL project](https://github.com/manifold-systems/manifold-sample-graphql-app)
-* [Manifold sample REST API project](https://github.com/manifold-systems/manifold-sample-rest-api)
-* [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app)
+* [Manifold sample GraphQL App](https://github.com/manifold-systems/manifold-sample-graphql-app)
+* [Manifold sample REST API App](https://github.com/manifold-systems/manifold-sample-rest-api)
+* [Manifold sample Web App](https://github.com/manifold-systems/manifold-sample-web-app)
 * [Manifold sample Gradle Project](https://github.com/manifold-systems/manifold-simple-gradle-project)
+* [Manifold sample Kotlin App](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 
 # Setup
 
