@@ -56,7 +56,7 @@ Experiment with [unit expressions](#unit-expressions) as a new way to improve re
 unit-related errors.
 Escape the rigidity of nominal typing with [structural interfaces](#structural-interfaces-via-structural).
 Avoid the tedium and error-prone nature of Java reflection using [type-safe reflection](#type-safe-reflection-via-jailbreak).
-Utilize the [self](#the-self-type-via-self) type as a simple alternative to reflective generic types.
+Utilize the [self](#the-self-type-via-self) type as a simple alternative to recursive generic types.
  
 # Extension Classes via `@Extension`
 
