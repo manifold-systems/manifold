@@ -20,15 +20,7 @@ import graphql.ErrorClassification;
 import graphql.ErrorType;
 import graphql.GraphQLError;
 import graphql.InvalidSyntaxError;
-import graphql.language.Definition;
-import graphql.language.Document;
-import graphql.language.FragmentDefinition;
-import graphql.language.OperationDefinition;
-import graphql.language.SDLDefinition;
-import graphql.language.ScalarTypeDefinition;
-import graphql.language.SchemaDefinition;
-import graphql.language.SourceLocation;
-import graphql.language.TypeDefinition;
+import graphql.language.*;
 import graphql.parser.InvalidSyntaxException;
 import graphql.parser.Parser;
 import graphql.schema.idl.TypeDefinitionRegistry;
@@ -36,12 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
@@ -146,11 +133,59 @@ public class GqlModel extends AbstractSingleFileModel
         // fragments
         fragments.put( ((FragmentDefinition)definition).getName(), (FragmentDefinition)definition );
       }
+      validateDefinition( definition, errors );
     }
     _issues = new GqlIssueContainer( errors, getFile() );
     _typeRegistry = typeRegistry;
     _operations = operations;
     _fragments = fragments;
+  }
+
+  //
+  // Checks for errors not handled by the GraphQL parser e.g., duplicate fields
+  //
+  private void validateDefinition( Definition definition, List<GraphQLError> errors )
+  {
+    Set<String> names = new HashSet<>();
+    for( NamedNode child: getDefinitions( definition ) )
+    {
+      String name = child.getName();
+      if( names.contains( name ) )
+      {
+        GraphQLError error = new InvalidSyntaxError( child.getSourceLocation(),
+          "Duplicate definition: " + child.getName() );
+        errors.add( error );
+      }
+      else
+      {
+        names.add( name );
+      }
+    }
+  }
+
+  private Iterable<? extends NamedNode> getDefinitions( Definition def )
+  {
+    if( def instanceof OperationDefinition )
+    {
+      return ((OperationDefinition)def).getVariableDefinitions();
+    }
+    if( def instanceof InputObjectTypeDefinition )
+    {
+      return ((InputObjectTypeDefinition)def).getInputValueDefinitions();
+    }
+    if( def instanceof ObjectTypeDefinition )
+    {
+      return ((ObjectTypeDefinition)def).getFieldDefinitions();
+    }
+    if( def instanceof EnumTypeDefinition )
+    {
+      return ((EnumTypeDefinition)def).getEnumValueDefinitions();
+    }
+    if( def instanceof InterfaceTypeDefinition )
+    {
+      return ((InterfaceTypeDefinition)def).getFieldDefinitions();
+    }
+    return Collections.emptyList();
   }
 
   private void handleParseException( ParseCancellationException e ) throws RuntimeException
