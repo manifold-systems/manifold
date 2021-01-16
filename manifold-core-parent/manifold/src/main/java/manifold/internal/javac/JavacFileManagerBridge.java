@@ -147,6 +147,12 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     // expected WrappedStandardJavaFileManager, thus we must find the wrapped StandardJavaFileManager and delegate the
     // call.
 
+    while( getLocationAsPaths == null && fm.getClass().getTypeName().equals( "com.sun.tools.javac.main.DelegatingJavaFileManager" ) )
+    {
+      fm = (JavaFileManager)ReflectUtil.field( fm, "baseFM" ).get();
+      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+    }
+
     while( getLocationAsPaths == null && fm.getClass().getEnclosingClass() == ClientCodeWrapper.class )
     {
       fm = (JavaFileManager)ReflectUtil.field( fm, "clientJavaFileManager" ).get();
