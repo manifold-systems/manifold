@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2020.1.44-SNAPSHOT</version>
+    <version>2020.1.44</version>
   </parent>
   <artifactId>manifold-templates</artifactId>
   <name>Manifold :: Templates</name>
