@@ -19,9 +19,7 @@ package manifold.ext;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.Context;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,10 +50,8 @@ import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.internal.javac.ClassSymbols;
-import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavacPlugin;
-import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
+import manifold.rt.api.Array;
 
 /**
  */
@@ -330,15 +326,10 @@ class ExtCodeGen
       return;
     }
 
-//## todo: This is disabled because it involves calls to ClassSymbols#getClassSymbol() where another javac compiler task
-//## todo: is spawned which can lead to perf problems because the same graph of types is recompiled over and over.
-//## todo: Instead find a different way to get the type information e.g., ASM, dumb AST trees, etc.
-//## todo: -- or ---
-//## todo: Instead of checking for duplicates at this time, wait and do it during type processing i.e.,
-//    if( warnIfDuplicate( method, extendedType, errorHandler ) )
-//    {
-//      return;
-//    }
+    if( warnIfDuplicate( method, extendedType, errorHandler ) )
+    {
+      return;
+    }
 
     // the class is a produced class, therefore we must delegate the calls since calls are not replaced
     boolean delegateCalls = !_existingSource.isEmpty() && !_genStubs;
@@ -353,8 +344,7 @@ class ExtCodeGen
       modifiers |= Flags.DEFAULT;
     }
 
-//## Don't mark extension methods on classes as final, it otherwise blocks extended
-//   classes from implementing an interface with the same method signature
+//## Don't mark extension methods on classes as final, it otherwise blocks extended classes from implementing an interface with the same method signature
 //    else
 //    {
 //      // extension method must be final in class to prohibit override
@@ -463,31 +453,35 @@ class ExtCodeGen
       return false;
     }
 
-    ClassSymbols classSymbols = ClassSymbols.instance( getModule() );
-    Context ctx = JavacPlugin.instance() == null ? classSymbols.getJavacTask_PlainFileMgr().getContext() : JavacPlugin.instance().getContext();
-    Symbol.ClassSymbol sym = IDynamicJdk.instance().getLoadedClass( ctx, ((SrcClass)method.getOwner()).getName() );
-    if( sym == null )
+    if( extendedType.getName().equals( Array.class.getTypeName() ) &&
+      ((SrcClass)duplicate.getOwner()).getName().equals( Object.class.getTypeName() ) )
     {
+      // to support shadowing Object#equals() etc. on arrays
       return false;
     }
 
-    JavaFileObject file = sym.sourcefile;
     SrcAnnotationExpression anno = duplicate.getAnnotation( ExtensionMethod.class );
     if( anno != null )
     {
-      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
-                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_DUPLICATION.get( method.signature(), ((SrcClass)method.getOwner()).getName(), anno.getArgument( ExtensionMethod.extensionClass ).getValue()) ) );
+      errorHandler.report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0,
+        ExtIssueMsg.MSG_EXTENSION_DUPLICATION.get( method.signature(), ((SrcClass)method.getOwner()).getName(), anno.getArgument( ExtensionMethod.extensionClass ).getValue()) ) );
     }
     else
     {
-      errorHandler.report( new JavacDiagnostic( file.toUri().getScheme() == null ? null : new SourceJavaFileObject( file.toUri() ),
-                                                Diagnostic.Kind.WARNING, 0, 0, 0, ExtIssueMsg.MSG_EXTENSION_SHADOWS.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
+      errorHandler.report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0,
+        ExtIssueMsg.MSG_EXTENSION_SHADOWS.get( method.signature(), ((SrcClass)method.getOwner()).getName(), extendedType.getName()) ) );
     }
+
     return true;
   }
 
   private AbstractSrcMethod findMethod( AbstractSrcMethod method, SrcClass extendedType )
   {
+    if( extendedType == null )
+    {
+      return null;
+    }
+
     AbstractSrcMethod duplicate = null;
     outer:
     for( AbstractSrcMethod m: extendedType.getMethods() )
