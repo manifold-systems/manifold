@@ -191,6 +191,11 @@ public class JavacPlugin implements Plugin, TaskListener
 
     processArgs( jpe, args );
 
+    if( JreUtil.isJava16orLater() )
+    {
+      NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
+    }
+
     _host = new JavacManifoldHost();
     _fileFragmentResources = new ArrayList<>();
     _javaSourcePath = Collections.emptySet();

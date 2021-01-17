@@ -550,7 +550,7 @@ public class ReflectUtil
 
   public static void setAccessible( Member m )
   {
-    Field overrideField = getOverrideField();
+    Field overrideField = field( FakeAccessibleObject.class, "override" )._field;;
     try
     {
       NecessaryEvilUtil.getUnsafe().putObjectVolatile( m, NecessaryEvilUtil.getUnsafe().objectFieldOffset( overrideField ), true );
@@ -561,22 +561,11 @@ public class ReflectUtil
     }
   }
 
-  private static Field getOverrideField()
+  // This class mirrors the layout/structure of the AccessibleObject class so we can get the offset of 'override'
+  private static class FakeAccessibleObject
   {
-    Field overrideField = getRawFieldFromCache( AccessibleObject.class, "override" );
-    if( overrideField == null )
-    {
-      try
-      {
-        overrideField = AccessibleObject.class.getDeclaredField( "override" );
-        addRawFieldToCache( AccessibleObject.class, overrideField );
-      }
-      catch( Exception e )
-      {
-        throw ManExceptionUtil.unchecked( e );
-      }
-    }
-    return overrideField;
+    static final private String ACCESS_PERMISSION = "";
+    boolean override;
   }
 
   public static class MethodRef

@@ -17,19 +17,14 @@
 package manifold.internal.javac;
 
 import com.sun.source.util.TaskEvent;
-import com.sun.tools.javac.parser.JavaTokenizer;
-import com.sun.tools.javac.parser.JavacParser;
-import com.sun.tools.javac.parser.JavadocTokenizer;
-import com.sun.tools.javac.parser.Lexer;
-import com.sun.tools.javac.parser.ParserFactory;
-import com.sun.tools.javac.parser.Scanner;
-import com.sun.tools.javac.parser.ScannerFactory;
-import com.sun.tools.javac.parser.Tokens;
+import com.sun.tools.javac.parser.*;
 import com.sun.tools.javac.util.Context;
 import java.nio.CharBuffer;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.tools.JavaFileObject;
+
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 
@@ -159,23 +154,28 @@ public class ManParserFactory extends ParserFactory
     private class ManJavadocTokenizer extends JavadocTokenizer
     {
       private final ManScannerFactory _scannerFactory;
+      private final UnicodeReader _reader;
 
       ManJavadocTokenizer( ManScannerFactory manScannerFactory, CharBuffer buf )
       {
         super( manScannerFactory, buf );
         _scannerFactory = manScannerFactory;
+        //noinspection ConstantConditions
+        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
       }
 
       ManJavadocTokenizer( ManScannerFactory manScannerFactory, char[] input, int inputLength )
       {
         super( manScannerFactory, input, inputLength );
         _scannerFactory = manScannerFactory;
+        //noinspection ConstantConditions
+        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
       }
 
       protected Tokens.Comment processComment( int pos, int endPos, Tokens.Comment.CommentStyle style )
       {
         Tokens.Comment comment = super.processComment( pos, endPos, style );
-        char[] buf = reader.getRawCharacters( pos, endPos );
+        char[] buf = _reader.getRawCharacters( pos, endPos );
         FragmentProcessor.instance().processComment(
           _scannerFactory._parserFactory._taskEvent.getSourceFile(), pos, new String( buf ), style );
         return comment;
@@ -187,9 +187,9 @@ public class ManParserFactory extends ParserFactory
         if( token.kind == STRINGLITERAL )
         {
           // todo: passing raw characters means we must parse string literal escaped chars esp. '"', '\n', unicode
-          char[] buf = reader.getRawCharacters( token.pos, token.endPos );
+          char[] buf = _reader.getRawCharacters( token.pos, token.endPos );
           FragmentProcessor.instance().processString(
-            ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ) );
+            ((ManScannerFactory)ReflectUtil.field( this, "fac" ).get())._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ) );
         }
         return token;
       }
@@ -214,20 +214,26 @@ public class ManParserFactory extends ParserFactory
 
       private static class ManJavaTokenizer extends JavaTokenizer
       {
+        private final UnicodeReader _reader;
+
         ManJavaTokenizer( ManScannerFactory fac, char[] buf, int len )
         {
           super( fac, buf, len );
+          //noinspection ConstantConditions
+          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
         }
 
         ManJavaTokenizer( ManScannerFactory fac, CharBuffer buf )
         {
           super( fac, buf );
+          //noinspection ConstantConditions
+          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
         }
 
         protected Tokens.Comment processComment( int pos, int endPos, Tokens.Comment.CommentStyle style )
         {
           Tokens.Comment comment = super.processComment( pos, endPos, style );
-          char[] buf = reader.getRawCharacters( pos, endPos );
+          char[] buf = _reader.getRawCharacters( pos, endPos );
           FragmentProcessor.instance().processComment(
             ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), pos, new String( buf ), style );
           return comment;
@@ -238,7 +244,7 @@ public class ManParserFactory extends ParserFactory
           Tokens.Token token = super.readToken();
           if( token.kind == STRINGLITERAL )
           {
-            char[] buf = reader.getRawCharacters( token.pos, token.endPos );
+            char[] buf = _reader.getRawCharacters( token.pos, token.endPos );
             FragmentProcessor.instance().processString(
               ((ManScannerFactory)fac)._parserFactory._taskEvent.getSourceFile(), token.pos, new String( buf ) );
           }

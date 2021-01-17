@@ -103,13 +103,13 @@ class on `java.lang.String` must reside directly in a package equal to or ending
 convention facilitates the extension discovery process and avoids the overhead and ceremony of
 alternative means such as annotation processors.
 
-In **Java 9** because a package must reside in a single module, you should prepend your module name to the extension package
+With Java 9 or later, because a package must reside in a single module, you should prepend your module name to the extension package
 name to avoid illegal sharing of packages between modules.  For example, if your module were named `foo.widget` you
 should define your extension class in package `foo.widget.extensions.java.lang.String`.  In Java 8 all extension classes
 can be directly rooted in the `extensions` package, however it is still best to qualify extension classes with your
 project or module name to prevent naming collisions.
 
-Additionally, an extension class must be annotated with `manifold.ext.rt.api.Extension`, which distinguishes extension
+Additionally, as the example illustrates, an extension class must be annotated with `manifold.ext.rt.api.Extension`, which distinguishes extension
 classes from other classes that may reside in the same package.
 
 ## Extension Method Basics
