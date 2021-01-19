@@ -99,7 +99,7 @@ public class ReflectUtil
       componentFqn = fqn.substring( 0, iBracket );
     }
     //openPackage( fqn, null );
-    Class<?> cls = null;
+    Class<?> cls;
     try
     {
       cls = Class.forName( componentFqn, false, cl );
@@ -197,6 +197,12 @@ public class ReflectUtil
    */
   public static MethodRef method( Class<?> cls, String name, Class... params )
   {
+    // This indirection avoids NPE checks from IJ, which cause annoying compile warnings
+    // that otherwise cause crap like 'Optional' to be layered on the API
+    return _method( cls, name, params );
+  }
+  private static MethodRef _method( Class<?> cls, String name, Class... params )
+  {
     MethodRef match = matchFirstMethod( cls, name, params );
     if( match != null )
     {
@@ -219,7 +225,7 @@ public class ReflectUtil
       Class superclass = cls.getSuperclass();
       if( superclass != null )
       {
-        mr = method( superclass, name, params );
+        mr = _method( superclass, name, params );
         if( mr != null )
         {
           addMethodToCache( cls, mr._method );
@@ -229,7 +235,7 @@ public class ReflectUtil
 
       for( Class iface: cls.getInterfaces() )
       {
-        mr = method( iface, name, params );
+        mr = _method( iface, name, params );
         if( mr != null )
         {
           addMethodToCache( cls, mr._method );
@@ -253,6 +259,7 @@ public class ReflectUtil
    *
    * @return A reference to the specified method or null if not found
    */
+  @SuppressWarnings( "unused" )
   public static MethodRef methodFromName( Class<?> cls, String name )
   {
     MethodRef mr = getMethodFromCacheUsingNameOnly( cls, name );
@@ -387,6 +394,12 @@ public class ReflectUtil
    */
   public static FieldRef field( Class<?> cls, String name )
   {
+    // This indirection avoids NPE checks from IJ, which cause annoying compile warnings
+    // that otherwise cause crap like 'Optional' to be layered on the API
+    return _field( cls, name );
+  }
+  private static FieldRef _field( Class<?> cls, String name )
+  {
     FieldRef match = matchFirstField( cls, name );
     if( match != null )
     {
@@ -409,7 +422,7 @@ public class ReflectUtil
       Class superclass = cls.getSuperclass();
       if( superclass != null )
       {
-        fr = field( superclass, name );
+        fr = _field( superclass, name );
         if( fr != null )
         {
           addFieldToCache( cls, fr._field );
@@ -419,7 +432,7 @@ public class ReflectUtil
 
       for( Class iface: cls.getInterfaces() )
       {
-        fr = field( iface, name );
+        fr = _field( iface, name );
         if( fr != null )
         {
           addFieldToCache( cls, fr._field );
@@ -550,7 +563,7 @@ public class ReflectUtil
 
   public static void setAccessible( Member m )
   {
-    Field overrideField = field( FakeAccessibleObject.class, "override" )._field;;
+    Field overrideField = field( FakeAccessibleObject.class, "override" )._field;
     try
     {
       NecessaryEvilUtil.getUnsafe().putObjectVolatile( m, NecessaryEvilUtil.getUnsafe().objectFieldOffset( overrideField ), true );
@@ -562,6 +575,7 @@ public class ReflectUtil
   }
 
   // This class mirrors the layout/structure of the AccessibleObject class so we can get the offset of 'override'
+  @SuppressWarnings( "unused" )
   private static class FakeAccessibleObject
   {
     static final private String ACCESS_PERMISSION = "";

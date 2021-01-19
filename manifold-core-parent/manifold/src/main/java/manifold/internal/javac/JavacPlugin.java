@@ -82,7 +82,6 @@ import manifold.util.NecessaryEvilUtil;
 import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
 import manifold.rt.api.util.StreamUtil;
-import manifold.util.concurrent.ConcurrentHashSet;
 
 
 import static manifold.api.type.ContributorKind.Supplemental;
@@ -95,23 +94,11 @@ public class JavacPlugin implements Plugin, TaskListener
   public static final String ARG_DYNAMIC = "dynamic";
   /** disables &lt;clinit&gt; bootstap */
   public static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
-  /** turns off checked exceptions (deprecated, use manifold-exceptions dependency) */
-  @Deprecated
-  public static final String ARG_EXCEPTIONS = "exceptions";
-  /** static mode (deprecated, now the default) */
-  @Deprecated
-  public static final String ARG_STATIC = "static";
-  /** enables string literal templating (deprecated, use manifold-strings dependency) */
-  @Deprecated
-  public static final String ARG_STRINGS = "strings";
   /** all plugin args */
   public static final String[] ARGS =
   {
     ARG_NO_BOOTSTRAP,
     ARG_DYNAMIC,
-    ARG_STATIC,
-    ARG_EXCEPTIONS,
-    ARG_STRINGS,
   };
 
   /** javac command line arguments for static compilation */
@@ -155,7 +142,6 @@ public class JavacPlugin implements Plugin, TaskListener
   private boolean _initialized;
   private Map<Context, Set<Symbol>> _seenModules;
   private Map<String, Boolean> _argPresent;
-  private ConcurrentHashSet<Pair<String, JavaFileManager.Location>> _extraClasses;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
   private List<String> _manifoldSourcePath;
@@ -223,7 +209,7 @@ public class JavacPlugin implements Plugin, TaskListener
         }
       }
     }
-    catch( Exception igonre ) {}
+    catch( Exception ignore ) {}
   }
 
   private void processArgs( JavacProcessingEnvironment jpe, String[] args )
@@ -245,18 +231,6 @@ public class JavacPlugin implements Plugin, TaskListener
       if( Arrays.stream( ARGS ).noneMatch( validArg -> validArg.equals( arg ) ) )
       {
         jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "Unrecognized Manifold plugin argument '" + arg + "'" );
-      }
-      else if( ARG_STATIC.equals( arg ) )
-      {
-        jpe.getMessager().printMessage( Diagnostic.Kind.MANDATORY_WARNING, "'static' mode is the default mode, please remove the 'static' argument to '-Xplugin:Manifold'" );
-      }
-      else if( ARG_STRINGS.equals( arg ) )
-      {
-        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "'strings' argument to '-Xplugin:Manifold' is deprecated, instead use *dependency* 'manifold-strings'" );
-      }
-      else if( ARG_EXCEPTIONS.equals( arg ) )
-      {
-        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "'exceptions' argument to '-Xplugin:Manifold' is deprecated, instead use *dependency* 'manifold-exceptions'" );
       }
     }
   }
@@ -382,7 +356,6 @@ public class JavacPlugin implements Plugin, TaskListener
       _typeProcessor = new TypeProcessor( getHost(), _javacTask );
       _issueReporter = new IssueReporter( _javacTask::getContext );
       _seenModules = new HashMap<>();
-      _extraClasses = new ConcurrentHashSet<>();
       injectManFileManager();
     }
   }
@@ -462,8 +435,8 @@ public class JavacPlugin implements Plugin, TaskListener
     if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
     {
       // Override javac's ClassFinder
-      //noinspection ConstantConditions
-      ReflectUtil.method( ReflectUtil.type( "manifold.internal.javac.ManClassFinder_9" ), "instance", Context.class ).invokeStatic( getContext() );
+      ReflectUtil.method( "manifold.internal.javac.ManClassFinder_9", "instance", Context.class )
+        .invokeStatic( getContext() );
     }
   }
 
@@ -603,8 +576,9 @@ public class JavacPlugin implements Plugin, TaskListener
     if( JreUtil.isJava9Modular_compiler( getContext() ) )
     {
       List<String> pathsFromModules = new ArrayList<>();
-      Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", Context.class ).invokeStatic( getContext() );
+      Object modulesUtil = ReflectUtil.method( "com.sun.tools.javac.comp.Modules", "instance", Context.class ).invokeStatic( getContext() );
       // an explicit is compiling, determine the class path from its dependencies, which are allModules visible via Modules util
+      //noinspection unchecked
       for( Symbol m : (Iterable<Symbol>)ReflectUtil.method( modulesUtil, "allModules" ).invoke() )
       {
         Object classLocation = ReflectUtil.field( m, "classLocation" ).get();
@@ -615,6 +589,7 @@ public class JavacPlugin implements Plugin, TaskListener
         Collection<Path> paths;
         try
         {
+          //noinspection unchecked
           paths = (Collection<Path>)ReflectUtil.method( classLocation, "getPaths" ).invoke();
         }
         catch( Exception e )
@@ -670,7 +645,6 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       for( String p : paths )
       {
-        //noinspection StringEquality
         String unmodifiedPath = path;
         if( path.endsWith( File.separator + '.' ) )
         {
