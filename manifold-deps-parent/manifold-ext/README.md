@@ -579,8 +579,8 @@ See the `manifold-ext-producer-sample` module for a sample type manifold impleme
 # Operator Overloading
 
 The Manifold extension framework plugs into Java to provide seamless operator overloading capability. You can
-type-safely provide arithmetic, relational, and [unit](#unit-expressions) operators for any class by implementing one or
-more predefined operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
+type-safely provide arithmetic, relational, index, and [unit](#unit-expressions) operators for any class by implementing
+one or more predefined operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
 to implement operators for classes you don't otherwise control. For example, using extension methods Manifold provides
 operator implementations for `BigDecimal` so you can write code like this:
 ```java

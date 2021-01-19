@@ -65,7 +65,7 @@ greeting.myMethod(); // Add your own methods to String!
 ```
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-Implement *operator* methods on any type to directly support arithmetic, relational, and unit operators.
+Implement *operator* methods on any type to directly support arithmetic, relational, index, and unit operators.
 ```java
 // BigDecimal expressions
 if (bigDec1 > bigDec2) {
