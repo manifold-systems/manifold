@@ -56,7 +56,7 @@ class BootstrapInserter extends TreeTranslator
   public void visitClassDef( JCTree.JCClassDecl tree )
   {
     super.visitClassDef( tree );
-    if( tree.sym != null && !tree.sym.isInner() )
+    if( tree.sym != null && !tree.sym.isInner() && !tree.sym.isInterface() )
     {
       if( okToInsertBootstrap( tree ) )
       {
