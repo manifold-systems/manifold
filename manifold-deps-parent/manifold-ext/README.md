@@ -1776,6 +1776,10 @@ For optimal performance and to work with Android and other JVM languages it is r
 * Add a default scoped dependency on `manifold-ext-rt` (Gradle: "implementation", Maven: "compile")
 * Add `manifold-ext` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
 
+Instead, if your project utilizes dynamic features of this dependency, such as dynamic structural interfaces, you must:
+* Add a default scoped dependency on `manifold-ext` (Gradle: "implementation", Maven: "compile")
+* Add `manifold-ext` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
+ 
 ## Binaries
 
 If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#download).
