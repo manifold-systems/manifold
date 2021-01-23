@@ -1423,6 +1423,22 @@ the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
+>A note about static vs. dynamic structural interface proxies 
+>
+>Manifold is generally a Java _compiler_ plugin, thus aside from utility classes, Manifold is more or less out of the
+>picture at runtime, which translates to a small runtime footprint and near-zero performance impact. This is not the
+>case, however, if structural interfaces are used dynamically.
+>   
+>Unless an interface nominally implements a structural interface, a structural call requires a proxy to wire the call to
+>the receiving object. If the proxy is statically defined using [Implementation by Proxy](#implementation-by-proxy), the
+>call resolves at compile-time, otherwise the proxy is dynamically generated and compiled at _runtime_ using runtime
+>services of Javac and the Manifold plugin.
+>
+>Therefore, unless you provide static proxies for your usage of structural interfaces using Implementation by Proxy, you must
+>add a dependency to `manifold-ext` for use at _runtime_. For Maven projects this is a "compile" scoped dependency. For
+>Gradle projects, this is an "implementation" scoped dependency. Otherwise, `manifold-ext` is used exclusively at
+>compile-time in the "processor path". See [Setup](#setup) for details. 
+
 # Type-safe Reflection via `@Jailbreak`
 
 Sometimes you have to use Java reflection to access fields, methods, and types that are not directly accessible from
