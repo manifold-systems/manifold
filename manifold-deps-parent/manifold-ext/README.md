@@ -1778,7 +1778,7 @@ For optimal performance and to work with Android and other JVM languages it is r
 
 Instead, if your project utilizes dynamic features of this dependency, such as dynamic structural interfaces, you must:
 * Add a default scoped dependency on `manifold-ext` (Gradle: "implementation", Maven: "compile")
-* Add `manifold-ext` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
+* Add `manifold-ext` to the annotationProcessor path (Gradle: add an "annotationProcessor" dependency, Maven: add to "annotationProcessorPaths")
  
 ## Binaries
 
@@ -1814,6 +1814,10 @@ configurations {
 
 dependencies {
     implementation 'systems.manifold:manifold-ext-rt:2020.1.45'
+
+// Add this only if you are using dynamic features of manifold extension framework such as dynamic structural interfaces 
+//    implementation 'systems.manifold:manifold-ext:2020.1.45'   
+
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2020.1.45'
@@ -1860,7 +1864,15 @@ rootProject.name = 'MyExtProject'
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-ext-rt</artifactId>
             <version>${manifold.version}</version>
+        </dependency>                                                                                                     
+
+<!-- Add this only if you are using dynamic features of manifold extension framework such as dynamic structural interfaces 
+       <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-ext-rt</artifactId>
+            <version>${manifold.version}</version>
         </dependency>
+-->
     </dependencies>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
