@@ -33,6 +33,7 @@
   * [Implementation by Extension](#implementation-by-extension)
   * [Implementation by Proxy](#implementation-by-proxy)
   * [Dynamic Typing](#dynamic-typing-with-icallhandler)
+  * [Static v. Dynamic](#a-note-about-static-vs-dynamic-structural-interface-proxies)
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) with `@Jailbreak`
   * [Basics](#using-the-jailbreak-extension)
   * [Using `jailbreak()`](#using-the-jailbreak-extension)
@@ -1423,7 +1424,7 @@ the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
->A note about static vs. dynamic structural interface proxies 
+>## A note about static vs. dynamic structural interface proxies 
 >
 >Manifold is generally a Java _compiler_ plugin, thus aside from utility classes, Manifold is more or less out of the
 >picture at runtime, which translates to a small runtime footprint and near-zero performance impact. This is not the
