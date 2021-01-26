@@ -11,6 +11,8 @@ layout: default
  I haven't quite committed to anything big at the moment. For now I'm reviewing bugs and looking for small stuff
  to fortify existing features until I figure out what is next. Visit the Manifold [Slack group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
  to discuss ideas etc.
+ 
+ Currently working on [240](https://github.com/manifold-systems/manifold/issues/240).
    
 ## On the pile (in no particular order)
 
