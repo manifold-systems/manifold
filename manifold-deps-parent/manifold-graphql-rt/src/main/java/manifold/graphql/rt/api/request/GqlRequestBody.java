@@ -34,10 +34,24 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
   {
     DataBindings bindings = new DataBindings();
     bindings.put( "query", query );
-    bindings.put( "variables", variables );
+    bindings.put( "variables", filterNulls( (Bindings)variables ) );
 
     //noinspection unchecked
     return (GqlRequestBody<V>)bindings;
+  }
+
+  static Bindings filterNulls( Bindings variables )
+  {
+    DataBindings bindings = new DataBindings();
+    for( Map.Entry<String, Object> entry: variables.entrySet() )
+    {
+      Object value = entry.getValue();
+      if( value != null )
+      {
+        bindings.put( entry.getKey(), value );
+      }
+    }
+    return bindings;
   }
 
   /**
