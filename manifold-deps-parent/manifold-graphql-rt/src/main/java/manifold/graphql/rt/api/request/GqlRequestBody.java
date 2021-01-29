@@ -17,6 +17,7 @@
 package manifold.graphql.rt.api.request;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import manifold.graphql.rt.api.Config;
@@ -64,12 +65,32 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
       {
         maybeRemoveNulls( (Bindings)value );
       }
+      else if( value instanceof List )
+      {
+        removeNulls( (List)value );
+      }
       else if( value == null )
       {
         iter.remove();
       }
     }
     return variables;
+  }
+
+  static void removeNulls( List list )
+  {
+    for( Object item: list )
+    {
+      if( item instanceof List )
+      {
+        removeNulls( (List)item );
+      }
+      else if( item instanceof Bindings )
+      {
+        maybeRemoveNulls( (Bindings)item );
+      }
+      // not removing direct null items
+    }
   }
 
   /**
