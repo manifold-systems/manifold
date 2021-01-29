@@ -61,6 +61,21 @@ public class StructuralTypeTest extends TestCase
     assertEquals( 1.0, rectCoord.getX() );
   }
 
+  public void testAnonymousClass()
+  {
+    Coordinate c = (Coordinate) makeAnonymousClass();
+    assertEquals( 1.0, c.getX() );
+    assertEquals( 2.0, c.getY() );
+  }
+  public Runnable makeAnonymousClass()
+  {
+    return new Runnable() {
+      public void run() {}
+      public double getX() { return 1.0; }
+      public double getY() { return 2.0; }
+    };
+  }
+
   public void testEqualsUsesRawValues()
   {
     Coordinate c1 = (Coordinate)new Point( 8, 9 );

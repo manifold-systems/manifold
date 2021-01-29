@@ -16,11 +16,7 @@
 
 package manifold.ext.rt;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -31,13 +27,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import manifold.ext.rt.extensions.java.util.Map.MapStructExt;
 import manifold.rt.api.Bindings;
 
 import manifold.rt.api.util.ManClassUtil;
 import manifold.ext.rt.api.*;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.ReflectUtil;
-import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class RuntimeMethods
@@ -392,14 +389,26 @@ public class RuntimeMethods
     if( proxyFactory == null )
     {
       IDynamicProxyFactory dynamicProxyFactory = _dynamicProxyFactory.get();
-      if( dynamicProxyFactory == null )
+      if( dynamicProxyFactory == null || rootClass.isAnonymousClass() )
       {
-        throw new RuntimeException(
-          "Missing proxy factory for '" + iface.getTypeName() + "' : '" + rootClass.getTypeName() + "'" );
+        // No Manifold runtime operating (manifold was used exclusively at compile-time), so we use a proxy that calls dynamically at runtime
+        return makeDynamicProxyNoManifoldRuntimeHost( rootClass, iface );
       }
       proxyFactory = dynamicProxyFactory.makeProxyFactory( iface, rootClass );
     }
     return proxyFactory;
+  }
+
+  private static IProxyFactory makeDynamicProxyNoManifoldRuntimeHost( Class rootClass, Class intface )
+  {
+    if( Map.class.isAssignableFrom( rootClass ) )
+    {
+      return (target, iface) -> Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
+        (proxy, method, args) -> MapStructExt.call( (Map)target, iface, method.getName(), null,
+          method.getReturnType(), method.getParameterTypes(), args) );
+    }
+    return (target, iface) -> Proxy.newProxyInstance( rootClass.getClassLoader(), new Class[]{iface},
+      (proxy, method, args) -> ReflectUtil.structuralCall( method, target, args ) );
   }
 
   public static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )

@@ -21,12 +21,10 @@ import java.lang.reflect.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -49,6 +47,7 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, ConcurrentHashSet<Method>>> _methodsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, ConcurrentMap<String, Field>> _fieldsByName = new ConcurrentWeakHashMap<>();
   private static final ConcurrentWeakHashMap<Class, Set<Constructor>> _constructorsByClass = new ConcurrentWeakHashMap<>();
+  private static final ConcurrentWeakHashMap<Method, ConcurrentMap<Class, Method>> _structuralCall = new ConcurrentWeakHashMap<>();
   private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
   private static final String LAMBDA_METHOD = "lambda method";
 
@@ -64,7 +63,6 @@ public class ReflectUtil
    * the current thread's context class loader.
    *
    * @param fqn The qualified name of the type e.g., {@code "java.lang.String"} or {@code "java.lang.String[]"}
-   *
    * @return The {@code Class} corresponding with {@code fqn} or null if not found
    */
   public static Class<?> type( String fqn )
@@ -81,7 +79,6 @@ public class ReflectUtil
    *
    * @param fqn The qualified name of the type e.g., {@code "java.lang.String"}
    * @param cl  The class loader to search
-   *
    * @return The {@code Class} corresponding with {@code fqn} or null if not found
    */
   public static Class<?> type( String fqn, ClassLoader cl )
@@ -154,7 +151,6 @@ public class ReflectUtil
    * @param receiver The object to make the call on
    * @param name     The name of the method to call or a '|' separated list of names, where the first found is used
    * @param params   The types of the method's parameters
-   *
    * @return A reference to the specified method, throws {@link RuntimeException} if the method is not found.
    * Use {@link WithNull} to avoid the RuntimeException.
    */
@@ -176,7 +172,6 @@ public class ReflectUtil
    * @param fqn    The qualified name of the class containing the method
    * @param name   The name of the method or a '|' separated list of names, where the first found is used
    * @param params The types of the method's parameters
-   *
    * @return A reference to the specified method or null if not found
    */
   public static MethodRef method( String fqn, String name, Class... params )
@@ -192,7 +187,6 @@ public class ReflectUtil
    * @param cls    The class containing the method
    * @param name   The name of the method or a '|' separated list of names, where the first found is used
    * @param params The types of the method's parameters
-   *
    * @return A reference to the specified method or null if not found
    */
   public static MethodRef method( Class<?> cls, String name, Class... params )
@@ -254,9 +248,8 @@ public class ReflectUtil
    * <p/>
    * <pre> methodByName(LocalTime.class, "isAfter").invoke(source, time) </pre>
    *
-   * @param cls    The class containing the method
-   * @param name   The name of the method or a '|' separated list of names, where the first found is used
-   *
+   * @param cls  The class containing the method
+   * @param name The name of the method or a '|' separated list of names, where the first found is used
    * @return A reference to the specified method or null if not found
    */
   @SuppressWarnings( "unused" )
@@ -353,7 +346,6 @@ public class ReflectUtil
    *
    * @param receiver The object having the field
    * @param name     The name of the field or a '|' separated list of names, where the first found is used
-   *
    * @return A reference to the specified field, throws {@link RuntimeException} if the field is not found.
    * Use {@link WithNull} to avoid the RuntimeException.
    */
@@ -374,7 +366,6 @@ public class ReflectUtil
    *
    * @param fqn  The qualified name of the class having the field
    * @param name The name of the field or a '|' separated list of names, where the first found is used
-   *
    * @return A reference to the specified field or null if not found
    */
   public static FieldRef field( String fqn, String name )
@@ -389,7 +380,6 @@ public class ReflectUtil
    *
    * @param cls  The class having the field
    * @param name The name of the field or a '|' separated list of names, where the first found is used
-   *
    * @return A reference to the specified field or null if not found
    */
   public static FieldRef field( Class<?> cls, String name )
@@ -468,7 +458,6 @@ public class ReflectUtil
    *
    * @param fqn    The qualified name of the class to construct
    * @param params A list of parameter types for the constructor
-   *
    * @return A reference to the constructor or null if not found
    */
   public static ConstructorRef constructor( String fqn, Class<?>... params )
@@ -483,7 +472,6 @@ public class ReflectUtil
    *
    * @param cls    The class to construct
    * @param params A list of parameter types for the constructor
-   *
    * @return A reference to the constructor or null if not found
    */
   public static ConstructorRef constructor( Class<?> cls, Class<?>... params )
@@ -751,7 +739,7 @@ public class ReflectUtil
       return _field;
     }
 
-    @SuppressWarnings("unused")
+    @SuppressWarnings( "unused" )
     public Object getReceiver()
     {
       return _receiver;
@@ -1063,7 +1051,7 @@ public class ReflectUtil
    *                      parent loader chain
    * @param parentLoader  The class loader to load the class in, must be in the parent chain of {@code wouldBeLoader}
    */
-  @SuppressWarnings("unused")
+  @SuppressWarnings( "unused" )
   public static void preloadClassIntoParentLoader( String fqn, URI content, ClassLoader wouldBeLoader, ClassLoader parentLoader )
   {
     if( null != method( parentLoader, "findLoadedClass", String.class ).invoke( fqn ) )
@@ -1129,6 +1117,75 @@ public class ReflectUtil
     {
       return super.getClassContext();
     }
+  }
+
+  public static MethodRef structuralMethod( Class target, Class structIface, String name, Class... params )
+  {
+    MethodRef structMethod = method( structIface, name, params );
+    if( structMethod != null )
+    {
+      Method bestMethod = findBestMethod( structMethod.getMethod(), target );
+      return bestMethod == null ? null : new MethodRef( bestMethod );
+    }
+    return null;
+  }
+
+  public static LiveMethodRef structuralMethod( Object receiver, Class structIface, String name, Class... params )
+  {
+    MethodRef structMethod = method( structIface, name, params );
+    if( structMethod != null )
+    {
+      Method bestMethod = findBestMethod( structMethod.getMethod(), receiver.getClass() );
+      return bestMethod == null ? null : new LiveMethodRef( bestMethod, receiver );
+    }
+    return null;
+  }
+
+  public static Object structuralCall( Method structMethod, Object receiver, Object... args )
+  {
+    Method bestMethod = findBestMethod( structMethod, receiver.getClass() );
+    if( bestMethod == null )
+    {
+      throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
+        "' does not implement a method structurally compatible with method: " +  structMethod );
+    }
+
+    try
+    {
+      return bestMethod.invoke( receiver, args );
+    }
+    catch( Throwable t )
+    {
+      throw ManExceptionUtil.unchecked( t );
+    }
+
+  }
+
+  private static Method findBestMethod( Method structMethod, Class receiverClass )
+  {
+    ConcurrentMap<Class, Method> map = _structuralCall.computeIfAbsent( structMethod, cls -> new ConcurrentWeakHashMap<>() );
+    return map.computeIfAbsent( receiverClass, rc -> {
+      List<Method> methods = new ArrayList<>();
+      for( Method m : rc.getMethods() )
+      {
+        if( m.getName().equals( structMethod.getName() ) )
+        {
+          methods.add( m );
+        }
+      }
+      List<MethodScore> methodScores = MethodScorer.instance()
+        .scoreMethods( methods, Arrays.asList( structMethod.getParameterTypes() ), structMethod.getReturnType() );
+      for( MethodScore score : methodScores )
+      {
+        if( !score.isErrant() )
+        {
+          Method method = score.getMethod();
+          setAccessible( method );
+          return method;
+        }
+      }
+      return null;
+    } );
   }
 
   //## not necessary (until Unsafe goes away), using Unsafe.putObjectVolatile() to set 'override' directly

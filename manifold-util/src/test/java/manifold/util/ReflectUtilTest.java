@@ -38,4 +38,97 @@ public class ReflectUtilTest extends TestCase
     long actualOffset = NecessaryEvilUtil.getUnsafe().objectFieldOffset( AccessibleObject.class.getDeclaredField( "override" ) );
     assertEquals( actualOffset, approximateOffset );
   }
+
+  public void testStructuralCall()
+  {
+    Object res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", CharSequence.class ).getMethod(), new Foo(), "hi" );
+    assertEquals( "hi", res );
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", String.class ).getMethod(), new Foo(), "hi" );
+    assertEquals( "hi", res );
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", int.class ).getMethod(), new Foo(), 5 );
+    assertEquals( "int", res );
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", double.class ).getMethod(), new Foo(), 5 );
+    assertEquals( "Number", res );
+    try
+    {
+      ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", int[].class ).getMethod(), new Foo(), 5 );
+      fail( "Should have failed with 'Illegal structural call' since there is no method on Foo compatible with callMe(int[])" );
+    }
+    catch( RuntimeException ignore ) {}
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "returnString", int.class ).getMethod(), new Foo(), 5 );
+    assertEquals( "String", res );
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "returnCharSequence", int.class ).getMethod(), new Foo(), 5 );
+    assertEquals( "String", res );
+    res = ReflectUtil.structuralCall( ReflectUtil.method( IFoo.class, "callMe", Three.class ).getMethod(), new Foo(), new Three() );
+    assertEquals( "two", res );
+  }
+
+  interface IFoo
+  {
+    String callMe( CharSequence p );
+    String callMe( String p );
+    String callMe( int p );
+    String callMe( double p );
+    String callMe( int[] p );
+    String callMe( Integer p );
+
+    String returnString( int n );
+    CharSequence returnCharSequence( int n );
+
+    String callMe( Three three );
+  }
+  static class Foo
+  {
+    public String callMe( CharSequence p )
+    {
+      return p.toString();
+    }
+
+    public String callMe( int p )
+    {
+      return "int";
+    }
+
+    public String callMe( Number p )
+    {
+      return "Number";
+    }
+
+    public String callMe( Two two )
+    {
+      return "two";
+    }
+    public String callMe( One one )
+    {
+      return "one";
+    }
+
+    public CharSequence returnString( int n )
+    {
+      return "CharSequence";
+    }
+    public String returnString( long l )
+    {
+      return "String";
+    }
+
+    public String returnCharSequence( long l )
+    {
+      return "String";
+    }
+    public Object returnCharSequence( int n )
+    {
+      return "Object";
+    }
+
+    public String primitiveMethod( int i )
+    {
+      return "String";
+    }
+
+  }
+
+  static class One {}
+  static class Two extends One {}
+  static class Three extends Two {}
 }
