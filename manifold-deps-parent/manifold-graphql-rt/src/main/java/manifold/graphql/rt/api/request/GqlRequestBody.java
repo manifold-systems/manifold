@@ -16,7 +16,10 @@
 
 package manifold.graphql.rt.api.request;
 
+import java.util.Iterator;
 import java.util.Map;
+
+import manifold.graphql.rt.api.Config;
 import manifold.rt.api.Bindings;
 import manifold.json.rt.api.IJsonBindingsBacked;
 import manifold.json.rt.api.DataBindings;
@@ -34,24 +37,39 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
   {
     DataBindings bindings = new DataBindings();
     bindings.put( "query", query );
-    bindings.put( "variables", filterNulls( (Bindings)variables ) );
+    bindings.put( "variables", maybeRemoveNulls( (Bindings)variables ) );
 
     //noinspection unchecked
     return (GqlRequestBody<V>)bindings;
   }
 
-  static Bindings filterNulls( Bindings variables )
+  /**
+   * Recursively remove entries with `null` values since the absence of a field and a field
+   * with a `null` value are treated equally. The reason for removing them is mostly due to
+   * tooling that does not handle null well (Nasdaq), however it may also help with large,
+   * sparsely populated payloads.
+   */
+  static Bindings maybeRemoveNulls( Bindings variables )
   {
-    DataBindings bindings = new DataBindings();
-    for( Map.Entry<String, Object> entry: variables.entrySet() )
+    if( !Config.instance().isRemoveNullConstraintValues() )
     {
+      return variables;
+    }
+
+    for( Iterator<Map.Entry<String, Object>> iter = variables.entrySet().iterator(); iter.hasNext(); )
+    {
+      Map.Entry<String, Object> entry = iter.next();
       Object value = entry.getValue();
-      if( value != null )
+      if( value instanceof Bindings )
       {
-        bindings.put( entry.getKey(), value );
+        maybeRemoveNulls( (Bindings)value );
+      }
+      else if( value == null )
+      {
+        iter.remove();
       }
     }
-    return bindings;
+    return variables;
   }
 
   /**
