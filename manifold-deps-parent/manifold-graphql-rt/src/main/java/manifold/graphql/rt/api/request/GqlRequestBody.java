@@ -16,9 +16,7 @@
 
 package manifold.graphql.rt.api.request;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import manifold.graphql.rt.api.Config;
 import manifold.rt.api.Bindings;
@@ -57,17 +55,28 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
       return variables;
     }
 
+    return _maybeRemoveNulls( variables, new HashSet<>() );
+  }
+  static Bindings _maybeRemoveNulls( Bindings variables, Set<Integer> visited )
+  {
+    int identity = System.identityHashCode( variables );
+    if( visited.contains( identity ) )
+    {
+      return variables;
+    }
+    visited.add( identity );
+
     for( Iterator<Map.Entry<String, Object>> iter = variables.entrySet().iterator(); iter.hasNext(); )
     {
       Map.Entry<String, Object> entry = iter.next();
       Object value = entry.getValue();
       if( value instanceof Bindings )
       {
-        maybeRemoveNulls( (Bindings)value );
+        _maybeRemoveNulls( (Bindings)value, visited );
       }
       else if( value instanceof List )
       {
-        removeNulls( (List)value );
+        removeNulls( (List)value, visited );
       }
       else if( value == null )
       {
@@ -77,17 +86,24 @@ public interface GqlRequestBody<V> extends IJsonBindingsBacked
     return variables;
   }
 
-  static void removeNulls( List list )
+  static void removeNulls( List list, Set<Integer> visited )
   {
+    int identity = System.identityHashCode( list );
+    if( visited.contains( identity ) )
+    {
+      return;
+    }
+    visited.add( identity );
+
     for( Object item: list )
     {
       if( item instanceof List )
       {
-        removeNulls( (List)item );
+        removeNulls( (List)item, visited );
       }
       else if( item instanceof Bindings )
       {
-        maybeRemoveNulls( (Bindings)item );
+        _maybeRemoveNulls( (Bindings)item, visited );
       }
       // not removing direct null items
     }
