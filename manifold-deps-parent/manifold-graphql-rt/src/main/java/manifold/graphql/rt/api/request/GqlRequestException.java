@@ -17,25 +17,42 @@
 package manifold.graphql.rt.api.request;
 
 import manifold.json.rt.api.JsonList;
+import manifold.rt.api.Bindings;
 
 import java.util.List;
 
 /**
  * Thrown when a GraphQL request response contains errors. The errors wrap the {@link graphql.GraphQLError}
- * values in the response as a list of {@link GqlError}.
+ * values in the response as a type-safe list of {@link GqlError} from {@link #getErrors()}. The query result data,
+ * if available, is also type-safely accessible from {@link #getResult(Class)}.
  */
 public class GqlRequestException extends RuntimeException
 {
-  private final List<GqlError> _errors;
+  private final Bindings _response;
 
-  public GqlRequestException( List<GqlError> errors )
+  public GqlRequestException( Bindings response )
   {
-    super( errors.size() == 1 ? errors.get( 0 ).getMessage() : "GraphQL request errors found" );
-    _errors = new JsonList<>( errors, GqlError.class );
+    _response = response;
+  }
+
+  public <E> E getResult( Class<E> resultType )
+  {
+    //noinspection unchecked
+    return (E)_response.get( "data" );
+  }
+
+  @Override
+  public String getMessage()
+  {
+    //noinspection unchecked
+    List<GqlError> errors = (List)_response.get( "errors" );
+    return errors.size() == 1 ? errors.get( 0 ).getMessage() : "GraphQL request errors found";
   }
 
   public List<GqlError> getErrors()
   {
-    return _errors;
+    //noinspection unchecked
+    List<GqlError> errors = (List)_response.get( "errors" );
+    return new JsonList<>( errors, GqlError.class );
   }
 }

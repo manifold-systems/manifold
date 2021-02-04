@@ -248,7 +248,7 @@ public class Executor<T>
     List<GqlError> errors = (List)response.get( "errors" );
     if( errors != null && !errors.isEmpty() )
     {
-      throw new GqlRequestException( errors );
+      throw new GqlRequestException( response );
     }
   }
 }
