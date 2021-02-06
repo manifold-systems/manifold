@@ -70,6 +70,7 @@ import javax.tools.StandardLocation;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.fs.def.FileFragmentImpl;
+import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.util.JavacUtil;
 import manifold.internal.host.JavacManifoldHost;
@@ -408,6 +409,8 @@ public class JavacPlugin implements Plugin, TaskListener
 
     ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
 
+    notifyCompilerComponents();
+
     if( JreUtil.isJava8() )
     {
       return;
@@ -437,6 +440,14 @@ public class JavacPlugin implements Plugin, TaskListener
       // Override javac's ClassFinder
       ReflectUtil.method( "manifold.internal.javac.ManClassFinder_9", "instance", Context.class )
         .invokeStatic( getContext() );
+    }
+  }
+
+  private void notifyCompilerComponents()
+  {
+    for( ICompilerComponent cc: JavacPlugin.instance().getTypeProcessor().getCompilerComponents() )
+    {
+      cc.tailorCompiler();
     }
   }
 
@@ -939,7 +950,7 @@ public class JavacPlugin implements Plugin, TaskListener
     return otherSourceList;
   }
 
-  private void initialize( TaskEvent e )
+  public void initialize( TaskEvent e )
   {
     if( !_initialized )
     {

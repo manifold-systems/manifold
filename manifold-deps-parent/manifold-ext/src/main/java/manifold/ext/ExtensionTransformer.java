@@ -328,10 +328,13 @@ public class ExtensionTransformer extends TreeTranslator
   // Create a temporary variable and corresonding identifier to avoid cop
   private JCTree[] tempify( JCTree.JCExpression tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
   {
-    return tempify( false, tree, make, expr, ctx, owner, varName );
+    return tempify( false, tree, make, expr, ctx, owner, varName, tempVarIndex );
   }
-
   private JCTree[] tempify( boolean force, JCTree.JCExpression tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName )
+  {
+    return tempify( force, tree, make, expr, ctx, owner, varName, tempVarIndex );
+  }
+  public static JCTree[] tempify( boolean force, JCTree.JCExpression tree, TreeMaker make, JCExpression expr, Context ctx, Symbol owner, String varName, int tempVarIndex )
   {
     switch( expr.getTag() )
     {
@@ -2261,6 +2264,10 @@ public class ExtensionTransformer extends TreeTranslator
 
   private Symbol getEnclosingSymbol( Tree tree, Context ctx )
   {
+    return getEnclosingSymbol( tree, ctx, _tp );
+  }
+  public static Symbol getEnclosingSymbol( Tree tree, Context ctx, TypeProcessor tp )
+  {
     if( tree == null )
     {
       return null;
@@ -2277,7 +2284,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     if( tree instanceof JCTree.JCVariableDecl )
     {
-      Tree parent = _tp.getParent( tree );
+      Tree parent = tp.getParent( tree );
       if( parent instanceof JCTree.JCClassDecl )
       {
         // field initializers have a block scope
@@ -2285,7 +2292,7 @@ public class ExtensionTransformer extends TreeTranslator
           Names.instance( ctx ).empty, null, ((JCTree.JCClassDecl)parent).sym );
       }
     }
-    return getEnclosingSymbol( _tp.getParent( tree ), ctx );
+    return getEnclosingSymbol( tp.getParent( tree ), ctx, tp );
   }
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )

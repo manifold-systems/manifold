@@ -27,4 +27,12 @@ public interface ICompilerComponent
   {
     return false;
   }
+
+  /**
+   * Called when the JavacPlugin initializes and whenever the compiler context changes e.g., when annotation processors
+   * make rounds. This is where, if need be, you hack into the compiler before compilation starts.
+   */
+  default void tailorCompiler()
+  {
+  }
 }

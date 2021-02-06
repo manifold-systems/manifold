@@ -22,6 +22,9 @@
   <modules>
     <module>manifold-collections</module>
     <module>manifold-collections-test</module>
+    <module>manifold-csv</module>
+    <module>manifold-csv-rt</module>
+    <module>manifold-csv-test</module>
     <module>manifold-darkj</module>
     <module>manifold-darkj-test</module>
     <module>manifold-highjump</module>
@@ -49,6 +52,8 @@
     <module>manifold-json-test</module>
     <module>manifold-preprocessor</module>
     <module>manifold-preprocessor-test</module>
+    <module>manifold-props</module>
+    <module>manifold-props-test</module>
     <module>manifold-properties</module>
     <module>manifold-properties-test</module>
     <module>manifold-science</module>
@@ -68,9 +73,6 @@
     <module>manifold-yaml</module>
     <module>manifold-yaml-rt</module>
     <module>manifold-yaml-test</module>
-    <module>manifold-csv</module>
-    <module>manifold-csv-rt</module>
-    <module>manifold-csv-test</module>
   </modules>
 
   <build>
