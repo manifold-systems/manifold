@@ -17,7 +17,9 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
+import manifold.ext.props.api.get;
 import manifold.ext.props.api.prop;
+import manifold.ext.props.api.set;
 
 public class PropsTest extends TestCase
 {
@@ -39,6 +41,13 @@ public class PropsTest extends TestCase
 
     INamed named = new NamedInner( "scott" );
     assertEquals( "scott", named.name );
+    named.name = "asdf";
+    assertEquals( "asdf", named.name );
+
+    IFoo foo = new FooImpl( "Bubby" );
+    assertEquals( "Bubby", foo.name );
+    foo.name = "Mo";
+    assertEquals( "Mo", foo.name );
   }
 
   class NamedInner implements INamed
@@ -56,5 +65,21 @@ public class PropsTest extends TestCase
 //    public void setName(String value) {
 //      name = value;
 //    }
+  }
+
+  interface IFoo {
+    @prop String name;
+    default String getName()
+    {
+      return "hi";
+    }
+  }
+  class FooImpl implements IFoo {
+    @prop public String name;
+
+    public FooImpl( String name )
+    {
+      this.name = name;
+    }
   }
 }

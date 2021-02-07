@@ -35,6 +35,8 @@ import com.sun.tools.javac.util.*;
 import com.sun.tools.javac.util.List;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ICompilerComponent;
+import manifold.ext.ExtensionManifold;
+import manifold.ext.ExtensionTransformer;
 import manifold.ext.props.api.*;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.javac.JavacPlugin;
@@ -43,6 +45,7 @@ import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;
+import manifold.util.concurrent.LocklessLazyVar;
 
 import javax.tools.Diagnostic;
 import java.lang.reflect.Modifier;
@@ -57,9 +60,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private TypeProcessor _tp;
   private BasicJavacTask _javacTask;
   private Stack<Pair<JCClassDecl, ArrayList<JCTree>>> _propertyStatements;
-  private Map<JCClassDecl, Set<JCVariableDecl>> _propMap;
-  private Map<JCClassDecl, Set<VarSymbol>> _backingMap;
-  private Map<JCClassDecl, Set<JCVariableDecl>> _nonbackingMap;
+  private Map<ClassSymbol, Set<VarSymbol>> _propMap;
+  private Map<ClassSymbol, Set<VarSymbol>> _backingMap;
+  private Map<ClassSymbol, Set<VarSymbol>> _nonbackingMap;
+  private LocklessLazyVar<ExtensionTransformer> _extensionTransformer = LocklessLazyVar.make( () -> {
+    ExtensionManifold extensionManifold = (ExtensionManifold)JavacPlugin.instance().getHost().getSingleModule()
+      .getTypeManifolds().stream()
+      .filter( e -> e instanceof ExtensionManifold )
+      .findFirst().orElse( null );
+    return new ExtensionTransformer( extensionManifold, _tp );
+  } );
 
   @Override
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
@@ -142,8 +152,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           propgen anno = sym.getAnnotation( propgen.class );
           if( anno != null )
           {
-            long flags = sym.flags_field & ~PRIVATE | anno.flags();
-            sym.flags_field = flags;
+            sym.flags_field = sym.flags_field & ~PRIVATE | anno.flags();
             handled = true;
           }
         }
@@ -247,7 +256,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
         else if( e.getKind() == TaskEvent.Kind.GENERATE )
         {
-          classDecl.accept( new Generate_Start() );
+          new Generate_Start().handleClass( classDecl.sym );
         }
       }
     }
@@ -256,7 +265,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   @Override
   public void finished( TaskEvent e )
   {
-    if( e.getKind() != TaskEvent.Kind.ANALYZE &&
+    if( e.getKind() != TaskEvent.Kind.ENTER &&
+        e.getKind() != TaskEvent.Kind.ANALYZE &&
         e.getKind() != TaskEvent.Kind.GENERATE )
     {
       return;
@@ -268,13 +278,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
       {
         JCClassDecl classDecl = (JCClassDecl)tree;
-        if( e.getKind() == TaskEvent.Kind.ANALYZE )
+        if( e.getKind() == TaskEvent.Kind.ENTER )
+        {
+          classDecl.accept( new Enter_Finish() );
+        }
+        else if( e.getKind() == TaskEvent.Kind.ANALYZE )
         {
           classDecl.accept( new Analyze_Finish() );
         }
         else if( e.getKind() == TaskEvent.Kind.GENERATE )
         {
-          classDecl.accept( new Generate_Finish() );
+          new Generate_Finish().handleClass( classDecl.sym );
         }
       }
     }
@@ -295,7 +309,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         .noneMatch( k -> k == ContributorKind.Supplemental );
   }
 
-  // Make getter/setter methods corresponding with @prop fields
+  // Make getter/setter methods corresponding with @prop, @get, @set fields
   //
   private class Enter_Start extends TreeTranslator
   {
@@ -330,26 +344,46 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       int modifiers = (int)tree.getModifiers().flags;
 
       JCClassDecl classDecl = _propertyStatements.peek().fst;
-      if( classDecl.defs.contains( tree ) && hasPropAnnotation( tree ) )
+      if( classDecl.defs.contains( tree ) )
       {
+        JCAnnotation prop = getAnnotation( tree, prop.class );
+        JCAnnotation get = getAnnotation( tree, get.class );
+        JCAnnotation set = getAnnotation( tree, set.class );
+
+        if( prop == null && get == null && set == null )
+        {
+          // not a property field
+          return;
+        }
+
         if( classDecl.getKind() == Tree.Kind.INTERFACE && (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
         {
-          // must explicitly default @prop fields to PUBLIC in interfaces
+          // must explicitly default @prop fields to PUBLIC
           tree.getModifiers().flags |= PUBLIC;
         }
 
-        // a @prop field => add getter and/or setter
+        // add getter and/or setter
 
         Pair<JCClassDecl, ArrayList<JCTree>> pair = _propertyStatements.peek();
-        boolean propAbstract = isPropAbstract( tree, classDecl );
-        JCMethodDecl getter = makeGetter( classDecl, tree, propAbstract );
-        if( getter != null )
+        if( set == null || get != null )
         {
-          pair.snd.add( getter );
+          boolean getAbstract = isAbstract( classDecl, get == null ? prop.args : get.args );
+          boolean getFinal = hasOption( get == null ? prop.args : get.args, PropOption.Final );
+          PropOption getAccess = getAccess( classDecl, get == null ? prop.args : get.args );
+
+          JCMethodDecl getter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess );
+          if( getter != null )
+          {
+            pair.snd.add( getter );
+          }
         }
-        if( !Modifier.isFinal( modifiers  ) )
+        if( (get == null || set != null) && !Modifier.isFinal( modifiers  ) )
         {
-          JCMethodDecl setter = makeSetter( classDecl, tree, propAbstract );
+          boolean setAbstract = isAbstract( classDecl, set == null ? prop.args : set.args );
+          boolean setFinal = hasOption( set == null ? prop.args : set.args, PropOption.Final );
+          PropOption setAccess = getAccess( classDecl, set == null ? prop.args : set.args );
+
+          JCMethodDecl setter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess );
           if( setter != null )
           {
             pair.snd.add( setter );
@@ -358,43 +392,76 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private boolean isPropAbstract( JCVariableDecl tree, JCClassDecl classDecl )
+    private boolean isAbstract( JCClassDecl classDecl, List<JCExpression> args )
     {
       if( classDecl.getKind() == Tree.Kind.INTERFACE )
       {
+        // generated methods are always abstract in interfaces
         return true;
       }
-
-      if( Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
+      else if( Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
       {
-        // tree.getModifiers().... find Abstract in @prop
+        // abstract class can have abstract methods
+
+        return hasOption( args, PropOption.Abstract );
       }
       return false;
     }
 
-    private boolean hasPropAnnotation( JCVariableDecl tree )
+    private PropOption getAccess( JCClassDecl classDecl, List<JCExpression> args )
     {
-      return tree.getModifiers().getAnnotations().stream().anyMatch(
-        e -> prop.class.getSimpleName().equals( e.annotationType.toString() ) );
+      if( classDecl.getKind() == Tree.Kind.INTERFACE )
+      {
+        // generated methods are always abstract in interfaces
+        return PropOption.Public;
+      }
+      return hasOption( args, PropOption.Public )
+        ? PropOption.Public
+        : hasOption( args, PropOption.Protected )
+          ? PropOption.Protected
+          : hasOption( args, PropOption.Package )
+            ? PropOption.Package
+            : hasOption( args, PropOption.Private )
+              ? PropOption.Private
+              : null;
+    }
+
+    private boolean hasOption( List<JCExpression> args, PropOption option )
+    {
+      if( args == null )
+      {
+        return false;
+      }
+      return args.stream().anyMatch( e -> ((JCLiteral)e).value == option );
+    }
+
+    private JCAnnotation getAnnotation( JCVariableDecl tree, Class anno )
+    {
+      return tree.getModifiers().getAnnotations().stream()
+        .filter( e -> anno.getSimpleName().equals( e.annotationType.toString() ) )
+        .findFirst().orElse( null );
     }
 
     //  @propgen(name = "foo", 1)
     //  public String getFoo() {
     //    return this.foo;
     //  }
-    private JCMethodDecl makeGetter( JCClassDecl classDecl, JCVariableDecl propField, boolean propAbstract )
+    private JCMethodDecl makeGetter( JCClassDecl classDecl, JCVariableDecl propField,
+                                     boolean propAbstract, boolean propFinal, PropOption propAccess )
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
       long flags = propField.getModifiers().flags;
       List<JCAnnotation> annos = List.of( addPropGenAnnotation( propField ) );
-      JCModifiers access = getGetterSetterModifiers( make, (int)flags, annos, propField.pos );
+      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
+        propAccess, (int)flags, annos, propField.pos );
       Name name = Names.instance( context ).fromString( getGetterName( propField, true ) );
       JCExpression resType = (JCExpression)propField.vartype.clone();
       JCReturn ret = make.Return( make.Ident( propField.name ).setPos( propField.pos ) );
       JCBlock block = propAbstract ? null : (JCBlock)make.Block( 0, List.of( ret ) ).setPos( propField.pos );
 
-      JCMethodDecl getter = (JCMethodDecl)make.MethodDef( access, name, resType, List.nil(), List.nil(), List.nil(), block, null ).setPos( propField.pos );
+      JCMethodDecl getter = (JCMethodDecl)make.MethodDef(
+        access, name, resType, List.nil(), List.nil(), List.nil(), block, null ).setPos( propField.pos );
       return exists( classDecl, getter ) ? null : getter;
     }
 
@@ -402,16 +469,19 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     //  public void setFoo(String value) {
     //    this.foo = value;
     //  }
-    private JCMethodDecl makeSetter( JCClassDecl classDecl, JCVariableDecl propField, boolean propAbstract )
+    private JCMethodDecl makeSetter( JCClassDecl classDecl, JCVariableDecl propField,
+                                     boolean propAbstract, boolean propFinal, PropOption propAccess )
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
       long flags = propField.getModifiers().flags;
       List<JCAnnotation> annos = List.of( addPropGenAnnotation( propField ) );
-      JCModifiers access = getGetterSetterModifiers( make, (int)flags, annos, propField.pos );
+      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
+        propAccess, (int)flags, annos, propField.pos );
       Names names = Names.instance( context );
       Name name = names.fromString( getSetterName( propField.name ) );
-      JCVariableDecl param = (JCVariableDecl)make.VarDef( make.Modifiers( FINAL | Flags.PARAMETER ), names.fromString( "value" ),
+      JCVariableDecl param = (JCVariableDecl)make.VarDef(
+        make.Modifiers( FINAL | Flags.PARAMETER ), names.fromString( "value" ),
         (JCExpression)propField.vartype.clone(), null ).setPos( propField.pos );
       JCExpression resType = make.Type( Symtab.instance( context ).voidType ).setPos( propField.pos );
       JCExpressionStatement assign = (JCExpressionStatement)make.Exec( make.Assign(
@@ -419,7 +489,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         make.Ident( names.fromString( "value" ) ).setPos( propField.pos ) ).setPos( propField.pos ) )
         .setPos( propField.pos );
       JCBlock block = propAbstract ? null : (JCBlock)make.Block( 0, List.of( assign ) ).setPos( propField.pos );
-      JCMethodDecl setter = (JCMethodDecl)make.MethodDef( access, name, resType, List.nil(), List.of( param ), List.nil(), block, null )
+      JCMethodDecl setter = (JCMethodDecl)make.MethodDef(
+        access, name, resType, List.nil(), List.of( param ), List.nil(), block, null )
         .setPos( propField.pos );
       return exists( classDecl, setter ) ? null : setter;
     }
@@ -456,9 +527,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return false;
     }
 
-    private JCModifiers getGetterSetterModifiers( TreeMaker make, int flags, List<JCAnnotation> annos, int pos )
+    private JCModifiers getGetterSetterModifiers( TreeMaker make, boolean propAbstract, boolean propFinal, boolean propStatic,
+                                                  PropOption propAccess, int flags, List<JCAnnotation> annos, int pos )
     {
-      int access = isPublic( flags ) ? PUBLIC : isProtected( flags ) ? PROTECTED : isPrivate( flags ) ? PRIVATE : 0;
+      int access = propAccess == null
+        ? isPublic( flags ) ? PUBLIC : isProtected( flags ) ? PROTECTED : isPrivate( flags ) ? PRIVATE : 0
+        : propAccess.getModifier();
+      access |= (propAbstract ? ABSTRACT : 0);
+      access |= (propFinal ? FINAL : 0);
+      access |= (propStatic ? STATIC : 0);
       return (JCModifiers)make.Modifiers( access, annos ).setPos( pos );
     }
 
@@ -475,19 +552,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       // add args for prop, get, and set
       field.getModifiers().getAnnotations().stream().filter(
         e -> prop.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno -> {
-          args.add( make.Assign( make.Ident( names.fromString( "prop" ) ), anno ) );
-        } );
+        .findFirst().ifPresent( anno -> args.add( make.Assign( make.Ident( names.fromString( "prop" ) ), anno ) ) );
       field.getModifiers().getAnnotations().stream().filter(
         e -> get.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno -> {
-          args.add( make.Assign( make.Ident( names.fromString( "get" ) ), anno ) );
-        } );
+        .findFirst().ifPresent( anno -> args.add( make.Assign( make.Ident( names.fromString( "get" ) ), anno ) ) );
       field.getModifiers().getAnnotations().stream().filter(
         e -> set.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno -> {
-          args.add( make.Assign( make.Ident( names.fromString( "set" ) ), anno ) );
-        } );
+        .findFirst().ifPresent( anno -> args.add( make.Assign( make.Ident( names.fromString( "set" ) ), anno ) ) );
       JCExpression propgenType = memberAccess( make, javacElems, propgen.class.getName() );
       return make.Annotation( propgenType, List.from( args ) );
     }
@@ -505,6 +576,46 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         expr = make.Select( expr, node.getName( components[i] ) );
       }
       return expr;
+    }
+  }
+
+  class Enter_Finish extends TreeTranslator
+  {
+    private Stack<JCClassDecl> _classes = new Stack<>();
+
+    @Override
+    public void visitClassDef( JCClassDecl classDecl )
+    {
+      _classes.push( classDecl );
+      try
+      {
+        super.visitClassDef( classDecl );
+      }
+      finally
+      {
+        _classes.pop();
+      }
+    }
+
+    @Override
+    public void visitVarDef( JCVariableDecl tree )
+    {
+      super.visitVarDef( tree );
+
+      JCClassDecl cls = _classes.peek();
+      if( cls.getKind() != Tree.Kind.INTERFACE )
+      {
+        return;
+      }
+
+      if( isPropertyField( tree.sym ) )
+      {
+        return;
+      }
+
+      // Remove FINAL modifier from property fields in interfaces to enable assignment
+      // (note these fields do not exist in bytecode)
+      tree.sym.flags_field &= ~FINAL;
     }
   }
 
@@ -527,7 +638,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       try
       {
         super.visitClassDef( classDecl );
-        Set<VarSymbol> props = _backingMap.computeIfAbsent( classDecl, e -> new HashSet<>() );
+        Set<VarSymbol> props = _backingMap.computeIfAbsent( classDecl.sym, e -> new HashSet<>() );
         props.addAll( _backingSymbols.peek().snd );
       }
       finally
@@ -555,7 +666,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       super.visitSelect( tree );
 
-      if( tree.sym.getAnnotation( prop.class ) == null )
+      if( isPropertyField( tree.sym ) )
       {
         return;
       }
@@ -616,7 +727,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       super.visitIdent( tree );
 
-      if( tree.sym.getAnnotation( prop.class ) == null )
+      if( isPropertyField( tree.sym ) )
       {
         return;
       }
@@ -651,8 +762,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCMethodDecl methodDecl = _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == getMethod )
         {
-          // don't rewrite with getter inside the getter
+          // don't rewrite with getter inside the getter, backing symbol required
           _backingSymbols.peek().snd.add( (VarSymbol)tree.sym );
+
+          if( _methodDefs.peek().sym.isDefault() )
+          {
+            // Cannot reference property in default interface accessor
+            _tp.report( tree, Diagnostic.Kind.ERROR,
+              PropIssueMsg.MSG_PROPERTY_IS_ABSTRACT.get( tree.sym.flatName().toString() ) );
+          }
+          
           return;
         }
 
@@ -717,9 +836,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      if( lhsSym.getAnnotation( prop.class ) == null )
+      if( isPropertyField( lhsSym ) )
       {
-        // Not a property field
         return;
       }
 
@@ -790,8 +908,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       methodTree.setPos( tree.pos );
       methodTree.type = methodSym.getReturnType();
 
-//      // If methodCall is an extension method, rewrite it
-//      methodCall = maybeReplaceWithExtensionMethod( methodCall );
+      // If methodCall is an extension method, rewrite it
+      //noinspection ConstantConditions
+      methodTree = _extensionTransformer.get().maybeReplaceWithExtensionMethod( methodTree );
 
       // Concrete type set in attr
       methodTree.type = tree.type;
@@ -857,53 +976,45 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
   }
 
-  // Make the field PRIVATE
-  // Add annotation:  @propgen(name, flags), so we can change it when loaded from .class file
-  class Generate_Start extends TreeTranslator
+  // Make the field PRIVATE, or delete it if no backing field is necessary
+  // If a backing field, add annotation:  @propgen(name, flags), so we can change it when loaded from .class file
+  // Note, @propgen is also added to getter/setter methods so that a non-backing field can be recreated on .class load
+  class Generate_Start
   {
-    @Override
-    public void visitClassDef( JCClassDecl classDecl )
+    private void handleClass( ClassSymbol classSym )
     {
-      _propertyStatements.push( new Pair<>( classDecl, new ArrayList<>() ) );
-      try
-      {
-        super.visitClassDef( classDecl );
-        Set<JCVariableDecl> props = _propMap.computeIfAbsent( classDecl, e -> new HashSet<>() );
-        props.addAll( (Collection)_propertyStatements.peek().snd );
-      }
-      finally
-      {
-        _propertyStatements.pop();
-      }
+      classSym.members_field.getElements( e -> e instanceof ClassSymbol )
+        .forEach( c -> handleClass( (ClassSymbol)c ) );
+
+      classSym.members_field.getElements( e -> e instanceof VarSymbol )
+        .forEach( varSym -> handleField( classSym, (VarSymbol)varSym ) );
     }
 
-    @Override
-    public void visitVarDef( JCVariableDecl tree )
+    private void handleField( ClassSymbol classSym, VarSymbol fieldSym )
     {
-      super.visitVarDef( tree );
+      long modifiers = fieldSym.flags_field;
 
-      long modifiers = tree.getModifiers().flags;
-
-      prop anno = tree.sym.getAnnotation( prop.class );
-      if( anno != null  )
+      if( isPropertyField( fieldSym ) )
       {
-        // if the field is a backing field, make it PRIVATE and tag it with @propgen, then make it public again during Generate:finish, or
-        // erase it and put it back during Generate:finish
+        return;
+      }
 
-        // remove the prop field here if a backing field is not needed e.g., where the getter/setter methods don't ref it
-        //
-        JCClassDecl classDecl = _propertyStatements.peek().fst;
-        Set<VarSymbol> backingSymbols = _backingMap.get( classDecl );
-        if( backingSymbols.contains( tree.sym ) )
-        {
-          // make the field a backing field (private), make it public again during Generate:finish
+      // if the field is a backing field, make it PRIVATE and tag it with @propgen, then make it public again during Generate:finish, or
+      // erase it and put it back during Generate:finish
 
-          tree.sym.flags_field = tree.getModifiers().flags & ~(PUBLIC | PROTECTED) | PRIVATE;
+      // remove the prop field here if a backing field is not needed e.g., where the getter/setter methods don't ref it
+      //
+      Set<VarSymbol> backingSymbols = _backingMap.get( classSym );
+      if( backingSymbols.contains( fieldSym ) )
+      {
+        // make the field a backing field (private), make it public again during Generate:finish
 
-          // Add annotation:  @propgen(name, flags), so we can change it when loaded from .class file
+        fieldSym.flags_field = fieldSym.flags_field & ~(PUBLIC | PROTECTED) | PRIVATE;
 
-          Names names = Names.instance( _javacTask.getContext() );
-          Symtab symtab = Symtab.instance( _javacTask.getContext() );
+        // Add annotation:  @propgen(name, flags), so we can change it when loaded from .class file
+
+        Names names = Names.instance( _javacTask.getContext() );
+        Symtab symtab = Symtab.instance( _javacTask.getContext() );
 
 //todo: add the args for prop, get, and set
 //
@@ -911,76 +1022,87 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 //            List.of( new Pair<>( valueMeth, new Attribute.Array( PropOption[].class, new Attribute.Enum( PropOption.class, whatever ) ),
 //              new Pair<>( flagsMeth, new Attribute.Constant( symtab.longType, modifiers ) ) ) );
 
-          ClassSymbol propgenSym = IDynamicJdk.instance().getTypeElement( _javacTask.getContext(),
-            _tp.getCompilationUnit(), propgen.class.getTypeName() );
-          MethodSymbol nameMeth = (MethodSymbol)propgenSym.members().lookup( names.fromString( "name" ) ).sym;
-          MethodSymbol flagsMeth = (MethodSymbol)propgenSym.members().lookup( names.fromString( "flags" ) ).sym;
-          Attribute.Compound propGenAnno = new Attribute.Compound( propgenSym.type,
-            List.of( new Pair<>( nameMeth, new Attribute.Constant( symtab.stringType, tree.name.toString() ) ),
-              new Pair<>( flagsMeth, new Attribute.Constant( symtab.longType, modifiers ) ) ) );
-          tree.sym.appendAttributes( List.of( propGenAnno ) );
+        ClassSymbol propgenSym = IDynamicJdk.instance().getTypeElement( _javacTask.getContext(),
+          _tp.getCompilationUnit(), propgen.class.getTypeName() );
+        MethodSymbol nameMeth = (MethodSymbol)propgenSym.members().lookup( names.fromString( "name" ) ).sym;
+        MethodSymbol flagsMeth = (MethodSymbol)propgenSym.members().lookup( names.fromString( "flags" ) ).sym;
+        Attribute.Compound propGenAnno = new Attribute.Compound( propgenSym.type,
+          List.of( new Pair<>( nameMeth, new Attribute.Constant( symtab.stringType, fieldSym.name.toString() ) ),
+            new Pair<>( flagsMeth, new Attribute.Constant( symtab.longType, modifiers ) ) ) );
+        fieldSym.appendAttributes( List.of( propGenAnno ) );
 
-          _propertyStatements.peek().snd.add( tree );
-        }
-        else
-        {
-          // erase the field, put it back on Generate:finish
+        Set<VarSymbol> props = _propMap.computeIfAbsent( classSym, e -> new HashSet<>() );
+        props.add( fieldSym );
+      }
+      else
+      {
+        // erase the field, put it back on Generate:finish
 
-          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-          newDefs.remove( tree );
-          classDecl.defs = List.from( newDefs );
+//          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
+//          newDefs.remove( tree );
+//          classDecl.defs = List.from( newDefs );
 
-          classDecl.sym.members().remove( tree.sym );
-          Set<JCVariableDecl> nonbacking = _nonbackingMap.computeIfAbsent( classDecl, e -> new HashSet<>() );
-          nonbacking.add( tree );
-        }
+        classSym.members().remove( fieldSym );
+        Set<VarSymbol> nonbacking = _nonbackingMap.computeIfAbsent( classSym, e -> new HashSet<>() );
+        nonbacking.add( fieldSym );
       }
     }
   }
 
-  class Generate_Finish extends TreeTranslator
+  class Generate_Finish
   {
-    @Override
-    public void visitClassDef( JCClassDecl classDecl )
+    public void handleClass( ClassSymbol classSym )
     {
-      super.visitClassDef( classDecl );
+      classSym.members_field.getElements( e -> e instanceof ClassSymbol )
+        .forEach( c -> handleClass( (ClassSymbol)c ) );
 
       // handle backing fields
       //
 
       // put original modifiers back e.g. PUBLIC
-      Set<JCVariableDecl> backingFields = _propMap.get( classDecl );
-      for( JCVariableDecl varDecl: backingFields )
+      Set<VarSymbol> backingFields = _propMap.get( classSym );
+      if( backingFields != null )
       {
-        propgen anno = varDecl.sym.getAnnotation( propgen.class );
-        if( anno != null )
+        for( VarSymbol varSym : backingFields )
         {
-          long flags = varDecl.getModifiers().flags & ~PRIVATE | anno.flags();
-          varDecl.sym.flags_field = flags;
+          propgen anno = varSym.getAnnotation( propgen.class );
+          if( anno != null )
+          {
+            // remove PRIVATE, restore original access modifiers
+            varSym.flags_field = varSym.flags_field & ~PRIVATE | anno.flags();
+          }
         }
+        _propMap.remove( classSym );
       }
-      _propMap.remove( classDecl );
 
       // handle non-backing fields, recreate the prop field
       //
-      Set<JCVariableDecl> nonbackingFields = _nonbackingMap.get( classDecl );
+      Set<VarSymbol> nonbackingFields = _nonbackingMap.get( classSym );
       if( nonbackingFields != null )
       {
-        for( JCVariableDecl varDecl : nonbackingFields )
+        for( VarSymbol varSym : nonbackingFields )
         {
-          Type t = varDecl.sym.type;
-          VarSymbol sym = new VarSymbol( varDecl.sym.flags_field, varDecl.name, t, classDecl.sym );
-          sym.appendAttributes( varDecl.sym.getAnnotationMirrors() ); // add the @prop etc. annotations
-          classDecl.sym.members_field.enter( sym );
-          varDecl.sym = sym;
-
-          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-          newDefs.add( varDecl );
-          classDecl.defs = List.from( newDefs );
+          Type t = varSym.type;
+          VarSymbol sym = new VarSymbol( varSym.flags_field, varSym.name, t, classSym );
+          sym.appendAttributes( varSym.getAnnotationMirrors() ); // add the @prop etc. annotations
+          classSym.members_field.enter( sym );
+//        varSym.sym = sym;
+//
+//          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
+//          newDefs.add( varSym );
+//          classDecl.defs = List.from( newDefs );
         }
       }
-      _nonbackingMap.remove( classDecl );
+      _nonbackingMap.remove( classSym );
     }
+  }
+
+  public boolean isPropertyField( Symbol sym )
+  {
+    // Not a property field
+    return sym.getAnnotation( prop.class ) == null &&
+      sym.getAnnotation( get.class ) == null &&
+      sym.getAnnotation( set.class ) == null;
   }
 
   private String getGetterName( Symbol field, boolean isOk )

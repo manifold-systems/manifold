@@ -31,5 +31,5 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.CLASS )
 public @interface prop
 {
-  PropOption[] value() default {PropOption.Auto};
+  PropOption[] value() default {};
 }

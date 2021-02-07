@@ -22,4 +22,5 @@ public class PropIssueMsg
 {
   public static final IssueMsg MSG_CANNOT_ACCESS_PROPERTY = new IssueMsg( "Cannot access property '{0}'" );
   public static final IssueMsg MSG_CANNOT_MODIFY_PROPERTY = new IssueMsg( "Cannot modify final property '{0}'" );
+  public static final IssueMsg MSG_PROPERTY_IS_ABSTRACT = new IssueMsg( "Cannot reference property '{0}' in default interface accessor" );
 }

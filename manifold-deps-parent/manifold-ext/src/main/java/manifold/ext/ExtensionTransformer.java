@@ -105,7 +105,7 @@ public class ExtensionTransformer extends TreeTranslator
   private final TypeProcessor _tp;
   private boolean _bridgeMethod;
 
-  ExtensionTransformer( ExtensionManifold sp, TypeProcessor typeProcessor )
+  public ExtensionTransformer( ExtensionManifold sp, TypeProcessor typeProcessor )
   {
     _sp = sp;
     _tp = typeProcessor;
@@ -1012,7 +1012,7 @@ public class ExtensionTransformer extends TreeTranslator
     result = letExpr;
   }
 
-  private JCTree.JCMethodInvocation maybeReplaceWithExtensionMethod( JCTree.JCMethodInvocation methodCall )
+  public JCTree.JCMethodInvocation maybeReplaceWithExtensionMethod( JCTree.JCMethodInvocation methodCall )
   {
     // If methodCall is an extension method, rewrite it accordingly
     Symbol.MethodSymbol extMethod = findExtMethod( methodCall );

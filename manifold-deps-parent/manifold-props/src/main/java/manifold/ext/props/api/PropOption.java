@@ -54,11 +54,9 @@ public enum PropOption
    * For use with {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be {@code public}.
    */
-  Public( Modifier.PUBLIC ),
-  /**
-   * The default option for {@link prop}, {@link get}, {@link set}. The property's declared accessibility is used.
-   */
-  Auto( -1 );
+  Public( Modifier.PUBLIC );
+
+  public static final PropOption[] EMPTY_ARRAY = new PropOption[0];
 
   private int _modifier;
 

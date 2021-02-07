@@ -392,9 +392,12 @@ public class ManJavacParser extends JavacParser
       if( annotations != null )
       {
         if( mods.annotations.stream()
-          .anyMatch( anno -> "prop".equals( anno.getAnnotationType().toString() ) ) )
+          .anyMatch( anno ->
+            "prop".equals( anno.getAnnotationType().toString() ) ||
+            "get".equals( anno.getAnnotationType().toString() ) ||
+            "set".equals( anno.getAnnotationType().toString() ) ) )
         {
-          // Manifold: a @prop field has no initialization in an interface
+          // Manifold: a @prop, @get, @set field has no initialization in an interface
           reqInit = false;
         }
       }
