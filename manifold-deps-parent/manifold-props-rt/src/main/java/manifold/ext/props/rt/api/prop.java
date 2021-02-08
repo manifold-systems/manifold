@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.api;
+package manifold.ext.props.rt.api;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,15 +22,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares a field as having a property getter method. Specifying {@code @get} without a {@code @set} indicates the
- * property is <i>read-only</i>, thus you must specify {@code @set} for the field to be writable, or use {@code @prop}.
- * Note, use of {@code @prop} is optional when specifying {@code @get}.
+ * Designates a field declaration as a property.
  *
- * @see prop
+ * @see get
+ * @see set
  */
 @Target( {ElementType.FIELD} )
 @Retention( RetentionPolicy.CLASS )
-public @interface get
+public @interface prop
 {
   PropOption[] value() default {};
 }

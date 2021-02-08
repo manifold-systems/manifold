@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.api;
+package manifold.ext.props;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
-/**
- * Designates a field declaration as a property.
- *
- * @see get
- * @see set
- */
-@Target( {ElementType.FIELD} )
-@Retention( RetentionPolicy.CLASS )
-public @interface prop
+public class NamedBase
 {
-  PropOption[] value() default {};
+  // test that this setter is overridden by a generated setter in subclass
+  public void setName( String name )
+  {
+    System.out.println( "LOL" );
+  }
 }

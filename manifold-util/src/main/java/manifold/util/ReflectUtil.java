@@ -17,6 +17,9 @@
 package manifold.util;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -562,7 +565,7 @@ public class ReflectUtil
     }
   }
 
-  // This class mirrors the layout/structure of the AccessibleObject class so we can get the offset of 'override'
+// This class mirrors the layout/structure of the AccessibleObject class so we can get the offset of 'override'
   @SuppressWarnings( "unused" )
   private static class FakeAccessibleObject
   {
@@ -652,6 +655,21 @@ public class ReflectUtil
       catch( Exception e )
       {
         throw ManExceptionUtil.unchecked( e );
+      }
+    }
+
+    public Object invokeSuper( Object... args )
+    {
+      try
+      {
+        MethodHandle superMethod = MethodHandles.lookup().findSpecial(
+          _receiver.getClass().getSuperclass(), _method.getName(),
+          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
+        return superMethod.bindTo( _receiver ).invokeExact( args );
+      }
+      catch( Throwable t )
+      {
+        throw ManExceptionUtil.unchecked( t );
       }
     }
   }

@@ -37,11 +37,23 @@ public interface IDynamicJdk
 {
   <T> void report( Log issueLogger, Diagnostic<? extends T> diagnostic );
 
-  Iterable<Symbol> getMembers( Symbol.ClassSymbol members );
+  default Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym )
+  {
+    return getMembers( classSym, true );
+  }
+  Iterable<Symbol> getMembers( Symbol.ClassSymbol members, boolean completeFirst );
 
-  Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter );
+  default Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter )
+  {
+    return getMembers( classSym, filter, true );
+  }
+  Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter, boolean completeFirst );
 
-  Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call );
+  default Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name name )
+  {
+    return getMembersByName( classSym, name, true );
+  }
+  Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call, boolean completeFirst );
 
   Symbol.ClassSymbol getTypeElement( Context ctx, Object moduleCtx, String fqn );
 

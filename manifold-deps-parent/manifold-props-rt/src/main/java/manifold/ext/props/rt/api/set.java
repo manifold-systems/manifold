@@ -14,30 +14,21 @@
  * limitations under the License.
  */
 
-package manifold.ext.props;
+package manifold.ext.props.rt.api;
 
-import manifold.ext.props.rt.api.prop;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class FooSub extends Foo
+/**
+ * Declares a field as having a property setter method.
+ *
+ * @see prop
+ */
+@Target( {ElementType.FIELD} )
+@Retention( RetentionPolicy.CLASS )
+public @interface set
 {
-  @prop public double rate;
-
-  public FooSub( String thing, double rate )
-  {
-    this.thing = thing;
-    System.out.println( this.thing );
-
-    this.rate = rate;
-  }
-
-  public String getThing()
-  {
-    String superThing = super.thing;
-    return superThing + "_sub";
-  }
-
-  public void setRate( double value )
-  {
-    rate = 2 * value;
-  }
+  PropOption[] value() default {};
 }

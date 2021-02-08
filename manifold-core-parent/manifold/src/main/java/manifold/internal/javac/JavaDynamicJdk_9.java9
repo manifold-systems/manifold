@@ -63,23 +63,23 @@ public class JavaDynamicJdk_9 implements IDynamicJdk
   }
 
   @Override
-  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym )
+  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, boolean completeFirst )
   {
-    Scope.WriteableScope members = classSym.members();
+    Scope.WriteableScope members = completeFirst ? classSym.members() : classSym.members_field;
     return members == null ? Collections.emptyList() : members.getSymbols();
   }
 
   @Override
-  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter )
+  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter, boolean completeFirst )
   {
-    Scope.WriteableScope members = classSym.members();
+    Scope.WriteableScope members = completeFirst ? classSym.members() : classSym.members_field;
     return members == null ? Collections.emptyList() : members.getSymbols( filter );
   }
 
   @Override
-  public Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call )
+  public Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name call, boolean completeFirst )
   {
-    Scope.WriteableScope members = classSym.members();
+    Scope.WriteableScope members = completeFirst ? classSym.members() : classSym.members_field;
     return members == null ? Collections.emptyList() : members.getSymbolsByName( call );
   }
 

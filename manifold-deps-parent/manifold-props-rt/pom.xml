@@ -8,20 +8,14 @@
     <version>2020.1.47-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-props</artifactId>
+  <artifactId>manifold-props-rt</artifactId>
 
-  <name>Manifold :: Props</name>
+  <name>Manifold :: Props Runtime</name>
 
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-props-rt</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
+      <artifactId>manifold-ext-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
@@ -35,7 +29,7 @@
           <archive>
             <manifestEntries>
               <!--JPMS module name-->
-              <Automatic-Module-Name>manifold.props</Automatic-Module-Name>
+              <Automatic-Module-Name>manifold.props.rt</Automatic-Module-Name>
             </manifestEntries>
           </archive>
         </configuration>

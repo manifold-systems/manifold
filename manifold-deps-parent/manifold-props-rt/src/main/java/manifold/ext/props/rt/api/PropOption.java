@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.api;
+package manifold.ext.props.rt.api;
 
 import java.lang.reflect.Modifier;
 

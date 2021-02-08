@@ -16,9 +16,9 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.api.prop;
+import manifold.ext.props.rt.api.prop;
 
-public class Named implements INamed
+public class Named extends NamedBase implements INamed
 {
   @prop public String name;
 

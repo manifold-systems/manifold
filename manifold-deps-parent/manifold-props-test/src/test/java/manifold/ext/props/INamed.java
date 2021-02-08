@@ -16,7 +16,7 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.api.prop;
+import manifold.ext.props.rt.api.prop;
 
 public interface INamed
 {

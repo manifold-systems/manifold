@@ -17,9 +17,9 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
-import manifold.ext.props.api.get;
-import manifold.ext.props.api.prop;
-import manifold.ext.props.api.set;
+import manifold.ext.props.rt.api.get;
+import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.set;
 
 public class PropsTest extends TestCase
 {
