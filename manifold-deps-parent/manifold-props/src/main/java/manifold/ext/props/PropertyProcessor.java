@@ -54,6 +54,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.FINAL;
+import static com.sun.tools.javac.code.Flags.PRIVATE;
 import static java.lang.reflect.Modifier.*;
 
 public class PropertyProcessor implements ICompilerComponent, TaskListener
@@ -148,8 +149,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
 
     /**
-     * Restore the original access modifier to the property field.
-     * Note the field is not really in the bytecode of the class.
+     * Restore the user defined property field, either by recreating it from @propgen info, or by resetting the
+     * access modifier. Note the field is not really in the bytecode of the class, this is just the VarSymbol the
+     * compiler needs to resolve refs.
      */
     private boolean restorePropFields( ClassSymbol classSym, Names names )
     {
@@ -193,9 +195,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             // Create and enter the prop field
 
             MethodSymbol meth = (MethodSymbol)sym;
-            Type t = meth.getReturnType() == Symtab.instance( _javacTask.getContext() ).voidType
-              ? meth.getParameters().get( 0 ).type
-              : meth.getReturnType();
+            Type t = meth.getParameters().isEmpty()
+              ? meth.getReturnType()
+              : meth.getParameters().get( 0 ).type;
             VarSymbol propField = new VarSymbol( getFlags( anno ), fieldName, t, classSym );
 
             // add the @prop, @get, @set annotations
@@ -204,7 +206,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
               .map( e -> (Attribute.Compound)((Attribute.Array)e.snd).values[0] )
               .collect( Collectors.toList() ) ) );
 
-            //classSym.members_field.enter( propField );
+            // reflectively call:  classSym.members_field.enter( propField );
             ReflectUtil.method( ReflectUtil.field( classSym, "members_field" ).get(),
               "enter", Symbol.class ).invoke( propField );
 
@@ -376,7 +378,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         if( classDecl.getKind() == Tree.Kind.INTERFACE && (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
         {
-          // must explicitly default @prop fields to PUBLIC
+          // must explicitly default @prop fields to PUBLIC inside interfaces
           tree.getModifiers().flags |= PUBLIC;
         }
 
@@ -470,7 +472,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
       long flags = propField.getModifiers().flags;
-      List<JCAnnotation> annos = List.of( addPropGenAnnotation( propField ) );
+      JCAnnotation propgenAnno = makePropGenAnnotation( propField );
+      List<JCAnnotation> annos = List.of( propgenAnno );
       JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
         propAccess, (int)flags, annos, propField.pos );
       Name name = Names.instance( context ).fromString( getGetterName( propField, true ) );
@@ -480,7 +483,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       JCMethodDecl getter = (JCMethodDecl)make.MethodDef(
         access, name, resType, List.nil(), List.nil(), List.nil(), block, null ).setPos( propField.pos );
-      return exists( classDecl, getter ) ? null : getter;
+      JCMethodDecl existingGetter = findExistsingAccessor( propField, classDecl, getter );
+      if( existingGetter != null )
+      {
+        ArrayList<JCAnnotation> newAnnos = new ArrayList<>( existingGetter.getModifiers().annotations );
+        newAnnos.add( propgenAnno );
+        existingGetter.getModifiers().annotations = List.from( newAnnos ); // add @propgen to existing method
+        return null;
+      }
+      return getter;
     }
 
     //  @propgen(name = "foo", 1)
@@ -493,7 +504,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
       long flags = propField.getModifiers().flags;
-      List<JCAnnotation> annos = List.of( addPropGenAnnotation( propField ) );
+      JCAnnotation propgenAnno = makePropGenAnnotation( propField );
+      List<JCAnnotation> annos = List.of( propgenAnno );
       JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
         propAccess, (int)flags, annos, propField.pos );
       Names names = Names.instance( context );
@@ -510,10 +522,18 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl setter = (JCMethodDecl)make.MethodDef(
         access, name, resType, List.nil(), List.of( param ), List.nil(), block, null )
         .setPos( propField.pos );
-      return exists( classDecl, setter ) ? null : setter;
+      JCMethodDecl existingSetter = findExistsingAccessor( propField, classDecl, setter );
+      if( existingSetter != null )
+      {
+        ArrayList<JCAnnotation> newAnnos = new ArrayList<>( existingSetter.getModifiers().annotations );
+        newAnnos.add( propgenAnno );
+        existingSetter.getModifiers().annotations = List.from( newAnnos ); // add @propgen to existing method
+        return null;
+      }
+      return setter;
     }
 
-    private boolean exists( JCClassDecl classDecl, JCMethodDecl accessor )
+    private JCMethodDecl findExistsingAccessor( JCVariableDecl propField, JCClassDecl classDecl, JCMethodDecl accessor )
     {
       outer:
       for( JCTree def: classDecl.defs )
@@ -527,22 +547,61 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           accessor.params.length() == tree.params.length() )
         {
           List<JCVariableDecl> accessorParams = accessor.params;
-          List<JCVariableDecl> treeParams = accessor.params;
+          List<JCVariableDecl> treeParams = tree.params;
           for( int i = 0; i < accessor.params.size(); i++ )
           {
             JCVariableDecl accessorParam = accessorParams.get( i );
             JCVariableDecl treeParam = treeParams.get( i );
-            if( !accessorParam.vartype.toString().equals( treeParam.vartype.toString() ) )
+            if( !isSameType( tree, propField.getName(), accessorParam.vartype.toString(), treeParam.vartype.toString() ) )
             {
-              //todo: more reliable type compare, maybe using erasure e.g., clip up to first '<', handle varargs, etc.
               continue outer;
             }
           }
           // method already exists
-          return true;
+          return tree;
         }
       }
+      return null;
+    }
+
+    private boolean isSameType( JCMethodDecl tree, Name propName, String expected, String found )
+    {
+      if( expected.equals( found ) )
+      {
+        return true;
+      }
+      else if( ghettoErasure( expected ).equals( ghettoErasure( found ) ) )
+      {
+        // We have to match the erasure of the setter parameter due to Java's generic type erasure, so warn about that
+        _tp.report( tree, Diagnostic.Kind.WARNING,
+          PropIssueMsg.MSG_SETTER_TYPE_CONFLICT.get( found, propName, expected ) );
+        return true;
+      }
       return false;
+    }
+
+    private String ghettoErasure( String type )
+    {
+      int iOpen = type.indexOf( '<' );
+      if( iOpen < 0 )
+      {
+        return type;
+      }
+      String erasedType = type.substring( 0, iOpen );
+      int iClose = type.lastIndexOf( '>' );
+      if( iClose < 0 )
+      {
+        return erasedType;
+      }
+      if( iClose < type.length()-1 )
+      {
+        erasedType += type.substring( iClose+1 );
+        if( !erasedType.endsWith( "[]" ) )
+        {
+          throw new IllegalStateException( "Expecting an array type" );
+        }
+      }
+      return erasedType;
     }
 
     private JCModifiers getGetterSetterModifiers( TreeMaker make, boolean propAbstract, boolean propFinal, boolean propStatic,
@@ -557,7 +616,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return (JCModifiers)make.Modifiers( access, annos ).setPos( pos );
     }
 
-    private JCAnnotation addPropGenAnnotation( JCVariableDecl field )
+    private JCAnnotation makePropGenAnnotation( JCVariableDecl field )
     {
       JavacPlugin javacPlugin = JavacPlugin.instance();
       TreeMaker make = javacPlugin.getTreeMaker();
@@ -780,7 +839,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCMethodDecl methodDecl = _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == getMethod )
         {
-          // don't rewrite with getter inside the getter, backing symbol required
+          // - don't rewrite with getter inside the getter
+          // - backing symbol required, add to set of backing symbols
           _backingSymbols.peek().snd.add( (VarSymbol)tree.sym );
 
           if( _methodDefs.peek().sym.isDefault() )
@@ -859,6 +919,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
+      JCMethodDecl methodDecl = _methodDefs.peek();
+
       // replace  foo.bar = baz  with  foo.setBar(baz)
 
       Context ctx = _javacTask.getContext();
@@ -867,10 +929,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       if( setMethod != null )
       {
-        JCMethodDecl methodDecl = _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == setMethod )
         {
-          // don't rewrite with setter inside the setter
+          // - don't rewrite with setter inside the setter
+          // - backing symbol required, add to set of backing symbols
           _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
           return;
         }
@@ -916,6 +978,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
       else
       {
+        if( methodDecl.sym.isConstructor() &&
+          lhsSelected.toString().equals( "this" ) &&
+          lhsSym.owner == _backingSymbols.peek().fst.sym )
+        {
+          // without a setter, allow the property to be initialized in the constructor
+          return;
+        }
+
         _tp.report( tree, Diagnostic.Kind.ERROR,
           PropIssueMsg.MSG_CANNOT_MODIFY_PROPERTY.get( lhsSym.flatName().toString() ) );
       }
@@ -1025,21 +1095,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Set<VarSymbol> backingSymbols = _backingMap.get( classSym );
       if( backingSymbols.contains( fieldSym ) )
       {
-        // make the field a backing field (private), make it public again during Generate:finish
+        // make the field a backing field with PRIVATE access
 
         fieldSym.flags_field = fieldSym.flags_field & ~(PUBLIC | PROTECTED) | PRIVATE;
 
-        // Add annotation:  @propgen(name, flags), so we can change it when loaded from .class file
+        // store the original access modifier in @propgen(name, flags) so we can restore the field's access upon
+        // loading from .class file
 
         Names names = Names.instance( _javacTask.getContext() );
         Symtab symtab = Symtab.instance( _javacTask.getContext() );
-
-//todo: add the args for prop, get, and set
-//
-//          Attribute.Compound propAnno = new Attribute.Compound( propSym.type,
-//            List.of( new Pair<>( valueMeth, new Attribute.Array( PropOption[].class, new Attribute.Enum( PropOption.class, whatever ) ),
-//              new Pair<>( flagsMeth, new Attribute.Constant( symtab.longType, modifiers ) ) ) );
-
         ClassSymbol propgenSym = IDynamicJdk.instance().getTypeElement( _javacTask.getContext(),
           _tp.getCompilationUnit(), propgen.class.getTypeName() );
         MethodSymbol nameMeth = (MethodSymbol)IDynamicJdk.instance().getMembersByName( propgenSym, names.fromString( "name" ) ).iterator().next();
@@ -1056,11 +1120,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         // erase the field, put it back on Generate:finish
 
-//          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-//          newDefs.remove( tree );
-//          classDecl.defs = List.from( newDefs );
-
-        //classSym.members().remove( fieldSym );
+        // reflectively call: classSym.members().remove( fieldSym );
         ReflectUtil.method(
           ReflectUtil.method( classSym, "members" )
             .invoke(), "remove", Symbol.class )
@@ -1109,15 +1169,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           VarSymbol sym = new VarSymbol( varSym.flags_field, varSym.name, t, classSym );
           sym.appendAttributes( varSym.getAnnotationMirrors() ); // add the @prop etc. annotations
 
-          //classSym.members_field.enter( sym );
+            // reflectively call:  classSym.members_field.enter( sym );
           ReflectUtil.method( ReflectUtil.field( classSym, "members_field" ).get(),
             "enter", Symbol.class ).invoke( sym );
-
-//        varSym.sym = sym;
-//
-//          ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-//          newDefs.add( varSym );
-//          classDecl.defs = List.from( newDefs );
         }
       }
       _nonbackingMap.remove( classSym );

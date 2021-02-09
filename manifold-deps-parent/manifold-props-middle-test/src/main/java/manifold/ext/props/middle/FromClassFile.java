@@ -14,14 +14,28 @@
  * limitations under the License.
  */
 
-package manifold.ext.props;
+package manifold.ext.props.middle;
 
-import manifold.api.util.IssueMsg;
+import manifold.ext.props.rt.api.prop;
 
-public class PropIssueMsg
+import java.util.HashMap;
+import java.util.Map;
+
+public class FromClassFile
 {
-  public static final IssueMsg MSG_CANNOT_ACCESS_PROPERTY = new IssueMsg( "Cannot access property '{0}'" );
-  public static final IssueMsg MSG_CANNOT_MODIFY_PROPERTY = new IssueMsg( "Cannot modify final property '{0}'" );
-  public static final IssueMsg MSG_PROPERTY_IS_ABSTRACT = new IssueMsg( "Cannot reference property '{0}' in default interface accessor" );
-  public static final IssueMsg MSG_SETTER_TYPE_CONFLICT = new IssueMsg( "Setter has parameter of type '{0}' but property '{1}' is of type '{2}'" );
+  private Map<String, Integer> _map = new HashMap<>();
+
+  @prop public int nonbacking;
+  {
+    _map.put( "nonbacking", 8 );
+  }
+
+  public int getNonbacking()
+  {
+    return _map.get( "nonbacking" );
+  }
+  public void setNonbacking( int value )
+  {
+    _map.put( "nonbacking", value );
+  }
 }

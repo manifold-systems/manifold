@@ -16,12 +16,23 @@
 
 package manifold.ext.props;
 
-import manifold.api.util.IssueMsg;
+import manifold.ext.props.middle.FromClassFile;
 
-public class PropIssueMsg
+import junit.framework.TestCase;
+import manifold.util.ReflectUtil;
+
+public class NonbackingTest extends TestCase
 {
-  public static final IssueMsg MSG_CANNOT_ACCESS_PROPERTY = new IssueMsg( "Cannot access property '{0}'" );
-  public static final IssueMsg MSG_CANNOT_MODIFY_PROPERTY = new IssueMsg( "Cannot modify final property '{0}'" );
-  public static final IssueMsg MSG_PROPERTY_IS_ABSTRACT = new IssueMsg( "Cannot reference property '{0}' in default interface accessor" );
-  public static final IssueMsg MSG_SETTER_TYPE_CONFLICT = new IssueMsg( "Setter has parameter of type '{0}' but property '{1}' is of type '{2}'" );
+  public void testFromClassFile()
+  {
+    // field should not exist
+    ReflectUtil.FieldRef nonbacking = ReflectUtil.field( FromClassFile.class, "nonbacking" );
+    assertNull( nonbacking );
+
+    // nonbacking field works
+    FromClassFile fromClassFile = new FromClassFile();
+    fromClassFile.nonbacking = 9;
+    assertEquals( 9, fromClassFile.nonbacking );
+  }
+
 }

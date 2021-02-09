@@ -7,16 +7,11 @@
     <version>2020.1.47-SNAPSHOT</version>
   </parent>
 
-  <artifactId>manifold-props-test</artifactId>
+  <artifactId>manifold-props-middle-test</artifactId>
 
-  <name>Manifold :: PropsTest</name>
+  <name>Manifold :: PropsMiddleTest</name>
   
   <dependencies>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-props-middle-test</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-props</artifactId>

@@ -21,6 +21,9 @@ import manifold.ext.props.rt.api.get;
 import manifold.ext.props.rt.api.prop;
 import manifold.ext.props.rt.api.set;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class PropsTest extends TestCase
 {
   public void testProps()
@@ -44,10 +47,11 @@ public class PropsTest extends TestCase
     named.name = "asdf";
     assertEquals( "asdf", named.name );
 
-    IFoo foo = new FooImpl( "Bubby" );
+    IFoo foo = new FooImpl( "Bubby", Arrays.asList( "red", "blue", "green" ) );
     assertEquals( "Bubby", foo.name );
     foo.name = "Mo";
     assertEquals( "Mo", foo.name );
+    assertEquals( Arrays.asList( "red", "blue", "green" ), foo.colors );
   }
 
   class NamedInner implements INamed
@@ -73,13 +77,29 @@ public class PropsTest extends TestCase
     {
       return "hi";
     }
+
+    @prop List<String> colors;
   }
   class FooImpl implements IFoo {
     @prop public String name;
+    @prop public List<String> colors;
+    @prop public List<String> things;
+    @prop public final int finalInt;
+    @get public int readonlyInt;
 
-    public FooImpl( String name )
+    public FooImpl( String name, List<String> colors )
     {
       this.name = name;
+      this.colors = colors;
+
+      this.finalInt = 8; // init final var
+      this.readonlyInt = 9; // init read-only var
+      readonlyInt = 10; // can init read-only more than once in constructor
+    }
+
+    public void setThings( List<? extends CharSequence> things )
+    {
+      this.things = (List<String>)things;
     }
   }
 }

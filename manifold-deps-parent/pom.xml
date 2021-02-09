@@ -54,6 +54,7 @@
     <module>manifold-preprocessor-test</module>
     <module>manifold-props</module>
     <module>manifold-props-rt</module>
+    <module>manifold-props-middle-test</module>
     <module>manifold-props-test</module>
     <module>manifold-properties</module>
     <module>manifold-properties-test</module>
