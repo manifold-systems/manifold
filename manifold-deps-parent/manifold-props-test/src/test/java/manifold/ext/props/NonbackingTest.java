@@ -16,6 +16,7 @@
 
 package manifold.ext.props;
 
+import manifold.ext.props.middle.NonbackingWithPropOptions;
 import manifold.ext.props.middle.FromClassFile;
 
 import junit.framework.TestCase;
@@ -31,8 +32,15 @@ public class NonbackingTest extends TestCase
 
     // nonbacking field works
     FromClassFile fromClassFile = new FromClassFile();
+    assertEquals( 8, fromClassFile.nonbacking );
     fromClassFile.nonbacking = 9;
     assertEquals( 9, fromClassFile.nonbacking );
   }
 
+  public void testNonbackingWithPropOptions()
+  {
+    NonbackingWithPropOptions c = new NonbackingWithPropOptions();
+    c.nonbackingFinal = "hello";
+    assertEquals( "hi", c.nonbackingFinal );
+  }
 }

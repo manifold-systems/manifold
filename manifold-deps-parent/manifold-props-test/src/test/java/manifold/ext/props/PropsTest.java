@@ -17,6 +17,7 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
+import manifold.ext.props.rt.api.PropOption;
 import manifold.ext.props.rt.api.get;
 import manifold.ext.props.rt.api.prop;
 import manifold.ext.props.rt.api.set;
@@ -81,10 +82,11 @@ public class PropsTest extends TestCase
     @prop List<String> colors;
   }
   class FooImpl implements IFoo {
-    @prop public String name;
+    @prop( PropOption.Final ) public String name;
     @prop public List<String> colors;
     @prop public List<String> things;
-    @prop public final int finalInt;
+    @prop(PropOption.Final) public String whatever;
+    @get @set public final int finalInt;
     @get public int readonlyInt;
 
     public FooImpl( String name, List<String> colors )
@@ -96,6 +98,25 @@ public class PropsTest extends TestCase
       this.readonlyInt = 9; // init read-only var
       readonlyInt = 10; // can init read-only more than once in constructor
     }
+
+    public final String getWhatever()
+    {
+      return whatever;
+    }
+    public final void setWhatever( String value )
+    {
+      whatever = value;
+    }
+
+    public void setFinalInt( int value )
+    {
+//      finalInt = value;
+    }
+//    // should cause error because no @set defined for readonlyInt property
+//    public void setReadonlyInt( int value )
+//    {
+//      readonlyInt = value;
+//    }
 
     public void setThings( List<? extends CharSequence> things )
     {

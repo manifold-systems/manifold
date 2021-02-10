@@ -39,6 +39,7 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import manifold.api.host.IManifoldHost;
 import manifold.api.util.JavacDiagnostic;
+import manifold.util.ReflectUtil;
 
 public abstract class CompiledTypeProcessor implements TaskListener
 {
@@ -152,6 +153,20 @@ public abstract class CompiledTypeProcessor implements TaskListener
   public JavaFileObject getFile( Tree node )
   {
     JCTree.JCClassDecl classDecl = getClassDecl( node );
+    if( classDecl == null )
+    {
+      ReflectUtil.LiveFieldRef symField = ReflectUtil.WithNull.field( node, "sym" );
+      Symbol sym = symField == null ? null : (Symbol)symField.get();
+      while( sym != null )
+      {
+        Symbol owner = sym.owner;
+        if( owner instanceof Symbol.ClassSymbol )
+        {
+          return ((Symbol.ClassSymbol)owner).sourcefile;
+        }
+        sym = owner;
+      }
+    }
     return classDecl == null ? null : classDecl.sym.sourcefile;
   }
 

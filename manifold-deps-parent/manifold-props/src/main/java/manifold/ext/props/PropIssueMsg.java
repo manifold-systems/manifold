@@ -16,12 +16,18 @@
 
 package manifold.ext.props;
 
+import manifold.api.util.DynamicArray;
 import manifold.api.util.IssueMsg;
 
 public class PropIssueMsg
 {
-  public static final IssueMsg MSG_CANNOT_ACCESS_PROPERTY = new IssueMsg( "Cannot access property '{0}'" );
-  public static final IssueMsg MSG_CANNOT_MODIFY_PROPERTY = new IssueMsg( "Cannot modify final property '{0}'" );
+  public static final IssueMsg MSG_CANNOT_ASSIGN_READONLY_PROPERTY = new IssueMsg( "Cannot assign read-only property '{0}'" );
+  public static final IssueMsg MSG_CANNOT_ACCESS_WRITEONLY_PROPERTY = new IssueMsg( "Cannot access write-only property '{0}'" );
   public static final IssueMsg MSG_PROPERTY_IS_ABSTRACT = new IssueMsg( "Cannot reference property '{0}' in default interface accessor" );
   public static final IssueMsg MSG_SETTER_TYPE_CONFLICT = new IssueMsg( "Setter has parameter of type '{0}' but property '{1}' is of type '{2}'" );
+  public static final IssueMsg MSG_PROPERTY_METHOD_CONFLICT = new IssueMsg( "Property accessor conflict: Property '{0}' method '{1}': '{2}'" );
+  public static final IssueMsg MSG_FINAL_NOT_ALLOWED_IN_INTERFACE = new IssueMsg( "'Final' property not allowed in interface" );
+  public static final IssueMsg MSG_SETTER_DEFINED_FOR_READONLY = new IssueMsg( "Setter method '{0}' defined for read-only property '{1}'" );
+  public static final IssueMsg MSG_GETTER_DEFINED_FOR_WRITEONLY = new IssueMsg( "Getter method '{0}' defined for write-only property '{1}'" );
+  public static final IssueMsg MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY = new IssueMsg( "Setter method '{0}' defined for final property '{1}'" );
 }

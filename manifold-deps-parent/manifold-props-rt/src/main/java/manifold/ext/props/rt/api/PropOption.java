@@ -17,6 +17,7 @@
 package manifold.ext.props.rt.api;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 
 /**
  * Options used with {@link prop}, {@link get}, {@link set}.
@@ -80,5 +81,13 @@ public enum PropOption
   public int or( int modifier )
   {
     return getModifier() | modifier;
+  }
+
+  public static PropOption fromModifier( int modifier )
+  {
+    return Arrays.stream( PropOption.values() )
+      .filter( e -> e.getModifier() == modifier )
+      .findFirst()
+      .orElseThrow( () -> new IllegalArgumentException( "Bad modifier: " + modifier ) );
   }
 }

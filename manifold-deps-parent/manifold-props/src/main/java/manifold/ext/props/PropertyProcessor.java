@@ -49,6 +49,7 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import javax.tools.Diagnostic;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -163,10 +164,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         if( sym instanceof VarSymbol )
         {
-          propgen anno = sym.getAnnotation( propgen.class );
-          if( anno != null )
+          Attribute.Compound propgen = getAnnotationMirror( sym, propgen.class );
+          if( propgen != null )
           {
-            sym.flags_field = sym.flags_field & ~PRIVATE | anno.flags();
+            sym.flags_field = sym.flags_field & ~PRIVATE | getFlags( propgen );
             handled = true;
           }
         }
@@ -179,10 +180,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         if( sym instanceof MethodSymbol )
         {
-          Attribute.Compound anno = getPropGenAnnoMirror( sym );
-          if( anno != null )
+          Attribute.Compound propgenAnno = getAnnotationMirror( sym, propgen.class );
+          if( propgenAnno != null )
           {
-            Name fieldName = names.fromString( getName( anno ) );
+            Name fieldName = names.fromString( getName( propgenAnno ) );
             for( Symbol existing: IDynamicJdk.instance().getMembersByName( classSym, fieldName, false ) )
             {
               if( existing instanceof VarSymbol )
@@ -198,10 +199,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             Type t = meth.getParameters().isEmpty()
               ? meth.getReturnType()
               : meth.getParameters().get( 0 ).type;
-            VarSymbol propField = new VarSymbol( getFlags( anno ), fieldName, t, classSym );
+            VarSymbol propField = new VarSymbol( getFlags( propgenAnno ), fieldName, t, classSym );
 
             // add the @prop, @get, @set annotations
-            propField.appendAttributes( List.from( anno.values.stream()
+            propField.appendAttributes( List.from( propgenAnno.values.stream()
               .filter( e -> e.snd instanceof Attribute.Array )
               .map( e -> (Attribute.Compound)((Attribute.Array)e.snd).values[0] )
               .collect( Collectors.toList() ) ) );
@@ -228,30 +229,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
       }
       throw new IllegalStateException();
-    }
-
-    private long getFlags( Attribute.Compound anno )
-    {
-      for( MethodSymbol methSym: anno.getElementValues().keySet() )
-      {
-        if( methSym.getSimpleName().toString().equals( "flags" ) )
-        {
-          return ((Number)anno.getElementValues().get( methSym ).getValue()).longValue();
-        }
-      }
-      throw new IllegalStateException();
-    }
-
-    private Attribute.Compound getPropGenAnnoMirror( Symbol sym )
-    {
-      for( Attribute.Compound anno: sym.getAnnotationMirrors() )
-      {
-        if( propgen.class.getTypeName().equals( anno.type.tsym.getQualifiedName().toString() ) )
-        {
-          return anno;
-        }
-      }
-      return null;
     }
   }
   
@@ -410,56 +387,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
       }
-    }
-
-    private boolean isAbstract( JCClassDecl classDecl, List<JCExpression> args )
-    {
-      if( classDecl.getKind() == Tree.Kind.INTERFACE )
-      {
-        // generated methods are always abstract in interfaces
-        return true;
-      }
-      else if( Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
-      {
-        // abstract class can have abstract methods
-
-        return hasOption( args, PropOption.Abstract );
-      }
-      return false;
-    }
-
-    private PropOption getAccess( JCClassDecl classDecl, List<JCExpression> args )
-    {
-      if( classDecl.getKind() == Tree.Kind.INTERFACE )
-      {
-        // generated methods are always abstract in interfaces
-        return PropOption.Public;
-      }
-      return hasOption( args, PropOption.Public )
-        ? PropOption.Public
-        : hasOption( args, PropOption.Protected )
-          ? PropOption.Protected
-          : hasOption( args, PropOption.Package )
-            ? PropOption.Package
-            : hasOption( args, PropOption.Private )
-              ? PropOption.Private
-              : null;
-    }
-
-    private boolean hasOption( List<JCExpression> args, PropOption option )
-    {
-      if( args == null )
-      {
-        return false;
-      }
-      return args.stream().anyMatch( e -> ((JCLiteral)e).value == option );
-    }
-
-    private JCAnnotation getAnnotation( JCVariableDecl tree, Class anno )
-    {
-      return tree.getModifiers().getAnnotations().stream()
-        .filter( e -> anno.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().orElse( null );
     }
 
     //  @propgen(name = "foo", 1)
@@ -656,6 +583,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  // Remove FINAL modifier from property fields in interfaces to enable assignment
+  // (note these fields do not exist in bytecode)
   class Enter_Finish extends TreeTranslator
   {
     private Stack<JCClassDecl> _classes = new Stack<>();
@@ -679,20 +608,195 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       super.visitVarDef( tree );
 
-      JCClassDecl cls = _classes.peek();
-      if( cls.getKind() != Tree.Kind.INTERFACE )
-      {
-        return;
-      }
-
       if( !isPropertyField( tree.sym ) )
       {
         return;
       }
 
-      // Remove FINAL modifier from property fields in interfaces to enable assignment
-      // (note these fields do not exist in bytecode)
-      tree.sym.flags_field &= ~FINAL;
+      verifyPropertyMethodsAgree( tree );
+
+      JCClassDecl cls = _classes.peek();
+      if( cls.getKind() == Tree.Kind.INTERFACE )
+      {
+        // Remove FINAL modifier from property fields in interfaces to enable assignment
+        // (note these fields do not exist in bytecode)
+        tree.sym.flags_field &= ~FINAL;
+      }
+    }
+
+    private void verifyPropertyMethodsAgree( JCVariableDecl varDecl )
+    {
+      JCAnnotation prop = getAnnotation( varDecl, manifold.ext.props.rt.api.prop.class );
+      JCAnnotation get = getAnnotation( varDecl, manifold.ext.props.rt.api.get.class );
+      JCAnnotation set = getAnnotation( varDecl, manifold.ext.props.rt.api.set.class );
+
+      if( prop == null && get == null && set == null )
+      {
+        // not a property field
+        throw new IllegalStateException();
+      }
+
+      boolean[] finalErrorHanlded = {false};
+
+      verifyGetter( varDecl, prop, get, set, finalErrorHanlded );
+      verifySetter( varDecl, prop, get, set, finalErrorHanlded[0] );
+    }
+
+    private void verifyGetter( JCVariableDecl varDecl, JCAnnotation prop, JCAnnotation get, JCAnnotation set,
+                               boolean[] finalErrorHanlded )
+    {
+      MethodSymbol getMethod = resolveGetMethod( varDecl.sym.owner.type, varDecl.sym );
+
+      if( set == null || get != null )
+      {
+        // Property is defined to have 'get' access
+        //
+
+        JCClassDecl classDecl = _classes.peek();
+
+        if( getMethod == null )
+        {
+          throw new IllegalStateException( "Getter should exist, if not user-defined, it should have been generated" );
+        }
+
+        boolean getAbstract = isAbstract( classDecl, get == null ? prop.args : get.args );
+        boolean getFinal = hasOption( get == null ? prop.args : get.args, PropOption.Final );
+        PropOption getAccess = PropertyProcessor.this.getAccess( classDecl, get == null ? prop.args : get.args );
+
+        if( getAbstract != Modifier.isAbstract( (int)getMethod.flags() ) )
+        {
+          if( classDecl.getKind() != Tree.Kind.INTERFACE )
+          {
+            _tp.report( varDecl, Diagnostic.Kind.ERROR,
+              PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+                varDecl.sym.flatName().toString(), getMethod.flatName().toString(), "Abstract" ) );
+          }
+        }
+
+        if( getFinal && classDecl.getKind() == Tree.Kind.INTERFACE )
+        {
+          _tp.report( varDecl, Diagnostic.Kind.ERROR, PropIssueMsg.MSG_FINAL_NOT_ALLOWED_IN_INTERFACE.get() );
+          finalErrorHanlded[0] = get == null;
+        }
+
+        if( getFinal != Modifier.isFinal( (int)getMethod.flags() ) )
+        {
+          _tp.report( varDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+              varDecl.sym.flatName().toString(), getMethod.flatName().toString(), "Final" ) );
+        }
+
+        int accessModifier = getAccess == null
+          ? getAccess( classDecl, (int)varDecl.getModifiers().flags )
+          : getAccess.getModifier();
+
+        if( (getMethod.flags() & accessModifier) != accessModifier )
+        {
+          _tp.report( varDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+              varDecl.sym.flatName().toString(), getMethod.flatName().toString(),
+              PropOption.fromModifier( accessModifier ).name() ) );
+        }
+      }
+      else if( getMethod != null ) // just @set
+      {
+        _tp.report( varDecl, Diagnostic.Kind.WARNING,
+          PropIssueMsg.MSG_GETTER_DEFINED_FOR_WRITEONLY.get(
+            getMethod.flatName().toString(), varDecl.sym.flatName().toString() ) );
+      }
+    }
+
+    private void verifySetter( JCVariableDecl varDecl, JCAnnotation prop, JCAnnotation get, JCAnnotation set,
+                               boolean finalErrorHanlded )
+    {
+      MethodSymbol setMethod = resolveSetMethod( varDecl.sym.owner.type, varDecl.sym,
+        Types.instance( _javacTask.getContext() ) );
+
+      if( setMethod != null && Modifier.isFinal( (int)varDecl.getModifiers().flags ) )
+      {
+        _tp.report( varDecl, Diagnostic.Kind.WARNING,
+          PropIssueMsg.MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY.get(
+            setMethod.flatName().toString(), varDecl.name.toString() ) );
+      }
+
+      if( get == null || set != null )
+      {
+        // Property is defined to have 'set' access
+        //
+
+        JCClassDecl classDecl = _classes.peek();
+
+        boolean setAbstract = isAbstract( classDecl, set == null ? prop.args : set.args );
+        boolean setFinal = hasOption( set == null ? prop.args : set.args, PropOption.Final );
+        PropOption setAccess = PropertyProcessor.this.getAccess( classDecl, set == null ? prop.args : set.args );
+        boolean setGenerated = getAnnotation( varDecl, propgen.class ) != null;
+
+        if( setMethod == null && !Modifier.isFinal( (int)varDecl.getModifiers().flags ) )
+        {
+          throw new IllegalStateException( "Setter should exist, if not user-defined, it should have been generated" );
+        }
+
+        if( setMethod != null && setAbstract != Modifier.isAbstract( (int)setMethod.flags() ) )
+        {
+          if( classDecl.getKind() != Tree.Kind.INTERFACE )
+          {
+            _tp.report( varDecl, Diagnostic.Kind.ERROR,
+              PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+                varDecl.sym.flatName().toString(), setMethod.flatName().toString(), "Abstract" ) );
+          }
+        }
+
+        if( !finalErrorHanlded && setFinal && classDecl.getKind() == Tree.Kind.INTERFACE )
+        {
+          _tp.report( varDecl, Diagnostic.Kind.ERROR, PropIssueMsg.MSG_FINAL_NOT_ALLOWED_IN_INTERFACE.get() );
+        }
+
+        if( setMethod != null && setFinal != Modifier.isFinal( (int)setMethod.flags() ) )
+        {
+          if( setGenerated )
+          {
+            throw new IllegalStateException( "generated method should match property" );
+          }
+
+          _tp.report( varDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+              varDecl.sym.flatName().toString(), setMethod.flatName().toString(), "Final" ) );
+        }
+
+        int accessModifier = setAccess == null
+          ? getAccess( classDecl, (int)varDecl.getModifiers().flags )
+          : setAccess.getModifier();
+
+        if( setMethod != null && (setMethod.flags() & accessModifier) != accessModifier )
+        {
+          if( setGenerated )
+          {
+            throw new IllegalStateException( "generated method should match property" );
+          }
+
+          _tp.report( varDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_PROPERTY_METHOD_CONFLICT.get(
+              varDecl.sym.flatName().toString(), setMethod.flatName().toString(),
+              PropOption.fromModifier( accessModifier ).name() ) );
+        }
+      }
+      else if( setMethod != null ) // just @set
+      {
+        _tp.report( varDecl, Diagnostic.Kind.WARNING,
+          PropIssueMsg.MSG_SETTER_DEFINED_FOR_READONLY.get(
+            setMethod.flatName().toString(), varDecl.sym.flatName().toString() ) );
+      }
+    }
+
+    private int getAccess( JCClassDecl classDecl, int flags )
+    {
+      return Modifier.isPublic( flags )
+        ? PUBLIC
+        : Modifier.isProtected( flags )
+          ? PROTECTED
+          : Modifier.isPrivate( flags )
+            ? PRIVATE
+            : classDecl.getKind() == Tree.Kind.INTERFACE ? PUBLIC : 0;
     }
   }
 
@@ -750,7 +854,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       // replace foo.bar with foo.getBar()
 
-      MethodSymbol getMethod = resolveGetMethod( tree.selected.type, tree.sym );
+      MethodSymbol getMethod = isReadableProperty( tree.sym )
+        ? resolveGetMethod( tree.selected.type, tree.sym )
+        : null;
 
       if( getMethod != null )
       {
@@ -795,7 +901,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       else
       {
         _tp.report( tree, Diagnostic.Kind.ERROR,
-          PropIssueMsg.MSG_CANNOT_ACCESS_PROPERTY.get( tree.sym.flatName().toString() ) );
+          PropIssueMsg.MSG_CANNOT_ACCESS_WRITEONLY_PROPERTY.get( tree.sym.flatName().toString() ) );
       }
     }
 
@@ -811,7 +917,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       // replace with bar with this.getBar()
 
-      MethodSymbol getMethod = resolveGetMethod( _backingSymbols.peek().fst.type, tree.sym );
+      MethodSymbol getMethod = isReadableProperty( tree.sym )
+        ? resolveGetMethod( _backingSymbols.peek().fst.type, tree.sym )
+        : null;
 
       if( getMethod != null )
       {
@@ -865,7 +973,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       else
       {
         _tp.report( tree, Diagnostic.Kind.ERROR,
-          PropIssueMsg.MSG_CANNOT_ACCESS_PROPERTY.get( tree.sym.flatName().toString() ) );
+          PropIssueMsg.MSG_CANNOT_ACCESS_WRITEONLY_PROPERTY.get( tree.sym.flatName().toString() ) );
       }
     }
 
@@ -925,7 +1033,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       Context ctx = _javacTask.getContext();
 
-      MethodSymbol setMethod = resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( ctx ) );
+      MethodSymbol setMethod = isWritableProperty( lhsSym )
+        ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( ctx ) )
+        : null;
 
       if( setMethod != null )
       {
@@ -987,7 +1097,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
 
         _tp.report( tree, Diagnostic.Kind.ERROR,
-          PropIssueMsg.MSG_CANNOT_MODIFY_PROPERTY.get( lhsSym.flatName().toString() ) );
+          PropIssueMsg.MSG_CANNOT_ASSIGN_READONLY_PROPERTY.get( lhsSym.flatName().toString() ) );
       }
     }
 
@@ -1003,64 +1113,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       // Concrete type set in attr
       methodTree.type = tree.type;
       return methodTree;
-    }
-
-    private MethodSymbol resolveGetMethod( Type type, Symbol field )
-    {
-      Types types = _tp.getTypes();
-
-      if( type instanceof Type.TypeVar )
-      {
-        type = types.erasure( type );
-      }
-
-      if( !(type.tsym instanceof ClassSymbol) )
-      {
-        return null;
-      }
-
-      MethodSymbol method = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
-      if( method == null )
-      {
-        method = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
-      }
-      return method;
-    }
-
-    private MethodSymbol resolveSetMethod( Type type, Symbol field, Types types )
-    {
-      if( type instanceof Type.TypeVar )
-      {
-        type = types.erasure( type );
-      }
-
-      if( !(type.tsym instanceof ClassSymbol) )
-      {
-        return null;
-      }
-
-      MethodSymbol getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
-      if( getMethod == null )
-      {
-        getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
-      }
-      if( getMethod != null )
-      {
-        Type elemType = getMethod.type.isErroneous()
-          ? getMethod.type
-          : types.memberType( type, getMethod ).getReturnType();
-
-        MethodSymbol setMethod = ManAttr.getMethodSymbol( types, type, field.type, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
-        if( setMethod != null )
-        {
-          Type param2 = types.memberType( type, setMethod ).getParameterTypes().get( 0 );
-          if( types.isAssignable( elemType, param2 ) || ManAttr.isAssignableWithGenerics( types, elemType, param2 ) )
-          {
-            return setMethod;
-          }
-        }
-      }
-      return null;
     }
   }
 
@@ -1148,11 +1200,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         for( VarSymbol varSym : backingFields )
         {
-          propgen anno = varSym.getAnnotation( propgen.class );
-          if( anno != null )
+          Attribute.Compound propgenAnno = getAnnotationMirror( varSym, propgen.class );
+          if( propgenAnno != null )
           {
             // remove PRIVATE, restore original access modifiers
-            varSym.flags_field = varSym.flags_field & ~PRIVATE | anno.flags();
+            varSym.flags_field = varSym.flags_field & ~PRIVATE | getFlags( propgenAnno );
           }
         }
         _propMap.remove( classSym );
@@ -1169,7 +1221,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           VarSymbol sym = new VarSymbol( varSym.flags_field, varSym.name, t, classSym );
           sym.appendAttributes( varSym.getAnnotationMirrors() ); // add the @prop etc. annotations
 
-            // reflectively call:  classSym.members_field.enter( sym );
+          // reflectively call:  classSym.members_field.enter( sym );
           ReflectUtil.method( ReflectUtil.field( classSym, "members_field" ).get(),
             "enter", Symbol.class ).invoke( sym );
         }
@@ -1178,12 +1230,169 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  private MethodSymbol resolveGetMethod( Type type, Symbol field )
+  {
+    Types types = _tp.getTypes();
+
+    if( type instanceof Type.TypeVar )
+    {
+      type = types.erasure( type );
+    }
+
+    if( !(type.tsym instanceof ClassSymbol) )
+    {
+      return null;
+    }
+
+    MethodSymbol method = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
+    if( method == null )
+    {
+      method = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
+    }
+    return method;
+  }
+
+  private MethodSymbol resolveSetMethod( Type type, Symbol field, Types types )
+  {
+    if( type instanceof Type.TypeVar )
+    {
+      type = types.erasure( type );
+    }
+
+    if( !(type.tsym instanceof ClassSymbol) )
+    {
+      return null;
+    }
+
+    MethodSymbol getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
+    if( getMethod == null )
+    {
+      getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
+    }
+    if( getMethod != null )
+    {
+      Type elemType = getMethod.type.isErroneous()
+        ? getMethod.type
+        : types.memberType( type, getMethod ).getReturnType();
+
+      MethodSymbol setMethod = ManAttr.getMethodSymbol( types, type, field.type, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
+      if( setMethod != null )
+      {
+        Type param2 = types.memberType( type, setMethod ).getParameterTypes().get( 0 );
+        if( types.isAssignable( elemType, param2 ) || ManAttr.isAssignableWithGenerics( types, elemType, param2 ) )
+        {
+          return setMethod;
+        }
+      }
+    }
+    return null;
+  }
+
+  private boolean isAbstract( JCClassDecl classDecl, List<JCExpression> args )
+  {
+    if( classDecl.getKind() == Tree.Kind.INTERFACE )
+    {
+      // generated methods are always abstract in interfaces
+      return true;
+    }
+    else if( Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
+    {
+      // abstract class can have abstract methods
+
+      return hasOption( args, PropOption.Abstract );
+    }
+    return false;
+  }
+
+  private PropOption getAccess( JCClassDecl classDecl, List<JCExpression> args )
+  {
+    if( classDecl.getKind() == Tree.Kind.INTERFACE )
+    {
+      // generated methods are always abstract in interfaces
+      return PropOption.Public;
+    }
+    return hasOption( args, PropOption.Public )
+      ? PropOption.Public
+      : hasOption( args, PropOption.Protected )
+      ? PropOption.Protected
+      : hasOption( args, PropOption.Package )
+      ? PropOption.Package
+      : hasOption( args, PropOption.Private )
+      ? PropOption.Private
+      : null;
+  }
+
+  private boolean hasOption( List<JCExpression> args, PropOption option )
+  {
+    if( args == null )
+    {
+      return false;
+    }
+    return args.stream().anyMatch( e -> isOption( option, e ) );
+  }
+
+  private boolean isOption( PropOption option, JCExpression e )
+  {
+    if( e instanceof JCLiteral )
+    {
+      return ((JCLiteral)e).getValue() == option;
+    }
+    // whatever, it works
+    return e.toString().contains( option.name() );
+  }
+
+  private JCAnnotation getAnnotation( JCVariableDecl tree, Class anno )
+  {
+    return tree.getModifiers().getAnnotations().stream()
+      .filter( e -> anno.getSimpleName().equals( e.annotationType.toString() ) )
+      .findFirst().orElse( null );
+  }
+
   public boolean isPropertyField( Symbol sym )
   {
     return sym != null &&
-      (sym.getAnnotation( prop.class ) != null ||
-       sym.getAnnotation( get.class ) != null ||
-       sym.getAnnotation( set.class ) != null);
+      !sym.isLocal() &&
+      (getAnnotationMirror( sym, prop.class ) != null ||
+       getAnnotationMirror( sym, get.class ) != null ||
+       getAnnotationMirror( sym, set.class ) != null);
+  }
+
+  public boolean isReadableProperty( Symbol sym )
+  {
+    return sym != null &&
+      (getAnnotationMirror( sym, prop.class ) != null && getAnnotationMirror( sym, set.class ) == null ||
+       getAnnotationMirror( sym, get.class ) != null);
+  }
+  public boolean isWritableProperty( Symbol sym )
+  {
+    return sym != null &&
+      !isFinal( (int)sym.flags_field ) &&
+      (getAnnotationMirror( sym, prop.class ) != null && getAnnotationMirror( sym, get.class ) == null ||
+       getAnnotationMirror( sym, set.class ) != null);
+  }
+
+  private long getFlags( Attribute.Compound anno )
+  {
+    for( MethodSymbol methSym: anno.getElementValues().keySet() )
+    {
+      if( methSym.getSimpleName().toString().equals( "flags" ) )
+      {
+        return ((Number)anno.getElementValues().get( methSym ).getValue()).longValue();
+      }
+    }
+    throw new IllegalStateException();
+  }
+
+  private Attribute.Compound getAnnotationMirror( Symbol sym, Class<? extends Annotation> annoClass )
+  {
+    for( Attribute.Compound anno: sym.getAnnotationMirrors() )
+    {
+      if( annoClass.getTypeName().equals( anno.type.tsym.getQualifiedName().toString() ) )
+      {
+        return anno;
+      }
+    }
+    return null;
   }
 
   private String getGetterName( Symbol field, boolean isOk )
