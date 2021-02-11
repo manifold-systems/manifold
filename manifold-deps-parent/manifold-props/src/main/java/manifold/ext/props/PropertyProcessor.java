@@ -461,10 +461,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
+      boolean isInterface = classDecl.getKind() == Tree.Kind.INTERFACE;
       long flags = propField.getModifiers().flags;
       JCAnnotation propgenAnno = makePropGenAnnotation( propField );
       List<JCAnnotation> annos = List.of( propgenAnno );
-      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
+      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal,
+        isInterface ? propField.init != null : (flags & STATIC) != 0,
         propAccess, (int)flags, annos, propField.pos );
       Name name = Names.instance( context ).fromString( getGetterName( propField, true ) );
       JCExpression resType = (JCExpression)propField.vartype.clone();
@@ -493,10 +495,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
+      boolean isInterface = classDecl.getKind() == Tree.Kind.INTERFACE;
       long flags = propField.getModifiers().flags;
       JCAnnotation propgenAnno = makePropGenAnnotation( propField );
       List<JCAnnotation> annos = List.of( propgenAnno );
-      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal, (flags & STATIC) != 0,
+      JCModifiers access = getGetterSetterModifiers( make, propAbstract, propFinal,
+        isInterface ? propField.init != null : (flags & STATIC) != 0,
         propAccess, (int)flags, annos, propField.pos );
       Names names = Names.instance( context );
       Name name = names.fromString( getSetterName( propField.name ) );
@@ -730,7 +734,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCClassDecl classDecl = _classes.peek();
 
         // check that the method and property are both static/non-static, otherwise issue compiler error
-        getMethod = checkStatic( varDecl, varDecl.sym, getMethod );
+        getMethod = checkStatic( classDecl, varDecl, varDecl.sym, getMethod );
         if( getMethod == null )
         {
           return;
@@ -801,17 +805,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // Property is defined to have 'set' access
         //
 
+        JCClassDecl classDecl = _classes.peek();
+
         if( setMethod != null )
         {
           // check that the method and property are both static/non-static, otherwise issue compiler error
-          setMethod = checkStatic( varDecl, varDecl.sym, setMethod );
+          setMethod = checkStatic( classDecl, varDecl, varDecl.sym, setMethod );
           if( setMethod == null )
           {
             return;
           }
         }
-
-        JCClassDecl classDecl = _classes.peek();
 
         boolean setAbstract = isAbstract( classDecl, set == null ? prop.args : set.args );
         boolean setFinal = hasOption( set == null ? prop.args : set.args, PropOption.Final );
@@ -886,14 +890,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             : classDecl.getKind() == Tree.Kind.INTERFACE ? PUBLIC : 0;
     }
 
-    private MethodSymbol checkStatic( JCVariableDecl propDecl, Symbol field, MethodSymbol method )
+    private MethodSymbol checkStatic( JCClassDecl classDecl, JCVariableDecl propDecl, Symbol field, MethodSymbol method )
     {
       if( method == null )
       {
         throw new IllegalStateException( "Should have found a method, either generated or user-defined." );
       }
 
-      boolean isPropStatic = ((int)field.flags_field & STATIC) != 0;
+      boolean isInterface = classDecl.getKind() == Tree.Kind.INTERFACE;
+      boolean isPropStatic = isInterface ? propDecl.init != null : ((int)field.flags_field & STATIC) != 0;
       boolean isMethodStatic = ((int)method.flags_field & STATIC) != 0;
       if( isPropStatic != isMethodStatic )
       {
