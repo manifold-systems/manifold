@@ -27,6 +27,17 @@ import java.lang.reflect.Modifier;
 @SuppressWarnings( "JavaReflectionMemberAccess" )
 public class FromClassFileTest extends TestCase
 {
+  public void testStaticReadWriteBacking() throws Throwable
+  {
+    assertEquals( "s1", FromClassFile.staticReadwriteBackingProp );
+    FromClassFile.staticReadwriteBackingProp = "b";
+    assertEquals( "b", FromClassFile.staticReadwriteBackingProp );
+
+    Field field = FromClassFile.class.getDeclaredField( "staticReadwriteBackingProp" );
+    assertNotNull( field );
+    assertTrue( Modifier.isPrivate( field.getModifiers() ) );
+  }
+
   public void testReadWriteBacking() throws Throwable
   {
     FromClassFile f = new FromClassFile();

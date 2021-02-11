@@ -722,7 +722,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
                                boolean[] finalErrorHanlded )
     {
       MethodSymbol getMethod = resolveGetMethod( varDecl.sym.owner.type, varDecl.sym );
-
       if( set == null || get != null )
       {
         // Property is defined to have 'get' access
@@ -730,9 +729,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         JCClassDecl classDecl = _classes.peek();
 
+        // check that the method and property are both static/non-static, otherwise issue compiler error
+        getMethod = checkStatic( varDecl, varDecl.sym, getMethod );
         if( getMethod == null )
         {
-          throw new IllegalStateException( "Getter should exist, if not user-defined, it should have been generated" );
+          return;
         }
 
         boolean getAbstract = isAbstract( classDecl, get == null ? prop.args : get.args );
@@ -799,6 +800,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         // Property is defined to have 'set' access
         //
+
+        if( setMethod != null )
+        {
+          // check that the method and property are both static/non-static, otherwise issue compiler error
+          setMethod = checkStatic( varDecl, varDecl.sym, setMethod );
+          if( setMethod == null )
+          {
+            return;
+          }
+        }
 
         JCClassDecl classDecl = _classes.peek();
 
@@ -873,6 +884,32 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           : isPrivate( flags )
             ? PRIVATE
             : classDecl.getKind() == Tree.Kind.INTERFACE ? PUBLIC : 0;
+    }
+
+    private MethodSymbol checkStatic( JCVariableDecl propDecl, Symbol field, MethodSymbol method )
+    {
+      if( method == null )
+      {
+        throw new IllegalStateException( "Should have found a method, either generated or user-defined." );
+      }
+
+      boolean isPropStatic = ((int)field.flags_field & STATIC) != 0;
+      boolean isMethodStatic = ((int)method.flags_field & STATIC) != 0;
+      if( isPropStatic != isMethodStatic )
+      {
+        if( isMethodStatic )
+        {
+          _tp.report( _taskEvent.getSourceFile(), propDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_STATIC_MISMATCH.get( method.name.toString(), field.name.toString() ) );
+        }
+        else
+        {
+          _tp.report( _taskEvent.getSourceFile(), propDecl, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_NONSTATIC_MISMATCH.get( method.name.toString(), field.name.toString() ) );
+        }
+        method = null;
+      }
+      return method;
     }
   }
 

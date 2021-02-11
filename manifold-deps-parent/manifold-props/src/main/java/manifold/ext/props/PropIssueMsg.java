@@ -32,4 +32,6 @@ public class PropIssueMsg
   public static final IssueMsg MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY = new IssueMsg( "Setter method '{0}' defined for final property '{1}'" );
   public static final IssueMsg MSG_PROPERTY_NOT_ACCESSIBLE = new IssueMsg( "{0} access to property '{1}' is '{2}'" );
   public static final IssueMsg MSG_ACCESSOR_WEAKER = new IssueMsg( "'{0}' attempting to assign weaker access privileges; was '{1}'" );
+  public static final IssueMsg MSG_STATIC_MISMATCH = new IssueMsg( "Static method '{0}' conflicts with non-static property '{1}'" );
+  public static final IssueMsg MSG_NONSTATIC_MISMATCH = new IssueMsg( "Non-static method '{0}' conflicts with static property '{1}'" );
 }

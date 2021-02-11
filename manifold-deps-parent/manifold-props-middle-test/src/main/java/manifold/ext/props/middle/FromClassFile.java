@@ -26,6 +26,8 @@ import java.util.Map;
 
 public class FromClassFile
 {
+  @prop public static String staticReadwriteBackingProp = "s1";
+
   private Map<String, Integer> _map = new HashMap<>();
 
   @prop public String readwriteBackingProp = "a1";
