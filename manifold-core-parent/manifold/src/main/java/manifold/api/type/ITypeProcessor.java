@@ -35,6 +35,4 @@ public interface ITypeProcessor
    * </pre>
    */
   void process( TypeElement fqn, TypeProcessor typeProcessor, IssueReporter<JavaFileObject> issueReporter );
-
-  //boolean filterError( TypeProcessor typeProcessor, Diagnostic diagnostic );
 }

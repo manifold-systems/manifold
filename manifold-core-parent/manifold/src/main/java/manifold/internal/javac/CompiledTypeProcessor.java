@@ -172,8 +172,12 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public void report( JCTree tree, Diagnostic.Kind kind, String msg )
   {
+    report( null, tree, kind, msg );
+  }
+  public void report( JavaFileObject sourcefile, JCTree tree, Diagnostic.Kind kind, String msg )
+  {
     IssueReporter<JavaFileObject> reporter = new IssueReporter<>( _javacTask::getContext );
-    JavaFileObject file = getFile( tree );
+    JavaFileObject file = sourcefile != null ? sourcefile : getFile( tree );
     reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
 

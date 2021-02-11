@@ -24,7 +24,7 @@ import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
-import com.sun.tools.javac.comp.Annotate;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -66,6 +66,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private Map<ClassSymbol, Set<VarSymbol>> _propMap;
   private Map<ClassSymbol, Set<VarSymbol>> _backingMap;
   private Map<ClassSymbol, Set<VarSymbol>> _nonbackingMap;
+  private TaskEvent _taskEvent;
   private LocklessLazyVar<ExtensionTransformer> _extensionTransformer = LocklessLazyVar.make( () -> {
     ExtensionManifold extensionManifold = (ExtensionManifold)JavacPlugin.instance().getHost().getSingleModule()
       .getTypeManifolds().stream()
@@ -241,21 +242,29 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return;
     }
 
-    for( Tree tree : e.getCompilationUnit().getTypeDecls() )
+    _taskEvent = e;
+    try
     {
-      if( tree instanceof JCClassDecl &&
-          shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
+      for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        JCClassDecl classDecl = (JCClassDecl)tree;
-        if( e.getKind() == TaskEvent.Kind.ENTER )
+        if( tree instanceof JCClassDecl &&
+          shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
         {
-          classDecl.accept( new Enter_Start() );
-        }
-        else if( e.getKind() == TaskEvent.Kind.GENERATE )
-        {
-          new Generate_Start().handleClass( classDecl.sym );
+          JCClassDecl classDecl = (JCClassDecl)tree;
+          if( e.getKind() == TaskEvent.Kind.ENTER )
+          {
+            classDecl.accept( new Enter_Start() );
+          }
+          else if( e.getKind() == TaskEvent.Kind.GENERATE )
+          {
+            new Generate_Start().handleClass( classDecl.sym );
+          }
         }
       }
+    }
+    finally
+    {
+      _taskEvent = null;
     }
   }
 
@@ -269,27 +278,34 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return;
     }
 
-    for( Tree tree : e.getCompilationUnit().getTypeDecls() )
+    _taskEvent = e;
+    try
     {
-      if( tree instanceof JCClassDecl &&
-        shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
+      for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        JCClassDecl classDecl = (JCClassDecl)tree;
-        if( e.getKind() == TaskEvent.Kind.ENTER )
+        if( tree instanceof JCClassDecl &&
+          shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
         {
-          classDecl.accept( new Enter_Finish() );
-        }
-        else if( e.getKind() == TaskEvent.Kind.ANALYZE )
-        {
-          classDecl.accept( new Analyze_Finish() );
-        }
-        else if( e.getKind() == TaskEvent.Kind.GENERATE )
-        {
-          new Generate_Finish().handleClass( classDecl.sym );
+          JCClassDecl classDecl = (JCClassDecl)tree;
+          if( e.getKind() == TaskEvent.Kind.ENTER )
+          {
+            classDecl.accept( new Enter_Finish() );
+          }
+          else if( e.getKind() == TaskEvent.Kind.ANALYZE )
+          {
+            classDecl.accept( new Analyze_Finish() );
+          }
+          else if( e.getKind() == TaskEvent.Kind.GENERATE )
+          {
+            new Generate_Finish().handleClass( classDecl.sym );
+          }
         }
       }
     }
-
+    finally
+    {
+      _taskEvent = null;
+    }
   }
 
   public boolean shouldProcess( String fqn, TaskEvent e )
@@ -353,13 +369,19 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
-        if( classDecl.getKind() == Tree.Kind.INTERFACE && (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
+        boolean isInterface = classDecl.getKind() == Tree.Kind.INTERFACE;
+        if( isInterface && (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
         {
           // must explicitly default @prop fields to PUBLIC inside interfaces
           tree.getModifiers().flags |= PUBLIC;
         }
 
         // add getter and/or setter
+        // or, if a PRIVATE property and no user-defined accessors exist, no benefit from property, so treat as field
+
+        JCMethodDecl generatedGetter = null;
+        JCMethodDecl generatedSetter = null;
+        boolean shouldMakeProperty = !isPrivate( (int)tree.getModifiers().flags );
 
         Pair<JCClassDecl, ArrayList<JCTree>> pair = _propertyStatements.peek();
         if( set == null || get != null )
@@ -368,23 +390,64 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           boolean getFinal = hasOption( get == null ? prop.args : get.args, PropOption.Final );
           PropOption getAccess = getAccess( classDecl, get == null ? prop.args : get.args );
 
-          JCMethodDecl getter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess );
-          if( getter != null )
+          if( !isInterface && isWeakerAccess( getAccess, getAccess( modifiers ) ) )
           {
-            pair.snd.add( getter );
+            _tp.report( _taskEvent.getCompilationUnit().getSourceFile(),
+              get != null ? get : prop, Diagnostic.Kind.ERROR,
+              PropIssueMsg.MSG_ACCESSOR_WEAKER.get(
+                "get", PropOption.fromModifier( getAccess( modifiers ) ).name().toLowerCase() ) );
+          }
+
+          generatedGetter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess );
+          if( generatedGetter == null )
+          {
+            shouldMakeProperty = true;
           }
         }
+
         if( (get == null || set != null) && !Modifier.isFinal( modifiers  ) )
         {
           boolean setAbstract = isAbstract( classDecl, set == null ? prop.args : set.args );
           boolean setFinal = hasOption( set == null ? prop.args : set.args, PropOption.Final );
           PropOption setAccess = getAccess( classDecl, set == null ? prop.args : set.args );
 
-          JCMethodDecl setter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess );
-          if( setter != null )
+          if( !isInterface && isWeakerAccess( setAccess, getAccess( modifiers ) ) )
           {
-            pair.snd.add( setter );
+            _tp.report( _taskEvent.getCompilationUnit().getSourceFile(),
+              set != null ? set : prop, Diagnostic.Kind.ERROR,
+              PropIssueMsg.MSG_ACCESSOR_WEAKER.get(
+                "set", PropOption.fromModifier( getAccess( modifiers ) ).name().toLowerCase() ) );
           }
+
+          generatedSetter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess );
+          if( generatedSetter == null )
+          {
+            shouldMakeProperty = true;
+          }
+        }
+
+        if( shouldMakeProperty )
+        {
+          // add the generated accessors
+
+          if( generatedGetter != null )
+          {
+            pair.snd.add( generatedGetter );
+          }
+          if( generatedSetter != null )
+          {
+            pair.snd.add( generatedSetter );
+          }
+        }
+        else
+        {
+          // remove @prop etc. to treat it as a raw field
+
+          ArrayList<JCAnnotation> annos = new ArrayList<>( tree.getModifiers().getAnnotations() );
+          annos.remove( prop );
+          annos.remove( get );
+          annos.remove( set );
+          tree.getModifiers().annotations = List.from( annos );
         }
       }
     }
@@ -580,6 +643,19 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         expr = make.Select( expr, node.getName( components[i] ) );
       }
       return expr;
+    }
+
+    // does the accessor method have weaker access than the prop field?
+    private boolean isWeakerAccess( PropOption accessorOpt, int propAccess )
+    {
+      if( accessorOpt == null )
+      {
+        return false;
+      }
+      int accessorAccess = accessorOpt.getModifier();
+      return accessorAccess == PUBLIC && propAccess != PUBLIC ||
+        accessorAccess == PROTECTED && (propAccess == 0 || propAccess == PRIVATE) ||
+        accessorAccess == 0 && propAccess == PRIVATE;
     }
   }
 
@@ -790,11 +866,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
     private int getAccess( JCClassDecl classDecl, int flags )
     {
-      return Modifier.isPublic( flags )
+      return isPublic( flags )
         ? PUBLIC
-        : Modifier.isProtected( flags )
+        : isProtected( flags )
           ? PROTECTED
-          : Modifier.isPrivate( flags )
+          : isPrivate( flags )
             ? PRIVATE
             : classDecl.getKind() == Tree.Kind.INTERFACE ? PUBLIC : 0;
     }
@@ -852,40 +928,48 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      // replace foo.bar with foo.getBar()
+      // don't process here if the field access is an l-value
+      //
+      Tree parent = _tp.getParent( tree );
+      if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCUnary )
+      {
+        switch( ((JCTree.JCUnary)parent).getTag() )
+        {
+          case POSTDEC:
+          case POSTINC:
+          case PREDEC:
+          case PREINC:
+            return;
+        }
+      }
 
+      // replace foo.bar with foo.getBar()
+      //
       MethodSymbol getMethod = isReadableProperty( tree.sym )
         ? resolveGetMethod( tree.selected.type, tree.sym )
         : null;
 
       if( getMethod != null )
       {
-        Tree parent = _tp.getParent( tree );
-        if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
-        {
-          return;
-        }
-        if( parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
-        {
-          return;
-        }
-        if( parent instanceof JCTree.JCUnary )
-        {
-          switch( ((JCTree.JCUnary)parent).getTag() )
-          {
-            case POSTDEC:
-            case POSTINC:
-            case PREDEC:
-            case PREINC:
-              return;
-          }
-        }
-
         JCMethodDecl methodDecl = _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == getMethod )
         {
           // don't rewrite with getter inside the getter
           _backingSymbols.peek().snd.add( (VarSymbol)tree.sym );
+          return;
+        }
+
+        if( !verifyAccess( tree, tree.sym, getMethod, "Read" ) )
+        {
+          // the getter is not accessible from the use site
           return;
         }
 
@@ -915,35 +999,36 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      // replace with bar with this.getBar()
+      // don't process here if ident is an l-value
+      //
+      Tree parent = _tp.getParent( tree );
+      if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
+      {
+        return;
+      }
+      if( parent instanceof JCTree.JCUnary )
+      {
+        switch( ((JCTree.JCUnary)parent).getTag() )
+        {
+          case POSTDEC:
+          case POSTINC:
+          case PREDEC:
+          case PREINC:
+            return;
+        }
+      }
 
+      // replace with bar with this.getBar()
+      //
       MethodSymbol getMethod = isReadableProperty( tree.sym )
         ? resolveGetMethod( _backingSymbols.peek().fst.type, tree.sym )
         : null;
-
       if( getMethod != null )
       {
-        Tree parent = _tp.getParent( tree );
-        if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
-        {
-          return;
-        }
-        if( parent instanceof JCTree.JCAssignOp && ((JCTree.JCAssignOp)parent).lhs == tree )
-        {
-          return;
-        }
-        if( parent instanceof JCTree.JCUnary )
-        {
-          switch( ((JCTree.JCUnary)parent).getTag() )
-          {
-            case POSTDEC:
-            case POSTINC:
-            case PREDEC:
-            case PREINC:
-              return;
-          }
-        }
-
         JCMethodDecl methodDecl = _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == getMethod )
         {
@@ -958,6 +1043,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
               PropIssueMsg.MSG_PROPERTY_IS_ABSTRACT.get( tree.sym.flatName().toString() ) );
           }
           
+          return;
+        }
+
+        if( !verifyAccess( tree, tree.sym, getMethod, "Read" ) )
+        {
+          // the getter is not accessible from the use site
           return;
         }
 
@@ -1047,6 +1138,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
+        if( !verifyAccess( tree, lhsSym, setMethod, "Write" ) )
+        {
+          // the setter is not accessible from the use site
+          return;
+        }
+
         JCExpression rhs = tree.rhs;
 
 //        tempVarIndex++;
@@ -1099,6 +1196,28 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         _tp.report( tree, Diagnostic.Kind.ERROR,
           PropIssueMsg.MSG_CANNOT_ASSIGN_READONLY_PROPERTY.get( lhsSym.flatName().toString() ) );
       }
+    }
+
+    private boolean verifyAccess( JCExpression ref, Symbol propSym, MethodSymbol accessorMethod, String accessKind )
+    {
+      if( !sameAccess( accessorMethod, propSym ) )
+      {
+        JCClassDecl classDecl = _backingSymbols.peek().fst;
+        Resolve resolve = Resolve.instance( _javacTask.getContext() );
+        AttrContext attrContext = new AttrContext();
+        Env<AttrContext> env = new AttrContextEnv( ref, attrContext );
+        env.toplevel = (JCCompilationUnit)_tp.getCompilationUnit();
+        env.enclClass = classDecl;
+
+        if( !resolve.isAccessible( env, classDecl.type, accessorMethod ) )
+        {
+          _tp.report( ref, Diagnostic.Kind.ERROR,
+            PropIssueMsg.MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind,
+              propSym.flatName().toString(), PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
+          return false;
+        }
+      }
+      return true;
     }
 
     private JCTree.JCMethodInvocation configMethod( JCTree.JCExpression tree, MethodSymbol methodSym, JCTree.JCMethodInvocation methodTree )
@@ -1264,28 +1383,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return null;
     }
 
-    MethodSymbol getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, true ), (ClassSymbol)type.tsym, 0 );
-    if( getMethod == null )
-    {
-      getMethod = ManAttr.getMethodSymbol( types, type, field.type, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
-    }
-    if( getMethod != null )
-    {
-      Type elemType = getMethod.type.isErroneous()
-        ? getMethod.type
-        : types.memberType( type, getMethod ).getReturnType();
-
-      MethodSymbol setMethod = ManAttr.getMethodSymbol( types, type, field.type, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
-      if( setMethod != null )
-      {
-        Type param2 = types.memberType( type, setMethod ).getParameterTypes().get( 0 );
-        if( types.isAssignable( elemType, param2 ) || ManAttr.isAssignableWithGenerics( types, elemType, param2 ) )
-        {
-          return setMethod;
-        }
-      }
-    }
-    return null;
+    return ManAttr.getMethodSymbol( types, type, field.type, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
   }
 
   private boolean isAbstract( JCClassDecl classDecl, List<JCExpression> args )
@@ -1393,6 +1491,23 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
     return null;
+  }
+
+  private boolean sameAccess( Symbol sym1, Symbol sym2 )
+  {
+    return sameAccess( (int)sym1.flags_field, (int)sym2.flags_field );
+  }
+  private boolean sameAccess( int flags1, int flags2 )
+  {
+    return getAccess( flags1 ) == getAccess( flags2 );
+  }
+  private int getAccess( Symbol sym )
+  {
+    return getAccess( (int)sym.flags_field );
+  }
+  private int getAccess( int flags )
+  {
+    return flags & (PUBLIC | PROTECTED | PRIVATE);
   }
 
   private String getGetterName( Symbol field, boolean isOk )

@@ -48,22 +48,6 @@ public class TypeProcessor extends CompiledTypeProcessor
     loadCompilerComponents( javacTask );
   }
 
-//  @Override
-//  public boolean filterError( Diagnostic diagnostic )
-//  {
-//    for( ITypeManifold sp: RuntimeManifoldHost.get().getSingleModule().getTypeManifolds() )
-//    {
-//      if( sp instanceof ITypeProcessor )
-//      {
-//        if( ((ITypeProcessor)sp).filterError( this, diagnostic ) )
-//        {
-//          return true;
-//        }
-//      }
-//    }
-//    return false;
-//  }
-
   private void loadCompilerComponents( BasicJavacTask javacTask )
   {
     _compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );

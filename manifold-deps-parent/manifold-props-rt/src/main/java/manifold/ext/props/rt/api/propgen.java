@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
  * backing field, {@link prop}, {@link get}, and {@link set} are used to recreate the erased symbol.
  */
 @Target( {ElementType.FIELD, ElementType.METHOD} )
-@Retention( RetentionPolicy.RUNTIME )
+@Retention( RetentionPolicy.CLASS )
 public @interface propgen
 {
   String name();

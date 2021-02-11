@@ -16,7 +16,10 @@
 
 package manifold.ext.props.middle;
 
+import manifold.ext.props.rt.api.PropOption;
+import manifold.ext.props.rt.api.get;
 import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.set;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +27,11 @@ import java.util.Map;
 public class FromClassFile
 {
   private Map<String, Integer> _map = new HashMap<>();
+
+  @prop public String readwriteBackingProp = "a1";
+  @get @set public String readwriteBackingProp2 = "a2";
+  @get public String readonlyBackingProp = "a3";
+  @set public String writeonlyBackingProp;
 
   @prop public int nonbacking;
   {

@@ -27,33 +27,39 @@ public enum PropOption
   /**
    * For use with {@link prop}, {@link get}, {@link set}. If specified, the generated get/set methods will be abstract.
    * Note only properties declared in interfaces and abstract classes can be {@code abstract}.
+   * If the corresponding get/set method is user-defined, it must be declared {@code abstract}.
    */
   Abstract( Modifier.ABSTRACT ),
 
   /**
    * For use with {@link prop}, {@link get}, {@link set}. If specified, the generated get/set methods will be final.
    * Note only properties declared in classes, as opposed to interfaces, can be {@code final}.
+   * If the corresponding get/set method is user-defined, it must be declared {@code final}.
    */
   Final( Modifier.FINAL ),
 
   /**
    * For use with {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be {@code private}.
+   * If the corresponding get/set method is user-defined, it must be declared {@code private}.
    */
   Private( Modifier.PRIVATE ),
   /**
    * For use with {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be <i>package-private</i>.
+   * If the corresponding get/set method is user-defined, it must be declared {@code package-private}.
    */
   Package( 0 ),
   /**
    * For use with {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be {@code protected}.
+   * If the corresponding get/set method is user-defined, it must be declared {@code protected}.
    */
   Protected( Modifier.PROTECTED ),
   /**
    * For use with {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be {@code public}.
+   * If the corresponding get/set method is user-defined, it must be declared {@code public}.
    */
   Public( Modifier.PUBLIC );
 
