@@ -50,9 +50,45 @@ public class GenericPropTest extends TestCase
     }
   }
 
-  public void testBasic()
+  public void testFromInterface()
   {
-    GenericPropsImpl props = new GenericPropsImpl();
+    IGenericProps props = new GenericPropsImpl();
+
+    List list_Raw = Arrays.asList( "abc", 123 );
+    props.list_Raw = list_Raw;
+    assertEquals( list_Raw, props.list_Raw );
+
+    List<CharSequence> list_CharSequence = Arrays.asList( "abc", new StringBuilder( "abc" ) );
+    props.list_CharSequence = list_CharSequence;
+    assertEquals( list_CharSequence, props.list_CharSequence );
+
+    List<String> list_String = Arrays.asList( "abc", "def" );
+    props.list_String = list_String;
+    assertEquals( list_String, props.list_String );
+
+    //noinspection UnnecessaryLocalVariable
+    List<?> list_Wildcard = list_Raw;
+    props.list_Wildcard = list_Wildcard;
+    assertEquals( list_Wildcard, props.list_Wildcard );
+
+    //noinspection UnnecessaryLocalVariable
+    List<? extends CharSequence> list_Wildcard_Extends_CharSequence = list_CharSequence;
+    props.list_Wildcard_Extends_CharSequence = list_Wildcard_Extends_CharSequence;
+    assertEquals( list_Wildcard_Extends_CharSequence, props.list_Wildcard_Extends_CharSequence );
+
+    List<Object> list_Wildcard_Super_CharSequence = Arrays.asList( "abc", 123 );
+    props.list_Wildcard_Super_CharSequence = list_Wildcard_Super_CharSequence;
+    assertEquals( list_Wildcard_Super_CharSequence, props.list_Wildcard_Super_CharSequence );
+
+    //noinspection unchecked
+    List<String>[] list_String_Array = new List[] {Arrays.asList( "abc", "def" )};
+    props.list_String_Array = list_String_Array;
+    assertEquals( list_String_Array, props.list_String_Array );
+  }
+
+  public void testFromImpl()
+  {
+    IGenericProps props = new GenericPropsImpl();
 
     List list_Raw = Arrays.asList( "abc", 123 );
     props.list_Raw = list_Raw;

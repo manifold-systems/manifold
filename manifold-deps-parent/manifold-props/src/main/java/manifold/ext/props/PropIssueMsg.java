@@ -16,7 +16,6 @@
 
 package manifold.ext.props;
 
-import manifold.api.util.DynamicArray;
 import manifold.api.util.IssueMsg;
 
 public class PropIssueMsg
@@ -26,7 +25,7 @@ public class PropIssueMsg
   public static final IssueMsg MSG_PROPERTY_IS_ABSTRACT = new IssueMsg( "Cannot reference property '{0}' in default interface accessor" );
   public static final IssueMsg MSG_SETTER_TYPE_CONFLICT = new IssueMsg( "Setter has parameter of type '{0}' but property '{1}' is of type '{2}'" );
   public static final IssueMsg MSG_PROPERTY_METHOD_CONFLICT = new IssueMsg( "Property accessor conflict: Property '{0}' method '{1}': '{2}'" );
-  public static final IssueMsg MSG_FINAL_NOT_ALLOWED_IN_INTERFACE = new IssueMsg( "'Final' property not allowed in interface" );
+  public static final IssueMsg MSG_FINAL_NOT_ALLOWED_IN_INTERFACE = new IssueMsg( "'Final' property accessor not allowed in interface" );
   public static final IssueMsg MSG_SETTER_DEFINED_FOR_READONLY = new IssueMsg( "Setter method '{0}' defined for read-only property '{1}'" );
   public static final IssueMsg MSG_GETTER_DEFINED_FOR_WRITEONLY = new IssueMsg( "Getter method '{0}' defined for write-only property '{1}'" );
   public static final IssueMsg MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY = new IssueMsg( "Setter method '{0}' defined for final property '{1}'" );
@@ -34,4 +33,7 @@ public class PropIssueMsg
   public static final IssueMsg MSG_ACCESSOR_WEAKER = new IssueMsg( "'{0}' attempting to assign weaker access privileges; was '{1}'" );
   public static final IssueMsg MSG_STATIC_MISMATCH = new IssueMsg( "Static method '{0}' conflicts with non-static property '{1}'" );
   public static final IssueMsg MSG_NONSTATIC_MISMATCH = new IssueMsg( "Non-static method '{0}' conflicts with static property '{1}'" );
+  public static final IssueMsg MSG_SET_WITH_FINAL = new IssueMsg( "Cannot use @set with final property" );
+  public static final IssueMsg MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR = new IssueMsg( "Interface '{0}' must provide method '{1}' for static non-final property '{2}'" );
+  public static final IssueMsg MSG_INTERFACE_FIELD_BACKED_PROPERTY_NOT_SUPPORTED = new IssueMsg( "Static interface property '{0}' must provide user-defined accessor[s] which do not reference the property field. (The JVM prohibits non-public and non-final interface fields)" );
 }

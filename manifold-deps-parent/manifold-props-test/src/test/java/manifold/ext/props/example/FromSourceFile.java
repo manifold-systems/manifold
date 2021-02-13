@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.example;
 
 import manifold.ext.props.rt.api.get;
 import manifold.ext.props.rt.api.prop;
@@ -23,7 +23,11 @@ import manifold.ext.props.rt.api.set;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FromClassFile
+/**
+ * FromSourceFile, as opposed to FromClassFile --
+ * testing properties from .java files v. testing properties from .class files.
+ */
+public class FromSourceFile
 {
   @prop public static String staticReadwriteBackingProp = "staticReadwriteBackingProp";
   @prop public static final String staticFinalBackingProp = "staticFinalBackingProp";
@@ -49,6 +53,8 @@ public class FromClassFile
     _staticMap.put( "staticNonbackingProp", value );
   }
 
+  private Map<String, Integer> _map = new HashMap<>();
+
   @prop public String readwriteBackingProp = "readwriteBackingProp";
   @get @set public String readwriteBackingProp2 = "readwriteBackingProp2";
   @get public String readonlyBackingProp = "readonlyBackingProp";
@@ -56,11 +62,11 @@ public class FromClassFile
 
   @get public final String finalBackingProp = "finalBackingProp";
 
-  private Map<String, Integer> _map = new HashMap<>();
   @prop public int nonbacking;
   {
     _map.put( "nonbacking", 8 );
   }
+
   public int getNonbacking()
   {
     return _map.get( "nonbacking" );

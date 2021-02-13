@@ -24,7 +24,7 @@ import manifold.util.ReflectUtil;
 
 public class NonbackingTest extends TestCase
 {
-  public void testFromClassFile()
+  public void testNonbacking()
   {
     // field should not exist
     ReflectUtil.FieldRef nonbacking = ReflectUtil.field( FromClassFile.class, "nonbacking" );

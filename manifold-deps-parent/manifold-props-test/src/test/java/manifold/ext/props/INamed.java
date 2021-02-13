@@ -20,6 +20,5 @@ import manifold.ext.props.rt.api.prop;
 
 public interface INamed
 {
-  String blah = "hi";
   @prop String name;
 }

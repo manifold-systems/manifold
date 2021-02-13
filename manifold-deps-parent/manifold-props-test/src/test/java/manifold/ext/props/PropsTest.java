@@ -86,7 +86,7 @@ public class PropsTest extends TestCase
     @prop public List<String> colors;
     @prop public List<String> things;
     @prop(PropOption.Final) public String whatever;
-    @get @set public final int finalInt;
+    @get public final int finalInt;
     @get public int readonlyInt;
 
     public FooImpl( String name, List<String> colors )
