@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.util.Context;
@@ -44,6 +45,7 @@ public class ManCheck extends Check
     super( ctx );
 
     ReflectUtil.field( JavaCompiler.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Annotate.instance( ctx ), CHECK_FIELD ).set( this );
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package manifold.ext.props.rt.api;
 
+import manifold.rt.api.anno.any;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -27,9 +29,11 @@ import java.lang.annotation.Target;
  * @see get
  * @see set
  */
-@Target( {ElementType.FIELD} )
+@Target( ElementType.FIELD )
 @Retention( RetentionPolicy.CLASS )
 public @interface prop
 {
   PropOption[] value() default {};
+  any[] annos() default {};
+  any[] param() default {};
 }

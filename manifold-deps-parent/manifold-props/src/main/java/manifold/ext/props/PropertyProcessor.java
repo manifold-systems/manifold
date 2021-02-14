@@ -394,7 +394,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
               PropOption.fromModifier( getAccess( modifiers ) ).name().toLowerCase() ) );
           }
 
-          generatedGetter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess );
+          generatedGetter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess, get != null ? get : prop );
           if( generatedGetter == null )
           {
             shouldMakeProperty = true;
@@ -418,7 +418,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
           else if( !isFinal( classDecl, tree ) )
           {
-            generatedSetter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess );
+            generatedSetter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess, set != null ? set : prop );
             if( generatedSetter == null )
             {
               shouldMakeProperty = true;
@@ -465,7 +465,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     //    return this.foo;
     //  }
     private JCMethodDecl makeGetter( JCClassDecl classDecl, JCVariableDecl propField,
-                                     boolean propAbstract, boolean propFinal, PropOption propAccess )
+                                     boolean propAbstract, boolean propFinal, PropOption propAccess, JCAnnotation anno )
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
@@ -484,9 +484,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl existingGetter = findExistsingAccessor( propField, classDecl, getter );
       if( existingGetter != null )
       {
-        ArrayList<JCAnnotation> newAnnos = new ArrayList<>( existingGetter.getModifiers().annotations );
-        newAnnos.add( propgenAnno );
-        existingGetter.getModifiers().annotations = List.from( newAnnos ); // add @propgen to existing method
+        addAnnotations( existingGetter, List.of( propgenAnno ) );
+        addAnnotations( existingGetter, getAnnotations( anno, "annos" ) );
         return null;
       }
       else if( isInterface( classDecl ) && isStatic( classDecl, propField ) && !isFinal( classDecl, propField ) )
@@ -494,6 +493,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // interface: static non-final property MUST provide user-defined getter
         reportError( propField, MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR.get(
           classDecl.name, name + "() : " + propField.vartype.toString(), propField.name ) );
+      }
+      else
+      {
+        addAnnotations( getter, getAnnotations( anno, "annos" ) );
       }
       return getter;
     }
@@ -504,7 +507,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     //    return this;
     //  }
     private JCMethodDecl makeSetter( JCClassDecl classDecl, JCVariableDecl propField,
-                                     boolean propAbstract, boolean propFinal, PropOption propAccess )
+                                     boolean propAbstract, boolean propFinal, PropOption propAccess, JCAnnotation anno )
     {
       Context context = _javacTask.getContext();
       TreeMaker make = TreeMaker.instance( context );
@@ -530,9 +533,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl existingSetter = findExistsingAccessor( propField, classDecl, setter );
       if( existingSetter != null )
       {
-        ArrayList<JCAnnotation> newAnnos = new ArrayList<>( existingSetter.getModifiers().annotations );
-        newAnnos.add( propgenAnno );
-        existingSetter.getModifiers().annotations = List.from( newAnnos ); // add @propgen to existing method
+        addAnnotations( existingSetter, List.of( propgenAnno ) );
         return null;
       }
       else if( isInterface( classDecl ) && isStatic( classDecl, propField ) && !isFinal( classDecl, propField ) )
@@ -540,6 +541,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // interface: static non-final property MUST provide user-defined setter
         reportError( propField, MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR.get(
           classDecl.name, name + "(" + propField.vartype.toString() + ")", propField.name ) );
+      }
+      else
+      {
+        addAnnotations( setter, getAnnotations( anno, "annos" ) );
+        addAnnotations( param, getAnnotations( anno, "param" ) );
       }
       return setter;
     }
@@ -612,6 +618,43 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
       }
       return erasedType;
+    }
+
+    private void addAnnotations( JCMethodDecl accessor, List<JCAnnotation> propgenAnno )
+    {
+      ArrayList<JCAnnotation> newAnnos = new ArrayList<>( accessor.getModifiers().annotations );
+      newAnnos.addAll( propgenAnno );
+      accessor.getModifiers().annotations = List.from( newAnnos );
+    }
+    private void addAnnotations( JCVariableDecl setterParam, List<JCAnnotation> propgenAnno )
+    {
+      ArrayList<JCAnnotation> newAnnos = new ArrayList<>( setterParam.getModifiers().annotations );
+      newAnnos.addAll( propgenAnno );
+      setterParam.getModifiers().annotations = List.from( newAnnos );
+    }
+
+    private List<JCAnnotation> getAnnotations( JCAnnotation anno, String target )
+    {
+      for( JCExpression arg: anno.args )
+      {
+        if( arg instanceof JCAssign )
+        {
+          JCAssign assign = (JCAssign)arg;
+          if( assign.lhs.toString().equals( target ) )
+          {
+            if( assign.rhs instanceof JCAnnotation )
+            {
+              return List.of( (JCAnnotation)assign.rhs );
+            }
+            else if( assign.rhs instanceof JCNewArray )
+            {
+              //noinspection unchecked
+              return List.from( (List)((JCNewArray)assign.rhs).elems );
+            }
+          }
+        }
+      }
+      return List.nil();
     }
 
     private JCModifiers getGetterSetterModifiers( TreeMaker make, boolean propAbstract, boolean propFinal, boolean propStatic,

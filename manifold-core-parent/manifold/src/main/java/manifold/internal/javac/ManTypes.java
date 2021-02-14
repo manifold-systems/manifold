@@ -17,14 +17,7 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.SymbolMetadata;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.TargetType;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.TypeAnnotationPosition;
-import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.Check;
@@ -42,13 +35,12 @@ import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Filter;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.RichDiagnosticFormatter;
+import com.sun.tools.javac.util.*;
+
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
+import manifold.rt.api.anno.any;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -150,6 +142,27 @@ public class ManTypes extends Types
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.TypeEnter" ), "instance", Context.class )
         .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TreeMaker.instance( context ), TYPES_FIELD ).set( this );
+  }
+
+  @Override
+  public boolean isAssignable( Type from, Type to, Warner warn )
+  {
+    if( isAssignableToAnyAnnotation( from, to ) )
+    {
+      return true;
+    }
+    return super.isAssignable( from, to, warn );
+  }
+
+  public boolean isAssignableToAnyAnnotation( Type from, Type to )
+  {
+    return isAnnotation( from ) &&
+      any.class.getTypeName().equals( to.tsym.getQualifiedName().toString() );
+  }
+
+  private boolean isAnnotation( Type from )
+  {
+    return from.tsym.isInterface() && (from.tsym.flags_field & Flags.ANNOTATION) != 0;
   }
 
   @Override

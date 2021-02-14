@@ -14,27 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.rt.api;
+package manifold.rt.api.anno;
 
-import manifold.rt.api.anno.any;
-
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
 /**
- * Makes the property writable so it can be used in assignments. Specifying {@code @set} without a {@code @get}
- * indicates the is <i>write-only</i>, thus you must specify {@code @get} for the field to be readable, or use
- * {@code @prop}. Note, use of {@code @prop} is redundant when specifying {@code @set}.
- *
- * @see prop
+ * Facilitates having an annotation parameter be any annotation type as opposed to a specific one.
  */
-@Target( {ElementType.FIELD} )
-@Retention( RetentionPolicy.CLASS )
-public @interface set
+@Retention(RetentionPolicy.SOURCE)
+public @interface any
 {
-  PropOption[] value() default {};
-  any[] annos() default {};
-  any[] param() default {};
 }
