@@ -18,12 +18,13 @@ package manifold.ext.props;
 
 import junit.framework.TestCase;
 import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.prop;
-import manifold.ext.props.rt.api.set;
+import manifold.ext.props.rt.api.val;
+import manifold.ext.props.rt.api.var;
 
 import java.util.Arrays;
 import java.util.List;
+
+import static manifold.ext.props.rt.api.PropOption.Final;
 
 public class PropsTest extends TestCase
 {
@@ -57,7 +58,7 @@ public class PropsTest extends TestCase
 
   class NamedInner implements INamed
   {
-    public @prop String name;
+    @var String name;
 
     public NamedInner( String name )
     {
@@ -73,21 +74,17 @@ public class PropsTest extends TestCase
   }
 
   interface IFoo {
-    @prop String name;
-    default String getName()
-    {
-      return "hi";
-    }
+    @var String name = "hi";  // generates a 'default' getter returning "hi", and abstract setter
 
-    @prop List<String> colors;
+    @var List<String> colors;
   }
   class FooImpl implements IFoo {
-    @prop( PropOption.Final ) public String name;
-    @prop public List<String> colors;
-    @prop public List<String> things;
-    @prop(PropOption.Final) public String whatever;
-    @get public final int finalInt;
-    @get public int readonlyInt;
+    @var(Final) String name;
+    @var List<String> colors;
+    @var List<String> things;
+    @var(Final) String whatever;
+    @val final int finalInt;
+    @val int readonlyInt;
 
     public FooImpl( String name, List<String> colors )
     {

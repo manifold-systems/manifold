@@ -17,7 +17,7 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.var;
 
 import java.util.Arrays;
 import java.util.List;
@@ -25,23 +25,23 @@ import java.util.List;
 public class GenericPropTest extends TestCase
 {
   interface IGenericProps {
-    @prop List list_Raw;
-    @prop List<String> list_String;
-    @prop List<CharSequence> list_CharSequence;
-    @prop List<?> list_Wildcard;
-    @prop List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
-    @prop List<? super CharSequence> list_Wildcard_Super_CharSequence;
-    @prop List<String>[] list_String_Array;
+    @var List list_Raw;
+    @var List<String> list_String;
+    @var List<CharSequence> list_CharSequence;
+    @var List<?> list_Wildcard;
+    @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
+    @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
+    @var List<String>[] list_String_Array;
   }
   class GenericPropsImpl implements IGenericProps
   {
-    @prop public List list_Raw;
-    @prop public List<String> list_String;
-    @prop public List<CharSequence> list_CharSequence;
-    @prop public List<?> list_Wildcard;
-    @prop public List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
-    @prop public List<? super CharSequence> list_Wildcard_Super_CharSequence;
-    @prop public List<String>[] list_String_Array;
+    @var List list_Raw;
+    @var List<String> list_String;
+    @var List<CharSequence> list_CharSequence;
+    @var List<?> list_Wildcard;
+    @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
+    @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
+    @var List<String>[] list_String_Array;
 
     // tests that List<String> and List<String>[] don't match with PropertyProcessor#ghettoErasure
     public void setList_String_Array( List<String> fooledya )

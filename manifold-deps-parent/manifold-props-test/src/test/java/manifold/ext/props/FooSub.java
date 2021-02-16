@@ -16,11 +16,11 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.var;
 
 public class FooSub extends Foo
 {
-  @prop public double rate;
+  @var double rate;
 
   public FooSub( String thing, double rate )
   {

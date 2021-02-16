@@ -16,20 +16,20 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.prop;
-import manifold.ext.props.rt.api.set;
+import manifold.ext.props.rt.api.var;
 
 public interface IFromClassFile
 {
 //  @prop String staticFinalBackingProp = "hi";
-  
+
 // JVM prohibits private static fields in interfaces,
 //     java.lang.ClassFormatError: Illegal field modifiers in class manifold/ext/props/middle/IFromClassFile: 0xA
 //  can't do this:
 //  @prop static String staticNonFinalBackingProp = "";
 
-  @prop static int staticNonbackingProp;
+  @var String defaultGetter = "hi";
+  
+  @var static int staticNonbackingProp;
 
   static int getStaticNonbackingProp()
   {

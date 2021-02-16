@@ -384,6 +384,7 @@ public class ManJavacParser extends JavacParser
     return opStackSupply.remove(opStackSupply.size() - 1);
   }
 
+  //Manifold: Overrides the method in Java 8
   @Override
   JCVariableDecl variableDeclaratorRest( int pos, JCModifiers mods, JCExpression type, Name name,
                                          boolean reqInit, Comment dc )
@@ -416,7 +417,8 @@ public class ManJavacParser extends JavacParser
       {
         if( mods.annotations.stream()
           .anyMatch( anno ->
-            "prop".equals( anno.getAnnotationType().toString() ) ||
+            "var".equals( anno.getAnnotationType().toString() ) ||
+            "val".equals( anno.getAnnotationType().toString() ) ||
               "get".equals( anno.getAnnotationType().toString() ) ||
               "set".equals( anno.getAnnotationType().toString() ) ) )
         {

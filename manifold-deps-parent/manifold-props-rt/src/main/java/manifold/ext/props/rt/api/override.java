@@ -16,24 +16,33 @@
 
 package manifold.ext.props.rt.api;
 
-import manifold.rt.api.anno.any;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Designates a field declaration as a property.
+ * Same as &#64;{@link java.lang.Override} but for properties.
+ * <p/>
+ * Usage:<pre><code>
+ *   interface Foo {
+ *     &#64;prop String color;
+ *   }
  *
+ *   public class FooImpl extends Foo {
+ *     &#64;override String color = "Plaid";
+ *   }
+ * </code>
+ * </pre>
+ * Note, without an accompanying {@code @get}, {@code @set}, or {@code @prop}, use of {@code @override} implies
+ * {@code @prop}.
+ *
+ * @see var
  * @see get
  * @see set
  */
-@Target( ElementType.FIELD )
+@Target( {ElementType.FIELD} )
 @Retention( RetentionPolicy.CLASS )
-public @interface prop
+public @interface override
 {
-  PropOption[] value() default {};
-  any[] annos() default {};
-  any[] param() default {};
 }

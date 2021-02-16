@@ -24,11 +24,11 @@ import java.lang.annotation.Target;
 /**
  * For internal use only.
  * <p/>
- * This annotation preserves declared state of a {@code @}{@link prop} field on the property's corresponding accessor
+ * This annotation preserves declared state of a {@code @}{@link var} field on the property's corresponding accessor
  * method[s]. In the case of property that must have a backing field, the {@link #flags} store the field's access so it
  * can be changed to {@code private} access in bytecode and then restored to the originally declared access during
  * compilation immediately after the declaring type's .class file is loaded. Similarly, when a property does not have a
- * backing field, {@link prop}, {@link get}, and {@link set} are used to recreate the erased symbol.
+ * backing field, {@link var}, {@link get}, and {@link set} are used to recreate the erased symbol.
  */
 @Target( {ElementType.FIELD, ElementType.METHOD} )
 @Retention( RetentionPolicy.CLASS )
@@ -36,7 +36,8 @@ public @interface propgen
 {
   String name();
   long flags();
-  prop[] prop() default {};
+  var[] var() default {};
+  val[] val() default {};
   get[] get() default {};
   set[] set() default {};
 }

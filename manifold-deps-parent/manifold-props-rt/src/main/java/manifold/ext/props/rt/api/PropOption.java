@@ -20,19 +20,19 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 /**
- * Options used with {@link prop}, {@link get}, {@link set}.
+ * Options used with {@link var}, {@link val}, {@link get}, {@link set}.
  */
 public enum PropOption
 {
   /**
-   * For use with {@link prop}, {@link get}, {@link set}. If specified, the generated get/set methods will be abstract.
+   * For use with {@link var}, {@link get}, {@link set}. If specified, the generated get/set methods will be abstract.
    * Note only properties declared in interfaces and abstract classes can be {@code abstract}.
    * If the corresponding get/set method is user-defined, it must be declared {@code abstract}.
    */
   Abstract( Modifier.ABSTRACT ),
 
   /**
-   * For use with {@link prop}, {@link get}, {@link set}. If specified, the generated get/set methods will be final.
+   * For use with {@link var}, {@link get}, {@link set}. If specified, the generated get/set methods will be final.
    * Note only properties declared in classes, as opposed to interfaces, can be {@code final}.
    * If the corresponding get/set method is user-defined, it must be declared {@code final}.
    */

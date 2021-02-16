@@ -16,20 +16,11 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.var;
-
-public class NonbackingWithPropOptions
+public class SubClassOverridesBaseClassGeneratedGetter extends BaseClass
 {
-  @var( PropOption.Final ) public String name;
+  @Override public String getBackedProp()
+  {
+    return super.backedProp + ":overridenGetter";
+  }
 
-  @var( PropOption.Final ) public String nonbackingFinal;
-  final public String getNonbackingFinal()
-  {
-    return "hi";
-  }
-  final public void setNonbackingFinal( String value )
-  {
-    // whatever
-  }
 }

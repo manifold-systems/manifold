@@ -16,11 +16,11 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.var;
 
 public class Named extends NamedBase implements INamed
 {
-  @prop public String name;
+  @var String name;
 
   public Named( String name )
   {

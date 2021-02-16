@@ -17,7 +17,8 @@
 package manifold.ext.props.middle;
 
 import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.val;
+import manifold.ext.props.rt.api.var;
 import manifold.ext.props.rt.api.set;
 
 import java.util.HashMap;
@@ -25,9 +26,9 @@ import java.util.Map;
 
 public class FromClassFile
 {
-  @prop public static String staticReadwriteBackingProp = "staticReadwriteBackingProp";
-  @prop public static final String staticFinalBackingProp = "staticFinalBackingProp";
-  @get public static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
+  @var static String staticReadwriteBackingProp = "staticReadwriteBackingProp";
+  @val static final String staticFinalBackingProp = "staticFinalBackingProp";
+  @val static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
 
   public static void updateStaticReadonlyBackingProp()
   {
@@ -36,7 +37,7 @@ public class FromClassFile
   }
 
   static private Map<String, Integer> _staticMap = new HashMap<>();
-  @prop public static int staticNonbackingProp;
+  @var static int staticNonbackingProp;
   {
     _staticMap.put( "staticNonbackingProp", 8 );
   }
@@ -49,15 +50,15 @@ public class FromClassFile
     _staticMap.put( "staticNonbackingProp", value );
   }
 
-  @prop public String readwriteBackingProp = "readwriteBackingProp";
-  @get @set public String readwriteBackingProp2 = "readwriteBackingProp2";
-  @get public String readonlyBackingProp = "readonlyBackingProp";
-  @set public String writeonlyBackingProp;
+  @var String readwriteBackingProp = "readwriteBackingProp";
+  @get @set String readwriteBackingProp2 = "readwriteBackingProp2";
+  @val String readonlyBackingProp = "readonlyBackingProp";
+  @set String writeonlyBackingProp;
 
-  @get public final String finalBackingProp = "finalBackingProp";
+  @val final String finalBackingProp = "finalBackingProp";
 
   private Map<String, Integer> _map = new HashMap<>();
-  @prop public int nonbacking;
+  @var int nonbacking;
   {
     _map.put( "nonbacking", 8 );
   }

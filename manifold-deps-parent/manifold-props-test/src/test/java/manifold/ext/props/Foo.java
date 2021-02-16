@@ -16,16 +16,15 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.var;
 import manifold.ext.props.rt.api.set;
 
 public class Foo
 {
-  @prop public String thing;
-  @prop public final double rate = 3.14;
-  @prop private int privateProp = 2;
+  @var String thing;
+  @var final double rate = 3.14;
+  @var private int privateProp = 2;
+  @set String foo = "hi";
 
   public int usePrivateProp( int value )
   {

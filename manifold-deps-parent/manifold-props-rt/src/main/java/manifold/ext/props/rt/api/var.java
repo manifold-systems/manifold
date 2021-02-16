@@ -24,17 +24,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Makes the property writable so it can be used in assignments. Specifying {@code @set} without a {@code @get}
- * indicates the is <i>write-only</i>, thus you must specify {@code @get} for the field to be readable, or use
- * {@code @prop}. Note, use of {@code @prop} is redundant when specifying {@code @set}.
+ * Designates a field declaration as a property.
  *
- * @see var
- * @see val
  * @see get
+ * @see set
  */
-@Target( {ElementType.FIELD} )
+@Target( ElementType.FIELD )
 @Retention( RetentionPolicy.CLASS )
-public @interface set
+public @interface var
 {
   PropOption[] value() default {};
   any[] annos() default {};

@@ -16,20 +16,17 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.PropOption;
+import manifold.ext.props.rt.api.override;
 import manifold.ext.props.rt.api.var;
 
-public class NonbackingWithPropOptions
+public class SubClassOfAbstractBaseClass extends AbstractBaseClass
 {
-  @var( PropOption.Final ) public String name;
+  @override @var String abstractProp;
+  @override @var String abstractReadonly;
 
-  @var( PropOption.Final ) public String nonbackingFinal;
-  final public String getNonbackingFinal()
+  public SubClassOfAbstractBaseClass( String abstractProp, String abstractReadonly )
   {
-    return "hi";
-  }
-  final public void setNonbackingFinal( String value )
-  {
-    // whatever
+    this.abstractProp = abstractProp;
+    this.abstractReadonly = abstractReadonly;
   }
 }

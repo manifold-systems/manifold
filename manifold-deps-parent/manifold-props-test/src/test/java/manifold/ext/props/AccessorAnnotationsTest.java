@@ -19,18 +19,17 @@ package manifold.ext.props;
 import junit.framework.TestCase;
 import manifold.ext.props.rt.api.*;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 public class AccessorAnnotationsTest extends TestCase
 {
   class Foo {
-    @prop(annos=@sampleAnno(name="foo", flags=1), param=@sampleAnno(name="p", flags=0))
-    public String name;
+    @var(annos=@sampleAnno(name="foo", flags=1), param=@sampleAnno(name="p", flags=0))
+    String name;
 
     @get(annos={@sampleAnno(name="bar", flags=2)})
     @set(annos=@sampleAnno(name="baz", flags=3), param=@sampleAnno(name="boz", flags=4))
-    public String asdf;
+    @var String asdf;
   }
 
   public void testAccessorAnnotations() throws NoSuchMethodException

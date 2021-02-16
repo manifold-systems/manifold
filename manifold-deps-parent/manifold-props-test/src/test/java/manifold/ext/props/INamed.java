@@ -16,9 +16,11 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.prop;
+import manifold.ext.props.rt.api.var;
 
 public interface INamed
 {
-  @prop String name;
+  @var String name;
+
+//  @set String foo = "hi";
 }

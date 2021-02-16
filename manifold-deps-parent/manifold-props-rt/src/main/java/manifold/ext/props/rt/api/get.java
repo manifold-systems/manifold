@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * property is <i>read-only</i>, thus you must specify {@code @set} for the field to be writable, or use {@code @prop}.
  * Note, use of {@code @prop} is redundant when specifying {@code @get}.
  *
- * @see prop
+ * @see var
  */
 @Target( {ElementType.FIELD} )
 @Retention( RetentionPolicy.CLASS )

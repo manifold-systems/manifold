@@ -16,20 +16,16 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.var;
+import manifold.ext.props.rt.api.get;
+import manifold.ext.props.rt.api.override;
 
-public class NonbackingWithPropOptions
+public class SubClass extends BaseClass
 {
-  @var( PropOption.Final ) public String name;
+  @override @get String fullName;
 
-  @var( PropOption.Final ) public String nonbackingFinal;
-  final public String getNonbackingFinal()
+  @Override
+  public String getFullName()
   {
-    return "hi";
-  }
-  final public void setNonbackingFinal( String value )
-  {
-    // whatever
+    return lastName + ", " + firstName;
   }
 }

@@ -16,20 +16,13 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.PropOption;
+import manifold.ext.props.rt.api.get;
 import manifold.ext.props.rt.api.var;
 
-public class NonbackingWithPropOptions
-{
-  @var( PropOption.Final ) public String name;
+import static manifold.ext.props.rt.api.PropOption.Abstract;
 
-  @var( PropOption.Final ) public String nonbackingFinal;
-  final public String getNonbackingFinal()
-  {
-    return "hi";
-  }
-  final public void setNonbackingFinal( String value )
-  {
-    // whatever
-  }
+public abstract class AbstractBaseClass
+{
+  @var(Abstract) public String abstractProp;
+  @get(Abstract) public String abstractReadonly;
 }

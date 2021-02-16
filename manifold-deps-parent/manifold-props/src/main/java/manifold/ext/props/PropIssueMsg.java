@@ -35,5 +35,6 @@ public class PropIssueMsg
   public static final IssueMsg MSG_NONSTATIC_MISMATCH = new IssueMsg( "Non-static method '{0}' conflicts with static property '{1}'" );
   public static final IssueMsg MSG_SET_WITH_FINAL = new IssueMsg( "Cannot use @set with final property" );
   public static final IssueMsg MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR = new IssueMsg( "Interface '{0}' must provide method '{1}' for static non-final property '{2}'" );
-  public static final IssueMsg MSG_INTERFACE_FIELD_BACKED_PROPERTY_NOT_SUPPORTED = new IssueMsg( "Static interface property '{0}' must provide user-defined accessor[s] which do not reference the property field. (The JVM prohibits non-public and non-final interface fields)" );
+  public static final IssueMsg MSG_INTERFACE_FIELD_BACKED_PROPERTY_NOT_SUPPORTED = new IssueMsg( "Static interface properties must provide user-defined accessor[s] which do not reference the property field" );
+  public static final IssueMsg MSG_WRITEONLY_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER = new IssueMsg( "A write-only abstract property cannot have an initializer" );
 }
