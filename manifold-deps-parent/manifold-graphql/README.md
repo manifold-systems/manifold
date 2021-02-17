@@ -552,10 +552,10 @@ configurations {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-graphql-rt:2020.1.50-SNAPSHOT'
+     implementation 'systems.manifold:manifold-graphql-rt:2020.1.51-SNAPSHOT'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2020.1.50-SNAPSHOT'
+     annotationProcessor 'systems.manifold:manifold-graphql:2020.1.51-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -591,7 +591,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2020.1.50</manifold.version>
+        <manifold.version>2020.1.51</manifold.version>
     </properties>
     
     <dependencies>
@@ -635,10 +635,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-graphql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2020.1.50/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2020.1.50)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2020.1.51/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2020.1.51)
 
 `manifold-graphql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2020.1.50/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2020.1.50)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2020.1.51/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2020.1.51)
 
 # License
 

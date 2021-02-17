@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle.foo;
+package manifold.ext.props.foo;
 
 public class DoNotDeleteThis
 {
