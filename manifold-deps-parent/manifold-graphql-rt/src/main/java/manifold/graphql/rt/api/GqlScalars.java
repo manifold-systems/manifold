@@ -25,6 +25,9 @@ import graphql.schema.GraphQLScalarType;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import manifold.ext.rt.CoercionProviders;
+import manifold.ext.rt.api.ICoercionProvider;
 import manifold.json.rt.api.IJsonFormatTypeCoercer;
 import manifold.rt.api.util.ManStringUtil;
 
@@ -38,14 +41,17 @@ public class GqlScalars
   public static Collection<GraphQLScalarType> transformFormatTypeResolvers()
   {
     Set<GraphQLScalarType> scalars = new HashSet<>();
-    for( IJsonFormatTypeCoercer formatCoercer: IJsonFormatTypeCoercer.get() )
+    for( ICoercionProvider formatCoercer: CoercionProviders.get() )
     {
-      formatCoercer.getFormats().forEach( (format, type) ->
-        scalars.add( GraphQLScalarType.newScalar()
-        .name( ManStringUtil.toPascalCase( format ) )
-        .description( "Support values of type: " + type.getTypeName() )
-        .coercing( makeCoercer( type, formatCoercer ) )
-        .build() ) );
+      if( formatCoercer instanceof IJsonFormatTypeCoercer )
+      {
+        ((IJsonFormatTypeCoercer)formatCoercer).getFormats().forEach( ( format, type ) ->
+          scalars.add( GraphQLScalarType.newScalar()
+            .name( ManStringUtil.toPascalCase( format ) )
+            .description( "Support values of type: " + type.getTypeName() )
+            .coercing( makeCoercer( type, (IJsonFormatTypeCoercer)formatCoercer ) )
+            .build() ) );
+      }
     }
     return scalars;
   }

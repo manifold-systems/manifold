@@ -67,6 +67,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import manifold.ext.rt.CoercionProviders;
+import manifold.ext.rt.api.ICoercionProvider;
 import manifold.graphql.rt.api.GqlQuery;
 import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
@@ -1649,15 +1651,28 @@ class GqlParentType
 
   private java.lang.Class<?> findFormatType( String formatName )
   {
-    for( IJsonFormatTypeCoercer coercer: IJsonFormatTypeCoercer.get() )
+    // must use *this* class loader so that, in the case of IJ plugin, any custom ICoercionProviders will be included
+    ClassLoader prevLoader = Thread.currentThread().getContextClassLoader();
+    Thread.currentThread().setContextClassLoader( getClass().getClassLoader() );
+    try
     {
-      Class<?> javaType = coercer.getFormats().get( formatName );
-      if( javaType != null )
+      for( ICoercionProvider coercer : CoercionProviders.get() )
       {
-        return javaType;
+        if( coercer instanceof IJsonFormatTypeCoercer )
+        {
+          Class<?> javaType = ((IJsonFormatTypeCoercer)coercer).getFormats().get( formatName );
+          if( javaType != null )
+          {
+            return javaType;
+          }
+        }
       }
+      return findJsonEquivalent( formatName );
     }
-    return findJsonEquivalent( formatName );
+    finally
+    {
+      Thread.currentThread().setContextClassLoader( prevLoader );
+    }
   }
 
   private Class<?> findJsonEquivalent( String scalarName )

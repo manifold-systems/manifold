@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * See {@link DefaultCoercer} to see how {@code "date-time"} and other formats are mapped to a set of Java types.
  * <p>
  * Register one or more of your {@code IJsonFormatTypeCoercer} implementations in a file named:<b>
- * <pre>META-INF/services/manifold.json.rt.api.IJsonFormatTypeCoercer</pre>
+ * <pre>META-INF/services/manifold.ext.rt.api.ICoercionProvider</pre>
  * This file contains the fully qualified names of your implementations, one per line e.g.,
  * <pre>
  * com.example.FooFormatTypeCoercer
