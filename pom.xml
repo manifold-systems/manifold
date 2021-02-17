@@ -4,7 +4,7 @@
   <groupId>systems.manifold</groupId>
   <artifactId>manifold-parent</artifactId>
   <packaging>pom</packaging>
-  <version>2020.1.49-SNAPSHOT</version>
+  <version>2020.1.49</version>
 
   <name>Manifold :: Parent</name>
   <description>
@@ -49,7 +49,7 @@
     <connection>${scm.root}/manifold.git</connection>
     <developerConnection>${scm.root}/manifold.git</developerConnection>
     <url>https://github.com/manifold-systems/manifold</url>
-    <tag>HEAD</tag>
+    <tag>v2020.1.49</tag>
   </scm>
   
   <!--<repositories>-->
