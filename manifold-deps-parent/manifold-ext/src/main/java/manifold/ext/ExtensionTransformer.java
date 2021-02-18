@@ -280,7 +280,7 @@ public class ExtensionTransformer extends TreeTranslator
               JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
                 List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
                 .invoke( tempVars, expr );
-              letExpr.type = expr.type;
+              letExpr.type = expr.type.constValue() != null ? expr.type.baseType() : expr.type;
               expr = letExpr;
             }
           }
@@ -760,7 +760,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
         List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
         .invoke( tempVars, rhs );
-      letExpr.type = lhs.type;
+      letExpr.type = lhs.type.constValue() != null ? lhs.type.baseType() : lhs.type;;
 
       result = letExpr;
       return true;
@@ -1007,7 +1007,8 @@ public class ExtensionTransformer extends TreeTranslator
     JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
       List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
       .invoke( tempVars, answer );
-    letExpr.type = tree.arg.type;
+    Type argType = tree.arg.type;
+    letExpr.type = argType.constValue() != null ? argType.baseType() : argType;
 
     result = letExpr;
   }

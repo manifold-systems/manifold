@@ -1210,7 +1210,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             // Cannot reference property in default interface accessor
             reportError( tree, MSG_PROPERTY_IS_ABSTRACT.get( tree.sym.flatName() ) );
           }
-          
+
           return;
         }
 
@@ -1237,25 +1237,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
+    private int tempVarIndex;
+
     @Override
-    public void visitExec( JCExpressionStatement tree )
+    public void visitAssign( JCAssign tree )
     {
-      super.visitExec( tree );
-
-      handlePropertyAssignment( tree );
-    }
-
-    private void handlePropertyAssignment( JCExpressionStatement t )
-    {
-      JCExpression expr = t.expr;
-      if( !(expr instanceof JCAssign) )
-      {
-        return;
-      }
+      super.visitAssign( tree );
 
       TreeMaker make = _tp.getTreeMaker();
-
-      JCAssign tree = (JCAssign)expr;
 
       JCExpression lhs;
       Type lhsSelectedType;
@@ -1277,7 +1266,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhsSym = ident.sym;
         lhsSelected = lhsSym.isStatic()
           ? make.Type( lhsSym.owner.type )
-          : make.This( lhsSelectedType ).setPos( t.pos );
+          : make.This( lhsSelectedType ).setPos( tree.pos );
       }
       else
       {
@@ -1317,15 +1306,18 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         JCExpression rhs = tree.rhs;
 
-//        tempVarIndex++;
-//        List<JCTree.JCVariableDecl> tempVars = List.nil();
-//        JCTree[] rhsTemp = ExtensionTransformer.tempify( false, tree, make, rhs, ctx,
-//          ExtensionTransformer.getEnclosingSymbol( tree, ctx, _tp ), "setPropRhsTempVar" + tempVarIndex, tempVarIndex );
-//        if( rhsTemp != null )
-//        {
-//          tempVars = tempVars.append( (JCTree.JCVariableDecl)rhsTemp[0] );
-//          rhs = (JCExpression)rhsTemp[1];
-//        }
+        List<JCTree> tempVars = List.nil();
+        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        {
+          tempVarIndex++;
+          JCTree[] rhsTemp = ExtensionTransformer.tempify( false, tree, make, rhs, ctx,
+            ExtensionTransformer.getEnclosingSymbol( tree, ctx, _tp ), "setPropRhsTempVar" + tempVarIndex, tempVarIndex );
+          if( rhsTemp != null )
+          {
+            tempVars = tempVars.append( (JCTree.JCVariableDecl)rhsTemp[0] );
+            rhs = (JCExpression)rhsTemp[1];
+          }
+        }
 
         JCTree.JCMethodInvocation setCall;
         Type parameterizedMethod = _tp.getTypes().memberType( lhsSelectedType, setMethod );
@@ -1334,27 +1326,32 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           parameterizedMethod = parameterizedMethod.asMethodType();
         }
 
-        setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( t.pos ), List.of( rhs ) );
+        setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = configMethod( lhs, setMethod, setCall );
-        t.expr = setCall;
-//## todo: this does not work if the setXxx() call return void because the LetExpr only lets us have temp var assign stmts
-//
-//      JCTree[] setCallTemp = ExtensionTransformer.tempify( true, tree, make, setCall, ctx,
-//        ExtensionTransformer.getEnclosingSymbol( tree, ctx, _tp ), "$setPropCallTempVar" + tempVarIndex, tempVarIndex );
-//      //noinspection ConstantConditions
-//      tempVars = tempVars.append( (JCTree.JCVariableDecl)setCallTemp[0] );
-//
-//      // Need let expr so that we can return the RHS value as required by java assignment op.
-//      // Note, the setXxx() method can return whatever it wants, it is ignored here,
-//      // this allows us to support eg. List.set(int, T) where this method returns the previous value
-//      JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
-//        List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-//        .invoke( tempVars, rhs );
-//      letExpr.type = rhs.type;
-//
-//      result = letExpr;
+
+        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        {
+          // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
+          tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
+
+          // Need let expr so that we can return the RHS value as required by java assignment op.
+          // Note, the setXxx() method can return whatever it wants, it is ignored here,
+          // this allows us to support eg. List.set(int, T) where this method returns the previous value
+          JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
+            List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
+            .invoke( tempVars, rhs );
+          // if the rhs type is a constant expr, the Generator will optimize out the LetExpr,
+          // so we have to put in the non-constant type (wtef)
+          letExpr.type = rhs.type.constValue() != null ? rhs.type.baseType() : rhs.type;
+
+          result = letExpr;
+        }
+        else
+        {
+          result = setCall;
+        }
       }
-      else
+      else // errant
       {
         if( !_propDefs.isEmpty() && _propDefs.peek().sym == lhsSym )
         {

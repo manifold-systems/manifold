@@ -83,6 +83,9 @@ public class FromClassFileTest extends TestCase
     f.readwriteBackingProp = "b";
     assertEquals( "b", f.readwriteBackingProp );
 
+    String r = f.readwriteBackingProp = "c";
+    assertEquals( "c", r );
+
     Field field = FromClassFile.class.getDeclaredField( "readwriteBackingProp" );
     assertNotNull( field );
     assertTrue( Modifier.isPrivate( field.getModifiers() ) );
