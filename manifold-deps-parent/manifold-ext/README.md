@@ -298,7 +298,6 @@ import manifold.ext.rt.api.This;
 @Extension
 public class MyMoviesExt
 {
-  @Extension
   public static class Person {
     public static String myPersonMethod(@This Person thiz) {
       return "myPersonMethod";
