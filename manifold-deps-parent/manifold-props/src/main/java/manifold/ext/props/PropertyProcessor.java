@@ -54,6 +54,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.sun.tools.javac.code.TypeTag.NONE;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.props.PropIssueMsg.*;
 
@@ -1120,7 +1121,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             return;
         }
       }
+      result = repalceWithGetter( tree );
+    }
 
+    public JCExpression repalceWithGetter( JCFieldAccess tree )
+    {
       // replace foo.bar with foo.getBar()
       //
       MethodSymbol getMethod = isReadableProperty( tree.sym )
@@ -1134,28 +1139,29 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         {
           // don't rewrite with getter inside the getter
           _backingSymbols.peek().snd.add( (VarSymbol)tree.sym );
-          return;
+          return tree;
         }
 
         if( !verifyAccess( tree, tree.sym, getMethod, "Read" ) )
         {
           // the getter is not accessible from the use site
-          return;
+          return tree;
         }
 
         TreeMaker make = _tp.getTreeMaker();
 
-        JCTree.JCMethodInvocation methodCall;
+        JCMethodInvocation methodCall;
         JCExpression receiver = tree.selected;
         methodCall = make.Apply( List.nil(), make.Select( receiver, getMethod ), List.nil() );
         methodCall = configMethod( tree, getMethod, methodCall );
 
-        result = methodCall;
+        return methodCall;
       }
       else
       {
         reportError( tree, MSG_CANNOT_ACCESS_WRITEONLY_PROPERTY.get( tree.sym.flatName() ) );
       }
+      return tree;
     }
 
     @Override
@@ -1190,7 +1196,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             return;
         }
       }
+      result = replaceWithGetter( tree );
+    }
 
+    private JCExpression replaceWithGetter( JCIdent tree )
+    {
       // replace bar with this.getBar()
       //
       MethodSymbol getMethod = isReadableProperty( tree.sym )
@@ -1211,34 +1221,34 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             reportError( tree, MSG_PROPERTY_IS_ABSTRACT.get( tree.sym.flatName() ) );
           }
 
-          return;
+          return tree;
         }
 
         if( !verifyAccess( tree, tree.sym, getMethod, "Read" ) )
         {
           // the getter is not accessible from the use site
-          return;
+          return tree;
         }
 
         TreeMaker make = _tp.getTreeMaker();
 
-        JCTree.JCMethodInvocation methodCall;
+        JCMethodInvocation methodCall;
         JCExpression receiver = tree.sym.isStatic()
           ? make.Type( tree.sym.owner.type )
           : make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
         methodCall = make.Apply( List.nil(), make.Select( receiver, getMethod ).setPos( tree.pos ), List.nil() );
         methodCall = configMethod( tree, getMethod, methodCall );
 
-        result = methodCall;
+        return methodCall;
       }
       else
       {
         reportError( tree, MSG_CANNOT_ACCESS_WRITEONLY_PROPERTY.get( tree.sym.flatName() ) );
       }
+      return tree;
     }
 
     private int tempVarIndex;
-
     @Override
     public void visitAssign( JCAssign tree )
     {
@@ -1314,37 +1324,19 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             ExtensionTransformer.getEnclosingSymbol( tree, ctx, _tp ), "setPropRhsTempVar" + tempVarIndex, tempVarIndex );
           if( rhsTemp != null )
           {
-            tempVars = tempVars.append( (JCTree.JCVariableDecl)rhsTemp[0] );
+            tempVars = tempVars.append( rhsTemp[0] );
             rhs = (JCExpression)rhsTemp[1];
           }
         }
 
-        JCTree.JCMethodInvocation setCall;
-        Type parameterizedMethod = _tp.getTypes().memberType( lhsSelectedType, setMethod );
-        while( parameterizedMethod instanceof Type.ForAll )
-        {
-          parameterizedMethod = parameterizedMethod.asMethodType();
-        }
-
-        setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = configMethod( lhs, setMethod, setCall );
 
         if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
         {
           // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
           tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
-
-          // Need let expr so that we can return the RHS value as required by java assignment op.
-          // Note, the setXxx() method can return whatever it wants, it is ignored here,
-          // this allows us to support eg. List.set(int, T) where this method returns the previous value
-          JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
-            List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-            .invoke( tempVars, rhs );
-          // if the rhs type is a constant expr, the Generator will optimize out the LetExpr,
-          // so we have to put in the non-constant type (wtef)
-          letExpr.type = rhs.type.constValue() != null ? rhs.type.baseType() : rhs.type;
-
-          result = letExpr;
+          result = makeLetExpr( make, tempVars, rhs, tree.pos );
         }
         else
         {
@@ -1353,31 +1345,36 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
       else // errant
       {
-        if( !_propDefs.isEmpty() && _propDefs.peek().sym == lhsSym )
-        {
-          // - no setter, allow the property to initialize in its declaration
-          // - backing symbol required, add to set of backing symbols
-          _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
-        }
-        else if( methodDecl.sym.isConstructor() &&
-          lhsSelected.toString().equals( "this" ) &&
-          lhsSym.owner == _backingSymbols.peek().fst.sym )
-        {
-          // - no setter, allow the read-only (final or non-final) property to initialize in its constructor
-          // - backing symbol required, add to set of backing symbols
-          _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
-        }
-        else if( !Modifier.isFinal( (int)lhsSym.flags_field ) &&
-          _backingSymbols.peek().fst.sym.outermostClass() == lhsSym.outermostClass() )
-        {
-          // no setter, allow the read-only (non-final) prop field to be directly assigned inside the class file
-          // - backing symbol required, add to set of backing symbols
-          _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
-        }
-        else
-        {
-          reportError( tree, MSG_CANNOT_ASSIGN_READONLY_PROPERTY.get( lhsSym.flatName() ) );
-        }
+        handleErrantAssignment( tree, lhsSym, lhsSelected, methodDecl );
+      }
+    }
+
+    public void handleErrantAssignment( JCTree tree, Symbol lhsSym, JCExpression lhsSelected, JCMethodDecl methodDecl )
+    {
+      if( !_propDefs.isEmpty() && _propDefs.peek().sym == lhsSym )
+      {
+        // - no setter, allow the property to initialize in its declaration
+        // - backing symbol required, add to set of backing symbols
+        _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
+      }
+      else if( methodDecl.sym.isConstructor() &&
+        lhsSelected.toString().equals( "this" ) &&
+        lhsSym.owner == _backingSymbols.peek().fst.sym )
+      {
+        // - no setter, allow the read-only (final or non-final) property to initialize in its constructor
+        // - backing symbol required, add to set of backing symbols
+        _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
+      }
+      else if( !Modifier.isFinal( (int)lhsSym.flags_field ) &&
+        _backingSymbols.peek().fst.sym.outermostClass() == lhsSym.outermostClass() )
+      {
+        // no setter, allow the read-only (non-final) prop field to be directly assigned inside the class file
+        // - backing symbol required, add to set of backing symbols
+        _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
+      }
+      else
+      {
+        reportError( tree, MSG_CANNOT_ASSIGN_READONLY_PROPERTY.get( lhsSym.flatName() ) );
       }
     }
 
@@ -1402,6 +1399,153 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return true;
     }
 
+    @Override
+    public void visitUnary( JCUnary tree )
+    {
+      super.visitUnary( tree );
+
+      switch( tree.getTag() )
+      {
+        case PREINC:
+        case PREDEC:
+        case POSTINC:
+        case POSTDEC:
+          genUnaryIncDec( tree );
+          break;
+      }
+    }
+
+    private void genUnaryIncDec( JCTree.JCUnary tree )
+    {
+      TreeMaker make = _tp.getTreeMaker();
+
+      JCExpression lhs;
+      Type lhsSelectedType;
+      Symbol lhsSym;
+      JCExpression lhsSelected;
+      if( tree.arg instanceof JCTree.JCFieldAccess )
+      {
+        JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree.arg;
+        lhs = fieldAccess;
+        lhsSelectedType = fieldAccess.selected.type;
+        lhsSym = fieldAccess.sym;
+        lhsSelected = fieldAccess.selected;
+      }
+      else if( tree.arg instanceof JCIdent && ((JCIdent)tree.arg).sym.owner instanceof ClassSymbol )
+      {
+        JCIdent ident = (JCIdent)tree.arg;
+        lhs = ident;
+        lhsSelectedType = _backingSymbols.peek().fst.type;
+        lhsSym = ident.sym;
+        lhsSelected = lhsSym.isStatic()
+          ? make.Type( lhsSym.owner.type )
+          : make.This( lhsSelectedType ).setPos( tree.pos );
+      }
+      else
+      {
+        return;
+      }
+
+      if( !isPropertyField( lhsSym ) )
+      {
+        return;
+      }
+
+      JCMethodDecl methodDecl = _methodDefs.peek();
+
+      // replace  foo.bar = baz  with  foo.setBar(baz)
+
+      Context ctx = _javacTask.getContext();
+
+      MethodSymbol setMethod = isWritableProperty( lhsSym )
+        ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( ctx ) )
+        : null;
+
+      if( setMethod != null )
+      {
+        if( methodDecl != null && methodDecl.sym == setMethod )
+        {
+          // - don't rewrite with setter inside the setter
+          // - backing symbol required, add to set of backing symbols
+          _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
+          return;
+        }
+
+        if( !verifyAccess( tree, lhsSym, setMethod, "Write" ) )
+        {
+          // the setter is not accessible from the use site
+          return;
+        }
+
+        JCExpression arg = tree.arg instanceof JCIdent
+          ? replaceWithGetter( (JCIdent)tree.arg )
+          : repalceWithGetter( (JCFieldAccess)tree.arg );
+        arg.setPos( tree.pos );
+        List<JCTree> tempVars = List.nil();
+        if( tree.getTag().isPostUnaryOp() && !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        {
+          tempVarIndex++;
+          JCTree[] argTemp = ExtensionTransformer.tempify( false, tree, make, arg, ctx,
+            ExtensionTransformer.getEnclosingSymbol( tree, ctx, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+          if( argTemp != null )
+          {
+            tempVars = tempVars.append( argTemp[0] );
+            arg = (JCExpression)argTemp[1];
+          }
+        }
+
+        JCExpression rhs = makeUnaryIncDecCall( tree, make, arg );
+
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
+        setCall = (JCMethodInvocation)configMethod( lhs, setMethod, setCall ).setPos( tree.pos );
+
+        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        {
+          // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
+          tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
+          result = makeLetExpr( make, tempVars, arg, tree.pos );
+        }
+        else
+        {
+          result = setCall;
+        }
+      }
+      else // errant
+      {
+        handleErrantAssignment( tree, lhsSym, lhsSelected, methodDecl );
+      }
+    }
+
+    private JCTree.JCExpression makeUnaryIncDecCall( JCTree.JCUnary tree, TreeMaker make, JCExpression operand )
+    {
+      Type unboxedType = _tp.getTypes().unboxedType( operand.type );
+      if( unboxedType != null && !unboxedType.hasTag( NONE ) )
+      {
+        operand = _extensionTransformer.get().unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( JavacPlugin.instance().getContext() ), operand, unboxedType );
+      }
+
+      JCTree.JCExpression one = make.Literal( 1 );
+      one.pos = tree.pos;
+      one = make.TypeCast( operand.type, one );
+      one.pos = tree.pos;
+      JCTree.JCBinary binary = make.Binary(
+        tree.getTag() == JCTree.Tag.PREINC || tree.getTag() == JCTree.Tag.POSTINC
+          ? JCTree.Tag.PLUS
+          : JCTree.Tag.MINUS, operand, one );
+      binary.pos = tree.pos;
+      binary.type = operand.type;
+      Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
+      env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
+      env.enclClass = _extensionTransformer.get().getEnclosingClass( tree );
+      binary.operator = (Symbol.OperatorSymbol)_extensionTransformer.get()
+        .resolveMethod( tree.pos(),
+          Names.instance( _tp.getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
+          _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      return binary;
+
+      // maybe unbox here?
+    }
+
     private JCTree.JCMethodInvocation configMethod( JCTree.JCExpression tree, MethodSymbol methodSym, JCTree.JCMethodInvocation methodTree )
     {
       methodTree.setPos( tree.pos );
@@ -1415,6 +1559,21 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       methodTree.type = tree.type;
       return methodTree;
     }
+  }
+
+  private LetExpr makeLetExpr( TreeMaker make, List<JCTree> tempVars, JCExpression value, int pos )
+  {
+    // Need let expr so that we can return the RHS value as required by java assignment op.
+    // Note, the setXxx() method can return whatever it wants, it is ignored here,
+    // this allows us to support eg. List.set(int, T) where this method returns the previous value
+    LetExpr letExpr = (LetExpr)ReflectUtil.method( make, "LetExpr",
+      List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
+      .invoke( tempVars, value );
+    // if the rhs type is a constant expr, the Generator will optimize out the LetExpr,
+    // so we have to put in the non-constant type (wtef)
+    letExpr.type = value.type.constValue() != null ? value.type.baseType() : value.type;
+    letExpr.setPos( pos );
+    return letExpr;
   }
 
   // Make the field PRIVATE, or delete it if no backing field is necessary

@@ -512,7 +512,7 @@ public class ExtensionTransformer extends TreeTranslator
   /**
    * Unbox an object to a primitive value.
    */
-  private JCExpression unbox( Types types, TreeMaker make, Names names, JCExpression tree, Type primitive )
+  public JCExpression unbox( Types types, TreeMaker make, Names names, JCExpression tree, Type primitive )
   {
     Type unboxedType = types.unboxedType( tree.type );
     if( unboxedType.hasTag( NONE ) )
@@ -1095,9 +1095,8 @@ public class ExtensionTransformer extends TreeTranslator
 
   public void genUnaryMinus( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
   {
-    JCTree.JCMethodInvocation methodCall;
     JCExpression receiver = tree.getExpression();
-    methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.nil() );
+    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.nil() );
     methodCall.setPos( tree.pos );
     methodCall.type = operatorMethod.getReturnType();
 
@@ -2250,7 +2249,7 @@ public class ExtensionTransformer extends TreeTranslator
     return false;
   }
 
-  private JCTree.JCClassDecl getEnclosingClass( Tree tree )
+  public JCTree.JCClassDecl getEnclosingClass( Tree tree )
   {
     if( tree == null )
     {
@@ -2915,7 +2914,7 @@ public class ExtensionTransformer extends TreeTranslator
     return expr;
   }
 
-  private Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
+  public Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
     return resolveMethod( pos, _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), name, qual, args );
   }

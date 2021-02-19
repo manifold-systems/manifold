@@ -91,6 +91,86 @@ public class FromClassFileTest extends TestCase
     assertTrue( Modifier.isPrivate( field.getModifiers() ) );
   }
 
+  public void testInt_ReadWriteBacking() throws Throwable
+  {
+    FromClassFile f = new FromClassFile();
+    assertEquals( 1, f.int_readwriteBackingProp );
+    f.int_readwriteBackingProp = 2;
+    assertEquals( 2, f.int_readwriteBackingProp );
+
+    Field field = FromClassFile.class.getDeclaredField( "int_readwriteBackingProp" );
+    assertNotNull( field );
+    assertTrue( Modifier.isPrivate( field.getModifiers() ) );
+  }
+
+  public void testInt_ReadWriteBacking_AssignExpr()
+  {
+    FromClassFile f = new FromClassFile();
+
+    int res = f.int_readwriteBackingProp = 3;
+    assertEquals( 3, res );
+    assertEquals( 3, f.int_readwriteBackingProp );
+
+    res = 2 + (f.int_readwriteBackingProp = 4);
+    assertEquals( 6, res );
+    assertEquals( 4, f.int_readwriteBackingProp );
+
+    f.int_readwriteBackingProp += 4;
+    assertEquals( 8, f.int_readwriteBackingProp );
+
+    res = 2 + (f.int_readwriteBackingProp += 4);
+    assertEquals( 14, res );
+    assertEquals( 12, f.int_readwriteBackingProp );
+  }
+
+  public void testInt_ReadWriteBacking_IncDec()
+  {
+    FromClassFile f = new FromClassFile();
+
+    // ++
+    //
+    int res = ++f.int_readwriteBackingProp;
+    assertEquals( 2, res );
+    assertEquals( 2, f.int_readwriteBackingProp );
+
+    res = f.int_readwriteBackingProp++;
+    assertEquals( 2, res );
+    assertEquals( 3, f.int_readwriteBackingProp );
+
+    f.int_readwriteBackingProp++;
+    assertEquals( 4, f.int_readwriteBackingProp );
+    ++f.int_readwriteBackingProp;
+    assertEquals( 5, f.int_readwriteBackingProp );
+
+    // --
+    //
+    f.int_readwriteBackingProp = 10;
+
+    res = --f.int_readwriteBackingProp;
+    assertEquals( 9, res );
+    assertEquals( 9, f.int_readwriteBackingProp );
+
+    res = f.int_readwriteBackingProp--;
+    assertEquals( 9, res );
+    assertEquals( 8, f.int_readwriteBackingProp );
+
+    f.int_readwriteBackingProp--;
+    assertEquals( 7, f.int_readwriteBackingProp );
+    --f.int_readwriteBackingProp;
+    assertEquals( 6, f.int_readwriteBackingProp );
+  }
+
+  public void testInt_ReadWriteBacking_UnaryPlusMinus()
+  {
+    FromClassFile f = new FromClassFile();
+
+    int res = -f.int_readwriteBackingProp;
+    assertEquals( -1, res );
+
+    res = +f.int_readwriteBackingProp;
+    assertEquals( 1, res );
+  }
+
   public void testReadWriteBacking2() throws Throwable
   {
     FromClassFile f = new FromClassFile();
@@ -122,7 +202,7 @@ public class FromClassFileTest extends TestCase
     }
   }
 
-  public void testWriteonlyBackingProp() throws Throwable
+  public void testWriteonlyBackingProp()
   {
     FromClassFile f = new FromClassFile();
     f.writeonlyBackingProp = "c";
@@ -161,7 +241,7 @@ public class FromClassFileTest extends TestCase
     }
   }
 
-  public void testStaticNonBacking() throws Throwable
+  public void testStaticNonBacking()
   {
     // field should not exist
     ReflectUtil.FieldRef staticnNonbackingProp = ReflectUtil.field( FromClassFile.class, "staticNonbackingProp" );
@@ -173,7 +253,7 @@ public class FromClassFileTest extends TestCase
     assertEquals( 9, FromClassFile.staticNonbackingProp );
   }
 
-  public void testStaticNonBackingIface() throws Throwable
+  public void testStaticNonBackingIface()
   {
     // field should not exist
     ReflectUtil.FieldRef staticNonbackingProp = ReflectUtil.field( IFromClassFile.class, "staticNonbackingProp" );
@@ -195,4 +275,113 @@ public class FromClassFileTest extends TestCase
     assertEquals( 5, IFromClassFile.staticNonbackingProp );
   }
 
+  public void testSub_Int_ReadWriteBacking() throws Throwable
+  {
+    new SubFromClassFile().testIdent_Int_ReadWriteBacking();
+  }
+
+  public void testSub_Int_ReadWriteBacking_AssignExpr()
+  {
+    new SubFromClassFile().testIdent_Int_ReadWriteBacking_AssignExpr();
+  }
+
+  public void testSub_Int_ReadWriteBacking_IncDec()
+  {
+    new SubFromClassFile().testIdent_Int_ReadWriteBacking_IncDec();
+  }
+
+  public void testSub_Int_ReadWriteBacking_UnaryPlusMinus()
+  {
+    new SubFromClassFile().testIdent_Int_ReadWriteBacking_UnaryPlusMinus();
+  }
+
+  static class SubFromClassFile extends FromClassFile
+  {
+    public void testIdent_ReadWriteBacking() throws Throwable
+    {
+      assertEquals( "readwriteBackingProp", readwriteBackingProp );
+      readwriteBackingProp = "b";
+      assertEquals( "b", readwriteBackingProp );
+
+      String r = readwriteBackingProp = "c";
+      assertEquals( "c", r );
+
+      Field field = FromClassFile.class.getDeclaredField( "readwriteBackingProp" );
+      assertNotNull( field );
+      assertTrue( Modifier.isPrivate( field.getModifiers() ) );
+    }
+
+    public void testIdent_Int_ReadWriteBacking() throws Throwable
+    {
+      assertEquals( 1, int_readwriteBackingProp );
+      int_readwriteBackingProp = 2;
+      assertEquals( 2, int_readwriteBackingProp );
+
+      Field field = FromClassFile.class.getDeclaredField( "int_readwriteBackingProp" );
+      assertNotNull( field );
+      assertTrue( Modifier.isPrivate( field.getModifiers() ) );
+    }
+
+    public void testIdent_Int_ReadWriteBacking_AssignExpr()
+    {
+      int res = int_readwriteBackingProp = 3;
+      assertEquals( 3, res );
+      assertEquals( 3, int_readwriteBackingProp );
+
+      res = 2 + (int_readwriteBackingProp = 4);
+      assertEquals( 6, res );
+      assertEquals( 4, int_readwriteBackingProp );
+
+      int_readwriteBackingProp += 4;
+      assertEquals( 8, int_readwriteBackingProp );
+
+      res = 2 + (int_readwriteBackingProp += 4);
+      assertEquals( 14, res );
+      assertEquals( 12, int_readwriteBackingProp );
+    }
+
+    public void testIdent_Int_ReadWriteBacking_IncDec()
+    {
+      // ++
+      //
+      int res = ++int_readwriteBackingProp;
+      assertEquals( 2, res );
+      assertEquals( 2, int_readwriteBackingProp );
+
+      res = int_readwriteBackingProp++;
+      assertEquals( 2, res );
+      assertEquals( 3, int_readwriteBackingProp );
+
+      int_readwriteBackingProp++;
+      assertEquals( 4, int_readwriteBackingProp );
+      ++int_readwriteBackingProp;
+      assertEquals( 5, int_readwriteBackingProp );
+
+      // --
+      //
+      int_readwriteBackingProp = 10;
+
+      res = --int_readwriteBackingProp;
+      assertEquals( 9, res );
+      assertEquals( 9, int_readwriteBackingProp );
+
+      res = int_readwriteBackingProp--;
+      assertEquals( 9, res );
+      assertEquals( 8, int_readwriteBackingProp );
+
+      int_readwriteBackingProp--;
+      assertEquals( 7, int_readwriteBackingProp );
+      --int_readwriteBackingProp;
+      assertEquals( 6, int_readwriteBackingProp );
+    }
+
+    public void testIdent_Int_ReadWriteBacking_UnaryPlusMinus()
+    {
+      int res = -int_readwriteBackingProp;
+      assertEquals( -1, res );
+
+      res = +int_readwriteBackingProp;
+      assertEquals( 1, res );
+    }
+  }
 }

@@ -51,6 +51,7 @@ public class FromClassFile
   }
 
   @var String readwriteBackingProp = "readwriteBackingProp";
+  @var int int_readwriteBackingProp = 1;
   @get @set String readwriteBackingProp2 = "readwriteBackingProp2";
   @val String readonlyBackingProp = "readonlyBackingProp";
   @set String writeonlyBackingProp;
