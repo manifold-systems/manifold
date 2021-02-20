@@ -23,6 +23,7 @@ import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
@@ -52,6 +53,7 @@ import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.TypeTag.NONE;
@@ -801,23 +803,118 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
+    // Premise: A property field TOTALLY overrides it's super's field
+    // Consequences:
+    // - Must override FIELD with like access e.g.,
+    //   - must override @var with @var
+    //   - can't override @var with @val or @set
+    //   - can't override @val with @set or visa versa
+    // - To override BEHAVIOR of superclass property, just override the accessor[s]
+    // If @override is NOT present,
+    //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy,
+    //   if so, error "propX overrides propX in classA, missing @override"
+    // If @override IS present,
+    //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy
+    //   if not, error "propX does not override anything"
     private void verifyPropertyOverride( JCVariableDecl tree )
     {
-      //todo:
-      // Premise: A property field TOTALLY overrides it's super's field
-      // Consequences:
-      // - Must override FIELD with like access e.g.,
-      //   - must override @get @set with both @get @set
-      //   - can't override @get @set with just @get or just @set
-      //   - can't override @get with @set or visa versa
-      // - To override BEHAVIOR of superclass property, just override the accessor[s]
-      // If @override is NOT present,
-      //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy,
-      //   if so, error "propX overrides propX in classA, missing @override"
-      // If @override IS present,
-      //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy
-      //   if not, error "propX does not override anything"
-      // Also check for abstract methods that are not overridden
+      Names names = Names.instance( _javacTask.getContext() );
+
+      boolean readableProperty = isReadableProperty( tree.sym );
+      boolean writableProperty = isWritableProperty( tree.sym );
+
+      JCAnnotation override = getAnnotation( tree, override.class );
+      if( override != null )
+      {
+        if( readableProperty && !isSuperReadable( tree, names ) )
+        {
+          if( !writableProperty )
+          {
+            // does not override anything
+            reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+          }
+          else if( !isSuperWritable( tree, names ) )
+          {
+            // does not override anything
+            reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+          }
+        }
+        else if( !readableProperty && !isSuperWritable( tree, names ) )
+        {
+          // does not override anything
+          reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+        }
+      }
+      else
+      {
+        if( readableProperty && isSuperReadable( tree, names ) )
+        {
+          // warning: missing @override (overrides getter)
+          reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+        }
+        else if( writableProperty && isSuperWritable( tree, names ) )
+        {
+          // warning: missing @override (overrides setter)
+          reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+        }
+      }
+    }
+
+    private boolean isSuperWritable( JCVariableDecl tree, Names names )
+    {
+      Name setterName = names.fromString( getSetterName( tree.sym.name ) );
+      return checkAncestry( (TypeSymbol)tree.sym.owner, sym -> {
+        for( Symbol member: IDynamicJdk.instance().getMembersByName( (ClassSymbol)sym, setterName ) )
+        {
+          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().size() == 1 ) // todo: check param type
+          {
+            return true;
+          }
+        }
+        return false;
+      } );
+    }
+
+    private boolean isSuperReadable( JCVariableDecl tree, Names names )
+    {
+      Name getterName = names.fromString( getGetterName( tree.sym, true ) );
+      return checkAncestry( (TypeSymbol)tree.sym.owner, sym -> {
+        for( Symbol member: IDynamicJdk.instance().getMembersByName( (ClassSymbol)sym, getterName ) )
+        {
+          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().isEmpty() )
+          {
+            return true;
+          }
+        }
+        return false;
+      } );
+    }
+
+    private boolean checkAncestry( TypeSymbol ts, Predicate<Symbol> check )
+    {
+      if( !(ts instanceof ClassSymbol) )
+      {
+        return false;
+      }
+
+      ClassSymbol sym = (ClassSymbol)ts;
+
+      Type superclass = sym.getSuperclass();
+      if( superclass != null && superclass.tsym != null )
+      {
+        if( check.test( superclass.tsym ) || checkAncestry( superclass.tsym, check ) )
+        {
+          return true;
+        }
+      }
+      for( Type iface: sym.getInterfaces() )
+      {
+        if( check.test( iface.tsym ) || checkAncestry( iface.tsym, check ) )
+        {
+          return true;
+        }
+      }
+      return false;
     }
 
     private void verifyPropertyMethodsAgree( JCVariableDecl varDecl )
@@ -835,12 +932,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       boolean[] finalErrorHanlded = {false};
 
-      verifyGetter( varDecl, var, val, get, set, finalErrorHanlded );
-      verifySetter( varDecl, var, val, get, set, finalErrorHanlded[0] );
+      verifyGetter( varDecl, var, val, get, finalErrorHanlded );
+      verifySetter( varDecl, var, set, finalErrorHanlded[0] );
     }
 
     private void verifyGetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation val, JCAnnotation get,
-                               JCAnnotation set, boolean[] finalErrorHandled )
+                               boolean[] finalErrorHandled )
     {
       MethodSymbol getMethod = resolveGetMethod( varDecl.sym.owner.type, varDecl.sym );
       if( var != null || val != null || get != null )
@@ -895,24 +992,25 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
       else if( getMethod != null ) // just @set
       {
-        reportWarning( varDecl, MSG_GETTER_DEFINED_FOR_WRITEONLY.get(
+        if( getMethod.owner == varDecl.sym.owner )
+        {
+          reportError( varDecl, MSG_GETTER_DEFINED_FOR_WRITEONLY.get(
             getMethod.flatName(), varDecl.sym.flatName() ) );
+        }
+        else
+        {
+          reportError( varDecl, PropIssueMsg.MSG_WRITEONLY_CANNOT_OVERRIDE_READABLE.get(
+            getMethod.flatName(), varDecl.sym.flatName() ) );
+        }
       }
     }
 
-    private void verifySetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation val, JCAnnotation get,
-                               JCAnnotation set, boolean finalErrorHanlded )
+    private void verifySetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation set, boolean finalErrorHanlded )
     {
       JCClassDecl classDecl = _classes.peek();
 
       MethodSymbol setMethod = resolveSetMethod( varDecl.sym.owner.type, varDecl.sym,
         Types.instance( _javacTask.getContext() ) );
-
-      if( setMethod != null && isFinal( classDecl, varDecl ) )
-      {
-        reportWarning( varDecl, MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY.get(
-          setMethod.flatName(), varDecl.name ) );
-      }
 
       if( var != null || set != null )
       {
@@ -981,8 +1079,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
       else if( setMethod != null ) // just @set
       {
-        reportWarning( varDecl, MSG_SETTER_DEFINED_FOR_READONLY.get(
+        if( setMethod.owner == varDecl.sym.owner )
+        {
+          reportError( varDecl, MSG_SETTER_DEFINED_FOR_READONLY.get(
             setMethod.flatName(), varDecl.sym.flatName() ) );
+        }
+        else
+        {
+          reportError( varDecl, MSG_READONLY_CANNOT_OVERRIDE_WRITABLE.get(
+            setMethod.flatName(), varDecl.sym.flatName() ) );
+        }
       }
     }
 
@@ -1537,7 +1643,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
       env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
       env.enclClass = _extensionTransformer.get().getEnclosingClass( tree );
-      binary.operator = (Symbol.OperatorSymbol)_extensionTransformer.get()
+      binary.operator = _extensionTransformer.get()
         .resolveMethod( tree.pos(),
           Names.instance( _tp.getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
           _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
@@ -1552,7 +1658,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       methodTree.type = methodSym.getReturnType();
 
       // If methodCall is an extension method, rewrite it
-      //noinspection ConstantConditions
       methodTree = _extensionTransformer.get().maybeReplaceWithExtensionMethod( methodTree );
 
       // Concrete type set in attr

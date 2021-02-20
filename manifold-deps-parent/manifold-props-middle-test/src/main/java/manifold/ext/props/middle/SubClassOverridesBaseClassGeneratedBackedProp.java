@@ -16,9 +16,10 @@
 
 package manifold.ext.props.middle;
 
+import manifold.ext.props.rt.api.override;
 import manifold.ext.props.rt.api.var;
 
 public class SubClassOverridesBaseClassGeneratedBackedProp extends BaseClass
 {
-  @var String backedProp;
+  @override @var String backedProp;
 }

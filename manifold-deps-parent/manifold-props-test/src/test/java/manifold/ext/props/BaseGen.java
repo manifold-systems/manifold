@@ -16,29 +16,17 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.override;
+import manifold.ext.props.rt.api.PropOption;
 import manifold.ext.props.rt.api.var;
 
-public class FooSub extends Foo
+import java.util.List;
+
+import static manifold.ext.props.rt.api.PropOption.Abstract;
+
+public abstract class BaseGen<T, R>
 {
-  @override @var double rate;
+  @var(Abstract) List<T> names;
+  @var(Abstract) R result;
 
-  public FooSub( String thing, double rate )
-  {
-    this.thing = thing;
-    System.out.println( this.thing );
-
-    this.rate = rate;
-  }
-
-  public String getThing()
-  {
-    String superThing = super.thing;
-    return superThing + "_sub";
-  }
-
-  public void setRate( double value )
-  {
-    rate = 2 * value;
-  }
+  public void asdf() {}
 }

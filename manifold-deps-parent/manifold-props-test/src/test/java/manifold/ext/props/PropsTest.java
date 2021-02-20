@@ -18,6 +18,7 @@ package manifold.ext.props;
 
 import junit.framework.TestCase;
 import manifold.ext.props.rt.api.PropOption;
+import manifold.ext.props.rt.api.override;
 import manifold.ext.props.rt.api.val;
 import manifold.ext.props.rt.api.var;
 
@@ -58,7 +59,7 @@ public class PropsTest extends TestCase
 
   class NamedInner implements INamed
   {
-    @var String name;
+    @override @var String name;
 
     public NamedInner( String name )
     {
@@ -79,8 +80,8 @@ public class PropsTest extends TestCase
     @var List<String> colors;
   }
   class FooImpl implements IFoo {
-    @var(Final) String name;
-    @var List<String> colors;
+    @override @var(Final) String name;
+    @override @var List<String> colors;
     @var List<String> things;
     @var(Final) String whatever;
     @val final int finalInt;
@@ -105,10 +106,10 @@ public class PropsTest extends TestCase
       whatever = value;
     }
 
-    public void setFinalInt( int value )
-    {
-//      finalInt = value;
-    }
+//    public void setFinalInt( int value )
+//    {
+////      finalInt = value;
+//    }
 //    // should cause error because no @set defined for readonlyInt property
 //    public void setReadonlyInt( int value )
 //    {

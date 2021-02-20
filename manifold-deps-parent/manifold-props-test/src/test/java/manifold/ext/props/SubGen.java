@@ -17,28 +17,19 @@
 package manifold.ext.props;
 
 import manifold.ext.props.rt.api.override;
+import manifold.ext.props.rt.api.val;
 import manifold.ext.props.rt.api.var;
 
-public class FooSub extends Foo
+import java.util.List;
+
+public class SubGen extends BaseGen<String, Integer>
 {
-  @override @var double rate;
+  @override @var List<String> names;
+  @override @var Integer result;
 
-  public FooSub( String thing, double rate )
+  public SubGen( List<String> names, Integer result )
   {
-    this.thing = thing;
-    System.out.println( this.thing );
-
-    this.rate = rate;
-  }
-
-  public String getThing()
-  {
-    String superThing = super.thing;
-    return superThing + "_sub";
-  }
-
-  public void setRate( double value )
-  {
-    rate = 2 * value;
+    this.names = names;
+    this.result = result;
   }
 }

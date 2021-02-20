@@ -28,7 +28,7 @@ public abstract class LocklessLazyVar<T>
   /**
    * @return the value of this lazy var, created if necessary
    */
-  public final T get()
+  public T get()
   {
     T result = _val;
     if( result == NULL )

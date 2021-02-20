@@ -16,6 +16,7 @@
 
 package manifold.ext.props;
 
+import manifold.api.util.DynamicArray;
 import manifold.api.util.IssueMsg;
 
 public class PropIssueMsg
@@ -28,7 +29,6 @@ public class PropIssueMsg
   public static final IssueMsg MSG_FINAL_NOT_ALLOWED_IN_INTERFACE = new IssueMsg( "'Final' property accessor not allowed in interface" );
   public static final IssueMsg MSG_SETTER_DEFINED_FOR_READONLY = new IssueMsg( "Setter method '{0}' defined for read-only property '{1}'" );
   public static final IssueMsg MSG_GETTER_DEFINED_FOR_WRITEONLY = new IssueMsg( "Getter method '{0}' defined for write-only property '{1}'" );
-  public static final IssueMsg MSG_SETTER_DEFINED_FOR_FINAL_PROPERTY = new IssueMsg( "Setter method '{0}' defined for final property '{1}'" );
   public static final IssueMsg MSG_PROPERTY_NOT_ACCESSIBLE = new IssueMsg( "{0} access to property '{1}' is '{2}'" );
   public static final IssueMsg MSG_ACCESSOR_WEAKER = new IssueMsg( "'{0}' attempting to assign weaker access privileges; was '{1}'" );
   public static final IssueMsg MSG_STATIC_MISMATCH = new IssueMsg( "Static method '{0}' conflicts with non-static property '{1}'" );
@@ -37,4 +37,8 @@ public class PropIssueMsg
   public static final IssueMsg MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR = new IssueMsg( "Interface '{0}' must provide method '{1}' for static non-final property '{2}'" );
   public static final IssueMsg MSG_INTERFACE_FIELD_BACKED_PROPERTY_NOT_SUPPORTED = new IssueMsg( "Static interface properties must provide user-defined accessor[s] which do not reference the property field" );
   public static final IssueMsg MSG_WRITEONLY_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER = new IssueMsg( "A write-only abstract property cannot have an initializer" );
+  public static final IssueMsg MSG_DOES_NOT_OVERRIDE_ANYTHING = new IssueMsg( "Property '{0}' does not override anything" );
+  public static final IssueMsg MSG_MISSING_OVERRIDE = new IssueMsg( "Property '{0}' should be annotated with '@override'" );
+  public static final IssueMsg MSG_READONLY_CANNOT_OVERRIDE_WRITABLE = new IssueMsg( "Read-only property '{0}' cannot override writable property" );
+  public static final IssueMsg MSG_WRITEONLY_CANNOT_OVERRIDE_READABLE = new IssueMsg( "Write-only property '{0}' cannot override readable property" );
 }

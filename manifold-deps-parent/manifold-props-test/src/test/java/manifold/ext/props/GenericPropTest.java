@@ -17,6 +17,7 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
+import manifold.ext.props.rt.api.override;
 import manifold.ext.props.rt.api.var;
 
 import java.util.Arrays;
@@ -35,13 +36,13 @@ public class GenericPropTest extends TestCase
   }
   class GenericPropsImpl implements IGenericProps
   {
-    @var List list_Raw;
-    @var List<String> list_String;
-    @var List<CharSequence> list_CharSequence;
-    @var List<?> list_Wildcard;
-    @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
-    @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
-    @var List<String>[] list_String_Array;
+    @override @var List list_Raw;
+    @override @var List<String> list_String;
+    @override @var List<CharSequence> list_CharSequence;
+    @override @var List<?> list_Wildcard;
+    @override @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
+    @override @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
+    @override @var List<String>[] list_String_Array;
 
     // tests that List<String> and List<String>[] don't match with PropertyProcessor#ghettoErasure
     public void setList_String_Array( List<String> fooledya )
