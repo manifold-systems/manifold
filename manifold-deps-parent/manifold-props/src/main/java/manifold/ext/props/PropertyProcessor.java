@@ -537,12 +537,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Names names = Names.instance( context );
       Name name = names.fromString( getSetterName( propField.name ) );
       JCVariableDecl param = (JCVariableDecl)make.VarDef(
-        make.Modifiers( FINAL | Flags.PARAMETER ), names.fromString( "value" ),
+        make.Modifiers( FINAL | Flags.PARAMETER ), names.fromString( "$value" ),
         (JCExpression)propField.vartype.clone(), null ).setPos( propField.pos );
       JCExpression resType = make.Type( Symtab.instance( context ).voidType ).setPos( propField.pos );
       JCExpressionStatement assign = (JCExpressionStatement)make.Exec( make.Assign(
         make.Ident( propField.name ).setPos( propField.pos ),
-        make.Ident( names.fromString( "value" ) ).setPos( propField.pos ) ).setPos( propField.pos ) )
+        make.Ident( names.fromString( "$value" ) ).setPos( propField.pos ) ).setPos( propField.pos ) )
         .setPos( propField.pos );
       JCBlock block = propAbstract ? null : (JCBlock)make.Block( 0, List.of( assign ) ).setPos( propField.pos );
       JCMethodDecl setter = (JCMethodDecl)make.MethodDef(
