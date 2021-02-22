@@ -113,6 +113,15 @@ public class ManResolve extends Resolve
     ReflectUtil.field( Annotate.instance( context ), "resolve" ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), "resolve" ).set( this );
     ReflectUtil.field( JavacElements.instance( context ), "resolve" ).set( this );
+
+    if( JreUtil.isJava11orLater() )
+    {
+      // Allow @var to work with properties.
+      // Note, this is not as scary as it looks. Setting allowLocalVariableTypeInference to false only turns off
+      // unnecessary name checking so we can use @var annotation type, which should be allowed because `@` effectively
+      // escapes the name, so there really isn't any conflict with Java's 'var' construct. Just sayin'
+      ReflectUtil.field( this, "allowLocalVariableTypeInference" ).set( false );
+    }
   }
 
   /**
