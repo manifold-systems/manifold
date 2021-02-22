@@ -52,7 +52,7 @@ public class PropsTest extends TestCase
 
     IFoo foo = new FooImpl( "Bubby", Arrays.asList( "red", "blue", "green" ) );
     assertEquals( "Bubby", foo.name );
-    foo.name = "Mo";
+    ((FooImpl)foo).name = "Mo";
     assertEquals( "Mo", foo.name );
     assertEquals( Arrays.asList( "red", "blue", "green" ), foo.colors );
   }
@@ -75,8 +75,7 @@ public class PropsTest extends TestCase
   }
 
   interface IFoo {
-    @var String name = "hi";  // generates a 'default' getter returning "hi", and abstract setter
-
+    @val String name = "hi";  // generates a 'default' getter returning "hi"
     @var List<String> colors;
   }
   class FooImpl implements IFoo {

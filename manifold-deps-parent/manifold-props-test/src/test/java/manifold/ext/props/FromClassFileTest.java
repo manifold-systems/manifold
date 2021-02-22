@@ -22,6 +22,7 @@ import manifold.ext.props.middle.IFromClassFile;
 import manifold.util.ReflectUtil;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 
 @SuppressWarnings( "JavaReflectionMemberAccess" )
@@ -51,24 +52,6 @@ public class FromClassFileTest extends TestCase
     try
     {
       FromClassFile.class.getMethod( "staticReadonlyBackingProp", String.class );
-      fail( "method should not exist" );
-    }
-    catch( NoSuchMethodException ignore )
-    {
-    }
-  }
-
-  public void testStaticFinalBacking() throws Throwable
-  {
-    assertEquals( "staticFinalBackingProp", FromClassFile.staticFinalBackingProp );
-
-    Field field = FromClassFile.class.getDeclaredField( "staticFinalBackingProp" );
-    assertNotNull( field );
-    assertTrue( Modifier.isPrivate( field.getModifiers() ) );
-
-    try
-    {
-      FromClassFile.class.getMethod( "setStaticFinalBackingProp", String.class );
       fail( "method should not exist" );
     }
     catch( NoSuchMethodException ignore )
@@ -231,14 +214,41 @@ public class FromClassFileTest extends TestCase
     assertNotNull( field );
     assertTrue( Modifier.isPrivate( field.getModifiers() ) );
 
+    Method m = FromClassFile.class.getDeclaredMethod( "getFinalBackingProp" );
+    assertNotNull( m );
+    assertTrue( Modifier.isFinal( m.getModifiers() ) );
+    m = FromClassFile.class.getDeclaredMethod( "setFinalBackingProp", String.class );
+    assertNotNull( m );
+    assertTrue( Modifier.isFinal( m.getModifiers() ) );
+  }
+
+  public void testFinalNonBacking() throws Throwable
+  {
+    FromClassFile f = new FromClassFile();
+    assertEquals( "finalNonBackingProp", f.finalNonBackingProp );
     try
     {
-      FromClassFile.class.getMethod( "setFinalBackingProp", String.class );
-      fail( "method should not exist" );
+      f.finalNonBackingProp = "nope";
+      fail();
     }
-    catch( NoSuchMethodException ignore )
+    catch( RuntimeException re )
     {
+      assertEquals( re.getMessage(), "finalNonBackingProp" );
     }
+
+    try
+    {
+      FromClassFile.class.getDeclaredField( "finalNonBackingProp" );
+      fail();
+    }
+    catch( NoSuchFieldException ignore ) {}
+
+    Method m = FromClassFile.class.getDeclaredMethod( "getFinalBackingProp" );
+    assertNotNull( m );
+    assertTrue( Modifier.isFinal( m.getModifiers() ) );
+    m = FromClassFile.class.getDeclaredMethod( "setFinalBackingProp", String.class );
+    assertNotNull( m );
+    assertTrue( Modifier.isFinal( m.getModifiers() ) );
   }
 
   public void testStaticNonBacking()

@@ -204,7 +204,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
               : meth.getParameters().get( 0 ).type;
             VarSymbol propField = new VarSymbol( getFlags( propgenAnno ), fieldName, t, classSym );
 
-            // add the @var, @val, @get, @set annotations
+            // add the @var, @val, @get, @set, etc. annotations
             propField.appendAttributes( List.from( propgenAnno.values.stream()
               .filter( e -> e.snd instanceof Attribute.Array )
               .map( e -> (Attribute.Compound)((Attribute.Array)e.snd).values[0] )
@@ -363,8 +363,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         JCAnnotation var = getAnnotation( tree, var.class );
         JCAnnotation val = getAnnotation( tree, val.class );
-        JCAnnotation get = getAnnotation( tree, manifold.ext.props.rt.api.get.class );
-        JCAnnotation set = getAnnotation( tree, manifold.ext.props.rt.api.set.class );
+        JCAnnotation get = getAnnotation( tree, get.class );
+        JCAnnotation set = getAnnotation( tree, set.class );
 
         if( var == null && val == null && get == null && set == null )
         {
@@ -372,11 +372,59 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
-        if( /*isInterface( classDecl ) &&*/ (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
+        if( (modifiers & (PUBLIC|PROTECTED|PRIVATE)) == 0 )
         {
-          // must explicitly default @var fields to PUBLIC inside interfaces
           // default @var fields to PUBLIC, they must use PropOption.Package if they really want it
           tree.getModifiers().flags |= PUBLIC;
+        }
+
+        Context context = _javacTask.getContext();
+        TreeMaker make = TreeMaker.instance( context );
+        JavacElements javacElems = JavacPlugin.instance().getJavacElements();
+
+        boolean isAbstract = getAnnotation( tree, Abstract.class ) != null;
+        boolean isFinal = getAnnotation( tree, Final.class ) != null;
+
+        if( (modifiers & ABSTRACT) != 0 )
+        {
+          // remove 'abstract' modifier, applies to getter/setter methods
+          tree.getModifiers().flags &= ~ABSTRACT;
+          if( !isAbstract )
+          {
+            // add @Abstract
+            JCExpression abstractType = memberAccess( make, javacElems, Abstract.class.getName() );
+            addAnnotations( tree, List.of( make.Annotation( abstractType, List.nil() ) ) );
+            isAbstract = true;
+          }
+        }
+        if( (modifiers & FINAL) != 0 )
+        {
+          // remove 'final' modifier, applies to getter/setter methods
+          tree.getModifiers().flags &= ~FINAL;
+          if( !isFinal )
+          {
+            // add @Final
+            JCExpression abstractType = memberAccess( make, javacElems, Final.class.getName() );
+            addAnnotations( tree, List.of( make.Annotation( abstractType, List.nil() ) ) );
+            isFinal = true;
+          }
+        }
+
+        if( isAbstract && !isInterface( classDecl ) && !Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
+        {
+          reportError( tree, MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS.get() );
+          return;
+        }
+        
+        if( isFinal && isAbstract )
+        {
+          reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_ABSTRACT.get() );
+          return;
+        }
+        else if( isFinal && isStatic( tree ) )
+        {
+          reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_STATIC.get() );
+          return;
         }
 
         // add getter and/or setter
@@ -390,8 +438,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         if( var != null || val != null || get != null )
         {
           List<JCExpression> args = get == null ? val == null ? var.args : val.args : get.args;
-          boolean getAbstract = isAbstract( classDecl, tree, args ) && tree.init == null;
-          boolean getFinal = hasOption( args, PropOption.Final );
+          boolean getAbstract = isAbstract( classDecl, tree ) || hasOption( args, PropOption.Abstract );
+          boolean getFinal = isFinal || hasOption( args, PropOption.Final );
           PropOption getAccess = getAccess( classDecl, args );
 
           if( !isInterface( classDecl ) && isWeakerAccess( getAccess, getAccess( modifiers ) ) )
@@ -400,35 +448,60 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
               PropOption.fromModifier( getAccess( modifiers ) ).name().toLowerCase() ) );
           }
 
-          JCAnnotation anno = get == null ? val == null ? var : val : get;
-          generatedGetter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess, anno );
-          if( generatedGetter == null )
+          if( getFinal && getAbstract )
           {
-            shouldMakeProperty = true;
+            reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_ABSTRACT.get() );
+          }
+          else if( getFinal && isStatic( tree ) )
+          {
+            reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_STATIC.get() );
+          }
+          else if( getAbstract && !isInterface( classDecl ) && !Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
+          {
+            reportError( tree, MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS.get() );
+          }
+          else
+          {
+            JCAnnotation anno = get == null ? val == null ? var : val : get;
+            generatedGetter = makeGetter( classDecl, tree, getAbstract, getFinal, getAccess, anno );
+            if( generatedGetter == null )
+            {
+              shouldMakeProperty = true;
+            }
           }
         }
 
         if( var != null || set != null )
         {
-          boolean setAbstract = isAbstract( classDecl, tree, set == null ? var.args : set.args );
-          boolean setFinal = hasOption( set == null ? var.args : set.args, PropOption.Final );
-          PropOption setAccess = getAccess( classDecl, set == null ? var.args : set.args );
+          List<JCExpression> args = set == null ? var.args : set.args;
+          boolean setAbstract = isAbstract( classDecl, tree ) || isInterface( classDecl ) || hasOption( args, PropOption.Abstract );
+          boolean setFinal = isFinal || hasOption( args, PropOption.Final );
+          PropOption setAccess = getAccess( classDecl, args );
 
-          if( setAbstract && set != null && var == null && get == null && tree.init != null  )
+          if( tree.init != null && setAbstract )
           {
-            reportError( set, MSG_WRITEONLY_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER.get() );
+            reportError( tree.init, MSG_WRITABLE_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER.get( tree.name ) );
           }
 
-          if( set != null && isFinal( classDecl, tree ) )
-          {
-            reportError( set, MSG_SET_WITH_FINAL.get() );
-          }
-          else if( !isInterface( classDecl ) && isWeakerAccess( setAccess, getAccess( modifiers ) ) )
+          if( !isInterface( classDecl ) && isWeakerAccess( setAccess, getAccess( modifiers ) ) )
           {
             reportError( set != null ? set : var, MSG_ACCESSOR_WEAKER.get( "set",
               PropOption.fromModifier( getAccess( modifiers ) ).name().toLowerCase() ) );
           }
-          else if( !isFinal( classDecl, tree ) )
+
+          if( setFinal && setAbstract )
+          {
+            reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_ABSTRACT.get() );
+          }
+          else if( setFinal && isStatic( tree ) )
+          {
+            reportError( tree, MSG_FINAL_NOT_ALLOWED_ON_STATIC.get() );
+          }
+          else if( setAbstract && !isInterface( classDecl ) && !Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
+          {
+            reportError( tree, MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS.get() );
+          }
+          else
           {
             generatedSetter = makeSetter( classDecl, tree, setAbstract, setFinal, setAccess, set != null ? set : var );
             if( generatedSetter == null )
@@ -506,9 +579,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         addAnnotations( existingGetter, getAnnotations( anno, "annos" ) );
         return null;
       }
-      else if( isInterface( classDecl ) && isStatic( propField ) && !isFinal( classDecl, propField ) )
+      else if( isInterface( classDecl ) && isStatic( propField ) && propField.init == null )
       {
-        // interface: static non-final property MUST provide user-defined getter
+        // interface: static non-initialized property MUST provide user-defined getter
         reportError( propField, MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR.get(
           classDecl.name, name + "() : " + propField.vartype.toString(), propField.name ) );
       }
@@ -554,9 +627,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         addAnnotations( existingSetter, List.of( propgenAnno ) );
         return null;
       }
-      else if( isInterface( classDecl ) && isStatic( propField ) && !isFinal( classDecl, propField ) )
+      else if( isInterface( classDecl ) && isStatic( propField ) && propField.init == null )
       {
-        // interface: static non-final property MUST provide user-defined setter
+        // interface: static non-initialized property MUST provide user-defined setter
         reportError( propField, MSG_MISSING_INTERFACE_STATIC_PROPERTY_ACCESSOR.get(
           classDecl.name, name + "(" + propField.vartype.toString() + ")", propField.name ) );
       }
@@ -644,11 +717,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       newAnnos.addAll( propgenAnno );
       accessor.getModifiers().annotations = List.from( newAnnos );
     }
-    private void addAnnotations( JCVariableDecl setterParam, List<JCAnnotation> propgenAnno )
+    private void addAnnotations( JCVariableDecl varDecl, List<JCAnnotation> propgenAnno )
     {
-      ArrayList<JCAnnotation> newAnnos = new ArrayList<>( setterParam.getModifiers().annotations );
+      ArrayList<JCAnnotation> newAnnos = new ArrayList<>( varDecl.getModifiers().annotations );
       newAnnos.addAll( propgenAnno );
-      setterParam.getModifiers().annotations = List.from( newAnnos );
+      varDecl.getModifiers().annotations = List.from( newAnnos );
     }
 
     private List<JCAnnotation> getAnnotations( JCAnnotation anno, String target )
@@ -703,25 +776,30 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       ArrayList<JCAssign> args = new ArrayList<>();
       args.add( make.Assign( make.Ident( names.fromString( "name" ) ), make.Literal( field.name.toString() ) ) );
       args.add( make.Assign( make.Ident( names.fromString( "flags" ) ), make.Literal( field.getModifiers().flags ) ) );
-      // add args for var, get, and set
-      field.getModifiers().getAnnotations().stream().filter(
-        e -> var.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno ->
-        args.add( make.Assign( make.Ident( names.fromString( "var" ) ), anno ) ) );
-      field.getModifiers().getAnnotations().stream().filter(
-        e -> val.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno ->
-        args.add( make.Assign( make.Ident( names.fromString( "val" ) ), anno ) ) );
-      field.getModifiers().getAnnotations().stream().filter(
-        e -> get.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno ->
-        args.add( make.Assign( make.Ident( names.fromString( "get" ) ), anno ) ) );
-      field.getModifiers().getAnnotations().stream().filter(
-        e -> set.class.getSimpleName().equals( e.annotationType.toString() ) )
-        .findFirst().ifPresent( anno ->
-        args.add( make.Assign( make.Ident( names.fromString( "set" ) ), anno ) ) );
+      maybeAddAnnotation( field, args, var.class );
+      maybeAddAnnotation( field, args, val.class );
+      maybeAddAnnotation( field, args, get.class );
+      maybeAddAnnotation( field, args, set.class );
+      maybeAddAnnotation( field, args, Abstract.class );
+      maybeAddAnnotation( field, args, Final.class );
       JCExpression propgenType = memberAccess( make, javacElems, propgen.class.getName() );
       return make.Annotation( propgenType, List.from( args ) );
+    }
+
+    private void maybeAddAnnotation( JCVariableDecl field, ArrayList<JCAssign> args, Class<? extends Annotation> cls )
+    {
+      JavacPlugin javacPlugin = JavacPlugin.instance();
+      TreeMaker make = javacPlugin.getTreeMaker();
+      Names names = Names.instance( javacPlugin.getContext() );
+
+      for( JCAnnotation anno: field.getModifiers().getAnnotations() )
+      {
+        if( cls.getSimpleName().equals( anno.annotationType.toString() ) ||
+            cls.getTypeName().equals( anno.annotationType.toString() ) )
+        {
+          args.add( make.Assign( make.Ident( names.fromString( cls.getSimpleName() ) ), anno ) );
+        }
+      }
     }
 
     private JCTree.JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )
@@ -955,8 +1033,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
 
         List<JCExpression> args = get == null ? val == null ? var.args : val.args : get.args;
-        boolean getAbstract = isAbstract( classDecl, varDecl, args );
-        boolean getFinal = hasOption( args, PropOption.Final );
+        boolean getAbstract = isAbstract( classDecl, varDecl ) || hasOption( args, PropOption.Abstract );
+        boolean getFinal = getAnnotation( varDecl, Final.class ) != null || hasOption( args, PropOption.Final );
         PropOption getAccess = PropertyProcessor.this.getAccess( classDecl, args );
 
         if( getAbstract != Modifier.isAbstract( (int)getMethod.flags() ) )
@@ -966,12 +1044,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             reportError( varDecl, MSG_PROPERTY_METHOD_CONFLICT.get(
                 varDecl.sym.flatName(), getMethod.flatName(), "Abstract" ) );
           }
-        }
-
-        if( getFinal && isInterface( classDecl ) )
-        {
-          reportError( varDecl, MSG_FINAL_NOT_ALLOWED_IN_INTERFACE.get() );
-          finalErrorHandled[0] = get == null;
         }
 
         if( getFinal != Modifier.isFinal( (int)getMethod.flags() ) )
@@ -1021,23 +1093,20 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         {
           // check that the method and property are both static/non-static, otherwise issue compiler error
           setMethod = checkStatic( classDecl, varDecl, varDecl.sym, setMethod );
-          if( setMethod == null )
-          {
-            return;
-          }
         }
 
-        boolean setAbstract = isAbstract( classDecl, varDecl, set == null ? var.args : set.args );
-        boolean setFinal = hasOption( set == null ? var.args : set.args, PropOption.Final );
-        PropOption setAccess = PropertyProcessor.this.getAccess( classDecl, set == null ? var.args : set.args );
+        if( setMethod == null )
+        {
+          return;
+        }
+
+        List<JCExpression> args = set == null ? var.args : set.args;
+        boolean setAbstract = isAbstract( classDecl, varDecl ) || hasOption( args, PropOption.Abstract );
+        boolean setFinal = getAnnotation( varDecl, Final.class ) != null || hasOption( args, PropOption.Final );
+        PropOption setAccess = PropertyProcessor.this.getAccess( classDecl, args );
         boolean setGenerated = getAnnotation( varDecl, propgen.class ) != null;
 
-        if( setMethod == null && !isFinal( classDecl, varDecl ) )
-        {
-          throw new IllegalStateException( "Setter should exist, if not user-defined, it should have been generated" );
-        }
-
-        if( setMethod != null && setAbstract != Modifier.isAbstract( (int)setMethod.flags() ) )
+        if( setAbstract != Modifier.isAbstract( (int)setMethod.flags() ) )
         {
           if( classDecl.getKind() != Tree.Kind.INTERFACE )
           {
@@ -1048,10 +1117,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         if( !finalErrorHanlded && setFinal && isInterface( classDecl ) )
         {
-          reportError( varDecl, MSG_FINAL_NOT_ALLOWED_IN_INTERFACE.get() );
+          reportError( varDecl, MSG_FINAL_NOT_ALLOWED_ON_ABSTRACT.get() );
         }
 
-        if( setMethod != null && setFinal != Modifier.isFinal( (int)setMethod.flags() ) )
+        if( setFinal != Modifier.isFinal( (int)setMethod.flags() ) )
         {
           if( setGenerated )
           {
@@ -1066,7 +1135,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           ? getAccess( classDecl, (int)varDecl.getModifiers().flags )
           : setAccess.getModifier();
 
-        if( setMethod != null && (setMethod.flags() & accessModifier) != accessModifier )
+        if( (setMethod.flags() & accessModifier) != accessModifier )
         {
           if( setGenerated )
           {
@@ -1467,17 +1536,21 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhsSelected.toString().equals( "this" ) &&
         lhsSym.owner == _backingSymbols.peek().fst.sym )
       {
-        // - no setter, allow the read-only (final or non-final) property to initialize in its constructor
+        // - no setter, allow the read-only property to initialize in its constructor
         // - backing symbol required, add to set of backing symbols
         _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
       }
-      else if( !Modifier.isFinal( (int)lhsSym.flags_field ) &&
-        _backingSymbols.peek().fst.sym.outermostClass() == lhsSym.outermostClass() )
-      {
-        // no setter, allow the read-only (non-final) prop field to be directly assigned inside the class file
-        // - backing symbol required, add to set of backing symbols
-        _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
-      }
+// @val is same as final field, but lets us apply 'final' to getter/setter methods as not overridable.
+// Essentially, ALL the modifiers on a property apply to the accessors.
+// So, it's not just saying "there's only a getter", it also means the class can't update the backing field
+// in places other than the initializer and the constructor. If you want to make it behave like "just a getter"
+// on a private field, do this:  @val @set(Private) String name;
+//      else if( _backingSymbols.peek().fst.sym.outermostClass() == lhsSym.outermostClass() )
+//      {
+//        // - no setter, allow the read-only prop field to be directly assigned inside the class file
+//        // - backing symbol required, add to set of backing symbols
+//        _backingSymbols.peek().snd.add( (VarSymbol)lhsSym );
+//      }
       else
       {
         reportError( tree, MSG_CANNOT_ASSIGN_READONLY_PROPERTY.get( lhsSym.flatName() ) );
@@ -1836,19 +1909,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     return ManAttr.getMethodSymbol( types, type, field.type, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
   }
 
-  private boolean isAbstract( JCClassDecl classDecl, JCVariableDecl propField, List<JCExpression> args )
+  private boolean isAbstract( JCClassDecl classDecl, JCVariableDecl propField )
   {
-    // abstract class can have abstract methods
-    if( isInterface( classDecl ) && !isStatic( propField ) && !isFinal( classDecl, propField ) )
+    if( isInterface( classDecl ) && !isStatic( propField ) && propField.init == null )
     {
-      // generated methods are always abstract in interfaces
+      // non-static, non-default method is abstract in interface
       return true;
     }
     else
     {
       // abstract class can have abstract methods
-      return Modifier.isAbstract( (int)classDecl.getModifiers().flags ) &&
-        hasOption( args, PropOption.Abstract );
+      return getAnnotation( propField, Abstract.class ) != null;
     }
   }
 
@@ -1889,11 +1960,20 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     return e.toString().contains( option.name() );
   }
 
-  private JCAnnotation getAnnotation( JCVariableDecl tree, Class anno )
+  private JCAnnotation getAnnotation( JCVariableDecl field, Class<? extends Annotation> cls )
   {
-    return tree.getModifiers().getAnnotations().stream()
-      .filter( e -> anno.getSimpleName().equals( e.annotationType.toString() ) )
-      .findFirst().orElse( null );
+    for( JCAnnotation jcAnno: field.getModifiers().getAnnotations() )
+    {
+      if( cls.getSimpleName().equals( jcAnno.annotationType.toString() ) )
+      {
+        return jcAnno;
+      }
+      else if( cls.getTypeName().equals( jcAnno.annotationType.toString() ) )
+      {
+        return jcAnno;
+      }
+    }
+    return null;
   }
 
   public boolean isPropertyField( Symbol sym )
@@ -1916,7 +1996,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   public boolean isWritableProperty( Symbol sym )
   {
     return sym != null &&
-      !Modifier.isFinal( (int)sym.flags_field ) &&
       (getAnnotationMirror( sym, var.class ) != null ||
        getAnnotationMirror( sym, set.class ) != null);
   }
@@ -1925,15 +2004,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   {
     long flags = propField.getModifiers().flags;
     return (flags & STATIC) != 0;
-  }
-
-  private boolean isFinal( JCClassDecl classDecl, JCVariableDecl propField )
-  {
-    boolean isInterface = isInterface( classDecl );
-    long flags = propField.getModifiers().flags;
-    return isInterface
-      ? (flags & FINAL) != 0 || ((flags & STATIC) != 0 && (propField.init != null))
-      : (flags & FINAL) != 0;
   }
 
   private long getFlags( Attribute.Compound anno )

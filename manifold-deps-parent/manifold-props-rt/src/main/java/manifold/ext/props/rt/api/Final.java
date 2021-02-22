@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.ext.props;
+package manifold.ext.props.rt.api;
 
-import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.var;
-
-import java.util.List;
-
-import static manifold.ext.props.rt.api.PropOption.Abstract;
-
-public abstract class BaseGen<T, R>
+/**
+ * For internal use only. Use 'final' modifier directly on properties instead of this.
+ */
+public @interface Final
 {
-  @var(Abstract) List<T> names;
-  @var(Abstract) R result;
-  @var abstract String abstractProp;
-
-  final @var String finalProp;
-
-  public void asdf() {}
 }

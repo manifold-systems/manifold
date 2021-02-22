@@ -40,4 +40,6 @@ public @interface propgen
   val[] val() default {};
   get[] get() default {};
   set[] set() default {};
+  Abstract[] Abstract() default {};
+  Final[] Final() default {};
 }

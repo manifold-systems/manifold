@@ -16,13 +16,12 @@
 
 package manifold.ext.props.example;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.val;
-import manifold.ext.props.rt.api.var;
-import manifold.ext.props.rt.api.set;
+import manifold.ext.props.rt.api.*;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static manifold.ext.props.rt.api.PropOption.Private;
 
 /**
  * FromSourceFile, as opposed to FromClassFile --
@@ -31,8 +30,7 @@ import java.util.Map;
 public class FromSourceFile
 {
   @var static String staticReadwriteBackingProp = "staticReadwriteBackingProp";
-  @var static final String staticFinalBackingProp = "staticFinalBackingProp";
-  @val static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
+  @var @set(Private) static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
 
   public static void updateStaticReadonlyBackingProp()
   {

@@ -16,19 +16,19 @@
 
 package manifold.ext.props.middle;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.val;
-import manifold.ext.props.rt.api.var;
-import manifold.ext.props.rt.api.set;
+import manifold.ext.props.rt.api.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static manifold.ext.props.rt.api.PropOption.Private;
+
 public class FromClassFile
 {
   @var static String staticReadwriteBackingProp = "staticReadwriteBackingProp";
-  @val static final String staticFinalBackingProp = "staticFinalBackingProp";
-  @val static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
+
+  // externally read-only property
+  @var @set(Private) static String staticReadonlyBackingProp = "staticReadonlyBackingProp";
 
   public static void updateStaticReadonlyBackingProp()
   {
@@ -56,7 +56,11 @@ public class FromClassFile
   @val String readonlyBackingProp = "readonlyBackingProp";
   @set String writeonlyBackingProp;
 
-  @val final String finalBackingProp = "finalBackingProp";
+  @var final String finalBackingProp = "finalBackingProp";
+
+  @var final String finalNonBackingProp;
+  public final String getFinalNonBackingProp() {return "finalNonBackingProp";}
+  public final void setFinalNonBackingProp(String value) {throw new RuntimeException("finalNonBackingProp");}
 
   private Map<String, Integer> _map = new HashMap<>();
   @var int nonbacking;

@@ -20,14 +20,13 @@ import manifold.ext.props.rt.api.var;
 
 public interface IFromClassFile
 {
-//  @prop String staticFinalBackingProp = "hi";
-
-// JVM prohibits private static fields in interfaces,
+// interfaces prohibit writable static property; cannot have initializer
 //     java.lang.ClassFormatError: Illegal field modifiers in class manifold/ext/props/middle/IFromClassFile: 0xA
 //  can't do this:
-//  @prop static String staticNonFinalBackingProp = "";
+//  @var static String staticNonFinalBackingProp = "";
 
-  @var String defaultGetter = "hi";
+// writable abstract property cannot have initializer
+//  @var String defaultGetter = "hi";
   
   @var static int staticNonbackingProp;
 

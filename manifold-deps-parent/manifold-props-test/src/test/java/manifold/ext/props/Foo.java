@@ -22,7 +22,7 @@ import manifold.ext.props.rt.api.set;
 public class Foo
 {
   @var String thing;
-  @var final double rate = 3.14;
+  @var double rate = 3.14;
   @var private int privateProp = 2;
   @set String foo = "hi";
 
