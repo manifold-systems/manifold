@@ -427,6 +427,16 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
 
+        if( (val != null || (get != null && set == null && var == null)) && !isAbstract && !isInterface( classDecl ) )
+        {
+          List<JCExpression> args = get == null ? val.args : get.args;
+          if( !hasOption( args, PropOption.Abstract ) )
+          {
+            // add `final` for @val with backing field; this flag is removed if there is no backing field
+            tree.getModifiers().flags |= FINAL;
+          }
+        }
+
         if( isAbstract && !isInterface( classDecl ) && !Modifier.isAbstract( (int)classDecl.getModifiers().flags ) )
         {
           reportError( tree, MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS.get() );
@@ -484,6 +494,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             if( generatedGetter == null )
             {
               shouldMakeProperty = true;
+
+              // remove `final` for user-defined getter (todo: keep final if still a backing field)
+              tree.getModifiers().flags &= ~FINAL;
             }
           }
         }
@@ -1025,14 +1038,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         throw new IllegalStateException();
       }
 
-      boolean[] finalErrorHanlded = {false};
-
-      verifyGetter( varDecl, var, val, get, finalErrorHanlded );
-      verifySetter( varDecl, var, set, finalErrorHanlded[0] );
+      verifyGetter( varDecl, var, val, get );
+      verifySetter( varDecl, var, set );
     }
 
-    private void verifyGetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation val, JCAnnotation get,
-                               boolean[] finalErrorHandled )
+    private void verifyGetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation val, JCAnnotation get )
     {
       MethodSymbol getMethod = resolveGetMethod( varDecl.sym.owner.type, varDecl.sym );
       if( var != null || val != null || get != null )
@@ -1094,7 +1104,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private void verifySetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation set, boolean finalErrorHanlded )
+    private void verifySetter( JCVariableDecl varDecl, JCAnnotation var, JCAnnotation set )
     {
       JCClassDecl classDecl = _classes.peek();
 
@@ -1132,7 +1142,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
 
-        if( !finalErrorHanlded && setFinal && isInterface( classDecl ) )
+        if( setFinal && isInterface( classDecl ) )
         {
           reportError( varDecl, MSG_FINAL_NOT_ALLOWED_ON_ABSTRACT.get() );
         }

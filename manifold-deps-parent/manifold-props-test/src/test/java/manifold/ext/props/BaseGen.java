@@ -16,7 +16,7 @@
 
 package manifold.ext.props;
 
-import manifold.ext.props.rt.api.PropOption;
+import manifold.ext.props.rt.api.val;
 import manifold.ext.props.rt.api.var;
 
 import java.util.List;
@@ -27,9 +27,11 @@ public abstract class BaseGen<T, R>
 {
   @var(Abstract) List<T> names;
   @var(Abstract) R result;
-  @var abstract String abstractProp;
+  abstract @var String abstractProp;
 
   final @var String finalProp;
+
+//  @val String valProp; // error for no init
 
   public void asdf() {}
 }

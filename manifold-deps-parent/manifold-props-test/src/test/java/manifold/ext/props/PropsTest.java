@@ -83,8 +83,7 @@ public class PropsTest extends TestCase
     @override @var List<String> colors;
     @var List<String> things;
     @var(Final) String whatever;
-    @val final int finalInt;
-    @val int readonlyInt;
+    @val int finalInt;
 
     public FooImpl( String name, List<String> colors )
     {
@@ -92,8 +91,6 @@ public class PropsTest extends TestCase
       this.colors = colors;
 
       this.finalInt = 8; // init final var
-      this.readonlyInt = 9; // init read-only var
-      readonlyInt = 10; // can init read-only more than once in constructor
     }
 
     public final String getWhatever()
