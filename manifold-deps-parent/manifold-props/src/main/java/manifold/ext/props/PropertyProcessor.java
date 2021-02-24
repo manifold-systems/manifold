@@ -28,6 +28,7 @@ import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -93,7 +94,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   @Override
   public void tailorCompiler()
   {
-    replaceClassReaderCompleter();
+    replaceThisCompleter();
   }
 
   /**
@@ -104,18 +105,19 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
    * <p/>
    * Note the .class file remains untouched; the changes made here are only to the compiler's ClassSymbol.
    */
-  private void replaceClassReaderCompleter()
+  private void replaceThisCompleter()
   {
+    Context context = _javacTask.getContext();
     ReflectUtil.LiveFieldRef thisCompleterField;
     if( JreUtil.isJava8() )
     {
-      ClassReader classReader = ClassReader.instance( _javacTask.getContext() );
+      ClassReader classReader = ClassReader.instance( context );
       thisCompleterField = ReflectUtil.field( classReader, "thisCompleter" );
     }
     else
     {
       Object classFinder = ReflectUtil.method( "com.sun.tools.javac.code.ClassFinder", "instance", Context.class )
-        .invokeStatic( _javacTask.getContext() );
+        .invokeStatic( context );
       thisCompleterField = ReflectUtil.field( classFinder, "thisCompleter" );
     }
 
@@ -124,6 +126,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       Symbol.Completer myCompleter = new MyCompleter( thisCompleter );
       thisCompleterField.set( myCompleter );
+
+      if( JreUtil.isJava9orLater() )
+      {
+        ReflectUtil.field( Symtab.instance( context ), "initialCompleter" ).set( myCompleter );
+        ReflectUtil.field( JavacProcessingEnvironment.instance( context ), "initialCompleter" ).set( myCompleter );
+      }
     }
   }
 
@@ -146,8 +154,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         if( !restorePropFields( (ClassSymbol)sym, names ) )
         {
           // It may be that the class hasn't finished adding annotations, try again after annotations complete
-          Annotate.instance( _javacTask.getContext() )
-            .normal( () -> restorePropFields( (ClassSymbol)sym, names ) );
+
+          Annotate annotate = Annotate.instance( _javacTask.getContext() );
+          if( JreUtil.isJava8() )
+          {
+            annotate.normal( () -> restorePropFields( (ClassSymbol)sym, names ) );
+          }
+          else
+          {
+            ReflectUtil.method( annotate, "normal", Runnable.class )
+              .invoke( (Runnable) () -> restorePropFields( (ClassSymbol)sym, names ) );
+          }
         }
       }
     }

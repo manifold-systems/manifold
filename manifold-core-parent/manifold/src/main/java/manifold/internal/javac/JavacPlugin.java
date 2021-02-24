@@ -409,38 +409,35 @@ public class JavacPlugin implements Plugin, TaskListener
 
     ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
 
+    if( !JreUtil.isJava8() )
+    {
+      //
+      // Java 9+ specific alterations
+      //
+
+      Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
+      if( module == null )
+      {
+        return;
+      }
+      Set<Symbol> modules = _seenModules.computeIfAbsent( getContext(), k -> new LinkedHashSet<>() );
+      if( modules.contains( module ) )
+      {
+        return;
+      }
+
+      modules.add( module );
+
+      NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
+
+      if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
+      {
+        // Override javac's ClassFinder
+        ReflectUtil.method( "manifold.internal.javac.ManClassFinder_9", "instance", Context.class )
+          .invokeStatic( getContext() );
+      }
+    }
     notifyCompilerComponents();
-
-    if( JreUtil.isJava8() )
-    {
-      return;
-    }
-
-    //
-    // Java 9 specific alterations
-    //
-
-    Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
-    if( module == null )
-    {
-      return;
-    }
-    Set<Symbol> modules = _seenModules.computeIfAbsent( getContext(), k -> new LinkedHashSet<>() );
-    if( modules.contains( module ) )
-    {
-      return;
-    }
-
-    modules.add( module );
-
-    NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
-
-    if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
-    {
-      // Override javac's ClassFinder
-      ReflectUtil.method( "manifold.internal.javac.ManClassFinder_9", "instance", Context.class )
-        .invokeStatic( getContext() );
-    }
   }
 
   private void notifyCompilerComponents()
