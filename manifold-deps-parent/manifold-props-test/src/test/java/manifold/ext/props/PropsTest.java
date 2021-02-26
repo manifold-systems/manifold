@@ -17,10 +17,7 @@
 package manifold.ext.props;
 
 import junit.framework.TestCase;
-import manifold.ext.props.rt.api.PropOption;
-import manifold.ext.props.rt.api.override;
-import manifold.ext.props.rt.api.val;
-import manifold.ext.props.rt.api.var;
+import manifold.ext.props.rt.api.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -57,7 +54,7 @@ public class PropsTest extends TestCase
     assertEquals( Arrays.asList( "red", "blue", "green" ), foo.colors );
   }
 
-  class NamedInner implements INamed
+  static class NamedInner implements INamed
   {
     @override @var String name;
 
@@ -78,19 +75,21 @@ public class PropsTest extends TestCase
     @val String name = "hi";  // generates a 'default' getter returning "hi"
     @var List<String> colors;
   }
-  class FooImpl implements IFoo {
+  static class FooImpl implements IFoo {
     @override @var(Final) String name;
     @override @var List<String> colors;
     @var List<String> things;
     @var(Final) String whatever;
-    @val int finalInt;
+    @val int readonlyInt;
+//    @set String foo;
 
     public FooImpl( String name, List<String> colors )
     {
       this.name = name;
       this.colors = colors;
 
-      this.finalInt = 8; // init final var
+      this.readonlyInt = 8; // init final var
+      this.getReadonlyInt();
     }
 
     public final String getWhatever()

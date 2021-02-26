@@ -495,7 +495,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             {
               shouldMakeProperty = true;
 
-              // remove `final` for user-defined getter (todo: keep final if still a backing field)
+              // remove `final` for user-defined getter (todo: keep final if user-defined getter refs backing field)
               tree.getModifiers().flags &= ~FINAL;
             }
           }
@@ -602,7 +602,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
       JCMethodDecl getter = (JCMethodDecl)make.MethodDef(
         access, name, resType, List.nil(), List.nil(), List.nil(), block, null ).setPos( propField.pos );
-      JCMethodDecl existingGetter = findExistsingAccessor( propField, classDecl, getter );
+      JCMethodDecl existingGetter = findExistingAccessor( propField, classDecl, getter );
       if( existingGetter != null )
       {
         addAnnotations( existingGetter, List.of( propgenAnno ) );
@@ -651,7 +651,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCMethodDecl setter = (JCMethodDecl)make.MethodDef(
         access, name, resType, List.nil(), List.of( param ), List.nil(), block, null )
         .setPos( propField.pos );
-      JCMethodDecl existingSetter = findExistsingAccessor( propField, classDecl, setter );
+      JCMethodDecl existingSetter = findExistingAccessor( propField, classDecl, setter );
       if( existingSetter != null )
       {
         addAnnotations( existingSetter, List.of( propgenAnno ) );
@@ -671,7 +671,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return setter;
     }
 
-    private JCMethodDecl findExistsingAccessor( JCVariableDecl propField, JCClassDecl classDecl, JCMethodDecl accessor )
+    private JCMethodDecl findExistingAccessor( JCVariableDecl propField, JCClassDecl classDecl, JCMethodDecl accessor )
     {
       outer:
       for( JCTree def: classDecl.defs )

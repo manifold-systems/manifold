@@ -17,7 +17,11 @@
 package manifold.ext.props.rt.api;
 
 /**
- * For internal use only. Use 'abstract' modifier directly on properties instead of this.
+ * <h2>For internal use only.</h2>
+ * <p/>
+ * Use {@code abstract} modifier directly on properties instead of this to indicate corresponding accessor <i>methods</i>
+ * are abstract. Manifold rewrites the property fields's modifiers during compilation and replace {@code abstract} with
+ * {@code @Abstract}.
  */
 public @interface Abstract
 {

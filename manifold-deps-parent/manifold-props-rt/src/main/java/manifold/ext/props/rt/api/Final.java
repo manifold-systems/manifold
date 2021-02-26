@@ -17,7 +17,11 @@
 package manifold.ext.props.rt.api;
 
 /**
- * For internal use only. Use 'final' modifier directly on properties instead of this.
+ * <h2>For internal use only.</h2>
+ * <p/>
+ * Use {@code final} modifier directly on properties instead of this to indicate corresponding accessor <i>methods</i>
+ * are final. Manifold rewrites the property fields's modifiers during compilation and replace {@code final} with
+ * {@code @Final}.
  */
 public @interface Final
 {

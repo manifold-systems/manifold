@@ -120,25 +120,6 @@ public class FromSourceFileTest extends TestCase
     }
   }
 
-  public void testFinalBacking() throws Throwable
-  {
-    FromSourceFile f = new FromSourceFile();
-    assertEquals( "finalBackingProp", f.finalBackingProp );
-
-    Field field = FromSourceFile.class.getDeclaredField( "finalBackingProp" );
-    assertNotNull( field );
-    assertTrue( Modifier.isPrivate( field.getModifiers() ) );
-
-    try
-    {
-      FromSourceFile.class.getMethod( "setFinalBackingProp", String.class );
-      fail( "method should not exist" );
-    }
-    catch( NoSuchMethodException ignore )
-    {
-    }
-  }
-
   public void testStaticNonBacking() throws Throwable
   {
     // field should not exist

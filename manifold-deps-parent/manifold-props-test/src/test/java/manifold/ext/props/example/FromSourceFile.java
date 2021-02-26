@@ -38,11 +38,8 @@ public class FromSourceFile
     staticReadonlyBackingProp = "updated";
   }
 
-  static private Map<String, Integer> _staticMap = new HashMap<>();
-  @var static int staticNonbackingProp;
-  {
-    _staticMap.put( "staticNonbackingProp", 8 );
-  }
+  private static final Map<String, Integer> _staticMap = new HashMap<>();
+  @var static int staticNonbackingProp; {_staticMap.put( "staticNonbackingProp", 8 );}
   public static int getStaticNonbackingProp()
   {
     return _staticMap.get( "staticNonbackingProp" );
@@ -52,20 +49,14 @@ public class FromSourceFile
     _staticMap.put( "staticNonbackingProp", value );
   }
 
-  private Map<String, Integer> _map = new HashMap<>();
 
   @var String readwriteBackingProp = "readwriteBackingProp";
-  @get @set public String readwriteBackingProp2 = "readwriteBackingProp2";
+  @get @set String readwriteBackingProp2 = "readwriteBackingProp2";
   @val String readonlyBackingProp = "readonlyBackingProp";
-  @set public String writeonlyBackingProp;
+  @set String writeonlyBackingProp;
 
-  @val final String finalBackingProp = "finalBackingProp";
-
-  @var int nonbacking;
-  {
-    _map.put( "nonbacking", 8 );
-  }
-
+  private final Map<String, Integer> _map = new HashMap<>();
+  @var int nonbacking; { _map.put( "nonbacking", 8 ); }
   public int getNonbacking()
   {
     return _map.get( "nonbacking" );

@@ -31,7 +31,7 @@ public abstract class BaseGen<T, R>
 
   final @var String finalProp;
 
-//  @val String valProp; // error for no init
+//todo:  @val String valProp; // error for no init
 
   public void asdf() {}
 }
