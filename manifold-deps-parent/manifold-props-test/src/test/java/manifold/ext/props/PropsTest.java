@@ -22,8 +22,6 @@ import manifold.ext.props.rt.api.*;
 import java.util.Arrays;
 import java.util.List;
 
-import static manifold.ext.props.rt.api.PropOption.Final;
-
 public class PropsTest extends TestCase
 {
   public void testProps()
@@ -76,10 +74,10 @@ public class PropsTest extends TestCase
     @var List<String> colors;
   }
   static class FooImpl implements IFoo {
-    @override @var(Final) String name;
+    final @override @var String name;
     @override @var List<String> colors;
     @var List<String> things;
-    @var(Final) String whatever;
+    final @var String whatever;
     @val int readonlyInt;
 //    @set String foo;
 

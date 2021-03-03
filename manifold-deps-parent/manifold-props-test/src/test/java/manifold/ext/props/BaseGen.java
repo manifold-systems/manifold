@@ -21,12 +21,10 @@ import manifold.ext.props.rt.api.var;
 
 import java.util.List;
 
-import static manifold.ext.props.rt.api.PropOption.Abstract;
-
 public abstract class BaseGen<T, R>
 {
-  @var(Abstract) List<T> names;
-  @var(Abstract) R result;
+  abstract @var List<T> names;
+  abstract @var R result;
   abstract @var String abstractProp;
 
   final @var String finalProp;

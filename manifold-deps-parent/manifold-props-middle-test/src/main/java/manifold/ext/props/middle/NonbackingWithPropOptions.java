@@ -21,9 +21,9 @@ import manifold.ext.props.rt.api.var;
 
 public class NonbackingWithPropOptions
 {
-  @var( PropOption.Final ) public String name;
+  final @var public String name;
 
-  @var( PropOption.Final ) public String nonbackingFinal;
+  final @var public String nonbackingFinal;
   final public String getNonbackingFinal()
   {
     return "hi";

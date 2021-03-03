@@ -16,29 +16,24 @@
 
 package manifold.ext.props.rt.api;
 
-import manifold.rt.api.anno.any;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Designates a field declaration as a read-only property. Adding @{@link set} along with @{@link get} makes the
- * property read-write; the same effect as @{@link var}. Note {@link val} can also be used to designate a read-only
- * property.
+ * <h2>For internal use only</h2>.
  * <p/>
- * Note, it is recommended to use {@link get} and {@link set} exclusively as a means to override modifiers and
- * annotations on {@link var}, <i>or</i> as an alternative to using {@link var} and {@link val}.
- *
- * @see set
- * @see val
- * @see var
+ * Tags a property field as auto-generated during property inference.
  */
-@Target( {ElementType.FIELD} )
+@Target( ElementType.FIELD )
 @Retention( RetentionPolicy.CLASS )
-public @interface get
+public @interface auto
 {
-  PropOption[] value() default {};
-  any[] annos() default {};
+  /**
+   * Applies to an existing field having the same name as an inferred property. Stores the declared
+   * access privilege (public, protected, package, or private) of the original field. The default
+   * value of -1 indicates the field did not exist prior to the inference.
+   */
+  int declaredAccess() default -1;
 }

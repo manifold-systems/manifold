@@ -14,13 +14,33 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.middle.auto;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
-
-public abstract class AbstractBaseClass
+public class RightTriangle extends Triangle
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  public RightTriangle( double a, double b )
+  {
+    super( a, b, Math.sqrt( a*a + b*b ) );
+  }
+
+  public double getA()
+  {
+    return getSides()[0];
+  }
+
+  public double getB()
+  {
+    return getSides()[1];
+  }
+
+  public double getC()
+  {
+    return getSides()[2];
+  }
+
+  @Override
+  public double getArea()
+  {
+    return (getA() * getB())/2;
+  }
 }

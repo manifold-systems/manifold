@@ -14,13 +14,38 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.middle.auto.gen;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
+import java.util.Collections;
+import java.util.List;
 
-public abstract class AbstractBaseClass
+public abstract class GenericBase<T extends CharSequence>
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  private T tee;
+
+  public GenericBase( T tee )
+  {
+    this.tee = tee;
+  }
+
+  public T getTee()
+  {
+    return tee;
+  }
+  public void setTee(T tee )
+  {
+    this.tee = tee;
+  }
+
+  public List<T> getList()
+  {
+    return Collections.singletonList( tee );
+  }
+  public void setList( List<T> list )
+  {
+    tee = list.get( 0 );
+  }
+
+  abstract protected GenericBase<T> getMee();
+  abstract protected void setMee( GenericBase<T> mee );
 }

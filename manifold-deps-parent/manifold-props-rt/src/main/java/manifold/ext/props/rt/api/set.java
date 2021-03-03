@@ -24,13 +24,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Makes the property writable so it can be used in assignments. Specifying {@code @set} without a {@code @get}
- * indicates the is <i>write-only</i>, thus you must specify {@code @get} for the field to be readable, or use
- * {@code @prop}. Note, use of {@code @prop} is redundant when specifying {@code @set}.
+ * Designates a field declaration as a write-only property. Adding @{@link get} along with @{@link set} makes the
+ * property read-write; the same effect as @{@link var}.
+ * <p/>
+ * Note, it is recommended to use {@link get} and {@link set} exclusively as a means to override modifiers and
+ * annotations on {@link var}, <i>or</i> as an alternative to using {@link var} and {@link val}.
  *
- * @see var
- * @see val
  * @see get
+ * @see val
+ * @see var
  */
 @Target( {ElementType.FIELD} )
 @Retention( RetentionPolicy.CLASS )

@@ -14,13 +14,27 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.infer;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
+import manifold.ext.props.middle.auto.RightTriangle;
+import org.junit.Test;
 
-public abstract class AbstractBaseClass
+import static org.junit.Assert.assertEquals;
+
+public class ShapesTest
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  @Test
+  public void testShapes()
+  {
+    RightTriangle t = new RightTriangle( 3, 4 );
+
+    assertEquals( 3d, t.a, 0 );
+    assertEquals( 4d, t.b, 0 );
+    assertEquals( 5d, t.c, 0 );
+    assertEquals( 6d, t.area, 0 );
+    assertEquals( 5d, t.area(), 0 ); // tests conflicting field
+    assertEquals( 6d, t.getArea(), 0 );
+    t.color = "leopardskin";
+    assertEquals( "leopardskin", t.color );
+  }
 }

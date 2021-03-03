@@ -24,8 +24,30 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Declares a field as having a property getter method and no setter method, effectively a read-only property.
- *
+ * Designates a field declaration as a read-only property.
+ * <p/>
+ * <pre><code>
+ * {@literal @}val String name; // a public read-only property
+ * </code></pre>
+ * You use the property directly as declared:
+ * <p/>
+ * <pre><code>
+ * String theName = foo.name; // compiles as a call to foo.getName()
+ * </code></pre>
+ * When used in an interface the property is public and abstract, a public getter is generated. If the property is
+ * initialized, the getter is {@code default} and returns the initialized value.
+ * <p/>
+ * When used in a class the property is public by default, a private final backing field is generated having the same
+ * name, and a public getter is generated returning the field. The property must be initialized either in its
+ * declaration or in the constructor(s).
+ * <p/>
+ * A property can be declared with {@code static}. When used in a class, the same rules apply as non-static. Static
+ * interface properties, however, must always be calculated -- getter/setter methods must be provided.
+ * <p/>
+ * Note, the {@code final} and {@code abstract} modifiers can be used in a property declaration; they apply to the
+ * getter/setter accessor methods. Thus, if there are user-defined getter/setter methods corresponding with the
+ * property, they must reflect the modifiers from the property.
+ * <p/>
  * @see var
  * @see get
  * @see set
@@ -34,6 +56,5 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.CLASS )
 public @interface val
 {
-  PropOption[] value() default {};
   any[] annos() default {};
 }

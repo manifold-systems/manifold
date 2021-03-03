@@ -24,8 +24,37 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Designates a field declaration as a property.
- *
+ * Designates a field declaration as a read-write property.
+ * <p/>
+ * <pre><code>
+ * {@literal @}var String name; // a public read-write property
+ * </code></pre>
+ * You use the property directly as declared:
+ * <p/>
+ * <pre><code>
+ * foo.name = "Scott"; // compiles as a call to foo.setName("Scott")
+ * String theName = foo.name; // compiles as a call to foo.getName()
+ * </code></pre>
+ * When used in an interface the property is public and abstract, public getter/setter method are generated.
+ * <p/>
+ * When used in a class the property is public by default, a private final backing field is generated having the same
+ * name, a public getter is generated returning the field and a setter is generated assigning the parameter value to
+ * the field.
+ * <p/>
+ * A property can be declared with {@code static}. When used in a class, the same rules apply as non-static. Static
+ * interface properties, however, must always be calculated -- getter/setter methods must be provided.
+ * <p/>
+ * Note, the {@code final} and {@code abstract} modifiers can be used in a property declaration; they apply to the
+ * getter/setter accessor methods. Thus, if there are user-defined getter/setter methods corresponding with the
+ * property, they must reflect the modifiers from the property.
+ * <p/>
+ * You can use {@link get} and {@link set} along with {@link var} to override the modifiers declared on it:
+ * <p/>
+ * <pre><code>
+ * {@literal @}var @set(Protected) String name; // declares public read access and protected write access
+ * </code></pre>
+ * <p/>
+ * @see val
  * @see get
  * @see set
  */
@@ -33,7 +62,6 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.CLASS )
 public @interface var
 {
-  PropOption[] value() default {};
   any[] annos() default {};
   any[] param() default {};
 }

@@ -340,9 +340,9 @@ class GqlParentType
         .addParam( "map", Map.class.getSimpleName() )
         .addParam( "iface", new SrcType( "Class<${enclosingType.getSimpleName()}>" ) )
         .body( new SrcStatementBlock()
-          .addStatement( "DataBindings bindings = map instanceof DataBindings ? (DataBindings)map : new DataBindings(map);" )
           .addStatement( "return new ${enclosingType.getSimpleName()}() {" +
-              "public DataBindings getBindings() {return bindings;}" +
+              "private DataBindings _bindings = map instanceof DataBindings ? (DataBindings)map : new DataBindings(map);" +
+              "public DataBindings getBindings() {return _bindings;}" +
               "public int hashCode() {return getBindings().hashCode();}" +
               "public boolean equals(Object obj) {return obj instanceof Bindings " +
                 "? obj.equals(getBindings()) " +

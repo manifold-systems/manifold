@@ -20,21 +20,31 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 /**
- * Options used with {@link var}, {@link val}, {@link get}, {@link set}.
+ * Options used with {@link get}, {@link set}.
  */
 public enum PropOption
 {
   /**
-   * For use with {@link var}, {@link get}, {@link set}. If specified, the generated get/set methods will be abstract.
-   * Note only properties declared in interfaces and abstract classes can be {@code abstract}.
-   * If the corresponding get/set method is user-defined, it must be declared {@code abstract}.
+   * For use with {@link get}, {@link set} to override the non-use of {@code abstract} modifier on the {@code @var}
+   * property, or individually with {@link get} and {@link set}. If specified, the generated get/set method will be
+   * abstract. Note only properties declared in interfaces and abstract classes can be {@code abstract}. If the
+   * corresponding get/set method is user-defined, it must be declared {@code abstract}.
+   * <pre><code>
+   *    // only the setter method is abstract
+   *   {@literal @}var @set(Abstract) String name;
+   * </code></pre>
    */
   Abstract( Modifier.ABSTRACT ),
 
   /**
-   * For use with {@link var}, {@link get}, {@link set}. If specified, the generated get/set methods will be final.
-   * Note only properties declared in classes, as opposed to interfaces, can be {@code final}.
-   * If the corresponding get/set method is user-defined, it must be declared {@code final}.
+   * For use with {@link get}, {@link set} to override the non-use of {@code final} modifier on the {@code @var}
+   * property, or individually with {@link get} and {@link set}. If specified, the generated get/set method will be
+   * final. Note properties declared in interfaces cannot be {@code final}. If the corresponding get/set method is
+   * user-defined, it must be declared {@code final}.
+   * <pre><code>
+   *    // only the setter is final
+   *   {@literal @}var @set(Final) String name;
+   * </code></pre>
    */
   Final( Modifier.FINAL ),
 

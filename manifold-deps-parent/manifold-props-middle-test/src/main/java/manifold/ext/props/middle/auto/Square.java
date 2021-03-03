@@ -14,13 +14,24 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.middle.auto;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
-
-public abstract class AbstractBaseClass
+public class Square extends Rectangle
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  public Square( String name, double side )
+  {
+    super( name, side, side );
+  }
+
+  public double getLength()
+  {
+    return getSides()[0];
+  }
+
+  @Override
+  public double getArea()
+  {
+    double l = getLength();
+    return l * l;
+  }
 }

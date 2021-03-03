@@ -14,13 +14,31 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.middle.auto;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
-
-public abstract class AbstractBaseClass
+public class Rectangle extends Shape
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  public Rectangle( String name, double s1, double s2 )
+  {
+    super( name, s1, s2, s1, s2 );
+  }
+
+  public double getLength()
+  {
+    double[] sides = getSides();
+    return Math.max( sides[0], sides[1] );
+  }
+
+  public double getWidth()
+  {
+    double[] sides = getSides();
+    return Math.min( sides[0], sides[1] );
+  }
+
+  @Override
+  public double getArea()
+  {
+    double[] sides = getSides();
+    return sides[0] * sides[1];
+  }
 }

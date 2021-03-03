@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For internal use only.
+ * <h2>For internal use only.</h2>
  * <p/>
  * This annotation preserves declared state of a {@code @}{@link var} field on the property's corresponding accessor
  * method[s]. In the case of property that must have a backing field, the {@link #flags} store the field's access so it

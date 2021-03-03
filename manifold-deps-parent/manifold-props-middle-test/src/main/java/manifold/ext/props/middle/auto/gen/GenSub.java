@@ -14,13 +14,30 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle;
+package manifold.ext.props.middle.auto.gen;
 
-import manifold.ext.props.rt.api.get;
-import manifold.ext.props.rt.api.var;
-
-public abstract class AbstractBaseClass
+public class GenSub extends GenericBase<String>
 {
-  abstract @var String abstractProp;
-  abstract @get String abstractReadonly;
+  public GenSub( String tee )
+  {
+    super( tee );
+  }
+
+  @Override
+  public String getTee()
+  {
+    return super.getTee();
+  }
+
+  @Override
+  protected GenericBase<String> getMee()
+  {
+    return this;
+  }
+
+  @Override
+  protected void setMee( GenericBase<String> mee )
+  {
+    setTee( mee.getTee() );
+  }
 }
