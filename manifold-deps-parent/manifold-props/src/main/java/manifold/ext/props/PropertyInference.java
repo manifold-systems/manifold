@@ -329,7 +329,8 @@ class PropertyInference
       VarSymbol exField = (VarSymbol)existing[0];
       Types types = Types.instance( context() );
       if( types.isAssignable( exField.type, t ) &&
-        Modifier.isStatic( (int)exField.flags_field ) == Modifier.isStatic( flags ) && !exField.owner.isInterface() )
+        Modifier.isStatic( (int)exField.flags_field ) == Modifier.isStatic( flags ) && !exField.owner.isInterface() &&
+        (!Modifier.isPublic( (int)exField.flags_field ) || _pp.isPropertyField( exField )) /* existing public field must always be accessed directly (see keep PropertyProcess#keepRefToField() */ )
       {
         int weakest = weakest( _pp.getAccess( (int)exField.flags_field ), _pp.getAccess( flags ) );
 

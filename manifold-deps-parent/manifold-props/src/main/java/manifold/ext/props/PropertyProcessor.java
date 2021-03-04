@@ -1526,13 +1526,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         Env<AttrContext> env = new AttrContextEnv( ref, attrContext );
         env.toplevel = (JCCompilationUnit)_tp.getCompilationUnit();
         env.enclClass = classDecl;
-
-        if( !resolve.isAccessible( env, classDecl.type, accessorMethod ) )
-        {
-          reportError( ref, MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind, propSym.flatName(),
-            PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
-          return false;
-        }
+//todo: this doesn't really work all that well, for now rely on indirect errors from the accessors, maybe intercept those errors and rewrite them in terms of properties?
+//        if( !resolve.isAccessible( env, classDecl.type, accessorMethod ) )
+//        {
+//          reportError( ref, MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind, propSym.flatName(),
+//            PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
+//          return false;
+//        }
       }
       return true;
     }
