@@ -16,6 +16,7 @@
 
 package manifold.ext.props;
 
+import manifold.ext.props.rt.api.val;
 import manifold.ext.props.rt.api.var;
 import manifold.ext.props.rt.api.set;
 
@@ -25,6 +26,7 @@ public class Foo
   @var double rate = 3.14;
   @var private int privateProp = 2;
   @set String foo = "hi";
+  @val boolean isGood = true;
 
   public int usePrivateProp( int value )
   {

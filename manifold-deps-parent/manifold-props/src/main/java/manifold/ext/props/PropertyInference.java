@@ -447,6 +447,11 @@ class PropertyInference
         char first = derived.charAt( 0 );
         if( Character.isUpperCase( first ) || first == '$' )
         {
+          if( "is".equals( prefix ) && first != '$' )
+          {
+            // keep "is" in the name to prevent collisions where isBook():true and getBook():Book are both there
+            derived = prefix + derived;
+          }
           return new PropAttrs( prefix, ManStringUtil.uncapitalize( derived ), type, m );
         }
         else if( first == '_' )
@@ -458,6 +463,11 @@ class PropertyInference
           }
           if( sb.length() > 0 )
           {
+            if( "is".equals( prefix ) )
+            {
+              // keep "is" in the name to prevent collisions where is_book():true and get_book():Book are both there
+              sb = new StringBuilder( prefix + ManStringUtil.capitalize( sb.toString() ) );
+            }
             return new PropAttrs( prefix, sb.toString(), type, m );
           }
         }

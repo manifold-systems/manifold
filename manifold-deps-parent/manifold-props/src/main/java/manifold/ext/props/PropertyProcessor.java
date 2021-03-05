@@ -1975,17 +1975,35 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
   private String getGetterName( Symbol field, boolean isOk )
   {
-    Symtab syms = Symtab.instance( _context );
-    return (isOk && field.type == syms.booleanType
-      ? "is"
-      : "get") + ManStringUtil.capitalize( field.name.toString() );
+    String name = field.name.toString();
+    if( isOk && field.type == Symtab.instance( _context ).booleanType )
+    {
+      if( startsWithIs( name ) )
+      {
+        return name;
+      }
+      return "is" + ManStringUtil.capitalize( name );
+    }
+    return "get" + ManStringUtil.capitalize( name );
   }
 
   private String getGetterName( JCVariableDecl tree, @SuppressWarnings( "SameParameterValue" ) boolean isOk )
   {
-    return (isOk && tree.vartype.toString().equals( "boolean" )
-      ? "is"
-      : "get") + ManStringUtil.capitalize( tree.name.toString() );
+    String name = tree.name.toString();
+    if( isOk && tree.vartype.toString().equals( "boolean" ) )
+    {
+      if( startsWithIs( name ) )
+      {
+        return name;
+      }
+      return "is" + ManStringUtil.capitalize( name );
+    }
+    return "get" + ManStringUtil.capitalize( name );
+  }
+
+  private boolean startsWithIs( String name )
+  {
+    return name.length() > 2 && name.startsWith( "is" ) && Character.isUpperCase( name.charAt( 2 ) );
   }
 
   private String getSetterName( Name name )
