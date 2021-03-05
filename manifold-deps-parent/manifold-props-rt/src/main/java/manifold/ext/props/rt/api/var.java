@@ -62,6 +62,20 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.CLASS )
 public @interface var
 {
+  /**
+   * Access options to override the property field's declared access. Note, favor Java modifiers for properties over
+   * PropOption annotation arguments. As such, the only necessary option is PropOption.Package to override the default
+   * public nature of properties. Otherwise, you don't need to use this argument.
+   */
+  PropOption[] value() default {};
+
+  /**
+   * Use this argument to specify annotations to apply to the var's generated getter/setter methods.
+   */
   any[] annos() default {};
+
+  /**
+   * Use this argument to specify annotations to apply to the var's generated setter parameter.
+   */
   any[] param() default {};
 }

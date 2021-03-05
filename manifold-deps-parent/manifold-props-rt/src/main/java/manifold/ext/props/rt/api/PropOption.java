@@ -20,12 +20,20 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 
 /**
- * Options used with {@link get}, {@link set}.
+ * Options used with {@link val}, {@link var}, {@link get}, {@link set}.
+ * <p/>
+ * Note, usage with {@link val} and {@link var} should normally be limited to {@link #Package}. Other options
+ * pertain to {@link get} or {@link set} to override the declared modifiers on {@link var} or{@link val} e.g.,
+ * <p/>
+ * <pre><code>
+ *    // only the setter method is abstract
+ *   {@literal @}var @set(Abstract) String name;
+ * </code></pre>
  */
 public enum PropOption
 {
   /**
-   * For use with {@link get}, {@link set} to override the non-use of {@code abstract} modifier on the {@code @var}
+   * For use with {@link get}, {@link set} to override the non-use of {@code abstract} modifier on a {@code @var}
    * property, or individually with {@link get} and {@link set}. If specified, the generated get/set method will be
    * abstract. Note only properties declared in interfaces and abstract classes can be {@code abstract}. If the
    * corresponding get/set method is user-defined, it must be declared {@code abstract}.
@@ -37,7 +45,7 @@ public enum PropOption
   Abstract( Modifier.ABSTRACT ),
 
   /**
-   * For use with {@link get}, {@link set} to override the non-use of {@code final} modifier on the {@code @var}
+   * For use with {@link get}, {@link set} to override the non-use of {@code final} modifier on a {@code @var}
    * property, or individually with {@link get} and {@link set}. If specified, the generated get/set method will be
    * final. Note properties declared in interfaces cannot be {@code final}. If the corresponding get/set method is
    * user-defined, it must be declared {@code final}.
@@ -55,7 +63,7 @@ public enum PropOption
    */
   Private( Modifier.PRIVATE ),
   /**
-   * For use with {@link get}, {@link set} to override the property's declared accessibility.
+   * For use with {@link var}, {@link get}, {@link set} to override the property's declared accessibility.
    * If specified, the generated get and/or set methods will be <i>package-private</i>.
    * If the corresponding get/set method is user-defined, it must be declared {@code package-private}.
    */
@@ -73,9 +81,7 @@ public enum PropOption
    */
   Public( Modifier.PUBLIC );
 
-  public static final PropOption[] EMPTY_ARRAY = new PropOption[0];
-
-  private int _modifier;
+  private final int _modifier;
 
   PropOption( int modifier )
   {
@@ -83,7 +89,7 @@ public enum PropOption
   }
 
   /**
-   * @return The Java {@link Modifier} value corresponding with the option.
+   * @return The Java {@link Modifier} integral value corresponding with the option.
    */
   public int getModifier()
   {

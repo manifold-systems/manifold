@@ -33,7 +33,7 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.*;
-import manifold.api.type.ContributorKind;
+import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
 import manifold.ext.ExtensionManifold;
 import manifold.ext.ExtensionTransformer;
@@ -57,6 +57,7 @@ import java.util.function.Predicate;
 import static com.sun.tools.javac.code.TypeTag.NONE;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.props.PropIssueMsg.*;
+import static manifold.ext.props.Util.*;
 
 public class PropertyProcessor implements ICompilerComponent, TaskListener
 {
@@ -70,8 +71,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private PropertyInference _propInference;
   private Set<ClassSymbol> _inferLater;
   private TaskEvent _taskEvent;
-  private LocklessLazyVar<ExtensionTransformer> _extensionTransformer = LocklessLazyVar.make( () -> {
-    ExtensionManifold extensionManifold = (ExtensionManifold)JavacPlugin.instance().getHost().getSingleModule()
+  private final LocklessLazyVar<ExtensionTransformer> _extensionTransformer = LocklessLazyVar.make( () -> {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin == null )
+    {
+      // does not function at runtime
+      return null;
+    }
+    IManifoldHost host = javacPlugin.getHost();
+    ExtensionManifold extensionManifold = (ExtensionManifold)host.getSingleModule()
       .getTypeManifolds().stream()
       .filter( e -> e instanceof ExtensionManifold )
       .findFirst().orElse( null );
@@ -90,17 +98,18 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     _nonbackingMap = new HashMap<>();
     _inferLater = new HashSet<>();
 
+    if( JavacPlugin.instance() == null )
+    {
+      // does not function at runtime
+      return;
+    }
+
     javacTask.addTaskListener( this );
   }
 
   PropertyInference getPropInference()
   {
     return _propInference;
-  }
-
-  TypeProcessor getTypeProcessor()
-  {
-    return _tp;
   }
 
   BasicJavacTask getJavacTask()
@@ -117,7 +126,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   public void tailorCompiler()
   {
     _context = _javacTask.getContext();
-    _propInference = new PropertyInference( this );
+    _propInference = new PropertyInference(
+      field -> addToBackingFields( field ),
+      () -> getContext(),
+      () -> _tp.getCompilationUnit() );
     ClassReaderCompleter.replaceCompleter( this );
   }
 
@@ -136,8 +148,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        if( tree instanceof JCClassDecl &&
-          shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
+        if( tree instanceof JCClassDecl && ensureInitialized( e ) )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
           if( e.getKind() == TaskEvent.Kind.ENTER )
@@ -176,8 +187,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        if( tree instanceof JCClassDecl &&
-          shouldProcess( e.getCompilationUnit().getPackageName() + "." + ((JCClassDecl)tree).name, e ) )
+        if( tree instanceof JCClassDecl && ensureInitialized( e ) )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
           if( e.getKind() == TaskEvent.Kind.ENTER )
@@ -199,22 +209,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       _taskEvent = null;
     }
-  }
-
-  private boolean shouldProcess( String fqn, TaskEvent e )
-  {
-    if( e.getKind() == TaskEvent.Kind.ENTER )
-    {
-      // ensure JavacPlugin is initialized, particularly for Enter since the order of TaskListeners is evidently not
-      // maintained by JavaCompiler i.e., this TaskListener is added after JavacPlugin, but is notified earlier
-      JavacPlugin.instance().initialize( e );
-    }
-
-    return true;
-//    // don't process source that is projected from a supplemental type manifold (class extension)
-//    return JavacPlugin.instance().getHost().getSingleModule().findTypeManifoldsFor( fqn )
-//      .stream().map( ee -> ee.getContributorKind() )
-//      .noneMatch( k -> k == ContributorKind.Supplemental );
   }
 
   // Make getter/setter methods corresponding with @var, @get, @set fields
@@ -272,7 +266,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
 
         TreeMaker make = TreeMaker.instance( _context );
-        JavacElements javacElems = JavacPlugin.instance().getJavacElements();
+        JavacElements javacElems = JavacElements.instance( _context );
 
         boolean isAbstract = getAnnotation( tree, Abstract.class ) != null;
         boolean isFinal = getAnnotation( tree, Final.class ) != null;
@@ -674,10 +668,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
     private JCAnnotation makePropGenAnnotation( JCVariableDecl field )
     {
-      JavacPlugin javacPlugin = JavacPlugin.instance();
-      TreeMaker make = javacPlugin.getTreeMaker();
-      JavacElements javacElems = javacPlugin.getJavacElements();
-      Names names = Names.instance( javacPlugin.getContext() );
+      TreeMaker make = TreeMaker.instance( getContext() );
+      JavacElements javacElems = JavacElements.instance( getContext() );
+      Names names = Names.instance( getContext() );
 
       ArrayList<JCAssign> args = new ArrayList<>();
       args.add( make.Assign( make.Ident( names.fromString( "name" ) ), make.Literal( field.name.toString() ) ) );
@@ -694,9 +687,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
     private void maybeAddAnnotation( JCVariableDecl field, ArrayList<JCAssign> args, Class<? extends Annotation> cls )
     {
-      JavacPlugin javacPlugin = JavacPlugin.instance();
-      TreeMaker make = javacPlugin.getTreeMaker();
-      Names names = Names.instance( javacPlugin.getContext() );
+      TreeMaker make = TreeMaker.instance( getContext() );
+      Names names = Names.instance( getContext() );
 
       for( JCAnnotation anno : field.getModifiers().getAnnotations() )
       {
@@ -743,7 +735,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   // - verify property override
   class Enter_Finish extends TreeTranslator
   {
-    private Stack<JCClassDecl> _classes = new Stack<>();
+    private final Stack<JCClassDecl> _classes = new Stack<>();
 
     @Override
     public void visitClassDef( JCClassDecl classDecl )
@@ -939,7 +931,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         List<JCExpression> args = get == null ? val == null ? var.args : val.args : get.args;
         boolean getAbstract = isAbstract( classDecl, varDecl ) || hasOption( args, PropOption.Abstract );
         boolean getFinal = getAnnotation( varDecl, Final.class ) != null || hasOption( args, PropOption.Final );
-        PropOption getAccess = PropertyProcessor.this.getAccess( classDecl, args );
+        PropOption getAccess = getAccess( classDecl, args );
 
         if( getAbstract != Modifier.isAbstract( (int)getMethod.flags() ) )
         {
@@ -1007,7 +999,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         List<JCExpression> args = set == null ? var.args : set.args;
         boolean setAbstract = isAbstract( classDecl, varDecl ) || hasOption( args, PropOption.Abstract );
         boolean setFinal = getAnnotation( varDecl, Final.class ) != null || hasOption( args, PropOption.Final );
-        PropOption setAccess = PropertyProcessor.this.getAccess( classDecl, args );
+        PropOption setAccess = getAccess( classDecl, args );
         boolean setGenerated = getAnnotation( varDecl, propgen.class ) != null;
 
         if( setAbstract != Modifier.isAbstract( (int)setMethod.flags() ) )
@@ -1065,17 +1057,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private int getAccess( JCClassDecl classDecl, int flags )
-    {
-      return isPublic( flags )
-        ? PUBLIC
-        : isProtected( flags )
-          ? PROTECTED
-          : isPrivate( flags )
-            ? PRIVATE
-            : isInterface( classDecl ) ? PUBLIC : 0;
-    }
-
     private MethodSymbol checkStatic( JCClassDecl classDecl, JCVariableDecl propDecl, Symbol field, MethodSymbol method )
     {
       if( method == null )
@@ -1108,7 +1089,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   //
   class Analyze_Start extends TreeTranslator
   {
-    private Set<ClassSymbol> _visited = new HashSet<>();
+    private final Set<ClassSymbol> _visited = new HashSet<>();
 
     @Override
     public void visitClassDef( JCClassDecl classDecl )
@@ -1166,9 +1147,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   //
   class Analyze_Finish extends TreeTranslator
   {
-    private Stack<JCVariableDecl> _propDefs = new Stack<>();
-    private Stack<JCMethodDecl> _methodDefs = new Stack<>();
-    private Stack<Pair<JCClassDecl, Set<VarSymbol>>> _backingSymbols = new Stack<>();
+    private final Stack<JCVariableDecl> _propDefs = new Stack<>();
+    private final Stack<JCMethodDecl> _methodDefs = new Stack<>();
+    private final Stack<Pair<JCClassDecl, Set<VarSymbol>>> _backingSymbols = new Stack<>();
 
     @Override
     public void visitClassDef( JCClassDecl classDecl )
@@ -1267,7 +1248,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       if( getMethod != null )
       {
-        JCMethodDecl methodDecl = _methodDefs.peek();
+        JCMethodDecl methodDecl =_methodDefs.isEmpty() ? null : _methodDefs.peek();
         if( methodDecl != null && methodDecl.sym == getMethod )
         {
           // don't rewrite with getter inside the getter
@@ -1342,14 +1323,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         : null;
       if( getMethod != null )
       {
-        JCMethodDecl methodDecl = _methodDefs.peek();
+        JCMethodDecl methodDecl = _methodDefs.isEmpty() ? null : _methodDefs.peek();
         if( methodDecl != null && (methodDecl.sym == getMethod || overrides( methodDecl.sym, getMethod )) )
         {
           // - don't rewrite with getter inside the getter
           // - backing symbol required, add to set of backing symbols
           _backingSymbols.peek().snd.add( (VarSymbol)tree.sym );
 
-          if( _methodDefs.peek().sym.isDefault() )
+          if( !_methodDefs.isEmpty() && _methodDefs.peek().sym.isDefault() )
           {
             // Cannot reference property in default interface accessor
             reportError( tree, MSG_PROPERTY_IS_ABSTRACT.get( tree.sym.flatName() ) );
@@ -1423,7 +1404,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      JCMethodDecl methodDecl = _methodDefs.peek();
+      JCMethodDecl methodDecl = _methodDefs.isEmpty() ? null : _methodDefs.peek();
 
       // replace  foo.bar = baz  with  foo.setBar(baz)
 
@@ -1516,27 +1497,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private boolean verifyAccess( JCExpression ref, Symbol propSym, MethodSymbol accessorMethod, String accessKind )
-    {
-      if( !sameAccess( accessorMethod, propSym ) )
-      {
-        JCClassDecl classDecl = _backingSymbols.peek().fst;
-        Resolve resolve = Resolve.instance( _context );
-        AttrContext attrContext = new AttrContext();
-        Env<AttrContext> env = new AttrContextEnv( ref, attrContext );
-        env.toplevel = (JCCompilationUnit)_tp.getCompilationUnit();
-        env.enclClass = classDecl;
-//todo: this doesn't really work all that well, for now rely on indirect errors from the accessors, maybe intercept those errors and rewrite them in terms of properties?
-//        if( !resolve.isAccessible( env, classDecl.type, accessorMethod ) )
-//        {
-//          reportError( ref, MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind, propSym.flatName(),
-//            PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
-//          return false;
-//        }
-      }
-      return true;
-    }
-
     @Override
     public void visitUnary( JCUnary tree )
     {
@@ -1590,7 +1550,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      JCMethodDecl methodDecl = _methodDefs.peek();
+      JCMethodDecl methodDecl = _methodDefs.isEmpty() ? null : _methodDefs.peek();
 
       // replace  foo.bar = baz  with  foo.setBar(baz)
 
@@ -1654,6 +1614,75 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
+//    private boolean verifyAccess( JCExpression ref, Symbol propSym, MethodSymbol accessorMethod, String accessKind )
+//    {
+//      if( !sameAccess( accessorMethod, propSym ) )
+//      {
+//        JCClassDecl classDecl = _backingSymbols.peek().fst;
+//        Resolve resolve = Resolve.instance( _context );
+//        AttrContext attrContext = new AttrContext();
+//        Env<AttrContext> env = new AttrContextEnv( ref, attrContext );
+//        env.toplevel = (JCCompilationUnit)_tp.getCompilationUnit();
+//        env.enclClass = classDecl;
+//
+////alternative way, just as bad
+////        JavacTrees trees = JavacTrees.instance( _context );
+////        TreePath path = trees.getPath( _tp.getCompilationUnit(), ref );
+////        boolean accessible = trees.isAccessible( trees.getScope( path ), accessorMethod, (DeclaredType)classDecl.type );
+//
+////this doesn't really work all that well, for now rely on indirect errors from the accessors, maybe intercept those errors and rewrite them in terms of properties?
+//        if( !resolve.isAccessible( env, classDecl.type, accessorMethod, true ) )
+//        {
+//          reportError( ref, MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind, propSym.flatName(),
+//            PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
+//          return false;
+//        }
+//      }
+//      return true;
+//    }
+
+    // for now...
+    @SuppressWarnings( "unused" )
+    private boolean verifyAccess( JCExpression ref, Symbol propSym, MethodSymbol accessorMethod, String accessKind )
+    {
+      if( !sameAccess( accessorMethod, propSym ) )
+      {
+        JCClassDecl classDecl = _backingSymbols.peek().fst;
+        return isAccessible( accessorMethod, classDecl );
+      }
+      return true;
+    }
+    // retarded check until Resolve.isAccessible/env is better understood
+    private boolean isAccessible( Symbol.MethodSymbol member, JCTree.JCClassDecl siteClass )
+    {
+      if( Modifier.isPublic( (int)member.flags_field ) )
+      {
+        return true;
+      }
+
+      ClassSymbol siteClassSym = siteClass.sym;
+      ClassSymbol memberClassSym = member.enclClass();
+
+      if( memberClassSym == siteClassSym ||
+        siteClassSym.outermostClass() == memberClassSym.outermostClass() )
+      {
+        return true;
+      }
+
+      if( Modifier.isProtected( (int)member.flags_field ) )
+      {
+        return siteClassSym.isSubClass( memberClassSym, Types.instance( getContext() ) );
+      }
+
+      // package-private
+      if( !Modifier.isPrivate( (int)member.flags_field ) )
+      {
+        return memberClassSym.packge().equals( siteClassSym.packge() );
+      }
+
+      return false;
+    }
+
     private boolean overrides( MethodSymbol enclosingMethod, MethodSymbol getMethod )
     {
       return enclosingMethod.name.equals( getMethod.name ) &&
@@ -1701,7 +1730,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Type unboxedType = _tp.getTypes().unboxedType( operand.type );
       if( unboxedType != null && !unboxedType.hasTag( NONE ) )
       {
-        operand = _extensionTransformer.get().unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( JavacPlugin.instance().getContext() ), operand, unboxedType );
+        operand = _extensionTransformer.get().unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( getContext() ), operand, unboxedType );
       }
 
       JCTree.JCExpression one = make.Literal( 1 );
@@ -1923,169 +1952,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     return ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
   }
 
-  private boolean isAbstract( JCClassDecl classDecl, JCVariableDecl propField )
-  {
-    if( isInterface( classDecl ) && !isStatic( propField ) && propField.init == null )
-    {
-      // non-static, non-default method is abstract in interface
-      return true;
-    }
-    else
-    {
-      // abstract class can have abstract methods
-      return getAnnotation( propField, Abstract.class ) != null;
-    }
-  }
-
-  private PropOption getAccess( JCClassDecl classDecl, List<JCExpression> args )
-  {
-    if( isInterface( classDecl ) )
-    {
-      // generated methods are always public in interfaces
-      return PropOption.Public;
-    }
-    return hasOption( args, PropOption.Public )
-      ? PropOption.Public
-      : hasOption( args, PropOption.Protected )
-      ? PropOption.Protected
-      : hasOption( args, PropOption.Package )
-      ? PropOption.Package
-      : hasOption( args, PropOption.Private )
-      ? PropOption.Private
-      : null;
-  }
-
-  private boolean hasOption( List<JCExpression> args, PropOption option )
-  {
-    if( args == null )
-    {
-      return false;
-    }
-    return args.stream().anyMatch( e -> isOption( option, e ) );
-  }
-
-  private boolean isOption( PropOption option, JCExpression e )
-  {
-    if( e instanceof JCLiteral )
-    {
-      return ((JCLiteral)e).getValue() == option;
-    }
-    // whatever, it works
-    return e.toString().contains( option.name() );
-  }
-
-  private JCAnnotation getAnnotation( JCVariableDecl field, Class<? extends Annotation> cls )
-  {
-    for( JCAnnotation jcAnno : field.getModifiers().getAnnotations() )
-    {
-      if( cls.getSimpleName().equals( jcAnno.annotationType.toString() ) )
-      {
-        return jcAnno;
-      }
-      else if( cls.getTypeName().equals( jcAnno.annotationType.toString() ) )
-      {
-        return jcAnno;
-      }
-    }
-    return null;
-  }
-
-  public boolean isPropertyField( Symbol sym )
-  {
-    return sym != null &&
-      !sym.isLocal() &&
-      (getAnnotationMirror( sym, var.class ) != null ||
-        getAnnotationMirror( sym, val.class ) != null ||
-        getAnnotationMirror( sym, get.class ) != null ||
-        getAnnotationMirror( sym, set.class ) != null);
-  }
-
-  public boolean isReadableProperty( Symbol sym )
-  {
-    return sym != null &&
-      (getAnnotationMirror( sym, var.class ) != null ||
-        getAnnotationMirror( sym, val.class ) != null ||
-        getAnnotationMirror( sym, get.class ) != null);
-  }
-
-  public boolean isWritableProperty( Symbol sym )
-  {
-    return sym != null &&
-      (getAnnotationMirror( sym, var.class ) != null ||
-        getAnnotationMirror( sym, set.class ) != null);
-  }
-
-  private boolean isStatic( JCVariableDecl propField )
-  {
-    long flags = propField.getModifiers().flags;
-    return (flags & STATIC) != 0;
-  }
-
-  long getFlags( Attribute.Compound anno )
-  {
-    for( MethodSymbol methSym : anno.getElementValues().keySet() )
-    {
-      if( methSym.getSimpleName().toString().equals( "flags" ) )
-      {
-        return ((Number)anno.getElementValues().get( methSym ).getValue()).longValue();
-      }
-    }
-    throw new IllegalStateException();
-  }
-
-  private int getDeclaredAccess( Attribute.Compound anno )
-  {
-    for( MethodSymbol methSym : anno.getElementValues().keySet() )
-    {
-      if( methSym.getSimpleName().toString().equals( "declaredAccess" ) )
-      {
-        return ((Number)anno.getElementValues().get( methSym ).getValue()).intValue();
-      }
-    }
-    return -1;
-  }
-
   void addToBackingFields( VarSymbol propField )
   {
     _backingMap.computeIfAbsent( propField.enclClass(), key -> new HashSet<>() )
       .add( propField );
-  }
-
-  Attribute.Compound getAnnotationMirror( Symbol classSym, Class<? extends Annotation> annoClass )
-  {
-    for( Attribute.Compound anno : classSym.getAnnotationMirrors() )
-    {
-      if( annoClass.getTypeName().equals( anno.type.tsym.getQualifiedName().toString() ) )
-      {
-        return anno;
-      }
-    }
-    return null;
-  }
-
-  private boolean sameAccess( Symbol sym1, Symbol sym2 )
-  {
-    return sameAccess( (int)sym1.flags_field, (int)sym2.flags_field );
-  }
-
-  private boolean sameAccess( int flags1, int flags2 )
-  {
-    return getAccess( flags1 ) == getAccess( flags2 );
-  }
-
-  int getAccess( Symbol classSym )
-  {
-    return getAccess( (int)classSym.flags_field );
-  }
-
-  int getAccess( int flags )
-  {
-    return flags & (PUBLIC | PROTECTED | PRIVATE);
-  }
-
-  private boolean isInterface( JCClassDecl classDecl )
-  {
-    return classDecl.getKind() == Tree.Kind.INTERFACE;
   }
 
   private void reportWarning( JCTree location, String message )
@@ -2121,5 +1991,20 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private String getSetterName( Name name )
   {
     return "set" + ManStringUtil.capitalize( name.toString() );
+  }
+
+  private boolean ensureInitialized( TaskEvent e )
+  {
+    if( e.getKind() == TaskEvent.Kind.ENTER )
+    {
+      // ensure JavacPlugin is initialized, particularly for Enter since the order of TaskListeners is evidently not
+      // maintained by JavaCompiler i.e., this TaskListener is added after JavacPlugin, but is notified earlier
+      JavacPlugin javacPlugin = JavacPlugin.instance();
+      if( javacPlugin != null )
+      {
+        javacPlugin.initialize( e );
+      }
+    }
+    return true;
   }
 }

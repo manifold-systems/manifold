@@ -16,6 +16,7 @@
 
 package manifold.ext.props;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -23,7 +24,6 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.util.*;
 import manifold.ext.props.rt.api.*;
 import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
@@ -34,26 +34,33 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static java.lang.Integer.MAX_VALUE;
 import static java.lang.reflect.Modifier.*;
 import static java.lang.reflect.Modifier.PRIVATE;
+import static manifold.ext.props.Util.*;
 
 class PropertyInference
 {
-  private final PropertyProcessor _pp;
-  private TypeProcessor _tp;
-
-  PropertyInference( PropertyProcessor processor )
+  private final Consumer<VarSymbol> _backingFieldConsumer;
+  private final Supplier<Context> _contextSupplier;
+  private final Supplier<CompilationUnitTree> _compilationUnitSupplier;
+    
+  PropertyInference( Consumer<VarSymbol> backingFieldConsumer,
+                     Supplier<Context> contextSupplier,
+                     Supplier<CompilationUnitTree> compilationUnitSupplier )
   {
-    _pp = processor;
-    _tp = processor.getTypeProcessor();
+    _backingFieldConsumer = backingFieldConsumer;
+    _contextSupplier = contextSupplier;
+    _compilationUnitSupplier = compilationUnitSupplier;
   }
 
   private Context context()
   {
-    return _pp.getContext();
+    return _contextSupplier.get();
   }
 
   void inferProperties( ClassSymbol classSym )
@@ -75,7 +82,7 @@ class PropertyInference
 
   private void gatherCandidates( Symbol.MethodSymbol m, Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
   {
-    Attribute.Compound propgenAnno = _pp.getAnnotationMirror( m, propgen.class );
+    Attribute.Compound propgenAnno = getAnnotationMirror( m, propgen.class );
     if( propgenAnno != null )
     {
       // already a property
@@ -96,20 +103,29 @@ class PropertyInference
     }
   }
 
-  private boolean isAccessible( Symbol sym, ClassSymbol origin )
+  private boolean isInherited( Symbol ancestorSym, ClassSymbol origin )
   {
-    ClassSymbol encClass = sym.enclClass();
-    if( encClass == origin )
+    ClassSymbol ancestorClass = ancestorSym.enclClass();
+    if( ancestorClass == origin )
     {
       return true;
     }
-    if( Modifier.isPublic( (int)sym.flags_field ) ||
-      Modifier.isProtected( (int)sym.flags_field ) )
+    if( ancestorSym.isStatic() && ancestorClass.isInterface() )
+    {
+      return false;
+    }
+    if( Modifier.isPublic( (int)ancestorSym.flags_field ) ||
+      Modifier.isProtected( (int)ancestorSym.flags_field ) )
     {
       return true;
     }
-    return !Modifier.isPrivate( (int)sym.flags_field ) &&
-      encClass.packge().equals( origin.packge() );
+    if( Modifier.isPrivate( (int)ancestorSym.flags_field ) )
+    {
+      return ancestorClass.outermostClass() == origin.outermostClass();
+    }
+    // package-private
+    return !Modifier.isPrivate( (int)ancestorSym.flags_field ) &&
+      ancestorClass.packge().equals( origin.packge() );
   }
 
   private void handleVars( Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
@@ -181,7 +197,7 @@ class PropertyInference
     ClassSymbol classSym = getAttr._m.enclClass();
 
     Type t = getMoreSpecificType( getAttr._type, setAttr._type );
-    int flags = weakest( _pp.getAccess( getAttr._m ), _pp.getAccess( setAttr._m ) );
+    int flags = weakest( getAccess( getAttr._m ), getAccess( setAttr._m ) );
     flags |= (getAttr._m.flags_field & STATIC);
 
     Pair<Integer, VarSymbol> res = handleExistingField( fieldName, t, flags, classSym, var.class );
@@ -215,14 +231,14 @@ class PropertyInference
     // Create and enter the prop field
 
     int flags = res.fst == MAX_VALUE
-      ? _pp.getAccess( (int)getAttr._m.flags_field )
+      ? getAccess( (int)getAttr._m.flags_field )
       : weakest( res.fst, (int)getAttr._m.flags_field );
     flags |= (getAttr._m.flags_field & STATIC);
     VarSymbol propField = new VarSymbol( flags, fieldName, getAttr._type, classSym );
 
     // if super's field is writable, make this one also writable to allow the setter to be used in assignments
     Class<? extends Annotation> varClass =
-      res.snd != null && _pp.isWritableProperty( res.snd )
+      isWritableProperty( res.snd )
         ? var.class
         : val.class;
     addField( propField, classSym, varClass );
@@ -244,7 +260,7 @@ class PropertyInference
     // Create and enter the prop field
 
     int flags = res.fst == MAX_VALUE
-      ? _pp.getAccess( (int)setAttr._m.flags_field )
+      ? getAccess( (int)setAttr._m.flags_field )
       : weakest( res.fst, (int)setAttr._m.flags_field );
     Type t = setAttr._type;
 
@@ -253,7 +269,7 @@ class PropertyInference
 
     // if super's field is readable, make this one also readable to allow the getter to be used
     Class<? extends Annotation> varClass =
-      res.snd != null && _pp.isReadableProperty( res.snd )
+      isReadableProperty( res.snd )
         ? var.class
         : set.class;
     addField( propField, classSym, varClass );
@@ -266,7 +282,7 @@ class PropertyInference
 
   private void addField( VarSymbol propField, ClassSymbol classSym, Class<? extends Annotation> varClass, int existingDeclaredAccess )
   {
-    Object ctx = _tp.getCompilationUnit();
+    Object ctx = _compilationUnitSupplier.get();
     if( JreUtil.isJava9orLater() )
     {
       ctx = ReflectUtil.method( JavacElements.instance( context() ), "getModuleElement", CharSequence.class ).invoke( "manifold.props.rt" );
@@ -295,7 +311,7 @@ class PropertyInference
             new Attribute.Constant( symtab.intType, existingDeclaredAccess ) ) ) );
 
         // Also add it to backing fields, since this indicates the field should not be erased (apples to compiled source)
-        _pp.addToBackingFields( propField );
+        _backingFieldConsumer.accept( propField );
       }
       // add the @var, @val, @get, @set, etc. annotations
       propField.appendAttributes( List.of( varAnno, autoAnno ) );
@@ -330,9 +346,9 @@ class PropertyInference
       Types types = Types.instance( context() );
       if( types.isAssignable( exField.type, t ) &&
         Modifier.isStatic( (int)exField.flags_field ) == Modifier.isStatic( flags ) && !exField.owner.isInterface() &&
-        (!Modifier.isPublic( (int)exField.flags_field ) || _pp.isPropertyField( exField )) /* existing public field must always be accessed directly (see keep PropertyProcess#keepRefToField() */ )
+        (!Modifier.isPublic( (int)exField.flags_field ) || isPropertyField( exField )) /* existing public field must always be accessed directly (see keep PropertyProcess#keepRefToField() */ )
       {
-        int weakest = weakest( _pp.getAccess( (int)exField.flags_field ), _pp.getAccess( flags ) );
+        int weakest = weakest( getAccess( (int)exField.flags_field ), getAccess( flags ) );
 
         if( exField.enclClass() == classSym )
         {
@@ -342,7 +358,7 @@ class PropertyInference
           addField( exField, null, varClass, declaredAccess );
           return null; // don't create another one
         }
-        if( _pp.isPropertyField( exField ) )
+        if( isPropertyField( exField ) )
         {
           return new Pair<>( weakest, exField ); // existing field is compatible, create one with `weakest` access (or weaker)
         }
@@ -364,7 +380,7 @@ class PropertyInference
     {
       if( sym instanceof VarSymbol )
       {
-        return isAccessible( sym, origin ) ? new Symbol[]{sym} : new Symbol[]{};
+        return isInherited( sym, origin ) ? new Symbol[]{sym} : new Symbol[]{};
       }
     }
     Type st = types.supertype( c.type );
@@ -401,24 +417,6 @@ class PropertyInference
       _type = type;
       _m = m;
     }
-  }
-
-  int weakest( int acc1, int acc2 )
-  {
-    return
-      acc1 == PUBLIC
-        ? PUBLIC
-        : acc2 == PUBLIC
-        ? PUBLIC
-        : acc1 == PROTECTED
-        ? PROTECTED
-        : acc2 == PROTECTED
-        ? PROTECTED
-        : acc1 != PRIVATE
-        ? 0
-        : acc2 != PRIVATE
-        ? 0
-        : PRIVATE;
   }
 
   private PropAttrs derivePropertyNameFromGetter( Symbol.MethodSymbol m )

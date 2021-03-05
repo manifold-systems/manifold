@@ -36,6 +36,8 @@ import manifold.util.ReflectUtil;
 import java.util.stream.Collectors;
 
 import static java.lang.reflect.Modifier.PRIVATE;
+import static manifold.ext.props.Util.getAnnotationMirror;
+import static manifold.ext.props.Util.getFlags;
 
 class ClassReaderCompleter implements Symbol.Completer
 {
@@ -162,10 +164,10 @@ class ClassReaderCompleter implements Symbol.Completer
     {
       if( sym instanceof Symbol.VarSymbol )
       {
-        Attribute.Compound propgen = _pp.getAnnotationMirror( sym, manifold.ext.props.rt.api.propgen.class );
+        Attribute.Compound propgen = getAnnotationMirror( sym, manifold.ext.props.rt.api.propgen.class );
         if( propgen != null )
         {
-          sym.flags_field = sym.flags_field & ~PRIVATE | _pp.getFlags( propgen );
+          sym.flags_field = sym.flags_field & ~PRIVATE | getFlags( propgen );
           handled = true;
         }
       }
@@ -178,7 +180,7 @@ class ClassReaderCompleter implements Symbol.Completer
     {
       if( sym instanceof Symbol.MethodSymbol )
       {
-        Attribute.Compound propgenAnno = _pp.getAnnotationMirror( sym, propgen.class );
+        Attribute.Compound propgenAnno = getAnnotationMirror( sym, propgen.class );
         if( propgenAnno != null )
         {
           Name fieldName = names.fromString( getName( propgenAnno ) );
@@ -197,7 +199,7 @@ class ClassReaderCompleter implements Symbol.Completer
           Type t = meth.getParameters().isEmpty()
             ? meth.getReturnType()
             : meth.getParameters().get( 0 ).type;
-          Symbol.VarSymbol propField = new Symbol.VarSymbol( _pp.getFlags( propgenAnno ), fieldName, t, classSym );
+          Symbol.VarSymbol propField = new Symbol.VarSymbol( getFlags( propgenAnno ), fieldName, t, classSym );
 
           // add the @var, @val, @get, @set, etc. annotations
           propField.appendAttributes( List.from( propgenAnno.values.stream()

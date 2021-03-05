@@ -24,13 +24,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Designates a field declaration as a write-only property. Adding @{@link get} along with @{@link set} makes the
- * property read-write; the same effect as @{@link var}.
+ * Declares a write-only property, or modifies the setter of a read-write property . Adding {@link get} along with
+ * {@link set} makes the property read-write; the same effect as {@link var}.
  * <p/>
- * Note, it is recommended to use {@link get} and {@link set} exclusively as a means to override modifiers and
- * annotations on {@link var}, <i>or</i> as an alternative to using {@link var} and {@link val}.
- *
- * @see get
+ * <pre><code>
+ * {@literal @}var @set(Protected) String name; // a read-write property with public getter access and protected setter access
+ * </code></pre>
+ * @see set
  * @see val
  * @see var
  */
@@ -38,7 +38,18 @@ import java.lang.annotation.Target;
 @Retention( RetentionPolicy.CLASS )
 public @interface set
 {
+  /**
+   * Use this argument to override the property's declared access.
+   */
   PropOption[] value() default {};
+
+  /**
+   * Use this argument to specify annotations to apply to the property's generated setter method.
+   */
   any[] annos() default {};
+
+  /**
+   * Use this argument to specify annotations to apply to the property's generated setter parameter.
+   */
   any[] param() default {};
 }
