@@ -280,6 +280,7 @@ public class SrcClassUtil
     {
       srcMethod.name( name );
       srcMethod.returns( makeSrcType( method.getReturnType(), method, TargetType.METHOD_RETURN, -1 ) );
+      removeMethodAnnotationsIntendedForReturnType( srcMethod );
     }
     for( Symbol.TypeVariableSymbol typeVar: method.getTypeParameters() )
     {
@@ -317,6 +318,31 @@ public class SrcClassUtil
         new SrcRawStatement()
           .rawText( bodyStmt ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  /**
+   * Prevent "error: Xxx is not a repeatable annotation type" when eg., jetbrtains Nullable is used in classes
+   * that have extensions -- the MethodSymbol erroneously claims the annotation is on both the method and the ret type,
+   * maybe to be backward compatible with older processors that don't handle annotated types (?)  Anyhow, we remove the
+   * duplicate from the method, since the return type is more specific and since the compiler is just gonna put it back
+   * on the method when it compiles the augmented class to produce the ClassSymbol with extensions.
+   */
+  private void removeMethodAnnotationsIntendedForReturnType( SrcMethod srcMethod )
+  {
+    SrcType returnType = srcMethod.getReturnType();
+    java.util.List<SrcAnnotationExpression> retAnnos = returnType.getAnnotations();
+    java.util.List<SrcAnnotationExpression> methAnnos = srcMethod.getAnnotations();
+    for( SrcAnnotationExpression anno: retAnnos )
+    {
+      for( int i = 0; i < methAnnos.size(); i++ )
+      {
+        SrcAnnotationExpression methAnno = retAnnos.get( i );
+        if( methAnno.toString().equals( anno.toString() ) )
+        {
+          methAnnos.remove( i-- );
+        }
+      }
+    }
   }
 
   private SrcType makeSrcType( Type type, Symbol symbol, TargetType targetType, int index )
@@ -645,6 +671,7 @@ public class SrcClassUtil
         continue;
       }
 
+      //noinspection IfCanBeSwitch
       if( fqn.equals( "android.annotation.Nullable" ) )
       {
         // retarded android bullshit
