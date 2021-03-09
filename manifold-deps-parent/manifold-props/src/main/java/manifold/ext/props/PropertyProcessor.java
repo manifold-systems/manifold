@@ -1949,7 +1949,21 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
 
     Type fieldType = types.memberType( type, field ); // the type of the field as a member of `type` e.g., a field  of type List<T> inside Bar<T> as seen from class Foo that extends Bar<String> ...
-    return ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
+    MethodSymbol setter = ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( field.name ), (ClassSymbol)type.tsym, 1 );
+
+    // handle property where isXxx is both field name and getter name isXxx(), look for setter by name of xxx.
+    if( setter == null && isIsName( field.name.toString() ) && resolveGetMethod( type, field ) != null )
+    {
+      Names names = Names.instance( getContext() );
+      Name name = names.fromString( ManStringUtil.uncapitalize( field.name.toString().substring( 2 ) ) );
+      setter = ManAttr.getMethodSymbol( types, type, fieldType, getSetterName( name ), (ClassSymbol)type.tsym, 1 );
+    }
+    return setter;
+  }
+
+  private boolean isIsName( String name )
+  {
+    return name.length() > 2 && name.startsWith( "is" ) && Character.isUpperCase( name.charAt( 2 ) );
   }
 
   void addToBackingFields( VarSymbol propField )

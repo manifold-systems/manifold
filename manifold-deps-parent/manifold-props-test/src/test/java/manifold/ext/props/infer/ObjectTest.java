@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import java.time.LocalDateTime;
 import java.time.Month;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -53,5 +54,13 @@ public class ObjectTest
     assertEquals( 12, ldt.dayOfMonth );
     assertEquals( 3, ldt.hour );
     assertEquals( 30, ldt.minute );
+
+    Calendar calendar = Calendar.instance; // call getInstance() static
+    if (calendar.firstDayOfWeek == Calendar.SUNDAY) {  // call getFirstDayOfWeek()
+      calendar.firstDayOfWeek = Calendar.MONDAY; // call setFirstDayOfWeek()
+    }
+    if (!calendar.isLenient) { // call isLenient()
+      calendar.isLenient = true; // call setLenient()
+    }
   }
 }

@@ -22,6 +22,7 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.util.*;
+import com.sun.tools.javac.util.List;
 import manifold.ext.props.rt.api.*;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.rt.api.util.ManStringUtil;
@@ -31,10 +32,7 @@ import manifold.util.ReflectUtil;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -131,6 +129,7 @@ class PropertyInference
 
   private void handleVars( Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
   {
+    outer:
     for( Map.Entry<String, Set<PropAttrs>> entry : fromGetter.entrySet() )
     {
       String name = entry.getKey();
@@ -139,22 +138,60 @@ class PropertyInference
       if( getters != null && !getters.isEmpty() && setters != null && !setters.isEmpty() )
       {
         Types types = Types.instance( context() );
-        outer:
-        for( PropAttrs getAttr : getters )
+        for( Iterator<PropAttrs> getterIter = getters.iterator(); getterIter.hasNext(); )
         {
+          PropAttrs getAttr = getterIter.next();
           Type getType = getAttr._type;
-          for( PropAttrs setAttr : setters )
+          for( Iterator<PropAttrs> setterIter = setters.iterator(); setterIter.hasNext(); )
           {
+            PropAttrs setAttr = setterIter.next();
             Type setType = setAttr._type;
-            if( types.isAssignable( getType, setType ) && getAttr._m.isStatic() == setAttr._m.isStatic() )
+            if( types.isSubtype( getType, setType ) && getAttr._m.isStatic() == setAttr._m.isStatic() )
             {
               makeVar( getAttr, setAttr );
-              break outer;
+              getterIter.remove();
+              setterIter.remove();
+              continue outer;
+            }
+          }
+        }
+      }
+      // Handle isXxx() where isXxx is the property name and the getter method name
+      if( getters != null && !getters.isEmpty() && isIsProperty( name ) )
+      {
+        setters = fromSetter.get( ManStringUtil.uncapitalize( ManStringUtil.uncapitalize( name.substring( 2 ) ) ) );
+        if( setters != null && !setters.isEmpty() )
+        {
+          Types types = Types.instance( context() );
+          for( Iterator<PropAttrs> getterIter = getters.iterator(); getterIter.hasNext(); )
+          {
+            PropAttrs getAttr = getterIter.next();
+            if( getAttr._m.name.toString().equals( name ) ) // only when isXxx is the name of property and getter method
+            {
+              Type getType = getAttr._type;
+              for( Iterator<PropAttrs> setterIter = setters.iterator(); setterIter.hasNext(); )
+              {
+                PropAttrs setAttr = setterIter.next();
+                Type setType = setAttr._type;
+                if( types.isSubtype( getType, setType ) && getAttr._m.isStatic() == setAttr._m.isStatic() )
+                {
+//                  setAttr._name = getAttr._name;
+                  makeVar( getAttr, setAttr );
+                  getterIter.remove();
+                  setterIter.remove();
+                  continue outer;
+                }
+              }
             }
           }
         }
       }
     }
+  }
+
+  private boolean isIsProperty( String name )
+  {
+    return name.length() > 2 && name.startsWith( "is" ) && Character.isUpperCase( name.charAt( 2 ) );
   }
 
   private void handleVals( Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
@@ -168,7 +205,9 @@ class PropertyInference
         Set<PropAttrs> setters = fromSetter.get( name );
         if( setters == null || setters.isEmpty() )
         {
-          makeVal( getters.iterator().next() );
+          PropAttrs getAttr = getters.iterator().next();
+          makeVal( getAttr );
+          getters.remove( getAttr );
         }
       }
     }
@@ -185,7 +224,9 @@ class PropertyInference
         Set<PropAttrs> getters = fromGetter.get( name );
         if( getters == null || getters.isEmpty() )
         {
-          makeWo( setters.iterator().next() );
+          PropAttrs setAttr = setters.iterator().next();
+          makeWo( setAttr );
+          setters.remove( setAttr );
         }
       }
     }
@@ -333,7 +374,7 @@ class PropertyInference
     {
       return t1;
     }
-    return types.isAssignable( t1, t2 ) ? t1 : t2;
+    return types.isSubtype( t1, t2 ) ? t1 : t2;
   }
 
   private Pair<Integer, VarSymbol> handleExistingField( Name fieldName, Type t, int flags, ClassSymbol classSym, Class<? extends Annotation> varClass )
@@ -345,7 +386,7 @@ class PropertyInference
 
       VarSymbol exField = (VarSymbol)existing[0];
       Types types = Types.instance( context() );
-      if( types.isAssignable( exField.type, t ) &&
+      if( types.isSubtype( exField.type, t ) &&
         Modifier.isStatic( (int)exField.flags_field ) == Modifier.isStatic( flags ) && !exField.owner.isInterface() &&
         (!Modifier.isPublic( (int)exField.flags_field ) || isPropertyField( exField )) /* existing public field must always be accessed directly (see keep PropertyProcess#keepRefToField() */ )
       {
