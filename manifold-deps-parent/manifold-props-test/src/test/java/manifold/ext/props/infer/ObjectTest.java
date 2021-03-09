@@ -24,19 +24,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class ObjectTest
 {
-  @Test
-  public void testInferredPropertiesDontClashWithJavaReservedWords()
-  {
-    // here Object#getClass() is inferred with "Class", not the reserved word "class". Note all reserved words are
-    // automatically corrected in this way.
-    assertEquals( String.class, "hi".Class );
-  }
-
   @Test
   public void testJreInterfaceInferredProperties()
   {
