@@ -26,7 +26,6 @@ import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.comp.*;
-import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -38,13 +37,9 @@ import manifold.api.type.ICompilerComponent;
 import manifold.ext.ExtensionManifold;
 import manifold.ext.ExtensionTransformer;
 import manifold.ext.props.rt.api.*;
-import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavacPlugin;
-import manifold.internal.javac.ManAttr;
-import manifold.internal.javac.TypeProcessor;
+import manifold.internal.javac.*;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
-import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -266,7 +261,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         }
 
         TreeMaker make = TreeMaker.instance( _context );
-        JavacElements javacElems = JavacElements.instance( _context );
 
         boolean isAbstract = getAnnotation( tree, Abstract.class ) != null;
         boolean isFinal = getAnnotation( tree, Final.class ) != null;
@@ -278,7 +272,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           if( !isAbstract )
           {
             // add @Abstract
-            JCExpression abstractType = memberAccess( make, javacElems, Abstract.class.getName() );
+            JCExpression abstractType = memberAccess( make, Abstract.class.getName() );
             addAnnotations( tree, List.of( make.Annotation( abstractType, List.nil() ) ) );
             isAbstract = true;
           }
@@ -290,7 +284,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           if( !isFinal )
           {
             // add @Final
-            JCExpression abstractType = memberAccess( make, javacElems, Final.class.getName() );
+            JCExpression abstractType = memberAccess( make, Final.class.getName() );
             addAnnotations( tree, List.of( make.Annotation( abstractType, List.nil() ) ) );
             isFinal = true;
           }
@@ -669,7 +663,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     private JCAnnotation makePropGenAnnotation( JCVariableDecl field )
     {
       TreeMaker make = TreeMaker.instance( getContext() );
-      JavacElements javacElems = JavacElements.instance( getContext() );
       Names names = Names.instance( getContext() );
 
       ArrayList<JCAssign> args = new ArrayList<>();
@@ -681,7 +674,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       maybeAddAnnotation( field, args, set.class );
       maybeAddAnnotation( field, args, Abstract.class );
       maybeAddAnnotation( field, args, Final.class );
-      JCExpression propgenType = memberAccess( make, javacElems, propgen.class.getName() );
+      JCExpression propgenType = memberAccess( make, propgen.class.getName() );
       return make.Annotation( propgenType, List.from( args ) );
     }
 
@@ -700,17 +693,18 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private JCTree.JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )
+    private JCTree.JCExpression memberAccess( TreeMaker make, String path )
     {
-      return memberAccess( make, javacElems, path.split( "\\." ) );
+      return memberAccess( make, path.split( "\\." ) );
     }
 
-    private JCTree.JCExpression memberAccess( TreeMaker make, JavacElements node, String... components )
+    private JCTree.JCExpression memberAccess( TreeMaker make, String... components )
     {
-      JCTree.JCExpression expr = make.Ident( node.getName( components[0] ) );
+      Names names = Names.instance( getContext() );
+      JCTree.JCExpression expr = make.Ident( names.fromString( ( components[0] ) ) );
       for( int i = 1; i < components.length; i++ )
       {
-        expr = make.Select( expr, node.getName( components[i] ) );
+        expr = make.Select( expr, names.fromString( components[i] ) );
       }
       return expr;
     }
@@ -1451,7 +1445,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         {
           // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
           tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
-          result = makeLetExpr( make, tempVars, rhs, tree.pos );
+          result = ILetExpr.makeLetExpr( make, tempVars, rhs, rhs.type, tree.pos );
         }
         else
         {
@@ -1552,7 +1546,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       JCMethodDecl methodDecl = _methodDefs.isEmpty() ? null : _methodDefs.peek();
 
-      // replace  foo.bar = baz  with  foo.setBar(baz)
+      // replace  foo.bar++  with  foo.setBar( foo.getBar() + 1 )
 
       MethodSymbol setMethod = isWritableProperty( lhsSym )
         ? resolveSetMethod( lhsSelectedType, lhsSym, Types.instance( _context ) )
@@ -1575,38 +1569,59 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
-        JCExpression arg = tree.arg instanceof JCIdent
+
+        JCExpression arg;
+        List<JCTree> tempVars = List.nil();
+
+        // tempify lhsSelected because it is used both in the getter call and the setter call
+        tempVarIndex++;
+        JCTree[] argTemp = ExtensionTransformer.tempify( false, tree, make, lhsSelected, _context,
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+        if( argTemp != null )
+        {
+          tempVars = tempVars.append( argTemp[0] );
+          lhsSelected = (JCExpression)argTemp[1];
+
+          // rewrite the arg to use the temp var
+          Type t = tree.arg.type;
+          tree.arg = lhs = make.Select( lhsSelected, lhsSym );
+          tree.arg.pos = tree.pos;
+          tree.arg.type = t;
+        }
+
+        // replace the arg with a getter call
+        arg = tree.arg instanceof JCIdent
           ? replaceWithGetter( (JCIdent)tree.arg )
           : repalceWithGetter( (JCFieldAccess)tree.arg );
         arg.setPos( tree.pos );
-        List<JCTree> tempVars = List.nil();
-        if( tree.getTag().isPostUnaryOp() && !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+
+        // now, tempify the arg, since it must be preserved as the result of the post inc/dec
+        tempVarIndex++;
+        argTemp = ExtensionTransformer.tempify( false, tree, make, arg, _context,
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+        if( argTemp != null )
         {
-          tempVarIndex++;
-          JCTree[] argTemp = ExtensionTransformer.tempify( false, tree, make, arg, _context,
-            ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
-          if( argTemp != null )
-          {
-            tempVars = tempVars.append( argTemp[0] );
-            arg = (JCExpression)argTemp[1];
-          }
+          tempVars = tempVars.append( argTemp[0] );
+          arg = (JCExpression)argTemp[1];
         }
 
+        // make the getXxx() + 1 call
         JCExpression rhs = makeUnaryIncDecCall( tree, make, arg );
 
+        // tempify the rhs so it can be returned for pre-inc/dec
+        tempVarIndex++;
+        argTemp = ExtensionTransformer.tempify( false, tree, make, rhs, _context,
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+        tempVars = tempVars.append( argTemp[0] );
+        rhs = (JCExpression)argTemp[1];
+
+        // make the setXxx(rhs) call
         JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = (JCMethodInvocation)configMethod( lhs, setMethod, setCall ).setPos( tree.pos );
 
-        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
-        {
-          // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
-          tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
-          result = makeLetExpr( make, tempVars, arg, tree.pos );
-        }
-        else
-        {
-          result = setCall;
-        }
+        // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
+        tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
+        result = ILetExpr.makeLetExpr( make, tempVars, tree.getTag().isPostUnaryOp() ? arg : rhs, arg.type, tree.pos );
       }
       else // errant
       {
@@ -1767,21 +1782,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       methodTree.type = tree.type;
       return methodTree;
     }
-  }
-
-  private LetExpr makeLetExpr( TreeMaker make, List<JCTree> tempVars, JCExpression value, int pos )
-  {
-    // Need let expr so that we can return the RHS value as required by java assignment op.
-    // Note, the setXxx() method can return whatever it wants, it is ignored here,
-    // this allows us to support eg. List.set(int, T) where this method returns the previous value
-    LetExpr letExpr = (LetExpr)ReflectUtil.method( make, "LetExpr",
-      List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-      .invoke( tempVars, value );
-    // if the rhs type is a constant expr, the Generator will optimize out the LetExpr,
-    // so we have to put in the non-constant type (wtef)
-    letExpr.type = value.type.constValue() != null ? value.type.baseType() : value.type;
-    letExpr.setPos( pos );
-    return letExpr;
   }
 
   // Make the field PRIVATE, or delete it if no backing field is necessary

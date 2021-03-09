@@ -17,12 +17,8 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.OperatorSymbol;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.TypeAnnotations;
 import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ByteCodes;
 import com.sun.tools.javac.main.JavaCompiler;
@@ -118,6 +114,27 @@ public class ManAttr_8 extends Attr implements ManAttr
     {
       _selects.pop();
     }
+  }
+
+  /**
+   * Handle the LetExpr, which is normally used after the attribution phase. We use it during parse to transform
+   * AssignOp to normal Assign so that other manifold features are easier to implement (operator overloading,
+   * properties, etc.)
+   */
+  @Override
+  public void visitLetExpr( JCTree.LetExpr tree )
+  {
+    Env env = getEnv();
+    Env localEnv = env.dup( tree, ReflectUtil.method( env.info, "dup" ).invoke() );
+    for( JCTree.JCVariableDecl def: tree.defs )
+    {
+      attribStat( def, localEnv );
+      def.type = def.init.type;
+      def.vartype.type = def.type;
+      def.sym.type = def.type;
+    }
+    ReflectUtil.field( this, "result" ).set( attribExpr( tree.expr, localEnv ) );
+    tree.type = tree.expr.type;
   }
 
   private boolean shouldCheckSuperType( Type type )

@@ -21,6 +21,7 @@ public abstract class Shape
   private final String name;
   private final double[] sides;
   private String color = "White";
+  private double scale = 1;
 
   public Shape( String name, double... sides )
   {
@@ -61,9 +62,17 @@ public abstract class Shape
   {
     return color;
   }
-
   public void setColor( String color )
   {
     this.color = color;
+  }
+
+  public double getScale()
+  {
+    return scale;
+  }
+  public void setScale( double scale )
+  {
+    this.scale = scale;
   }
 }

@@ -14,35 +14,26 @@
  * limitations under the License.
  */
 
-package manifold.ext.props.middle.auto;
+package manifold.ext.props.middle;
 
-public class Rectangle extends Shape
+import java.util.ArrayList;
+import java.util.List;
+
+public class NameTypeCollisionClass
 {
-  public Rectangle( double s1, double s2 )
+  private List<String> errors = new ArrayList<>();
+
+  public NameTypeCollisionClass()
   {
-     this( "Rectangle", s1, s1 );
-  }
-  protected Rectangle( String name, double s1, double s2 )
-  {
-    super( name, s1, s2, s1, s2 );
   }
 
-  public double getLength()
+  public void addError(String err)
   {
-    double[] sides = getSides();
-    return Math.max( sides[0], sides[1] );
+    errors.add( err );
   }
 
-  public double getWidth()
+  public String[] getErrors()
   {
-    double[] sides = getSides();
-    return Math.min( sides[0], sides[1] );
-  }
-
-  @Override
-  public double getArea()
-  {
-    double[] sides = getSides();
-    return sides[0] * sides[1];
+    return errors.toArray( new String[0] );
   }
 }

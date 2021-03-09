@@ -16,27 +16,16 @@
 
 package manifold.ext.props.infer;
 
-import manifold.ext.props.middle.auto.RightTriangle;
-import manifold.ext.props.middle.auto.Shape;
-import manifold.ext.props.middle.auto.Square;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class ShapesTest
+public class NameTypeCollisionTest
 {
   @Test
-  public void testShapes()
+  public void testNameTypeCollision()
   {
-    RightTriangle t = new RightTriangle( 3, 4 );
-
-    assertEquals( 3d, t.a, 0 );
-    assertEquals( 4d, t.b, 0 );
-    assertEquals( 5d, t.c, 0 );
-    assertEquals( 6d, t.area, 0 );
-    assertEquals( 5d, t.area(), 0 ); // tests conflicting field
-    assertEquals( 6d, t.getArea(), 0 );
-    t.color = "leopardskin";
-    assertEquals( "leopardskin", t.color );
+    NameTypeCollisionClass c = new NameTypeCollisionClass();
+//    String[] errors = c.errors; // should not be a property due to collision of List<String> and String[]
   }
 }

@@ -61,6 +61,7 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
+import manifold.internal.javac.*;
 import manifold.rt.api.FragmentValue;
 import manifold.api.type.ITypeManifold;
 import manifold.rt.api.IncrementalCompile;
@@ -74,15 +75,6 @@ import manifold.ext.rt.api.Structural;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.ReflectionRuntimeMethods;
 import manifold.ext.rt.RuntimeMethods;
-import manifold.internal.javac.ClassSymbols;
-import manifold.internal.javac.FragmentProcessor;
-import manifold.internal.javac.GeneratedJavaStubFileObject;
-import manifold.internal.javac.IDynamicJdk;
-import manifold.internal.javac.JavacPlugin;
-import manifold.internal.javac.ManAttr;
-import manifold.internal.javac.ManParserFactory;
-import manifold.internal.javac.OverloadOperatorSymbol;
-import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.Array;
 import manifold.util.JreUtil;
 import manifold.rt.api.util.Pair;
@@ -208,7 +200,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( operatorMethod != null )
       {
         operatorMethod = favorStringsWithNumberCoercion( tree, operatorMethod );
-        JCTree expr = null;
+        JCExpression expr = null;
 
         JCTree.JCMethodInvocation methodCall;
         JCExpression receiver = swap ? tree.rhs : tree.lhs;
@@ -277,11 +269,7 @@ public class ExtensionTransformer extends TreeTranslator
 
             if( !tempVars.isEmpty() )
             {
-              JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
-                List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-                .invoke( tempVars, expr );
-              letExpr.type = expr.type.constValue() != null ? expr.type.baseType() : expr.type;
-              expr = letExpr;
+              expr = ILetExpr.makeLetExpr( make, tempVars, expr, expr.type, expr.pos );
             }
           }
           else if( operatorMethod.name.toString().equals( "compareTo" ) )
@@ -757,10 +745,7 @@ public class ExtensionTransformer extends TreeTranslator
       // Need let expr so that we can return the RHS value as required by java assignment op.
       // Note, the set() method can return whatever it wants, it is ignored here,
       // this allows us to support eg. List.set(int, T) where this method returns the previous value
-      JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
-        List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-        .invoke( tempVars, rhs );
-      letExpr.type = lhs.type.constValue() != null ? lhs.type.baseType() : lhs.type;;
+      JCTree.LetExpr letExpr = ILetExpr.makeLetExpr( make, tempVars, rhs, lhs.type, tree.pos );
 
       result = letExpr;
       return true;
@@ -809,6 +794,11 @@ public class ExtensionTransformer extends TreeTranslator
     Symbol op = IDynamicJdk.instance().getOperator( tree );
     boolean isOverload = op instanceof OverloadOperatorSymbol;
     TreeMaker make = _tp.getTreeMaker();
+
+    if( !(op instanceof Symbol.MethodSymbol) )
+    {
+      return;
+    }
 
     // Handle operator overload expressions
     Symbol.MethodSymbol operatorMethod = (Symbol.MethodSymbol)op;
@@ -1004,13 +994,7 @@ public class ExtensionTransformer extends TreeTranslator
     // - ensures we don't compile an expression multiple times, instead the expressions are initializers of the vars
     // - a way to have a compound expression, for instance "temp = a = a.ref" lets us perform the assignment as an expr
     // - handle postfix inc/dec value where the value of the postfix expr is the lhs beforehand
-    JCTree.LetExpr letExpr = (JCTree.LetExpr)ReflectUtil.method( make, "LetExpr",
-      List.class, JreUtil.isJava8() ? JCTree.class : JCExpression.class )
-      .invoke( tempVars, answer );
-    Type argType = tree.arg.type;
-    letExpr.type = argType.constValue() != null ? argType.baseType() : argType;
-
-    result = letExpr;
+    result = ILetExpr.makeLetExpr( make, tempVars, answer, tree.arg.type, tree.pos );
   }
 
   public JCTree.JCMethodInvocation maybeReplaceWithExtensionMethod( JCTree.JCMethodInvocation methodCall )

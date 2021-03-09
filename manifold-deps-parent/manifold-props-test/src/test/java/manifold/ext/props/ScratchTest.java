@@ -22,7 +22,7 @@ import manifold.ext.props.rt.api.*;
 import java.util.Arrays;
 import java.util.List;
 
-public class PropsTest extends TestCase
+public class ScratchTest extends TestCase
 {
   public void testProps()
   {

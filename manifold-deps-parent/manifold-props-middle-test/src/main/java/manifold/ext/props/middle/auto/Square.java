@@ -18,9 +18,9 @@ package manifold.ext.props.middle.auto;
 
 public class Square extends Rectangle
 {
-  public Square( String name, double side )
+  public Square( double side )
   {
-    super( name, side, side );
+    super( "Square", side, side );
   }
 
   public double getLength()
@@ -33,5 +33,15 @@ public class Square extends Rectangle
   {
     double l = getLength();
     return l * l;
+  }
+
+  public String[] getStringArray()
+  {
+    return new String[]{"a", "b"};
+  }
+
+  public void testAssignOp_Ident( int scaleBump )
+  {
+    double res = scale += scaleBump;
   }
 }

@@ -25,6 +25,7 @@ import com.sun.tools.javac.util.*;
 import manifold.ext.props.rt.api.*;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.rt.api.util.ManStringUtil;
+import manifold.rt.api.util.ReservedWordMapping;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -452,7 +453,9 @@ class PropertyInference
             // keep "is" in the name to prevent collisions where isBook():true and getBook():Book are both there
             derived = prefix + derived;
           }
-          return new PropAttrs( prefix, ManStringUtil.uncapitalize( derived ), type, m );
+          String propName = ManStringUtil.uncapitalize( derived );
+          propName = ReservedWordMapping.getIdentifierForName( propName ); // avoid clashing with Java reserved words
+          return new PropAttrs( prefix, propName, type, m );
         }
         else if( first == '_' )
         {
@@ -468,7 +471,9 @@ class PropertyInference
               // keep "is" in the name to prevent collisions where is_book():true and get_book():Book are both there
               sb = new StringBuilder( prefix + ManStringUtil.capitalize( sb.toString() ) );
             }
-            return new PropAttrs( prefix, sb.toString(), type, m );
+            String propName = sb.toString();
+            propName = ReservedWordMapping.getIdentifierForName( propName ); // avoid clashing with Java reserved words
+            return new PropAttrs( prefix, propName, type, m );
           }
         }
       }

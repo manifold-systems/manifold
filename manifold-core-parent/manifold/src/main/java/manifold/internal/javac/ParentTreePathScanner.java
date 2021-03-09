@@ -54,5 +54,19 @@ public class ParentTreePathScanner extends TreeScanner<Tree, Void>
       _parent.pop();
     }
   }
+
+  @Override
+  public Tree visitOther( Tree node, Void p )
+  {
+    if( node instanceof ILetExpr )
+    {
+      // handle the LetExpr
+
+      ILetExpr letExpr = (ILetExpr)node;
+      Tree r = scan( letExpr.getDefs(), p );
+      return reduce( scan( letExpr.getExpr(), p ), r );
+    }
+    return super.visitOther( node, p );
+  }
 }
 
