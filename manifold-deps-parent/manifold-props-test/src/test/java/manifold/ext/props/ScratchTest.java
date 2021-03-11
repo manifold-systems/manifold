@@ -33,12 +33,14 @@ public class ScratchTest extends TestCase
     assertEquals( 10.2, fooSub.rate );
 
     // compound assign
-    fooSub.rate += 5;
-    assertEquals( 30.4, fooSub.rate );
+    double result = fooSub.rate += 5;
+    assertEquals( 15.2, result, 0 );
+    assertEquals( 30.4, fooSub.rate, 0 );
 
     // inc/dec
-//    fooSub.rate++;
-//    assertEquals( 31.4, fooSub.rate );
+    double prior = fooSub.rate++;
+    assertEquals( 30.4, prior, 0 );
+    assertEquals( 62.8, fooSub.rate, 0 ); // the setter doubles the arg value
 
     INamed named = new NamedInner( "scott" );
     assertEquals( "scott", named.name );
@@ -67,6 +69,18 @@ public class ScratchTest extends TestCase
 //    public void setName(String value) {
 //      name = value;
 //    }
+  }
+  static class NamedInner2 extends NamedInner
+  {
+    public NamedInner2( String name )
+    {
+      super( name );
+    }
+
+    @Override public String getName()
+    {
+      return super.name + "2";
+    }
   }
 
   interface IFoo {
