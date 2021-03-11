@@ -1,11 +1,19 @@
 # Properties for Java
   
 > **⚠ Experimental Feature**
-
-> **⚠ Achtung!**  Under development, falling debris
  
 The `manifold-props` project is a compiler plugin to simplify declaring and using properties in Java. Use it to reduce
 the amount of code you would otherwise write and to improve readability wherever you use properties.
+    
+```java
+// a public property, directly accessible/assignable
+@var String name;  
+```
+
+Note, `manifold-props` also automatically _infers_ properties within your existing source files and within compiled
+classes your project uses. See [Property inference](#property-inference).
+
+Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
 
 ### Table of Contents
 * [Declaring properties](#declaring-properties)
@@ -290,19 +298,19 @@ Properties fully support all of Java's assignment operations:
 
 # Property inference
 
-Properties are inferred from classes that follow the Java naming convention for getters and setters.
+Properties are inferred from classes that follow the Java naming convention for getters and setters. As a result, you
+can use property syntax instead of calling getter/setter methods with any Java class. 
 ```java
 import java.util.Calendar;
 
-public void calendarDemo() {
-    Calendar calendar = Calendar.instance;  // call getInstance()
-    if (calendar.firstDayOfWeek == Calendar.SUNDAY) {  // call getFirstDayOfWeek()
-        calendar.firstDayOfWeek = Calendar.MONDAY; // call setFirstDayOfWeek()
-    }
-    if (!calendar.isLenient) { // call isLenient()
-        calendar.isLenient = true; // call setLenient()
-    }
+Calendar calendar = Calendar.instance;  // call getInstance()
+if (calendar.firstDayOfWeek == Calendar.SUNDAY) {  // call getFirstDayOfWeek()
+    calendar.firstDayOfWeek = Calendar.MONDAY; // call setFirstDayOfWeek()
 }
+if (!calendar.isLenient) { // call isLenient()
+    calendar.isLenient = true; // call setLenient()
+}
+
 ```  
 
 Properties are inferred from _both_ existing source classes in your project and compiled classes your project uses.
