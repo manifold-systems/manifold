@@ -63,6 +63,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -625,8 +626,8 @@ public class JavacPlugin implements Plugin, TaskListener
       return pathsFromModules;
     }
 
-    URLClassLoader classLoader = (URLClassLoader)_javacTask.getContext().get( JavaFileManager.class ).getClassLoader( StandardLocation.CLASS_PATH );
-    URL[] classpathUrls = classLoader.getURLs();
+    ClassLoader cl = _javacTask.getContext().get( JavaFileManager.class ).getClassLoader( StandardLocation.CLASS_PATH );
+    URL[] classpathUrls = getURLs( cl );
     List<String> paths = Arrays.stream( classpathUrls )
       .map( url ->
             {
@@ -640,6 +641,24 @@ public class JavacPlugin implements Plugin, TaskListener
               }
             } ).collect( Collectors.toList() );
     return removeBadPaths( paths );
+  }
+
+  private URL[] getURLs( ClassLoader cl )
+  {
+    if( cl instanceof URLClassLoader )
+    {
+      return ((URLClassLoader)cl).getURLs();
+    }
+
+    // intellij's LazyClassLoader
+    ReflectUtil.LiveFieldRef myUrls = ReflectUtil.WithNull.field( cl, "myUrls" );
+    if( myUrls != null )
+    {
+      Iterable<URL> urls = (Iterable<URL>)myUrls.get();
+      return StreamSupport.stream( urls.spliterator(), false ).toArray( URL[]::new );
+    }
+
+    throw new UnsupportedOperationException( "Unhandled ClassLoader type: " + cl.getClass().getTypeName() );
   }
 
   private List<String> removeBadPaths( List<String> paths )
@@ -965,6 +984,16 @@ public class JavacPlugin implements Plugin, TaskListener
       // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
       tailorJavaCompiler( e );
     }
+    else if( _javacTask.getContext() != _ctx )
+    {
+      // If annotation processors are present, javac creates a whole new JavaCompiler and ctx before Analyze phase...
+
+      _ctx = _javacTask.getContext();
+
+      // Override javac's stuff again for the new ctx
+      tailorJavaCompiler( e );
+      injectManFileManager();
+    }
   }
 
   @Override
@@ -986,19 +1015,9 @@ public class JavacPlugin implements Plugin, TaskListener
         break;
 
       case ANALYZE:
+        initialize( e );
         // Add extension methods to javac's array type
         extendArrayType( e );
-
-        if( _javacTask.getContext() != _ctx )
-        {
-          // If annotation processors are present, javac creates a whole new JavaCompiler and ctx before Analyze phase...
-
-          _ctx = _javacTask.getContext();
-
-          // Override javac's stuff again for the new ctx
-          tailorJavaCompiler( e );
-          injectManFileManager();
-        }
         break;
     }
   }

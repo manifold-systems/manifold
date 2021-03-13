@@ -37,6 +37,8 @@ import manifold.api.type.ICompilerComponent;
 import manifold.ext.ExtensionManifold;
 import manifold.ext.ExtensionTransformer;
 import manifold.ext.props.rt.api.*;
+import manifold.ext.props.rt.api.tags.enter_finish;
+import manifold.ext.props.rt.api.tags.enter_start;
 import manifold.internal.javac.*;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
@@ -141,9 +143,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     _taskEvent = e;
     try
     {
+      ensureInitialized( _taskEvent );
+
       for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        if( tree instanceof JCClassDecl && ensureInitialized( e ) )
+        if( tree instanceof JCClassDecl )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
           if( e.getKind() == TaskEvent.Kind.ENTER )
@@ -180,9 +184,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     _taskEvent = e;
     try
     {
+      ensureInitialized( _taskEvent );
+
       for( Tree tree : e.getCompilationUnit().getTypeDecls() )
       {
-        if( tree instanceof JCClassDecl && ensureInitialized( e ) )
+        if( tree instanceof JCClassDecl )
         {
           JCClassDecl classDecl = (JCClassDecl)tree;
           if( e.getKind() == TaskEvent.Kind.ENTER )
@@ -243,6 +249,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCClassDecl classDecl = _propertyStatements.peek().fst;
       if( classDecl.defs.contains( tree ) )
       {
+        if( getAnnotation( tree, enter_start.class ) != null )
+        {
+          // already processed, probably an annotation processing round
+          return;
+        }
+
         JCAnnotation var = getAnnotation( tree, var.class );
         JCAnnotation val = getAnnotation( tree, val.class );
         JCAnnotation get = getAnnotation( tree, get.class );
@@ -254,13 +266,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
+        TreeMaker make = TreeMaker.instance( _context );
+
+        // tag the field as processed to avoid processing it again (during annotation processing)
+        JCExpression enter_start = memberAccess( make, enter_start.class.getName() );
+        addAnnotations( tree, List.of( make.Annotation( enter_start, List.nil() ) ) );
+
         if( (modifiers & (PUBLIC | PROTECTED | PRIVATE)) == 0 )
         {
           // default @var fields to PUBLIC, they must use PropOption.Package if they really want it
           tree.getModifiers().flags |= PUBLIC;
         }
-
-        TreeMaker make = TreeMaker.instance( _context );
 
         boolean isAbstract = getAnnotation( tree, Abstract.class ) != null;
         boolean isFinal = getAnnotation( tree, Final.class ) != null;
@@ -760,6 +776,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         return;
       }
+
+      if( getAnnotationMirror( tree.sym, enter_finish.class ) != null )
+      {
+        // already processed, probably an annotation processing round
+        return;
+      }
+      addAnnotation( tree.sym, enter_finish.class );
 
       verifyPropertyMethodsAgree( tree );
 
@@ -2025,18 +2048,22 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     return "set" + ManStringUtil.capitalize( name.toString() );
   }
 
-  private boolean ensureInitialized( TaskEvent e )
+  private void addAnnotation( VarSymbol fieldSym, Class<? extends Annotation> annoClass )
   {
-    if( e.getKind() == TaskEvent.Kind.ENTER )
+    ClassSymbol annoSym = IDynamicJdk.instance().getTypeElement( _context,
+      _tp.getCompilationUnit(), annoClass.getTypeName() );
+    Attribute.Compound anno = new Attribute.Compound( annoSym.type,List.nil() );
+    fieldSym.appendAttributes( List.of( anno ) );
+  }
+
+  private void ensureInitialized( TaskEvent e )
+  {
+    // ensure JavacPlugin is initialized, particularly for Enter since the order of TaskListeners is evidently not
+    // maintained by JavaCompiler i.e., this TaskListener is added after JavacPlugin, but is notified earlier
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    if( javacPlugin != null )
     {
-      // ensure JavacPlugin is initialized, particularly for Enter since the order of TaskListeners is evidently not
-      // maintained by JavaCompiler i.e., this TaskListener is added after JavacPlugin, but is notified earlier
-      JavacPlugin javacPlugin = JavacPlugin.instance();
-      if( javacPlugin != null )
-      {
-        javacPlugin.initialize( e );
-      }
+      javacPlugin.initialize( e );
     }
-    return true;
   }
 }
