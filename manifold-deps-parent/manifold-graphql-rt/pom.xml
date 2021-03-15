@@ -35,7 +35,7 @@
     <dependency>
       <groupId>org.jetbrains</groupId>
       <artifactId>annotations</artifactId>
-      <version>16.0.2</version>
+      <version>17.0.0</version>
     </dependency>
 
     <!--

@@ -109,7 +109,7 @@ class ClassReaderCompleter implements Symbol.Completer
       if( restorePropFields( classSym, names ) )
       {
         // infer properties in .class files
-        _pp.getPropInference().inferProperties( classSym );
+        _pp.inferPropertiesFromClassReader( classSym );
       }
       else
       {
@@ -120,7 +120,7 @@ class ClassReaderCompleter implements Symbol.Completer
           annotate.normal( () -> {
             restorePropFields( classSym, names );
             // infer properties in .class files
-            _pp.getPropInference().inferProperties( classSym );
+            _pp.inferPropertiesFromClassReader( classSym );
           } );
         }
         else
@@ -129,7 +129,7 @@ class ClassReaderCompleter implements Symbol.Completer
             .invoke( (Runnable)() -> {
               restorePropFields( classSym, names );
               // infer properties in .class files
-              _pp.getPropInference().inferProperties( classSym );
+              _pp.inferPropertiesFromClassReader( classSym );
             } );
         }
       }

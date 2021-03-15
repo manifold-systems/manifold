@@ -16,6 +16,7 @@
 
 package manifold.ext.props;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
@@ -104,11 +105,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     javacTask.addTaskListener( this );
   }
 
-  PropertyInference getPropInference()
-  {
-    return _propInference;
-  }
-
   BasicJavacTask getJavacTask()
   {
     return _javacTask;
@@ -126,8 +122,26 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     _propInference = new PropertyInference(
       field -> addToBackingFields( field ),
       () -> getContext(),
-      () -> _tp.getCompilationUnit() );
+      () -> getCompilationUnit() );
     ClassReaderCompleter.replaceCompleter( this );
+  }
+
+  private CompilationUnitTree getCompilationUnit()
+  {
+    if( _taskEvent != null )
+    {
+      CompilationUnitTree compUnit = _taskEvent.getCompilationUnit();
+      if( compUnit != null )
+      {
+        return compUnit;
+      }
+    }
+    return _tp.getCompilationUnit();
+  }
+
+  void inferPropertiesFromClassReader( ClassSymbol classSym )
+  {
+    _propInference.inferProperties( classSym );
   }
 
   @Override
@@ -459,6 +473,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     //  public String getFoo() {
     //    return this.foo;
     //  }
+    @SuppressWarnings( "CommentedOutCode" )
     private JCMethodDecl makeGetter( JCClassDecl classDecl, JCVariableDecl propField,
                                      boolean propAbstract, boolean propFinal, PropOption propAccess, JCAnnotation anno )
     {
@@ -506,6 +521,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     //    this.foo = value;
     //    return this;
     //  }
+    @SuppressWarnings( "CommentedOutCode" )
     private JCMethodDecl makeSetter( JCClassDecl classDecl, JCVariableDecl propField,
                                      boolean propAbstract, boolean propFinal, PropOption propAccess, JCAnnotation anno )
     {
@@ -1660,12 +1676,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 //        Resolve resolve = Resolve.instance( _context );
 //        AttrContext attrContext = new AttrContext();
 //        Env<AttrContext> env = new AttrContextEnv( ref, attrContext );
-//        env.toplevel = (JCCompilationUnit)_tp.getCompilationUnit();
+//        env.toplevel = getCompilationUnit();
 //        env.enclClass = classDecl;
 //
 ////alternative way, just as bad
 ////        JavacTrees trees = JavacTrees.instance( _context );
-////        TreePath path = trees.getPath( _tp.getCompilationUnit(), ref );
+////        TreePath path = trees.getPath( getCompilationUnit(), ref );
 ////        boolean accessible = trees.isAccessible( trees.getScope( path ), accessorMethod, (DeclaredType)classDecl.type );
 //
 ////this doesn't really work all that well, for now rely on indirect errors from the accessors, maybe intercept those errors and rewrite them in terms of properties?
@@ -1782,7 +1798,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       binary.pos = tree.pos;
       binary.type = operand.type;
       Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
-      env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
+      env.toplevel = (JCTree.JCCompilationUnit)getCompilationUnit();
       env.enclClass = _extensionTransformer.get().getEnclosingClass( tree );
       binary.operator = _extensionTransformer.get()
         .resolveMethod( tree.pos(),
@@ -1862,7 +1878,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           Names names = Names.instance( _context );
           Symtab symtab = Symtab.instance( _context );
           ClassSymbol propgenSym = IDynamicJdk.instance().getTypeElement( _context,
-            _tp.getCompilationUnit(), propgen.class.getTypeName() );
+            getCompilationUnit(), propgen.class.getTypeName() );
           MethodSymbol nameMeth = (MethodSymbol)IDynamicJdk.instance().getMembersByName( propgenSym, names.fromString( "name" ) ).iterator().next();
           MethodSymbol flagsMeth = (MethodSymbol)IDynamicJdk.instance().getMembersByName( propgenSym, names.fromString( "flags" ) ).iterator().next();
           Attribute.Compound propGenAnno = new Attribute.Compound( propgenSym.type,
@@ -2048,10 +2064,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     return "set" + ManStringUtil.capitalize( name.toString() );
   }
 
-  private void addAnnotation( VarSymbol fieldSym, Class<? extends Annotation> annoClass )
+  private void addAnnotation( VarSymbol fieldSym, @SuppressWarnings( "SameParameterValue" ) Class<? extends Annotation> annoClass )
   {
     ClassSymbol annoSym = IDynamicJdk.instance().getTypeElement( _context,
-      _tp.getCompilationUnit(), annoClass.getTypeName() );
+      getCompilationUnit(), annoClass.getTypeName() );
     Attribute.Compound anno = new Attribute.Compound( annoSym.type,List.nil() );
     fieldSym.appendAttributes( List.of( anno ) );
   }
