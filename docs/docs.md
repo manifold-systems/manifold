@@ -322,13 +322,13 @@ For the convenience of non-maven/non-gradle users you can directly download late
 >from the list above.
 >
 >For instance, to use the *manifold-preprocessor* jar using **Ant** your project needs:
->* [manifold-preprocessor-2021.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
->* [manifold-2021.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
->* [manifold-util-2021.1.3.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
+>* [manifold-preprocessor-2021.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-preprocessor&v=RELEASE)
+>* [manifold-2021.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
+>* [manifold-util-2021.1.4.jar](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-util&v=RELEASE)
 >
 >As such your *javac* command line should include:
 >```text
->javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2021.1.3.jar;<jar-path>/manifold-2021.1.3.jar;<jar-path>/manifold-util-2021.1.3.jar
+>javac -Xplugin:Manifold -classpath <jar-path>/manifold-preprocessor-2021.1.4.jar;<jar-path>/manifold-2021.1.4.jar;<jar-path>/manifold-util-2021.1.4.jar
 >```
 
 * Download [Manifold : _Core_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold&v=RELEASE)
