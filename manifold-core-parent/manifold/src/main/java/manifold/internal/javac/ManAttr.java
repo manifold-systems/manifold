@@ -16,15 +16,8 @@
 
 package manifold.internal.javac;
 
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.Types;
-import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.javac.comp.Env;
-import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
@@ -38,6 +31,7 @@ import java.util.function.BiPredicate;
 import manifold.internal.javac.AbstractBinder.Node;
 import manifold.util.ReflectUtil;
 
+import static com.sun.tools.javac.code.Flags.INTERFACE;
 import static com.sun.tools.javac.code.TypeTag.ERROR;
 import static manifold.util.JreUtil.isJava8;
 
@@ -127,6 +121,46 @@ public interface ManAttr
         }
       }
     }
+  }
+
+  /**
+   * Handle properties in interfaces, which are non-static unless explicitly static.
+   * This is necessary so that a non-static property can reference type variables in its type:  @var T element;
+   */
+  default void handleNonStaticInterfaceProperty( Env<AttrContext> env)
+  {
+    if( (((Scope)ReflectUtil.field( env.info, "scope" ).get()).owner.flags() & INTERFACE) != 0 )
+    {
+      if( env.tree instanceof JCTree.JCVariableDecl )
+      {
+        JCTree.JCModifiers mods = ((JCTree.JCVariableDecl)env.tree).mods;
+        if( (mods.flags & Flags.STATIC) == 0 )
+        {
+          for( JCTree.JCAnnotation anno : mods.annotations )
+          {
+            if( isPropertyAnno( anno.annotationType ) )
+            {
+              // The env would have bumped up the staticLevel, so we simply
+              // bump it back down when we know the property is non-static
+              ReflectUtil.LiveFieldRef staticLevel = ReflectUtil.field( env.info, "staticLevel" );
+              staticLevel.set( (int)staticLevel.get() - 1 );
+            }
+          }
+        }
+      }
+    }
+  }
+  default boolean isPropertyAnno( JCTree annotationType )
+  {
+    String annoName = annotationType.toString();
+    for( String anno: new String[] {"var", "val", "get", "set"} )
+    {
+      if( annoName.equals( anno ) || annoName.endsWith( "." + anno ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   default boolean handleOperatorOverloading( JCExpression tree, Type left, Type right )

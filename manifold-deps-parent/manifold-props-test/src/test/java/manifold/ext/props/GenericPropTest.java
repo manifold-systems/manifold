@@ -25,7 +25,7 @@ import java.util.List;
 
 public class GenericPropTest extends TestCase
 {
-  interface IGenericProps {
+  interface IGenericProps<T> {
     @var List list_Raw;
     @var List<String> list_String;
     @var List<CharSequence> list_CharSequence;
@@ -33,8 +33,10 @@ public class GenericPropTest extends TestCase
     @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
     @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
     @var List<String>[] list_String_Array;
+    @var List<T> list_t;
+    @var T _t;
   }
-  class GenericPropsImpl implements IGenericProps
+  static class GenericPropsImpl implements IGenericProps<String>
   {
     @override @var List list_Raw;
     @override @var List<String> list_String;
@@ -43,6 +45,8 @@ public class GenericPropTest extends TestCase
     @override @var List<? extends CharSequence> list_Wildcard_Extends_CharSequence;
     @override @var List<? super CharSequence> list_Wildcard_Super_CharSequence;
     @override @var List<String>[] list_String_Array;
+    @override @var List<String> list_t;
+    @override @var String _t;
 
     // tests that List<String> and List<String>[] don't match with PropertyProcessor#ghettoErasure
     public void setList_String_Array( List<String> fooledya )

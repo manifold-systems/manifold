@@ -99,6 +99,17 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   /**
+   * Handle properties in interfaces, which are non-static unless explicitly static.
+   * This is necessary so that a non-static property can reference type variables in its type:  @var T element;
+   */
+  @Override
+  public Type attribType(JCTree tree, Env<AttrContext> env)
+  {
+    ManAttr.super.handleNonStaticInterfaceProperty( env );
+    return super.attribType( tree, env );
+  }
+
+  /**
    * Facilitates @Jailbreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
    */
   @Override

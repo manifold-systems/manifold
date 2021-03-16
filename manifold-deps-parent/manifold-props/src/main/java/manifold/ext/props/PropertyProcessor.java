@@ -873,12 +873,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     private boolean isSuperWritable( JCVariableDecl tree, Names names )
     {
       Name setterName = names.fromString( getSetterName( tree.sym.name ) );
+      Types types = Types.instance( _javacTask.getContext() );
       return checkAncestry( (TypeSymbol)tree.sym.owner, sym -> {
         for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)sym, setterName ) )
         {
-          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().size() == 1 ) // todo: check param type
+          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().size() == 1 )
           {
-            return true;
+            Type setterParamType = ((Type.MethodType)types.memberType( tree.sym.enclClass().type, member )).argtypes.get( 0 );
+            return types.isSameType( tree.type, setterParamType );
           }
         }
         return false;
