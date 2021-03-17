@@ -39,8 +39,10 @@ public class PropIssueMsg
   public static final IssueMsg MSG_INTERFACE_FIELD_BACKED_PROPERTY_NOT_SUPPORTED = new IssueMsg( "Static interface properties must provide user-defined accessor[s] which do not reference the property field" );
   public static final IssueMsg MSG_DOES_NOT_OVERRIDE_ANYTHING = new IssueMsg( "Property '{0}' does not override anything" );
   public static final IssueMsg MSG_MISSING_OVERRIDE = new IssueMsg( "Property '{0}' should be annotated with '@override'" );
+  public static final IssueMsg MSG_CANNOT_OVERRIDE_STATIC = new IssueMsg( "Property '{0}' cannot override static method '{1}'" );
   public static final IssueMsg MSG_READONLY_CANNOT_OVERRIDE_WRITABLE = new IssueMsg( "Read-only property '{0}' cannot override writable property" );
   public static final IssueMsg MSG_WRITEONLY_CANNOT_OVERRIDE_READABLE = new IssueMsg( "Write-only property '{0}' cannot override readable property" );
+  public static final IssueMsg MSG_PROPERTY_CLASH_RETURN = new IssueMsg( "Property '{0}' in '{1}' clashes with getter in '{2}'" );
   public static final IssueMsg MSG_WRITABLE_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER = new IssueMsg( "Writable abstract property '{0}' cannot have an initializer" );
   public static final IssueMsg MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS = new IssueMsg( "Abstract property in non-abstract class" );
 }

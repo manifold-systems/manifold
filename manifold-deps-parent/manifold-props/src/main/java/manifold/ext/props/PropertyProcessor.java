@@ -50,7 +50,7 @@ import javax.tools.Diagnostic;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.function.Predicate;
+import java.util.function.Function;
 
 import static com.sun.tools.javac.code.TypeTag.NONE;
 import static java.lang.reflect.Modifier.*;
@@ -142,6 +142,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   void inferPropertiesFromClassReader( ClassSymbol classSym )
   {
     _propInference.inferProperties( classSym );
+    for( Symbol elem: classSym.getEnclosedElements() )
+    {
+      if( elem instanceof ClassSymbol )
+      {
+        inferPropertiesFromClassReader( (ClassSymbol)elem );
+      }
+    }
   }
 
   @Override
@@ -813,19 +820,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    // Premise: A property field TOTALLY overrides it's super's field
-    // Consequences:
-    // - Must override FIELD with like access e.g.,
-    //   - must override @var with @var
-    //   - can't override @var with @val or @set
-    //   - can't override @val with @set or visa versa
-    // - To override BEHAVIOR of superclass property, just override the accessor[s]
-    // If @override is NOT present,
-    //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy,
-    //   if so, error "propX overrides propX in classA, missing @override"
-    // If @override IS present,
-    //   check for getXxx() and setXxx(X) methods in the immediate class and if they override those in the super hierarchy
-    //   if not, error "propX does not override anything"
     private void verifyPropertyOverride( JCVariableDecl tree )
     {
       Names names = Names.instance( _context );
@@ -836,77 +830,144 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       JCAnnotation override = getAnnotation( tree, override.class );
       if( override != null )
       {
-        if( readableProperty && !isSuperReadable( tree, names ) )
+        if( tree.sym.isStatic() )
         {
-          if( !writableProperty )
-          {
-            // does not override anything
-            reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
-          }
-          else if( !isSuperWritable( tree, names ) )
-          {
-            // does not override anything
-            reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
-          }
-        }
-        else if( !readableProperty && !isSuperWritable( tree, names ) )
-        {
-          // does not override anything
           reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
         }
-      }
-      else
-      {
-        if( readableProperty && isSuperReadable( tree, names ) )
+        else if( readableProperty )
         {
-          // warning: missing @override (overrides getter)
-          reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+          MethodSymbol superReadable = getSuperReadable( tree, names );
+          if( superReadable == null )
+          {
+            if( !writableProperty )
+            {
+              reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+            }
+            else
+            {
+              MethodSymbol superWritable = getSuperWritable( tree, names );
+              if( superWritable == null )
+              {
+                reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+              }
+              else if( superWritable.isStatic() )
+              {
+                reportError( tree, MSG_CANNOT_OVERRIDE_STATIC.get( tree.name, superWritable.name ) );
+              }
+            }
+          }
+          else if( superReadable.isStatic() )
+          {
+            reportError( tree, MSG_CANNOT_OVERRIDE_STATIC.get( tree.name, superReadable.name ) );
+          }
+          else
+          {
+            Types types = Types.instance( getContext() );
+            Type getterReturnType = types.memberType( tree.sym.enclClass().type, superReadable ).getReturnType();
+            if( !types.isCastable( getterReturnType, tree.sym.type ) )
+            {
+              reportError( tree, MSG_PROPERTY_CLASH_RETURN.get( tree.name, tree.sym.enclClass().className(), superReadable.enclClass().className() ) );
+            }
+          }
         }
-        else if( writableProperty && isSuperWritable( tree, names ) )
+        else if( writableProperty )
         {
-          // warning: missing @override (overrides setter)
-          reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+          MethodSymbol superWritable = getSuperWritable( tree, names );
+          if( superWritable == null )
+          {
+            reportError( tree, PropIssueMsg.MSG_DOES_NOT_OVERRIDE_ANYTHING.get( tree.name ) );
+          }
+          else if( superWritable.isStatic() )
+          {
+            reportError( tree, MSG_CANNOT_OVERRIDE_STATIC.get( tree.name, superWritable.name ) );
+          }
+        }
+      }
+      else if( !tree.sym.isStatic() )
+      {
+        if( readableProperty )
+        {
+          MethodSymbol superReadable = getSuperReadable( tree, names );
+          if( superReadable != null )
+          {
+            if( superReadable.isStatic() )
+            {
+              reportError( tree, MSG_CANNOT_OVERRIDE_STATIC.get( tree.name, superReadable.name ) );
+            }
+            else
+            {
+              reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+            }
+            return;
+          }
+        }
+
+        if( writableProperty )
+        {
+          MethodSymbol superWritable = getSuperWritable( tree, names );
+          if( superWritable != null )
+          {
+            if( superWritable.isStatic() )
+            {
+              reportError( tree, MSG_CANNOT_OVERRIDE_STATIC.get( tree.name, superWritable.name ) );
+            }
+            else
+            {
+              reportError( tree, PropIssueMsg.MSG_MISSING_OVERRIDE.get( tree.name ) );
+            }
+          }
         }
       }
     }
 
-    private boolean isSuperWritable( JCVariableDecl tree, Names names )
+    private MethodSymbol getSuperWritable( JCVariableDecl tree, Names names )
     {
       Name setterName = names.fromString( getSetterName( tree.sym.name ) );
       Types types = Types.instance( _javacTask.getContext() );
-      return checkAncestry( (TypeSymbol)tree.sym.owner, sym -> {
-        for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)sym, setterName ) )
+      return checkAncestry( (TypeSymbol)tree.sym.owner, superSym -> {
+        for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)superSym, setterName ) )
         {
-          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().size() == 1 )
+          if( member instanceof MethodSymbol && (!superSym.isInterface() || !member.isStatic()) &&
+            ((MethodSymbol)member).params().size() == 1 )
           {
             Type setterParamType = ((Type.MethodType)types.memberType( tree.sym.enclClass().type, member )).argtypes.get( 0 );
-            return types.isSameType( tree.type, setterParamType );
+            if( types.isSameType( tree.sym.type, setterParamType ) )
+            {
+              return (MethodSymbol)member;
+            }
           }
         }
-        return false;
+        return null;
       } );
     }
 
-    private boolean isSuperReadable( JCVariableDecl tree, Names names )
+    private MethodSymbol getSuperReadable( JCVariableDecl tree, Names names )
     {
       Name getterName = names.fromString( getGetterName( tree.sym, true ) );
-      return checkAncestry( (TypeSymbol)tree.sym.owner, sym -> {
-        for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)sym, getterName ) )
+      Types types = Types.instance( _javacTask.getContext() );
+      return checkAncestry( (TypeSymbol)tree.sym.owner, superSym -> {
+        for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)superSym, getterName ) )
         {
-          if( member instanceof MethodSymbol && ((MethodSymbol)member).params().isEmpty() )
+          if( member instanceof MethodSymbol && (!superSym.isInterface() || !member.isStatic()) &&
+            ((MethodSymbol)member).params().isEmpty() )
           {
-            return true;
+// let caller determine when to detect clashes
+//            Type getterReturnType = types.memberType( tree.sym.enclClass().type, member ).getReturnType();
+//            if( types.isCastable( getterReturnType, tree.sym.type ) )
+//            {
+              return (MethodSymbol)member;
+//            }
           }
         }
-        return false;
+        return null;
       } );
     }
 
-    private boolean checkAncestry( TypeSymbol ts, Predicate<Symbol> check )
+    private MethodSymbol checkAncestry( TypeSymbol ts, Function<Symbol, MethodSymbol> check )
     {
       if( !(ts instanceof ClassSymbol) )
       {
-        return false;
+        return null;
       }
 
       ClassSymbol sym = (ClassSymbol)ts;
@@ -914,19 +975,31 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Type superclass = sym.getSuperclass();
       if( superclass != null && superclass.tsym != null )
       {
-        if( check.test( superclass.tsym ) || checkAncestry( superclass.tsym, check ) )
+        MethodSymbol method = check.apply( superclass.tsym );
+        if( method != null )
         {
-          return true;
+          return method;
+        }
+        method = checkAncestry( superclass.tsym, check );
+        if( method != null )
+        {
+          return method;
         }
       }
       for( Type iface : sym.getInterfaces() )
       {
-        if( check.test( iface.tsym ) || checkAncestry( iface.tsym, check ) )
+        MethodSymbol method = check.apply( iface.tsym );
+        if( method != null )
         {
-          return true;
+          return method;
+        }
+        method = checkAncestry( iface.tsym, check );
+        if( method != null )
+        {
+          return method;
         }
       }
-      return false;
+      return null;
     }
 
     private void verifyPropertyMethodsAgree( JCVariableDecl varDecl )
