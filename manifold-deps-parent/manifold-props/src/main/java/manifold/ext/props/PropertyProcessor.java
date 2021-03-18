@@ -131,10 +131,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   public void tailorCompiler()
   {
     _context = _javacTask.getContext();
-    _propInference = new PropertyInference(
-      field -> addToBackingFields( field ),
-      () -> getContext(),
-      () -> getCompilationUnit() );
+    _propInference = new PropertyInference( field -> addToBackingFields( field ), () -> getContext() );
     ClassReaderCompleter.replaceCompleter( this );
   }
 

@@ -16,7 +16,6 @@
 
 package manifold.ext.props;
 
-import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -46,15 +45,12 @@ class PropertyInference
 {
   private final Consumer<VarSymbol> _backingFieldConsumer;
   private final Supplier<Context> _contextSupplier;
-  private final Supplier<CompilationUnitTree> _compilationUnitSupplier;
-    
+
   PropertyInference( Consumer<VarSymbol> backingFieldConsumer,
-                     Supplier<Context> contextSupplier,
-                     Supplier<CompilationUnitTree> compilationUnitSupplier )
+                     Supplier<Context> contextSupplier )
   {
     _backingFieldConsumer = backingFieldConsumer;
     _contextSupplier = contextSupplier;
-    _compilationUnitSupplier = compilationUnitSupplier;
   }
 
   private Context context()
@@ -319,15 +315,23 @@ class PropertyInference
 
   private void addField( VarSymbol propField, ClassSymbol classSym, Class<? extends Annotation> varClass )
   {
-    addField( propField, classSym, varClass, -1 );
+    addField( propField, classSym, varClass, -1, true );
   }
 
-  private void addField( VarSymbol propField, ClassSymbol classSym, Class<? extends Annotation> varClass, int existingDeclaredAccess )
+  private void addField( VarSymbol propField, ClassSymbol classSym, Class<? extends Annotation> varClass,
+                         int existingDeclaredAccess, boolean addToClass )
   {
-    Object ctx = _compilationUnitSupplier.get();
+    Object ctx = null;
     if( JreUtil.isJava9orLater() )
     {
-      ctx = ReflectUtil.method( JavacElements.instance( context() ), "getModuleElement", CharSequence.class ).invoke( "manifold.props.rt" );
+      if( JreUtil.isJava9Modular_compiler( context() ) )
+      {
+        ctx = ReflectUtil.method( JavacElements.instance( context() ), "getModuleElement", CharSequence.class ).invoke( "manifold.props.rt" );
+      }
+      else // unnamed module
+      {
+        ctx = ReflectUtil.field( Symtab.instance( context() ), "unnamedModule" ).get();
+      }
     }
     ClassSymbol varSym = IDynamicJdk.instance().getTypeElement( context(), ctx, varClass.getTypeName() );
     ClassSymbol autoSym = IDynamicJdk.instance().getTypeElement( context(), ctx, auto.class.getTypeName() );
@@ -358,9 +362,9 @@ class PropertyInference
       // add the @var, @val, @get, @set, etc. annotations
       propField.appendAttributes( List.of( varAnno, autoAnno ) );
 
-      if( classSym != null )
+      if( addToClass )
       {
-        // reflectively call:  classSym.members_field.enter( propField );
+        // call:  classSym.members_field.enter( propField );
         ReflectUtil.method( ReflectUtil.field( classSym, "members_field" ).get(),
           "enter", Symbol.class ).invoke( propField );
       }
@@ -397,7 +401,7 @@ class PropertyInference
           // make the existing field accessible according to the weakest of property methods
           int declaredAccess = (int)exField.flags_field & (PUBLIC | PROTECTED | PRIVATE);
           exField.flags_field = exField.flags_field & ~(PUBLIC | PROTECTED | PRIVATE) | weakest;
-          addField( exField, null, varClass, declaredAccess );
+          addField( exField, classSym, varClass, declaredAccess, false );
           return null; // don't create another one
         }
         if( isPropertyField( exField ) )
