@@ -16,6 +16,8 @@
 
 package manifold.ext.props.middle.auto;
 
+import java.time.LocalDate;
+
 public interface IPerson
 {
   IAddress getAddress();
@@ -25,5 +27,8 @@ public interface IPerson
   {
     String getCity();
     void setCity(String city);
+
+    LocalDate getDate();
+    void setDate(LocalDate date);
   }
 }
