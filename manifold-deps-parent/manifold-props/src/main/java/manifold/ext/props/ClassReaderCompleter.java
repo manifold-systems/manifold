@@ -132,6 +132,7 @@ class ClassReaderCompleter implements Symbol.Completer
               _pp.inferPropertiesFromClassReader( classSym );
             } );
         }
+        annotate.flush();
       }
     }
   }
