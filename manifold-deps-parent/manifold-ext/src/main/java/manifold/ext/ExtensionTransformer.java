@@ -16,6 +16,7 @@
 
 package manifold.ext;
 
+import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Attribute;
@@ -52,6 +53,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
@@ -470,7 +472,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     else
     {
-      tree = (T)unbox( types, make, names, (JCExpression)tree, type );
+      tree = (T)unbox( types, make, names, _tp.getContext(), _tp.getCompilationUnit(), (JCExpression)tree, type );
     }
     return tree;
   }
@@ -500,7 +502,8 @@ public class ExtensionTransformer extends TreeTranslator
   /**
    * Unbox an object to a primitive value.
    */
-  public JCExpression unbox( Types types, TreeMaker make, Names names, JCExpression tree, Type primitive )
+  public static JCExpression unbox( Types types, TreeMaker make, Names names, Context context, CompilationUnitTree compUnit,
+                                    JCExpression tree, Type primitive )
   {
     Type unboxedType = types.unboxedType( tree.type );
     if( unboxedType.hasTag( NONE ) )
@@ -522,7 +525,7 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     make.at( tree.pos() );
-    Symbol valueSym = resolveMethod( tree.pos(),
+    Symbol valueSym = resolveMethod( tree.pos(), context, (JCTree.JCCompilationUnit)compUnit,
       unboxedType.tsym.name.append( names.Value ), // x.intValue()
       tree.type,
       List.<Type>nil() );
@@ -1016,7 +1019,8 @@ public class ExtensionTransformer extends TreeTranslator
       Type unboxedType = _tp.getTypes().unboxedType( operand.type );
       if( unboxedType != null && !unboxedType.hasTag( NONE ) )
       {
-        operand = unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( JavacPlugin.instance().getContext() ), operand, unboxedType );
+        operand = unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( JavacPlugin.instance().getContext() ),
+          _tp.getContext(), _tp.getCompilationUnit(), operand, unboxedType );
       }
 
       //
@@ -2235,6 +2239,10 @@ public class ExtensionTransformer extends TreeTranslator
 
   public JCTree.JCClassDecl getEnclosingClass( Tree tree )
   {
+    return getEnclosingClass( tree, child -> _tp.getParent( child ) );
+  }
+  public static JCTree.JCClassDecl getEnclosingClass( Tree tree, Function<Tree, Tree> parentOf )
+  {
     if( tree == null )
     {
       return null;
@@ -2243,14 +2251,14 @@ public class ExtensionTransformer extends TreeTranslator
     {
       return (JCTree.JCClassDecl)tree;
     }
-    return getEnclosingClass( _tp.getParent( tree ) );
+    return getEnclosingClass( parentOf.apply( tree ), parentOf );
   }
 
   private Symbol getEnclosingSymbol( Tree tree, Context ctx )
   {
-    return getEnclosingSymbol( tree, ctx, _tp );
+    return getEnclosingSymbol( tree, ctx, child -> _tp.getParent( child ) );
   }
-  public static Symbol getEnclosingSymbol( Tree tree, Context ctx, TypeProcessor tp )
+  public static Symbol getEnclosingSymbol( Tree tree, Context ctx, Function<Tree,Tree> parentOf )
   {
     if( tree == null )
     {
@@ -2268,7 +2276,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     if( tree instanceof JCTree.JCVariableDecl )
     {
-      Tree parent = tp.getParent( tree );
+      Tree parent = parentOf.apply( tree );
       if( parent instanceof JCTree.JCClassDecl )
       {
         // field initializers have a block scope
@@ -2276,7 +2284,7 @@ public class ExtensionTransformer extends TreeTranslator
           Names.instance( ctx ).empty, null, ((JCTree.JCClassDecl)parent).sym );
       }
     }
-    return getEnclosingSymbol( tp.getParent( tree ), ctx, tp );
+    return getEnclosingSymbol( parentOf.apply( tree ), ctx, parentOf );
   }
 
   private boolean hasAnnotation( List<JCTree.JCAnnotation> annotations, Class<? extends Annotation> annoClass )
@@ -2900,7 +2908,11 @@ public class ExtensionTransformer extends TreeTranslator
 
   public Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
   {
-    return resolveMethod( pos, _tp.getContext(), (JCTree.JCCompilationUnit)_tp.getCompilationUnit(), name, qual, args );
+    return resolveMethod( _tp.getContext(), _tp.getCompilationUnit(), pos, name, qual, args );
+  }
+  public static Symbol.MethodSymbol resolveMethod( Context context, CompilationUnitTree compUnit, JCDiagnostic.DiagnosticPosition pos, Name name, Type qual, List<Type> args )
+  {
+    return resolveMethod( pos, context, (JCTree.JCCompilationUnit)compUnit, name, qual, args );
   }
 
   private static Symbol.MethodSymbol resolveMethod( JCDiagnostic.DiagnosticPosition pos, Context ctx, JCTree.JCCompilationUnit compUnit, Name name, Type qual, List<Type> args )

@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 
 import java.io.PrintWriter;
@@ -99,5 +100,13 @@ public class TypeProcessor extends CompiledTypeProcessor
   public Set<Object> getDrivers()
   {
     return _drivers;
+  }
+
+  // adds listener *before* TypeProcessor so that ExtensionTransformer processes whatever changes are made from listener
+  public void addTaskListener( TaskListener listener )
+  {
+    getJavacTask().removeTaskListener( this );
+    getJavacTask().addTaskListener( listener );
+    getJavacTask().addTaskListener( this );
   }
 }

@@ -25,5 +25,7 @@ public class PersonTest
   {
     IPerson person = null;
     person.address.city = "hi";
+
+    int year = person.address.date.year;
   }
 }

@@ -22,8 +22,11 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import manifold.ext.props.rt.api.*;
+import manifold.util.ReflectUtil;
 
+import javax.tools.JavaFileObject;
 import java.lang.annotation.Annotation;
+import java.util.function.Function;
 
 import static java.lang.reflect.Modifier.*;
 
@@ -218,4 +221,40 @@ public class Util
     }
     return -1;
   }
+
+  public static JavaFileObject getFile( Tree node, Function<Tree, Tree> parentOf )
+  {
+    JCTree.JCClassDecl classDecl = getClassDecl( node, parentOf );
+    if( classDecl == null )
+    {
+      ReflectUtil.LiveFieldRef symField = ReflectUtil.WithNull.field( node, "sym" );
+      Symbol sym = symField == null ? null : (Symbol)symField.get();
+      while( sym != null )
+      {
+        Symbol owner = sym.owner;
+        if( owner instanceof Symbol.ClassSymbol )
+        {
+          return ((Symbol.ClassSymbol)owner).sourcefile;
+        }
+        sym = owner;
+      }
+    }
+    return classDecl == null ? null : classDecl.sym.sourcefile;
+  }
+
+  public static JCTree.JCClassDecl getClassDecl( Tree node, Function<Tree, Tree> parentOf )
+  {
+    if( node == null || node instanceof JCTree.JCCompilationUnit )
+    {
+      return null;
+    }
+
+    if( node instanceof JCTree.JCClassDecl )
+    {
+      return (JCTree.JCClassDecl)node;
+    }
+
+    return getClassDecl( parentOf.apply( node ), parentOf );
+  }
+
 }

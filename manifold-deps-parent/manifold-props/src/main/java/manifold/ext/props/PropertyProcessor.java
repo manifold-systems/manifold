@@ -33,9 +33,8 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.*;
-import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
-import manifold.ext.ExtensionManifold;
+import manifold.api.util.JavacDiagnostic;
 import manifold.ext.ExtensionTransformer;
 import manifold.ext.props.rt.api.*;
 import manifold.ext.props.rt.api.tags.enter_finish;
@@ -44,9 +43,9 @@ import manifold.internal.javac.*;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;
-import manifold.util.concurrent.LocklessLazyVar;
 
 import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -59,7 +58,6 @@ import static manifold.ext.props.Util.*;
 
 public class PropertyProcessor implements ICompilerComponent, TaskListener
 {
-  private TypeProcessor _tp;
   private BasicJavacTask _javacTask;
   private Context _context;
   private Stack<Pair<JCClassDecl, ArrayList<JCTree>>> _propertyStatements;
@@ -69,25 +67,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private PropertyInference _propInference;
   private Set<ClassSymbol> _inferLater;
   private TaskEvent _taskEvent;
-  private final LocklessLazyVar<ExtensionTransformer> _extensionTransformer = LocklessLazyVar.make( () -> {
-    JavacPlugin javacPlugin = JavacPlugin.instance();
-    if( javacPlugin == null )
-    {
-      // does not function at runtime
-      return null;
-    }
-    IManifoldHost host = javacPlugin.getHost();
-    ExtensionManifold extensionManifold = (ExtensionManifold)host.getSingleModule()
-      .getTypeManifolds().stream()
-      .filter( e -> e instanceof ExtensionManifold )
-      .findFirst().orElse( null );
-    return new ExtensionTransformer( extensionManifold, _tp );
-  } );
+  private ParentMap _parents;
 
   @Override
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
   {
-    _tp = typeProcessor;
     _javacTask = javacTask;
     _context = _javacTask.getContext();
     _propertyStatements = new Stack<>();
@@ -95,6 +79,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     _backingMap = new HashMap<>();
     _nonbackingMap = new HashMap<>();
     _inferLater = new HashSet<>();
+    _parents = new ParentMap( () -> getCompilationUnit() );
 
     if( JavacPlugin.instance() == null )
     {
@@ -102,7 +87,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       return;
     }
 
-    javacTask.addTaskListener( this );
+    // Ensure TypeProcessor follows this in the listener list e.g., so that properties integrate with structural
+    // typing and extension methods.
+    typeProcessor.addTaskListener( this );
   }
 
   BasicJavacTask getJavacTask()
@@ -113,6 +100,31 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   Context getContext()
   {
     return _context;
+  }
+
+  Tree getParent( Tree child )
+  {
+    return _parents.getParent( child );
+  }
+
+  public Types getTypes()
+  {
+    return Types.instance( getContext() );
+  }
+
+  public Names getNames()
+  {
+    return Names.instance( getContext() );
+  }
+
+  public TreeMaker getTreeMaker()
+  {
+    return TreeMaker.instance( getContext() );
+  }
+
+  public Symtab getSymtab()
+  {
+    return Symtab.instance( getContext() );
   }
 
   @Override
@@ -136,7 +148,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         return compUnit;
       }
     }
-    return _tp.getCompilationUnit();
+    // needed for case where ClassReader completer does properties outside the scope of TaskListener
+    return JavacPlugin.instance() != null
+      ? JavacPlugin.instance().getTypeProcessor().getCompilationUnit()
+      : null;
   }
 
   void inferPropertiesFromClassReader( ClassSymbol classSym )
@@ -491,7 +506,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       List<JCAnnotation> annos = List.of( propgenAnno );
       JCModifiers access = getGetterSetterModifiers( make, isInterface( classDecl ), propAbstract, propFinal, isStatic( propField ),
         propAccess, (int)flags, annos, propField.pos );
-      Name name = Names.instance( context ).fromString( getGetterName( propField, true ) );
+      Name name = getNames().fromString( getGetterName( propField, true ) );
       JCExpression resType = (JCExpression)propField.vartype.clone();
       JCBlock block = null;
       if( !propAbstract )
@@ -532,19 +547,18 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     private JCMethodDecl makeSetter( JCClassDecl classDecl, JCVariableDecl propField,
                                      boolean propAbstract, boolean propFinal, PropOption propAccess, JCAnnotation anno )
     {
-      Context context = _context;
-      TreeMaker make = TreeMaker.instance( context );
+      TreeMaker make = getTreeMaker();
       long flags = propField.getModifiers().flags;
       JCAnnotation propgenAnno = makePropGenAnnotation( propField );
       List<JCAnnotation> annos = List.of( propgenAnno );
       JCModifiers access = getGetterSetterModifiers( make, isInterface( classDecl ), propAbstract, propFinal, isStatic( propField ),
         propAccess, (int)flags, annos, propField.pos );
-      Names names = Names.instance( context );
+      Names names = getNames();
       Name name = names.fromString( getSetterName( propField.name ) );
       JCVariableDecl param = (JCVariableDecl)make.VarDef(
         make.Modifiers( FINAL | Flags.PARAMETER ), names.fromString( "$value" ),
         (JCExpression)propField.vartype.clone(), null ).setPos( propField.pos );
-      JCExpression resType = make.Type( Symtab.instance( context ).voidType ).setPos( propField.pos );
+      JCExpression resType = make.Type( getSymtab().voidType ).setPos( propField.pos );
       JCExpressionStatement assign = (JCExpressionStatement)make.Exec( make.Assign(
         make.Ident( propField.name ).setPos( propField.pos ),
         make.Ident( names.fromString( "$value" ) ).setPos( propField.pos ) ).setPos( propField.pos ) )
@@ -944,7 +958,6 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     private MethodSymbol getSuperReadable( JCVariableDecl tree, Names names )
     {
       Name getterName = names.fromString( getGetterName( tree.sym, true ) );
-      Types types = Types.instance( _javacTask.getContext() );
       return checkAncestry( (TypeSymbol)tree.sym.owner, superSym -> {
         for( Symbol member : IDynamicJdk.instance().getMembersByName( (ClassSymbol)superSym, getterName ) )
         {
@@ -1323,7 +1336,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       // don't process here if the field access is an l-value
       //
-      Tree parent = _tp.getParent( tree );
+      Tree parent = getParent( tree );
       if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
       {
         return;
@@ -1370,7 +1383,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return tree;
         }
 
-        TreeMaker make = _tp.getTreeMaker();
+        TreeMaker make = getTreeMaker();
 
         JCMethodInvocation methodCall;
         JCExpression receiver = tree.selected;
@@ -1399,7 +1412,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
       // don't process here if ident is an l-value
       //
-      Tree parent = _tp.getParent( tree );
+      Tree parent = getParent( tree );
       if( parent instanceof JCTree.JCAssign && ((JCTree.JCAssign)parent).lhs == tree )
       {
         return;
@@ -1453,7 +1466,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return tree;
         }
 
-        TreeMaker make = _tp.getTreeMaker();
+        TreeMaker make = getTreeMaker();
 
         JCMethodInvocation methodCall;
         JCExpression receiver = tree.sym.isStatic()
@@ -1477,7 +1490,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     {
       super.visitAssign( tree );
 
-      TreeMaker make = _tp.getTreeMaker();
+      TreeMaker make = getTreeMaker();
 
       JCExpression lhs;
       Type lhsSelectedType;
@@ -1540,11 +1553,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCExpression rhs = tree.rhs;
 
         List<JCTree> tempVars = List.nil();
-        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        if( !(getParent( tree ) instanceof JCExpressionStatement) )
         {
           tempVarIndex++;
           JCTree[] rhsTemp = ExtensionTransformer.tempify( false, tree, make, rhs, _context,
-            ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropRhsTempVar" + tempVarIndex, tempVarIndex );
+            ExtensionTransformer.getEnclosingSymbol( tree, _context, child -> getParent( child ) ), "setPropRhsTempVar" + tempVarIndex, tempVarIndex );
           if( rhsTemp != null )
           {
             tempVars = tempVars.append( rhsTemp[0] );
@@ -1555,7 +1568,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = configMethod( lhs, setMethod, setCall );
 
-        if( !(_tp.getParent( tree ) instanceof JCExpressionStatement) )
+        if( !(getParent( tree ) instanceof JCExpressionStatement) )
         {
           // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)
           tempVars = tempVars.append( make.Exec( setCall ).setPos( tree.pos ) );
@@ -1623,7 +1636,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
     private void genUnaryIncDec( JCTree.JCUnary tree )
     {
-      TreeMaker make = _tp.getTreeMaker();
+      TreeMaker make = getTreeMaker();
 
       JCExpression lhs;
       Type lhsSelectedType;
@@ -1690,7 +1703,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // tempify lhsSelected because it is used both in the getter call and the setter call
         tempVarIndex++;
         JCTree[] argTemp = ExtensionTransformer.tempify( false, tree, make, lhsSelected, _context,
-          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, child -> getParent( child ) ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
         if( argTemp != null )
         {
           tempVars = tempVars.append( argTemp[0] );
@@ -1712,7 +1725,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // now, tempify the arg, since it must be preserved as the result of the post inc/dec
         tempVarIndex++;
         argTemp = ExtensionTransformer.tempify( false, tree, make, arg, _context,
-          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, child -> getParent( child ) ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
         if( argTemp != null )
         {
           tempVars = tempVars.append( argTemp[0] );
@@ -1725,7 +1738,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // tempify the rhs so it can be returned for pre-inc/dec
         tempVarIndex++;
         argTemp = ExtensionTransformer.tempify( false, tree, make, rhs, _context,
-          ExtensionTransformer.getEnclosingSymbol( tree, _context, _tp ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
+          ExtensionTransformer.getEnclosingSymbol( tree, _context, child -> getParent( child ) ), "setPropArgTempVar" + tempVarIndex, tempVarIndex );
         tempVars = tempVars.append( argTemp[0] );
         rhs = (JCExpression)argTemp[1];
 
@@ -1856,10 +1869,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
     private JCTree.JCExpression makeUnaryIncDecCall( JCTree.JCUnary tree, TreeMaker make, JCExpression operand )
     {
-      Type unboxedType = _tp.getTypes().unboxedType( operand.type );
+      Type unboxedType = getTypes().unboxedType( operand.type );
       if( unboxedType != null && !unboxedType.hasTag( NONE ) )
       {
-        operand = _extensionTransformer.get().unbox( _tp.getTypes(), _tp.getTreeMaker(), Names.instance( getContext() ), operand, unboxedType );
+        operand = ExtensionTransformer.unbox( getTypes(), getTreeMaker(), Names.instance( getContext() ),
+          getContext(), getCompilationUnit(), operand, unboxedType );
       }
 
       JCTree.JCExpression one = make.Literal( 1 );
@@ -1874,11 +1888,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       binary.type = operand.type;
       Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
       env.toplevel = (JCTree.JCCompilationUnit)getCompilationUnit();
-      env.enclClass = _extensionTransformer.get().getEnclosingClass( tree );
-      binary.operator = _extensionTransformer.get()
-        .resolveMethod( tree.pos(),
-          Names.instance( _tp.getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
-          _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      env.enclClass = ExtensionTransformer.getEnclosingClass( tree, child -> getParent( child ) );
+      binary.operator = ExtensionTransformer
+        .resolveMethod( getContext(), getCompilationUnit(), tree.pos(),
+          Names.instance( getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
+          getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
       return binary;
 
       // maybe unbox here?
@@ -1889,8 +1903,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       methodTree.setPos( tree.pos );
       methodTree.type = methodSym.getReturnType();
 
+      //!! not needed, the TypeProcessor processes the ast after properties
       // If methodCall is an extension method, rewrite it
-      methodTree = _extensionTransformer.get().maybeReplaceWithExtensionMethod( methodTree );
+//      methodTree = ExtensionTransformer.maybeReplaceWithExtensionMethod( methodTree );
 
       // Concrete type set in attr
       methodTree.type = tree.type;
@@ -2029,7 +2044,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
   private MethodSymbol resolveGetMethod( Type type, Symbol field )
   {
-    Types types = _tp.getTypes();
+    Types types = getTypes();
 
     if( type instanceof Type.TypeVar )
     {
@@ -2098,7 +2113,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
   private void report( Diagnostic.Kind kind, JCTree location, String message )
   {
-    _tp.report( _taskEvent.getSourceFile(), location, kind, message );
+    report( _taskEvent.getSourceFile(), location, kind, message );
+  }
+  public void report( JavaFileObject sourcefile, JCTree tree, Diagnostic.Kind kind, String msg )
+  {
+    IssueReporter<JavaFileObject> reporter = new IssueReporter<>( _javacTask::getContext );
+    JavaFileObject file = sourcefile != null ? sourcefile : Util.getFile( tree, child -> getParent( child ) );
+    reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
 
   private String getGetterName( Symbol field, boolean isOk )

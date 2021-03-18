@@ -61,7 +61,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
     _issueReporter = new IssueReporter<>( _javacTask::getContext );
     _typesToProcess = new HashMap<>();
     _innerClassForGeneration = new HashMap<>();
-    _parents = new ParentMap();
+    _parents = new ParentMap( () -> getCompilationUnit() );
   }
 
   /**
@@ -301,23 +301,4 @@ public abstract class CompiledTypeProcessor implements TaskListener
     _innerClassForGeneration.put( def.sym.flatName().toString(), def );
   }
 
-  private class ParentMap
-  {
-    private Map<CompilationUnitTree, Map<Tree, Tree>> _parents;
-
-    private ParentMap()
-    {
-      _parents = new HashMap<>();
-    }
-
-    private Tree getParent( Tree child )
-    {
-      Map<Tree, Tree> parents = _parents.computeIfAbsent( _compilationUnit, cu -> {
-        Map<Tree, Tree> map = new HashMap<>();
-        new ParentTreePathScanner( map ).scan( cu, null );
-        return map;
-      } );
-      return parents.get( child );
-    }
-  }
 }
