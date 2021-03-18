@@ -1329,7 +1329,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       super.visitSelect( tree );
 
       JCClassDecl classDecl = _backingSymbols.peek().fst;
-      if( !isPropertyField( tree.sym ) || keepRefToField( tree.sym, classDecl ) )
+      if( !isPropertyField( tree.sym ) || keepRefToField( tree, tree.sym, classDecl ) )
       {
         return;
       }
@@ -1405,7 +1405,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       super.visitIdent( tree );
 
       JCClassDecl classDecl = _backingSymbols.peek().fst;
-      if( !isPropertyField( tree.sym ) || keepRefToField( tree.sym, classDecl ) )
+      if( !isPropertyField( tree.sym ) || keepRefToField( tree, tree.sym, classDecl ) )
       {
         return;
       }
@@ -1520,7 +1520,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
 
       JCClassDecl classDecl = _backingSymbols.peek().fst;
-      if( !isPropertyField( lhsSym ) || keepRefToField( lhsSym, classDecl ) )
+      if( !isPropertyField( lhsSym ) || keepRefToField( lhs, lhsSym, classDecl ) )
       {
         return;
       }
@@ -1666,7 +1666,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       }
 
       JCClassDecl classDecl = _backingSymbols.peek().fst;
-      if( !isPropertyField( lhsSym ) || keepRefToField( lhsSym, classDecl ) )
+      if( !isPropertyField( lhsSym ) || keepRefToField( lhs, lhsSym, classDecl ) )
       {
         return;
       }
@@ -1837,8 +1837,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
      * of the class wants to access stuff inside his implementation using property syntax, he should explicitly declare
      * properties.
      */
-    private boolean keepRefToField( Symbol sym, JCClassDecl classDecl )
+    private boolean keepRefToField( JCExpression tree, Symbol sym, JCClassDecl classDecl )
     {
+      if( ExtensionTransformer.isJailbreakReceiver( tree ) )
+      {
+        return true;
+      }
+
       Attribute.Compound auto = getAnnotationMirror( sym, auto.class );
       if( auto == null )
       {
