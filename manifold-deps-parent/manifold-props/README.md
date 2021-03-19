@@ -24,7 +24,7 @@ See [Property inference](#property-inference).
 
 Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's features to create new
 properties, verify property references, access properties with code completion, and more. 
-<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="80%" height="80%"/></p>
+<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="50%" height="50%"/></p>
 
 ### Table of Contents
 * [Declaring properties](#declaring-properties)
@@ -404,10 +404,10 @@ configurations {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-props-rt:2021.1.6-SNAPSHOT'
+     implementation 'systems.manifold:manifold-props-rt:2021.1.7-SNAPSHOT'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-props:2021.1.6-SNAPSHOT'
+     annotationProcessor 'systems.manifold:manifold-props:2021.1.7-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -443,7 +443,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2021.1.6</manifold.version>
+        <manifold.version>2021.1.7</manifold.version>
     </properties>
     
     <dependencies>
@@ -487,10 +487,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-props`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2021.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2021.1.6)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2021.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2021.1.7)
 
 `manifold-props-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2021.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2021.1.6)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2021.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2021.1.7)
 
 # License
 
