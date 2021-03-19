@@ -8,10 +8,11 @@ layout: default
  
 ## On the workbench
 
- Recently completed: [#240](https://github.com/manifold-systems/manifold/issues/240).
- 
- Currently working on: [#242: Support Properties language construct](https://github.com/manifold-systems/manifold/issues/242)
-   
+Recently completed: [Properties for Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+(Available in new major release [v2021.1](https://github.com/manifold-systems/manifold/releases/tag/v2021.1.8))
+
+Working on: documentation
+
 ## On the pile (in no particular order)
 
 #### Extension method specialization 
