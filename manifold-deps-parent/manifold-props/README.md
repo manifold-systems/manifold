@@ -119,8 +119,10 @@ The full syntax for declaring a `@var` property:
 ```
 
 # Modifiers
+                 
+Properties are always `public` by default.
 
-To keep things consistent and simple, modifiers on a property always apply to the getter/setter methods.
+A property's modifiers always apply to its _accessor methods_.
 
 As this example illustrates, `protected`, `abstract`, and `final` all apply exclusively to the getter/setter methods:
 ```java 
@@ -151,6 +153,25 @@ Compiles as:
 private final Map<String, Object> bindings = new HashMap<>();
 . . . 
 public final Map<String, Object> getBindings() {return bindigs;}
+```
+`static` applies to both accessors and state.
+```java
+public class Tree {
+  static @var @set(Private) int nodeCount;
+}
+. . .
+Tree.nodeCount++;
+```
+Compiles as:
+```java
+public class Tree {
+  private static int nodeCount;
+
+  public static int getNodeCount() {return nodeCount;}
+  private static void setNodeCount(int value) {nodeCount = value;}
+}
+. . .
+Tree.setNodeCount(Tree.getNodeCount() + 1);
 ```
 
 # Computed properties
@@ -296,8 +317,8 @@ public class Foo {
 }
 ```
 ```java
-    Foo.setData("the eagle has landed");
-    String data = Foo.getData();
+Foo.setData("the eagle has landed");
+String data = Foo.getData();
 ```
 
 Note, since interfaces are restricted to read-only static data, static interface properties are limited to `@val` and calculated `@var` static properties.
@@ -333,11 +354,12 @@ Properties are inferred from _both_ existing source classes in your project and 
 ### Works with code generators
 
 Property inference automatically works with code generated from annotation processors and Javac plugins. This is
-significant since generated code tends to reflect object models which contain a lot of getter/setter boilerplate. For instance,
-property inference reduces this GraphQL excerpt from this:
+significant since generated code tends to reflect object models which result in a lot of getter/setter boilerplate. For
+instance, property inference reduces this GraphQL excerpt from this:
 ```java
 Actor person = result.getMovie().getLeadingRole().getActor();
-person.getLikes().setCount(person.getLikes().getCount() + 1);
+Likes likes = person.getLikes();
+likes.setCount(likes.getCount() + 1);
 ```
 to this:
 ```java
