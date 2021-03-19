@@ -17,7 +17,7 @@ All fully supported in **Java 8 - 16** with comprehensive IDE support in **Intel
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  
-> * Finally, [_**Properties**_](http://manifold.systems/kotlin.html) for Java with @var, @val, & @set
+> * Finally, [_**Properties**_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) for Java
 > * Includes automatic property _inference_ for existing Java classes  **😎**
 > 
 > [Get you some](http://manifold.systems/kotlin.html).
