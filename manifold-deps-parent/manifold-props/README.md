@@ -329,11 +329,26 @@ if (!calendar.isLenient) { // call isLenient()
 ```  
 
 Properties are inferred from _both_ existing source classes in your project and compiled classes your project uses.
+                                      
+### Works with code generators
+
+Property inference automatically works with code generated from annotation processors and Javac plugins. This is
+significant since generated code tends to reflect object models which contain a lot of getter/setter boilerplate. For instance,
+property inference reduces this GraphQL excerpt from this:
+```java
+Actor person = result.getMovie().getLeadingRole().getActor();
+person.getLikes().setCount(person.getLikes().getCount() + 1);
+```
+to this:
+```java
+Actor person = result.movie.leadingRole.actor;
+person.likes.count++;
+``` 
 
 # Backward compatible
 
-Projects not using Manifold can still use classes compiled with Manifold properties. In this case the project uses the
-getter/setter methods as they normally would.
+Projects not using Manifold can still use classes compiled with Manifold properties. In this case a project uses
+getter/setter methods as it normally would.
 
 
 # IDE Support

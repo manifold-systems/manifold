@@ -1787,7 +1787,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       if( !sameAccess( accessorMethod, propSym ) )
       {
         JCClassDecl classDecl = _backingSymbols.peek().fst;
-        return isAccessible( accessorMethod, classDecl );
+        if( !isAccessible( accessorMethod, classDecl ) )
+        {
+          reportError( ref, MSG_PROPERTY_NOT_ACCESSIBLE.get( accessKind, propSym.flatName(),
+            PropOption.fromModifier( getAccess( accessorMethod ) ).name().toLowerCase() ) );
+          return false;
+        }
       }
       return true;
     }
