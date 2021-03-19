@@ -6,6 +6,7 @@
 Manifold plugs into Java to supplement it with powerful features, including:
 * [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Properties with @var/@val/@set](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 * [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
@@ -16,8 +17,10 @@ All fully supported in **Java 8 - 16** with comprehensive IDE support in **Intel
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  
-> * Manifold supports **Android Studio**! [Learn more](http://manifold.systems/android.html).
-> * Manifold supports **Kotlin**! [Learn more](http://manifold.systems/kotlin.html).
+> * Finally, [_**Properties**_](http://manifold.systems/kotlin.html) for Java with @var, @val, & @set
+> * Includes automatic property _inference_ for existing Java classes  **😎**
+> 
+> [Get you some](http://manifold.systems/kotlin.html).
 
 ## What can you do with Manifold?
 
@@ -62,6 +65,24 @@ Add your own methods to existing Java classes, even *String*, *List*, and *File*
 ```java
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
+```
+
+### [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+Eliminate boilerplate getter/setter code, improve your overall dev experience with properties.
+```java
+interface Book {
+  @var String title; // automatically builds private field & accessors for you
+}
+// refer to it directly by name
+book.title = "Daisy";     // calls setter
+String name = book.title; // calls getter 
+book.title += " chain";   // calls getter & setter
+```
+Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
+compiled classes your project uses.
+```java
+java.time.ZonedDateTime zdt = ZonedDateTime.now();
+String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout yor project
 ```
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
@@ -198,6 +219,11 @@ template editing, integrated preprocessor, and more.
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
 
+Get the plugin from JetBrains Marketplace:
+
+<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
+</iframe>
+
 ### [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project consists of one or more **dependencies** you can easily add to your project:
@@ -205,6 +231,8 @@ by the core framework. Each project consists of one or more **dependencies** you
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)<br>
 
 [Manifold : _Java Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
+
+[Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
