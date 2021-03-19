@@ -3,17 +3,28 @@
 > **⚠ Experimental Feature**
  
 The `manifold-props` project is a compiler plugin to simplify declaring and using properties in Java. Use it to reduce
-the amount of code you would otherwise write and to improve readability wherever you use properties.
-    
+the amount of code you would otherwise write and to improve your overall dev experience with properties. 
 ```java
-// a public property, directly accessible/assignable
-@var String name;  
+interface Book {
+  @var String title; // automatically builds private field & accessors for you
+}
+// refer to it directly by name
+book.title = "Daisy";     // calls setter
+String name = book.title; // calls getter 
+book.title += " chain";   // calls getter & setter
 ```
 
-Note, `manifold-props` also automatically _infers_ properties within your existing source files and within compiled
-classes your project uses. See [Property inference](#property-inference).
+Additionally, `manifold-props` automatically _**infers**_ properties, both from your existing source files and from
+compiled classes your project uses.
+```java
+java.time.ZonedDateTime zdt = ZonedDateTime.now();
+String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout yor project
+```
+See [Property inference](#property-inference).
 
-Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**.
+Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's features to create new
+properties, verify property references, access properties with code completion, and more. 
+<p><img src="http://manifold.systems/images/properties.png" alt="properties" width="80%" height="80%"/></p>
 
 ### Table of Contents
 * [Declaring properties](#declaring-properties)
@@ -23,6 +34,7 @@ Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**
 * [Static properties](#static-properties)
 * [L-value benefits](#l-value-benefits)
 * [Property inference](#property-inference)
+* [Backward compatible](#backward-compatible)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -181,7 +193,9 @@ public class Foo {
     Stuff s = foo.getStuff();
     foo.setStuff(new Stuff());
 ```
-
+>Note if you omit `@var Stuff stuff`, users of class `Foo` can still use `stuff` as a property.
+> See [Property inference](#property-inference).
+ 
 # Backing fields
 
 Accessor methods have exclusive access to the private backing field for a property. If they don't use the backing field,
@@ -189,7 +203,7 @@ the compiler does not generate one. References to a property outside the accesso
 ```java
   @var String name;
   public void setName(String value) {
-    name = validateName(value); // directly sets backing field 'name' 
+    name = validateName(value); // directly assigns to backing field 'name' 
   }
   
   public String toString() {
@@ -199,7 +213,7 @@ the compiler does not generate one. References to a property outside the accesso
 
 # Overriding properties
 
-Overriding a property works similarly to overriding a method. 
+Overriding a property is similar to overriding a method. 
 
 Creating, implementing, and using an interface:
 ```java
@@ -238,7 +252,8 @@ class Rectangle extends Shape {
 `@var` can override `@val`, but not vice versa. This is because `@var` provides the getter necessary for `@val`, but
 `@val` does not provide the setter required by `@var`. Similarly, `@var` can override `@set`. 
                                                                                 
-Note you must use `@override` when overriding a property.
+Note you must use `@override` when overriding a property. This way the compiler can help you identify broken code if the
+super property changes or is removed in a later release.
 
 If you only need to override the _implementation_ of a getter or a setter, just do that:
 ```java
@@ -315,10 +330,10 @@ if (!calendar.isLenient) { // call isLenient()
 
 Properties are inferred from _both_ existing source classes in your project and compiled classes your project uses.
 
-# Miscellany
+# Backward compatible
 
->Projects not using Manifold can still use classes compiled with Manifold properties. In this case the project uses the
-> getter/setter methods as they normally would.
+Projects not using Manifold can still use classes compiled with Manifold properties. In this case the project uses the
+getter/setter methods as they normally would.
 
 
 # IDE Support

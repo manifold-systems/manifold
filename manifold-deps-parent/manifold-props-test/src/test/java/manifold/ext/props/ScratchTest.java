@@ -18,7 +18,9 @@ package manifold.ext.props;
 
 import junit.framework.TestCase;
 import manifold.ext.props.rt.api.*;
+import org.junit.Test;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,6 +39,9 @@ public class ScratchTest extends TestCase
     assertEquals( 15.2, result, 0 );
     assertEquals( 30.4, fooSub.rate, 0 );
 
+    fooSub.thing += " bye";
+    assertEquals( "hi_sub bye_sub", fooSub.thing );
+
     // inc/dec
     double prior = fooSub.rate++;
     assertEquals( 30.4, prior, 0 );
@@ -52,6 +57,15 @@ public class ScratchTest extends TestCase
     ((FooImpl)foo).name = "Mo";
     assertEquals( "Mo", foo.name );
     assertEquals( Arrays.asList( "red", "blue", "green" ), foo.colors );
+  }
+
+  @Test
+  public void testTime()
+  {
+    ZonedDateTime zdt = ZonedDateTime.now();
+    String calendarType1 = zdt.getChronology().getCalendarType();
+    String calendarType2 = zdt.chronology.calendarType;
+    assertEquals( calendarType1, calendarType2 );
   }
 
   static class NamedInner implements INamed
