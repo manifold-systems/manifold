@@ -28,6 +28,7 @@ properties, verify property references, access properties with code completion, 
 
 ### Table of Contents
 * [Declaring properties](#declaring-properties)
+* [Modifiers](#modifiers)
 * [Computed properties](#computed-properties)
 * [Backing fields](#backing-fields)
 * [Overriding properties](#overriding-properties)
