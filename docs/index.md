@@ -17,7 +17,7 @@ All fully supported in **Java 8 - 16** with comprehensive IDE support in **Intel
 Simply add Manifold to your existing project and begin taking advantage of it.
 
 > _**New!**_  
-> * Finally, [_**Properties**_](http://manifold.systems/kotlin.html) for Java with `@var`, `@val`, & `@set`
+> * Finally, [_**Properties**_](http://manifold.systems/kotlin.html) for Java with @var, @val, & @set
 > * Includes automatic property _inference_ for existing Java classes  **😎**
 > 
 > [Get you some](http://manifold.systems/kotlin.html).
@@ -78,7 +78,7 @@ book.title = "Daisy";     // calls setter
 String name = book.title; // calls getter 
 book.title += " chain";   // calls getter & setter
 ```
-Additionally, `manifold-props` automatically _**infers**_ properties, both from your existing source files and from
+Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
 compiled classes your project uses.
 ```java
 java.time.ZonedDateTime zdt = ZonedDateTime.now();
