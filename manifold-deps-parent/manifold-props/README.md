@@ -442,10 +442,10 @@ configurations {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-props-rt:2021.1.8-SNAPSHOT'
+     implementation 'systems.manifold:manifold-props-rt:2021.1.8'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-props:2021.1.8-SNAPSHOT'
+     annotationProcessor 'systems.manifold:manifold-props:2021.1.8'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
