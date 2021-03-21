@@ -16,7 +16,10 @@
 
 package manifold.ext.props.multi;
 
+import manifold.util.ReflectUtil;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class MultiTest
 {
@@ -24,13 +27,18 @@ public class MultiTest
   public void testMulti()
   {
     String type = "hi";
-    IBoth both = new IBoth() {
-      @Override
-      public String getType()
-      {
-        return type;
-      }
-    };
-    String theType = both.getType();
+    IBoth both = () -> type;
+
+    assertEquals( String.class, ReflectUtil.method( both, "getType" ).getMethod().getReturnType() );
+    assertEquals( "hi", both.getType() );
+
+// should produce compile error: MSG_NASTY_INFERRED_PROPERTY_REF
+//    IBoth both = new IBoth() {
+//      @Override
+//      public String getType()
+//      {
+//        return type;
+//      }
+//    };
   }
 }
