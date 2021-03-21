@@ -1851,6 +1851,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       {
         return false;
       }
+
       int declaredAccess = getDeclaredAccess( auto );
       switch( declaredAccess )
       {
@@ -1866,8 +1867,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         case PUBLIC:
           // field is public, no dice
           return true;
-        case -1:
-          // indicates no existing field to worry about
+        case -1: // indicates no existing field
+          if( tree instanceof JCIdent && !_methodDefs.isEmpty() && _methodDefs.peek().sym.enclClass().isAnonymous() )
+          {
+            // can't reference an inferred property from within the declaring class (or inner class within same top-level class)
+            reportError( tree, MSG_NASTY_INFERRED_PROPERTY_REF.get( sym.name ) );
+          }
           return false;
         default:
           throw new IllegalStateException( "Unknown or invalid access privilege: " + declaredAccess );

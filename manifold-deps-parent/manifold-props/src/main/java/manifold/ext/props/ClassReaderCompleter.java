@@ -144,9 +144,20 @@ class ClassReaderCompleter implements Symbol.Completer
     Type superclass = sym.getSuperclass();
     if( superclass instanceof Type.ClassType )
     {
-      superclass.tsym.complete();
+      try
+      {
+        superclass.tsym.complete();
+      }
+      catch( Symbol.CompletionFailure ignore ) {}
+
     }
-    sym.getInterfaces().forEach( iface -> iface.tsym.complete() );
+    sym.getInterfaces().forEach( iface -> {
+      try
+      {
+        iface.tsym.complete();
+      }
+      catch( Symbol.CompletionFailure ignore ) {}
+    } );
     return sym;
   }
 

@@ -16,7 +16,6 @@
 
 package manifold.ext.props;
 
-import manifold.api.util.DynamicArray;
 import manifold.api.util.IssueMsg;
 
 public class PropIssueMsg
@@ -45,4 +44,5 @@ public class PropIssueMsg
   public static final IssueMsg MSG_PROPERTY_CLASH_RETURN = new IssueMsg( "Property '{0}' in '{1}' clashes with getter in '{2}'" );
   public static final IssueMsg MSG_WRITABLE_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER = new IssueMsg( "Writable abstract property '{0}' cannot have an initializer" );
   public static final IssueMsg MSG_ABSTRACT_PROPERTY_IN_NONABSTRACT_CLASS = new IssueMsg( "Abstract property in non-abstract class" );
+  public static final IssueMsg MSG_NASTY_INFERRED_PROPERTY_REF = new IssueMsg( "Identifier reference to outer inferred property `{0}' from anonymous context not allowed (to prevent properties from quietly shadowing refs to locals)." );
 }

@@ -77,6 +77,12 @@ class PropertyInference
 
   private void gatherCandidates( Symbol.MethodSymbol m, Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
   {
+    if( isSynthetic( m ) )
+    {
+      // don't derive a property (or property type) from a synthetic accessor
+      return;
+    }
+    
     Attribute.Compound propgenAnno = getAnnotationMirror( m, propgen.class );
     if( propgenAnno != null )
     {
@@ -96,6 +102,12 @@ class PropertyInference
       fromSetter.computeIfAbsent( derivedFromSetter._name, key -> new HashSet<>() )
         .add( derivedFromSetter );
     }
+  }
+
+  private boolean isSynthetic( Symbol.MethodSymbol m )
+  {
+    return (m.flags() & Flags.SYNTHETIC) != 0 ||
+      (m.flags() & Flags.BRIDGE) != 0;
   }
 
   private boolean isInherited( Symbol ancestorSym, ClassSymbol origin )
@@ -390,7 +402,19 @@ class PropertyInference
 
       VarSymbol exField = (VarSymbol)existing[0];
       Types types = Types.instance( context() );
-      if( types.isSubtype( exField.type, t ) &&
+      boolean subtype;
+      try
+      {
+        subtype = types.isSubtype( exField.type, t );
+      }
+      catch( Symbol.CompletionFailure scf )
+      {
+        // can happen e.g., a type is not included in the classpath or
+        // a JRE class is not represented in ct.sym (sun.awt.util.IdentityArrayList)
+        return null;
+      }
+
+      if( subtype &&
         Modifier.isStatic( (int)exField.flags_field ) == Modifier.isStatic( flags ) && !exField.owner.isInterface() &&
         (!Modifier.isPublic( (int)exField.flags_field ) || isPropertyField( exField )) /* existing public field must always be accessed directly (see keep PropertyProcess#keepRefToField() */ )
       {
