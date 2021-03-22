@@ -16,7 +16,7 @@ by the core framework. This document serves as a quick reference to these projec
 * [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 * [Manifold : _CSV_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
 * [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
-* [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
+* [Manifold : _Property Files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
 * [Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
 * [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)
 * [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
@@ -28,6 +28,7 @@ by the core framework. This document serves as a quick reference to these projec
 * [Manifold : _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 
 ## Java Compiler Extensions
+* [Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Manifold : _String Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) <small>(string interpolation)</small>
 * [Manifold : _[Un]checked_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 

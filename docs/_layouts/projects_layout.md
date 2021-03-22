@@ -17,7 +17,7 @@ _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-dep
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
 [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)
 [Manifold :
-_Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
+_Property Files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)
 [Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)
 [Manifold : _Dark
 Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)
@@ -25,6 +25,9 @@ Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-pa
 ---
 [Manifold : _Java
 Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+---
+[Manifold : _Java
+Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 ---
 [Manifold :
 _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)

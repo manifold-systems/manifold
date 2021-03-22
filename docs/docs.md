@@ -30,12 +30,13 @@ Use [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-
 [Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates), etc.
 directly and type-safely from Java without a code generator in your build and with comprehensive IDE support. 
 * [**Java Extensions**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext) --
-provides extension methods (like [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/classes-and-structs/extension-methods)),
+provides [extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension),
+[properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props),
 [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading),
 [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
-structural typing (like [TypeScript](https://www.typescriptlang.org/docs/handbook/interfaces.html)),
-string interpolation (like [Kotlin](https://kotlinlang.org/docs/reference/basic-types.html#string-templates)),
-type-safe reflection (via [`@Jailbreak`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#type-safe-reflection-via-jailbreak)),
+[structural typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural),
+[string interpolation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings),
+[type-safe reflection](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#type-safe-reflection-via-jailbreak),
 and a lot more.
 
 
@@ -153,6 +154,12 @@ which are similar to interfaces in the [Go](https://golang.org/) and [TypeScript
 languages. See the [Java Extension Manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 for full coverage of these features.
 
+> _**New!**_
+> * Finally, [_**Properties**_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) for Java
+> * Includes automatic property _inference_ for existing Java classes  **😎**
+>
+> [Learn more](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props).
+
 
 # Benefits
 
@@ -234,6 +241,9 @@ projects' docs.
 ### Java Extension Manifold
 * [Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 
+### Java Properties
+* [Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+
 ### Java Templates Framework
 * [Manifold : _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 
@@ -279,7 +289,7 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 * Setup for [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json#setup)
 * Setup for [Manifold : _CSV_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv#setup)
 * Setup for [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml#setup)
-* Setup for [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties#setup)
+* Setup for [Manifold : _Property Files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties#setup)
 * Setup for [Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image#setup)
 * Setup for [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj#setup)
 * Setup for [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js#setup)
@@ -287,6 +297,10 @@ Setup instructions are consistent for each sub-project/dependency.  Here are dir
 <hr/>
 
 * Setup for [Manifold : _Java Extension_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#setup)
+
+<hr/>
+
+* Setup for [Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#setup)
 
 <hr/>
 
@@ -348,6 +362,10 @@ For the convenience of non-maven/non-gradle users you can directly download late
 <hr/>
 
 * Download [Manifold : _Java Extension_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-ext&v=RELEASE)
+
+<hr/>
+
+* Download [Manifold : _Java Properties_](https://repository.sonatype.org/service/local/artifact/maven/redirect?r=central-proxy&g=systems.manifold&a=manifold-props&v=RELEASE)
 
 <hr/>
 
