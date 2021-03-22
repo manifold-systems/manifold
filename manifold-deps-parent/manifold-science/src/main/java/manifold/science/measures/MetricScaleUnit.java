@@ -16,8 +16,6 @@
 
 package manifold.science.measures;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import manifold.science.util.Rational;
 
 
@@ -32,7 +30,7 @@ import static manifold.science.util.MetricFactorConstants.*;
  * 1.25m // 1.25 milli or 0.00125
  * </code></pre>
  */
-public enum MetricScaleUnit
+public enum MetricScaleUnit implements DimensionlessUnit
 {
   y( YOCTO, "yocto", "y" ),
   z( ZEPTO, "zepto", "z" ),
@@ -63,9 +61,9 @@ public enum MetricScaleUnit
   Y( KILO.pow( 8 ), "Yotta", "Y" ),
   Yi( KIBI.pow( 8 ), "Yobi", "Yi" );
 
-  private Rational _amount;
-  private String _name;
-  private String _symbol;
+  private final Rational _amount;
+  private final String _name;
+  private final String _symbol;
 
   MetricScaleUnit( Rational amount, String name, String symbol )
   {
@@ -87,45 +85,5 @@ public enum MetricScaleUnit
   public String getUnitSymbol()
   {
     return _symbol;
-  }
-
-  public Rational postfixBind( String value )
-  {
-    return _amount * Rational.get( value );
-  }
-
-  public Rational postfixBind( Integer value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( Long value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( Float value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( Double value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( BigInteger value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( BigDecimal value )
-  {
-    return _amount * value;
-  }
-
-  public Rational postfixBind( Rational value )
-  {
-    return _amount * value;
   }
 }
