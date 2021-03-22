@@ -20,7 +20,7 @@ Simply add Manifold to your existing project and begin taking advantage of it.
 > * Finally, [_**Properties**_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) for Java with @var, @val, & @set
 > * Includes automatic property _inference_ for existing Java classes  **😎**
 > 
-> [Get you some](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props).
+> [Learn more](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props).
 
 ## What can you do with Manifold?
 
