@@ -6,7 +6,7 @@ layout: default
 Manifold plugs into Java to supplement it with powerful features, including:
 * [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-* [Properties with @var/@val/@set](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 * [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 * [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
