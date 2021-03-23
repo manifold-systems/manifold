@@ -8,10 +8,8 @@
 
   <name>Manifold :: Parent</name>
   <description>
-    Manifold plugs into Java to supplement it with powerful features, including Type-safe Metaprogramming, Extension
-    Methods, Operator Overloading, Unit Expressions, Java Template Engine, Preprocessor, and more. All fully supported
-    in Java 8 - 16 with comprehensive support in IntelliJ IDEA and Android Studio. Simply add Manifold to your existing
-    project and begin taking advantage of it.
+    Manifold is a Java compiler plugin, its features include Metaprogramming, Properties, Extension
+    Methods, Operator Overloading, Templates, a Preprocessor, and more.
   </description>
   <url>http://manifold.systems/</url>
 

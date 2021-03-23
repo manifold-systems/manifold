@@ -3,7 +3,7 @@
 </center>
 
 ## What is Manifold?
-Manifold plugs into Java to supplement it with powerful features, including:
+Manifold is a Java compile plugin. Its features include:
 * [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) (_**New!**_)
