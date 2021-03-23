@@ -82,7 +82,7 @@ Additionally, the feature automatically _**infers**_ properties, both from your 
 compiled classes your project uses.
 ```java
 java.time.ZonedDateTime zdt = ZonedDateTime.now();
-String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout yor project
+String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout your project
 ```
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
