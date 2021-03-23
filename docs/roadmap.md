@@ -9,7 +9,7 @@ layout: default
 ## On the workbench
 
 Recently completed: [Properties for Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-(Available in new major release [v2021.1](https://github.com/manifold-systems/manifold/releases/tag/v2021.1.9))
+(Available in new major release [v2021.1](https://github.com/manifold-systems/manifold/releases/tag/v2021.1.8))
 
 Working on: documentation
 
