@@ -5,8 +5,8 @@
 The `manifold-props` project is a compiler plugin to simplify declaring and using properties in Java. Use it to reduce
 the amount of code you would otherwise write and to improve your overall dev experience with properties. 
 ```java
-interface Book {
-  @var String title; // automatically builds private field & accessors for you
+public interface Book {
+  @var String title; // no more boilerplate code!
 }
 // refer to it directly by name
 book.title = "Daisy";     // calls setter

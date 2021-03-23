@@ -70,8 +70,8 @@ greeting.myMethod(); // Add your own methods to String!
 ### [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 Eliminate boilerplate getter/setter code, improve your overall dev experience with properties.
 ```java
-interface Book {
-  @var String title; // automatically builds private field & accessors for you
+public interface Book {
+  @var String title; // no more boilerplate code!
 }
 // refer to it directly by name
 book.title = "Daisy";     // calls setter
