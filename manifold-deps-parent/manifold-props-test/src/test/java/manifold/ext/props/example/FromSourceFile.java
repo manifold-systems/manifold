@@ -65,4 +65,10 @@ public class FromSourceFile
   {
     _map.put( "nonbacking", value );
   }
+
+  public enum MyInnerEnum
+  {
+    A, B, C, D;
+  }
+  @var MyInnerEnum myInnerEnum;
 }

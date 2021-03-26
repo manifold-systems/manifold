@@ -44,6 +44,7 @@ import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;
 
+import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.lang.annotation.Annotation;
@@ -193,7 +194,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
           else if( e.getKind() == TaskEvent.Kind.GENERATE )
           {
-            new Generate_Start().handleClass( classDecl.sym );
+            new Generate_Start().handleClass( e.getTypeElement() );
           }
         }
       }
@@ -234,7 +235,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
           else if( e.getKind() == TaskEvent.Kind.GENERATE )
           {
-            new Generate_Finish().handleClass( classDecl.sym );
+            new Generate_Finish().handleClass( e.getTypeElement() );
           }
         }
       }
@@ -1930,10 +1931,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   // Note, @propgen is also added to getter/setter methods so that a non-backing field can be recreated on .class load
   class Generate_Start
   {
-    private void handleClass( ClassSymbol classSym )
+    private void handleClass( TypeElement typeSym )
     {
-      IDynamicJdk.instance().getMembers( classSym, e -> e instanceof ClassSymbol, false )
-        .forEach( c -> handleClass( (ClassSymbol)c ) );
+      if( !(typeSym instanceof ClassSymbol) )
+      {
+        return;
+      }
+
+      ClassSymbol classSym = (ClassSymbol)typeSym;
 
       IDynamicJdk.instance().getMembers( classSym, e -> e instanceof VarSymbol, false )
         .forEach( varSym -> handleField( classSym, (VarSymbol)varSym ) );
@@ -2010,10 +2015,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
   class Generate_Finish
   {
-    public void handleClass( ClassSymbol classSym )
+    public void handleClass( TypeElement typeSym )
     {
-      IDynamicJdk.instance().getMembers( classSym, e -> e instanceof ClassSymbol, false )
-        .forEach( c -> handleClass( (ClassSymbol)c ) );
+      if( !(typeSym instanceof ClassSymbol) )
+      {
+        return;
+      }
+
+      ClassSymbol classSym = (ClassSymbol)typeSym;
 
       // handle backing fields
       //

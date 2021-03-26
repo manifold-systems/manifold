@@ -19,6 +19,7 @@ package manifold.ext.props;
 import junit.framework.TestCase;
 import manifold.ext.props.example.FromSourceFile;
 import manifold.util.ReflectUtil;
+import org.junit.Test;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -130,5 +131,11 @@ public class FromSourceFileTest extends TestCase
     assertEquals( 8, FromSourceFile.staticNonbackingProp );
     FromSourceFile.staticNonbackingProp = 9;
     assertEquals( 9, FromSourceFile.staticNonbackingProp );
+  }
+
+  public void testPropWithInnerClass()
+  {
+    FromSourceFile fromSourceFile = new FromSourceFile();
+    FromSourceFile.MyInnerEnum muhEnum = fromSourceFile.myInnerEnum;
   }
 }
