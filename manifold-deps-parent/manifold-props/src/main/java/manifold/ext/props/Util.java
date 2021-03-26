@@ -157,7 +157,6 @@ public class Util
   static boolean isPropertyField( Symbol sym )
   {
     return sym != null &&
-      !sym.isLocal() &&
       (getAnnotationMirror( sym, var.class ) != null ||
         getAnnotationMirror( sym, val.class ) != null ||
         getAnnotationMirror( sym, get.class ) != null ||

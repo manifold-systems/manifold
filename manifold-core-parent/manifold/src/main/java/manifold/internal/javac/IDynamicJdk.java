@@ -89,9 +89,13 @@ public interface IDynamicJdk
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_9";
           }
-          else // Java 11 or later
+          else if( JreUtil.isJava11() ) // Java 11 - 15
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_11";
+          }
+          else // Java 16+
+          {
+            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_16";
           }
           return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }
