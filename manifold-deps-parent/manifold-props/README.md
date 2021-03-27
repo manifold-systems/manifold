@@ -14,12 +14,18 @@ String name = book.title; // calls getter
 book.title += " chain";   // calls getter & setter
 ```
 
-Additionally, `manifold-props` automatically _**infers**_ properties, both from your existing source files and from
-compiled classes your project uses.
+Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
+compiled classes your project uses. Reduce property use from this:
 ```java
-java.time.ZonedDateTime zdt = ZonedDateTime.now();
-String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout yor project
+Actor person = result.getMovie().getLeadingRole().getActor();
+Likes likes = person.getLikes();
+likes.setCount(likes.getCount() + 1);
 ```
+to this:
+```java
+result.movie.leadingRole.actor.likes.count++;
+``` 
+
 See [Property inference](#property-inference).
 
 Properties are fully integrated in both **IntelliJ IDEA** and **Android Studio**. Use the IDE's features to create new
@@ -356,7 +362,7 @@ Properties are inferred from _both_ existing source classes in your project and 
 
 Property inference automatically works with code generated from annotation processors and Javac plugins. This is
 significant since generated code tends to reflect object models which result in a lot of getter/setter boilerplate. For
-instance, property inference reduces this GraphQL excerpt from this:
+instance, using property inference reduces this GraphQL excerpt:
 ```java
 Actor person = result.getMovie().getLeadingRole().getActor();
 Likes likes = person.getLikes();
@@ -364,8 +370,7 @@ likes.setCount(likes.getCount() + 1);
 ```
 to this:
 ```java
-Actor person = result.movie.leadingRole.actor;
-person.likes.count++;
+result.movie.leadingRole.actor.likes.count++;
 ``` 
 
 # Backward compatible

@@ -79,11 +79,16 @@ String name = book.title; // calls getter
 book.title += " chain";   // calls getter & setter
 ```
 Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
-compiled classes your project uses.
+compiled classes your project uses. Reduce property use from this:
 ```java
-java.time.ZonedDateTime zdt = ZonedDateTime.now();
-String calendarType = zdt.chronology.calendarType; // access properties concisely & consistently throughout your project
+Actor person = result.getMovie().getLeadingRole().getActor();
+Likes likes = person.getLikes();
+likes.setCount(likes.getCount() + 1);
 ```
+to this:
+```java
+result.movie.leadingRole.actor.likes.count++;
+``` 
 
 ### [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 Implement *operator* methods on any type to directly support arithmetic, relational, index, and unit operators.

@@ -68,9 +68,8 @@ This example demonstrates how to apply annotations to a property and how to spec
 
 ## Inferred Properties
 
-Additionally, `manifold-props` automatically _infers_ properties, both from your existing source files and from
-compiled classes your project uses, including generated code from annotation processors. For instance, property
-inference reduces this GraphQL excerpt:
+Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
+compiled classes your project uses. Reduce property use from this:
 ```java
 Actor person = result.getMovie().getLeadingRole().getActor();
 Likes likes = person.getLikes();
@@ -78,9 +77,8 @@ likes.setCount(likes.getCount() + 1);
 ```
 to this:
 ```java
-Actor person = result.movie.leadingRole.actor;
-person.likes.count++;
-```
+result.movie.leadingRole.actor.likes.count++;
+``` 
 
 ## IDE Support
                                     
