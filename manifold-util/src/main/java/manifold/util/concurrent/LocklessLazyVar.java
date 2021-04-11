@@ -50,22 +50,23 @@ public abstract class LocklessLazyVar<T>
     return result;
   }
 
+  public T set( T value )
+  {
+    T prev = get();
+    _val = value == null ? (T)NULL : value;
+    return prev;
+  }
+
   protected abstract T init();
 
   /**
-   * Clears the variable, forcing the next call to {@link #get()} to re-calculate
-   * the value.
+   * Clears the variable, forcing the next call to {@link #get()} to re-init the value.
    */
   public final T clear()
   {
-    T hold = _val;
+    T prev = _val;
     _val = null;
-    return hold;
-  }
-
-  protected void initDirectly( T val )
-  {
-    _val = val;
+    return prev;
   }
 
   public boolean isLoaded()

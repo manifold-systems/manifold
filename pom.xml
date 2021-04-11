@@ -33,6 +33,7 @@
     <module>manifold-core-parent</module>
     <module>manifold-deps-parent</module>
     <module>manifold-util</module>
+    <module>manifold-javadoc-agent</module>
     <module>manifold-all</module>
   </modules>
 
@@ -296,21 +297,13 @@
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.9.1</version>
-            <configuration>
-              <encoding>UTF-8</encoding>
-              <additionalparam>-Xdoclint:none</additionalparam>
-
-              <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
-              <excludePackageNames>manifold.science.measures;manifold.science.util;manifold.science.vector;manifold.ext.props.middle</excludePackageNames>
-              
-            </configuration>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <version>2.8</version>
             <executions>
               <execution>
-                <id>attach-javadocs</id>
+                <id>getClasspathFilenames</id>
                 <goals>
-                  <goal>jar</goal>
+                  <goal>properties</goal>
                 </goals>
               </execution>
             </executions>

@@ -17,22 +17,23 @@
 package manifold.util.concurrent;
 
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public abstract class LockingLazyVar<T>
 {
   private final static Object NULL = new Object();
   private volatile T _val = null;
-  private final Lock _lock;
+  private final ReadWriteLock _rwLock;
 
   protected LockingLazyVar()
   {
-    this( new ReentrantLock() );
+    this( new ReentrantReadWriteLock() );
   }
 
-  protected LockingLazyVar( Lock lock )
+  protected LockingLazyVar( ReadWriteLock lock )
   {
-    _lock = lock;
+    _rwLock = lock;
   }
 
   /**
@@ -40,44 +41,75 @@ public abstract class LockingLazyVar<T>
    */
   public final T get()
   {
-    T result = _val;
+    T result;
+    Lock rLock = _rwLock.readLock();
+    rLock.lock();
+    try
+    {
+      result = _val;
+    }
+    finally
+    {
+      rLock.unlock();
+    }
+
     if( result == NULL )
     {
       return null;
     }
-    if( result == null )
-    {
-      _lock.lock();
-      try
-      {
 
-        result = _val;
-        if( result == NULL )
-        {
-          return null;
-        }
+    if( result != null )
+    {
+      return result;
+    }
+
+    Lock wLock = _rwLock.writeLock();
+    wLock.lock();
+    try
+    {
+      result = _val;
+      if( result == NULL )
+      {
+        return null;
+      }
+      if( result == null )
+      {
+        result = init();
         if( result == null )
         {
-          result = init();
-
-          //The extra space makes all the difference
-
-          if( result == null )
-          {
-            _val = (T)NULL;
-          }
-          else
-          {
-            _val = result;
-          }
+          _val = (T)NULL;
+        }
+        else
+        {
+          _val = result;
         }
       }
-      finally
-      {
-        _lock.unlock();
-      }
+    }
+    finally
+    {
+      wLock.unlock();
     }
     return result;
+  }
+
+  public T set( T value )
+  {
+    if( value == null )
+    {
+      value = (T)NULL;
+    }
+    T prev = get();
+    Lock wLock = _rwLock.writeLock();
+    wLock.lock();
+    try
+    {
+      _val = value;
+    }
+    finally
+    {
+      wLock.unlock();
+    }
+    return prev;
   }
 
   protected abstract T init();
@@ -88,18 +120,19 @@ public abstract class LockingLazyVar<T>
    */
   public final T clear()
   {
-    T hold;
-    _lock.lock();
+    T prev;
+    Lock wLock = _rwLock.writeLock();
+    wLock.lock();
     try
     {
-      hold = _val;
+      prev = _val;
       _val = null;
     }
     finally
     {
-      _lock.unlock();
+      wLock.unlock();
     }
-    return hold;
+    return prev;
   }
 
   public final void clearNoLock()
@@ -107,22 +140,18 @@ public abstract class LockingLazyVar<T>
     _val = null;
   }
 
-  protected void initDirectly( T val )
+  public boolean isLoaded()
   {
-    _lock.lock();
+    Lock rLock = _rwLock.readLock();
+    rLock.lock();
     try
     {
-      _val = val;
+      return _val != null;
     }
     finally
     {
-      _lock.unlock();
+      rLock.unlock();
     }
-  }
-
-  public boolean isLoaded()
-  {
-    return _val != null;
   }
 
   /**
@@ -147,7 +176,7 @@ public abstract class LockingLazyVar<T>
     };
   }
 
-  public static <Q> LockingLazyVar<Q> make( Lock lock, final LazyVarInit<Q> init )
+  public static <Q> LockingLazyVar<Q> make( ReadWriteLock lock, final LazyVarInit<Q> init )
   {
     return new LockingLazyVar<Q>( lock )
     {
@@ -157,5 +186,4 @@ public abstract class LockingLazyVar<T>
       }
     };
   }
-
 }

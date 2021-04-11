@@ -42,7 +42,7 @@ public class NecessaryEvilUtil
       try
       {
         // Shutdown Oracle's attempt at blacklisting fields and methods from reflection in Java 12
-        Class<?> hackClass = Class.forName( "manifold.util.ReflectionHack_12" );
+        Class<?> hackClass = Class.forName( NecessaryEvilUtil.class.getPackage().getName() + ".ReflectionHack_12" );
         Method hackReflection = hackClass.getMethod( "hackReflection" );
         hackReflection.invoke( null );
       }
@@ -188,6 +188,7 @@ public class NecessaryEvilUtil
     }
     Object /*Module*/ jdkJavadoc = ReflectUtil.method( Class.class, "getModule" ).invoke( HtmlDoclet );
     addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.doclets.formats.html", manifoldModule, true, true );
+    addExportsOrOpens.invoke( jdkJavadoc, "jdk.javadoc.internal.tool", manifoldModule, true, true );
     if( !JreUtil.isJava13orLater() )
     {
       // `com.sun.tools.doclets.standard.Standard` and `com.sun.tools.javadoc.main.Main` are removed in JDK 13

@@ -75,6 +75,53 @@
     <module>manifold-yaml-test</module>
   </modules>
 
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-javadoc-agent</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+      <version>2021.1.10-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+  <profiles>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.0.1</version>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <additionalOptions>
+                <additionalOption>-Xdoclint:none</additionalOption>
+              </additionalOptions>
+              <additionalJOptions>
+                <additionalJOption>-J-javaagent:${systems.manifold:manifold-javadoc-agent:jar}</additionalJOption>
+<!--                <additionalJOption>-J-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005</additionalJOption>-->
+              </additionalJOptions>
+              <!-- The manifold.science module uses binding expressions which don't parse in the javadoc parser at the moment -->
+<!--              <excludePackageNames>manifold.science.measures;manifold.science.util;manifold.science.vector;manifold.ext.props.middle</excludePackageNames>-->
+
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+  
   <build>
     <pluginManagement>
       <plugins>
