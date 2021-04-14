@@ -59,10 +59,10 @@ existing project:
 ```groovy
 dependencies {
     // Add manifold-exceptions to neutralize checked exceptions
-    compile group: 'systems.manifold', name: 'manifold-exceptions', version: '.2021.1.11'
+    compile group: 'systems.manifold', name: 'manifold-exceptions', version: '2021.1.11'
 
     // Add manifold-exceptions to -processorpath for javac (for Java 9+, not needed for Java 8)
-    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '.2021.1.11'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2021.1.11'
 }
 
 tasks.withType(JavaCompile) {
