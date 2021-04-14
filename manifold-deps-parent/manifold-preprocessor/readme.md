@@ -478,6 +478,12 @@ rootProject.name = 'MyPreprocessorProject'
 </project>
 ```
 
+## Javadoc agent
+
+See [Javadoc agent](http://manifold.systems/javadoc-agent.html) for details about integrating specific language extensions
+with javadoc.
+
+
 # Javadoc
 
 `manifold-preprocessor`:<br>
