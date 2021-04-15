@@ -21,6 +21,7 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 * [Projects](#projects)
 * [Sample Projects](#sample-projects)
 * [Setup](#setup)
+* [Platforms](#platforms)
 * [Javadoc](#javadoc)
 * [License](#license)
 * [Versioning](#versioning)
@@ -955,6 +956,15 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
+
+# Platforms
+
+Manifold supports:
+* Java SE (8 - 17)
+* [Android](http://manifold.systems/android.html)
+* [Kotlin](http://manifold.systems/kotlin.html) (limited)
+
+Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
 # Javadoc 
 

@@ -7,8 +7,9 @@ layout: default
 * [Type-safe Metaprogramming](#type-safe-metaprogramming-with-type-manifolds)
 * [Java Extensions with the _Extension_ Manifold](#the-extension-manifold)
 * [Benefits](#benefits)
-* [Projects](#projects)
 * [IDE Support](#ide-support)
+* [Projects](#projects)
+* [Platforms](#platforms)  
 * [**Setup**](#setup)
 * [Download](#download)
 * [License](#license)
@@ -269,6 +270,15 @@ projects' docs.
 * [Manifold sample Web App](https://github.com/manifold-systems/manifold-sample-web-app)
 * [Manifold sample Gradle Project](https://github.com/manifold-systems/manifold-simple-gradle-project)
 * [Manifold sample Kotlin App](https://github.com/manifold-systems/manifold-sample-kotlin-app)
+
+# Platforms
+
+Manifold supports:
+* Java SE (8 - 17)
+* [Android](http://manifold.systems/android.html)
+* [Kotlin](http://manifold.systems/kotlin.html) (limited)
+
+Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
 # Setup
 

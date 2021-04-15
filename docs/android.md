@@ -5,18 +5,19 @@ layout: default
 # Using Manifold with Android Studio
 
 Android Studio's support for [Java 8 features](https://developer.android.com/studio/write/java8-support.html) enables
-Android applications to work directly with Manifold. This document provides configuration information to help you setup
-your project to use Manifold.
+Android applications to work directly with Manifold. This document provides supplementary configuration information to
+elp you setup your Android project to use Manifold.
 
->Note, you can also develop Android applications with IntelliJ IDEA using the Android plugin along with the Manifold
+>🛈 Note, you can also develop Android applications with IntelliJ IDEA using the Android plugin along with the Manifold
 >plugin. 
-
-## Get the Manifold plugin
-Get the Manifold plugin directly from within Android Studio:
-<br>
-`Settings | Plugins | Marketplace | search "Manifold"`
-<br>
-You must restart Android Studio to enable the plugin. 
+>
+>### Get the Manifold plugin
+>Get the Manifold plugin directly from within Android Studio:
+><br>
+>`Settings | Plugins | Marketplace | search "Manifold"`
+><br>
+> 
+>You must restart Android Studio to enable the plugin. 
  
 ## Java 8 Source and Target Compatibility 
 Set your project's source and target compatibility values to Java 8:
@@ -48,7 +49,7 @@ You can conveniently copy/paste from the following list of the latest Manifold d
 between *annotationProcessor* and *implementation* scoping. Manifold dependencies that operate exclusively within the
 Java compiler are only accessible from the processor path, therefore they have no impact on your runtime distribution.
 
-#### Manifold core
+#### Manifold Core
 ```groovy
 annotationProcessor 'systems.manifold:manifold:2021.1.11'
 implementation 'systems.manifold:manifold-rt:2021.1.11'
@@ -57,6 +58,11 @@ implementation 'systems.manifold:manifold-rt:2021.1.11'
 ```groovy
 annotationProcessor 'systems.manifold:manifold-ext:2021.1.11'
 implementation 'systems.manifold:manifold-ext-rt:2021.1.11'
+```
+#### Manifold : Props
+```groovy
+annotationProcessor 'systems.manifold:manifold-props:2021.1.11'
+implementation 'systems.manifold:manifold-props-rt:2021.1.11'
 ```
 #### Manifold : GraphQL
 ```groovy
@@ -83,11 +89,11 @@ implementation 'systems.manifold:manifold-yaml-rt:2021.1.11'
 annotationProcessor 'systems.manifold:manifold-csv:2021.1.11'
 implementation 'systems.manifold:manifold-csb-rt:2021.1.11'
 ```
-#### Manifold : Properties
+#### Manifold : Properties Files
 ```groovy
 annotationProcessor 'systems.manifold:manifold-properties:2021.1.11'
 ```
-#### Manifold : Image
+#### Manifold : Image Files
 ```groovy
 annotationProcessor 'systems.manifold:manifold-image:2021.1.11'
 ```
