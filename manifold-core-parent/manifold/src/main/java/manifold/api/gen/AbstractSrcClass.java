@@ -26,6 +26,8 @@ import javax.lang.model.element.ElementKind;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
+import com.sun.source.tree.Tree;
 import manifold.api.host.IModule;
 import manifold.api.type.ContributorKind;
 import manifold.api.type.ITypeManifold;
@@ -656,7 +658,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     Annotation,
     Enum;
 
-    public static AbstractSrcClass.Kind from( ElementKind kind )
+    public static Kind from( ElementKind kind )
     {
       switch( kind )
       {
@@ -669,7 +671,23 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
         case INTERFACE:
           return Interface;
       }
-      throw new IllegalArgumentException( "Bad kind: " + kind );
+      throw new IllegalArgumentException( "Unhandled kind: " + kind );
+    }
+
+    public static Kind from( Tree.Kind kind )
+    {
+      switch( kind )
+      {
+        case ENUM:
+          return Enum;
+        case CLASS:
+          return Class;
+        case ANNOTATION_TYPE:
+          return Annotation;
+        case INTERFACE:
+          return Interface;
+      }
+      throw new IllegalArgumentException( "Unhandled kind: " + kind );
     }
   }
 

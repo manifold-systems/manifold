@@ -36,14 +36,7 @@ import javax.tools.JavaFileObject;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
-import manifold.api.gen.AbstractSrcMethod;
-import manifold.api.gen.SrcAnnotationExpression;
-import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcMethod;
-import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawStatement;
-import manifold.api.gen.SrcStatementBlock;
-import manifold.api.gen.SrcType;
+import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.ext.rt.ExtensionMethod;
@@ -97,7 +90,7 @@ class ExtCodeGen
     List<CompilationUnitTree> trees = new ArrayList<>();
     _model.getHost().getJavaParser().parseText( _existingSource, trees, null, null, null );
     JCTree.JCClassDecl classDecl = (JCTree.JCClassDecl)trees.get( 0 ).getTypeDecls().get( 0 );
-    SrcClass srcExtended = new SrcClass( _fqn, classDecl.getKind() == Tree.Kind.CLASS ? SrcClass.Kind.Class : SrcClass.Kind.Interface )
+    SrcClass srcExtended = new SrcClass( _fqn, SrcClass.Kind.from( classDecl.getKind() ) )
       .modifiers( classDecl.getModifiers().getFlags() );
     if( classDecl.extending != null )
     {
