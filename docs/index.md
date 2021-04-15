@@ -216,7 +216,7 @@ A template file *abc/example/UserSample.html.mtl*
 </html>
 ```
 
-### [IDE Support](http://manifold.systems/docs.html#ide--intellij-idea)
+## [IDE Support](http://manifold.systems/docs.html#ide--intellij-idea)
 Use the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to fully leverage
 Manifold with **IntelliJ IDEA** and **Android Studio**. The plugin provides comprehensive support for Manifold including code
 completion, navigation, usage searching, refactoring, incremental compilation, hotswap debugging, full-featured
@@ -229,7 +229,7 @@ Get the plugin from JetBrains Marketplace:
 <iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
 </iframe>
 
-### [Projects](http://manifold.systems/projects.html)
+## [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project consists of one or more **dependencies** you can easily add to your project:
 
@@ -270,9 +270,18 @@ by the core framework. Each project consists of one or more **dependencies** you
 >* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
 >* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 
-### [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+## Platforms
+
+Manifold supports:
+* Java SE (8 - 17)
+* [Android](http://manifold.systems/android.html)
+* [Kotlin](http://manifold.systems/kotlin.html) (limited)
+
+Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
+
+## [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
-### [Learn More](http://manifold.systems/docs.html)
+## [Learn More](http://manifold.systems/docs.html)
 <br>
