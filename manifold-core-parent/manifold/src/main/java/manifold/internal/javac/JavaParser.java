@@ -337,7 +337,7 @@ public class JavaParser implements IJavaParser
     {
       if( iFile.isDescendantOf( dir ) )
       {
-        return makeTypeName( iFile.getName().substring( dir.getName().length() ) );
+        return makeTypeName( iFile.toString().substring( dir.toString().length() ) );
       }
     }
     throw new IllegalStateException( "Could not infer type name from: " + file.getName() );
@@ -345,6 +345,10 @@ public class JavaParser implements IJavaParser
 
   private String makeTypeName( String path )
   {
+    if( path.startsWith( "/" ) || path.startsWith( File.separator ) )
+    {
+      path = path.substring( 1 );
+    }
     return path
       .replace( '/', '.' )
       .replace( File.separatorChar, '.' )
