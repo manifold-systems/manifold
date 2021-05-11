@@ -1260,9 +1260,11 @@ public class JavacPlugin implements Plugin, TaskListener
    */
   private static void loadJavacParserClass()
   {
-    synchronized( JavacPlugin.class )
+    ClassLoader classLoader = JavacParser.class.getClassLoader();
+    synchronized(
+      ReflectUtil.method( classLoader, "getClassLoadingLock", String.class )
+        .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
     {
-      ClassLoader classLoader = JavacParser.class.getClassLoader();
       if( null == ReflectUtil.method( classLoader, "findLoadedClass", String.class )
         .invoke( "com.sun.tools.javac.parser.ManJavacParser" ) )
       {
