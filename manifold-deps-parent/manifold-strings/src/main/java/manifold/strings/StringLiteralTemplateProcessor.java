@@ -23,6 +23,7 @@ import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.ClientCodeWrapper;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -46,14 +47,18 @@ import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.rt.api.util.Stack;
 import manifold.strings.api.ITemplateProcessorGate;
+import manifold.util.concurrent.LocklessLazyVar;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
+  private static final String SIMPLE_EXPR_DISABLED = "manifold.strings.simple.disabled";
+
   private TypeProcessor _tp;
   private BasicJavacTask _javacTask;
   private Stack<Boolean> _disabled;
   private ManDiagnosticHandler _manDiagnosticHandler;
   private SortedSet<ITemplateProcessorGate> _processorGates;
+  private LocklessLazyVar<Boolean> _isSimpleExprDisabled;
 
   @Override
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
@@ -62,10 +67,18 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
     _javacTask = javacTask;
     _disabled = new Stack<>();
     _disabled.push( false );
+    _isSimpleExprDisabled = LocklessLazyVar.make( () -> isSimpleExprDisabled() );
 
     javacTask.addTaskListener( this );
 
     loadTemplateProcessorGates();
+  }
+
+  private boolean isSimpleExprDisabled()
+  {
+    JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( _javacTask.getContext() );
+    String value = jpe.getOptions().get( SIMPLE_EXPR_DISABLED );
+    return Boolean.parseBoolean( value );
   }
 
   private void loadTemplateProcessorGates()
@@ -287,8 +300,8 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
 
   public List<JCTree.JCExpression> parse( String stringValue, int literalOffset )
   {
-    List<StringLiteralTemplateParser.Expr> comps =
-      StringLiteralTemplateParser.parse( new EscapeMatcher( _manDiagnosticHandler, literalOffset+1 ), stringValue );
+    List<StringLiteralTemplateParser.Expr> comps = StringLiteralTemplateParser.parse(
+      new EscapeMatcher( _manDiagnosticHandler, literalOffset+1 ), _isSimpleExprDisabled.get(), stringValue );
     if( comps.isEmpty() )
     {
       return Collections.emptyList();

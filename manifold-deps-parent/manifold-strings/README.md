@@ -52,7 +52,7 @@ for more details regarding Java services.
  
 ## Escaping '$'
 
-Finally, you can use the `$` literally and bypass string templates using standard Java character escape syntax:
+You can use the `$` literally and bypass string templates using standard Java character escape syntax:
 ```java
 String verbatim = "It is \$hour o'clock"; // prints "It is $hour o'clock"
 ```
@@ -60,6 +60,28 @@ Or, if you prefer, you can use template syntax:
 ```java
 String verbatim = "It is ${'$'}hour o'clock"; // prints "It is $hour o'clock"
 ``` 
+
+## Disabling simple `$foo` expressions
+           
+Finally, you can disable simple `$foo` syntax in favor is strictly using `${foo}` syntax with the javac
+`-Amanifold.strings.simple.disabled=true` command line option. As such, you can still use string templates with the
+`${foo}` syntax, while simple usages of `$` are excluded from processing.
+                                                        
+```xml
+<plugin>
+  <groupId>org.apache.maven.plugins</groupId>
+. . .
+    <compilerArgs>
+      <arg>-Xplugin:Manifold</arg>
+      <arg>-Amanifold.strings.simple.disabled=true</arg>
+    </compilerArgs>
+. . .
+```
+```java
+int hour = 5;
+out.println("It is $hour o'clock"); // prints "It is $hour o'clock"
+out.println("It is ${hour} o'clock"); // prints "It is 5 o'clock"
+```
 
 # Template Files
 

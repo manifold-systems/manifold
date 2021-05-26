@@ -24,7 +24,8 @@ import manifold.internal.javac.FragmentProcessor;
 
 public class StringLiteralTemplateParser
 {
-  private String _stringValue;
+  private final String _stringValue;
+  private final boolean _simpleExprDisabled;
   private final IntPredicate _escapeMatcher;
   private int _index;
 
@@ -32,21 +33,23 @@ public class StringLiteralTemplateParser
    * Parse a string from a string literal using standard template delimiters e.g., "$foo" and "${foo.bar()}",
    * and return the list of expressions.
    *
-   * @param $escapeMatcher Given the index of a '$' returns whether or not the '$' is escaped. Command line
-   *                       compilers filter out the '\' char in the string, so the caller must keep track.
-   *                       Other parsers, like many IDE parsers, preserve the '\' chars in the string, so
-   *                       they have a different (and simpler) way of determining escaped '$' chars.
-   * @param stringValue The value of the string literal as returned by the tokenizer.
+   * @param $escapeMatcher     Given the index of a '$' returns whether or not the '$' is escaped. Command line
+   *                           compilers filter out the '\' char in the string, so the caller must keep track.
+   *                           Other parsers, like many IDE parsers, preserve the '\' chars in the string, so
+   *                           they have a different (and simpler) way of determining escaped '$' chars.
+   * @param simpleExprDisabled If true, disables simple $ expressions to support ${} expressions only. Note, this
+   *                           argument reflects the `manifold.strings.simple.disabled` javac command line option.
+   * @param stringValue        The value of the string literal as returned by the tokenizer.
    * @return The list of expressions from the String
    */
-  public static List<Expr> parse( IntPredicate $escapeMatcher, String stringValue )
+  public static List<Expr> parse( IntPredicate $escapeMatcher, boolean simpleExprDisabled, String stringValue )
   {
     if( isFilterFromTemplateParsing( stringValue ) )
     {
       return Collections.emptyList();
     }
 
-    return new StringLiteralTemplateParser( $escapeMatcher, stringValue ).parse();
+    return new StringLiteralTemplateParser( $escapeMatcher, simpleExprDisabled, stringValue ).parse();
   }
 
   private static boolean isFilterFromTemplateParsing( String stringValue )
@@ -57,10 +60,16 @@ public class StringLiteralTemplateParser
            stringValue.startsWith( "\"\"\"" ) && stringValue.contains( FragmentProcessor.FRAGMENT_START );
   }
 
-  private StringLiteralTemplateParser( IntPredicate $escapeMatcher, String stringValue )
+  private StringLiteralTemplateParser( IntPredicate $escapeMatcher, boolean simpleExprDisabled, String stringValue )
   {
     _stringValue = stringValue;
+    _simpleExprDisabled = simpleExprDisabled;
     _escapeMatcher = $escapeMatcher;
+  }
+
+  private boolean isSimpleExprDisabled()
+  {
+    return _simpleExprDisabled;
   }
 
   private List<Expr> parse()
@@ -142,6 +151,11 @@ public class StringLiteralTemplateParser
 
   private Expr parseSimpleExpr()
   {
+    if( isSimpleExprDisabled() )
+    {
+      return null;
+    }
+
     int length = _stringValue.length();
     int index = _index + 1;
     int offset = index;
