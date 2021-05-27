@@ -22,6 +22,7 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.Tag;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
 import java.util.ArrayList;
@@ -378,6 +379,19 @@ public interface ManAttr
       operands.add( new JavacBinder.Node<>( tree ) );
     }
     return operands;
+  }
+
+  default JCTree.JCTypeCast makeCast( JCTree.JCExpression expression, Type type )
+  {
+    TreeMaker make = JavacPlugin.instance().getTreeMaker();
+
+    JCTree.JCTypeCast castCall = make.TypeCast( type, expression );
+
+    // Transform to ManTypeCast to distinguish from non-generated casts, to avoid warnings
+    ManTypeCast manTypeCast = new ManTypeCast( castCall.clazz, castCall.expr );
+    manTypeCast.type = type;
+    manTypeCast.pos = expression.pos;
+    return manTypeCast;
   }
 
   static Symbol.MethodSymbol resolveUnaryMethod( Types types, Tag tag, Type expr )

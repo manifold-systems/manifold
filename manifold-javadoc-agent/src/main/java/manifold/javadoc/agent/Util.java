@@ -18,14 +18,13 @@ package manifold.javadoc.agent;
 
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
-import com.sun.tools.javac.processing.JavacProcessingEnvironment;
-import com.sun.tools.javac.util.Context;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import java.util.ServiceLoader;
 
 public class Util
 {
-  public static void initJavacPlugin( Context context, ClassLoader cl )
+  public static void initJavacPlugin( Object context, ClassLoader cl )
   {
     // Load the JavacPlugin
     bypassJava9Security( cl );
@@ -34,9 +33,20 @@ public class Util
     {
       if( plugin.getName().equals( "Manifold" ) )
       {
-        JavacProcessingEnvironment pEnv = JavacProcessingEnvironment.instance( context );
-        plugin.init( JavacTask.instance( pEnv ) );
-        break;
+        try
+        {
+          // note, using reflection here for the case where we build manifold with java 11 when we have to compile ManXxx_11 classes
+          // otherwise, direct refs to com.sun.tools.javac.xxx classes fail to resolve cuz modules
+          Class<?> jpeClass = Class.forName( "com.sun.tools.javac.processing.JavacProcessingEnvironment" );
+          Class<?> ctxClass = Class.forName( "com.sun.tools.javac.util.Context" );
+          Object jpe = jpeClass.getMethod( "instance", ctxClass ).invoke( null, context );
+          plugin.init( JavacTask.instance( (ProcessingEnvironment)jpe ) );
+          break;
+        }
+        catch( Exception e )
+        {
+          throw new RuntimeException( e );
+        }
       }
     }
   }

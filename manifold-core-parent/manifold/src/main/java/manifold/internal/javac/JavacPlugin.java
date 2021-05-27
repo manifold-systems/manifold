@@ -26,6 +26,7 @@ import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Attr;
+import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.CompileStates;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
@@ -403,7 +404,8 @@ public class JavacPlugin implements Plugin, TaskListener
     ManClassWriter.instance( getContext() );
 
     // Override javac's Check
-    ManCheck.instance( getContext() );
+    ReflectUtil.method( "manifold.internal.javac.ManCheck_" + (JreUtil.isJava11orLater() ? 11 : 8),
+      "instance", Context.class ).invokeStatic( getContext() );
 
     if( !isExtensionsEnabled() )
     {

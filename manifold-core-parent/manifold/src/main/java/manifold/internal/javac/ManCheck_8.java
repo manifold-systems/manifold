@@ -17,13 +17,17 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.comp.Annotate;
+import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.Check;
+import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
 
+import com.sun.tools.javac.util.JCDiagnostic;
 import manifold.util.ReflectUtil;
 
-public class ManCheck extends Check
+public class ManCheck_8 extends Check
 {
   private static final String CHECK_FIELD = "chk";
   private boolean _enterGuard;
@@ -31,16 +35,16 @@ public class ManCheck extends Check
   public static Check instance( Context ctx )
   {
     Check check = ctx.get( checkKey );
-    if( !(check instanceof ManCheck) )
+    if( !(check instanceof ManCheck_8) )
     {
       ctx.put( checkKey, (Check)null );
-      check = new ManCheck( ctx );
+      check = new ManCheck_8( ctx );
     }
 
     return check;
   }
 
-  private ManCheck( Context ctx )
+  private ManCheck_8( Context ctx )
   {
     super( ctx );
 
@@ -56,5 +60,35 @@ public class ManCheck extends Check
     StaticCompiler.instance().compileRemainingTypes_ByTypeNameRegexes();
 
     super.reportDeferredDiagnostics();
+  }
+
+  @Override
+  public void checkRedundantCast( Env<AttrContext> env, JCTree.JCTypeCast tree )
+  {
+    if( tree instanceof ManTypeCast )
+    {
+      // ManTypeCast is always generated and should never cause a warning
+      return;
+    }
+
+    super.checkRedundantCast( env, tree );
+  }
+
+  @Override
+  public void warnStatic( JCDiagnostic.DiagnosticPosition pos, String msg, Object... args )
+  {
+    JCTree tree = pos.getTree();
+    if( tree instanceof JCTree.JCFieldAccess )
+    {
+      JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree;
+      if( fieldAccess.sym.enclClass().isInterface() &&
+        fieldAccess.sym.getAnnotationMirrors().stream()
+          .anyMatch( e -> e.toString().contains( "manifold.ext.props.rt.api" ) ) )
+      {
+        // filter properties on interfaces
+        return;
+      }
+    }
+    super.warnStatic( pos, msg, args );
   }
 }

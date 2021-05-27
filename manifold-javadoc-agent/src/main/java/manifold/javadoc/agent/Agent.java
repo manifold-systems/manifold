@@ -93,7 +93,7 @@ public class Agent
             mv.visitMethodInsn( INVOKEINTERFACE, "javax/tools/JavaFileManager", "getClassLoader", "(Ljavax/tools/JavaFileManager$Location;)Ljava/lang/ClassLoader;", true );
 
             // call Util.initJavacPlugin(ClassLoader, Context)
-            visitMethodInsn( INVOKESTATIC, "manifold/javadoc/agent/Util", "initJavacPlugin", "(Lcom/sun/tools/javac/util/Context;Ljava/lang/ClassLoader;)V", false );
+            visitMethodInsn( INVOKESTATIC, "manifold/javadoc/agent/Util", "initJavacPlugin", "(Ljava/lang/Object;Ljava/lang/ClassLoader;)V", false );
             super.visitCode();
           }
         };

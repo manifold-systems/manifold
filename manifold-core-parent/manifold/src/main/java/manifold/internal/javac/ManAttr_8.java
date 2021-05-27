@@ -310,17 +310,6 @@ public class ManAttr_8 extends Attr implements ManAttr
     ensureIndexedAssignmentIsWritable( tree.lhs );
   }
 
-  private JCTree.JCTypeCast makeCast( JCTree.JCExpression expression, Type type )
-  {
-    TreeMaker make = JavacPlugin.instance().getTreeMaker();
-
-    JCTree.JCTypeCast castCall = make.TypeCast( type, expression );
-    castCall.type = type;
-    castCall.pos = expression.pos;
-
-    return castCall;
-  }
-
   @Override
   public void visitAssignop( JCTree.JCAssignOp tree )
   {

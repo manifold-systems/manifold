@@ -409,17 +409,23 @@ commonly used types.  These include:
 | **Binary**       | _string_     | `manifold.json.rt.api.OctetEncoding`      |
 | **Octet**        | _string_     | `manifold.json.rt.api.OctetEncoding`      |
 | **Base64**       | _string_     | `manifold.json.rt.api.Base64Encoding`     | 
+                                                                                                            
+### Custom scalar types
 
-Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the 
-`IJsonFormatTypeCoercer` interface as a 
+Additionally, Manifold includes an API you can implement to provide your own custom scalar types.  Implement the
+`manifold.json.rt.api.IJsonFormatTypeCoercer` interface as a 
 [service provider](https://docs.oracle.com/javase/tutorial/ext/basics/spi.html#register-service-providers).
 
->If you've implemented format type resolvers for JSON Schema, you can share them with your GraphQL APIs.  No need to
-reinvent the wheel!
+Note, the scalar's persisted JSON type and format must match the GraphQL server's type and format. The GraphQL
+server's published schema should include this information. For instance, a date or time value typically persists as a
+String type and adheres to a specific date/time format.
+
+>If you've implemented format type resolvers for JSON Schema using `manifold-json`, you can share them with your
+> GraphQL APIs; they already implement `IJsonFormatTypeCoercer`.
 
 # Embedding Queries with Fragments
 
->Note, this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword)
+>Note, this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword
 
 You can now *embed* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
 means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate

@@ -46,6 +46,8 @@ import manifold.util.ReflectUtil;
 import manifold.rt.api.util.Stack;
 import manifold.util.concurrent.LocklessLazyVar;
 
+import javax.tools.Diagnostic;
+
 public class ManLog_8 extends Log
 {
   private Map<DiagnosticHandler, LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>>> _suspendedIssues;
@@ -188,6 +190,13 @@ public class ManLog_8 extends Log
   @Override
   public void report( JCDiagnostic issue )
   {
+    if( issue.getKind().ordinal() > Diagnostic.Kind.ERROR.ordinal() &&
+      issue.getDiagnosticSource().getFile() instanceof GeneratedJavaStubFileObject )
+    {
+      // ignore warnings from generated source
+      return;
+    }
+
     LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>> suspendedIssues =
       _suspendedIssues.get( getDiagnosticHandler() );
     if( suspendedIssues == null || suspendedIssues.isEmpty() )

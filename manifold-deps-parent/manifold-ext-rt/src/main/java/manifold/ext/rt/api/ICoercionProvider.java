@@ -31,8 +31,8 @@ public interface ICoercionProvider
    * by another coercion provider.
    * @param value A value to coerce, typically a String.
    * @param type The type to convert to.
-   * @return A value of the specified {@code type} or {@link ICallHandler#UNHANDLED} if not this provider does not
-   * handle the coercion.
+   * @return A value of the specified {@code type} or {@link ICallHandler#UNHANDLED} if this provider does not handle
+   * the coercion.
    */
   Object coerce( Object value, Class<?> type );
 
