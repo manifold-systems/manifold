@@ -1643,6 +1643,11 @@ class GqlParentType
       case "BigDecimal":
         cls = BigDecimal.class;
         break;
+      // permit arbitrary bindings as a "json" object
+      case "json":
+      case "JSON":
+        cls = Bindings.class;
+        break;
       default:
         cls = findFormatType( type.getName() );
     }
