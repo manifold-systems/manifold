@@ -112,7 +112,7 @@ configurations {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-image:2021.1.12-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-image:2021.1.13-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -156,7 +156,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2021.1.12</manifold.version>
+        <manifold.version>2021.1.13</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
@@ -200,7 +200,7 @@ module my.image.app {
 # Javadoc
 
 `manifold-image`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2021.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2021.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2021.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2021.1.13)
 
 # License
 
