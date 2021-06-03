@@ -16,6 +16,7 @@
 
 package com.sun.tools.javac.parser;
 
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Source;
 import com.sun.tools.javac.parser.Tokens.Comment;
 import com.sun.tools.javac.parser.Tokens.Token;
@@ -33,11 +34,10 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.stream.Collectors;
 
 
 import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
-import static com.sun.tools.javac.tree.JCTree.Tag.IDENT;
-import static com.sun.tools.javac.tree.JCTree.Tag.TYPEARRAY;
 
 /**
  * !!! IMPORTANT !!!
@@ -63,9 +63,14 @@ public class ManJavacParser extends JavacParser
   private static Field field_endPosTable = null;
   private static Field field_parseModuleInfo = null;
   private static Field field_PATTERN_MATCHING_IN_INSTANCEOF = null;
+  private static Field field_TYPE_ANNOTATIONS = null;
   private static Method method_selectExprMode = null;
   private static Method method_checkSourceLevel = null;
-  private static Method method_BindingPattern = null;
+  private static Method method_BindingPattern_15 = null;
+  private static Method method_BindingPattern_16 = null;
+  private static Method method_insertAnnotationsToMostInner = null;
+  private static Method method_unannotatedType = null;
+  private static int java_ver = 0;
   static
   {
     try
@@ -76,10 +81,22 @@ public class ManJavacParser extends JavacParser
       field_endPosTable = JavacParser.class.getDeclaredField( "endPosTable" );
       field_endPosTable.setAccessible( true );
 
+      method_insertAnnotationsToMostInner = JavacParser.class.getDeclaredMethod( "insertAnnotationsToMostInner", JCExpression.class, List.class, boolean .class );
+      method_insertAnnotationsToMostInner.setAccessible( true );
+
+      java_ver = 8;
+
       // Java 9+
-      //noinspection JavaReflectionMemberAccess
       field_parseModuleInfo = JavacParser.class.getDeclaredField( "parseModuleInfo" );
       field_parseModuleInfo.setAccessible( true );
+
+      java_ver = 9;
+
+      // java 10+
+      method_unannotatedType = JavacParser.class.getDeclaredMethod( "unannotatedType", boolean.class );
+      method_unannotatedType.setAccessible( true );
+
+      java_ver = 10;
 
       // Java 15+
       method_selectExprMode = JavacParser.class.getDeclaredMethod( "selectExprMode" );
@@ -91,9 +108,19 @@ public class ManJavacParser extends JavacParser
       field_PATTERN_MATCHING_IN_INSTANCEOF = featureClass.getDeclaredField( "PATTERN_MATCHING_IN_INSTANCEOF" );
       field_PATTERN_MATCHING_IN_INSTANCEOF.setAccessible( true );
 
-      method_BindingPattern = TreeMaker.class.getDeclaredMethod( "BindingPattern", Name.class, JCTree.class );
-      method_BindingPattern.setAccessible( true );
+      field_TYPE_ANNOTATIONS = featureClass.getDeclaredField( "TYPE_ANNOTATIONS" );
+      field_TYPE_ANNOTATIONS.setAccessible( true );
 
+      method_BindingPattern_15 = TreeMaker.class.getDeclaredMethod( "BindingPattern", Name.class, JCTree.class );
+      method_BindingPattern_15.setAccessible( true );
+
+      java_ver = 15;
+
+      // Java 16+
+      method_BindingPattern_16 = TreeMaker.class.getDeclaredMethod( "BindingPattern", JCVariableDecl.class );
+      method_BindingPattern_16.setAccessible( true );
+
+      java_ver = 16;
     }
     catch( Exception ignore )
     {
@@ -193,14 +220,54 @@ public class ManJavacParser extends JavacParser
       if (token.kind == INSTANCEOF) {
         int pos = token.pos;
         nextToken();
-        JCTree pattern = parseType();
+
+        JCModifiers mods = optFinal(0);
+        JCExpression type;
+        if( java_ver >= 16 ) {
+          try {
+            type = (JCExpression)method_unannotatedType.invoke( this, false );
+          } catch( Exception e ) { throw new RuntimeException( e ); }
+        } else {
+          type = parseType();
+        }
+        JCTree pattern = type;
+
         if (token.kind == IDENTIFIER) {
           checkSourceLevel_InstanceOf();
           try {
-            pattern = toP( (JCTree)method_BindingPattern.invoke( F.at( token.pos ), ident(), pattern ) );
+            if( java_ver >= 16 )
+            {
+              JCVariableDecl var = toP(F.at(token.pos).VarDef(mods, ident(), type, null));
+              pattern = toP( (JCTree)method_BindingPattern_16.invoke( F.at( token.pos ), var ) );
+            }
+            else
+            {
+              pattern = toP( (JCTree)method_BindingPattern_15.invoke( F.at( token.pos ), ident(), pattern ) );
+            }
           } catch( Exception ignore ) {
             // a Java release prior to BindingPattern will have a compile error from the extra identifier
           }
+        } else if( java_ver >= 16 ) {
+          checkNoMods( mods.flags & ~Flags.DEPRECATED );
+          if( mods.annotations.nonEmpty() ) {
+            checkSourceLevel_Type_Annotations( mods.annotations.head.pos );
+            List<JCTree.JCAnnotation> typeAnnos = List.from(
+              mods.annotations.stream()
+                .map( decl -> {
+                  JCTree.JCAnnotation typeAnno = F.at( decl.pos )
+                    .TypeAnnotation( decl.annotationType,
+                      decl.args );
+                  try
+                  {
+                    ((AbstractEndPosTable)field_endPosTable.get( ManJavacParser.this )).replaceTree( decl, typeAnno );
+                  } catch( Exception e ) { throw new IllegalStateException( e ); }
+                  return typeAnno;
+                } ).collect( Collectors.toList() ) );
+            try {
+              type = (JCExpression)method_insertAnnotationsToMostInner.invoke( this, type, typeAnnos, false );
+            } catch( Exception e ) { throw new RuntimeException( e ); }
+          }
+          pattern = type;
         }
         odStack[top] = F.at(pos).TypeTest(odStack[top], pattern);
       }
@@ -243,6 +310,17 @@ public class ManJavacParser extends JavacParser
     if( method_checkSourceLevel != null ) {
       try{
         method_checkSourceLevel.invoke(token.pos, field_PATTERN_MATCHING_IN_INSTANCEOF);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private void checkSourceLevel_Type_Annotations( int pos )
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(pos, field_TYPE_ANNOTATIONS);
       } catch( Exception e ) {
         // oh well, don't let this ruin anyone's day
       }
@@ -385,7 +463,7 @@ public class ManJavacParser extends JavacParser
   }
 
   //Manifold: Overrides the method in Java 8
-  @Override
+  //@Override
   JCVariableDecl variableDeclaratorRest( int pos, JCModifiers mods, JCExpression type, Name name,
                                          boolean reqInit, Comment dc )
   {
