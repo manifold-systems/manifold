@@ -406,14 +406,7 @@ For the convenience of non-maven/non-gradle users you can directly download late
 
 # License
 
-## Open Source
-Manifold is licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
-
-## Commercial
-Commercial licenses for this work are available. These replace the above ASL 2.0 and offer limited warranties, support,
-maintenance, and commercial server integrations.
-
-For more information contact: [admin@manifold.systems](mailto:admin@manifold.systems)
+Manifold is open source and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
 
 # Author
 

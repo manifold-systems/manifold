@@ -492,16 +492,7 @@ with javadoc.
 
 # License
 
-## Open Source
 Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.  
-
-## Commercial
-Commercial licenses for this work are available. These replace the above ASL 2.0 and offer 
-limited warranties, support, maintenance, and commercial server integrations.
-
-For more information, please visit: http://manifold.systems//licenses
-
-Contact: admin@manifold.systems
 
 # Versioning
 
