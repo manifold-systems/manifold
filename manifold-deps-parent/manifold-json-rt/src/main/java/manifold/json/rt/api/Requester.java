@@ -55,6 +55,7 @@ public class Requester<T>
   private Format _format;
   private Map<String, String> _headers;
   private Map<String, String> _parameters;
+  private Function<T, Object> _rawResponseHandler;
   private int _timeout;
 
   public enum Format
@@ -205,6 +206,26 @@ public class Requester<T>
   {
     _timeout = timeout;
     return this;
+  }
+
+  /**
+   * @param handler An optional handler for processing the raw response as an arbitrary Bindings instance. The handler
+   *                may return a custom bindings object which overrides the default, type-safe result instance. In any
+   *                case, the handler can process the response in any way. Note, modifications made to the response
+   *                persist and, therefore, affect default internal data and error processing.
+   */
+  public Requester<T> withRawResponseHandler( Function<T, Object> handler )
+  {
+    _rawResponseHandler = handler;
+    return this;
+  }
+
+  /**
+   * @return The raw response handler or null if one is not assigned.
+   */
+  public Function<T, Object> getRawResponseHandler()
+  {
+    return _rawResponseHandler;
   }
 
   /**

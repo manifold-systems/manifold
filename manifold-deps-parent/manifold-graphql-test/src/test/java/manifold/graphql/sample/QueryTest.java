@@ -3,6 +3,9 @@ package manifold.graphql.sample;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+
+import manifold.rt.api.Bindings;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.json.rt.api.Requester;
@@ -141,5 +144,14 @@ public class QueryTest
     Executor exec = query.request( "" ).withBearerAuthorization( "xyz" );
     String bearerAuth = (String)exec.getHeaders().get( "Authorization" );
     assertEquals( "Bearer xyz", bearerAuth );
+  }
+
+  @Test
+  public void testRawResponseHandler()
+  {
+    MovieQuery query = MovieQuery.builder().build();
+    Function<Bindings, Object> handler = bindings -> null;
+    Executor exec = query.request( "" ).withRawResponseHandler( handler );
+    assertSame( handler, exec.getRawResponseHandler() );
   }
 }

@@ -18,6 +18,7 @@ package manifold.graphql.rt.api.request;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import manifold.ext.rt.RuntimeMethods;
@@ -81,6 +82,12 @@ public class Executor<T>
   private Object coerce( Class<T> resultType, Object result )
   {
     Bindings response = (Bindings) result;
+    Object customResult = handleRawResponse( response );
+    if( customResult != null )
+    {
+      // an custom result bindings
+      return customResult;
+    }
     handleErrors( response );
     return RuntimeMethods.coerce( response.get( "data" ), resultType );
   }
@@ -169,12 +176,12 @@ public class Executor<T>
   {
     return withAuthorization( "Bearer", accessToken );
   }
+
   @SuppressWarnings("unused")
   public Executor<T> withAuthorization( String tokenType, String accessToken )
   {
     return withHeader( "Authorization", "$tokenType $accessToken" );
   }
-
   /**
    * The connection timeout setting in milliseconds. If the timeout expires before the connection can be established, a
    * {@link java.net.SocketTimeoutException) is thrown. A value of zero is interpreted as an infinite timeout, this is
@@ -184,6 +191,24 @@ public class Executor<T>
   {
     _requester.withTimeout( timeout );
     return this;
+  }
+
+  /**
+   * @param handler An optional handler for processing the raw response as an arbitrary Bindings instance. The handler
+   *                may return a custom bindings object which overrides the default, type-safe result instance. In any
+   *                case, the handler can process the response in any way. Note, modifications made to the response
+   *                persist and, therefore, affect default internal data and error processing.
+   * @return this {@code Executor} instance.
+   */
+  public Executor<T> withRawResponseHandler( Function<Bindings, Object> handler )
+  {
+    _requester.withRawResponseHandler( handler );
+    return this;
+  }
+
+  public Function<Bindings, Object> getRawResponseHandler()
+  {
+    return _requester.getRawResponseHandler();
   }
 
   /**
@@ -240,6 +265,16 @@ public class Executor<T>
   public T get( Requester.Format format ) throws GqlRequestException
   {
     return (T)_requester.getOne( "", _reqArgs.getBindings(), format );
+  }
+
+  private Object handleRawResponse( Bindings response )
+  {
+    Function<Bindings, Object> handler = _requester.getRawResponseHandler();
+    if( handler != null )
+    {
+      return handler.apply( response );
+    }
+    return null;
   }
 
   private void handleErrors( Bindings response )
