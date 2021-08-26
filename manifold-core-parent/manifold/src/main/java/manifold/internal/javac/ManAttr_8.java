@@ -339,7 +339,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", DiagnosticPosition.class, Type.class );
     ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
     Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
-    Type right = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
+    Type right = (Type)checkNonVoid.invoke( tree.rhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
 
     if( handleOperatorOverloading( tree, left, right ) )
     {

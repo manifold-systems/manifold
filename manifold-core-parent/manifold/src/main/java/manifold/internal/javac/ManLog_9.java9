@@ -1,17 +1,7 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.comp.Annotate;
-import com.sun.tools.javac.comp.ArgumentAttr;
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.javac.comp.DeferredAttr;
-import com.sun.tools.javac.comp.Enter;
-import com.sun.tools.javac.comp.Flow;
-import com.sun.tools.javac.comp.Infer;
-import com.sun.tools.javac.comp.Lower;
-import com.sun.tools.javac.comp.MemberEnter;
-import com.sun.tools.javac.comp.Resolve;
-import com.sun.tools.javac.comp.TypeEnter;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.jvm.Gen;
@@ -92,10 +82,12 @@ public class ManLog_9 extends Log
       Infer.instance( ctx ),
       JavaCompiler.instance( ctx ),
       JavacProcessingEnvironment.instance( ctx ),
+      JavacProcessingEnvironment.instance( ctx ).getMessager(),
       JavacTrees.instance( ctx ),
       MemberEnter.instance( ctx ),
       Resolve.instance( ctx ),
       TypeEnter.instance( ctx ),
+      Operators.instance( ctx ),
 //      LambdaToMethod.instance( ctx ),
 //      Lower.instance( ctx ),
 //      MemberEnter.instance( ctx ),

@@ -102,6 +102,7 @@ public class ManLog_8 extends Log
       Infer.instance( ctx ),
       JavaCompiler.instance( ctx ),
       JavacProcessingEnvironment.instance( ctx ),
+      JavacProcessingEnvironment.instance( ctx ).getMessager(),
       JavacTrees.instance( ctx ),
       MemberEnter.instance( ctx ),
       Resolve.instance( ctx ),
