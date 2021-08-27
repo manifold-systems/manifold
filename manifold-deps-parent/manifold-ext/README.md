@@ -1829,14 +1829,14 @@ configurations {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-ext-rt:2021.1.15'
+    implementation 'systems.manifold:manifold-ext-rt:2021.1.16'
 
 // Add this only if you are using dynamic features of manifold extension framework such as dynamic structural interfaces 
-//    implementation 'systems.manifold:manifold-ext:2021.1.15'   
+//    implementation 'systems.manifold:manifold-ext:2021.1.16'   
 
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2021.1.15'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2021.1.16'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -1872,7 +1872,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2021.1.15</manifold.version>
+        <manifold.version>2021.1.16</manifold.version>
     </properties>
     
     <dependencies>
@@ -1930,10 +1930,10 @@ with javadoc.
 # Javadoc 
 
 `manifold-ext`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2021.1.15/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2021.1.15)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2021.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2021.1.16)
 
 `manifold-ext-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2021.1.15/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2021.1.15)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2021.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2021.1.16)
 
 # License
 
