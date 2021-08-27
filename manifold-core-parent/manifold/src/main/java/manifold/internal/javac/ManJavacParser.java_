@@ -111,10 +111,15 @@ public class ManJavacParser extends JavacParser
       field_TYPE_ANNOTATIONS = featureClass.getDeclaredField( "TYPE_ANNOTATIONS" );
       field_TYPE_ANNOTATIONS.setAccessible( true );
 
-      method_BindingPattern_15 = TreeMaker.class.getDeclaredMethod( "BindingPattern", Name.class, JCTree.class );
-      method_BindingPattern_15.setAccessible( true );
-
       java_ver = 15;
+      try
+      {
+        method_BindingPattern_15 = TreeMaker.class.getDeclaredMethod( "BindingPattern", Name.class, JCTree.class );
+        method_BindingPattern_15.setAccessible( true );
+      }
+      catch( Exception ignore )
+      {
+      }
 
       // Java 16+
       method_BindingPattern_16 = TreeMaker.class.getDeclaredMethod( "BindingPattern", JCVariableDecl.class );
