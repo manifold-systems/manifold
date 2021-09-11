@@ -213,10 +213,24 @@ public interface ManAttr
     if( overloadOperator != null )
     {
       overloadOperator = new OverloadOperatorSymbol( overloadOperator, false );
+      Type owntype;
+      if( overloadOperator.type.isErroneous() )
+      {
+        owntype = overloadOperator.type;
+      }
+      else
+      {
+        Type returnType = types().memberType( exprType, overloadOperator ).getReturnType();
+        if( types().isAssignable( exprType, returnType ) )
+        {
+          owntype = returnType;
+        }
+        else
+        {
+          return false;
+        }
+      }
       IDynamicJdk.instance().setOperator( tree, (Symbol.OperatorSymbol)overloadOperator );
-      Type owntype = overloadOperator.type.isErroneous()
-                     ? overloadOperator.type
-                     : types().memberType( exprType, overloadOperator ).getReturnType();
       setResult( tree, owntype );
       return true;
     }
