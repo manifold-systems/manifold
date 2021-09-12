@@ -1,4 +1,4 @@
-![manifold framwork](http://manifold.systems/images/manifold_framework.png)
+![manifold framework](http://manifold.systems/images/manifold_framework.png)
 
 # Manifold : Core
 
@@ -87,8 +87,6 @@ The framework consists of the several SPIs:
 * [ITypeManifold]() This SPI is the basis for implementing a _type manifold_. See existing type manifold projects such as [`manifold-graphql`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql). 
 * [ICompilerComponent]() Implement this low-level SPI to supplement Java with new or enhanced behavior e.g., [`manifold-strings`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) and [`manifold-exceptions`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions).
 * [IPreprocessor]() Implement this SPI to provide a _preprocessor_ to filter source before it enters Java's parser e.g., [`manifold-preprocessor`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor).
-* [IProxyFactory]() This SPI addresses _structural interface_ performance; you implement this to provide a compile-time
-proxy for a specific structural interface.
 
 # Anatomy of a Type Manifold
 
@@ -309,15 +307,13 @@ compilation
     * **Kotlin**. Applications using Manifold statically fully support Kotlin and other JVM languages. 
     
     **Limitations**:
-    * Dynamic compilation is not supported. Usage of dynamic features such as structural typing can still be used, but
-    must be configured with static proxy factories.
+    * Dynamic compilation (compilation at runtime) is not supported. Usage of dynamic features such as Dark Java can't be used. Considering Dark Java is the only remaining exclusively dynamic feature of Manifold, this is a rather minor limitation. 
     
 * **`dynamic`**: Compiles all resource types dynamically at runtime. No resource types are compiled to .class files
 at compile-time. Both compile-time and runtime binaries are included in your distribution.
 
     **Advantages**:
-    * **Dynamic**. Supports features such as structural typing without having to build static bridges. Additionally,
-    purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
+    * **Dynamic**. Purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
      
     **Limitations**:
     * Slower startup and initialization. Manifold dynamic services contribute to a slower startup time. Additionally,
@@ -328,12 +324,10 @@ at compile-time. Both compile-time and runtime binaries are included in your dis
      supported using this configuration. 
     
 * **`mixed`**: Compiles project resource types statically such as resource files, and compiles dynamic resource types
-dynamically such as Dark Java and dynamic structural interface bridges.  Both compile-time and runtime binaries are
-included in your distribution.
+dynamically such as Dark Java.  Both compile-time and runtime binaries are included in your distribution.
 
     **Advantages**:
-    * **Dynamic**. Supports features such as structural typing without having to build static bridges. Additionally,
-    purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
+    * **Dynamic**. Purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
     * **Performance**. Since resource types are compiled ahead of time as .class files, load time for a resource type
     is the same a Java type. 
     
@@ -376,7 +370,7 @@ exclusive to compile-time or that does not provide any features exclusive to com
 with a _compile-only_ scope. Conversely, the `manifold-science` library does not define any features exclusive to
 compile-time, so you always use it with default scoping so it is packaged with your executable artifact. 
 
-### Static Configuration
+### Static Configuration (default)
 
 * Add the `-Xplugin:Manifold` javac argument
 * If using Kotlin or other alternative JVM language, put Manifold resources in a separate Java compiled module and add
@@ -451,7 +445,7 @@ to filter specific classes.
 >
 # Explicit Resource Compilation
 
-By default Manifold compiles resource types to disk _as the Java compiler encounters them in your code_. As a consequence,
+By default, Manifold compiles resource types to disk _as the Java compiler encounters them in your code_. As a consequence,
 a resource that is never used in your code as a type is not compiled. For example, if you have hundreds of JSON resource
 files, but your project only uses a handful type-safely with Manifold, only the handful is compiled to disk as .class
 files.
@@ -622,17 +616,14 @@ In such a case Manifold will dynamically compile the referenced class as if you 
 general, your code will work regardless of the mode you're using, hence the general recommendation to stay with static
 mode where you get the best of both worlds. 
 
-* Dynamic mode requires `tools.jar` at runtime for **Java 8**.  Note tools.jar may still be required with static mode,
-depending on the Manifold features you use.  For example, if you use [structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-your project _may_ require tools.jar, regardless of mode. This largely depends on whether or not the an [`IProxyFactory`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#implementation-by-proxy)
-implementations exist for the structural interfaces involved.
+* Dynamic mode requires `tools.jar` at runtime for **Java 8**.
 
 * Static mode is generally faster at runtime since it pre-compiles all the type manifold resources along with Java 
 sources when you build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
-> Note, you can use `javac` command line arguments to statically compile a set of specified types whether or not you use
+> Note, you can use `javac` command line arguments to statically compile a set of specified types whether you use
 > them directly in your code e.g., if type-safe resources are part of an API.  See [Static Compilation](#static-compilation)
 > next.
  

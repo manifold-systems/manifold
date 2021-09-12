@@ -434,7 +434,7 @@ the JSON `Bindings` map that is parsed from the JSON payload. This is also part 
 uniquely both type-safe and the *single source of truth*.  There is literally nothing between your JSON Schema API documents and
 the code that consumes them.
 
-Read more about [dynamic structural typing](#dynamic-typing-with-icallhandler).
+Read more about [dynamic structural typing](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#dynamic-typing-with-icallhandler).
 
 ## Extensions
 
@@ -476,7 +476,7 @@ resolve method calls and perform static type analysis.
 
 You can even write your own type manifolds to dynamically generate extension classes and have your code automatically
 resolve against the extensions. This can be useful to seamlessly add hypermedia linkage to your JSON API.  See
-[Generating Extension Classes](#generating-extension-classes) for more info.
+[Generating Extension Classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#generating-extension-classes) for more info.
 
 
 ## JSON, XML, CSV, & YAML Utilities

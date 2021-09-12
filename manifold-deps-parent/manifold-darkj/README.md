@@ -147,8 +147,8 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 
     if (JavaVersion.current() == JavaVersion.VERSION_1_8) {
-        // tools.jar dependency (for Java 8 only), primarily to support structural typing without static proxies.
-        // Thus if you are *not* using structural typing, you **don't** need tools.jar
+        // tools.jar dependency (for Java 8 only), primarily to support manifold dynamic compilation with Dark Java.
+        // If you are *not* using Dark Java, you **don't** need tools.jar
         compile files( "${System.properties['java.home']}/../lib/tools.jar" )
     }
     // Add manifold to -processorpath for javac
