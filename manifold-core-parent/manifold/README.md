@@ -624,8 +624,7 @@ sources when you build your project
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
 > Note, you can use `javac` command line arguments to statically compile a set of specified types whether you use
-> them directly in your code e.g., if type-safe resources are part of an API.  See [Static Compilation](#static-compilation)
-> next.
+> them directly in your code e.g., if type-safe resources are part of an API.  See [Explicit Resource Compilation](#explicit-resource-compilation).
  
 
 # Programming Language Manifolds
