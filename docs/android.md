@@ -51,89 +51,89 @@ Java compiler are only accessible from the processor path, therefore they have n
 
 #### Manifold Core
 ```groovy
-annotationProcessor 'systems.manifold:manifold:2021.1.17'
-implementation 'systems.manifold:manifold-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold:2021.1.18'
+implementation 'systems.manifold:manifold-rt:2021.1.18'
 ```
 #### Manifold : Extensions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-ext:2021.1.17'
-implementation 'systems.manifold:manifold-ext-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-ext:2021.1.18'
+implementation 'systems.manifold:manifold-ext-rt:2021.1.18'
 ```
 #### Manifold : Props
 ```groovy
-annotationProcessor 'systems.manifold:manifold-props:2021.1.17'
-implementation 'systems.manifold:manifold-props-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-props:2021.1.18'
+implementation 'systems.manifold:manifold-props-rt:2021.1.18'
 ```
 #### Manifold : GraphQL
 ```groovy
-annotationProcessor 'systems.manifold:manifold-graphql:2021.1.17'
-implementation 'systems.manifold:manifold-graphql-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-graphql:2021.1.18'
+implementation 'systems.manifold:manifold-graphql-rt:2021.1.18'
 ```
 #### Manifold : JSON
 ```groovy
-annotationProcessor 'systems.manifold:manifold-json:2021.1.17'
-implementation 'systems.manifold:manifold-json-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-json:2021.1.18'
+implementation 'systems.manifold:manifold-json-rt:2021.1.18'
 ```
 #### Manifold : XML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-xml:2021.1.17'
-implementation 'systems.manifold:manifold-xml-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-xml:2021.1.18'
+implementation 'systems.manifold:manifold-xml-rt:2021.1.18'
 ```
 #### Manifold : YAML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-yaml:2021.1.17'
-implementation 'systems.manifold:manifold-yaml-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-yaml:2021.1.18'
+implementation 'systems.manifold:manifold-yaml-rt:2021.1.18'
 ```
 #### Manifold : CSV
 ```groovy
-annotationProcessor 'systems.manifold:manifold-csv:2021.1.17'
-implementation 'systems.manifold:manifold-csb-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-csv:2021.1.18'
+implementation 'systems.manifold:manifold-csb-rt:2021.1.18'
 ```
 #### Manifold : Properties Files
 ```groovy
-annotationProcessor 'systems.manifold:manifold-properties:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-properties:2021.1.18'
 ```
 #### Manifold : Image Files
 ```groovy
-annotationProcessor 'systems.manifold:manifold-image:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-image:2021.1.18'
 ```
 #### Manifold : JavaScript
 ```groovy
-annotationProcessor 'systems.manifold:manifold-js:2021.1.17'
-implementation 'systems.manifold:manifold-js-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-js:2021.1.18'
+implementation 'systems.manifold:manifold-js-rt:2021.1.18'
 ```
 #### Manifold : Templates
 ```groovy
-annotationProcessor 'systems.manifold:manifold-templates:2021.1.17'
-implementation 'systems.manifold:manifold-templates-rt:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-templates:2021.1.18'
+implementation 'systems.manifold:manifold-templates-rt:2021.1.18'
 ```
 #### Manifold : String Interpolation
 ```groovy
-annotationProcessor 'systems.manifold:manifold-strings:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-strings:2021.1.18'
 ```
 #### Manifold : (Un)checked Exceptions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-exceptions:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-exceptions:2021.1.18'
 ```
 #### Manifold : Preprocessor
 ```groovy
-annotationProcessor 'systems.manifold:manifold-preprocessor:2021.1.17'
+annotationProcessor 'systems.manifold:manifold-preprocessor:2021.1.18'
 ```
 #### Manifold : Science
 ```groovy
-implementation 'systems.manifold:manifold-science:2021.1.17'
+implementation 'systems.manifold:manifold-science:2021.1.18'
 ```
 #### Manifold : Collections Extension
 ```groovy
-implementation 'systems.manifold:manifold-collections:2021.1.17'
+implementation 'systems.manifold:manifold-collections:2021.1.18'
 ```
 #### Manifold : IO Extensions
 ```groovy
-implementation 'systems.manifold:manifold-io:2021.1.17'
+implementation 'systems.manifold:manifold-io:2021.1.18'
 ```
 #### Manifold : Text Extensions
 ```groovy
-implementation 'systems.manifold:manifold-text:2021.1.17'
+implementation 'systems.manifold:manifold-text:2021.1.18'
 ```
 
 ## Resources
