@@ -26,7 +26,6 @@ import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.Check;
 import com.sun.tools.javac.comp.CompileStates;
 import com.sun.tools.javac.comp.Enter;
 import com.sun.tools.javac.jvm.ClassReader;
@@ -39,12 +38,11 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.RichDiagnosticFormatter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
+
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -69,6 +67,8 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
+
+import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.fs.def.FileFragmentImpl;
@@ -106,6 +106,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   /** javac command line arguments for static compilation */
   private static final String MANIFOLD_SOURCE = "manifold.source";
+  private static final String MANIFOLD_SOURCE_TARGET = "manifold.source.target";
   private static final String MANIFOLD_SOURCE_MAPPING = MANIFOLD_SOURCE + '.';
   private static final String OTHER_SOURCE_FILES = "other.source.files";
   private static final String OTHER_SOURCE_LIST = "other.source.list";
@@ -147,6 +148,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private Map<String, Boolean> _argPresent;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
+  private Set<URI> _dumpedSourceFiles;
   private List<String> _manifoldSourcePath;
   private String _bootclasspath;
   private boolean _isIncremental;
@@ -188,6 +190,7 @@ public class JavacPlugin implements Plugin, TaskListener
     _host = new JavacManifoldHost();
     _fileFragmentResources = new ArrayList<>();
     _javaSourcePath = Collections.emptySet();
+    _dumpedSourceFiles = new HashSet<>();
     assignBootclasspath();
     hijackJavacFileManager();
     overrideJavacToolEnter();
@@ -1059,14 +1062,16 @@ public class JavacPlugin implements Plugin, TaskListener
     switch( e.getKind() )
     {
       case PARSE:
-      {
         addInputFile( e );
         processParse( e );
         break;
-      }
 
       case ENTER:
         process( e );
+        break;
+
+      case GENERATE:
+        maybeDumpSourceFiles( e );
         break;
     }
   }
@@ -1086,6 +1091,142 @@ public class JavacPlugin implements Plugin, TaskListener
         }
       }
     }
+  }
+
+  /**
+   * Dumps source file to directory specified with MANIFOLD_SOURCE_LOCATION via -Akey=value compiler arg. If the
+   * preprocessor is in use, the source is the processed form. Generated source is also included.
+   * <p/>
+   * Note user is responsible for cleaning this directory in the build.
+   */
+  private void maybeDumpSourceFiles( TaskEvent e )
+  {
+    JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( JavacPlugin.instance().getContext() );
+    Map<String, String> options = jpe.getOptions();
+    if( options == null )
+    {
+      // no command line -A options
+      return;
+    }
+
+    String target = options.get( MANIFOLD_SOURCE_TARGET );
+    if( target == null || target.isEmpty() )
+    {
+      // no "manifold.source.target" directory is specified (usually it isn't)
+      return;
+    }
+
+    JavaFileObject sourceFile = e.getSourceFile();
+    if( _dumpedSourceFiles.contains( sourceFile.toUri() ) )
+    {
+      // already handled
+      return;
+    }
+    _dumpedSourceFiles.add( sourceFile.toUri() );
+
+    if( sourceFile instanceof GeneratedJavaStubFileObject && !((GeneratedJavaStubFileObject)sourceFile).isPrimary() )
+    {
+      // the source file is an extended class like java.lang.String, do not write these out
+      return;
+    }
+
+    CharSequence source = ManParserFactory.getSource( sourceFile );
+    if( source == null )
+    {
+      try
+      {
+        source = sourceFile.getCharContent( true );
+      }
+      catch( Exception ee )
+      {
+        // for whatever reason there is no source available for this file,
+        // shouldn't really ever happen, regardless don't let this kill a build
+        return;
+      }
+    }
+
+    if( source != null )
+    {
+      dumpSourceFile( target, sourceFile, source );
+    }
+  }
+
+  private void dumpSourceFile( String target, JavaFileObject sourceFile, CharSequence source )
+  {
+    if( source.charAt( source.length()-1 ) == '\u001A' )
+    {
+      // the java parser appends the ctrl+z char (end of file), remove it
+      source = source.subSequence( 0, source.length()-1 );
+    }
+
+    File absoluteTarget = new File( target ).getAbsoluteFile();
+    if( !absoluteTarget.isFile() && (absoluteTarget.isDirectory() || absoluteTarget.mkdirs()) )
+    {
+      File prepFileTarget = makePrepFileTarget( absoluteTarget, sourceFile );
+      if( prepFileTarget != null )
+      {
+        try
+        {
+          if( !prepFileTarget.isFile() )
+          {
+            File parent = prepFileTarget.getParentFile();
+            if( !parent.isDirectory() )
+            {
+              if( !parent.mkdirs() )
+              {
+                throw new IOException( "Failed to create processed source file target directory: " + parent.getAbsolutePath() );
+              }
+            }
+            if( !prepFileTarget.createNewFile() )
+            {
+              throw new IOException( "Failed to create processed source file in target directory: " + prepFileTarget.getAbsolutePath() );
+            }
+          }
+
+          try( FileWriter writer = new FileWriter( prepFileTarget ) )
+          {
+            writer.write( source.toString() );
+          }
+        }
+        catch( Throwable t )
+        {
+          IDynamicJdk.instance().logError( Log.instance( getContext() ),
+            new JCDiagnostic.SimpleDiagnosticPosition( 0 ),
+            "proc.messager", "Failed to dump preprocessed file: " + sourceFile.getName() + " : " + t.getMessage() );
+        }
+      }
+    }
+  }
+
+  private File makePrepFileTarget( File absoluteTarget, JavaFileObject sourceFile )
+  {
+    for( String path: _javaSourcePath )
+    {
+      IDirectory srcPath = getHost().getFileSystem().getIDirectory( new File( path ) );
+      IFile srcFile;
+      try
+      {
+        URI uri = sourceFile.toUri();
+        if( "genstub".equals( uri.getScheme() ) )
+        {
+          return new File( absoluteTarget, uri.getPath() );
+        }
+        srcFile = getHost().getFileSystem().getIFile( uri.toURL() );
+      }
+      catch( Exception ex )
+      {
+        continue;
+      }
+      if( srcFile.isDescendantOf( srcPath ) )
+      {
+        String relativePath = srcPath.relativePath( srcFile );
+        if( relativePath != null )
+        {
+          return new File( absoluteTarget, relativePath );
+        }
+      }
+    }
+    return null;
   }
 
   private String extractPackageName( String file )

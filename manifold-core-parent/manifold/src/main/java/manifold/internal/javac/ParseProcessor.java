@@ -23,8 +23,6 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Names;
-import manifold.util.JreUtil;
-import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Flags.*;
 

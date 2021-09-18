@@ -267,7 +267,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
           IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( () -> _ctx );
           String fqn = tn.name.replace( '$', '.' );
           JavaFileObject file = findGeneratedFile( fqn, location, tn.getModule(), issueReporter );
-          if( file != null && isCorrectModule( tn.getModule(), location, patchableFiles, file, fqn ) )
+          if( file != null && isSourceOk( file, location ) && isCorrectModule( tn.getModule(), location, patchableFiles, file, fqn ) )
           {
             newList.add( file );
           }
@@ -276,6 +276,12 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       list = newList;
     }
     return list;
+  }
+
+  private boolean isSourceOk( JavaFileObject file, Location location )
+  {
+    return location != StandardLocation.CLASS_PATH ||
+      file instanceof GeneratedJavaStubFileObject && !((GeneratedJavaStubFileObject)file).isPrimary();
   }
 
   private boolean isCorrectModule( IModule module, Location location, Iterable<JavaFileObject> patchableFiles, JavaFileObject file, String fqn )
