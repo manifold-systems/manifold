@@ -4,6 +4,7 @@
 * [Overview](#overview)
 * [Directives](#directives)
 * [Symbols](#symbols)
+* [Dumping source](#dumping-source)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -331,7 +332,21 @@ The O/S architecture:
 ARCH_32
 ARCH_64
 ``` 
+       
+## Dumping source
+                 
+The preprocessor integrates directly with the Java parser, as such there are no intermediate files to manage. However,
+some tools may need to parse or otherwise analyze processed Java source separate from the Java compiler. In this case
+you can use the `manifold.source.target` compiler option to specify a directory where all source is copied as it is
+compiled, including processed and generated source from Manifold.
 
+Usage:
+```
+javac -Amanfild.source.target=<my-directory> ...
+```
+>Note, you are responsible for managing the directory in your build configuration. For instance, for the "clean" build
+>target, it is your responsibility to delete the contents of the directory.
+ 
 # IDE Support 
 
 Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
