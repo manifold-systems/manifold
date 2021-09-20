@@ -345,6 +345,15 @@ class PropertyInference
         ctx = ReflectUtil.field( Symtab.instance( context() ), "unnamedModule" ).get();
       }
     }
+
+    if( classSym.isInterface() && ((int)propField.flags_field & STATIC) != 0 )
+    {
+      // explicitly declared static property in interface, tag with Static
+      ClassSymbol staticSym = IDynamicJdk.instance().getTypeElement( context(), ctx, Static.class.getTypeName() );
+      Attribute.Compound staticAnno = new Attribute.Compound( staticSym.type, List.nil() );
+      propField.appendAttributes( List.of( staticAnno ) );
+    }
+
     ClassSymbol varSym = IDynamicJdk.instance().getTypeElement( context(), ctx, varClass.getTypeName() );
     ClassSymbol autoSym = IDynamicJdk.instance().getTypeElement( context(), ctx, auto.class.getTypeName() );
     if( varSym != null )

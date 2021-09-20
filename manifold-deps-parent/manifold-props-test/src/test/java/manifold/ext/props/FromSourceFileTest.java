@@ -18,6 +18,9 @@ package manifold.ext.props;
 
 import junit.framework.TestCase;
 import manifold.ext.props.example.FromSourceFile;
+import manifold.ext.props.rt.api.override;
+import manifold.ext.props.rt.api.val;
+import manifold.ext.props.rt.api.var;
 import manifold.util.ReflectUtil;
 import org.junit.Test;
 
@@ -137,5 +140,14 @@ public class FromSourceFileTest extends TestCase
   {
     FromSourceFile fromSourceFile = new FromSourceFile();
     FromSourceFile.MyInnerEnum muhEnum = fromSourceFile.myInnerEnum;
+  }
+
+  public void testUseOwnPropsInDefaultMethod() {
+    SomeInterfaceImpl delme = new SomeInterfaceImpl();
+    assertEquals( 8, delme.useProps() );
+  }
+  class SomeInterfaceImpl implements ISomeInterface {
+    @override @var int varFoo = 2;
+    @override @val int foo = 1;
   }
 }

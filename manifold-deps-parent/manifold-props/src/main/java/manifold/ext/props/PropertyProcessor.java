@@ -367,6 +367,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
+        if( isInterface( classDecl ) && ((int)tree.getModifiers().flags & STATIC) != 0 )
+        {
+          // preserve the explicit static declaration so we can distinguish static/instance fields in interfaces
+          addAnnotations( tree, List.of( makeStaticAnnotation() ) );
+        }
+
         // add getter and/or setter
         // or, if a PRIVATE property and no user-defined accessors exist, no benefit from property, so treat as field
 
@@ -727,6 +733,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       maybeAddAnnotation( field, args, Final.class );
       JCExpression propgenType = memberAccess( make, propgen.class.getName() );
       return make.Annotation( propgenType, List.from( args ) );
+    }
+
+    private JCAnnotation makeStaticAnnotation()
+    {
+      TreeMaker make = TreeMaker.instance( getContext() );
+      JCExpression staticAnno = memberAccess( make, Static.class.getName() );
+      return make.Annotation( staticAnno, List.nil() );
     }
 
     private void maybeAddAnnotation( JCVariableDecl field, ArrayList<JCAssign> args, Class<? extends Annotation> cls )
@@ -1467,7 +1480,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         TreeMaker make = getTreeMaker();
 
         JCMethodInvocation methodCall;
-        JCExpression receiver = tree.sym.isStatic()
+        Attribute.Compound staticAnno = getAnnotationMirror( tree.sym, Static.class );
+        JCExpression receiver = (tree.sym.owner.type.isInterface() ? staticAnno != null : tree.sym.isStatic())
           ? make.Type( tree.sym.owner.type )
           : make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
         methodCall = make.Apply( List.nil(), make.Select( receiver, getMethod ).setPos( tree.pos ), List.nil() );
@@ -1508,7 +1522,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhs = ident;
         lhsSelectedType = _backingSymbols.peek().fst.type;
         lhsSym = ident.sym;
-        lhsSelected = lhsSym.isStatic()
+        Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
+        lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
           ? make.Type( lhsSym.owner.type )
           : make.This( lhsSelectedType ).setPos( tree.pos );
       }
@@ -1654,7 +1669,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhs = ident;
         lhsSelectedType = _backingSymbols.peek().fst.type;
         lhsSym = ident.sym;
-        lhsSelected = lhsSym.isStatic()
+        Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
+        lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
           ? make.Type( lhsSym.owner.type )
           : make.This( lhsSelectedType ).setPos( tree.pos );
       }
