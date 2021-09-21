@@ -26,11 +26,11 @@ import java.lang.annotation.Target;
  * <p/>
  * Usage:<pre><code>
  *   interface Foo {
- *     &#64;prop String color;
+ *     &#64;val String color;
  *   }
  *
  *   public class FooImpl extends Foo {
- *     &#64;override String color = "Plaid";
+ *     &#64;override &#64;val String color = "Plaid";
  *   }
  * </code>
  * </pre>

@@ -342,7 +342,7 @@ compiled, including processed and generated source from Manifold.
 
 Usage:
 ```
-javac -Amanfild.source.target=<my-directory> ...
+javac -Amanifold.source.target=<my-directory> ...
 ```
 >Note, you are responsible for managing the directory in your build configuration. For instance, for the "clean" build
 >target, it is your responsibility to delete the contents of the directory.
