@@ -13,13 +13,6 @@
   <name>Manifold :: Yaml Runtime</name>
 
   <dependencies>
-    <!-- 'provided' dependency on manifold-ext to use extension methods and jailbreak -->
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
     <!-- json-rt for json interop with yaml -->
     <dependency>
       <groupId>systems.manifold</groupId>
@@ -48,6 +41,30 @@
           </archive>
         </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
+        <configuration>
+          <source>8</source>
+          <target>8</target>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!-- Configure manifold plugin -->
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+          <!-- Add the processor path for the plugin -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-ext</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
     </plugins>
   </build>
 

@@ -24,7 +24,6 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import manifold.rt.api.Bindings;
 import junit.framework.TestCase;
-import manifold.api.json.JsonTransformer;
 import manifold.api.yaml.rt.Yaml;
 import manifold.json.rt.Json;
 import manifold.rt.api.util.StreamUtil;

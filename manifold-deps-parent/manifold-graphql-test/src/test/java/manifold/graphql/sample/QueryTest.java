@@ -15,7 +15,6 @@ import org.junit.Test;
 import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
-import static manifold.internal.javac.FragmentProcessor.ANONYMOUS_FRAGMENT_PREFIX;
 import static org.junit.Assert.*;
 
 @DisableStringLiteralTemplates
@@ -134,7 +133,7 @@ public class QueryTest
   public void testAnonymousStringLiteralQuery()
   {
     Object value = "[>.graphql<] query MyOneAnimal2($id: ID!) { animal(id: $id) { id name } }";
-    assertTrue( value.getClass().getSimpleName().startsWith( ANONYMOUS_FRAGMENT_PREFIX ) );
+    assertTrue( value.getClass().getSimpleName().startsWith( "Fragment_" ) ); //See ANONYMOUS_FRAGMENT_PREFIX in internal pkg
   }
 
   @Test

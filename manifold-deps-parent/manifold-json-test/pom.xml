@@ -14,17 +14,6 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-ext-test</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-json</artifactId>
-      <version>${project.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
       <artifactId>manifold-json-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -57,22 +46,28 @@
 
   <build>
     <plugins>
-
-      <!--
-        Enable bootstrapping by removing the `no-bootstrap` -Xplugin arg present in the parent pom.
-        This is necessary because this module uses structural typing, which is a runtime feature of
-        Manifold.
-      -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.8.0</version>
         <configuration>
+          <source>8</source>
+          <target>8</target>
+          <encoding>UTF-8</encoding>
           <compilerArgs>
+            <!-- Configure manifold plugin -->
             <arg>-Xplugin:Manifold</arg>
           </compilerArgs>
+          <!-- Add the processor path for the plugin -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-json</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
         </configuration>
       </plugin>
-
     </plugins>
   </build>
   
