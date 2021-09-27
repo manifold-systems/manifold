@@ -145,12 +145,12 @@ public class QueryTest
     assertEquals( "Bearer xyz", bearerAuth );
   }
 
-  @Test
-  public void testRawResponseHandler()
-  {
-    MovieQuery query = MovieQuery.builder().build();
-    Function<Bindings, Object> handler = bindings -> null;
-    Executor exec = query.request( "" ).withRawResponseHandler( handler );
-    assertSame( handler, exec.getRawResponseHandler() );
-  }
+//  @Test
+//  public void testRawResponseHandler()
+//  {
+//    MovieQuery query = MovieQuery.builder().build();
+//    Function<Bindings, Object> handler = bindings -> null;
+//    Executor exec = query.request( "" ).withRawResponseHandler( handler );
+//    assertSame( handler, exec.getRawResponseHandler() );
+//  }
 }

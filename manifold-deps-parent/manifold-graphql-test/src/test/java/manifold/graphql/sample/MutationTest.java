@@ -45,7 +45,7 @@ public class MutationTest {
     // test copy
     ReviewInput inputCopy = input.copy();
     assertEquals( input, inputCopy );
-    ReviewInput inputCopierCopy = ReviewInput.copier( input ).withComment( "Excellent" ).copy();
+    ReviewInput inputCopierCopy = ReviewInput.copier( input ).withComment( "Excellent" ).build();
     inputCopy.setComment( "Excellent" );
     assertEquals( inputCopy, inputCopierCopy );
   }

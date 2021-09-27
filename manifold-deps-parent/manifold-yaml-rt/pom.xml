@@ -52,7 +52,7 @@
           <encoding>UTF-8</encoding>
           <compilerArgs>
             <!-- Configure manifold plugin -->
-            <arg>-Xplugin:Manifold</arg>
+            <arg>-Xplugin:Manifold no-bootstrap</arg>
           </compilerArgs>
           <!-- Add the processor path for the plugin -->
           <annotationProcessorPaths>

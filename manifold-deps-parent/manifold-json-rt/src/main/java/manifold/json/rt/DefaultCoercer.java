@@ -23,6 +23,8 @@ import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -58,15 +60,16 @@ public class DefaultCoercer implements IJsonFormatTypeCoercer
   }
 
   @Override
-  public Object coerce( Object value, Class<?> type )
+  public Object coerce( Object value, Type type )
   {
     //
     // From JSON value to Java value
     //
 
-    if( type.isEnum() )
+    Class rawType = type instanceof ParameterizedType ? (Class)((ParameterizedType)type).getRawType() : (Class)type;
+    if( rawType.isEnum() )
     {
-      Object v = coerceEnum( value, type );
+      Object v = coerceEnum( value, rawType );
       if( v != UNHANDLED )
       {
         return v;
@@ -134,9 +137,9 @@ public class DefaultCoercer implements IJsonFormatTypeCoercer
     // "utc-millisec"
     if( value instanceof Instant )
     {
-      if( Number.class.isAssignableFrom( type ) )
+      if( Number.class.isAssignableFrom( rawType ) )
       {
-        return RuntimeMethods.coerce( ((Instant)value).toEpochMilli(), type );
+        return RuntimeMethods.coerce( ((Instant)value).toEpochMilli(), rawType );
       }
       if( type == String.class )
       {

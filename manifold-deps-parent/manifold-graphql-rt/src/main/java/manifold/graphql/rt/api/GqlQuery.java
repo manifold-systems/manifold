@@ -16,6 +16,7 @@
 
 package manifold.graphql.rt.api;
 
+import manifold.ext.rt.api.Structural;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.json.rt.api.Endpoint;
 import manifold.json.rt.api.Requester;
@@ -28,7 +29,8 @@ import java.util.function.Supplier;
  *
  * @param <R> The query result type mirroring the fields and structure of the query
  */
-public interface GqlQuery<R extends GqlQueryResult>
+@Structural
+public interface GqlQuery<R extends GqlQueryResult> extends GqlType
 {
   /**
    * Provides an HTTP request executor for the query. Use it to configure an HTTP request headers, authorization, etc.

@@ -155,7 +155,7 @@ class DynamicTypeProxyGenerator
 
   private void handleCall( StringBuilder sb, Method mi, Class ifaceType, String actualName, Class[] params )
   {
-    sb.append( "_root" ).append( ".call(" ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( actualName ).append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
+    sb.append( "_root" ).append( ".call(this, " ).append( ifaceType.getCanonicalName() ).append( ".class, \"" ).append( mi.getName() ).append( "\", " ).append( actualName ).append( ", " ).append( mi.getReturnType().getCanonicalName() ).append( ".class, " ).append( "new Class[] {" );
     Class<?>[] parameterTypes = mi.getParameterTypes();
     for( int i = 0; i < parameterTypes.length; i++ )
     {

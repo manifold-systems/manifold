@@ -19,19 +19,30 @@ package manifold.json.rt;
 import manifold.ext.rt.api.ICallHandler;
 import manifold.ext.rt.api.ICoercionProvider;
 import manifold.ext.rt.api.IListBacked;
-import manifold.json.rt.api.IJsonList;
 import manifold.json.rt.api.JsonList;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 
 public class ListCoercer implements ICoercionProvider
 {
   @Override
-  public Object coerce( Object value, Class<?> type )
+  public Object coerce( Object value, Type type )
   {
-    if( value instanceof List && !IListBacked.class.isAssignableFrom( type ) )
+    while( type instanceof ParameterizedType && value instanceof List &&
+      List.class.isAssignableFrom( (Class)((ParameterizedType)type).getRawType() ) )
     {
-      return new JsonList( (List)value, type );
+      type = ((ParameterizedType)type).getActualTypeArguments()[0];
+    }
+    if( type instanceof ParameterizedType )
+    {
+      type = ((ParameterizedType)type).getRawType();
+    }
+    Class rawType = (Class)type;
+    if( value instanceof List && !IListBacked.class.isAssignableFrom( rawType ) )
+    {
+      return new JsonList( (List)value, rawType );
     }
     return ICallHandler.UNHANDLED;
   }

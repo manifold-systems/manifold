@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2021 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,16 @@
  * limitations under the License.
  */
 
-package manifold.graphql.rt.api;
+package manifold.ext.structural;
 
-import manifold.json.rt.api.IJsonBindingsBacked;
+import junit.framework.TestCase;
 
-/**
- * Base interface for all query result types type-safely reflecting query fields and structure.
- */
-public interface GqlQueryResult extends GqlType
+public class StructuralTest extends TestCase
 {
+  public void testStructReturnsStruct()
+  {
+    StructReturnsStruct value = (StructReturnsStruct)new StructReturnsStruct.Impl();
+    StructReturnsStruct returnValue = value.returnStruct();
+    assertNotSame( value, returnValue );
+  }
 }

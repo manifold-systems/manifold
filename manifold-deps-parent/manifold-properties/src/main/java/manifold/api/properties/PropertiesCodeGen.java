@@ -56,7 +56,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 class PropertiesCodeGen
 {
-  private static final String FIELD_FILE_URL = "__FILE_URL_";
+  private static final String FIELD_FILE_URL = "__FILE_URL";
   private final String _fqn;
   private final String _content;
   private final FqnCache<String> _model;

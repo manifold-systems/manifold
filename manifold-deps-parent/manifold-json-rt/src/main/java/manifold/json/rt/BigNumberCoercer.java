@@ -18,6 +18,7 @@ package manifold.json.rt;
 
 import manifold.json.rt.api.IJsonFormatTypeCoercer;
 
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
@@ -44,7 +45,7 @@ public class BigNumberCoercer implements IJsonFormatTypeCoercer
   }
 
   @Override
-  public Object coerce( Object value, Class<?> type )
+  public Object coerce( Object value, Type type )
   {
     //
     // From JSON value to Java value

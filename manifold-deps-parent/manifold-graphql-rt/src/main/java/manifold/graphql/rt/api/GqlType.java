@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2021 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ package manifold.graphql.rt.api;
 import manifold.json.rt.api.IJsonBindingsBacked;
 
 /**
- * Base interface for all query result types type-safely reflecting query fields and structure.
+ * Common base type for GraphQL generated types.
  */
-public interface GqlQueryResult extends GqlType
+public interface GqlType extends IJsonBindingsBacked
 {
 }

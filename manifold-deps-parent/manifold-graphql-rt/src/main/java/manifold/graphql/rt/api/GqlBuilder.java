@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2021 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,14 @@
 
 package manifold.graphql.rt.api;
 
-import manifold.json.rt.api.IJsonBindingsBacked;
+import manifold.ext.rt.RuntimeMethods;
 
-/**
- * Base interface for all query result types type-safely reflecting query fields and structure.
- */
-public interface GqlQueryResult extends GqlType
+public interface GqlBuilder<T extends GqlType> extends BuiltType<T>
 {
+  default T build()
+  {
+    //noinspection unchecked
+    return (T)RuntimeMethods.coerceFromBindingsValue( getBindings(), findBuiltTypeFrom( GqlBuilder.class ) );
+  }
 }
+

@@ -62,7 +62,7 @@ import manifold.rt.api.util.ManStringUtil;
  */
 public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 {
-  protected static final String FIELD_FILE_URL = "__FILE_URL_";
+  protected static final String FIELD_FILE_URL = "__FILE_URL";
   @SuppressWarnings("unused")
   protected static final String FROM_SOURCE_METHOD = "fromSource";
 

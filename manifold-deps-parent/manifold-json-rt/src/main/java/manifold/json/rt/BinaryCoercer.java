@@ -21,6 +21,7 @@ import manifold.json.rt.api.Base64Encoding;
 import manifold.json.rt.api.IJsonFormatTypeCoercer;
 import manifold.json.rt.api.OctetEncoding;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public class BinaryCoercer implements IJsonFormatTypeCoercer
   }
 
   @Override
-  public Object coerce( Object value, Class<?> type )
+  public Object coerce( Object value, Type type )
   {
     //
     // From JSON value to Java value

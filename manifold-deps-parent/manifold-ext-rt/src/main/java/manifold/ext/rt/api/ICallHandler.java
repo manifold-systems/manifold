@@ -49,6 +49,7 @@ public interface ICallHandler
   /**
    * Dispatch a call to an interface method.
    *
+   * @param proxy The proxy instance delegating this call, null if not a proxy
    * @param iface The extended interface and owner of the method
    * @param name The name of the method
    * @param actualName The actual name of the property associated with the method e.g., a Json name that is not a legal Java identifier, can be null
@@ -57,5 +58,5 @@ public interface ICallHandler
    * @param args The arguments from the call site
    * @return The result of the method call or UNHANDLED if the method is not dispatched.  Null if the method's return type is void.
    */
-  Object call( Class<?> iface, String name, String actualName, Class<?> returnType, Class<?>[] paramTypes, Object[] args );
+  Object call( Object proxy, Class<?> iface, String name, String actualName, Class<?> returnType, Class<?>[] paramTypes, Object[] args );
 }

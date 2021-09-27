@@ -280,7 +280,11 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
 
   private boolean isSourceOk( JavaFileObject file, Location location )
   {
+    JavacPlugin javacPlugin = JavacPlugin.instance();
+    boolean isModular = javacPlugin != null && JreUtil.isJava9Modular_compiler( javacPlugin.getContext() );
     return location != StandardLocation.CLASS_PATH ||
+      !isModular ||
+      // allow extension classes source to copy to CLASS_PATH
       file instanceof GeneratedJavaStubFileObject && !((GeneratedJavaStubFileObject)file).isPrimary();
   }
 

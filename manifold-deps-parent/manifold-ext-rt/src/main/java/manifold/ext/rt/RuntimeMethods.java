@@ -60,13 +60,28 @@ public class RuntimeMethods
     return createNewProxy( root, iface );
   }
 
+  public static Object coerceFromBindingsValue( Object value, Type t )
+  {
+//## would like to do this to limit proxies to just structural calls, however since we support default interface methods
+//## we have a situation where a more specific interface "implements" using a default method a less specific interface,
+//## however if a bindings/map is cast to the less specific one, there the default impl isn't there... boom. Therefore,
+//## we have to keep the proxies alive, thereby allowing such casts to work.
+//    if( value instanceof Bindings )
+//    {
+//      return value;
+//    }
+
+    return coerce( value, t );
+  }
+  
   /**
    * Coerce a value e.g., from a JSON bindings, to a more specific a Java value, using {@link ICoercionProvider}
    * where applicable. Note, for {@code List} the {@code type} corresponds with the deepest component type of the list,
    * see {@code ListCoercer}.
    */
-  public static Object coerce( Object value, Class<?> type )
+  public static Object coerce( Object value, Type t )
   {
+    Class<?> type = t instanceof ParameterizedType ? (Class<?>)((ParameterizedType)t).getRawType() : (Class)t;
     if( value == null )
     {
       if( type.isPrimitive() )
@@ -78,7 +93,7 @@ public class RuntimeMethods
 
     if( value instanceof List )
     {
-      Object result = callCoercionProviders( value, type );
+      Object result = callCoercionProviders( value, t );
       if( result != ICallHandler.UNHANDLED )
       {
         return result;
@@ -97,7 +112,7 @@ public class RuntimeMethods
       return value;
     }
 
-    Object result = callCoercionProviders( value, type );
+    Object result = callCoercionProviders( value, t );
     if( result != ICallHandler.UNHANDLED )
     {
       return result;
@@ -304,7 +319,7 @@ public class RuntimeMethods
     return null;
   }
 
-  private static Object callCoercionProviders( Object value, Class<?> type )
+  private static Object callCoercionProviders( Object value, Type type )
   {
     for( ICoercionProvider coercer: CoercionProviders.get() )
     {
@@ -403,11 +418,10 @@ public class RuntimeMethods
   {
     if( Map.class.isAssignableFrom( rootClass ) )
     {
-      return (target, iface) -> Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
-        (proxy, method, args) -> MapStructExt.call( (Map)target, iface, method.getName(), null,
-          method.getReturnType(), method.getParameterTypes(), args) );
+      return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
+        (proxy, method, args) -> MapStructExt.invoke( (Map)target, proxy, method, args) );
     }
-    return (target, iface) -> Proxy.newProxyInstance( rootClass.getClassLoader(), new Class[]{iface},
+    return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( rootClass.getClassLoader(), new Class[]{iface},
       (proxy, method, args) -> ReflectUtil.structuralCall( method, target, args ) );
   }
 

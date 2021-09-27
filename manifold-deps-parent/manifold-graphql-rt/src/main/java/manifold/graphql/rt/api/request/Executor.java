@@ -85,7 +85,7 @@ public class Executor<T>
     Object customResult = handleRawResponse( response );
     if( customResult != null )
     {
-      // an custom result bindings
+      // a custom result bindings
       return customResult;
     }
     handleErrors( response );

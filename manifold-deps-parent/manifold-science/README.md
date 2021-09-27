@@ -332,7 +332,7 @@ dependencies {
     implementation 'systems.manifold:manifold-science:2021.1.20-SNAPSHOT'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-science:2021.1.20-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-ext:2021.1.20-SNAPSHOT'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -398,7 +398,7 @@ rootProject.name = 'MyExtProject'
                     <annotationProcessorPaths>
                         <path>
                             <groupId>systems.manifold</groupId>
-                            <artifactId>manifold-science</artifactId>
+                            <artifactId>manifold-ext</artifactId>
                             <version>${manifold.version}</version>
                         </path>
                     </annotationProcessorPaths>

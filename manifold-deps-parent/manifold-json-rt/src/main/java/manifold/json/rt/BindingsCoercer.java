@@ -16,10 +16,13 @@
 
 package manifold.json.rt;
 
+import manifold.ext.rt.RuntimeMethods;
 import manifold.ext.rt.api.*;
 import manifold.rt.api.Bindings;
 import manifold.util.ReflectUtil;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.List;
 
 /**
@@ -33,14 +36,34 @@ import java.util.List;
 public class BindingsCoercer implements ICoercionProvider
 {
   @Override
-  public Object coerce( Object o, Class<?> proxyClass )
+  public Object coerce( Object o, Type proxyClassType )
   {
-    if( IBindingsBacked.class.isAssignableFrom( proxyClass )
-        && (o instanceof Bindings || (o instanceof List && List.class.isAssignableFrom( proxyClass )))
-        || IListBacked.class.isAssignableFrom( proxyClass ) && o instanceof List && !(o instanceof IListBacked) )
+    Class<?> proxyClass = proxyClassType instanceof ParameterizedType
+      ? (Class)((ParameterizedType)proxyClassType).getRawType()
+      : (Class)proxyClassType;
+    if( !proxyClass.isInterface() )
     {
-      IProxyFactory factory = (IProxyFactory) ReflectUtil.constructor( proxyClass.getName() + "$ProxyFactory" ).newInstance();
-      return factory.proxy( o, proxyClass );
+      return ICallHandler.UNHANDLED;
+    }
+
+    Structural annotation = proxyClass.getAnnotation( Structural.class );
+    if( annotation != null )
+    {
+      if( annotation.factoryClass() != Void.class )
+      {
+        if( IBindingsBacked.class.isAssignableFrom( proxyClass )
+          && (o instanceof Bindings || (o instanceof List && List.class.isAssignableFrom( proxyClass )))
+          || IListBacked.class.isAssignableFrom( proxyClass ) && o instanceof List && !(o instanceof IListBacked) )
+        {
+          IProxyFactory factory = (IProxyFactory)ReflectUtil.constructor( proxyClass.getName() + "$ProxyFactory" ).newInstance();
+          //noinspection unchecked
+          return factory.proxy( o, proxyClass );
+        }
+      }
+      else
+      {
+        return RuntimeMethods.constructProxy( o, proxyClass );
+      }
     }
     return ICallHandler.UNHANDLED;
   }

@@ -325,6 +325,36 @@ public class ReflectUtil
     return null;
   }
 
+  /**
+   * Invoke a default interface method.
+   * <p/>
+   * This is useful, for example, for a proxy implementation where there is no
+   * explicit implementation of the interface on which to invoke the default method.
+   *
+   * @param receiver The receiver of the call (the proxy instance in the case of a proxy impl).
+   * @param method The default interface method to invoke on {@code receiver}.
+   * @param args The arguments to {@code method}.
+   * @return The return value of {@code method} or {@code null} if the method has a {@code void} return type.
+   */
+  public static Object invokeDefault( Object receiver, Method method, Object... args )
+  {
+    try
+    {
+      Class declaringInterface = method.getDeclaringClass();
+      //noinspection ConstantConditions
+      MethodHandles.Lookup lookup = (MethodHandles.Lookup)
+        constructor( MethodHandles.Lookup.class, Class.class ).newInstance( declaringInterface );
+      return lookup.in( declaringInterface )
+        .unreflectSpecial( method, declaringInterface )
+        .bindTo( receiver )
+        .invokeWithArguments( args );
+    }
+    catch( Throwable t )
+    {
+      throw ManExceptionUtil.unchecked( t );
+    }
+  }
+
   private static MethodRef matchFirstMethod( Class<?> cls, String name, Class[] params )
   {
     if( name.indexOf( '|' ) >= 0 )

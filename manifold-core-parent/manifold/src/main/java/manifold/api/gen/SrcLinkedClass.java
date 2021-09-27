@@ -41,7 +41,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
 {
-  protected static final String FIELD_FILE_URL = "__FILE_URL_";
+  protected static final String FIELD_FILE_URL = "__FILE_URL";
 
   private IFile _linkedFile;
   private Map<IFile, int[]> _resFileToContent;

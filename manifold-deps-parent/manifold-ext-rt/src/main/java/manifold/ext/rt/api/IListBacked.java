@@ -64,14 +64,19 @@ public interface IListBacked<T> extends List<T>
   default List<T> coerceListToComplexValues()
   {
     return (List) getList().stream()
-      .map( e -> RuntimeMethods.coerce( e, getFinalComponentType() ) )
+      .map( e -> coerce( e, getFinalComponentType() ) )
       .collect( Collectors.toList() );
+  }
+  
+  default Object coerce( Object value, Class type )
+  {
+    return RuntimeMethods.coerceFromBindingsValue( value, type );
   }
 
   @Override
   default void replaceAll( UnaryOperator<T> operator )
   {
-    getList().replaceAll( e -> toBindingsValue( operator.apply( (T) RuntimeMethods.coerce( e, getFinalComponentType() ) ) ) );
+    getList().replaceAll( e -> toBindingsValue( operator.apply( (T) coerce( e, getFinalComponentType() ) ) ) );
   }
 
   @Override
@@ -261,7 +266,7 @@ public interface IListBacked<T> extends List<T>
   default T get( int index )
   {
     Object o = getList().get( index );
-    return (T) RuntimeMethods.coerce( o, getFinalComponentType() );
+    return (T) coerce( o, getFinalComponentType() );
   }
 
   @Override
@@ -269,7 +274,7 @@ public interface IListBacked<T> extends List<T>
   {
     element = (T) toBindingsValue( element );
     T result = (T) getList().set( index, element );
-    return result == null ? null : (T) RuntimeMethods.coerce( result, getFinalComponentType() );
+    return result == null ? null : (T) coerce( result, getFinalComponentType() );
   }
 
   @Override
@@ -283,7 +288,7 @@ public interface IListBacked<T> extends List<T>
   default T remove( int index )
   {
     Object bindingValue = getList().remove( index );
-    return bindingValue == null ? null : (T) RuntimeMethods.coerce( bindingValue, getFinalComponentType() );
+    return bindingValue == null ? null : (T) coerce( bindingValue, getFinalComponentType() );
   }
 
   @Override
@@ -446,7 +451,7 @@ public interface IListBacked<T> extends List<T>
   default List<T> subList( int fromIndex, int toIndex )
   {
     return (List<T>) getList().subList( fromIndex, toIndex ).stream()
-      .map( e -> RuntimeMethods.coerce( e, getFinalComponentType() ) )
+      .map( e -> coerce( e, getFinalComponentType() ) )
       .collect( Collectors.toList() );
   }
 }

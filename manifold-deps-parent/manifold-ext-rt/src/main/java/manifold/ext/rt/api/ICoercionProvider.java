@@ -16,6 +16,8 @@
 
 package manifold.ext.rt.api;
 
+import java.lang.reflect.Type;
+
 /**
  * Implement this interface to handle coercions during dynamic proxy invocation, such as with JSON Schema marshalling.
  * Note if you intend to implement JSON coercions you should instead implement {@code IJsonFormatTypeCoercer}.
@@ -34,7 +36,7 @@ public interface ICoercionProvider
    * @return A value of the specified {@code type} or {@link ICallHandler#UNHANDLED} if this provider does not handle
    * the coercion.
    */
-  Object coerce( Object value, Class<?> type );
+  Object coerce( Object value, Type type );
 
   /**
    * Coerce {@code value} parameter to a value suitable for a {@link manifold.rt.api.Bindings} e.g., a JSON bindings.

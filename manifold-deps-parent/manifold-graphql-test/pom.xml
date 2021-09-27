@@ -48,6 +48,11 @@
             </path>
             <path>
               <groupId>systems.manifold</groupId>
+              <artifactId>manifold-ext</artifactId>
+              <version>${project.version}</version>
+            </path>
+            <path>
+              <groupId>systems.manifold</groupId>
               <artifactId>manifold-exceptions</artifactId>
               <version>${project.version}</version>
             </path>
