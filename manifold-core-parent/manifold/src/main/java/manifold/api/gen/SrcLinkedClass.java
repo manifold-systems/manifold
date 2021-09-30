@@ -140,7 +140,8 @@ public class SrcLinkedClass extends AbstractSrcClass<SrcLinkedClass>
   public static void addActualNameAnnotation( SrcAnnotated srcAnno, String name, boolean capitalize )
   {
     String identifier = makeIdentifier( name, capitalize );
-    if( !identifier.equals( name ) )
+    if( !identifier.equals( name ) ||
+      !Character.isAlphabetic( name.charAt( 0 ) ) ) // so that underscore is included as key in maps (for MapStruct)
     {
       srcAnno.addAnnotation( new SrcAnnotationExpression( ActualName.class.getSimpleName() )
         .addArgument( new SrcArgument( new SrcRawExpression( '"' + name + '"' ) ) ) );

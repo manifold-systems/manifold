@@ -43,6 +43,7 @@ type Person implements Actor {
   dateOfBirth: Date!
   nationality: String
   height: Float # meters
+  _width: Float # added to test underscore handling
 }
 
 type Animal implements Actor {

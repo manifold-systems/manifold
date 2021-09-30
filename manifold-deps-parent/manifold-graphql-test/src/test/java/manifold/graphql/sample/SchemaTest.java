@@ -56,6 +56,12 @@ public class SchemaTest {
       .withHeight(1.91)
       .withNationality("American")
       .build();
+
+    // quick test underscore handling
+    SLIM_PICKENS.set_width( 2.2 );
+    assertEquals( 2.2d, SLIM_PICKENS.get_width(), 0 );
+    assertEquals( 2.2d, (double)SLIM_PICKENS.getBindings().get("_width"), 0d );
+    
     Person JAMES_GARNER = Person.builder(id(), "James Garner", date(1928, 4, 7))
       .withHeight(1.87)
       .withNationality("American")
