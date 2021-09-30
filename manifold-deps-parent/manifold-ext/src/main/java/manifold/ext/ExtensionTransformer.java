@@ -1374,6 +1374,12 @@ public class ExtensionTransformer extends TreeTranslator
 
       _tp.report( tree, Diagnostic.Kind.ERROR,
         ExtIssueMsg.MSG_STRUCTURAL_METHOD_REF_NOT_SUPPORTED.get( tree.sym.flatName() ) );
+
+      //todo, see LambdaToMethod for how javac translates a method ref to a lambda, setting ownerAccessible and then
+      // utilizing LambdaToMethod directly should work:
+      //      - tree.ownerAccessible = false;
+      //      - call into LambdaToMethod to transform the method ref to a lambda expr
+      //      - call configMethod() here in case the method is an extension method
     }
   }
 
