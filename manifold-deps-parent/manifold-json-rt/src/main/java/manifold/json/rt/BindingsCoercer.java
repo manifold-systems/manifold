@@ -28,41 +28,38 @@ import java.util.List;
 /**
  * Coerce {@link Bindings} and {@link List} to {@link IBindingsBacked} and {@link IListBacked}.
  * <p/>
- * Note, this coercer primarily serves the JSON and GraphQL APIs where structural interfaces provide
- * {@link IProxyFactory} classes to overlay JSON bindings. This coercer is used to produce direct instances of the
- * interfaces so that other JVM languages can use JSON and GraphQL type manifolds without having to support structural
- * typing.
+ * Note, this coercer primarily serves the JSON and GraphQL APIs where structural interfaces overlay bindings. This
+ * coercer is used to produce direct instances of the interfaces so that other JVM languages can use JSON and GraphQL
+ * type manifolds without having to support structural typing.
  */
 public class BindingsCoercer implements ICoercionProvider
 {
   @Override
-  public Object coerce( Object o, Type proxyClassType )
+  public Object coerce( Object o, Type ifaceToProxyType )
   {
-    Class<?> proxyClass = proxyClassType instanceof ParameterizedType
-      ? (Class)((ParameterizedType)proxyClassType).getRawType()
-      : (Class)proxyClassType;
-    if( !proxyClass.isInterface() )
+    Class<?> ifaceToProxy = ifaceToProxyType instanceof ParameterizedType
+      ? (Class)((ParameterizedType)ifaceToProxyType).getRawType()
+      : (Class)ifaceToProxyType;
+    if( !ifaceToProxy.isInterface() )
     {
       return ICallHandler.UNHANDLED;
     }
 
-    Structural annotation = proxyClass.getAnnotation( Structural.class );
+    Structural annotation = ifaceToProxy.getAnnotation( Structural.class );
     if( annotation != null )
     {
-      if( annotation.factoryClass() != Void.class )
+      if( o instanceof Bindings && IBindingsBacked.class.isAssignableFrom( ifaceToProxy ) )
       {
-        if( IBindingsBacked.class.isAssignableFrom( proxyClass )
-          && (o instanceof Bindings || (o instanceof List && List.class.isAssignableFrom( proxyClass )))
-          || IListBacked.class.isAssignableFrom( proxyClass ) && o instanceof List && !(o instanceof IListBacked) )
+        if( annotation.factoryClass() != Void.class )
         {
-          IProxyFactory factory = (IProxyFactory)ReflectUtil.constructor( proxyClass.getName() + "$ProxyFactory" ).newInstance();
+          IProxyFactory factory = (IProxyFactory)ReflectUtil.constructor( ifaceToProxy.getName() + "$ProxyFactory" ).newInstance();
           //noinspection unchecked
-          return factory.proxy( o, proxyClass );
+          return factory.proxy( o, ifaceToProxy );
         }
-      }
-      else
-      {
-        return RuntimeMethods.constructProxy( o, proxyClass );
+        else
+        {
+          return RuntimeMethods.constructProxy( o, ifaceToProxy );
+        }
       }
     }
     return ICallHandler.UNHANDLED;

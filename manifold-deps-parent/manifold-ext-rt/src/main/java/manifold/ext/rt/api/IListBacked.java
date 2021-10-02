@@ -18,6 +18,8 @@ package manifold.ext.rt.api;
 
 import manifold.ext.rt.RuntimeMethods;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -44,7 +46,36 @@ public interface IListBacked<T> extends List<T>
    */
   List<Object> getList();
 
-  Class<?> getFinalComponentType();
+  /**
+   * Finds declared type parameter of type extending IListBacked.
+   * <pre>interface Hobby extends IlistBacked&lt;HobbyItem&gt;</pre>
+   * Returns {@code HobbyItem}
+   */
+  default Class<?> getFinalComponentType()
+  {
+    Class<?>[] interfaces = getClass().getInterfaces();
+    for( Class<?> e : interfaces )
+    {
+      for( Type iface : e.getGenericInterfaces() )
+      {
+        if( iface instanceof ParameterizedType &&
+          List.class.isAssignableFrom( (Class<?>)((ParameterizedType)iface).getRawType() ) )
+        {
+          Type typeArg = ((ParameterizedType)iface).getActualTypeArguments()[0];
+          if( typeArg instanceof ParameterizedType )
+          {
+            typeArg = ((ParameterizedType)typeArg).getRawType();
+          }
+          if( typeArg instanceof Class )
+          {
+            //noinspection unchecked
+            return (Class<T>)typeArg;
+          }
+        }
+      }
+    }
+    throw new IllegalStateException();
+  }
 
   /*
    * Delegate to the wrapped List.

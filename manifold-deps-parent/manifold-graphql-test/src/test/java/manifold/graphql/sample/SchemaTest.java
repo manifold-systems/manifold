@@ -16,6 +16,8 @@
 
 package manifold.graphql.sample;
 
+import manifold.graphql.rt.api.GqlBuilder;
+import manifold.graphql.rt.api.GqlType;
 import manifold.json.rt.api.DataBindings;
 import manifold.graphql.sample.movies.Role;
 import org.junit.Test;
@@ -24,6 +26,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 
+import static java.lang.System.out;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.Type.Main;
@@ -57,11 +60,6 @@ public class SchemaTest {
       .withNationality("American")
       .build();
 
-    // quick test underscore handling
-    SLIM_PICKENS.set_width( 2.2 );
-    assertEquals( 2.2d, SLIM_PICKENS.get_width(), 0 );
-    assertEquals( 2.2d, (double)SLIM_PICKENS.getBindings().get("_width"), 0d );
-    
     Person JAMES_GARNER = Person.builder(id(), "James Garner", date(1928, 4, 7))
       .withHeight(1.87)
       .withNationality("American")
@@ -169,6 +167,18 @@ public class SchemaTest {
     assertSame(id, cm.getId());
     assertSame(animal.getName(), cm.getName());
     assertSame(animal.getNationality(), cm.getNationality());
+  }
+
+  @Test
+  public void testLeadingUnderscoreIsPreserved()
+  {
+    Person SLIM_PICKENS = Person.builder(id(), "Slim Pickens", date(1919, 6, 29))
+      .build();
+
+    // quick test underscore handling
+    SLIM_PICKENS.set_width( 2.2 );
+    assertEquals( 2.2d, SLIM_PICKENS.get_width(), 0 );
+    assertEquals( 2.2d, (double)SLIM_PICKENS.getBindings().get("_width"), 0d );
   }
 
   private static String id() {

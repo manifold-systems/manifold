@@ -3,8 +3,11 @@ package manifold.graphql.sample;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
+import manifold.graphql.rt.api.GqlType;
+import manifold.graphql.rt.api.GqlBuilder;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.graphql.rt.api.request.Executor;
@@ -12,6 +15,7 @@ import manifold.json.rt.api.Requester;
 import org.junit.Test;
 
 
+import static java.lang.System.out;
 import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
@@ -143,6 +147,25 @@ public class QueryTest
     Executor exec = query.request( "" ).withBearerAuthorization( "xyz" );
     String bearerAuth = (String)exec.getHeaders().get( "Authorization" );
     assertEquals( "Bearer xyz", bearerAuth );
+  }
+
+  @Test
+  public void testBuilderIsProxiedOnBuildReturn()
+  {
+    MovieQuery.Builder mq = MovieQuery.builder();
+    MovieQuery q = boo( mq );
+    assertTrue( q.getClass().getSimpleName().contains( "Proxy" ) );
+  }
+  @Test
+  public void testBuilderIsProxiedOnWithReturn()
+  {
+    MovieQuery.Builder mq = MovieQuery.builder().withTitle( "foo" );
+    MovieQuery q = boo( mq );
+    assertTrue( q.getClass().getSimpleName().contains( "Proxy" ) );
+  }
+  private <V extends GqlType> V boo( GqlBuilder<V> builder )
+  {
+    return builder.build();
   }
 
 //  @Test

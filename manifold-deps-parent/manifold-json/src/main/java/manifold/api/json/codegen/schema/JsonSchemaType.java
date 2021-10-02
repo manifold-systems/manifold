@@ -471,8 +471,12 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   protected String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize )
   {
+    return addActualNameAnnotation( sb, indent, name, capitalize, false );
+  }
+  protected String addActualNameAnnotation( StringBuilder sb, int indent, String name, boolean capitalize, boolean force )
+  {
     String identifier = makeIdentifier( name, capitalize );
-    if( !identifier.equals( name ) )
+    if( force || !identifier.equals( name ) || !Character.isAlphabetic( name.charAt( 0 ) ) )
     {
       indent( sb, indent );
       sb.append( "@" ).append( ActualName.class.getName() ).append( "( \"" ).append( name ).append( "\" )\n" );

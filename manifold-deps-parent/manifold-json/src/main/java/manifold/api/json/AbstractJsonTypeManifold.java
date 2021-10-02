@@ -120,7 +120,11 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
       .append( "import " ).append( FragmentValue.class.getName() ).append( ";\n" )
       .append( "import " ).append( IProxyFactory.class.getName() ).append( ";\n" )
-      .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n\n" );
+      .append( "import " ).append( JsonBuilder.class.getName() ).append( ";\n" )
+      .append( "import " ).append( RuntimeMethods.class.getName() ).append( ";\n" )
+      .append( "\n" )
+      .append( "import static " ).append( RuntimeMethods.class.getName() + ".coerceFromBindingsValue" ).append( ";\n" )
+      .append( "\n" );
     model.report( errorHandler );
     IJsonParentType type = model.getType();
     type.prepareToRender( location, getModule(), errorHandler );

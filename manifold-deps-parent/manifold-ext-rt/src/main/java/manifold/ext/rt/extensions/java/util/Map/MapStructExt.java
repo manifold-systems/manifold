@@ -88,7 +88,7 @@ public abstract class MapStructExt implements ICallHandler
         result = setValue( bindings, methodName, actualName, paramTypes, args );
         if( returnType != void.class )
         {
-          result = bindings; //proxy;
+          result = RuntimeMethods.coerceFromBindingsValue( bindings, returnType );
         }
       }
       if( result == ICallHandler.UNHANDLED )

@@ -421,7 +421,12 @@ public class RuntimeMethods
       return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
         (proxy, method, args) -> MapStructExt.invoke( (Map)target, proxy, method, args) );
     }
-    return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( rootClass.getClassLoader(), new Class[]{iface},
+    if( List.class.isAssignableFrom( rootClass ) )
+    {
+      return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
+        (proxy, method, args) -> ListProxy.invoke( (List)target, proxy, method, args) );
+    }
+    return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
       (proxy, method, args) -> ReflectUtil.structuralCall( method, target, args ) );
   }
 

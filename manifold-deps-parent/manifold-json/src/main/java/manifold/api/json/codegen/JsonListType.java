@@ -186,7 +186,7 @@ public class JsonListType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent );
-    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
+    sb.append( "@Structural\n" );
     indent( sb, indent );
     //noinspection unused
     String componentType = makeTypeParameter( getComponentType(), true, false );
@@ -322,8 +322,6 @@ public class JsonListType extends JsonSchemaType
 
   private void renderInnerTypes( StringBuilder sb, int indent, boolean mutable )
   {
-    addProxy( sb, indent );
-    addProxyFactory( sb, indent );
     renderJsonInnerTypes( sb, indent, mutable );
   }
 
@@ -344,51 +342,6 @@ public class JsonListType extends JsonSchemaType
         }
       }
     }
-  }
-
-  /**
-   * Not so much a "proxy" as a substitute for a structural proxy that is otherwise generated dynamically at runtime.
-   * Essentially this class is a compile-time substitute that vastly improves the first-time load performance of
-   * JSON types.
-   */
-  private void addProxy( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    //noinspection unused
-    indent( sb, indent += 2 );
-    sb.append( "class Proxy implements $typeName {\n" );
-    indent( sb, indent );
-    sb.append( "  private final List _list;\n" );
-    indent( sb, indent );
-    sb.append( "  private Proxy(List list) {_list = list;}\n" );
-    indent( sb, indent );
-    sb.append( "  public List getList() {return _list;}\n" );
-    indent( sb, indent );
-    sb.append( "  public Class getFinalComponentType() {return ${getPropertyType( getComponentType() )}.class;}\n" );
-    indent( sb, indent );
-    sb.append( "  public int hashCode() {return _list.hashCode();}\n" );
-    indent( sb, indent );
-    sb.append( "  public boolean equals(Object obj) {return obj instanceof List " +
-      "? getList().equals(obj) " +
-      ": obj instanceof IJsonList && getList().equals(((IJsonList)obj).getList());}" );
-    sb.append( "}\n" );
-  }
-
-  private void addProxyFactory( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent += 2 );
-    sb.append( "class ProxyFactory implements IProxyFactory<List, ${getIdentifier()}> {\n" );
-    indent( sb, indent );
-    sb.append( "  public ${getIdentifier()} proxy(List list, Class<${getIdentifier()}> iface) {\n" );
-    indent( sb, indent );
-    sb.append( "    return new Proxy(list);\n" );
-    indent( sb, indent );
-    sb.append( "  }\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
   }
 
   @Override

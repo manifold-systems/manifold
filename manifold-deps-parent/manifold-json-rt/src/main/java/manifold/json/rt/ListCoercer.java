@@ -16,6 +16,7 @@
 
 package manifold.json.rt;
 
+import manifold.ext.rt.RuntimeMethods;
 import manifold.ext.rt.api.ICallHandler;
 import manifold.ext.rt.api.ICoercionProvider;
 import manifold.ext.rt.api.IListBacked;
@@ -28,22 +29,38 @@ import java.util.List;
 public class ListCoercer implements ICoercionProvider
 {
   @Override
-  public Object coerce( Object value, Type type )
+  public Object coerce( Object value, Type toType )
   {
-    while( type instanceof ParameterizedType && value instanceof List &&
-      List.class.isAssignableFrom( (Class)((ParameterizedType)type).getRawType() ) )
+    Class<?> toClass = toType instanceof ParameterizedType
+      ? (Class)((ParameterizedType)toType).getRawType()
+      : (Class)toType;
+    if( !toClass.isInterface() )
     {
-      type = ((ParameterizedType)type).getActualTypeArguments()[0];
+      return ICallHandler.UNHANDLED;
     }
-    if( type instanceof ParameterizedType )
+
+    while( toType instanceof ParameterizedType && value instanceof List &&
+      List.class.isAssignableFrom( (Class)((ParameterizedType)toType).getRawType() ) )
     {
-      type = ((ParameterizedType)type).getRawType();
+      toType = ((ParameterizedType)toType).getActualTypeArguments()[0];
     }
-    Class rawType = (Class)type;
-    if( value instanceof List && !IListBacked.class.isAssignableFrom( rawType ) )
+    if( toType instanceof ParameterizedType )
     {
-      return new JsonList( (List)value, rawType );
+      toType = ((ParameterizedType)toType).getRawType();
     }
+    Class rawToType = (Class)toType;
+    if( value instanceof List )
+    {
+      // handle case like Person.Hobby where Hobby extends IListBacked<HobbyItem>
+      if( IListBacked.class.isAssignableFrom( rawToType ) )
+      {
+        return RuntimeMethods.constructProxy( value, rawToType );
+      }
+
+      // Handle case like Foo where Foo is the component type to transform a simple List to a JsonList<Foo>
+      return new JsonList( (List)value, rawToType );
+    }
+
     return ICallHandler.UNHANDLED;
   }
 

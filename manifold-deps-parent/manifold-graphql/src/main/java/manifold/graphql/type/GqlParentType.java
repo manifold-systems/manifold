@@ -68,7 +68,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import manifold.ext.rt.CoercionProviders;
-import manifold.ext.rt.api.ICoercionProvider;
+import manifold.ext.rt.api.*;
 import manifold.graphql.rt.api.*;
 import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
@@ -97,9 +97,6 @@ import manifold.rt.api.util.ManEscapeUtil;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Pair;
 import manifold.ext.rt.RuntimeMethods;
-import manifold.ext.rt.api.IBindingType;
-import manifold.ext.rt.api.IProxyFactory;
-import manifold.ext.rt.api.Structural;
 import manifold.graphql.rt.api.request.Executor;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import org.jetbrains.annotations.NotNull;
@@ -352,17 +349,18 @@ class GqlParentType
       String actualName = ensure$included( varDef );
       String nameNo$ = remove$( actualName );
       String propName = makeIdentifier( nameNo$, true );
-      SrcType type = makeSrcType( enclosingType, varDef.getType(), false );
-      //noinspection unused
-      StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
-      //noinspection unused
-      StringBuilder componentType = getComponentType( type ).render( new StringBuilder(), 0, false );
-      SrcGetProperty getter = new SrcGetProperty( propName, type );
+      SrcType getterType = makeSrcType( enclosingType, varDef.getType(), false );
+      SrcType setterType = makeSrcType( enclosingType, varDef.getType(), false, true );
+//      //noinspection unused
+//      StringBuilder propertyType = getterType.render( new StringBuilder(), 0, false );
+//      //noinspection unused
+//      StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
+      SrcGetProperty getter = new SrcGetProperty( propName, getterType );
       addActualNameAnnotation( getter, nameNo$, true );
       addSourcePositionAnnotation( srcClass, varDef, actualName, getter );
       srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 
-      SrcSetProperty setter = new SrcSetProperty( propName, type );
+      SrcSetProperty setter = new SrcSetProperty( propName, setterType );
       addActualNameAnnotation( setter, nameNo$, true );
       addSourcePositionAnnotation( srcClass, varDef, actualName, setter );
       srcClass.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
@@ -505,7 +503,7 @@ class GqlParentType
       if( isRequiredVar( node ) )
       {
         Type type = getType( node );
-        SrcType srcType = makeSrcType( owner, type, false );
+        SrcType srcType = makeSrcType( owner, type, false, true );
         method.addParam( makeIdentifier( remove$( node.getName() ), false ), srcType );
       }
     }
@@ -532,7 +530,7 @@ class GqlParentType
 
       Type type = getType( node );
       String propName = makeIdentifier( node.getName(), true );
-      addWithMethod( srcClass, node, propName, makeSrcType( srcClass, type, false ) );
+      addWithMethod( srcClass, node, propName, makeSrcType( srcClass, type, false, true ) );
     }
   }
 
@@ -693,6 +691,7 @@ class GqlParentType
     srcClass.addImport( IJsonBindingsBacked.class );
     srcClass.addImport( IProxyFactory.class );
     srcClass.addImport( List.class );
+    srcClass.addImport( IListBacked.class );
     srcClass.addImport( Loader.class );
     srcClass.addImport( Map.class );
     srcClass.addImport( HashMap.class );
@@ -1210,7 +1209,8 @@ class GqlParentType
   private void addMember( SrcLinkedClass srcClass, NamedNode member, Type type, String name,
                           Predicate<String> duplicateChecker )
   {
-    SrcType srcType = makeSrcType( srcClass, type, false );
+    SrcType getterType = makeSrcType( srcClass, type, false );
+    SrcType setterType = makeSrcType( srcClass, type, false, true );
     String propName = makeIdentifier( name, true );
     if( !propName.equals( name ) && duplicateChecker.test( propName ) )
     {
@@ -1219,11 +1219,11 @@ class GqlParentType
       // e.g., getFoo() and get_foo()
       propName = '_' + makeIdentifier( name, false );
     }
-    //noinspection unused
-    StringBuilder propertyType = srcType.render( new StringBuilder(), 0, false );
-    //noinspection unused
-    StringBuilder componentType = getComponentType( srcType ).render( new StringBuilder(), 0, false );
-    SrcGetProperty getter = new SrcGetProperty( propName, srcType );
+//    //noinspection unused
+//    StringBuilder propertyType = getterType.render( new StringBuilder(), 0, false );
+//    //noinspection unused
+//    StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
+    SrcGetProperty getter = new SrcGetProperty( propName, getterType );
     addActualNameAnnotation( getter, name, true );
     if( member != null )
     {
@@ -1231,7 +1231,7 @@ class GqlParentType
     }
     srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 
-    SrcSetProperty setter = new SrcSetProperty( propName, srcType );
+    SrcSetProperty setter = new SrcSetProperty( propName, setterType );
     addActualNameAnnotation( setter, name, true );
     if( member != null )
     {
@@ -1447,11 +1447,15 @@ class GqlParentType
 
   private SrcType makeSrcType( SrcLinkedClass owner, Type type, boolean typeParam )
   {
+    return makeSrcType( owner, type, typeParam, false );
+  }
+  private SrcType makeSrcType( SrcLinkedClass owner, Type type, boolean typeParam, boolean isParameter )
+  {
     SrcType srcType;
     if( type instanceof ListType )
     {
-      srcType = new SrcType( "List" );
-      srcType.addTypeParam( makeSrcType( owner, ((ListType)type).getType(), true ) );
+      srcType = new SrcType( isParameter ? "List" : "IListBacked" );
+      srcType.addTypeParam( makeSrcType( owner, ((ListType)type).getType(), true, isParameter ) );
     }
     else if( type instanceof TypeName )
     {
@@ -1466,7 +1470,7 @@ class GqlParentType
     else if( type instanceof NonNullType )
     {
       Type theType = ((NonNullType)type).getType();
-      srcType = makeSrcType( owner, theType, typeParam );
+      srcType = makeSrcType( owner, theType, typeParam, isParameter );
       if( !typeParam && !srcType.isPrimitive() )
       {
         srcType.addAnnotation( new SrcAnnotationExpression( NotNull.class.getSimpleName() ) );

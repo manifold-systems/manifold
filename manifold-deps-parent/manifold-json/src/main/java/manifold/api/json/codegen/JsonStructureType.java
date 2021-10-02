@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import manifold.ext.rt.api.Structural;
 import manifold.rt.api.Bindings;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
@@ -519,7 +521,7 @@ public class JsonStructureType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent );
-    sb.append( "@Structural(factoryClass=$typeName.ProxyFactory.class)\n" );
+    sb.append( "@" + Structural.class.getSimpleName() + "\n" );
     if( getIFile() instanceof IFileFragment )
     {
       indent( sb, indent );
@@ -538,10 +540,7 @@ public class JsonStructureType extends JsonSchemaType
 
   private void renderInnerTypes( StringBuilder sb, int indent, boolean mutable )
   {
-    addProxy( sb, indent );
-    addProxyFactory( sb, indent );
     addBuilder( sb, indent );
-    addCopier( sb, indent );
 
     for( IJsonParentType child: _state._innerTypes.values() )
     {
@@ -613,13 +612,7 @@ public class JsonStructureType extends JsonSchemaType
     indent( sb, indent + 2 );
     //noinspection unused
     String propertyType = getPropertyType( type );
-    sb.append( "default $propertyType get$identifier() {\n" );
-    indent( sb, indent + 4 );
-    //noinspection unused
-    String componentType = getPropertyType( getComponentType( type ) );
-    sb.append( "return ($propertyType)" ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $propertyType.class);\n" );
-    indent( sb, indent + 2 );
-    sb.append( "}\n" );
+    sb.append( "$propertyType get$identifier();\n" );
   }
 
   private IJsonType getComponentType( IJsonType type )
@@ -637,11 +630,7 @@ public class JsonStructureType extends JsonSchemaType
     //noinspection unused
     String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
     indent( sb, indent + 2 );
-    sb.append( "default void set$identifier(" ).append( propertyType ).append( " ${'$'}value) {\n" );
-    indent( sb, indent + 4 );
-    sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(${'$'}value));\n" );
-    indent( sb, indent + 2 );
-    sb.append( "}\n" );
+    sb.append( "void set$identifier(" ).append( propertyType ).append( " ${'$'}value);\n" );
   }
 
   private void addAdditionalPropertiesMethods( StringBuilder sb, int indent, boolean mutable )
@@ -695,27 +684,11 @@ public class JsonStructureType extends JsonSchemaType
           addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
         }
         //noinspection unused
-        String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
+        String identifier = addActualNameAnnotation( sb, indent + 2, key, true, true );
         indent( sb, indent + 2 );
         //noinspection unused
         String unionName = makeMemberIdentifier( constituentType );
-        sb.append( "default $specificPropertyType get$identifier" ).append( "As$unionName() {\n" );
-        indent( sb, indent + 4 );
-        if( constituentType instanceof JsonListType || specificPropertyType.indexOf( '>' ) > 0 )
-        {
-          String rawSpecificPropertyType = removeGenerics( specificPropertyType );
-          sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() )
-        .append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $rawSpecificPropertyType.class);\n" );
-        }
-        else
-        {
-          //noinspection unused
-          String rawSpecificPropertyType = removeGenerics( specificPropertyType );
-          sb.append( "return ($specificPropertyType)" ).append( RuntimeMethods.class.getSimpleName() )
-            .append( ".coerce(((DataBindings)getBindings()).get(\"$key\"), $rawSpecificPropertyType.class);\n" );
-        }
-        indent( sb, indent + 2 );
-        sb.append( "}\n" );
+        sb.append( "$specificPropertyType get$identifier" ).append( "As$unionName();\n" );
         if( mutable )
         {
           //noinspection UnusedAssignment
@@ -725,14 +698,9 @@ public class JsonStructureType extends JsonSchemaType
           {
             addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
           }
-          addActualNameAnnotation( sb, indent + 2, key, true );
+          addActualNameAnnotation( sb, indent + 2, key, true, true );
           indent( sb, indent + 2 );
-          sb.append( "default void set$identifier" ).append( "As$unionName($specificPropertyType ${'$'}value) {\n" );
-          indent( sb, indent + 4 );
-          sb.append( "getBindings().put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() )
-            .append( ".coerceToBindingValue(${'$'}value));\n" );
-          indent( sb, indent + 2 );
-          sb.append( "}\n" );
+          sb.append( "void set$identifier" ).append( "As$unionName($specificPropertyType ${'$'}value);\n" );
         }
       }
     }
@@ -840,7 +808,7 @@ public class JsonStructureType extends JsonSchemaType
     sb.append( ") {\n" );
     indent += 2;
     indent( sb, indent );
-    sb.append( "return new Builder(" );
+    sb.append( "return (Builder)coerceFromBindingsValue(create(" );
     int count = 0;
     for( String param: allRequired )
     {
@@ -856,7 +824,7 @@ public class JsonStructureType extends JsonSchemaType
         sb.append( "$paramName" );
       }
     }
-    sb.append( ");\n" );
+    sb.append( ").getBindings(), Builder.class);\n" );
     indent -= 2;
     indent( sb, indent );
     sb.append( "}\n" );
@@ -867,151 +835,19 @@ public class JsonStructureType extends JsonSchemaType
     //noinspection unused
     String typeName = getIdentifier();
     indent( sb, indent );
-    sb.append( "static Copier copier($typeName from) {return new Copier(from);}\n" );
-  }
-
-  /**
-   * Not so much a "proxy" as a substitute for a structural proxy that is otherwise generated dynamically at runtime.
-   * Essentially this class is a compile-time substitute that vastly improves the first-time load performance of
-   * JSON types.
-   */
-  private void addProxy( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    //noinspection unused
-    indent( sb, indent += 2 );
-    sb.append( "class Proxy implements $typeName {\n" );
-    indent( sb, indent );
-    sb.append( "  private final DataBindings _bindings;\n" );
-    indent( sb, indent );
-    sb.append( "  private Proxy(Bindings bindings) {_bindings = bindings instanceof DataBindings ? (DataBindings)bindings : new DataBindings(bindings);}\n" );
-    indent( sb, indent );
-    sb.append( "  public DataBindings getBindings() {return _bindings;}\n" );
-    indent( sb, indent );
-    sb.append( "  public int hashCode() {return _bindings.hashCode();}\n" );
-    indent( sb, indent );
-    sb.append( "  public boolean equals(Object obj) {return obj instanceof Bindings " +
-      "? obj.equals(getBindings()) " +
-      ": obj instanceof IJsonBindingsBacked && getBindings().equals(((IJsonBindingsBacked)obj).getBindings());}" );
-    sb.append( "}\n" );
-  }
-
-  private void addProxyFactory( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent += 2 );
-    sb.append( "class ProxyFactory implements IProxyFactory<Map, ${getIdentifier()}> {\n" );
-    indent( sb, indent );
-    sb.append( "  public ${getIdentifier()} proxy(Map bindings, Class<${getIdentifier()}> iface) {\n" );
-    indent( sb, indent );
-    sb.append( "    if(!(bindings instanceof Bindings)) {bindings = new DataBindings(bindings);}\n" );
-    indent( sb, indent );
-    sb.append( "    return new Proxy((Bindings)bindings);\n" );
-    indent( sb, indent );
-    sb.append( "  }\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
+    sb.append( "static Builder copier($typeName from) {return (Builder)coerceFromBindingsValue(from.getBindings().deepCopy(), Builder.class);}\n" );
   }
 
   private void addBuilder( StringBuilder sb, int indent )
   {
+    String typeName = getIdentifier();
     indent( sb, indent += 2 );
-    sb.append( "class Builder {\n" );
-    indent( sb, indent += 2 );
-    //noinspection unused
-    sb.append( "private final Bindings _bindings;\n" );
+    sb.append( "@" + Structural.class.getSimpleName() + "\n" );
     indent( sb, indent );
-
-    // constructor
-    addBuilderConstructor( sb, indent );
-
-    addWithMethods( getNotRequired(), "Builder", sb, indent );
-
-    addBuildMethod( sb, indent );
-
-    indent( sb, indent - 2 );
-    sb.append( "}\n" );
-  }
-
-  private void addBuilderConstructor( StringBuilder sb, int indent )
-  {
-    sb.append( "private Builder(" );
-    Set<String> allRequired = getAllRequired();
-    Map<String, IJsonType> allMembers = getAllMembers();
-    addRequiredParams( sb, allRequired, allMembers );
-    sb.append( ") {\n" );
-    indent += 2;
-    indent( sb, indent );
-    sb.append( "_bindings = create(" );
-    int count = 0;
-    for( String param: allRequired )
-    {
-      IJsonType paramType = allMembers.get( param );
-      if( paramType.getTypeAttributes().getDefaultValue() == null )
-      {
-        if( count++ > 0 )
-        {
-          sb.append( ", " );
-        }
-        //noinspection unused
-        String paramName = makeIdentifier( param, false );
-        sb.append( "$paramName" );
-      }
-    }
-    sb.append( ").getBindings();\n" );
-    indent -= 2;
+    sb.append( "interface Builder extends JsonBuilder<$typeName> {\n" );
+    addWithMethods( getNotRequired(), "Builder", sb, indent + 2 );
     indent( sb, indent );
     sb.append( "}\n" );
-  }
-
-  private void addBuildMethod( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent );
-    sb.append( "public $typeName build() {\n" );
-    indent( sb, indent + 2 );
-    sb.append( "return new ProxyFactory().proxy(_bindings, $typeName.class);\n" );
-    indent( sb, indent );
-    sb.append( "}\n" );
-  }
-
-  private void addCopier( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    indent( sb, indent );
-    sb.append( "class Copier {\n" );
-    indent( sb, indent );
-    sb.append( "  private final Bindings _bindings;\n" );
-    indent( sb, indent );
-
-    // constructor
-    addCopierConstructor( sb, indent );
-
-    addWithMethods( getNotRequired(), "Copier", sb, indent );
-
-    addCopierCopyMethod( sb, indent );
-
-    indent( sb, indent - 2 );
-    sb.append( "}\n" );
-  }
-
-  private void addCopierCopyMethod( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent );
-    sb.append( "public $typeName copy() {return ($typeName)_bindings;}\n" );
-  }
-
-  private void addCopierConstructor( StringBuilder sb, int indent )
-  {
-    //noinspection unused
-    String typeName = getIdentifier();
-    indent( sb, indent );
-    sb.append( "private Copier($typeName from) {_bindings = from.copy().getBindings();}\n" );
   }
 
   private void addCopyMethod( StringBuilder sb, int indent )
@@ -1031,17 +867,11 @@ public class JsonStructureType extends JsonSchemaType
       String key = entry.getKey();
       //noinspection unused
       String suffix = makeIdentifier( key, true );
-      addSourcePositionAnnotation( sb, indent + 2, key );
+      addSourcePositionAnnotation( sb, indent, key );
       //noinspection unused
-      String identifier = addActualNameAnnotation( sb, indent + 2, key, false );
+      String identifier = addActualNameAnnotation( sb, indent, key, false, true );
       indent( sb, indent );
-      sb.append( "public $builderType with$suffix($propertyType $identifier) {\n" );
-      indent( sb, indent );
-      sb.append( "  _bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue($identifier));\n" );
-      indent( sb, indent );
-      sb.append( "  return this;\n" );
-      indent( sb, indent );
-      sb.append( "}\n" );
+      sb.append( "$builderType with$suffix($propertyType $identifier);\n" );
       renderUnionAccessors_With( builderType, sb, indent, key, entry.getValue() );
     }
   }
@@ -1061,19 +891,14 @@ public class JsonStructureType extends JsonSchemaType
         sb.append( '\n' );
         String specificPropertyType = getConstituentQn( constituentType, type );
         String unionName = makeMemberIdentifier( constituentType );
-        addSourcePositionAnnotation( sb, indent + 2, key );
+        addSourcePositionAnnotation( sb, indent, key );
         if( constituentType instanceof JsonSchemaType )
         {
-          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+          addTypeReferenceAnnotation( sb, indent, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
         }
-        String identifier = addActualNameAnnotation( sb, indent + 2, key, true );
-        indent( sb, indent + 2 );
-        sb.append( "public $builderType with" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value) {\n" );
-        indent( sb, indent + 2 );
-        sb.append( "  _bindings.put(\"$key\", " ).append( RuntimeMethods.class.getSimpleName() ).append( ".coerceToBindingValue(${'$'}value));\n" );
-        sb.append( "  return this;\n" );
-        indent( sb, indent + 2 );
-        sb.append( "}\n" );
+        String identifier = addActualNameAnnotation( sb, indent, key, true );
+        indent( sb, indent );
+        sb.append( "$builderType with" ).append( identifier ).append( "As" ).append( unionName ).append( "(" ).append( specificPropertyType ).append( " ${'$'}value);\n" );
       }
     }
   }
@@ -1138,7 +963,7 @@ public class JsonStructureType extends JsonSchemaType
       }
     }
     indent( sb, indent + 2 );
-    sb.append( "return new ProxyFactory().proxy(bindings_, $typeName.class);\n" );
+    sb.append( "return ($typeName)coerceFromBindingsValue(bindings_, $typeName.class);\n" );
     indent( sb, indent );
     sb.append( "}\n" );
   }
