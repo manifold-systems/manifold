@@ -558,10 +558,10 @@ configurations {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-graphql-rt:2021.1.25-SNAPSHOT'
+     implementation 'systems.manifold:manifold-graphql-rt:2021.1.25'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2021.1.25-SNAPSHOT'
+     annotationProcessor 'systems.manifold:manifold-graphql:2021.1.25'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&

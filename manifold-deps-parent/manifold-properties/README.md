@@ -104,7 +104,7 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-properties:2021.1.25-SNAPSHOT'
+    annotationProcessor 'systems.manifold:manifold-properties:2021.1.25'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&

@@ -131,7 +131,7 @@ configurations {
 dependencies {
     // Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
     //   -Xplugin:Manifold no-bootstrap
-    implementation 'systems.manifold:manifold-rt:2021.1.25-SNAPSHOT'
+    implementation 'systems.manifold:manifold-rt:2021.1.25'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2021.1.25'
