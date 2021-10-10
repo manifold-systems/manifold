@@ -161,7 +161,12 @@ public class ManParserFactory extends ParserFactory
         super( manScannerFactory, buf );
         _scannerFactory = manScannerFactory;
         //noinspection ConstantConditions
-        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
+        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader();
+      }
+
+      private UnicodeReader reader()
+      {
+        return (UnicodeReader)ReflectUtil.field( this, "reader" ).get();
       }
 
       ManJavadocTokenizer( ManScannerFactory manScannerFactory, char[] input, int inputLength )
@@ -169,7 +174,7 @@ public class ManParserFactory extends ParserFactory
         super( manScannerFactory, input, inputLength );
         _scannerFactory = manScannerFactory;
         //noinspection ConstantConditions
-        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
+        _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader();
       }
 
       protected Tokens.Comment processComment( int pos, int endPos, Tokens.Comment.CommentStyle style )
@@ -220,14 +225,19 @@ public class ManParserFactory extends ParserFactory
         {
           super( fac, buf, len );
           //noinspection ConstantConditions
-          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
+          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader();
         }
 
         ManJavaTokenizer( ManScannerFactory fac, CharBuffer buf )
         {
           super( fac, buf );
           //noinspection ConstantConditions
-          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader;
+          _reader = JreUtil.isJava16orLater() ? (UnicodeReader)(Object)this : reader();
+        }
+
+        private UnicodeReader reader()
+        {
+          return (UnicodeReader)ReflectUtil.field( this, "reader" ).get();
         }
 
         protected Tokens.Comment processComment( int pos, int endPos, Tokens.Comment.CommentStyle style )

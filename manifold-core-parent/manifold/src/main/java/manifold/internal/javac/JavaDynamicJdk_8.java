@@ -23,7 +23,6 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
@@ -31,6 +30,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import java.util.Collections;
 import java.util.Locale;
+import java.util.function.Predicate;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
@@ -79,10 +79,10 @@ public class JavaDynamicJdk_8 implements IDynamicJdk
   }
 
   @Override
-  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter, boolean completeFirst )
+  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Predicate<Symbol> predicate, boolean completeFirst )
   {
     Scope members = completeFirst ? classSym.members() : classSym.members_field;
-    return members == null ? Collections.emptyList() : members.getElements( filter );
+    return members == null ? Collections.emptyList() : members.getElements( t -> predicate.test( t ) );
   }
 
   @Override

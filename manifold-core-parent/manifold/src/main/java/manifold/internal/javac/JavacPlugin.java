@@ -427,7 +427,8 @@ public class JavacPlugin implements Plugin, TaskListener
     ManTransTypes.instance( _ctx );
 
     // Override javac's Types
-    ManTypes.instance( _ctx );
+    ReflectUtil.method( "manifold.internal.javac.ManTypes_" + (JreUtil.isJava17orLater() ? 17 : 8),
+      "instance", Context.class ).invokeStatic( getContext() );
 
     ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
 

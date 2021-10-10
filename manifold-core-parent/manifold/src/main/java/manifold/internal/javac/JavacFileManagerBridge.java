@@ -22,6 +22,7 @@ import com.sun.tools.javac.util.Context;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -36,7 +37,7 @@ import manifold.util.ReflectUtil;
  * via the Java Compiler API do not require our file manager to extend JavacFileManager.  Otherwise, we'd extend
  * ForwardingJavaFileManager.
  */
-public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFileManager
+public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFileManager implements PreJava17JavacFileManagerMethod
 {
   /**
    * The file manager which all methods are delegated to.
@@ -129,14 +130,14 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     return (Iterable)getLocation.invoke( location );
   }
 
-  // exclusive to Java 9
-  public Iterable<? extends Path> getLocationAsPaths( Location location )
+  // exclusive to Java 9, also note the PreJava17JavacFileManagerMethod impl
+  public Collection<? extends Path> getLocationAsPaths( Location location )
   {
     ReflectUtil.LiveMethodRef getLocationAsPaths = findStandardJavaFileManagerMethod(
       fileManager, "getLocationAsPaths", Location.class );
 
     //noinspection unchecked
-    return (Iterable)getLocationAsPaths.invoke( location );
+    return (Collection)getLocationAsPaths.invoke( location );
   }
 
   public ReflectUtil.LiveMethodRef findStandardJavaFileManagerMethod( JavaFileManager fm, String name, Class... params )
@@ -335,7 +336,6 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     try
     {
       ReflectUtil.LiveMethodRef contains = ReflectUtil.method( fileManager, "contains", Location.class, FileObject.class );
-      //noinspection unchecked
       return (boolean)contains.invoke( location, fo );
     }
     catch( Exception e )

@@ -3,32 +3,27 @@ package manifold.internal.javac;
 import com.sun.tools.javac.code.Scope;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.comp.Modules;
 import com.sun.tools.javac.comp.Operators;
-import com.sun.tools.javac.resources.CompilerProperties;
 import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.resources.CompilerProperties;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.JCDiagnostic;
-import com.sun.tools.javac.util.Log;
-import com.sun.tools.javac.util.Name;
-import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.*;
+import manifold.rt.api.util.Stack;
+import manifold.util.ReflectUtil;
+
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.function.Predicate;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-
-import manifold.rt.api.util.Stack;
-import manifold.util.ReflectUtil;
 
 import static manifold.internal.javac.ManifoldJavaFileManager.MODULE_CTX;
 
-public class JavaDynamicJdk_11 implements IDynamicJdk
+public class JavaDynamicJdk_17 implements IDynamicJdk
 {
   @Override
   public <T> void report( Log issueLogger, Diagnostic<? extends T> diagnostic )
@@ -41,7 +36,7 @@ public class JavaDynamicJdk_11 implements IDynamicJdk
       switch( diagnostic.getKind() )
       {
         case ERROR:
-          issueLogger.error( JCDiagnostic.DiagnosticFlag.MULTIPLE, new IssueReporter.Position( diagnostic ), CompilerProperties.Errors.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
+          issueLogger.error( (JCDiagnostic.DiagnosticFlag)ReflectUtil.field( JCDiagnostic.DiagnosticFlag.class, "API" ).getStatic(), new IssueReporter.Position( diagnostic ), CompilerProperties.Errors.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
           break;
         case WARNING:
           issueLogger.warning( new IssueReporter.Position( diagnostic ), CompilerProperties.Warnings.ProcMessager( diagnostic.getMessage( Locale.getDefault() ) ) );
@@ -69,10 +64,10 @@ public class JavaDynamicJdk_11 implements IDynamicJdk
   }
 
   @Override
-  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Predicate<Symbol> filter, boolean completeFirst )
+  public Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Predicate<Symbol> predicate, boolean completeFirst )
   {
     Scope.WriteableScope members = completeFirst ? classSym.members() : classSym.members_field;
-    return members == null ? Collections.emptyList() : members.getSymbols( t -> filter.test( t ) );
+    return members == null ? Collections.emptyList() : members.getSymbols( predicate );
   }
 
   @Override

@@ -20,7 +20,6 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Log;
@@ -29,6 +28,8 @@ import javax.tools.Diagnostic;
 import manifold.util.JreUtil;
 import manifold.api.util.PerfLogUtil;
 import manifold.util.concurrent.LocklessLazyVar;
+
+import java.util.function.Predicate;
 
 /**
  * This interface facilitates JDK API version independence via dynamically compiled Dark Java implementations
@@ -43,11 +44,11 @@ public interface IDynamicJdk
   }
   Iterable<Symbol> getMembers( Symbol.ClassSymbol members, boolean completeFirst );
 
-  default Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter )
+  default Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Predicate<Symbol> predicate )
   {
-    return getMembers( classSym, filter, true );
+    return getMembers( classSym, predicate, true );
   }
-  Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Filter<Symbol> filter, boolean completeFirst );
+  Iterable<Symbol> getMembers( Symbol.ClassSymbol classSym, Predicate<Symbol> predicate, boolean completeFirst );
 
   default Iterable<Symbol> getMembersByName( Symbol.ClassSymbol classSym, Name name )
   {
@@ -93,9 +94,13 @@ public interface IDynamicJdk
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_11";
           }
-          else // Java 16+
+          else if( JreUtil.isJava16() ) // Java 16
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_16";
+          }
+          else // Java 17+
+          {
+            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_17";
           }
           return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }

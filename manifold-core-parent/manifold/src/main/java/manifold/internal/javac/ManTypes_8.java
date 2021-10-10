@@ -44,7 +44,7 @@ import manifold.rt.api.anno.any;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
-public class ManTypes extends Types
+public class ManTypes_8 extends Types
 {
   private static final String TYPES_FIELD = "types";
   private static final String SELF_TYPE_NAME = "manifold.ext.rt.api.Self";
@@ -58,16 +58,16 @@ public class ManTypes extends Types
   public static Types instance( Context ctx )
   {
     Types types = ctx.get( typesKey );
-    if( !(types instanceof ManTypes) )
+    if( !(types instanceof ManTypes_8) )
     {
       ctx.put( typesKey, (Types)null );
-      types = new ManTypes( ctx );
+      types = new ManTypes_8( ctx );
     }
 
     return types;
   }
 
-  private ManTypes( Context ctx )
+  private ManTypes_8( Context ctx )
   {
     super( ctx );
 

@@ -34,6 +34,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
@@ -69,6 +70,7 @@ public class ManJavacParser extends JavacParser
   private static Method method_BindingPattern_15 = null;
   private static Method method_BindingPattern_16 = null;
   private static Method method_insertAnnotationsToMostInner = null;
+  private static Method method_peekToken = null;
   private static Method method_unannotatedType = null;
   private static int java_ver = 0;
   static
@@ -83,6 +85,16 @@ public class ManJavacParser extends JavacParser
 
       method_insertAnnotationsToMostInner = JavacParser.class.getDeclaredMethod( "insertAnnotationsToMostInner", JCExpression.class, List.class, boolean .class );
       method_insertAnnotationsToMostInner.setAccessible( true );
+
+      try
+      {
+        method_peekToken = JavacParser.class.getDeclaredMethod( "peekToken", int.class, Class.forName( "com.sun.tools.javac.util.Filter", true, JavacParser.class.getClassLoader() ) );
+        method_peekToken.setAccessible( true );
+      }
+      catch( Throwable ignore )
+      {
+        // means we are running java 17+
+      }
 
       java_ver = 8;
 
@@ -126,6 +138,13 @@ public class ManJavacParser extends JavacParser
       method_BindingPattern_16.setAccessible( true );
 
       java_ver = 16;
+
+      // Java 17+
+      method_peekToken = JavacParser.class.getDeclaredMethod( "peekToken", int.class, Predicate.class );
+      method_peekToken.setAccessible( true );
+
+      java_ver = 17;
+
     }
     catch( Exception ignore )
     {
@@ -409,11 +428,11 @@ public class ManJavacParser extends JavacParser
         parensResult == ParensResult.IMPLICIT_LAMBDA )
     {
       int lookahead = 0;
-      while( !peekToken( lookahead, RPAREN ) )
+      while( !_peekToken( lookahead, RPAREN ) )
       {
         lookahead++;
       }
-      if( !peekToken( ++lookahead, ARROW ) )
+      if( !_peekToken( ++lookahead, ARROW ) )
       {
         parensResult = ParensResult.PARENS;
       }
@@ -448,6 +467,18 @@ public class ManJavacParser extends JavacParser
     catch( Exception e )
     {
       throw new RuntimeException( e );
+    }
+  }
+
+  private boolean _peekToken( int i, Object filter )
+  {
+    try
+    {
+      return (boolean)method_peekToken.invoke( this, i, filter );
+    }
+    catch( Throwable t )
+    {
+      throw new RuntimeException( t );
     }
   }
 
