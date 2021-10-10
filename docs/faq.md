@@ -15,7 +15,7 @@ Yes.  Manifold fully supports Java 8 - 17.  Manifold also fully supports the Jav
 
 #### Q: Manifold is somehow using Java internal APIs to do its magic. Could it break in a future version of Java?
 Unlikely.  Java internal APIs can and do change from version to version, sometimes dramatically, however Manifold always
-adjusts to changes ahead of Java releases. To date, Manifold has adapted to seven major Java versions since its debut,
+adjusts to changes ahead of Java releases. To date, Manifold has adapted to eight major Java versions since its debut,
 always well in advance of Oracle's official release schedule.  
 
 #### Q: Is Manifold free?
