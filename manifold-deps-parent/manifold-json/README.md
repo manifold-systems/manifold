@@ -580,10 +580,10 @@ configurations {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-json-rt:2021.1.25'
+    implementation 'systems.manifold:manifold-json-rt:2021.1.26'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-json:2021.1.25'
+    annotationProcessor 'systems.manifold:manifold-json:2021.1.26'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -619,7 +619,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2021.1.25</manifold.version>
+        <manifold.version>2021.1.26</manifold.version>
     </properties>
     
     <dependencies>
@@ -663,10 +663,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-json`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json/2021.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json/2021.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json/2021.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json/2021.1.26)
 
 `manifold-json-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json-rt/2021.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json-rt/2021.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-json-rt/2021.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-json-rt/2021.1.26)
 
 # License
 

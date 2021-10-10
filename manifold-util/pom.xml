@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>2021.1.25-SNAPSHOT</version>
+    <version>2021.1.26-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-util</artifactId>
