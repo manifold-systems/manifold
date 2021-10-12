@@ -413,8 +413,7 @@ public class SrcClassUtil
   {
     return isJava8()
            ? (Type)ReflectUtil.method( type, "unannotatedType" ).invoke()
-           : (Type)ReflectUtil.method( type, "cloneWithMetadata", ReflectUtil.type( "com.sun.tools.javac.code.TypeMetadata" ) )
-             .invoke( ReflectUtil.field( "com.sun.tools.javac.code.TypeMetadata", "EMPTY" ).getStatic() );
+           : (Type)ReflectUtil.method( type, "stripMetadata" ).invoke();
   }
 
   private String typeNoAnnotations( Type type )

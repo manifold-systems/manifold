@@ -209,6 +209,13 @@ public class SimpleTest extends TestCase
     assertTrue( ClassWithConstants.OBJ_VALUE2 instanceof ClassWithConstants );
   }
 
+  public void testAnnotatedParameters()
+  {
+    Double dub = 1.2;
+    List<String> list = new ArrayList<>();
+    dub.myMethod( list );
+  }
+  
   private double foo( Coordinate c )
   {
     return c.getX();
