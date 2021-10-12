@@ -245,11 +245,43 @@ public class SrcClassUtil
     }
     else if( constValue instanceof Float )
     {
-      value += "f";
+      if( Float.isInfinite( (Float)constValue ) )
+      {
+        String infinite = "1.0f / 0.0f";
+        if( value.charAt( 0 ) == '-' )
+        {
+          infinite = '-' + infinite;
+        }
+        value = infinite;
+      }
+      else if( Float.isNaN( (Float)constValue ) )
+      {
+        value = "0.0f / 0.0f";
+      }
+      else
+      {
+        value += "f";
+      }
     }
     else if( constValue instanceof Double )
     {
-      value += "d";
+      if( Double.isInfinite( (Double)constValue ) )
+      {
+        String infinite = "1.0 / 0.0";
+        if( value.charAt( 0 ) == '-' )
+        {
+          infinite = '-' + infinite;
+        }
+        value = infinite;
+      }
+      else if( Double.isNaN( (Double)constValue ) )
+      {
+        value = "0.0d / 0.0";
+      }
+      else
+      {
+        value += "d";
+      }
     }
     else if( constValue instanceof String )
     {
