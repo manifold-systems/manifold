@@ -681,7 +681,11 @@ public class JsonStructureType extends JsonSchemaType
         addSourcePositionAnnotation( sb, indent + 2, key );
         if( constituentType instanceof JsonSchemaType )
         {
-          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+          IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+          if( constituentQnComponent instanceof JsonSchemaType )
+          {
+            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+          }
         }
         //noinspection unused
         String identifier = addActualNameAnnotation( sb, indent + 2, key, true, true );
@@ -696,7 +700,11 @@ public class JsonStructureType extends JsonSchemaType
           addSourcePositionAnnotation( sb, indent + 2, key );
           if( constituentType instanceof JsonSchemaType )
           {
-            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+            IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+            if( constituentQnComponent instanceof JsonSchemaType )
+            {
+              addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+            }
           }
           addActualNameAnnotation( sb, indent + 2, key, true, true );
           indent( sb, indent + 2 );
@@ -894,7 +902,11 @@ public class JsonStructureType extends JsonSchemaType
         addSourcePositionAnnotation( sb, indent, key );
         if( constituentType instanceof JsonSchemaType )
         {
-          addTypeReferenceAnnotation( sb, indent, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+          IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+          if( constituentQnComponent instanceof JsonSchemaType )
+          {
+            addTypeReferenceAnnotation( sb, indent, (JsonSchemaType)constituentQnComponent );
+          }
         }
         String identifier = addActualNameAnnotation( sb, indent, key, true );
         indent( sb, indent );

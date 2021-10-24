@@ -219,7 +219,11 @@ public class JsonListType extends JsonSchemaType
 //      addSourcePositionAnnotation( sb, indent + 2, key );
       if( constituentType instanceof JsonSchemaType )
       {
-        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+        IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+        if( constituentQnComponent instanceof JsonSchemaType )
+        {
+          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+        }
       }
       indent( sb, indent + 2 );
       //noinspection unused
@@ -244,7 +248,11 @@ public class JsonListType extends JsonSchemaType
       specificPropertyType = getConstituentQn( constituentType, componentType, true );
       if( constituentType instanceof JsonSchemaType )
       {
-        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+        IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+        if( constituentQnComponent instanceof JsonSchemaType )
+        {
+          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+        }
       }
       indent( sb, indent + 2 );
       sb.append( "default void setAs$unionName(int index, $specificPropertyType ${'$'}value) {\n" );
@@ -256,7 +264,11 @@ public class JsonListType extends JsonSchemaType
 
       if( constituentType instanceof JsonSchemaType )
       {
-        addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)getConstituentQnComponent( constituentType ) );
+        IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+        if( constituentQnComponent instanceof JsonSchemaType )
+        {
+          addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+        }
       }
       indent( sb, indent + 2 );
       sb.append( "default void addAs$unionName(int index, $specificPropertyType ${'$'}value) {\n" );

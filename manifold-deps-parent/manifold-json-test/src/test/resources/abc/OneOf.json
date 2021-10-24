@@ -68,6 +68,19 @@
     },
     "topLevelEnumArray": {
       "$ref": "Enum_TopLevel_Array.json"
+    },
+    "topLevelWithList": {
+      "oneOf": [
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        {
+          "type": "string"
+        }
+      ]
     }
   },
   "oneOf": [

@@ -108,6 +108,8 @@ public class JsonTest extends TestCase
     List<Enum_TopLevel_Array.Enum_TopLevel_ArrayItem> enumArray = Arrays.asList( Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.a, Enum_TopLevel_Array.Enum_TopLevel_ArrayItem.e );
     oneOf.setTopLevelEnumArray( enumArray );
     assertEquals( enumArray, oneOf.getTopLevelEnumArray() );
+
+    oneOf.getTopLevelWithList();
   }
 
   public void testAllOf()
