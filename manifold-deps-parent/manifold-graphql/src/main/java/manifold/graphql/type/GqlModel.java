@@ -23,7 +23,6 @@ import graphql.InvalidSyntaxError;
 import graphql.language.*;
 import graphql.parser.InvalidSyntaxException;
 import graphql.parser.Parser;
-import graphql.schema.idl.TypeDefinitionRegistry;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,11 +31,15 @@ import java.util.*;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+
+import graphql.schema.idl.TypeDefinitionRegistry;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
+import manifold.util.concurrent.LocklessLazyVar;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
@@ -46,8 +49,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class GqlModel extends AbstractSingleFileModel
 {
   private final GqlManifold _gqlManifold;
+  private GqlScope _scope;
   private GqlParentType _type;
-  private SchemaDefinition _schemaDefinition;
   private TypeDefinitionRegistry _typeRegistry;
   private Map<String, OperationDefinition> _operations;
   private Map<String, FragmentDefinition> _fragments;
@@ -66,9 +69,39 @@ public class GqlModel extends AbstractSingleFileModel
 
   private void init()
   {
+    _scope = assignScope();
     parse();
-    _type = new GqlParentType( getFqn(), _schemaDefinition, _typeRegistry,
-      _operations, _fragments, getFile(), _gqlManifold );
+    _type = new GqlParentType( this );
+  }
+
+  private GqlScope assignScope()
+  {
+    GqlScope scope = _gqlManifold.getScopeFinder().findScope( getFile() );
+    if( scope == null )
+    {
+      scope = GqlScope.makeErrantScope( _gqlManifold, getFqn(), getFile() );
+    }
+    return scope;
+  }
+
+  GqlScope getScope()
+  {
+    return _scope;
+  }
+
+  public TypeDefinitionRegistry getTypeRegistry()
+  {
+    return _typeRegistry;
+  }
+
+  public Map<String, OperationDefinition> getOperations()
+  {
+    return _operations;
+  }
+
+  public Map<String, FragmentDefinition> getFragments()
+  {
+    return _fragments;
   }
 
   private void parse()
@@ -111,7 +144,7 @@ public class GqlModel extends AbstractSingleFileModel
     {
       if( definition instanceof SchemaDefinition )
       {
-        _schemaDefinition = (SchemaDefinition)definition;
+        getScope().setSchemaDefinition( (SchemaDefinition)definition );
       }
       else if( definition instanceof SDLDefinition )
       {
@@ -239,6 +272,8 @@ public class GqlModel extends AbstractSingleFileModel
   public void updateFile( IFile file )
   {
     super.updateFile( file );
+    // must refresh GqlScopeFinder because there may have been a SchemaDefinition creation/deletion
+    _gqlManifold.getScopeFinder().refresh();
     init();
   }
 
@@ -252,9 +287,9 @@ public class GqlModel extends AbstractSingleFileModel
     return _typeRegistry.scalars().get( simpleName );
   }
 
-  SchemaDefinition getSchemaDefinition()
+  void addIssue( GraphQLError issue )
   {
-    return _schemaDefinition;
+    _issues.addIssues( Collections.singletonList( issue ) );
   }
 
   void report( DiagnosticListener<JavaFileObject> errorHandler )
@@ -264,17 +299,32 @@ public class GqlModel extends AbstractSingleFileModel
       return;
     }
 
-    List<IIssue> issues = getIssues();
-    if( issues.isEmpty() )
+    List<IIssue> scopeIssues = getScope().getIssues();
+    if( !scopeIssues.isEmpty() )
     {
-      return;
+      IFile scopeConfigFile = getScope().getConfigFile();
+      JavaFileObject configFile = scopeConfigFile == null ? null : new SourceJavaFileObject( scopeConfigFile.toURI() );
+      for( IIssue scopeIssue : scopeIssues )
+      {
+        Diagnostic.Kind kind = scopeIssue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
+        errorHandler.report( new JavacDiagnostic( configFile, kind, scopeIssue.getStartOffset(), scopeIssue.getLine(), scopeIssue.getColumn(), scopeIssue.getMessage() ) );
+      }
     }
 
-    JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
-    for( IIssue issue: issues )
+    List<IIssue> issues = getIssues();
+    if( !issues.isEmpty() )
     {
-      Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
-      errorHandler.report( new JavacDiagnostic( file, kind, issue.getStartOffset(), issue.getLine(), issue.getColumn(), issue.getMessage() ) );
+      JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
+      for( IIssue issue : issues )
+      {
+        int offset = issue.getStartOffset();
+        if( getFile() instanceof IFileFragment )
+        {
+          offset += ((IFileFragment)getFile()).getOffset();
+        }
+        Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
+        errorHandler.report( new JavacDiagnostic( file, kind, offset, issue.getLine(), issue.getColumn(), issue.getMessage() ) );
+      }
     }
   }
 

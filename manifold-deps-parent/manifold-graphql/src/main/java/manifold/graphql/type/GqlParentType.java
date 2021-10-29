@@ -50,7 +50,6 @@ import graphql.language.TypeDefinition;
 import graphql.language.TypeName;
 import graphql.language.UnionTypeDefinition;
 import graphql.language.VariableDefinition;
-import graphql.schema.idl.TypeDefinitionRegistry;
 import java.lang.Class;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
@@ -67,6 +66,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import graphql.validation.ValidationError;
+import graphql.validation.ValidationErrorType;
 import manifold.ext.rt.CoercionProviders;
 import manifold.ext.rt.api.*;
 import manifold.graphql.rt.api.*;
@@ -74,7 +75,6 @@ import manifold.rt.api.Bindings;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.gen.AbstractSrcClass;
 import manifold.api.gen.AbstractSrcMethod;
@@ -116,55 +116,41 @@ class GqlParentType
 {
   private static final String ANONYMOUS_TYPE = "Anonymous_";
 
-  private final String _fqn;
-  private final SchemaDefinition _schemaDefinition;
-  private final TypeDefinitionRegistry _registry;
-  private final Map<String, OperationDefinition> _operations;
-  private final Map<String, FragmentDefinition> _fragments;
-  private final IFile _file;
-  private final GqlManifold _gqlManifold;
+  private final GqlModel _model;
   private final Map<TypeDefinition, Set<UnionTypeDefinition>> _typeToUnions;
   private int _anonCount;
 
-  GqlParentType( String fqn, SchemaDefinition schemaDefinition, TypeDefinitionRegistry registry,
-                 Map<String, OperationDefinition> operations, Map<String, FragmentDefinition> fragments,
-                 IFile file, GqlManifold gqlManifold )
+  GqlParentType( GqlModel model )
   {
-    _fqn = fqn;
-    _schemaDefinition = schemaDefinition;
-    _registry = registry;
-    _operations = operations;
-    _fragments = fragments;
-    _file = file;
-    _gqlManifold = gqlManifold;
+    _model = model;
     _typeToUnions = new HashMap<>();
   }
 
   private String getFqn()
   {
-    return _fqn;
+    return _model.getFqn();
   }
 
   @SuppressWarnings( "unused" )
   boolean hasChild( String childName )
   {
-    return _registry.getType( childName ).isPresent() ||
-           _operations.containsKey( childName );
+    return _model.getTypeRegistry().getType( childName ).isPresent() ||
+           _model.getOperations().containsKey( childName );
   }
 
   Definition getChild( String childName )
   {
-    Definition def = _registry.getType( childName ).orElse( null );
+    Definition def = _model.getTypeRegistry().getType( childName ).orElse( null );
     if( def == null )
     {
-      def = _operations.get( childName );
+      def = _model.getOperations().get( childName );
     }
     return def;
   }
 
   void render( StringBuilder sb, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
-    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _file, location, module, errorHandler )
+    SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .addAnnotation( new SrcAnnotationExpression( FragmentValue.class.getSimpleName() )
         .addArgument( "methodName", String.class, "fragmentValue" )
@@ -179,12 +165,12 @@ class GqlParentType
 
   private void addFragmentValueMethod( SrcLinkedClass srcClass )
   {
-    if( !(_file instanceof IFileFragment) )
+    if( !(_model.getFile() instanceof IFileFragment) )
     {
       return;
     }
 
-    switch( ((IFileFragment)_file).getHostKind() )
+    switch( ((IFileFragment)_model.getFile()).getHostKind() )
     {
       case DOUBLE_QUOTE_LITERAL:
       case TEXT_BLOCK_LITERAL:
@@ -194,7 +180,7 @@ class GqlParentType
         return;
     }
 
-    for( OperationDefinition operation: _operations.values() )
+    for( OperationDefinition operation: _model.getOperations().values() )
     {
       switch( operation.getOperation() )
       {
@@ -248,7 +234,7 @@ class GqlParentType
   {
     mapUnionMemberToUnions();
 
-    for( TypeDefinition type: _registry.types().values() )
+    for( TypeDefinition type: _model.getTypeRegistry().types().values() )
     {
       if( type instanceof ObjectTypeDefinition )
       {
@@ -295,7 +281,7 @@ class GqlParentType
   // use.
   private void mapUnionMemberToUnions()
   {
-    _registry.types().values().stream()
+    _model.getTypeRegistry().types().values().stream()
       .filter( typeDef -> typeDef instanceof UnionTypeDefinition )
       .map( typeDef -> (UnionTypeDefinition)typeDef )
       .forEach( unionTypeDef -> unionTypeDef.getMemberTypes().stream()
@@ -307,7 +293,7 @@ class GqlParentType
 
   private void addInnerOperations( SrcLinkedClass srcClass )
   {
-    for( OperationDefinition operation: _operations.values() )
+    for( OperationDefinition operation: _model.getOperations().values() )
     {
       switch( operation.getOperation() )
       {
@@ -628,15 +614,15 @@ class GqlParentType
   private TypeDefinition getRoot( OperationDefinition.Operation operation )
   {
     TypeDefinition root = null;
-    SchemaDefinition schemaDefinition = findSchemaDefinition();
+    SchemaDefinition schemaDefinition = _model.getScope().getSchemaDefinition();
     if( schemaDefinition != null )
     {
-      Optional<OperationTypeDefinition> rootQueryType =
+      Optional<OperationTypeDefinition> rootOperationType =
         schemaDefinition.getOperationTypeDefinitions().stream()
           .filter( e -> e.getName().equals( getOperationKey( operation ) ) ).findFirst();
-      if( rootQueryType.isPresent() )
+      if( rootOperationType.isPresent() )
       {
-        Type type = rootQueryType.get().getTypeName();
+        Type type = rootOperationType.get().getTypeName();
         root = findTypeDefinition( type );
       }
     }
@@ -644,7 +630,7 @@ class GqlParentType
     {
       // e.g., by convention a 'type' named "Query" is considered the root query type
       // if one is not specified in the 'schema'
-      root = _gqlManifold.findTypeDefinition( getOperationDefaultTypeName( operation ) );
+      root = _model.getScope().findTypeDefinition( getOperationDefaultTypeName( operation ) );
     }
     return root;
   }
@@ -709,10 +695,14 @@ class GqlParentType
 
   private void importAllOtherGqlTypes( SrcLinkedClass srcClass )
   {
-    _gqlManifold.getAllTypeNames().forEach( fqn -> {
-      if( !fqn.equals( getFqn() ) )
+    _model.getScope().getAllModels().forEach( model -> {
+      if( !model.getFqn().equals( getFqn() ) )
       {
-        srcClass.addStaticImport( "$fqn.*" );
+        // exclude manifold fragments
+        if( !(model.getFile() instanceof IFileFragment) )
+        {
+          srcClass.addStaticImport( model.getFqn() + ".*" );
+        }
       }
     } );
   }
@@ -758,7 +748,7 @@ class GqlParentType
   private void addObjectExtensions( ObjectTypeDefinition type, SrcLinkedClass srcClass )
   {
     List<FieldDefinition> baseFieldDefinitions = type.getFieldDefinitions();
-    List<ObjectTypeExtensionDefinition> objectExtensions = _registry.objectTypeExtensions().get( type.getName() );
+    List<ObjectTypeExtensionDefinition> objectExtensions = _model.getTypeRegistry().objectTypeExtensions().get( type.getName() );
     if( objectExtensions != null )
     {
       for( ObjectTypeExtensionDefinition ext: objectExtensions )
@@ -807,7 +797,7 @@ class GqlParentType
   private void addInputExtensions( InputObjectTypeDefinition type, SrcLinkedClass srcClass )
   {
     List<InputValueDefinition> baseInputValueDefinitions = type.getInputValueDefinitions();
-    List<InputObjectTypeExtensionDefinition> inputExtensions = _registry.inputObjectTypeExtensions().get( type.getName() );
+    List<InputObjectTypeExtensionDefinition> inputExtensions = _model.getTypeRegistry().inputObjectTypeExtensions().get( type.getName() );
     if( inputExtensions != null )
     {
       for( InputObjectTypeExtensionDefinition ext: inputExtensions )
@@ -848,7 +838,7 @@ class GqlParentType
   private void addInterfaceExtensions( InterfaceTypeDefinition type, SrcLinkedClass srcClass )
   {
     List<FieldDefinition> baseFieldDefinitions = type.getFieldDefinitions();
-    List<InterfaceTypeExtensionDefinition> interfaceExtensions = _registry.interfaceTypeExtensions().get( type.getName() );
+    List<InterfaceTypeExtensionDefinition> interfaceExtensions = _model.getTypeRegistry().interfaceTypeExtensions().get( type.getName() );
     if( interfaceExtensions != null )
     {
       for( InterfaceTypeExtensionDefinition ext: interfaceExtensions )
@@ -897,7 +887,7 @@ class GqlParentType
 
   private void addEnumExtensions( EnumTypeDefinition type, SrcLinkedClass srcClass )
   {
-    List<EnumTypeExtensionDefinition> enumExtensions = _registry.enumTypeExtensions().get( type.getName() );
+    List<EnumTypeExtensionDefinition> enumExtensions = _model.getTypeRegistry().enumTypeExtensions().get( type.getName() );
     if( enumExtensions != null )
     {
       String declaringType = makeIdentifier( type.getName(), false );
@@ -980,7 +970,7 @@ class GqlParentType
     else if( selection instanceof FragmentSpread )
     {
       String name = ((FragmentSpread)selection).getName();
-      FragmentDefinition fragment = _fragments.get( name );
+      FragmentDefinition fragment = _model.getFragments().get( name );
       TypeDefinition fragmentCtx = fragment == null ? null : findTypeDefinition( fragment.getTypeCondition() );
       if( fragmentCtx != null )
       {
@@ -1075,8 +1065,21 @@ class GqlParentType
     FieldDefinition fieldDefStatic = fieldDef.orElse( null );
     if( fieldDefStatic == null )
     {
-      // assume the parser exposes the error
-      return;
+      if( ctx instanceof ObjectTypeDefinition )
+      {
+        fieldDefStatic = getFromExtensions( (ObjectTypeDefinition)ctx, fieldName );
+      }
+      else if( ctx instanceof InterfaceTypeDefinition )
+      {
+        fieldDefStatic = getFromExtensions( (InterfaceTypeDefinition)ctx, fieldName );
+      }
+
+      if( fieldDefStatic == null )
+      {
+        _model.addIssue( new ValidationError( ValidationErrorType.FieldUndefined, field.getSourceLocation(),
+          "GraphQL field '$fieldName' is not defined in the type '${ctx.getName()}' from scope '${_model.getScope().getName()}'" ) );
+        return;
+      }
     }
 
     Type type = fieldDefStatic.getType();
@@ -1148,19 +1151,53 @@ class GqlParentType
     }
   }
 
+  private FieldDefinition getFromExtensions( ObjectTypeDefinition ctx, String fieldName )
+  {
+    List<ObjectTypeExtensionDefinition> objectExtensions = _model.getTypeRegistry().objectTypeExtensions().get( ctx.getName() );
+    if( objectExtensions != null )
+    {
+      for( ObjectTypeExtensionDefinition ext : objectExtensions )
+      {
+        List<FieldDefinition> extFieldDefinitions = ext.getFieldDefinitions();
+        for( FieldDefinition fieldDef : extFieldDefinitions )
+        {
+          if( fieldDef.getName().equals( fieldName ) )
+          {
+            return fieldDef;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  private FieldDefinition getFromExtensions( InterfaceTypeDefinition ctx, String fieldName )
+  {
+    List<InterfaceTypeExtensionDefinition> objectExtensions = _model.getTypeRegistry().interfaceTypeExtensions().get( ctx.getName() );
+    if( objectExtensions != null )
+    {
+      for( InterfaceTypeExtensionDefinition ext : objectExtensions )
+      {
+        List<FieldDefinition> extFieldDefinitions = ext.getFieldDefinitions();
+        for( FieldDefinition fieldDef : extFieldDefinitions )
+        {
+          if( fieldDef.getName().equals( fieldName ) )
+          {
+            return fieldDef;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   /**
    * Searches globally for a type i.e., across all .graphql files.
    */
   private TypeDefinition findTypeDefinition( Type type )
   {
     TypeName componentType = (TypeName)getComponentType( type );
-    TypeDefinition typeDefinition = _registry.getType( componentType ).orElse( null );
-    if( typeDefinition != null )
-    {
-      return typeDefinition;
-    }
-
-    return _gqlManifold.findTypeDefinition( componentType.getName() );
+    return _model.getScope().findTypeDefinition( componentType.getName() );
   }
 
   /**
@@ -1169,27 +1206,7 @@ class GqlParentType
   private ScalarTypeDefinition findScalarTypeDefinition( TypeName type )
   {
     TypeName componentType = (TypeName)getComponentType( type );
-    ScalarTypeDefinition typeDefinition = _registry.scalars().get( componentType.getName() );
-    if( typeDefinition != null )
-    {
-      return typeDefinition;
-    }
-
-    return _gqlManifold.findScalarTypeDefinition( componentType.getName() );
-  }
-
-  /**
-   * Searches globally for the schema definition i.e., across all .graphql files.
-   * Assuming only one is defined. todo: verify if 'schema' s/b defined only once
-   */
-  private SchemaDefinition findSchemaDefinition()
-  {
-    if( _schemaDefinition != null )
-    {
-      return _schemaDefinition;
-    }
-
-    return _gqlManifold.findSchemaDefinition();
+    return _model.getScope().findScalarTypeDefinition( componentType.getName() );
   }
 
   private void addMember( SrcLinkedClass srcClass, FieldDefinition member, Predicate<String> duplicateChecker )

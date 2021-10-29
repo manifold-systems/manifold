@@ -32,6 +32,7 @@ import manifold.internal.javac.HostKind;
 
 public class FileFragmentImpl implements IFileFragment
 {
+  private final String _scope;
   private final String _name;
   private final String _ext;
   private final HostKind _hostKind;
@@ -42,8 +43,9 @@ public class FileFragmentImpl implements IFileFragment
   private final String _content;
   private Object _container;
 
-  public FileFragmentImpl( String name, String ext, HostKind hostKind, IFile enclosingFile, int offset, int length, String content )
+  public FileFragmentImpl( String scope, String name, String ext, HostKind hostKind, IFile enclosingFile, int offset, int length, String content )
   {
+    _scope = scope;
     _name = name;
     _ext = ext.toLowerCase();
     _hostKind = hostKind;
@@ -51,6 +53,11 @@ public class FileFragmentImpl implements IFileFragment
     _offset = offset;
     _length = length;
     _content = content;
+  }
+
+  public String getScope()
+  {
+    return _scope;
   }
 
   public String getContent()

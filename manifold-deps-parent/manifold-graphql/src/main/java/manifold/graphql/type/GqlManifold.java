@@ -19,13 +19,13 @@ package manifold.graphql.type;
 import graphql.language.Definition;
 import graphql.language.Node;
 import graphql.language.OperationDefinition;
-import graphql.language.ScalarTypeDefinition;
-import graphql.language.SchemaDefinition;
 import graphql.language.TypeDefinition;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -36,10 +36,18 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
 {
   public static final List<String> EXTS = Arrays.asList( "graphql", "graphqls", "gql" );
 
+  private GqlScopeFinder _scopeFinder;
+
   @Override
   public void init( IModule module )
   {
+    _scopeFinder = new GqlScopeFinder( this );
     init( module, (fqn, files) -> new GqlModel( this, fqn, files ) );
+  }
+
+  public GqlScopeFinder getScopeFinder()
+  {
+    return _scopeFinder;
   }
 
   @Override
@@ -84,45 +92,36 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
     return null;
   }
 
-  TypeDefinition findTypeDefinition( String simpleName )
+  public <R> R findByModel( Function<GqlModel, R> byModel )
   {
     return getAllTypeNames().stream()
       .map( fqn -> {
         GqlModel model = getModel( fqn );
-        return model == null ? null : model.getTypeDefinition( simpleName );
+        return model == null ? null : byModel.apply( model );
       } )
       .filter( Objects::nonNull )
       .findFirst().orElse( null );
   }
 
-  ScalarTypeDefinition findScalarTypeDefinition( String simpleName )
+  public <R> Stream<R> findAllByModel( Function<GqlModel, R> byModel )
   {
     return getAllTypeNames().stream()
       .map( fqn -> {
         GqlModel model = getModel( fqn );
-        return model == null ? null : model.getScalarTypeDefinition( simpleName );
+        return model == null ? null : byModel.apply( model );
       } )
-      .filter( Objects::nonNull )
-      .findFirst().orElse( null );
-  }
-
-  SchemaDefinition findSchemaDefinition()
-  {
-    return getAllTypeNames().stream()
-      .map( fqn -> {
-        GqlModel model = getModel( fqn );
-        return model == null ? null : model.getSchemaDefinition();
-      } )
-      .filter( Objects::nonNull )
-      .findFirst().orElse( null );
+      .filter( Objects::nonNull );
   }
 
   @Override
   protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, GqlModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     StringBuilder sb = new StringBuilder();
+    if( !model.getScope().hasConfigErrors() )
+    {
+      model.getType().render( sb, location, getModule(), errorHandler );
+    }
     model.report( errorHandler );
-    model.getType().render( sb, location, getModule(), errorHandler );
     return sb.toString();
   }
 }

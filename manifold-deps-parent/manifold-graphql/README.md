@@ -24,6 +24,7 @@ begin experimenting with GraphQL using Manifold.
 * [Copying GraphQL Objects](#copying-graphql-objects)
 * [Types](#type)
 * [Scalar Types](#scalar-types)
+* [Configuring for Multiple Schemas](#configuring-for-multiple-schemas)
 * [Embedding Queries with Fragments](#embedding-queries-with-fragments)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
@@ -422,6 +423,42 @@ String type and adheres to a specific date/time format.
 
 >If you've implemented format type resolvers for JSON Schema using `manifold-json`, you can share them with your
 > GraphQL APIs; they already implement `IJsonFormatTypeCoercer`.
+
+# Configuring for Multiple Schemas
+
+To use GraphQL files in your project, at least one of them must define a *schema*. This can be done explicitly with a
+`schema` declaration, or it can be done implicitly with a naming convention where the operation roots are aptly named
+"Query" and "Mutation". Either way, if your project only uses one schema, Manifold assumes all GraphQL files are scoped
+to that schema.
+
+A project with multiple schemas must configure a scope for each schema using `.graphqlconfig` files. The scope provides
+information such as a unique name and file paths to help locate GraphQL files belonging to it. Without this information
+it is otherwise difficult to know which schema a query or mutation refers to, particularly if any of the field names
+overlap. 
+
+A `.graphqlconfig` file follows the [graphql-config](https://github.com/kamilkisiela/graphql-config/blob/legacy/specification.md)
+format. For Manifold, it is recommended to use multiple .graphqlconfig files as opposed to a single multi-project one.
+For instance, it is best to organize GraphQL resource files into separate namespaces like this:
+
+```
+- resources/
+. . .
+    - schema_one/
+        - .graphqlconfig
+        - graphql files
+    - schema_two/
+        - .graphqlconfig
+        - graphql files
+```
+
+This way your GraphQL types are nicely separated and your .graphqlconfig files are simple:
+
+```json
+{
+  "name": "scope_one",
+  "schemaPath": "./schema.graphql"
+}
+```
 
 # Embedding Queries with Fragments
 

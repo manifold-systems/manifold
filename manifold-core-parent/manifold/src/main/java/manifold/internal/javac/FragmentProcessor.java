@@ -30,6 +30,7 @@ public class FragmentProcessor
 {
   public static final String FRAGMENT_START = "[>";
   public static final String FRAGMENT_END = "<]";
+  public static final char SCHEMA_NAME_SEPARATOR = ':';
 
   private final static FragmentProcessor INSTANCE = new FragmentProcessor();
   public static final String ANONYMOUS_FRAGMENT_PREFIX = "Fragment_";
@@ -56,7 +57,7 @@ public class FragmentProcessor
     Fragment f = parseFragment( pos, comment, HostKind.from( style ) );
     if( f != null )
     {
-      JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
+      JavacPlugin.instance().registerType( sourceFile, f.getScope(), f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
     }
   }
 
@@ -68,7 +69,7 @@ public class FragmentProcessor
       : HostKind.DOUBLE_QUOTE_LITERAL );
     if( f != null )
     {
-      JavacPlugin.instance().registerType( sourceFile, f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
+      JavacPlugin.instance().registerType( sourceFile, f.getScope(), f.getOffset(), f.getName(), f.getExt(), f.getHostKind(), f._content );
     }
   }
 
@@ -132,13 +133,25 @@ public class FragmentProcessor
         if( index < end && !exts.isEmpty() )
         {
           index = skipSpaces( chars, index, end );
-          if( index + 1 < end &&
+          if( index < end )
+          {
+            String schema = null;
+            if( SCHEMA_NAME_SEPARATOR == chars.charAt( index ) )
+            {
+              index++;
+              index = skipSpaces( chars, index, end );
+              schema = parseName( chars, index, end );
+              index += (schema == null ? 0 : schema.length());
+              index = skipSpaces( chars, index, end );
+            }
+            if( index + 1 < end &&
               FRAGMENT_END.charAt( 0 ) == chars.charAt( index++ ) &&
               FRAGMENT_END.charAt( 1 ) == chars.charAt( index++ ) )
-          {
-            String content = chars.substring( index, end );
-            name = isString ? handleAnonymousName( name, content ) : name;
-            return new Fragment( pos + index, makeBaseName( name, exts ), exts.get( exts.size() - 1 ), hostKind, content );
+            {
+              String content = chars.substring( index, end );
+              name = isString ? handleAnonymousName( name, content ) : name;
+              return new Fragment( pos + index, schema, makeBaseName( name, exts ), exts.get( exts.size() - 1 ), hostKind, content );
+            }
           }
         }
       }
@@ -221,14 +234,16 @@ public class FragmentProcessor
   public static class Fragment
   {
     private final int _offset;
+    private final String _scope;
     private final String _name;
     private final String _ext;
     private final String _content;
     private final HostKind _hostKind;
 
-    Fragment( int offset, String name, String ext, HostKind hostKind, String content )
+    Fragment( int offset, String scope, String name, String ext, HostKind hostKind, String content )
     {
       _offset = offset;
+      _scope = scope;
       _name = name;
       _ext = ext;
       _hostKind = hostKind;
@@ -238,6 +253,11 @@ public class FragmentProcessor
     public int getOffset()
     {
       return _offset;
+    }
+
+    public String getScope()
+    {
+      return _scope;
     }
 
     public String getName()

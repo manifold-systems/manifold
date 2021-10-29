@@ -419,7 +419,8 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     if( !model.isProcessing( fqn ) )
     {
       // Now remove the model since we don't need it anymore
-      lazyModel.clear();
+      //... on second thought, models may be referenced after contributing, don't clear it
+      //lazyModel.clear();
     }
 
     return source;

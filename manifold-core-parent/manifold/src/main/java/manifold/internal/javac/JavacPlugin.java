@@ -1000,9 +1000,6 @@ public class JavacPlugin implements Plugin, TaskListener
       // Initialize the Javac host environment
       getHost().initialize( deriveSourcePath(), deriveClasspath(), deriveOutputPath() );
 
-      // Initialize the runtime host for dynamically loading darkj classes Manifold itself uses during compilation e.g., ManClassFinder_9
-      Bootstrap.init();
-
       // Override javac's ClassFinder and Resolve so that we can safely load class symbols corresponding with extension classes
       tailorJavaCompiler( e );
     }
@@ -1307,9 +1304,9 @@ public class JavacPlugin implements Plugin, TaskListener
     return _argPresent.get( ARG_NO_BOOTSTRAP );
   }
 
-  public void registerType( JavaFileObject sourceFile, int offset, String name, String ext, HostKind hostKind, String content )
+  public void registerType( JavaFileObject sourceFile, String scope, int offset, String name, String ext, HostKind hostKind, String content )
   {
-    _fileFragmentResources.add( new FileFragmentResource( sourceFile, offset, name, ext, hostKind, content ) );
+    _fileFragmentResources.add( new FileFragmentResource( sourceFile, scope, offset, name, ext, hostKind, content ) );
   }
 
   private void addFileFragments( TaskEvent e )
@@ -1337,15 +1334,17 @@ public class JavacPlugin implements Plugin, TaskListener
   private class FileFragmentResource
   {
     private final JavaFileObject _sourceFile;
+    private final String _scope;
     private final int _offset;
     private final String _name;
     private final String _ext;
     private final HostKind _hostKind;
     private final String _content;
 
-    private FileFragmentResource( JavaFileObject sourceFile, int offset, String name, String ext, HostKind hostKind, String content )
+    private FileFragmentResource( JavaFileObject sourceFile, String scope, int offset, String name, String ext, HostKind hostKind, String content )
     {
       _sourceFile = sourceFile;
+      _scope = scope;
       _offset = offset;
       _name = name;
       _ext = ext;
@@ -1378,7 +1377,7 @@ public class JavacPlugin implements Plugin, TaskListener
       }
 
       FileFragmentImpl fragment =
-        new FileFragmentImpl( _name, _ext, _hostKind, file, _offset, _content.length(), _content );
+        new FileFragmentImpl( _scope, _name, _ext, _hostKind, file, _offset, _content.length(), _content );
       JavacManifoldHost host = JavacPlugin.instance().getHost();
       Set<ITypeManifold> tms = host.getSingleModule()
         .findTypeManifoldsFor( fragment, t -> t.getContributorKind() != Supplemental );

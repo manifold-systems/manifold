@@ -212,41 +212,6 @@ public class FqnCacheNode<K>
     return visitor.test( this );
   }
 
-  public final boolean visitBreadthFirst( Predicate<K> visitor )
-  {
-    if( !visitor.test( getUserData() ) )
-    {
-      return false;
-    }
-    if( _children != null )
-    {
-      List<FqnCacheNode<K>> copy = new ArrayList<>( _children.values() );
-      for( FqnCacheNode<K> child : copy )
-      {
-        child.visitBreadthFirst( visitor );
-      }
-    }
-    return true;
-  }
-
-  @SuppressWarnings("UnusedDeclaration")
-  public final boolean visitNodeBreadthFirst( Predicate<FqnCacheNode> visitor )
-  {
-    if( !visitor.test( this ) )
-    {
-      return false;
-    }
-    if( _children != null )
-    {
-      List<FqnCacheNode<K>> copy = new ArrayList<>( _children.values() );
-      for( FqnCacheNode<K> child : copy )
-      {
-        child.visitNodeBreadthFirst( visitor );
-      }
-    }
-    return true;
-  }
-
   public final String getName()
   {
     return _name;
