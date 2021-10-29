@@ -427,12 +427,41 @@ String type and adheres to a specific date/time format.
 # Configuring for Multiple Schemas
 
 To use GraphQL files in your project, at least one of them must define a *schema*. This can be done explicitly with a
-`schema` declaration, or it can be done implicitly with a naming convention where the operation roots are aptly named
-"Query" and "Mutation". Either way, if your project only uses one schema, Manifold assumes all GraphQL files are scoped
-to that schema.
+`schema` declaration:
 
-A project with multiple schemas must configure a scope for each schema using `.graphqlconfig` files. The scope provides
-information such as a unique name and file paths to help locate GraphQL files belonging to it. Without this information
+```graphql
+schema {
+  query: MyQueryRoot
+  mutation: MyMutationRoot
+}
+
+type MyQueryRoot {
+  . . .
+}
+
+type MyMutationRoot {
+  . . .
+}
+
+```
+
+Or, it can be done implicitly with a naming convention where the operation roots are aptly named
+"Query" and "Mutation":
+
+```graphql
+type Query {
+  . . .
+}
+
+type Mutation {
+  . . .
+}
+```
+
+Either way, if your project only defines one schema, Manifold assumes all GraphQL files are scoped to that schema.
+
+For a project with multiple schemas, one or more `.graphqlconfig` files define the scope for each schema. The scope provides
+information such as a unique name and file paths to establish the scope's boundaries. Without this information
 it is otherwise difficult to know which schema a query or mutation refers to, particularly if any of the field names
 overlap. 
 
@@ -451,7 +480,7 @@ For instance, it is best to organize GraphQL resource files into separate namesp
         - graphql files
 ```
 
-This way your GraphQL types are nicely separated and your .graphqlconfig files are simple:
+This way your GraphQL types are nicely separated and your .graphqlconfig files easy to define:
 
 ```json
 {
@@ -459,6 +488,25 @@ This way your GraphQL types are nicely separated and your .graphqlconfig files a
   "schemaPath": "./schema.graphql"
 }
 ```
+
+This layout takes advantage of the relative location of the schema files. For instance, GraphQL resource
+files in the same directory or subdirectory of the schema file named in `schemaPath` are automatically in scope.
+            
+You can also specify multiple schema file locations using `"schema"` instead of `"schemaPath"`:
+```json
+{
+  "name": "scope_one",
+  "schema": [
+    "./foo/schema_part1.graphql",
+    "./bar/schema_part2.graphql"
+  ]
+}
+```
+The complete graphql-config format is [found here](https://github.com/kamilkisiela/graphql-config/blob/master/config-schema.json).
+Manifold supports both the newer and legacy formats.
+
+>If you are using the JS-GraphQL IntelliJ plugin, you may have noticed it also uses .graphqlconfig files. You can
+> use the same files with Manifold as well.
 
 # Embedding Queries with Fragments
 
