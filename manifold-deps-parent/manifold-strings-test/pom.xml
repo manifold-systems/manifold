@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2021.1.28-SNAPSHOT</version>
+    <version>2021.1.29-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-strings-test</artifactId>
