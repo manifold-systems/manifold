@@ -17,39 +17,8 @@
 package manifold.graphql.type;
 
 import com.sun.tools.javac.code.Flags;
-import graphql.language.AstPrinter;
-import graphql.language.Definition;
-import graphql.language.EnumTypeDefinition;
-import graphql.language.EnumTypeExtensionDefinition;
-import graphql.language.EnumValueDefinition;
-import graphql.language.Field;
-import graphql.language.FieldDefinition;
-import graphql.language.FragmentDefinition;
-import graphql.language.FragmentSpread;
-import graphql.language.InlineFragment;
-import graphql.language.InputObjectTypeDefinition;
-import graphql.language.InputObjectTypeExtensionDefinition;
-import graphql.language.InputValueDefinition;
-import graphql.language.InterfaceTypeDefinition;
-import graphql.language.InterfaceTypeExtensionDefinition;
-import graphql.language.ListType;
-import graphql.language.NamedNode;
-import graphql.language.Node;
-import graphql.language.NonNullType;
-import graphql.language.ObjectTypeDefinition;
-import graphql.language.ObjectTypeExtensionDefinition;
-import graphql.language.OperationDefinition;
-import graphql.language.OperationTypeDefinition;
-import graphql.language.ScalarTypeDefinition;
-import graphql.language.SchemaDefinition;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
-import graphql.language.SourceLocation;
-import graphql.language.Type;
-import graphql.language.TypeDefinition;
-import graphql.language.TypeName;
-import graphql.language.UnionTypeDefinition;
-import graphql.language.VariableDefinition;
+import graphql.language.*;
+
 import java.lang.Class;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
@@ -68,6 +37,7 @@ import java.util.stream.Collectors;
 
 import graphql.validation.ValidationError;
 import graphql.validation.ValidationErrorType;
+import manifold.api.gen.*;
 import manifold.ext.rt.CoercionProviders;
 import manifold.ext.rt.api.*;
 import manifold.graphql.rt.api.*;
@@ -76,18 +46,6 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFileFragment;
-import manifold.api.gen.AbstractSrcClass;
-import manifold.api.gen.AbstractSrcMethod;
-import manifold.api.gen.SrcAnnotated;
-import manifold.api.gen.SrcAnnotationExpression;
-import manifold.api.gen.SrcField;
-import manifold.api.gen.SrcGetProperty;
-import manifold.api.gen.SrcLinkedClass;
-import manifold.api.gen.SrcMethod;
-import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcSetProperty;
-import manifold.api.gen.SrcStatementBlock;
-import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
 import manifold.json.rt.api.*;
 import manifold.rt.api.ActualName;
@@ -452,9 +410,69 @@ class GqlParentType
       {
         block.addStatement( "thiz.set$Prop($name);" );
       }
+      else if( node instanceof VariableDefinition )
+      {
+        Value defaultValue = ((VariableDefinition)node).getDefaultValue();
+        if( defaultValue != null )
+        {
+          StringBuilder value = new StringBuilder();
+          makeStringValue( value, defaultValue, ((VariableDefinition)node).getType(), srcClass );
+          block.addStatement( "thiz.set$Prop($value);" );
+        }
+      }
     }
     block.addStatement( "return thiz;" );
     method.body( block );
+  }
+
+  private void makeStringValue( StringBuilder sb, Value value, Type type, SrcLinkedClass srcClass )
+  {
+    if( value instanceof ArrayValue )
+    {
+      sb.append( "new " );
+      SrcType srcType = makeSrcType( srcClass, type, false );
+      srcType.render( sb, 0 );
+      sb.append( '[' );
+      for( Value elem: ((ArrayValue)value).getValues() )
+      {
+        if( sb.charAt( sb.length()-1 ) != '[' )
+        {
+          sb.append( ',' );
+        }
+        makeStringValue( sb, elem, ((ListType)type).getType(), srcClass );
+      }
+      sb.append( ']' );
+    }
+    else if( value instanceof BooleanValue )
+    {
+      sb.append( ((BooleanValue)value).isValue() );
+    }
+    else if( value instanceof EnumValue )
+    {
+      SrcType srcType = makeSrcType( srcClass, type, false );
+      srcType.render( sb, 0 );
+      sb.append( '.' ).append( makeIdentifier( ((EnumValue)value).getName(), false ) );
+    }
+    else if( value instanceof FloatValue )
+    {
+      sb.append( ((FloatValue)value).getValue().doubleValue() );
+    }
+    else if( value instanceof IntValue )
+    {
+      sb.append( ((IntValue)value).getValue().intValue() );
+    }
+    else if( value instanceof NullValue )
+    {
+      sb.append( "null" );
+    }
+    else if( value instanceof StringValue )
+    {                                                             
+      sb.append( '"' ).append( ((StringValue)value).getValue() ).append( '"' );
+    }
+    else
+    {
+      throw new UnsupportedOperationException( "Unexpected constant value type: " + value.getClass().getSimpleName() );
+    }
   }
 
   private void addBuilderMethod( SrcLinkedClass srcClass, Definition definition )

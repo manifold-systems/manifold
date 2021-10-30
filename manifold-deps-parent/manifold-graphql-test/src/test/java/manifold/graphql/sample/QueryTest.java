@@ -59,8 +59,22 @@ public class QueryTest
 
     Executor<MovieQuery.Result> request = movieQuery.request( "" );
     String query = request.getRequestBody().getQuery();
-    String expected = "query MovieQuery($title:String,$genre:Genre,$releaseDate:Date,$actors:[ActorInput!]) {movies(title:$title,genre:$genre,releaseDate:$releaseDate,actors:$actors) {id title genre releaseDate starring {typename:__typename ... on Actor {id name} ... on Animal {kind}} cast {id name type actor {id name}}}}";
+    String expected = "query MovieQuery($title:String=\"hi\",$genre:Genre,$releaseDate:Date,$actors:[ActorInput!]) {movies(title:$title,genre:$genre,releaseDate:$releaseDate,actors:$actors) {id title genre releaseDate starring {typename:__typename ... on Actor {id name} ... on Animal {kind}} cast {id name type actor {id name}}}}";
     assertEquals( expected.replaceAll( "\\s+", "" ), query.replaceAll( "\\s+", "" ) );
+  }
+
+  @Test
+  public void testMoviesQuery_defaultValue()
+  {
+    MovieQuery movieQuery = MovieQuery
+      .builder()
+      .build();
+    assertEquals(
+      "{\n" +
+      "  \"title\": \"hi\"\n" +
+      "}",
+      movieQuery.write().toJson() );
+    assertEquals( "hi", movieQuery.getTitle() );
   }
 
   @Test

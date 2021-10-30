@@ -4,7 +4,7 @@
 # Use Manifold to access queryies type-safely in Java directly by name such as MovieQuery.builder()...
 #
 
-query MovieQuery($title: String, $genre: Genre, $releaseDate: Date, $actors: [ActorInput!]) {
+query MovieQuery($title: String = "hi", $genre: Genre, $releaseDate: Date, $actors: [ActorInput!]) {
   movies(title: $title, genre: $genre, releaseDate: $releaseDate, actors: $actors) {
     id
     title
