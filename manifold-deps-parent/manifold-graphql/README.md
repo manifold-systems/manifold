@@ -533,10 +533,13 @@ query Movies($title: String, $genre: Genre, $releaseDate: Date) {
 var query = MyQuery.Movies.builder().withGenre(Action).build();
 out.println(query.toString());
 ```
->**IntelliJ and Android Studio users...**
->
->Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
->GraphQL fragments, it pairs exceptionally well with the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
+
+For a project configured for [multiple schemas](#configuring-for-multiple-schemas) via `.graphqlconfig` files, the
+declaration must also specify the scope of the schema. For the example above, if the schema for the `movies` query were
+in a scope named *"my_movies"*, the declaration encodes this name like so:
+```
+[>MyQuery.graphql:my_movies<]
+```
  
 A fragment *expression* is embedded in a String literal:
 ```java
@@ -545,11 +548,23 @@ var result = query.builder().build().request("").post();
 result.getMovies().forEach( e -> e.getGenre() );
 ```
 
-With Java 15 [text block](https://openjdk.java.net/jeps/378) String literals you can easily author multi-line fragment
+For a project configured for [multiple schemas](#configuring-for-multiple-schemas) via `.graphqlconfig` files, the
+expression must also specify the scope of the schema. For the example above, if the schema for the `movies` query were
+in a scope named *"my_movies"*, the expression encodes this name like so:
+```
+[>.graphql:my_movies<]
+```
+
+With Java [text block](https://openjdk.java.net/jeps/378) String literals you can author multi-line fragment
 expressions like this:
 
 <p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
- 
+
+>**IntelliJ and Android Studio users...**
+>
+>Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
+>GraphQL fragments, it pairs exceptionally well with the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
+
 Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental).
 
 # IDE Support 
@@ -577,8 +592,8 @@ Enter: <kbd>*https://github.com/manifold-systems/manifold-sample-graphql-app.git
 
 <p><img src="http://manifold.systems/images/OpenSampleProject_graphql.png" alt="echo method" width="60%" height="60%"/></p>
 
-Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to really boost your productivity. Use code
-completion to conveniently build queries and discover the schema's API.  Navigate to/from call-sites and GraphQL schema
+Use the [plugin](https://plugins.jetbrains.com/plugin/10057-manifold) to boost your productivity. Use code
+completion to conveniently build queries and discover the schema's fluent API.  Navigate to/from call-sites and GraphQL schema
 file elements.  Make changes to your query schema files and use the changes immediately, no compilation!  Find usages of
 any element in your schema files. Perform rename refactors to quickly and safely make project-wide changes.
 
