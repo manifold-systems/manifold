@@ -23,6 +23,7 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.internal.javac.IIssue;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.net.URI;
@@ -137,8 +138,38 @@ class GqlScope
 
   SchemaDefinition getSchemaDefinition()
   {
+    ensureSchemaDefinitionAssigned();
     return _schemaDefinition;
   }
+
+  @Nullable
+  private void ensureSchemaDefinitionAssigned()
+  {
+    if( _schemaDefinition == null )
+    {
+      if( !isDefault() )
+      {
+        for( File file : _schemaFiles )
+        {
+          IFile schemaFile = _gqlManifold.getModule().getHost().getFileSystem().getIFile( file );
+          Set<String> fqnForFile = _gqlManifold.getModule().getPathCache().getFqnForFile( schemaFile );
+          if( !fqnForFile.isEmpty() )
+          {
+            _gqlManifold.getModel( fqnForFile.iterator().next() );
+            if( _schemaDefinition != null )
+            {
+              return;
+            }
+          }
+        }
+      }
+
+      // default scope,
+      // or schema files from config file don't have the schema def, force all .graphql files to load models to find it
+      _gqlManifold.findByModel( model -> null );
+    }
+  }
+
   void setSchemaDefinition( SchemaDefinition schemaDefinition )
   {
     _schemaDefinition = schemaDefinition;

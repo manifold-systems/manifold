@@ -113,6 +113,15 @@ public class GqlManifold extends JavaTypeManifold<GqlModel>
       .filter( Objects::nonNull );
   }
 
+  /**
+   * Override so that getModel() can be called within this package (see GqlScope)
+   */
+  @Override
+  protected GqlModel getModel( String fqn )
+  {
+    return super.getModel( fqn );
+  }
+
   @Override
   protected String contribute( JavaFileManager.Location location, String topLevelFqn, boolean genStubs, String existing, GqlModel model, DiagnosticListener<JavaFileObject> errorHandler )
   {
