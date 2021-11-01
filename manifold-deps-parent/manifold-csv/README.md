@@ -230,7 +230,7 @@ SalesItem copy = salesItem.copy();
 ```
 Alternatively, you can use the `copier()` static method for a richer set of features:
 ```java
-SalesItem copy = SalesItem.copier(salesItem).withDiscount(0.25).build();
+SalesItem copy = SalesItem.copier(salesItem).withDiscount(0.25).copy();
 ```
 `copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
 `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
