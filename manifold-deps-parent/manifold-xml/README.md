@@ -237,7 +237,7 @@ Catelog copy = catelog.copy();
 ```
 Alternatively, you can use the `copier()` static method for a richer set of features:
 ```java
-Catelog copy = Catelog.copier(catelog).withProductListing(. . .).copy();
+Catelog copy = Catelog.copier(catelog).withProductListing(. . .).build();
 ```
 `copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
 `builder()` it maintains the integrity of the schema's declared mutability -- you can't change
