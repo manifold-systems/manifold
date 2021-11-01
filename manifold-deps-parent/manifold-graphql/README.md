@@ -198,6 +198,21 @@ for (var movie : actionMovies) {
 }
 ```
 
+>Pro Tip: Include [manifold-props](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+>in your project for more concise usage of get/set property methods:
+> ```java
+> out.println(
+>    "Title: " + movie.title + "\n" +
+>    "Genre: " + movie.genre + "\n" +
+>    "Year: " + movie.releaseDate.year + "\n");
+>```
+> Configure dependencies like this:
+> ```groovy
+> implementation 'systems.manifold:manifold-props-rt:2021.1.30'
+> annotationProcessor 'systems.manifold:manifold-props:2021.1.30'
+>``` 
+> See complete [setup docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#maven) for details.
+
 ## Execute Mutations
 You execute a mutation exactly as you would a query using the same API.  Note this example creates a `ReviewInput`
 instance also using the same API.  
