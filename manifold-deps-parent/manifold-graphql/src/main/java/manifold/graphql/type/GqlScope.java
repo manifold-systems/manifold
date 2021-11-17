@@ -153,7 +153,7 @@ class GqlScope
         {
           IFile schemaFile = _gqlManifold.getModule().getHost().getFileSystem().getIFile( file );
           Set<String> fqnForFile = _gqlManifold.getModule().getPathCache().getFqnForFile( schemaFile );
-          if( !fqnForFile.isEmpty() )
+          if( fqnForFile != null && !fqnForFile.isEmpty() )
           {
             _gqlManifold.getModel( fqnForFile.iterator().next() );
             if( _schemaDefinition != null )
