@@ -49,6 +49,7 @@
     <module>manifold-json-rt</module>
     <module>manifold-json-test</module>
     <module>manifold-preprocessor</module>
+    <module>manifold-preprocessor-android-syms</module>
     <module>manifold-preprocessor-test</module>
     <module>manifold-props</module>
     <module>manifold-props-rt</module>

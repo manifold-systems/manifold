@@ -46,78 +46,78 @@ getTasks().withType(JavaCompile) {
 
 ## Manifold Dependencies
 You can conveniently copy/paste from the following list of the latest Manifold dependencies. Note the distinction
-between *annotationProcessor* and *implementation* scoping. Manifold dependencies that operate exclusively within the
+between *compileOnly* and *implementation* scoping. Manifold dependencies that operate exclusively within the
 Java compiler are only accessible from the processor path, therefore they have no impact on your runtime distribution.
 
 #### Manifold Core
 ```groovy
-annotationProcessor 'systems.manifold:manifold:2021.1.31'
+compileOnly 'systems.manifold:manifold:2021.1.31'
 implementation 'systems.manifold:manifold-rt:2021.1.31'
 ```
 #### Manifold : Extensions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-ext:2021.1.31'
+compileOnly 'systems.manifold:manifold-ext:2021.1.31'
 implementation 'systems.manifold:manifold-ext-rt:2021.1.31'
 ```
 #### Manifold : Props
 ```groovy
-annotationProcessor 'systems.manifold:manifold-props:2021.1.31'
+compileOnly 'systems.manifold:manifold-props:2021.1.31'
 implementation 'systems.manifold:manifold-props-rt:2021.1.31'
 ```
 #### Manifold : GraphQL
 ```groovy
-annotationProcessor 'systems.manifold:manifold-graphql:2021.1.31'
+compileOnly 'systems.manifold:manifold-graphql:2021.1.31'
 implementation 'systems.manifold:manifold-graphql-rt:2021.1.31'
 ```
 #### Manifold : JSON
 ```groovy
-annotationProcessor 'systems.manifold:manifold-json:2021.1.31'
+compileOnly 'systems.manifold:manifold-json:2021.1.31'
 implementation 'systems.manifold:manifold-json-rt:2021.1.31'
 ```
 #### Manifold : XML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-xml:2021.1.31'
+compileOnly 'systems.manifold:manifold-xml:2021.1.31'
 implementation 'systems.manifold:manifold-xml-rt:2021.1.31'
 ```
 #### Manifold : YAML
 ```groovy
-annotationProcessor 'systems.manifold:manifold-yaml:2021.1.31'
+compileOnly 'systems.manifold:manifold-yaml:2021.1.31'
 implementation 'systems.manifold:manifold-yaml-rt:2021.1.31'
 ```
 #### Manifold : CSV
 ```groovy
-annotationProcessor 'systems.manifold:manifold-csv:2021.1.31'
+compileOnly 'systems.manifold:manifold-csv:2021.1.31'
 implementation 'systems.manifold:manifold-csb-rt:2021.1.31'
 ```
 #### Manifold : Properties Files
 ```groovy
-annotationProcessor 'systems.manifold:manifold-properties:2021.1.31'
+compileOnly 'systems.manifold:manifold-properties:2021.1.31'
 ```
 #### Manifold : Image Files
 ```groovy
-annotationProcessor 'systems.manifold:manifold-image:2021.1.31'
+compileOnly 'systems.manifold:manifold-image:2021.1.31'
 ```
 #### Manifold : JavaScript
 ```groovy
-annotationProcessor 'systems.manifold:manifold-js:2021.1.31'
+compileOnly 'systems.manifold:manifold-js:2021.1.31'
 implementation 'systems.manifold:manifold-js-rt:2021.1.31'
 ```
 #### Manifold : Templates
 ```groovy
-annotationProcessor 'systems.manifold:manifold-templates:2021.1.31'
+compileOnly 'systems.manifold:manifold-templates:2021.1.31'
 implementation 'systems.manifold:manifold-templates-rt:2021.1.31'
 ```
 #### Manifold : String Interpolation
 ```groovy
-annotationProcessor 'systems.manifold:manifold-strings:2021.1.31'
+compileOnly 'systems.manifold:manifold-strings:2021.1.31'
 ```
 #### Manifold : (Un)checked Exceptions
 ```groovy
-annotationProcessor 'systems.manifold:manifold-exceptions:2021.1.31'
+compileOnly 'systems.manifold:manifold-exceptions:2021.1.31'
 ```
 #### Manifold : Preprocessor
 ```groovy
-annotationProcessor 'systems.manifold:manifold-preprocessor:2021.1.31'
+compileOnly 'systems.manifold:manifold-preprocessor:2021.1.31'
 ```
 #### Manifold : Science
 ```groovy
@@ -140,7 +140,7 @@ implementation 'systems.manifold:manifold-text:2021.1.31'
 
 If you use a [type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#the-big-picture)
 that is based on resource files such as GraphQL, JSON, Templates, etc. you must place the resource files in the 
-*source* directory along with your Java files.  Do **not** place them in the *res* or *assets* directories.
+*source* directory along with your Java files.  Do **NOT** place them in the *res* or *assets* directories.
  
 <p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
 

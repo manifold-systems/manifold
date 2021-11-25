@@ -249,12 +249,13 @@ You can also generate a compiler error with the [`#error`](#error) directive.
 
 
 ## Symbols
-Similar to a variable in Java, a preprocessor symbol has a name and an optional value. There are four ways a symbol can
+Similar to a variable in Java, a preprocessor symbol has a name and an optional value. There are five ways a symbol can
 be defined:
 1. Locally in the source file via `#define`
 2. Using a `build.properties` file in the directory ancestry beginning with the root source directory
 3. Using the `-Akey[=value]` option on the javac command line
 4. From compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.    
+5. From custom SymbolProvider SPI implementations such as the Android Studio build variant symbols
 
 Symbol scoping rules model a hierarchy of maps, where symbols are accessed in leaf-first order where the leaf
 symbols are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
@@ -331,8 +332,23 @@ The O/S architecture:
 ```java
 ARCH_32
 ARCH_64
+```
+
+### SymbolProvider SPI implementations
+
+Implement the `SymbolProvider` SPI to augment the environment definitions with your own custom environment symbols.
+
+For instance, the `manifold-preprocessor-android-syms` library implements the service to provide direct access to
+Android build variant symbols. You can add the library as a dependency to gain automatic access to familiar Android
+`BuildConfig` symbols:
+```java
+DEBUG
+BUILD_TYPE // current build variant  
+FLAVOR // flavor of current build variant
+etc. 
 ``` 
-       
+See [manifold-preprocessor-android-syms]([Extension type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor-android-syms)) for details.
+
 ## Dumping source
                  
 The preprocessor integrates directly with the Java parser, as such there are no intermediate files to manage. However,

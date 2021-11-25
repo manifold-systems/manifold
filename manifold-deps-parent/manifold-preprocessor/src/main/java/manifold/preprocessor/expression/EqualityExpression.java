@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Objects;
 import manifold.preprocessor.definitions.Definitions;
 
+import static manifold.preprocessor.expression.ExpressionTokenType.Equals;
+import static manifold.preprocessor.expression.ExpressionTokenType.NotEquals;
+
 public class EqualityExpression extends Expression
 {
   private final Expression _lhs;
@@ -56,6 +59,6 @@ public class EqualityExpression extends Expression
 
   public String toString()
   {
-    return _lhs + " == " + _rhs;
+    return _lhs + (_not ? NotEquals.getToken() : Equals.getToken()) + _rhs;
   }
 }

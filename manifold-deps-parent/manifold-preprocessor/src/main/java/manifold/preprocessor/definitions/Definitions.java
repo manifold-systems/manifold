@@ -62,6 +62,16 @@ public class Definitions
     _localUnDefs = new HashMap<>();
   }
 
+  protected IFile getSourceFile()
+  {
+    return _definitionsSource;
+  }
+
+  protected Definitions getParent()
+  {
+    return _parent.get();
+  }
+
   protected Definitions loadParentDefinitions()
   {
     Definitions parentDefinitions = null;
@@ -82,7 +92,7 @@ public class Definitions
         @Override
         protected Definitions loadParentDefinitions()
         {
-          return null;
+          return new ServiceDefinitions( Definitions.this );
         }
       };
     }
@@ -145,7 +155,7 @@ public class Definitions
   }
 
   /**
-   * @return True if there a definition having name {@code def}, regardless of its value.
+   * @return True if there is a definition having name {@code def}, regardless of its value.
    */
   public boolean isDefined( String def )
   {
@@ -159,7 +169,7 @@ public class Definitions
       return true;
     }
 
-    Definitions parent = _parent.get();
+    Definitions parent = getParent();
     return parent != null && parent.isDefined( def );
   }
 
@@ -175,7 +185,7 @@ public class Definitions
       return _localDefs.get( def );
     }
 
-    Definitions parent = _parent.get();
+    Definitions parent = getParent();
     return parent == null ? null : parent.getValue( def );
   }
 

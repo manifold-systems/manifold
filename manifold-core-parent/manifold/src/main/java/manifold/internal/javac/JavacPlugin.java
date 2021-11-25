@@ -711,8 +711,7 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private Set<String> deriveSourcePath()
   {
-    Set<String> sourcePath = new HashSet<>();
-    deriveSourcePath( _javaInputFiles, sourcePath );
+    Set<String> sourcePath = deriveJavaSourcePath();
     _javaSourcePath = new HashSet<>( sourcePath );
     deriveAdditionalSourcePath( _otherInputFiles, sourcePath );
     maybeAddResourcePath( _javaInputFiles, sourcePath );
@@ -787,10 +786,11 @@ public class JavacPlugin implements Plugin, TaskListener
     deriveResourcePath( javaInputFiles, sourcePath );
   }
 
-  private void deriveSourcePath( Set<Pair<String, JavaFileObject>> inputFiles, Set<String> sourcePath )
+  public Set<String> deriveJavaSourcePath()
   {
+    Set<String> sourcePath = new HashSet<>();
     outer:
-    for( Pair<String, JavaFileObject> inputFile : inputFiles )
+    for( Pair<String, JavaFileObject> inputFile : _javaInputFiles )
     {
       if( !isPhysicalFile( inputFile.getSecond() ) )
       {
@@ -819,6 +819,7 @@ public class JavacPlugin implements Plugin, TaskListener
         getIssueReporter().report( new JavacDiagnostic( null, Diagnostic.Kind.WARNING, 0, 0, 0, IssueMsg.MSG_COULD_NOT_FIND_TYPE_FOR_FILE.get( inputFile ) ) );
       }
     }
+    return sourcePath;
   }
 
   /**
