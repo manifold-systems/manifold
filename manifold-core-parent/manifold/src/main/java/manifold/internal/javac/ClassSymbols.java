@@ -134,11 +134,15 @@ public class ClassSymbols
       add( "-Xprefer:source" );
 
       // add "--release 8" if compiling say from Java 11 but targeting Java 8 with "--release 8" which runs against the
-      // actual Java 8 JRE classes, not the Java 11 ones. Otherwise there is trouble if we bring in JRE 11 sources here,
+      // actual Java 8 JRE classes, not the Java 11 ones. Otherwise, there is trouble if we bring in JRE 11 sources here,
       // which have Java 11 features that won't compile with source level 8.
       JavacPlugin javacPlugin = JavacPlugin.instance();
       String release = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() ).get( "--release" );
-      if( "8".equals( release ) )
+      if( release == null && JreUtil.isJava9orLater() ) // must be *building* with Java 9+
+      {
+        release = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() ).get( "-target" );
+      }
+      if( "8".equals( release ) || "1.8".equals( release ) )
       {
         add( "--release" );
         add( "8" );
