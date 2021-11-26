@@ -48,18 +48,25 @@ public class Definitions
   private final LocklessLazyVar<Definitions> _parent;
   private final Map<String, String> _localDefs;
   private final Map<String, String> _localUnDefs;
+  private final Definitions _root;
 
   public Definitions( IFile definitionsSource )
   {
-    this( definitionsSource, null );
+    this( null, definitionsSource, null );
   }
 
-  protected Definitions( IFile definitionsSource, Map<String, String> definitions )
+  protected Definitions( Definitions root, IFile definitionsSource, Map<String, String> definitions )
   {
+    _root = root == null ? this : root;
     _definitionsSource = definitionsSource;
     _parent = LocklessLazyVar.make( () -> loadParentDefinitions() );
     _localDefs = definitions == null ? new HashMap<>() : definitions;
     _localUnDefs = new HashMap<>();
+  }
+
+  protected Definitions getRoot()
+  {
+    return _root;
   }
 
   protected IFile getSourceFile()
@@ -74,30 +81,33 @@ public class Definitions
 
   protected Definitions loadParentDefinitions()
   {
-    Definitions parentDefinitions = null;
-
     if( _definitionsSource != null )
     {
       IFile source = _definitionsSource;
       if( source.exists() )
       {
-        parentDefinitions = findBuildProperties( source );
+        Definitions buildPropertiesDefinitions = findBuildProperties( source );
+        if( buildPropertiesDefinitions != null )
+        {
+          return buildPropertiesDefinitions;
+        }
       }
     }
 
-    if( parentDefinitions == null )
-    {
-      parentDefinitions = new Definitions( null, loadEnvironmentDefinitions() )
+    return makeEnvironmentDefinitions();
+  }
+
+  private Definitions makeEnvironmentDefinitions()
+  {
+    return
+      new Definitions( getRoot(), null, getRoot().loadEnvironmentDefinitions() )
       {
         @Override
         protected Definitions loadParentDefinitions()
         {
-          return new ServiceDefinitions( Definitions.this );
+          return new ServiceDefinitions( getRoot() );
         }
       };
-    }
-
-    return parentDefinitions;
   }
 
   protected Map<String, String> loadEnvironmentDefinitions()
@@ -140,7 +150,7 @@ public class Definitions
     {
       properties.load( input );
       //noinspection unchecked
-      return new Definitions( source, (Map)properties );
+      return new Definitions( getRoot(), source, (Map)properties );
     }
     catch( IOException e )
     {
