@@ -347,7 +347,7 @@ BUILD_TYPE // current build variant
 FLAVOR // flavor of current build variant
 etc. 
 ``` 
-See [manifold-preprocessor-android-syms]([Extension type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor-android-syms)) for details.
+See [manifold-preprocessor-android-syms](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor-android-syms) for details.
 
 ## Dumping source
                  
