@@ -119,6 +119,10 @@ compileOnly 'systems.manifold:manifold-exceptions:2021.1.33'
 ```groovy
 compileOnly 'systems.manifold:manifold-preprocessor:2021.1.33'
 ```
+#### Manifold : Preprocessor : Android Symbols
+```groovy
+compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2021.1.33'
+```
 #### Manifold : Science
 ```groovy
 implementation 'systems.manifold:manifold-science:2021.1.33'
@@ -144,3 +148,24 @@ that is based on resource files such as GraphQL, JSON, Templates, etc. you must 
  
 <p><img src="http://manifold.systems/images/android_resources.png" alt="echo method" width="50%" height="50%"/></p> 
 
+## Preprocessor and build variant symbols
+
+If you use the [preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor),
+you can directly reference Android build variant symbols with the [manifold-preprocessor-android-syms](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor-android-syms)
+dependency.
+```java
+#if FLAVOR == "paid"
+  @Override
+  public void specialMethod(Foo foo) {
+  ...
+  }
+#endif
+```
+build.gradle
+```groovy
+dependencies {
+    ...
+    compileOnly 'systems.manifold:manifold-preprocessor:2021.1.33'
+    compileOnly 'systems.manifold:manifold-preprocessor-android-syms:2021.1.33'
+}
+```

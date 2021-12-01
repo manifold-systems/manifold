@@ -34,7 +34,8 @@ import manifold.util.concurrent.LocklessLazyVar;
  * <ul>
  *   <li> {@code build.properties} files in the source file's directory ancestry </li>
  *   <li> Custom compiler arguments provided by the {@code -Akey[=value]} javac command line option </li>
- *   <li> Compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.
+ *   <li> Compiler and JVM environment settings such as Java source version, JPMS mode, operating system, etc.</li>
+ *   <li> Custom service provider implementations of {@code SymbolProvider}. See {@code BuildVariantSymbols}.</li>
  * </ul>
  * Note the effects of {@code #define} and {@code #undef} are limited to the file scope. This means {@code #define}
  * definitions are not available to other files.  Similarly, parent definitions masked with {@code #undef} are
