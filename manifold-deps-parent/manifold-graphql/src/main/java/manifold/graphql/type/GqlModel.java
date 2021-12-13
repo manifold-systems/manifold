@@ -272,8 +272,6 @@ public class GqlModel extends AbstractSingleFileModel
   public void updateFile( IFile file )
   {
     super.updateFile( file );
-    // must refresh GqlScopeFinder because there may have been a SchemaDefinition creation/deletion
-    _gqlManifold.getScopeFinder().refresh();
     init();
   }
 

@@ -46,11 +46,6 @@ public class GqlScopeFinder
     _scopes = LocklessLazyVar.make( () -> findScopes() );
   }
 
-  public void refresh()
-  {
-    _scopes.clear();
-  }
-
   Set<GqlScope> getScopes()
   {
     return _scopes.get();
@@ -78,7 +73,7 @@ public class GqlScopeFinder
       } );
     if( scopes.isEmpty() )
     {
-      scopes.add( new GqlScope( _gqlManifold ) );
+      scopes.add( GqlScope.getDefaultScope( _gqlManifold ) );
     }
     return scopes;
   }

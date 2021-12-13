@@ -53,6 +53,11 @@ class GqlScope
   private static final String DEFAULT = "_default_scope";
   private static final String ERRANT = "_errant_scope";
 
+  private static final Map<GqlManifold, GqlScope> DEFAULT_SCOPE_BY_MODULE = new WeakHashMap<>();
+  static GqlScope getDefaultScope( GqlManifold gqlManifold ) {
+    return DEFAULT_SCOPE_BY_MODULE.computeIfAbsent( gqlManifold, key -> new GqlScope( key ) );
+  }
+
   private final GqlManifold _gqlManifold;
   private final IFile _configFile;
   private String _name;
@@ -78,7 +83,7 @@ class GqlScope
    * scope. Note, this means there should be only ONE schema definition in the entire module. If you have multiple
    * schemas in the same module, you must use .graphqlconfig file[s] to define the scope for each schema.
    */
-  GqlScope( GqlManifold gqlManifold )
+  private GqlScope( GqlManifold gqlManifold )
   {
     _gqlManifold = gqlManifold;
     _configFile = null;
