@@ -1283,16 +1283,13 @@ route and implement your own proxy factory...
 
 ## Implementation by Proxy
 
-You can provide your own proxies the compiler can use to delegate structural calls.  This is especially useful to avoid
-the one-time runtime overhead of the first call through a structural interface. Consider the `Coordinate` structural
-interface earlier.
+If extensions methods aren't suitable, you can provide your own proxy implementations the compiler can use to delegate
+structural calls. Consider the `Coordinate` structural interface earlier.
 ```java
 Coordinate coord = (Coordinate) new Point(4,5);
 coord.getX();
 ```
-The first time `Point` is called through a `Coordinate` Manifold dynamically generates and compiles a proxy for `Point`
-as a `Coordinate`.  Most of the time this does not matter -- avoid premature optimization! -- but when it does matter the
-delay can be a problem.  To address that you can provide your own proxy ahead of time via the `IProxyFactory` service.
+You can provide your own proxy implementation ahead of time via the `IProxyFactory` service.
 ```java
 public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
   @Override
@@ -1318,8 +1315,7 @@ public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
   }
 }
 ```
-The compiler uses this proxy factory to make `Point` calls through `Coordinate`, which vastly improves the first time
-call performance since it saves Manifold from dynamically generating and compiling a similar class.
+The compiler uses this proxy factory to make `Point` calls through `Coordinate`.
 
 Your proxy factory must be registered as a service in `META-INF` directly like so:
 ```
