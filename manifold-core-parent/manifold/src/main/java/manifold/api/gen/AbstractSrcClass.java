@@ -316,17 +316,22 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   public boolean isInterface()
   {
-    return _kind == AbstractSrcClass.Kind.Interface;
+    return _kind == Kind.Interface;
   }
 
   public boolean isEnum()
   {
-    return _kind == AbstractSrcClass.Kind.Enum;
+    return _kind == Kind.Enum;
   }
 
   public boolean isAnnotation()
   {
-    return _kind == AbstractSrcClass.Kind.Annotation;
+    return _kind == Kind.Annotation;
+  }
+
+  public boolean isRecord()
+  {
+    return _kind == Kind.Record;
   }
 
   public List<SrcType> getTypeVariables()
@@ -387,17 +392,21 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
     StringBuilder sbType = new StringBuilder();
 
-    if( _kind == AbstractSrcClass.Kind.Enum )
+    switch( _kind )
     {
-      renderEnum( sbType, indent );
-    }
-    else if( _kind == AbstractSrcClass.Kind.Annotation )
-    {
-      renderAnnotation( sbType, indent );
-    }
-    else
-    {
-      renderClassOrInterface( sbType, indent );
+      case Enum:
+        renderEnum( sbType, indent );
+        break;
+      case Annotation:
+        renderAnnotation( sbType, indent );
+        break;
+      case Class:
+      case Interface:
+        renderClassOrInterface( sbType, indent );
+        break;
+      case Record:
+        renderRecord( sbType, indent );
+        break;
     }
 
     if( getEnclosingClass() != null )
@@ -511,6 +520,36 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
     indent( sb, indent );
     sb.append( "}\n\n" );
+  }
+
+  private void renderRecord( StringBuilder sb, int indent )
+  {
+    renderAnnotations( sb, indent, false );
+    indent( sb, indent );
+    renderModifiers( sb, false, Modifier.PUBLIC );
+    sb.append( "record " ).append( getSimpleName() ).append( renderTypeVars( _typeVars, sb ) );
+    renderRecordParams( sb );
+    sb.append( renderClassImplements( sb ) )
+      .append( " {\n" );
+
+    renderClassFeatures( sb, indent + INDENT );
+
+    indent( sb, indent );
+    sb.append( "}\n\n" );
+  }
+
+  private void renderRecordParams( StringBuilder sb )
+  {
+    if( _constructors.isEmpty() )
+    {
+      throw new IllegalStateException( "missing constructor for record class" );
+    }
+    if( _constructors.size() > 1 )
+    {
+      throw new IllegalStateException( "found " +  _constructors.size() + " record constructors, should be one" );
+    }
+    SrcConstructor ctor = _constructors.get( 0 );
+    ctor.renderParameters( sb );
   }
 
   private void renderClassFeatures( StringBuilder sb, int indent )
@@ -670,7 +709,8 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     Class,
     Interface,
     Annotation,
-    Enum;
+    Enum,
+    Record;
 
     public static Kind from( ElementKind kind )
     {
@@ -684,6 +724,11 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
           return Annotation;
         case INTERFACE:
           return Interface;
+        default:
+          if( kind.name().equals( "RECORD" ) )
+          {
+            return Record;
+          }
       }
       throw new IllegalArgumentException( "Unhandled kind: " + kind );
     }
@@ -700,6 +745,11 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
           return Annotation;
         case INTERFACE:
           return Interface;
+        default:
+          if( kind.name().equals( "RECORD" ) )
+          {
+            return Record;
+          }
       }
       throw new IllegalArgumentException( "Unhandled kind: " + kind );
     }

@@ -177,7 +177,11 @@ class ExtCodeGen
 
   private void addExtensionInterfacesToExistingClass( SrcClass srcClass, StringBuilder sb )
   {
-    String start = (srcClass.isInterface() ? "interface " : "class ") + srcClass.getSimpleName();
+    String start = (srcClass.isInterface()
+      ? "interface "
+      : srcClass.getKind() == AbstractSrcClass.Kind.Record
+        ? "record "
+        : "class ") + srcClass.getSimpleName();
     int iStart = sb.indexOf( start );
     int iBrace = sb.indexOf( "{", iStart );
 
@@ -203,7 +207,12 @@ class ExtCodeGen
       anno.render( sbAnnos, 0 ).append( '\n' );
     }
 
-    String start = (srcClass.isInterface() ? "interface " : "class ") + srcClass.getSimpleName();
+    String start = (srcClass.isInterface()
+      ? "interface "
+      : srcClass.getKind() == AbstractSrcClass.Kind.Record
+      ? "record "
+      : "class ") + srcClass.getSimpleName();
+
     int iStart = sb.indexOf( start );
     while( iStart != 0 )
     {

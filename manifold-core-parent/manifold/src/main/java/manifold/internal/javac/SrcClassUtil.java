@@ -701,7 +701,11 @@ public class SrcClassUtil
         // Since java 10 we have to keep these out of stubbed java source
         continue;
       }
-
+      if( fqn.equals( "jdk.internal.ValueBased" ) )
+      {
+        // Since java 16 we have to keep these out of stubbed java source
+        continue;
+      }
       //noinspection IfCanBeSwitch
       if( fqn.equals( "android.annotation.Nullable" ) )
       {
