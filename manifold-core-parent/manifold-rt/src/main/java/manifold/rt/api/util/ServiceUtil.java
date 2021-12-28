@@ -24,7 +24,7 @@ import java.util.Set;
 public class ServiceUtil
 {
   /**
-   * Loads, but does not initialize, all <i>registered</i>type services of type `C` managed by this module container.
+   * Loads, but does not initialize, all <i>registered</i> services of type `C` managed by this module container.
    * A registered compiler task is discoverable in the META-INF/ directory as specified by {@link ServiceLoader}.
    */
   public static <C> Set<C> loadRegisteredServices( Set<C> services, Class<C> serviceClass, ClassLoader classLoader )

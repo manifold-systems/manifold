@@ -125,7 +125,7 @@ public interface ITypeManifold extends IFileConnected, ISelfCompiled
   /**
    * Signals that normal javac compilation is complete with respect to the supplied Java source file list passed
    * to javac. Any "other" source files passed in (via other.source.files property using -Akey=value arg) are
-   * about to be compiled. This method was added to facilitate a self-compiled type manifolds such as Gosu where
+   * about to be compiled. This method was added to facilitate a self-compiled type manifold such as Gosu where
    * it can reliably depend on Java ClassSymbols to be complete from the JavacPlugin's javacTask. This in turn
    * enables the sharing of these symbols so the type manifold doesn't have to load a second javacTask and potentially
    * duplicate expensive work.

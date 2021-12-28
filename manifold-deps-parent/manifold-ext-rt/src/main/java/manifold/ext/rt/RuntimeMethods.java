@@ -35,6 +35,7 @@ import manifold.rt.api.util.ManClassUtil;
 import manifold.ext.rt.api.*;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.ReflectUtil;
+import manifold.util.ReflectUtil.FakeProxy;
 import manifold.util.concurrent.LocklessLazyVar;
 
 public class RuntimeMethods
@@ -427,13 +428,14 @@ public class RuntimeMethods
         (proxy, method, args) -> ListProxy.invoke( (List)target, proxy, method, args) );
     }
     return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
-      (proxy, method, args) -> ReflectUtil.structuralCall( method, target, args ) );
+      (proxy, method, args) -> ReflectUtil.structuralCallByProxy( method, proxy, target, args ) );
   }
 
   public static IProxyFactory maybeSelfProxyClass( Class<?> rootClass, Class<?> iface )
   {
-    // The self-proxy strategy avoids costs otherwise involved with generating and compiling the proxy at runtime via
-    // ICallHandler
+    // The self-proxy strategy avoids costs otherwise involved with generating a proxy dynamically,
+    // and since it's compiled statically with manifold, the proxy source can use manifold features
+    // such as extension methods, operator overloading, etc.
 
     Structural anno = iface.getAnnotation( Structural.class );
     if( anno != null )
@@ -443,7 +445,7 @@ public class RuntimeMethods
       {
         // If the proxy factory declared in @Structural handles the rootClass, create the proxy via the factory
 
-        IProxyFactory proxyFactory = maybeMakeProxyFactory( rootClass, factoryClass, RuntimeMethods::constructProxyFactory );
+        IProxyFactory proxyFactory = maybeMakeProxyFactory( rootClass, iface, factoryClass, RuntimeMethods::constructProxyFactory );
         if( proxyFactory != null )
         {
           return proxyFactory;
@@ -454,31 +456,42 @@ public class RuntimeMethods
     // See if there is a registered IProxyFactory for the rootClass and iface, so create one that way,
     // otherwise return null
 
-    return findRegisteredFactory( rootClass );
+    return findRegisteredFactory( rootClass, iface );
   }
 
-  private static IProxyFactory findRegisteredFactory( Class<?> rootClass )
+  private static IProxyFactory findRegisteredFactory( Class<?> rootClass, Class<?> iface )
   {
     //noinspection ConstantConditions
     return _registeredProxyFactories.get().stream()
       .filter( e -> !(e instanceof IDynamicProxyFactory) )
-      .filter( e -> maybeMakeProxyFactory( rootClass, e.getClass(), c -> e ) != null )
+      .filter( e -> maybeMakeProxyFactory( rootClass, iface, e.getClass(), c -> e ) != null )
       .findFirst().orElse( null );
   }
 
-  private static IProxyFactory maybeMakeProxyFactory( Class<?> rootClass, Class factoryClass, Function<Class<?>, IProxyFactory> proxyFactoryMaker )
+  private static IProxyFactory maybeMakeProxyFactory( Class<?> rootClass, Class<?> ifaceClass, Class factoryClass,
+                                                      Function<Class<?>, IProxyFactory> proxyFactoryMaker )
   {
     Type type = Arrays.stream( factoryClass.getGenericInterfaces() )
       .filter( e -> e.getTypeName().startsWith( IProxyFactory.class.getTypeName() ) )
       .findFirst().orElse( null );
     if( type instanceof ParameterizedType )
     {
-      Type typeArg = ((ParameterizedType)type).getActualTypeArguments()[0];
-      if( typeArg instanceof ParameterizedType )
+      Type typeArg1 = ((ParameterizedType)type).getActualTypeArguments()[0];
+      if( typeArg1 instanceof ParameterizedType )
       {
-        typeArg = ((ParameterizedType)typeArg).getRawType();
+        typeArg1 = ((ParameterizedType)typeArg1).getRawType();
       }
-      if( ((Class<?>)typeArg).isAssignableFrom( rootClass ) )
+      if( !((Class<?>)typeArg1).isAssignableFrom( rootClass ) )
+      {
+        return null;
+      }
+
+      Type typeArg2 = ((ParameterizedType)type).getActualTypeArguments()[1];
+      if( typeArg2 instanceof ParameterizedType )
+      {
+        typeArg2 = ((ParameterizedType)typeArg2).getRawType();
+      }
+      if( ((Class<?>)typeArg2).isAssignableFrom( ifaceClass ) )
       {
         return proxyFactoryMaker.apply( factoryClass );
       }
@@ -562,5 +575,20 @@ public class RuntimeMethods
            type == Long.class ||
            type == Float.class ||
            type == Double.class;
+  }
+
+  @SuppressWarnings( "unused" )
+  public static Object unFakeProxy( Object proxy )
+  {
+    if( proxy == null || !Proxy.isProxyClass( proxy.getClass() ) )
+    {
+      return proxy;
+    }
+    InvocationHandler invocationHandler = Proxy.getInvocationHandler( proxy );
+    if( invocationHandler instanceof FakeProxy )
+    {
+      return ((FakeProxy)invocationHandler).getTarget();
+    }
+    return proxy;
   }
 }

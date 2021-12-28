@@ -217,7 +217,7 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
   /**
    * Additional types derived from {@code file}.
    * These can be supporting classes, interfaces, extension classes, what have you.
-   * In the case of extension classes, this type manifold must implement IExtensionProvider.
+   * In the case of extension classes, this type manifold must implement IExtensionClassProducer.
    *
    * @param fqnForFile The primary type this type manifold assigned to {@code file}
    * @param file       The resource file from which types may be derived

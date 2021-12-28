@@ -33,6 +33,7 @@ import manifold.internal.host.RuntimeManifoldHost;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.IDynamicJdk;
 import manifold.internal.runtime.protocols.ManClassesUrlConnection;
+import manifold.util.ReflectUtil;
 
 /**
  * Used at runtime to dynamically proxy a type that structurally (as opposed to nominally)
@@ -43,7 +44,7 @@ import manifold.internal.runtime.protocols.ManClassesUrlConnection;
 class StructuralTypeProxyGenerator
 {
   private final Class<?> _iface;
-  private Class<?> _rootClass;
+  private final Class<?> _rootClass;
   private final String _name;
   private Symbol.ClassSymbol _rootClassSymbol;
 
@@ -116,7 +117,7 @@ class StructuralTypeProxyGenerator
 
   private void genInterfaceMethodDecl( StringBuilder sb, Method mi, Class rootType )
   {
-    if( (mi.isDefault() && !implementsMethod( rootType, mi )) ||
+    if( (mi.isDefault() && !isStructurallyAssignable( rootType, mi )) ||
         Modifier.isStatic( mi.getModifiers() ) ||
         mi.isBridge() || mi.isSynthetic() )
     {
@@ -440,13 +441,16 @@ class StructuralTypeProxyGenerator
     return paramTypes;
   }
 
-  private boolean implementsMethod( Class type, Method mi )
+  private boolean isStructurallyAssignable( Class type, Method mi )
   {
-    //## todo:
+    //## todo: this does not take into account *extension methods* that may implement the method
+    return ReflectUtil.findBestMethod( mi, type ) != null;
+
+    //## todo:  handle generics
     //return isStructurallyAssignable( mi.getOwnersType(), type, mi, new TypeVarToTypeMap() );
-    return true;
   }
 
+  @SuppressWarnings( "unused" )
   private String maybeCastReturnType( Method mi, Class returnType, Class rootType )
   {
     //## todo:

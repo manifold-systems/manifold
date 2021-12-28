@@ -19,13 +19,7 @@ package manifold.ext;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.SymbolMetadata;
-import com.sun.tools.javac.code.Symtab;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.AttrContextEnv;
 import com.sun.tools.javac.comp.Env;
@@ -356,6 +350,9 @@ public class ExtensionTransformer extends TreeTranslator
 
     // If methodCall is an extension method, rewrite it
     methodCall = maybeReplaceWithExtensionMethod( methodCall );
+
+    // If methodCall is a structural call, rewrite it e.g., from an arithmetic expression using an operator overload call
+    methodCall = maybeReplaceWithStructuralCall( methodCall );
 
     // Concrete type set in attr
     methodCall.type = tree.type;
@@ -1008,6 +1005,17 @@ public class ExtensionTransformer extends TreeTranslator
     {
       // Replace with extension method call
       methodCall = replaceExtCall( methodCall, extMethod );
+    }
+    return methodCall;
+  }
+
+  public JCTree.JCMethodInvocation maybeReplaceWithStructuralCall( JCTree.JCMethodInvocation methodCall )
+  {
+    if( isStructuralMethod( methodCall ) )
+    {
+      // The structural interface method is implemented directly in the type or supertype hierarchy,
+      // replace with proxy call
+      methodCall = replaceStructuralCall( methodCall );
     }
     return methodCall;
   }
@@ -2097,6 +2105,11 @@ public class ExtensionTransformer extends TreeTranslator
     }
     try
     {
+      if( !_tp.isGenerate() && !_bridgeMethod )
+      {
+        unproxyStructuralArgsIfDefaultMethod( tree );
+      }
+
       super.visitMethodDef( tree );
     }
     finally
@@ -2119,6 +2132,83 @@ public class ExtensionTransformer extends TreeTranslator
 
     verifyExtensionMethod( tree );
     result = tree;
+  }
+
+  /**
+   This is to handle the case where a structural interface has a default method and is called reflectively from a proxy
+   and the method has at least one parameter that is also a structural interface. The problem with this case is that
+   ReflectUtil.invokeDefault() calls deep inside methodHandleLand where the param is cast to the structural interface
+   before calling the method, the cast of course fails because we *only* proxy the *receiver* at the call-site to make
+   the structural call; to maintain object identity we never keep proxies alive beyond that, thus we don't pass them to
+   methods. Note, the JVM does *not* type check arguments passed to methods.
+
+   As a remedy we now "fake" proxy the arg to get past the cast; we generate code in the receiving method to unproxy
+   the fake proxied argument before it used; again this all just to get around methodhandle calling code that casts the
+   arg to the structural iface type before invoking it. A fake proxy is a normal Java proxy that is never called, it
+   exists solely to make it past the cast.
+  */
+  private void unproxyStructuralArgsIfDefaultMethod( JCTree.JCMethodDecl tree )
+  {
+    if( !tree.sym.isDefault() )
+    {
+      return;
+    }
+
+    for( JCTree.JCVariableDecl param: tree.getParameters() )
+    {
+      if( TypeUtil.isStructuralInterface( _tp, param.type.tsym ) )
+      {
+        // default void myDefaultMethod( MyStructuralIface obj ) {
+        //   generated --> obj = unFakeProxy( obj );
+        //   ...
+        // }
+
+        TreeMaker make = TreeMaker.instance( _tp.getContext() );
+        JavacElements javacElems = _tp.getElementUtil();
+        Symtab symbols = _tp.getSymtab();
+
+        int bodyPos = tree.getBody().pos;
+
+        JCExpression condition;
+        if( !param.type.isPrimitive() )
+        {
+          JCTree.JCIdent proxiedParam = make.Ident( param.sym );
+          proxiedParam.pos = bodyPos;
+
+          Names names = Names.instance( _tp.getContext() );
+          Symbol.ClassSymbol runtimeMethodsClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+          Symbol.MethodSymbol unproxyMethod = resolveMethod( tree.pos(), names.fromString( "unFakeProxy" ), runtimeMethodsClassSym.type,
+            List.from( new Type[]{symbols.objectType} ) );
+
+          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".unFakeProxy" ), List.of( proxiedParam ) );
+          unproxyCall.setPos( bodyPos );
+          unproxyCall.type = symbols.objectType;
+          JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)unproxyCall.getMethodSelect();
+          methodSelect.sym = unproxyMethod;
+          methodSelect.type = unproxyMethod.type;
+          methodSelect.pos = bodyPos;
+          assignTypes( methodSelect.selected, runtimeMethodsClassSym );
+          methodSelect.selected.pos = bodyPos;
+
+          JCTypeCast castedUnproxyCall = make.TypeCast( param.type, unproxyCall );
+          castedUnproxyCall.pos = bodyPos;
+
+          JCTree.JCIdent lhs = make.Ident( param.sym );
+          lhs.pos = bodyPos;
+
+          JCTree.JCAssign unproxy = make.Assign( lhs, castedUnproxyCall );
+          unproxy.pos = bodyPos;
+          unproxy.type = symbols.objectType;
+          JCTree.JCExpressionStatement unproxyStmt = make.Exec( unproxy );
+          unproxyStmt.pos = bodyPos;
+          unproxyStmt.type = unproxy.type;
+
+          JCTree.JCBlock body = tree.getBody();
+          tree.body = make.Block( 0, List.of( unproxyStmt, body ) );
+          tree.body.pos = bodyPos;
+        }
+      }
+    }
   }
 
   private void checkExtensionClassError( JCTree.JCClassDecl typeDecl )
@@ -2305,7 +2395,7 @@ public class ExtensionTransformer extends TreeTranslator
     return false;
   }
 
-  private JCTree replaceStructuralCall( JCTree.JCMethodInvocation theCall )
+  private JCTree.JCMethodInvocation replaceStructuralCall( JCTree.JCMethodInvocation theCall )
   {
     JCExpression methodSelect = theCall.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
