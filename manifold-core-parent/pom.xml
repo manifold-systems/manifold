@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>2021.1.35-SNAPSHOT</version>
+    <version>2021.1.35</version>
   </parent>
 
   <artifactId>manifold-core-parent</artifactId>
@@ -28,7 +28,7 @@
       <artifactId>manifold-javadoc-agent</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-      <version>2021.1.35-SNAPSHOT</version>
+      <version>2021.1.35</version>
     </dependency>
   </dependencies>
 
