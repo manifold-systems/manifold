@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 /**
  * Declare a structural interface using this annotation.
  * <p/>
- * See the <a href="http://manifold.systems/docs.html#structural-interfaces">Structural Interfaces</a>
+ * See the <a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural">Structural Interfaces</a>
  * documentation for more information.
  */
 @Retention(RetentionPolicy.RUNTIME)
@@ -37,10 +37,11 @@ public @interface Structural
    * A factory class that produces a proxy for a structural interface.  The factory class must provide a public default
    * constructor and must implement {@link IProxyFactory}.
    * <p/>
-   * Note the factory class is optional and exists primarily to address performance when the first time a type is cast
-   * to a structural interface.  If a factory class is <i>not</i> provided, Manifold dynamically generates and compiles
-   * one at runtime, which entails a significant first-time performance hit.  Thus a compile-time proxy factory provides
-   * a way to eliminate this performance hit if and when needed.
+   * Note, the factory class exists to address performance and to facilitate proxies where structural interface methods
+   * are implemented indirectly as extension methods. In the latter case a factory class is required either here in the
+   * &#64;Structural declaration or as a service. Note if there are more than one factory classes, they should be
+   * provided as service implementations in the META-INF/services/manifold.ext.rt.api.IProxyFactory file, or listed in
+   * your module's module-info.java file if you are using JDK 9+ with named modules.
    */
   Class factoryClass() default Void.class;
 }

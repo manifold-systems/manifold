@@ -1272,7 +1272,11 @@ public class MyVectorExtension {
 }
 ```
 
-Voila! `Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
+`Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
+>Important!
+> Manifold's default execution mode is `static`. In this mode it is necessary to implement the `IProxyFactory` service
+> to delegate to your structurally implemented extension methods.  See [Implementation By Proxy](#implementation-by-proxy)
+> next.
 
 Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
 project does not control.
@@ -1283,8 +1287,8 @@ route and implement your own proxy factory...
 
 ## Implementation by Proxy
 
-If extensions methods aren't suitable, you can provide your own proxy implementations the compiler can use to delegate
-structural calls. Consider the `Coordinate` structural interface earlier.
+You can provide your own proxy implementations the compiler can use to delegate structural calls. Consider the 
+`Coordinate` structural interface earlier.
 ```java
 Coordinate coord = (Coordinate) new Point(4,5);
 coord.getX();
@@ -1316,6 +1320,9 @@ public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
 }
 ```
 The compiler uses this proxy factory to make `Point` calls through `Coordinate`.
+ 
+>Important!
+>You must implement a proxy if you provide extension methods for a structural interface.
 
 Your proxy factory must be registered as a service in `META-INF` directly like so:
 ```
