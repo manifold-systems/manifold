@@ -2176,11 +2176,13 @@ public class ExtensionTransformer extends TreeTranslator
           proxiedParam.pos = bodyPos;
 
           Names names = Names.instance( _tp.getContext() );
-          Symbol.ClassSymbol runtimeMethodsClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+          Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
+
           Symbol.MethodSymbol unproxyMethod = resolveMethod( tree.pos(), names.fromString( "unFakeProxy" ), runtimeMethodsClassSym.type,
             List.from( new Type[]{symbols.objectType} ) );
 
-          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(), memberAccess( make, javacElems, RuntimeMethods.class.getName() + ".unFakeProxy" ), List.of( proxiedParam ) );
+          JCTree.JCMethodInvocation unproxyCall = make.Apply( List.nil(), 
+            memberAccess( make, javacElems, RuntimeMethods.class.getTypeName() + ".unFakeProxy" ), List.of( proxiedParam ) );
           unproxyCall.setPos( bodyPos );
           unproxyCall.type = symbols.objectType;
           JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)unproxyCall.getMethodSelect();
@@ -2209,6 +2211,16 @@ public class ExtensionTransformer extends TreeTranslator
         }
       }
     }
+  }
+
+  private Symbol.ClassSymbol getRtClassSym( Class cls )
+  {
+    Symbol.ClassSymbol sym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), cls.getTypeName() );
+    if( sym == null )
+    {
+      sym = JavacElements.instance( _tp.getContext() ).getTypeElement( cls.getTypeName() );
+    }
+    return sym;
   }
 
   private void checkExtensionClassError( JCTree.JCClassDecl typeDecl )
@@ -2404,7 +2416,7 @@ public class ExtensionTransformer extends TreeTranslator
 
       Symtab symbols = _tp.getSymtab();
       Names names = Names.instance( _tp.getContext() );
-      Symbol.ClassSymbol reflectMethodClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), RuntimeMethods.class.getName() );
+      Symbol.ClassSymbol reflectMethodClassSym = getRtClassSym( RuntimeMethods.class );
       Symbol.MethodSymbol makeInterfaceProxyMethod = resolveMethod( theCall.pos(), names.fromString( "constructProxy" ), reflectMethodClassSym.type,
         List.from( new Type[]{symbols.objectType, symbols.classType} ) );
 
