@@ -872,6 +872,11 @@ public class ReflectUtil
         throw ManExceptionUtil.unchecked( e );
       }
     }
+
+    public Constructor<?> getConstructor()
+    {
+      return _constructor;
+    }
   }
 
   private static MethodRef addMethodToCache( Class cls, Method m )
@@ -1272,6 +1277,7 @@ public class ReflectUtil
           setAccessible( method );
           return method;
         }
+        //todo: post a compile error indicating the errant method
       }
       return null;
     } );

@@ -1686,6 +1686,8 @@ public class ExtensionTransformer extends TreeTranslator
 
     precompileClasses( tree );
 
+    compileGeneratedProxyFactoryClasses( tree );
+
     incrementalCompileClasses( tree );
   }
 
@@ -1794,6 +1796,14 @@ public class ExtensionTransformer extends TreeTranslator
       }
     }
     return matchingTypes;
+  }
+
+  private void compileGeneratedProxyFactoryClasses( JCTree.JCClassDecl tree )
+  {
+    if( isExtensionClass( tree ) )
+    {
+      StaticCompiler.instance().surfaceGeneratedProxyFactoryClasses( _tp.getContext(), _tp.getCompilationUnit() );
+    }
   }
 
   private void incrementalCompileClasses( JCTree.JCClassDecl tree )
@@ -2169,7 +2179,6 @@ public class ExtensionTransformer extends TreeTranslator
 
         int bodyPos = tree.getBody().pos;
 
-        JCExpression condition;
         if( !param.type.isPrimitive() )
         {
           JCTree.JCIdent proxiedParam = make.Ident( param.sym );

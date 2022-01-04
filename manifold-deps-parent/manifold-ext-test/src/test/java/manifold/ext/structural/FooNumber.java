@@ -14,6 +14,9 @@ public class FooNumber {
   public BigDecimal getNumber() {
     return _bd;
   }
+  double something(double d, int i) {
+    return d + i;
+  }
 
   public String toString() {return _bd.toString();}
 }

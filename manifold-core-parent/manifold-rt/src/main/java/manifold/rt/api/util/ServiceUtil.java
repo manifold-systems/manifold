@@ -16,6 +16,9 @@
 
 package manifold.rt.api.util;
 
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
+
 import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
@@ -33,6 +36,7 @@ public class ServiceUtil
     // (currently the IJ plugin creates loaders for accessing type manifolds from project classpath)
 
     ServiceLoader<C> loader = ServiceLoader.load( serviceClass );
+    hackServiceLoaderToHandleProxyFactoryForJpms( loader, serviceClass, null );
     Iterator<C> iterator = loader.iterator();
     if( iterator.hasNext() )
     {
@@ -54,6 +58,7 @@ public class ServiceUtil
     {
       // Also load from this loader
       loader = ServiceLoader.load( serviceClass, classLoader );
+      hackServiceLoaderToHandleProxyFactoryForJpms( loader, serviceClass, classLoader );
       for( iterator = loader.iterator(); iterator.hasNext(); )
       {
         try
@@ -74,6 +79,23 @@ public class ServiceUtil
     }
 
     return services;
+  }
+
+  private static <C> void hackServiceLoaderToHandleProxyFactoryForJpms( ServiceLoader<C> serviceLoader, Class<?> serviceClass, ClassLoader classLoader )
+  {
+    if( !JreUtil.isJava9Modular_runtime() || !serviceClass.getSimpleName().equals( "IProxyFactory_gen" ) )
+    {
+      return;
+    }
+    // Handle IProxyFactory_gen services in module mode.
+    //
+    // In module mode the standard Java LazyClassPathLookupIterator requires module-info.java files to expose services
+    // as "providers".  This here LazyClassPathLookupIterator lets us get them from META-INF/services, which is required
+    // since they are generated and placed there. Otherwise, there is no way (I am aware of) to generate services that
+    // are discoverable in module mode.
+    ReflectUtil.field( serviceLoader, "lookupIterator1" ).set(
+      ReflectUtil.constructor( "manifold.util.LazyClassPathLookupIterator", Class.class, ClassLoader.class )
+        .newInstance(serviceClass, classLoader == null ? ReflectUtil.field( serviceLoader, "loader" ).get() : classLoader ) );
   }
 
   /**

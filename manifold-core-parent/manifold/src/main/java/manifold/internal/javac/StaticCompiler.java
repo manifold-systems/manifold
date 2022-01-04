@@ -16,12 +16,17 @@
 
 package manifold.internal.javac;
 
+import com.sun.source.tree.CompilationUnitTree;
+import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.comp.AttrContext;
 import com.sun.tools.javac.comp.CompileStates;
 import com.sun.tools.javac.comp.Env;
 import com.sun.tools.javac.comp.Todo;
 import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Assert;
 import com.sun.tools.javac.util.Context;
 import manifold.api.fs.IFile;
@@ -33,8 +38,15 @@ import manifold.internal.host.JavacManifoldHost;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 import java.io.File;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static manifold.api.type.ContributorKind.Supplemental;
 
@@ -52,16 +64,17 @@ import static manifold.api.type.ContributorKind.Supplemental;
  * <p/>
  * See <a href="https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#explicit-resource-compilation">Explicit Resource Compilation</a>
  */
-class StaticCompiler
+public class StaticCompiler
 {
   private static final StaticCompiler INSTANCE = new StaticCompiler();
   private boolean _enterGuard;
+  private Map<String, Boolean> _ifaceToProxies = new ConcurrentHashMap<>();
 
   private StaticCompiler()
   {
   }
 
-  static StaticCompiler instance()
+  public static StaticCompiler instance()
   {
     return INSTANCE;
   }
@@ -75,6 +88,9 @@ class StaticCompiler
     _enterGuard = true;
     try
     {
+      //todo: make this call in a more focused place
+      createIProxyFactoryServicesForExtensions();
+
       List<String> others = JavacPlugin.instance().getOtherInputFiles();
       if( others.isEmpty() )
       {
@@ -181,6 +197,61 @@ class StaticCompiler
     finally
     {
       _enterGuard = false;
+    }
+  }
+
+  private void createIProxyFactoryServicesForExtensions()
+  {
+    if( _ifaceToProxies.isEmpty() )
+    {
+      return;
+    }
+
+    String filename = "META-INF/services/manifold.ext.rt.api.IProxyFactory_gen";
+    try
+    {
+      JavacProcessingEnvironment processingEnv = JavacProcessingEnvironment.instance( JavacPlugin.instance().getContext() );
+      FileObject file = processingEnv.getFiler().createResource( StandardLocation.CLASS_OUTPUT, "", filename );
+      PrintWriter writer = new PrintWriter( new OutputStreamWriter( file.openOutputStream(), StandardCharsets.UTF_8 ) );
+      for( String proxyFactory : _ifaceToProxies.keySet() )
+      {
+        writer.println( proxyFactory );
+      }
+      writer.close();
+      _ifaceToProxies.clear();
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  public void addIProxyFactory( String iface, String fqn )
+  {
+    _ifaceToProxies.put( fqn, false );
+  }
+
+  public void surfaceGeneratedProxyFactoryClasses( Context context, CompilationUnitTree compilationUnit )
+  {
+    // This call surfaces the type in the compiler.  If compiling in "static" mode, this means
+    // the type will be compiled to disk.
+    for( Map.Entry<String, Boolean> proxy : new HashMap<>( _ifaceToProxies ).entrySet() )
+    {
+      if( proxy.getValue() )
+      {
+        continue;
+      }
+
+      Tree tree = compilationUnit.getTypeDecls().get( 0 );
+      String proxyName = proxy.getKey();
+      if( proxyName.contains( ((JCTree.JCClassDecl)tree).getSimpleName().toString() ) )
+      {
+        Symbol.ClassSymbol sym = IDynamicJdk.instance().getTypeElement( context, compilationUnit, proxyName );
+        if( sym != null )
+        {
+          _ifaceToProxies.put( proxyName, true );
+        }
+      }
     }
   }
 

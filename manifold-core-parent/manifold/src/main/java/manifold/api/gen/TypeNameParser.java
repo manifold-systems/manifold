@@ -43,6 +43,24 @@ public class TypeNameParser
     return parseType();
   }
 
+  public List<Type> parseCommaSeparated()
+  {
+    nextToken();
+    Type param = parseType();
+    if( param == null )
+    {
+      return Collections.emptyList();
+    }
+
+    List<Type> types = new ArrayList<>();
+    types.add( param );
+    while( match( ',' ) )
+    {
+      types.add( parseType() );
+    }
+    return types;
+  }
+
   private Type parseType()
   {
     Type type;
@@ -219,6 +237,11 @@ public class TypeNameParser
       _superOrExtends = superOrExtends;
       _bound = bound;
       _params = Collections.emptyList();
+    }
+
+    public String getPlainName()
+    {
+      return _fqn;
     }
 
     void addParam( Type param )

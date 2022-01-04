@@ -181,7 +181,8 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
            !isIntellijPluginTemporaryFile( kind, fo ) &&
            (kind != JavaFileObject.Kind.CLASS ||
             !(fo instanceof GeneratedJavaStubFileObject) ||
-            (JavacPlugin.instance().isStaticCompile() && ((GeneratedJavaStubFileObject)fo).isPrimary()));
+            (JavacPlugin.instance().isStaticCompile() &&
+              (((GeneratedJavaStubFileObject)fo).isPrimary() || fo.getName().contains( "generatedproxy_" ))));
   }
 
   // ManChangedResourceBuilder from IJ plugin
@@ -304,6 +305,11 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       // true if type is not exclusively an extended type
       //noinspection unchecked
       Set<ITypeManifold> typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn, tm -> tm.getContributorKind() == Primary );
+      if( typeManifoldsFor.isEmpty() && fqn.contains( ".generatedproxy_" ) )
+      {
+        // handle auto-generated proxies for structural interface impl by extension class
+        typeManifoldsFor = getHost().getSingleModule().findTypeManifoldsFor( fqn, tm -> tm.getContributorKind() == Supplemental );
+      }
       return !typeManifoldsFor.isEmpty();
     }
 

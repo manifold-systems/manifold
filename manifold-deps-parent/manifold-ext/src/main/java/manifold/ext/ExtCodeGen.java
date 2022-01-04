@@ -17,39 +17,43 @@
 package manifold.ext;
 
 import com.sun.source.tree.CompilationUnitTree;
-import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.cache.PathCache;
 import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
+import manifold.api.util.JavacDiagnostic;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.internal.javac.ClassSymbols;
-import manifold.api.util.JavacDiagnostic;
+import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
+import manifold.rt.api.util.Pair;
+
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static manifold.ext.ExtensionManifold.EXTENSIONS_PACKAGE;
 
 /**
  */
 class ExtCodeGen
 {
+  public static final String GENERATEDPROXY_ = "generatedproxy_";
+  public static final String OF_ = "_Of_";
+  public static final String TO_ = "_To_";
+
   private JavaFileManager.Location _location;
   private final Model _model;
   private final String _fqn;
@@ -72,6 +76,12 @@ class ExtCodeGen
 
   String make( JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
+    if( isProxyFactory() )
+    {
+      // auto-generate a proxy factory for interfaces the extension class implements
+      return generateProxyFactory();
+    }
+
     SrcClass srcExtended;
     if( !_existingSource.isEmpty() )
     {
@@ -83,6 +93,82 @@ class ExtCodeGen
       srcExtended.setBinary( true );
     }
     return addExtensions( srcExtended, errorHandler );
+  }
+
+  private boolean isProxyFactory()
+  {
+    return _fqn.contains( GENERATEDPROXY_ ) && _fqn.contains( OF_ ) && _fqn.contains( TO_ );
+  }
+
+  private String generateProxyFactory()
+  {
+    int genIndex = _fqn.indexOf( GENERATEDPROXY_ );
+    String pkg = _fqn.substring( 0, genIndex-1 );
+    String name = _fqn.substring( genIndex );
+    genIndex += GENERATEDPROXY_.length();
+    int ofIndex = _fqn.indexOf( OF_, genIndex );
+    String baseExtensionName = _fqn.substring( genIndex, ofIndex );
+    String extensionFqn = pkg + '.' + baseExtensionName;
+
+    Symbol.ClassSymbol extensionSym = getExtensionSym( extensionFqn );
+
+    Type ifaceType = getInterfaceType( ofIndex, extensionSym );
+
+    Symbol.ClassSymbol extendedSym = getExtendedSym( pkg );
+
+    Pair<String, String> fqnToCode = StaticStructuralTypeProxyGenerator.makeProxy( name, ifaceType, extendedSym, pkg, getModule() );
+    return fqnToCode.getSecond();
+  }
+
+  private Symbol.ClassSymbol getExtendedSym( String pkg )
+  {
+    int extentionsIndex = pkg.indexOf( EXTENSIONS_PACKAGE + '.' );
+    if( extentionsIndex < 0 )
+    {
+      throw new IllegalStateException( "'extensions' package missing from extension auto proxy name" );
+    }
+    String extendedType = pkg.substring( extentionsIndex + EXTENSIONS_PACKAGE.length() + 1 );
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair2 = ClassSymbols.instance( getModule() )
+      .getClassSymbol( JavacPlugin.instance().getJavacTask(), extendedType );
+    if( pair2 == null || pair2.getFirst() == null )
+    {
+      throw new IllegalStateException( "Failed to load extended type ClassSymbol for proxy: " + _fqn );
+    }
+    Symbol.ClassSymbol extendedSym = pair2.getFirst();
+    return extendedSym;
+  }
+
+  private Type getInterfaceType( int ofIndex, Symbol.ClassSymbol extensionSym )
+  {
+    int toIndex = _fqn.indexOf( TO_, ofIndex );
+    String baseIfaceName = _fqn.substring( toIndex + TO_.length() );
+
+    Type ifaceType = null;
+    for( Type csr: extensionSym.getInterfaces() )
+    {
+      if( csr.tsym.getSimpleName().toString().equals( baseIfaceName ) )
+      {
+        ifaceType = csr;
+        break;
+      }
+    }
+    if( ifaceType == null )
+    {
+      throw new IllegalStateException( "Failed to load implemented interface ClassSymbol for proxy: " + _fqn );
+    }
+    return ifaceType;
+  }
+
+  private Symbol.ClassSymbol getExtensionSym( String extensionFqn )
+  {
+    Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> pair = ClassSymbols.instance( getModule() )
+      .getClassSymbol( JavacPlugin.instance().getJavacTask(), extensionFqn );
+    if( pair == null || pair.getFirst() == null )
+    {
+      throw new IllegalStateException( "Failed to get extension class symbol: " + extensionFqn );
+    }
+    Symbol.ClassSymbol extensionSym = pair.getFirst();
+    return extensionSym;
   }
 
   private SrcClass makeStubFromSource()

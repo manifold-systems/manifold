@@ -12,4 +12,8 @@ public abstract class BigDecimalExt implements SqlNumber
   public static BigDecimal getNumber(@This BigDecimal thiz) {
     return thiz;
   }
+
+  public static double something(@This BigDecimal thiz, double dp, int d) {
+    return thiz.add( new BigDecimal( d + dp ) ).doubleValue();
+  }
 }

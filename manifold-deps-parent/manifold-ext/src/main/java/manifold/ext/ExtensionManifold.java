@@ -19,18 +19,15 @@ package manifold.ext;
 import com.sun.tools.javac.tree.TreeTranslator;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.gen.TypeNameParser;
 import manifold.api.host.IModule;
 import manifold.api.host.RefreshRequest;
 import manifold.api.type.ContributorKind;
@@ -40,12 +37,17 @@ import manifold.api.type.JavaTypeManifold;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.rt.api.Extension;
 import manifold.internal.javac.IssueReporter;
+import manifold.internal.javac.StaticCompiler;
 import manifold.internal.javac.TypeProcessor;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static manifold.ext.ExtCodeGen.GENERATEDPROXY_;
+import static manifold.ext.ExtCodeGen.OF_;
+import static manifold.ext.ExtCodeGen.TO_;
 
 /**
  */
@@ -145,6 +147,89 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
       }
     }
     return false;
+  }
+
+  @Override
+  protected Set<String> getAdditionalTypes( String fqnForFile, IFile file )
+  {
+    // Generate proxies for interfaces the extension class declares it implements
+
+    Set<String> ifaces = getImplementedInterfaces( file );
+    Set<String> proxyFactoryTypes = new HashSet<>();
+    for( String iface: ifaces )
+    {
+      String proxyFqn = makeProxyFactoryTypeName( file, fqnForFile, iface );
+      StaticCompiler.instance().addIProxyFactory( iface, proxyFqn );
+      proxyFactoryTypes.add( proxyFqn );
+    }
+    return proxyFactoryTypes;
+  }
+
+  private String makeProxyFactoryTypeName( IFile file, String extendedType, String iface )
+  {
+    // we put the proxy in the same package as the extension class from which
+    // we deduce the proxy with the following naming scheme:
+    //
+    //   <extension-packag>.generatedproxy_<extension-name>_Of_<extended-name>_To_<interface-name>
+    //
+
+    String proxyPackage = getExtensionPackage( file );
+    String extensionName = file.getBaseName();
+    String extendedName = extendedType.substring( extendedType.lastIndexOf( '.' ) + 1 );
+    String interfaceName = iface.replace( '.', '_' );
+    String proxyName = GENERATEDPROXY_ + extensionName + OF_ + extendedName + TO_ + interfaceName;
+    return proxyPackage + '.' + proxyName;
+  }
+
+  private String getExtensionPackage( IFile file )
+  {
+    Set<String> fqnForFile = getModule().getPathCache().getFqnForFile( file );
+    for( String fqn: fqnForFile )
+    {
+      return ManClassUtil.getPackage( fqn );
+    }
+    return null;
+  }
+
+  private Set<String> getImplementedInterfaces( IFile file )
+  {
+    if( !file.getExtension().equalsIgnoreCase( "java" ) )
+    {
+      return Collections.emptySet();
+    }
+
+    try
+    {
+      //## note: this is pretty sloppy science here, but we don't want to parse
+      // java or use asm here i.e., this has to be *fast*.
+
+      if( file.getExtension().equalsIgnoreCase( "java" ) )
+      {
+        String extensionName = file.getBaseName();
+        String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
+        String extMarker = "class " + extensionName + " ";
+        int extIndex = content.indexOf( extMarker );
+        if( extIndex > 0 )
+        {
+          int braceIndex = content.indexOf( '{', extIndex + extMarker.length() );
+          String header = content.substring( extIndex + extMarker.length(), braceIndex );
+          int implementsIndex = header.indexOf( "implements " );
+          if( implementsIndex >= 0 )
+          {
+            String implementsClause = header.substring( implementsIndex + "implements ".length() );
+            implementsClause = implementsClause.trim();
+            // file should be in extension class package, don't need to know the fqn of the iface
+            List<TypeNameParser.Type> types = new TypeNameParser( implementsClause ).parseCommaSeparated();
+            return types.stream().map( e -> e.getPlainName() ).collect( Collectors.toSet() );
+          }
+        }
+      }
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+    return Collections.emptySet();
   }
 
   @Override

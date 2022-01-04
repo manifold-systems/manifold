@@ -1,0 +1,300 @@
+/*
+ * Copyright (c) 2022 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package manifold.util;
+
+import jdk.internal.loader.BootLoader;
+import jdk.internal.loader.ClassLoaders;
+import manifold.util.ReflectUtil;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.*;
+
+// This class exists to work around the JPMS way of declaring service providers in the module-info.java class.
+// We need this for the generated proxy factory classes: if an extension class implements a structural interface, we
+// generate an IProxyFactory_gen class, which is a service implementation, along side the extension class. We also
+// generate a META-INF/services/...IProxyFactory_gen file listing the generated proxies. Hence, the need for the JPMS
+// work around.
+//
+// Essentially, the work around is to replace the ServiceLoader's iterator with our own that reads from
+// META-INF/services, for a consistent and straightforward way of supporting generated service impls. Otherwise,
+// there is no way to generate a service impl that I am aware of.
+//
+// ServiceLoader loader = ServiceLoader.load(cls);
+// loader.lookupIterator1 = <instance of this class>;
+//
+public class LazyClassPathLookupIterator<T> implements Iterator<ServiceLoader.Provider<T>>
+{
+  static final String PREFIX = "META-INF/services/";
+
+  Set<String> providerNames = new HashSet<>();  // to avoid duplicates
+  Enumeration<URL> configs;
+  Iterator<String> pending;
+
+  ServiceLoader.Provider<T> nextProvider;
+  ServiceConfigurationError nextError;
+
+  Class<?> service;
+  ClassLoader loader;
+  
+  LazyClassPathLookupIterator(Class<?> service, ClassLoader loader) {
+    this.service = service;
+    this.loader = loader;
+  }
+
+  /**
+   * Parse a single line from the given configuration file, adding the
+   * name on the line to set of names if not already seen.
+   */
+  private int parseLine( URL u, BufferedReader r, int lc, Set<String> names)
+    throws IOException
+  {
+    String ln = r.readLine();
+    if (ln == null) {
+      return -1;
+    }
+    int ci = ln.indexOf('#');
+    if (ci >= 0) ln = ln.substring(0, ci);
+    ln = ln.trim();
+    int n = ln.length();
+    if (n != 0) {
+      if ((ln.indexOf(' ') >= 0) || (ln.indexOf('\t') >= 0))
+        fail(service, u, lc, "Illegal configuration-file syntax");
+      int cp = ln.codePointAt(0);
+      if (!Character.isJavaIdentifierStart(cp))
+        fail(service, u, lc, "Illegal provider-class name: " + ln);
+      int start = Character.charCount(cp);
+      for (int i = start; i < n; i += Character.charCount(cp)) {
+        cp = ln.codePointAt(i);
+        if (!Character.isJavaIdentifierPart(cp) && (cp != '.'))
+          fail(service, u, lc, "Illegal provider-class name: " + ln);
+      }
+      if (providerNames.add(ln)) {
+        names.add(ln);
+      }
+    }
+    return lc + 1;
+  }
+
+  private static void fail(Class<?> service, String msg, Throwable cause)
+    throws ServiceConfigurationError
+  {
+    throw new ServiceConfigurationError(service.getName() + ": " + msg,
+      cause);
+  }
+
+  private static void fail(Class<?> service, String msg)
+    throws ServiceConfigurationError
+  {
+    throw new ServiceConfigurationError(service.getName() + ": " + msg);
+  }
+
+  private static void fail(Class<?> service, URL u, int line, String msg)
+    throws ServiceConfigurationError
+  {
+    fail(service, u + ":" + line + ": " + msg);
+  }
+
+
+  /**
+   * Parse the content of the given URL as a provider-configuration file.
+   */
+  private Iterator<String> parse(URL u) {
+    Set<String> names = new LinkedHashSet<>(); // preserve insertion order
+    try {
+      URLConnection uc = u.openConnection();
+      uc.setUseCaches(false);
+      try ( InputStream in = uc.getInputStream();
+            BufferedReader r
+              = new BufferedReader(new InputStreamReader(in, "utf-8")))
+      {
+        int lc = 1;
+        while ((lc = parseLine(u, r, lc, names)) >= 0);
+      }
+    } catch (IOException x) {
+      fail(service, "Error accessing configuration file", x);
+    }
+    return names.iterator();
+  }
+
+  /**
+   * Loads and returns the next provider class.
+   */
+  private Class<?> nextProviderClass() {
+    if (configs == null) {
+      try {
+        String fullName = PREFIX + service.getName();
+        if (loader == null) {
+          configs = ClassLoader.getSystemResources(fullName);
+        } else if (loader == ClassLoaders.platformClassLoader()) {
+          // The platform classloader doesn't have a class path,
+          // but the boot loader might.
+          if ( BootLoader.hasClassPath()) {
+            configs = BootLoader.findResources(fullName);
+          } else {
+            configs = Collections.emptyEnumeration();
+          }
+        } else {
+          configs = loader.getResources(fullName);
+        }
+      } catch (IOException x) {
+        fail(service, "Error locating configuration files", x);
+      }
+    }
+    while ((pending == null) || !pending.hasNext()) {
+      if (!configs.hasMoreElements()) {
+        return null;
+      }
+      pending = parse(configs.nextElement());
+    }
+    String cn = pending.next();
+    try {
+      return Class.forName(cn, false, loader);
+    } catch (ClassNotFoundException x) {
+      fail(service, "Provider " + cn + " not found");
+      return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private boolean hasNextService() {
+    while (nextProvider == null && nextError == null) {
+      try {
+        Class<?> clazz = nextProviderClass();
+        if (clazz == null)
+          return false;
+
+//## this is the reason we are implementing our own LazyServiceIterator        
+//        if (clazz.getModule().isNamed()) {
+//          // ignore class if in named module
+//          continue;
+//        }
+
+        if (service.isAssignableFrom(clazz)) {
+          Class<?> type = clazz;
+          Constructor<?> ctor = ReflectUtil.constructor( clazz ).getConstructor();
+          ServiceLoader.Provider p = new ProviderImpl(service, type, ctor);
+          nextProvider = p;
+        } else {
+          fail(service, clazz.getName() + " not a subtype");
+        }
+      } catch (ServiceConfigurationError e) {
+        nextError = e;
+      }
+    }
+    return true;
+  }
+
+  private ServiceLoader.Provider<T> nextService() {
+    if (!hasNextService())
+      throw new NoSuchElementException();
+
+    ServiceLoader.Provider<T> provider = nextProvider;
+    if (provider != null) {
+      nextProvider = null;
+      return provider;
+    } else {
+      ServiceConfigurationError e = nextError;
+      assert e != null;
+      nextError = null;
+      throw e;
+    }
+  }
+
+  @Override
+  public boolean hasNext() {
+      return hasNextService();
+  }
+
+  @Override
+  public ServiceLoader.Provider<T> next() {
+      return nextService();
+  }
+
+  private static class ProviderImpl<S> implements ServiceLoader.Provider<S>
+  {
+    final Class<S> service;
+    final Class<? extends S> type;
+    final Constructor<? extends S> ctor; // public no-args constructor or null
+
+    ProviderImpl(Class<S> service,
+                 Class<? extends S> type,
+                 Constructor<? extends S> ctor) {
+      this.service = service;
+      this.type = type;
+      this.ctor = ctor;
+    }
+
+    @Override
+    public Class<? extends S> type() {
+      return type;
+    }
+
+    @Override
+    public S get() {
+      return newInstance();
+    }
+
+    /**
+     * Invokes Constructor::newInstance to instantiate a provider. When running
+     * with a security manager then the constructor runs with permissions that
+     * are restricted by the security context of whatever created this loader.
+     */
+    private S newInstance() {
+      S p = null;
+      Throwable exc = null;
+        try {
+          p = ctor.newInstance();
+        } catch (Throwable x) {
+          exc = x;
+        }
+      if (exc != null) {
+        if (exc instanceof InvocationTargetException)
+          exc = exc.getCause();
+        String cn = ctor.getDeclaringClass().getName();
+        fail(service,
+          "Provider " + cn + " could not be instantiated", exc);
+      }
+      return p;
+    }
+
+    // For now, equals/hashCode uses the access control context to ensure
+    // that two Providers created with different contexts are not equal
+    // when running with a security manager.
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(service, type);
+    }
+
+    @Override
+    public boolean equals(Object ob) {
+      if (!(ob instanceof ProviderImpl))
+        return false;
+      @SuppressWarnings("unchecked")
+      ProviderImpl<?> that = (ProviderImpl<?>)ob;
+      return this.service == that.service
+        && this.type == that.type;
+    }
+  }
+}

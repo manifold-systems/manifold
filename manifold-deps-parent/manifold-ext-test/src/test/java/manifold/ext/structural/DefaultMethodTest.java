@@ -33,6 +33,9 @@ public class DefaultMethodTest extends TestCase
     SqlNumber sum = n1 + n2;
     assertEquals( new BigDecimal("3"), sum );
 
+    double result = n1.something( 4.5, 6 );
+    assertEquals(11.5, result);
+
     SqlNumber f = (SqlNumber)new FooNumber("9");
     sum = f.plus(n2);
     assertEquals( new BigDecimal("11"), sum );

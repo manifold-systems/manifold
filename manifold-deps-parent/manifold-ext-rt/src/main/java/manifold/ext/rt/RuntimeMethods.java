@@ -47,6 +47,12 @@ public class RuntimeMethods
       ServiceUtil.loadRegisteredServices( registered, IProxyFactory.class, RuntimeMethods.class.getClassLoader() );
       return registered;
     } );
+  private static final LocklessLazyVar<Set<IProxyFactory_gen>> _registeredProxyFactories_gen =
+    LocklessLazyVar.make( () -> {
+      Set<IProxyFactory_gen> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, IProxyFactory_gen.class, RuntimeMethods.class.getClassLoader() );
+      return registered;
+    } );
   private static final LocklessLazyVar<IDynamicProxyFactory> _dynamicProxyFactory =
     LocklessLazyVar.make( () -> {
       Set<IDynamicProxyFactory> registered = new HashSet<>();
@@ -465,7 +471,10 @@ public class RuntimeMethods
     return _registeredProxyFactories.get().stream()
       .filter( e -> !(e instanceof IDynamicProxyFactory) )
       .filter( e -> maybeMakeProxyFactory( rootClass, iface, e.getClass(), c -> e ) != null )
-      .findFirst().orElse( null );
+      .findFirst().orElse(
+        _registeredProxyFactories_gen.get().stream()
+          .filter( e -> maybeMakeProxyFactory( rootClass, iface, e.getClass(), c -> e ) != null )
+          .findFirst().orElse( null ) );
   }
 
   private static IProxyFactory maybeMakeProxyFactory( Class<?> rootClass, Class<?> ifaceClass, Class factoryClass,
