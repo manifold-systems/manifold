@@ -6,16 +6,19 @@ The `manifold-props` project is a compiler plugin to simplify declaring and usin
 the amount of code you would otherwise write and to improve your overall dev experience with properties. 
 ```java
 public interface Book {
-  @var String title; // no more boilerplate code!
+  @var String title; // no more boilerplate getter/setter methods!
 }
-// refer to it directly by name
+```
+Refer to it directly by name:
+```java
 book.title = "Daisy";     // calls setter
 String name = book.title; // calls getter 
 book.title += " chain";   // calls getter & setter
 ```
-
 Additionally, the feature automatically _**infers**_ properties, both from your existing source files and from
-compiled classes your project uses. Reduce property use from this:
+compiled classes your project uses.
+
+Reduce property *use* from this:
 ```java
 Actor person = result.getMovie().getLeadingRole().getActor();
 Likes likes = person.getLikes();
@@ -23,7 +26,8 @@ likes.setCount(likes.getCount() + 1);
 ```
 to this:
 ```java
-result.movie.leadingRole.actor.likes.count++;
+result.movie.leadingRole.actor
+  .likes.count++;
 ``` 
 
 See [Property inference](#property-inference).
@@ -69,8 +73,7 @@ To use a property, simply refer to it by name:
   String name = person.name;  // getter is called
   int age = person.age; 
 ```
-The compiler automatically creates a `private` backing field and accessor methods where necessary. Property access
-compiles as getter/setter calls:
+The compiler automatically creates a `private` backing field and getter/setter methods where necessary:
 ```java
 public class Person {
   private String name;
@@ -91,6 +94,7 @@ public class Person {
   }
 }
 ```
+Property access compiles as getter/setter calls:
 ```java
   Person person = new Person();
 
@@ -129,7 +133,7 @@ The full syntax for declaring a `@var` property:
                  
 Properties are always `public` by default.
 
-A property's modifiers always apply to its _accessor methods_.
+A property's modifiers always apply to its _getter/setter methods_.
 
 As this example illustrates, `protected`, `abstract`, and `final` all apply exclusively to the getter/setter methods:
 ```java 
@@ -150,7 +154,7 @@ public abstract class Account {
   protected abstract void setRate(int value);
 }
 ```
-`final` applies to the accessor methods too. Since the state for a `@val` is inherently final, a `final @val` declare a
+`final` applies to the getter/setter methods too. Since the state for a `@val` is inherently final, a `final @val` declare a
 final getter:
 ```java
 final @val Map<String, Object> bindings = new HashMap<>();
@@ -161,7 +165,7 @@ private final Map<String, Object> bindings = new HashMap<>();
 . . . 
 public final Map<String, Object> getBindings() {return bindigs;}
 ```
-`static` applies to both accessors and state.
+`static` applies to both getters/setters and state.
 ```java
 public class Tree {
   static @var @set(Private) int nodeCount;
@@ -183,11 +187,11 @@ Tree.setNodeCount(Tree.getNodeCount() + 1);
 
 # Computed properties
 
-A property that is not used in its accessor methods is considered a _computed_ property; it does not need the property
+A property that is not used in its getter/setter methods is considered a _computed_ property; it does not need the property
 field to maintain state, thus no "backing" field is provided.
 ```java
 public class Foo {
-  @var Stuff stuff; // "computed property", user-defined accessor methods
+  @var Stuff stuff; // "computed property", user-defined getter/setter
 
   public Stuff getStuff() {
     return lookupStuff(); // does not access `stuff`
@@ -226,8 +230,8 @@ public class Foo {
  
 # Backing fields
 
-Accessor methods have exclusive access to the private backing field for a property. If they don't use the backing field,
-the compiler does not generate one. References to a property outside the accessors are compiled as calls to an accessor.
+Getter/setter methods have exclusive access to the private backing field for a property. If they don't use the backing field,
+the compiler does not generate one. References to a property outside the getters/setters are compiled as calls to them.
 ```java
   @var String name;
   public void setName(String value) {
@@ -361,8 +365,9 @@ Properties are inferred from _both_ existing source classes in your project and 
 ### Works with code generators
 
 Property inference automatically works with code generated from annotation processors and Javac plugins. This is
-significant since generated code tends to reflect object models which result in a lot of getter/setter boilerplate. For
-instance, using property inference reduces this GraphQL excerpt:
+significant since generated code tends to reflect object models which result in a lot of getter/setter boilerplate.
+
+For instance, using property inference reduces this GraphQL excerpt:
 ```java
 Actor person = result.getMovie().getLeadingRole().getActor();
 Likes likes = person.getLikes();
@@ -370,7 +375,8 @@ likes.setCount(likes.getCount() + 1);
 ```
 to this:
 ```java
-result.movie.leadingRole.actor.likes.count++;
+result.movie.leadingRole.actor
+  .likes.count++;
 ``` 
 
 # Backward compatible
