@@ -419,20 +419,22 @@ Also it's worth pointing out you can make existing interfaces _structural_ using
 ```java
 package extensions.abc.Widget;
 @Extension
-@Structural // makes the interface structural
+@Structural // makes the Widget interface structural (within your project)
 public class MyWidgetExtension {
 }
 ```
-
 This extension effectively changes the `abc.Widget` _nominal_ interface to a _structural_ interface. In the context
-of your project classes no longer have to declare they implement it nominally.  
+of your project classes no longer have to declare they implement it nominally. This is particularly desirable when a class
+you cannot modify should implement a third-party interface in the context of your application. Making the interface
+structural avoids undesirable conventional strategies such as wrappers and proxies, which introduce readability issues
+and lose object identity in the process.
 
 See [Structural Interfaces](#structural-interfaces-via-structural) later in this guide for fuller coverage of the topic.
 
 ## Extension Interfaces
 
-An extension class can add structural interfaces to its extended class.  This feature helps with a 
-variety of use-cases.  For example, let's say we have a class `Foo` and interface `Hello`:
+An extension class can logically add structural interfaces to its extended class.  This feature helps with a variety of
+use-cases.
   
 ```java
 public final class Foo {
@@ -449,7 +451,7 @@ public interface Hello {
 
 Although `Foo` does not implement `Hello` nominally, it defines the `sayHello()` method that otherwise 
 satisfies the interface.  Let's assume we don't control `Foo`'s implementation, but we need it to
-implement `Hello` nominally.  We can do that with an extension interface:
+implement `Hello`.  We can do that with an extension interface:
 
 ```java
 @Extension
@@ -464,14 +466,12 @@ Hello hello = new Foo();
 hello.sayHello();
 ```
 Note `Hello` is structural, so even without the extension interface, instances of `Foo` are still 
-compatible with `Hello`. It's less convenient, though, because you have to explicitly cast `Foo` to `Hello` --
+compatible with `Hello`. It's less convenient, though, because you otherwise have to cast `Foo` to `Hello` --
 a purely structural relationship in Manifold requires a cast. Basically extension interfaces save you
-from casting. This not only
-improves readability, it also prevents confusion in cases involving type inference where it may not be 
-obvious that casting is necessary.
+from casting. This not only improves readability, it also prevents confusion in cases involving type inference where it
+may not be obvious that casting is necessary.
 
-It's worth pointing out you can both add an interface _and_ implement its methods
-by extension:
+It's worth pointing out you can both add an interface _and_ implement its methods by extension:
 ```java
 public final class Shy {
 }
@@ -483,15 +483,12 @@ public abstract class MyShyExtension implements Hello {
   }
 }
 ```
-This example extends `Shy` to nominally implement `Hello` _and_ provides the `Hello` implementation. Note
-the abstract modifier on the extension class.  This is necessary because it doesn't really implement the
-interface, the extended class does.
+This example extends `Shy` to nominally implement `Hello` _and_ provides the `Hello` implementation. Note the `abstract`
+modifier. This is necessary because the extension class can't really implement the interface with static methods, but
+the extensions result in the extended class logically implementing the interface.
 
-You can also use extension interfaces to extract interfaces from classes you don't
-control.  For example, if you want to provide an immutable view of a collection class
-such as `java.util.List`, you could use extension interfaces to extract immutable and
-mutable interfaces from the class.  As such your code is better suited to confine
-`List` operations on otherwise fully mutable lists.
+>You can also use extension interfaces to *extract* interfaces from classes you don't control to, say, expose a safer
+> API.
 
 
 ## Extension Libraries
@@ -568,7 +565,7 @@ to your project separately depending on its needs.
 ## Generating Extension Classes
 
 Sometimes the contents of an extension class reflect metadata from other resources.  In this case rather 
-than painstakingly writing such classes by hand it's easier and less error prone to produce them via 
+than painstakingly writing such classes by hand it's easier and less error-prone to produce them via 
 type manifold.  To facilitate this use-case, your type manifold must implement the `IExtensionClassProducer`
 interface so that the `ExtensionManifold` can discover information about the classes your type
 manifold produces. For the typical use case your type manifold should extend `AbstractExtensionProducer`.
@@ -1262,26 +1259,22 @@ What if an extension class supplied the methods?
   
 ```java
 @Extension
-public class MyVectorExtension {
-  public double getX(@This Vector thiz) {
+public abstract class MyVectorExtension implements Coordinate {
+  public static double getX(@This Vector thiz) {
     return thiz.getMagnitude() * Math.cos(thiz.getDirection()); 
   }
-  public double getY(@This Vector thiz) {
+  public static double getY(@This Vector thiz) {
     return thiz.getMagnitude() * Math.sin(thiz.getDirection()); 
   }
 }
 ```
 
 `Vector` now structurally implements `Coordinate` and can be used with `coordSorter`.
->Important!
-> Manifold's default execution mode is `static`. In this mode it is necessary to implement the `IProxyFactory` service
-> to delegate to your structurally implemented extension methods.  See [Implementation By Proxy](#implementation-by-proxy)
-> next.
 
 Generally _implementation by extension_ is a powerful technique to provide a common API for classes your 
 project does not control.
 
-Nevertheless if you'd rather not add extension methods to `Vector`, or the extension class strategy is unsuitable for
+>Note, if you'd rather not add extension methods to `Vector`, or the extension class strategy is unsuitable for
 your use-case e.g., the `Comparable<T>` interface sometimes makes this impossible, you can instead go a more direct
 route and implement your own proxy factory...
 
@@ -1290,39 +1283,40 @@ route and implement your own proxy factory...
 You can provide your own proxy implementations the compiler can use to delegate structural calls. Consider the 
 `Coordinate` structural interface earlier.
 ```java
-Coordinate coord = (Coordinate) new Point(4,5);
-coord.getX();
+Coordinate coord = (Coordinate) new Vector(4,5);
+double x = coord.getX();
+double y = coord.getY();
 ```
-You can provide your own proxy implementation ahead of time via the `IProxyFactory` service.
+If you don't want to implement an extension class, say because you don't want to add methods to Vector, you can provide
+your own proxy implementation ahead of time via the `IProxyFactory` service.
 ```java
-public class Point_To_Coordinate implements IProxyFactory<Point, Coordinate> {
+public class Vector_To_Coordinate implements IProxyFactory<Vector, Coordinate> {
   @Override
-  public Coordinate proxy(Point pt, Class<Coordinate> cls) {
-    return new Proxy(pt);
+  public Coordinate proxy(Vector v, Class<Coordinate> cls) {
+    return new Proxy(v);
   }
 
   public static class Proxy implements Coordinate
   {
-    private final Point _delegate;
+    private final Vector _delegate;
 
-    public Proxy(Point pt) {
-      _delegate = tp;
+    public Proxy(Vector v) {
+      _delegate = v;
     }
 
+    @Override
     public double getX() {
-      return _delegate.getX();
+      return _delegate.getMagnitude() * Math.cos(_delegate.getDirection());
     }
-
+    
+    @Override
     public double getY() {
-      return _delegate.getY();
+      return _delegate.getMagnitude() * Math.sin(_delegate.getDirection());
     }
   }
 }
 ```
-The compiler uses this proxy factory to make `Point` calls through `Coordinate`.
- 
->Important!
->You must implement a proxy if you provide extension methods for a structural interface.
+The compiler discovers and uses this proxy factory to make `Vector` calls through `Coordinate`.
 
 Your proxy factory must be registered as a service in `META-INF` directly like so:
 ```
@@ -1338,7 +1332,7 @@ you create a text file called `manifold.ext.rt.api.IProxyFactory` in the `servic
 The file should contain the fully qualified name of your proxy factory class (the one that implements `IProxyFactory`) followed
 by a new blank line:
 ```
-com.abc.Point_To_Coordinate
+com.abc.Vector_To_Coordinate
 
 ```
 
@@ -1347,15 +1341,15 @@ If you are the declarer of the structural interface, you can skip the Java servi
 directly in the `@Structural` call site:
 
 ```java
-@Structural(factoryClass = Point_To_Coordinate.class)
+@Structural(factoryClass = Vector_To_Coordinate.class)
 public interface Coordinate {
   ...
 }
 ```
 
 Manifold inspects the `facotryClass` to see whether it is appropriate for a given proxy.  For instance, from
-the super class declaration `IProxyFactory<Point, Coordinate>` Manifold determines `Point_To_Coordinate` is exclusively
-a proxy factory for `Point`, other classes go through the default dynamic proxy generation/compilation.  
+the super class declaration `IProxyFactory<Vector, Coordinate>` Manifold determines `Vector_To_Coordinate` is exclusively
+a proxy factory for `Vector`, other classes go through the default dynamic proxy generation/compilation.  
  
  
 ## Dynamic Typing with `ICallHandler`
