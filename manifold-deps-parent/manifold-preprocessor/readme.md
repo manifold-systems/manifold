@@ -140,13 +140,15 @@ Expressions can also test for equality with `==` and `!=`. Two expressions are e
 2. They are both defined *and* their *string values* are the same
 
 The string value of a symbol defined with `#define` is the empty string `""`. Symbols defined with `build.properties`
-files or `-Akey[=value]` command line arguments may have values assigned to them explicitly.
+files, `-Akey[=value]` command line arguments, and SymbolProvider implementations such as Android build variant symbols
+may have String values.
 
 >Note it is impossible for a symbol to have a `null` value. When referenced in an equality expression, if a symbol
 is not assigned a value, its value is the empty string `""`.
 
 Additionally, you can compare numeric symbol values using relational expressions with `>`, `>=`, `<`, `<=`. If either of
-the operands is not a number value, a compile-time error results indicating the value is not allowed in the expression.
+the operands is not coercible to a number value, a compile-time error results indicating the value is not allowed in the
+expression.
  
 ### `#elif`
 
@@ -260,7 +262,7 @@ be defined:
 
 Symbol scoping rules model a hierarchy of maps, where symbols are accessed in leaf-first order where the leaf
 symbols are controlled by the `#define` and `#undef` directives in the compiling source file.  Parent symbols
-correspond with 2 - 4 above.
+correspond with 2 - 5 above.
 
 Note the effects of `#define` and `#undef` are limited to the file scope. This means `#define` symbols are not
 available to other files.  Similarly, parent symbols masked with `#undef` are unaffected in other files.
