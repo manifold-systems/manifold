@@ -23,7 +23,7 @@ separate build steps or additional file I/O, instead it directly contributes to 
 The preprocessor offers a simple and convenient way to support multiple build targets with a single codebase.  It
 provides advanced features such as tiered symbol definition via `build.properties` files, `-Akey[=value]` compiler
 arguments, and environment settings symbols such as `JAVA_9_OR_LATER` and `JPMS_NAMED`. Additionally, the preprocessor
-supports Android build variant symbols such as including `DEBUG`, `BUILD_TYPE`, and `FLAVOR`. The preprocessor is also
+supports Android build variant symbols including `DEBUG`, `BUILD_TYPE`, and `FLAVOR`. The preprocessor is also
 fully integrated into IntelliJ IDEA using the [Manifold](https://plugins.jetbrains.com/plugin/10057-manifold) plugin:  
 
 [![preprocessor](http://manifold.systems/images/preprocessor_slide_1_play.png)](http://manifold.systems/images/preprocessor.mp4)
