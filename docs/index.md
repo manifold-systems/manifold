@@ -3,7 +3,7 @@ layout: default
 ---
 
 ## What is Manifold?
-<p>Manifold is a Java compiler plugin. It supplements Java with:</p>
+Manifold is a Java compiler plugin. It supplements Java with:
 <ul>
   <li>Direct, <i>type-safe</i> access to:</li>
   <ul>
