@@ -3,8 +3,15 @@
 </center>
 
 ## What is Manifold?
-Manifold is a Java compiler plugin. Its features include:
-* [*Type-safe* Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
+Manifold is a Java compiler plugin. It supplements Java with:
+* _Direct_, _**Type-safe**_ access to:
+    * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+    * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+      [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
+      [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
+    * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
+    * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
+    * etc.
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) (_**New!**_)
 * [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
@@ -14,7 +21,7 @@ Manifold is a Java compiler plugin. Its features include:
 * ...and more
 
 All fully supported in **Java 8 - 17** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
-Simply add Manifold to your existing project and begin taking advantage of it.
+Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
 > _**New!**_  
 > * Finally, [_**Properties**_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) for Java

@@ -4,7 +4,7 @@ layout: default
 
 ## Table of Contents
 * [Overview](#overview)
-* [Type-safe Metaprogramming](#type-safe-metaprogramming-with-type-manifolds)
+* [Type-safe Metaprogramming (GraphQL, JSON, XML, etc.)](#type-safe-metaprogramming-with-type-manifolds)
 * [Java Extensions with the _Extension_ Manifold](#the-extension-manifold)
 * [Benefits](#benefits)
 * [IDE Support](#ide-support)
