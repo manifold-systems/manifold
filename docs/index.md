@@ -4,23 +4,21 @@ layout: default
 
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
-<ul>
-  <li>Direct, <i>type-safe</i> access to:</li>
-  <ul>
-    <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql">GraphQL</a> schemas, queries, etc.</li>
-    <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json">JSON & JSON Schema</a>, <a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml">YAML</a>, <a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml">XML</a>
-    <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv">CSV</a></li>
-    <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js">JavaScript</a></li>
-    <li>etc.</li>
-  </ul>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext">Extension Methods</a></li>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props">Properties</a></li>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading">Operator Overloading</a></li>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions">Unit Expressions</a></li>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates">A <em>Java</em> Template Engine</a></li>
-  <li><a href="https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor">A Preprocessor</a></li>
-  <li>...and more</li>
-</ul>
+* Direct, _type-safe_ access to:
+    * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+    * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+      [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
+      [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
+    * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
+    * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
+    * etc.
+* [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) (_**New!**_)
+* [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+* [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+* [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+* [A Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+* ...and more
 
 All fully supported in **Java 8 - 17** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
