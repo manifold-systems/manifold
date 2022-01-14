@@ -5,13 +5,13 @@ layout: default
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
 * _Direct_, _**Type-safe**_ access to:
-  * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
-  * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
-    [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
-    [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
-  * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
-  * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
-  * etc.
+    * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
+    * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+      [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
+      [XML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)
+    * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
+    * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
+    * etc.
 * [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) (_**New!**_)
 * [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
