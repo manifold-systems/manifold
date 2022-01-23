@@ -213,12 +213,12 @@ A template file *abc/example/UserSample.html.mtl*
 <%@ params(List<User> users) %>
 <html lang="en">
 <body>
-<% users.stream()
-   .filter(user -> user.getDateOfBirth() != null)
-   .forEach(user -> { %>
+<% for(User user: users) { %> 
+  <% if(user.getDateOfBirth() != null) { %>
     User: ${user.getName()} <br>
     DOB: ${user.getDateOfBirth()} <br>
-<% }); %>
+  <% } %>
+<% } %>
 </body>
 </html>
 ```
