@@ -40,7 +40,7 @@ Sells itself.
 Perhaps the most offensive checked exception use-cases involve lambdas:
 ```java
 List<String> strings = ...;
-List<URL> urls = list
+List<URL> urls = strings.stream().
   .map(URL::new) // Unhandled exception error: MalformedURLException
   .collect(Collectors.toList());
 ```
@@ -48,7 +48,7 @@ The checked exception prevents concise lambda usage here.  With Manifold, howeve
 like:
 ```java
 List<String> strings = ...;
-List<URL> urls = list
+List<URL> urls = strings.stream().
   .map(URL::new) // Mmm, life is good
   .collect(Collectors.toList());
 ```
@@ -129,9 +129,7 @@ configurations {
 }
 
 dependencies {
-    // Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
-    //   -Xplugin:Manifold no-bootstrap
-    implementation 'systems.manifold:manifold-rt:2022.1.1'
+    compileOnly 'systems.manifold:manifold-rt:2022.1.1'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2022.1.1'
@@ -172,14 +170,14 @@ rootProject.name = 'MyProject'
         <!-- set latest manifold version here --> 
         <manifold.version>2022.1.1</manifold.version>
     </properties>
-    
+
     <dependencies>
-        <!-- Note, you can omit the manifold-rt dependency if you use the `no-bootstrap` plugin option:
-             -Xplugin:Manifold no-bootstrap -->
         <dependency>
+            <!-- Necessary only during compile-time to resolve generated source-level annotations -->
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-rt</artifactId>
             <version>${manifold.version}</version>
+            <scope>provided</scope> <!-- dependency is only applied during compile-time for manifold-exceptions -->
         </dependency>
     </dependencies>
 

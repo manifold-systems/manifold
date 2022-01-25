@@ -184,7 +184,7 @@ You now have an option to make checked exceptions behave like unchecked exceptio
 swallowing. No more *try*/*catch*/*wrap*/*rethrow* boilerplate!
 ```java
 List<String> strings = ...;
-List<URL> urls = list
+List<URL> urls = strings.stream().
   .map(URL::new) // No need to handle the MalformedURLException!
   .collect(Collectors.toList());
 ```

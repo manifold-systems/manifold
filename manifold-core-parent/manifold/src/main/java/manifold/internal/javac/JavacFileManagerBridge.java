@@ -140,7 +140,7 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
     return (Collection)getLocationAsPaths.invoke( location );
   }
 
-  public ReflectUtil.LiveMethodRef findStandardJavaFileManagerMethod( JavaFileManager fm, String name, Class... params )
+  public static ReflectUtil.LiveMethodRef findStandardJavaFileManagerMethod( JavaFileManager fm, String name, Class... params )
   {
     ReflectUtil.LiveMethodRef getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
 

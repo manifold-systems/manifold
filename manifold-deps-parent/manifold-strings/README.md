@@ -169,6 +169,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor 'systems.manifold:manifold-strings:2022.1.1'
+    compileOnly 'systems.manifold:manifold-rt:2022.1.1'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -211,16 +212,15 @@ module MyProject {
     <properties>
         <!-- set latest manifold version here --> 
         <manifold.version>2022.1.1</manifold.version>
-    </properties> 
-            
+    </properties>
+
     <dependencies>
-        <!-- Note the manifold dependency is not necessary for manifold-strings, however it enables the feature when
-             using IntelliJ IDEA and/or Android Studio (see annotationProcessorPaths below) -->
         <dependency>
+            <!-- Necessary only during compile-time to resolve generated source-level annotations -->
             <groupId>systems.manifold</groupId>
-            <artifactId>manifold</artifactId>
+            <artifactId>manifold-rt</artifactId>
             <version>${manifold.version}</version>
-            <scope>provided</scope>
+            <scope>provided</scope> <!-- dependency is only applied during compile-time for manifold-strings -->
         </dependency>
     </dependencies>
   

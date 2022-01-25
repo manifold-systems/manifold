@@ -19,7 +19,7 @@ to your javadoc config:
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-javadoc-agent</artifactId>
     <scope>provided</scope>
-    <version>${manifold-version}</version>
+    <version>${manifold.version}</version>
   </dependency>
 </dependencies>
 
@@ -67,7 +67,7 @@ to your javadoc config:
               <additionalDependency>
                 <groupId>systems.manifold</groupId>
                 <artifactId>manifold-all</artifactId>
-                <version>${manifold-version}</version>
+                <version>${manifold.version}</version>
               </additionalDependency>
             </additionalDependencies>
               
