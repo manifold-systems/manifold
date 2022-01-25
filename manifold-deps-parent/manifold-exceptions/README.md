@@ -40,7 +40,7 @@ Sells itself.
 Perhaps the most offensive checked exception use-cases involve lambdas:
 ```java
 List<String> strings = ...;
-List<URL> urls = strings.stream().
+List<URL> urls = strings.stream()
   .map(URL::new) // Unhandled exception error: MalformedURLException
   .collect(Collectors.toList());
 ```
@@ -48,7 +48,7 @@ The checked exception prevents concise lambda usage here.  With Manifold, howeve
 like:
 ```java
 List<String> strings = ...;
-List<URL> urls = strings.stream().
+List<URL> urls = strings.stream()
   .map(URL::new) // Mmm, life is good
   .collect(Collectors.toList());
 ```
