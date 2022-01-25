@@ -193,10 +193,10 @@ configurations {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-js-rt:2022.1.1'
+    implementation 'systems.manifold:manifold-js-rt:2022.1.2'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-js:2022.1.1'
+    annotationProcessor 'systems.manifold:manifold-js:2022.1.2'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -232,7 +232,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.1</manifold.version>
+        <manifold.version>2022.1.2</manifold.version>
     </properties>
     
     <dependencies>
