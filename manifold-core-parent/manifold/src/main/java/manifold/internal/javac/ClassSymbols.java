@@ -137,10 +137,12 @@ public class ClassSymbols
       // actual Java 8 JRE classes, not the Java 11 ones. Otherwise, there is trouble if we bring in JRE 11 sources here,
       // which have Java 11 features that won't compile with source level 8.
       JavacPlugin javacPlugin = JavacPlugin.instance();
-      String release = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() ).get( "--release" );
-      if( release == null && JreUtil.isJava9orLater() ) // must be *building* with Java 9+
+      Options options = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() );
+      String release = options == null ? null : options.get( "--release" );
+      if( release == null && JreUtil.isJava9orLater() && options != null ) // must be *building* with Java 9+
       {
-        release = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() ).get( "-target" );
+        release = options.get( "-target" );
+        release = release == null ? options.get( "--target" ) : release;
       }
       if( "8".equals( release ) || "1.8".equals( release ) )
       {

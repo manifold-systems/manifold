@@ -17,11 +17,7 @@
 package manifold.api.gen;
 
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import javax.lang.model.element.ElementKind;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -35,26 +31,26 @@ import manifold.rt.api.util.ManClassUtil;
 
 public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatement<T>
 {
-  private String _package;
-  private String _originalSimpleName;
-  private List<String> _imports;
+  private final String _package;
+  private final String _originalSimpleName;
+  private final List<String> _imports;
   private final AbstractSrcClass.Kind _kind;
   private SrcType _superClass;
   private final AbstractSrcClass _enclosingClass;
-  private List<SrcType> _interfaces = new ArrayList<>();
-  private List<SrcField> _fields = new ArrayList<>();
-  private List<SrcField> _enumConsts = new ArrayList<>();
-  private List<SrcConstructor> _constructors = new ArrayList<>();
-  private List<AbstractSrcMethod> _methods = new ArrayList<>();
-  private List<SrcStatementBlock> _staticBlocks = new ArrayList<>();
-  private TreeMap<String, SrcGetProperty> _getProperties = new TreeMap<>();
-  private TreeMap<String, SrcSetProperty> _setProperties = new TreeMap<>();
-  private List<AbstractSrcClass> _innerClasses = new ArrayList<>();
-  private List<SrcType> _typeVars;
+  private final List<SrcType> _interfaces = new ArrayList<>();
+  private final List<SrcField> _fields = new ArrayList<>();
+  private final List<SrcField> _enumConsts = new ArrayList<>();
+  private final List<SrcConstructor> _constructors = new ArrayList<>();
+  private final List<AbstractSrcMethod> _methods = new ArrayList<>();
+  private final List<SrcStatementBlock> _staticBlocks = new ArrayList<>();
+  private final TreeMap<String, SrcGetProperty> _getProperties = new TreeMap<>();
+  private final TreeMap<String, SrcSetProperty> _setProperties = new TreeMap<>();
+  private final List<AbstractSrcClass> _innerClasses = new ArrayList<>();
+  private final List<SrcType> _typeVars;
 
-  private IModule _module;
-  private JavaFileManager.Location _location;
-  private DiagnosticListener<JavaFileObject> _errorHandler;
+  private final IModule _module;
+  private final JavaFileManager.Location _location;
+  private final DiagnosticListener<JavaFileObject> _errorHandler;
   private boolean _binary;
 
 
@@ -225,10 +221,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   public T imports( String... classes )
   {
-    for( String c : classes )
-    {
-      _imports.add( c );
-    }
+    _imports.addAll( Arrays.asList( classes ) );
     return (T)this;
   }
 
@@ -538,18 +531,21 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
     sb.append( "}\n\n" );
   }
 
-  private void renderRecordParams( StringBuilder sb )
+  private StringBuilder renderRecordParams( StringBuilder sb )
   {
-    if( _constructors.isEmpty() )
-    {
-      throw new IllegalStateException( "missing constructor for record class" );
-    }
-    if( _constructors.size() > 1 )
-    {
-      throw new IllegalStateException( "found " +  _constructors.size() + " record constructors, should be one" );
-    }
-    SrcConstructor ctor = _constructors.get( 0 );
+    AbstractSrcMethod ctor = findPrimaryConstructor();
     ctor.renderParameters( sb );
+    return sb;
+  }
+
+  public AbstractSrcMethod findPrimaryConstructor()
+  {
+    return _methods.stream()
+      .filter( c -> c.isPrimaryConstructor() )
+      .findFirst()
+      .orElse( _constructors.stream()
+        .filter( m -> m.isPrimaryConstructor() )
+        .findFirst().orElse( null ) );
   }
 
   private void renderClassFeatures( StringBuilder sb, int indent )
@@ -603,6 +599,12 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 //    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// fields //\n" );
     for( SrcField field : _fields )
     {
+      if( _kind == Kind.Record && !Modifier.isStatic( (int)field.getModifiers() ) )
+      {
+        // only static fields allowed in records
+        return;
+      }
+
       field.render( sb, indent );
     }
   }

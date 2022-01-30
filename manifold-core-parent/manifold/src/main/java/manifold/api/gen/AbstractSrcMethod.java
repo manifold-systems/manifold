@@ -31,6 +31,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
   private List<SrcType> _typeVars;
   private List<SrcType> _throwTypes;
   private boolean _isConstructor;
+  private boolean _isPrimaryConstructor;
 
   public AbstractSrcMethod( AbstractSrcClass srcClass )
   {
@@ -43,10 +44,19 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
   {
     return _isConstructor;
   }
-
   public void setConstructor( boolean isConstructor )
   {
     _isConstructor = isConstructor;
+  }
+
+  // for record classes only
+  public boolean isPrimaryConstructor()
+  {
+    return _isPrimaryConstructor;
+  }
+  public void setPrimaryConstructor( boolean primary )
+  {
+    _isPrimaryConstructor = primary;
   }
 
   public T returns( SrcType returns )

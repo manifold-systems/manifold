@@ -19,36 +19,23 @@ package manifold.internal.javac;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.tools.javac.api.BasicJavacTask;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.BoundKind;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.SymbolMetadata;
-import com.sun.tools.javac.code.TargetType;
-import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.TypeAnnotationPosition;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
-import java.util.Collections;
+import java.util.*;
 import java.util.stream.Collectors;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
-import manifold.api.gen.SrcAnnotated;
-import manifold.api.gen.SrcAnnotationExpression;
-import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcField;
-import manifold.api.gen.SrcMethod;
-import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawStatement;
-import manifold.api.gen.SrcStatementBlock;
-import manifold.api.gen.SrcType;
+
+import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.rt.api.util.ManEscapeUtil;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 
@@ -86,12 +73,12 @@ public class SrcClassUtil
     SrcClass srcClass;
     if( enclosing == null )
     {
-      srcClass = new SrcClass( fqn, SrcClass.Kind.from( classSymbol.getKind() ), location, module, errorHandler )
+      srcClass = new SrcClass( fqn, getKindFrom( classSymbol ), location, module, errorHandler )
         .modifiers( classSymbol.getModifiers() );
     }
     else
     {
-      srcClass = new SrcClass( fqn, enclosing, SrcClass.Kind.from( classSymbol.getKind() ) )
+      srcClass = new SrcClass( fqn, enclosing, getKindFrom( classSymbol ) )
         .modifiers( classSymbol.getModifiers() );
     }
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
@@ -156,6 +143,23 @@ public class SrcClassUtil
       addDefaultCtorForEnum( classSymbol, srcClass, members );
     }
     return srcClass;
+  }
+
+  /*
+   * Note, we have to check for the java.lang.Record super class because we get the ClassSymbol using Java 8,
+   * which does not have records
+   */
+  private AbstractSrcClass.Kind getKindFrom( Symbol.ClassSymbol classSymbol )
+  {
+    if( !classSymbol.isInterface() && JreUtil.isJava16orLater() )
+    {
+      Type superclass = classSymbol.getSuperclass();
+      if( superclass != null && superclass.toString().equals( "java.lang.Record" ) )
+      {
+        return AbstractSrcClass.Kind.Record;
+      }
+    }
+    return SrcClass.Kind.from( classSymbol.getKind() );
   }
 
   private void addDefaultCtorForEnum( Symbol.ClassSymbol classSymbol, SrcClass srcClass, java.util.List<Symbol> members )
@@ -318,11 +322,22 @@ public class SrcClassUtil
     {
       srcMethod.addTypeVar( makeTypeVarType( typeVar ) );
     }
+    java.util.List<Symbol.VarSymbol> recordFields = null;
+    Symbol.ClassSymbol owner = (Symbol.ClassSymbol)method.owner;
+    if( method.isConstructor() && getKindFrom( owner ) == AbstractSrcClass.Kind.Record )
+    {
+      Symbol.MethodSymbol primaryRecordCtor = findPrimaryRecordCtor( owner, javacTask );
+      if( primaryRecordCtor == method )
+      {
+        recordFields = getRecordFields( owner );
+      }
+    }
     List<Symbol.VarSymbol> parameters = method.getParameters();
     for( int i = 0; i < parameters.size(); i++ )
     {
       Symbol.VarSymbol param = parameters.get( i );
-      SrcParameter srcParam = new SrcParameter( param.flatName().toString(), makeSrcType( param.type, method, TargetType.METHOD_FORMAL_PARAMETER, i ) );
+      String paramName = recordFields == null ? param.flatName().toString() : recordFields.get( i ).flatName().toString();
+      SrcParameter srcParam = new SrcParameter( paramName, makeSrcType( param.type, method, TargetType.METHOD_FORMAL_PARAMETER, i ) );
       srcMethod.addParam( srcParam );
       addAnnotations( srcParam, param );
     }
@@ -339,7 +354,14 @@ public class SrcClassUtil
       // still complain about the missing super() call if the super class does not have
       // an accessible default ctor. To appease the compiler we generate a super(...)
       // call to the first accessible constructor we can find in the super class.
-      bodyStmt = genSuperCtorCall( module, srcClass, javacTask );
+      if( srcClass.isRecord() )
+      {
+        bodyStmt = genRecordCtorBody( srcMethod, method, javacTask );
+      }
+      else
+      {
+        bodyStmt = genSuperCtorCall( module, srcClass, javacTask );
+      }
     }
     else
     {
@@ -636,6 +658,85 @@ public class SrcClassUtil
     sb.append( ");" );
     bodyStmt = sb.toString();
     return bodyStmt;
+  }
+
+  private String genRecordCtorBody( SrcMethod srcMethod, Symbol.MethodSymbol method, BasicJavacTask javacTask )
+  {
+    Symbol.ClassSymbol owner = (Symbol.ClassSymbol)method.owner;
+    Symbol.MethodSymbol primaryRecordCtor = findPrimaryRecordCtor( (Symbol.ClassSymbol)method.owner, javacTask );
+    if( primaryRecordCtor == method )
+    {
+      srcMethod.setPrimaryConstructor( true );
+      return initializeRecordFields( owner );
+    }
+    return callPrimaryRecordCtor( owner, primaryRecordCtor );
+  }
+
+  private String callPrimaryRecordCtor( Symbol.ClassSymbol owner, Symbol.MethodSymbol primaryRecordCtor )
+  {
+    StringBuilder sb = new StringBuilder( "this(" );
+    List<Symbol.VarSymbol> parameters = primaryRecordCtor.getParameters();
+    for( int i = 0, parametersSize = parameters.size(); i < parametersSize; i++ )
+    {
+      Symbol.VarSymbol param = parameters.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      sb.append( getValueForType( param.type ) );
+    }
+    sb.append( ");\n" );
+    return sb.toString();
+  }
+
+  private Symbol.MethodSymbol findPrimaryRecordCtor( Symbol.ClassSymbol owner, BasicJavacTask javacTask )
+  {
+    java.util.List<Symbol.VarSymbol> fields = getRecordFields( owner );
+    for( Symbol meth : IDynamicJdk.instance().getMembers( owner, m -> m instanceof Symbol.MethodSymbol && m.isConstructor() ) )
+    {
+      Symbol.MethodSymbol method = (Symbol.MethodSymbol)meth;
+      List<Symbol.VarSymbol> params = method.getParameters();
+      if( params.size() == fields.size() )
+      {
+        boolean primaryCtor = true;
+        Types types = Types.instance( javacTask.getContext() );
+        for( int i = 0, paramsSize = params.size(); i < paramsSize; i++ )
+        {
+          Symbol.VarSymbol param = params.get( i );
+          if( !types.isSameType( param.type, fields.get( i ).type ) )
+          {
+            primaryCtor = false;
+            break;
+          }
+        }
+        if( primaryCtor )
+        {
+          return method;
+        }
+      }
+    }
+    return null;
+  }
+
+  private String initializeRecordFields( Symbol.ClassSymbol owner )
+  {
+    StringBuilder sb = new StringBuilder();
+    java.util.List<Symbol.VarSymbol> fields = getRecordFields( owner );
+    for( Symbol f: fields )
+    {
+      sb.append( "this." ).append( f.flatName() ).append( " = " ).append( getValueForType( f.type ) ).append( "; " );
+    }
+    sb.append( "\n" );
+    return sb.toString();
+  }
+
+  private java.util.List<Symbol.VarSymbol> getRecordFields( Symbol.ClassSymbol owner )
+  {
+    // fields in declared order
+    return owner.getEnclosedElements().stream()
+      .filter( e -> e instanceof Symbol.VarSymbol && !e.isStatic() )
+      .map( e -> (Symbol.VarSymbol)e )
+      .collect( Collectors.toList() );
   }
 
   private Symbol.MethodSymbol findConstructor( IModule module, String fqn, BasicJavacTask javacTask )

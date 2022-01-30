@@ -68,6 +68,11 @@ public class SrcField extends SrcAnnotated<SrcField>
     return this;
   }
 
+  public SrcType getType()
+  {
+    return _type;
+  }
+
   public SrcField initializer( SrcExpression expr )
   {
     _initializer = expr;

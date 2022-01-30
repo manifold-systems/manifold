@@ -142,31 +142,31 @@ public class JavacFileManagerBridge<M extends JavaFileManager> extends JavacFile
 
   public static ReflectUtil.LiveMethodRef findStandardJavaFileManagerMethod( JavaFileManager fm, String name, Class... params )
   {
-    ReflectUtil.LiveMethodRef getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+    ReflectUtil.LiveMethodRef methodRef = ReflectUtil.WithNull.method( fm, name, params );
 
     // Some build systems (Gradle 6.x) may use ClientCodeWrapper variant, WrappedJavaFileManager, as opposed to the
     // expected WrappedStandardJavaFileManager, thus we must find the wrapped StandardJavaFileManager and delegate the
     // call.
 
-    while( getLocationAsPaths == null && fm.getClass().getTypeName().equals( "com.sun.tools.javac.main.DelegatingJavaFileManager" ) )
+    while( methodRef == null && fm.getClass().getTypeName().equals( "com.sun.tools.javac.main.DelegatingJavaFileManager" ) )
     {
       fm = (JavaFileManager)ReflectUtil.field( fm, "baseFM" ).get();
-      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+      methodRef = ReflectUtil.WithNull.method( fm, name, params );
     }
 
-    while( getLocationAsPaths == null && fm.getClass().getEnclosingClass() == ClientCodeWrapper.class )
+    while( methodRef == null && fm.getClass().getEnclosingClass() == ClientCodeWrapper.class )
     {
       fm = (JavaFileManager)ReflectUtil.field( fm, "clientJavaFileManager" ).get();
-      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+      methodRef = ReflectUtil.WithNull.method( fm, name, params );
     }
 
-    while( getLocationAsPaths == null && fm instanceof ForwardingJavaFileManager )
+    while( methodRef == null && fm instanceof ForwardingJavaFileManager )
     {
       fm = (JavaFileManager)ReflectUtil.field( fm, "fileManager" ).get();
-      getLocationAsPaths = ReflectUtil.WithNull.method( fm, name, params );
+      methodRef = ReflectUtil.WithNull.method( fm, name, params );
     }
 
-    return getLocationAsPaths;
+    return methodRef;
   }
 
   public int isSupportedOption( String option )

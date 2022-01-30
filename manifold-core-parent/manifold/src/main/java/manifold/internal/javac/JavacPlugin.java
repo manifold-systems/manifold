@@ -76,7 +76,6 @@ import manifold.api.type.ICompilerComponent;
 import manifold.api.type.ITypeManifold;
 import manifold.api.util.JavacUtil;
 import manifold.internal.host.JavacManifoldHost;
-import manifold.internal.runtime.Bootstrap;
 import manifold.api.util.IssueMsg;
 import manifold.api.util.JavacDiagnostic;
 import manifold.util.JreUtil;
