@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>2022.1.3-SNAPSHOT</version>
+    <version>2022.1.3</version>
   </parent>
 
   <artifactId>manifold-deps-parent</artifactId>
@@ -82,7 +82,7 @@
       <artifactId>manifold-javadoc-agent</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-      <version>2022.1.3-SNAPSHOT</version>
+      <version>2022.1.3</version>
     </dependency>
   </dependencies>
 
