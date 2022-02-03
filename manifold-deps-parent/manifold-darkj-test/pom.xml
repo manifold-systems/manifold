@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2022.1.3-SNAPSHOT</version>
+    <version>2022.1.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-darkj-test</artifactId>
