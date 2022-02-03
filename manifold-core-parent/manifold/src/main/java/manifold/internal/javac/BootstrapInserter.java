@@ -22,18 +22,11 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
-
-import java.io.File;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 import manifold.rt.api.NoBootstrap;
 import manifold.rt.api.IBootstrap;
-import manifold.util.JreUtil;
-import manifold.util.ReflectUtil;
-
-import javax.tools.JavaFileManager;
-import javax.tools.StandardLocation;
 
 
 /**
@@ -92,48 +85,13 @@ class BootstrapInserter extends TreeTranslator
   {
     try
     {
-      // check --class-path and --module-path, but not -processorpath nor --processor-module-path because we don't
-      // want to include the bootstrap for a project that only depends on, say, manifold-exceptions where no manifold
-      // runtime is needed because there is no code gen for that dependency.
-      return isManifoldExtRtInPath( StandardLocation.CLASS_PATH ) ||
-        JreUtil.isJava9orLater() &&
-          isManifoldExtRtInPath( (StandardLocation)ReflectUtil.field( StandardLocation.class, "MODULE_PATH" ).getStatic() );
-    }
-    catch( Throwable t )
-    {
-      // fail quietly, don't want to tank the compiler over this
-      System.out.println( "Unexpected FileManager: " + _javacPlugin.getJavaFileManager().getClass().getTypeName() );
-      t.printStackTrace();
+      Class.forName( "manifold.ext.rt.api.Extension" );
       return true;
     }
-  }
-
-  private boolean isManifoldExtRtInPath( JavaFileManager.Location location )
-  {
-    Iterable<? extends File> paths = getLocation( location );
-    if( paths == null )
+    catch( ClassNotFoundException e )
     {
       return false;
     }
-
-    for( File path : paths )
-    {
-      if( path.getName().startsWith( "manifold-ext-rt" ) ||
-          path.getName().startsWith( "manifold-all" ) ) //## todo: remove when manifold-all is removed
-      {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public Iterable<? extends File> getLocation( JavaFileManager.Location location )
-  {
-    ReflectUtil.LiveMethodRef getLocation = JavacFileManagerBridge.findStandardJavaFileManagerMethod(
-      _javacPlugin.getJavaFileManager(), "getLocation", JavaFileManager.Location.class );
-
-    //noinspection unchecked
-    return (Iterable)getLocation.invoke( location );
   }
 
   // If an annotation processor is active, a class can be processed multiple times,
