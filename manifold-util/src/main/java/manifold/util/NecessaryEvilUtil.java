@@ -21,37 +21,14 @@ import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import sun.misc.Unsafe;
+
+import java.lang.reflect.Field;
+import java.util.*;
 
 public class NecessaryEvilUtil
 {
   private static Unsafe UNSAFE = null;
-
-  static
-  {
-    if( JreUtil.isJava12orLater() )
-    {
-      try
-      {
-        // Shutdown Oracle's attempt at blacklisting fields and methods from reflection in Java 12
-        Class<?> hackClass = Class.forName( NecessaryEvilUtil.class.getPackage().getName() + ".ReflectionHack_12" );
-        Method hackReflection = hackClass.getMethod( "hackReflection" );
-        hackReflection.invoke( null );
-      }
-      catch( Throwable e )
-      {
-        throw new RuntimeException( e );
-      }
-    }
-  }
 
   public static Unsafe getUnsafe()
   {
@@ -257,4 +234,90 @@ public class NecessaryEvilUtil
     }
   }
 
+  //## no need for shenanigans here since ReflectUtil uses Class#getDeclaredMethods0/Fields0 to bypass java12 blacklisting
+//    of fields. Leaving this commented out code here in case it is needed to address future jdk changes.
+//
+//  static
+//  {
+//    makeReflectionGreatAgain();
+//  }
+//
+//  // Shutdown Oracle's attempt at blacklisting fields and methods from reflection introduced in Java 12
+//  private static void makeReflectionGreatAgain()
+//  {
+//    if( JreUtil.isJava12orLater() )
+//    {
+//      try
+//      {
+//        Unsafe unsafe = NecessaryEvilUtil.getUnsafe();
+//
+//        // Must approximate the AccessibleObject#override field offset (because it is one of the filtered fields)
+//        long overrideOffset = AccessibleObject_layout.getOverrideOffset( unsafe );
+//
+//        // Reflection.class.reflectionData.declaredFields = Reflection.class.getDeclaredFields0()
+//        // then you can use ReflectUtil to: Reflection.fieldFilterMap = emptyMap()
+//        // now reflection is great again
+//
+//        Class<?> moduleClass = ReflectUtil.type( "java.lang.Module" );
+//        Method addOpens = moduleClass.getDeclaredMethod( "implAddOpens", String.class, moduleClass );
+//        unsafe.putObject( addOpens, overrideOffset, true );
+//        ReflectUtil.MethodRef getModule = ReflectUtil.method( Class.class, "getModule" );
+//        addOpens.invoke( getModule.invoke( String.class ), "jdk.internal.reflect", getModule.invoke( NecessaryEvilUtil.class ) );
+//
+//        Class<?> reflectionClass = ReflectUtil.type( "jdk.internal.reflect.Reflection" );
+//        ReflectUtil.method( (Object)reflectionClass, "reflectionData" ).invoke(); // to ensure initialization of reflectionData
+//        SoftReference reflectionData = (SoftReference)ReflectUtil.field( (Object)reflectionClass, "reflectionData" ).get();
+//        ReflectUtil.LiveMethodRef getDeclaredFields0 = ReflectUtil.method( (Object)reflectionClass, "getDeclaredFields0", boolean.class );
+//        ReflectUtil.field( reflectionData.get(), "declaredPublicFields" ).set( getDeclaredFields0.invoke( true ) );
+//        ReflectUtil.field( reflectionData.get(), "declaredFields" ).set( getDeclaredFields0.invoke( false ) );
+//
+//        // erase the internal blacklist
+//        ReflectUtil.field( reflectionClass, "fieldFilterMap" ).setStatic( Collections.emptyMap() );
+//      }
+//      catch( Throwable e )
+//      {
+//        throw new RuntimeException( e );
+//      }
+//    }
+//  }
+//
+//  //## this strategy works, but I'm keeping this as a backup in case the above strategy is thwarted by a newer jdk
+//  //    release such as if getDeclaredFields0 is removed or some other change.
+//  //
+//  //  static
+//  //  {
+//  //    if( JreUtil.isJava12orLater() )
+//  //    {
+//  //      try
+//  //      {
+//  //        // Shutdown Oracle's attempt at blacklisting fields and methods from reflection in Java 12
+//  //        Class<?> hackClass = Class.forName( NecessaryEvilUtil.class.getPackage().getName() + ".ReflectionHack_12" );
+//  //        Method hackReflection = hackClass.getMethod( "hackReflection" );
+//  //        hackReflection.invoke( null );
+//  //      }
+//  //      catch( Throwable e )
+//  //      {
+//  //        throw new RuntimeException( e );
+//  //      }
+//  //    }
+//  //  }
+//
+//  @SuppressWarnings({"unused", "WeakerAccess"})
+//  static abstract class AccessibleObject_layout
+//  {
+//    boolean override;
+//    volatile Object securityCheckCache;
+//
+//    static long getOverrideOffset( Unsafe unsafe )
+//    {
+//      try
+//      {
+//        return unsafe.objectFieldOffset( AccessibleObject_layout.class.getDeclaredField( "override" ) );
+//      }
+//      catch( NoSuchFieldException e )
+//      {
+//        throw new RuntimeException( e );
+//      }
+//    }
+//  }
 }

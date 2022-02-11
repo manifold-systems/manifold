@@ -33,14 +33,21 @@ import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
 import manifold.util.concurrent.LocklessLazyVar;
 
+import static manifold.util.NecessaryEvilUtil.getUnsafe;
+
 /**
  * A Java reflection utility.  Use it to efficiently access classes by name, get/set field values,
  * invoke methods, and use constructors. Notable features include:
  * <ul>
- * <li>Call a private method</li>
- * <li>Get and set the value of a private, final field</li>
+ * <li>Intuitive, fluent API</li>
+ * <li>Call any method: private, filtered, inaccessible, etc.</li>
+ * <li>Get and set the value of a final field</li>
  * <li>Access fields and methods of a class belonging to an inaccessible module</li>
+ * <li>Call a super method</li>
+ * <li>Call a default interface method esp. for a proxy</li>
+ * <li>Call a method structurally with automatic best method matching</li>
  * <li>Fields, methods, and constructors are cached upon use to improve performance</li>
+ * <li>Works with all versions of Java beginning with Java 8</li>
  * </ul>
  * <p>
  * (Use <b>@Jailbreak</b> to avoid writing reflection code.
@@ -54,8 +61,86 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Method, ConcurrentMap<Class, Method>> _structuralCall = new ConcurrentWeakHashMap<>();
   private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
   private static final String LAMBDA_METHOD = "lambda method";
+  private static final LocklessLazyVar<Long> _overrideOffset = LocklessLazyVar.make( () -> {
+    try
+    {
+      Field overrideField = FakeAccessibleObject.class.getDeclaredField( "override" );
+      return getUnsafe().objectFieldOffset( overrideField );
+    }
+    catch( Exception e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  } );
 
-  //private static final ConcurrentHashMap<String, Boolean> _openPackages = new ConcurrentHashMap<>();
+  /**
+   * For JDK 12+ using {@code Class#getDeclaredMethods0(boolean)} to access fields and methods that are otherwise
+   * filtered via {@link jdk.internal.reflect.Reflection#filterFields(Class, Field[])}.
+   */
+  private static final LocklessLazyVar<Method> _getDeclaredMethods0 = LocklessLazyVar.make( () -> {
+      if( JreUtil.isJava12orLater() )
+      {
+        try
+        {
+          Method getDeclaredMethods0 = Class.class.getDeclaredMethod( "getDeclaredMethods0", boolean.class );
+          setAccessible( getDeclaredMethods0 );
+          return getDeclaredMethods0;
+        }
+        catch( Exception e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+      throw new IllegalStateException( "This field should only be used with JDK version 12 or later." );
+    } );
+  private static final LocklessLazyVar<Method> _copyMethod = LocklessLazyVar.make( () -> {
+      if( JreUtil.isJava12orLater() )
+      {
+        try
+        {
+          Method copy = Method.class.getDeclaredMethod( "copy");
+          setAccessible( copy );
+          return copy;
+        }
+        catch( Exception e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+    throw new IllegalStateException( "This field should only be used with JDK version 12 or later." );
+    } );
+  private static final LocklessLazyVar<Method> _getDeclaredFields0 = LocklessLazyVar.make( () -> {
+      if( JreUtil.isJava12orLater() )
+      {
+        try
+        {
+          Method getDeclaredFields0 = Class.class.getDeclaredMethod( "getDeclaredFields0", boolean.class );
+          setAccessible( getDeclaredFields0 );
+          return getDeclaredFields0;
+        }
+        catch( Exception e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+      throw new IllegalStateException( "This field should only be used with JDK version 12 or later." );
+    } );
+  private static final LocklessLazyVar<Method> _copyField = LocklessLazyVar.make( () -> {
+      if( JreUtil.isJava12orLater() )
+      {
+        try
+        {
+          Method copy = Field.class.getDeclaredMethod( "copy" );
+          setAccessible( copy );
+          return copy;
+        }
+        catch( Exception e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+      throw new IllegalStateException( "This field should only be used with JDK version 12 or later." );
+    } );
 
   static
   {
@@ -215,7 +300,7 @@ public class ReflectUtil
 
     try
     {
-      Method method = cls.getDeclaredMethod( name, params );
+      Method method = getDeclaredMethod( cls, name, params );
       return addMethodToCache( cls, method );
     }
     catch( Exception e )
@@ -245,8 +330,90 @@ public class ReflectUtil
     return null;
   }
 
+  private static Method[] getDeclaredMethods( Class<?> cls )
+  {
+    if( !JreUtil.isJava12orLater() )
+    {
+      return cls.getDeclaredMethods();
+    }
+    else
+    {
+      try
+      {
+        return (Method[])_getDeclaredMethods0.get().invoke( cls, false );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
+  }
+
+  private static Method getDeclaredMethod( Class<?> cls, String name, Class<?>... parameterTypes ) throws NoSuchMethodException
+  {
+    if( !JreUtil.isJava12orLater() )
+    {
+      return cls.getDeclaredMethod( name, parameterTypes );
+    }
+    else
+    {
+      try
+      {
+        Method[] methods = (Method[])_getDeclaredMethods0.get().invoke( cls, false );
+        Method res = null;
+        for( int i = 0, methodsLength = methods.length; i < methodsLength; i++ )
+        {
+          Method m = methods[i];
+          if( m.getName().equals( name )
+            && sameParameters( parameterTypes, m.getParameterTypes() )
+            && (res == null || res.getReturnType().isAssignableFrom( m.getReturnType() )) )
+          {
+            res = m;
+          }
+        }
+        if( res == null )
+        {
+          throw new NoSuchMethodException();
+        }
+        return (Method)_copyMethod.get().invoke( res );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
+  }
+
+  private static boolean sameParameters( Class<?>[] params1, Class<?>[] params2 )
+  {
+    if( params1 == null )
+    {
+      return params2 == null || params2.length == 0;
+    }
+
+    if( params2 == null )
+    {
+      return params1.length == 0;
+    }
+
+    if( params1.length != params2.length )
+    {
+      return false;
+    }
+
+    for( int i = 0; i < params1.length; i++ )
+    {
+      if( params1[i] != params2[i] )
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
   /**
-   * Get a {@link MethodRef} to from the specified {@code name} without regard to parameter types. If more than one
+   * Get a {@link MethodRef} to the specified {@code name} without regard to parameter types. If more than one
    * method has the {@code name}, the first one encountered is used, in no particular order. This method should be used
    * only when the named method is <i>not</i> overloaded. Typical use:
    * <p/>
@@ -265,7 +432,7 @@ public class ReflectUtil
       return mr;
     }
 
-    for( Method method: cls.getDeclaredMethods() )
+    for( Method method: getDeclaredMethods( cls ) )
     {
       if( method.getName().equals( name ) )
       {
@@ -425,7 +592,7 @@ public class ReflectUtil
   /**
    * Get a {@link FieldRef} to the specified field.  Typical use:
    * <p>
-   * <pre> field("java.time.LocalTime", "hour").get(); </pre>
+   * <pre> field("java.time.LocalTime", "hour").get(time); </pre>
    *
    * @param fqn  The qualified name of the class having the field
    * @param name The name of the field or a '|' separated list of names, where the first found is used
@@ -439,7 +606,7 @@ public class ReflectUtil
   /**
    * Get a {@link FieldRef} to the specified field.  Typical use:
    * <p>
-   * <pre> field(LocalTime.class, "hour").get(); </pre>
+   * <pre> field(LocalTime.class, "hour").get(time); </pre>
    *
    * @param cls  The class having the field
    * @param name The name of the field or a '|' separated list of names, where the first found is used
@@ -467,7 +634,7 @@ public class ReflectUtil
 
     try
     {
-      Field field = cls.getDeclaredField( name );
+      Field field = getDeclaredField( cls, name );
       return addFieldToCache( cls, field );
     }
     catch( Exception e )
@@ -495,6 +662,39 @@ public class ReflectUtil
     }
 
     return null;
+  }
+
+  private static Field getDeclaredField( Class<?> cls, String name ) throws NoSuchFieldException
+  {
+    if( !JreUtil.isJava12orLater() )
+    {
+      return cls.getDeclaredField( name );
+    }
+    else
+    {
+      try
+      {
+        Field[] fields = (Field[])_getDeclaredFields0.get().invoke( cls, false );
+        Field res = null;
+        for( Field field : fields )
+        {
+          if( field.getName().equals( name ) )
+          {
+            res = field;
+            break;
+          }
+        }
+        if( res == null )
+        {
+          throw new NoSuchFieldException();
+        }
+        return (Field)_copyField.get().invoke( res );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
   }
 
   private static FieldRef matchFirstField( Class<?> cls, String name )
@@ -614,10 +814,9 @@ public class ReflectUtil
 
   public static void setAccessible( Member m )
   {
-    Field overrideField = field( FakeAccessibleObject.class, "override" )._field;
     try
     {
-      NecessaryEvilUtil.getUnsafe().putObjectVolatile( m, NecessaryEvilUtil.getUnsafe().objectFieldOffset( overrideField ), true );
+      getUnsafe().putBooleanVolatile( m, _overrideOffset.get(), true );
     }
     catch( Exception e )
     {
@@ -627,7 +826,7 @@ public class ReflectUtil
 
 // This class mirrors the layout/structure of the AccessibleObject class so we can get the offset of 'override'
   @SuppressWarnings( "unused" )
-  private static class FakeAccessibleObject
+  static class FakeAccessibleObject
   {
     static final private String ACCESS_PERMISSION = "";
     boolean override;
@@ -683,8 +882,8 @@ public class ReflectUtil
 
   public static class LiveMethodRef
   {
-    private Method _method;
-    private Object _receiver;
+    private final Method _method;
+    private final Object _receiver;
 
     private LiveMethodRef( Method m, Object receiver )
     {
@@ -1054,22 +1253,22 @@ public class ReflectUtil
 
   private static void removeFinalModifier( Field field ) throws Exception
   {
-    Field modifiersField = Field.class.getDeclaredField( "modifiers" );
+    Field modifiersField = getDeclaredField( Field.class, "modifiers" );
     modifiersField.setAccessible( true );
     modifiersField.setInt( field, field.getModifiers() & ~Modifier.FINAL );
   }
 
   private static void clearFieldAccessors( Field field ) throws Exception
   {
-    Field fa = Field.class.getDeclaredField( "fieldAccessor" );
+    Field fa = getDeclaredField( Field.class, "fieldAccessor" );
     fa.setAccessible( true );
     fa.set( field, null );
 
-    Field ofa = Field.class.getDeclaredField( "overrideFieldAccessor" );
+    Field ofa = getDeclaredField( Field.class, "overrideFieldAccessor" );
     ofa.setAccessible( true );
     ofa.set( field, null );
 
-    Field rf = Field.class.getDeclaredField( "root" );
+    Field rf = getDeclaredField( Field.class, "root" );
     rf.setAccessible( true );
     Field root = (Field)rf.get( field );
     if( root != null )
