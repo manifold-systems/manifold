@@ -208,8 +208,8 @@ for (var movie : actionMovies) {
 >```
 > Configure dependencies like this:
 > ```groovy
-> implementation 'systems.manifold:manifold-props-rt:2022.1.4'
-> annotationProcessor 'systems.manifold:manifold-props:2022.1.4'
+> implementation 'systems.manifold:manifold-props-rt:2022.1.5'
+> annotationProcessor 'systems.manifold:manifold-props:2022.1.5'
 >``` 
 > See complete [setup docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#maven) for details.
 
@@ -673,10 +673,10 @@ configurations {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-graphql-rt:2022.1.4'
+     implementation 'systems.manifold:manifold-graphql-rt:2022.1.5'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2022.1.4'
+     annotationProcessor 'systems.manifold:manifold-graphql:2022.1.5'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -712,7 +712,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.4</manifold.version>
+        <manifold.version>2022.1.5</manifold.version>
     </properties>
     
     <dependencies>
@@ -756,10 +756,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-graphql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2022.1.4/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2022.1.4)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2022.1.5/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2022.1.5)
 
 `manifold-graphql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2022.1.4/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2022.1.4)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2022.1.5/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2022.1.5)
 
 # License
 
