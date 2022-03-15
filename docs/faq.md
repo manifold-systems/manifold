@@ -22,6 +22,9 @@ always well in advance of Oracle's official release schedule.
 Yes, the Manifold project is [open source](https://github.com/manifold-systems/manifold) and publicly available on
 github, free for use via Apache License 2.0.
 
+The Manifold [plugins for IntelliJ and Android Studio](https://plugins.jetbrains.com/plugin/10057-manifold/) are also
+[open source](https://github.com/manifold-systems/manifold-ij) and freely available.
+
 #### Q: Does Manifold work with Maven?  Gradle?
 Yes.  Please refer to the [Setup](http://manifold.systems/docs.html#setup) instructions. 
 
@@ -38,11 +41,9 @@ Download / Update the plugin directly from within the IDE:
   
 >Note: The IDE notifies you within 24 hours when an update is available and gives you the opportunity to sync.
 
-#### Q: Do I really need a license for the IntelliJ plugin?
-The [IntelliJ plugin](https://plugins.jetbrains.com/plugin/10057-manifold/) is offered separately via the JetBrains
-Marketplace. It is *free* for use with IntelliJ IDEA *Community Edition* after a 30 day free trial. Similarly, it is
-free for use with IntelliJ IDEA *Ultimate Edition* after a 30 day free trial, however after the trial the plugin lightly
-nags about the trial expiration, but you can continue to use it if you don't want to purchase the license.
+#### Q: Do I need a license for the IntelliJ plugin?
+No. The [plugin](https://plugins.jetbrains.com/plugin/10057-manifold/) is no longer commercial and is available for free
+from JetBrains Marketplace.
 
 #### Q: How do I get manifold-*fill-in-blank* working with my project? 
 Add the manifold-*fill-in-blank* dependency[s] to your project along with the `-Xplugin:Manifold` javac argument, the
