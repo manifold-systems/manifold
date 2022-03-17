@@ -129,10 +129,10 @@ configurations {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2022.1.5'
+    compileOnly 'systems.manifold:manifold-rt:2022.1.6'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2022.1.5'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-exceptions', version: '2022.1.6'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -168,7 +168,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.5</manifold.version>
+        <manifold.version>2022.1.6</manifold.version>
     </properties>
 
     <dependencies>
@@ -214,7 +214,7 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-exceptions`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2022.1.5/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2022.1.5)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-exceptions/2022.1.6/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-exceptions/2022.1.6)
 
 # License
 
