@@ -62,7 +62,7 @@ public class JailbreakTest extends TestCase
   public void testType()
   {
     java.lang.@Jailbreak AbstractStringBuilder sb = new @Jailbreak StringBuilder();
-    sb.append( 8 );
+    sb.append( 1 );
 
     manifold.ext.stuff.@Jailbreak SecretParam secretParam =
       new manifold.ext.stuff.@Jailbreak SecretParam();
@@ -71,6 +71,16 @@ public class JailbreakTest extends TestCase
       new manifold.ext.stuff.@Jailbreak SecretClass( secretParam );
     secretParam = secret.getParam();
     assertEquals( 9, secretParam._foo );
+  }
+
+  public void testCasting()
+  {
+    StringBuilder ss = new StringBuilder();
+    
+    java.lang.@Jailbreak AbstractStringBuilder sb = (java.lang.@Jailbreak AbstractStringBuilder)ss;
+    sb.append( 2 );
+
+    ((java.lang.@Jailbreak AbstractStringBuilder)ss).append( 3 );
   }
 
   public void testJailbreak()
