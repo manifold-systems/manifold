@@ -1497,7 +1497,14 @@ class SecretClass {
   SecretClass(String data){
     _data = data;
   }
+  
+  private void callme() {...}
 }
+```
+                                   
+```java
+// casting with hidden type
+((com.abc. @Jailbreak SecretClass) foo).callme();
 ```
 
 ### Break JPMS Barriers
