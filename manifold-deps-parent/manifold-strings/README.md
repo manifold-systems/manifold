@@ -168,8 +168,8 @@ configurations {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-strings:2022.1.7'
-    compileOnly 'systems.manifold:manifold-rt:2022.1.7'
+    annotationProcessor 'systems.manifold:manifold-strings:2022.1.8'
+    compileOnly 'systems.manifold:manifold-rt:2022.1.8'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -211,7 +211,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.7</manifold.version>
+        <manifold.version>2022.1.8</manifold.version>
     </properties>
 
     <dependencies>
