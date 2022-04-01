@@ -180,7 +180,7 @@ public class ManCharSequenceExt
    * @param length  the desired string length.
    * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
+   * @return Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
 
@@ -211,7 +211,7 @@ public class ManCharSequenceExt
    * @param length  the desired string length.
    * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
+   * @return Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
   public static CharSequence padEnd( @This CharSequence thiz, int length, char padChar )
@@ -513,7 +513,7 @@ public class ManCharSequenceExt
    *
    * @param ignoreCase {@code true} to ignore character case when matching a character.
    *
-   * @returns An index of the first occurrence of matched character from {@code chars} or -1 if none of {@code chars} are found.
+   * @return An index of the first occurrence of matched character from {@code chars} or -1 if none of {@code chars} are found.
    */
   public static int indexOfAny( @This CharSequence thiz, char[] chars, int startIndex, boolean ignoreCase )
   {
@@ -536,7 +536,7 @@ public class ManCharSequenceExt
    * @param startIndex The index of character to start searching at. The search proceeds backward toward the beginning of the string.
    * @param ignoreCase {@code true} to ignore character case when matching a character.
    *
-   * @returns An index of the last occurrence of matched character from {@code chars} or -1 if none of {@code chars} are found.
+   * @return An index of the last occurrence of matched character from {@code chars} or -1 if none of {@code chars} are found.
    */
   public static int lastIndexOfAny( @This CharSequence thiz, char[] chars, int startIndex, boolean ignoreCase )
   {
@@ -692,7 +692,7 @@ public class ManCharSequenceExt
    *
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns A pair of an index of the first occurrence of matched string from {@code strings} and the string matched
+   * @return A pair of an index of the first occurrence of matched string from {@code strings} and the string matched
    * or {@code null} if none of {@code strings} are found.
    * <p>
    * To avoid ambiguous results when strings in {@code strings} have characters in common, this method proceeds from
@@ -719,7 +719,7 @@ public class ManCharSequenceExt
    * @param startIndex The index of character to start searching at. The search proceeds backward toward the beginning of the string.
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns A pair of an index of the last occurrence of matched string from {@code strings} and the string matched or {@code null} if none of {@code strings} are found.
+   * @return A pair of an index of the last occurrence of matched string from {@code strings} and the string matched or {@code null} if none of {@code strings} are found.
    * <p>
    * To avoid ambiguous results when strings in {@code strings} have characters in common, this method proceeds from
    * the end toward the beginning of this string, and finds at each position the first element in {@code strings}
@@ -744,7 +744,7 @@ public class ManCharSequenceExt
    *
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns An index of the first occurrence of matched string from {@code strings} or -1 if none of {@code strings} are found.
+   * @return An index of the first occurrence of matched string from {@code strings} or -1 if none of {@code strings} are found.
    * <p>
    * To avoid ambiguous results when strings in {@code strings} have characters in common, this method proceeds from
    * the beginning to the end of this string, and finds at each position the first element in {@code strings}
@@ -771,7 +771,7 @@ public class ManCharSequenceExt
    * @param startIndex The index of character to start searching at. The search proceeds backward toward the beginning of the string.
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns An index of the last occurrence of matched string from {@code strings} or -1 if none of {@code strings} are found.
+   * @return An index of the last occurrence of matched string from {@code strings} or -1 if none of {@code strings} are found.
    * <p>
    * To avoid ambiguous results when strings in {@code strings} have characters in common, this method proceeds from
    * the end toward the beginning of this string, and finds at each position the first element in {@code strings}
@@ -802,7 +802,7 @@ public class ManCharSequenceExt
    *
    * @param ignoreCase {@code true} to ignore character case when matching a character.
    *
-   * @returns An index of the first occurrence of {@code char} or -1 if none is found.
+   * @return An index of the first occurrence of {@code char} or -1 if none is found.
    */
   public static int indexOf( @This CharSequence thiz, int ch, int startIndex, boolean ignoreCase )
   {
@@ -829,7 +829,7 @@ public class ManCharSequenceExt
    *
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns An index of the first occurrence of {@code string} or `-1` if none is found.
+   * @return An index of the first occurrence of {@code string} or `-1` if none is found.
    */
   public static int indexOf( @This CharSequence thiz, String string, int startIndex, boolean ignoreCase )
   {
@@ -857,7 +857,7 @@ public class ManCharSequenceExt
    * @param startIndex The index of character to start searching at. The search proceeds backward toward the beginning of the string.
    * @param ignoreCase {@code true} to ignore character case when matching a character.
    *
-   * @returns An index of the first occurrence of {@code char} or -1 if none is found.
+   * @return An index of the first occurrence of {@code char} or -1 if none is found.
    */
   public static int lastIndexOf( @This CharSequence thiz, int ch, int startIndex, boolean ignoreCase )
   {
@@ -885,7 +885,7 @@ public class ManCharSequenceExt
    * @param startIndex The index of character to start searching at. The search proceeds backward toward the beginning of the string.
    * @param ignoreCase {@code true} to ignore character case when matching a string.
    *
-   * @returns An index of the first occurrence of {@code string} or -1 if none is found.
+   * @return An index of the first occurrence of {@code string} or -1 if none is found.
    */
   public static int lastIndexOf( @This CharSequence thiz, String string, int startIndex, boolean ignoreCase )
   {

@@ -129,7 +129,7 @@ public class ManStringExt
    * @param length  the desired string length.
    * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
+   * @return Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
   public static String padStart( @This String thiz, int length, char padChar )
@@ -143,7 +143,7 @@ public class ManStringExt
    * @param length  the desired string length.
    * @param padChar the character to pad string with, if it has length less than the {@code length} specified.
    *
-   * @returns Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
+   * @return Returns a string, of length at least {@code length}, consisting of string prepended with {@code padChar} as many times.
    * as are necessary to reach that length.
    */
   public static String padEnd( @This String thiz, int length, char padChar )
