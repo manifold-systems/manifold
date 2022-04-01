@@ -2520,6 +2520,13 @@ public class ExtensionTransformer extends TreeTranslator
         newArgs.add( 0, thisArg );
         tree.args = List.from( newArgs );
       }
+
+      boolean isPublic = (method.flags_field & Flags.AccessFlags) == PUBLIC;
+      if( !isPublic )
+      {
+        tree = replaceWithReflection( tree );
+      }
+
       return tree;
     }
     else if( methodSelect instanceof JCTree.JCIdent )
@@ -2547,6 +2554,13 @@ public class ExtensionTransformer extends TreeTranslator
       newMethodSelect.type = method.type;
       newMethodSelect.pos = tree.pos;
       assignTypes( newMethodSelect.selected, method.owner );
+
+      boolean isPublic = (method.flags_field & Flags.AccessFlags) == PUBLIC;
+      if( !isPublic )
+      {
+        extCall = replaceWithReflection( extCall );
+      }
+
       return extCall;
     }
     return tree;
