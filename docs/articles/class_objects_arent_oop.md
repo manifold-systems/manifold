@@ -60,7 +60,7 @@ public class Maple extends Tree {
 
 List<Class<? extends Tree>> treeClasses = loadTreeCatalog();
 ...
-List<Image> photos = treeClasses.stream().map( c -> c.samplePhoto() );
+List<Image> photos = treeClasses.stream().map(c -> c.samplePhoto());
 ```
 
 ### Can't statically implement an interface (no virtual class methods)
@@ -78,34 +78,34 @@ public interface Bounds {
   double getMinValue();
 }
 
-if( clazz implements Bounds ) {...}
+if (clazz implements Bounds) {...}
 
 Class<? extends Bounds> type = preferredNumberType();
-Range range = new Range( type.getMinValue(), type.getMaxValue() );
+Range range = new Range(type.getMinValue(), type.getMaxValue());
 ```
 Maybe better example of this is an interface as a factory:
 
 ```java
 public interface TaggedObjectFactory {
-  Object create( Tag tag );
-  Object create( Tag tag, LocalDateTime timestamp );
+  Object create(Tag tag);
+  Object create(Tag tag, LocalDateTime timestamp);
 }
 
 public class MyObject implements static TaggedObjectFactory {
   @Override
-  public static Object create( Tag tag ) {
-    return new MyObject( tag );
+  public static Object create(Tag tag) {
+    return new MyObject(tag);
   }
   @Override
-  public static Object create( Tag tag, LocalDateTime timestamp ) {
-    return new MyObject( tag, timestamp );
+  public static Object create(Tag tag, LocalDateTime timestamp) {
+    return new MyObject(tag, timestamp);
   }
   ...
 }
 
 Class serviceClass = loadServiceClass();
-if( serviceClass implements TaggedObjectFactory ) {
-  service = ((TaggedObjectFactory)serviceClass).create( tag, timestamp );
+if (serviceClass implements TaggedObjectFactory) {
+  service = ((TaggedObjectFactory) serviceClass).create(tag, timestamp);
 }
 else {
   service = serviceClass.newInstance(); // resort to some type of reflective construction
