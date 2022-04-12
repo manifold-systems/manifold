@@ -42,6 +42,7 @@ import manifold.ext.props.rt.api.tags.enter_start;
 import manifold.internal.javac.*;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 import javax.lang.model.element.TypeElement;
@@ -1918,10 +1919,23 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
       Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
       env.toplevel = (JCTree.JCCompilationUnit)getCompilationUnit();
       env.enclClass = ExtensionTransformer.getEnclosingClass( tree, child -> getParent( child ) );
-      binary.operator = ExtensionTransformer
-        .resolveMethod( getContext(), getCompilationUnit(), tree.pos(),
-          Names.instance( getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
-          getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      if( JreUtil.isJava8() )
+      {
+        binary.operator = ExtensionTransformer
+          .resolveMethod( getContext(), getCompilationUnit(), tree.pos(),
+            Names.instance( getContext() ).fromString( binary.getTag() == Tag.PLUS ? "+" : "-" ),
+            getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      }
+      else
+      {
+        //reflective: binary.operator = Operators.instance( _tp.getContext ).resolveBinary( ... );
+        Object operators = ReflectUtil.method( "com.sun.tools.javac.comp.Operators", "instance", Context.class )
+          .invokeStatic( getContext() );
+        ReflectUtil.field( binary, "operator" )
+          .set( ReflectUtil.method( operators, "resolveBinary", JCDiagnostic.DiagnosticPosition.class, JCTree.Tag.class, Type.class, Type.class )
+            .invoke( tree.pos(), binary.getTag(), binary.lhs.type, binary.rhs.type ) );
+      }
+
       return binary;
 
       // maybe unbox here?

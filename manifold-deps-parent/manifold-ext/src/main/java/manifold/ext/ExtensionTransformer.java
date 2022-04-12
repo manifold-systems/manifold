@@ -1046,7 +1046,17 @@ public class ExtensionTransformer extends TreeTranslator
       Env<AttrContext> env = new AttrContextEnv( tree, new AttrContext() );
       env.toplevel = (JCTree.JCCompilationUnit)_tp.getCompilationUnit();
       env.enclClass = getEnclosingClass( tree );
-      binary.operator = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( binary.getTag() == JCTree.Tag.PLUS ? "+" : "-" ), _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      if( JreUtil.isJava8() )
+      {
+        binary.operator = resolveMethod( tree.pos(), Names.instance( _tp.getContext() ).fromString( binary.getTag() == JCTree.Tag.PLUS ? "+" : "-" ), _tp.getSymtab().predefClass.type, List.of( binary.lhs.type, binary.rhs.type ) );
+      }
+      else
+      {
+        //reflective: binary.operator = Operators.instance( _tp.getContext ).resolveBinary( ... );
+        Object operators = ReflectUtil.method( "com.sun.tools.javac.comp.Operators", "instance", Context.class ).invokeStatic( _tp.getContext() );
+        ReflectUtil.field( binary, "operator" ).set( ReflectUtil.method( operators, "resolveBinary", JCDiagnostic.DiagnosticPosition.class, JCTree.Tag.class, Type.class, Type.class )
+          .invoke( tree.pos(), binary.getTag(), binary.lhs.type, binary.rhs.type ) );
+      }
       return binary;
 
       // maybe unbox here?
