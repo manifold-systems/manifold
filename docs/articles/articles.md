@@ -7,20 +7,6 @@ layout: default
 <table>
  <tr>
   <td>
-  <p><a href="http://manifold.systems/articles/class_objects_arent_oop.html"><img width="240" height="135" src="/images/oops.png" alt="a"></a></p>
-  </td>
-  <td>
-  <p><a href="http://manifold.systems/articles/class_objects_arent_oop.html">Java class objects aren't OOP, should they be?</a></p>
-  <p>Java Class objects are special, they don't behave like normal objects. In most regards they aren't objects at all.
-  Is this a shortcoming or a feature?</p>
-  <p><small>manifold.systems</small></p>
-  </td>
- </tr>
- 
- <tr><td><p>&nbsp;</p></td><td><p>&nbsp;</p></td></tr>
- 
- <tr>
-  <td>
   <p><a href="https://blog.jetbrains.com/platform/2020/09/an-interview-with-scott-mckinney-author-of-the-manifold-plugin/"><img width="240" height="135" src="/images/jetbrains.png" alt="a"></a></p>
   </td>
   <td>
