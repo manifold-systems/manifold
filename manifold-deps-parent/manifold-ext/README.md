@@ -1825,11 +1825,11 @@ configurations {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-ext-rt:2022.1.8'
+    implementation 'systems.manifold:manifold-ext-rt:2022.1.9'
 
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2022.1.8'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-ext', version: '2022.1.9'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -1865,7 +1865,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.8</manifold.version>
+        <manifold.version>2022.1.9</manifold.version>
     </properties>
     
     <dependencies>
@@ -1915,10 +1915,10 @@ with javadoc.
 # Javadoc 
 
 `manifold-ext`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2022.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2022.1.8)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext/2022.1.9/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext/2022.1.9)
 
 `manifold-ext-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2022.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2022.1.8)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-ext-rt/2022.1.9/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-ext-rt/2022.1.9)
 
 # License
 
