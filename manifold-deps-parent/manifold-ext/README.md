@@ -9,6 +9,7 @@
   * [Arrays](#extending-arrays)
   * [Manifold Types](#extending-manifold-types)
   * [Static Dispatching](#static-dispatching)
+  * ["Smart" Static Methods](#smart-static-methods-with-thisclass)
   * [Accessibility & Scopes](#accessibility-and-scope)
   * [Adding Annotations](#annotation-extensions)
   * [Adding Interfaces](#extension-interfaces)
@@ -356,8 +357,20 @@ if (name.isNullOrEmpty()) {
   println("empty");
 }
 ```
-
 Here the example doesn't check for null and instead shifts the burden to the extension.
+              
+## "Smart" static methods with `@ThisClass`
+
+Sometimes it is useful to define a static extension method in a base class that knows which derived class called the 
+method (the "receiver" of the call).
+```java
+public class MyEntityExtension {
+  public static @Self Entity create(@ThisClass Class thisClass) {
+    return (Entity)getEntityConstructor(thisClass).newInstance(generateId());
+  }
+}
+```
+`@ThisClass` is the static counterpart of `@This` and is particularly useful when paired with [`@Self`](#the-self-type-via-self).
 
 ## Accessibility and Scope
 

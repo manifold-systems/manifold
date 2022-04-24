@@ -416,7 +416,13 @@ public class JavacPlugin implements Plugin, TaskListener
     }
 
     // Override javac's Attr
-    Attr manAttr = (Attr)ReflectUtil.method( "manifold.internal.javac.ManAttr_" + (JreUtil.isJava8() ? 8 : 9),
+    Attr manAttr = (Attr)ReflectUtil.method(
+      "manifold.internal.javac.ManAttr_" +
+        ((JreUtil.isJava8()
+          ? 8
+          : JreUtil.isJava17orLater()
+            ? 17
+            : 9)),
       "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's Resolve

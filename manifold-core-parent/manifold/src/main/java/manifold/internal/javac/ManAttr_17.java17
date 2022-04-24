@@ -1,0 +1,543 @@
+package manifold.internal.javac;
+
+import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.comp.*;
+import com.sun.tools.javac.jvm.ByteCodes;
+import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.resources.CompilerProperties;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Name;
+import com.sun.tools.javac.util.Warner;
+import java.util.ArrayList;
+import java.util.List;
+
+import manifold.rt.api.FragmentValue;
+import manifold.api.type.ISelfCompiledFile;
+import manifold.util.ReflectUtil;
+import manifold.rt.api.util.Stack;
+
+
+import static com.sun.tools.javac.code.TypeTag.CLASS;
+import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
+
+public class ManAttr_17 extends Attr implements ManAttr
+{
+  private final ManLog_9 _manLog;
+  private final Symtab _syms;
+  private Stack<JCTree.JCFieldAccess> _selects;
+  private Stack<JCTree.JCAnnotatedType> _annotatedTypes;
+  private Stack<JCTree.JCMethodDecl> _methodDefs;
+
+  public static ManAttr_17 instance( Context ctx )
+  {
+    Attr attr = ctx.get( attrKey );
+    if( !(attr instanceof ManAttr_17) )
+    {
+      ctx.put( attrKey, (Attr)null );
+      attr = new ManAttr_17( ctx );
+    }
+
+    return (ManAttr_17)attr;
+  }
+
+  private ManAttr_17( Context ctx )
+  {
+    super( ctx );
+    _selects = new Stack<>();
+    _annotatedTypes = new Stack<>();
+    _methodDefs = new Stack<>();
+    _syms = Symtab.instance( ctx );
+
+    // Override logger to handle final field assignment for @Jailbreak
+    _manLog = (ManLog_9)ManLog_9.instance( ctx );
+    ReflectUtil.field( this, "log" ).set( _manLog );
+    ReflectUtil.field( this, "rs" ).set( ManResolve.instance( ctx ) );
+    reassignAllEarlyHolders( ctx );
+  }
+
+  private void reassignAllEarlyHolders( Context ctx )
+  {
+    List<Object> earlyAttrHolders = new ArrayList<Object>() {{
+      add( Modules.instance( ctx ) );
+      add( Resolve.instance( ctx ) );
+      add( DeferredAttr.instance( ctx ) );
+      add( ArgumentAttr.instance( ctx ) );
+      add( MemberEnter.instance( ctx ) );
+      add( TypeEnter.instance( ctx ) );
+      add( Analyzer.instance( ctx ) );
+      add( Lower.instance( ctx ) );
+      add( TransTypes.instance( ctx ) );
+      add( Annotate.instance( ctx ) );
+      add( TypeAnnotations.instance( ctx ) );
+      add( JavacTrees.instance( ctx ) );
+      add( JavaCompiler.instance( ctx ) );
+      add( AttrRecover.instance( ctx ) );
+      add( TransPatterns.instance( ctx ) );
+    }};
+    for( Object instance: earlyAttrHolders )
+    {
+      ReflectUtil.LiveFieldRef attr = ReflectUtil.WithNull.field( instance, "attr" );
+      if( attr != null )
+      {
+        attr.set( this );
+      }
+    }
+  }
+
+  /**
+   * Handle properties in interfaces, which are non-static unless explicitly static.
+   * This is necessary so that a non-static property can reference type variables in its type:  @var T element;
+   */
+  @Override
+  public Type attribType(JCTree tree, Env<AttrContext> env)
+  {
+    ManAttr.super.handleNonStaticInterfaceProperty( env );
+    return super.attribType( tree, env );
+  }
+
+  public void visitMethodDef( JCTree.JCMethodDecl tree )
+  {
+    _methodDefs.push( tree );
+    try
+    {
+      super.visitMethodDef( tree );
+    }
+    finally
+    {
+      _methodDefs.pop();
+    }
+  }
+  public JCTree.JCMethodDecl peekMethodDef()
+  {
+    return _methodDefs.isEmpty() ? null : _methodDefs.peek();
+  }
+
+  /**
+   * Facilitates @Jailbreak. ManResolve#isAccessible() needs to know the JCFieldAccess in context.
+   */
+  @Override
+  public void visitSelect( JCTree.JCFieldAccess tree )
+  {
+    // record JCFieldAccess trees as they are visited so we can access them elsewhere while in context
+    _selects.push( tree );
+    try
+    {
+      super.visitSelect( tree );
+    }
+    finally
+    {
+      _selects.pop();
+    }
+  }
+
+  /**
+   * Handle the LetExpr, which is normally used after the attribution phase. We use it during parse to transform
+   * AssignOp to normal Assign so that other manifold features are easier to implement (operator overloading,
+   * properties, etc.)
+   */
+  @Override
+  public void visitLetExpr( JCTree.LetExpr tree )
+  {
+    Env env = getEnv();
+    Env localEnv = env.dup( tree, ReflectUtil.method( env.info, "dup" ).invoke() );
+    try {
+      for( JCTree.JCStatement stmt: tree.defs )
+      {
+        JCTree.JCVariableDecl def = (JCTree.JCVariableDecl)stmt;
+        attribStat( def, localEnv );
+        def.type = def.init.type;
+        def.vartype.type = def.type;
+        def.sym.type = def.type;
+      }
+      ReflectUtil.field( this, "result" ).set( attribExpr( tree.expr, localEnv ) );
+      tree.type = tree.expr.type;
+      ReflectUtil.field( this, "result" ).set( tree.expr.type );
+    } finally {
+//      ((Scope.WriteableScope)ReflectUtil.field( localEnv.info, "scope" ).get()).leave();
+    }
+  }
+
+  private boolean shouldCheckSuperType( Type type )
+  {
+    return _shouldCheckSuperType( type, true );
+  }
+
+  private boolean _shouldCheckSuperType( Type type, boolean checkSuper )
+  {
+    return
+      type instanceof Type.ClassType &&
+      type != Type.noType &&
+      !(type instanceof Type.ErrorType) &&
+      !type.toString().equals( Object.class.getTypeName() ) &&
+      (!checkSuper || _shouldCheckSuperType( ((Symbol.ClassSymbol)type.tsym).getSuperclass(), false ));
+  }
+
+  /**
+   * Facilitates @Jailbreak. ManResolve#isAccessible() needs to know the JCAnnotatedType in context.
+   */
+  @Override
+  public void visitAnnotatedType( JCTree.JCAnnotatedType tree )
+  {
+    _annotatedTypes.push( tree );
+    try
+    {
+      super.visitAnnotatedType( tree );
+    }
+    finally
+    {
+      _annotatedTypes.pop();
+    }
+  }
+
+  public JCTree.JCFieldAccess peekSelect()
+  {
+    return _selects.isEmpty() ? null : _selects.peek();
+  }
+
+  public JCTree.JCAnnotatedType peekAnnotatedType()
+  {
+    return _annotatedTypes.isEmpty() ? null : _annotatedTypes.peek();
+  }
+
+  /**
+   * Handles @Jailbreak
+   */
+  @Override
+  public void visitApply( JCTree.JCMethodInvocation tree )
+  {
+    if( !(tree.meth instanceof JCTree.JCFieldAccess) )
+    {
+      super.visitApply( tree );
+      patchMethodType( tree );
+      return;
+    }
+
+    if( JAILBREAK_PRIVATE_FROM_SUPERS )
+    {
+      _manLog.pushSuspendIssues( tree ); // since method-calls can be nested, we need a tree of stacks TreeNode(JCTree.JCFieldAccess, Stack<JCDiagnostic>>)
+    }
+
+    JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree.meth;
+    try
+    {
+      super.visitApply( tree );
+      patchMethodType( tree );
+
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        if( fieldAccess.type instanceof Type.ErrorType )
+        {
+          if( shouldCheckSuperType( fieldAccess.selected.type ) && _manLog.isJailbreakSelect( fieldAccess ) )
+          {
+            // set qualifier type to supertype to handle private methods
+            Type.ClassType oldType = (Type.ClassType)fieldAccess.selected.type;
+            fieldAccess.selected.type = ((Symbol.ClassSymbol)oldType.tsym).getSuperclass();
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+            fieldAccess.type = null;
+            fieldAccess.sym = null;
+            tree.type = null;
+
+            // retry with supertype
+            visitApply( tree );
+
+            // restore original type
+            fieldAccess.selected.type = oldType;
+            ((JCTree.JCIdent)fieldAccess.selected).sym.type = fieldAccess.selected.type;
+          }
+        }
+        else
+        {
+          // apply any issues logged for the found method (only the top of the suspend stack)
+          _manLog.recordRecentSuspendedIssuesAndRemoveOthers( tree );
+        }
+      }
+    }
+    finally
+    {
+      if( JAILBREAK_PRIVATE_FROM_SUPERS )
+      {
+        _manLog.popSuspendIssues( tree );
+      }
+    }
+  }
+
+  @Override
+  public void visitIndexed( JCTree.JCArrayAccess tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitIndexed( tree );
+      return;
+    }
+
+    ManAttr.super.handleIndexedOverloading( tree );
+  }
+
+  @Override
+  public void visitAssign( JCTree.JCAssign tree )
+  {
+    Class<?> ResultInfo_Class = ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" );
+    Type owntype = (Type)ReflectUtil.method( this, "attribTree", JCTree.class, Env.class, ResultInfo_Class )
+      .invoke( tree.lhs, getEnv().dup( tree ), ReflectUtil.field( this, "varAssignmentInfo" ).get() );
+
+    if( tree.lhs.type != null && tree.lhs.type.isPrimitive() )
+    {
+      // always cast rhs for the case where the original statement was a compound assign involving a primitive type
+      // (manifold transforms a += b to a = a + b, so that we can simply use plus() to handle both addition and compound
+      // assign addition, however:
+      //   short a = 0;
+      //   a += (byte)b;
+      // blows up if we don't cast the rhs of the resulting
+      // transformation:  a += (byte)b;  parse==>  a = a + (byte)b;  attr==>  a = (short) (a + (byte)b);
+      tree.rhs = makeCast( tree.rhs, tree.lhs.type );
+    }
+
+    Type capturedType = types().capture( owntype );
+    attribExpr( tree.rhs, getEnv(), owntype );
+    setResult( tree, capturedType );
+    ReflectUtil.field( this, "result" ).set( ReflectUtil.method( this, "check", JCTree.class, Type.class, Kinds.KindSelector.class, ResultInfo_Class )
+      .invoke( tree, capturedType, Kinds.KindSelector.VAL, ReflectUtil.field( this, "resultInfo" ).get() ) );
+
+    ensureIndexedAssignmentIsWritable( tree.lhs );
+  }
+
+  @Override
+  public void visitAssignop( JCTree.JCAssignOp tree )
+  {
+    super.visitAssignop( tree );
+
+    ensureIndexedAssignmentIsWritable( tree.lhs );
+  }
+
+  @Override
+  public void visitBinary( JCTree.JCBinary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitBinary( tree );
+      return;
+    }
+
+    if( tree.getTag() == JCTree.Tag.APPLY ) // binding expr
+    {
+      // Handle binding expressions
+
+      visitBindingExpression( tree );
+      ReflectUtil.field( tree, "opcode" ).set( JCTree.Tag.MUL ); // pose as a MUL expr to pass binary expr checks
+      return;
+    }
+
+    ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", JCDiagnostic.DiagnosticPosition.class, Type.class );
+    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
+    Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
+    Type right = handlePatternBindings( tree, checkNonVoid, attribExpr );
+
+    if( handleOperatorOverloading( tree, left, right ) )
+    {
+      // Handle operator overloading
+      return;
+    }
+
+    // Everything after left/right operand attribution (see super.visitBinary())
+    _visitBinary_Rest( tree, left, right );
+  }
+
+  private Type handlePatternBindings( JCTree.JCBinary tree, ReflectUtil.LiveMethodRef checkNonVoid, ReflectUtil.LiveMethodRef attribExpr )
+  {
+    // x && y
+    // include x's bindings when true in y
+
+    // x || y
+    // include x's bindings when false in y
+
+    MatchBindingsComputer.MatchBindings lhsBindings = (MatchBindingsComputer.MatchBindings)ReflectUtil.field( this, "matchBindings" ).get();
+    List<Symbol.BindingSymbol> propagatedBindings;
+    switch ( tree.getTag()) {
+      case AND:
+        propagatedBindings = lhsBindings.bindingsWhenTrue;
+        break;
+      case OR:
+        propagatedBindings = lhsBindings.bindingsWhenFalse;
+        break;
+      default:
+        propagatedBindings = com.sun.tools.javac.util.List.nil();
+        break;
+    }
+    Env<AttrContext> rhsEnv = (Env<AttrContext>)ReflectUtil.method( this, "bindingEnv", Env.class, com.sun.tools.javac.util.List.class )
+      .invoke(getEnv(), propagatedBindings);
+    Type right;
+    try {
+      right = (Type)checkNonVoid.invoke( tree.rhs.pos(), attribExpr.invoke( tree.rhs, rhsEnv ) );
+    } finally {
+      ((Scope.WriteableScope)ReflectUtil.field( rhsEnv.info, "scope" ).get()).leave();
+    }
+
+    ReflectUtil.field( this, "matchBindings" ).set( ((MatchBindingsComputer)ReflectUtil.field( this, "matchBindingsComputer" ).get())
+      .binary( tree, lhsBindings, (MatchBindingsComputer.MatchBindings)ReflectUtil.field( this, "matchBindings" ).get() ) );
+    return right;
+  }
+
+  private void _visitBinary_Rest( JCTree.JCBinary tree, Type left, Type right )
+  {
+    // Find operator.
+    Operators operators = Operators.instance( JavacPlugin.instance().getContext() );
+    Symbol operator = tree.operator =
+      (Symbol.OperatorSymbol)ReflectUtil.method( operators, "resolveBinary",
+        JCDiagnostic.DiagnosticPosition.class, JCTree.Tag.class, Type.class, Type.class )
+        .invoke( tree.pos(), tree.getTag(), left, right );
+
+    Type owntype = types().createErrorType( tree.type );
+    if( operator != operators.noOpSymbol &&
+        !left.isErroneous() &&
+        !right.isErroneous() )
+    {
+      owntype = operator.type.getReturnType();
+      int opc = ((Symbol.OperatorSymbol)operator).opcode;
+      // If both arguments are constants, fold them.
+      if( left.constValue() != null && right.constValue() != null )
+      {
+        Type ctype = (Type)ReflectUtil.method( cfolder(), "fold2", int.class, Type.class, Type.class ).invoke( opc, left, right );
+        if( ctype != null )
+        {
+          owntype = (Type)ReflectUtil.method( cfolder(), "coerce", Type.class, Type.class ).invoke( ctype, owntype );
+        }
+      }
+
+      // Check that argument types of a reference ==, != are
+      // castable to each other, (JLS 15.21).  Note: unboxing
+      // comparisons will not have an acmp* opc at this point.
+      if( (opc == ByteCodes.if_acmpeq || opc == ByteCodes.if_acmpne) )
+      {
+        if( !types().isCastable( left, right, new Warner( tree.pos() ) ) )
+        {
+          getLogger().error( tree.pos(), CompilerProperties.Errors.IncomparableTypes( left, right ) );
+        }
+      }
+
+      ReflectUtil.method( chk(), "checkDivZero", JCDiagnostic.DiagnosticPosition.class, Symbol.class, Type.class )
+        .invoke( tree.rhs.pos(), operator, right );
+    }
+    setResult( tree, owntype );
+  }
+
+  @Override
+  public void visitUnary( JCTree.JCUnary tree )
+  {
+    if( !JavacPlugin.instance().isExtensionsEnabled() )
+    {
+      super.visitUnary( tree );
+      return;
+    }
+
+    if( handleUnaryOverloading( tree ) )
+    {
+      return;
+    }
+
+    super.visitUnary( tree );
+  }
+
+  /**
+   * Overrides to handle fragments in String literals
+   */
+  public void visitLiteral( JCTree.JCLiteral tree )
+  {
+    if( tree.typetag == CLASS && tree.value.toString().startsWith( "[>" ) )
+    {
+      Type type = getFragmentValueType( tree );
+      tree.type = type;
+      ReflectUtil.field( this, "result" ).set( type );
+    }
+    else
+    {
+      super.visitLiteral( tree );
+    }
+  }
+
+  private Type getFragmentValueType( JCTree.JCLiteral tree )
+  {
+    try
+    {
+      CharSequence source = ManParserFactory.getSource( getEnv().toplevel.sourcefile );
+      CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
+        tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
+      FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
+        tree.pos().getStartPosition(), chars.toString(),
+        chars.length() > 3 && chars.charAt( 1 ) == '"'
+        ? TEXT_BLOCK_LITERAL
+        : DOUBLE_QUOTE_LITERAL );
+      if( fragment != null )
+      {
+        //String fragClass = getEnv().toplevel.packge.toString() + '.' + "Fragment_" + new Fingerprint( chars.toString() );
+        String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();
+        Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, fragClass );
+        for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+        {
+          if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
+          {
+            Type type = getFragmentValueType( annotation );
+            if( type != null )
+            {
+              return type;
+            }
+          }
+        }
+        getLogger().rawWarning( tree.pos().getStartPosition(),
+          "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
+      }
+    }
+    catch( Exception e )
+    {
+      getLogger().rawWarning( tree.pos().getStartPosition(),
+        "Error parsing Manifold fragment.\n" +
+        e.getClass().getSimpleName() + ": " + e.getMessage() + "\n" +
+        (e.getStackTrace().length > 0 ? e.getStackTrace()[0].toString() : "") );
+    }
+    return _syms.stringType.constType( tree.value );
+  }
+
+  private Type getFragmentValueType( Attribute.Compound attribute )
+  {
+    String type = null;
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "type" ) )
+      {
+        type = (String)pair.snd.getValue();
+      }
+    }
+
+    if( type != null )
+    {
+      Symbol.ClassSymbol fragValueSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, type );
+      if( fragValueSym != null )
+      {
+        return fragValueSym.type;
+      }
+    }
+
+    return null;
+  }
+
+  @Override
+  public void attribClass( JCDiagnostic.DiagnosticPosition pos, Symbol.ClassSymbol c) {
+    if( c.sourcefile instanceof ISelfCompiledFile )
+    {
+      ISelfCompiledFile sourcefile = (ISelfCompiledFile)c.sourcefile;
+      String fqn = c.getQualifiedName().toString();
+      if( sourcefile.isSelfCompile( fqn ) )
+      {
+        // signal the self-compiled class to fully parse and report errors
+        // (note its source in javac is just a stub)
+        sourcefile.parse( fqn );
+      }
+    }
+
+    super.attribClass( pos, c );
+  }
+}

@@ -31,6 +31,7 @@ import manifold.api.util.JavacDiagnostic;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
+import manifold.ext.rt.api.ThisClass;
 import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
@@ -453,7 +454,8 @@ class ExtCodeGen
       srcMethod.addAnnotation(
         new SrcAnnotationExpression( ExtensionMethod.class )
           .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
-          .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod ) );
+          .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod )
+          .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) ) );
     }
 
     srcMethod.returns( method.getReturnType() );
@@ -471,7 +473,7 @@ class ExtCodeGen
     }
 
     List params = method.getParameters();
-    for( int i = isInstanceExtensionMethod ? 1 : 0; i < params.size(); i++ )
+    for( int i = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0; i < params.size(); i++ )
     {
       // exclude This param
 
@@ -516,6 +518,11 @@ class ExtCodeGen
     if( isInstanceExtensionMethod )
     {
       call.append( "this" );
+    }
+    else if( hasThisClassAnnotation( method ) )
+    {
+      //todo @ThisClass does NOT work in delegation mode, this will fail
+      call.append( srcMethod.getOwner().getSimpleName() ).append( ".class" );
     }
     for( SrcParameter param : srcMethod.getParameters() )
     {
@@ -633,7 +640,7 @@ class ExtCodeGen
       return true;
     }
 
-    return hasThisAnnotation( method, extendedType );
+    return hasThisAnnotation( method, extendedType ) || hasThisClassAnnotation( method );
   }
   private boolean isInstanceExtensionMethod( AbstractSrcMethod method, SrcClass extendedType )
   {
@@ -661,6 +668,21 @@ class ExtCodeGen
     // checking only for simple name for cases where the name cannot be resolved yet e.g., extension method on another source producer type
     return param.getType().getName().endsWith( extendedType.getSimpleName() ) ||
       isArrayExtension( param, extendedType );
+  }
+  private boolean hasThisClassAnnotation( AbstractSrcMethod method )
+  {
+    List params = method.getParameters();
+    if( params.size() == 0 )
+    {
+      return false;
+    }
+    SrcParameter param = (SrcParameter)params.get( 0 );
+    if( !param.hasAnnotation( ThisClass.class ) )
+    {
+      return false;
+    }
+    // checking only for simple name for cases where the name cannot be resolved yet e.g., extension method on another source producer type
+    return param.getType().getName().endsWith( "Class" ) || param.getType().getName().contains( "Class<" );
   }
 
   private boolean isArrayExtension( SrcParameter param, SrcClass extendedType )

@@ -14,32 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.ext.rt;
+package manifold.ext.rt.api;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 /**
- * !!! For internal use only !!!
- * <p/>
- * This annotation is added to a generated extension method when it is added to the extended class.
- * It serves as a means to efficiently identify an extension method during method call analysis.
- * This annotation is never applied to code on disk.
+ * Identifies the static receiver of a static extension method, the calling class of the static method. The receiver's
+ * type must be {@link Class}.
  */
-@Target({METHOD})
-@Retention(RUNTIME)
-public @interface ExtensionMethod
+@Retention(RetentionPolicy.CLASS)
+@Target(ElementType.PARAMETER)
+public @interface ThisClass
 {
-  String extensionClass = "extensionClass";
-  String extensionClass();
-
-  String isStatic = "isStatic";
-  boolean isStatic();
-
-  String isSmartStatic = "isSmartStatic";
-  boolean isSmartStatic();
 }

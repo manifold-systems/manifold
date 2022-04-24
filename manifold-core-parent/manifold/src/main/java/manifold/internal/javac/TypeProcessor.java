@@ -21,26 +21,27 @@ import com.sun.tools.javac.api.BasicJavacTask;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
+
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ICompilerComponent;
+import manifold.api.type.ICompilerComponent.InitOrder;
 import manifold.api.type.ITypeManifold;
 import manifold.api.type.ITypeProcessor;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
+
+import static manifold.api.type.ICompilerComponent.InitOrder.After;
+import static manifold.api.type.ICompilerComponent.InitOrder.Before;
 
 /**
  */
 public class TypeProcessor extends CompiledTypeProcessor
 {
   private final Set<Object> _drivers;
-  private SortedSet<ICompilerComponent> _compilerComponents;
+  private LinkedHashSet<ICompilerComponent> _compilerComponents;
 
   TypeProcessor( IManifoldHost host, BasicJavacTask javacTask )
   {
@@ -51,9 +52,50 @@ public class TypeProcessor extends CompiledTypeProcessor
 
   private void loadCompilerComponents( BasicJavacTask javacTask )
   {
-    _compilerComponents = new TreeSet<>( Comparator.comparing( c -> c.getClass().getTypeName() ) );
+    _compilerComponents = new LinkedHashSet<>();
     ServiceUtil.loadRegisteredServices( _compilerComponents, ICompilerComponent.class, getClass().getClassLoader() );
+    _compilerComponents = new LinkedHashSet<>( order( new ArrayList<>( _compilerComponents ) ) );
     _compilerComponents.forEach( cc -> cc.init( javacTask, this ) );
+  }
+
+  /**
+   * Allow the components to control the order of their init() call with respect to other components.
+   */
+  private List<ICompilerComponent> order( List<ICompilerComponent> compilerComponents )
+  {
+    if( compilerComponents.size() <= 0 )
+    {
+      return compilerComponents;
+    }
+
+    List<ICompilerComponent> copy = new ArrayList<>( compilerComponents );
+    for( int i = 0; i < copy.size(); i++ )
+    {
+      ICompilerComponent c = copy.get( i );
+      int oldIndex = compilerComponents.indexOf( c );
+      compilerComponents.remove( oldIndex );
+      int newIndex = -1;
+      for( int j = compilerComponents.size() - 1; j >= 0; j-- )
+      {
+        ICompilerComponent cc = compilerComponents.get( j );
+        InitOrder initOrder = c.initOrder( cc );
+        if( initOrder == Before )
+        {
+          newIndex = j;
+        }
+      }
+      for( int j = 0; j < compilerComponents.size(); j++ )
+      {
+        ICompilerComponent cc = compilerComponents.get( j );
+        InitOrder initOrder = c.initOrder( cc );
+        if( initOrder == After )
+        {
+          newIndex = j + 1;
+        }
+      }
+      compilerComponents.add( newIndex >= 0 ? newIndex : oldIndex, c );
+    }
+    return compilerComponents;
   }
 
   public Collection<ICompilerComponent> getCompilerComponents()

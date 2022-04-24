@@ -170,7 +170,8 @@ public class ManTypes_8 extends Types
   {
     Type memberType = super.memberType( qualifier, memberSym );
 
-    if( memberSym.isStatic() || memberType.tsym.type instanceof Type.ErrorType )
+    // note, static is ok for methods intended to be transformed e.g., for the ICompilerComponent stuff e.g., query api
+    if( memberType.tsym.type instanceof Type.ErrorType )
     {
       return memberType;
     }
@@ -182,11 +183,6 @@ public class ManTypes_8 extends Types
 
     JCTree.JCMethodDecl methodDef = ((ManAttr)_attr).peekMethodDef();
     if( isSameMethodSym( memberSym, methodDef ) )
-    {
-      return memberType;
-    }
-
-    if( memberSym.getEnclosingElement().type.equals( qualifier ) )
     {
       return memberType;
     }

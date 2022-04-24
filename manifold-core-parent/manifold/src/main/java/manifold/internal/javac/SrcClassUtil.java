@@ -390,7 +390,7 @@ public class SrcClassUtil
     {
       for( int i = 0; i < methAnnos.size(); i++ )
       {
-        SrcAnnotationExpression methAnno = retAnnos.get( i );
+        SrcAnnotationExpression methAnno = methAnnos.get( i );
         if( methAnno.toString().equals( anno.toString() ) )
         {
           methAnnos.remove( i-- );

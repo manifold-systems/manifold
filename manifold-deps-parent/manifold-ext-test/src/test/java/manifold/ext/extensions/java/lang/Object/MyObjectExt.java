@@ -17,7 +17,11 @@
 package manifold.ext.extensions.java.lang.Object;
 
 import manifold.ext.rt.api.Extension;
+import manifold.ext.rt.api.Self;
 import manifold.ext.rt.api.This;
+import manifold.ext.rt.api.ThisClass;
+
+import java.util.function.Predicate;
 
 @Extension
 public class MyObjectExt
@@ -25,5 +29,23 @@ public class MyObjectExt
   protected static String myProtectedMethod( @This Object thiz )
   {
     return "protected method";
+  }
+
+  @Extension
+  public static @Self Object myStaticSelfMethod( Predicate<@Self Object> constraints )
+  {
+    // note, without employing @ThisClass the usage of @Self in a static method is still useful with code gen when
+    // the static method is not really going to execute e.g., building a query model from the meta information in the
+    // call.
+    return null;
+  }
+
+  public static Class mySmartStaticSelfMethod( @ThisClass Class callingClass, Predicate<@Self Object> constraints ) throws Exception
+  {
+    if( !constraints.test( callingClass.newInstance() ) )
+    {
+      return null;
+    }
+    return callingClass;
   }
 }

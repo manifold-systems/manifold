@@ -106,6 +106,7 @@ public class ManTypes_17 extends Types
         .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Annotate.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Attr.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( AttrRecover.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( DeferredAttr.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Flow.instance( context ), TYPES_FIELD ).set( this );
@@ -126,11 +127,11 @@ public class ManTypes_17 extends Types
     ReflectUtil.field(
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Operators" ), "instance", Context.class )
         .invokeStatic( context ), TYPES_FIELD ).set( this );
-    //noinspection ConstantConditions
     ReflectUtil.field(
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.jvm.StringConcat" ), "instance", Context.class )
         .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( RichDiagnosticFormatter.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( TransPatterns.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field(
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.TypeEnter" ), "instance", Context.class )
@@ -164,7 +165,8 @@ public class ManTypes_17 extends Types
   {
     Type memberType = super.memberType( qualifier, memberSym );
 
-    if( memberSym.isStatic() || memberType.tsym.type instanceof Type.ErrorType )
+    // static is ok now e.g., for transformer stuff
+    if( memberType.tsym.type instanceof Type.ErrorType )
     {
       return memberType;
     }
@@ -176,11 +178,6 @@ public class ManTypes_17 extends Types
 
     JCTree.JCMethodDecl methodDef = ((ManAttr)_attr).peekMethodDef();
     if( isSameMethodSym( memberSym, methodDef ) )
-    {
-      return memberType;
-    }
-
-    if( memberSym.getEnclosingElement().type.equals( qualifier ) )
     {
       return memberType;
     }

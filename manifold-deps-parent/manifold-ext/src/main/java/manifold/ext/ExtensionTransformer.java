@@ -30,56 +30,38 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCTypeCast;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.Name;
-import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Position;
-
-import java.io.File;
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
-
+import com.sun.tools.javac.util.*;
 import manifold.ExtIssueMsg;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.ContributorKind;
-import manifold.internal.javac.*;
-import manifold.rt.api.FragmentValue;
 import manifold.api.type.ITypeManifold;
-import manifold.rt.api.IncrementalCompile;
-import manifold.rt.api.Precompile;
 import manifold.ext.rt.ExtensionMethod;
-import manifold.ext.rt.api.Extension;
-import manifold.ext.rt.api.ComparableUsing;
-import manifold.ext.rt.api.Jailbreak;
-import manifold.ext.rt.api.Self;
-import manifold.ext.rt.api.Structural;
-import manifold.ext.rt.api.This;
 import manifold.ext.rt.ReflectionRuntimeMethods;
 import manifold.ext.rt.RuntimeMethods;
+import manifold.ext.rt.api.*;
+import manifold.internal.javac.*;
 import manifold.rt.api.Array;
-import manifold.util.JreUtil;
+import manifold.rt.api.FragmentValue;
+import manifold.rt.api.IncrementalCompile;
+import manifold.rt.api.Precompile;
 import manifold.rt.api.util.Pair;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
 
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.*;
-import static com.sun.tools.javac.code.Flags.BLOCK;
 import static com.sun.tools.javac.code.TypeTag.*;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
@@ -739,7 +721,6 @@ public class ExtensionTransformer extends TreeTranslator
       setCall = configMethod( lhs, operatorMethod, setCall );
 
       JCTree[] setCallTemp = tempify( true, tree, make, setCall, ctx, getEnclosingSymbol( tree, ctx ), "$setCallTempVar" + tempVarIndex );
-      //noinspection ConstantConditions
       tempVars = tempVars.append( (JCTree.JCVariableDecl)setCallTemp[0] );
 
       // Need let expr so that we can return the RHS value as required by java assignment op.
@@ -1000,11 +981,12 @@ public class ExtensionTransformer extends TreeTranslator
   public JCTree.JCMethodInvocation maybeReplaceWithExtensionMethod( JCTree.JCMethodInvocation methodCall )
   {
     // If methodCall is an extension method, rewrite it accordingly
-    Symbol.MethodSymbol extMethod = findExtMethod( methodCall );
+    boolean[] isSmartStatic = {false};
+    Symbol.MethodSymbol extMethod = findExtMethod( methodCall, isSmartStatic );
     if( extMethod != null )
     {
       // Replace with extension method call
-      methodCall = replaceExtCall( methodCall, extMethod );
+      methodCall = replaceExtCall( methodCall, extMethod, isSmartStatic[0] );
     }
     return methodCall;
   }
@@ -1366,11 +1348,12 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    Symbol.MethodSymbol method = findExtMethod( tree );
+    boolean isSmartStatic[] = {false};
+    Symbol.MethodSymbol method = findExtMethod( tree, isSmartStatic );
     if( method != null )
     {
       // Replace with extension method call
-      result = replaceExtCall( tree, method );
+      result = replaceExtCall( tree, method, isSmartStatic[0] );
     }
     else if( isStructuralMethod( tree ) )
     {
@@ -1674,18 +1657,10 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     Tree parent = _tp.getParent( tree );
-    if( parent instanceof JCTree.JCTypeParameter )
-    {
-      // @Self not allowed on type param
-      return false;
-    }
 
     if( parent instanceof JCTree.JCMethodDecl )
     {
-      // @Self allowed only on return type and parameters of an instance method
-      return !((JCTree.JCMethodDecl)parent).getModifiers()
-        .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
-        isExtensionClass( getEnclosingClass( parent ) );
+      return true;
     }
 
     if( parent instanceof JCTree.JCVariableDecl )
@@ -1694,9 +1669,7 @@ public class ExtensionTransformer extends TreeTranslator
       if( container instanceof JCTree.JCClassDecl )
       {
         // @Self allowed only on class var, not local var
-        return !((JCTree.JCVariableDecl)parent).getModifiers()
-          .getFlags().contains( javax.lang.model.element.Modifier.STATIC ) ||
-          isExtensionClass( getEnclosingClass( parent ) );
+        return true;
       }
     }
     return isSelfInMethodDeclOrFieldDecl( parent, anno );
@@ -2505,8 +2478,9 @@ public class ExtensionTransformer extends TreeTranslator
     return castCall;
   }
 
-  private JCTree.JCMethodInvocation replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method )
+  private JCTree.JCMethodInvocation replaceExtCall( JCTree.JCMethodInvocation tree, Symbol.MethodSymbol method, boolean isSmartStatic )
   {
+    Symtab symTab = _tp.getSymtab();
     JCExpression methodSelect = tree.getMethodSelect();
     if( methodSelect instanceof JCTree.JCFieldAccess )
     {
@@ -2528,6 +2502,18 @@ public class ExtensionTransformer extends TreeTranslator
       {
         ArrayList<JCExpression> newArgs = new ArrayList<>( tree.args );
         newArgs.add( 0, thisArg );
+        tree.args = List.from( newArgs );
+      }
+      else if( isSmartStatic )
+      {
+        ArrayList<JCExpression> newArgs = new ArrayList<>( tree.args );
+        JCTree.JCFieldAccess classExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, thisArg.type.tsym.getQualifiedName().toString() + ".class" );
+        classExpr.type = symTab.classType;
+        classExpr.sym = symTab.classType.tsym;
+        classExpr.pos = tree.pos;
+        assignTypes( classExpr.selected, thisArg.type.tsym );
+        classExpr.selected.pos = tree.pos;
+        newArgs.add( 0, classExpr );
         tree.args = List.from( newArgs );
       }
 
@@ -2552,6 +2538,17 @@ public class ExtensionTransformer extends TreeTranslator
       {
         JCExpression thisArg = make.This( _tp.getClassDecl( tree ).type );
         newArgs.add( 0, thisArg );
+      }
+      else if( isSmartStatic )
+      {
+        JCTree.JCClassDecl classDecl = _tp.getClassDecl( tree );
+        JCTree.JCFieldAccess classExpr = (JCTree.JCFieldAccess)memberAccess( make, javacElems, classDecl.getSimpleName().toString() + ".class" );
+        classExpr.type = symTab.classType;
+        classExpr.sym = symTab.classType.tsym;
+        classExpr.pos = tree.pos;
+        assignTypes( classExpr.selected, classDecl.type.tsym );
+        classExpr.selected.pos = tree.pos;
+        newArgs.add( 0, classExpr );
       }
       JCTree.JCMethodInvocation extCall =
         make.Apply( List.nil(),
@@ -2884,7 +2881,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
   }
 
-  private Symbol.MethodSymbol findExtMethod( JCTree.JCMethodInvocation tree )
+  private Symbol.MethodSymbol findExtMethod( JCTree.JCMethodInvocation tree, boolean[] isSmartStatic )
   {
     Symbol sym = null;
     if( tree.meth instanceof JCTree.JCFieldAccess )
@@ -2907,6 +2904,7 @@ public class ExtensionTransformer extends TreeTranslator
       {
         String extensionClass = (String)annotation.values.get( 0 ).snd.getValue();
         boolean isStatic = (boolean)annotation.values.get( 1 ).snd.getValue();
+        isSmartStatic[0] = (boolean)annotation.values.get( 2 ).snd.getValue();
         BasicJavacTask javacTask = (BasicJavacTask)_tp.getJavacTask(); //JavacHook.instance() != null ? (JavacTaskImpl)JavacHook.instance().getJavacTask_PlainFileMgr() : ClassSymbols.instance( _sp.getModule() ).getJavacTask_PlainFileMgr();
         Pair<Symbol.ClassSymbol, JCTree.JCCompilationUnit> classSymbol = ClassSymbols.instance( _sp.getModule() ).getClassSymbol( javacTask, _tp, extensionClass );
         if( classSymbol == null )
@@ -2932,7 +2930,7 @@ public class ExtensionTransformer extends TreeTranslator
             Symbol.MethodSymbol extMethodSym = (Symbol.MethodSymbol)elem;
             List<Symbol.VarSymbol> extParams = extMethodSym.getParameters();
             List<Symbol.VarSymbol> calledParams = ((Symbol.MethodSymbol)sym).getParameters();
-            int thisOffset = isStatic ? 0 : 1;
+            int thisOffset = isStatic && !isSmartStatic[0] ? 0 : 1;
             if( extParams.size() - thisOffset != calledParams.size() )
             {
               continue;
