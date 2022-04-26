@@ -2278,7 +2278,9 @@ public class ExtensionTransformer extends TreeTranslator
     {
       JCTree.JCVariableDecl param = parameters.get( i );
       long methodModifiers = tree.getModifiers().flags;
-      if( hasAnnotation( param.getModifiers().getAnnotations(), This.class ) )
+      boolean This;
+      if( (This = hasAnnotation( param.getModifiers().getAnnotations(), This.class )) ||
+        hasAnnotation( param.getModifiers().getAnnotations(), ThisClass.class ) )
       {
         thisAnnoFound = true;
 
@@ -2287,7 +2289,7 @@ public class ExtensionTransformer extends TreeTranslator
           _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_THIS_FIRST.get() );
         }
 
-        if( extendedClassName.equals( Array.class.getTypeName() ) )
+        if( This && extendedClassName.equals( Array.class.getTypeName() ) )
         {
           if( !param.type.tsym.getQualifiedName().toString().equals( Object.class.getName() ) )
           {
@@ -2295,9 +2297,12 @@ public class ExtensionTransformer extends TreeTranslator
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_OBJECT_FOR_THIS.get( Object.class.getSimpleName() ) );
           }
         }
-        else if( !(param.type.tsym instanceof Symbol.ClassSymbol) || !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName ) )
+        else if( This &&
+          (!(param.type.tsym instanceof Symbol.ClassSymbol) ||
+            !((Symbol.ClassSymbol)param.type.tsym).className().equals( extendedClassName )) )
         {
-          Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
+          Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement(
+            _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null &&
             !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
             !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) &&
@@ -2306,6 +2311,13 @@ public class ExtensionTransformer extends TreeTranslator
           {
             _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_TYPE_FOR_THIS.get( extendedClassName ) );
           }
+        }
+        else if( !This &&
+          (!(param.type.tsym instanceof Symbol.ClassSymbol) ||
+            !((Symbol.ClassSymbol)param.type.tsym).className().equals( Class.class.getTypeName() )) )
+        {
+          // @ThisClass must have Class type
+          _tp.report( param, Diagnostic.Kind.ERROR, ExtIssueMsg.MSG_EXPECTING_CLASS_TYPE_FOR_THISCLASS.get( extendedClassName ) );
         }
       }
       else if( i == 0 &&

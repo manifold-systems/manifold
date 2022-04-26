@@ -24,6 +24,7 @@ public class ExtIssueMsg
 {
   public static final IssueMsg MSG_THIS_FIRST = new IssueMsg( "'@This' must target only the first parameter of an extension method" );
   public static final IssueMsg MSG_EXPECTING_TYPE_FOR_THIS = new IssueMsg( "Expecting type '{0}' for '@This' parameter" );
+  public static final IssueMsg MSG_EXPECTING_CLASS_TYPE_FOR_THISCLASS = new IssueMsg( "Expecting type 'Class' for '@ThisClass' parameter" );
   public static final IssueMsg MSG_EXPECTING_OBJECT_FOR_THIS = new IssueMsg( "Array extensions must use 'Object' as '@This' parameter to handle both primitive and reference arrays" );
   public static final IssueMsg MSG_MAYBE_MISSING_THIS = new IssueMsg( "Maybe missing '@This' to declare an instance extension method?" );
   public static final IssueMsg MSG_MUST_BE_STATIC = new IssueMsg( "Extension method '{0}' must be declared 'static'" );
