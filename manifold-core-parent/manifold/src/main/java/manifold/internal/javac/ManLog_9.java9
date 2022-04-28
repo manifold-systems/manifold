@@ -85,6 +85,7 @@ public class ManLog_9 extends Log
       JavacProcessingEnvironment.instance( ctx ).getMessager(),
       JavacTrees.instance( ctx ),
       MemberEnter.instance( ctx ),
+      Modules.instance( ctx ),
       Resolve.instance( ctx ),
       TypeEnter.instance( ctx ),
       Operators.instance( ctx ),
