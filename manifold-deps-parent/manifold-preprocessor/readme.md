@@ -435,15 +435,11 @@ repositories {
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
-configurations {
-    // give tests access to annotationProcessor dependencies
-    testImplementation.extendsFrom annotationProcessor
-}
-
 dependencies {
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.11'
+    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2022.1.11'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
