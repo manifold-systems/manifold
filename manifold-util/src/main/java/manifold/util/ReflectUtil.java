@@ -75,7 +75,7 @@ public class ReflectUtil
 
   /**
    * For JDK 12+ using {@code Class#getDeclaredMethods0(boolean)} to access fields and methods that are otherwise
-   * filtered via {@link jdk.internal.reflect.Reflection#filterFields(Class, Field[])}.
+   * filtered via {@code jdk.internal.reflect.Reflection#filterFields(Class, Field[])}.
    */
   private static final LocklessLazyVar<Method> _getDeclaredMethods0 = LocklessLazyVar.make( () -> {
       if( JreUtil.isJava12orLater() )
@@ -188,7 +188,11 @@ public class ReflectUtil
     Class<?> cls;
     try
     {
-      cls = Class.forName( componentFqn, false, cl );
+      cls = classForPrimitiveName( componentFqn );
+      if( cls == null )
+      {
+        cls = Class.forName( componentFqn, false, cl );
+      }
     }
     catch( ClassNotFoundException e )
     {
@@ -205,6 +209,32 @@ public class ReflectUtil
       cls = Array.newInstance( cls, new int[dims] ).getClass();
     }
     return cls;
+  }
+
+  private static Class<?> classForPrimitiveName( String type )
+  {
+    switch( type )
+    {
+      case "void":
+        return void.class;
+      case "boolean":
+        return boolean.class;
+      case "char":
+        return char.class;
+      case "byte":
+        return byte.class;
+      case "short":
+        return short.class;
+      case "int":
+        return int.class;
+      case "long":
+        return long.class;
+      case "float":
+        return float.class;
+      case "double":
+        return double.class;
+    }
+    return null;
   }
 
   private static Class<?> findInCallChain( String fqn )
