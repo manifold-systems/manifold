@@ -11,7 +11,7 @@ layout: default
 Recently completed: [Properties for Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 (Available in new major release [v2021.1](https://github.com/manifold-systems/manifold/releases/tag/v2021.1.8))
 
-Working on: IDE plugin performance
+Working on: [Anonymous types](https://github.com/manifold-systems/manifold/issues/358) and [simple query](https://github.com/manifold-systems/manifold-simple-query) 
 
 ## On the pile (in no particular order)
 
