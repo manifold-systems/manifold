@@ -126,6 +126,7 @@ public class NecessaryEvilUtil
     //
     Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
