@@ -341,6 +341,7 @@ public class SrcClassUtil
       srcMethod.addParam( srcParam );
       addAnnotations( srcParam, param );
     }
+    removeParamAnnotationsIntendedForParamType( srcMethod );
     List<Type> thrownTypes = method.getThrownTypes();
     for( int i = 0; i < thrownTypes.size(); i++ )
     {
@@ -393,7 +394,33 @@ public class SrcClassUtil
         SrcAnnotationExpression methAnno = methAnnos.get( i );
         if( methAnno.toString().equals( anno.toString() ) )
         {
-          methAnnos.remove( i-- );
+          methAnnos.remove( i );
+          break;
+        }
+      }
+    }
+  }
+
+  /**
+   * Similar to {@link #removeMethodAnnotationsIntendedForReturnType} but applies to parameters and parameter types.
+   */
+  private void removeParamAnnotationsIntendedForParamType( SrcMethod srcMethod )
+  {
+    for( SrcParameter param: srcMethod.getParameters() )
+    {
+      SrcType paramType = param.getType();
+      java.util.List<SrcAnnotationExpression> paramAnnos = param.getAnnotations();
+      java.util.List<SrcAnnotationExpression> typeAnnos = paramType.getAnnotations();
+      for( SrcAnnotationExpression typeAnno: typeAnnos )
+      {
+        for( int i = 0; i < paramAnnos.size(); i++ )
+        {
+          SrcAnnotationExpression paramAnno = paramAnnos.get( i );
+          if( paramAnno.toString().equals( typeAnno.toString() ) )
+          {
+            paramAnnos.remove( i );
+            break;
+          }
         }
       }
     }
