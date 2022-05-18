@@ -53,6 +53,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Function;
 
+import static com.sun.tools.javac.code.TypeTag.LONG;
 import static com.sun.tools.javac.code.TypeTag.NONE;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.props.PropIssueMsg.*;
@@ -254,6 +255,22 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     @Override
     public void visitClassDef( JCClassDecl classDecl )
     {
+
+      if(!_propertyStatements.isEmpty()){
+
+        int modifiers = (int)classDecl.getModifiers().flags;
+
+        JCClassDecl superClassDecl = _propertyStatements.peek().fst;
+        boolean isPublicDefault = superClassDecl.getModifiers().annotations.stream().anyMatch(anno->
+          anno.getAnnotationType().toString().equals(PublicDefault.class.getSimpleName())
+        );
+
+        if(isPublicDefault && (modifiers & (PROTECTED | PRIVATE)) == 0){
+          // if the modifier does not contain protected and private, then add public to it
+          // for classes to avoid enclosing, static is added by default
+          classDecl.getModifiers().flags |= PUBLIC | STATIC;
+        }
+      }
       _propertyStatements.push( new Pair<>( classDecl, new ArrayList<>() ) );
       try
       {
@@ -275,6 +292,26 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     }
 
     @Override
+    public void visitMethodDef( JCMethodDecl tree )
+    {
+      super.visitMethodDef(tree);
+      if(!_propertyStatements.isEmpty()){
+
+        int modifiers = (int)tree.getModifiers().flags;
+
+        JCClassDecl classDecl = _propertyStatements.peek().fst;
+        boolean isPublicDefault = classDecl.getModifiers().annotations.stream().anyMatch(anno->
+          anno.getAnnotationType().toString().equals(PublicDefault.class.getSimpleName())
+        );
+
+        if(isPublicDefault && (modifiers & (PROTECTED | PRIVATE)) == 0 && !tree.getName().toString().equals("<init>")){
+          // if the modifier does not contain protected and private, then add public to it
+          tree.getModifiers().flags |= PUBLIC;
+        }
+      }
+    }
+
+    @Override
     public void visitVarDef( JCVariableDecl tree )
     {
       super.visitVarDef( tree );
@@ -290,12 +327,17 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
+        boolean isPublicDefault = classDecl.getModifiers().annotations.stream().anyMatch(anno->
+          anno.getAnnotationType().toString().equals(PublicDefault.class.getSimpleName())
+        );
+
+
         JCAnnotation var = getAnnotation( tree, var.class );
         JCAnnotation val = getAnnotation( tree, val.class );
         JCAnnotation get = getAnnotation( tree, get.class );
         JCAnnotation set = getAnnotation( tree, set.class );
 
-        if( var == null && val == null && get == null && set == null )
+        if( var == null && val == null && get == null && set == null && !isPublicDefault)
         {
           // not a property field
           return;
@@ -310,6 +352,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         if( (modifiers & (PUBLIC | PROTECTED | PRIVATE)) == 0 )
         {
           // default @var fields to PUBLIC, they must use PropOption.Package if they really want it
+          tree.getModifiers().flags |= PUBLIC;
+        }
+
+        if(isPublicDefault && (modifiers & (PROTECTED | PRIVATE)) == 0){
+          // if the modifier does not contain protected and private, then add public to it.
           tree.getModifiers().flags |= PUBLIC;
         }
 
