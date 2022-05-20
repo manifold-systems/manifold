@@ -180,6 +180,45 @@ public class ManArrayExt
     return Arrays.binarySearch( (Object[])array, from, to, key, comparator );
   }
 
+  public static String toString( @This Object array )
+  {
+    if( array == null )
+    {
+      return "null";
+    }
+
+    Class<?> componentType = array.getClass().getComponentType();
+    if( componentType.isPrimitive() )
+    {
+      switch( componentType.getTypeName() )
+      {
+        case "byte":
+          return Arrays.toString( (byte[])array );
+        case "short":
+          return Arrays.toString( (short[])array );
+        case "int":
+          return Arrays.toString( (int[])array );
+        case "long":
+          return Arrays.toString( (long[])array );
+        case "float":
+          return Arrays.toString( (float[])array );
+        case "double":
+          return Arrays.toString( (double[])array );
+        case "char":
+          return Arrays.toString( (char[])array );
+        case "boolean":
+          return Arrays.toString( (boolean[])array );
+        default:
+          throw new IllegalStateException();
+      }
+    }
+    else if( !componentType.isArray() )
+    {
+      return Arrays.toString( (Object[])array );
+    }
+    return Arrays.deepToString( (Object[])array );
+  }
+
   public static int hashCode( @This Object array )
   {
     Class<?> componentType = array.getClass().getComponentType();
@@ -207,13 +246,27 @@ public class ManArrayExt
           throw new IllegalStateException();
       }
     }
+    else if( !componentType.isArray() )
+    {
+      return Arrays.hashCode( (Object[])array );
+    }
     return Arrays.deepHashCode( (Object[])array );
   }
 
   public static boolean equals( @This Object array, @Self Object that )
   {
+    if( array == null && that == null )
+    {
+      return true;
+    }
+    if( array == null || that == null )
+    {
+      return false;
+    }
+
     Class<?> componentType = array.getClass().getComponentType();
-    if( componentType.isPrimitive() )
+    Class<?> thatComponentType = that.getClass().getComponentType();
+    if( componentType.isPrimitive() && componentType == thatComponentType )
     {
       switch( componentType.getTypeName() )
       {
@@ -237,6 +290,14 @@ public class ManArrayExt
           throw new IllegalStateException();
       }
     }
-    return Arrays.deepEquals( (Object[])array, (Object[])that );
+    else if( !componentType.isArray() && !thatComponentType.isArray() )
+    {
+      return Arrays.equals( (Object[])array, (Object[])that );
+    }
+    else if( componentType.isArray() && thatComponentType.isArray() )
+    {
+      return Arrays.deepEquals( (Object[])array, (Object[])that );
+    }
+    return false;
   }
 }

@@ -166,4 +166,22 @@ public class ManArrayExtTest extends TestCase
     //noinspection SimplifiableJUnitAssertion,ArrayEquals
     assertFalse( strArr1.equals( strArr3 ) );
   }
+
+  public void testToString()
+  {
+    int[] nullArray = null;
+    assertEquals( "null", nullArray.toString() );
+
+    int[] iArray = {1, 2, 3, 4};
+    assertEquals( "[1, 2, 3, 4]", iArray.toString() );
+
+    int[][] iArrayArray = {{1}, {2}, null, {4}};
+    assertEquals( "[[1], [2], null, [4]]", iArrayArray.toString() );
+
+    String[] strArray = {"1", "2", null, "4"};
+    assertEquals( "[1, 2, null, 4]", strArray.toString() );
+
+    String[][] strArrayArray = {{"1"}, {"2"}, {null}, {"4"}};
+    assertEquals( "[[1], [2], [null], [4]]", strArrayArray.toString() );
+  }
 }
