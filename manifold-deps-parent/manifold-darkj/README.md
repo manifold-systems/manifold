@@ -111,7 +111,7 @@ mvn compile
 ## Using this project
 
 The `manifold-darkj` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 17.
+versions 8 - 18.
 
 >Note, since Dark Java is a dynamic compilation feature, you must include Manifold dependencies in both compile-time
 >and runtime. As a consequence, the Manifold runtime compilation services add a bit of overhead in terms of
@@ -125,7 +125,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 ## Gradle
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 17), the script takes care of the rest. 
+version (8 - 18), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
