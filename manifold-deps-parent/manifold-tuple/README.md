@@ -85,12 +85,12 @@ for improved readability, in a return statement you can omit the parenthesis oth
 
 ## Inferred types 
          
-Tuple types are managed behind the scenes. You never directly specify them or even see them. They are always inferred
-using `auto` or `var`. The primary reason for this design is simply that tuple types tend to decrease readability where
-they are present and are generally inappropriate for APIs, particularly as method parameters. 
+Tuple *types* are managed behind the scenes. You never directly specify them or even see them. They are always inferred
+using `auto` or `var`. The primary reason for this design is that tuple types tend to decrease readability where they
+are present and are generally inappropriate for APIs, particularly as method parameters. 
 
-Essentially, tuples are designed to group loosely related data items within private and internal implementation code. In
-the case of APIs, consider defining a record, class, or interface.
+Essentially, tuple expressions are designed to group loosely related data items in internal implementation code. In
+the case of public APIs, consider defining a record, class, or interface.
 
 ## Type equivalence
 
