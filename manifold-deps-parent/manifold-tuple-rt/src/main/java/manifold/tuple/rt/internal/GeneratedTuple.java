@@ -106,7 +106,7 @@ public abstract class GeneratedTuple implements Tuple, Serializable
         public TupleItem next()
         {
           return new TupleValueImpl(
-            _orderedLabels.get( _index ), _orderedLabels.get( _index++ ) );
+            _orderedLabels.get( _index ), _orderedValues.get( _index++ ) );
         }
       };
   }

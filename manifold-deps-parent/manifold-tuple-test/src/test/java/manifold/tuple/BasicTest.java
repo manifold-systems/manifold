@@ -19,6 +19,7 @@ package manifold.tuple;
 import junit.framework.TestCase;
 import manifold.tuple.nested.DifferentPackage;
 import manifold.ext.rt.api.auto;
+import manifold.tuple.rt.api.TupleItem;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -167,6 +168,22 @@ public class BasicTest extends TestCase
     assertNotEquals( t1, t3 );
   }
 
+  public void testIterable()
+  {
+    auto x = (name: "Scott", age: 20);
+    List<Object> stuff = new ArrayList<>();
+    for( TupleItem item: x )
+    {
+      stuff.add( item.getName() );
+      stuff.add( item.getValue() );
+    }
+    assertEquals( 4, stuff.size() );
+    assertTrue( stuff.contains( "name" ) );
+    assertTrue( stuff.contains( "age" ) );
+    assertTrue( stuff.contains( "Scott" ) );
+    assertTrue( stuff.contains( 20 ) );
+  }
+  
   public void testNullReturn()
   {
     assertNull( nullTest( null ) );
