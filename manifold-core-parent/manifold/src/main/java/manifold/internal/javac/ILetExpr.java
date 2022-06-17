@@ -29,12 +29,12 @@ import manifold.util.ReflectUtil;
  * {@link LetExpr#expr}. Manifold uses LetExpr to handle JCUnary inc/dec and JCAssignOp (+=, *=, etc.) with advanced
  * features such as operator overloading and properties. In some cases, such as properties, we need the LetExpr to
  * have defs that are not JCVarDecl e.g., setXxx() to handle JCAssignOp. All of this mumbo jumbo here and in LetExpr_8
- * and LetExpr_9 is to make that work.
+ * and LetExpr_11 is to make that work.
  */
 public interface ILetExpr
 {
   /**
-   * Always use this method to make a new LetExpr, which must be an instance of either LetExpr_8 or LetExpr_9.
+   * Always use this method to make a new LetExpr, which must be an instance of either LetExpr_8 or LetExpr_11.
    */
   static LetExpr makeLetExpr(
     TreeMaker make, List<? extends JCTree> tempVars, JCTree.JCExpression value, Type type, int pos )
@@ -54,7 +54,7 @@ public interface ILetExpr
     letExpr.setPos( pos );
     return (LetExpr)(JreUtil.isJava8()
           ? (JCTree)ReflectUtil.constructor( "manifold.internal.javac.LetExpr_8", LetExpr.class ).newInstance( letExpr )
-          : (JCTree)ReflectUtil.constructor( "manifold.internal.javac.LetExpr_9", LetExpr.class ).newInstance( letExpr ));
+          : (JCTree)ReflectUtil.constructor( "manifold.internal.javac.LetExpr_11", LetExpr.class ).newInstance( letExpr ));
   }
 
   List<JCTree.JCStatement> getDefs();

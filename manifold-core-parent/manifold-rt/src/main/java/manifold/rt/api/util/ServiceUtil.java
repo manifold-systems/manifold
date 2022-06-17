@@ -17,6 +17,7 @@
 package manifold.rt.api.util;
 
 import manifold.util.JreUtil;
+import manifold.util.ManExceptionUtil;
 import manifold.util.ReflectUtil;
 
 import java.util.Iterator;
@@ -46,6 +47,14 @@ public class ServiceUtil
         {
           C service = iterator.next();
           services.add( service );
+        }
+        catch( UnsupportedClassVersionError ucve )
+        {
+          // if manifold compiles within IJ, it picks up the IJ plugin's impl, which is compiled with a later version of Java
+          if( !ucve.getMessage().contains( "manifold/ij/android/BuildVariantSymbols" ) )
+          {
+            throw ManExceptionUtil.unchecked( ucve );
+          }
         }
         catch( ServiceConfigurationError e )
         {

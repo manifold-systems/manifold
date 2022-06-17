@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.tree.JCTree;
@@ -25,10 +26,12 @@ import com.sun.tools.javac.tree.JCTree.Tag;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.Log;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+
+import java.util.*;
 import java.util.function.BiPredicate;
+
+import com.sun.tools.javac.util.Names;
+import manifold.api.util.IssueMsg;
 import manifold.internal.javac.AbstractBinder.Node;
 import manifold.util.ReflectUtil;
 
@@ -38,6 +41,8 @@ import static manifold.util.JreUtil.isJava8;
 
 public interface ManAttr
 {
+  String AUTO_TYPE = "manifold.ext.rt.api.auto";
+
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
   String COMPARE_TO = "compareTo";
@@ -81,6 +86,11 @@ public interface ManAttr
     return (Resolve)ReflectUtil.field( this, "rs" ).get();
   }
 
+  default Names names()
+  {
+    return (Names)ReflectUtil.field( this, "names" ).get();
+  }
+
   default Types types()
   {
     return (Types)ReflectUtil.field( this, "types" ).get();
@@ -101,7 +111,27 @@ public interface ManAttr
     return ReflectUtil.method( this, "pkind" ).invoke();
   }
 
-  default void patchMethodType( JCTree.JCMethodInvocation tree )
+  default void patchMethodType( JCTree.JCMethodInvocation tree, Set<JCTree.JCMethodInvocation> visited )
+  {
+    patchOperatorMethodType( tree );
+
+    if( visited.contains( tree ) )
+    {
+      // not handling non-tail recursive types (for now)
+      return;
+    }
+    visited.add( tree );
+    try
+    {
+      patchAutoReturnType( tree );
+    }
+    finally
+    {
+      visited.remove( tree );
+    }
+  }
+
+  default void patchOperatorMethodType( JCTree.JCMethodInvocation tree )
   {
     if( tree.meth.type == null )
     {
@@ -122,6 +152,244 @@ public interface ManAttr
         }
       }
     }
+  }
+
+  /**
+   * If the field access returns `auto`, this indicates the field definition is not fully compiled yet (type attribution),
+   * otherwise the `auto` type would be a real type inferred from the field's initializer. Therefore, we force the
+   * field to attribute so that the field access can be properly typed (to access the members declared in the
+   * inferred type).
+   */
+  default void patchAutoFieldType( JCTree.JCExpression tree )
+  {
+    Type type = tree.type;
+    if( !isAutoType( type ) )
+    {
+      return;
+    }
+                      
+    Symbol.VarSymbol vsym = null;
+    if( tree instanceof JCTree.JCIdent &&
+      ((JCTree.JCIdent)tree).sym instanceof Symbol.VarSymbol )
+    {
+      vsym = (Symbol.VarSymbol)((JCTree.JCIdent)tree).sym;
+    }
+    else if( tree instanceof JCTree.JCFieldAccess &&
+      ((JCTree.JCFieldAccess)tree).sym instanceof Symbol.VarSymbol )
+    {
+      vsym = (Symbol.VarSymbol)((JCTree.JCFieldAccess)tree).sym;
+    }
+
+    if( vsym != null )
+    {
+      Symbol.ClassSymbol declaringClassSym = (Symbol.ClassSymbol)vsym.owner;
+      JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
+
+      MyDiagnosticHandler diagHandler = new MyDiagnosticHandler( getLogger() );
+      try
+      {
+        if( enclosingClass != null && enclosingClass.sym == declaringClassSym )
+        {
+          // the field is in the same class as the field access site,
+          // force the FIELD to attribute, so we can get the actual field type
+          JCTree.JCVariableDecl varDecl = findJCVariableDecl( enclosingClass, vsym );
+          ((Attr)this).attribStat( varDecl, getEnv() );
+        }
+        else
+        {
+          // the field is not in the same class as the field access site,
+          // force the CLASS to attribute, so we can get the actual field type
+          ((Attr)this).attribClass( tree.pos(), declaringClassSym );
+        }
+      }
+      finally
+      {
+        getLogger().popDiagnosticHandler( diagHandler );
+      }
+
+      // get the potentially attributed return type
+      type = vsym.type;
+      if( isAutoType( type ) )
+      {
+        // failed to attribute
+
+        if( enclosingClass != null && enclosingClass.sym != declaringClassSym )
+        {
+          diagHandler = new MyDiagnosticHandler( getLogger() );
+          try
+          {
+            // the field is not in the same class as the field access site, but the class failed to fully attribute
+            // probably due to a reference cycle. Try to force just the FIELD to attribute.
+            //noinspection unchecked
+            Env<AttrContext> declClassEnv = (Env<AttrContext>)ReflectUtil.method(
+                ReflectUtil.field( this, "typeEnvs" ).get(), "get", Symbol.TypeSymbol.class )
+              .invoke( declaringClassSym );
+            JCTree.JCClassDecl declaringClass = (JCTree.JCClassDecl)declClassEnv.tree;
+            JCTree.JCVariableDecl varDecl = findJCVariableDecl( declaringClass, vsym );
+            // not supporting non-tail recursive methods (for now)
+//            ((Attr)this).attribStat( varDecl, declClassEnv );
+            type = ((Attr)this).attribStat( varDecl, declClassEnv );
+          }
+          finally
+          {
+            getLogger().popDiagnosticHandler( diagHandler );
+          }
+        }
+      }
+      if( isAutoType( type ) )
+      {
+        // bad, the class did/could not attribute types
+        IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.pos(),
+          "proc.messager", IssueMsg.MSG_AUTO_UNABLE_TO_RESOLVE_TYPE.get() );
+      }
+      else
+      {
+        // good, the more specific type is there now, set `this.result = type`
+        tree.type = type;
+        ReflectUtil.field( this, "result" ).set( type );
+      }
+    }
+  }
+  /**
+   * If the method call returns `auto`, this indicates the method definition is not fully compiled yet (type attribution),
+   * otherwise the `auto` type would be a real type inferred from the return statements. Therefore, we force the
+   * method to attribute types so that the method call can be properly typed (to access the members declared in the
+   * inferred type).
+   */
+  default void patchAutoReturnType( JCTree.JCMethodInvocation tree )
+  {
+    Type type = tree.type;
+    if( !isAutoType( type ) )
+    {
+      return;
+    }
+
+    Symbol.MethodSymbol msym = null;
+    if( tree.meth instanceof JCTree.JCIdent &&
+      ((JCTree.JCIdent)tree.meth).sym instanceof Symbol.MethodSymbol )
+    {
+      msym = (Symbol.MethodSymbol)((JCTree.JCIdent)tree.meth).sym;
+    }
+    else if( tree.meth instanceof JCTree.JCFieldAccess &&
+      ((JCTree.JCFieldAccess)tree.meth).sym instanceof Symbol.MethodSymbol )
+    {
+      msym = (Symbol.MethodSymbol)((JCTree.JCFieldAccess)tree.meth).sym;
+    }
+
+    if( msym != null )
+    {
+      Symbol.ClassSymbol declaringClassSym = (Symbol.ClassSymbol)msym.owner;
+      JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
+
+      MyDiagnosticHandler diagHandler = new MyDiagnosticHandler( getLogger() );
+      try
+      {
+        if( enclosingClass != null && enclosingClass.sym == declaringClassSym )
+        {
+          // the called method is in the same class as the call site,
+          // force the METHOD to attribute, so we can get the actual return type
+          JCTree.JCMethodDecl methodDef = findJCMethodDef( enclosingClass, msym );
+          ((Attr)this).attribStat( methodDef, getEnv() );
+        }
+        else
+        {
+          // the called method is not in the same class as the call site,
+          // force the CLASS to attribute, so we can get the actual return type
+          ((Attr)this).attribClass( tree.pos(), declaringClassSym );
+        }
+      }
+      finally
+      {
+        getLogger().popDiagnosticHandler( diagHandler );
+      }
+
+      // get the potentially attributed return type
+      type = msym.getReturnType();
+      if( isAutoType( type ) )
+      {
+        // failed to attribute
+
+        if( enclosingClass != null && enclosingClass.sym != declaringClassSym )
+        {
+          diagHandler = new MyDiagnosticHandler( getLogger() );
+          try
+          {
+            // the called method is not in the same class as the call site, but the class failed to fully attribute
+            // probably due to a reference cycle. Try to force just the called METHOD to attribute.
+            //noinspection unchecked
+            Env<AttrContext> declClassEnv = (Env<AttrContext>)ReflectUtil.method(
+                ReflectUtil.field( this, "typeEnvs" ).get(), "get", Symbol.TypeSymbol.class )
+              .invoke( declaringClassSym );
+            JCTree.JCClassDecl declaringClass = (JCTree.JCClassDecl)declClassEnv.tree;
+            JCTree.JCMethodDecl methodDef = findJCMethodDef( declaringClass, msym );
+            if( methodDef != getEnv().enclMethod )
+            {
+              // not supporting non-tail recursive methods (for now)
+              ((Attr)this).attribStat( methodDef, declClassEnv );
+              type = msym.getReturnType();
+            }
+          }
+          finally
+          {
+            getLogger().popDiagnosticHandler( diagHandler );
+          }
+        }
+      }
+      if( isAutoType( type ) )
+      {
+        // bad, the class did/could not attribute types
+        IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.meth.pos(),
+          "proc.messager", IssueMsg.MSG_AUTO_UNABLE_TO_RESOLVE_TYPE.get() );
+      }
+      else
+      {
+        // good, the more specific type is there now, set `this.result = type`
+        tree.type = type;
+        ReflectUtil.field( this, "result" ).set( type );
+      }
+    }
+  }
+
+  default JCTree.JCMethodDecl findJCMethodDef( JCTree.JCClassDecl tree, Symbol.MethodSymbol msym )
+  {
+    for( JCTree def: tree.defs )
+    {
+      if( def instanceof JCTree.JCMethodDecl && ((JCTree.JCMethodDecl)def).sym == msym )
+      {
+        return (JCTree.JCMethodDecl)def;
+      }
+    }
+    return null;
+  }
+
+  default JCTree.JCVariableDecl findJCVariableDecl( JCTree.JCClassDecl tree, Symbol.VarSymbol vsym )
+  {
+    for( JCTree def: tree.defs )
+    {
+      if( def instanceof JCTree.JCVariableDecl && ((JCTree.JCVariableDecl)def).sym == vsym )
+      {
+        return (JCTree.JCVariableDecl)def;
+      }
+    }
+    return null;
+  }
+
+  default JCTree.JCClassDecl getEnclosingClass( Tree tree )
+  {
+    if( tree == null )
+    {
+      return null;
+    }
+    if( tree instanceof JCTree.JCClassDecl )
+    {
+      return (JCTree.JCClassDecl)tree;
+    }
+    return getEnclosingClass( JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel ) );
+  }
+
+  default boolean isAutoType( Type type )
+  {
+    return type != null && type.tsym != null && type.tsym.getQualifiedName().toString().equals( AUTO_TYPE );
   }
 
   /**
@@ -655,5 +923,29 @@ public interface ManAttr
            tag == Tag.BITAND ||
            tag == Tag.EQ ||
            tag == Tag.NE;
+  }
+
+  class MyDiagnosticHandler extends Log.DiagnosticHandler
+  {
+    MyDiagnosticHandler( Log log )
+    {
+      install( log );
+    }
+
+    @Override
+    public void report( JCDiagnostic jcDiagnostic )
+    {
+      prev.report( jcDiagnostic );
+    }
+  }
+
+  class MyRuntimeException extends RuntimeException
+  {
+    @Override
+    public synchronized Throwable fillInStackTrace()
+    {
+      // avoid cost of exception
+      return this;
+    }
   }
 }

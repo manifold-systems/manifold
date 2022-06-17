@@ -496,6 +496,33 @@ public class ManTypes_8 extends Types
     return receiverType;
   }
 
+  @Override
+  public boolean returnTypeSubstitutable( Type r1,
+                                          Type r2, Type r2res,
+                                          Warner warner )
+  {
+    if( ManAttr.AUTO_TYPE.equals( r1.getReturnType().tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    if( ManAttr.AUTO_TYPE.equals( r2res.tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+
+    return super.returnTypeSubstitutable( r1, r2, r2res, warner );
+  }
+
+  @Override
+  public boolean resultSubtype( Type t, Type s, Warner warner )
+  {
+    if( ManAttr.AUTO_TYPE.equals( t.getReturnType().tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    return super.resultSubtype( t, s, warner );
+  }
+
   /**
    * Override to keep track of when/if implementation() is in scope, if ManTypes#memberType() should not try to
    * substitute the qualifier type for @Self because the qualifier is not really a call site, rather it is the

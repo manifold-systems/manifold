@@ -1522,6 +1522,10 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCIdent ident = (JCIdent)tree.lhs;
         lhs = ident;
         lhsSelectedType = _backingSymbols.peek().fst.type;
+        if( lhsSelectedType == null )
+        {
+          return;
+        }
         lhsSym = ident.sym;
         Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
         lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())

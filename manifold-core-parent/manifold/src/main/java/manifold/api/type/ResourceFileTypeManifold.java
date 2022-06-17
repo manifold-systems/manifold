@@ -79,6 +79,12 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     getModule().getHost().addTypeSystemListenerAsWeakRef( getModule(), _cacheClearer = createCacheClearer() );
   }
 
+  @Override
+  public boolean isFileBacked()
+  {
+    return true;
+  }
+
   protected CacheClearer createCacheClearer()
   {
     return new CacheClearer();

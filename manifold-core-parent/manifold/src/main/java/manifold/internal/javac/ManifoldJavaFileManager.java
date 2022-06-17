@@ -356,7 +356,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
     return (Location)ReflectUtil.field( moduleElement, "classLocation" ).get();
   }
 
-  private JavaFileObject findGeneratedFile( String fqn, Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
+  public JavaFileObject findGeneratedFile( String fqn, Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
   {
     FqnCacheNode<JavaFileObject> node = _generatedFiles.getNode( fqn );
     if( node != null )
@@ -470,7 +470,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       .collect( Collectors.toSet() );
     for( ITypeManifold tm: host.getSingleModule().getTypeManifolds() )
     {
-      if( tm.getContributorKind() == Supplemental && tm.isType( fqn ) )
+      if( (tm.getContributorKind() == Supplemental || !tm.isFileBacked()) && tm.isType( fqn ) )
       {
         // do not filter extension classes, they must be augmented in memory (the extended .class file does not have extensions)
         return false;

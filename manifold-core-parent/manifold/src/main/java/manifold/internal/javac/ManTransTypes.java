@@ -16,13 +16,23 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.code.Kinds;
+import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.comp.LambdaToMethod;
 import com.sun.tools.javac.comp.TransTypes;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Log;
+import manifold.api.util.IssueMsg;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
+import manifold.util.concurrent.LocklessLazyVar;
+
+import static manifold.internal.javac.ManAttr.AUTO_TYPE;
 
 public class ManTransTypes extends TransTypes
 {
@@ -71,5 +81,39 @@ public class ManTransTypes extends TransTypes
   public boolean isTranslating()
   {
     return _translateCount > 0;
+  }
+
+  private final LocklessLazyVar<?> java9Kind_TYP = LocklessLazyVar.make(
+    () -> ReflectUtil.field( Kinds.class.getTypeName() + "$Kind", "TYP" ).getStatic() );
+  public void visitIdent( JCTree.JCIdent tree)
+  {
+    boolean isTypeId = JreUtil.isJava8()
+      ? ReflectUtil.field( tree.sym, "kind" ).get().equals( ReflectUtil.field( Kinds.class, "TYP" ).getStatic() )
+      : ReflectUtil.field( tree.sym, "kind" ).get() == java9Kind_TYP.get();
+    if( isTypeId && tree.type.isPrimitive() && isAutoType( tree ) )
+    {
+      // Map 'auto' to primitive as-is avoiding otherwise errant erasure logic
+      result = tree;
+      return;
+    }
+
+    Type botType = Symtab.instance( JavacPlugin.instance().getContext() ).botType;
+    if( tree.type == botType )
+    {
+      // error: 'auto' can't infer from only 'null' expressions
+
+      IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ), tree.pos(),
+        "proc.messager", IssueMsg.MSG_AUTO_CANNOT_INFER_FROM_NULL.get() );
+    }
+    else
+    {
+      super.visitIdent( tree );
+    }
+  }
+
+  private boolean isAutoType( JCTree.JCIdent tree )
+  {
+    return ManClassUtil.getShortClassName( AUTO_TYPE ).equals( tree.name.toString() ) ||
+      AUTO_TYPE.equals( tree.name.toString() );
   }
 }

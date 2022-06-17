@@ -165,7 +165,7 @@ public class ManTypes_17 extends Types
   {
     Type memberType = super.memberType( qualifier, memberSym );
 
-    // static is ok now e.g., for transformer stuff
+    // note, static is ok for methods intended to be transformed e.g., for the ICompilerComponent stuff e.g., query api
     if( memberType.tsym.type instanceof Type.ErrorType )
     {
       return memberType;
@@ -489,6 +489,32 @@ public class ManTypes_17 extends Types
       return makeArray( ((Type.ArrayType)unannotatedType).getComponentType(), new Type.ArrayType( receiverType, _syms.arrayClass ) );
     }
     return receiverType;
+  }
+
+  @Override
+  public boolean returnTypeSubstitutable( Type r1,
+                                          Type r2, Type r2res,
+                                          Warner warner )
+  {
+    if( ManAttr.AUTO_TYPE.equals( r1.getReturnType().tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    if( ManAttr.AUTO_TYPE.equals( r2res.tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    return super.returnTypeSubstitutable( r1, r2, r2res, warner );
+  }
+
+  @Override
+  public boolean resultSubtype( Type t, Type s, Warner warner )
+  {
+    if( ManAttr.AUTO_TYPE.equals( t.getReturnType().tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    return super.resultSubtype( t, s, warner );
   }
 
   /**

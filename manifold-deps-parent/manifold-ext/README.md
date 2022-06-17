@@ -36,7 +36,9 @@
   * [Dynamic Typing](#dynamic-typing-with-icallhandler)
 * [Type-safe reflection](#type-safe-reflection-via-jailbreak) with `@Jailbreak`
   * [Basics](#using-the-jailbreak-extension)
-  * [Using `jailbreak()`](#using-the-jailbreak-extension)
+    * [Using `jailbreak()`](#using-the-jailbreak-extension)
+* [Type inference with 'auto'](#type-inference-with-auto)
+  * [Multiple return values](#multiple-return-values)
 * [The *Self* type](#the-self-type-via-self) via `@Self`
   * [Builders](#builders)
   * [Self + Generics](#self--generics)
@@ -1543,6 +1545,50 @@ inaccessible members:
 ```java
 something.foo().jailbreak().bar.jailbreak().baz = value;
 ``` 
+
+# Type inference with `auto`
+
+Similar to `var` in Java 10+, `auto` provides type inference for local variables beginning with Java 8. You can use
+`var` and `auto` interchangeably for locals. However, unlike `var`, `auto` also works with fields and method return
+types.
+
+```java
+/** Selects a list of (name, age) tuples from a list of Person */
+public auto nameAge(List<Person> list) { 
+  return list.stream()
+    .map(p -> (p.name, p.age))
+    .collect(Collectors.toList());
+}
+
+auto result = nameAge(persons);
+for(auto tuple: nameAge(persons)) {
+  out.pringln("name: " + tuple.name + " age: " + tuple.age);
+}
+```
+>Note, see [Tuples](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple) for
+>for more info on tuples.
+
+## Multiple return values
+A common use-case for `auto` is to return multiple values from a method.
+```java
+var result = findMinMax(data);
+System.out.println("Minimum: " + result.min + " Maximum: " + result.max);
+
+auto findMinMax(int data[]) {
+  if(data == null || data.length == 0) return null;
+  int min = Integer.MAX_VALUE;
+  int max = Integer.MIN_VALUE;
+  for(int i: input) {
+    if(i < min) min == i;
+    if(i > max) max = i;
+  }
+  return min, max;
+}
+```
+Here the combined use of tuples and `auto` provides a clear and concise syntax for type-safely returning multiple values. As with
+fields and local variables, using `auto` on a method infers its return type from its return statements. Additionally,
+for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
+
 
 # The *Self* Type via `@Self`
 

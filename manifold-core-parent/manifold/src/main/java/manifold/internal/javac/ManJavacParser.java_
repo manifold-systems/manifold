@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2022 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.*;
+import manifold.util.ReflectUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -39,6 +40,8 @@ import java.util.stream.Collectors;
 
 
 import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
+import static com.sun.tools.javac.tree.JCTree.Tag.IDENT;
+import static com.sun.tools.javac.tree.JCTree.Tag.VARDEF;
 
 /**
  * !!! IMPORTANT !!!
@@ -70,6 +73,7 @@ public class ManJavacParser extends JavacParser
   private static Method method_BindingPattern_15 = null;
   private static Method method_BindingPattern_16 = null;
   private static Method method_insertAnnotationsToMostInner = null;
+  private static Method method_reportSyntaxError = null;
   private static Method method_peekToken = null;
   private static Method method_unannotatedType = null;
   private static int java_ver = 0;
@@ -83,17 +87,20 @@ public class ManJavacParser extends JavacParser
       field_endPosTable = JavacParser.class.getDeclaredField( "endPosTable" );
       field_endPosTable.setAccessible( true );
 
-      method_insertAnnotationsToMostInner = JavacParser.class.getDeclaredMethod( "insertAnnotationsToMostInner", JCExpression.class, List.class, boolean .class );
+      method_insertAnnotationsToMostInner = JavacParser.class.getDeclaredMethod( "insertAnnotationsToMostInner", JCExpression.class, List.class, boolean.class );
       method_insertAnnotationsToMostInner.setAccessible( true );
 
       try
       {
         method_peekToken = JavacParser.class.getDeclaredMethod( "peekToken", int.class, Class.forName( "com.sun.tools.javac.util.Filter", true, JavacParser.class.getClassLoader() ) );
         method_peekToken.setAccessible( true );
+
+        method_reportSyntaxError = JavacParser.class.getDeclaredMethod( "reportSyntaxError", int.class, String.class, Object[].class );
+        method_reportSyntaxError.setAccessible( true );
       }
       catch( Throwable ignore )
       {
-        // means we are running java 17+
+        // greater than 8 (either 11 or 17)
       }
 
       java_ver = 8;
@@ -109,6 +116,13 @@ public class ManJavacParser extends JavacParser
       method_unannotatedType.setAccessible( true );
 
       java_ver = 10;
+
+      // java 11+
+
+      method_reportSyntaxError = JavacParser.class.getDeclaredMethod( "reportSyntaxError", int.class, Class.forName( JCDiagnostic.class.getTypeName() + "$Error" ) );
+      method_reportSyntaxError.setAccessible( true );
+
+      java_ver = 11;
 
       // Java 15+
       method_selectExprMode = JavacParser.class.getDeclaredMethod( "selectExprMode" );
@@ -414,6 +428,170 @@ public class ManJavacParser extends JavacParser
       token.kind == LPAREN;
   }
 
+  @Override
+  protected JCExpression term3()
+  {
+    //Manifold: handle tuple expression:
+    // tuple-expr: '(' <tuple-item> {, <tuple-item>} ')'
+    // tuple-item: <labeled-expr> | <expr>
+    // labeled-expr: <label> ':' <expr>
+    JCTree.JCExpression tupleExpr = parseTupleExpr();
+    if( tupleExpr != null )
+    {
+      return tupleExpr;
+    }
+    
+    return super.term3();
+  }
+
+  private JCExpression parseTupleExpr()
+  {
+    int pos = token.pos;
+    if( token.kind == LPAREN &&
+      ((get_mode() & EXPR) != 0) &&
+      typeArgumentsOpt( EXPR ) == null &&
+      analyzeParens() == ParensResult.PARENS )
+    {
+      accept( LPAREN );
+      List<JCExpression> args = List.nil();
+      while( true )
+      {
+        JCExpression arg = args.isEmpty()
+          ? parseExpression() //termRest( term1Rest( term2Rest( term3(), TreeInfo.orPrec ) ) )
+          : parseExpression();
+        if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+        {
+          JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+          labelMethod.pos = arg.pos;
+          JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+          label.pos = arg.pos;
+          args = args.append( label );
+          nextToken();
+          arg = parseExpression();
+        }
+        args = args.append( arg );
+        if( token.kind != COMMA )
+        {
+          break;
+        }
+        nextToken();
+      }
+
+      JCExpression result;
+      if( args.size() > 1 )
+      {
+        JCExpression lastArg = args.get( args.size() - 1 );
+        JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+        ident.pos = lastArg.pos;
+        result = F.Apply( List.nil(), ident, args );
+        result.pos = lastArg.pos;
+      }
+      else
+      {
+        result = args.isEmpty() ? null : args.get( 0 );
+      }
+      accept( RPAREN );
+      JCExpression expr = toP( F.at( pos ).Parens( result ) );
+      return term3Rest( expr, null );
+    }
+    return null;
+  }
+
+//  private JCTree.JCExpression parseTupleExpr()
+//  {
+//    if( token.kind == LPAREN &&
+//      get_mode() == EXPR &&
+//      typeArgumentsOpt( EXPR ) == null &&
+//      analyzeParens() == ParensResult.PARENS )
+//    {
+//      int lookahead = 1;
+//      boolean labeled = false;
+//      if( S.token( lookahead ).kind == COLON || (labeled = S.token( lookahead ).kind == IDENTIFIER) )
+//      {
+//        lookahead++;
+//        if( !labeled || S.token( lookahead ).kind == COLON )
+//        {
+//          int pos = token.pos;
+//
+//          accept( LPAREN );
+//
+//          JCExpression tupleGuts = null;
+//          List<JCExpression> args = List.nil();
+//          while( true )
+//          {
+//            labeled = token.kind != COLON;
+//
+//            if( !labeled )
+//            {
+//              accept( COLON );
+//            }
+//
+//            JCExpression arg = parseExpression();
+//
+//            if( labeled )
+//            {
+//              if( !(arg instanceof JCTree.JCIdent) || token.kind != COLON )
+//              {
+//                reportError( arg.pos, "A tuple value must be labeled or must be preceded by a ':'" );
+//              }
+//              else
+//              {
+//                JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+//                labelMethod.pos = arg.pos;
+//                JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+//                label.pos = arg.pos;
+//                args = args.append( label );
+//                nextToken();
+//                arg = parseExpression();
+//              }
+//            }
+//            args = args.append( arg );
+//            if( token.kind != COMMA )
+//            {
+//              break;
+//            }
+//            accept( COMMA );
+//          }
+//
+//          accept( RPAREN );
+//
+//          if( !args.isEmpty() )
+//          {
+//            JCExpression lastArg = args.get( args.size() - 1 );
+//            JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+//            ident.pos = lastArg.pos;
+//            tupleGuts = F.Apply( List.nil(), ident, args );
+//            tupleGuts.pos = lastArg.pos;
+//            JCTree.JCParens tupleExpr = toP( F.at( pos ).Parens( tupleGuts ) );
+//            return term3Rest( tupleExpr, null );
+//          }
+//        }
+//      }
+//    }
+//    return null;
+//  }
+
+  private void reportError( int pos, String message )
+  {
+    try
+    {
+      if( java_ver >= 11 )
+      {
+        method_reportSyntaxError.invoke( this, pos,
+          Class.forName( "com.sun.tools.javac.resources.CompilerProperties$Errors" ).getMethod( "ProcMessager", String.class )
+            .invoke( null, message ) );
+      }
+      else
+      {
+        method_reportSyntaxError.invoke( this, pos, "proc.messager", new Object[]{message} );
+      }
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
   /**
    * Manifold:
    * Override to account for case: {@code (ident unit)}.  This otherwise conflicts with the parser's handling of parens
@@ -482,6 +660,9 @@ public class ManJavacParser extends JavacParser
     }
   }
 
+  protected <T extends JCTree> T to( T t ) {
+    return _endPosTable.to(t);
+  }
   protected <T extends JCTree> T toP( T t ) {
     return _endPosTable.toP(t);
   }
@@ -542,5 +723,77 @@ public class ManJavacParser extends JavacParser
       }
     }
     return reqInit;
+  }
+
+  @SuppressWarnings("fallthrough")
+  public JCTree.JCStatement parseStatement() {
+    JCTree.JCStatement returnStmt = handleMultipleValueReturnAsTuple();
+    if( returnStmt != null )
+    {
+      return returnStmt;
+    }
+    return super.parseStatement();
+  }
+
+  List<JCTree.JCStatement> blockStatement()
+  {
+    JCTree.JCStatement returnStmt = handleMultipleValueReturnAsTuple();
+    if( returnStmt != null )
+    {
+      return List.of( returnStmt );
+    }
+    return super.blockStatement();
+  }
+
+  private JCTree.JCStatement handleMultipleValueReturnAsTuple()
+  {
+    if( token.kind != RETURN )
+    {
+      return null;
+    }
+    int pos = token.pos;
+    //Manifold: handle multiple return expressions as a tuple
+    nextToken();
+    JCExpression result = null;
+    if( token.kind != SEMI )
+    {
+      List<JCExpression> args = List.nil();
+      while( true )
+      {
+        JCExpression arg = parseExpression();
+        if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+        {
+          JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+          labelMethod.pos = arg.pos;
+          JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+          label.pos = arg.pos;
+          args = args.append( label );
+          nextToken();
+          arg = parseExpression();
+        }
+        args = args.append( arg );
+        if( token.kind != COMMA )
+        {
+          break;
+        }
+        nextToken();
+      }
+
+      if( args.size() > 1 )
+      {
+        JCExpression lastArg = args.get( args.size() - 1 );
+        JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+        ident.pos = lastArg.pos;
+        result = F.Apply( List.nil(), ident, args );
+        result.pos = lastArg.pos;
+      }
+      else
+      {
+        result = args.isEmpty() ? null : args.get( 0 );
+      }
+    }
+    JCTree.JCReturn t = to( F.at( pos ).Return( result ) );
+    accept( SEMI );
+    return t;
   }
 }

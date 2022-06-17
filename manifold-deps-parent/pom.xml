@@ -18,6 +18,9 @@
   <url>http://manifold.systems/</url>
 
   <modules>
+    <module>manifold-tuple</module>
+    <module>manifold-tuple-rt</module>
+    <module>manifold-tuple-test</module>
     <module>manifold-collections</module>
     <module>manifold-collections-test</module>
     <module>manifold-csv</module>

@@ -82,25 +82,22 @@ public interface IDynamicJdk
         try
         {
           String fqnIssueReporter;
-          if( JreUtil.isJava8() )
+          if( JreUtil.isJava8() ) // Java 8
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_8";
           }
-          else if( JreUtil.JAVA_VERSION < 11 ) // Java 9 & 10
-          {
-            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_9";
-          }
-          else if( JreUtil.isJava11() ) // Java 11 - 15
+          else if( JreUtil.isJava11() ) // Java 11
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_11";
           }
-          else if( JreUtil.isJava16() ) // Java 16
-          {
-            fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_16";
-          }
-          else // Java 17+
+          else if( JreUtil.isJava17orLater() )// Java 17+
           {
             fqnIssueReporter = "manifold.internal.javac.JavaDynamicJdk_17";
+          }
+          else
+          {
+            throw new RuntimeException( "Unsupported JDK version " + JreUtil.JAVA_VERSION +
+              ". Only LTS versions starting with Java 8 and the latest release are supported." );
           }
           return (IDynamicJdk)Class.forName( fqnIssueReporter ).newInstance();
         }

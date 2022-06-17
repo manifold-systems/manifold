@@ -134,6 +134,10 @@ public abstract class CompiledTypeProcessor implements TaskListener
   {
     return _parents.getParent( node );
   }
+  public Tree getParent( Tree node, CompilationUnitTree compUnit )
+  {
+    return _parents.getParent( node, compUnit );
+  }
 
   public JCTree.JCClassDecl getClassDecl( Tree node )
   {

@@ -25,6 +25,14 @@ import manifold.api.host.RefreshKind;
 public interface IFileConnected
 {
   /**
+   * Are the types produced from this type manifold backed by project files such as resource files?
+   */
+  default boolean isFileBacked()
+  {
+    return false;
+  }
+
+  /**
    * @return True if this type manifold handles files having the given {@code fileExtension}
    */
   boolean handlesFileExtension( String fileExtension );

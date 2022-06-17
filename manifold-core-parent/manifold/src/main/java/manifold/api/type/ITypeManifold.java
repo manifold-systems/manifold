@@ -46,7 +46,7 @@ public interface ITypeManifold extends IFileConnected, ISelfCompiled
   String ARG_DUMP_SOURCE = "manifold.dump.source";
 
   /**
-   * A module calls this method to determine whether or not to include this type manifold in its collection of type
+   * A module calls this method to determine whether to include this type manifold in its collection of type
    * manifolds.  Gives this type manifold an opportunity to opt out of inclusion based on the module. For instance,
    * if a module should only operate in a runtime environment, it should return false if the module's host is not
    * an instance of {@link IRuntimeManifoldHost}.

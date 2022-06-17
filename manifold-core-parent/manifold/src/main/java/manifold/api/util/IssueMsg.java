@@ -25,6 +25,12 @@ public class IssueMsg
 {
   public static final IssueMsg MSG_COULD_NOT_FIND_TYPE_FOR_FILE = new IssueMsg( "Could not find type for file: {0}" );
 
+  public static final IssueMsg MSG_AUTO_CANNOT_INFER_WO_INIT = new IssueMsg( "Cannot infer 'auto' variable type without initializer" );
+  public static final IssueMsg MSG_AUTO_CANNOT_RETURN_AUTO_FROM_ABSTRACT_METHOD = new IssueMsg( "Cannot return 'auto' from abstract method" );
+  public static final IssueMsg MSG_AUTO_RETURN_MORE_SPECIFIC_TYPE = new IssueMsg( "Cannot return 'auto', return a more specific type" );
+  public static final IssueMsg MSG_AUTO_UNABLE_TO_RESOLVE_TYPE = new IssueMsg( "Unable to infer 'auto' type here" );
+  public static final IssueMsg MSG_AUTO_CANNOT_INFER_FROM_NULL = new IssueMsg( "'auto' cannot infer from just 'null', cast 'null' or replace 'auto' with a type" );
+
   private final String _msg;
 
   public IssueMsg( String msg )

@@ -40,7 +40,12 @@ public class ParentMap
 
   public Tree getParent( Tree child )
   {
-    Map<Tree, Tree> parents = _parents.computeIfAbsent( _compilationUnitSupplier.get(), cu -> {
+    return getParent( child, _compilationUnitSupplier.get() );
+  }
+
+  public Tree getParent( Tree child, CompilationUnitTree compilationUnitTree )
+  {
+    Map<Tree, Tree> parents = _parents.computeIfAbsent( compilationUnitTree, cu -> {
       Map<Tree, Tree> map = new HashMap<>();
       new ParentTreePathScanner( map ).scan( cu, null );
       return map;

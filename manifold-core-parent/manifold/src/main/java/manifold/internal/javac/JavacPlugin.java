@@ -399,7 +399,7 @@ public class JavacPlugin implements Plugin, TaskListener
     //
 
     // Override javac's Log for error suppression (@Jailbreak too, but that's only if extensions are enabled, see below)
-    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (JreUtil.isJava8() ? 8 : 9),
+    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (JreUtil.isJava8() ? 8 : 11),
       "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's ClassWriter
@@ -418,11 +418,11 @@ public class JavacPlugin implements Plugin, TaskListener
     // Override javac's Attr
     Attr manAttr = (Attr)ReflectUtil.method(
       "manifold.internal.javac.ManAttr_" +
-        ((JreUtil.isJava8()
-          ? 8
-          : JreUtil.isJava17orLater()
-            ? 17
-            : 9)),
+        (JreUtil.isJava17orLater()
+         ? 17
+         : JreUtil.isJava11orLater()
+           ? 11
+           : 8 ),
       "instance", Context.class ).invokeStatic( getContext() );
 
     // Override javac's Resolve
@@ -461,7 +461,7 @@ public class JavacPlugin implements Plugin, TaskListener
       if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
       {
         // Override javac's ClassFinder
-        ReflectUtil.method( "manifold.internal.javac.ManClassFinder_9", "instance", Context.class )
+        ReflectUtil.method( "manifold.internal.javac.ManClassFinder_11", "instance", Context.class )
           .invokeStatic( getContext() );
       }
     }
