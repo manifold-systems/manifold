@@ -1551,8 +1551,12 @@ something.foo().jailbreak().bar.jailbreak().baz = value;
 Similar to `var` in Java 10+, `auto` provides type inference for local variables beginning with Java 8. You can use
 `var` and `auto` interchangeably for locals. However, unlike `var`, `auto` also works with fields and method return
 types.
+                                        
+Use `auto` by importing the `manifold.ext.rt.api.auto` type.
 
 ```java
+import manifold.ext.rt.api.auto; // use auto
+
 /** Selects a list of (name, age) tuples from a list of Person */
 public auto nameAge(List<Person> list) { 
   return list.stream()
@@ -1571,6 +1575,8 @@ for(auto tuple: nameAge(persons)) {
 ## Multiple return values
 A common use-case for `auto` is to return multiple values from a method.
 ```java
+import manifold.ext.rt.api.auto;
+
 var result = findMinMax(data);
 System.out.println("Minimum: " + result.min + " Maximum: " + result.max);
 
@@ -1589,6 +1595,68 @@ Here the combined use of tuples and `auto` provides a clear and concise syntax f
 fields and local variables, using `auto` on a method infers its return type from its return statements. Additionally,
 for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
 
+## On fields
+Unlike Java's `var`, you can use `auto` for field type inference.
+
+```java
+import java.util.concurrent.ConcurrentHashMap;
+
+public class MyClass {
+  auto list = new ArrayList<String>();
+  auto map = new ConcurrentHashMap<String, Person>();
+  ...
+}
+```
+
+## On methods
+Method return types are inferred using `auto` as the declared return type. This is particularly useful in situations
+where the type is not readily discernible, for example with code generation, or if the type is otherwise not normally
+transferable, for example with anonymous types.
+
+```java
+auto task = getTask();
+task.run();
+int tally = task.tally; // access members of anonymous types
+  ...
+auto getTask() {
+  return new Runnable() {
+    int tally;
+    public void run() {
+      for(Work w: findWork()) {
+        w.run();
+        tally++;
+      }
+    }
+  };  
+}  
+```
+The preceding example illustrates how an anonymous type can be returned from a method using `auto`. This enables
+internal code to use anonymous types more effectively.
+
+## Limitations
+There are a few limitations, at least in the first draft of the feature.
+
+### LUB method return type
+Used as a method return type, `auto` poses a challenge in terms of reflecting a complete type. Return type inference
+must take into account methods having multiple return statements where return expressions may have different, but
+related types.  Specifically, a "least upper bound" (LUB) algorithm must be applied to properly capture the type. Such a
+type may result in an intersection type reflecting all the common interfaces between the varying return expression types.
+Although the Java compiler provides limited support for such types, the JVM does not; intersection types are not
+supported in method signatures. As a compromise the algorithm will use heuristics in an attempt to infer the most
+relevant type from the intersection of types e.g., `CharSequence` wins over `Serializable`.
+
+### Head recursion
+An `auto` return type supports tail recursion, but not head recursion. This is because return type analysis visits
+method call sites in a top-down fashion. If a recursive auto call precedes the first non-recursive return statement
+(head recursion), the method's type can't be inferred. Note, this is a first-draft limitation that will likely be
+remedied in a future revision.
+
+## Concerns
+Careless use of `auto` with non-private fields and methods can lead to an overexposed API.  For instance, exposing an
+`ArrayList<String>` as opposed to `List<String>` may be an unintentional consequence of using `auto`. However,
+considering the bulk of fields in most applications are private, perhaps having `auto` vs. not is a reasonable
+trade-off. Similarly, method return type inference via `auto` should be used judiciously for public APIs.
+                                                         
 
 # The *Self* Type via `@Self`
 
