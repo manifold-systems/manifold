@@ -12,22 +12,34 @@ Manifold is a Java compiler plugin. It supplements Java with:
     * [CSV](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)
     * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
     * etc.
-* [Extension Methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
-* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) (_**New!**_)
-* [Operator Overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-* [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-* [A *Java* Template Engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
-* [A Preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
+* [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple) (_**New!**_)
+* [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+* [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+* [A *Java* template engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
+* [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 * ...and more
 
 All fully supported in **Java 8 - 17** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
-> _**New!**_  
-> * Finally, [_**Properties**_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props) for Java
-> * Includes automatic property _inference_ for existing Java classes  **😎**
+># _**What's New...**_
 > 
-> [Learn more](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props).
+>#### [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+> ```java
+> var t = (person.name, person.age); // tuple expression   
+> out.println("Name: " + t.name + " Age: " + t.age);
+> ```
+> 
+>#### [Type inference with `auto`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+> 
+> `auto` is like `var` but also works with _fields_ and _method return types_
+> 
+>#### [Multiple return values](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#multiple-return-values)
+> ```java
+>  return min, max;
+> ```
 
 ## What can you do with Manifold?
 
@@ -109,6 +121,16 @@ if (bigDec1 > bigDec2) {
 MyType value = myType1 + myType2;
 ```  
 
+### [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+Tuple expressions provide concise syntax to group named data items in a lightweight structure.
+```java
+var t = (name: "Bob", age: "35");
+System.out.println("Name: " + t.name + " Age: " + t.age);
+
+var t = (person.name, person.age);
+System.out.println("Name: " + t.name + " Age: " + t.age);
+```
+You can also use tuples with new [`auto` type inference](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) to enable multiple return values from a method.
 ### [Unit Expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 Unit or *binding* operations are unique to the Manifold framework. They provide a powerfully concise syntax and can be
 applied to a wide range of applications.

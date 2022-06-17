@@ -57,7 +57,7 @@ Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;i
 them with code completion.
 ```java
 var query = MovieQuery.builder(Action).build();
-var result = query.request("http://example.com/graphql").post();
+var result = query.request("http://com.example/graphql").post();
 var actionMovies = result.getMovies();
 for (var movie : actionMovies) {
   out.println(
@@ -143,7 +143,7 @@ Mass infant = 9 lb + 8.71 oz;
 ```  
 
 ### [Ranges](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-Easily work with the *Range* API using [unit expressions]((https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)).
+Easily work with the *Range* API using [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
 Simply import the *RangeFun* constants to create ranges.
 ```java
 // imports the `to`, `step`, and other "binding" constants
@@ -235,12 +235,12 @@ A template file *abc/example/UserSample.html.mtl*
 <%@ params(List<User> users) %>
 <html lang="en">
 <body>
-<% users.stream()
-   .filter(user -> user.getDateOfBirth() != null)
-   .forEach(user -> { %>
+<% for(User user: users) { %> 
+  <% if(user.getDateOfBirth() != null) { %>
     User: ${user.getName()} <br>
     DOB: ${user.getDateOfBirth()} <br>
-<% }); %>
+  <% } %>
+<% } %>
 </body>
 </html>
 ```
@@ -266,17 +266,17 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 [Manifold : _Java Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
+[Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
+
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)<br>
 [Manifold : _YAML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml)<br>
 [Manifold : _CSV_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv)<br>
-[Manifold : _Property files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>
-[Manifold : _Image files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)<br>
+[Manifold : _Property Files_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-properties)<br>
+[Manifold : _Image_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-image)<br>
 [Manifold : _Dark Java_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-darkj)<br>
 [Manifold : _JavaScript_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)<br>
-
-[Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
 
 [Manifold : _Java Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)<br>
 
@@ -296,8 +296,8 @@ by the core framework. Each project consists of one or more **dependencies** you
 >* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
->* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 >* [Manifold : _Gradle Example Project_](https://github.com/manifold-systems/manifold-simple-gradle-project)
+>* [Manifold : _Sample Kotlin App_](https://github.com/manifold-systems/manifold-sample-kotlin-app)
 
 ## Platforms
 
