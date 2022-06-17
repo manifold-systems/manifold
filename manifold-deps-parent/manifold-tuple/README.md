@@ -16,6 +16,8 @@ which is inferred from the expression using `auto` or `var`.
 >Note, `var` may be used in place of `auto` if using Java 11+, otherwise if using Java 8, you must use `auto` for
 > variable type inference.
 
+>See [Type inference with **auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto).
+
 You can define tuples with any number of items.
 ```java
 var t = 
@@ -78,7 +80,8 @@ auto findMinMax(int data[]) {
   return min, max;
 }
 ```
-Here the combined use of tuples and `auto` provides a clear and concise syntax for type-safely returning multiple values. As with
+Here the combined use of tuples and [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+provides a clear and concise syntax for type-safely returning multiple values. As with
 fields and local variables, using `auto` on a method infers its return type from its return statements. Additionally,
 for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
 >Note, you must use `auto` to infer a method return type; Java's `var` only works on local variables.
@@ -86,7 +89,7 @@ for improved readability, in a return statement you can omit the parenthesis oth
 ## Inferred types 
          
 Tuple *types* are managed behind the scenes. You never directly specify them or even see them. They are always inferred
-using `auto` or `var`. The primary reason for this design is that tuple types tend to decrease readability where they
+using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) or **var**. The primary reason for this design is that tuple types tend to decrease readability where they
 are present and are generally inappropriate for APIs, particularly as method parameters. 
 
 Essentially, tuple expressions are designed to group loosely related data items in internal implementation code. In
