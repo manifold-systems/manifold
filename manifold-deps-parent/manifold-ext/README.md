@@ -1584,7 +1584,7 @@ auto findMinMax(int data[]) {
   if(data == null || data.length == 0) return null;
   int min = Integer.MAX_VALUE;
   int max = Integer.MIN_VALUE;
-  for(int i: input) {
+  for(int i: data) {
     if(i < min) min == i;
     if(i > max) max = i;
   }
