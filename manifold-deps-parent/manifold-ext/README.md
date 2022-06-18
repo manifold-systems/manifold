@@ -1580,12 +1580,12 @@ import manifold.ext.rt.api.auto;
 var result = findMinMax(data);
 System.out.println("Minimum: " + result.min + " Maximum: " + result.max);
 
-auto findMinMax(int data[]) {
+auto findMinMax(int[] data) {
   if(data == null || data.length == 0) return null;
   int min = Integer.MAX_VALUE;
   int max = Integer.MIN_VALUE;
   for(int i: data) {
-    if(i < min) min == i;
+    if(i < min) min = i;
     if(i > max) max = i;
   }
   return min, max;
