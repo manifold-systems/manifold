@@ -92,9 +92,9 @@ for improved readability, in a return statement you can omit the parenthesis oth
 
 ### Always inferred
 Tuple expressions are designed as a lightweight utility to group loosely related data items. Because their types are
-purely structural, they tend to be less desirable because they lack the basic qualities of nominal typing. For instance,
+purely structural, they tend to be less desirable as they lack the basic qualities of nominal typing. For instance,
 a nominal type such as a class is centrally defined, which enables it to be easily referenced by name, allows it to be
-formally documented, and makes it available for deterministic tooling.
+formally documented, and makes it available for deterministic tooling. Tuple types lack these fundamental capabilities.
 
 Another issue with tuple types, again because they are purely structural, is they tend to get quite verbose. And because
 they are not centrally defined, they must be redefined wherever they are used. As a consequence, readability suffers.
