@@ -1,6 +1,6 @@
 # Manifold : Tuples
 
->Warning: _**Experimental Feature**_
+> **⚠ Experimental Feature**
 
 The tuples feature provides concise expression syntax to group named data items in a lightweight structure.
 ```java
@@ -24,15 +24,17 @@ var t =
   (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
    11, 12, 13, 14, 15, 16, 17, 18);
 ```
-Tuples fields are final.
+Tuples are read/write.
 ```java
-var t = (name, age);
-t.name = "Helga"; // compile error
+var t = (name: "Bob", age: 35);
+...
+t.name = "Alec";
 ```
 Copy tuples.
 ```java
 var t = (name, age);
-t = t.name("Pearl"); // copies the tuple with the new name
+var t2 = t.copy(); // shallow copy
+out.println(t2.name);
 ```
 Tuples are iterable.
 ```java
@@ -86,17 +88,37 @@ fields and local variables, using `auto` on a method infers its return type from
 for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
 >Note, you must use `auto` to infer a method return type; Java's `var` only works on local variables.
 
-## Inferred types 
-         
-Tuple *types* are managed behind the scenes. You never directly specify them or even see them. They are always inferred
-using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) or **var**. The primary reason for this design is that tuple types tend to decrease readability where they
-are present and are generally inappropriate for APIs, particularly as method parameters. 
+## Tuple types 
 
-Essentially, tuple expressions are designed to group loosely related data items in internal implementation code. In
-the case of public APIs, consider defining a record, class, or interface.
+### Always inferred
+Tuple expressions are designed as a lightweight utility to group loosely related data items. Because their types are
+purely structural, they tend to be less desirable because they lack the basic qualities of nominal typing. For instance,
+a nominal type such as a class is centrally defined, which enables it to be easily referenced by name, allows it to be
+formally documented, and makes it available for deterministic tooling.
 
-## Type equivalence
+Another issue with tuple types, again because they are purely structural, is they tend to get quite verbose. And because
+they are not centrally defined, they must be redefined wherever they are used. As a consequence, readability suffers.
 
+Manifold works toward solving these problems by altogether hiding tuple types from view. You never directly specify tuple
+types or even see them. They are always inferred using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+or **var**. If you find yourself "needing" a tuple type, as a method parameter for instance, consider instead using a
+record, class, or interface.
+
+### `Tuple` interface
+All tuple types implement the `manifold.tuple.rt.api.Tuple` interface. This can be useful, for example, if you need to
+test for a tuple type or require a tuple as a parameter.
+```java
+var t = (person.name, person.age);
+foo(t);
+  ...
+void foo(Tuple t) {
+  for(TupleItem item: t) {
+  ...
+  }  
+}
+```
+
+### Type equivalence
 For type-safety, tuple types are based on both item types and item names. This means the order of name/value pairs in
 a tuple expression is insignificant with respect to its type.
 ```java
@@ -107,13 +129,13 @@ t1.getClass() == t2.getClass() // true!
 ```
 Here, `t1` and `t2` have the same tuple type because they project the same name/type pairs.
 
-## Examples
+## More examples
 A common use-case for tuples involves selecting and organizing data from query results.
 ```java
 /** Selects a list of (name, age) tuples from a list of Person */
 public auto nameAge(List<Person> list) { 
   return list.stream()
-    .map(p -> (p.name, p.age))
+    .map(p -> (p.name, p.age)) // tuples are powerful here
     .collect(Collectors.toList());
 }
 
@@ -126,7 +148,7 @@ for(var t: nameAge(persons)) {
 ## Limitations
 ### No tuple types
 Tuple types are inferred from tuple expressions, there is no way to define a tuple type explicitly. This is a designed
-limitation, see [inferred types](#inferred-types) above.
+limitation, see [Always inferred](#always-inferred) above.
 
 ### Tuples can't reference private classes
 A tuple expression may not contain a value having a private inner class type. This is a first draft limitation that will

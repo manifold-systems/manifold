@@ -258,6 +258,18 @@ public class BasicTest extends TestCase
     }
   }
 
+  public void testCopy()
+  {
+    auto t = (name: "Scott", age: 100);
+    auto t2 = t.copy();
+    assertSame(t.name, t2.name);
+    assertEquals("Scott", t2.name);
+    assertEquals(100, t.age);
+    t2.name = "Bob";
+    assertEquals("Bob", t2.name);
+    assertEquals("Scott", t.name);
+    assertEquals(100, t.age);
+  }
   public void testGenericValues()
   {
     ArrayList<String> list = new ArrayList<String>() {{ add("hi");}};

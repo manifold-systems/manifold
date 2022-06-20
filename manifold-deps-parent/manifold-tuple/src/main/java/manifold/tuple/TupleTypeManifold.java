@@ -180,7 +180,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
       String name = entry.getKey();
       String type = entry.getValue();
       SrcField field = new SrcField( name, type )
-        .modifiers( Modifier.PUBLIC | Modifier.FINAL );
+        .modifiers( Modifier.PUBLIC );
       srcClass.addField( field );
       srcConstructor.addParam( new SrcParameter( name, type ).modifiers( Modifier.FINAL ) );
       body
@@ -191,7 +191,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
     srcConstructor.body( body );
     srcClass.addConstructor( srcConstructor );
 
-    //todo: equals, hashcode, tostring
+    //todo: generate equals, hashcode, toString instead of the reflection based stuff in the base class
     return srcClass.render().toString();
   }
 

@@ -16,6 +16,10 @@
 
 package manifold.tuple.rt.api;
 
+import manifold.ext.rt.api.Self;
+import manifold.util.ManExceptionUtil;
+
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -41,4 +45,19 @@ public interface Tuple extends Iterable<TupleItem>
    */
   @Override
   Iterator<TupleItem> iterator();
+
+  /**
+   * @return A shallow copy of this tuple. The return type is the receiver's type.
+   */
+  default @Self Tuple copy()
+  {
+    try
+    {
+      return (Tuple)getClass().getConstructors()[0].newInstance( orderedValues().toArray() );
+    }
+    catch( Exception e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
 }

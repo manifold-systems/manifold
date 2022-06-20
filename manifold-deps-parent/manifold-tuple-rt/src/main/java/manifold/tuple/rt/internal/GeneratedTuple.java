@@ -16,11 +16,14 @@
 
 package manifold.tuple.rt.internal;
 
+import manifold.ext.rt.api.Self;
 import manifold.tuple.rt.api.Tuple;
 import manifold.tuple.rt.api.TupleItem;
+import manifold.util.ManExceptionUtil;
 import manifold.util.ReflectUtil;
 
 import java.io.Serializable;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
