@@ -12,7 +12,8 @@ System.out.println("Name: " + t.name + " Age: " + t.age);
 ``` 
 A tuple expression consists of name/value pairs where the names are optionally labeled, otherwise they are inferred from
 expression identifiers or assigned default names. The names are type-safely reflected in the corresponding tuple type,
-which is inferred from the expression using `auto` or `var`.
+which is inferred from the expression using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+or **var**.
 >Note, `var` may be used in place of `auto` if using Java 11+, otherwise if using Java 8, you must use `auto` for
 > variable type inference.
 
