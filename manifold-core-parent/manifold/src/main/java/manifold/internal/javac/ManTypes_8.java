@@ -523,6 +523,19 @@ public class ManTypes_8 extends Types
     return super.resultSubtype( t, s, warner );
   }
 
+  public boolean isConvertible( Type t, Type s, Warner warn )
+  {
+    if( t != null && t.tsym != null && ManAttr.AUTO_TYPE.equals( t.tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    if( s != null && s.tsym != null && ManAttr.AUTO_TYPE.equals( s.tsym.getQualifiedName().toString() ) )
+    {
+      return true;
+    }
+    return super.isConvertible( t, s, warn );
+  }
+  
   /**
    * Override to keep track of when/if implementation() is in scope, if ManTypes#memberType() should not try to
    * substitute the qualifier type for @Self because the qualifier is not really a call site, rather it is the

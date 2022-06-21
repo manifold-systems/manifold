@@ -346,6 +346,10 @@ public interface ManAttr
         // good, the more specific type is there now, set `this.result = type`
         tree.type = type;
         ReflectUtil.field( this, "result" ).set( type );
+
+        // ensure the inferred type is assignable to the lhs type: Foo result = autoMeth(); where must be assignable to Foo
+        ReflectUtil.method( ReflectUtil.field( this, "resultInfo" ).get(), "check", JCDiagnostic.DiagnosticPosition.class, Type.class )
+          .invoke( tree.pos(), type );
       }
     }
   }

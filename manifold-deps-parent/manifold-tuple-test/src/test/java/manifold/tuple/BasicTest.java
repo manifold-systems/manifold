@@ -19,6 +19,7 @@ package manifold.tuple;
 import junit.framework.TestCase;
 import manifold.tuple.nested.DifferentPackage;
 import manifold.ext.rt.api.auto;
+import manifold.tuple.rt.api.Tuple;
 import manifold.tuple.rt.api.TupleItem;
 
 import java.math.BigDecimal;
@@ -270,6 +271,18 @@ public class BasicTest extends TestCase
     assertEquals("Scott", t.name);
     assertEquals(100, t.age);
   }
+
+  public void testTupleInterface()
+  {
+    auto t = (name: "Scott", age: 100);
+    Tuple result = hi( t );
+    assertSame( result, t );
+  }
+  private auto hi( Tuple t )
+  {
+    return t;
+  }
+
   public void testGenericValues()
   {
     ArrayList<String> list = new ArrayList<String>() {{ add("hi");}};
