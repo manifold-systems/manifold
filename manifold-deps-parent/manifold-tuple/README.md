@@ -232,11 +232,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-tuple-rt:2022.1.17'
+    implementation 'systems.manifold:manifold-tuple-rt:2022.1.18'
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2022.1.17'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2022.1.17'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2022.1.18'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2022.1.18'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -272,7 +272,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.17</manifold.version>
+        <manifold.version>2022.1.18</manifold.version>
     </properties>
     
     <dependencies>
@@ -316,10 +316,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-tuple`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple/2022.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple/2022.1.17)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple/2022.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple/2022.1.18)
 
 `manifold-tuple-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple-rt/2022.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple-rt/2022.1.17)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple-rt/2022.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple-rt/2022.1.18)
 
 # License
 
