@@ -111,10 +111,9 @@ else {
   service = serviceClass.newInstance(); // resort to some type of reflective construction
 }
 ```
+See project Manifold's [@ThisClass](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/README.md#smart-static-methods-with-thisclass)
 
 ## That's about it
 In my view none of this stuff is critical. There are workarounds for all of it, most of them perhaps better than my
-sketchy proposals. Maybe I wrote this list simply to offload it? Anyhow, it felt good, like throwing away junk in your
+sketchy proposals. Maybe I wrote this list simply to offload it? Anyhow, it felt good, like throwing away junk from the
 garage.
-
-Feel free to discuss this and similar ideas on the [Manifold slack channel](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
