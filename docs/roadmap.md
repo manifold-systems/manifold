@@ -8,10 +8,16 @@ layout: default
  
 ## On the workbench
 
-Recently completed: [Properties for Java](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-(Available in new major release [v2021.1](https://github.com/manifold-systems/manifold/releases/tag/v2021.1.8))
+Recently completed: 
+* [tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+* [`auto` type inference](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+* [multiple return values](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#multiple-return-values)
+* [simple query](https://github.com/manifold-systems/manifold-simple-query)
 
-Working on: [Tuple expressions](https://github.com/manifold-systems/manifold/issues/358) and [simple query](https://github.com/manifold-systems/manifold-simple-query) 
+Working on:<br>
+
+* IntelliJ plugin bugs
+
 
 ## On the pile (in no particular order)
 
