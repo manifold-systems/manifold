@@ -12,10 +12,9 @@ Recently completed:
 * [tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 * [`auto` type inference](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
 * [multiple return values](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#multiple-return-values)
-* [simple query](https://github.com/manifold-systems/manifold-simple-query)
 
 Working on:<br>
-
+* [simple query](https://github.com/manifold-systems/manifold-simple-query)
 * IntelliJ plugin bugs
 
 
