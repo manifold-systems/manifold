@@ -102,12 +102,14 @@ they are not centrally defined, they must be redefined wherever they are used. A
 
 Manifold works toward solving these problems by altogether hiding tuple types from view. You never directly specify tuple
 types or even see them. They are always inferred using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
-or **var**. If you find yourself "needing" a tuple type, as a method parameter for instance, consider instead using a
-record, class, or interface.
+or **var**. If you find yourself "needing" a tuple type, as a method parameter for instance, consider instead defining a
+[structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
+to reflect the tuple's structure. As such the parameter is more readable, better conveys its purpose, and is generally
+more in tune with Java's nominal type system.
 
 ### `Tuple` interface
 All tuple types implement the `manifold.tuple.rt.api.Tuple` interface. This can be useful, for example, if you need to
-test for a tuple type or require a tuple as a parameter.
+test for a tuple type or need to dynamically access a tuple's values.
 ```java
 var t = (person.name, person.age);
 foo(t);

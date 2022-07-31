@@ -61,6 +61,7 @@ public class ReflectUtil
   private static final ConcurrentWeakHashMap<Method, ConcurrentMap<Class, Method>> _structuralCall = new ConcurrentWeakHashMap<>();
   private static final LocklessLazyVar<ClassContextSecurityManager> _sm = LocklessLazyVar.make( () -> new ClassContextSecurityManager() );
   private static final String LAMBDA_METHOD = "lambda method";
+  private static final Object UNHANDLED = new Object() {};
   private static final LocklessLazyVar<Long> _overrideOffset = LocklessLazyVar.make( () -> {
     try
     {
@@ -1468,6 +1469,12 @@ public class ReflectUtil
       }
       else
       {
+        Object result = handleByField( structMethod, proxy, receiver, args );
+        if( result != UNHANDLED )
+        {
+          return result;
+        }
+
         throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
           "' does not implement a method structurally compatible with method: " + structMethod );
       }
@@ -1482,6 +1489,123 @@ public class ReflectUtil
       throw ManExceptionUtil.unchecked( t );
     }
 
+  }
+
+  enum Variance
+  {
+    Covariant, Contravariant
+  }
+
+  private static Field findField( String name, Class rootType, Class<?> returnType, Variance variance )
+  {
+    String nameUpper = Character.toUpperCase( name.charAt( 0 ) ) + (name.length() > 1 ? name.substring( 1 ) : "");
+    String nameLower = Character.toLowerCase( name.charAt( 0 ) ) + (name.length() > 1 ? name.substring( 1 ) : "");
+    String nameUnder = '_' + nameLower;
+
+    for( Field field : rootType.getFields() )
+    {
+      String fieldName = field.getName();
+      Class<?> toType = variance == Variance.Covariant ? returnType : field.getType();
+      Class<?> fromType = variance == Variance.Covariant ? field.getType() : returnType;
+      if( (toType.isAssignableFrom( fromType ) ||
+        arePrimitiveTypesAssignable( toType, fromType )) &&
+        (fieldName.equals( nameUpper ) ||
+          fieldName.equals( nameLower ) ||
+          fieldName.equals( nameUnder )) )
+      {
+        return field;
+      }
+    }
+    return null;
+  }
+
+  public static boolean arePrimitiveTypesAssignable( Class toType, Class fromType )
+  {
+    if( toType == null || fromType == null || !toType.isPrimitive() || !fromType.isPrimitive() )
+    {
+      return false;
+    }
+    if( toType == fromType )
+    {
+      return true;
+    }
+
+    if( toType == double.class )
+    {
+      return fromType == float.class ||
+        fromType == int.class ||
+        fromType == char.class ||
+        fromType == short.class ||
+        fromType == byte.class;
+    }
+    if( toType == float.class )
+    {
+      return fromType == char.class ||
+        fromType == short.class ||
+        fromType == byte.class;
+    }
+    if( toType == long.class )
+    {
+      return fromType == int.class ||
+        fromType == char.class ||
+        fromType == short.class ||
+        fromType == byte.class;
+    }
+    if( toType == int.class )
+    {
+      return fromType == short.class ||
+        fromType == char.class ||
+        fromType == byte.class;
+    }
+    if( toType == short.class )
+    {
+      return fromType == byte.class;
+    }
+
+    return false;
+  }
+
+  private static Object handleByField( Method structMethod, Object proxy, Object receiver, Object[] args )
+  {
+    String propertyName = getPropertyNameFromGetter( structMethod );
+    if( propertyName != null )
+    {
+      Field field = findField( propertyName, receiver.getClass(), structMethod.getReturnType(), Variance.Covariant );
+      if( field != null )
+      {
+        try
+        {
+          setAccessible( field );
+          return field.get( receiver );
+        }
+        catch( IllegalAccessException e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+    }
+    else
+    {
+      propertyName = getPropertyNameFromSetter( structMethod );
+      if( propertyName != null )
+      {
+        Field field = findField( propertyName, receiver.getClass(), structMethod.getParameterTypes()[0], Variance.Contravariant );
+        if( field != null )
+        {
+          try
+          {
+            setAccessible( field );
+            field.set( receiver, args[0] );
+            return null;
+          }
+          catch( IllegalAccessException e )
+          {
+            throw ManExceptionUtil.unchecked( e );
+          }
+        }
+      }
+    }
+    return UNHANDLED;
   }
 
   public static Method findBestMethod( Method structMethod, Class receiverClass )
@@ -1531,6 +1655,77 @@ public class ReflectUtil
     {
       throw new IllegalStateException( "This proxy exists only to handle being cast, it should never be invoked." );
     }
+  }
+
+  private static String getPropertyNameFromGetter( Method method )
+  {
+    Class<?>[] params = method.getParameterTypes();
+    if( params.length != 0 )
+    {
+      return null;
+    }
+    String name = method.getName();
+    String propertyName = null;
+    for( String prefix : Arrays.asList( "get", "is" ) )
+    {
+      if( name.length() > prefix.length() &&
+        name.startsWith( prefix ) )
+      {
+        if( prefix.equals( "is" ) &&
+          (!method.getReturnType().equals( boolean.class ) &&
+            !method.getReturnType().equals( Boolean.class )) )
+        {
+          break;
+        }
+
+        propertyName = name.substring( prefix.length() );
+        char firstChar = propertyName.charAt( 0 );
+        if( firstChar == '_' && propertyName.length() > 1 )
+        {
+          propertyName = propertyName.substring( 1 );
+        }
+        else if( Character.isAlphabetic( firstChar ) &&
+          !Character.isUpperCase( firstChar ) )
+        {
+          propertyName = null;
+          break;
+        }
+      }
+    }
+    return propertyName;
+  }
+
+  private static String getPropertyNameFromSetter( Method method )
+  {
+    if( method.getReturnType() != void.class )
+    {
+      return null;
+    }
+
+    Class<?>[] params = method.getParameterTypes();
+    if( params.length != 1 )
+    {
+      return null;
+    }
+
+    String name = method.getName();
+    String propertyName = null;
+    if( name.length() > "set".length() &&
+      name.startsWith( "set" ) )
+    {
+      propertyName = name.substring( "set".length() );
+      char firstChar = propertyName.charAt( 0 );
+      if( firstChar == '_' && propertyName.length() > 1 )
+      {
+        propertyName = propertyName.substring( 1 );
+      }
+      else if( Character.isAlphabetic( firstChar ) &&
+        !Character.isUpperCase( firstChar ) )
+      {
+        propertyName = null;
+      }
+    }
+    return propertyName;
   }
 
   //## not necessary (until Unsafe goes away), using Unsafe.putObjectVolatile() to set 'override' directly

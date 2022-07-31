@@ -142,7 +142,7 @@ public class TupleTypeManifold extends BaseService implements ITypeManifold
   {
     SrcClass srcClass = new SrcClass( fqn, AbstractSrcClass.Kind.Class )
       .imports( List.class, ArrayList.class )
-      .modifiers( Modifier.PUBLIC | Modifier.FINAL )
+      .modifiers( Modifier.PUBLIC )  // non-final to support structural interface casts (until structural assignability is impled)
       .superClass( GeneratedTuple.class )
       .addField( new SrcField( "_orderedLabels",new  SrcType( List.class ).addTypeParam( String.class ) )
         .modifiers( Modifier.PRIVATE ) )

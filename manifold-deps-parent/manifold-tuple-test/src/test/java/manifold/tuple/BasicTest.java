@@ -17,6 +17,7 @@
 package manifold.tuple;
 
 import junit.framework.TestCase;
+import manifold.ext.rt.api.Structural;
 import manifold.tuple.nested.DifferentPackage;
 import manifold.ext.rt.api.auto;
 import manifold.tuple.rt.api.Tuple;
@@ -367,6 +368,21 @@ public class BasicTest extends TestCase
   private String SdkVersion()
   {
     return "sdkVersion_3";
+  }
+
+  public void testTupleCastToStructuralInterface()
+  {
+    auto t = (name: "Bear", age:100);
+    MyStructuralIface iface = (MyStructuralIface)t;
+    assertEquals( "Bear", iface.getName() );
+    iface.setName( "Bobcat" );
+    assertEquals( "Bobcat", iface.getName() );
+  }
+  @Structural
+  interface MyStructuralIface
+  {
+    String getName();
+    void setName(String name);
   }
 
   static class Person
