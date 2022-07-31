@@ -320,11 +320,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-csv-rt:2022.1.18'
+    implementation 'systems.manifold:manifold-csv-rt:2022.1.19'
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2022.1.18'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2022.1.18'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2022.1.19'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-csv', version: '2022.1.19'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -360,7 +360,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.18</manifold.version>
+        <manifold.version>2022.1.19</manifold.version>
     </properties>
     
     <dependencies>
@@ -404,10 +404,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-csv`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv/2022.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv/2022.1.18)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv/2022.1.19/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv/2022.1.19)
 
 `manifold-csv-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv-rt/2022.1.18/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv-rt/2022.1.18)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-csv-rt/2022.1.19/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-csv-rt/2022.1.19)
 
 # License
 
