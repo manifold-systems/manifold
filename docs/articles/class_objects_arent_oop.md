@@ -109,7 +109,7 @@ else {
 for an approximation of this feature.
 
 ## That's about it
-In my view neither of these are critical, there are certainly workarounds for all of them. It's just a bit peculiar
+In my view none of these are critical, there are certainly workarounds for all of them. It's just a bit peculiar
 to me that Class objects are not object-oriented. Maybe it was difficult for the Sun/Oracle guys to wedge this in with
 generics? Or maybe this would involve a new bytecode instruction "InvokeStaticVirtual" that isn't worth the trouble? Or
 maybe it's just a bad idea. In any case I do find myself bumping into this every so often and wonder, why? 
