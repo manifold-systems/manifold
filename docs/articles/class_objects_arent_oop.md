@@ -1,4 +1,4 @@
-# Class isn't OOP, should it be?
+# Class is not fully OOP, should it be?
 
 <br>
 Ever want Java Class objects to behave more OOP-like? This happens often enough for me that I thought I'd finally jot
