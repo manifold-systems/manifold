@@ -1,51 +1,46 @@
-# Java class objects aren't OOP, should they be?
+# Class isn't OOP, should it be?
 
-<small>Scott McKinney</small>
 <br>
+Ever want Java Class objects to behave more OOP-like? This happens often enough for me that I thought I'd finally jot
+down a short "wishlist" with proposed solutions everyone will hate because there are perhaps nicer alternatives that avoid
+overloading Class this way. Anyhow, here's my list.
 
-At times, I've wanted more from Java class objects than is available. This happens often enough that I thought I'd
-jot down some details concerning where I think they lack. Generally, I suppose the list argues for better OOP support
-with Class objects.
-
-In many cases there are workarounds that offer perhaps a better alternative. Or are we just conditioned to think this
-way?
-
-### Why '.class' when assigning/passing a class literal as a Class?
-A minor nitpick.                                                            
-```java
-Class clazz = MyClass; // compile error, needs MyClass.class
-```
-
-### Can't call a static method from a Class object
+### Call a static method from a Class object (static virtual methods)
      
 ```java
 public int words( Class<? extends Number> cls ) {
   return cls.bits() / 32;  // compile error
 }
 
-public static class Long extends Number {
+public class Long extends Number {
+  @Override
   public static int bits() {return 2 * 32;}  // see virtual class methods below
 }
 public abstract class Number {
   public static int bits() {return 32;}
 }
 ``` 
-This shared namespace presents ambiguity between Class and user-defined static members. But a
-simple compromise could fix that:
+The problem with this example is that it implies meta and static features share the same space. For example, the
+Class#getName() method prevents a class from defining its own, unrelated getName(). We could add a 'static' qualifier
+to fix that.
 
 ```java
-class MyClass {
+class Shape {
   // clashes with Class#getName()
   public static String getName() {...}
 }
-Class<MyClass> clazz = MyClass.class;
-clazz.static.getName(); // Class#static qualifies user-defined static features
+
+void create(Class<? extends Shape> clazz) {
+  log("Creating a " + clazz.static.getName()); // Class#static qualifies user-defined static features
+  ...
+}
 ```
-### Can't define/override abstract static methods (static can't be virtual)
+
+### Define/override abstract static methods
 
 ```java
 public abstract class Tree {
-  public abstract static Image samplePhoto();    
+  public abstract static Image samplePhoto(); // abstract static   
 }
 
 public class Maple extends Tree {
@@ -63,27 +58,26 @@ List<Class<? extends Tree>> treeClasses = loadTreeCatalog();
 List<Image> photos = treeClasses.stream().map(c -> c.samplePhoto());
 ```
 
-### Can't statically implement an interface (no virtual class methods)
+### Statically implement an interface
 ```java
-public class Integer implements static Bounds { // note, "implements static"
-  @Override
-  public static double getMaxValue() {
-    return MAX_VALUE;
+public class Rectangle extends Shape implements static Sides { // note, "implements static"
+  @Override // static implementation of Sides
+  public static int getSides() {
+    return 4;
   }
   ...
 }
 
-public interface Bounds {
-  double getMaxValue();
-  double getMinValue();
+public interface Sides {
+  int getSides();
 }
 
-if (clazz implements Bounds) {...}
+if (clazz implements Sides) {...} // handy
 
-Class<? extends Bounds> type = preferredNumberType();
-Range range = new Range(type.getMinValue(), type.getMaxValue());
+Class<? extends Sides> type = preferredShapeType();
+int sides = type.getSides();
 ```
-Maybe better example of this is an interface as a factory:
+Perhaps better example of this is an interface as a factory:
 
 ```java
 public interface TaggedObjectFactory {
@@ -103,7 +97,7 @@ public class MyObject implements static TaggedObjectFactory {
   ...
 }
 
-Class serviceClass = loadServiceClass();
+Class<?> serviceClass = loadServiceClass();
 if (serviceClass implements TaggedObjectFactory) {
   service = ((TaggedObjectFactory) serviceClass).create(tag, timestamp);
 }
@@ -111,9 +105,11 @@ else {
   service = serviceClass.newInstance(); // resort to some type of reflective construction
 }
 ```
-See project Manifold's [@ThisClass](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/README.md#smart-static-methods-with-thisclass)
+>See [@ThisClass](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-ext/README.md#smart-static-methods-with-thisclass)
+for an approximation of this feature.
 
 ## That's about it
-In my view none of this stuff is critical. There are workarounds for all of it, most of them perhaps better than my
-sketchy proposals. Maybe I wrote this list simply to offload it? Anyhow, it felt good, like throwing away junk from the
-garage.
+In my view neither of these are critical, there are certainly workarounds for all of them. It's just a bit peculiar
+to me that Class objects are not object-oriented. Maybe it was difficult for the Sun/Oracle guys to wedge this in with
+generics? Or maybe this would involve a new bytecode instruction "InvokeStaticVirtual" that isn't worth the trouble? Or
+maybe it's just a bad idea. In any case I do find myself bumping into this every so often and wonder, why? 
