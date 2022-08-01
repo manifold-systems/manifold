@@ -5,7 +5,7 @@ Ever want Java Class objects to behave more OOP-like? This happens often enough 
 down a short "wishlist" with proposed solutions everyone will hate because there are perhaps nicer alternatives that avoid
 overloading Class this way. Anyhow, here's my list.
 
-### Call a static method from a Class object (static virtual methods)
+### Virtual static methods callable from a Class object
      
 ```java
 public int words( Class<? extends Number> cls ) {
@@ -14,7 +14,7 @@ public int words( Class<? extends Number> cls ) {
 
 public class Long extends Number {
   @Override
-  public static int bits() {return 2 * 32;}  // see virtual class methods below
+  public static int bits() {return 2 * 32;}
 }
 public abstract class Number {
   public static int bits() {return 32;}
