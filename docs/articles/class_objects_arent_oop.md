@@ -2,8 +2,9 @@
 
 <br>
 Ever want Java Class objects to behave more OOP-like? This happens often enough for me that I thought I'd finally jot
-down a short "wishlist" with proposed solutions everyone will hate because there are perhaps nicer alternatives that avoid
-overloading Class this way. Anyhow, here's my list.
+down a short "wishlist" with proposed solutions everyone will hate because there are perhaps nicer alternatives. This is
+by no means a dig at Java. Quite the opposite, this is just me expressing my curiosity about a language I appreciate and
+enjoy using nearly every day. Anyhow, here's my list (and contrived examples).
 
 ### Virtual static methods callable from a Class object
      
@@ -21,7 +22,7 @@ public abstract class Number {
 }
 ``` 
 The problem with this example is that it implies meta and static features share the same space. For example, the
-Class#getName() method prevents a class from defining its own, unrelated getName(). We could add a 'static' qualifier
+Class#getName() method prevents a class from defining its own, unrelated getName(). Perhaps add a 'static' qualifier
 to fix that.
 
 ```java
@@ -30,7 +31,11 @@ class Shape {
   public static String getName() {...}
 }
 
-void create(Class<? extends Shape> clazz) {
+Class<? extends Shape> clazz = ...;
+clazz.getName(); // calls Class#getName()
+clazz.static.getName(); // calls Shape#getName()
+
+public static Shape create(Class<? extends Shape> clazz) {
   log("Creating a " + clazz.static.getName()); // Class#static qualifies user-defined static features
   ...
 }
@@ -110,6 +115,7 @@ for an approximation of this feature.
 
 ## That's about it
 In my view none of these are critical, there are certainly workarounds for all of them. It's just a bit peculiar
-to me that Class objects are not object-oriented. Maybe it was difficult for the Sun/Oracle guys to wedge this in with
-generics? Or maybe this would involve a new bytecode instruction "InvokeStaticVirtual" that isn't worth the trouble? Or
-maybe it's just a bad idea. In any case I do find myself bumping into this every so often and wonder, why? 
+to me that Class objects do not already behave this way. Since generics are pretty much required for the practical use
+of these features, perhaps it was difficult for the Sun/Oracle guys to wedge this in with generics? Or maybe this would
+involve a new bytecode instruction "InvokeStaticVirtual" that was deemed not worth the trouble? Or maybe none of this
+was ever considered? In any case I do find myself bumping into this every so often and wonder, why?
