@@ -616,6 +616,10 @@ Any type can support arithmetic operators by implementing one or more of the fol
 | `a / b`   | `a.div(b)`   |
 | `a % b`   | `a.rem(b)`   |
 
+Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve as _commutative_ operators. Thus, if
+`a.plus(b)` fails to resolve, an attempt is made to resolve `b.plus(a)`. Keep this in mind when defining or using
+`plus` and `times` where `a` and `b` have different types.
+
 **Compound assignment**
 
 | Operation | Method           |
@@ -649,37 +653,38 @@ var temp = a;
 a = a.inc();
 temp; // result
 ```                                                                         
+                                                 
+### Defining an operator method
+Operator methods do not belong to a class or interface you implement. Instead, you implement them *structurally*
+simply by defining a method with the same signature. Note you can implement several versions of the same
+method differing by parameter type. 
 
->Note, operator methods do not belong to a class or interface you implement. Instead, you implement them *structurally*
->simply by defining a method with the same signature. Note you can implement several versions of the same
->method differing by parameter type. 
->
->Here's a simple example demonstrating how to implement the `+` operator:
->```java
->public class Point {
->  public final int x, y;
->  public Point(int x, int y) {this.x = x; this.y = y;}
->  
->  public Point plus(Point that) {
->    return new Point(x + that.x, y + that.y);
->  }
->}
->
->var a = new Point(1, 2);
->var b = new Point(3, 4);
->
->var sum = a + b; // Point(4, 6)
->```
->
->Since operator methods are structural, you can define *multiple* `plus()` methods:
->```java
->public Point plus(int[] coord) {
->  if(coord.length != 2) {
->    throw new IllegalArgumentException();
->  }
->  return new Point(x + coord[0], y + coord[1]);
->}
->```
+Here's a simple example demonstrating how to implement the `+` operator:
+```java
+public class Point {
+  public final int x, y;
+  public Point(int x, int y) {this.x = x; this.y = y;}
+  
+  public Point plus(Point that) {
+    return new Point(x + that.x, y + that.y);
+  }
+}
+
+var a = new Point(1, 2);
+var b = new Point(3, 4);
+
+var sum = a + b; // Point(4, 6)
+```
+
+Since operator methods are structural, you can define *multiple* `plus()` methods:
+```java
+public Point plus(int[] coord) {
+  if(coord.length != 2) {
+    throw new IllegalArgumentException();
+  }
+  return new Point(x + coord[0], y + coord[1]);
+}
+```
    
 ## Relational Operators
 
