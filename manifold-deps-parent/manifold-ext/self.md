@@ -1,7 +1,7 @@
 # The *Self* Type with `@Self`
 
 The *Self* type provides a way to _statically_ express the "type of this" and is most useful in situations where a
-method return type or parameter type in a base type reflects the subtype i.e., the *receiver* type.
+method return type or parameter type in a base type reflects a subtype.
 
 Consider the case where `equals()` is symmetric, only objects of the declaring class can be equal.  
 ```java
