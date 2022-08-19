@@ -39,11 +39,10 @@
     * [Using `jailbreak()`](#using-the-jailbreak-extension)
 * [Type inference with 'auto'](#type-inference-with-auto)
   * [Multiple return values](#multiple-return-values)
-* [The *Self* type](#the-self-type-via-self) via `@Self`
+* [The *Self* type](#the-self-type-with-self) with `@Self`
   * [Builders](#builders)
   * [Self + Generics](#self--generics)
   * [Self + Extensions](#self--extensions)
-  * [Overriding Methods](#overriding-methods)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -1661,24 +1660,26 @@ Careless use of `auto` with non-private fields and methods can lead to an overex
 `ArrayList<String>` as opposed to `List<String>` may be an unintentional consequence of using `auto`. However,
 considering the bulk of fields in most applications are private, perhaps having `auto` vs. not is a reasonable
 trade-off. Similarly, method return type inference via `auto` should be used judiciously for public APIs.
-                                                         
 
-# The *Self* Type via `@Self`
 
-The *Self* type is a common term used in the language community to mean *"the subtype of `this`"* and is most useful
-in situations where you want a return type or parameter type of a method in a base type to reflect the subtype
-i.e., the *invoking* type.  For instance, consider the `equals()` method. We all know it suffers from Java's lack of a
-Self type:
+# The *Self* Type with `@Self`
+
+The *Self* type provides a way to _statically_ express the "type of this" and is most useful in situations where a
+method return type or parameter type in a base type reflects the subtype i.e., the *receiver* type.
+
+Consider the case where `equals()` is symmetric, only objects of the declaring class can be equal.
 ```java
 public class MyClass {
   @Override
-  public boolean equals(Object obj) { // why Object?!
+  public boolean equals(Object obj) { // Object?!
+    ...
+    if (!(obj instance MyClass)) // runtime check, should be compile-time check!
     ...
   }
 }
 
 MyClass myClass = new MyClass();
-myClass.equals("nope"); // this compiles! :(
+myClass.equals("nope"); // sadly, this compiles! :(
 ```
 What we want is to somehow override `equals()` to enforce `MyClass` symmetry:
 ```java
@@ -1697,20 +1698,24 @@ public boolean equals(@Self Object obj) {
   ...
 }
 ```
-Now we have the behavior we want:
+Now `MyClass` enforces compile-time symmetry.
 ```java
 MyClass myClass = new MyClass();
 myClass.equals("notMyClass"); // Compile Error. YES!!!
 ```
+Note, `equals()` must still guard against asymmetric calls dispatched from base classes.
+```java
+((Object)myClass).equals("notMyClass"); // equals still requires an instanceof check 
+``` 
 
-> Note although Java does not provide a Self type, it does provide some of its capabilities with *recursive generic types*.
-But this feature can be difficult to understand and use, and the syntax it imposes is often unsuitable for class
-hierarchies and APIs. Additionally, it is ineffective for cases like `equals()` -- it requires that we change the base
-class definition! E.g., `public class Object<T extends Object<T>>`... oy!
+## Alternative to recursive generics
+Although Java does not provide a Self type, it does provide some of its capabilities with *recursive generic types*.
+But this feature is notoriously difficult to understand and use, and the syntax it imposes is often unsuitable for class
+hierarchies and APIs. Additionally, it is ineffective for cases like `equals()` -- it otherwise requires `Object` to be
+a recursive generic class: `public class Object<T extends Object<T>>`, which pollutes the entire Java class hierarchy.
 
-But as you'll see Manifold's `@Self` annotation altogether removes the need for recursive generics. It provides Java with
-a simpler, more versatile alternative.  Use it on method return types, parameter types, and field types to enforce
-*"the subtype of `this`"* where suitable.
+The `@Self` annotation provides a simpler, more versatile alternative to most use-cases involving recursive generics.
+Use it precisely where it is needed on method return types, parameter types, field types, and generic type arguments.
 
 ## Builders
 
@@ -1743,11 +1748,11 @@ public class AirplaneBuilder extends VehicleBuilder {
 
 Airplane airplane = new AirplaneBuilder()
   .withWheels(3) // returns VehicleBuilder :(
-  .withWings(1)  // ERROR
+  .withWings(1)  // ERROR!
 ```
 
-`withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to return the 
-*"the subtype of `this`"*.  This is what the self type accomplishes:
+`withWheels()` returns `VehicleBuilder`, not `AirplaneBuilder`.  This is a classic example where we want to statically
+express the "type of this" using the Self type:
 
 ```java
   public @Self VehicleBuilder withWheels(int wheels) {
@@ -1764,8 +1769,8 @@ Airplane airplane = new AirplaneBuilder()
   .withWings(1)  // GOOD!
 ``` 
 
-Annotate with `@Self` to preserve the *"the subtype of `this`"* anywhere on or in a method return type, parameter type,
-or field type.
+Annotate with `@Self` to statically express the "type of this" in a method return type, parameter type, field type, or
+generic type argument.
 
 ## Self + Generics
 
@@ -1781,6 +1786,7 @@ public class Node {
   }
 
   public void addChild(@Self Node child) {
+    checkAssignable(this, child);
     children.add(child);
   }
 }
@@ -1790,8 +1796,7 @@ public class MyNode extends Node {
 }
 ```
 
-Here you can make the component type of `List` the Self type so you can use the `getChildren` method type-safely from
-subtypes of node:
+Here `Node` annotates the component type of `List` with `@Self` so the `getChildren` method is type-safe from subtypes:
 
 ```java
 MyNode myNode = findMyNode();
@@ -1800,63 +1805,20 @@ List<MyNode> = myNode.getChildren(); // wunderbar!
 
 ## Self + Extensions
 
-You can use `@Self` with [extension methods](#extension-classes-via-extension) too.  Here we make an extension method as
-a means to conveniently chain additions to `Map` while preserving its concrete type:
+`@Self` may be used with [extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension)
+too.  Here an extension method conveniently enables call chaining to `Map` while preserving its static subtype:
 
 ```java
 public static <K,V> @Self Map<K,V> add(@This Map<K,V> thiz, K key, V value) {
   thiz.put(key, value);
-  return thiz;
+  return thiz; // returns Self for type-safe call chaining 
 }
 
-HashMap<String, String> map = new HashMap<>()
-  .add("nick", "grouper")
+HashMap<String, String> map = new HashMap<>() 
+  .add("nick", "grouper") // chain calls to add()
   .add("miles", "amberjack");
-  .add("alec", "barracuda")
+  .add("alec", "barracuda"); // preserves HashMap type
 ```
-
-## Overriding Methods
-
-Using @Self in a method return type or parameter type has _no_ effect on the method's override characteristics or binary
-signature:
-```java
-public class SinglyNode {
-  private @Self SinglyNode next;
-  
-  public void setNext(@Self SinglyNode next) {
-    this.next = next;
-  }
-}
-
-public class DoublyNode extends SinglyNode {
-  private @Self DoublyNode prev;
-
-  public void setNext(@Self SinglyNode next) {
-    if(next instanceof DoublyNode) {
-      super.setNext(next);
-      next.prev = this;
-    }
-    else {
-      throw new IllegalArgumentException();
-    }
-  }
-}
-```
-Of particular interest is the `@Self SinglyNode` parameter in the `DoublyNode` override. As mentioned earlier Java does not
-permit covariant parameter overrides -- we can't override the method using a `DoublyNode` parameter type.  To make up for
-this `@Self` informs the compiler that the parameter is indeed a `DoublyNode` when invoked from a `DoublyNode`:
-```java
-doublyNode.setNext(singlyNode); // Compile Error :)
-doublyNode.setNext(doublyNode); // OK :)
-```
-This is precisely the arrangement we want.  Type-safety is enforced at the call site.  But, equally important, the
-subclass handles the parameter as a base class.  Why?  Because this:
-```java
-((SinglyNode)doublyNode).setNext(singlyNode);
-```
-Here `setNext()`, although invoked as a `SinglyNode`, dispatches to the `DoublyNode` override.  Thus the `SinglyNode` parameter
-type enforces that a `SinglyNode` cannot be mistaken for `DoublyNode`, hence the necessity of the `instanceof` check in
-`setNext()`.
 
 # IDE Support 
 
