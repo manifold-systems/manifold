@@ -902,29 +902,32 @@ if (bd1 >= bd2) {
 >Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
 and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
 projects use operator overloading and unit expressions extensively.
-   
+
 
 # Unit Expressions
->Warning: **Experimental Feature**
+>**⚠ _Experimental Feature_**
 
-Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into Java to provide Unit
-(or *Binding*) Expressions.  This feature is unique to the Manifold framework and provides a powerfully concise syntax
-that can be applied to a wide range of applications.
+Extending [operator overloading](#operator-overloading) further, Manifold seamlessly plugs into the Java compiler to
+provide Unit Expressions. In a nutshell unit expressions provide a powerfully concise syntax combining concatenative and
+object-oriented paradigms. Instead of composing _functions_ as with concatenative programming languages, unit
+expressions compose operations on juxtaposed _objects_. The result is naturally expressive, easy to read and write
+syntax.
 
-Units are just normal identifiers, you can define them anywhere with fields and local variables and use them directly.
-Normally you import predefined unit constants like the ones provided in `UnitConstants` from the
-`manifold.science.util` package:
+Units tend to be simple identifiers. Normally you import predefined unit constants like the ones provided in
+`UnitConstants` from the `manifold.science.util` package:
 ```java
 import static manifold.science.util.UnitConstants.kg;
 import static manifold.science.util.UnitConstants.hr;
 import static manifold.science.util.UnitConstants.mph;
 . . .
 ```
-Using imported constants such as `kg` for `Kilogram`, `hr` for `Hour`, `mph` for `Mile/Hour`, etc. you can
-begin working with unit expressions:
+Using imported constants such as `kg` for `Kilogram`, `hr` for `Hour`, `mph` for `Mile/Hour`, etc. you can begin working
+with unit expressions:
 
-**Simple and easy to read syntax**
+**Naturally concise syntax**
 ```java
+Time t = 3 hr;
+
 Length distance = 100 mph * 3 hr;
 ```
 **Type-safe**
@@ -940,7 +943,7 @@ force == 49.035 N // true
 ```java
 Mass m = 10 lb + 10 kg; 
 ```
-**Easily make Ranges with the `to` constant from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**
+**Make Ranges with the `to` constant from [`RangeFun`](https://github.com/manifold-systems/manifold/blob/master/manifold-deps-parent/manifold-collections/src/main/java/manifold/collections/api/range/RangeFun.java)**
 ```java
 for( Mass m: 10kg to 100kg ) {...}
 ```
@@ -978,10 +981,10 @@ public Mass postfixBind(Number magnitude) {...}
 ``` 
 the compiler translates the expression as the method call `kg.postfixBind(10)` resulting in type `Mass`.
 
-Note `postfixBind()` and `prefixBind()` do not belong to a class or interface you implement. Instead you implement
+Note, `postfixBind()` and `prefixBind()` do not belong to a class or interface you implement. Instead, you implement
 them *structurally* simply by defining a method with the same name, parameter, and non-void return type. This is
-necessary because a type may implement multiple versions of the same method. This level of flexibility is otherwise not
-supported with Java's name-based type system. 
+necessary because a type may implement multiple versions of the same method, which is otherwise not possible with Java's
+nominal type system.
 
 ## Operator Precedence
 
@@ -1012,7 +1015,7 @@ For example, the expression `5 kg * 2` reflects this example exactly.
 
 As you can see unit expressions demand a level of flexibility beyond that of conventional compilers such as Java's. But
 Java is flexible enough in its architecture so that Manifold can reasonably plug in to augment it with this capability.
-    
+
 ## Type-safe and Simple
 
 There is nothing special about a unit, it is just a simple expression, most of the time just a variable. You can easily
@@ -1024,13 +1027,13 @@ Length twoMeters = 2 m;
 
 ## More Than Units
 
-What makes unit expressions work is simple, just a pair of methods you can implement on any types you like: 
+What makes unit expressions work is simple, just a pair of methods you can implement on any types you like:
 ```java
 public R postfixBind(T lhs);
 public R prefixBind(T rhs);
 ``` 
 If your type implements either of these, it is the basis of a potential "unit" expression. Thus, the application of
-these methods goes beyond just units. To illustrate, let's say you want to make date "literal" expressions such as:   
+these methods goes beyond just units. To illustrate, let's say you want to make date "literal" expressions such as:
 ```java
 LocalMonthDay d1 = May 15;
 LocalYearMonth d2 = 2019 May;
@@ -1068,13 +1071,13 @@ LocalDate date = 2019 October 9;
 Essentially you can implement binding expressions to make use of juxtaposition wherever your imagination takes you.
 
 ## Science & Ranges
-Of course, as some of the examples illustrate, unit expressions are especially well suited as the basis for a library
-modeling physical dimensions such as length, time, mass, etc. Indeed, check out the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-dependency.
+Of course, as some of the examples illustrate, unit expressions are particularly well suited as the basis for a library
+modeling physical dimensions such as length, time, mass, etc. Indeed, check out the [manifold-science](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+component.
 
 Another application of units involves the [Range API](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections#ranges)
-provided by the [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-dependency. Simply by importing the static constants from `RangeFun` you can easily work with ranges:
+provided by the [manifold-collections](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+component. Simply by importing the static constants from `RangeFun` you can easily work with ranges:
 ```java
 IntegerRange range = 1 to 5;
 ```

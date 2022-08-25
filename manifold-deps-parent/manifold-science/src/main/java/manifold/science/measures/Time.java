@@ -31,7 +31,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static manifold.science.measures.TimeUnit.Nano;
 
 /**
- * Models a measure of time in units of {@link TimeUnit}.
+ * Models a duration of time in units of {@link TimeUnit}.
  * <p/>
  * Use values of {@code Time} directly in arithmetic expressions with other dimensions such as:
  * <pre><code>

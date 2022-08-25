@@ -1,25 +1,28 @@
 # Manifold : Science
 
->Warning: **Experimental Feature**
+>**⚠ _Experimental Feature_**
 
-Use the `manifold-science` framework to type-safely incorporate units & measures into your application. `Dimension`
-type-safely models quantities. The framework provides comprehensive support for physical quantities such as `Length`,
-`Mass`, and `Temperature`, as well as abstract quantities such as `StorageCapacity` and `Money`. Together with
-[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-these classes provide an expressive units & measures foundation for a variety of applications.
+Use the `manifold-science` framework to type-safely incorporate units of measurement into your application. The
+framework provides comprehensive support for physical quantities such as `Length`,`Mass`, and `Temperature`, as well as
+abstract quantities such as `StorageCapacity` and `Money`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+these classes provide a foundation for a variety of scientific applications.
 
-Conveniently and type-safely express physical quantities of any type and unit of measure using *unit expressions*:
+Conveniently and type-safely express physical quantities of any type and unit using _**unit expressions**_:
 
 ```java
 import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
 ...
+Time t = 12.7 sec;  
+Length l = 11 cm;  
+Mass m = 5 kg;
+
 Force f = 5 kg * 9.807 m/s/s; // result: 49.035 Newtons
 
 Area space = (20ft + 2in) * (37ft + 7.5in); // result: 758 37/48 ft²
 ```
->Note dimensions work directly in arithmetic expressions by integrating with [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+>Note units work directly in arithmetic expressions by integrating with [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 and [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
-both of these features are provided by the [`manifold-ext`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+both of these features are provided by the *[manifold-ext](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)*
 dependency.
 
  
@@ -37,29 +40,28 @@ dependency.
 
 # Dimensions & Units API
 
-Physical quantities have a fundamental *dimension* that is independent of units of measurement. The primary physical
+A physical quantity is measured in terms of a unit-independent *dimension*. The primary physical
 dimensions are: length, mass, time, electrical charge, temperature and luminous intensity. Derived physical dimensions
 include area, volume, velocity, force, energy, power and so on. The `manifold-science` framework provides an API to
-model both primary and derived dimensions. Using this API the framework supplies a class library consisting of all of
-the primary dimensions and many of the derived mechanical dimensions used with classical physics computations.
+model both primary and derived dimensions. Using this API the framework also supplies a class library consisting of all
+the primary dimensions and several derived mechanical dimensions used with classical physics computations.
 
 ## API
 
 The foundational API of the science framework consists of a small set of base classes and interfaces defined in the
 `manifold.science.api` package.  
 
-## Measures
+## Measurements
 
-`Dimension` interface is the root of the API. It models a dimension as having a unitless measure represented as a
+`Dimension` interface is the root of the API. It models a dimension as having a unitless quantity represented as a
 `Rational` value as well as common [operator methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-for arithmetic operations. Since common dimensions define a unit of measure you will rarely implement `Dimension`
-directly, instead you should extend `AbstractMeasure`.  This class adds a unit of measure to `Dimension` so you can
-extend it to reuse unit functionality common to all physical quantities.
+for arithmetic operations. Since common dimensions require a unit, you will rarely implement `Dimension`
+directly, instead you should extend `AbstractMeasure`, which incorporates unit functionality common to all physical
+quantities.
 
-Instances of this class store the value (or magnitude) of the measure in terms of *base units*. Thus all arithmetic on
-measures is performed using base units, which permits measures of differing input units to work in calculations. A
-measure instance also maintains a *display unit*, which is used for display purposes and for working with other systems
-requiring specific units.
+Instances of this class store the value (or magnitude) of the quantity in terms of *base units*. Thus, all arithmetic on
+`AbstractMeasure` derived types is performed using base units, which permits quantities of differing units to work in calculations.
+Additionally, a *display unit* is used for display purposes and for working with other systems requiring specific units.
 
 For example, the `Length` dimension is defined like this:
 
@@ -84,7 +86,7 @@ public final class Length extends AbstractMeasure<LengthUnit, Length> {
 ## Units
 
 The `Unit` interface provides a base abstraction for unit types. Primary unit types `Length`, `Mass`, `Time`, `Charge`,
-and `Temperature` implement `Unit` indirectly via `AbstractPrimaryUnit`. For instance, `LengthUnit`:
+and `Temperature` implement `Unit` indirectly via `AbstractPrimaryUnit`. For example,`LengthUnit`:
 
 ```java
 public final class LengthUnit extends AbstractPrimaryUnit<Length, LengthUnit> {
@@ -147,8 +149,8 @@ final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUni
 
 You can use *all* Dimensions and Units directly in arithmetic, relational, and [unit (or "binding") expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
 
-The `Length` class, for example, implements method operators for all arithmetic, relational, and unit operators. This is
-what allows you to write expressions like this:
+The `Length` class, for example, implements method operators for all arithmetic, relational, and unit operators,
+enabling you to write expressions like this:
 ```java
  *   // commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
  *   import static manifold.science.util.UnitConstants.*;
@@ -217,16 +219,16 @@ Utility classes providing useful constants are available in the `manifold.scienc
 
 # Rational Numbers
 
-The `Rational` class in the `manifold.science.util` package is similar to `BigDecimal` in that it can model rational
-numbers with arbitrary precision. However `Rational` differs from `BigDecimal` in that it models a rational number as 
+The `Rational` class in the `manifold.science.util` package is similar to `BigDecimal` in that it models rational
+numbers with arbitrary precision. However, `Rational` differs from `BigDecimal` in that it models a rational number as 
 the quotient of two `BigIntenger` numbers.  This has the advantage of maintaining what is otherwise a repeating decimal
 for values such as `1/3`. For instance, dividing a number by 3 then later multiplying that number by 3 should result
 in the original number without rounding errors. While you can handle rounding with `BigDecimal`, using `Rational` can
-be less error prone in some cases especially when working with equations. For this reason, all the Dimensions and Units
+be less error prone in some cases particularly when working with equations. For this reason, all the dimensions and units
 defined in the `manifold.science` package use `Rational`. [Feedback](https://github.com/manifold-systems/manifold/issues)
 on this subject is welcome!
 
->Note as a performance measure this class does *not* maintain its value in reduced form. You must call `reduce()` to get
+>Note, as a performance measure `Rational` does *not* maintain its value in reduced form. You must call `reduce()` to get
 a separate instance for the reduced form. Call `isReduced()` to determine if an instance is in reduced form.
 
 Use the `CoercionConstants` and `MetricScaleUnit` classes to conveniently use literal values as `Rational` numbers:
@@ -239,8 +241,9 @@ Use the `CoercionConstants` and `MetricScaleUnit` classes to conveniently use li
   Rational fiveMillion = 5M;
 ```
 `Rational` implements arithmetic, negation, and relational operators via [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-provided by the manifold-ext dependency. Operator overloading lets you use `Rataional` numbers directly in arithmetic,
-negation, and relational expressions:
+provided by the *[manifold-ext](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)*
+dependency. Operator overloading lets you use `Rataional` numbers directly in arithmetic, negation, and relational
+expressions:
 ```java
 Rational oneThird = 1r/3;
 Rational circumference = 3.14159r * 5.27r;
