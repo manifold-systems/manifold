@@ -56,7 +56,7 @@ common to all physical quantities.
 
 Instances of this class store the value (or magnitude) of the quantity in terms of *base units*. As such, arithmetic on
 `AbstractMeasure` derived types is performed using base units, which permits quantities of differing units to work in calculations.
-Additionally, a *display unit* can be used for UI and interfacing with other systems requiring specific units.
+Additionally, a *display unit* can be used for presentation and to interface with other systems requiring specific units.
 
 For example, the `Length` dimension is defined like this:
 
