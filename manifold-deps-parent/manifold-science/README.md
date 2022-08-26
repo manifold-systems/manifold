@@ -2,12 +2,12 @@
 
 >**⚠ _Experimental Feature_**
 
-Use the `manifold-science` framework to type-safely incorporate units of measurement into your application. The
-framework provides comprehensive support for physical quantities such as `Length`,`Mass`, and `Temperature`, as well as
-abstract quantities such as `StorageCapacity` and `Money`. Together with [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
-these classes provide a foundation for a variety of scientific applications.
-
-Conveniently and type-safely express physical quantities of any type and unit using _**unit expressions**_:
+The science library provides comprehensive support for physical quantities such as Length, Mass, and
+Temperature, as well as abstract quantities such as StorageCapacity and Money. Additionally, the library implements
+[unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
+and [arithmetic & relational operators](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
+over the entire spectrum of quantities, which significantly improves type-safety and readability and prevents common
+unit related errors.
 
 ```java
 import static manifold.science.util.UnitConstants.*; // kg, m, s, ft, etc.
@@ -20,11 +20,6 @@ Force f = 5 kg * 9.807 m/s/s; // result: 49.035 Newtons
 
 Area space = (20ft + 2in) * (37ft + 7.5in); // result: 758 37/48 ft²
 ```
->Note units work directly in arithmetic expressions by integrating with [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-and [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions),
-both of these features are provided by the *[manifold-ext](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)*
-dependency.
-
  
 ## Table of Contents
 * [Dimensions & Units API](#dimensions--units-api)
@@ -37,6 +32,7 @@ dependency.
 * [Versioning](#versioning)
 * [Author](#author)
 
+>Check out the [_Type-safe Unit Expressions_](https://devm.io/java/java-type-safe-171944) article at dev<i>mio</i>!
 
 # Dimensions & Units API
 
@@ -55,13 +51,12 @@ The foundational API of the science framework consists of a small set of base cl
 
 `Dimension` interface is the root of the API. It models a dimension as having a unitless quantity represented as a
 `Rational` value as well as common [operator methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
-for arithmetic operations. Since common dimensions require a unit, you will rarely implement `Dimension`
-directly, instead you should extend `AbstractMeasure`, which incorporates unit functionality common to all physical
-quantities.
+for arithmetic operations. The `AbstractMeasure` base class implements `Dimension` and incorporates unit functionality
+common to all physical quantities.
 
-Instances of this class store the value (or magnitude) of the quantity in terms of *base units*. Thus, all arithmetic on
+Instances of this class store the value (or magnitude) of the quantity in terms of *base units*. As such, arithmetic on
 `AbstractMeasure` derived types is performed using base units, which permits quantities of differing units to work in calculations.
-Additionally, a *display unit* is used for display purposes and for working with other systems requiring specific units.
+Additionally, a *display unit* can be used for UI and interfacing with other systems requiring specific units.
 
 For example, the `Length` dimension is defined like this:
 
@@ -132,14 +127,14 @@ public final class LengthUnit extends AbstractPrimaryUnit<Length, LengthUnit> {
 }
 ```
 
-Derived unit types consist of products or quotients of other unit types, so they extend `AbstractProductUnit` and
+Derived unit types consist of products or quotients of other unit types, thus they extend `AbstractProductUnit` and
 `AbstractQuotientUnit`.  For instance, `VelocityUnit` is the quotient of `LengthUnit` and `TimeUnit`, therefore it
 derives from `AbstractQuotientUnit`:
 
 ```java
 final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUnit, Velocity, VelocityUnit> {
   
-  public static final VelocityUnit BASE = get( Meter, Second );
+  public static final VelocityUnit BASE = get(Meter, Second);
 
   ...
 }
@@ -147,18 +142,21 @@ final public class VelocityUnit extends AbstractQuotientUnit<LengthUnit, TimeUni
 
 ## Operator Methods
 
-You can use *all* Dimensions and Units directly in arithmetic, relational, and [unit (or "binding") expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
+You can use *all* Dimensions and Units directly in arithmetic, relational, and [unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions).
 
-The `Length` class, for example, implements method operators for all arithmetic, relational, and unit operators,
-enabling you to write expressions like this:
 ```java
- *   // commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
- *   import static manifold.science.util.UnitConstants.*;
- *   ...
- *   Length l = 5m; // 5 meters
- *   Length height = 5 ft + 9.5 in;
- *   Area room = 20 ft * 15.5 ft;
- *   Length distance = 80 mph * 2.3 hr;
+// commonly used unit abbreviations e.g., m, ft, hr, mph, etc.
+import static manifold.science.util.UnitConstants.*;
+...
+Length l = 5m; // 5 meters
+Length height = 5 ft + 9.5 in;
+Area room = 20 ft * 15.5 ft;
+Length distance = 80 mph * 2.3 hr;
+
+Force force = 5kg * 9.807 m/s/s; // 49.035 Newtons
+var f = 49.035 kg m/s/s;
+force == f // true
+force == 49.035 N // true
 ``` 
 
 See the documentation for [operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
@@ -167,7 +165,7 @@ for detail about working with these features.
  
 # Library
 
-All of the primary dimensions and many of the derived dimensions are directly provided in the `manifold.science`
+All the primary dimensions and many of the derived dimensions are directly provided in the `manifold.science`
 package. These include:
 
 * `Acceleration` & `AccelerationUnit`
