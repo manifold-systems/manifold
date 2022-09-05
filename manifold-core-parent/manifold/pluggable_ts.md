@@ -44,7 +44,7 @@ steps, completely disconnected from the compiled sources employing their service
 any way to hook into the compiler's type system to resolve types as they are encountered. Instead, a code generator runs as
 a separate build artifact and always produces its full potential universe of types, regardless of the actual set of
 types used in source code. Indeed, static code generation is an all-or-nothing, uninformed build event that, among other
-horrors, destroys the otherwise productive gains with incremental compilation. This disconnect is the bane of static
+horrors, destroys the otherwise productive aspects of incremental compilation. This disconnect is the bane of static
 code generation and is why code generators are notorious for slow builds, code bloat, out of sync issues, stale archive
 caches, and generally being a pain in the ass.
 
@@ -75,8 +75,8 @@ agents or class loader shenanigans, naturally incremental, schema-first oriented
 
 The components produced from this framework are called "type manifolds" because they more or less bolt onto javac's type system
 as integration conduit. Building on this concept, another kind of type manifold is the "extension manifold." But instead
-of providing new types, the extension manifold targets existing types so that features such as new methods, interfaces,
-and annotations may be logically added to types you otherwise can't modify.
+of providing new types, the extension manifold targets existing types so that features such as new methods, interfaces, and annotations may
+be logically added to types that otherwise can't be modified.
 
 Beyond first-order metaprogramming, several experimental language features have spawned from this effort. They stem
 from the extension manifold concept and delve deeper into javac's architecture. Instead of adding features to types,
