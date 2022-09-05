@@ -2,7 +2,7 @@
                                                                   
 _Whether you stand on the static or dynamic side of the fence, the resurgence of dynamic languages is undeniable. This
 flies in the face of the recent influx of statically typed languages. State-of-the-art newcomers like Kotlin, Swift, and C#
-clearly demonstrate the lunge toward richly featured static type systems, at least within the mainstream language
+clearly represent a lunge toward richly featured static type systems, at least within the mainstream language
 community. Even dynamic languages are admitting some level of defeat by including type annotations to mitigate pitfalls
 inherent in their type systems. By now one would assume dynamic languages would be waning in popularity. What is going
 on here?_
@@ -21,7 +21,7 @@ so many programmers. This is much closer to the truth, as there is a vast select
 However, most of those libraries can thank **metaprogramming** for their massive traction.  
 
 As the name suggests metaprogramming is about writing code that writes code. Generally, leveraging metaprogramming
-services, a library can dynamically add new types and modify existing types as needed during runtime. Whole
+services a library can dynamically add new types and modify existing types as needed during runtime. Whole
 classes can be added, new functions can appear anywhere, existing functions can be modified, and so on.
 
 Using metaprogramming services a library can magically add new entity classes mirroring a database, inject HTTP support
