@@ -1,23 +1,23 @@
-# The game is rigged! Why dynamic languages always win.
+# The game is rigged! Why dynamic languages win.
                                                                   
-_Whether you stand on the static or dynamic side of the fence, the resurgence of dynamic languages is undeniable. This
+_Whether you stand on the static or dynamic side of the fence, the massive popularity of dynamic languages like Python is undeniable. This
 flies in the face of the recent influx of statically typed languages. State-of-the-art newcomers like Kotlin, Swift, and C#
-clearly represent a lunge toward richly featured static type systems, at least within the mainstream language
-community. Even dynamic languages are admitting some level of defeat by including type annotations to mitigate pitfalls
-inherent in their type systems. By now one would assume dynamic languages would be waning in popularity. What is going
-on here?_
- 
+clearly represent a leap toward richly featured static type systems, at least within the mainstream language
+community. Even dynamic languages are admitting some level of defeat by offering type annotations to mitigate pitfalls
+inherent in their type systems. By now one would assume dynamic languages would be waning in popularity, not gaining.
+What is going on here?_
+
 # Dynamic superpower
 
-If programming language surveys are any indication, dynamic languages are on the rise (again). For instance, the TIOBE index has Python
+If programming language surveys are any indication, dynamic languages are here to stay. For instance, the TIOBE index has Python
 as the second most popular programming language for 2021, just under C. When 2022 wraps up Python will likely eclipse
 C and Java as the most popular language on planet Earth, according to both TIOBE and PYPL indexes.  
 
 ![Python](http://manifold.systems/images/python.png)
 
-Is Python accidentally the perfect ML language to such a degree that it has become the de facto standard? Probably not.
+Is Python accidentally the perfect ML language to such a degree that it has become the de facto standard? Opinions vary widely on this.
 Why then does Python keep winning? Some claim it's not so much the language as it is the badass libraries that attract
-so many programmers. This is much closer to the truth, as there is a vast selection of amazing libraries to choose from.
+so many programmers. This is probably much closer to the truth considering Python's vast selection of amazing libraries to choose from.
 However, most of those libraries can thank **metaprogramming** for their massive traction.  
 
 As the name suggests metaprogramming is about writing code that writes code. Generally, leveraging metaprogramming
@@ -25,53 +25,60 @@ services a library can dynamically add new types and modify existing types as ne
 classes can be added, new functions can appear anywhere, existing functions can be modified, and so on.
 
 Using metaprogramming services a library can magically add new entity classes mirroring a database, inject HTTP support
-for data classes, weave user-defined methods into a domain model, and so on. The possibilities are limitless. 
+for data classes, integrate user-defined methods into a domain model, and so on. The possibilities are limitless. 
 
 Consequently, metaprogramming is the superpower that is at least partly responsible for the incredible uptake of dynamic
-languages over the last few years. This is also the reason there are no such libraries for Java, Kotlin, C#, etc. Static
-languages are compiled, therefore runtime metaprogramming is out of the picture. But considering runtime metaprogramming has its
-own set of problems, perhaps this is a blessing in disguise.
+languages over the last decade or so. It is the ace in the sleeve of Python, Ruby, R, Lua, and others.
 
-# Static superpower?
+But there's a catch. Ideally, features conjured up from metaprogramming would be fully available for discovery and inspection while editing
+code that uses them. But these features exist exclusively in runtime space, there is no static type information to help editors and IDEs assist
+with discovering and using them. As a consequence, the price of dark coding magic is the darkness. The cataloging of structure,
+ownership, references, and names of features produced from metaprogramming is largely foisted on the developer. Much grok
+is required. Python's reputation for being simple and easy quickly diminishes when powerful libraries are in play.
+While there is dev tooling available for some popular libraries, it is a non-deterministic, one-off affair. YMMV.
 
-Code generation alone is not metaprogramming, but this is all static languages have in their repertoire of magic acts.
+
+# Static metaprogramming?
+
+Code generation alone is not metaprogramming, but it's the only trick static languages possess in their repertoire of magic acts.
 Yes, metaprogramming is loosely code generation at runtime, so in theory almost anything generated at runtime can be
-generated statically. But look around, no magical Java libraries. Only pain and suffering. The compiler disconnect is
-the problem. 
+generated statically. But look around, no magical Java libraries. Only pain and suffering. We can blame the closed-door
+nature of compiler APIs for this imbalance.
                               
-Generally, aside from the limited utility of annotation processors, code generators are not compiler-driven. They execute as separate build
+Generally speaking, code generators are not compiler-driven. They execute as separate build
 steps, completely disconnected from the compiled sources employing their services. For example, there is no SPI or
-any way to hook into the compiler's type system to resolve types as they are encountered. Instead, a code generator runs as
+any way to hook into the compiler to resolve and produce types as they are needed. Instead, a code generator runs as
 a separate build artifact and always produces its full potential universe of types, regardless of the actual set of
 types used in source code. Indeed, static code generation is an all-or-nothing, uninformed build event that, among other
 horrors, destroys the otherwise productive aspects of incremental compilation. This disconnect is the bane of static
 code generation and is why code generators are notorious for slow builds, code bloat, out of sync issues, stale archive
 caches, and generally being a pain in the ass.
 
-So why don't compilers provide static metaprogramming services? That is the $64k question. How cool would it be to have
+So why don't compilers provide _static_ metaprogramming services to lend a hand? That is the $64k question. How cool would it be to have
 compiler metaprogramming SPIs for popular languages such as Java and C#? If such services did exist, perhaps there would
-be much less of a disparity between Python and Java regarding, say, ML? In my view metaprogramming is such a game changer I
-rank it up there with static typing as a key differentiating feature.
+be much less of a disparity between Python and Java regarding, say, ML and data science? In my view metaprogramming is
+a game changer, it's up there with static typing as a key differentiating factor.
 
 Most importantly, the benefits of static metaprogramming apply to both runtime and _design-time_. This is a crucial advantage
-that cannot be overstated. Because all the new types and other features provided by metaprogramming are available at compile-time,
-IDEs can universally provide amazing developer productivity features including type and feature discovery, code completion,
-navigation, deterministic refactoring, etc. Imagine refactoring an element name in a JSON file and having code references
-change accordingly, without running a code generator or writing one-off IDE plugins. Static analysis is gold.
+that cannot be overstated. All the new types and other features provided by metaprogramming are available at compile-time.
+As a result, IDEs can use the compiler's metaprogramming SPIs to universally provide amazing developer productivity
+features including type and feature discovery, code completion, navigation, deterministic refactoring, etc. Imagine refactoring
+an element name in a JSON file and having code references change accordingly and then finding code usages directly from
+the JSON element, all without running a code generator or writing one-off IDE plugins. Static analysis is gold.
 
 
 # Insanity
           
 Using the javac plug-in mechanism I went ahead and built a [metaprogramming framework](https://github.com/manifold-systems/manifold)
-for the Java compiler. It is largely experimental and replete with unforgivable hacks into javac internals. Along the way
-I learned a great deal about javac's architecture and came to appreciate its codebase. I am grateful for its well composed
+for the Java compiler, supporting Java versions 8 - 18. It is largely experimental and replete with unforgivable hacks into javac internals. Along the way
+I learned a great deal about javac's architecture and have come to appreciate its codebase. I am grateful for its well composed
 design, otherwise the Frankenstein-level surgery required to dynamically add, modify, and replace parts would not have
 been possible. I'm sure the Oracle Java lords are overjoyed to learn of this. But I digress.
 
 Anyhow, I built this a few years back and have since cobbled together libraries for direct, type-safe access to structured
-resources. These include GraphQL, JSON, XML, JavaScript, Templates, and several others. Projects can simply add these libraries
+resources. These include GraphQL, JSON, XML, JavaScript, Java Templates, and several others. Projects can simply add these libraries
 as dependencies to trick the compiler into believing JSON files, for example, are Java types. No separate build steps, no
-agents or class loader shenanigans, naturally incremental, schema-first oriented, and fully IDE integrated.
+agents or class loader shenanigans, naturally incremental, schema-first oriented, and fully IDE integrated (IntelliJ).
 
 The components produced from this framework are called "type manifolds" because they more or less bolt onto javac's type system
 as integration conduit. Building on this concept, another kind of type manifold is the "extension manifold." But instead
@@ -81,11 +88,12 @@ be logically added to types that otherwise can't be modified.
 Beyond first-order metaprogramming, several experimental language features have spawned from this effort. They stem
 from the extension manifold concept and delve deeper into javac's architecture. Instead of adding features to types,
 they add features to the Java language itself. These include operator overloading, properties, tuples, structural
-typing, type-safe reflection, and more. Many are à la carte as separate dependencies.
+typing, type-safe reflection, and more. Many are provided à la carte as separate dependencies.
 
 Yes, this is all utterly insane, but I did it anyway for the lulz.
 
 Check it out on [github](https://github.com/manifold-systems/manifold).
-
+                                                                                
+Thanks for reading.
 
 
