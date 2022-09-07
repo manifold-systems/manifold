@@ -36,11 +36,11 @@ Ideally, features conjured up from metaprogramming would be fully available for 
 inspection while editing code that uses them. But these features exist exclusively in runtime space, there is no static
 type information to help editors and IDEs assist with discovering and using them. Thus, the cataloging of structure,
 ownership, references, and names of features produced from metaprogramming is largely foisted on the developer's memory
-and library expertise. Much grok is required. As a consequence, Python's reputation for being simple and easy to
+and library expertise. Much grok required. As a consequence, Python's reputation for being simple and easy to
 comprehend quickly diminishes when powerful libraries are in play. The price of dark coding magic is the darkness.
 
 
-# Static metaprogramming?
+# Well-lit magic
 
 Code generation alone is not metaprogramming, but it's the only trick static languages possess in their repertoire of magic acts.
 Yes, metaprogramming is loosely code generation at runtime, so in theory almost anything generated at runtime can be
@@ -59,18 +59,19 @@ caches, and generally being a pain in the ass.
 So, why don't compilers provide _static_ metaprogramming services to lend a hand? That is the $64k question. How cool would it be to have
 compiler metaprogramming SPIs for popular languages such as Java and C#? If such services did exist, perhaps there would
 be much less of a disparity between Python and Java regarding, say, ML and data science? In my view metaprogramming is
-a game changer, it's up there with static typing as a key differentiating factor.
+a game changing, key differentiating factor.
 
 Most importantly, the benefits of static metaprogramming apply to both runtime and _design-time_. This is a crucial advantage
 that cannot be overstated. All the new types and other features provided by metaprogramming are available at compile-time.
 As a result, IDEs can use the compiler's metaprogramming SPIs to universally provide amazing developer productivity
-features including type and feature discovery, code completion, navigation, deterministic refactoring, and more.
+features including parser feedback, type and feature discovery, code completion, navigation, deterministic refactoring,
+and more.
 
 Imagine:
 - referencing elements defined in a GraphQL file directly and type-safely in your code and then...
-- navigating directly to a referenced element in the file from a call site and then...
+- navigating to a referenced element in the GraphQL file from a call site and then...
 - refactoring the element name from the GraphQL file and having code references instantly reflect the change and then...
-- finding code usages directly from the GraphQL element
+- finding all code usages directly from the GraphQL element
 
 All with deterministic precision made possible with static analysis.
 
@@ -80,15 +81,16 @@ All with deterministic precision made possible with static analysis.
 
 # Insanity
 
-Using the javac plug-in mechanism I went ahead and built a [metaprogramming framework](https://github.com/manifold-systems/manifold)
-for the Java compiler, supporting Java versions 8 - 18. It is largely experimental and replete with unforgivable hacks into javac internals. Along the way
-I learned a great deal about javac's architecture and have come to appreciate its codebase. I am grateful for its well composed
-design, otherwise the Frankenstein-level surgery required to dynamically add, modify, and replace parts would not have
-been possible. I'm sure the Oracle Java lords are overjoyed to learn of this. But I digress.
+Using the javac plug-in mechanism I went ahead and built a [static metaprogramming framework](https://github.com/manifold-systems/manifold)
+for the Java compiler, it currently supports JDK versions 8, 11, 17, & 18. It is largely experimental and replete with
+unforgivable hacks into javac internals. Along the way I learned a great deal about javac's architecture and have come
+to appreciate its codebase. I am grateful for its well composed design, otherwise the Frankenstein-level surgery
+required to dynamically add, modify, and replace parts would not have been possible. I'm sure the Oracle Java lords are
+overjoyed to learn of this. But I digress.
 
 Anyhow, I built this a few years back and have since cobbled together libraries for direct, type-safe access to structured
-resources. These include GraphQL, JSON, XML, JavaScript, Java Templates, and several others. Projects can simply add these libraries
-as dependencies to trick the compiler into believing JSON files, for example, are Java types. No separate build steps, no
+resources. These include GraphQL, JSON, XML, JavaScript, Java Templates, and several others. Simply add these libraries
+as project dependencies to trick the compiler into believing JSON files, for example, are Java types. No separate build steps, no
 agents or class loader shenanigans, naturally incremental, schema-first oriented, and fully IDE integrated (IntelliJ).
 
 The components produced from this framework are called "type manifolds" because they more or less bolt onto javac's type system
