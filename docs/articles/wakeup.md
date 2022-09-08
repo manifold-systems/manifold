@@ -1,4 +1,4 @@
-# Wakeup! static languages, metaprogramming is eating your lunch 
+# Wakeup static languages, metaprogramming is eating your lunch 
 
 _For at least a couple of decades dynamic languages have gained popularity due in part to the powers of metaprogramming.
 Of course, statically typed languages are unable to perform the full spectrum of runtime metaprogramming As a consequence,
