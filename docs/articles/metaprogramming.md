@@ -1,7 +1,7 @@
 # Wakeup static languages, metaprogramming is eating your lunch 
 
 _For at least a couple of decades dynamic languages have gained popularity due in part to the powers of metaprogramming.
-Of course, statically typed languages are unable to perform the full spectrum of runtime metaprogramming, as a consequence
+Of course, statically typed languages are unable to perform the full spectrum of runtime metaprogramming As a consequence,
 they have gained little traction in white-hot fields such as ML and data science. This post addresses this imbalance and presents
 some ideas toward a remedy._
 
