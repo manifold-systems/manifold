@@ -1,10 +1,10 @@
-# Why metaprogramming wins
+# Well-lit static metaprogramming 
 
-_Whether you stand on the static or dynamic side of the fence, the growing popularity of some dynamic languages like Python
-is undeniable. This flies in the face of the recent influx of statically typed languages. State-of-the-art newcomers
-like Kotlin, Swift, and TypeScript clearly represent a collective leap toward richly featured static type systems. Even
-dynamic languages are joining in by offering type annotations to mitigate the pitfalls of dynamic typing.
-By now one would assume dynamic languages would be waning in popularity. What is going on here?_
+_The growing popularity of some dynamic languages like Python is undeniable. This flies in the face of the recent influx
+of statically typed languages. State-of-the-art newcomers like Kotlin, Swift, and TypeScript clearly represent a
+collective leap toward richly featured static type systems. Even dynamic languages are joining in by offering type
+annotations to mitigate the downside of dynamic typing. By now one would assume dynamic languages would be waning in
+popularity, surely not gaining. What is going on here?_
 
 # Dark magic
 
@@ -15,56 +15,59 @@ TIOBE and PYPL indexes.
 
 Is Python accidentally the perfect ML language to such a degree that it has become the de facto standard? Opinions vary widely on this.
 Why then does Python keep winning? Some claim it's not so much the language as it is the badass libraries that are the
-main attraction. This is probably much closer to the truth considering Python's vast selection of amazing libraries.
+main attraction. This is probably closer to the truth considering Python's vast selection of amazing libraries.
 However, most of these libraries can thank _metaprogramming_ for their massive traction.
 
 As the name suggests metaprogramming is about writing code that writes code. Generally, leveraging metaprogramming
 services a library can dynamically add new types and modify existing types on demand as code executes. Whole
 classes can be added, new functions can appear anywhere, existing functions can be modified, and so on. With
 metaprogramming a library can, for instance, seamlessly bridge large, otherwise complicated data sets as intuitive
-models consisting of interconnected types with tailored query support, user-defined methods... the possibilities are
-limitless.
+models consisting of interconnected types with tailored query support, user-defined methods, and a host of other
+features. The possibilities are limitless.
 
 Consequently, metaprogramming is the dark magic that is at least partly responsible for the incredible uptake of dynamic
-languages over the last decade or so. It is a veritable ace up the sleeve for Python and other dynamic languages.
+languages over the last decade or so. It is a veritable ace up the sleeve for Python.
 
 But there's a catch.
 
-Ideally, features conjured up from metaprogramming would be fully available for discovery and
-inspection while editing code that uses them. But these features exist exclusively in runtime space, there is no static
+Ideally, features conjured from metaprogramming would be fully available for discovery and
+inspection while writing code that uses them. On the contrary, because these features exist exclusively in runtime space, there is no static
 type information to help editors and IDEs assist with discovering and using them. Thus, the cataloging of structure,
 ownership, references, and names of features produced from metaprogramming is largely foisted on the developer. Much
-grok required. As a consequence, Python's reputation for being simple and easy to comprehend quickly diminishes when
+grok required. As a consequence, Python's reputation for being simple and easy to comprehend can quickly diminish when
 powerful libraries are in play. The price of dark coding magic is the darkness.
 
 
 # Well-lit magic
 
+>Critically, there is no API or hook into compilers to resolve and produce types as they are referenced; there is no
+> just-in-time code generation, if you will.
+
 Code generation alone is not metaprogramming, but it's the only trick static languages possess in their repertoire of magic acts.
 Yes, metaprogramming is loosely code generation at runtime, so in theory almost anything generated at runtime can be
-generated statically. But look around, no spotlight-grabbing magic Java libraries. We can blame the closed-door nature
-of compiler APIs for this imbalance.
+generated statically. But look around, no spotlight-grabbing magic Java libraries. The closed-door nature of compiler
+APIs may be to blame for this imbalance.
 
 Generally, static code generators are not compiler-driven. They execute as separate build
-steps, completely disconnected from the compiled sources employing their services. Critically, there is no SPI or
-any way to hook into the compiler to resolve and produce types as they are _referenced_; there is no just-in-time code generation, if you will.
+steps, completely disconnected from the compiled sources employing their services. Critically, there is no API or
+hook into compilers to resolve and produce types as they are referenced; there is no just-in-time code generation, if you will.
 Instead, a code generator runs as a separate build artifact and always produces its full potential universe of types, regardless of the actual set of
 types used in source code. Indeed, static code generation is an all-or-nothing, uninformed build event that, among other
 horrors, destroys the otherwise productive aspects of incremental compilation. This disconnect is the bane of static
 code generation and is why code generators are notorious for slow builds, code bloat, out of sync issues, stale archive
 caches, and generally being a pain in the ass.
 
-So, why don't compilers provide _static_ metaprogramming services to lend a hand? That is the $64k question. How cool would it be to have
-compiler metaprogramming SPIs for popular languages such as Java and C#? If such services did exist, perhaps there would
-be much less of a disparity between Python and Java regarding, say, ML and data science? Compiler-driven metaprogramming could be a
-game-changing proposition.
+So, why don't compilers provide _static_ metaprogramming services to lend a hand? That is the $64k question. How cool
+would it be to have compiler-driven code gen APIs for popular languages such as Java and C#? If such services did
+exist, perhaps there would be much less of a disparity between Python and Java regarding, say, ML and data science?
+Static metaprogramming could be a game-changing proposition.
 
 Most importantly, the benefits of static metaprogramming apply to both runtime and _design-time_. This is a crucial benefit
-that cannot be overstated. Using the same compiler-defined metaprogramming SPIs, tooling such as IDEs can statically
-analyze the domain of types and features provided by SPI implementors, the badass libraries. As a result, IDEs can
-seamlessly project all the cool features conjured from libraries in real time. Consequently, developer productivity is off the
-charts with instant parser feedback, true schema-first design, type and feature discovery, code completion, navigation,
-deterministic refactoring, and more.
+that cannot be overstated. Using the same compiler-defined metaprogramming APIs, tooling such as IDEs can statically
+analyze the domain of types and features provided by API implementors, the badass libraries. Thus, IDEs can
+seamlessly catalog and project all the cool features conjured from libraries in real time as changes are made. As a
+result, developer productivity is off the charts with instant parser feedback, type and feature discovery, code
+completion, navigation, deterministic refactoring, true schema-first design, and more.
 
 Imagine:
 - referencing types defined in a GraphQL query or schema file type-safely from source code and then...
@@ -73,22 +76,22 @@ Imagine:
 - refactoring the element name from the GraphQL file and having code references instantly reflect the change and then...
 - finding all code usages of the element directly from the GraphQL file
 
-All with deterministic precision.
+All with the deterministic precision of static analysis.
 
 [![graphql](http://manifold.systems/images/graphql_slide_1.png)](http://manifold.systems/images/graphql.mp4)
     
 ^^ true story.
 
-# Insanity
+# For the lulz
 
-Using the javac plug-in mechanism I went ahead and built a [static metaprogramming framework](https://github.com/manifold-systems/manifold)
+Using the javac plug-in mechanism I went ahead and built a well-lit [static metaprogramming framework](https://github.com/manifold-systems/manifold)
 for the Java compiler, it currently supports JDK versions 8, 11, 17, & 18. It is largely experimental and replete with
 unforgivable hacks into javac internals. Along the way I learned a great deal about javac's architecture and have come
 to appreciate its codebase. I am grateful for its well composed design, otherwise the Frankenstein-level surgery
 required to dynamically add, modify, and replace parts would not have been possible. I'm sure the Oracle Java lords are
 overjoyed to learn of this. But I digress.
 
-Anyhow, I built this a few years back and have since cobbled together libraries for direct, type-safe access to structured
+Anyhow, I built the initial release many years back and have since cobbled together libraries for direct, type-safe access to structured
 resources. These include GraphQL, JSON, XML, JavaScript, Java Templates, and several others. Simply add these libraries
 as project dependencies to trick the compiler into believing JSON files, for example, are Java types. No separate build steps, no
 agents or class loader shenanigans, naturally incremental, schema-first oriented, and fully IDE integrated (IntelliJ).
