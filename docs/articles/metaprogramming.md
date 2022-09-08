@@ -1,10 +1,9 @@
-# Well-lit static metaprogramming 
+# Wakeup static languages, metaprogramming is eating your lunch 
 
-_The growing popularity of some dynamic languages like Python is undeniable. This flies in the face of the recent influx
-of statically typed languages. State-of-the-art newcomers like Kotlin, Swift, and TypeScript clearly represent a
-collective leap toward richly featured static type systems. Even dynamic languages are joining in by offering type
-annotations to mitigate the downside of dynamic typing. By now one would assume dynamic languages would be waning in
-popularity, surely not gaining. What is going on here?_
+_For at least a couple of decades dynamic languages have gained popularity due in part to the powers of metaprogramming.
+Of course, statically typed languages are unable to perform the full spectrum of runtime metaprogramming, as a consequence
+they have gained little traction in white-hot fields such as ML and data science. This post addresses this imbalance and presents
+some ideas toward a remedy._
 
 # Dark magic
 
