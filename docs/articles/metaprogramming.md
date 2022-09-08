@@ -40,17 +40,14 @@ powerful libraries are in play. The price of dark coding magic is the darkness.
 
 # Well-lit magic
 
->Critically, there is no API or hook into compilers to resolve and produce types as they are referenced; there is no
-> just-in-time code generation, if you will.
-
 Code generation alone is not metaprogramming, but it's the only trick static languages possess in their repertoire of magic acts.
 Yes, metaprogramming is loosely code generation at runtime, so in theory almost anything generated at runtime can be
 generated statically. But look around, no spotlight-grabbing magic Java libraries. The closed-door nature of compiler
 APIs may be to blame for this imbalance.
 
 Generally, static code generators are not compiler-driven. They execute as separate build
-steps, completely disconnected from the compiled sources employing their services. Critically, there is no API or
-hook into compilers to resolve and produce types as they are referenced; there is no just-in-time code generation, if you will.
+steps, completely disconnected from the compiled sources employing their services. **Critically, there is no API or
+hook into compilers to resolve and produce types as they are referenced; there is no just-in-time code generation, if you will.**
 Instead, a code generator runs as a separate build artifact and always produces its full potential universe of types, regardless of the actual set of
 types used in source code. Indeed, static code generation is an all-or-nothing, uninformed build event that, among other
 horrors, destroys the otherwise productive aspects of incremental compilation. This disconnect is the bane of static
