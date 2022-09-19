@@ -39,7 +39,6 @@ import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.api.util.JavacDiagnostic;
-import manifold.util.concurrent.LocklessLazyVar;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
