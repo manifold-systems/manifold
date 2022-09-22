@@ -104,8 +104,8 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-properties:2022.1.20'
-    compileOnly 'systems.manifold:manifold-rt:2022.1.20'
+    annotationProcessor 'systems.manifold:manifold-properties:2022.1.21'
+    compileOnly 'systems.manifold:manifold-rt:2022.1.21'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -147,7 +147,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.20</manifold.version>
+        <manifold.version>2022.1.21</manifold.version>
     </properties>
 
     <dependencies>
@@ -199,7 +199,7 @@ module my.properties.app {
 # Javadoc
 
 `manifold-properties`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-properties/2022.1.20/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-properties/2022.1.20)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-properties/2022.1.21/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-properties/2022.1.21)
 
 
 # License
