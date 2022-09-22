@@ -820,7 +820,7 @@ mvn compile
 ## Using this project
 
 The `manifold` core dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 18.
+versions 8 - 19.
 
 This project consists of two modules:
 * `manifold`
@@ -843,7 +843,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 18), the script takes care of the rest. 
+version (8 - 19), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -946,7 +946,7 @@ rootProject.name = 'MyProject'
 # Platforms
 
 Manifold supports:
-* Java SE (8 - 18)
+* Java SE (8 - 19)
 * [Android](http://manifold.systems/android.html)
 * [Kotlin](http://manifold.systems/kotlin.html) (limited)
 
