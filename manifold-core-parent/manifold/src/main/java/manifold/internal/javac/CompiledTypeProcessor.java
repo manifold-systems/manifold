@@ -269,9 +269,12 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
     TypeElement elem = e.getTypeElement();
     _tree = (JCTree.JCClassDecl)getTreeUtil().getTree( elem );
-    preserveInnerClassesForGeneration( _tree );
-
-    process( elem, _issueReporter );
+    if( _tree != null )
+    {
+      // _tree can be null here e.g., module-info
+      preserveInnerClassesForGeneration( _tree );
+      process( elem, _issueReporter );
+    }
   }
 
   private JCTree.JCClassDecl findTopLevel( Symbol.ClassSymbol type, List<? extends Tree> typeDecls )
