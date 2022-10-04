@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
+import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,10 +59,8 @@ public class ManFileExt
   @Extension
   public static File createTempDir( String prefix, String suffix, File directory ) throws IOException
   {
-    File dir = File.createTempFile( prefix, suffix, directory );
-    //noinspection ResultOfMethodCallIgnored
-    dir.delete();
-    if( dir.mkdir() )
+    File dir = Files.createTempDirectory(directory.toPath(), prefix + suffix).toFile();
+    if( true )
     {
       return dir;
     }
