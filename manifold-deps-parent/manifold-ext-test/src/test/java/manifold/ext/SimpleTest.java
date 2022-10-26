@@ -1,9 +1,7 @@
 package manifold.ext;
 
-import abc.ClassWithAnnotatedMethod;
-import abc.ClassWithConstants;
-import abc.Coordinate;
-import abc.IGenericThing;
+import abc.*;
+
 import java.awt.Rectangle;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -155,6 +153,12 @@ public class SimpleTest extends TestCase
   {
     List<String> l = Arrays.asList( "hi", "bye" );
     assertEquals( "hi, bye", String.valueOf( l ) );
+  }
+
+  public void testSuperClassWithCtorParamReferencingTypeVar()
+  {
+    SubClass sc = new SubClass();
+    assertEquals( "myMethod", sc.myMethod() );
   }
 
   public void testCompileTimeConstantFieldInitializersPreserved()
