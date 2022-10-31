@@ -980,7 +980,7 @@ public class ManAttr_11 extends Attr implements ManAttr
   {
     try
     {
-      CharSequence source = ManParserFactory.getSource( getEnv().toplevel.sourcefile );
+      CharSequence source = ParserFactoryFiles.getSource( getEnv().toplevel.sourcefile );
       CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
         tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
       FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(

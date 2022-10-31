@@ -133,6 +133,20 @@ public class NecessaryEvilUtil
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.module", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
     addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
+
+
+    //
+    // Module: java.desktop (needed for testing manifold IJ plugin)
+    //
+    Class<?> Desktop = ReflectUtil.type( "java.awt.Desktop", true );
+    if( Desktop == null )
+    {
+      // Warn and continue
+      //System.out.println( "\nWARNING: Failed to find class 'java.awt.Desktop'\n" );
+      return;
+    }
+    Object /*Module*/ javaDesktop = ReflectUtil.method( Class.class, "getModule" ).invoke( Desktop );
+    addExportsOrOpens.invoke( javaDesktop, "sun.awt", manifoldModule, true, true );
   }
 
   private static void openCompilerModules( ReflectUtil.MethodRef addExportsOrOpens, Object manifoldModule )

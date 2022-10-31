@@ -67,11 +67,19 @@ public class RenameSourceFilesForJava11Build
    *
    *  when compiling with Java 11.
    */
-  public static class              _11_will_become_java_files // REMEMBER TO DEFINE ENV VAR!!!!!!!!!!
+  public static class              _11_will_become_java_files_from_8 // REMEMBER TO DEFINE ENV VAR!!!!!!!!!!
   {
     public static void main( String[] args ) throws IOException, URISyntaxException
     {
       doIt( 11, 8 );
+    }
+  }
+
+  public static class              _11_will_become_java_files_from_17 // REMEMBER TO DEFINE ENV VAR!!!!!!!!!!
+  {
+    public static void main( String[] args ) throws IOException, URISyntaxException
+    {
+      doIt( 11, 17 );
     }
   }
 

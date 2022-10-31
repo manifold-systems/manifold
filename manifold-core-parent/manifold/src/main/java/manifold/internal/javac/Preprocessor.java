@@ -16,6 +16,7 @@
 
 package manifold.internal.javac;
 
+import com.sun.tools.javac.parser.ParserFactory;
 import com.sun.tools.javac.util.Context;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -26,6 +27,8 @@ import java.util.Set;
 import javax.tools.JavaFileObject;
 import manifold.api.type.IPreprocessor;
 import manifold.rt.api.util.ServiceUtil;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 
@@ -42,7 +45,7 @@ public class Preprocessor
       return processors;
     } );
 
-  private final ManParserFactory _parserFactory;
+  private final ParserFactory _parserFactory;
 
   public static Preprocessor instance( Context context )
   {
@@ -56,7 +59,10 @@ public class Preprocessor
 
   private Preprocessor( Context context )
   {
-    _parserFactory = ManParserFactory.instance( context );
+    // override the ParserFactory to support fragments in comments and string literals
+    _parserFactory = (ParserFactory)ReflectUtil.method(
+      "manifold.internal.javac.ManParserFactory_" + (JreUtil.isJava17orLater() ? 17 : 8),
+      "instance", Context.class ).invokeStatic( context );
   }
 
   public CharSequence process( JavaFileObject sourceFile, CharSequence input )

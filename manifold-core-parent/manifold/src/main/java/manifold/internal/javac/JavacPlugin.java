@@ -33,6 +33,7 @@ import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.parser.JavacParser;
+import com.sun.tools.javac.parser.ParserFactory;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -1028,7 +1029,10 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       case PARSE:
         // override the ParserFactory to support fragments in comments and string literals
-        ManParserFactory parserFactory = ManParserFactory.instance( _javacTask.getContext() );
+        ParserFactoryFiles parserFactory = (ParserFactoryFiles)ReflectUtil.method(
+          "manifold.internal.javac.ManParserFactory_" + (JreUtil.isJava17orLater() ? 17 : 8),
+          "instance", Context.class ).invokeStatic( getContext() );
+
         parserFactory.setTaskEvent( e );
         ReflectUtil.field( JavaCompiler.instance( _javacTask.getContext() ), "parserFactory" ).set( parserFactory );
         break;
@@ -1134,7 +1138,7 @@ public class JavacPlugin implements Plugin, TaskListener
       return;
     }
 
-    CharSequence source = ManParserFactory.getSource( sourceFile );
+    CharSequence source = ParserFactoryFiles.getSource( sourceFile );
     if( source == null )
     {
       try

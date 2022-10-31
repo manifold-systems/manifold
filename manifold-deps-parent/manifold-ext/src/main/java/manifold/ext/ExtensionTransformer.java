@@ -384,7 +384,7 @@ public class ExtensionTransformer extends TreeTranslator
         postfixBinding_string.getReturnType().equals( operatorMethod.getReturnType() ) )
       {
         // since the source may be preprocessed we attempt to get it in its preprocessed form
-        CharSequence source = ManParserFactory.getSource( _tp.getCompilationUnit().getSourceFile() );
+        CharSequence source = ParserFactoryFiles.getSource( _tp.getCompilationUnit().getSourceFile() );
         int start = tree.lhs.pos;
         int end = tree.lhs.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions );
         String token = source.subSequence( start, end ).toString();
@@ -1232,7 +1232,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
 
-    CharSequence source = ManParserFactory.getSource( enclosingClass.sym.sourcefile );
+    CharSequence source = ParserFactoryFiles.getSource( enclosingClass.sym.sourcefile );
     CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
       tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
     FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(

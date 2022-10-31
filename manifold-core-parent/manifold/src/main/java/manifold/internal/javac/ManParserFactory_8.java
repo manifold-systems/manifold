@@ -35,25 +35,24 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.STRINGLITERAL;
  * - facilitate a pluggable Java preprocessor<br>
  * - handle embedded file fragments in comment tokens<br>
  */
-public class ManParserFactory extends ParserFactory
+public class ManParserFactory_8 extends ParserFactory implements ParserFactoryFiles
 {
-  private static final Map<String, CharSequence> fileToProcessedInput = new ConcurrentHashMap<>();
   private TaskEvent _taskEvent;
   private final Preprocessor _preprocessor;
 
-  public static ManParserFactory instance( Context ctx )
+  public static ManParserFactory_8 instance( Context ctx )
   {
     ParserFactory parserFactory = ctx.get( parserFactoryKey );
-    if( !(parserFactory instanceof ManParserFactory) )
+    if( !(parserFactory instanceof ManParserFactory_8) )
     {
       ctx.put( parserFactoryKey, (ParserFactory)null );
-      parserFactory = new ManParserFactory( ctx );
+      parserFactory = new ManParserFactory_8( ctx );
     }
 
-    return (ManParserFactory)parserFactory;
+    return (ManParserFactory_8)parserFactory;
   }
 
-  private ManParserFactory( Context ctx )
+  private ManParserFactory_8( Context ctx )
   {
     super( ctx );
     _preprocessor = Preprocessor.instance( ctx );
@@ -78,16 +77,13 @@ public class ManParserFactory extends ParserFactory
       .newInstance( this, lexer, keepDocComments, keepLineMap, keepEndPos, parseModuleInfo );
   }
 
-  public static CharSequence getSource( JavaFileObject file )
-  {
-    return fileToProcessedInput.get( file.getName() );
-  }
   private void mapInput( JavaFileObject sourceFile, CharSequence input )
   {
     fileToProcessedInput.put( sourceFile.getName(), input );
   }
 
-  void setTaskEvent( TaskEvent e )
+  @Override
+  public void setTaskEvent( TaskEvent e )
   {
     _taskEvent = e;
   }
@@ -98,9 +94,9 @@ public class ManParserFactory extends ParserFactory
    */
   public static class ManScannerFactory extends ScannerFactory
   {
-    private final ManParserFactory _parserFactory;
+    private final ManParserFactory_8 _parserFactory;
 
-    public static ScannerFactory instance( Context ctx, ManParserFactory parserFactory )
+    public static ScannerFactory instance( Context ctx, ManParserFactory_8 parserFactory )
     {
       ScannerFactory scannerFactory = ctx.get( scannerFactoryKey );
       if( !(scannerFactory instanceof ManScannerFactory) )
@@ -112,7 +108,7 @@ public class ManParserFactory extends ParserFactory
       return scannerFactory;
     }
 
-    private ManScannerFactory( Context ctx, ManParserFactory parserFactory )
+    private ManScannerFactory( Context ctx, ManParserFactory_8 parserFactory )
     {
       super( ctx );
       _parserFactory = parserFactory;
