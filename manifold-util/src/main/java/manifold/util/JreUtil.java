@@ -141,6 +141,15 @@ public class JreUtil
     return JAVA_VERSION >= 17;
   }
 
+  public static boolean isJava20()
+  {
+    return JAVA_VERSION == 20;
+  }
+  public static boolean isJava20orLater()
+  {
+    return JAVA_VERSION >= 20;
+  }
+
   public static boolean isJava9Modular_compiler( Object/*Context*/ ctx )
   {
     if( _modular == null )

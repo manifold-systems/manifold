@@ -134,8 +134,15 @@ public class ManJavacParser extends JavacParser
       field_PATTERN_MATCHING_IN_INSTANCEOF = featureClass.getDeclaredField( "PATTERN_MATCHING_IN_INSTANCEOF" );
       field_PATTERN_MATCHING_IN_INSTANCEOF.setAccessible( true );
 
-      field_TYPE_ANNOTATIONS = featureClass.getDeclaredField( "TYPE_ANNOTATIONS" );
-      field_TYPE_ANNOTATIONS.setAccessible( true );
+      try
+      {
+        field_TYPE_ANNOTATIONS = featureClass.getDeclaredField( "TYPE_ANNOTATIONS" );
+        field_TYPE_ANNOTATIONS.setAccessible( true );
+      }
+      catch( Exception ignore )
+      {
+        // implies java 20+
+      }
 
       java_ver = 15;
       try
@@ -356,7 +363,7 @@ public class ManJavacParser extends JavacParser
 
   private void checkSourceLevel_Type_Annotations( int pos )
   {
-    if( method_checkSourceLevel != null ) {
+    if( method_checkSourceLevel != null && field_TYPE_ANNOTATIONS != null ) {
       try{
         method_checkSourceLevel.invoke(pos, field_TYPE_ANNOTATIONS);
       } catch( Exception e ) {

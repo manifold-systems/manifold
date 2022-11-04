@@ -435,7 +435,14 @@ public class Proxy implements java.io.Serializable {
         // get a module for the proxy
         Object builder = ReflectUtil.constructor( "java.lang.reflect.Proxy$ProxyBuilder", ClassLoader.class, List.class )
           .newInstance( loader, Arrays.asList( interfaces ) );
-        proxyModule = ReflectUtil.field( builder, "module" ).get();
+        if( JreUtil.isJava20orLater() )
+        {
+          proxyModule = ReflectUtil.field( ReflectUtil.field( builder, "context" ).get(), "module" ).get();
+        }
+        else
+        {
+          proxyModule = ReflectUtil.field( builder, "module" ).get();
+        }
         String moduleName = (String)ReflectUtil.method( proxyModule, "getName" ).invoke();
         Class<?> moduleClass = ReflectUtil.type( "java.lang.Module" );
 
