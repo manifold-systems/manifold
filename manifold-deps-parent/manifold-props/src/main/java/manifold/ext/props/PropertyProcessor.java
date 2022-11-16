@@ -2180,6 +2180,11 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
   private String getGetterName( Symbol field, boolean isOk )
   {
     String name = field.name.toString();
+    if( field.owner != null && field.owner.getKind().name().equals( "RECORD" ) )
+    {
+      return name;
+    }
+
     if( isOk && field.type == Symtab.instance( _context ).booleanType )
     {
       if( startsWithIs( name ) )

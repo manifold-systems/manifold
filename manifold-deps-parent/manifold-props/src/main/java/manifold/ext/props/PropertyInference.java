@@ -18,6 +18,7 @@ package manifold.ext.props;
 
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.util.*;
@@ -34,6 +35,7 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.StreamSupport;
 
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static java.lang.Integer.MAX_VALUE;
@@ -64,9 +66,17 @@ class PropertyInference
     Map<String, Set<PropAttrs>> fromSetter = new HashMap<>();
     for( Symbol sym : IDynamicJdk.instance().getMembers( classSym, false ) )
     {
-      if( sym instanceof Symbol.MethodSymbol )
+      if( sym instanceof MethodSymbol )
       {
-        gatherCandidates( (Symbol.MethodSymbol)sym, fromGetter, fromSetter );
+        gatherCandidatesFromClass( (MethodSymbol)sym, fromGetter, fromSetter );
+      }
+      else if( sym instanceof Symbol.VarSymbol && classSym.getKind().name().equals( "RECORD" ) )
+      {
+        StreamSupport.stream( IDynamicJdk.instance().getMembers( classSym, false ).spliterator(), false )
+          .filter( m -> m instanceof MethodSymbol && m.name.equals( sym.name ) )
+          .map( m -> (MethodSymbol)m )
+          .findFirst()
+          .ifPresent( accessor -> gatherCandidatesFromRecord( accessor, fromGetter ) );
       }
     }
 
@@ -75,7 +85,7 @@ class PropertyInference
     handleWos( fromGetter, fromSetter );
   }
 
-  private void gatherCandidates( Symbol.MethodSymbol m, Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
+  private void gatherCandidatesFromClass( MethodSymbol m, Map<String, Set<PropAttrs>> fromGetter, Map<String, Set<PropAttrs>> fromSetter )
   {
     if( isSynthetic( m ) )
     {
@@ -103,8 +113,24 @@ class PropertyInference
         .add( derivedFromSetter );
     }
   }
+  private void gatherCandidatesFromRecord( MethodSymbol m, Map<String, Set<PropAttrs>> fromGetter )
+  {
+    Attribute.Compound propgenAnno = getAnnotationMirror( m, propgen.class );
+    if( propgenAnno != null )
+    {
+      // already a property
+      return;
+    }
 
-  private boolean isSynthetic( Symbol.MethodSymbol m )
+    PropAttrs derivedFromAccessor = derivePropertyNameFromRecordAccessor( m );
+    if( derivedFromAccessor != null )
+    {
+      fromGetter.computeIfAbsent( derivedFromAccessor._name, key -> new HashSet<>() )
+        .add( derivedFromAccessor );
+    }
+  }
+
+  private boolean isSynthetic( MethodSymbol m )
   {
     return (m.flags() & Flags.SYNTHETIC) != 0 ||
       (m.flags() & Flags.BRIDGE) != 0;
@@ -371,7 +397,7 @@ class PropertyInference
 
         Names names = Names.instance( context() );
         Symtab symtab = Symtab.instance( context() );
-        Symbol.MethodSymbol declaredAccessMeth = (Symbol.MethodSymbol)IDynamicJdk.instance().getMembersByName(
+        MethodSymbol declaredAccessMeth = (MethodSymbol)IDynamicJdk.instance().getMembersByName(
           autoSym, names.fromString( "declaredAccess" ) ).iterator().next();
         autoAnno = new Attribute.Compound( autoSym.type,
           List.of( new Pair<>( declaredAccessMeth,
@@ -487,9 +513,9 @@ class PropertyInference
     String _prefix;
     String _name;
     Type _type;
-    Symbol.MethodSymbol _m;
+    MethodSymbol _m;
 
-    PropAttrs( String prefix, String name, Type type, Symbol.MethodSymbol m )
+    PropAttrs( String prefix, String name, Type type, MethodSymbol m )
     {
       _prefix = prefix;
       _name = name;
@@ -498,7 +524,7 @@ class PropertyInference
     }
   }
 
-  private PropAttrs derivePropertyNameFromGetter( Symbol.MethodSymbol m )
+  private PropAttrs derivePropertyNameFromGetter( MethodSymbol m )
   {
     Symtab symtab = Symtab.instance( context() );
     if( m.getReturnType() == symtab.voidType || !m.getParameters().isEmpty() )
@@ -510,12 +536,23 @@ class PropertyInference
     return derived == null ? deriveName( m, "is", m.getReturnType() ) : derived;
   }
 
-  private PropAttrs derivePropertyNameFromSetter( Symbol.MethodSymbol m )
+  private PropAttrs derivePropertyNameFromSetter( MethodSymbol m )
   {
     return m.getParameters().length() != 1 ? null : deriveName( m, "set", m.getParameters().get( 0 ).type );
   }
 
-  private PropAttrs deriveName( Symbol.MethodSymbol m, String prefix, Type type )
+  private PropAttrs derivePropertyNameFromRecordAccessor( MethodSymbol m )
+  {
+    Symtab symtab = Symtab.instance( context() );
+    if( m.getReturnType() == symtab.voidType || !m.getParameters().isEmpty() )
+    {
+      return null;
+    }
+
+    return new PropAttrs( "", m.getSimpleName().toString(), m.getReturnType(), m );
+  }
+
+  private PropAttrs deriveName( MethodSymbol m, String prefix, Type type )
   {
     String name = m.getSimpleName().toString();
     if( name.startsWith( prefix ) )

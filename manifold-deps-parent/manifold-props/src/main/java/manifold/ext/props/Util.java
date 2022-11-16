@@ -178,9 +178,9 @@ public class Util
         getAnnotationMirror( sym, set.class ) != null);
   }
 
-  static Attribute.Compound getAnnotationMirror( Symbol classSym, Class<? extends Annotation> annoClass )
+  static Attribute.Compound getAnnotationMirror( Symbol sym, Class<? extends Annotation> annoClass )
   {
-    for( Attribute.Compound anno : classSym.getAnnotationMirrors() )
+    for( Attribute.Compound anno : sym.getAnnotationMirrors() )
     {
       if( annoClass.getTypeName().equals( anno.type.tsym.getQualifiedName().toString() ) )
       {
