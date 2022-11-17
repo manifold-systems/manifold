@@ -1550,6 +1550,69 @@ public class ExtensionTransformer extends TreeTranslator
   }
 
   @Override
+  public void visitForeachLoop( JCTree.JCEnhancedForLoop tree )
+  {
+    super.visitForeachLoop( tree );
+
+    // Support case where Iterable is made structural via extension.
+    // In this case foreach should work with types that implement Iterable structurally.
+
+    Type iterableType = _tp.getTypes().erasure( _tp.getSymtab().iterableType );
+
+    if( TypeUtil.isStructuralInterface( _tp, iterableType.tsym ) &&
+      _tp.getTypes().isAssignable( tree.expr.type.tsym.type, iterableType ) )
+    {
+      // replace with: makeIterable( expr.iterator() )
+
+      Names names = Names.instance( _tp.getContext() );
+      Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
+
+      Symbol.MethodSymbol makeIterableMethod = resolveMethod( tree.expr.pos(), names.fromString( "makeIterable" ), runtimeMethodsClassSym.type,
+        List.from( new Type[]{_tp.getSymtab().iteratorType} ) );
+
+      TreeMaker make = _tp.getTreeMaker();
+      JavacElements javacElems = _tp.getElementUtil();
+
+      Symbol.MethodSymbol iteratorMethSym = resolveMethod( tree.expr.pos(), names.fromString( "iterator" ), tree.expr.type, List.nil() );
+      JCTree.JCFieldAccess iterMethAccess = make.Select( tree.expr, names.fromString( "iterator" ) );
+      iterMethAccess.type = getIteratorType( names, tree.expr.type );
+      iterMethAccess.sym = iteratorMethSym;
+      JCTree.JCMethodInvocation iteratorCall = make.Apply( List.nil(), iterMethAccess, List.nil() );
+      iteratorCall.setPos( tree.expr.pos );
+      iteratorCall.type = iterMethAccess.type;
+      ((JCTree.JCFieldAccess)iteratorCall.meth).sym = iteratorMethSym;
+      iteratorCall = maybeReplaceWithExtensionMethod( iteratorCall );
+      iteratorCall = maybeReplaceWithStructuralCall( iteratorCall );
+
+      JCTree.JCMethodInvocation makeIterableCall = make.Apply( List.nil(),
+        memberAccess( make, javacElems, RuntimeMethods.class.getTypeName() + ".makeIterable" ), List.of( iteratorCall ) );
+      makeIterableCall.setPos( tree.expr.pos );
+      makeIterableCall.type = iterableType;
+      JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)makeIterableCall.getMethodSelect();
+      methodSelect.sym = makeIterableMethod;
+      methodSelect.type = makeIterableMethod.type;
+      methodSelect.pos = tree.expr.pos;
+      assignTypes( methodSelect.selected, runtimeMethodsClassSym );
+      methodSelect.selected.pos = tree.expr.pos;
+      tree.expr = makeIterableCall;
+    }
+  }
+
+  private Type getIteratorType( Names names, Type type )
+  {
+    Iterable<Symbol> matches = IDynamicJdk.instance().getMembersByName( (Symbol.ClassSymbol)type.tsym, names.fromString( "iterator" ) );
+    for( Symbol s: matches )
+    {
+      if( s instanceof Symbol.MethodSymbol && ((Symbol.MethodSymbol)s).params().isEmpty() )
+      {
+        return _tp.getTypes().memberType( type, s ).getReturnType();
+      }
+    }
+    //## todo: should be a compile error?
+    return _tp.getTypes().erasure( _tp.getSymtab().iteratorType );
+  }
+
+  @Override
   public void visitAnnotation( JCTree.JCAnnotation tree )
   {
     super.visitAnnotation( tree );

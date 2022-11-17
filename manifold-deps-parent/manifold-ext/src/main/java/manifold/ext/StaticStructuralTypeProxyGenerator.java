@@ -198,7 +198,7 @@ public class StaticStructuralTypeProxyGenerator
     }
     if( !mi.getReturnType().isPrimitive() )
     {
-      sb.append( ", " ).append( returnType ).append( ".class);\n" );
+      sb.append( ", " ).append( mi.getReturnType().tsym.toString() ).append( ".class);\n" );
     }
     else
     {

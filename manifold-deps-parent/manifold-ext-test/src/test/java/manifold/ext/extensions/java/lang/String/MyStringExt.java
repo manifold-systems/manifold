@@ -1,5 +1,6 @@
 package manifold.ext.extensions.java.lang.String;
 
+import java.util.Iterator;
 import java.util.List;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
@@ -7,7 +8,7 @@ import manifold.ext.rt.api.This;
 /**
  */
 @Extension
-public abstract class MyStringExt
+public abstract class MyStringExt implements Iterable<Character>
 {
   public static void echo( @This String thiz )
   {
@@ -51,5 +52,26 @@ public abstract class MyStringExt
       sb.append( o );
     }
     return sb.toString();
+  }
+
+  /** Test Iterable as a structural interface in a foreach stmt */
+  @Extension
+  public static Iterator<Character> iterator( @This String thiz )
+  {
+    return new Iterator<Character>()
+      {
+        private int _index = -1;
+        @Override
+        public boolean hasNext()
+        {
+          return _index < thiz.length()-1;
+        }
+
+        @Override
+        public Character next()
+        {
+          return thiz.charAt( ++_index );
+        }
+      };
   }
 }

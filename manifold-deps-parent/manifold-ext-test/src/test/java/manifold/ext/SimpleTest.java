@@ -107,6 +107,16 @@ public class SimpleTest extends TestCase
     assertSame( itf, tf );
   }
 
+  public void testStructuralIterator()
+  {
+    StringBuilder sb = new StringBuilder();
+    for( Character c : "hello" ) // String extension impls iterator()
+    {
+      sb.append( c );
+    }
+    assertEquals( "hello", sb.toString() );
+  }
+
   public void testHashMap()
   {
     HashMap<String, String> map = new HashMap<>();
