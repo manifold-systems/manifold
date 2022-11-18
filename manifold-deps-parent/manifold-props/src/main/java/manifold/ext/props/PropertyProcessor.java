@@ -2116,6 +2116,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
     if( method == null )
     {
       method = ManAttr.getMethodSymbol( types, type, fieldType, getGetterName( field, false ), (ClassSymbol)type.tsym, 0 );
+      if( method == null )
+      {
+        // If class is a record, try getting property from conventional, user-defined getter method
+        if( field.owner != null && field.owner.getKind().name().equals( "RECORD" ) )
+        {
+          method = ManAttr.getMethodSymbol( types, type, fieldType, getGetterName( field, false, false ), (ClassSymbol)type.tsym, 0 );;
+        }
+
+      }
     }
     return method;
   }
@@ -2179,8 +2188,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
   private String getGetterName( Symbol field, boolean isOk )
   {
+    return getGetterName( field, isOk, true );
+  }
+  private String getGetterName( Symbol field, boolean isOk, boolean supportRecordComps )
+  {
     String name = field.name.toString();
-    if( field.owner != null && field.owner.getKind().name().equals( "RECORD" ) )
+    if( supportRecordComps &&
+      field.owner != null && field.owner.getKind().name().equals( "RECORD" ) )
     {
       return name;
     }
