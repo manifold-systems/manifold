@@ -340,7 +340,10 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
   @Override
   public void process( TypeElement typeElement, TypeProcessor typeProcessor, IssueReporter<JavaFileObject> issueReporter )
   {
-    if( typeElement.getKind() == ElementKind.CLASS || typeElement.getKind() == ElementKind.ENUM || typeElement.getKind() == ElementKind.INTERFACE )
+    if( typeElement.getKind() == ElementKind.CLASS ||
+      typeElement.getKind() == ElementKind.ENUM ||
+      typeElement.getKind().name().equals( "RECORD" ) ||
+      typeElement.getKind() == ElementKind.INTERFACE )
     {
       TreeTranslator visitor = new ExtensionTransformer( this, typeProcessor );
       typeProcessor.getTree().accept( visitor );
