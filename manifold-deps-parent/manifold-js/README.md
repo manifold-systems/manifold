@@ -188,11 +188,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-js-rt:2022.1.25'
+    implementation 'systems.manifold:manifold-js-rt:2022.1.26'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-js:2022.1.25'
-    testAnnotationProcessor 'systems.manifold:manifold-js:2022.1.25'
+    annotationProcessor 'systems.manifold:manifold-js:2022.1.26'
+    testAnnotationProcessor 'systems.manifold:manifold-js:2022.1.26'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -228,7 +228,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.25</manifold.version>
+        <manifold.version>2022.1.26</manifold.version>
     </properties>
     
     <dependencies>
