@@ -69,6 +69,7 @@ public interface IDynamicJdk
   void setOperator( JCTree.JCExpression tree, Symbol.OperatorSymbol operator );
 
   void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
+  void logWarning( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
 
   class Instance
   {

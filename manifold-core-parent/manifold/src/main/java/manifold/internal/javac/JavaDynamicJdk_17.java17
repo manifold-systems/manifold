@@ -199,4 +199,10 @@ public class JavaDynamicJdk_17 implements IDynamicJdk
   {
     logger.error( pos, new JCDiagnostic.Error( "compiler", key, args ) );
   }
+
+  @Override
+  public void logWarning( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
+  {
+    logger.warning( pos, new JCDiagnostic.Warning( "compiler", key, args ) );
+  }
 }

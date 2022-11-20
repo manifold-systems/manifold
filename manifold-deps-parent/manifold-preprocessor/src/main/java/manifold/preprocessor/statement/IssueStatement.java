@@ -49,13 +49,20 @@ public class IssueStatement extends Statement
       return;
     }
 
-    //## todo: handle _isError, add logWarning()
-
     if( JavacPlugin.instance() != null )
     {
-      IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ),
-        new JCDiagnostic.SimpleDiagnosticPosition( _tokenStart ),
-        "proc.messager", _message.getValue( definitions ) );
+      if( _isError )
+      {
+        IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ),
+          new JCDiagnostic.SimpleDiagnosticPosition( _tokenStart ),
+          "proc.messager", _message.getValue( definitions ) );
+      }
+      else
+      {
+        IDynamicJdk.instance().logWarning( Log.instance( JavacPlugin.instance().getContext() ),
+          new JCDiagnostic.SimpleDiagnosticPosition( _tokenStart ),
+          "proc.messager", _message.getValue( definitions ) );
+      }
     }
   }
 

@@ -150,4 +150,10 @@ public class JavaDynamicJdk_8 implements IDynamicJdk
   {
     logger.error( pos, key, args );
   }
+
+  @Override
+  public void logWarning( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
+  {
+    logger.warning( pos, key, args );
+  }
 }
