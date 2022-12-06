@@ -934,8 +934,15 @@ public class SrcClassUtil
     else
     {
       String fqn = type.toString();
-      fqn = removeGenerics( fqn );
-      value = "(" + fqn  + ")null"; // cast to disambiguate when used as an argument
+      if( type instanceof Type.TypeVar )
+      {
+        value = "null";
+      }
+      else
+      {
+        fqn = removeGenerics( fqn );
+        value = "(" + fqn + ") null"; // cast to disambiguate when used as an argument
+      }
     }
     return value;
   }

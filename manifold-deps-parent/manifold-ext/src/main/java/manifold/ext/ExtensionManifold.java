@@ -26,6 +26,8 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
+import manifold.api.fs.IDirectory;
 import manifold.api.fs.IFile;
 import manifold.api.gen.TypeNameParser;
 import manifold.api.host.IModule;
@@ -36,9 +38,7 @@ import manifold.api.type.ITypeProcessor;
 import manifold.api.type.JavaTypeManifold;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.ext.rt.api.Extension;
-import manifold.internal.javac.IssueReporter;
-import manifold.internal.javac.StaticCompiler;
-import manifold.internal.javac.TypeProcessor;
+import manifold.internal.javac.*;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -293,7 +293,27 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     catch( ClassNotFoundException ignore )
     {
     }
+    String name = topLevel.replace( '.', '/' ) + "$" + relativeInner.replace( '.', '$' ) + ".class";
+    return isClassFile( name );
+  }
+
+  private boolean isClassFile( String relFileName )
+  {
+    for( IDirectory directory : getModule().getJavaClassPath() )
+    {
+      boolean isClassFile = findFile( directory, relFileName );
+      if( isClassFile )
+      {
+        return true;
+      }
+    }
     return false;
+  }
+
+  private boolean findFile( IDirectory directory, String relFileName )
+  {
+    IFile descendant = directory.file( relFileName );
+    return descendant != null && descendant.exists();
   }
 
   private boolean isInnerClass( Class<?> cls, String relativeInner )

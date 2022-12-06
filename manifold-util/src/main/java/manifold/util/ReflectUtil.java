@@ -1299,6 +1299,10 @@ public class ReflectUtil
     ofa.setAccessible( true );
     ofa.set( field, null );
 
+//    Field tf = getDeclaredField( Field.class, "trustedFinal" );
+//    setAccessible( tf );
+//    tf.setBoolean( field, false );
+
     Field rf = getDeclaredField( Field.class, "root" );
     rf.setAccessible( true );
     Field root = (Field)rf.get( field );
