@@ -1267,10 +1267,35 @@ public class ReflectUtil
     {
       try
       {
-        clearFieldAccessors( field );
+        if( JreUtil.isJava17orLater() )
+        {
+          // this is a failed attempt at circumventing reflection checks, but keeping it here to revisit
+//          field = (Field)constructor( Field.class,
+//            Class.class, String.class, Class.class, int.class, boolean.class, int.class, String.class, byte[].class )
+//            .newInstance( field.getDeclaringClass(), field.getName(), field.getType(), field.getModifiers() & ~Modifier.FINAL,
+//              false, // trustedFinal
+//              field( field, "slot" ).get(),
+//              field( field, "signature" ).get(),
+//              field( field, "annotations" ).get() );
 
-        removeFinalModifier( field );
-
+//          getUnsafe().putObject( ctx == null ? getUnsafe().staticFieldBase( field ) : ctx,
+//            Modifier.isStatic( field.getModifiers() )
+//            ? getUnsafe().staticFieldOffset( field ) // if this method is removed from Unsafe, write our own version of it
+//            : getUnsafe().objectFieldOffset( field ), value );
+          // using jdk.internal.misc.Unsafe to bypass sun.misc.Unsafe restrictions on records and hidden classes
+          Object unsafe = method( "jdk.internal.misc.Unsafe", "getUnsafe" ).invokeStatic();
+          method( unsafe, "putObject", Object.class, long.class, Object.class )
+            .invoke( ctx == null ? method( unsafe, "staticFieldBase", Field.class ).invoke( field ) : ctx,
+              Modifier.isStatic( field.getModifiers() )
+                ? method( unsafe, "staticFieldOffset", Field.class ).invoke( field ) // if this method is removed from Unsafe, write our own version of it
+                : method( unsafe, "objectFieldOffset", Field.class ).invoke( field ), value );
+          return true;
+        }
+        else
+        {
+          clearFieldAccessors( field );
+          removeFinalModifier( field );
+        }
         field.set( ctx, value );
         return true;
       }
