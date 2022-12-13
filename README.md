@@ -14,7 +14,7 @@ Manifold is a Java compiler plugin. It supplements Java with:
     * etc.
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple) (_**New!**_)
+* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 * [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 * [A *Java* template engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
