@@ -256,6 +256,13 @@ public class ManAttr_17 extends Attr implements ManAttr
 
   @Override
   public void visitForeachLoop( JCTree.JCEnhancedForLoop tree) {
+    if( JreUtil.isJava20orLater() &&
+      ReflectUtil.method( tree, "getDeclarationKind" ).invoke() ==
+        ReflectUtil.field( "com.sun.source.tree.EnhancedForLoopTree$DeclarationKind", "PATTERN" ).getStatic() )
+    {
+      super.visitForeachLoop( tree );
+    }
+
     Env<AttrContext> env = getEnv();
     Env<AttrContext> loopEnv =
       env.dup(env.tree, (AttrContext)ReflectUtil.method( env.info, "dup", Scope.WriteableScope.class ).invoke( ReflectUtil.method( ReflectUtil.field( env.info, "scope" ).get(), "dup" ).invoke() ) );
@@ -290,23 +297,26 @@ public class ManAttr_17 extends Attr implements ManAttr
           }
         }
       }
-      if (tree.var.isImplicitlyTyped()) {
+      JCTree.JCVariableDecl var = (JCTree.JCVariableDecl)(JreUtil.isJava20orLater()
+              ? ReflectUtil.method( tree, "getVariable" ).invoke()
+              : ReflectUtil.field( tree, "var" ).get());
+      if (var.isImplicitlyTyped()) {
         Type inferredType = (Type)ReflectUtil.method( chk(), "checkLocalVarType", DiagnosticPosition.class, Type.class, Name.class )
-          .invoke(tree.var, elemtype, tree.var.name);
+          .invoke(var, elemtype, var.name);
         ReflectUtil.method( this, "setSyntheticVariableType", JCTree.JCVariableDecl.class, Type.class )
-          .invoke( tree.var, inferredType );
+          .invoke( var, inferredType );
       }
-      attribStat( tree.var, loopEnv );
+      attribStat( var, loopEnv );
 
-      if( tree.var.type != null &&
-        AUTO_TYPE.equals( tree.var.type.tsym.getQualifiedName().toString() ) )
+      if( var.type != null &&
+        AUTO_TYPE.equals( var.type.tsym.getQualifiedName().toString() ) )
       {
-        tree.var.type = elemtype;
-        tree.var.sym.type = elemtype;
+        var.type = elemtype;
+        var.sym.type = elemtype;
       }
 
       ReflectUtil.method( chk(), "checkType", JCDiagnostic.DiagnosticPosition.class, Type.class, Type.class )
-        .invoke( tree.expr.pos(), elemtype, tree.var.sym.type );
+        .invoke( tree.expr.pos(), elemtype, var.sym.type );
       loopEnv.tree = tree; // before, we were not in loop!
       attribStat(tree.body, loopEnv);
       ReflectUtil.field( this, "result" ).set( null );

@@ -848,6 +848,7 @@ public class ReflectUtil
     try
     {
       getUnsafe().putBooleanVolatile( m, _overrideOffset.get(), true );
+//      method( m, "setAccessible0", boolean.class ).invoke( true );
     }
     catch( Exception e )
     {
@@ -1277,6 +1278,7 @@ public class ReflectUtil
 //              field( field, "slot" ).get(),
 //              field( field, "signature" ).get(),
 //              field( field, "annotations" ).get() );
+//          setAccessible( field );
 
 //          getUnsafe().putObject( ctx == null ? getUnsafe().staticFieldBase( field ) : ctx,
 //            Modifier.isStatic( field.getModifiers() )
@@ -1284,7 +1286,7 @@ public class ReflectUtil
 //            : getUnsafe().objectFieldOffset( field ), value );
           // using jdk.internal.misc.Unsafe to bypass sun.misc.Unsafe restrictions on records and hidden classes
           Object unsafe = method( "jdk.internal.misc.Unsafe", "getUnsafe" ).invokeStatic();
-          method( unsafe, "putObject", Object.class, long.class, Object.class )
+          method( unsafe, "putReference", Object.class, long.class, Object.class )
             .invoke( ctx == null ? method( unsafe, "staticFieldBase", Field.class ).invoke( field ) : ctx,
               Modifier.isStatic( field.getModifiers() )
                 ? method( unsafe, "staticFieldOffset", Field.class ).invoke( field ) // if this method is removed from Unsafe, write our own version of it

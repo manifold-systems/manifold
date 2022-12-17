@@ -129,6 +129,7 @@ public class NecessaryEvilUtil
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
+    addExportsOrOpens.invoke( javaBaseModule, "java.lang", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.module", manifoldModule, true, true );
     addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
