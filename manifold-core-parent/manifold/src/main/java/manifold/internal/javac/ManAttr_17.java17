@@ -256,11 +256,18 @@ public class ManAttr_17 extends Attr implements ManAttr
 
   @Override
   public void visitForeachLoop( JCTree.JCEnhancedForLoop tree) {
-    if( JreUtil.isJava20orLater() &&
-      ReflectUtil.method( tree, "getDeclarationKind" ).invoke() ==
-        ReflectUtil.field( "com.sun.source.tree.EnhancedForLoopTree$DeclarationKind", "PATTERN" ).getStatic() )
+    boolean patternSupport = false;
+
+    if( JreUtil.isJava20orLater() )
     {
-      super.visitForeachLoop( tree );
+      ReflectUtil.LiveMethodRef getDeclarationKind = ReflectUtil.WithNull.method( tree, "getDeclarationKind" );
+      patternSupport = getDeclarationKind != null;
+      if( patternSupport &&
+        getDeclarationKind.invoke() ==
+          ReflectUtil.field( "com.sun.source.tree.EnhancedForLoopTree$DeclarationKind", "PATTERN" ).getStatic() )
+      {
+        super.visitForeachLoop( tree );
+      }
     }
 
     Env<AttrContext> env = getEnv();
@@ -297,7 +304,7 @@ public class ManAttr_17 extends Attr implements ManAttr
           }
         }
       }
-      JCTree.JCVariableDecl var = (JCTree.JCVariableDecl)(JreUtil.isJava20orLater()
+      JCTree.JCVariableDecl var = (JCTree.JCVariableDecl)(patternSupport
               ? ReflectUtil.method( tree, "getVariable" ).invoke()
               : ReflectUtil.field( tree, "var" ).get());
       if (var.isImplicitlyTyped()) {

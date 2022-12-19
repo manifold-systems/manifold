@@ -188,6 +188,13 @@ public class ManResolve extends Resolve
   @Override
   public boolean isAccessible( Env<AttrContext> env, Type site, Symbol sym, boolean checkInner )
   {
+    if( env.enclClass == null && JreUtil.isJava20orLater() )
+    {
+      // this check is here to fix an NPE caused by Valhalla build for java20, happens during ExtensionTransformer (env.enclClass is null)
+      // remove this if-stmt if/when valhalla fixes it
+      return sym.owner == site.tsym || sym.name == null || !"<init>".equals( sym.name.toString() );
+    }
+
     boolean accessible = super.isAccessible( env, site, sym, checkInner );
     if( accessible )
     {
