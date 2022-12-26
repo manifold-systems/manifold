@@ -328,11 +328,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-xml-rt:2022.1.31'
+    implementation 'systems.manifold:manifold-xml-rt:2022.1.32'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-xml:2022.1.31'
-    testAnnotationProcessor 'systems.manifold:manifold-xml:2022.1.31'
+    annotationProcessor 'systems.manifold:manifold-xml:2022.1.32'
+    testAnnotationProcessor 'systems.manifold:manifold-xml:2022.1.32'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -368,7 +368,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.31</manifold.version>
+        <manifold.version>2022.1.32</manifold.version>
     </properties>
     
     <dependencies>
@@ -412,10 +412,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-xml`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2022.1.31/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2022.1.31)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2022.1.32/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2022.1.32)
 
 `manifold-xml-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2022.1.31/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2022.1.31)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2022.1.32/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2022.1.32)
 
 
 # License
