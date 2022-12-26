@@ -1517,20 +1517,35 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         lhsSym = fieldAccess.sym;
         lhsSelected = fieldAccess.selected;
       }
-      else if( tree.lhs instanceof JCIdent && ((JCIdent)tree.lhs).sym.owner instanceof ClassSymbol )
+      else if( tree.lhs instanceof JCIdent )
       {
-        JCIdent ident = (JCIdent)tree.lhs;
-        lhs = ident;
-        lhsSelectedType = _backingSymbols.peek().fst.type;
-        if( lhsSelectedType == null )
+        Symbol sym = ((JCIdent)tree.lhs).sym;
+        if( sym == null )
+        {
+          // sym is null if the property is directly in a top level class, but it's not the class of the file name
+          reportError( tree, "Manifold @var properties are not supported in sidecar classes, consider nesting the class instead" );
+          return;
+        }
+
+        if( sym.owner instanceof ClassSymbol )
+        {
+          JCIdent ident = (JCIdent)tree.lhs;
+          lhs = ident;
+          lhsSelectedType = _backingSymbols.peek().fst.type;
+          if( lhsSelectedType == null )
+          {
+            return;
+          }
+          lhsSym = ident.sym;
+          Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
+          lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
+            ? make.Type( lhsSym.owner.type )
+            : make.This( lhsSelectedType ).setPos( tree.pos );
+        }
+        else
         {
           return;
         }
-        lhsSym = ident.sym;
-        Attribute.Compound staticAnno = getAnnotationMirror( lhsSym, Static.class );
-        lhsSelected = (lhsSym.owner.type.isInterface() ? staticAnno != null : lhsSym.isStatic())
-          ? make.Type( lhsSym.owner.type )
-          : make.This( lhsSelectedType ).setPos( tree.pos );
       }
       else
       {

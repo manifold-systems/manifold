@@ -3,7 +3,7 @@
 ## Table of Contents
 * [Extension classes](#extension-classes-via-extension) via `@Extension`
   * [The `extensions` Package](#the-extensions-package)
-  * [Basics](#extension-method-basics)
+  * [Extension Methods](#extension-method-basics)
   * [Generics](#generics)
   * [Inner Classes](#inner-classes)
   * [Arrays](#extending-arrays)
@@ -114,7 +114,7 @@ project or module name to prevent naming collisions.
 Additionally, as the example illustrates, an extension class must be annotated with `manifold.ext.rt.api.Extension`, which distinguishes extension
 classes from other classes that may reside in the same package.
 
-## Extension Method Basics
+## Extension Methods
 
 An extension method must be declared `static` and non-`private`. As the receiver of the call, the first
 parameter of an extension _instance_ method must have the same type as the extended class. The
@@ -217,6 +217,84 @@ for(Entry<String, String> entry: map.entrySet()) {
   entry.myEntryMethod();
 }
 ```
+
+# Extension Properties
+
+Classes may be supplemented with [properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props),
+using the extension class mechanism. However, since extension classes do not support adding state to classes using
+fields, the @var/@val field syntax can't be used to make extension properties. Instead, conventional getter and setter
+methods must be used. As such, if the `manifold-props` dependency is in use, extension properties are [inferred](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#property-inference)
+from getter/setter extension methods, otherwise the methods are exposed as normal getter/setter methods.
+
+```java
+package com.example.Person;
+. . .
+public class Person {
+  private final LocalDate dateOfBirth;
+  . . .
+  public LocalDate getDateOfBirth() { return dateOfBirth; }
+  . . .
+}
+```
+```java
+package myapp.extensions.com.example.Person;
+. . .
+public class MyPersonExt {
+  public static String getAge(@This Person thiz) {
+    return calculateAge(thiz.dateOfBirth);
+  }
+}
+```
+Usage:
+```java
+Person person = findPerson(. . .);
+sout.println("Age: " + person.age); // property syntax if manifold-props used
+sout.println("Age: " + person.getAge()); // otherwise, getter syntax
+```
+Note, since fields may not be added via extension, extension properties are most often stateless and consist of just
+getter methods.
+
+Additionally, *existing* properties may be extended for read and/or write access. For instance, if an existing read-only
+property consists of a getter method, it can be made writable by adding a setter extension method.
+```java
+package com.example;
+. . .
+public class Account {
+  . . .
+  public String getName() { return getOwner().getName(); } 
+}
+```
+Extension:
+```java
+package myapp.extensions.com.example.Account;
+. . .
+@Extension
+public class MyAccountExtension {
+  public static void setName(@This Account thiz, String value) { getOwner().setName(value); }
+}
+```
+Resulting usage:
+```java
+Account account = findAccount(. . .);
+account.name = "Fred"; // name is now a writable property
+```
+> **Anything is possible. . .**<br/>
+> If necessary, you can incorporate manifold's `@Jailbreak` feature to modify private fields using an extension setter
+> method.
+> ```java
+> package myapp.extensions.java.lang.String;
+> . . .
+> @Extension
+> public class MyStringExt {
+>   public static void setBytes(@This @Jailbreak String thiz, byte[] bytes) {
+>     thiz.value = bytes; // unforgivable evil
+>   }
+> }                                                 
+> 
+> String greeting = "hi";
+> greeting.bytes = "bye".bytes; // oh my
+> 
+> ```           
 
 ## Extending Arrays
 

@@ -361,7 +361,20 @@ if (!calendar.isLenient) { // call isLenient()
 ```  
 
 Properties are inferred from _both_ existing source classes in your project and compiled classes your project uses.
-                                      
+
+### Works with records
+
+Declared fields in record classes are effectively read-only properties and are inferred as such.
+```java
+public record Person(String name, LocalDate dateOfBirth) {}
+```
+Property usage:
+```java
+Person person = new Person("Fred", LocalDate.of(1969, 11, 14));
+String name = person.name; // access as properties
+LocalDate dob = person.dateOfBirth;
+```
+
 ### Works with code generators
 
 Property inference automatically works with code generated from annotation processors and Javac plugins. This is
