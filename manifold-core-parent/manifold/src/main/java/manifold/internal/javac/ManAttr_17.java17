@@ -610,7 +610,7 @@ public class ManAttr_17 extends Attr implements ManAttr
     {
       ((JCTree.JCReturn)parent).expr = newTuple;
     }
-    else
+    else if( parent != null )
     {
       ((JCTree.JCParens)parent).expr = newTuple;
     }

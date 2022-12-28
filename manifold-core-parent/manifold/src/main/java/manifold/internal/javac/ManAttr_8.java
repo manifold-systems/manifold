@@ -577,7 +577,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     {
       ((JCTree.JCReturn)parent).expr = newTuple;
     }
-    else
+    else if( parent instanceof JCTree.JCParens )
     {
       ((JCTree.JCParens)parent).expr = newTuple;
     }

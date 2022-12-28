@@ -320,6 +320,20 @@ public class BasicTest extends TestCase
     }
   }
 
+  public void testMethodCallReceiver()
+  {
+    String noLabels = (1, 2).getClass().getTypeName();
+    assertTrue( noLabels.contains( "manifold_tuple" ) );
+    
+    String withLabels = (one: 1, two: 2).getClass().getTypeName();
+    assertTrue( noLabels.contains( "manifold_tuple" ) );
+
+    int a = (a: 1, b: 2).a;
+    assertEquals( 1, a );
+    int b = (a: 1, b: 2).b;
+    assertEquals( 2, b );
+  }
+
   public void testDefaultTupleNames()
   {
     LocalDate now = LocalDate.now();
