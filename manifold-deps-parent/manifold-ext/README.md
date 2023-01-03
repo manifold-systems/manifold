@@ -908,13 +908,17 @@ The index operator can be overloaded to provide more concise syntax for ordered 
 |:------------|:-----------------|
 | `a[b]`      | `a.get(b)`       |
 | `a[b] = c`  | `a.set(b, c)`    |
-  
-The indexed assignment expression `a[b] = c` follows the Java language rule that an assignment expression's
-value is equal to the assigned value.
+         
+If both `get(b)` and `set(b, c)` methods are defined, they should have the same return type.
+
+The `set(b, c)` method must not return `void`, instead it should return the same type as its second parameter.
+
+The indexed assignment expression `a[b] = c` follows the Java language rule that an assignment expression's value is
+equal to the assigned value.
 ```java
 var value = a[b] = c;
 ```
-Here `value` is equal to `c`, regardless of what the `set(b, c)` operator method returns. 
+`value` is equal to `c`, regardless of what the `set(b, c)` operator method returns. 
 
 >Note, Manifold provides convenient extension methods for indexed access to `List`, `Map`, `String`, and other data
 >structures.
@@ -928,6 +932,71 @@ Here `value` is equal to `c`, regardless of what the `set(b, c)` operator method
 >Map<String, String> map = ...;
 >map[key] = value;
 >```                           
+
+### Multidimensional indexing
+
+The index operator can be overloaded for a type with multiple dimensions. To achieve this the type must expose its
+inner dimensions as types that each overload the index operator according to the structure of the dimensions. For
+instance, a mutable, two-dimensional matrix could override the index operator as follows.
+```java
+public class Matrix<T> {
+  private final Object[] rows;
+
+  public Matrix(int rows, int columns) {
+    rows = new Object[rows];
+    for(int i = 0; i < rows; i++) {
+      rows[i] = new Row(columns);
+    }
+  }
+
+  public Row get(int row) { return (Row) rows[row]; }
+
+  public class Row {
+    private final Object[] data;
+
+    private Row(int size) {
+      data = new Object[size];
+    }
+
+    public T get(int column) { return (T) data[column]; }
+    public T set(int column, T value) { return (T) (data[column] = value); }
+  }
+}
+```
+Matrix implements the index operator to expose the Row dimension. Row implements the index operator for read/write
+access to the matrix' content. As such Matrix can be accessed with the index operator in both dimensions.
+```java
+Matrix<String> matrix = new Matrix(10, 5);
+matrix[3][4] = "hi";
+String value = matrix[3][4];
+System.out.println(value);
+```
+Note, Matrix and its intermediate Row class could be implemented differently. For instance, the matrix could be backed
+directly by a two-dimensional array. In this case the Row class serves as a simple intermediary.
+```java
+public class Matrix<T> {
+  private final Object[][] matrix;
+  
+  public Matrix(int rows, int columns) {
+    this.matrix = new Object[rows][columns];
+  }
+  
+  public Row get(int row) { return new Row(row); }
+  
+  private class Row {
+    private final int row;
+
+    private Row(int row) {
+      this.row = row;
+    }
+
+    public T get(int column) { return (T) matrix[row][column]; }
+    public T set(int column, T value) { return (T) (matrix[row][column] = value); }
+  }
+}
+```
+The main idea here is to illustrate that multidimensional indexing on a closed data structure can be achieved by
+modeling inner dimensions purely as intermediaries.
 
 ## Unit Operators
 
