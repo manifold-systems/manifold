@@ -81,6 +81,8 @@ public class ManLog_11 extends Log
       Gen.instance( ctx ),
       Infer.instance( ctx ),
       JavaCompiler.instance( ctx ),
+      ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(),
+      ReflectUtil.field( ReflectUtil.field( JavaCompiler.instance( ctx ), "preview" ).get(), "previewHandler" ).get(),
       JavacProcessingEnvironment.instance( ctx ),
       JavacProcessingEnvironment.instance( ctx ).getMessager(),
       JavacTrees.instance( ctx ),
