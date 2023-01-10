@@ -37,7 +37,7 @@ public interface Sample {
 }
 
 public class MySample implements Sample {
-  @delegate final Sample basicSample = new BasicSample("composition");
+  @delegate final BasicSample basicSample = new BasicSample("composition");
   
   // Sample implementation is handled via @delegate, no boilerplate!
 }
@@ -46,27 +46,37 @@ MySample sample = new MySample();
 ditto.jot();   // prints "composition"
 
 ```
-* `@component` is a class that implements one or more interfaces strictly for use as a delegate
+* `@component` is a class that implements one or more interfaces for use as a delegate
 * `@delegate` is a declared member of a class that delegates interface implementation to a component class instance
                                                                
-A class having a field annotated with `@delegate` will have the corresponding interface methods generated where the implementation
+A class having a field annotated with `@delegate` will have the field's interface methods generated such that the implementation
 of the methods all delegate to the field.
+```java
+  @Override public void jot() {
+    basicSample.jot();
+  }
+  @Override public void ditto() {
+    basicSample.ditto();
+  }
+```
+All of the interfaces declared on the `@component` class of the field must be declared in the delegating class, either directly
+in its implements clause or indirectly via inheritance. This is to say that a component class is _atomic_ -- it may not be
+partially delegated to.
 
-A class annotated with `@component` is subject to restrictions detailed in the following section. These mostly concern
-preserving the overriding identity of the delegating class when control is passed to a component class.
+A class annotated with `@component` will be processed to preserve the overriding identity of the delegating class, the _self_.
+Details are covered in the following section.
 
 ## The self problem
 Another critical aspect of compositional design concerns shared identity between the delegating class and the component
-class, or lack thereof. Often called _the self problem_, the delegating class instance and the component class instances
-have separate identities; their `this` references are all different.  While this is critical for a compositional design,
-a problem arises when a component class calls an interface method where the delegating class overrides the method. Since
-their identities are separate and the component class knows nothing of the delegating class, its override is never called,
+class. Often called _the self problem_, the delegating class instance is unknown to the component class instance. While
+having separate instances is critical for a compositional design, a problem arises when a component class calls an interface
+method that the delegating class overrides. Since delegating class is unknown to the component class, its override is ignored,
 thereby breaking the composition contract.
 
-Unremedied, if `MySample` overrides `jot()` it is never called from `BasicSample#ditto()`.
+If `MySample` overrides `jot()` it is never called from `BasicSample#ditto()`.
 ```java
 public class MySample implements Sample {
-  @delegate final Sample basicSample = new BasicSample("composition");
+  @delegate final BasicSample basicSample = new BasicSample("composition");
 
   @Override
   public void jot() {
@@ -79,29 +89,42 @@ public class MySample implements Sample {
 MySample sample = new MySample();
 sample.ditto(); // prints "composition"  YIKES!
 ```
-This example illustrates why language support for delegation should not only delegate from the delegating class to the component,
-but also from the component back to the delegating class. This behavior is aptly referred to as _true delegation_.
+This example illustrates why simple delegation technique are ineffective as a replacement for class inheritance. A more
+suitable strategy allows the delegating class and its components to cooperate so that the delegating class can override
+behavior _consistently_ across all its components. This behavior is aptly referred to as _true delegation_.
 
-Thus, toward achieving true delegation, if a delegating class overrides an interface method, it must _in all cases_ override
-the component class implementation; the component class implementation should never be called unless delegated to by the
-delegating class.
+Toward achieving true delegation, if a delegating class overrides an interface method, it must _in all cases_ override the
+component class implementation, thus the component class implementation should _never_ be called unless delegated to by
+the delegating class.
 
 This means a `this` reference within a component class definition must be context-sensitive. Effectively, `this` is compiled
-as a reference to the delegating class instance when `this` is:
+as a reference to the delegating class instance when `this` is any of the following:
 * the receiver of an interface method call
-* an argument to a method call
+* an argument to a method call 
 * a return statement value
 
-`this` replacements apply only when a component class is operating as a delegate instance i.e., when its constructor is
-invoked from a delegate member or as a super call from a subcomponent. Otherwise, if the component class is constructed
-as a non-delegate, `this` references remain as-is. More specifically, `this` will be replaced with `$self` where `$self`
+`this` replacements apply only when a component class is operating as a delegate instance. Otherwise, if the component class
+is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be replaced with `$self` where `$self`
 is a generated final field and will reference the delegating class instance if non-null, otherwise it will reference `this`.
                          
-To initialize `$self` another set of private constructors will be generated in the component class reflecting its declared
-constructors, but the new constructors will have an additional parameter prepended to pass the delegating class instance.
-Accordingly, constructor call sites will be rewritten to prepend the calling delegating class instance argument, or null
-if the component class is not constructed within a delegate context. Note, the since the new constructors are necessarily
-private they will be invoked internally via method handles.
+The `$self` field will be initialized reflectively. While it is preferable to add a hidden parameter to constructors for
+this, the JVM is not amenable to this behavior; instead it would have to be wrangled in the compiler plugin, which is not
+worth the effort at this time.
+
+Note, private constructors could be generated instead of reflectively setting the field, however this strategy assumes the components
+will always be constructed in the context of a `@delegate` declaration. But this is not the case, for example, when a delegating
+class' is configurable via constructor parameters where components are created separately and passed to the delegating class.
+```java
+public class MySample implements Sample {
+  @delegate final Sample sample;
+
+  public MySample(Sample sample) {
+    this.sample = sample;
+  }
+}
+```
+In the case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
+directly via reflection.
 
 As a consequence of these restrictions it is impossible for the component class instance to escape the scope of the component
 class when used as a delegate. This is, of course, by design so that in a delegate context, beyond interface delegation calls,
@@ -134,4 +157,4 @@ Since component class members require different accessibility defaults from norm
 access modifier defaults that are more suitable for component classes. For instance, constructors and interface method
 overrides default to `public`, everything else defaults to `private`. One problem, however, is the Java default _package_
 access will not be possible. Package access is by far the least needed of the four, perhaps not having to read or write
-a ton of access modifiers is a decent trade-off? 
+a ton of access modifiers is a decent trade-off?
