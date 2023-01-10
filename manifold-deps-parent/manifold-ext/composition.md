@@ -85,7 +85,7 @@ but also from the component back to the delegating class. This behavior is aptly
 Thus, toward achieving true delegation, if a delegating class overrides an interface method, it must _in all cases_ override
 the component class implementation; the component class implementation should never be called unless delegated to by the
 delegating class.
-<ul>
+
 This means a `this` reference within a component class definition must be context-sensitive. Effectively, `this` is compiled
 as a reference to the delegating class instance when `this` is:
 * the receiver of an interface method call
@@ -105,8 +105,7 @@ private they will be invoked internally via method handles.
 
 As a consequence of these restrictions it is impossible for the component class instance to escape the scope of the component
 class when used as a delegate. This is, of course, by design so that in a delegate context, beyond interface delegation calls,
-a component class instance is never directly invoked. 
-</ul>
+a component class instance is never directly invoked.
 
 With these changes in hand the previous example works as expected.
 ```java
