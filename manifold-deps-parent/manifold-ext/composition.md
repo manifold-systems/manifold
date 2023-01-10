@@ -113,7 +113,7 @@ worth the effort at this time.
 
 Note, private constructors could be generated instead of reflectively setting the field, however this strategy assumes the components
 will always be constructed in the context of a `@delegate` declaration. But this is not the case, for example, when a delegating
-class' is configurable via constructor parameters where components are created separately and passed to the delegating class.
+class is configurable via constructor parameters where components are created separately and passed to the delegating class.
 ```java
 public class MySample implements Sample {
   @delegate final Sample sample;
