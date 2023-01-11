@@ -142,6 +142,36 @@ With these changes in hand the previous example works as expected.
 sample.ditto(); // prints "hello"
 ```    
 The restrictions detailed here will be enforced by applying compiler errors as necessary.
+   
+## Partial delegation?
+
+Should a delegating class be able to delegate only a subset of a component's interfaces? I'll call this _partial delegation_.
+```java
+public interface Foo {...}
+public interface Bar {...}
+
+@component class FooBar implements Foo, Bar {...}
+
+public class MyFoo implements Foo {
+  @delegate FooBar foo = new FooBar();  
+}
+```
+`MyFoo` implements `Foo`, but not `Bar`. Yet, it delegates `Foo` to the `FooBar` component, which implements `Foo` and `Bar`.
+
+Part of me says, yes, partial delegation adds more flexibility, therefore it is better. The rest of me says, no, partial
+delegation adds more complexity, therefore it is worse.
+
+The complexity muddies the concept of 'self' described earlier. An interface method call within a component class from `this`
+would involve testing whether the delegating class, `$self`, delegates the interface to `this`. This complicates the notion
+of self and just feels wrong.  
+
+Additionally, saying 'no' to partial delegation, promotes higher cohesion because it forces designers to build more focused
+component classes.
+* `FooBar` should be designed and used as a `FooBar`, no more, no less
+* `MyFoo` must either implement `Foo` itself or define a separate, reusable `Foo` component.
+
+So, in my judgment, partial delegation is not worth the trouble. The delegation model is simpler without it and naturally
+promotes high cohesion by prohibiting it.
 
 ## Abstract components
 
