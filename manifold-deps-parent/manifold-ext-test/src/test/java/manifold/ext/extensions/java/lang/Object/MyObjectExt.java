@@ -21,6 +21,9 @@ import manifold.ext.rt.api.Self;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.ThisClass;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 
 @Extension
@@ -29,6 +32,12 @@ public class MyObjectExt
   protected static String myProtectedMethod( @This Object thiz )
   {
     return "protected method";
+  }
+
+  @Extension
+  @SafeVarargs
+  public static <E> List<E> myStaticVarArgsMethod( E... elements) {
+    return Collections.unmodifiableList( Arrays.asList(elements));
   }
 
   @Extension

@@ -2631,6 +2631,7 @@ public class ExtensionTransformer extends TreeTranslator
           List.from( newArgs ) );
       extCall.setPos( tree.pos );
       extCall.type = tree.type;
+      extCall.varargsElement = tree.varargsElement;
       JCTree.JCFieldAccess newMethodSelect = (JCTree.JCFieldAccess)extCall.getMethodSelect();
       newMethodSelect.sym = method;
       newMethodSelect.type = method.type;
