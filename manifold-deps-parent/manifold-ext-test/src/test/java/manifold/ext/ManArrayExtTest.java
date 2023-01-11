@@ -40,6 +40,47 @@ public class ManArrayExtTest extends TestCase
     assertNotSame( strArray, strArray.clone() );
   }
 
+  public void testIsNullOrEmpty()
+  {
+    int[] iArray = {1, 2, 3, 4};
+    assertFalse( iArray.isNullOrEmpty() );
+
+    int[] emptyArray = {};
+    assertTrue( emptyArray.isNullOrEmpty() );
+
+    int[] nullArray = null;
+    assertTrue( nullArray.isNullOrEmpty() );
+  }
+
+  public void testIsEmpty()
+  {
+    int[] iArray = {1, 2, 3, 4};
+    assertFalse( iArray.isEmpty() );
+
+    int[] emptyArray = {};
+    assertTrue( emptyArray.isEmpty() );
+
+    int[] nullArray = null;
+    try
+    {
+      assertTrue( nullArray.isEmpty() );
+      fail();
+    }
+    catch( NullPointerException ignore ) {}
+  }
+
+  public void testFirst()
+  {
+    int[] iArray = {1, 2, 3, 4};
+    assertEquals( 1, iArray.first() );
+  }
+
+  public void testLast()
+  {
+    String[] strArray = {"a", "b", "c", "d"};
+    assertEquals( "d", strArray.last() );
+  }
+
   public void testToList()
   {
     int[] iArray = {1, 2, 3};

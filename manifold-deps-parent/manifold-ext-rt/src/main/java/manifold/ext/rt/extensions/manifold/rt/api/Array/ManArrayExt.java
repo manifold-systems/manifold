@@ -66,6 +66,16 @@ public class ManArrayExt
     return array == null || isEmpty( array );
   }
 
+  public static @Self(true) Object first( @This Object array )
+  {
+    return Array.get( array, 0 );
+  }
+
+  public static @Self(true) Object last( @This Object array )
+  {
+    return Array.get( array, Array.getLength( array ) - 1 );
+  }
+
   public static @Self Object copy( @This Object array )
   {
     return copy( array, -1 );
