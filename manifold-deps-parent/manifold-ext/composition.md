@@ -1,6 +1,12 @@
-_work in progress_
+# Language support for composition
 
-This is a proposal to add comprehensive language support for composition.
+>_work in progress_
+
+This is an informal design proposal to add comprehensive language support for interface composition via the manifold project.
+I'm mostly using this as a place to collect and refine my thoughts, so I can decide whether this is a good idea. Writing
+stuff down has a way of providing more clarity to my tired brain. But if you are not me, and you've stumbled on this, perhaps
+you have something to say? Feel free to comment on the [feature request](https://github.com/manifold-systems/manifold/issues/413).
+
 
 ## Rationale
 Interface composition offers a flexible object-oriented model that a lot of developers prefer over class inheritance, but
@@ -89,7 +95,7 @@ public class MySample implements Sample {
 MySample sample = new MySample();
 sample.ditto(); // prints "composition"  YIKES!
 ```
-This example illustrates why simple delegation technique are ineffective as a replacement for class inheritance. A more
+This example illustrates why simple delegation techniques are ineffective as a replacement for class inheritance. A more
 suitable strategy allows the delegating class and its components to cooperate so that the delegating class can override
 behavior _consistently_ across all its components. This behavior is aptly referred to as _true delegation_.
 
@@ -105,7 +111,8 @@ as a reference to the delegating class instance when `this` is any of the follow
 
 `this` replacements apply only when a component class is operating as a delegate instance. Otherwise, if the component class
 is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be replaced with `$self` where `$self`
-is a generated final field and will reference the delegating class instance if non-null, otherwise it will reference `this`.
+is a generated final field and will reference the delegating class instance it operating in a delegation context, otherwise
+it will reference `this`.
                          
 The `$self` field will be initialized reflectively. While it is preferable to add a hidden parameter to constructors for
 this, the JVM is not amenable to this behavior; instead it would have to be wrangled in the compiler plugin, which is not
@@ -123,7 +130,7 @@ public class MySample implements Sample {
   }
 }
 ```
-In the case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
+In this  case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
 directly via reflection.
 
 As a consequence of these restrictions it is impossible for the component class instance to escape the scope of the component
@@ -151,6 +158,19 @@ To address this use-case we will support delegation directly to abstract compone
 - rewriting `new AbstractComponent();` to an anonymous version: `new AbstractComponent() { missing stubs here }`
 - only generating delegate methods in the delegating class for implemented AbstractComponent methods, allowing the compiler
 to police the delegating class for unimplemented methods
+               
+## Delegation with non-components
+
+Since many existing classes may be suitable enough for delegation, but aren't declared with @component. Should they be usable
+as virtual components. In this case the delegating class will delegate _specified_ interfaces. Additionally, no attempt
+will be made to resolve the self problem as described above because the existing class cannot or should not be processed
+for delegation.
+```java
+public class MyFoo implements Foo {
+  @delegate(Foo.class) FooImpl foo = new FooImpl(); // FooImpl is not a @component
+}
+```
+It is unclear at this time whether this use-case should be supported.
 
 ## Further boilerplate reduction
 Since component class members require different accessibility defaults from normal classes, it may be worthwhile to support
