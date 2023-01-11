@@ -67,7 +67,7 @@ of the methods all delegate to the field.
 ```
 All of the interfaces declared on the `@component` class of the field must be declared in the delegating class, either directly
 in its implements clause or indirectly via inheritance. This is to say that a component class is _atomic_ -- it may not be
-partially delegated to.
+partially delegated to. See [partial delegation](#partial-delegation).
 
 A class annotated with `@component` will be processed to preserve the overriding identity of the delegating class, the _self_.
 Details are covered in the following section.
@@ -170,8 +170,8 @@ component classes.
 * `FooBar` should be designed and used as a `FooBar`, no more, no less
 * `MyFoo` must either implement `Foo` itself or define a separate, reusable `Foo` component.
 
-So, in my judgment, partial delegation is not worth the trouble. The delegation model is simpler without it and naturally
-promotes high cohesion by prohibiting it.
+In my judgment, partial delegation is not worth the trouble. The delegation model is simpler without it and naturally promotes
+high cohesion by prohibiting it.
 
 ## Abstract components
 
