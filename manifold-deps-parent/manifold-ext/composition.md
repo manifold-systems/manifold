@@ -43,7 +43,7 @@ public interface Sample {
 }
 
 public class MySample implements Sample {
-  @delegate final BasicSample basicSample = new BasicSample("composition");
+  @delegate final Sample sample = new BasicSample("composition");
   
   // Sample implementation is handled via @delegate, no boilerplate!
 }
@@ -55,19 +55,31 @@ ditto.jot();   // prints "composition"
 * `@component` is a class that implements one or more interfaces for use as a delegate
 * `@delegate` is a declared member of a class that delegates interface implementation to a component class instance
                                                                
-A class having a field annotated with `@delegate` will have the field's interface methods generated such that the implementation
-of the methods all delegate to the field.
+A class having a field annotated with `@delegate` automatically delegates interface implementation to the field. In the
+example the compiler generates the following methods in `MySample`.
 ```java
   @Override public void jot() {
-    basicSample.jot();
+    sample.jot();
   }
   @Override public void ditto() {
-    basicSample.ditto();
+    sample.ditto();
   }
 ```
-All of the interfaces declared on the `@component` class of the field must be declared in the delegating class, either directly
-in its implements clause or indirectly via inheritance. This is to say that a component class is _atomic_ -- it may not be
-partially delegated to. See [partial delegation](#partial-delegation).
+
+If the field's declared type is not an interface, specific interfaces may be provided as parameters to `@delegate`.
+```java
+  @delegate(Sample.class) final BasicSample basicSample;
+```
+Otherwise, the delegated interface is assumed to be field's declared type.
+```java
+@delegate final Sample sample;
+```
+Finally, if the field's type is a component type and `@delegate` does not provide interface arguments, the delegated interfaces
+are assumed to be the intersection of the component class's interfaces and the delegating class's interfaces.
+```java
+@delegate final BasicSample basicSample;
+```
+The intersection of `MySample` interfaces and `BasicSample` interfaces is `Sample`. 
 
 A class annotated with `@component` will be processed to preserve the overriding identity of the delegating class, the _self_.
 Details are covered in the following section.
@@ -105,18 +117,22 @@ the delegating class.
 
 This means a `this` reference within a component class definition must be context-sensitive. Effectively, `this` is compiled
 as a reference to the delegating class instance when `this` is any of the following:
-* the receiver of an interface method call
-* an argument to a method call 
-* a return statement value
+* the receiver of an interface method call that is delegated to
+* an argument to a method call, unless the parameter type is an interface that is not delegated to, ALL other types require replacement (including Object etc.)  
+* a return statement value, ^^ditto about the return type
 
 `this` replacements apply only when a component class is operating as a delegate instance. Otherwise, if the component class
 is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be replaced with `$self` where `$self`
-is a generated final field and will reference the delegating class instance it operating in a delegation context, otherwise
+is a generated final field and will reference the delegating class instance if it is operating in a delegation context, otherwise
 it will reference `this`.
+
+Self/this replacement is a little more involved than just shoving `$self` in there. Determining whether an interface is
+delegated to is a runtime check. So the conditions listed above require something like: `Utils.delegates($self, Foo.class) ? $self : this`.
+Some compile-time shortcuts can eliminate the `delegates()` check. For instance, if there is only one interface on the component.
+Also, the result will be cached by type of `$self` and interface type, so there should be just a one-time hit for each distinct
+call.
                          
-The `$self` field will be initialized reflectively. While it is preferable to add a hidden parameter to constructors for
-this, the JVM is not amenable to this behavior; instead it would have to be wrangled in the compiler plugin, which is not
-worth the effort at this time.
+The `$self` field will be recursively initialized using reflection over the tree of `@delegate` fields.
 
 Note, private constructors could be generated instead of reflectively setting the field, however this strategy assumes the components
 will always be constructed in the context of a `@delegate` declaration. But this is not the case, for example, when a delegating
@@ -133,45 +149,19 @@ public class MySample implements Sample {
 In this  case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
 directly via reflection.
 
-As a consequence of these restrictions it is impossible for the component class instance to escape the scope of the component
-class when used as a delegate. This is, of course, by design so that in a delegate context, beyond interface delegation calls,
-a component class instance is never directly invoked.
+Consequently, it is impossible for the component class instance to escape the scope of the component class when used as
+a delegate. This is, of course, by design so that in a delegate context, beyond interface delegation calls, a component
+class instance is never directly invoked.
+
+Because `$self` is not assigned until after a component is instantiated, constructors will be statically checked to warn
+against interface method calls, otherwise these calls break the override precedence of the delegating class (`$self`).
 
 With these changes in hand the previous example works as expected.
 ```java
 sample.ditto(); // prints "hello"
 ```    
+
 The restrictions detailed here will be enforced by applying compiler errors as necessary.
-   
-## Partial delegation?
-
-Should a delegating class be able to delegate only a subset of a component's interfaces? I'll call this _partial delegation_.
-```java
-public interface Foo {...}
-public interface Bar {...}
-
-@component class FooBar implements Foo, Bar {...}
-
-public class MyFoo implements Foo {
-  @delegate FooBar foo = new FooBar();  
-}
-```
-`MyFoo` implements `Foo`, but not `Bar`. Yet, it delegates `Foo` to the `FooBar` component, which implements `Foo` and `Bar`.
-
-Part of me says, yes, partial delegation adds more flexibility, therefore it is better. The rest of me says, no, partial
-delegation adds more complexity, therefore it is worse.
-
-The complexity muddies the concept of 'self' described earlier. An interface method call within a component class from `this`
-would involve testing whether the delegating class, `$self`, delegates the interface to `this`. This complicates the notion
-of self and just feels wrong.  
-
-Additionally, saying 'no' to partial delegation, promotes higher cohesion because it forces designers to build more focused
-component classes.
-* `FooBar` should be designed and used as a `FooBar`, no more, no less
-* `MyFoo` must either implement `Foo` itself or define a separate, reusable `Foo` component.
-
-In my judgment, partial delegation is not worth the trouble. The delegation model is simpler without it and naturally promotes
-high cohesion by prohibiting it.
 
 ## Abstract components
 
