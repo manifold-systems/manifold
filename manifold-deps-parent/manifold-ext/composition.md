@@ -16,9 +16,9 @@ delegate. Without these key language elements composition entails reams of error
 and other pitfalls relating to delegation. As a consequence composition has taken a backseat to inheritance in real-world
 Java app development.
 
-Considering Oracle does not appear to have a plan on the table to address this veritable missing link, this proposal
-lays out such a plan, albeit as a compiler plugin. The main idea is to provide comprehensive language support for interface
-composition using a form of _true delegation_.
+Considering Oracle does not appear to have a plan on the table to address this veritable missing link, perhaps it's time
+to take matters in our own hands, albeit as a compiler plugin. The main idea is to provide comprehensive language support
+for interface composition using a form of _true delegation_.
 
 ## Interface delegation
 Interface delegation is the primary function of the compositional model. It should be integrated as a concise, declarative
@@ -68,16 +68,16 @@ example the compiler generates the following methods in `MySample`.
 
 If the field's declared type is not an interface, specific interfaces may be provided as parameters to `@delegate`.
 ```java
-  @delegate(Sample.class) final BasicSample basicSample;
+@delegate(Sample.class) BasicSample basicSample;
 ```
-Otherwise, the delegated interface is assumed to be field's declared type.
+Otherwise, the delegated interface is assumed to be the field's declared type.
 ```java
-@delegate final Sample sample;
+@delegate Sample sample;
 ```
 Finally, if the field's type is a component type and `@delegate` does not provide interface arguments, the delegated interfaces
 are assumed to be the intersection of the component class's interfaces and the delegating class's interfaces.
 ```java
-@delegate final BasicSample basicSample;
+@delegate BasicSample basicSample;
 ```
 The intersection of `MySample` interfaces and `BasicSample` interfaces is `Sample`. 
 
@@ -85,11 +85,12 @@ A class annotated with `@component` will be processed to preserve the overriding
 Details are covered in the following section.
 
 ## The self problem
-Another critical aspect of compositional design concerns shared identity between the delegating class and the component
-class. Often called _the self problem_, the delegating class instance is unknown to the component class instance. While
-having separate instances is critical for a compositional design, a problem arises when a component class calls an interface
-method that the delegating class overrides. Since delegating class is unknown to the component class, its override is ignored,
-thereby breaking the composition contract.
+Another critical aspect of delegation concerns the collective identity consisting of the delegating class and its components.
+Often called _the self problem_, the delegating class instance and the component class instances have separate identities,
+where the delegation class is aware of its delegated components, but not the other way around.
+
+A problem arises when a component class calls an interface method that the delegating class overrides. Since the delegating
+class is unknown to the component class, the delegating class's override is ignored.
 
 If `MySample` overrides `jot()` it is never called from `BasicSample#ditto()`.
 ```java
@@ -107,54 +108,37 @@ public class MySample implements Sample {
 MySample sample = new MySample();
 sample.ditto(); // prints "composition"  YIKES!
 ```
-This example illustrates why simple delegation techniques are ineffective as a replacement for class inheritance. A more
-suitable strategy allows the delegating class and its components to cooperate so that the delegating class can override
-behavior _consistently_ across all its components. This behavior is aptly referred to as _true delegation_.
+This example illustrates why simple delegation techniques are ineffective as a serious alternative for class inheritance.
+A more practical strategy, called _true delegation_, establishes a collective identity, or _self_, between the delegating
+class and its components to enable consistent interface method call dispatching.
 
 Toward achieving true delegation, if a delegating class overrides an interface method, it must _in all cases_ override the
-component class implementation, thus the component class implementation should _never_ be called unless delegated to by
-the delegating class.
+component class implementation, thus **the component class implementation should _never_ be called directly outside the 
+delegating class.**
 
-This means a `this` reference within a component class definition must be context-sensitive. Effectively, `this` is compiled
-as a reference to the delegating class instance when `this` is any of the following:
+This means a `this` reference within a component class must be context-sensitive. Effectively, `this` must be compiled as
+a reference to the delegating class instance when `this` is any of the following: 
 * the receiver of an interface method call that is delegated to
-* an argument to a method call, unless the parameter type is an interface that is not delegated to, ALL other types require replacement (including Object etc.)  
-* a return statement value, ^^ditto about the return type
+* an argument to a method call, unless the parameter type is an interface that is not delegated to, ALL other types require substitution (including Object etc.)  
+* a return statement value, ^^ditto regarding the return type
 
-`this` replacements apply only when a component class is operating as a delegate instance. Otherwise, if the component class
-is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be replaced with `$self` where `$self`
-is a generated final field and will reference the delegating class instance if it is operating in a delegation context, otherwise
-it will reference `this`.
+`this` substitutions apply only when a component class is operating as a delegate instance. Otherwise, if the component class
+is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be substituted with `$self` where `$self`
+is a generated final field and will reference the delegating class instance if it is operating in a delegation context,
+otherwise it will reference `this`.
 
-Self/this replacement is a little more involved than just shoving `$self` in there. Determining whether an interface is
-delegated to is a runtime check. So the conditions listed above require something like: `Utils.delegates($self, Foo.class) ? $self : this`.
+Self/this substitution is a little more involved than just shoving `$self` in there. Determining whether an interface is
+delegated to is a _runtime_ check. So the conditions listed above require something like: `Utils.delegates($self, Foo.class) ? $self : this`.
 Some compile-time shortcuts can eliminate the `delegates()` check. For instance, if there is only one interface on the component.
 Also, the result will be cached by type of `$self` and interface type, so there should be just a one-time hit for each distinct
-call.
-                         
+call.     
+
 The `$self` field will be recursively initialized using reflection over the tree of `@delegate` fields.
 
-Note, private constructors could be generated instead of reflectively setting the field, however this strategy assumes the components
-will always be constructed in the context of a `@delegate` declaration. But this is not the case, for example, when a delegating
-class is configurable via constructor parameters where components are created separately and passed to the delegating class.
-```java
-public class MySample implements Sample {
-  @delegate final Sample sample;
-
-  public MySample(Sample sample) {
-    this.sample = sample;
-  }
-}
-```
-In this  case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
-directly via reflection.
-
-Consequently, it is impossible for the component class instance to escape the scope of the component class when used as
-a delegate. This is, of course, by design so that in a delegate context, beyond interface delegation calls, a component
-class instance is never directly invoked.
-
 Because `$self` is not assigned until after a component is instantiated, constructors will be statically checked to warn
-against interface method calls, otherwise these calls break the override precedence of the delegating class (`$self`).
+against interface method calls, otherwise these calls break the override precedence of the delegating class (`$self`). Perhaps
+there should be an `initialize()` method all components can override to accommodate such calls? This method would be called
+immediately after reflectively setting the `$self` field. _todo_
 
 With these changes in hand the previous example works as expected.
 ```java
@@ -162,6 +146,22 @@ sample.ditto(); // prints "hello"
 ```    
 
 The restrictions detailed here will be enforced by applying compiler errors as necessary.
+
+>Note, private constructors could be generated instead of reflectively setting `$self`, however this strategy assumes the
+>components will always be constructed in the context of a `@delegate` declaration. But this is not the case when the delegate
+>field is configurable, for example, as a constructor parameters where components are created separately and passed to the
+>delegating class.
+>```java
+>public class MySample implements Sample {
+>  @delegate final Sample sample;
+>
+>  public MySample(Sample sample) {
+>    this.sample = sample;
+>  }
+>}
+>```
+>In this  case since the component is created separate from the `@delegate` declaration, the `$self` field must be initialized
+>directly via reflection.
 
 ## Abstract components
 
