@@ -1,4 +1,4 @@
-# Language support for composition
+# Language support for interface composition
 
 >_work in progress_
 
