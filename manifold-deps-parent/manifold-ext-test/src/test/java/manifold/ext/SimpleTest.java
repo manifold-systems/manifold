@@ -4,11 +4,7 @@ import abc.*;
 
 import java.awt.Rectangle;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import junit.framework.TestCase;
@@ -16,6 +12,8 @@ import manifold.api.type.BasicIncrementalCompileDriver;
 import manifold.api.type.ClassType;
 import manifold.api.type.ContributorKind;
 import manifold.ext.rt.api.Structural;
+
+import static org.junit.Assert.assertArrayEquals;
 
 /**
  */
@@ -163,6 +161,15 @@ public class SimpleTest extends TestCase
   {
     assertEquals( "whatever", SimpleTest.class.whateverClassMethod() );
     assertEquals( "whatever", getClass().whateverClassMethod() );
+  }
+
+  public void testEmptyArrayMethod()
+  {
+    String[] emptyStringArray = String.emptyArray();
+    assertArrayEquals( new String[0], emptyStringArray );
+    
+    SimpleTest[] emptySimpleTestArray = SimpleTest.emptyArray();
+    assertArrayEquals( new SimpleTest[0], emptySimpleTestArray );
   }
 
   public void testStaticMethod()
