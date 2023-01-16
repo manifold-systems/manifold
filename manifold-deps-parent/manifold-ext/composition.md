@@ -3,9 +3,8 @@
 >_work in progress_
 
 This is an informal design proposal to add comprehensive language support for interface composition via the manifold project.
-I'm mostly using this as a place to collect and refine my thoughts, so I can decide whether this is a good idea. Writing
-stuff down has a way of providing more clarity to my tired brain. But if you are not me, and you've stumbled on this, perhaps
-you have something to say? Feel free to comment on the [feature request](https://github.com/manifold-systems/manifold/issues/413).
+I'm mostly using this as a place to collect and refine my thoughts, so I can decide whether this is a good idea. But feel
+free to comment on the [feature request](https://github.com/manifold-systems/manifold/issues/413).
 
 
 ## Rationale
@@ -16,14 +15,25 @@ delegate. Without these key language elements composition entails reams of error
 and other pitfalls relating to delegation. As a consequence composition has taken a backseat to inheritance in real-world
 Java app development.
 
-Considering Oracle does not appear to have a plan on the table to address this veritable missing link, perhaps it's time
-to take matters in our own hands, albeit as a compiler plugin. The main idea is to provide comprehensive language support
-for interface composition using a form of _true delegation_.
+The main idea here is to use manifold as a foundation for supplementing the Java language with features necessary for
+developers to apply interface composition concisely and reliably in their projects.
+
+## Goals
+
+Provide language features necessary so that interface composition is at an equal footing with class inheritance regarding
+ease of use, IDE accessibility, etc. Toward that goal these features should:
+
+* eliminate boilerplate delegation code
+* provide true delegation (solve the _self_ problem)
+* support runtime assignment of delegates (constructor injection etc.)   
+* integrate into IntelliJ and Android plugins for manifold
+
 
 ## Interface delegation
-Interface delegation is the primary function of the compositional model. It should be integrated as a concise, declarative
-language construct so that composing a class with interfaces is natural and straightforward. As such, a class utilizing
-this feature is void of boilerplate delegation code.
+
+Interface delegation is the primary function of the compositional model presented here. It will be integrated as a concise,
+declarative language construct so that composing a class with interfaces is natural and straightforward. As such, a class
+utilizing this feature is void of boilerplate delegation code.
 
 ```java
 public interface Sample {
@@ -80,14 +90,14 @@ are assumed to be the intersection of the component class's interfaces and the d
 @delegate BasicSample basicSample;
 ```
 The intersection of `MySample` interfaces and `BasicSample` interfaces is `Sample`. 
-
+                                                                                      
 A class annotated with `@component` will be processed to preserve the overriding identity of the delegating class, the _self_.
 Details are covered in the following section.
 
 ## The self problem
 Another critical aspect of delegation concerns the collective identity consisting of the delegating class and its components.
 Often called _the self problem_, the delegating class instance and the component class instances have separate identities,
-where the delegation class is aware of its delegated components, but not the other way around.
+where the delegating class is aware of its delegated components, but not the other way around.
 
 A problem arises when a component class calls an interface method that the delegating class overrides. Since the delegating
 class is unknown to the component class, the delegating class's override is ignored.
@@ -122,23 +132,24 @@ a reference to the delegating class instance when `this` is any of the following
 * an argument to a method call, unless the parameter type is an interface that is not delegated to, ALL other types require substitution (including Object etc.)  
 * a return statement value, ^^ditto regarding the return type
 
-`this` substitutions apply only when a component class is operating as a delegate instance. Otherwise, if the component class
-is used as a non-delegate, `this` references remain as-is. More specifically, `this` will be substituted with `$self` where `$self`
-is a generated final field and will reference the delegating class instance if it is operating in a delegation context,
-otherwise it will reference `this`.
+`this` substitutions apply only when a component class is operating as a delegate instance. Otherwise, if the component
+class is used as a non-delegate, `this` references remain as-is.
+
+To facilitate substitutions a private `$self` field will be generated on component classes and will be initialized with
+a reference to the delegating class instance immediately following assignment to a `@delegate` field.
 
 Self/this substitution is a little more involved than just shoving `$self` in there. Determining whether an interface is
 delegated to is a _runtime_ check. So the conditions listed above require something like: `Utils.delegates($self, Foo.class) ? $self : this`.
-Some compile-time shortcuts can eliminate the `delegates()` check. For instance, if there is only one interface on the component.
-Also, the result will be cached by type of `$self` and interface type, so there should be just a one-time hit for each distinct
-call.     
+Some compile-time shortcuts can eliminate the check. For instance, if there is only one interface on the component. Additionally,
+the result will be cached by type of `$self` and interface type, to reduce the complexity of the check to constant time.
 
-The `$self` field will be recursively initialized using reflection over the tree of `@delegate` fields.
+Immediately following assignment to a `@delegate` field, the component class's `$self` will be set to the delegating class
+instance.
 
 Because `$self` is not assigned until after a component is instantiated, constructors will be statically checked to warn
-against interface method calls, otherwise these calls break the override precedence of the delegating class (`$self`). Perhaps
+against interface method calls on `this`, otherwise these calls break the override precedence of the delegating class (`$self`). Perhaps
 there should be an `initialize()` method all components can override to accommodate such calls? This method would be called
-immediately after reflectively setting the `$self` field. _todo_
+immediately after setting the `$self` field. _todo_
 
 With these changes in hand the previous example works as expected.
 ```java
