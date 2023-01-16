@@ -159,6 +159,12 @@ public class SimpleTest extends TestCase
     }
   }
 
+  public void testClassExtension()
+  {
+    assertEquals( "whatever", SimpleTest.class.whateverClassMethod() );
+    assertEquals( "whatever", getClass().whateverClassMethod() );
+  }
+
   public void testStaticMethod()
   {
     List<String> l = Arrays.asList( "hi", "bye" );

@@ -954,6 +954,12 @@ public class SrcClassUtil
     if( iAngle > 0 )
     {
       rawType = rawType.substring( 0, iAngle );
+      int iLastAngle = type.lastIndexOf( '>' );
+      if( type.length()-1 > iLastAngle )
+      {
+        // array brackets
+        rawType += type.substring( iLastAngle + 1 );
+      }
     }
     return rawType;
   }
