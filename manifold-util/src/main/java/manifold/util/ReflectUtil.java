@@ -948,21 +948,22 @@ public class ReflectUtil
         throw ManExceptionUtil.unchecked( e );
       }
     }
-
-    public Object invokeSuper( Object... args )
-    {
-      try
-      {
-        MethodHandle superMethod = MethodHandles.lookup().findSpecial(
-          _receiver.getClass().getSuperclass(), _method.getName(),
-          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
-        return superMethod.bindTo( _receiver ).invokeExact( args );
-      }
-      catch( Throwable t )
-      {
-        throw ManExceptionUtil.unchecked( t );
-      }
-    }
+// disabling this for now because MethodHandle.invoke/invokeExact to not work in Android APIs before version 8 (API level 26)
+//
+//    public Object invokeSuper( Object... args )
+//    {
+//      try
+//      {
+//        MethodHandle superMethod = MethodHandles.lookup().findSpecial(
+//          _receiver.getClass().getSuperclass(), _method.getName(),
+//          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
+//        return superMethod.bindTo( _receiver ).invokeExact( args );
+//      }
+//      catch( Throwable t )
+//      {
+//        throw ManExceptionUtil.unchecked( t );
+//      }
+//    }
   }
 
   public static class FieldRef
