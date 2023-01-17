@@ -45,3 +45,6 @@ The imagined `This` is the static counterpart to `this` and can be used as a typ
 with the added bonus of reification.
 
 Along the same lines virtual static methods could be useful too. Just a thought.
+
+>See [extension classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext) from
+the manifold project for access to experimental features like this for Java.
