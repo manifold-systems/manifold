@@ -17,7 +17,6 @@
 package manifold.rt.api.util;
 
 import manifold.util.JreUtil;
-import manifold.util.ManExceptionUtil;
 import manifold.util.ReflectUtil;
 
 import java.util.Iterator;
@@ -37,23 +36,17 @@ public class ServiceUtil
     // (currently the IJ plugin creates loaders for accessing type manifolds from project classpath)
 
     ServiceLoader<C> loader = ServiceLoader.load( serviceClass );
-    hackServiceLoaderToHandleProxyFactoryForJpms( loader, serviceClass, null );
-    Iterator<C> iterator = loader.iterator();
-    if( iterator.hasNext() )
+    try
     {
-      while( iterator.hasNext() )
+      hackServiceLoaderToHandleProxyFactoryForJpms( loader, serviceClass, null );
+      for( Iterator<C> iterator = loader.iterator(); iterator.hasNext(); )
       {
         try
         {
           C service = iterator.next();
-          services.add( service );
-        }
-        catch( UnsupportedClassVersionError ucve )
-        {
-          // if manifold compiles within IJ, it picks up the IJ plugin's impl, which is compiled with a later version of Java
-          if( !ucve.getMessage().contains( "manifold/ij/android/BuildVariantSymbols" ) )
+          if( isAbsent( services, service ) )
           {
-            throw ManExceptionUtil.unchecked( ucve );
+            services.add( service );
           }
         }
         catch( ServiceConfigurationError e )
@@ -62,13 +55,24 @@ public class ServiceUtil
         }
       }
     }
+    catch( UnsupportedClassVersionError ignore )
+    {
+      // This happens when compiling from IntelliJ because it sets the context classloader with a loader having all
+      // kinds of stuff that shouldn't be there, like plugin jars etc. So if the plugin jar is compiled with a newer
+      // version of bytecode than the project that is building and happens to have a class that implements the service
+      // here, an UnsupportedClassVersion love note results.
+      // SymbolProvider is an example of this where separate implementations for IDE and compiler provide BuildVariantSymbols.
+      // The problem is that the IDE class is in this context classloader path.
+      //
+      //ignore.printStackTrace(); // printing this for now, but swallowing the exception and using the normal loader next...
+    }
 
     if( Thread.currentThread().getContextClassLoader() != classLoader )
     {
       // Also load from this loader
       loader = ServiceLoader.load( serviceClass, classLoader );
       hackServiceLoaderToHandleProxyFactoryForJpms( loader, serviceClass, classLoader );
-      for( iterator = loader.iterator(); iterator.hasNext(); )
+      for( Iterator<C> iterator = loader.iterator(); iterator.hasNext(); )
       {
         try
         {
