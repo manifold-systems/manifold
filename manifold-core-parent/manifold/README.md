@@ -272,7 +272,7 @@ the GraphQL manifold ([manifold-graphql](https://github.com/manifold-systems/man
 and the JavaScript manifold ([manifold-js](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)).
 These serve as decent reference implementations for wrapping parsers and binding to existing languages.
 
->Note with Java 9+ with named modules you register a service provider in your `module-info.java` file using the
+>Note, with Java 9+ with named modules you register a service provider in your `module-info.java` file using the
 `provides` keyword:
 >```java
 >provides manifold.api.type.ITypeManifold with com.abc.MyTypeManifold
@@ -291,7 +291,7 @@ compilation
 | `compileOnly` scope  | &#10003;|         |         |
 | `dynamic` plugin arg |         | &#10003;|         |
 
->Note, `static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
+>`static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
 >projects.
 
 * **`static`**: Compiles all resource types statically at compile-time. Distributes only Manifold runtime dependencies.
@@ -381,7 +381,7 @@ compile-time, so you always use it with default scoping so it is packaged with y
 
 See [Setup]() for examples of using Manifold statically.
 
->Note, `static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
+>`static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
 >projects.
    
 ### Dynamic Configuration
@@ -421,7 +421,7 @@ of unnecessarily alarming users. This is a noop when running on Java 8 / Android
 2. Dynamically open the java.base module to the manifold module for common reflection access, which is a noop running on
 Java 8 / Android
 
-Note `dasBoot()` performs these tasks one time, subsequent calls simply return i.e., there is no performance penalty.
+`dasBoot()` performs these tasks one time, subsequent calls simply return i.e., there is no performance penalty.
 
 If you know your code will never run on Java 9+ and/or you don't mind the Java 9+ warning message, you can eliminate the
 `dasBoot()` static initializer via the `no-bootstrap plugin` argument:
@@ -501,7 +501,7 @@ type manifolds not based on files or file extensions.
 ```
 javac -Amanifold.source.class:com.example.MySpecialTypeManifold=.* ...
 ```
->Note, as a reminder, the javac command line arguments are additive with respect to types compiled to disk. As a general
+>As a reminder, the javac command line arguments are additive with respect to types compiled to disk. As a general
 >rule Manifold types referenced in Java source are _always_ compiled, regardless of command line argument constraints.
 
 ## Adding Source Paths
@@ -603,7 +603,7 @@ You can use Manifold in one of two modes which you control as an optional argume
 Most projects benefit most using the default (static) mode. Dynamic mode in most cases should be reserved for specific
 type manifolds that are better suited to dynamic compilation.
 
-> Note if you're not sure which mode to use, try the default static mode -- it's usually the right choice.
+> If you're not sure which mode to use, try the default static mode -- it's usually the right choice.
 
 General information considering the static v. dynamic mode:
 
@@ -623,7 +623,7 @@ sources when you build your project
 
 * Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
    
-> Note, you can use `javac` command line arguments to statically compile a set of specified types whether you use
+> You can use `javac` command line arguments to statically compile a set of specified types whether you use
 > them directly in your code e.g., if type-safe resources are part of an API.  See [Explicit Resource Compilation](#explicit-resource-compilation).
  
 
@@ -634,11 +634,11 @@ this section
 
 # Embedding with Fragments (experimental)
 
-You can now *embed* resource content such as JSON, GraphQL, XML, YAML, CSV, etc. directly in a Java source file as a type-safe
-resource _**fragment**_.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
-IDE plugin, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
-This means you can directly embed resources closer to where you use them in your code.  For instance, you can
-type-safely write a query in the query language your application uses directly in the Java method that uses the query.
+You can now *embed* resource content such as JSON, GraphQL, XML, YAML, CSV, etc. directly in a Java source file as a **type-safe**
+resource fragment.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
+IDE plugins, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
+This means you can directly embed resources closer to where you use them in your code.  Write a query in the query language
+your application uses directly in the Java method that uses the query.
 
 You can embed a fragment as a *declaration* or a *value*.
 
@@ -670,8 +670,7 @@ public class MyJavaClass {
 }
 ``` 
 Notice the Javascript is embedded in a multiline comment. This is how you embed any kind of resource fragment as a type
-declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. Note
-a fragment must use `[>` and `<]` at the beginning of the comment to delimit the type name and extension.  A fragment
+declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. A fragment must use `[>` and `<]` at the beginning of the comment to delimit the type name and extension.  A fragment
 covers the remainder of the comment and must follow the format of the declared extension.
 
 You can embed any Manifold enabled resource as a fragment type declaration.  Here's another example using JSON:
@@ -713,7 +712,7 @@ A fragment can be embedded anywhere in your code.  The type declared in the frag
 enclosing class.  Thus in the example `Barker` is accessible anywhere in the enclosing `foo` method *as well as* foo's
 declaring class and other classes in its package.
 
->Note, even though the declared type is package scoped, for the sake of readability it is best to define the fragment
+>Even though the declared type is package scoped, for the sake of readability it is best to define the fragment
 nearest to its intended use. In a future release this level of scoping may be enforced.
 
 ## Rich Editing
@@ -735,10 +734,10 @@ Here a GraphQL query is embedded directly in a String literal as a fragment *val
 the fragment type in use.  In this case the GraphQL type manifold provides a special type with the single purpose of
 exposing a query `builder` method matching the one the `MoviesByGenre` query defines.
 
-Note not all manifold resources can be used as fragment values. The fragment value concept is not always a good fit.
+Not all manifold resources can be used as fragment values. The fragment value concept is not always a good fit.
 For instance, the Properties manifold does not implement fragment values because a properties type is used statically.
 
-Note fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/378)
+Fragments as values are more useful with multiline String literals via the new [Text Blocks](https://openjdk.java.net/jeps/378)
 feature in Java 15:
 
 <p><img src="http://manifold.systems/images/graphql_fragment.png" alt="graphql value fragment" width="70%" height="70%"/></p>
@@ -838,9 +837,9 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 
 ## Gradle
 
->Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
+>If you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
->Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
+>If you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
 version (8 - 19), the script takes care of the rest. 

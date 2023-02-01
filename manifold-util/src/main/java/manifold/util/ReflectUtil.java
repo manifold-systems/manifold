@@ -18,9 +18,7 @@ package manifold.util;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -28,6 +26,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.ConcurrentWeakHashMap;
@@ -525,6 +525,16 @@ public class ReflectUtil
   }
 
   /**
+   * This method behaves like the one below it, except this method ensures the {@code iface} default method is called even
+   * if the {@code receiver} overrides it. Essentially, this method is like calling Iface.super.method() from the receiver's
+   * perspective.
+   */
+  public static Object invokeDefault( Object receiver, Class<?> iface, String name, Class<?>[] params, Object... args )
+  {
+    return invokeDefault( receiver, method( iface, name, params ).getMethod(), args );
+  }
+
+  /**
    * Invoke a default interface method.
    * <p/>
    * This is useful, for example, for a proxy implementation where there is no
@@ -693,6 +703,37 @@ public class ReflectUtil
     }
 
     return null;
+  }
+
+  /**
+   * Visit declared fields of the {@code receiver} class. Stop if {@code fun} return false.
+   */
+  public static List<LiveFieldRef> fields( Object receiver )
+  {
+    return fields( receiver, null );
+  }
+  public static List<LiveFieldRef> fields( Object receiver, Predicate<LiveFieldRef> filter )
+  {
+    if( receiver == null )
+    {
+      throw new NullPointerException( "Receiver is null" );
+    }
+
+    Class<?> cls = receiver.getClass();
+    try
+    {
+      Field[] fields = JreUtil.isJava12orLater()
+        ? (Field[])_getDeclaredFields0.get().invoke( cls, false )
+        : cls.getDeclaredFields();
+      return Arrays.stream( fields )
+        .map( f -> field( receiver, f.getName() ) )
+        .filter( lf -> filter != null && filter.test( lf ) )
+        .collect( Collectors.toList() );
+    }
+    catch( Exception e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
   }
 
   private static Field getDeclaredField( Class<?> cls, String name ) throws NoSuchFieldException
@@ -1081,6 +1122,11 @@ public class ReflectUtil
         }
         throw ManExceptionUtil.unchecked( e );
       }
+    }
+
+    public boolean isStatic()
+    {
+      return Modifier.isStatic( getField().getModifiers() );
     }
   }
 
