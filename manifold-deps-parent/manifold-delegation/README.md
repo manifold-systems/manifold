@@ -1,4 +1,4 @@
-# Properties for Java
+# Delegation with links & parts
   
 > **⚠ Experimental Feature**
  
