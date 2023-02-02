@@ -146,6 +146,32 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
   @Override
   public void started( TaskEvent e )
   {
+    if( e.getKind() != TaskEvent.Kind.ANALYZE )
+    {
+      return;
+    }
+
+    _taskEvent = e;
+    try
+    {
+      ensureInitialized( _taskEvent );
+
+      for( Tree tree : e.getCompilationUnit().getTypeDecls() )
+      {
+        if( tree instanceof JCClassDecl )
+        {
+          JCClassDecl classDecl = (JCClassDecl)tree;
+          if( e.getKind() == TaskEvent.Kind.ANALYZE )
+          {
+            classDecl.accept( new Analyze_Start() );
+          }
+        }
+      }
+    }
+    finally
+    {
+      _taskEvent = null;
+    }
   }
 
   @Override
@@ -416,7 +442,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private void processPartClass( JCClassDecl classDecl )
     {
-      if( !isPartClass( classDecl ) )
+      if( !isPartClass( classDecl.sym ) )
       {
         return;
       }
@@ -841,6 +867,23 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
   }
 
+  // - reduce parenthesized expressions of the form (this) and (Foo.this) to this and Foo.this. To make 'this' replacements
+  // easier to deal with.
+  //
+  private class Analyze_Start extends TreeTranslator
+  {
+    @Override
+    public void visitParens( JCParens tree )
+    {
+      super.visitParens( tree );
+      if( tree.expr instanceof JCIdent && tree.expr.toString().equals( "this" ) || 
+          tree.expr instanceof JCFieldAccess && tree.expr.toString().endsWith( ".this" ) )
+      {
+        result = tree.expr;
+      }
+    }
+  }
+  
   // - for @link fields, assign linking class instance to $self of part classes
   // - for @part classes, replace 'this' with '$self' where applicable
   //
@@ -865,24 +908,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       super.visitIdent( tree );
 
-      JCClassDecl classDecl = _classDeclStack.peek();
-      if( isPartClass( classDecl ) || isInnerClassOfPartClass( classDecl.sym ) )
+      if( tree.name.toString().equals( "this" ) )
       {
-        if( tree.name.toString().equals( "this" ) )
-        {
-          replaceThis_Explicit( tree );
-        }
-      }
-    }
-
-    private void replaceThis_Explicit( JCExpression tree )
-    {
-      if( !replaceThisArgument( tree ) )
-      {
-        if( !replaceThisReceiver( tree ) )
-        {
-          replaceThisReturn( tree );
-        }
+        replaceThis_Explicit( tree );
       }
     }
 
@@ -891,53 +919,99 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       super.visitSelect( tree );
 
-      JCClassDecl classDecl = _classDeclStack.peek();
-      if( isPartClass( classDecl ) || isInnerClassOfPartClass( classDecl.sym ) )
+      if( tree.toString().endsWith( ".this" ) )
       {
-        if( tree.toString().endsWith( ".this" ) )
+        replaceThis_Explicit( tree );
+      }
+    }
+
+    private void replaceThis_Explicit( JCExpression tree )
+    {
+      if( isPartClass( tree.type.tsym ) )
+      {
+        if( !replaceThisArgument( tree ) &&
+          !replaceThisReceiver( tree ) &&
+          !replaceThisReturn( tree ) &&
+          !replaceThisCast( tree ) &&
+          !replaceThisTernary( tree ) &&
+          !replaceThisAssignment( tree ) )
         {
-          replaceThis_Explicit( tree );
         }
       }
     }
 
-    @Override
-    public void visitApply( JCMethodInvocation tree )
+    private boolean replaceThisAssignment( JCExpression tree )
     {
-      super.visitApply( tree );
-
-      JCClassDecl classDecl = _classDeclStack.peek();
-      if( isPartClass( classDecl ) || isInnerClassOfPartClass( classDecl.sym ) )
+      Tree parent = getParent( tree );
+      if( parent instanceof JCAssign )
       {
-        processImpliedThisCall( tree );
+        JCAssign assignment = (JCAssign)parent;
+        if( assignment.type.isInterface() )
+        {
+          JCClassDecl classDecl = findClassDecl( tree.type );
+          result = replaceThis( tree, classDecl, assignment.type );
+        }
+        else
+        {
+          reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
+        }
+        return true;
       }
+      else if( parent instanceof JCVariableDecl )
+      {
+        JCVariableDecl varDecl = (JCVariableDecl)parent;
+        if( varDecl.getType().type.isInterface() )
+        {
+          JCClassDecl classDecl = findClassDecl( tree.type );
+          result = replaceThis( tree, classDecl, varDecl.getType().type );
+        }
+        else
+        {
+          reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
+        }
+        return true;
+      }
+      return false;
     }
 
-    private void processImpliedThisCall( JCMethodInvocation tree )
+    private boolean replaceThisTernary( JCExpression tree )
     {
-      if( tree.meth instanceof JCIdent )
+      Tree parent = getParent( tree );
+      if( parent instanceof JCConditional )
       {
-        MethodSymbol sym = (MethodSymbol)((JCIdent)tree.meth).sym;
-        if( sym.isStatic() )
+        JCConditional ternary = (JCConditional)parent;
+        if( ternary.type.isInterface() )
         {
-          return;
+          JCClassDecl classDecl = findClassDecl( tree.type );
+          result = replaceThis( tree, classDecl, ternary.type );
         }
-
-        Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
-        if( enclClass_Iface == null )
+        else
         {
-          return;
+          reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
         }
-        if( enclClass_Iface.snd != null )
-        {
-          JCExpression thisSub = replaceThis( tree, enclClass_Iface.fst, enclClass_Iface.snd );
-          TreeMaker make = getTreeMaker();
-          make.pos = tree.pos;
-          JCMethodInvocation apply = make.Apply( List.nil(), make.Select( thisSub, sym ), tree.args );
-          apply.type = tree.type;
-          result = apply;
-        }
+        return true;
       }
+      return false;
+    }
+
+    private boolean replaceThisCast( JCExpression tree )
+    {
+      Tree parent = getParent( tree );
+      if( parent instanceof JCTypeCast )
+      {
+        JCTypeCast cast = (JCTypeCast)parent;
+        if( cast.type.isInterface() )
+        {
+          JCClassDecl classDecl = findClassDecl( tree.type );
+          result = replaceThis( tree, classDecl, cast.type );
+        }
+        else
+        {
+          reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
+        }
+        return true;
+      }
+      return false;
     }
 
     private boolean replaceThisReceiver( JCExpression tree )
@@ -947,7 +1021,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         JCFieldAccess fa = (JCFieldAccess)parent;
         MethodSymbol sym = (MethodSymbol)fa.sym;
-        JCClassDecl classDecl = _classDeclStack.peek();
         Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
         if( enclClass_Iface == null )
         {
@@ -982,7 +1055,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
             }
             else if( !types.isSameType( getSymtab().objectType, returnType ) )
             {
-              reportWarning( tree, MSG_PASSING_CONCRETE_PART.get() );
+              reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
             }
           }
         }
@@ -1029,12 +1102,54 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           }
           else if( !types.isSameType( getSymtab().objectType, paramType ) )
           {
-            reportWarning( tree, MSG_PASSING_CONCRETE_PART.get() );
+            reportError( tree, MSG_PART_THIS_NONINTERFACE_USE.get() );
           }
           return true;
         }
       }
       return false;
+    }
+
+    @Override
+    public void visitApply( JCMethodInvocation tree )
+    {
+      super.visitApply( tree );
+
+      processImpliedThisCall( tree );
+    }
+
+    private void processImpliedThisCall( JCMethodInvocation tree )
+    {
+      if( tree.meth instanceof JCIdent )
+      {
+        MethodSymbol sym = (MethodSymbol)((JCIdent)tree.meth).sym;
+        if( sym.isStatic() )
+        {
+          return;
+        }
+
+        JCClassDecl classDecl = _classDeclStack.peek();
+        if( !isInPartClass( classDecl.sym ) )
+        {
+          return;
+        }
+
+        Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
+        if( enclClass_Iface == null || !isPartClass( enclClass_Iface.fst.sym ) )
+        {
+          return;
+        }
+
+        if( enclClass_Iface.snd != null )
+        {
+          JCExpression thisSub = replaceThis( tree, enclClass_Iface.fst, enclClass_Iface.snd );
+          TreeMaker make = getTreeMaker();
+          make.pos = tree.pos;
+          JCMethodInvocation apply = make.Apply( List.nil(), make.Select( thisSub, sym ), tree.args );
+          apply.type = tree.type;
+          result = apply;
+        }
+      }
     }
 
     private JCExpression replaceThis( JCExpression tree, JCClassDecl receiverType, Type contextType )
@@ -1079,7 +1194,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         JCClassDecl classDecl = _classDeclStack.get( i );
         Types types = getTypes();
-        if( isPartClass( classDecl ) && types.isSameType( types.erasure( classDecl.sym.type ), types.erasure( type ) ) )
+        if( isPartClass( classDecl.sym ) && types.isSameType( types.erasure( classDecl.sym.type ), types.erasure( type ) ) )
         {
           return classDecl;
         }
@@ -1092,7 +1207,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       for( int i = _classDeclStack.size()-1; i >= 0; i-- )
       {
         JCClassDecl classDecl = _classDeclStack.get( i );
-        if( isPartClass( classDecl ) )
+        if( isPartClass( classDecl.sym ) )
         {
           ArrayList<ClassType> interfaces = new ArrayList<>();
           findAllInterfaces( classDecl.sym.type, new HashSet<>(), interfaces );
@@ -1360,13 +1475,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     return rs.resolveInternalField( pos, env, qual, name );
   }
 
-  private static boolean isPartClass( JCClassDecl classDecl )
+  private static boolean isPartClass( Symbol sym )
   {
-    Attribute.Compound delegateAnno = getAnnotationMirror( classDecl.sym, part.class );
+    Attribute.Compound delegateAnno = getAnnotationMirror( sym, part.class );
     return delegateAnno != null;
   }
 
-  private static boolean isInnerClassOfPartClass( Symbol sym )
+  private static boolean isInPartClass( Symbol sym )
   {
     Attribute.Compound delegateAnno = getAnnotationMirror( sym, part.class );
     if( delegateAnno != null )
@@ -1375,7 +1490,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
 
     Symbol owner = sym.owner;
-    return owner != null && owner != sym && isInnerClassOfPartClass( owner );
+    return owner != null && owner != sym && isInPartClass( owner );
   }
 
   private class ClassInfo

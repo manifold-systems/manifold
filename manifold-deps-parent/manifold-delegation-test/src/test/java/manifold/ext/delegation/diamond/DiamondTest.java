@@ -25,16 +25,40 @@ public class DiamondTest extends TestCase
 {
   public void testDiamond()
   {
-    Student taStudent = new StudentPart( new PersonPart( "Fred" ), BS );
+    PersonPart fred = new PersonPart( "Fred" );
+    Student taStudent = new StudentPart( fred, BS );
     TA ta = new TaPart( taStudent, Science );
 
     assertEquals( "Fred", ta.getName() );
     assertEquals( BS, ta.getProgram() );
     assertEquals( Science, ta.getDepartment() );
 
-    assertEquals( "Mr.", ta.getTitle() );
-    assertEquals( "Mr. Fred", ta.getTitledName() ); // wow
-    assertEquals( "Mr. Fred", ta.getTitledName2() ); // wow
-    assertEquals( "Mr. Fred", ta.getTitledName3() ); // wow
+    assertEquals( "TA", ta.getTitle() );
+    assertEquals( "TA Fred", ta.getTitledName() );
+  }
+
+  public void testMoreThisReplacement()
+  {
+    PersonPart fred = new PersonPart( "Fred" );
+    Student taStudent = new StudentPart( fred, BS );
+    TA ta = new TaPart( taStudent, Science );
+
+    assertEquals( "TA Fred", ta.getTitledName2() );
+    assertEquals( "TA Fred", ta.getTitledName3() );
+
+    assertEquals( "TA", fred.getTitleFromThisArg() );
+    assertEquals( "TA", fred.getTitleFromQualThisArg() );
+
+    assertEquals( "TA", fred.getPersonFromThisReturn().getTitle() );
+    assertEquals( "TA", fred.getPersonFromQualThisReturn().getTitle() );
+
+    assertEquals( "TA", fred.getPersonFromThisAssignment().getTitle() );
+    assertEquals( "TA", fred.getPersonFromQualThisAssignment().getTitle() );
+
+    assertEquals( "TA", fred.getPersonFromThisParens().getTitle() );
+    assertEquals( "TA", fred.getPersonFromQualThisParens().getTitle() );
+
+    assertEquals( "TA", fred.getPersonFromThisCast().getTitle() );
+    assertEquals( "TA", fred.getPersonFromQualThisCast().getTitle() );
   }
 }

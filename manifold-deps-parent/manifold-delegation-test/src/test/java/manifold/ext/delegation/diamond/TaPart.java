@@ -25,9 +25,9 @@ import manifold.ext.delegation.rt.api.link;
  * TaPart shares its Student part with its Teacher part to disambiguate the delegation of the Person interface shared between
  * them.
  */
-public @part class TaPart implements TA
+public @part class TaPart implements TA // TA is a "diamond" interface
 {
-  @link(share = true) Student _student; // disambiguates Person shared between TA's Student and Teacher parts
+  @link(share = true) Student _student; // 'share = true' disambiguates Person shared between TA's Student and Teacher parts
   @link Teacher _teacher;
 
 
@@ -42,6 +42,6 @@ public @part class TaPart implements TA
   @Override
   public String getTitle()
   {
-    return "Mr.";
+    return "TA";
   }
 }

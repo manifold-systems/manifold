@@ -48,28 +48,81 @@ public @part class PersonPart implements Person
 
   public String getTitledName3()
   {
-    foo( this );
-    foo( PersonPart.this );
-
     return new Roundabout().getMyTitle_Implicit() + // implicit 'PersonPart.this'
       " " +
       new Roundabout().getMyName_Explicit();   // explicit 'PersonPart.this'
   }
 
-  private void foo( Person p )
+  public String getTitleFromThisArg()
   {
+    return getTitleFromThisArg( this );
+  }
+  public String getTitleFromQualThisArg()
+  {
+    return getTitleFromThisArg( PersonPart.this );
+  }
+  private String getTitleFromThisArg( Person p )
+  {
+    return p.getTitle();
+  }
 
+  public Person getPersonFromThisReturn()
+  {
+    return this;
+  }
+  public Person getPersonFromQualThisReturn()
+  {
+    return PersonPart.this;
+  }
+
+  public Person getPersonFromThisAssignment()
+  {
+    //noinspection UnnecessaryLocalVariable
+    Person p = this;
+    return p;
+  }
+  public Person getPersonFromQualThisAssignment()
+  {
+    //noinspection UnnecessaryLocalVariable
+    Person p = PersonPart.this;
+    return p;
+  }
+
+  public Person getPersonFromThisParens()
+  {
+    //noinspection UnnecessaryLocalVariable
+    Person p = (this);
+    return p;
+  }
+  public Person getPersonFromQualThisParens()
+  {
+    //noinspection UnnecessaryLocalVariable
+    Person p = (PersonPart.this);
+    return p;
+  }
+
+  public Person getPersonFromThisCast()
+  {
+    //noinspection RedundantCast
+    return (Person)this;
+  }
+  public Person getPersonFromQualThisCast()
+  {
+    // noinspection RedundantCast
+    return (Person)PersonPart.this;
   }
 
   private class Roundabout
   {
     String getMyTitle_Implicit()
     {
+      // implicit PersonPart.this usage
       return getTitle();
     }
 
     String getMyName_Explicit()
     {
+      // explicit PersonPart.this usage
       return PersonPart.this.getName();
     }
   }

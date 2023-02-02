@@ -39,6 +39,6 @@ public @part class TeacherPart implements Teacher
   @Override
   public String getTitle()
   {
-    return "Dr.";
+    return "Prof";
   }
 }
