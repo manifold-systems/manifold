@@ -220,6 +220,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       _classInfoStack.push( new ClassInfo( classDecl ) );
       try
       {
+        if( classDecl.sym == null )
+        {
+          //todo: sym is null for method-local inner classes?
+          super.visitClassDef( classDecl );
+          return;
+        }
+
         processPartClass( classDecl );
 
         super.visitClassDef( classDecl );
@@ -622,6 +629,12 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     public void visitVarDef( JCVariableDecl tree )
     {
       super.visitVarDef( tree );
+
+      if( _classInfoStack.peek()._classDecl.sym == null )
+      {
+        //todo: sym is null for method-local inner classes?
+        return;
+      }
 
       processDelegateField( tree );
     }
