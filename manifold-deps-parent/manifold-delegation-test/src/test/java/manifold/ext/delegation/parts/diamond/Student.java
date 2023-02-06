@@ -14,31 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-import manifold.ext.delegation.rt.api.part;
-import manifold.ext.delegation.rt.api.link;
-
-public @part class StudentPart implements Student
+public interface Student extends Person
 {
-  @link Person _person;
-  private final Program _program;
+  enum Program {BS, MS, PHD}
 
-  public StudentPart( Person person, Program program )
-  {
-    _person = person;
-    _program = program;
-  }
-
-  @Override
-  public Program getProgram()
-  {
-    return _program;
-  }
-
-  @Override
-  public String getTitle()
-  {
-    return "grunt";
-  }
+  Program getProgram();
 }

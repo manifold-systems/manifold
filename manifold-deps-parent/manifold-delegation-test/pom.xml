@@ -14,7 +14,7 @@
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
-      <artifactId>manifold-delegation</artifactId>
+      <artifactId>manifold-delegation-rt</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -25,4 +25,33 @@
     </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!--Add the Manifold plugin-->
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+
+          <!-- Add Manifold compile-time dependencies in the processor path -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-delegation</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

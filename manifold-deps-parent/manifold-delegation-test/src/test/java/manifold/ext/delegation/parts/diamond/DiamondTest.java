@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
 import junit.framework.TestCase;
 
-import static manifold.ext.delegation.diamond.Student.Program.BS;
-import static manifold.ext.delegation.diamond.Teacher.Department.Science;
+import static manifold.ext.delegation.parts.diamond.Student.Program.BS;
+import static manifold.ext.delegation.parts.diamond.Teacher.Department.Science;
 
+/**
+ * Together PersonPart, StudentPart, TeacherPart, and TaPart form a classic diamond pattern with Person
+ * at the top. This test exercises {@code @link(share=true)} in {@link TaPart} to safely handle this use-case.
+ */
 public class DiamondTest extends TestCase
 {
   public void testDiamond()

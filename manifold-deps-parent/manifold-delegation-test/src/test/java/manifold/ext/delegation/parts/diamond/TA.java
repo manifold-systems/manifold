@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-public interface Teacher extends Person
+/** A "diamond" interface. Student and Teacher both extend Person. */
+public interface TA extends Student, Teacher
 {
-  enum Department {Math, Science, Engineering}
-
-  Department getDepartment();
 }

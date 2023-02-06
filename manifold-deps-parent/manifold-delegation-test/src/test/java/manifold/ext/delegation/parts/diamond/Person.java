@@ -14,11 +14,21 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-public interface Student extends Person
+public interface Person
 {
-  enum Program {BS, MS, PHD}
+  String getName();
+  String getTitle();
 
-  Program getProgram();
+  // exercises default method linking
+  default String getTitledName()
+  {
+    return getTitle() + " " + getName();
+  }
+
+  // exercises 'this' replacement
+  String getTitledName2();
+  // exercises 'Enclosing.this' replacement
+  String getTitledName3();
 }

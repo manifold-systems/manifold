@@ -22,15 +22,26 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Use {@code @link} to incorporate interface composition & delegation in your project. Apply {@code @link} to:
+ * Use {@code @link} to automatically transfer calls on unimplemented interface methods to fields in the same class.
  * <ul>
- * <li> delegate one or more interface implementations of the declaring class to a field that provides the implementations, and </li>
- * <li> if the field is assigned a {@link part} class, integrate the part to safely override linked interfaces (solves <i>the Self problem</i>) </li>
- * <li> safely share super interface implementations (solves <i>the Diamond problem</i>)</li>
+ * <li> Choose between call forwarding and true delegation with {@code @part} </li>
+ * <li> Override linked interface methods, optionally using {@link part} classes (solves <a href="https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html">the Self problem</a>) </li></li>
+ * <li> Share super interface implementations (solves <a href="https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem">the Diamond problem</a>)</li>
+ * <li> Configure class implementation dynamically</li>
  * </ul>
- * Many of the class's interfaces may be linked to a single field. A class may have many linked fields.
+ * Classes and links are many-to-many: Many of a class's interfaces may be linked to a single field. A single class may
+ * have many linked fields.
  * <p/>
- * todo: provide examples for each of the bullet points above
+ * <b>Basic usage</b><br/>
+ * <pre><code>
+ * class MyClass implements MyInterface {
+ *   &#64;link MyInterface myInterface; // transfers calls on MyInterface to myInterface
+ *
+ *   public MyClass(MyInterface myInterface) {
+ *     this.myInterface = myInterface; // dynamically configure behavior
+ *   }
+ * }
+ * </code></pre>
  */
 @Target( ElementType.FIELD )
 @Retention( RetentionPolicy.RUNTIME )
@@ -44,7 +55,7 @@ public @interface link
 
   /**
    * If true, indicates this link is shared where interface overlap exists with other links. Otherwise, overlapping interfaces
-   * are not linked and the class must implement them directly, or it must be declared abstract. If two or more links attempt
+   * are not linked and the class must implement them directly, or it must be declared abstract. If two or more links declare
    * to share the same interface, a compiler error results.
    */
   boolean share() default false;

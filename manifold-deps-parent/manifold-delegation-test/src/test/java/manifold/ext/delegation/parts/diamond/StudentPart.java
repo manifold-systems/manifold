@@ -14,21 +14,31 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-public interface Person
+import manifold.ext.delegation.rt.api.part;
+import manifold.ext.delegation.rt.api.link;
+
+public @part class StudentPart implements Student
 {
-  String getName();
-  String getTitle();
+  @link Person _person;
+  private final Program _program;
 
-  // exercises default method linking
-  default String getTitledName()
+  public StudentPart( Person person, Program program )
   {
-    return getTitle() + " " + getName();
+    _person = person;
+    _program = program;
   }
 
-  // exercises 'this' substitution
-  String getTitledName2();
-  // exercises 'Enclosing.this' substitution
-  String getTitledName3();
+  @Override
+  public Program getProgram()
+  {
+    return _program;
+  }
+
+  @Override
+  public String getTitle()
+  {
+    return "grunt";
+  }
 }

@@ -14,31 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-import manifold.ext.delegation.rt.api.part;
-import manifold.ext.delegation.rt.api.link;
-
-public @part class TeacherPart implements Teacher
+public interface Teacher extends Person
 {
-  @link Person _person;
-  private final Department _department;
+  enum Department {Math, Science, Engineering}
 
-  public TeacherPart( Person person, Department department )
-  {
-    _person = person;
-    _department = department;
-  }
-
-  @Override
-  public Department getDepartment()
-  {
-    return _department;
-  }
-
-  @Override
-  public String getTitle()
-  {
-    return "Prof";
-  }
+  Department getDepartment();
 }

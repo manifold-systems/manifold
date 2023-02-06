@@ -427,7 +427,9 @@ public class RuntimeMethods
     if( List.class.isAssignableFrom( rootClass ) )
     {
       return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
-        (proxy, method, args) -> ListProxy.invoke( (List)target, proxy, method, args) );
+        (proxy, method, args) -> proxy instanceof IListBacked
+          ? ListProxy.invoke( (List)target, proxy, method, args)
+          : ReflectUtil.structuralCallByProxy( method, proxy, target, args ) );
     }
     return (target, iface) -> manifold.ext.rt.proxy.Proxy.newProxyInstance( intface.getClassLoader(), new Class[]{iface},
       (proxy, method, args) -> ReflectUtil.structuralCallByProxy( method, proxy, target, args ) );

@@ -40,6 +40,7 @@ import manifold.ext.delegation.rt.RuntimeMethods;
 import manifold.ext.delegation.rt.api.link;
 import manifold.ext.delegation.rt.api.part;
 import manifold.ext.delegation.rt.api.tags.enter_finish;
+import manifold.ext.rt.api.Structural;
 import manifold.internal.javac.*;
 import manifold.rt.api.util.Stack;
 import manifold.util.ReflectUtil;
@@ -50,6 +51,7 @@ import java.lang.annotation.Annotation;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.sun.tools.javac.code.Flags.FINAL;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.delegation.DelegationIssueMsg.*;
 import static manifold.ext.delegation.Util.getAnnotation;
@@ -285,6 +287,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         {
           continue;
         }
+        //noinspection UnnecessaryLocalVariable
         Type iface = exprType;
         ArrayList<MethodSymbol> defaultMethods = new ArrayList<>();
         findDefaultMethodsToForward( classDecl, iface, new HashSet<>(), defaultMethods );
@@ -603,7 +606,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         Set<DelegateInfo> dis = entry.getValue();
         if( dis.size() > 1 )
         {
-          boolean isInterfaceShared = dis.stream().anyMatch( di -> di.isShare() );
+          boolean isInterfaceShared = checkSharedLinks( iface, dis );
 
           StringBuilder fieldNames = new StringBuilder();
           dis.forEach( di -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( di._delegateField.name ) );
@@ -617,12 +620,28 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
                   DelegationIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), fieldNames ) );
               }
 
-              // remove the overlap interface from the delegate
+              // remove the overlap interface from the delegate, only the sharing delegate provides it
               di.getInterfaces().remove( iface );
             }
           }
         }
       }
+    }
+
+    private boolean checkSharedLinks( ClassType iface, Set<DelegateInfo> dis )
+    {
+      ArrayList<DelegateInfo> sharedDelegates = dis.stream()
+        .filter( di -> di.isShare() )
+        .collect( Collectors.toCollection( () -> new ArrayList<>() ) );
+      if( sharedDelegates.size() > 1 )
+      {
+        StringBuilder fieldNames = new StringBuilder();
+        sharedDelegates.forEach( di -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( di._delegateField.name ) );
+
+        sharedDelegates.forEach( di -> reportError( di.getDelegateField(),
+          DelegationIssueMsg.MSG_MULTIPLE_SHARING.get( iface.tsym.getSimpleName(), fieldNames ) ) );
+      }
+      return !sharedDelegates.isEmpty();
     }
 
     @Override
@@ -789,6 +808,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       ArrayList<ClassType> delegateFieldInterfaces = new ArrayList<>();
       findAllInterfaces( fieldType, new HashSet<>(), delegateFieldInterfaces );
+
+      if( fieldType.isInterface() && Util.getAnnotationMirror( fieldType.tsym, Structural.class ) != null )
+      {
+        // A structural interface is assumed to be fully mapped onto the declaring class.
+        // Note, structural interfaces work only with forwarding, not with delegates/parts
+        return new HashSet<>( delegateFieldInterfaces );
+      }
 
       return ci.getInterfaces().stream()
         .filter( i1 -> delegateFieldInterfaces.stream()
@@ -1259,21 +1285,34 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       super.visitAssign( tree );
 
-      assignSelf( tree );
+      Symbol linkField = getLinkFieldRef( tree.lhs );
+      if( linkField != null )
+      {
+        tree.rhs = assignSelf( linkField, tree.rhs, tree );
+      }
     }
 
-    private void assignSelf( JCAssign tree )
+    @Override
+    public void visitVarDef( JCVariableDecl tree )
     {
-      Symbol linkField = getLinkFieldRef( tree.lhs );
-      if( linkField == null )
-      {
-        return;
-      }
+      super.visitVarDef( tree );
 
-      // replace assign expr
-      //   <field-ref-expr> = <value-expr>
+      if( tree.init != null )
+      {
+        Symbol linkField = getLinkFieldRef( tree );
+        if( linkField != null )
+        {
+          tree.init = assignSelf( linkField, tree.init, tree );
+        }
+      }
+    }
+
+    private JCExpression assignSelf( Symbol linkField, JCExpression rhs, JCTree assignmentOrVarDecl )
+    {
+      // replace assigned expr
+      //   field = <value-expr>
       // with method call expr
-      //   (<field-ref-expr-type>)RuntimeMethods.linkPart( this, <field-name>, <value-expr> )
+      //   field = (<field-ref-expr-type>)RuntimeMethods.linkPart( this, <field-name>, <value-expr> )
 
       Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
 
@@ -1281,7 +1320,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       Symtab symtab = getSymtab();
       Symbol.MethodSymbol assignPartMethod = resolveMethod( getContext(), getCompilationUnit(),
-        tree.pos(), names.fromString( "linkPart" ),
+        assignmentOrVarDecl.pos(), names.fromString( "linkPart" ),
         runtimeMethodsClassSym.type,
         List.from( new Type[]{symtab.objectType, symtab.stringType, symtab.objectType} ) );
 
@@ -1289,19 +1328,18 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       JCTree.JCMethodInvocation assignPartCall = make.Apply( List.nil(),
         memberAccess( make, RuntimeMethods.class.getTypeName() + ".linkPart" ),
-        List.of( make.This( _classDeclStack.peek().type ), make.Literal( linkField.name.toString() ), tree.rhs ) );
-      assignPartCall.setPos( tree.pos );
+        List.of( make.This( _classDeclStack.peek().type ), make.Literal( linkField.name.toString() ), rhs ) );
+      assignPartCall.setPos( assignmentOrVarDecl.pos );
       assignPartCall.type = symtab.objectType;
       JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)assignPartCall.getMethodSelect();
       methodSelect.sym = assignPartMethod;
       methodSelect.type = assignPartMethod.type;
-      methodSelect.pos = tree.pos;
+      methodSelect.pos = assignmentOrVarDecl.pos;
       assignTypes( methodSelect.selected, runtimeMethodsClassSym );
-      methodSelect.selected.pos = tree.pos;
+      methodSelect.selected.pos = assignmentOrVarDecl.pos;
 
       JCTypeCast castExpr = make.TypeCast( linkField.type, assignPartCall );
-
-      result = castExpr;
+      return castExpr;
     }
 
     private void assignTypes( JCExpression m, Symbol symbol )
@@ -1334,6 +1372,15 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       if( lhs instanceof JCParens )
       {
         return getLinkFieldRef( ((JCParens)lhs).expr );
+      }
+      return null;
+    }
+
+    private Symbol getLinkFieldRef( JCVariableDecl tree )
+    {
+      if( tree.sym.getAnnotation( link.class ) != null )
+      {
+        return tree.sym;
       }
       return null;
     }

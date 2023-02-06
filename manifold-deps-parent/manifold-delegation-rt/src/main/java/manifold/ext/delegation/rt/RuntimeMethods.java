@@ -45,9 +45,6 @@ public class RuntimeMethods
         "Delegating class instance is null when assigned to field '" + fieldName + "' of part class '" + part.getClass().getTypeName() );
     }
 
-    // assign part to delegate field
-    ReflectUtil.field( delegatingClass, fieldName ).set( part );
-
     // link the part to self
     linkPartToSelf( delegatingClass, part );
     return part;

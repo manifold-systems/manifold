@@ -14,9 +14,31 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
-/** A "diamond" interface. Student and Teacher both extend Person. */
-public interface TA extends Student, Teacher
+import manifold.ext.delegation.rt.api.part;
+import manifold.ext.delegation.rt.api.link;
+
+public @part class TeacherPart implements Teacher
 {
+  @link Person _person;
+  private final Department _department;
+
+  public TeacherPart( Person person, Department department )
+  {
+    _person = person;
+    _department = department;
+  }
+
+  @Override
+  public Department getDepartment()
+  {
+    return _department;
+  }
+
+  @Override
+  public String getTitle()
+  {
+    return "Prof";
+  }
 }

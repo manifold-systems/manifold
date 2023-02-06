@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
 import manifold.ext.delegation.rt.api.part;
 
@@ -48,9 +48,9 @@ public @part class PersonPart implements Person
 
   public String getTitledName3()
   {
-    return new Roundabout().getMyTitle_Implicit() + // implicit 'PersonPart.this'
+    return new FromInnerClass().getMyTitle_Implicit() + // implicit 'PersonPart.this'
       " " +
-      new Roundabout().getMyName_Explicit();   // explicit 'PersonPart.this'
+      new FromInnerClass().getMyName_Explicit();   // explicit 'PersonPart.this'
   }
 
   public String getTitleFromThisArg()
@@ -112,7 +112,7 @@ public @part class PersonPart implements Person
     return (Person)PersonPart.this;
   }
 
-  private class Roundabout
+  private class FromInnerClass
   {
     String getMyTitle_Implicit()
     {

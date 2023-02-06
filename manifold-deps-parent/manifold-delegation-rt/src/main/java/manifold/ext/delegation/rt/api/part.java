@@ -22,15 +22,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When combined with the {@link link} annotation, a part class can be used as a building block for interface composition & delegation,
- * as opposed to class inheritance. A part class can also be used as a regular class anywhere you would normally use a class.
+ * When combined with the {@link link} annotation, a part class is a building block for interface composition & <i>true</i>
+ * delegation. A part class may also be used as a regular class anywhere you would normally use a class.
  * <p/>
- * When used for delegation, fields of a class are marked with {@code @link} and each is assigned an instance
- * of a {@code part} class. The fields' declaring class, called the linking class, links the implementation of some
- * or all of its interfaces to the {@code @link} fields. The fields don't have to use part classes, but if part classes are not used
- * delegation is limited to call forwarding, which does not allow the linking class to safely override linked interface methods.
+ * When used for delegation, one or more fields of a class are marked with {@code @link} where each is assigned an instance
+ * of a {@code part} class. The field's declaring class, called the linking class, delegates the implementation of some
+ * or all of its interfaces to the field.
  * <p/>
- * Referred to as <a href="https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html">the Self problem</a>,
+ * If part classes are not used for linked fields, delegation is limited to call forwarding, which does not allow the linking
+ * class to safely override linked interface methods. Referred to as <a href="https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html">the Self problem</a>,
  * if the linking class overrides an interface method and the method is called from the linked class, since the receiver
  * of the call is the linked class it will not call the linking class's override. This breach in delegation compromises
  * the integrity of the interface composition model.

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-public class SimpleTest extends TestCase
+public class ScratchTest extends TestCase
 {
   public void testSimple() throws Exception
   {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.ext.delegation.diamond;
+package manifold.ext.delegation.parts.diamond;
 
 import manifold.ext.delegation.rt.api.part;
 import manifold.ext.delegation.rt.api.link;
