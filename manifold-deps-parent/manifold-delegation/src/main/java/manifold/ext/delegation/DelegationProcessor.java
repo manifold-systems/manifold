@@ -457,6 +457,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
+      checkSuperclass( classDecl );
+
       if( getAnnotationMirror( classDecl.sym, enter_finish.class ) != null )
       {
         // already processed, probably an annotation processing round
@@ -467,6 +469,16 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       addSelfField( classDecl );
       addCoveredField( classDecl );
       overrideDefaultInterfaceMethods( classDecl );
+    }
+
+    private void checkSuperclass( JCClassDecl classDecl )
+    {
+      Type superclass = classDecl.sym.getSuperclass();
+      if( classDecl.getExtendsClause() != null &&
+        superclass != null && getAnnotationMirror( superclass.tsym, part.class ) == null )
+      {
+        reportError( classDecl.getExtendsClause(), MSG_SUPERCLASS_NOT_PART.get() );
+      }
     }
 
     private void addSelfField( JCClassDecl classDecl )

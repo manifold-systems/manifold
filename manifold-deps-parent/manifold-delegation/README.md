@@ -25,6 +25,12 @@ class MyClass implements MyInterface {
 
 # Forwarding
 
+Generally, the difference between forwarding and true delegation is that forwarding does not fully support virtual methods,
+while true delegation does. This difference is at the heart of _the Self problem_ (aka _broken delegation_).
+
+In terms of this project, delegation works exclusively with `@part` classes. If a `@part` class is assigned to a `@link`
+field, the link uses delegation and fully supports polymorphic calls. Otherwise, the link uses forwarding.
+
 ```java
 class MyStudent implements Student {
   @link Person person;
@@ -48,7 +54,7 @@ interface Student extends Person {
   String getMajor();
 }
 ```
-With `@link` on the `person` field MyStudent automatically forwards unimplemented Person method calls to the field.
+With `@link` on the `person` field MyStudent automatically transfers calls to unimplemented Person methods to the field.
 ```java
 class MyPerson implements Person {
   private final String name;
@@ -64,20 +70,22 @@ MyPerson person = new MyPerson("Milton");
 MyStudent student = new MyStudent(person, "Metallurgy");
 out.println(student.getTitledName());
 ```
-With forwarding the calls are one-way tickets. The call to `student.getTitledName()` results in:
+Since MyPerson is _not_ annotated with `@part` forwarding is used to transfer interface method calls.
+
+But with forwarding, since the calls are one-way tickets, the call to `student.getTitledName()` results in:
 ```text
     Person Milton
 ```
-Since MyPerson is separate from MyStudent, its call to `getTitle()` is not polymorphic with respect to the link established
-in MyStudent. Generally, this behavior can be viewed as positive or negative, depending on the desired call transfer model.
+With forwarding the call to `getTitle()` from MyPerson is not polymorphic with respect to the link established
+in MyStudent.
 
-Forwarding is the default call transfer model. The delegation model is used when at runtime a field is assigned an instance
-of a `@part` class.
+Generally, this behavior can be viewed as positive or negative, depending on the desired call transfer model.
 
 # Delegation
 
 If the field's value is a `@part` class, the Person methods are called using _delegation_. Unlike forwarding, delegation
 enables polymorphic calls; MyStudent can override Person methods so that the implementation of Person defers to MyStudent.
+Essentially, `@part` solves _the Self problem_.
 ```java
 @part class PersonPart implements Person {
   private final String name;
@@ -100,12 +108,11 @@ The call to `student.getTitledName()` results in:
 This is because PersonPart is a `part` class, which enables polymorphic calls from linked parts. This means inside PersonPart
 `this` refers to MyStudent in terms of the Person interface. Thus, the call to `getTitle()` dispatches to MyStudent.
 
-If PersonPart were not annotated with `@part`, the result would have been:
+If PersonPart were _not_ annotated with `@part`, the result would have been:
 ```text
     Person Milton
 ```
-Without `@part` the call is forwarded, not delegated. As a consequence, inside PersonPart `this` always refers to PersonPart.
-Therefore, `getTitle()` invokes the local implementation.
+Because, without `@part` the call is forwarded, not delegated.
 
 ## Default methods
 
@@ -126,7 +133,7 @@ Inside Person `this` refers to MyStudent even when called from PersonPart.
 
 # Diamonds
 
-When super interfaces overlap, a "diamond" relationship results. This is known as the diamond problem.
+When super interfaces overlap, a "diamond" relationship results. This is known as _the diamond problem_.
 ```text
          Person
            ▲▲
@@ -169,7 +176,7 @@ interface TA extends Student, Teacher {
 The student is the teacher, so TaPart shares the link to student with `@link(share=true)` and student is passed along to
 the Teacher constructor.
 
-Note, `part` classes are not required with `@link(share=true)`; it works with both forwarding and delegation.
+>Note, `part` classes are not required with `@link(share=true)`; it works with both forwarding and delegation.
 
 # Structural interfaces
 
@@ -198,10 +205,6 @@ limitedList.add("hi");
 assertTrue(limitedList.contains("hi"));
 assertEquals("hi", limitedList.get(0));
 ```
-
-# Linking to abstract classes
-
-TBD
 
 # Inheritance
 

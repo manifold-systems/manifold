@@ -70,6 +70,15 @@ public class RuntimeMethods
 
     self.set( delegatingClass );
 
+    for( Class<?> superclass = part.getClass().getSuperclass(); superclass != null; superclass = superclass.getSuperclass() )
+    {
+      if( superclass == Object.class )
+      {
+        break;
+      }
+      ReflectUtil.field( superclass, SELF_FIELD ).set( part, delegatingClass );
+    }
+
     ReflectUtil.fields( part, f -> !f.isStatic() && f.getField().getAnnotation( link.class ) != null )
       .forEach( delegateField -> {
         Object partDelegate = delegateField.get();

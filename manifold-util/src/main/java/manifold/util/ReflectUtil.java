@@ -722,13 +722,32 @@ public class ReflectUtil
     Class<?> cls = receiver.getClass();
     try
     {
-      Field[] fields = JreUtil.isJava12orLater()
-        ? (Field[])_getDeclaredFields0.get().invoke( cls, false )
-        : cls.getDeclaredFields();
-      return Arrays.stream( fields )
+      List<Field> fields = fields( cls );
+      return fields.stream()
         .map( f -> field( receiver, f.getName() ) )
         .filter( lf -> filter != null && filter.test( lf ) )
         .collect( Collectors.toList() );
+    }
+    catch( Exception e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  private static List<Field> fields( Class cls )
+  {
+    try
+    {
+      Field[] fields = JreUtil.isJava12orLater()
+        ? (Field[])_getDeclaredFields0.get().invoke( cls, false )
+        : cls.getDeclaredFields();
+      List<Field> totalFields = new ArrayList<>( Arrays.asList( fields ) );
+      Class superclass = cls.getSuperclass();
+      if( superclass != null )
+      {
+        totalFields.addAll( fields( superclass ) );
+      }
+      return totalFields;
     }
     catch( Exception e )
     {

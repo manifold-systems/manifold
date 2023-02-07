@@ -29,4 +29,5 @@ public class DelegationIssueMsg
   public static final IssueMsg MSG_MODIFIER_NOT_ALLOWED_HERE = new IssueMsg( "Modifier '{0}' not allowed here" );
   public static final IssueMsg MSG_PART_THIS_NONINTERFACE_USE = new IssueMsg( "Part class 'this' must be used as an interface here" );
   public static final IssueMsg MSG_MULTIPLE_SHARING = new IssueMsg( "Interface '{0}' is shared by multiple links: '{1}'" );
+  public static final IssueMsg MSG_SUPERCLASS_NOT_PART = new IssueMsg( "Superclass must be a @part class" );
 }
