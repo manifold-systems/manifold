@@ -1,6 +1,8 @@
 # Interface delegation with links & parts
   
 > **⚠ Experimental Feature**
+
+> WARNING: Under construction!!!
  
 The `manifold-delegation` project is a compiler plugin providing language support for call forwarding and true delegation.
 These features are an experimental effort toward interface composition as a practical alternative to class inheritance.
