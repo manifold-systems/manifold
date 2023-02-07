@@ -950,7 +950,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
       finally
       {
-        assert tree == _classDeclStack.pop();
+        if( tree != _classDeclStack.pop() )
+        {
+          throw new IllegalStateException();
+        }
       }
     }
 
@@ -1167,6 +1170,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       super.visitApply( tree );
 
       processImpliedThisCall( tree );
+      replaceSuperDefaultMethodCall( tree );
     }
 
     private void processImpliedThisCall( JCMethodInvocation tree )
@@ -1290,6 +1294,109 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         }
       }
       return false;
+    }
+
+    private void replaceSuperDefaultMethodCall( JCMethodInvocation superInterfaceCall )
+    {
+      JCClassDecl classDecl = _classDeclStack.peek();
+      if( !isInPartClass( classDecl.sym ) )
+      {
+        return;
+      }
+
+      JCFieldAccess tree = findSuperInterfaceSelect( superInterfaceCall );
+      if( tree == null )
+      {
+        return;
+      }
+
+      JCFieldAccess meth = (JCFieldAccess)superInterfaceCall.meth;
+      Type iface = meth.selected.type;
+      if( iface.isErroneous() )
+      {
+        return;
+      }
+
+      NamedMethodType namedMt = new NamedMethodType( (MethodSymbol)meth.sym, meth.type );
+
+      Type csr = namedMt.getType();
+      while( csr instanceof Type.DelegatedType )
+      {
+        csr = ((Type.DelegatedType)csr).qtype;
+      }
+      MethodType mt = (MethodType)csr;
+
+      TreeMaker make = getTreeMaker();
+      make.pos = superInterfaceCall.pos;
+
+      Names names = getNames();
+      Symtab symtab = getSymtab();
+
+      // RuntimeMethods class sym
+      Symbol.ClassSymbol runtimeMethodsClassSym = getRtClassSym( RuntimeMethods.class );
+      MethodSymbol linksInterfaceToMethod = resolveMethod( getContext(), getCompilationUnit(), superInterfaceCall, getNames().fromString( "linksInterfaceTo" ), runtimeMethodsClassSym.type,
+        List.of( symtab.classType, symtab.objectType, symtab.objectType ) );
+
+      // SELF_FIELD sym
+      JCIdent selfIdent = make.Ident( resolveField( tree.pos(), getContext(), names.fromString( SELF_FIELD ),
+        classDecl.sym.type, classDecl ) );
+
+      // RuntimeMethods.linksInterfaceTo( $self )
+
+      JCTree.JCMethodInvocation linksInterfaceToCall = make.Apply( List.nil(),
+        memberAccess( make, RuntimeMethods.class.getTypeName() + ".linksInterfaceTo" ),
+        List.of( make.ClassLiteral( iface ), selfIdent, make.This( classDecl.sym.type ) ) );
+      linksInterfaceToCall.type = symtab.booleanType;
+      JCTree.JCFieldAccess methodSelect = (JCTree.JCFieldAccess)linksInterfaceToCall.getMethodSelect();
+      methodSelect.sym = linksInterfaceToMethod;
+      methodSelect.type = linksInterfaceToMethod.type;
+      assignTypes( methodSelect.selected, runtimeMethodsClassSym );
+
+      // ReflectUtil.invokeDefaultAsSelf
+
+      // Arg list
+      List<Type> parameterTypes = mt.getParameterTypes();
+      ArrayList<JCExpression> paramTs = parameterTypes.stream().map( t -> make.ClassLiteral( t ) )
+        .collect( Collectors.toCollection( () -> new ArrayList<>() ) );
+      JCNewArray paramTypesArray = make.NewArray(
+        make.Type( getTypes().erasure( symtab.classType ) ), List.nil(), List.from( paramTs ) );
+      paramTypesArray.type = new Type.ArrayType( symtab.classType, symtab.arrayClass );
+      JCNewArray argsArray = make.NewArray( make.Type( symtab.objectType ), List.nil(), List.from( superInterfaceCall.args ) );
+      argsArray.type = new Type.ArrayType( symtab.objectType, symtab.arrayClass );
+      List<JCExpression> theArgs = List.of( selfIdent, make.ClassLiteral( iface ),
+        make.Literal( namedMt.getName().toString() ), paramTypesArray, argsArray );
+
+      // make invokeDefault() call
+      MethodSymbol invokeDefaultMethod = resolveMethod( getContext(), getCompilationUnit(), superInterfaceCall,
+        getNames().fromString( "invokeDefault" ), runtimeMethodsClassSym.type,
+        List.of( symtab.objectType, symtab.classType, symtab.stringType, symtab.objectType, symtab.objectType ) );
+      JCTree.JCMethodInvocation invokeDefaultCall = make.Apply( List.nil(),
+        memberAccess( make, RuntimeMethods.class.getTypeName() + ".invokeDefault" ), theArgs );
+      invokeDefaultCall.type = symtab.booleanType;
+      JCTree.JCFieldAccess mselect = (JCTree.JCFieldAccess)invokeDefaultCall.getMethodSelect();
+      mselect.sym = invokeDefaultMethod;
+      mselect.type = invokeDefaultMethod.type;
+      assignTypes( mselect.selected, runtimeMethodsClassSym );
+      JCTypeCast castInvokeDefaultCall = make.TypeCast( mt.getReturnType(), invokeDefaultCall );
+
+      // replace superInterfaceCall with:  linksInterfaceToCall() ? invokeDefaultCall : superInterfaceCall
+
+      JCConditional conditional = make.Conditional( linksInterfaceToCall, castInvokeDefaultCall, superInterfaceCall );
+      conditional.type = mt.getReturnType();
+
+      result = conditional;
+    }
+
+    private JCFieldAccess findSuperInterfaceSelect( JCMethodInvocation methodCall )
+    {
+      for( JCTree csr = methodCall.meth; csr instanceof JCFieldAccess; csr = ((JCFieldAccess)csr).selected )
+      {
+        if( csr.toString().endsWith( ".super" ) )
+        {
+          return (JCFieldAccess)csr;
+        }
+      }
+      return null;
     }
 
     @Override
@@ -1648,7 +1755,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     }
     void addMethodType( MethodSymbol m, Type mt )
     {
-      assert !hasMethodType( m.name, mt );
+      if( hasMethodType( m.name, mt ) )
+      {
+        throw new IllegalStateException();
+      }
+      
       Set<NamedMethodType> methodTypes = _methodTypes.computeIfAbsent( m.name, k -> new HashSet<>() );
       methodTypes.add( new NamedMethodType( m, mt ) );
     }

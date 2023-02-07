@@ -218,3 +218,172 @@ If any of the linked parts are allowed to directly refer to another linked part,
 is compromised because a direct reference to another link bypasses the root, which must always dispatch all interface calls.
 
 Therefore, `part` classes may only subclass other `part` classes to maintain delegation integrity.
+
+# IDE Support
+
+Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
+
+## Install
+
+Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) directly from within the IDE via:
+
+<kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
+
+<p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="echo method" width="60%" height="60%"/></p>
+
+# Setup
+
+## Building this project
+
+The `manifold-delegation` project is defined with Maven.  To build it install Maven and a Java 8 JDK and run the following
+command.
+```
+mvn compile
+```
+
+## Using this project
+
+The `manifold-delegation` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
+versions 8 - 19.
+
+This project consists of two modules:
+* `manifold-delegation`
+* `manifold-delegation-rt`
+
+For optimal performance and to work with Android and other JVM languages it is recommended to:
+* Add a dependency on `manifold-delegation-rt` (Gradle: "implementation", Maven: "compile")
+* Add `manifold-delegation` to the annotationProcessor path (Gradle: "annotationProcessor", Maven: "annotationProcessorPaths")
+
+## Binaries
+
+If you are *not* using Maven or Gradle, you can download the latest binaries [here](http://manifold.systems/docs.html#download).
+
+
+## Gradle
+
+>Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
+
+Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
+version (8 - 19), the script takes care of the rest.
+```groovy
+plugins {
+    id 'java'
+}
+
+group 'systems.manifold'
+version '1.0-SNAPSHOT'
+
+targetCompatibility = 11
+sourceCompatibility = 11
+
+repositories {
+    jcenter()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+}
+
+dependencies {
+     implementation 'systems.manifold:manifold-delegation-rt:2022.1.38'
+     testImplementation 'junit:junit:4.12'
+     // Add manifold to -processorpath for javac
+     annotationProcessor 'systems.manifold:manifold-delegation:2022.1.38'
+     testAnnotationProcessor 'systems.manifold:manifold-delegation:2022.1.38'
+}
+
+if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
+    sourceSets.main.allJava.files.any {it.name == "module-info.java"}) {
+    tasks.withType(JavaCompile) {
+        // if you DO define a module-info.java file:
+        options.compilerArgs += ['-Xplugin:Manifold', '--module-path', it.classpath.asPath]
+    }
+} else {
+    tasks.withType(JavaCompile) {
+        // If you DO NOT define a module-info.java file:
+        options.compilerArgs += ['-Xplugin:Manifold']
+    }
+}
+```
+Use with accompanying `settings.gradle` file:
+```groovy
+rootProject.name = 'MyProject'
+```
+
+## Maven
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>my-app</artifactId>
+    <version>0.1-SNAPSHOT</version>
+
+    <name>My App</name>
+
+    <properties>
+        <!-- set latest manifold version here --> 
+        <manifold.version>2022.1.38</manifold.version>
+    </properties>
+    
+    <dependencies>
+        <dependency>
+            <groupId>systems.manifold</groupId>
+            <artifactId>manifold-delegation-rt</artifactId>
+            <version>${manifold.version}</version>
+        </dependency>
+    </dependencies>
+
+    <!--Add the -Xplugin:Manifold argument for the javac compiler-->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
+                <configuration>
+                    <source>11</source>
+                    <target>11</target>
+                    <encoding>UTF-8</encoding>
+                    <compilerArgs>
+                        <!-- Configure manifold plugin-->
+                        <arg>-Xplugin:Manifold</arg>
+                    </compilerArgs>
+                    <!-- Add the processor path for the plugin -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>systems.manifold</groupId>
+                            <artifactId>manifold-delegation</artifactId>
+                            <version>${manifold.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+## Javadoc agent
+
+See [Javadoc agent](http://manifold.systems/javadoc-agent.html) for details about integrating specific language extensions
+with javadoc.
+
+# Javadoc
+
+`manifold-delegation`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2022.1.38/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2022.1.38)
+
+`manifold-delegation-rt`:<br>
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2022.1.38/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2022.1.38)
+
+# License
+
+Open source Manifold is free and licensed under the [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
+
+# Versioning
+
+For the versions available, see the [tags on this repository](https://github.com/manifold-systems/manifold/tags).
+
+# Author
+
+* [Scott McKinney](mailto:scott@manifold.systems)
