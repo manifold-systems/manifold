@@ -20,73 +20,14 @@ import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.util.List;
-import manifold.ext.delegation.rt.api.*;
 import manifold.util.ReflectUtil;
 
 import javax.tools.JavaFileObject;
 import java.lang.annotation.Annotation;
 import java.util.function.Function;
 
-import static java.lang.reflect.Modifier.*;
-
 public class Util
 {
-  static boolean sameAccess( Symbol sym1, Symbol sym2 )
-  {
-    return sameAccess( (int)sym1.flags_field, (int)sym2.flags_field );
-  }
-
-  static boolean sameAccess( int flags1, int flags2 )
-  {
-    return getAccess( flags1 ) == getAccess( flags2 );
-  }
-
-  static int getAccess( Symbol classSym )
-  {
-    return getAccess( (int)classSym.flags_field );
-  }
-
-  static int getAccess( int flags )
-  {
-    return flags & (PUBLIC | PROTECTED | PRIVATE);
-  }
-
-  static int getAccess( JCTree.JCClassDecl classDecl, int flags )
-  {
-    return isPublic( flags )
-      ? PUBLIC
-      : isProtected( flags )
-      ? PROTECTED
-      : isPrivate( flags )
-      ? PRIVATE
-      : isInterface( classDecl ) ? PUBLIC : 0;
-  }
-
-  static boolean isInterface( JCTree.JCClassDecl classDecl )
-  {
-    return classDecl.getKind() == Tree.Kind.INTERFACE;
-  }
-
-
-  static int weakest( int acc1, int acc2 )
-  {
-    return
-      acc1 == PUBLIC
-        ? PUBLIC
-        : acc2 == PUBLIC
-        ? PUBLIC
-        : acc1 == PROTECTED
-        ? PROTECTED
-        : acc2 == PROTECTED
-        ? PROTECTED
-        : acc1 != PRIVATE
-        ? 0
-        : acc2 != PRIVATE
-        ? 0
-        : PRIVATE;
-  }
-
   static JCTree.JCAnnotation getAnnotation( JCTree.JCVariableDecl field, Class<? extends Annotation> cls )
   {
     for( JCTree.JCAnnotation jcAnno : field.getModifiers().getAnnotations() )
@@ -113,37 +54,6 @@ public class Util
       }
     }
     return null;
-  }
-
-
-  static boolean isStatic( JCTree.JCVariableDecl propField )
-  {
-    long flags = propField.getModifiers().flags;
-    return (flags & STATIC) != 0;
-  }
-
-  static long getFlags( Attribute.Compound anno )
-  {
-    for( Symbol.MethodSymbol methSym : anno.getElementValues().keySet() )
-    {
-      if( methSym.getSimpleName().toString().equals( "flags" ) )
-      {
-        return ((Number)anno.getElementValues().get( methSym ).getValue()).longValue();
-      }
-    }
-    throw new IllegalStateException();
-  }
-
-  static int getDeclaredAccess( Attribute.Compound anno )
-  {
-    for( Symbol.MethodSymbol methSym : anno.getElementValues().keySet() )
-    {
-      if( methSym.getSimpleName().toString().equals( "declaredAccess" ) )
-      {
-        return ((Number)anno.getElementValues().get( methSym ).getValue()).intValue();
-      }
-    }
-    return -1;
   }
 
   public static JavaFileObject getFile( Tree node, Function<Tree, Tree> parentOf )
@@ -180,5 +90,4 @@ public class Util
 
     return getClassDecl( parentOf.apply( node ), parentOf );
   }
-
 }

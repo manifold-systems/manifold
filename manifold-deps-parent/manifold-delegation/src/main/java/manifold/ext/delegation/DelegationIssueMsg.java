@@ -24,7 +24,7 @@ public class DelegationIssueMsg
   public static final IssueMsg MSG_ONLY_INTERFACES_HERE = new IssueMsg( "Only interfaces allowed here" );
   public static final IssueMsg MSG_INTERFACE_OVERLAP = new IssueMsg( "Interface '{0}' found in multiple links: {1}. You may share it with other links or implement it directly." );
   public static final IssueMsg MSG_METHOD_OVERLAP = new IssueMsg( "Method '{0}' found in multiple links '{1}', this method must be implemented directly" );
-  public static final IssueMsg MSG_DELEGATE_STATIC_FIELD = new IssueMsg( "@link is not supported on static members" );
+  public static final IssueMsg MSG_LINK_STATIC_FIELD = new IssueMsg( "@link is not supported on static members" );
   public static final IssueMsg MSG_MODIFIER_REDUNDANT_FOR_LINK = new IssueMsg( "Modifier '{0}' is redundant for part links" );
   public static final IssueMsg MSG_MODIFIER_NOT_ALLOWED_HERE = new IssueMsg( "Modifier '{0}' not allowed here" );
   public static final IssueMsg MSG_PART_THIS_NONINTERFACE_USE = new IssueMsg( "Part class 'this' must be used as an interface here" );

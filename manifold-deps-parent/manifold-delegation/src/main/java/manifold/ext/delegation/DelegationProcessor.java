@@ -139,7 +139,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return compUnit;
       }
     }
-    // needed for case where ClassReader completer does properties outside the scope of TaskListener
     return JavacPlugin.instance() != null
       ? JavacPlugin.instance().getTypeProcessor().getCompilationUnit()
       : null;
@@ -234,25 +233,25 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         super.visitClassDef( classDecl );
 
         ClassInfo classInfo = _classInfoStack.peek();
-        if( classInfo.hasDelegates() )
+        if( classInfo.hasLinks() )
         {
           // find and remove overlapping interfaces to force delegating class to implement them, add warnings
           processInterfaceOverlap( classInfo );
           // find and remove overlapping methods to force delegating class to implement them, add warnings
           processMethodOverlap( classInfo );
 
-          for( DelegateInfo di : classInfo.getDelegates().values() )
+          for( LinkInfo li : classInfo.getLinks().values() )
           {
             // build interface method defs
-            delegateInterfaces( di );
+            linkInterfaces( li );
 
             // add interface method defs to class AST
             ArrayList<JCTree> newDefs = new ArrayList<>( classDecl.defs );
-            newDefs.addAll( di.getGeneratedMethods() );
+            newDefs.addAll( li.getGeneratedMethods() );
             classDecl.defs = List.from( newDefs );
 
             // define interface method symbols and add them to the class symbol's members
-            for( JCMethodDecl methDecl : di.getGeneratedMethods() )
+            for( JCMethodDecl methDecl : li.getGeneratedMethods() )
             {
               ReflectUtil.method( MemberEnter.instance( getContext() ), "memberEnter", JCTree.class, Env.class )
                 .invoke( methDecl, Enter.instance( getContext() ).getClassEnv( classDecl.sym ) );
@@ -521,51 +520,51 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private void processMethodOverlap( ClassInfo classInfo )
     {
-      for( Map.Entry<JCVariableDecl, DelegateInfo> entry : classInfo.getDelegates().entrySet() )
+      for( Map.Entry<JCVariableDecl, LinkInfo> entry : classInfo.getLinks().entrySet() )
       {
-        DelegateInfo di = entry.getValue();
-        for( ClassType iface : di.getInterfaces() )
+        LinkInfo li = entry.getValue();
+        for( ClassType iface : li.getInterfaces() )
         {
           Iterable<Symbol> methods = IDynamicJdk.instance().getMembers( (ClassSymbol)iface.tsym,
             m -> m instanceof MethodSymbol && !m.isStatic() );
           for( Symbol m: methods )
           {
-            processMethods( classInfo._classDecl, di, (MethodSymbol)m );
+            processMethods( classInfo._classDecl, li, (MethodSymbol)m );
           }
         }
       }
 
-      // Map method types to delegates, so we can find overlapping methods
-      Map<NamedMethodType, Set<DelegateInfo>> mtToDi = new HashMap<>();
-      for( Map.Entry<JCVariableDecl, DelegateInfo> entry : classInfo.getDelegates().entrySet() )
+      // Map method types to links, so we can find overlapping methods
+      Map<NamedMethodType, Set<LinkInfo>> mtToDi = new HashMap<>();
+      for( Map.Entry<JCVariableDecl, LinkInfo> entry : classInfo.getLinks().entrySet() )
       {
-        DelegateInfo di = entry.getValue();
-        di.getMethodTypes().values()
+        LinkInfo li = entry.getValue();
+        li.getMethodTypes().values()
           .forEach( mtSet -> mtSet
-            .forEach( mt -> mtToDi.computeIfAbsent( mt, k -> new HashSet<>() ).add( di ) ) );
+            .forEach( mt -> mtToDi.computeIfAbsent( mt, k -> new HashSet<>() ).add( li ) ) );
       }
 
-      for( Map.Entry<NamedMethodType, Set<DelegateInfo>> entry: mtToDi.entrySet() )
+      for( Map.Entry<NamedMethodType, Set<LinkInfo>> entry: mtToDi.entrySet() )
       {
         NamedMethodType mt = entry.getKey();
-        Set<DelegateInfo> dis = entry.getValue();
-        if( dis.size() > 1 )
+        Set<LinkInfo> lis = entry.getValue();
+        if( lis.size() > 1 )
         {
           StringBuilder fieldNames = new StringBuilder();
-          dis.forEach( di -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( di._delegateField.name ) );
-          for( DelegateInfo di : dis )
+          lis.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
+          for( LinkInfo li : lis )
           {
-            reportWarning( di.getDelegateField(),
+            reportWarning( li.getLinkField(),
               DelegationIssueMsg.MSG_METHOD_OVERLAP.get( mt.getName(), fieldNames ) );
 
-            // remove the overlap method type from the delegate, the delegating class must implement it directly
-            di.getMethodTypes().get( mt.getName() ).remove( mt );
+            // remove the overlap method type from the link, the delegating class must implement it directly
+            li.getMethodTypes().get( mt.getName() ).remove( mt );
           }
         }
       }
     }
 
-    private void processMethods( JCClassDecl classDecl, DelegateInfo di, MethodSymbol m )
+    private void processMethods( JCClassDecl classDecl, LinkInfo li, MethodSymbol m )
     {
       MethodSymbol existingMethod = m.binaryImplementation( classDecl.sym, getTypes() );
       if( existingMethod != null &&
@@ -576,9 +575,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
 
       TreeMaker make = getTreeMaker();
-      make.pos = di._delegateField.pos;
+      make.pos = li._linkField.pos;
 
-      DelegateInfo delegateInfo = _classInfoStack.peek().getDelegates().get( di._delegateField );
+      LinkInfo linkInfo = _classInfoStack.peek().getLinks().get( li._linkField );
 
       // Method type as a member of the delegating class
       Type emt = getTypes().memberType( classDecl.sym.type, m );
@@ -587,73 +586,73 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         csr = ((Type.DelegatedType)csr).qtype;
       }
-      if( delegateInfo.hasMethodType( m.name, emt ) )
+      if( linkInfo.hasMethodType( m.name, emt ) )
       {
-        // already defined previously in this delegate
+        // already defined previously in this link
         return;
       }
-      delegateInfo.addMethodType( m, emt );
+      linkInfo.addMethodType( m, emt );
     }
 
     private void processInterfaceOverlap( ClassInfo ci )
     {
-      Map<ClassType, Set<DelegateInfo>> interfaceToDelegates = new HashMap<>();
+      Map<ClassType, Set<LinkInfo>> interfaceToLinks = new HashMap<>();
 
-      for( Map.Entry<JCVariableDecl, DelegateInfo> entry: ci.getDelegates().entrySet() )
+      for( Map.Entry<JCVariableDecl, LinkInfo> entry: ci.getLinks().entrySet() )
       {
-        DelegateInfo di = entry.getValue();
+        LinkInfo li = entry.getValue();
         for( ClassType iface : ci.getInterfaces() )
         {
-          if( di.getInterfaces().stream().anyMatch( e -> getTypes().isSameType( e, iface ) ) )
+          if( li.getInterfaces().stream().anyMatch( e -> getTypes().isSameType( e, iface ) ) )
           {
-            Set<DelegateInfo> dis = interfaceToDelegates.computeIfAbsent( iface, k -> new HashSet<>() );
-            dis.add( di );
+            Set<LinkInfo> lis = interfaceToLinks.computeIfAbsent( iface, k -> new HashSet<>() );
+            lis.add( li );
           }
         }
       }
 
-      for( Map.Entry<ClassType, Set<DelegateInfo>> entry: interfaceToDelegates.entrySet() )
+      for( Map.Entry<ClassType, Set<LinkInfo>> entry: interfaceToLinks.entrySet() )
       {
         ClassType iface = entry.getKey();
-        Set<DelegateInfo> dis = entry.getValue();
-        if( dis.size() > 1 )
+        Set<LinkInfo> lis = entry.getValue();
+        if( lis.size() > 1 )
         {
-          boolean isInterfaceShared = checkSharedLinks( iface, dis );
+          boolean isInterfaceShared = checkSharedLinks( iface, lis );
 
           StringBuilder fieldNames = new StringBuilder();
-          dis.forEach( di -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( di._delegateField.name ) );
-          for( DelegateInfo di: dis )
+          lis.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
+          for( LinkInfo li: lis )
           {
-            if( !di.isShare() )
+            if( !li.isShare() )
             {
               if( !isInterfaceShared )
               {
-                reportWarning( di.getDelegateField(),
+                reportWarning( li.getLinkField(),
                   DelegationIssueMsg.MSG_INTERFACE_OVERLAP.get( iface.tsym.getSimpleName(), fieldNames ) );
               }
 
-              // remove the overlap interface from the delegate, only the sharing delegate provides it
-              di.getInterfaces().remove( iface );
+              // remove the overlap interface from the link, only the sharing link provides it
+              li.getInterfaces().remove( iface );
             }
           }
         }
       }
     }
 
-    private boolean checkSharedLinks( ClassType iface, Set<DelegateInfo> dis )
+    private boolean checkSharedLinks( ClassType iface, Set<LinkInfo> lis )
     {
-      ArrayList<DelegateInfo> sharedDelegates = dis.stream()
-        .filter( di -> di.isShare() )
+      ArrayList<LinkInfo> sharedLinks = lis.stream()
+        .filter( li -> li.isShare() )
         .collect( Collectors.toCollection( () -> new ArrayList<>() ) );
-      if( sharedDelegates.size() > 1 )
+      if( sharedLinks.size() > 1 )
       {
         StringBuilder fieldNames = new StringBuilder();
-        sharedDelegates.forEach( di -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( di._delegateField.name ) );
+        sharedLinks.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
 
-        sharedDelegates.forEach( di -> reportError( di.getDelegateField(),
+        sharedLinks.forEach( li -> reportError( li.getLinkField(),
           DelegationIssueMsg.MSG_MULTIPLE_SHARING.get( iface.tsym.getSimpleName(), fieldNames ) ) );
       }
-      return !sharedDelegates.isEmpty();
+      return !sharedLinks.isEmpty();
     }
 
     @Override
@@ -667,10 +666,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      processDelegateField( tree );
+      processLinkField( tree );
     }
 
-    private void processDelegateField( JCVariableDecl varDecl )
+    private void processLinkField( JCVariableDecl varDecl )
     {
       int modifiers = (int)varDecl.getModifiers().flags;
 
@@ -678,16 +677,16 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       JCClassDecl classDecl = classInfo._classDecl;
       if( classDecl.defs.contains( varDecl ) )
       {
-        JCAnnotation delegateAnno = getAnnotation( varDecl, link.class );
-        if( delegateAnno == null )
+        JCAnnotation linkAnno = getAnnotation( varDecl, link.class );
+        if( linkAnno == null )
         {
-          // not a delegate field
+          // not a link field
           return;
         }
 
         if( varDecl.sym.isStatic() )
         {
-          reportError( varDecl, MSG_DELEGATE_STATIC_FIELD.get() );
+          reportError( varDecl, MSG_LINK_STATIC_FIELD.get() );
           return;
         }
 
@@ -700,7 +699,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
         checkModifiersAndApplyDefaults( varDecl, modifiers, classDecl );
 
-        addDelegatedInterfaces( delegateAnno, classInfo, varDecl );
+        addLinkedInterfaces( linkAnno, classInfo, varDecl );
       }
     }
 
@@ -738,10 +737,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private void addDelegatedInterfaces( JCAnnotation delegateAnno, ClassInfo ci, JCVariableDecl field )
+    private void addLinkedInterfaces( JCAnnotation linkAnno, ClassInfo ci, JCVariableDecl field )
     {
       ArrayList<ClassType> interfaces = new ArrayList<>();
-      boolean share = getInterfacesFromDelegateAnno( delegateAnno, interfaces );
+      boolean share = getInterfacesFromLinkAnno( linkAnno, interfaces );
       if( interfaces.isEmpty() )
       {
         interfaces.addAll( getCommonInterfaces( ci, field.sym.type ) );
@@ -754,23 +753,23 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       if( share )
       {
-        // shared delegates must be final
+        // shared links must be final
         field.getModifiers().flags |= FINAL;
       }
       
-      ci.getDelegates().put( field, new DelegateInfo( field, interfaces, share ) );
+      ci.getLinks().put( field, new LinkInfo( field, interfaces, share ) );
     }
 
-    private boolean getInterfacesFromDelegateAnno( JCAnnotation delegateAnno, ArrayList<ClassType> interfaces )
+    private boolean getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces )
     {
-      List<JCExpression> args = delegateAnno.getArguments();
+      List<JCExpression> args = linkAnno.getArguments();
       if( args.isEmpty() )
       {
         return false;
       }
 
       boolean share = false;
-      Attribute.Compound annoValues = delegateAnno.attribute.getValue();
+      Attribute.Compound annoValues = linkAnno.attribute.getValue();
       int i = 0;
       for( Map.Entry<MethodSymbol, Attribute> entry: annoValues.getElementValues().entrySet() )
       {
@@ -818,34 +817,34 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private Set<ClassType> getCommonInterfaces( ClassInfo ci, Type fieldType )
     {
-      ArrayList<ClassType> delegateFieldInterfaces = new ArrayList<>();
-      findAllInterfaces( fieldType, new HashSet<>(), delegateFieldInterfaces );
+      ArrayList<ClassType> linkFieldInterfaces = new ArrayList<>();
+      findAllInterfaces( fieldType, new HashSet<>(), linkFieldInterfaces );
 
       if( fieldType.isInterface() && Util.getAnnotationMirror( fieldType.tsym, Structural.class ) != null )
       {
         // A structural interface is assumed to be fully mapped onto the declaring class.
-        // Note, structural interfaces work only with forwarding, not with delegates/parts
-        return new HashSet<>( delegateFieldInterfaces );
+        // Note, structural interfaces work only with forwarding, not with parts
+        return new HashSet<>( linkFieldInterfaces );
       }
 
       return ci.getInterfaces().stream()
-        .filter( i1 -> delegateFieldInterfaces.stream()
+        .filter( i1 -> linkFieldInterfaces.stream()
           .anyMatch( i2 -> getTypes().isSameType( i1, i2 ) ) )
         .collect( Collectors.toSet() );
     }
 
-    private void delegateInterfaces( DelegateInfo di )
+    private void linkInterfaces( LinkInfo li )
     {
-      for( Set<NamedMethodType> mtSet : di.getMethodTypes().values() )
+      for( Set<NamedMethodType> mtSet : li.getMethodTypes().values() )
       {
         for( NamedMethodType mt : mtSet )
         {
-          generateInterfaceImplMethod( di, mt );
+          generateInterfaceImplMethod( li, mt );
         }
       }
     }
 
-    private void generateInterfaceImplMethod( DelegateInfo di, NamedMethodType namedMt )
+    private void generateInterfaceImplMethod( LinkInfo li, NamedMethodType namedMt )
     {
       Type csr = namedMt.getType();
       while( csr instanceof Type.DelegatedType )
@@ -855,7 +854,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       MethodType mt = (MethodType)csr;
 
       TreeMaker make = getTreeMaker();
-      make.pos = di.getDelegateField().pos;
+      make.pos = li.getLinkField().pos;
 
       // Method name & modifiers
       JCModifiers access = make.Modifiers( PUBLIC );
@@ -894,8 +893,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       JCExpression resType = make.Type( mt.getReturnType() );
 
       // Forward call statement
-      JCExpression delegate = make.Ident( di.getDelegateField() );
-      JCTree.JCFieldAccess forwardRef = (JCFieldAccess)make.Select( delegate, namedMt.getMethodSymbol() );
+      JCExpression link = make.Ident( li.getLinkField() );
+      JCTree.JCFieldAccess forwardRef = (JCFieldAccess)make.Select( link, namedMt.getMethodSymbol() );
       forwardRef.type = mt.getReturnType();
       java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
       JCTree.JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
@@ -914,7 +913,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       JCBlock block = make.Block( 0, List.of( forwardStmt ) );
       JCMethodDecl ifaceMethod = make.MethodDef( access, name, resType, typeParams, List.from( params ), thrown, block, null );
-      di.addGeneratedMethod( ifaceMethod );
+      li.addGeneratedMethod( ifaceMethod );
     }
   }
 
@@ -1656,14 +1655,14 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
   private static boolean isPartClass( Symbol sym )
   {
-    Attribute.Compound delegateAnno = getAnnotationMirror( sym, part.class );
-    return delegateAnno != null;
+    Attribute.Compound partAnno = getAnnotationMirror( sym, part.class );
+    return partAnno != null;
   }
 
   private static boolean isInPartClass( Symbol sym )
   {
-    Attribute.Compound delegateAnno = getAnnotationMirror( sym, part.class );
-    if( delegateAnno != null )
+    Attribute.Compound partAnno = getAnnotationMirror( sym, part.class );
+    if( partAnno != null )
     {
       return true;
     }
@@ -1676,12 +1675,12 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
   {
     private final JCClassDecl _classDecl;
     private ArrayList<ClassType> _interfaces;
-    private final Map<JCVariableDecl, DelegateInfo> _delegateInfos;
+    private final Map<JCVariableDecl, LinkInfo> _linkInfos;
 
     ClassInfo( JCClassDecl classDecl )
     {
       _classDecl = classDecl;
-      _delegateInfos = new HashMap<>();
+      _linkInfos = new HashMap<>();
     }
 
     public ArrayList<ClassType> getInterfaces()
@@ -1695,38 +1694,38 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       return _interfaces;
     }
 
-    boolean hasDelegates()
+    boolean hasLinks()
     {
-      return !_delegateInfos.isEmpty();
+      return !_linkInfos.isEmpty();
     }
 
-    Map<JCVariableDecl, DelegateInfo> getDelegates()
+    Map<JCVariableDecl, LinkInfo> getLinks()
     {
-      return _delegateInfos;
+      return _linkInfos;
     }
   }
 
-  private class DelegateInfo
+  private class LinkInfo
   {
-    private final JCVariableDecl _delegateField;
+    private final JCVariableDecl _linkField;
 
     private final ArrayList<JCMethodDecl> _generatedMethods;
     private final Map<Name, Set<NamedMethodType>> _methodTypes;
     private ArrayList<ClassType> _interfaces;
     private boolean _share;
 
-    DelegateInfo( JCVariableDecl delegateField, ArrayList<ClassType> delegatedInterfaces, boolean share )
+    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkdInterfaces, boolean share )
     {
-      _delegateField = delegateField;
+      _linkField = linkField;
       _generatedMethods = new ArrayList<>();
       _methodTypes = new HashMap<>();
-      _interfaces = new ArrayList<>( delegatedInterfaces );
+      _interfaces = new ArrayList<>( linkdInterfaces );
       _share = share;
     }
 
-    public JCVariableDecl getDelegateField()
+    public JCVariableDecl getLinkField()
     {
-      return _delegateField;
+      return _linkField;
     }
 
     public boolean isShare()
