@@ -1,13 +1,13 @@
-# Interface delegation with links & parts
+# Delegation with links & parts
   
 > **⚠ Experimental Feature**
 
 > WARNING: Under construction!!!
  
 The `manifold-delegation` project is a compiler plugin providing language support for call forwarding and true delegation.
-These features are an experimental effort toward interface composition as a practical alternative to class inheritance.
+These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
 
-Use `@link` to automatically transfer calls on unimplemented interface methods to fields in the same class.
+Use `@link` to automatically transfer calls to unimplemented interface methods through fields in the same class.
 
 * Choose between call forwarding and true delegation with `@part`
 * Override linked interface methods (solves [the Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
@@ -15,6 +15,8 @@ Use `@link` to automatically transfer calls on unimplemented interface methods t
 * Configure class implementation dynamically
 
 # Basic usage
+
+## `@link`
 ```java
 class MyClass implements MyInterface {
   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
@@ -22,6 +24,22 @@ class MyClass implements MyInterface {
   public MyClass(MyInterface myInterface) {
     this.myInterface = myInterface; // dynamically configure behavior
   }
+  
+  // No need to implement MyInterface here, but you can override myInterface as needed
+}
+```
+## `@part`
+```java
+@part class DoublerPart implements Doubler {
+  public int getDown() {return 0;}
+  
+  // call to getDown() is polymorphic when used with @link
+  public int doubleDown() {return getDown() * 2;}
+}
+
+interface Doubler {
+  int getDown();
+  int doubleDown();
 }
 ```
 
@@ -108,13 +126,15 @@ The call to `student.getTitledName()` results in:
     Student Milton
 ```
 This is because PersonPart is a `part` class, which enables polymorphic calls from linked parts. This means inside PersonPart
-`this` refers to MyStudent in terms of the Person interface. Thus, the call to `getTitle()` dispatches to MyStudent.
+`this` refers to MyStudent in terms of the Person interface. Thus, the call to `getTitle()` dispatches dynamically to MyStudent.
 
 If PersonPart were _not_ annotated with `@part`, the result would have been:
 ```text
     Person Milton
 ```
-Because, without `@part` the call is forwarded, not delegated.
+Because without `@part` PersonPart does not know of its role as a link in MyStudent; `this` refers to PersonPart in terms
+of the Person interface. As a consequence, `getTitle()` dispatches statically to PersonPart.
+ 
 
 ## Default methods
 
@@ -210,14 +230,14 @@ assertEquals("hi", limitedList.get(0));
 
 # Inheritance
 
-Delegation involves a compound object consisting of a root linking object and its graph of linked `part` classes. Inside
-this compound object linked interface calls are always applied to the root object and never to the linked parts; `this`
+Delegation involves a composite object consisting of a root object and its graph of linked `part` classes. Inside
+this composite object linked interface calls are always applied to the root object and never to the linked parts; `this`
 must always refer to the root in terms of the interfaces defined by the links.
 
 If any of the linked parts are allowed to directly refer to another linked part, delegation is broken. Polymorphic calling
 is compromised because a direct reference to another link bypasses the root, which must always dispatch all interface calls.
 
-Therefore, `part` classes may only subclass other `part` classes to maintain delegation integrity.
+Therefore, to maintain delegation integrity, `part` classes may only subclass other `part` classes.
 
 # IDE Support
 

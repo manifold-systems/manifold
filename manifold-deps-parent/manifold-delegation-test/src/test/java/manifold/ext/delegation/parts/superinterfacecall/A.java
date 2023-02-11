@@ -24,4 +24,9 @@ public interface A
   {
     return getName( "hi" ) + " " + name1 + " " + name2;
   }
+
+  default void stuffVoid( String name1, String name2, StringBuilder sb )
+  {
+    sb.append( getName( "hi" ) + " " + name1 + " " + name2 );
+  }
 }

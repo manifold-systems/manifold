@@ -2679,7 +2679,7 @@ public class ExtensionTransformer extends TreeTranslator
       ArrayList<JCExpression> paramTypes = new ArrayList<>();
       for( Symbol.VarSymbol param : parameters )
       {
-        JCExpression classExpr = makeClassExpr( tree, param.type );
+        JCExpression classExpr = makeClassExpr( tree, _tp.getTypes().erasure( param.type ) );
         paramTypes.add( classExpr );
       }
       Symtab symTab = _tp.getSymtab();
@@ -2839,7 +2839,7 @@ public class ExtensionTransformer extends TreeTranslator
     ArrayList<JCExpression> paramTypes = new ArrayList<>();
     for( Symbol.VarSymbol param : parameters )
     {
-      paramTypes.add( makeClassExpr( tree, param.type ) );
+      paramTypes.add( makeClassExpr( tree, _tp.getTypes().erasure( param.type ) ) );
     }
     Symtab symTab = _tp.getSymtab();
     JCTree.JCNewArray paramTypesArray = make.NewArray(
