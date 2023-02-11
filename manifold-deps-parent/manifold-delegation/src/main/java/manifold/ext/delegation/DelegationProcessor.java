@@ -574,9 +574,6 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      TreeMaker make = getTreeMaker();
-      make.pos = li._linkField.pos;
-
       LinkInfo linkInfo = _classInfoStack.peek().getLinks().get( li._linkField );
 
       // Method type as a member of the delegating class
@@ -740,16 +737,35 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private void addLinkedInterfaces( JCAnnotation linkAnno, ClassInfo ci, JCVariableDecl field )
     {
       ArrayList<ClassType> interfaces = new ArrayList<>();
-      boolean share = getInterfacesFromLinkAnno( linkAnno, interfaces );
-      if( interfaces.isEmpty() )
+      ArrayList<ClassType> fromAnno = new ArrayList<>();
+      boolean share = getInterfacesFromLinkAnno( linkAnno, fromAnno );
+      if( fromAnno.isEmpty() )
       {
+        // derive interfaces from field's declared type
+
         interfaces.addAll( getCommonInterfaces( ci, field.sym.type ) );
+        if( interfaces.isEmpty() )
+        {
+          reportError( field.getType(), MSG_NO_INTERFACES.get( field.sym.type, ci._classDecl.sym.type ) );
+        }
+      }
+      else
+      {
+        // derive interfaces from @link provided interfaces
+
+        for( ClassType iface : fromAnno )
+        {
+          Set<ClassType> commonInterfaces = getCommonInterfaces( ci, iface, true );
+          interfaces.addAll( commonInterfaces );
+          if( commonInterfaces.isEmpty() )
+          {
+            reportError( linkAnno, MSG_NO_INTERFACES.get( iface, ci._classDecl.sym.type ) );
+          }
+        }
+        verifyFieldTypeSatisfiesAnnoTypes( field, interfaces );
       }
 
-      if( interfaces.isEmpty() )
-      {
-        reportError( field.getType(), MSG_NO_INTERFACES.get( field.sym.type, ci._classDecl.sym.type ) );
-      }
+      removeDups( interfaces );
 
       if( share )
       {
@@ -758,6 +774,37 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
       
       ci.getLinks().put( field, new LinkInfo( field, interfaces, share ) );
+    }
+
+    private void verifyFieldTypeSatisfiesAnnoTypes( JCVariableDecl field, ArrayList<ClassType> interfaces )
+    {
+      Types types = getTypes();
+      for( ClassType t: interfaces )
+      {
+        if( !types.isAssignable( field.sym.type, t ) )
+        {
+          JCTree typeTree = field.getType();
+          reportError( typeTree == null ? field : typeTree, MSG_FIELD_TYPE_NOT_ASSIGNABLE_TO.get(
+            field.sym.type.tsym.getQualifiedName(), t.tsym.getQualifiedName() ) );
+        }
+      }
+    }
+
+    private void removeDups( ArrayList<ClassType> interfaces )
+    {
+      Types types = getTypes();
+      for( int i = 0; i < interfaces.size(); i++ )
+      {
+        ClassType ti = interfaces.get( i );
+        for( int j = i+1; j < interfaces.size(); j++ )
+        {
+          ClassType tj = interfaces.get( j );
+          if( types.isSameType( ti, tj ) )
+          {
+            interfaces.remove( j-- );
+          }
+        }
+      }
     }
 
     private boolean getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces )
@@ -817,6 +864,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private Set<ClassType> getCommonInterfaces( ClassInfo ci, Type fieldType )
     {
+      return getCommonInterfaces( ci, fieldType, false );
+    }
+    private Set<ClassType> getCommonInterfaces( ClassInfo ci, Type fieldType, boolean erasure )
+    {
       ArrayList<ClassType> linkFieldInterfaces = new ArrayList<>();
       findAllInterfaces( fieldType, new HashSet<>(), linkFieldInterfaces );
 
@@ -827,9 +878,17 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return new HashSet<>( linkFieldInterfaces );
       }
 
+      Types types = getTypes();
+      if( erasure )
+      {
+        return ci.getInterfaces().stream()
+          .filter( i1 -> linkFieldInterfaces.stream()
+            .anyMatch( i2 -> types.isSameType( types.erasure( i1 ), types.erasure( i2 ) ) ) )
+          .collect( Collectors.toSet() );
+      }
       return ci.getInterfaces().stream()
         .filter( i1 -> linkFieldInterfaces.stream()
-          .anyMatch( i2 -> getTypes().isSameType( i1, i2 ) ) )
+          .anyMatch( i2 -> types.isSameType( i1, i2 ) ) )
         .collect( Collectors.toSet() );
     }
 
@@ -1237,6 +1296,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       assignTypes( methodSelect.selected, runtimeMethodsClassSym );
       methodSelect.selected.pos = tree.pos;
 
+      //noinspection UnnecessaryLocalVariable
       JCTypeCast castExpr = make.TypeCast( contextType, replaceThisCall );
 
       return castExpr;
@@ -1456,6 +1516,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       assignTypes( methodSelect.selected, runtimeMethodsClassSym );
       methodSelect.selected.pos = assignmentOrVarDecl.pos;
 
+      //noinspection UnnecessaryLocalVariable
       JCTypeCast castExpr = make.TypeCast( linkField.type, assignPartCall );
       return castExpr;
     }
@@ -1711,8 +1772,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private final ArrayList<JCMethodDecl> _generatedMethods;
     private final Map<Name, Set<NamedMethodType>> _methodTypes;
-    private ArrayList<ClassType> _interfaces;
-    private boolean _share;
+    private final ArrayList<ClassType> _interfaces;
+    private final boolean _share;
 
     LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkdInterfaces, boolean share )
     {
