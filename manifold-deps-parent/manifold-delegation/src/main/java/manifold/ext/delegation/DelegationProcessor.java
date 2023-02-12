@@ -270,7 +270,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
      * Generate methods to override default interface methods. A generated override must forward the call to the default
      * method as if forwarded within $self. Since a default method implementation can call other methods in the interface,
      * and those interface methods can be overridden by linking classes, the default method must be called with @self as
-     * the implementing class. This can only be done reflectively via method handles.
+     * the implementing class -- ALL method calls must be dispatched from $self. This can only be done reflectively via method
+     * handles.
      */
     private void overrideDefaultInterfaceMethods( JCClassDecl classDecl )
     {
@@ -305,6 +306,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
             NamedMethodType namedMt = new NamedMethodType( m, type );
             if( !seen.contains( namedMt ) )
             {
+              ClassInfo ci = _classInfoStack.peek();
+              ci.addDefaultMethodForwarder( namedMt );
               generateDefaultMethodForwarder( classDecl, (ClassType)iface, namedMt );
             }
             seen.add( namedMt );
@@ -388,9 +391,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
 
       //     if( RuntimeMethods.linksInterfaceTo( $self ) )
-      //       RuntimeMethods.invokeDefault
+      //       RuntimeMethods.invokeDefault  // call default method from $self
       //     else
-      //       Iface.super.method()
+      //       Iface.super.method()  // call as-is
 
 
       Symtab symtab = getSymtab();
@@ -930,7 +933,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       {
         for( NamedMethodType mt : mtSet )
         {
-          generateInterfaceImplMethod( li, mt );
+          ClassInfo ci = _classInfoStack.peek();
+          if( !ci.getDefaultMethodForwarders().contains( mt ) )
+          {
+            generateInterfaceImplMethod( li, mt );
+          }
         }
       }
     }
@@ -1796,11 +1803,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private final JCClassDecl _classDecl;
     private ArrayList<ClassType> _interfaces;
     private final Map<JCVariableDecl, LinkInfo> _linkInfos;
+    private final Set<NamedMethodType> _defaultMethodForwarders;
 
     ClassInfo( JCClassDecl classDecl )
     {
       _classDecl = classDecl;
       _linkInfos = new HashMap<>();
+      _defaultMethodForwarders = new HashSet<>();
     }
 
     public ArrayList<ClassType> getInterfaces()
@@ -1822,6 +1831,15 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     Map<JCVariableDecl, LinkInfo> getLinks()
     {
       return _linkInfos;
+    }
+
+    public void addDefaultMethodForwarder( NamedMethodType namedMt )
+    {
+      _defaultMethodForwarders.add( namedMt );
+    }
+    public Set<NamedMethodType> getDefaultMethodForwarders()
+    {
+      return _defaultMethodForwarders;
     }
   }
 
