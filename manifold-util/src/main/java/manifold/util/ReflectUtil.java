@@ -1008,22 +1008,26 @@ public class ReflectUtil
         throw ManExceptionUtil.unchecked( e );
       }
     }
-// disabling this for now because MethodHandle.invoke/invokeExact to not work in Android APIs before version 8 (API level 26)
-//
-//    public Object invokeSuper( Object... args )
-//    {
-//      try
-//      {
-//        MethodHandle superMethod = MethodHandles.lookup().findSpecial(
-//          _receiver.getClass().getSuperclass(), _method.getName(),
-//          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
-//        return superMethod.bindTo( _receiver ).invokeExact( args );
-//      }
-//      catch( Throwable t )
-//      {
-//        throw ManExceptionUtil.unchecked( t );
-//      }
-//    }
+
+    /**
+     * Warning: using reflect to access MethodHandle because MethodHandle.invoke/invokeExact do not work in Android APIs
+     * before version 8 (API level 26). If you call this method from Android with an older API, it's gonna splode.
+     */
+    public Object invokeSuper( Object... args )
+    {
+      try
+      {
+        Object superMethod = MethodHandles.lookup().findSpecial(
+          _receiver.getClass().getSuperclass(), _method.getName(),
+          java.lang.invoke.MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
+        return method( "java.lang.invoke.MethodHandle", "invokeExact", Object[].class ).invoke(
+          method( "java.lang.invoke.MethodHandle", "bindTo", Object.class ).invoke( superMethod, _receiver ), args );
+      }
+      catch( Throwable t )
+      {
+        throw ManExceptionUtil.unchecked( t );
+      }
+    }
   }
 
   public static class FieldRef

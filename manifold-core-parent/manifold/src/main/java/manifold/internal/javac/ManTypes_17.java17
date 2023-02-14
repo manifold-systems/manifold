@@ -223,10 +223,11 @@ public class ManTypes_17 extends Types
       return null;
     }
 
-    return typeAttributes.stream()
+    java.util.List<TypeAnnotationPosition> positions = typeAttributes.stream()
       .filter( attr -> attr.type.toString().equals( SELF_TYPE_NAME ) )
       .map( Attribute.TypeCompound::getPosition )
       .collect( Collectors.toList() );
+    return positions.isEmpty() ? null : positions;
   }
 
   private boolean isSelfComponentType( Symbol sym )
