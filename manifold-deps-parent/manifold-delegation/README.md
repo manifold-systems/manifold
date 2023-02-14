@@ -2,8 +2,6 @@
   
 > **⚠ Experimental Feature**
 
-> WARNING: Under construction!!!
- 
 The `manifold-delegation` project is a compiler plugin providing language support for call forwarding and true delegation.
 These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
 
@@ -14,9 +12,26 @@ Use `@link` to automatically transfer calls to unimplemented interface methods t
 * Share super interface implementations (solves [the Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
 * Configure class implementation dynamically
 
+## Table of Contents
+* [Basic usage](#basic-usage)
+* [Forwarding](#forwarding)
+* [Delegation](#delegation)
+* [Default methods](#default-methods)
+* [Diamonds](#diamonds)
+* [Structural interfaces](#structural-interfaces)
+* [Inheritance](#inheritance)
+* [IDE Support](#ide-support)
+* [Setup](#setup)
+* [Javadoc](#javadoc)
+* [License](#license)
+* [Versioning](#versioning)
+* [Author](#author)
+    
+
 # Basic usage
 
 ## `@link`
+Use `@link` to implement one or more interfaces through a field. 
 ```java
 class MyClass implements MyInterface {
   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
@@ -28,8 +43,31 @@ class MyClass implements MyInterface {
   // No need to implement MyInterface here, but you can override myInterface as needed
 }
 ```
-## `@part`
+The interfaces used in a link are the intersection of the type[s] specified in the linked field and the interfaces of the
+enclosing class.
+
 ```java
+interface A {. . .}
+interface B {. . .}
+public abstract class Sample implements A, B {. . .}
+
+public class MyClass implements A, B {
+  @link A foo; // links A to foo
+  @link Sample foo; // links A and B to foo  
+  @link(A.class) Sample foo; // links A to foo
+  . . .  
+}
+```
+ 
+## `@part`
+Use `@part` to use true delegation with `@link`. 
+
+```java
+interface Doubler {
+  int getDown();
+  int doubleDown();
+}
+
 @part class DoublerPart implements Doubler {
   public int getDown() {return 0;}
   
@@ -37,9 +75,11 @@ class MyClass implements MyInterface {
   public int doubleDown() {return getDown() * 2;}
 }
 
-interface Doubler {
-  int getDown();
-  int doubleDown();
+class MyClass implements Doubler {
+  @link Doubler doubler = new DoublerPart();
+  
+  // overrides doubler's getDown()
+  @Override public int getDown() {return 8;}
 }
 ```
 
@@ -90,22 +130,20 @@ MyPerson person = new MyPerson("Milton");
 MyStudent student = new MyStudent(person, "Metallurgy");
 out.println(student.getTitledName());
 ```
-Since MyPerson is _not_ annotated with `@part` forwarding is used to transfer interface method calls.
+Since MyPerson is _not_ annotated with `@part`, forwarding is used to transfer interface method calls.
 
 But with forwarding, since the calls are one-way tickets, the call to `student.getTitledName()` results in:
 ```text
     Person Milton
 ```
-With forwarding the call to `getTitle()` from MyPerson is not polymorphic with respect to the link established
-in MyStudent.
+With forwarding, the call to `getTitle()` from MyPerson is not polymorphic with respect to the link established in MyStudent.
 
-Generally, this behavior can be viewed as positive or negative, depending on the desired call transfer model.
 
 # Delegation
 
 If the field's value is a `@part` class, the Person methods are called using _delegation_. Unlike forwarding, delegation
 enables polymorphic calls; MyStudent can override Person methods so that the implementation of Person defers to MyStudent.
-Essentially, `@part` solves _the Self problem_.
+As a result, `@part` solves _the Self problem_.
 ```java
 @part class PersonPart implements Person {
   private final String name;
@@ -155,7 +193,7 @@ Inside Person `this` refers to MyStudent even when called from PersonPart.
 
 # Diamonds
 
-When super interfaces overlap, a "diamond" relationship results. This is known as _the diamond problem_.
+When super interfaces overlap, a "diamond" relationship results. This is known as _the Diamond problem_.
 ```text
          Person
            ▲▲
@@ -204,7 +242,7 @@ the Teacher constructor.
 
 Sometimes the class you want to link to doesn't implement the interface you want to expose. If you don't control the implementation
 of the class, you can define a [structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-to map specific methods you want to expose.
+to map the methods of your choosing.
 ```java
 @Structural
 interface LimitedList<E> {
@@ -234,8 +272,8 @@ Delegation involves a composite object consisting of a root object and its graph
 this composite object linked interface calls are always applied to the root object and never to the linked parts; `this`
 must always refer to the root in terms of the interfaces defined by the links.
 
-If any of the linked parts are allowed to directly refer to another linked part, delegation is broken. Polymorphic calling
-is compromised because a direct reference to another link bypasses the root, which must always dispatch all interface calls.
+If any of the linked parts are allowed to directly refer to another linked part, delegation is broken. As a consequence,
+polymorphic calling is compromised when a direct reference to another link bypasses the root.
 
 Therefore, to maintain delegation integrity, `part` classes may only subclass other `part` classes.
 
