@@ -383,10 +383,6 @@ static @part class TAPart implements TA {
     }
     public String getTitle() { return "TA"; }
 }
-static @part class TAPart2 implements Teacher {
-    @link Teacher _student;
-    public String getTitle() { return "TA"; }
-}
 
 Person person = new PersonPart("Fred");
 Student student = new StudentPart(person, "CS")
