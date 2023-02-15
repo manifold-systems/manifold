@@ -26,21 +26,10 @@ import java.lang.annotation.Target;
  * delegation. A part class may also be used as a regular class anywhere you would normally use a class.
  * <p/>
  * When used for delegation, one or more fields of a class are marked with {@code @link} where each is assigned an instance
- * of a {@code part} class. The field's declaring class, called the linking class, delegates the implementation of some
- * or all of its interfaces to the field.
- * <p/>
- * If part classes are not used for linked fields, delegation is limited to call forwarding, which does not allow the linking
- * class to safely override linked interface methods. Referred to as <a href="https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html">the Self problem</a>,
- * if the linking class overrides an interface method and the method is called from the linked class, since the receiver
- * of the call is the linked class it will not call the linking class's override. This breach in delegation compromises
- * the integrity of the interface composition model.
- * <p/>
- * TODO: link to an example
- * <p/>
- * The {@code @part} annotation solves the self problem by integrating with the compiler so that, when used as a link,
- * the part class's {@code this} references evaluate to the linking class's instance where needed. Similar to the sub/super
- * class relationship, this strategy integrates a class and its linked parts to form a loosely coupled, dynamically
- * configurable component.
+ * of a {@code part} class. The field's enclosing class, called the linking class, delegates the implementation of linked
+ * interfaces to a {@code part} class, where the linking class can override methods in the link. In turn, linked interfaces
+ * invoked from the {@code part} class are also polymorphic with respect to the linking class. As with sub/super classes,
+ * linked interface method calls are polymorphic both going it and out of a {@code part} class.
  */
 @Target( ElementType.TYPE )
 @Retention( RetentionPolicy.CLASS )

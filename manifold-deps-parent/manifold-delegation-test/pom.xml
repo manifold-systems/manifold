@@ -23,6 +23,12 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+<!-- todo: use this when/if this is addressed: https://github.com/google/compile-testing/issues/346   -->
+<!--    <dependency>-->
+<!--      <groupId>com.google.testing.compile</groupId>-->
+<!--      <artifactId>compile-testing</artifactId>-->
+<!--      <version>0.21.0</version>-->
+<!--    </dependency>-->
   </dependencies>
 
   <build>

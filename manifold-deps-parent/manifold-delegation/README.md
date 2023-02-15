@@ -1,11 +1,9 @@
 # Delegation with links & parts
-  
-> **⚠ Experimental Feature**
 
-The `manifold-delegation` project is a compiler plugin providing language support for call forwarding and true delegation.
+The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and true delegation.
 These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
 
-Use `@link` to automatically transfer calls to unimplemented interface methods through fields in the same class.
+Use `@link` to automatically transfer calls to unimplemented interface methods through the fields of a class.
 
 * Choose between call forwarding and true delegation with `@part`
 * Override linked interface methods (solves [the Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
@@ -16,10 +14,12 @@ Use `@link` to automatically transfer calls to unimplemented interface methods t
 * [Basic usage](#basic-usage)
 * [Forwarding](#forwarding)
 * [Delegation](#delegation)
-* [Default methods](#default-methods)
+  * [Self-preservation](#self-preservation) 
+  * [Inheritance](#inheritance) 
+  * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
 * [Structural interfaces](#structural-interfaces)
-* [Inheritance](#inheritance)
+* [Example](#example)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -49,7 +49,7 @@ enclosing class.
 ```java
 interface A {. . .}
 interface B {. . .}
-public abstract class Sample implements A, B {. . .}
+public class Sample implements A, B {. . .}
 
 public class MyClass implements A, B {
   @link A foo; // links A to foo
@@ -58,9 +58,10 @@ public class MyClass implements A, B {
   . . .  
 }
 ```
+Note, `@link` fields are `private` and `final` by default.
  
 ## `@part`
-Use `@part` to use true delegation with `@link`. 
+Use `@part` to enable true delegation with `@link`. 
 
 ```java
 interface Doubler {
@@ -84,19 +85,28 @@ class MyClass implements Doubler {
 ```
 
 # Forwarding
+Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
+the methods on another object that implements the interface.
 
-Generally, the difference between forwarding and true delegation is that forwarding does not fully support virtual methods,
-while true delegation does. This difference is at the heart of _the Self problem_ (aka _broken delegation_).
+With `@link` this process is handled automatically.
 
-In terms of this project, delegation works exclusively with `@part` classes. If a `@part` class is assigned to a `@link`
-field, the link uses delegation and fully supports polymorphic calls. Otherwise, the link uses forwarding.
+Here, StudentPart uses `@link` to automatically transfer calls to unimplemented Person methods to the `person` field.
 
 ```java
-class MyStudent implements Student {
+interface Student extends Person {
+  String getMajor();
+}
+interface Person {
+  String getName();
+  String getTitle();
+  String getTitledName();
+}
+
+class StudentPart implements Student {
   @link Person person;
   private final String major;
   
-  public MyStudent(Person person, String major) {
+  public StudentPart(Person person, String major) {
     this.person = person;
     this.major = major;
   }
@@ -105,47 +115,7 @@ class MyStudent implements Student {
   public String getMajor() {return major;}
 }
 
-interface Person {
-  String getName();
-  String getTitle();
-  String getTitledName();
-}
-interface Student extends Person {
-  String getMajor();
-}
-```
-With `@link` on the `person` field MyStudent automatically transfers calls to unimplemented Person methods to the field.
-```java
-class MyPerson implements Person {
-  private final String name;
-
-  public PersonPart(String name) {this.name = name;}
-  
-  public String getName() {return name;}
-  public String getTitle() {return "Person";}
-  public String getTitledName() {return getTitle() + " " + getName();}
-}
-
-MyPerson person = new MyPerson("Milton");
-MyStudent student = new MyStudent(person, "Metallurgy");
-out.println(student.getTitledName());
-```
-Since MyPerson is _not_ annotated with `@part`, forwarding is used to transfer interface method calls.
-
-But with forwarding, since the calls are one-way tickets, the call to `student.getTitledName()` results in:
-```text
-    Person Milton
-```
-With forwarding, the call to `getTitle()` from MyPerson is not polymorphic with respect to the link established in MyStudent.
-
-
-# Delegation
-
-If the field's value is a `@part` class, the Person methods are called using _delegation_. Unlike forwarding, delegation
-enables polymorphic calls; MyStudent can override Person methods so that the implementation of Person defers to MyStudent.
-As a result, `@part` solves _the Self problem_.
-```java
-@part class PersonPart implements Person {
+class PersonPart implements Person {
   private final String name;
 
   public PersonPart(String name) {this.name = name;}
@@ -156,25 +126,98 @@ As a result, `@part` solves _the Self problem_.
 }
 
 PersonPart person = new PersonPart("Milton");
-MyStudent student = new MyStudent(person, "Metallurgy");
+StudentPart student = new StudentPart(person, "Metallurgy");
 out.println(student.getTitledName());
 ```
-The call to `student.getTitledName()` results in:
-```text
-    Student Milton
-```
-This is because PersonPart is a `part` class, which enables polymorphic calls from linked parts. This means inside PersonPart
-`this` refers to MyStudent in terms of the Person interface. Thus, the call to `getTitle()` dispatches dynamically to MyStudent.
-
-If PersonPart were _not_ annotated with `@part`, the result would have been:
+Output:
 ```text
     Person Milton
 ```
-Because without `@part` PersonPart does not know of its role as a link in MyStudent; `this` refers to PersonPart in terms
-of the Person interface. As a consequence, `getTitle()` dispatches statically to PersonPart.
- 
+With forwarding, the object handling the calls is unaware of the link defined in the forwarding object. As a consequence,
+forwarded calls are one-way tickets. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
+override is ignored.
 
-## Default methods
+Generally, linked interface calls within forwarded linked parts are not polymorphic.
+
+
+# Delegation
+
+If PersonPart is annotated with `@part`, Person methods are called using _delegation_.
+
+Delegation is more rigorous. It enables polymorphic calls from linked parts where StudentPart can override Person methods
+so that the implementation of Person defers to StudentPart.
+```java
+@part class PersonPart implements Person {
+  . . .
+}
+```
+With `@part` the call to `student.getTitledName()` results in:
+```text
+    Student Milton
+```
+Inside PersonPart `this` refers to StudentPart in terms of the Person interface. Thus, the call to `getTitle()` dispatches
+_dynamically_ to StudentPart.
+
+### Self-preservation
+
+Delegation involves composite objects each consisting of a root object and its graph of linked `part` objects. Within a
+composite object, linked interface calls are initially dispatched from the root object, never from linked parts; `this`
+always refers to the root in terms of the interfaces defined by the links. Otherwise, if any of the linked parts are allowed
+to directly refer to a non-root part, delegation is broken.
+
+Essentially, polymorphic calls are compromised when a direct reference to a part bypasses the root. Therefore, `part` classes
+are not permitted to reference `this` in a context other than a linked interface.
+
+Invalid `this` usages in `part` classes result in compile error: `Part class 'this' must be used as an interface here`. 
+```java
+@part class MyPart implements MyInterface {
+    @override public void interfaceMethod() {
+      privateMethod(this); // compile error
+      privateMethod(new MyPart()); // ok
+      MyPart w = this; // compile error
+      MyInterface x = this; // ok
+      Object y = (Object)this; // compile error
+      Object z = (MyInterface)this; // ok
+    }
+    
+    private MyPart privateMethod(MyPart a) {
+        return this; // compile error
+    }
+}
+```
+
+### Inheritance
+
+`@part` classes support implementation inheritance. But to maintain polymorphic calls within linked parts, superclasses
+associated with links must also be `part` classes.
+```java
+interface A {
+  String a(String a);
+  String b(String b);
+}
+
+@part class AImpl implements A {
+  public String a(String a) {return a + b(a);}
+  public String b(String b) {return b;}
+}
+
+@part class SubAImpl extends AImpl {}
+
+class MyA implements A {
+  @link A a = new SubAImpl();
+
+  public String b(String b) {"y_z";}
+}
+
+MyA a = new MyA();
+out.println(a.a( "x_" )); 
+```
+Output:
+```text
+    x_y_z
+```
+
+### Default methods
 
 Consider `getTitledName()` as a default method in Person instead of an implementation in PersonPart.
 ```java
@@ -185,11 +228,12 @@ interface Person {
 }
 ```  
 Calls must behave identically regardless of where the method is implemented; polymorphism must be preserved when using `part`
-classes. As such the call to `student.getTitledName()` results just as before:
+classes. As such the call to `student.getTitledName()` dispatches dynamically as before:
 ```text
     Student Milton
 ```    
-Inside Person `this` refers to MyStudent even when called from PersonPart.
+Inside the Person interface `this` refers to StudentPart even when called from PersonPart.
+ 
 
 # Diamonds
 
@@ -236,7 +280,7 @@ interface TA extends Student, Teacher {
 The student is the teacher, so TaPart shares the link to student with `@link(share=true)` and student is passed along to
 the Teacher constructor.
 
->Note, `part` classes are not required with `@link(share=true)`; it works with both forwarding and delegation.
+>Note, `part` classes are _not_ required with `@link(share=true)`; it works with both forwarding and delegation.
 
 # Structural interfaces
 
@@ -260,23 +304,79 @@ class MyLimitedList<E> implements LimitedList<E> {
 }
 
 // ArrayList structurally satisfies LimitedList
-LimitedList<String> limitedList = new MyLimitedList<>((LimitedList<String>)new ArrayList<>());
+LimitedList<String> arrayList = (LimitedList<String>)new ArrayList<>();  
+MyLimitedList<String> limitedList = new MyLimitedList<>(arrayList);
 limitedList.add("hi");
 assertTrue(limitedList.contains("hi"));
 assertEquals("hi", limitedList.get(0));
 ```
 
-# Inheritance
+# Example
 
-Delegation involves a composite object consisting of a root object and its graph of linked `part` classes. Inside
-this composite object linked interface calls are always applied to the root object and never to the linked parts; `this`
-must always refer to the root in terms of the interfaces defined by the links.
+Here is the Student/Teacher example in one place for easier readability.
+```java
+interface Person {
+    String getName();
+    String getTitle();
+    String getTitledName();
+}
+interface Teacher extends Person {
+    String getDept();
+}
+interface Student extends Person {
+    String getMajor();
+}
+interface TA extends Student, Teacher {
+}
 
-If any of the linked parts are allowed to directly refer to another linked part, delegation is broken. As a consequence,
-polymorphic calling is compromised when a direct reference to another link bypasses the root.
+static @part class PersonPart  implements Person {
+    private final String _name;
+    public PersonPart(String name) { _name = name; }
+    public String getName() { return _name; }
+    public String getTitle() { return "Person"; }
+    public String getTitledName() { return getTitle() + " " + getName(); }
+}
+static @part class TeacherPart implements  Teacher {
+    @link Person _person;
+    private final String _dept;
+    public TeacherPart(Person p, String dept) {
+        _person = p;
+        _dept = dept;
+    }
+    public String getTitle() { return "Teacher"; }
+    public String getDept() { return _dept; }
+}
+static @part class StudentPart implements Student {
+    @link Person _person;
+    private final String _major;
+    public StudentPart(Person p, String major) {
+        _person = p;
+        _major = major;
+    }
+    public String getTitle() { return "Student"; }
+    public String getMajor() { return _major; }
+}
+static @part class TAPart implements TA {
+    @link(share=true) Student _student;
+    @link Teacher _teacher;
+    public TAPart(Student student) {
+        _student = student;
+        _teacher = new TeacherPart(_student, "Math");
+    }
+    public String getTitle() { return "TA"; }
+}
+static @part class TAPart2 implements Teacher {
+    @link Teacher _student;
+    public String getTitle() { return "TA"; }
+}
 
-Therefore, to maintain delegation integrity, `part` classes may only subclass other `part` classes.
+Person person = new PersonPart("Fred");
+Student student = new StudentPart(person, "CS")
+TA ta = new TAPart(student);
+String titledName = ta.getTitledName();
+System.out.println(titledName);
 
+```
 # IDE Support
 
 Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
