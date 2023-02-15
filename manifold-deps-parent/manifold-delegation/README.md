@@ -50,15 +50,30 @@ enclosing class.
 interface A {. . .}
 interface B {. . .}
 public class Sample implements A, B {. . .}
-
+```
+If the field's type is an interface, the intersection of that interface and the interfaces of the enclosing class define
+the link.
+```java
 public class MyClass implements A, B {
   @link A foo; // links A to foo
-  @link Sample foo; // links A and B to foo  
-  @link(A.class) Sample foo; // links A to foo
-  . . .  
+  . . .
 }
 ```
+If the field's type is a class, the intersection of the interfaces of the class and the interfaces of the enclosing class
+define the link.
+```java
+  @link Sample foo; // links A and B to foo
+```
+If interfaces are specified in `@link`, the intersection of those interfaces and the interfaces of the enclosing class define
+the link.
+```java
+  @link(A.class) Sample foo; // links A to foo
+```
 Note, `@link` fields are `private` and `final` by default.
+
+Unimplemented interface calls transfer through the link to the assigned value of the field. The value's type determines
+how the calls are transferred. If the type is annotated with [`@part`](#part), calls are transferred using true [delegation](#delegation).
+Otherwise, they are transferred using call [forwarding](#forwarding).
  
 ## `@part`
 Use `@part` to enable true delegation with `@link`. 
@@ -83,6 +98,8 @@ class MyClass implements Doubler {
   @Override public int getDown() {return 8;}
 }
 ```
+DoublePart's `@part` annotation enables true delegation in MyClass's link. The [Delegation](#delegation) section covers
+more about the what and how of `@part`.
 
 # Forwarding
 Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
@@ -137,7 +154,8 @@ With forwarding, the object handling the calls is unaware of the link defined in
 forwarded calls are one-way tickets. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
 override is ignored.
 
-Generally, linked interface calls within forwarded linked parts are not polymorphic.
+Generally, linked interface calls within forwarded linked parts are not polymorphic. This behavior can be viewed as positive
+or negative, depending on the desired outcome.
 
 
 # Delegation
@@ -278,14 +296,14 @@ interface TA extends Student, Teacher {
 }
 ```
 The student is the teacher, so TaPart shares the link to student with `@link(share=true)` and student is passed along to
-the Teacher constructor.
+the Teacher constructor. Without `share=true` a compiler error indicates the overlap with Person. 
 
 >Note, `part` classes are _not_ required with `@link(share=true)`; it works with both forwarding and delegation.
 
 # Structural interfaces
 
-Sometimes the class you want to link to doesn't implement the interface you want to expose. If you don't control the implementation
-of the class, you can define a [structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
+Sometimes the class you want to link to doesn't nominally implement the interface you want to expose. If you don't control
+the implementation of the class, you can define a [structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
 to map the methods of your choosing.
 ```java
 @Structural
@@ -313,7 +331,7 @@ assertEquals("hi", limitedList.get(0));
 
 # Example
 
-Here is the Student/Teacher example in one place for easier readability.
+Here is the Student/Teacher example in one code sample for easier readability.
 ```java
 interface Person {
     String getName();
@@ -375,8 +393,8 @@ Student student = new StudentPart(person, "CS")
 TA ta = new TAPart(student);
 String titledName = ta.getTitledName();
 System.out.println(titledName);
-
 ```
+
 # IDE Support
 
 Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
@@ -421,8 +439,8 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 
 >Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
-Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 19), the script takes care of the rest.
+Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired JDK
+LTS release (8 - 19) or latest JDK release, the script takes care of the rest.
 ```groovy
 plugins {
     id 'java'
@@ -431,8 +449,8 @@ plugins {
 group 'systems.manifold'
 version '1.0-SNAPSHOT'
 
-targetCompatibility = 11
-sourceCompatibility = 11
+targetCompatibility = 17
+sourceCompatibility = 17
 
 repositories {
     jcenter()
@@ -499,8 +517,8 @@ rootProject.name = 'MyProject'
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>17</source>
+                    <target>17</target>
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <!-- Configure manifold plugin-->
