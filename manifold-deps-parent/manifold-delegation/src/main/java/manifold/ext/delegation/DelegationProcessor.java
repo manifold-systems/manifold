@@ -332,7 +332,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       Iterable<Symbol> defaultMethods = IDynamicJdk.instance().getMembers( (ClassSymbol)classSym,
         m -> m instanceof MethodSymbol && ((MethodSymbol)m).isDefault() );
       defaultMethods.forEach( m -> {
-        MethodSymbol implSym = ((MethodSymbol)m).binaryImplementation( classDecl.sym, getTypes() );
+        MethodSymbol implSym = ((MethodSymbol)m).implementation( classDecl.sym, getTypes(), false );
         if( implSym == null )
         {
           result.add( (MethodSymbol)m );
@@ -581,7 +581,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private void processMethods( JCClassDecl classDecl, LinkInfo li, MethodSymbol m )
     {
-      MethodSymbol existingMethod = m.binaryImplementation( classDecl.sym, getTypes() );
+      MethodSymbol existingMethod = m.implementation( classDecl.sym, getTypes(), false );
       if( existingMethod != null &&
         !getTypes().isSameType( getSymtab().objectType, existingMethod.owner.type ) )
       {
