@@ -329,14 +329,14 @@ interface Student extends Person {
 interface TA extends Student, Teacher {
 }
 
-static @part class PersonPart  implements Person {
+@part class PersonPart  implements Person {
     private final String _name;
     public PersonPart(String name) { _name = name; }
     public String getName() { return _name; }
     public String getTitle() { return "Person"; }
     public String getTitledName() { return getTitle() + " " + getName(); }
 }
-static @part class TeacherPart implements  Teacher {
+@part class TeacherPart implements  Teacher {
     @link Person _person;
     private final String _dept;
     public TeacherPart(Person p, String dept) {
@@ -346,7 +346,7 @@ static @part class TeacherPart implements  Teacher {
     public String getTitle() { return "Teacher"; }
     public String getDept() { return _dept; }
 }
-static @part class StudentPart implements Student {
+@part class StudentPart implements Student {
     @link Person _person;
     private final String _major;
     public StudentPart(Person p, String major) {
@@ -356,7 +356,7 @@ static @part class StudentPart implements Student {
     public String getTitle() { return "Student"; }
     public String getMajor() { return _major; }
 }
-static @part class TAPart implements TA {
+@part class TAPart implements TA {
     @link(share=true) Student _student;
     @link Teacher _teacher;
     public TAPart(Student student) {
@@ -366,15 +366,15 @@ static @part class TAPart implements TA {
     public String getTitle() { return "TA"; }
 }
 
-Person person = new PersonPart("Fred");
-Student student = new StudentPart(person, "CS")
+Person person = new PersonPart("Milton");
+Student student = new StudentPart(person, "CS");
 TA ta = new TAPart(student);
 String titledName = ta.getTitledName();
 System.out.println(titledName);
 ```
 Output:
 ```text
-    Student Milton
+    TA Milton
 ```
 
 # IDE Support
