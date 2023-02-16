@@ -1,11 +1,11 @@
 # Delegation with links & parts
 
-The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and true delegation.
+The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and delegation.
 These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
 
 Use `@link` to automatically transfer calls to unimplemented interface methods through the fields of a class.
 
-* Choose between call forwarding and true delegation with `@part`
+* Choose between call forwarding and delegation with `@part`
 * Override linked interface methods (solves [the Self problem](https://web.media.mit.edu/~lieber/Lieberary/OOP/Delegation/Delegation.html))
 * Share super interface implementations (solves [the Diamond problem](https://en.wikipedia.org/wiki/Multiple_inheritance#The_diamond_problem))
 * Configure class implementation dynamically
@@ -18,7 +18,6 @@ Use `@link` to automatically transfer calls to unimplemented interface methods t
   * [Inheritance](#inheritance) 
   * [Default methods](#default-methods)
 * [Diamonds](#diamonds)
-* [Structural interfaces](#structural-interfaces)
 * [Example](#example)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
@@ -72,11 +71,14 @@ the link.
 Note, `@link` fields are `private` and `final` by default.
 
 Unimplemented interface calls transfer through the link to the assigned value of the field. The value's type determines
-how the calls are transferred. If the type is annotated with [`@part`](#part), calls are transferred using true [delegation](#delegation).
+how the calls are transferred. If the type is annotated with [`@part`](#part), calls are transferred using [delegation](#delegation).
 Otherwise, they are transferred using call [forwarding](#forwarding).
  
 ## `@part`
-Use `@part` to enable true delegation with `@link`. 
+Use `@part` to enable delegation with `@link`.
+
+Generally, a link establishes a "part-of" relationship between the linking object and the linked part. Both objects form
+a single, composite object in terms of the interfaces defined in the link. 
 
 ```java
 interface Doubler {
@@ -97,8 +99,15 @@ class MyClass implements Doubler {
   // overrides doubler's getDown()
   @Override public int getDown() {return 8;}
 }
+
+Doubler doubler = new MyClass();
+out.println(doubler.doubleDown());
 ```
-DoublePart's `@part` annotation enables true delegation in MyClass's link. The [Delegation](#delegation) section covers
+Output:
+```text
+    16
+```
+DoublerPart's `@part` annotation enables delegation in MyClass's link. The [Delegation](#delegation) section covers
 more about the what and how of `@part`.
 
 # Forwarding
@@ -154,7 +163,7 @@ With forwarding, the object handling the calls is unaware of the link defined in
 forwarded calls are one-way tickets. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
 override is ignored.
 
-Generally, linked interface calls within forwarded linked parts are not polymorphic. This behavior can be viewed as positive
+Generally, linked interface calls within forwarded objects are not polymorphic. This behavior can be viewed as positive
 or negative, depending on the desired outcome.
 
 
@@ -300,35 +309,6 @@ the Teacher constructor. Without `share=true` a compiler error indicates the ove
 
 >Note, `part` classes are _not_ required with `@link(share=true)`; it works with both forwarding and delegation.
 
-# Structural interfaces
-
-Sometimes the class you want to link to doesn't nominally implement the interface you want to expose. If you don't control
-the implementation of the class, you can define a [structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-to map the methods of your choosing.
-```java
-@Structural
-interface LimitedList<E> {
-  boolean add(E e);
-  E get( int index );
-  boolean contains(Object e);
-}
-
-class MyLimitedList<E> implements LimitedList<E> {
-  @link LimitedList _list;
-
-  public MyLimitedList(LimitedList  list) {
-    _list = list;
-  }
-}
-
-// ArrayList structurally satisfies LimitedList
-LimitedList<String> arrayList = (LimitedList<String>)new ArrayList<>();  
-MyLimitedList<String> limitedList = new MyLimitedList<>(arrayList);
-limitedList.add("hi");
-assertTrue(limitedList.contains("hi"));
-assertEquals("hi", limitedList.get(0));
-```
-
 # Example
 
 Here is the Student/Teacher example in one code sample for easier readability.
@@ -389,6 +369,10 @@ Student student = new StudentPart(person, "CS")
 TA ta = new TAPart(student);
 String titledName = ta.getTitledName();
 System.out.println(titledName);
+```
+Output:
+```text
+    Student Milton
 ```
 
 # IDE Support

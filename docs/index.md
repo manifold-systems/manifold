@@ -13,33 +13,34 @@ Manifold is a Java compiler plugin. It supplements Java with:
     * [JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)
     * etc.
 * [Extension methods](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
+* [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation) (_**New!**_)
 * [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
-* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple) (_**New!**_)
+* [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 * [Operator overloading](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#operator-overloading)
 * [Unit expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#unit-expressions)
 * [A *Java* template engine](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 * [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 * ...and more
 
-All fully supported in **Java 8 - 19** with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in JDK LTS releases **8 - 19** + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
 ># _**What's New...**_
 > 
->#### [Tuple expressions](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+>#### [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
+> Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and delegation.
 > ```java
-> var t = (person.name, person.age); // tuple expression   
-> out.println("Name: " + t.name + " Age: " + t.age);
+> class MyClass implements MyInterface {
+>   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
+>
+>   public MyClass(MyInterface myInterface) {
+>     this.myInterface = myInterface; // dynamically configure behavior
+>   }
+>
+>   // No need to implement MyInterface here, but you can override myInterface as needed
+> }
 > ```
-> 
->#### [Type inference with `auto`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
-> 
-> `auto` is like `var` but also works with _fields_ and _method return types_
-> 
->#### [Multiple return values](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#multiple-return-values)
-> ```java
->  return min, max;
-> ```
+
 
 ## What can you do with Manifold?
 
@@ -85,6 +86,20 @@ Add your own methods to existing Java classes, even *String*, *List*, and *File*
 String greeting = "hello";
 greeting.myMethod(); // Add your own methods to String!
 ```
+
+### [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
+Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and delegation.
+> ```java
+> class MyClass implements MyInterface {
+>   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
+>
+>   public MyClass(MyInterface myInterface) {
+>     this.myInterface = myInterface; // dynamically configure behavior
+>   }
+>
+>   // No need to implement MyInterface here, but you can override myInterface as needed
+> }
+> ```
 
 ### [Properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 Eliminate boilerplate getter/setter code, improve your overall dev experience with properties.
@@ -253,10 +268,7 @@ template editing, integrated preprocessor, and more.
 
 <p><img src="http://manifold.systems/images/ManifoldPlugin.png" alt="manifold ij plugin" width="60%" height="60%"/></p>
 
-Get the plugin from JetBrains Marketplace:
-
-<iframe frameborder="none" width="245px" height="48px" src="https://plugins.jetbrains.com/embeddable/install/10057">
-</iframe>
+[Get the plugin from JetBrains Marketplace](https://plugins.jetbrains.com/plugin/10057-manifold)
 
 ## [Projects](http://manifold.systems/projects.html)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
@@ -264,9 +276,11 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)<br>
 
-[Manifold : _Java Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
+[Manifold : _Extensions_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)<br>
 
-[Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
+[Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)<br>
+
+[Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>

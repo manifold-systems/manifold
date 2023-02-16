@@ -28,7 +28,9 @@ by the core framework. This document serves as a quick reference to these projec
 * [Manifold : _Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates)
 
 ## Java Compiler Extensions
-* [Manifold : _Java Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+* [Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
+* [Manifold : _Tuples_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
 * [Manifold : _String Templates_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings) <small>(string interpolation)</small>
 * [Manifold : _[Un]checked_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-exceptions)
 
