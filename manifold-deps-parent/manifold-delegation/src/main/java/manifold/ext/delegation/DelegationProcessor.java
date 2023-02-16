@@ -542,7 +542,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         for( ClassType iface : li.getInterfaces() )
         {
           Iterable<Symbol> methods = IDynamicJdk.instance().getMembers( (ClassSymbol)iface.tsym,
-            m -> m instanceof MethodSymbol && !m.isStatic() && (m.flags() & SYNTHETIC) == 0 );
+            m -> m instanceof MethodSymbol && !m.isStatic() && !m.isPrivate() && (m.flags() & SYNTHETIC) == 0 );
           for( Symbol m: methods )
           {
             processMethods( classInfo._classDecl, li, (MethodSymbol)m );
