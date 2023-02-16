@@ -1,6 +1,6 @@
 # Delegation with links & parts
 
-> **⚠ Experimental Feature**
+> **⚠ Experimental**
 
 The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and delegation.
 These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
@@ -79,7 +79,7 @@ Otherwise, they are transferred using call [forwarding](#forwarding).
 ## `@part`
 Use `@part` to enable delegation with `@link`.
 
-Generally, a link establishes a "part-of" relationship between the linking object and the linked part. Both objects form
+Generally, a link establishes a "part-of" relationship between the linking object and the linked object. Both objects form
 a single, composite object in terms of the interfaces defined in the link. 
 
 ```java
@@ -195,7 +195,7 @@ always refers to the root in terms of the interfaces defined by the links. Other
 to directly refer to a non-root part, delegation is broken.
 
 Essentially, polymorphic calls are compromised when a direct reference to a part bypasses the root. Therefore, `part` classes
-are not permitted to reference `this` in a context other than a linked interface.
+are not permitted to reference `this` in a context other than a declared interface.
 
 Invalid `this` usages in `part` classes result in compile error: `Part class 'this' must be used as an interface here`. 
 ```java
@@ -214,6 +214,7 @@ Invalid `this` usages in `part` classes result in compile error: `Part class 'th
     }
 }
 ```
+Note, `@part` classes are not confined to usage as linked objects. They can be used anywhere for any purpose. 
 
 ### Inheritance
 
