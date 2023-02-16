@@ -325,11 +325,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-science:2022.1.38'
+    implementation 'systems.manifold:manifold-science:2023.1.0'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-ext:2022.1.38'
-    testAnnotationProcessor 'systems.manifold:manifold-ext:2022.1.38'
+    annotationProcessor 'systems.manifold:manifold-ext:2023.1.0'
+    testAnnotationProcessor 'systems.manifold:manifold-ext:2023.1.0'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -365,7 +365,7 @@ rootProject.name = 'MyExtProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2022.1.38</manifold.version>
+        <manifold.version>2023.1.0</manifold.version>
     </properties>
     
     <dependencies>
@@ -409,7 +409,7 @@ rootProject.name = 'MyExtProject'
 # Javadoc
 
 `manifold-science`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-science/2022.1.38/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-science/2022.1.38)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-science/2023.1.0/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-science/2023.1.0)
 
 
 # License
