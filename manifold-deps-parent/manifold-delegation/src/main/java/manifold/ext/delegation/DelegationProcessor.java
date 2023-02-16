@@ -53,6 +53,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.sun.tools.javac.code.Flags.FINAL;
+import static com.sun.tools.javac.code.Flags.SYNTHETIC;
 import static java.lang.reflect.Modifier.*;
 import static manifold.ext.delegation.DelegationIssueMsg.*;
 import static manifold.ext.delegation.Util.getAnnotation;
@@ -330,7 +331,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
       Iterable<Symbol> defaultMethods = IDynamicJdk.instance().getMembers( (ClassSymbol)classSym,
-        m -> m instanceof MethodSymbol && ((MethodSymbol)m).isDefault() );
+        m -> m instanceof MethodSymbol && ((MethodSymbol)m).isDefault() && (m.flags() & SYNTHETIC) == 0 );
       defaultMethods.forEach( m -> {
         MethodSymbol implSym = ((MethodSymbol)m).implementation( classDecl.sym, getTypes(), false );
         if( implSym == null )
@@ -541,7 +542,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         for( ClassType iface : li.getInterfaces() )
         {
           Iterable<Symbol> methods = IDynamicJdk.instance().getMembers( (ClassSymbol)iface.tsym,
-            m -> m instanceof MethodSymbol && !m.isStatic() );
+            m -> m instanceof MethodSymbol && !m.isStatic() && (m.flags() & SYNTHETIC) == 0 );
           for( Symbol m: methods )
           {
             processMethods( classInfo._classDecl, li, (MethodSymbol)m );
