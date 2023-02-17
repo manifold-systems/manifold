@@ -15,6 +15,7 @@ Use `@link` to automatically transfer calls to unimplemented interface methods t
 ## Table of Contents
 * [Basic usage](#basic-usage)
 * [Forwarding](#forwarding)
+  * [A one-way flight](#a-one-way-flight)
 * [Delegation](#delegation)
   * [Self-preservation](#self-preservation) 
   * [Inheritance](#inheritance) 
@@ -79,7 +80,7 @@ Otherwise, they are transferred using call [forwarding](#forwarding).
 ## `@part`
 Use `@part` to enable delegation with `@link`.
 
-Generally, a link establishes a "part-of" relationship between the linking object and the linked object. Both objects form
+Generally, a link establishes a "part-of" relationship between the linking object and the linked `part`. Both objects form
 a single, composite object in terms of the interfaces defined in the link. 
 
 ```java
@@ -118,7 +119,22 @@ the methods on another object that implements the interface.
 
 With `@link` this process is handled automatically.
 
+A simple example demonstrating interface composition via forwarding with a map.
+```java
+public class StringMap<E> implements Map<String, E> {
+  @link Map<String, E> map = new HashMap<>();
+
+  public boolean equals(Object o) {return map.equals(o);}
+  public int hashCode() {return map.hashCode();}
+}
+``` 
+The advantage over implementation inheritance is that the implementation of StringMap is decoupled from HashMap; only the Map
+interface is exposed. `@link` performs the grunt work of forwarding unimplemented Map calls.
+                                                                                                    
+### A one-way flight
+
 Here, StudentPart uses `@link` to automatically transfer calls to unimplemented Person methods to the `person` field.
+But PersonPart does something interesting, its implementation of `getTitledName()` calls other Person methods. 
 
 ```java
 interface Student extends Person {
@@ -162,7 +178,7 @@ Output:
     Person Milton
 ```
 With forwarding, the object handling the calls is unaware of the link defined in the forwarding object. As a consequence,
-forwarded calls are one-way tickets. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
+forwarded calls are one-way flights. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
 override is ignored.
 
 Generally, linked interface calls within forwarded objects are not polymorphic. This behavior can be viewed as positive
@@ -258,7 +274,7 @@ interface Person {
 }
 ```  
 Calls must behave identically regardless of where the method is implemented; polymorphism must be preserved when using `part`
-classes. As such the call to `student.getTitledName()` dispatches dynamically as before:
+classes. As such, the call to `student.getTitledName()` dispatches dynamically as before:
 ```text
     Student Milton
 ```    
@@ -331,38 +347,38 @@ interface TA extends Student, Teacher {
 }
 
 @part class PersonPart  implements Person {
-    private final String _name;
-    public PersonPart(String name) { _name = name; }
-    public String getName() { return _name; }
+    private final String name;
+    public PersonPart(String name) { this.name = name; }
+    public String getName() { return name; }
     public String getTitle() { return "Person"; }
     public String getTitledName() { return getTitle() + " " + getName(); }
 }
 @part class TeacherPart implements  Teacher {
-    @link Person _person;
-    private final String _dept;
-    public TeacherPart(Person p, String dept) {
-        _person = p;
-        _dept = dept;
+    @link Person person;
+    private final String dept;
+    public TeacherPart(Person person, String dept) {
+        this.person = person;
+        this.dept = dept;
     }
     public String getTitle() { return "Teacher"; }
-    public String getDept() { return _dept; }
+    public String getDept() { return dept; }
 }
 @part class StudentPart implements Student {
-    @link Person _person;
-    private final String _major;
-    public StudentPart(Person p, String major) {
-        _person = p;
-        _major = major;
+    @link Person person;
+    private final String major;
+    public StudentPart(Person person, String major) {
+        this.person = person;
+        thls.major = major;
     }
     public String getTitle() { return "Student"; }
-    public String getMajor() { return _major; }
+    public String getMajor() { return major; }
 }
 @part class TAPart implements TA {
-    @link(share=true) Student _student;
-    @link Teacher _teacher;
+    @link(share=true) Student student;
+    @link Teacher teacher;
     public TAPart(Student student) {
-        _student = student;
-        _teacher = new TeacherPart(_student, "Math");
+        this.student = student;
+        this.teacher = new TeacherPart(_student, "Math");
     }
     public String getTitle() { return "TA"; }
 }
@@ -380,7 +396,7 @@ Output:
 
 # IDE Support
 
-Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
+Delegation with links & parts is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
 
 ## Install
 
@@ -521,11 +537,6 @@ rootProject.name = 'MyProject'
     </build>
 </project>
 ```
-
-## Javadoc agent
-
-See [Javadoc agent](http://manifold.systems/javadoc-agent.html) for details about integrating specific language extensions
-with javadoc.
 
 # Javadoc
 
