@@ -110,8 +110,10 @@ Output:
 ```text
     16
 ```
-DoublerPart's `@part` annotation enables delegation in MyClass's link. The [Delegation](#delegation) section covers
-more about the what and how of `@part`.
+DoublerPart's `@part` annotation enables _true_ delegation in MyClass's link.
+
+The takeaway from this example is DoublerPart's call to `getDown()` calls MyClass's `getDown()`, indicating linked interfaces
+are polymorphic wrt `part` classes. The [Delegation](#delegation) section covers more about the what and how of `@part`.
 
 # Forwarding
 Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
