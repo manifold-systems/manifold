@@ -228,6 +228,10 @@ Invalid `this` usages in `part` classes result in compile error: `Part class 'th
     private MyPart privateMethod(MyPart a) {
         return this; // compile error
     }
+
+    private MyInterface otherMethod(MyPart a) {
+        return this; // ok
+    }
 }
 ```
 Note, `@part` classes are not confined to usage as linked objects. They can be used anywhere for any purpose. 
@@ -373,10 +377,10 @@ interface TA extends Student, Teacher {
     public String getTitle() { return "Student"; }
     public String getMajor() { return major; }
 }
-@part class TAPart implements TA {
+@part class TaPart implements TA {
     @link(share=true) Student student;
     @link Teacher teacher;
-    public TAPart(Student student) {
+    public TaPart(Student student) {
         this.student = student;
         this.teacher = new TeacherPart(_student, "Math");
     }
@@ -385,7 +389,7 @@ interface TA extends Student, Teacher {
 
 Person person = new PersonPart("Milton");
 Student student = new StudentPart(person, "CS");
-TA ta = new TAPart(student);
+TA ta = new TaPart(student);
 String titledName = ta.getTitledName();
 System.out.println(titledName);
 ```
