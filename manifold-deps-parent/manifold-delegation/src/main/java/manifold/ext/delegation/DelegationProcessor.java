@@ -1172,6 +1172,10 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       if( parent instanceof JCFieldAccess )
       {
         JCFieldAccess fa = (JCFieldAccess)parent;
+        if( !(fa.sym instanceof MethodSymbol) )
+        {
+          return false;
+        }
         MethodSymbol sym = (MethodSymbol)fa.sym;
         Pair<JCClassDecl, Type> enclClass_Iface = findInterfaceOfEnclosingTypeThatSymImplements( sym );
         if( enclClass_Iface == null )
