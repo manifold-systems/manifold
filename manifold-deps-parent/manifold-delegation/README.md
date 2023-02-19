@@ -338,62 +338,69 @@ the Teacher constructor. Without `share=true` a compiler error indicates the ove
 
 Here is the Student/Teacher example in one code sample for easier readability.
 ```java
-interface Person {
+import manifold.ext.delegation.rt.api.link;
+import manifold.ext.delegation.rt.api.part;
+
+public class DelegationExample {
+  interface Person {
     String getName();
     String getTitle();
     String getTitledName();
-}
-interface Teacher extends Person {
+  }
+  interface Teacher extends Person {
     String getDept();
-}
-interface Student extends Person {
+  }
+  interface Student extends Person {
     String getMajor();
-}
-interface TA extends Student, Teacher {
-}
+  }
+  interface TA extends Student, Teacher {
+  }
 
-@part class PersonPart  implements Person {
+  static @part class PersonPart  implements Person {
     private final String name;
     public PersonPart(String name) { this.name = name; }
     public String getName() { return name; }
     public String getTitle() { return "Person"; }
     public String getTitledName() { return getTitle() + " " + getName(); }
-}
-@part class TeacherPart implements  Teacher {
+  }
+  static @part class TeacherPart implements  Teacher {
     @link Person person;
     private final String dept;
     public TeacherPart(Person person, String dept) {
-        this.person = person;
-        this.dept = dept;
+      this.person = person;
+      this.dept = dept;
     }
     public String getTitle() { return "Teacher"; }
     public String getDept() { return dept; }
-}
-@part class StudentPart implements Student {
+  }
+  static @part class StudentPart implements Student {
     @link Person person;
     private final String major;
     public StudentPart(Person person, String major) {
-        this.person = person;
-        thls.major = major;
+      this.person = person;
+      this.major = major;
     }
     public String getTitle() { return "Student"; }
     public String getMajor() { return major; }
-}
-@part class TaPart implements TA {
+  }
+  static @part class TaPart implements TA {
     @link(share=true) Student student;
     @link Teacher teacher;
     public TaPart(Student student) {
-        this.student = student;
-        this.teacher = new TeacherPart(_student, "Math");
+      this.student = student;
+      this.teacher = new TeacherPart(student, "Math");
     }
     public String getTitle() { return "TA"; }
-}
+  }
 
-Person person = new PersonPart("Milton");
-Student student = new StudentPart(person, "CS");
-TA ta = new TaPart(student);
-String titledName = ta.getTitledName();
-System.out.println(titledName);
+  public static void main(String[] args) {
+    Person person = new PersonPart("Milton");
+    Student student = new StudentPart(person, "CS");
+    TA ta = new TaPart(student);
+    String titledName = ta.getTitledName();
+    System.out.println(titledName);
+  }
+}
 ```
 Output:
 ```text
