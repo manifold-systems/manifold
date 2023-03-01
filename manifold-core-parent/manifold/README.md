@@ -4,9 +4,13 @@
 
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
 as a universal *type* adapter to allow for a direct and seamless supply of types and features otherwise inaccessible to
-Java's type system. As such the Manifold core framework provides a foundation and plugin SPI to dynamically resolve
-type names and produce corresponding Java sources, and to more generally augment Java's type system. Such a plugin is
-called a *type manifold* and implements the `ITypeManifold` SPI. 
+Java's type system. The core library provides a foundation and plugin SPI to dynamically resolve type names and produce
+Java sources on demand, and to more generally augment Java's type system. A plugin implementing the `ITypeManifold` SPI
+is called a *type manifold*.
+
+A type manifold can provide new types corresponding with any type of structured data such as JSON, XML, GraphQL, and even
+languages like JavaScript. Additionally, a type manifold can supplement existing types with additional methods, properties,
+interfaces, annotations, etc.
 
 ## Table of Contents
 * [The Big Picture](#the-big-picture)
@@ -30,38 +34,35 @@ called a *type manifold* and implements the `ITypeManifold` SPI.
 
 # The Big Picture
 
-You can think of a type manifold as a **_just-in-time_ code generator**. Essentially the Manifold framework plugs in and
+You can think of a type manifold as a **_just-in-time_ code generator**. Essentially, the Manifold framework plugs in and
 overrides the compiler's type resolver so that, via the `ITypeManifold` SPI, a type manifold can claim ownership of
-type names as the compiler encounters them and dynamically provide source code corresponding with the types. As a
-consequence this core functionality serves as a productive alternative to conventional code generation techniques, a
-long overdue advancement for static typing. 
+type names as the compiler encounters them and dynamically provide source code corresponding with the types. This core functionality
+serves as a productive alternative to conventional code generation techniques. 
 
-To begin with, because the framework plugs directly into the compiler, a code generator as a type manifold *is no longer
-a separate build step*. What's more a type manifold generates code on-demand as the compiler asks for types. Not only
-does this significantly reduce the complexity of code generators, it also enables them to function *incrementally*. This
-means resources on which the generated sources are based can be edited and only the types corresponding with the changes
-will be regenerated and recompiled. Thus, contrary to conventional code generators, type manifolds:
+Because the framework plugs directly into the compiler, a code generator written as a type manifold *is no longer
+a separate build step*, it generates code on-demand as the compiler asks for types. This significantly reduces
+the complexity of code generation and enables it to function *incrementally*. Thus, contrary to conventional code generations
+techniques, type manifolds:
 * require **_zero_ build steps**
-* produce **_zero_ on-disk source code**
+* produce **_zero_ on-disk source code** (but can if desired)
 * are by definition **always in sync** with resources
 * are **inherently incremental** resulting in **optimal build times** 
 * are **dead simple to use** - just add a dependency to your project
 
-Moreover, type manifolds can *cooperate* and contribute source to types in different ways. Most often a type manifold
+Additionally, type manifolds can cooperate and contribute source/types in different ways. Most often a type manifold
 registers as a *primary* contributor to supply the main body of the type. The [JSON type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
 for example, is a *primary* contributor because it supplies the full type definition corresponding with a JSON Schema
 file or sample file. Alternatively, a type manifold can be a *partial* or *supplementary* contributor. For instance, the
 [Extension type manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext)
 is a *supplementary* contributor because it augments an existing type with additional methods, interfaces, and other
-features.  Thus both the JSON and Extension type manifolds can contribute to the same type, where the JSON manifold
+features.  Thus, both the JSON and Extension type manifolds can contribute to the same type, where the JSON manifold
 supplies the main body and the Extension type manifold contributes custom methods and other features provided by [extension classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext##extension-classes-via-extension).
 As a consequence any number of type manifolds can operate in concert to form an efficient and powerful type building
-pipeline, thus unlike conventional code generators, type manifolds:
-* can easily **have dependencies on one another**
-* can easily **contribute to one another's types**
-* are **customizable with _extensions_**
+pipeline, therefore, unlike conventional code generators, type manifolds:
+* can easily **cooperate**
+* are inherently **extensible**
 
-Finally, the Manifold core framework can be used from IDEs and other tooling to provide consistent, unified access to
+The core framework can also be used from IDEs and other tooling to provide consistent, unified access to
 the types and features produced from all type manifolds. For instance, the [Manifold plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold)
 provides comprehensive support for the Manifold framework. All types and features produced from type manifolds and other
 Manifold SPIs are fully supported. You can edit resources such as JSON and GraphQL files and immediately use the changes
