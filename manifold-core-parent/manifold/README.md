@@ -40,7 +40,7 @@ serves as a productive alternative to conventional code generation techniques.
 
 Because the framework plugs directly into the compiler, a code generator written as a type manifold *is no longer
 a separate build step*, it generates code on-demand as the compiler asks for types. This significantly reduces
-the complexity of code generation and enables it to function *incrementally*. Thus, contrary to conventional code generations
+the complexity of code generation and enables it to function *incrementally*. Thus, contrary to conventional code generation
 techniques, type manifolds:
 * require **_zero_ build steps**
 * produce **_zero_ on-disk source code** (but can if desired)
