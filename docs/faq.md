@@ -11,8 +11,7 @@ layout: default
 
 #### Q: Does Manifold support Java 11? 17? 8?
 Manifold fully supports all LTS versions since JDK 8, which includes 8, 11, and 17. Additionally, manifold works with
-the latest non-LTS version, at the moment 19. Manifold also fully supports the Java Platform Module System (JPMS). See
-the [Setup Guide](http://manifold.systems/docs.html#setup) for more info.
+the latest non-LTS version, at the moment 19. Manifold also fully supports the Java Platform Module System (JPMS).
 
 #### Q: Manifold is somehow using Java internal APIs to do its magic. Could it break in a future version of Java?
 Unlikely.  Java internal APIs can and do change from version to version, sometimes dramatically, however Manifold always

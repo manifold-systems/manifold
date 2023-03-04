@@ -270,7 +270,7 @@ template editing, integrated preprocessor, and more.
 
 [Get the plugin from JetBrains Marketplace](https://plugins.jetbrains.com/plugin/10057-manifold)
 
-## [Projects](http://manifold.systems/projects.html)
+## [Projects](https://github.com/manifold-systems/manifold)
 The Manifold project consists of the core Manifold framework and a collection of sub-projects implementing SPIs provided
 by the core framework. Each project consists of one or more **dependencies** you can easily add to your project:
 
@@ -281,6 +281,8 @@ by the core framework. Each project consists of one or more **dependencies** you
 [Manifold : _Delegation_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)<br>
 
 [Manifold : _Properties_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)<br>
+
+[Manifold : _Tuples_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)<br>
 
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>

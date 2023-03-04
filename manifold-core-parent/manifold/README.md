@@ -1,5 +1,3 @@
-![manifold framework](http://manifold.systems/images/manifold_framework.png)
-
 # Manifold : Core
 
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
