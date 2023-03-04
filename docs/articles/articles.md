@@ -22,14 +22,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/java-type-safe-171944.html"><img width="240" height="135" src="/images/mco.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/java-type-safe-171944"><img width="240" height="135" src="/images/mco.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/java-type-safe-171944.html">Type-safe Unit Expressions for Java (and you)</a></p>
+  <p><a href="https://devm.io/java/java-type-safe-171944">Type-safe Unit Expressions for Java (and you)</a></p>
   <p>Unit type-safety, or lack thereof, can have real consequences, sometimes disastrous ones. This article briefly
   demonstrates how the Manifold framework’s extension and science libraries can be applied toward a general solution
   using type-safe units and quantities.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -37,14 +37,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/graphql-made-easy-169181.html"><img width="240" height="135" src="/images/graphql.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/graphql-made-easy-169181"><img width="240" height="135" src="/images/graphql.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/graphql-made-easy-169181.html">GraphQL Made Easy</a></p>
+  <p><a href="https://devm.io/java/graphql-made-easy-169181">GraphQL Made Easy</a></p>
   <p>GraphQL has thoroughly captivated the API world, due in no small part to its uniquely expressive API query
   language. But using it type-safely from Java poses a challenge, as language barriers tend to do. Scott McKinney
   demonstrates how to reach beyond expectations and provide truly seamless, type-safe GraphQL access from Java.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -52,15 +52,15 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-operator-overloading-java-163232.html"><img width="240" height="135" src="/images/math.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-operator-overloading-java-163232"><img width="240" height="135" src="/images/math.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-operator-overloading-java-163232.html">Operator Overloading for Java</a></p>
+  <p><a href="https://devm.io/java/manifold-operator-overloading-java-163232">Operator Overloading for Java</a></p>
   <p>Finally you can use <i>BigDecimal</i> and other Java types directly in arithmetic and relational operations by
   incorporating a feature called operator overloading into your project. In this article, Scott McKinney walks you
   through this new capability provided by the Manifold project. Along the way he discusses other interesting features
   built atop operator overloading including unit expressions.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -68,14 +68,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-java-access-control-161882"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-java-access-control-161882.html">Java Access Control, Stop the Insanity!</a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md">Java Access Control, Stop the Insanity!</a></p>
   <p>Java access modifiers <code>protected</code>, <code>package</code>, and <code>private</code> are enforced <i>both</i> by
      the compiler and the JVM. Here Scott McKinney explains why this is <i>insane</i> and how access to internals could
      be made much simpler and <i>type-safe</i>.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -83,14 +83,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-say-goodbye-to-checked-exceptions-161065"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-say-goodbye-to-checked-exceptions-161065.html">Say Goodbye to Checked Exceptions</a></p>
+  <p><a href="https://devm.io/java/manifold-say-goodbye-to-checked-exceptions-161065">Say Goodbye to Checked Exceptions</a></p>
   <p>Modern languages don’t do checked exceptions. But you don’t have to jump ship to share the experience. In this
   article Scott McKinney shows you how to stick with Java and completely neutralize checked exceptions with a simple
   new addition to the <a href="http://manifold.systems/">Manifold framework</a>.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -98,14 +98,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-preprocessor-for-java-160712"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-preprocessor-for-java-160712.html">A <i>Preprocessor</i> for Java</a></p>
+  <p><a href="https://devm.io/java/manifold-preprocessor-for-java-160712">A <i>Preprocessor</i> for Java</a></p>
   <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
      project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
      provide seamless conditional compilation using familiar directives.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -113,14 +113,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
+  <p><a href="https://devm.io/java/type-safe-jailbreak-manifold-159177"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/type-safe-jailbreak-manifold-159177.html">Type-safe reflection code with <code>@Jailbreak</code></a></p>
+  <p><a href="https://devm.io/java/type-safe-jailbreak-manifold-159177">Type-safe reflection code with <code>@Jailbreak</code></a></p>
   <p>Ever overexpose fields and methods just so they can be accessed from tests? Ever write reflection code in order to
      access private class members? You can stop doing that now. Maintain integrity and type-safety with @Jailbreak from
      the Manifold project.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -128,14 +128,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/rest-api-vision-manifold-156110.html"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/rest-api-vision-manifold-156110"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/rest-api-vision-manifold-156110.html">REST API <i>Vision</i> with Manifold</a></p>
+  <p><a href="https://devm.io/java/rest-api-vision-manifold-156110">REST API <i>Vision</i> with Manifold</a></p>
   <p>Discover how to use Manifold to enable JSON Schema as your REST API single source of truth (SSoT). Scott McKinney
      explains how the new Manifold framework connects your JSON Schema and YAML resources directly to Java without code
      generators, annotated POJOs, or other go-betweens.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -143,12 +143,12 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-code-generator-part-2-151762"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generator-part-2-151762.html">Manifold: Extension methods for Java?! (Part 2) - JAXenter</a></p>
+  <p><a href="https://devm.io/java/manifold-code-generator-part-2-151762">Manifold: Extension methods for Java?! (Part 2) - JAXenter</a></p>
   <p>Scott McKinney discusses Extension Classes, an innovative feature that enables you to supplement a class with your own methods, interfaces, and other features.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
 
@@ -156,14 +156,14 @@ layout: default
 
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generators-150738.html"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
+  <p><a href="https://devm.io/java/manifold-code-generators-150738"><img width="240" height="135" src="/images/shutterstock_739795408-350x197.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-code-generators-150738.html">Manifold: The reinvention of code generators (Part 1) - JAXenter</a></p>
+  <p><a href="https://devm.io/java/manifold-code-generators-150738">Manifold: The reinvention of code generators (Part 1) - JAXenter</a></p>
   <p>Manifold offers cutting edge language features for Java devs. 
             Scott McKinney discusses Manifold's reinvention of code generators, 
 			namely Type Manifolds.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
@@ -171,14 +171,14 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://jaxenter.com/manifold-alien-technology-142755.html"><img width="240" height="135" src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
+  <p><a href="https://devm.io/java/manifold-alien-technology-142755"><img width="240" height="135" src="/images/shutterstock_164685149-350x233.jpg" alt="b"></a></p>
   </td>
   <td>
-  <p><a href="https://jaxenter.com/manifold-alien-technology-142755.html">Manifold: Alien technology - JAXenter</a></p>
+  <p><a href="https://devm.io/java/manifold-alien-technology-142755">Manifold: Alien technology - JAXenter</a></p>
   <p>Manifold is out of this world: this framework allows developers to dynamically and seamlessly 
             extend Java’s type system. In this article, Scott McKinney explores how the Manifold framework 
 			makes Java development more appealing and productive.</p>
-  <p><small>jaxenter.com</small></p>
+  <p><small>devm.io</small></p>
   </td>
  </tr>
  
