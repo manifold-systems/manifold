@@ -328,5 +328,4 @@ Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
-## [Learn More](http://manifold.systems/docs.html)
 <br>
