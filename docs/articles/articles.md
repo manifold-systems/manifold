@@ -68,7 +68,7 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-java-access-control-161882"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md"><img width="240" height="135" src="/images/crazy-pills.jpg" alt="a"></a></p>
   </td>
   <td>
   <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/reflection.md">Java Access Control, Stop the Insanity!</a></p>
@@ -83,10 +83,10 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-say-goodbye-to-checked-exceptions-161065"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/unchecked.md"><img width="240" height="135" src="/images/unchecked.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://devm.io/java/manifold-say-goodbye-to-checked-exceptions-161065">Say Goodbye to Checked Exceptions</a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/unchecked.md">Say Goodbye to Checked Exceptions</a></p>
   <p>Modern languages don’t do checked exceptions. But you don’t have to jump ship to share the experience. In this
   article Scott McKinney shows you how to stick with Java and completely neutralize checked exceptions with a simple
   new addition to the <a href="http://manifold.systems/">Manifold framework</a>.</p>
@@ -98,10 +98,10 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/manifold-preprocessor-for-java-160712"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/preprocessor.md"><img width="240" height="135" src="/images/preprocessor_article.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://devm.io/java/manifold-preprocessor-for-java-160712">A <i>Preprocessor</i> for Java</a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/preprocessor.md">A <i>Preprocessor</i> for Java</a></p>
   <p>Discover how to build multiple targets from a single Java codebase using the new preprocessor from the Manifold
      project. In this article Scott McKinney explains how the preprocessor plugs directly into Java’s compiler to
      provide seamless conditional compilation using familiar directives.</p>
@@ -113,10 +113,10 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/type-safe-jailbreak-manifold-159177"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/jailbreak.md"><img width="240" height="135" src="/images/jailbreak.png" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://devm.io/java/type-safe-jailbreak-manifold-159177">Type-safe reflection code with <code>@Jailbreak</code></a></p>
+  <p><a href="https://github.com/manifold-systems/manifold/blob/master/docs/articles/jailbreak.md">Type-safe reflection code with <code>@Jailbreak</code></a></p>
   <p>Ever overexpose fields and methods just so they can be accessed from tests? Ever write reflection code in order to
      access private class members? You can stop doing that now. Maintain integrity and type-safety with @Jailbreak from
      the Manifold project.</p>
@@ -251,10 +251,10 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://entwickler.de/leseproben/manifold-nicht-von-dieser-welt-579872136.html"><img width="240" height="135" src="/images/entwickler.png" alt="c"></a></p>
+  <p><a href="https://entwickler.de/java/nicht-von-dieser-welt"><img width="240" height="135" src="/images/entwickler.png" alt="c"></a></p>
   </td>
   <td>
-  <p><a href="https://entwickler.de/leseproben/manifold-nicht-von-dieser-welt-579872136.html">Manifold: Nicht von dieser Welt - entwickler</a></p>
+  <p><a href="https://entwickler.de/java/nicht-von-dieser-welt">Manifold: Nicht von dieser Welt - entwickler</a></p>
   <p>Java schließt mit Manifold die Lücke zu vielen Funktionen, die bisher ausschließlich dynamischen Sprachen vorbehalten waren. 
      Darüber hinaus liefert Manifold diese Eigenschaften mit intakter Typsicherheit. Metaprogrammierung, Extension Classes und strukturelle Typisierung sind leicht verfügbar und vollständig in IntelliJ IDEA integriert.</p>
   <p><small>entwickler.de</small></p>
