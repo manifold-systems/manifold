@@ -128,10 +128,10 @@ layout: default
  
  <tr>
   <td>
-  <p><a href="https://devm.io/java/rest-api-vision-manifold-156110"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931"><img width="240" height="135" src="/images/shutterstock_225924757.jpg" alt="a"></a></p>
   </td>
   <td>
-  <p><a href="https://devm.io/java/rest-api-vision-manifold-156110">REST API <i>Vision</i> with Manifold</a></p>
+  <p><a href="https://jaxenter.de/rest-api-vision-mit-manifold-80931">REST API <i>Vision</i> with Manifold</a></p>
   <p>Discover how to use Manifold to enable JSON Schema as your REST API single source of truth (SSoT). Scott McKinney
      explains how the new Manifold framework connects your JSON Schema and YAML resources directly to Java without code
      generators, annotated POJOs, or other go-betweens.</p>
