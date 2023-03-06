@@ -180,11 +180,11 @@ Output:
     Person Milton
 ```
 With forwarding, the object handling the calls is unaware of the link defined in the forwarding object. As a consequence,
-forwarded calls are one-way flights. The call to `getTitle()` from `Person#getTitledName()` is invoked statically, StudentPart's
-override is ignored.
+forwarded calls are one-way flights. The call to `getTitle()` from `PersonPart#getTitledName()` is invoked _statically_,
+StudentPart's override is ignored.
 
-Generally, linked interface calls within forwarded objects are not polymorphic. This behavior can be viewed as positive
-or negative, depending on the desired outcome.
+Generally, linked interface calls within forwarded objects are not polymorphic. This behavior is often referred to as
+_the Self problem_.
 
 
 # Delegation
@@ -203,7 +203,7 @@ With `@part` the call to `student.getTitledName()` results in:
     Student Milton
 ```
 Inside PersonPart `this` refers to StudentPart in terms of the Person interface. Thus, the call to `getTitle()` dispatches
-_dynamically_ to StudentPart.
+_dynamically_. This "true" form of delegation solves _the Self problem_.
 
 ### Self-preservation
 
