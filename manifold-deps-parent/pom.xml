@@ -74,6 +74,9 @@
     <module>manifold-test</module>
     <module>manifold-text</module>
     <module>manifold-text-test</module>
+    <module>manifold-typealias</module>
+    <module>manifold-typealias-rt</module>
+    <module>manifold-typealias-test</module>
     <module>manifold-xml</module>
     <module>manifold-xml-rt</module>
     <module>manifold-xml-test</module>

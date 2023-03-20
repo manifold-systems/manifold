@@ -354,6 +354,19 @@ public interface ManAttr
     }
   }
 
+  default void patchTypeAlias( JCTree tree )
+  {
+    if( TypeAliasTranslator.TRANSFORMER != null )
+    {
+      JCTree ret = TypeAliasTranslator.TRANSFORMER.transform( tree );
+      if( ret != null )
+      {
+        // redirect to new tree, and then cancel the old tree.
+        ret.accept( (Attr)this );
+      }
+    }
+  }
+
   default JCTree.JCMethodDecl findJCMethodDef( JCTree.JCClassDecl tree, Symbol.MethodSymbol msym )
   {
     for( JCTree def: tree.defs )
@@ -389,6 +402,11 @@ public interface ManAttr
       return (JCTree.JCClassDecl)tree;
     }
     return getEnclosingClass( JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel ) );
+  }
+
+  default JCTree getParent( JCTree tree )
+  {
+    return (JCTree)JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
   }
 
   default boolean isAutoType( Type type )

@@ -17,6 +17,8 @@ import com.sun.tools.javac.util.Names;
 import java.util.HashSet;
 import java.util.Set;
 import javax.tools.JavaFileObject;
+
+import manifold.api.util.JavacUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -28,6 +30,7 @@ public class ManClassFinder_11 extends ClassFinder
   private final Context _ctx;
   private final ModuleFinder _moduleFinder;
   private final Symtab _symtab;
+  private final boolean _allowsJailbreak;
 
   public static ManClassFinder_11 instance( Context ctx )
   {
@@ -48,6 +51,7 @@ public class ManClassFinder_11 extends ClassFinder
     _ctx = context;
     _symtab = Symtab.instance( _ctx );
     _moduleFinder = ModuleFinder.instance( _ctx );
+    _allowsJailbreak = JavacUtil.getSourceNumber() > 8;  // don't override if -source 8
 
     JavaCompiler compiler = JavaCompiler.instance( context );
     ReflectUtil.field( compiler, "finder" ).set( this );
@@ -60,6 +64,24 @@ public class ManClassFinder_11 extends ClassFinder
 
   @Override
   public Symbol.ClassSymbol loadClass( Symbol.ModuleSymbol msym, Name flatname ) throws Symbol.CompletionFailure
+  {
+    Symbol.ClassSymbol classSymbol;
+    if( _allowsJailbreak )
+    {
+      classSymbol = loadClassFromJailbreak( msym, flatname );
+    } 
+    else
+    {
+      classSymbol = super.loadClass( msym, flatname );
+    }
+    if( TypeAliasTranslator.IMPORTER != null )
+    {
+      TypeAliasTranslator.IMPORTER.accept( flatname, classSymbol );
+    }
+    return classSymbol;
+  }
+  
+  private Symbol.ClassSymbol loadClassFromJailbreak(Symbol.ModuleSymbol msym, Name flatname ) throws Symbol.CompletionFailure
   {
     try
     {

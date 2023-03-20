@@ -137,6 +137,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     {
       super.visitSelect( tree );
       patchAutoFieldType( tree );
+      patchTypeAlias( tree );
     }
     finally
     {
@@ -476,6 +477,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     super.visitIdent( tree );
     patchAutoFieldType( tree );
+    patchTypeAlias(tree);
   }
 
   /**

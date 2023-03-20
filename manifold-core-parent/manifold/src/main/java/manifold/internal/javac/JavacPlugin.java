@@ -459,12 +459,15 @@ public class JavacPlugin implements Plugin, TaskListener
 
       NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
 
-      if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
-      {
-        // Override javac's ClassFinder
-        ReflectUtil.method( "manifold.internal.javac.ManClassFinder_11", "instance", Context.class )
-          .invokeStatic( getContext() );
-      }
+      // Override javac's ClassFinder
+      ReflectUtil.method( "manifold.internal.javac.ManClassFinder_11", "instance", Context.class )
+              .invokeStatic( getContext() );
+    }
+    else
+    {
+      // Override javac's ClassReader(ClassFinder)
+      ReflectUtil.method( "manifold.internal.javac.ManClassFinder_8", "instance", Context.class )
+              .invokeStatic( getContext() );
     }
     notifyCompilerComponents();
   }
