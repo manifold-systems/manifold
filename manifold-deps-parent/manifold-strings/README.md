@@ -161,11 +161,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2023.1.3'
+    compileOnly 'systems.manifold:manifold-rt:2023.1.4'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-strings:2023.1.3'
-    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.3'
+    annotationProcessor 'systems.manifold:manifold-strings:2023.1.4'
+    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.4'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -207,7 +207,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.3</manifold.version>
+        <manifold.version>2023.1.4</manifold.version>
     </properties>
 
     <dependencies>
