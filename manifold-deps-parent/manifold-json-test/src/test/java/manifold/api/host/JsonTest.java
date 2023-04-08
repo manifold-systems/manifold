@@ -586,8 +586,8 @@ public class JsonTest extends TestCase
 
   public void testAdditionalProperties()
   {
-    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(0).build();
-    assertEquals( 0, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
+    HasReadOnlyEtc readOnlyEtc = HasReadOnlyEtc.builder().withIntegerValue_ReadOnly(1).build();
+    assertEquals( 1, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
     readOnlyEtc.put( "IntegerValue_ReadOnly", 50 );
     assertEquals( 50, readOnlyEtc.get( "IntegerValue_ReadOnly" ) );
     assertNull( ReflectUtil.method( HasReadOnlyEtc.NoAdditional.class, "get", String.class ) );

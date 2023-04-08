@@ -29,6 +29,7 @@ import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.api.util.JavacDiagnostic;
 import manifold.ext.rt.ExtensionMethod;
+import manifold.ext.rt.ForwardingExtensionMethod;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.ThisClass;
@@ -456,6 +457,10 @@ class ExtCodeGen
           .addArgument( "extensionClass", String.class, ((SrcClass)method.getOwner()).getName() )
           .addArgument( "isStatic", boolean.class, !isInstanceExtensionMethod )
           .addArgument( "isSmartStatic", boolean.class, hasThisClassAnnotation( method ) ) );
+    }
+    else
+    {
+      srcMethod.addAnnotation( new SrcAnnotationExpression( ForwardingExtensionMethod.class ) );
     }
 
     srcMethod.returns( method.getReturnType() );

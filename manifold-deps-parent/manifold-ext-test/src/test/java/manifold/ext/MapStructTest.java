@@ -59,6 +59,18 @@ public class MapStructTest extends TestCase
     assertEquals( 1.0, mapStuff.get_Double() );
   }
 
+//## only works with compile-time manifold, todo: make this test module compile-time manifold
+//  public void testOverrideDefaultMethod()
+//  {
+//    IStuff stuff = (IStuff)new HashMap<>();
+//    // override IStuff#likes()
+//    stuff.set_Double( 9.0 );
+//    ((Map)stuff).put( "likes", (Function<String, Boolean>)(thing -> !thing.equals( "relaxation" )) );
+//    assertEquals( 9.0, stuff.get_Double() );
+//    assertTrue( stuff.likes( "ball" ) );
+//    assertFalse( stuff.likes( "relaxation" ) );
+//  }
+
   @Structural
   interface IStuff
   {
@@ -68,6 +80,9 @@ public class MapStructTest extends TestCase
     void set_Double( Double d );
     int get_int();
     Integer get_Integer();
+    default boolean likes(String thing) {
+      return true;
+    }
   }
 
 }

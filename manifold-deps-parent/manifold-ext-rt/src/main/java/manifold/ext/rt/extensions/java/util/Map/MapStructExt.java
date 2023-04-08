@@ -21,6 +21,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Map;
 
+import manifold.ext.rt.ForwardingExtensionMethod;
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.rt.api.ActualName;
 import manifold.rt.api.Bindings;
@@ -41,7 +42,13 @@ public abstract class MapStructExt implements ICallHandler
   {
     assert paramTypes.length == args.length;
 
-    return invoke( bindings, proxy, name, actualName, returnType, returnType, paramTypes, args );
+    Object result = invoke( bindings, proxy, name, actualName, returnType, returnType, paramTypes, args );
+    if( result == ICallHandler.UNHANDLED )
+    {
+      String fn = actualName != null ? actualName : name;
+      throw new RuntimeException( "Missing method: " + fn + "(" + Arrays.toString( paramTypes ) + ")" );
+    }
+    return result;
   }
 
   public static Object invoke( Map bindings, Object proxy, Method method, Object[] args )
@@ -50,19 +57,28 @@ public abstract class MapStructExt implements ICallHandler
 
     String methodName = method.getName();
     Object result;
-    if( method.isDefault() )
+    if( method.isDefault() && method.isAnnotationPresent( ForwardingExtensionMethod.class ) )
     {
-      result = ReflectUtil.invokeDefault( proxy, method, args );
+      return ReflectUtil.invokeDefault( proxy, method, args );
     }
-    else
+
+    String actualName = null;
+    if( methodName.startsWith( "get" ) || methodName.startsWith( "is" ) || methodName.startsWith( "set" ) ||
+      methodName.startsWith( "with" ) )
     {
-      String actualName = null;
-      if( methodName.startsWith( "get" ) || methodName.startsWith( "is" ) || methodName.startsWith( "set" ) ||
-        methodName.startsWith( "with" ) )
+      actualName = getActualName( method );
+    }
+    result = invoke( bindings, proxy, method.getName(), actualName, method.getReturnType(), method.getGenericReturnType(), method.getParameterTypes(), args );
+    if( result == UNHANDLED )
+    {
+      if( method.isDefault() )
       {
-        actualName = getActualName( method );
+        result = ReflectUtil.invokeDefault( proxy, method, args );
       }
-      result = invoke( bindings, proxy, method.getName(), actualName, method.getReturnType(), method.getGenericReturnType(), method.getParameterTypes(), args );
+      else
+      {
+        throw new RuntimeException( "Missing method: " + methodName + "(" + Arrays.toString( method.getParameterTypes() ) + ")" );
+      }
     }
     return result;
   }
@@ -86,7 +102,7 @@ public abstract class MapStructExt implements ICallHandler
       {
         // call setter
         result = setValue( bindings, methodName, actualName, paramTypes, args );
-        if( returnType != void.class )
+        if( result != UNHANDLED && returnType != void.class )
         {
           result = RuntimeMethods.coerceFromBindingsValue( bindings, returnType );
         }
@@ -111,10 +127,6 @@ public abstract class MapStructExt implements ICallHandler
           result = _toString( bindings );
           break;
       }
-    }
-    if( result == ICallHandler.UNHANDLED )
-    {
-      throw new RuntimeException( "Missing method: " + methodName + "(" + Arrays.toString( paramTypes ) + ")" );
     }
     return result;
   }
