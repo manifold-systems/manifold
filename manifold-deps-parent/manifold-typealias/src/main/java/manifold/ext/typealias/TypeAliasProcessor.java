@@ -27,13 +27,7 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCAnnotation;
-import com.sun.tools.javac.tree.JCTree.JCClassDecl;
-import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
-import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCFieldAccess;
-import com.sun.tools.javac.tree.JCTree.JCIdent;
-import com.sun.tools.javac.tree.JCTree.JCTypeApply;
+import com.sun.tools.javac.tree.JCTree.*;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeScanner;
@@ -43,6 +37,7 @@ import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import manifold.api.type.ICompilerComponent;
+import manifold.ext.typealias.rt.api.TypeAlias;
 import manifold.ext.typealias.rt.api.TypeAliasProvider;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.ManAttr;
@@ -50,19 +45,25 @@ import manifold.internal.javac.TypeAliasTranslator;
 import manifold.internal.javac.TypeProcessor;
 import manifold.rt.api.util.Stack;
 
-import javax.lang.model.element.ElementKind;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
+
+  private static final String ANNOTATION_TYPE_NAME = TypeAlias.class.getTypeName();
+  private static final String ANNOTATION_TYPE_SIMPLE_NAME = TypeAlias.class.getSimpleName();
+
   private BasicJavacTask _javacTask;
   private Context _context;
   private Stack<JCClassDecl> _classDeclStack;
   private TaskEvent _taskEvent;
   private Watcher _watcher;
   private IdentityHashMap<ClassSymbol, ClassEntry> _cache;
+
+  private HashSet<JCCompilationUnit> _changed;
+  private HashSet<JCCompilationUnit> _processed;
 
   @Override
   public void init(BasicJavacTask javacTask, TypeProcessor typeProcessor) {
@@ -71,6 +72,8 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     _classDeclStack = new Stack<>();
     _watcher = new Watcher();
     _cache = new IdentityHashMap<>();
+    _processed = new HashSet<>();
+    _changed = new HashSet<>();
 
     if (JavacPlugin.instance() == null) {
       // does not function at runtime
@@ -147,12 +150,14 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     try {
       ensureInitialized(_taskEvent);
       JCCompilationUnit compilationUnit = (JCCompilationUnit) e.getCompilationUnit();
-      AtomicInteger counter = new AtomicInteger();
-      compilationUnit.accept(new FastAnnotation(_watcher, counter));
-      TypeAliasTranslator.TRANSFORMER = new FastRename(_watcher);
-      if (counter.get() != 0) {
-        //System.out.println(compilationUnit);
+      if (!_processed.add(compilationUnit)) {
+        // In the multiple project case,
+        // ENTER maybe called multiple times,
+        // we only need to handle the first time.
+        return;
       }
+      compilationUnit.accept(new FastAnnotation(_watcher, compilationUnit));
+      TypeAliasTranslator.TRANSFORMER = new FastRename(_watcher);
     } finally {
       _taskEvent = null;
     }
@@ -164,19 +169,9 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     if (e.getKind() != TaskEvent.Kind.ANALYZE) {
       return;
     }
-//    _taskEvent = e;
-//    try
-//    {
-//      ensureInitialized( _taskEvent );
 //    JCCompilationUnit compilationUnit = (JCCompilationUnit) e.getCompilationUnit();
-//      if (!globalWatcher.fastReplace.isEmpty()) {
-//        compilationUnit.accept(new FastReplace(globalWatcher));
-//      }
-//    System.out.println(compilationUnit);
-//    }
-//    finally
-//    {
-//      _taskEvent = null;
+//    if (_changed.contains(compilationUnit)) {
+//      System.out.println(compilationUnit);
 //    }
   }
 
@@ -220,14 +215,13 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
   }
 
   class FastAnnotation extends TreeScanner {
-    Names names = getNames();
 
-    final AtomicInteger counter;
     final Watcher watcher;
+    final JCCompilationUnit compilationUnit;
 
-    FastAnnotation(Watcher watcher, AtomicInteger counter) {
+    FastAnnotation(Watcher watcher, JCCompilationUnit compilationUnit) {
       this.watcher = watcher;
-      this.counter = counter;
+      this.compilationUnit = compilationUnit;
     }
 
     @Override
@@ -237,31 +231,15 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       if (annotation == null) {
         return;
       }
-//      Def def = new Def();
-//      def.className = tree.name;
-//      def.classDecl = tree;
-//      def.annotation = annotation;
-//      watcher.add(def);
       JCExpression expr2 = getTypeAliasAnnotationValue(annotation);
-//      def.annotationValue = expr2;
       if (expr2 == null) {
         expr2 = tree.extending;
       }
-
       TreeMaker maker = getTreeMaker(tree.pos);
-      //JCTree.JCModifiers modifiers = maker.Modifiers( Flags.STATIC );
-
-      //TypeAliasWrapper.class
-//      maker.
-//      maker.TypeParameter()
-//      JCVariableDecl decl2 = maker.VarDef( modifiers, names.fromString( "__manifold_aliased_type_ref__" ), expr2, null );
       JCFieldAccess clazz = generateDirectClassAccess(maker, TypeAliasProvider.class);
       JCTypeApply apply = maker.TypeApply(clazz, List.of(expr2));
-//      def.typeDecl = apply;
-//      def.type = expr2;
       tree.implementing = tree.implementing.append(apply);
-//      tree.defs = tree.defs.append(decl2);
-      counter.incrementAndGet();
+//      _changed.add(compilationUnit);
     }
 
     @Override
@@ -276,8 +254,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     private JCAnnotation getTypeAliasAnnotation(JCClassDecl tree) {
       for (List<JCAnnotation> var2 = tree.mods.annotations; var2.nonEmpty(); var2 = var2.tail) {
         JCAnnotation annotation = var2.head;
-        Name name = TreeInfo.name(annotation.annotationType);
-        if (name.toString().equals("TypeAlias") && hasTypeAliasAnnotationValue(annotation)) {
+        if (isTypeAliasType(annotation.annotationType) && hasTypeAliasAnnotationValue(annotation)) {
           return annotation;
         }
       }
@@ -294,13 +271,50 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
 
     private JCExpression getTypeAliasAnnotationValue(JCAnnotation annotation) {
       JCTree tree = annotation.args.head;
+      // @TypeAlias(value = <value>)
+      if (tree instanceof JCAssign) {
+        // if name not value, it means that it may be an annotation with the same name.
+        if (!TypeAliasUtil.fullName(((JCAssign) tree).lhs).equals("value")) {
+          return null;
+        }
+        tree = ((JCAssign) tree).rhs;
+      }
+      // @TypeAlias({<value>})
+      if (tree instanceof JCNewArray) {
+        tree = ((JCNewArray) tree).elems.head;
+      }
+      // @TypeAlias(<value>)
       if (tree instanceof JCFieldAccess) {
         JCFieldAccess field = (JCFieldAccess) tree;
-        if (field.name == names._class) {
+        if (field.name.toString().equals("class")) {
           return field.selected;
         }
       }
       return null;
+    }
+
+    private boolean isTypeAliasType(JCTree tree) {
+      String name = TypeAliasUtil.fullName(tree);
+      if (name.equals(ANNOTATION_TYPE_NAME)) {
+        return true;
+      }
+      // fo avoid the using same-name annotation,
+      // we need to find the package of TypeAlias.
+      if (!name.equals(ANNOTATION_TYPE_SIMPLE_NAME)) {
+        return false;
+      }
+      // search type alias package in import.
+      for (JCTree def : compilationUnit.defs) {
+        if (def instanceof JCImport) {
+          String pkg = TypeAliasUtil.fullName(((JCImport)def).qualid);
+          if (ANNOTATION_TYPE_NAME.equals(pkg.replace("*", ANNOTATION_TYPE_SIMPLE_NAME))) {
+            return true;
+          }
+        }
+      }
+      // search type alias in current package.
+      String pkg = TypeAliasUtil.fullName(compilationUnit.pid);
+      return ANNOTATION_TYPE_NAME.equals(pkg + "." + ANNOTATION_TYPE_SIMPLE_NAME);
     }
   }
 
@@ -370,6 +384,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       JCTree parent = getParentTree(tree);
       parent.accept(new FastReplace(tree, result));
 
+//      _changed.add(((ManAttr)attr).getEnv().toplevel);
       //System.out.println("replace ident: " + old + " to " + result);
     }
 
@@ -399,6 +414,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       result = maker.Type(newType);
       parent.accept(new FastReplace(tree, result));
 
+//      _changed.add(((ManAttr)attr).getEnv().toplevel);
       //System.out.println("replace select: " + old + " to " + result);
     }
 

@@ -18,7 +18,10 @@ package manifold.ext.typealias;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Name;
 import manifold.ext.typealias.rt.api.TypeAliasProvider;
 
 public class TypeAliasUtil {
@@ -26,15 +29,23 @@ public class TypeAliasUtil {
   private static final String TYPE_ALIAS_PROVIDER = TypeAliasProvider.class.getTypeName();
 
   static Type getAliasTypeFromInterface(Symbol.ClassSymbol sym) {
-    return getAliasTypeFromInterface( sym.getInterfaces() );
+    return getAliasTypeFromInterface(sym.getInterfaces());
   }
 
-  static Type getAliasTypeFromInterface( List<Type> interfaces ) {
+  static Type getAliasTypeFromInterface(List<Type> interfaces) {
     for (Type type : interfaces) {
       if (TYPE_ALIAS_PROVIDER.equals(type.tsym.getQualifiedName().toString()) && type.isParameterized()) {
         return type.getTypeArguments().get(0);
       }
     }
     return null;
+  }
+
+  static String fullName(JCTree tree) {
+    Name name = TreeInfo.fullName(tree);
+    if (name != null) {
+      return name.toString();
+    }
+    return "";
   }
 }

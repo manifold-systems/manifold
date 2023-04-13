@@ -1,8 +1,7 @@
 package manifold.ext.typealias.impl;
 
-import manifold.ext.typealias.other.ClassC;
-import manifold.ext.typealias.rt.api.TypeAlias;
+import manifold.ext.typealias.other.ClassF;
 
-@TypeAlias(ClassC.class)
-public enum ClassD {
+@manifold.ext.typealias.rt.api.TypeAlias(value = ClassF.class)
+public class ClassD {
 }

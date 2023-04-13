@@ -1,5 +1,6 @@
 package manifold.ext.typealias;
 
+import manifold.ext.typealias.impl.EnumA;
 import manifold.ext.typealias.impl.EnumB;
 import manifold.ext.typealias.impl.GenericC;
 
@@ -12,10 +13,10 @@ public class ChildAliasTest extends ParentAliasTest{
         method1(value);
     }
 
-//    @Override
-//    void method2(EnumA value) {
-//        method2(value);
-//    }
+    @Override
+    void method2(EnumA value) {
+        method2(value);
+    }
 
     @Override
     void method3(HashMap<String, String> value) {

@@ -1,7 +1,7 @@
 package manifold.ext.typealias.other;
 
-public class ClassC {
-    public static final ClassC NONE = new ClassC();
+public class ClassF {
+    public static final ClassF NONE = new ClassF();
 
 
     public void testq() {

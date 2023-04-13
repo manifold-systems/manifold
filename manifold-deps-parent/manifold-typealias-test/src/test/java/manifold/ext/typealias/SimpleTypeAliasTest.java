@@ -17,6 +17,9 @@
 package manifold.ext.typealias;
 
 import manifold.ext.typealias.impl.*;
+import manifold.ext.typealias.other.ClassF;
+import manifold.ext.typealias.other.ClassG;
+import manifold.ext.typealias.other.ClassH;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -55,6 +58,10 @@ public class SimpleTypeAliasTest
     c = EnumC.FALSE;
 
     memberB = EnumB.NONE;
+    memberB = InterfaceE.NONE;
+
+    ClassG g = new ClassG();
+    ClassH h = new ClassH();
 
     EnumB.values();
 //
