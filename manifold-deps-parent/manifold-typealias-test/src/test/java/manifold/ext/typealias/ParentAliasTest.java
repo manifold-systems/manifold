@@ -2,7 +2,7 @@ package manifold.ext.typealias;
 
 import manifold.ext.typealias.impl.EnumA;
 import manifold.ext.typealias.impl.EnumB;
-import manifold.ext.typealias.impl.GenericC;
+import manifold.ext.typealias.impl.NonGenericToGeneric;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -24,7 +24,7 @@ public class ParentAliasTest
         method1(value);
     }
 
-    void method3(GenericC value) {
+    void method3(NonGenericToGeneric value) {
         method4(value);
     }
 
@@ -32,7 +32,7 @@ public class ParentAliasTest
         method3(value);
     }
 
-  void method5(manifold.ext.typealias.impl.GenericC value) {
+  void method5(NonGenericToGeneric value) {
     method4(value);
   }
 }

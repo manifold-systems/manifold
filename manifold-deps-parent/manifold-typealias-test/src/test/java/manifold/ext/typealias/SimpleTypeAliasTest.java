@@ -17,14 +17,11 @@
 package manifold.ext.typealias;
 
 import manifold.ext.typealias.impl.*;
-import manifold.ext.typealias.other.ClassF;
 import manifold.ext.typealias.other.ClassG;
 import manifold.ext.typealias.other.ClassH;
 import org.junit.Test;
-import org.junit.runners.MethodSorters;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.function.Consumer;
 
 //import java.util.function.;
@@ -61,7 +58,7 @@ public class SimpleTypeAliasTest
     memberB = InterfaceE.NONE;
 
     ClassG g = new ClassG();
-    ClassH h = new ClassH();
+    Class<ClassH> h = ClassH.class;
 
     EnumB.values();
 //
@@ -89,16 +86,29 @@ public class SimpleTypeAliasTest
     calloutB(a);
     calloutB(b);
 
-    GenericC d = new GenericC();
-    d.put("a", "b");
-
-    calloutC(d);
-    calloutD(d);
-
     Object EnumB = "";
     EnumB.toString();
 
     System.out.println(memberB);
+  }
+
+  @Test
+  public void testGeneric() {
+
+    NonGenericToGeneric ng2g = new NonGenericToGeneric();
+    ng2g.put("a", "b");
+
+    DefaultParamGeneric<String> dpg = new DefaultParamGeneric<>();
+    dpg.put("a", "b");
+
+    ResortParamGeneric<String, Integer> rpg = new ResortParamGeneric<>();
+    rpg.put(0, "");
+
+    GenericToNonGeneric<String, String > g2ng = new GenericToNonGeneric<>("hello world");
+    System.out.println(g2ng);
+
+    calloutC(ng2g);
+    calloutD(ng2g);
   }
 
 //  Object EnumB = "";
@@ -110,7 +120,7 @@ public class SimpleTypeAliasTest
     return e;
   }
 
-  private void calloutC(GenericC e) {
+  private void calloutC(NonGenericToGeneric e) {
   }
 
   private void calloutD(HashMap<String, String> e) {

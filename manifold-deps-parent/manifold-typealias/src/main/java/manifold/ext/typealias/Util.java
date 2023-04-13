@@ -22,23 +22,37 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
-import manifold.ext.typealias.rt.api.TypeAliasProvider;
 
-public class TypeAliasUtil {
+public class Util {
 
-  private static final String TYPE_ALIAS_PROVIDER = TypeAliasProvider.class.getTypeName();
-
-  static Type getAliasTypeFromInterface(Symbol.ClassSymbol sym) {
-    return getAliasTypeFromInterface(sym.getInterfaces());
+  static Type getAliasTypeFromInterface(Symbol.ClassSymbol sym, String fqn) {
+    return getAliasTypeFromInterface(sym.getInterfaces(), fqn);
   }
 
-  static Type getAliasTypeFromInterface(List<Type> interfaces) {
+  static Type getAliasTypeFromInterface(List<Type> interfaces, String fqn) {
     for (Type type : interfaces) {
-      if (TYPE_ALIAS_PROVIDER.equals(type.tsym.getQualifiedName().toString()) && type.isParameterized()) {
+      if (fqn.equals(type.tsym.getQualifiedName().toString()) && type.isParameterized()) {
         return type.getTypeArguments().get(0);
       }
     }
     return null;
+  }
+
+  static List<JCTree.JCExpression> copyTypeArguments(List<JCTree.JCExpression> oldArguments, List<Type> oldArgumentTypes, List<JCTree.JCExpression> newArguments, List<Type> newArgumentTypes) {
+    // is a raw parameterized.
+    if (oldArguments.isEmpty()) {
+      return oldArguments;
+    }
+    JCTree.JCExpression[] resolvedArguments = new JCTree.JCExpression[newArgumentTypes.size()];
+    for (int i = 0; i <  resolvedArguments.length; ++i) {
+      JCTree.JCExpression argument = newArguments[i];
+      int index = oldArgumentTypes.indexOf(newArgumentTypes[i]);
+      if (index >= 0 && index < oldArguments.size()) {
+        argument = oldArguments.get(index);
+      }
+      resolvedArguments[i] = argument;
+    }
+    return List.from(resolvedArguments);
   }
 
   static String fullName(JCTree tree) {

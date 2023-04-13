@@ -16,7 +16,6 @@
 
 package manifold.ext.typealias;
 
-import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
@@ -38,7 +37,6 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 import manifold.api.type.ICompilerComponent;
 import manifold.ext.typealias.rt.api.TypeAlias;
-import manifold.ext.typealias.rt.api.TypeAliasProvider;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.ManAttr;
 import manifold.internal.javac.TypeAliasTranslator;
@@ -48,12 +46,12 @@ import manifold.rt.api.util.Stack;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
 
   private static final String ANNOTATION_TYPE_NAME = TypeAlias.class.getTypeName();
   private static final String ANNOTATION_TYPE_SIMPLE_NAME = TypeAlias.class.getSimpleName();
+  private static final String ANNOTATION_TYPE_PROVIDER = ClassProvider.class.getTypeName();
 
   private BasicJavacTask _javacTask;
   private Context _context;
@@ -129,18 +127,6 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     _cache.computeIfAbsent(symbol, ClassEntry::new).resolve();
   }
 
-  private CompilationUnitTree getCompilationUnit() {
-    if (_taskEvent != null) {
-      CompilationUnitTree compUnit = _taskEvent.getCompilationUnit();
-      if (compUnit != null) {
-        return compUnit;
-      }
-    }
-    return JavacPlugin.instance() != null
-            ? JavacPlugin.instance().getTypeProcessor().getCompilationUnit()
-            : null;
-  }
-
   @Override
   public void started(TaskEvent e) {
     if (e.getKind() != TaskEvent.Kind.ENTER) {
@@ -158,6 +144,9 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       }
       compilationUnit.accept(new FastAnnotation(_watcher, compilationUnit));
       TypeAliasTranslator.TRANSFORMER = new FastRename(_watcher);
+//      if (_changed.contains(compilationUnit)) {
+//        System.out.println(compilationUnit);
+//      }
     } finally {
       _taskEvent = null;
     }
@@ -236,10 +225,11 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
         expr2 = tree.extending;
       }
       TreeMaker maker = getTreeMaker(tree.pos);
-      JCFieldAccess clazz = generateDirectClassAccess(maker, TypeAliasProvider.class);
+      JCFieldAccess clazz = generateDirectClassAccess(maker, ClassProvider.class);
       JCTypeApply apply = maker.TypeApply(clazz, List.of(expr2));
       tree.implementing = tree.implementing.append(apply);
-//      _changed.add(compilationUnit);
+
+      //_changed.add(compilationUnit);
     }
 
     @Override
@@ -274,7 +264,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       // @TypeAlias(value = <value>)
       if (tree instanceof JCAssign) {
         // if name not value, it means that it may be an annotation with the same name.
-        if (!TypeAliasUtil.fullName(((JCAssign) tree).lhs).equals("value")) {
+        if (!Util.fullName(((JCAssign) tree).lhs).equals("value")) {
           return null;
         }
         tree = ((JCAssign) tree).rhs;
@@ -294,7 +284,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     }
 
     private boolean isTypeAliasType(JCTree tree) {
-      String name = TypeAliasUtil.fullName(tree);
+      String name = Util.fullName(tree);
       if (name.equals(ANNOTATION_TYPE_NAME)) {
         return true;
       }
@@ -306,14 +296,14 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       // search type alias package in import.
       for (JCTree def : compilationUnit.defs) {
         if (def instanceof JCImport) {
-          String pkg = TypeAliasUtil.fullName(((JCImport)def).qualid);
+          String pkg = Util.fullName(((JCImport)def).qualid);
           if (ANNOTATION_TYPE_NAME.equals(pkg.replace("*", ANNOTATION_TYPE_SIMPLE_NAME))) {
             return true;
           }
         }
       }
       // search type alias in current package.
-      String pkg = TypeAliasUtil.fullName(compilationUnit.pid);
+      String pkg = Util.fullName(compilationUnit.pid);
       return ANNOTATION_TYPE_NAME.equals(pkg + "." + ANNOTATION_TYPE_SIMPLE_NAME);
     }
   }
@@ -373,7 +363,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       if (newType == null) {
         return;
       }
-      //Name old = tree.name;
+      Type oldType = tree.sym.type;
       TreeMaker maker = getTreeMaker(tree.pos);
       JCIdent tree1 = maker.Ident(newType.tsym);
       tree.name = tree1.name;
@@ -382,9 +372,9 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
 
       result = maker.Type(newType);
       JCTree parent = getParentTree(tree);
-      parent.accept(new FastReplace(tree, result));
+      replaceParentTree(parent, tree, oldType, result, newType);
 
-//      _changed.add(((ManAttr)attr).getEnv().toplevel);
+      //_changed.add(((ManAttr)attr).getEnv().toplevel);
       //System.out.println("replace ident: " + old + " to " + result);
     }
 
@@ -403,7 +393,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       if (newType == null) {
         return;
       }
-      //Name old = TreeInfo.fullName(tree);
+      Type oldType = tree.sym.type;
       TreeMaker maker = getTreeMaker(tree.pos);
       JCFieldAccess tree1 = generateDirectClassAccess(maker, newType.tsym);
       tree.name = tree1.name;
@@ -412,9 +402,9 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
       tree.type = newType;
 
       result = maker.Type(newType);
-      parent.accept(new FastReplace(tree, result));
+      replaceParentTree(parent, tree, oldType, result, newType);
 
-//      _changed.add(((ManAttr)attr).getEnv().toplevel);
+// _changed.add(((ManAttr)attr).getEnv().toplevel);
       //System.out.println("replace select: " + old + " to " + result);
     }
 
@@ -422,6 +412,30 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
     public void visitTree(JCTree tree) {
       result = null;
     }
+
+    private void replaceParentTree(JCTree parent, JCTree oldValue, Type oldType, JCTree newValue, Type newType) {
+      // the generic tree need some special processing.
+      if (parent instanceof JCTypeApply && ((JCTypeApply) parent).clazz == oldValue) {
+        JCTypeApply source = (JCTypeApply) parent;
+        if (newValue instanceof JCTypeApply) {
+          // case 1: Source<A, B> => Target<B, A>
+          // case 2: Source<A> => Target<String, A>
+          JCTypeApply target = (JCTypeApply) newValue;
+          source.arguments = Util.copyTypeArguments(source.arguments, oldType.getTypeArguments(), target.arguments, newType.getTypeArguments());
+          newValue = target.clazz;
+        } else {
+          // case 3: Source<A, B> => Target
+          source.clazz = (JCExpression) newValue;
+          source.arguments = List.nil();
+          oldValue = parent;
+          parent = getParentTree(parent);
+        }
+      }
+      if (parent != null) {
+        parent.accept(new FastReplace(oldValue, newValue));
+      }
+    }
+
 
     private boolean isClassSymbol(Symbol symbol) {
       return symbol instanceof ClassSymbol;
@@ -448,7 +462,7 @@ public class TypeAliasProcessor implements ICompilerComponent, TaskListener {
         return;
       }
       _interfaces = interfaces;
-      Type newType = TypeAliasUtil.getAliasTypeFromInterface( interfaces );
+      Type newType = Util.getAliasTypeFromInterface( interfaces, ANNOTATION_TYPE_PROVIDER );
       //System.out.println("include: " + _symbol);
       if( newType != null ) {
         _watcher.add(_symbol, newType);
