@@ -216,7 +216,6 @@ module MyProject {
             <groupId>systems.manifold</groupId>
             <artifactId>manifold-rt</artifactId>
             <version>${manifold.version}</version>
-            <scope>provided</scope> <!-- dependency is only applied during compile-time for manifold-strings -->
         </dependency>
     </dependencies>
   
