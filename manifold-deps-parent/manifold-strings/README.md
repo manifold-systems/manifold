@@ -161,7 +161,6 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2023.1.5'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
     annotationProcessor 'systems.manifold:manifold-strings:2023.1.5'
@@ -209,17 +208,6 @@ module MyProject {
         <!-- set latest manifold version here --> 
         <manifold.version>2023.1.5</manifold.version>
     </properties>
-
-    <dependencies>
-        <dependency>
-            <!-- Necessary only during compile-time to resolve generated source-level annotations -->
-            <groupId>systems.manifold</groupId>
-            <artifactId>manifold-rt</artifactId>
-            <version>${manifold.version}</version>
-            <scope>provided</scope> <!-- dependency is only applied during compile-time for manifold-strings -->
-        </dependency>
-    </dependencies>
-  
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
     <build>
