@@ -18,6 +18,8 @@ package manifold.science.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
+
 import org.junit.Test;
 
 
@@ -55,6 +57,8 @@ public class BigDecimalTest
     assertEquals( -1bd, 2bd - 3bd );
     assertEquals( 6bd, 2bd * 3bd );
     assertEquals( 3bd, 6bd / 2bd );
+    assertEquals( 2.5bd, 10bd / 4bd );
+    assertEquals( BigDecimal.ONE.divide( BigDecimal.valueOf( 3 ), MathContext.DECIMAL128 ), 1bd / 3bd );
     assertEquals( 1bd, 3bd % 2bd );
   }
 

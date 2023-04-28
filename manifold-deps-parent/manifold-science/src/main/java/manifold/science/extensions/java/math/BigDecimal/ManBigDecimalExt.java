@@ -17,7 +17,7 @@
 package manifold.science.extensions.java.math.BigDecimal;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.math.MathContext;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.ComparableUsing;
 import manifold.ext.rt.api.This;
@@ -81,7 +81,7 @@ public abstract class ManBigDecimalExt implements ComparableUsing<BigDecimal>
    */
   public static BigDecimal div( @This BigDecimal thiz, BigDecimal operand )
   {
-    return thiz.divide( operand, RoundingMode.HALF_EVEN );
+    return thiz.divide( operand, MathContext.DECIMAL128 );
   }
 
   /**
