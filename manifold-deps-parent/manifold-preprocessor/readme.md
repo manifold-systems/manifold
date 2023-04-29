@@ -407,7 +407,7 @@ mvn compile
 ## Using this project
 
 The `manifold-preprocessor` dependency works with all build tooling, including Maven and Gradle. It supports JDK
-versions 8 - 19 and supports `-source` compatibility with any Java version.  Note this dependency is exclusive to
+versions8 - 20 and supports `-source` compatibility with any Java version.  Note this dependency is exclusive to
 compile-time use, there is no runtime impact.
 
 ## Binaries

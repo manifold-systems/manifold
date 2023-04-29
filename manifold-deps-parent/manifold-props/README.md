@@ -423,7 +423,7 @@ mvn compile
 ## Using this project
 
 The `manifold-props` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
-versions 8 - 19.
+versions8 - 20.
 
 This project consists of two modules:
 * `manifold-props`

@@ -288,7 +288,7 @@ mvn compile
 
 ## Using this project
 
-The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 19.
+The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions8 - 20.
 
 This project consists of two modules:
 * `manifold-xml`

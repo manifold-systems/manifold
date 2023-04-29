@@ -111,7 +111,7 @@ mvn compile
 ## Using this project
 
 The `manifold-darkj` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 19.
+versions8 - 20.
 
 >Note, since Dark Java is a dynamic compilation feature, you must include Manifold dependencies in both compile-time
 >and runtime. As a consequence, the Manifold runtime compilation services add a bit of overhead in terms of

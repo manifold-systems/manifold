@@ -22,7 +22,7 @@ Manifold is a Java compiler plugin. It supplements Java with:
 * [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 * ...and more
 
-All fully supported in JDK LTS releases 8 - 19 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in JDK LTS releases8 - 20 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
 ># _**What's New...**_

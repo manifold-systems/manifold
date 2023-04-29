@@ -131,7 +131,7 @@ mvn compile
 ## Using this project
 
 The `manifold-strings` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 19.
+versions8 - 20.
 
 ## Binaries
 

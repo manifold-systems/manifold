@@ -817,7 +817,7 @@ mvn compile
 ## Using this project
 
 The `manifold` core dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 19.
+versions8 - 20.
 
 This project consists of two modules:
 * `manifold`
