@@ -139,7 +139,7 @@ public class ExtensionTransformer extends TreeTranslator
       JCExpression arg = tree.index;
       arg = boxUnboxIfNeeded( _tp.getTypes(), _tp.getTreeMaker(),
         Names.instance( _tp.getContext() ), arg, operatorMethod.params().get( 0 ).type );
-      methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
+      methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.of( arg ) );
       methodCall = configMethod( tree, operatorMethod, methodCall );
 
       result = methodCall;
@@ -234,7 +234,7 @@ public class ExtensionTransformer extends TreeTranslator
             dynJdk.setOperatorSymbol( ctx, elsePart, JCTree.Tag.OR, "||", symbols.booleanType.tsym );
 
             methodCall = make.Apply( List.nil(),
-              make.Select( receiver, operatorMethod ),
+              IDynamicJdk.instance().Select( make, receiver, operatorMethod ),
               List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
             methodCall = configMethod( tree, operatorMethod, methodCall );
 
@@ -254,7 +254,7 @@ public class ExtensionTransformer extends TreeTranslator
           {
             // (x > y) generated as: (x.compareTo(y) > 0)
 
-            methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
+            methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.of( arg ) );
             methodCall.type = symbols.intType;
             methodCall.pos = tree.pos;
 
@@ -273,7 +273,7 @@ public class ExtensionTransformer extends TreeTranslator
             // (x > y) generated as: (x.compareToUsing(y, GT))
 
             methodCall = make.Apply( List.nil(),
-              make.Select( receiver, operatorMethod ),
+              IDynamicJdk.instance().Select( make, receiver, operatorMethod ),
               List.from( new JCExpression[]{arg, getRelationalOpEnumConst( make, tree )} ) );
 
             methodCall = configMethod( tree, operatorMethod, methodCall );
@@ -281,7 +281,7 @@ public class ExtensionTransformer extends TreeTranslator
         }
         else
         {
-          methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg ) );
+          methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.of( arg ) );
 
           methodCall = configMethod( tree, operatorMethod, methodCall );
         }
@@ -508,7 +508,7 @@ public class ExtensionTransformer extends TreeTranslator
       unboxedType.tsym.name.append( names.Value ), // x.intValue()
       tree.type,
       List.<Type>nil() );
-    return make.App( make.Select( tree, valueSym ) );
+    return make.App( IDynamicJdk.instance().Select( make, tree, valueSym ) );
   }
 
 //## todo: handle case where casting to a generic structural interface:  (StructuralInterface<Foo>)thing
@@ -717,7 +717,7 @@ public class ExtensionTransformer extends TreeTranslator
 
       arg = boxUnboxIfNeeded( _tp.getTypes(), _tp.getTreeMaker(),
         Names.instance( _tp.getContext() ), arg, parameterizedMethod.getParameterTypes().get( 0 ) );
-      setCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.of( arg, rhs ) );
+      setCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.of( arg, rhs ) );
       setCall = configMethod( lhs, operatorMethod, setCall );
 
       JCTree[] setCallTemp = tempify( true, tree, make, setCall, ctx, getEnclosingSymbol( tree, ctx ), "$setCallTempVar" + tempVarIndex );
@@ -873,7 +873,7 @@ public class ExtensionTransformer extends TreeTranslator
       {
         // indexed[index] uses indexed operator overloading (get/set by index)
 
-        JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( receiver, indexedGetMethod ), List.of( index ) );
+        JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, indexedGetMethod ), List.of( index ) );
         methodCall.setPos( tree.pos );
         methodCall.type = tree.arg.type;
         methodCall = maybeReplaceWithExtensionMethod( methodCall );
@@ -912,7 +912,7 @@ public class ExtensionTransformer extends TreeTranslator
         tempVars = tempVars.append( (JCTree.JCVariableDecl)incDecTempValue[0] );
         incDecValue = (JCExpression)incDecTempValue[1];
 
-        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( receiver, indexedSetMethod ), List.of( index, incDecValue ) );
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, indexedSetMethod ), List.of( index, incDecValue ) );
         setCall.setPos( tree.pos );
         setCall.type = tree.arg.type;
 
@@ -1045,7 +1045,7 @@ public class ExtensionTransformer extends TreeTranslator
     }
     else
     {
-      JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( operand, operatorMethod ), List.nil() );
+      JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, operand, operatorMethod ), List.nil() );
       methodCall.setPos( tree.pos );
       methodCall.type = operatorMethod.getReturnType();
 
@@ -1067,7 +1067,7 @@ public class ExtensionTransformer extends TreeTranslator
   private void genUnaryPreIncDec( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
   {
     JCTree.JCMethodInvocation methodCall;
-    methodCall = make.Apply( List.nil(), make.Select( tree.arg, operatorMethod ), List.nil() );
+    methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, tree.arg, operatorMethod ), List.nil() );
     methodCall.setPos( tree.pos );
     methodCall.type = operatorMethod.getReturnType();
 
@@ -1084,7 +1084,7 @@ public class ExtensionTransformer extends TreeTranslator
   public void genUnaryMinus( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
   {
     JCExpression receiver = tree.getExpression();
-    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), make.Select( receiver, operatorMethod ), List.nil() );
+    JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.nil() );
     methodCall.setPos( tree.pos );
     methodCall.type = operatorMethod.getReturnType();
 

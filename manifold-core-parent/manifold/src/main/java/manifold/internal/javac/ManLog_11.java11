@@ -142,6 +142,7 @@ public class ManLog_11 extends Log
   {
     if( pos instanceof JCTree.JCFieldAccess &&
         ("compiler.err.cant.assign.val.to.final.var".equals( errorKey.key() ) ||
+         "compiler.err.cant.assign.val.to.var".equals( errorKey.key() ) || // jdk 21
          "compiler.err.var.might.already.be.assigned".equals( errorKey.key() )) &&
         isJailbreakSelect( (JCTree.JCFieldAccess)pos ) )
     {

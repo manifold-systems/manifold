@@ -19,6 +19,7 @@ package manifold.internal.javac;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.JCDiagnostic;
 import com.sun.tools.javac.util.List;
@@ -27,6 +28,7 @@ import com.sun.tools.javac.util.Name;
 import javax.tools.Diagnostic;
 import manifold.util.JreUtil;
 import manifold.api.util.PerfLogUtil;
+import manifold.util.ReflectUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import java.util.function.Predicate;
@@ -70,6 +72,15 @@ public interface IDynamicJdk
 
   void logError( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
   void logWarning( Log logger, JCDiagnostic.DiagnosticPosition pos, String key, Object... message );
+
+  // todo: implement this in JavaDynamicJdk_21, they changed the return type from JCExpression to JCFieldAccess
+  default JCTree.JCFieldAccess Select( TreeMaker make, JCTree.JCExpression expr, Symbol sym )
+  {
+    return JreUtil.isJava8()
+      ? (JCTree.JCFieldAccess)make.Select( expr, sym )
+      : (JCTree.JCFieldAccess)ReflectUtil.method( make, "Select", JCTree.JCExpression.class, Symbol.class )
+          .invoke( expr, sym );
+  }
 
   class Instance
   {

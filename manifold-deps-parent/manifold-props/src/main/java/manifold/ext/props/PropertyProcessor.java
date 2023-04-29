@@ -1399,7 +1399,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
         JCMethodInvocation methodCall;
         JCExpression receiver = tree.selected;
-        methodCall = make.Apply( List.nil(), make.Select( receiver, getMethod ), List.nil() );
+        methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, getMethod ), List.nil() );
         methodCall = configMethod( tree, getMethod, methodCall );
 
         return methodCall;
@@ -1485,7 +1485,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCExpression receiver = (tree.sym.owner.type.isInterface() ? staticAnno != null : tree.sym.isStatic())
           ? make.Type( tree.sym.owner.type )
           : make.This( _backingSymbols.peek().fst.type ).setPos( tree.pos );
-        methodCall = make.Apply( List.nil(), make.Select( receiver, getMethod ).setPos( tree.pos ), List.nil() );
+        methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, getMethod ).setPos( tree.pos ), List.nil() );
         methodCall = configMethod( tree, getMethod, methodCall );
 
         return methodCall;
@@ -1598,7 +1598,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
 
-        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = configMethod( lhs, setMethod, setCall );
 
         if( !(getParent( tree ) instanceof JCExpressionStatement) )
@@ -1745,7 +1745,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
 
           // rewrite the arg to use the temp var
           Type t = tree.arg.type;
-          tree.arg = lhs = make.Select( lhsSelected, lhsSym );
+          tree.arg = lhs = IDynamicJdk.instance().Select( make, lhsSelected, lhsSym );
           tree.arg.pos = tree.pos;
           tree.arg.type = t;
         }
@@ -1777,7 +1777,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         rhs = (JCExpression)argTemp[1];
 
         // make the setXxx(rhs) call
-        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), make.Select( lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
+        JCTree.JCMethodInvocation setCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, lhsSelected, setMethod ).setPos( tree.pos ), List.of( rhs ) );
         setCall = (JCMethodInvocation)configMethod( lhs, setMethod, setCall ).setPos( tree.pos );
 
         // not really a var decl stmt, this is sneaking in a method call statement (turns out the LetExpr doesn't really require JCVarDecl, score!)

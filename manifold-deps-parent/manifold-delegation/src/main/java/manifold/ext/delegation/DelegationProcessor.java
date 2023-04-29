@@ -429,8 +429,8 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       // Iface.super.method()
 
-      JCTree.JCFieldAccess forwardRef = (JCFieldAccess)make.Select( make.Select( make.Type( iface ), names._super ),
-        namedMt.getMethodSymbol() );
+      JCTree.JCFieldAccess forwardRef = IDynamicJdk.instance().Select(
+        make, make.Select( make.Type( iface ), names._super ), namedMt.getMethodSymbol() );
       forwardRef.type = mt.getReturnType();
       java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
       JCTree.JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
@@ -993,7 +993,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       // Forward call statement
       JCExpression link = make.Ident( li.getLinkField() );
-      JCTree.JCFieldAccess forwardRef = (JCFieldAccess)make.Select( link, namedMt.getMethodSymbol() );
+      JCTree.JCFieldAccess forwardRef = IDynamicJdk.instance().Select( make, link, namedMt.getMethodSymbol() );
       forwardRef.type = mt.getReturnType();
       java.util.List<JCExpression> args = params.stream().map( p -> make.Ident( p.name ) ).collect( Collectors.toList() );
       JCTree.JCMethodInvocation forwardCall = make.Apply( List.nil(), forwardRef, List.from( args ) );
@@ -1313,7 +1313,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           JCExpression thisSub = replaceThis( tree, enclClass_Iface.fst, enclClass_Iface.snd );
           TreeMaker make = getTreeMaker();
           make.pos = tree.pos;
-          JCMethodInvocation apply = make.Apply( List.nil(), make.Select( thisSub, sym ), tree.args );
+          JCMethodInvocation apply = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, thisSub, sym ), tree.args );
           apply.type = tree.type;
           result = apply;
         }
