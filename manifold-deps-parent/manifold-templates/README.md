@@ -276,7 +276,7 @@ package demo;
 import model.Contact;
 import manifold.templates.rt.runtime.BaseTemplate;
 
-public class ExampleTemplate extends BaseTemplate {
+public abstract class ExampleTemplate extends BaseTemplate {
 
   public String displayContact(Contact c) {
     if(c.hasName()) {
@@ -311,6 +311,8 @@ And easily callable:
   get("/contact/:id", (req, resp) -> ShowContact.render(Contact.find(req.getParam("id")));
 ```
 
+>Note, all custom base classes must be declared `abstract`. 
+ 
 ### `params`
 
 Use the `params` directive to declare parameters in a template, similar to declaring parameters for a method.
