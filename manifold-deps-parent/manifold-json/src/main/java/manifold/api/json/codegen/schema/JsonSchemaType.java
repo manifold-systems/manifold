@@ -455,13 +455,27 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
       offset += ((IFileFragment)file).getOffset();
     }
 
+    String fqnTopLevel = findTopLevelType();
+
     SrcAnnotationExpression annotation = new SrcAnnotationExpression( SourcePosition.class.getName() )
-      .addArgument( new SrcArgument( new SrcMemberAccessExpression( getIdentifier(), FIELD_FILE_URL ) ).name( "url" ) )
+      .addArgument( new SrcArgument( new SrcMemberAccessExpression( fqnTopLevel, FIELD_FILE_URL ) ).name( "url" ) )
       .addArgument( "feature", String.class, name )
       .addArgument( "offset", int.class, offset )
       .addArgument( "length", int.class, name.length() );
     annotation.render( sb, indent );
     return true;
+  }
+
+  private String findTopLevelType()
+  {
+    JsonSchemaType toplevel = this;
+    for( JsonSchemaType ancestor = getParent(); ancestor != null; ancestor = ancestor.getParent() )
+    {
+      toplevel = ancestor;
+    }
+
+    String pkg = toplevel.getPackage( getTm(), toplevel );
+    return pkg.isEmpty() ? toplevel.getIdentifier() : pkg + '.' + toplevel.getIdentifier();
   }
 
   protected IFile getIFile()
@@ -500,6 +514,12 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
   protected void renderFileField( StringBuilder sb, int indent, String modifiers )
   {
+    if( getParent() != null )
+    {
+      // file field is exclusive to top-level type, inner types reference this one
+      return;
+    }
+
     indent( sb, indent );
     try
     {

@@ -24,15 +24,16 @@ import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.Tag;
 import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.util.JCDiagnostic;
-import com.sun.tools.javac.util.Log;
+import com.sun.tools.javac.tree.TreeScanner;
+import com.sun.tools.javac.util.*;
 
 import java.util.*;
 import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
-import com.sun.tools.javac.util.Names;
 import manifold.api.util.IssueMsg;
 import manifold.internal.javac.AbstractBinder.Node;
+import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Flags.INTERFACE;
@@ -42,6 +43,13 @@ import static manifold.util.JreUtil.isJava8;
 public interface ManAttr
 {
   String AUTO_TYPE = "manifold.ext.rt.api.auto";
+
+  Object Kind_TYP = JreUtil.isJava8()
+    ? ReflectUtil.field( Kinds.class, "TYP" ).getStatic()
+    : ReflectUtil.field( Kinds.class.getTypeName() + "$Kind", "TYP" ).getStatic();
+  Object KindSelector_TYP = JreUtil.isJava8()
+    ? ReflectUtil.field( Kinds.class, "TYP" ).getStatic()
+    : ReflectUtil.field( Kinds.class.getTypeName() + "$KindSelector", "TYP" ).getStatic();
 
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
@@ -74,6 +82,11 @@ public interface ManAttr
   default Log getLogger()
   {
     return (Log)ReflectUtil.field( this, "log" ).get();
+  }
+
+  default Object resultInfo()
+  {
+    return ReflectUtil.field( this, "resultInfo" ).get();
   }
 
   default Check chk()
@@ -394,6 +407,128 @@ public interface ManAttr
   default boolean isAutoType( Type type )
   {
     return type != null && type.tsym != null && type.tsym.getQualifiedName().toString().equals( AUTO_TYPE );
+  }
+
+  /**
+   * Facilitates handling shadowing where an instance field shadows an inner class of the same name.
+   * This is particularly useful in code gen where both a property and an inner type are derived from the same element.
+   * Otherwise, use-cases such as: Person.address.builder(), don't work because address resolves as the field and not
+   * the inner class.
+   */
+  default void restoreDiagnostics( JCTree.JCFieldAccess tree, DeferredAttrDiagHandler deferredAttrDiagHandler )
+  {
+    Queue<JCDiagnostic> diagnostics = deferredAttrDiagHandler.getDiagnostics();
+    if( !diagnostics.isEmpty() )
+    {
+      if( ((tree.selected instanceof JCTree.JCIdent && isType( ((JCTree.JCIdent)tree.selected).sym )) ||
+        (tree.selected instanceof JCTree.JCFieldAccess) && isType( ((JCTree.JCFieldAccess)tree.selected).sym )) &&
+        tree.sym instanceof Symbol.VarSymbol )
+      {
+        getLogger().popDiagnosticHandler( deferredAttrDiagHandler );
+        tree.sym = null;
+        if( tree.selected instanceof JCTree.JCIdent )
+        {
+          ((JCTree.JCIdent)tree.selected).sym = null;
+        }
+        else
+        {
+          ((JCTree.JCFieldAccess)tree.selected).sym = null;
+        }
+        ReflectUtil.field( resultInfo(), "pkind" ).set( KindSelector_TYP );
+
+        ReflectUtil.method( this, "visitSelect", JCTree.JCFieldAccess.class ).invokeSuper( tree );
+//        super.visitSelect( tree );
+
+        return;
+      }
+
+      deferredAttrDiagHandler.reportDeferredDiagnostics();
+    }
+    getLogger().popDiagnosticHandler( deferredAttrDiagHandler );
+  }
+  static boolean isType( Symbol sym )
+  {
+    return sym != null && Objects.equals( ReflectUtil.field( sym, "kind" ).get(), Kind_TYP );
+  }
+  default DeferredAttrDiagHandler suppressDiagnositics( JCTree.JCFieldAccess tree )
+  {
+    return new DeferredAttrDiagHandler( getLogger(), tree );
+  }
+
+  class DeferredDiagnosticHandler extends Log.DiagnosticHandler
+  {
+    private Queue<JCDiagnostic> deferred = new ListBuffer<>();
+    private final Predicate<JCDiagnostic> filter;
+
+    public DeferredDiagnosticHandler(Log log) {
+      this(log, null);
+    }
+
+    public DeferredDiagnosticHandler(Log log, Predicate<JCDiagnostic> filter) {
+      this.filter = filter;
+      install(log);
+    }
+
+    @Override
+    public void report(JCDiagnostic diag) {
+      if (!diag.isFlagSet(JCDiagnostic.DiagnosticFlag.NON_DEFERRABLE) &&
+        (filter == null || filter.test(diag))) {
+        deferred.add(diag);
+      } else {
+        prev.report(diag);
+      }
+    }
+
+    public Queue<JCDiagnostic> getDiagnostics() {
+      return deferred;
+    }
+
+    /** Report all deferred diagnostics. */
+    public void reportDeferredDiagnostics() {
+      reportDeferredDiagnostics(EnumSet.allOf(JCDiagnostic.Kind.class));
+    }
+
+    /** Report selected deferred diagnostics. */
+    public void reportDeferredDiagnostics(Set<JCDiagnostic.Kind> kinds) {
+      JCDiagnostic d;
+      while ((d = deferred.poll()) != null) {
+        if (kinds.contains(d.getKind()))
+          prev.report(d);
+      }
+      deferred = null; // prevent accidental ongoing use
+    }
+  }
+  class DeferredAttrDiagHandler extends DeferredDiagnosticHandler
+  {
+    static class PosScanner extends TreeScanner
+    {
+      JCDiagnostic.DiagnosticPosition pos;
+      boolean found = false;
+
+      PosScanner( JCDiagnostic.DiagnosticPosition pos )
+      {
+        this.pos = pos;
+      }
+
+      @Override
+      public void scan( JCTree tree )
+      {
+        if( tree != null &&
+          tree.pos() == pos )
+        {
+          found = true;
+        }
+        super.scan( tree );
+      }
+    }
+    DeferredAttrDiagHandler( Log log, JCTree newTree )
+    {
+      super( log, d -> {
+        DeferredAttrDiagHandler.PosScanner posScanner = new DeferredAttrDiagHandler.PosScanner( d.getDiagnosticPosition() );
+        posScanner.scan( newTree );
+        return posScanner.found;
+      } );
+    }
   }
 
   /**

@@ -19,6 +19,7 @@ package manifold.util;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -1017,11 +1018,22 @@ public class ReflectUtil
     {
       try
       {
-        Object superMethod = MethodHandles.lookup().findSpecial(
+//        MethodHandles.Lookup lookup = MethodHandles.lookup();
+//        field( lookup, "lookupClass" ).set( _receiver.getClass() );
+//
+//        MethodHandle superMethod = lookup.findSpecial(
+//        _receiver.getClass().getSuperclass(), _method.getName(),
+//          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
+//        return superMethod.bindTo( _receiver ).invokeWithArguments( args );
+
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        field( lookup, "lookupClass" ).set( _receiver.getClass() );
+
+        Object superMethod = lookup.findSpecial(
           _receiver.getClass().getSuperclass(), _method.getName(),
-          java.lang.invoke.MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
-        return method( "java.lang.invoke.MethodHandle", "invokeExact", Object[].class ).invoke(
-          method( "java.lang.invoke.MethodHandle", "bindTo", Object.class ).invoke( superMethod, _receiver ), args );
+          MethodType.methodType( _method.getReturnType(), _method.getParameterTypes() ), _receiver.getClass() );
+        Object bindTo = method( superMethod, "bindTo", Object.class ).invoke( _receiver );
+        return method( bindTo, "invokeWithArguments", List.class ).invoke( Arrays.asList( args ) );
       }
       catch( Throwable t )
       {
@@ -1338,7 +1350,7 @@ public class ReflectUtil
     {
       try
       {
-        if( JreUtil.isJava17orLater() )
+        if( JreUtil.isJava11orLater() )
         {
           // this is a failed attempt at circumventing reflection checks, but keeping it here to revisit
 //          field = (Field)constructor( Field.class,
@@ -1356,7 +1368,10 @@ public class ReflectUtil
 //            : getUnsafe().objectFieldOffset( field ), value );
           // using jdk.internal.misc.Unsafe to bypass sun.misc.Unsafe restrictions on records and hidden classes
           Object unsafe = method( "jdk.internal.misc.Unsafe", "getUnsafe" ).invokeStatic();
-          method( unsafe, "putReference", Object.class, long.class, Object.class )
+          LiveMethodRef putReference = JreUtil.isJava17orLater()
+            ? method( unsafe, "putReference", Object.class, long.class, Object.class )
+            : method( unsafe, "putObject", Object.class, long.class, Object.class );
+          putReference
             .invoke( ctx == null ? method( unsafe, "staticFieldBase", Field.class ).invoke( field ) : ctx,
               Modifier.isStatic( field.getModifiers() )
                 ? method( unsafe, "staticFieldOffset", Field.class ).invoke( field ) // if this method is removed from Unsafe, write our own version of it

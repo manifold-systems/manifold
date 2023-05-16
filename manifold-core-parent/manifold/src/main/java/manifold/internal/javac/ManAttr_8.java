@@ -60,6 +60,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   private final ManLog_8 _manLog;
   private final Symtab _syms;
   private final Stack<JCTree.JCFieldAccess> _selects;
+  private final Stack<JCTree.JCMethodInvocation> _applys;
   private final Stack<JCTree.JCAnnotatedType> _annotatedTypes;
   private final Stack<JCTree.JCMethodDecl> _methodDefs;
   private final Set<JCTree.JCMethodInvocation> _visitedAutoMethodCalls = new HashSet<>();
@@ -80,6 +81,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   {
     super( ctx );
     _selects = new Stack<>();
+    _applys = new Stack<>();
     _annotatedTypes = new Stack<>();
     _methodDefs = new Stack<>();
     _syms = Symtab.instance( ctx );
@@ -135,7 +137,23 @@ public class ManAttr_8 extends Attr implements ManAttr
     _selects.push( tree );
     try
     {
-      super.visitSelect( tree );
+      JCTree.JCMethodInvocation parent = peekApply();
+      DeferredAttrDiagHandler deferredAttrDiagHandler = null;
+      if( parent == null || parent.meth != tree )
+      {
+        deferredAttrDiagHandler = suppressDiagnositics( tree );
+      }
+      try
+      {
+        super.visitSelect( tree );
+      }
+      finally
+      {
+        if( deferredAttrDiagHandler != null )
+        {
+          restoreDiagnostics( tree, deferredAttrDiagHandler );
+        }
+      }
       patchAutoFieldType( tree );
     }
     finally
@@ -466,6 +484,11 @@ public class ManAttr_8 extends Attr implements ManAttr
     return _selects.isEmpty() ? null : _selects.peek();
   }
 
+  public JCTree.JCMethodInvocation peekApply()
+  {
+    return _applys.isEmpty() ? null : _applys.peek();
+  }
+
   public JCTree.JCAnnotatedType peekAnnotatedType()
   {
     return _annotatedTypes.isEmpty() ? null : _annotatedTypes.peek();
@@ -499,6 +522,7 @@ public class ManAttr_8 extends Attr implements ManAttr
       _manLog.pushSuspendIssues( tree ); // since method-calls can be nested, we need a tree of stacks TreeNode(JCTree.JCFieldAccess, Stack<JCDiagnostic>>)
     }
 
+    _applys.push( tree );
     JCTree.JCFieldAccess fieldAccess = (JCTree.JCFieldAccess)tree.meth;
     try
     {
@@ -536,6 +560,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     }
     finally
     {
+      _applys.pop();
       if( JAILBREAK_PRIVATE_FROM_SUPERS )
       {
         _manLog.popSuspendIssues( tree );

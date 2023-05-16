@@ -21,7 +21,6 @@ import manifold.util.ReflectUtil;
 
 
 import static abc.Person.*;
-import static abc.Person.Address.*;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -170,12 +169,12 @@ public class JsonTest extends TestCase
     person.setName( "Joe Namath" );
     assertEquals( "Joe Namath", person.getName() );
 
-    Address address = Address.create();
+    Person.address address = Person.address.create();
     address.setCity( "Dunedin" );
     person.setAddress( address );
     assertEquals( "Dunedin", person.getAddress().getCity() );
 
-    Planet planet = Planet.create();
+    Person.address.planet planet = Person.address.planet.create();
     address.setPlanet( planet );
 
     Hobby.HobbyItem baseball = Hobby.HobbyItem.create();

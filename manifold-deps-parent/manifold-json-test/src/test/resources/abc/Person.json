@@ -1,12 +1,12 @@
 {
   "Name": "Dickson Yamada",
   "Age": 39,
-  "Address": {
+  "address": {
     "Number": 9604,
     "Street": "Donald Court",
     "City": "Golden Shores",
     "State": "FL",
-    "Planet" : {
+    "planet" : {
       "Name": "Earth"
     }
   },
