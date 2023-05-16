@@ -858,11 +858,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-rt:2023.1.7'
+    implementation 'systems.manifold:manifold-rt:2023.1.8'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.7'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.7'
+    annotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.8'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold', version: '2023.1.8'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -899,7 +899,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.7</manifold.version>
+        <manifold.version>2023.1.8</manifold.version>
     </properties>
     
     <dependencies>
@@ -952,10 +952,10 @@ Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio
 # Javadoc 
 
 `manifold`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold/2023.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold/2023.1.7)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold/2023.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold/2023.1.8)
 
 `manifold-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-rt/2023.1.7/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-rt/2023.1.7)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-rt/2023.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-rt/2023.1.8)
 
 # License
 
