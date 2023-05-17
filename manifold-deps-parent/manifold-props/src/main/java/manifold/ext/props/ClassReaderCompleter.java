@@ -137,7 +137,8 @@ class ClassReaderCompleter implements Symbol.Completer
     }
   }
 
-  // recursively processes ancestry of class sym (for property inference, super's properties must be established)
+  // recursively processes ancestry of class sym
+  // (for property inference, both the enclosing and super class' properties must be established)
   // (calling complete on the sym calls comes here)
   private Symbol.ClassSymbol completeAncestryFirst( Symbol.ClassSymbol sym )
   {
@@ -146,14 +147,24 @@ class ClassReaderCompleter implements Symbol.Completer
     {
       try
       {
+        Symbol enclClass = superclass.tsym.getEnclosingElement();
+        if( enclClass instanceof Symbol.ClassSymbol )
+        {
+          completeAncestryFirst( (Symbol.ClassSymbol)enclClass );
+        }
         superclass.tsym.complete();
       }
       catch( Symbol.CompletionFailure ignore ) {}
-
     }
+
     sym.getInterfaces().forEach( iface -> {
       try
       {
+        Symbol enclClass = iface.tsym.getEnclosingElement();
+        if( enclClass instanceof Symbol.ClassSymbol )
+        {
+          completeAncestryFirst( (Symbol.ClassSymbol)enclClass );
+        }
         iface.tsym.complete();
       }
       catch( Symbol.CompletionFailure ignore ) {}
