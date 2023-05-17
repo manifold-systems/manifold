@@ -105,11 +105,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2023.1.8'
+    compileOnly 'systems.manifold:manifold-rt:2023.1.9'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-image:2023.1.8'
-    testAnnotationProcessor 'systems.manifold:manifold-image:2023.1.8'
+    annotationProcessor 'systems.manifold:manifold-image:2023.1.9'
+    testAnnotationProcessor 'systems.manifold:manifold-image:2023.1.9'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -153,7 +153,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.8</manifold.version>
+        <manifold.version>2023.1.9</manifold.version>
     </properties>
 
     <dependencies>
@@ -207,7 +207,7 @@ module my.image.app {
 # Javadoc
 
 `manifold-image`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2023.1.8/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2023.1.8)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2023.1.9/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2023.1.9)
 
 # License
 
