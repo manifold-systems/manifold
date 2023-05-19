@@ -19,6 +19,8 @@ package manifold.ext;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.util.List;
+import manifold.rt.api.util.TypesUtil;
+
 import java.util.ArrayList;
 import javax.lang.model.type.NoType;
 
@@ -111,7 +113,7 @@ class StructuralTypeEraser extends Types.UnaryVisitor<Type>
   @Override
   public Type visitType( Type t, Void o )
   {
-    if( TypeUtil.isStructuralInterface( _extensionTransformer.getTypeProcessor(), t.tsym ) )
+    if( TypesUtil.isStructuralInterface( _extensionTransformer.getTypeProcessor().getTypes(), t.tsym ) )
     {
       return _extensionTransformer.getObjectClass().asType();
     }

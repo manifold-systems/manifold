@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 import manifold.rt.api.anno.any;
+import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -524,6 +525,7 @@ public class ManTypes_8 extends Types
     return super.resultSubtype( t, s, warner );
   }
 
+  @Override
   public boolean isConvertible( Type t, Type s, Warner warn )
   {
     if( t != null && t.tsym != null && ManAttr.AUTO_TYPE.equals( t.tsym.getQualifiedName().toString() ) )
@@ -536,7 +538,17 @@ public class ManTypes_8 extends Types
     }
     return super.isConvertible( t, s, warn );
   }
-  
+
+  @Override
+  public boolean isCastable( Type t, Type s, Warner warn )
+  {
+    if( !t.isPrimitive() && TypesUtil.isStructuralInterface( this, s.tsym ) )
+    {
+      return true;
+    }
+    return super.isCastable( t, s, warn );
+  }
+
   /**
    * Override to keep track of when/if implementation() is in scope, if ManTypes#memberType() should not try to
    * substitute the qualifier type for @Self because the qualifier is not really a call site, rather it is the

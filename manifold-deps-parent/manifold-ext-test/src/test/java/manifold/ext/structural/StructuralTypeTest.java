@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import junit.framework.TestCase;
+import manifold.ext.rt.api.Structural;
 
 /**
  */
@@ -167,5 +168,18 @@ public class StructuralTypeTest extends TestCase
     {
       return _coord.getX();
     }
+  }
+
+  public void testFinalClass()
+  {
+    Bob bob = (Bob)new BobImpl();
+    bob.bob();
+  }
+  @Structural
+  interface Bob {
+    void bob();
+  }
+  static final class BobImpl {
+    public void bob() {}
   }
 }

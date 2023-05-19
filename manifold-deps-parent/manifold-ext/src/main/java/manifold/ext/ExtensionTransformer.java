@@ -48,6 +48,7 @@ import manifold.rt.api.FragmentValue;
 import manifold.rt.api.IncrementalCompile;
 import manifold.rt.api.Precompile;
 import manifold.rt.api.util.Pair;
+import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 import manifold.util.concurrent.ConcurrentHashSet;
@@ -551,7 +552,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( TypeUtil.isStructuralInterface( _tp, tree.sym ) && !isReceiver( tree ) )
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       Tree parent = _tp.getParent( tree );
@@ -613,7 +614,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( TypeUtil.isStructuralInterface( _tp, tree.sym ) && !isReceiver( tree ) )
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
       JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
@@ -1126,7 +1127,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) )
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.type.tsym ) )
     {
       // erase type if structural interface
       Symbol.ClassSymbol objectSym = getObjectClass();
@@ -1170,7 +1171,7 @@ public class ExtensionTransformer extends TreeTranslator
       return;
     }
 
-    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) )
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.type.tsym ) )
     {
       Type objectType = _tp.getSymtab().objectType;
       tree.expr = makeCast( tree.getExpression(), objectType );
@@ -1310,7 +1311,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     // the javac compiler generates casts e.g., for a generic call such as List#get()
 
-    if( TypeUtil.isStructuralInterface( _tp, tree.type.tsym ) && !isConstructProxyCall( tree.getExpression() ) )
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.type.tsym ) && !isConstructProxyCall( tree.getExpression() ) )
     {
       tree.type = getObjectClass().type;
       TreeMaker make = _tp.getTreeMaker();
@@ -1411,7 +1412,7 @@ public class ExtensionTransformer extends TreeTranslator
     {
       if( !isObjectMethod( sym ) )
       {
-        return TypeUtil.isStructuralInterface( _tp, sym.owner );
+        return TypesUtil.isStructuralInterface( _tp.getTypes(), sym.owner );
       }
     }
     return false;
@@ -1559,7 +1560,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     Type iterableType = _tp.getTypes().erasure( _tp.getSymtab().iterableType );
 
-    if( TypeUtil.isStructuralInterface( _tp, iterableType.tsym ) &&
+    if( TypesUtil.isStructuralInterface( _tp.getTypes(), iterableType.tsym ) &&
       _tp.getTypes().isAssignable( tree.expr.type.tsym.type, iterableType ) )
     {
       // replace with: makeIterable( expr.iterator() )
@@ -2159,7 +2160,7 @@ public class ExtensionTransformer extends TreeTranslator
 
   private void eraseGenericStructuralVarargs( JCTree.JCMethodInvocation tree )
   {
-    if( tree.varargsElement instanceof Type.ClassType && TypeUtil.isStructuralInterface( _tp, tree.varargsElement.tsym ) )
+    if( tree.varargsElement instanceof Type.ClassType && TypesUtil.isStructuralInterface( _tp.getTypes(), tree.varargsElement.tsym ) )
     {
       tree.varargsElement = _tp.getSymtab().objectType;
     }
@@ -2229,7 +2230,7 @@ public class ExtensionTransformer extends TreeTranslator
 
     for( JCTree.JCVariableDecl param: tree.getParameters() )
     {
-      if( TypeUtil.isStructuralInterface( _tp, param.type.tsym ) )
+      if( TypesUtil.isStructuralInterface( _tp.getTypes(), param.type.tsym ) )
       {
         // default void myDefaultMethod( MyStructuralIface obj ) {
         //   generated --> obj = unFakeProxy( obj );
@@ -2367,7 +2368,7 @@ public class ExtensionTransformer extends TreeTranslator
           Symbol.ClassSymbol extendClassSym = IDynamicJdk.instance().getTypeElement(
             _tp.getContext(), _tp.getCompilationUnit(), extendedClassName );
           if( extendClassSym != null &&
-            !TypeUtil.isStructuralInterface( _tp, extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
+            !TypesUtil.isStructuralInterface( _tp.getTypes(), extendClassSym ) && // an extended class could be made a structural interface which results in Object as @This param, ignore this
             !TypeUtil.isAssignableFromErased( _tp.getContext(), extendClassSym, param.type.tsym ) &&
             (tree.sym.enclClass() == null || !param.type.tsym.isEnclosedBy( extendClassSym )) // handle inner class extension method
           )
@@ -3111,7 +3112,7 @@ public class ExtensionTransformer extends TreeTranslator
         if( !isObjectMethod( m.sym ) )
         {
           JCExpression thisArg = m.selected;
-          return TypeUtil.isStructuralInterface( _tp, thisArg.type.tsym );
+          return TypesUtil.isStructuralInterface( _tp.getTypes(), thisArg.type.tsym );
         }
       }
     }
