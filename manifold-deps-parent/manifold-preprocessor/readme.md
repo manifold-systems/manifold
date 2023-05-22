@@ -352,12 +352,13 @@ etc.
 ``` 
 See [manifold-preprocessor-android-syms](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor-android-syms) for details.
 
-## Dumping source
-                 
-The preprocessor integrates directly with the Java parser, as such there are no intermediate files to manage. However,
-some tools may need to parse or otherwise analyze processed Java source separate from the Java compiler. In this case
-you can use the `manifold.source.target` compiler option to specify a directory where all source is copied as it is
-compiled, including processed and generated source from Manifold.
+# Dumping Source
+
+The manifold plugin integrates directly with the Java parser, as such there are no intermediate source files to manage.
+However, external tools and unsupported IDEs may require access to the Java sources manifold processes or produces during
+compilation. In this case you can use the `manifold.source.target` compiler option to specify a directory where _all_ compiled
+sources are copied as they are compiled. These include processed, supplemented, and fully generated sources from Manifold
+as well as ordinary source files in your project.
 
 Usage:
 ```

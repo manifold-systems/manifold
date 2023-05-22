@@ -16,6 +16,7 @@ interfaces, annotations, etc.
 * [Configuring Manifold](#configuring-manifold)
 * [Explicit Resource Compilation](#explicit-resource-compilation)
 * [Modes](#modes)
+* [Dumping Source](#dumping-source)
 * [Programming Language Manifolds](#programming-language-manifolds)
 * [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
 * [IDE Support](#ide-support)
@@ -591,17 +592,15 @@ processing -- the resources are already available as .class files.
 
 # Modes
 
-You can use Manifold in one of two modes which you control as an optional argument to the Manifold plugin for javac:
+Manifold may be used in one of two modes which you control as an optional argument to the Manifold plugin for javac:
 
 * **static**: `-Xplugin:Manifold` (default) compiles resource types statically at compile-time
 
 * **dynamic**: `-Xplugin:Manifold dynamic` compiles resource types _dynamically_ at _runtime_
 (alternatively `-Xplugin:"Manifold dynamic"`, some tools may require quotes)
 
-Most projects benefit most using the default (static) mode. Dynamic mode in most cases should be reserved for specific
-type manifolds that are better suited to dynamic compilation.
-
-> If you're not sure which mode to use, try the default static mode -- it's usually the right choice.
+> **Warning!!!** Dynamic mode is designed for special use-cases. Do not use dynamic mode in your project unless your it
+> is purely for experimentation purposes, or you have consulted with Manifold engineering regarding your project's needs.
 
 General information considering the static v. dynamic mode:
 
@@ -624,6 +623,20 @@ sources when you build your project
 > You can use `javac` command line arguments to statically compile a set of specified types whether you use
 > them directly in your code e.g., if type-safe resources are part of an API.  See [Explicit Resource Compilation](#explicit-resource-compilation).
  
+# Dumping Source
+
+The manifold plugin integrates directly with the Java parser, as such there are no intermediate source files to manage.
+However, external tools and unsupported IDEs may require access to the Java sources manifold processes or produces during
+compilation. In this case you can use the `manifold.source.target` compiler option to specify a directory where _all_ compiled
+sources are copied as they are compiled. These include processed, supplemented, and fully generated sources from Manifold
+as well as ordinary source files in your project.
+
+Usage:
+```
+javac -Amanifold.source.target=<my-directory> ...
+```
+>Note, you are responsible for managing the directory in your build configuration. For instance, for the "clean" build
+>target, it is your responsibility to delete the contents of the directory.
 
 # Programming Language Manifolds
 
