@@ -20,7 +20,7 @@ import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.TypeMap;
-import manifold.sql.rt.connection.TestContextProvider;
+import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.Schema;
 import manifold.util.ManExceptionUtil;
 
@@ -76,7 +76,7 @@ public class JdbcQueryTable implements QueryTable
 
   private void build( Connection c, List<ParamInfo> paramNames )
   {
-    for( TestContextProvider p : TestContextProvider.PROVIDERS.get() )
+    for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
     {
       p.init( c );
     }

@@ -16,11 +16,10 @@
 
 package manifold.sql.schema.jdbc;
 
-import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.TypeMap;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.Schema;
-import manifold.sql.rt.connection.TestContextProvider;
+import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
@@ -54,7 +53,7 @@ public class JdbcSchema implements Schema
 
   private void build( Connection c ) throws SQLException
   {
-    for( TestContextProvider p : TestContextProvider.PROVIDERS.get() )
+    for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
     {
       p.init( c );
     }

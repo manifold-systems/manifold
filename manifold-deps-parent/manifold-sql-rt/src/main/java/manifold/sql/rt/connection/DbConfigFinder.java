@@ -58,12 +58,13 @@ public class DbConfigFinder
       }
 
       // Now try finding a *.dbconfig file
-      Object module = JreUtil.isJava8()
+      Object module = JreUtil.isJava8() || ctx == null
         ? null
         : ReflectUtil.method( (Object)ctx, "getModule" ).invoke();
       String moduleName = module != null && (boolean)ReflectUtil.method( module, "isNamed" ).invoke()
         ? (String)ReflectUtil.method( module, "getName" ).invoke()
         : null;
+      moduleName = moduleName == null ? null : moduleName.replace( '.', '_' );
       return findConfig( moduleName, configName, ctx );
     } );
   }
@@ -84,11 +85,15 @@ public class DbConfigFinder
   private static DbConfig findConfig( String module, String configName, Class<?> ctx )
   {
     InputStream stream = findConfigInCurrentDir( configName );
-    stream = stream == null ? findConfigAsResource( module, configName, ctx ) : stream;
+    if( stream == null && ctx != null )
+    {
+      stream = findConfigAsResource( module, configName, ctx );
+    }
     if( stream == null )
     {
       return null;
     }
+
     try( Reader reader = new InputStreamReader( stream ) )
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );

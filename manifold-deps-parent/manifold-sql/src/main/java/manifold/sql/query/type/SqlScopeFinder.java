@@ -56,12 +56,42 @@ public class SqlScopeFinder
     return _scopes.get();
   }
 
-  SqlScope findScope( IFile file )
+  SqlScope findScope( IFile sqlFile )
   {
-    return _scopes.get().stream()
-      .filter( scope -> scope.contains( file ) )
+    SqlScope sqlScope = _scopes.get().stream()
+      .filter( scope -> scope.appliesTo( sqlFile ) )
       .findFirst().orElse( null );
+
+    if( sqlScope != null )
+    {
+      return sqlScope;
+    }
+
+    if( SqlScope.isDefaultScopeApplicable( sqlFile ) )
+    {
+      return findDefaultScope();
+    }
+
+    return null;
   }
+
+  private SqlScope findDefaultScope()
+  {
+    Set<SqlScope> scopes = getScopes();
+    if( scopes.size() == 1 )
+    {
+      return scopes.stream().findFirst().get();
+    }
+    for( SqlScope scope : scopes )
+    {
+      if( scope.getDbconfig().isDefault() )
+      {
+        return scope;
+      }
+    }
+    return null;
+  }
+
 
   private Set<SqlScope> findScopes()
   {

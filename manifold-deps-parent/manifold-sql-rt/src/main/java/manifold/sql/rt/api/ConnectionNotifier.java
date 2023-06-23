@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.connection;
+package manifold.sql.rt.api;
 
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -23,14 +23,23 @@ import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
 
-public interface TestContextProvider
+/**
+ * Notifies implementors immediately after a JDBC connection is established. Useful for testing, debugging, and connection
+ * related environment setup.
+ * <p/>
+ * Note, implement {@link manifold.sql.rt.api.ConnectionProvider} to control the Connection itself.
+ */
+public interface ConnectionNotifier
 {
-  LocklessLazyVar<Set<TestContextProvider>> PROVIDERS =
+  LocklessLazyVar<Set<ConnectionNotifier>> PROVIDERS =
     LocklessLazyVar.make( () -> {
-      Set<TestContextProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, TestContextProvider.class, TestContextProvider.class.getClassLoader() );
+      Set<ConnectionNotifier> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, ConnectionNotifier.class, ConnectionNotifier.class.getClassLoader() );
       return registered;
     } );
 
+  /**
+   * Invoked immediately after a JDBC connection is established.
+   */
   void init( Connection c );
 }

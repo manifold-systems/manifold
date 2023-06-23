@@ -96,43 +96,11 @@ public class SqlModel extends AbstractSingleFileModel
   private SqlScope assignScope()
   {
     SqlScope scope = _sqlManifold.getScopeFinder().findScope( getFile() );
-    if( scope == null && noFragmentScope() )
-    {
-      scope = findDefaultScope();
-    }
     if( scope == null )
     {
       scope = SqlScope.makeErrantScope( _sqlManifold, getFqn(), getFile() );
     }
     return scope;
-  }
-
-  private boolean noFragmentScope()
-  {
-    IFile file = getFile();
-    if( file instanceof IFileFragment )
-    {
-      String scope = ((IFileFragment)file).getScope();
-      return scope == null || scope.isEmpty();
-    }
-    return true;
-  }
-
-  private SqlScope findDefaultScope()
-  {
-    Set<SqlScope> scopes = _sqlManifold.getScopeFinder().getScopes();
-    if( scopes.size() == 1 )
-    {
-      return scopes.stream().findFirst().get();
-    }
-    for( SqlScope scope : scopes )
-    {
-      if( scope.getDbconfig().isDefault() )
-      {
-        return scope;
-      }
-    }
-    return null;
   }
 
   SqlScope getScope()

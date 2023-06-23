@@ -18,7 +18,6 @@ package manifold.sql.rt.api;
 
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
-import manifold.sql.rt.connection.TestContextProvider;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
@@ -54,7 +53,7 @@ public class Runner<T extends SqlQueryResult>
 
     try( Connection c = cp.getConnection( _configName, _queryClass ) )
     {
-      for( TestContextProvider p : TestContextProvider.PROVIDERS.get() )
+      for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
       {
         p.init( c );
       }

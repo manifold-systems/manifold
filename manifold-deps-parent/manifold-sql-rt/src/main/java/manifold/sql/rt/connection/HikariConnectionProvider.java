@@ -18,7 +18,6 @@ package manifold.sql.rt.connection;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.util.ManExceptionUtil;
@@ -30,7 +29,7 @@ import java.util.Map;
 
 public class HikariConnectionProvider implements ConnectionProvider
 {
-  private Map<String, HikariDataSource> _dataSources = new LinkedHashMap<>();
+  private final Map<String, HikariDataSource> _dataSources = new LinkedHashMap<>();
 
   @Override
   public Connection getConnection( String configName, Class<?> classContext )
@@ -39,7 +38,9 @@ public class HikariConnectionProvider implements ConnectionProvider
       DbConfig dbConfig = DbConfigFinder.instance().findConfig( configName, classContext );
       if( dbConfig == null )
       {
-        throw new RuntimeException( "Could not find a .dbconfig file for \"" + configName + "\"" );
+        throw ManExceptionUtil.unchecked(
+          new SQLException( "Could not find DbConfig for \"" + configName + "\", " +
+            "class context: " + classContext.getTypeName() ) );
       }
 
       loadDriverClass( dbConfig );
@@ -66,7 +67,8 @@ public class HikariConnectionProvider implements ConnectionProvider
     }
     catch( ClassNotFoundException e )
     {
-      throw new RuntimeException( e );
+      throw ManExceptionUtil.unchecked(
+        new SQLException( "Could not find JDBC driver class: " + dbConfig.getDriverClass() ) );
     }
   }
 }

@@ -16,6 +16,7 @@
 
 package manifold.sql.query.type;
 
+import manifold.api.fs.IFile;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
 
@@ -48,6 +49,27 @@ public class SqlManifold extends JavaTypeManifold<SqlModel>
   public boolean handlesFileExtension( String fileExtension )
   {
     return EXTS.contains( fileExtension );
+  }
+
+  @Override
+  public String getTypeNameForFile( String fqn, IFile file )
+  {
+    // handle sql file names that encode the DbConfig name as a secondary extension: MyQuery.MyDbConfig.sql
+    // type name is MyQuery
+
+    String fileBaseName = file.getBaseName();
+    int contentExt = fileBaseName.lastIndexOf( '.' );
+    if( contentExt < 0 )
+    {
+      // No secondary extension in name, keep fqn as-is
+      return fqn;
+    }
+    int indexContentExt = fqn.lastIndexOf( '_' );
+    if( fqn.substring( indexContentExt + 1 ).equals( fileBaseName.substring( contentExt + 1 ) ) )
+    {
+      return fqn.substring( 0, indexContentExt );
+    }
+    return fqn;
   }
 
   @Override

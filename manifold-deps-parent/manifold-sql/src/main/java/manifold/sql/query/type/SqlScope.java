@@ -25,7 +25,6 @@ import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaProvider;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -89,20 +88,45 @@ public class SqlScope
     return _issues;
   }
 
-  boolean contains( IFile file )
+  boolean appliesTo( IFile file )
   {
-    if( hasConfigErrors() )
+    if( hasConfigErrors() || _dbConfig.getName() == null )
     {
       return false;
     }
 
-    if( file instanceof IFileFragment )
+    String dbConfigName = findDbConfigName( file );
+    if( dbConfigName != null )
     {
-      return _dbConfig.getName() != null && _dbConfig.getName().equals( ((IFileFragment)file).getScope() );
+      return _dbConfig.getName().equals( dbConfigName );
     }
 
-    // sql files in the same directory or subdirectories of the config file are in scope
-    return file.isDescendantOf( _sqlManifold.getModule().getHost().getFileSystem().getIDirectory( new File( _dbConfig.getPath() ).getParentFile() ) );
+    return false;
+  }
+
+  public static boolean isDefaultScopeApplicable( IFile file )
+  {
+    String dbConfigName = findDbConfigName( file );
+    return dbConfigName == null || dbConfigName.isEmpty();
+  }
+
+  static String findDbConfigName( IFile file )
+  {
+    if( file instanceof IFileFragment )
+    {
+      return ((IFileFragment)file).getScope();
+    }
+
+    // look for name like: MyQuery.MyDbConfigName.sql
+
+    String fileBaseName = file.getBaseName();
+    int dbconfigName = fileBaseName.lastIndexOf( '.' );
+    if( dbconfigName < 0 )
+    {
+      // No secondary extension in name
+      return null;
+    }
+    return fileBaseName.substring( dbconfigName + 1 );
   }
 
   public boolean isErrant()

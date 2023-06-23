@@ -23,6 +23,9 @@ import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Implementors provide JDBC connections for all manifold-sql JDBC operations.
+ */
 public interface ConnectionProvider
 {
   LocklessLazyVar<Set<ConnectionProvider>> PROVIDERS =
@@ -32,5 +35,19 @@ public interface ConnectionProvider
       return registered;
     } );
 
+  /**
+   * Provides a JDBC connection corresponding with the {@code configName} {@link DbConfig} and optional {@code classContext}.
+   * A standard implementation sources the {@code configName} DbConfig in the following order:
+   * <li>Consult {@link DbConfigProvider} implementations</li>
+   * <li>From {@code <configName>.dbconfig} file in the {@code /config} subdir of the current directory (runtime only)</li>
+   * <li>From {@code <configName>.dbconfig} file in the current directory (runtime only)</li>
+   * <li>From {@code <configName>.dbconfig} resource file in the {@code <module-name>.config} package (JDK 11+)</li>
+   * <li>From {@code <configName>.dbconfig} resource file in the {@code config} package (JDK 8+)</li>
+   *
+   * @param configName The name of the DbConfig. Does not include a file extension.
+   * @param classContext The class initiating the connection. Used for context when searching for the DbConfig as a resource
+   *                     file.
+   * @return The JDBC connection
+   */
   Connection getConnection( String configName, Class<?> classContext );
 }
