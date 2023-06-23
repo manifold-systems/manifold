@@ -19,9 +19,7 @@ package manifold.tuple.rt.api;
 import manifold.ext.rt.api.Self;
 import manifold.util.ManExceptionUtil;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 /**
  * Root interface for tuples.
@@ -45,6 +43,27 @@ public interface Tuple extends Iterable<TupleItem>
    */
   @Override
   Iterator<TupleItem> iterator();
+
+  /**
+   * Make a map reflecting the name/value pairs of this tuple.
+   * @param recursive If true, recursively calls this method for values that are tuples.
+   * @return A map reflecting name/value pairs of this tuple.
+   */
+  default Map<String, Object> toMap( boolean recursive )
+  {
+    Map<String, Object> map = new LinkedHashMap<>();
+    for( TupleItem item : this )
+    {
+      String name = item.getName();
+      Object value = item.getValue();
+      if( recursive && value instanceof Tuple )
+      {
+        value = ((Tuple)value).toMap( true );
+      }
+      map.put( name, value );
+    }
+    return map;
+  }
 
   /**
    * @return A shallow copy of this tuple. The return type is the receiver's type.

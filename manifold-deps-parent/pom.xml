@@ -65,6 +65,9 @@
     <module>manifold-properties-test</module>
     <module>manifold-science</module>
     <module>manifold-science-test</module>
+    <module>manifold-sql</module>
+    <module>manifold-sql-rt</module>
+    <module>manifold-sql-test</module>
     <module>manifold-strings</module>
     <module>manifold-strings-test</module>
     <module>manifold-strings-test-excl</module>

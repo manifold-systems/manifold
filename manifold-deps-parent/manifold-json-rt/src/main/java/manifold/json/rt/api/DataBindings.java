@@ -16,11 +16,7 @@
 
 package manifold.json.rt.api;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.rt.api.Bindings;
@@ -30,6 +26,8 @@ import manifold.rt.api.Bindings;
  */
 public class DataBindings implements Bindings
 {
+  public static final DataBindings EMPTY_BINDINGS = new DataBindings( Collections.emptyMap() );
+
   /**
    * Stores name/value bindings.
    */

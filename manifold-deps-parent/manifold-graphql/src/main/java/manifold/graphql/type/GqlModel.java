@@ -60,14 +60,14 @@ public class GqlModel extends AbstractSingleFileModel
   {
     super( gqlManifold.getModule().getHost(), fqn, files );
     _gqlManifold = gqlManifold;
-    _issues = null;
-    _fragments = Collections.emptyMap();
-    _operations = Collections.emptyMap();
     init();
   }
 
   private void init()
   {
+    _issues = null;
+    _fragments = Collections.emptyMap();
+    _operations = Collections.emptyMap();
     _scope = assignScope();
     parse();
     _type = new GqlParentType( this );

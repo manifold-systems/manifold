@@ -1,0 +1,6 @@
+{
+  "driverClass": "org.sqlite.JDBC",
+  "url": "jdbc:sqlite:src/test/sakila-sqlite.db",
+  "buildUrl": "jdbc:sqlite:manifold-deps-parent/manifold-sql-test/src/test/sakila-sqlite.db",
+  "schemaPackage": "manifold.sql.schema.simple"
+}

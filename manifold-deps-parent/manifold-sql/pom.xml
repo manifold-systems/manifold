@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>2023.1.10-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-sql</artifactId>
+
+  <name>Manifold :: SQL</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-sql-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-json</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+      <!-- 'optional' means this dependency is hidden i.e., not transitive -->
+      <optional>true</optional>
+    </dependency>
+
+    <!--    <dependency>-->
+<!--      <groupId>com.h2database</groupId>-->
+<!--      <artifactId>h2</artifactId>-->
+<!--      <version>2.2.219-SNAPSHOT</version>-->
+<!--    </dependency>-->
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!--JPMS module name-->
+              <Automatic-Module-Name>manifold.sql</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
+</project>
