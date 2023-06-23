@@ -7,6 +7,7 @@
 - Type-safe DDL. Type-safe queries. Type-safe results.<br>
 - Embed SQL directly in Java source. Or, use .sql files.<br>
 - All JDBC database drivers and dialects fully supported.<br>
+- Supports Java 8 - 21 (LTS releases)
                                                       
 ![img.png](img.png)
 
