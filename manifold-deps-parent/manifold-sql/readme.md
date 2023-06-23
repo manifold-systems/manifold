@@ -8,8 +8,8 @@
 - Embed SQL directly in Java source. Or, use .sql files.<br>
 - All JDBC database drivers and dialects fully supported.<br>
 - Supports Java 8 - 21 (LTS releases)
-                                                      
-![img.png](img.png)
+
+<p><img src="http://manifold.systems/images/img.png" alt="manifold-sql" width="100%" height="100%"/></p>
 
 Coming soon. . .
 
