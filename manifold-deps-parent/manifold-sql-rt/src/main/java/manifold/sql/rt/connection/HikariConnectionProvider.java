@@ -43,11 +43,7 @@ public class HikariConnectionProvider implements ConnectionProvider
             "class context: " + classContext.getTypeName() ) );
       }
 
-      loadDriverClass( dbConfig );
-
-      HikariConfig config = new HikariConfig( dbConfig.toProperties() );
-      config.setJdbcUrl( dbConfig.getUrl() );
-      return new HikariDataSource( config );
+      return makeConnection( dbConfig, dbConfig.getUrl() );
     } );
     try
     {
@@ -57,6 +53,29 @@ public class HikariConnectionProvider implements ConnectionProvider
     {
       throw ManExceptionUtil.unchecked( e );
     }
+  }
+
+  @Override
+  public Connection getConnection( DbConfig dbConfig )
+  {
+    HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
+      makeConnection( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
+    try
+    {
+      return ds.getConnection();
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  private HikariDataSource makeConnection( DbConfig dbConfig, String url )
+  {
+    loadDriverClass( dbConfig );
+    HikariConfig config = new HikariConfig( dbConfig.toProperties() );
+    config.setJdbcUrl( url );
+    return new HikariDataSource( config );
   }
 
   private void loadDriverClass( DbConfig dbConfig )

@@ -19,27 +19,43 @@ package manifold.sql.query.jdbc;
 import manifold.sql.query.api.QueryParameter;
 
 import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 public class JdbcQueryParameter implements QueryParameter
 {
   private final JdbcQueryTable _queryTable;
   private final int _position;
   private final String _name;
-  private final Class<?> _type;
+  private Class<?> _type;
   private final int _size;
   private final int _scale;
   private final boolean _isNullable;
   private final boolean _isSigned;
 
-  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData ) throws SQLException
+  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, PreparedStatement preparedStatement ) throws SQLException
   {
     _position = paramIndex;
     _name = name == null ? "p" + paramIndex : name;
     _queryTable = queryTable;
 
-    int typeId = paramMetaData.getParameterType( paramIndex );
-    _type = queryTable.getTypeMap().getType( this, typeId );
+    int typeId;
+    try
+    {
+      typeId = paramMetaData.getParameterType( paramIndex );
+    }
+    catch( Exception e )
+    {
+      // (circus music)
+      // some drivers (SQLite since 3.42) require the parameter value to be set in the prepared statement BEFORE the
+      // call to getParameterType(), so the type can be obtained from the value (?!) instead of inferring the type from
+      // the parameter's context
+      preparedStatement.setString( paramIndex, "" );
+      typeId = Types.OTHER;
+      _type = Object.class;
+    }
+    _type = _type == null ? queryTable.getTypeMap().getType( this, typeId ) : _type;
     _size = paramMetaData.getParameterType( paramIndex );
     _scale = paramMetaData.getScale( paramIndex );
     _isNullable = paramMetaData.isNullable( paramIndex ) != ParameterMetaData.parameterNoNulls;

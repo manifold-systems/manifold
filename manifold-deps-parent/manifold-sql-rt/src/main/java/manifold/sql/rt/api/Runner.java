@@ -47,10 +47,7 @@ public class Runner<T extends SqlQueryResult>
   @SuppressWarnings( "unused" )
   public Iterable<T> run()
   {
-    ConnectionProvider cp = ConnectionProvider.PROVIDERS.get().stream()
-      .findFirst()
-      .orElseThrow( () -> new RuntimeException( "Could not find SQL connection provider" ) );
-
+    ConnectionProvider cp = ConnectionProvider.findFirst();
     try( Connection c = cp.getConnection( _configName, _queryClass ) )
     {
       for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )

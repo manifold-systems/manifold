@@ -19,6 +19,7 @@ package manifold.sql.query.jdbc;
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlScope;
+import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.TypeMap;
 import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.Schema;
@@ -52,7 +53,8 @@ public class JdbcQueryTable implements QueryTable
       return;
     }
 
-    try( Connection c = DriverManager.getConnection( scope.getDbconfig().getBuildUrlOtherwiseRuntimeUrl() ) )
+    ConnectionProvider cp = ConnectionProvider.findFirst();
+    try( Connection c = cp.getConnection( scope.getDbconfig() ) )
     {
       build( c, paramNames );
     }
@@ -103,7 +105,7 @@ public class JdbcQueryTable implements QueryTable
       for( int i = 1; i <= paramCount; i++ )
       {
         String name = paramNames.isEmpty() ? null : paramNames.get( i - 1 ).getName().substring( 1 );
-        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData );
+        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, preparedStatement );
         _parameters.add( param );
       }
     }

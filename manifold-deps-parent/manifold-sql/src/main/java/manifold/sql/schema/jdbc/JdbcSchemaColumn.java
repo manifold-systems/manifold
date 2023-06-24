@@ -16,7 +16,6 @@
 
 package manifold.sql.schema.jdbc;
 
-import manifold.sql.api.Table;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaTable;
 
@@ -45,7 +44,7 @@ public class JdbcSchemaColumn implements SchemaColumn
     _position = colIndex;
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
-    _isNullable = "YES".equals( rs.getString( "IS_NULLABLE" ) );
+    _isNullable = !"NO".equals( rs.getString( "IS_NULLABLE" ) );
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );
     _isId = _isPrimaryKeyPart && primaryKey.size() == 1;

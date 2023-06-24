@@ -75,7 +75,7 @@ public class TestSimple extends TestCase
       "Warren 103\n";
 
     StringBuilder actual = new StringBuilder();
-    for( MyQuery.Result row : MyQuery.run( "103" ) )
+    for( MyQuery.Result row : MyQuery.run( 103 ) )
     {
       actual.append( row.getCity() ).append( " " ).append( row.getCountry_id() ).append( "\n" );
     }
@@ -86,7 +86,7 @@ public class TestSimple extends TestCase
   {
     auto query = "[>.sql<] Select * From city Where country_id = :country_id or country_id = :country_id2";
     StringBuilder actual = new StringBuilder();
-    for( auto row : query.run("103", "90") )
+    for( auto row : query.run(103, 90) )
     {
       actual.append( row.getCity() ).append( " " ).append( row.getCountry_id() ).append( "\n" );
     }

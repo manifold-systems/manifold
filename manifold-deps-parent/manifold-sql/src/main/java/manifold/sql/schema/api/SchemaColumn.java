@@ -20,6 +20,7 @@ import manifold.sql.api.Column;
 
 public interface SchemaColumn extends Column
 {
+  SchemaTable getTable();
   boolean isId();
   boolean isPrimaryKeyPart();
   boolean isGenerated();

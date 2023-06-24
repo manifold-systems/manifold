@@ -16,9 +16,8 @@
 
 package manifold.sql.query.jdbc;
 
-import manifold.sql.api.Table;
 import manifold.sql.query.api.QueryColumn;
-import manifold.sql.schema.api.SchemaTable;
+import manifold.sql.schema.jdbc.JdbcSchemaColumn;
 import manifold.sql.schema.jdbc.JdbcSchemaTable;
 
 import java.sql.ResultSetMetaData;
@@ -28,9 +27,9 @@ public class JdbcQueryColumn implements QueryColumn
 {
   private final JdbcQueryTable _queryTable;
   private final JdbcSchemaTable _schemaTable;
+  private final JdbcSchemaColumn _schemaColumn;
   private final int _position;
   private final String _name;
-  private final String _schemaName;
   private final Class<?> _type;
   private final int _size;
   private final int _scale;
@@ -51,7 +50,7 @@ public class JdbcQueryColumn implements QueryColumn
       : (JdbcSchemaTable)_queryTable.getSchema().getTable( tableName );
 
     _name = rsMetaData.getColumnLabel( colIndex );
-    _schemaName = rsMetaData.getColumnName( colIndex );
+    _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
     int typeId = rsMetaData.getColumnType( colIndex );
     _type = queryTable.getTypeMap().getType( this, typeId );
@@ -72,14 +71,19 @@ public class JdbcQueryColumn implements QueryColumn
   }
 
   @Override
-  public Table getTable()
+  public JdbcQueryTable getTable()
   {
     return _queryTable;
   }
 
-  public SchemaTable getSchemaTable()
+  public JdbcSchemaTable getSchemaTable()
   {
     return _schemaTable;
+  }
+
+  public JdbcSchemaColumn getSchemaColumn()
+  {
+    return _schemaColumn;
   }
 
   @Override
@@ -120,11 +124,6 @@ public class JdbcQueryColumn implements QueryColumn
   public JdbcQueryTable getQueryTable()
   {
     return _queryTable;
-  }
-
-  public String getSchemaName()
-  {
-    return _schemaName;
   }
 
   public int getDisplaySize()

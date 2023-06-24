@@ -35,6 +35,13 @@ public interface ConnectionProvider
       return registered;
     } );
 
+  static ConnectionProvider findFirst()
+  {
+    return ConnectionProvider.PROVIDERS.get().stream()
+      .findFirst()
+      .orElseThrow( () -> new RuntimeException( "Could not find SQL connection provider" ) );
+  }
+
   /**
    * Provides a JDBC connection corresponding with the {@code configName} {@link DbConfig} and optional {@code classContext}.
    * A standard implementation sources the {@code configName} DbConfig in the following order:
@@ -43,6 +50,8 @@ public interface ConnectionProvider
    * <li>From {@code <configName>.dbconfig} file in the current directory (runtime only)</li>
    * <li>From {@code <configName>.dbconfig} resource file in the {@code <module-name>.config} package (JDK 11+)</li>
    * <li>From {@code <configName>.dbconfig} resource file in the {@code config} package (JDK 8+)</li>
+   * <p/>
+   * This method is intended for <b>runtime</b> use.
    *
    * @param configName The name of the DbConfig. Does not include a file extension.
    * @param classContext The class initiating the connection. Used for context when searching for the DbConfig as a resource
@@ -50,4 +59,14 @@ public interface ConnectionProvider
    * @return The JDBC connection
    */
   Connection getConnection( String configName, Class<?> classContext );
+
+  /**
+   * Provides a JDBC connection configured with the provided DbConfing.
+   * <p/>
+   * This method is intended for <b>build-time</b>.
+   *
+   * @param dbConfig The configuration for the connection
+   * @return The JDBC connection
+   */
+  Connection getConnection( DbConfig dbConfig );
 }

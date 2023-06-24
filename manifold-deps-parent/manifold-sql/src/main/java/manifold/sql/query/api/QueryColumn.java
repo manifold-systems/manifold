@@ -17,11 +17,12 @@
 package manifold.sql.query.api;
 
 import manifold.sql.api.Column;
+import manifold.sql.schema.api.SchemaColumn;
 
 public interface QueryColumn extends Column
 {
   QueryTable getQueryTable();
-  String getSchemaName();
+  SchemaColumn getSchemaColumn();
   int getDisplaySize();
   boolean isCurrency();
   boolean isReadOnly();
