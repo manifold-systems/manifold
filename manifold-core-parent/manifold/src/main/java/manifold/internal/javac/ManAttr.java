@@ -58,6 +58,7 @@ public interface ManAttr
   String UNARY_MINUS = "unaryMinus";
   String INC = "inc";
   String DEC = "dec";
+  String NEGATE = "negate";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
   {{
     put( Tag.PLUS, "plus" );
@@ -840,6 +841,9 @@ public interface ManAttr
       case POSTDEC:
       case PREDEC:
         op = DEC;
+        break;
+      case NOT:
+        op = NEGATE;
         break;
       default:
         return null;

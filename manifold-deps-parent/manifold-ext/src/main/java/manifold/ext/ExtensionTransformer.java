@@ -791,7 +791,13 @@ public class ExtensionTransformer extends TreeTranslator
 
     if( isOverload && operatorMethod != null && tree.getTag() == JCTree.Tag.NEG )
     {
-      genUnaryMinus( tree, make, operatorMethod );
+      genUnary( tree, make, operatorMethod );
+      return;
+    }
+
+    if( isOverload && operatorMethod != null && tree.getTag() == JCTree.Tag.NOT )
+    {
+      genUnary( tree, make, operatorMethod );
       return;
     }
 
@@ -1082,7 +1088,7 @@ public class ExtensionTransformer extends TreeTranslator
     result = assign;
   }
 
-  public void genUnaryMinus( JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
+  public void genUnary(JCTree.JCUnary tree, TreeMaker make, Symbol.MethodSymbol operatorMethod )
   {
     JCExpression receiver = tree.getExpression();
     JCTree.JCMethodInvocation methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select( make, receiver, operatorMethod ), List.nil() );
