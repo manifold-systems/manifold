@@ -728,6 +728,7 @@ Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve 
 | `~a`      | `a.complement()` |
 | `a & b`   | `a.bitwiseAnd()` |
 | `a \| b`  | `a.bitwiseOr()`  |
+| `a ^ b`   | `a.bitwiseXor()` |
 
 **Bit Shift Operators**
 
