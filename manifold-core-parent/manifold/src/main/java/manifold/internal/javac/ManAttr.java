@@ -59,6 +59,7 @@ public interface ManAttr
   String INC = "inc";
   String DEC = "dec";
   String NEGATE = "negate";
+  String COMPLEMENT = "complement";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
   {{
     put( Tag.PLUS, "plus" );
@@ -66,6 +67,14 @@ public interface ManAttr
     put( Tag.MUL, "times" );
     put( Tag.DIV, "div" );
     put( Tag.MOD, "rem" );
+    put( Tag.BITAND, "bitwiseAnd" );
+    put( Tag.BITOR, "bitwiseOr" );
+    put( Tag.BITXOR, "bitwiseXor" );
+    put( Tag.AND, "conditionalAnd" );
+    put( Tag.OR, "conditionalOr" );
+    put( Tag.SL, "signedLeftShift" );
+    put( Tag.SR, "signedRightShift" );
+    put( Tag.USR, "unsignedRightShift" );
     // note ==, !=, >, >=, <, <=  are covered via ComparableUsing
   }};
 
@@ -845,6 +854,9 @@ public interface ManAttr
       case NOT:
         op = NEGATE;
         break;
+      case COMPL:
+        op = COMPLEMENT;
+        break;
       default:
         return null;
     }
@@ -1064,6 +1076,8 @@ public interface ManAttr
            tag == Tag.BITOR ||
            tag == Tag.BITXOR ||
            tag == Tag.BITAND ||
+           tag == Tag.OR ||
+           tag == Tag.AND ||
            tag == Tag.EQ ||
            tag == Tag.NE;
   }

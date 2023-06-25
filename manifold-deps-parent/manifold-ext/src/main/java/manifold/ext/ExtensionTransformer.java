@@ -789,13 +789,7 @@ public class ExtensionTransformer extends TreeTranslator
       operatorMethod = ((OverloadOperatorSymbol)operatorMethod).getMethod();
     }
 
-    if( isOverload && operatorMethod != null && tree.getTag() == JCTree.Tag.NEG )
-    {
-      genUnary( tree, make, operatorMethod );
-      return;
-    }
-
-    if( isOverload && operatorMethod != null && tree.getTag() == JCTree.Tag.NOT )
+    if( isOverload && operatorMethod != null && List.of(JCTree.Tag.NEG, JCTree.Tag.NOT, JCTree.Tag.COMPL).contains(tree.getTag()))
     {
       genUnary( tree, make, operatorMethod );
       return;

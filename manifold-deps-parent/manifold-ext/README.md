@@ -712,7 +712,30 @@ Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve 
 | Operation  | Method           |
 |:-----------|:-----------------|
 | `-a`       | `a.unaryMinus()` |
-| `!a`       | `a.negate()`     |
+
+**Conditional Operators**
+
+| Operation  | Method               |
+|:-----------|:---------------------|
+| `!a`       | `a.negate()`         |
+| `a && b`   | `a.conditionalAnd()` |
+| `a \|\| b` | `a.conditionalOr()`  |
+
+**Bitwise Operators**
+
+| Operation | Method           |
+|:----------|:-----------------|
+| `~a`      | `a.complement()` |
+| `a & b`   | `a.bitwiseAnd()` |
+| `a \| b`  | `a.bitwiseOr()`  |
+
+**Bit Shift Operators**
+
+| Operation | Method                   |
+|:----------|:-------------------------|
+| `a << b`  | `a.signedLeftShift()`    |
+| `a >> b`  | `a.signedRightShift()`   |
+| `a >>> b` | `a.unsignedRightShift()` |
 
 **Increment and decrement**
 
