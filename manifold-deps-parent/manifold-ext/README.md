@@ -709,9 +709,10 @@ Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve 
 
 **Negation**
 
-| Operation | Method           |
-|:----------|:-----------------|
-| `-a`      | `a.unaryMinus()` |
+| Operation  | Method           |
+|:-----------|:-----------------|
+| `-a`       | `a.unaryMinus()` |
+| `!a`       | `a.negate()`     |
 
 **Increment and decrement**
 
