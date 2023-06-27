@@ -57,6 +57,12 @@ public class ManIdentifierUtil
     return identifier;
   }
 
+  public static String makePascalCaseIdentifier( String name, boolean pascal )
+  {
+    // pascal case remove underscores, great for transforming DDL names
+    return ManStringUtil.toPascalCase( ManIdentifierUtil.makeIdentifier( name ).toLowerCase() );
+  }
+
   private static String makeCorrections( StringBuilder sb )
   {
     String identifier = sb.toString();

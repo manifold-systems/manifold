@@ -6950,15 +6950,34 @@ public class ManStringUtil
   {
     StringBuilder sb = new StringBuilder();
     boolean isUpper = true;
+    boolean underscore = true;
     for( int i = 0; i < thiz.length(); i++ )
     {
       char c = thiz.charAt( i );
-      if( Character.isAlphabetic( c ) )
+      if( Character.isJavaIdentifierPart( c ) )
       {
+        // - only throw away the first of adjacent underscores
+        // - keep leading underscore
+
+        if( c == '_' )
+        {
+          isUpper = true;
+          if( i != 0 && !underscore )
+          {
+            underscore = true;
+            continue;
+          }
+        }
+        else
+        {
+          underscore = false;
+        }
+
         if( isUpper )
         {
-          c = Character.toUpperCase( c );
-          isUpper = false;
+          char C = Character.toUpperCase( c );
+          isUpper = c == C; // turn off upper if case changes
+          c = C;
         }
         sb.append( c );
       }

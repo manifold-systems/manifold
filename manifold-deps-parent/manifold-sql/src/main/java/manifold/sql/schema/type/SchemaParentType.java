@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
 import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
-import static manifold.api.gen.SrcLinkedClass.makeIdentifier;
+import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 
 /**
  * The top-level class enclosing all the types defined in a single ".dbconfig" file.
@@ -103,7 +103,7 @@ class SchemaParentType
     for( SrcParameter param: method.getParameters() )
     {
       //noinspection unused
-      String paramName = makeIdentifier( param.getSimpleName(), false );
+      String paramName = makePascalCaseIdentifier( param.getSimpleName(), false );
       sb.append( "    _bindings.put(\"$paramName\", $paramName);\n" );
     }
     sb.append( "  }\n" );
@@ -121,7 +121,7 @@ class SchemaParentType
       if( isRequired( col ) )
       {
         SrcType srcType = makeSrcType( owner, col.getType(), false, true );
-        method.addParam( makeIdentifier( col.getName(), false ), srcType );
+        method.addParam( makePascalCaseIdentifier( col.getName(), false ), srcType );
       }
     }
   }
@@ -159,7 +159,7 @@ class SchemaParentType
       }
 
       Class<?> type = col.getType();
-      String colName = makeIdentifier( col.getName(), false );
+      String colName = makePascalCaseIdentifier( col.getName(), false );
       addWithMethod( srcClass, col, colName, makeSrcType( srcClass, type, false, true ) );
     }
   }
@@ -173,7 +173,7 @@ class SchemaParentType
     //noinspection unused
     StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
     //noinspection unused
-    String propName = makeIdentifier( col.getName(), true );
+    String propName = makePascalCaseIdentifier( actualName, true );
     SrcMethod withMethod = new SrcMethod()
       .modifiers( Flags.DEFAULT )
       .name( "with$propName" )
@@ -204,7 +204,7 @@ class SchemaParentType
 
   private void addInnerObjectType( SchemaTable table, SrcLinkedClass enclosingType )
   {
-    String identifier = makeIdentifier( table.getName(), _model.getDbConfig().isCapitalizeTableTypes() );
+    String identifier = _model.getSchema().getJavaTypeName( table.getName() );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( SchemaType.class.getSimpleName() )
@@ -225,22 +225,23 @@ class SchemaParentType
   private void addMember( SrcLinkedClass srcInterface, SchemaColumn member )
   {
     Class<?> type = member.getType();
-    String name = makeIdentifier( member.getName(), false );
-    addMember( srcInterface, member, type, name );
+    addMember( srcInterface, member, type, member.getName() );
   }
 
   private void addMember( SrcLinkedClass srcInterface, SchemaColumn member, Class<?> type, String name )
   {
     SrcType getterType = makeSrcType( srcInterface, type, false );
 //    SrcType setterType = makeSrcType( srcInterface, type, false, true );
-    String propName = makeIdentifier( name, true );
+    String propName = makePascalCaseIdentifier( name, true );
+    //noinspection unused
+    String varName = makePascalCaseIdentifier( name, false );
 //    //noinspection unused
 //    StringBuilder propertyType = getterType.render( new StringBuilder(), 0, false );
 //    //noinspection unused
 //    StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
     SrcGetProperty getter = new SrcGetProperty( propName, getterType );
     getter.modifiers( Flags.DEFAULT );
-    getter.body( "return (${getterType.getFqName()})getBindings().get(\"$name\");" );
+    getter.body( "return (${getterType.getFqName()})getBindings().get(\"varName\");" );
     addActualNameAnnotation( getter, name, true );
     srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 

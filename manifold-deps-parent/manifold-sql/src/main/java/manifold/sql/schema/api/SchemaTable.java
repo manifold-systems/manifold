@@ -44,14 +44,17 @@ public interface SchemaTable extends Table
     {
       switch( kind )
       {
-        case "TABLE":
-          return Table;
         case "VIEW":
           return View;
         case "SYSTEM TABLE":
           return System;
+        case "TABLE":
+        case "BASE TABLE":
+        default:
+          return Table;
+
       }
-      throw new IllegalStateException( "Unrecognized type kind: " + kind );
+//      throw new IllegalStateException( "Unrecognized type kind: " + kind );
     }
   }
 }

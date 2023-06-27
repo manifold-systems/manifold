@@ -38,7 +38,7 @@ public class SQLiteJDBC
       System.out.println( "Opened database successfully" );
 
       Statement stmt = c.createStatement();
-      try( Reader reader = new InputStreamReader( SQLiteJDBC.class.getResourceAsStream( "/sakila/sqlite/sqlite-sakila-schema.sql" ) ) )
+      try( Reader reader = new InputStreamReader( SQLiteJDBC.class.getResourceAsStream( "/samples/sqlite/sqlite-sakila-schema.sql" ) ) )
       {
         String script = StreamUtil.getContent( reader );
         List<String> commands = SqlScriptParser.getCommands( script );
@@ -48,7 +48,7 @@ public class SQLiteJDBC
         }
         System.out.println( "Operation done successfully" );
       }
-      try( Reader reader = new InputStreamReader( SQLiteJDBC.class.getResourceAsStream( "/sakila/sqlite/sqlite-sakila-insert-data.sql" ) ) )
+      try( Reader reader = new InputStreamReader( SQLiteJDBC.class.getResourceAsStream( "/samples/sqlite/sqlite-sakila-insert-data.sql" ) ) )
       {
         String script = StreamUtil.getContent( reader );
         List<String> commands = SqlScriptParser.getCommands( script );

@@ -69,4 +69,9 @@ public interface ConnectionProvider
    * @return The JDBC connection
    */
   Connection getConnection( DbConfig dbConfig );
+
+  /**
+   * Close all resources.
+   */
+  void closeAll();
 }

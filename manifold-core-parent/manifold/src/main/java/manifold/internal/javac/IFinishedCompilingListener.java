@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
+package manifold.internal.javac;
 
-import manifold.sql.rt.api.TypeMap;
-
-import java.util.Map;
-
-public interface Schema
+public interface IFinishedCompilingListener
 {
-  String getName();
-  boolean hasTable( String name );
-  SchemaTable getTable( String name);
-  Map<String, ? extends SchemaTable> getTables();
-  TypeMap getTypeMap();
-  String getJavaTypeName( String name );
-  String getOriginalName( String pascalName );
+  void closing( );
 }

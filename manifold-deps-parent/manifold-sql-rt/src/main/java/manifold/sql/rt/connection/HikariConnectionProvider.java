@@ -24,12 +24,12 @@ import manifold.util.ManExceptionUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class HikariConnectionProvider implements ConnectionProvider
 {
-  private final Map<String, HikariDataSource> _dataSources = new LinkedHashMap<>();
+  private final Map<String, HikariDataSource> _dataSources = new ConcurrentHashMap<>();
 
   @Override
   public Connection getConnection( String configName, Class<?> classContext )
@@ -43,7 +43,7 @@ public class HikariConnectionProvider implements ConnectionProvider
             "class context: " + classContext.getTypeName() ) );
       }
 
-      return makeConnection( dbConfig, dbConfig.getUrl() );
+      return makeDataSource( dbConfig, dbConfig.getUrl() );
     } );
     try
     {
@@ -59,7 +59,7 @@ public class HikariConnectionProvider implements ConnectionProvider
   public Connection getConnection( DbConfig dbConfig )
   {
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
-      makeConnection( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
+      makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
     try
     {
       return ds.getConnection();
@@ -70,7 +70,7 @@ public class HikariConnectionProvider implements ConnectionProvider
     }
   }
 
-  private HikariDataSource makeConnection( DbConfig dbConfig, String url )
+  private HikariDataSource makeDataSource( DbConfig dbConfig, String url )
   {
     loadDriverClass( dbConfig );
     HikariConfig config = new HikariConfig( dbConfig.toProperties() );
@@ -89,5 +89,12 @@ public class HikariConnectionProvider implements ConnectionProvider
       throw ManExceptionUtil.unchecked(
         new SQLException( "Could not find JDBC driver class: " + dbConfig.getDriverClass() ) );
     }
+  }
+
+  @Override
+  public void closeAll()
+  {
+    _dataSources.values().forEach( ds -> ds.close() );
+    _dataSources.clear();
   }
 }

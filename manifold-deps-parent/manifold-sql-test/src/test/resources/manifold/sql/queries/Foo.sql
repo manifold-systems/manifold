@@ -1,1 +1,1 @@
-Select * From city
+Select * From purchase_order

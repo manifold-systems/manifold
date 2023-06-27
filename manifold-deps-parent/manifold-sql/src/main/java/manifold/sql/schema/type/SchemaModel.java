@@ -58,6 +58,8 @@ public class SchemaModel extends AbstractSingleFileModel
     try( Reader reader = new InputStreamReader( getFile().openInputStream() ) )
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
+      bindings.put( "name", getFile().getBaseName() );
+      bindings.put( "path", getFile().getPath().getFileSystemPathString() );
       _dbConfig = new DbConfigImpl( bindings );
       return SchemaProvider.PROVIDERS.get().stream()
         .map( sp -> sp.getSchema( _dbConfig ) )
@@ -94,14 +96,6 @@ public class SchemaModel extends AbstractSingleFileModel
 
   SchemaTable getTable( String simpleName )
   {
-    SchemaTable table = _schema.getTables().get( simpleName );
-    if( table == null &&
-      getDbConfig().isCapitalizeTableTypes() &&
-      Character.isUpperCase( simpleName.charAt( 0 ) ) )
-    {
-      simpleName = ManStringUtil.uncapitalize( simpleName );
-      table = _schema.getTables().get( simpleName );
-    }
-    return table;
+    return _schema.getTable( _schema.getOriginalName( simpleName ) );
   }
 }

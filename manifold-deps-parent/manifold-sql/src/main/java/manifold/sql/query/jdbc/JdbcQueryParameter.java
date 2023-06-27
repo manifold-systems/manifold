@@ -56,7 +56,7 @@ public class JdbcQueryParameter implements QueryParameter
       _type = Object.class;
     }
     _type = _type == null ? queryTable.getTypeMap().getType( this, typeId ) : _type;
-    _size = paramMetaData.getParameterType( paramIndex );
+    _size = paramMetaData.getPrecision( paramIndex );
     _scale = paramMetaData.getScale( paramIndex );
     _isNullable = paramMetaData.isNullable( paramIndex ) != ParameterMetaData.parameterNoNulls;
     _isSigned = paramMetaData.isSigned( paramIndex );

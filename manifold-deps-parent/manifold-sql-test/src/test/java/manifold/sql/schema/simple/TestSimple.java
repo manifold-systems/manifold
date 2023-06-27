@@ -18,116 +18,60 @@ package manifold.sql.schema.simple;
 
 import junit.framework.TestCase;
 import manifold.ext.rt.api.auto;
-
-import static java.lang.System.out;
+import manifold.sql.rt.api.ConnectionProvider;
 
 public class TestSimple extends TestCase
 {
+  @Override
+  protected void tearDown() throws Exception
+  {
+    super.tearDown();
+
+    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
+    ConnectionProvider.PROVIDERS.clear();
+  }
+
   public void testSimple()
   {
-    manifold.sql.schema.simple.SakilaSqlite.city city = null;
+    //manifold.sql.schema.simple.H2Sales.PurchaseOrder po = null;
     Iterable<manifold.sql.queries.Foo.Result> result = manifold.sql.queries.Foo.run();
+    StringBuilder sb = new StringBuilder();
     for( manifold.sql.queries.Foo.Result r : result )
     {
       // just make sure the results can be navigated
-      assertNotNull( r.getCity_id() + " " + r.getCity() + " " + r.getCountry_id() + " " + r.getLast_update() );
+      assertNotNull( r.getId() + " " + r.getCustomerId() + " " + r.getOrderDate() );
+      sb.append( r.getId() + " " + r.getCustomerId() + " " + r.getOrderDate() );
     }
+    assertTrue( sb.length() > 0 );
   }
 
   public void testCommentQueryWithParameters()
   {
-    /*[>MyQuery.sql<] Select * From city Where country_id = :country_id */
+    /*[>MyQuery.sql<] Select * From purchase_order Where customer_id = :c_id */
     String expected =
-      "Akron 103\n" +
-      "Arlington 103\n" +
-      "Augusta-Richmond County 103\n" +
-      "Aurora 103\n" +
-      "Bellevue 103\n" +
-      "Brockton 103\n" +
-      "Cape Coral 103\n" +
-      "Citrus Heights 103\n" +
-      "Clarksville 103\n" +
-      "Compton 103\n" +
-      "Dallas 103\n" +
-      "Dayton 103\n" +
-      "El Monte 103\n" +
-      "Fontana 103\n" +
-      "Garden Grove 103\n" +
-      "Garland 103\n" +
-      "Grand Prairie 103\n" +
-      "Greensboro 103\n" +
-      "Joliet 103\n" +
-      "Kansas City 103\n" +
-      "Lancaster 103\n" +
-      "Laredo 103\n" +
-      "Lincoln 103\n" +
-      "Manchester 103\n" +
-      "Memphis 103\n" +
-      "Peoria 103\n" +
-      "Roanoke 103\n" +
-      "Rockford 103\n" +
-      "Saint Louis 103\n" +
-      "Salinas 103\n" +
-      "San Bernardino 103\n" +
-      "Sterling Heights 103\n" +
-      "Sunnyvale 103\n" +
-      "Tallahassee 103\n" +
-      "Warren 103\n";
+      "1,2,2023-11-10\n" +
+      "3,2,2023-09-08\n";
 
     StringBuilder actual = new StringBuilder();
-    for( MyQuery.Result row : MyQuery.run( 103 ) )
+    for( MyQuery.Result row : MyQuery.run( 2 ) )
     {
-      actual.append( row.getCity() ).append( " " ).append( row.getCountry_id() ).append( "\n" );
+      actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
     }
     assertEquals( expected, actual.toString() );
   }
 
   public void testStringQueryWithParameters()
   {
-    auto query = "[>.sql<] Select * From city Where country_id = :country_id or country_id = :country_id2";
-    StringBuilder actual = new StringBuilder();
-    for( auto row : query.run(103, 90) )
-    {
-      actual.append( row.getCity() ).append( " " ).append( row.getCountry_id() ).append( "\n" );
-    }
-
+    auto query = "[>.sql<] Select * From purchase_order Where customer_id = :c_id";
     String expected =
-      "Malm 90\n" +
-      "Akron 103\n" +
-      "Arlington 103\n" +
-      "Augusta-Richmond County 103\n" +
-      "Aurora 103\n" +
-      "Bellevue 103\n" +
-      "Brockton 103\n" +
-      "Cape Coral 103\n" +
-      "Citrus Heights 103\n" +
-      "Clarksville 103\n" +
-      "Compton 103\n" +
-      "Dallas 103\n" +
-      "Dayton 103\n" +
-      "El Monte 103\n" +
-      "Fontana 103\n" +
-      "Garden Grove 103\n" +
-      "Garland 103\n" +
-      "Grand Prairie 103\n" +
-      "Greensboro 103\n" +
-      "Joliet 103\n" +
-      "Kansas City 103\n" +
-      "Lancaster 103\n" +
-      "Laredo 103\n" +
-      "Lincoln 103\n" +
-      "Manchester 103\n" +
-      "Memphis 103\n" +
-      "Peoria 103\n" +
-      "Roanoke 103\n" +
-      "Rockford 103\n" +
-      "Saint Louis 103\n" +
-      "Salinas 103\n" +
-      "San Bernardino 103\n" +
-      "Sterling Heights 103\n" +
-      "Sunnyvale 103\n" +
-      "Tallahassee 103\n" +
-      "Warren 103\n";
+      "1,2,2023-11-10\n" +
+        "3,2,2023-09-08\n";
+
+    StringBuilder actual = new StringBuilder();
+    for( auto row : query.run( 2 ) )
+    {
+      actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
+    }
     assertEquals( expected, actual.toString() );
   }
 

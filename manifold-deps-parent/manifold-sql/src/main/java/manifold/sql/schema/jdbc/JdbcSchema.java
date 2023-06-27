@@ -16,6 +16,7 @@
 
 package manifold.sql.schema.jdbc;
 
+import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.TypeMap;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.Schema;
@@ -25,23 +26,28 @@ import manifold.util.ManExceptionUtil;
 import java.sql.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
+
+import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 
 public class JdbcSchema implements Schema
 {
   private final String _name;
 
   private final Map<String, JdbcSchemaTable> _tables;
+  private final Map<String, String> _javaToName;
+  private final Map<String, String> _nameToJava;
   private final TypeMap _typeMap;
 
   public JdbcSchema( DbConfig dbConfig )
   {
     _name = dbConfig.getName();
     _tables = new LinkedHashMap<>();
+    _javaToName = new LinkedHashMap<>();
+    _nameToJava = new LinkedHashMap<>();
     _typeMap = TypeMap.findFirst();
     loadDriverClass( dbConfig );
-    Properties props = dbConfig.toProperties();
-    try( Connection c = DriverManager.getConnection( dbConfig.getBuildUrlOtherwiseRuntimeUrl(), props ) )
+    ConnectionProvider cp = ConnectionProvider.findFirst();
+    try( Connection c = cp.getConnection( dbConfig ) )
     {
       build( c );
     }
@@ -59,12 +65,17 @@ public class JdbcSchema implements Schema
     }
 
     DatabaseMetaData metaData = c.getMetaData();
-    try( ResultSet resultSet = metaData.getTables( null, null, null, new String[]{"TABLE", "VIEW"} ) )
+    String schemaName = findSchemaName( metaData );
+    try( ResultSet resultSet = metaData.getTables( null, schemaName, null, new String[]{"TABLE", "VIEW"} ) )
     {
       while( resultSet.next() )
       {
         JdbcSchemaTable table = new JdbcSchemaTable( c, this, metaData, resultSet );
-        _tables.put( table.getName(), table );
+        String name = table.getName();
+        _tables.put( name, table );
+        String javaName = makePascalCaseIdentifier( name, true );
+        _javaToName.put( javaName, name );
+        _nameToJava.put( name, javaName );
       }
     }
 
@@ -74,11 +85,38 @@ public class JdbcSchema implements Schema
     }
   }
 
+  private String findSchemaName( DatabaseMetaData metaData ) throws SQLException
+  {
+    String schemaName = null;
+    try( ResultSet schemas = metaData.getSchemas() )
+    {
+      while( schemas.next() )
+      {
+        String schem = schemas.getString( "TABLE_SCHEM" );
+        if( schem.equalsIgnoreCase( _name ) )
+        {
+          return schem;
+        }
+        if( schemaName == null || !schem.equalsIgnoreCase( "information_schema" ) )
+        {
+          schemaName = schem;
+        }
+      }
+    }
+    return schemaName;
+  }
+
   private void loadDriverClass( DbConfig dbConfig )
   {
+    String driverClass = dbConfig.getDriverClass();
+    if( driverClass == null || driverClass.isEmpty() )
+    {
+      return;
+    }
+
     try
     {
-      Class.forName( dbConfig.getDriverClass() );
+      Class.forName( driverClass );
     }
     catch( ClassNotFoundException e )
     {
@@ -95,13 +133,18 @@ public class JdbcSchema implements Schema
   @Override
   public boolean hasTable( String name )
   {
-    return _tables.containsKey( name );
+    return _tables.containsKey( name ) || _tables.containsKey( getOriginalName( name ) );
   }
 
   @Override
   public JdbcSchemaTable getTable( String name )
   {
-    return _tables.get( name );
+    JdbcSchemaTable table = _tables.get( name );
+    if( table == null )
+    {
+      table = _tables.get( getOriginalName( name ) );
+    }
+    return table;
   }
 
   @Override
@@ -113,5 +156,15 @@ public class JdbcSchema implements Schema
   public TypeMap getTypeMap()
   {
     return _typeMap;
+  }
+  
+  public String getJavaTypeName( String name )
+  {
+    return _nameToJava.get( name );
+  }
+
+  public String getOriginalName( String javaName )
+  {
+    return _javaToName.get( javaName );
   }
 }

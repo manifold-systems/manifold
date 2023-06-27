@@ -28,12 +28,12 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.CompileStates;
 import com.sun.tools.javac.comp.Enter;
+import com.sun.tools.javac.comp.Todo;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.parser.JavacParser;
-import com.sun.tools.javac.parser.ParserFactory;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
@@ -79,8 +79,10 @@ import manifold.api.util.JavacUtil;
 import manifold.internal.host.JavacManifoldHost;
 import manifold.api.util.IssueMsg;
 import manifold.api.util.JavacDiagnostic;
+import manifold.rt.api.util.ServiceUtil;
 import manifold.util.JreUtil;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.util.ManExceptionUtil;
 import manifold.util.NecessaryEvilUtil;
 import manifold.rt.api.util.Pair;
 import manifold.util.ReflectUtil;
@@ -1076,11 +1078,39 @@ public class JavacPlugin implements Plugin, TaskListener
 
       case ENTER:
         process( e );
+        closeStuff();
+        break;
+
+      case ANALYZE:
+        closeStuff();
         break;
 
       case GENERATE:
         maybeDumpSourceFiles( e );
+        closeStuff();
         break;
+    }
+  }
+
+  private void closeStuff()
+  {
+    if( Todo.instance( getContext() ).peek() != null )
+    {
+      return;
+    }
+
+    try
+    {
+      Set<IFinishedCompilingListener> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, IFinishedCompilingListener.class, IFinishedCompilingListener.class.getClassLoader() );
+      for( IFinishedCompilingListener l : registered )
+      {
+        l.closing();
+      }
+    }
+    catch( Throwable t )
+    {
+      throw ManExceptionUtil.unchecked( t );
     }
   }
 

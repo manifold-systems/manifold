@@ -78,13 +78,6 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
-  public boolean isCapitalizeTableTypes()
-  {
-    Boolean isDefault = (Boolean)_bindings.get( "capitalizeTableTypes" );
-    return isDefault != null && isDefault;
-  }
-
-  @Override
   public String getSchemaPackage()
   {
     return (String)_bindings.get( "schemaPackage" );

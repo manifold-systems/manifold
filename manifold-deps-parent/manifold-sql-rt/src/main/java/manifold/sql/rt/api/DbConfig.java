@@ -32,7 +32,7 @@ public interface DbConfig
   /** (Provided) Location of dbconfig file corresponding with this class */
   String getPath();
 
-  /** (Required) Qualified name of Java class serving as a driver, may be null */
+  /** (Optional) Qualified name of Java class serving as a driver, may be null */
   String getDriverClass();
 
   /** (Required) JDBC URL for database (run time). If {@link #getBuildUrl()} returns null, this URL is used both for runtime and build time. */
@@ -51,9 +51,6 @@ public interface DbConfig
 
   /** (Optional) If true, this dbconfig is applied to SQL queries that do not specify a dbconfig name */
   boolean isDefault();
-
-  /** (Optional) If true, all types corresponding with schema tables will be capitalized e.g., city -> City. Note this is a build-time option. */
-  boolean isCapitalizeTableTypes();
 
   /** (Optional) JDBC connection properties in JSON format. See {@link #toProperties()}. */
   Bindings getProperties();

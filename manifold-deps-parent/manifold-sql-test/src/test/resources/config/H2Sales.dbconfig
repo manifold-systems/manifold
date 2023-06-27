@@ -1,0 +1,6 @@
+{
+  "driverClass": "org.h2.Driver",
+  "url": "jdbc:h2:file:./src/test/Sales",
+  "buildUrl": "jdbc:h2:file:./manifold-deps-parent/manifold-sql-test/src/test/Sales",
+  "schemaPackage": "manifold.sql.schema.simple"
+}

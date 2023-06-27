@@ -41,6 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static manifold.api.gen.AbstractSrcClass.Kind.*;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
 import static manifold.api.gen.SrcLinkedClass.makeIdentifier;
+import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 
 /**
  * The top-level class defining an .sql file.
@@ -231,8 +232,8 @@ class SqlParentType
   private void addQueryGetter( SrcLinkedClass srcClass, QueryColumn column )
   {
     SrcType type = new SrcType( column.getType() );
-    String name = makeIdentifier( column.getName(), false );
-    String propName = makeIdentifier( column.getName(), true );
+    String name = column.getName();
+    String propName = makePascalCaseIdentifier( column.getName(), true );
     SrcGetProperty getter = new SrcGetProperty( propName, type )
       .modifiers( Flags.DEFAULT )
       .body( "return (${type.getFqName()})getBindings().get(\"$name\");" );
