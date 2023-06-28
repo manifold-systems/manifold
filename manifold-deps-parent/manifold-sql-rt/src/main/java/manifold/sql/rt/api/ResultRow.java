@@ -20,7 +20,9 @@ import manifold.ext.rt.api.IBindingsBacked;
 
 /**
  * Base interface for all query result types type-safely reflecting query fields and structure.
+ * <p/>
+ * This interface exists primarily for custom extension methods.
  */
-public interface SqlQueryResult extends IBindingsBacked
+public interface ResultRow extends IBindingsBacked
 {
 }

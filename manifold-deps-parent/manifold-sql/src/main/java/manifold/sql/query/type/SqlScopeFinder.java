@@ -141,40 +141,6 @@ public class SqlScopeFinder
 
   private SqlScope makeScope( IFile configFile )
   {
-    try( Reader reader = new InputStreamReader( configFile.openInputStream() ) )
-    {
-      Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
-      bindings.put( "name", configFile.getBaseName() );
-      bindings.put( "path", configFile.getPath().getFileSystemPathString() );
-      return makeScope( new DbConfigImpl( bindings ) );
-    }
-    catch( Exception e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  private SqlScope makeScope( DbConfig dbConfig )
-  {
-    List<IIssue> issues = new ArrayList<>();
-
-    if( dbConfig.getName() != null )
-    {
-      String name = dbConfig.getName();
-      validateConfigName( name, issues );
-      return new SqlScope( _sqlManifold, dbConfig, issues );
-    }
-    return null;
-  }
-
-  private void validateConfigName( String name, List<IIssue> issues )
-  {
-    if( name != null )
-    {
-      if( !ManClassUtil.isJavaIdentifier( name ) )
-      {
-        issues.add( new SqlIssue( IIssue.Kind.Warning, "\"name\" must be a valid Java identifier, otherwise Manifold fragments cannot be used with the config." ) );
-      }
-    }
+    return new SqlScope( _sqlManifold, configFile );
   }
 }

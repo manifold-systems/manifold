@@ -21,6 +21,7 @@ import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbConfigProvider;
+import manifold.sql.rt.api.DbLocationProvider;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -97,7 +98,7 @@ public class DbConfigFinder
     try( Reader reader = new InputStreamReader( stream ) )
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
-      return new DbConfigImpl( bindings );
+      return new DbConfigImpl( bindings, DbLocationProvider.Mode.Runtime );
     }
     catch( Exception e )
     {

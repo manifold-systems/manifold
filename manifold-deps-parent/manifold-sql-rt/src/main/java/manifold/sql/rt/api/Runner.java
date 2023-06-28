@@ -26,9 +26,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
-public class Runner<T extends SqlQueryResult>
+public class Runner<T extends ResultRow>
 {
-//  private final SqlQuery<T> _query;
   private final Class<T> _queryClass;
   private final Bindings _params;
   private final String _querySource;

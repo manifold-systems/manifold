@@ -16,27 +16,60 @@
 
 package manifold.sql.schema.simple;
 
-import junit.framework.TestCase;
 import manifold.ext.rt.api.auto;
+import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.queries.Foo;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
-public class TestSimple extends TestCase
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static org.junit.Assert.*;
+
+public class TestSimple
 {
-  @Override
-  protected void tearDown() throws Exception
+  @BeforeClass
+  public static void setup()
   {
-    super.tearDown();
-
-    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
-    ConnectionProvider.PROVIDERS.clear();
+    // copy database to temp dir, the url in DbConfig uses it from there
+    String tempDir = System.getProperty( "java.io.tmpdir" );
+    File tempDbFile = new File( tempDir + "manifold/sql/db/Sales.mv.db" );
+    tempDbFile.getParentFile().mkdirs();
+    tempDbFile.deleteOnExit();
+    try( InputStream in = TestSimple.class.getResourceAsStream( "/manifold/sql/db/Sales.mv.db" );
+         FileOutputStream out = new FileOutputStream( tempDbFile ) )
+    {
+      StreamUtil.copy( in, out );
+    }
+    catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
   }
 
+  @AfterClass
+  public static void cleanup()
+  {
+    // close db connections
+    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
+    ConnectionProvider.PROVIDERS.clear();
+
+    // delete temp db
+    String tempDir = System.getProperty( "java.io.tmpdir" );
+    //noinspection ResultOfMethodCallIgnored
+    new File( tempDir + "/manifold/sql/db/Sales.mv.db" ).delete();
+  }
+
+  @Test
   public void testSimple()
   {
-    //manifold.sql.schema.simple.H2Sales.PurchaseOrder po = null;
-    Iterable<manifold.sql.queries.Foo.Result> result = manifold.sql.queries.Foo.run();
     StringBuilder sb = new StringBuilder();
-    for( manifold.sql.queries.Foo.Result r : result )
+    for( Foo.Row r : Foo.run() )
     {
       // just make sure the results can be navigated
       assertNotNull( r.getId() + " " + r.getCustomerId() + " " + r.getOrderDate() );
@@ -45,27 +78,28 @@ public class TestSimple extends TestCase
     assertTrue( sb.length() > 0 );
   }
 
+  @Test
   public void testCommentQueryWithParameters()
   {
     /*[>MyQuery.sql<] Select * From purchase_order Where customer_id = :c_id */
-    String expected =
-      "1,2,2023-11-10\n" +
-      "3,2,2023-09-08\n";
-
     StringBuilder actual = new StringBuilder();
-    for( MyQuery.Result row : MyQuery.run( 2 ) )
+    for( MyQuery.Row row : MyQuery.run( 2 ) )
     {
       actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
     }
+    String expected =
+      "1,2,2023-11-10\n" +
+      "3,2,2023-09-08\n";
     assertEquals( expected, actual.toString() );
   }
 
+  @Test
   public void testStringQueryWithParameters()
   {
     auto query = "[>.sql<] Select * From purchase_order Where customer_id = :c_id";
     String expected =
       "1,2,2023-11-10\n" +
-        "3,2,2023-09-08\n";
+      "3,2,2023-09-08\n";
 
     StringBuilder actual = new StringBuilder();
     for( auto row : query.run( 2 ) )
@@ -75,4 +109,16 @@ public class TestSimple extends TestCase
     assertEquals( expected, actual.toString() );
   }
 
+  @Test
+  public void testStringWithUnhandledExtResolvesToPlainString()
+  {
+    String y = "[>.nope<] Select * From purchase_order Where customer_id = :c_id";
+    assertEquals( "[>.nope<] Select * From purchase_order Where customer_id = :c_id", y );
+  }
+
+  @Test
+  public void testCommentWithUnhandledExtDoesNothing()
+  {
+    /*[>Foo.nope<] Select * From purchase_order Where customer_id = :c_id */
+  }
 }

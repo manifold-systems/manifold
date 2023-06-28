@@ -16,6 +16,7 @@
 
 package manifold.sql.schema.api;
 
+import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.TypeMap;
 
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Map;
 public interface Schema
 {
   String getName();
+  DbConfig getDbConfig();
   boolean hasTable( String name );
   SchemaTable getTable( String name);
   Map<String, ? extends SchemaTable> getTables();

@@ -29,8 +29,8 @@ import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Runner;
-import manifold.sql.rt.api.SqlQuery;
-import manifold.sql.rt.api.SqlQueryResult;
+import manifold.sql.rt.api.Query;
+import manifold.sql.rt.api.ResultRow;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -70,7 +70,7 @@ class SqlParentType
     String identifier = makeIdentifier( name, false );
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Interface, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
-      .addInterface( new SrcType( "SqlQuery<$identifier.Result>" ) )
+      .addInterface( new SrcType( "Query<$identifier.Row>" ) )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, name, false );
     addImports( srcClass );
@@ -131,7 +131,7 @@ class SqlParentType
   {
     SrcMethod method = new SrcMethod( srcClass )
       .name( "run" )
-      .returns( new SrcType( "Iterable<Result>" ) );
+      .returns( new SrcType( "Iterable<Row>" ) );
     if( _model.getFile() instanceof IFileFragment &&
       isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() ) )
     {
@@ -158,8 +158,8 @@ class SqlParentType
     //noinspection unused
     String simpleName = srcClass.getSimpleName();
     sb.append(
-      "    return new Runner<Result>(Result.class, paramBindings, \"$query\", \"$configName\", " +
-      "      rowBindings -> new Result() {public Bindings getBindings() { return rowBindings; }}" +
+      "    return new Runner<Row>(Row.class, paramBindings, \"$query\", \"$configName\", " +
+      "      rowBindings -> new Row() {public Bindings getBindings() { return rowBindings; }}" +
       "    ).run();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -192,11 +192,9 @@ class SqlParentType
 
   private void addQueryResultType( SrcLinkedClass enclosingType )
   {
-    //## todo: if the query is a "Select * From <schema-table-name>", maybe change the Result type here to the corresponding table type?
-
-    String fqn = enclosingType.getName() + ".Result";
+    String fqn = enclosingType.getName() + ".Row";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( SqlQueryResult.class.getSimpleName() )
+      .addInterface( ResultRow.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
 
     if( getQuery() != null )
@@ -211,8 +209,8 @@ class SqlParentType
 
   private void addImports( SrcLinkedClass srcClass )
   {
-    srcClass.addImport( SqlQuery.class );
-    srcClass.addImport( SqlQueryResult.class );
+    srcClass.addImport( Query.class );
+    srcClass.addImport( ResultRow.class );
     srcClass.addImport( Runner.class );
     srcClass.addImport( Bindings.class );
     srcClass.addImport( DataBindings.class );

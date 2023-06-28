@@ -33,6 +33,7 @@ public class JdbcSchema implements Schema
 {
   private final String _name;
 
+  private final DbConfig _dbConfig;
   private final Map<String, JdbcSchemaTable> _tables;
   private final Map<String, String> _javaToName;
   private final Map<String, String> _nameToJava;
@@ -40,6 +41,7 @@ public class JdbcSchema implements Schema
 
   public JdbcSchema( DbConfig dbConfig )
   {
+    _dbConfig = dbConfig;
     _name = dbConfig.getName();
     _tables = new LinkedHashMap<>();
     _javaToName = new LinkedHashMap<>();
@@ -128,6 +130,11 @@ public class JdbcSchema implements Schema
   public String getName()
   {
     return _name;
+  }
+
+  public DbConfig getDbConfig()
+  {
+    return _dbConfig;
   }
 
   @Override

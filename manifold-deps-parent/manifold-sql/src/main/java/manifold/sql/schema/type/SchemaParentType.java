@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
 import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
+import static manifold.rt.api.util.ManIdentifierUtil.makeIdentifier;
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 
 /**
@@ -98,19 +99,26 @@ class SchemaParentType
 
     StringBuilder sb = new StringBuilder();
     sb.append( "return new Builder() {\n" );
-    sb.append( "  DataBindings _bindings = new DataBindings(new ConcurrentHashMap());\n" );
-    sb.append( "  {\n" );
-    for( SrcParameter param: method.getParameters() )
+    sb.append( "        DataBindings _bindings = new DataBindings(new ConcurrentHashMap());\n" );
+    sb.append( "        {\n" );
+    int i = 0;
+    for( SchemaColumn col: table.getColumns().values() )
     {
-      //noinspection unused
-      String paramName = makePascalCaseIdentifier( param.getSimpleName(), false );
-      sb.append( "    _bindings.put(\"$paramName\", $paramName);\n" );
+      if( isRequired( col ) )
+      {
+        //noinspection unused
+        String colName = col.getName();
+        SrcParameter param = method.getParameters().get( i++ );
+        //noinspection unused
+        String paramName = param.getSimpleName();
+        sb.append( "          _bindings.put(\"$colName\", $paramName);\n" );
+      }
     }
-    sb.append( "  }\n" );
+    sb.append( "        }\n" );
 
-    sb.append( "    @Override public Bindings getBindings() { return _bindings; }\n" );
+    sb.append( "        @Override public Bindings getBindings() { return _bindings; }\n" );
 
-    sb.append( "};" );
+    sb.append( "      };" );
     method.body( sb.toString() );
   }
 
@@ -158,20 +166,15 @@ class SchemaParentType
         continue;
       }
 
-      Class<?> type = col.getType();
-      String colName = makePascalCaseIdentifier( col.getName(), false );
-      addWithMethod( srcClass, col, colName, makeSrcType( srcClass, type, false, true ) );
+      addWithMethod( srcClass, col );
     }
   }
 
-  private void addWithMethod( SrcLinkedClass srcClass, SchemaColumn col, @SuppressWarnings( "unused" ) String colName,
-                              SrcType type )
+  private void addWithMethod( SrcLinkedClass srcClass, SchemaColumn col )
   {
     //noinspection unused
     String actualName = col.getName();
-
-    //noinspection unused
-    StringBuilder propertyType = type.render( new StringBuilder(), 0, false );
+    SrcType type = makeSrcType( srcClass, col.getType(), false, true );
     //noinspection unused
     String propName = makePascalCaseIdentifier( actualName, true );
     SrcMethod withMethod = new SrcMethod()
@@ -180,9 +183,7 @@ class SchemaParentType
       .addParam( "${'$'}value", type )
       .returns( new SrcType( srcClass.getSimpleName() ) );
     addActualNameAnnotation( withMethod, actualName, true );
-
-    withMethod.body( "getBindings().put(\"$colName\", ${'$'}value); return this;" );
-
+    withMethod.body( "getBindings().put(\"$actualName\", ${'$'}value); return this;" );
     srcClass.addMethod( withMethod );
   }
 
@@ -234,14 +235,14 @@ class SchemaParentType
 //    SrcType setterType = makeSrcType( srcInterface, type, false, true );
     String propName = makePascalCaseIdentifier( name, true );
     //noinspection unused
-    String varName = makePascalCaseIdentifier( name, false );
+    String colName = makeIdentifier( member.getName() );
 //    //noinspection unused
 //    StringBuilder propertyType = getterType.render( new StringBuilder(), 0, false );
 //    //noinspection unused
 //    StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
     SrcGetProperty getter = new SrcGetProperty( propName, getterType );
     getter.modifiers( Flags.DEFAULT );
-    getter.body( "return (${getterType.getFqName()})getBindings().get(\"varName\");" );
+    getter.body( "return (${getterType.getFqName()})getBindings().get(\"$colName\");" );
     addActualNameAnnotation( getter, name, true );
     srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 

@@ -57,10 +57,10 @@ public class ManIdentifierUtil
     return identifier;
   }
 
-  public static String makePascalCaseIdentifier( String name, boolean pascal )
+  public static String makePascalCaseIdentifier( String name, boolean firstChar )
   {
     // pascal case remove underscores, great for transforming DDL names
-    return ManStringUtil.toPascalCase( ManIdentifierUtil.makeIdentifier( name ).toLowerCase() );
+    return ManStringUtil.toPascalCase( ManIdentifierUtil.makeIdentifier( name ).toLowerCase(), !firstChar );
   }
 
   private static String makeCorrections( StringBuilder sb )

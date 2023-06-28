@@ -22,11 +22,10 @@ import manifold.api.type.JavaTypeManifold;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.ManClassUtil;
-import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.StreamUtil;
+import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
-import manifold.sql.api.Table;
 import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
@@ -49,10 +48,12 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
   @Override
   public String getTypeNameForFile( String defaultFqn, IFile file )
   {
+    //## todo: cache this name mapping, it's called A LOT
+
     try( Reader reader = new InputStreamReader( file.openInputStream() ) )
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
-      DbConfigImpl dbConfig = new DbConfigImpl( bindings );
+      DbConfigImpl dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
       String schemaPackage = dbConfig.getSchemaPackage();
       if( schemaPackage == null )
       {
@@ -94,6 +95,19 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
   protected SchemaModel getModel( String fqn )
   {
     return super.getModel( fqn );
+  }
+
+  public Schema getSchema( IFile file )
+  {
+    // get schema from the corresponding SchemaManifold
+
+    Set<String> fqns = getModule().getPathCache().getFqnForFile( file );
+    if( fqns.isEmpty() )
+    {
+      return null;
+    }
+    String fqn = getTypeNameForFile( fqns.iterator().next(), file );
+    return getModel( fqn ).getSchema();
   }
 
   @Override

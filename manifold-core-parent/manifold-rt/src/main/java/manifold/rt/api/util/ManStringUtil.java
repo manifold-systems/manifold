@@ -6946,7 +6946,7 @@ public class ManStringUtil
   /**
    * Converts snake_case/kebab-case to PascalCase e.g., my-type-name becomes MyTypeName.
    */
-  public static String toPascalCase( String thiz )
+  public static String toPascalCase( String thiz, boolean lowerFirst )
   {
     StringBuilder sb = new StringBuilder();
     boolean isUpper = true;
@@ -6977,7 +6977,14 @@ public class ManStringUtil
         {
           char C = Character.toUpperCase( c );
           isUpper = c == C; // turn off upper if case changes
-          c = C;
+          if( !lowerFirst ) // leading char not upper
+          {
+            c = C;
+          }
+          if( !isUpper )
+          {
+            lowerFirst = false;
+          }
         }
         sb.append( c );
       }

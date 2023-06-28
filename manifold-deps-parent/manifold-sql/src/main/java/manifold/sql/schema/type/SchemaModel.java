@@ -20,9 +20,9 @@ import manifold.api.fs.IFile;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
-import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaProvider;
@@ -60,7 +60,7 @@ public class SchemaModel extends AbstractSingleFileModel
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
       bindings.put( "name", getFile().getBaseName() );
       bindings.put( "path", getFile().getPath().getFileSystemPathString() );
-      _dbConfig = new DbConfigImpl( bindings );
+      _dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
       return SchemaProvider.PROVIDERS.get().stream()
         .map( sp -> sp.getSchema( _dbConfig ) )
         .filter( schema -> schema != null )

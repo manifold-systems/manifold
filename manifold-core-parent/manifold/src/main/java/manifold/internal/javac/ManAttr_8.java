@@ -984,13 +984,14 @@ public class ManAttr_8 extends Attr implements ManAttr
     if( tree.typetag == CLASS && tree.value.toString().startsWith( "[>" ) )
     {
       Type type = getFragmentValueType( tree );
-      tree.type = type;
-      ReflectUtil.field( this, "result" ).set( type );
+      if( type != null )
+      {
+        tree.type = type;
+        ReflectUtil.field( this, "result" ).set( type );
+        return;
+      }
     }
-    else
-    {
-      super.visitLiteral( tree );
-    }
+    super.visitLiteral( tree );
   }
 
   private Type getFragmentValueType( JCTree.JCLiteral tree )

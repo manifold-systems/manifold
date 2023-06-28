@@ -47,7 +47,7 @@ public class GqlScalars
       {
         ((IJsonFormatTypeCoercer)formatCoercer).getFormats().forEach( ( format, type ) ->
           scalars.add( GraphQLScalarType.newScalar()
-            .name( ManStringUtil.toPascalCase( format ) )
+            .name( ManStringUtil.toPascalCase( format, false ) )
             .description( "Support values of type: " + type.getTypeName() )
             .coercing( makeCoercer( type, (IJsonFormatTypeCoercer)formatCoercer ) )
             .build() ) );

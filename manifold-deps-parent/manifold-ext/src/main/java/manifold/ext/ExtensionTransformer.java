@@ -1241,7 +1241,7 @@ public class ExtensionTransformer extends TreeTranslator
       chars.length() > 3 && chars.charAt( 1 ) == '"'
         ? TEXT_BLOCK_LITERAL
         : DOUBLE_QUOTE_LITERAL );
-    if( fragment != null )
+    if( fragment != null && isHandledFileExtension( fragment.getExt() ) )
     {
       String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();
       Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), fragClass );
@@ -1255,6 +1255,13 @@ public class ExtensionTransformer extends TreeTranslator
     }
 
     return tree;
+  }
+
+  private boolean isHandledFileExtension( String fileExt )
+  {
+    return _tp.getHost().getSingleModule().getTypeManifolds().stream()
+      .filter( tm -> tm.getContributorKind() != ContributorKind.Supplemental )
+      .anyMatch( tm -> tm.handlesFileExtension( fileExt.toLowerCase() ) );
   }
 
   private JCTree replaceStringLiteral( Symbol.ClassSymbol fragSym, JCTree.JCLiteral tree, Attribute.Compound attribute )
