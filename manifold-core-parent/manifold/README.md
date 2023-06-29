@@ -13,15 +13,11 @@ interfaces, annotations, etc.
 * [The Big Picture](#the-big-picture)
 * [The API](#the-api)
 * [Anatomy of a Type Manifold](#anatomy-of-a-type-manifold)
-* [Configuring Manifold](#configuring-manifold)
 * [Explicit Resource Compilation](#explicit-resource-compilation)
-* [Modes](#modes)
 * [Dumping Source](#dumping-source)
-* [Programming Language Manifolds](#programming-language-manifolds)
 * [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
 * [IDE Support](#ide-support)
 * [Projects](#projects)
-* [Sample Projects](#sample-projects)
 * [Setup](#setup)
 * [Platforms](#platforms)
 * [Javadoc](#javadoc)
@@ -277,82 +273,6 @@ These serve as decent reference implementations for wrapping parsers and binding
 >provides manifold.api.type.ITypeManifold with com.abc.MyTypeManifold
 >```
 
-# Configuring Manifold
-
-There are three ways you can configure Manifold in your build: *static*, *dynamic*, and *mixed*. Each configuration type
-is determined by the following criteria:
-* Use of `compileOnly` (or `provided`) scoping on *all* Manifold dependencies your project uses that are specific to
-compilation
-* Use of the `dynamic` argument to the Manifold javac plugin e.g., `-Xplugin:Manifold` vs. `-Xplugin:Manifold dynamic`
-
-|                      |`static` |`dynamic`|`mixed`  |
-|----------------------|---------|---------|---------|
-| `compileOnly` scope  | &#10003;|         |         |
-| `dynamic` plugin arg |         | &#10003;|         |
-
->`static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
->projects.
-
-* **`static`**: Compiles all resource types statically at compile-time. Distributes only Manifold runtime dependencies.
-
-    **Advantages**:
-    * **Performance**. Since resource types are compiled ahead of time as .class files, load time for a resource type
-    is the same a Java type. 
-    * **Zero startup time**. The dynamic compilation subsystem and other services exclusive to compilation are not
-    present at runtime, therefore Manifold has ZERO impact on startup time.  
-    * **Footprint**. Since only runtime modules are distributed in this configuration, the resulting runtime footprint is more
-    than 10x smaller than dynamic and mixed configurations, which translates to faster downloads.
-    * **Android**. Applications using Manifold statically fully support Android. 
-    * **Kotlin**. Applications using Manifold statically fully support Kotlin and other JVM languages. 
-    
-    **Limitations**:
-    * Dynamic compilation (compilation at runtime) is not supported. Usage of dynamic features such as Dark Java can't be used. Considering Dark Java is the only remaining exclusively dynamic feature of Manifold, this is a rather minor limitation. 
-    
-* **`dynamic`**: Compiles all resource types dynamically at runtime. No resource types are compiled to .class files
-at compile-time. Both compile-time and runtime binaries are included in your distribution.
-
-    **Advantages**:
-    * **Dynamic**. Purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
-     
-    **Limitations**:
-    * Slower startup and initialization. Manifold dynamic services contribute to a slower startup time. Additionally,
-    initialization times for resource types are slower due to dynamic compilation on initial load. 
-    * Larger footprint. Dynamic services used at compile-time are also distributed with the runtime, the additional
-    files significantly impact the overall footprint (more than 10x). 
-    * Limited use. Only Java SE environments are supported. Other JVM environments such as Android and Kotlin are not
-     supported using this configuration. 
-    
-* **`mixed`**: Compiles project resource types statically such as resource files, and compiles dynamic resource types
-dynamically such as Dark Java.  Both compile-time and runtime binaries are included in your distribution.
-
-    **Advantages**:
-    * **Dynamic**. Purely dynamic features such as Dark Java enable dynamic runtime compilation of resources.
-    * **Performance**. Since resource types are compiled ahead of time as .class files, load time for a resource type
-    is the same a Java type. 
-    
-    **Limitations**:
-    * Slower startup and initialization. Manifold dynamic services contribute to a slower startup time. Additionally,
-    initialization times for resource types are slower due to dynamic compilation on initial load. 
-    * Larger footprint. Dynamic services used at compile-time are also distributed with the runtime, the additional
-    files significantly impact the overall footprint (more than 10x). 
-    * Limited use. Only Java SE environments are supported. Other JVM environments such as Android and Kotlin are not
-     supported using this configuration.
-      
->Configurations by supported features
->
-> |                  |`static` |`dynamic`|`mixed` |
-> |------------------|---------|---------|---------|
-> | Performance      | &#10003;|         | &#10003;|
-> | Small footprint  | &#10003;|         |         |
-> | Zero startup time| &#10003;|         |         |
-> | Java SE          | &#10003;| &#10003;| &#10003;|
-> | Android          | &#10003;|         |         |
-> | Kotlin**         | &#10003;|         |         |
-> | Dynamic Java     |         | &#10003;| &#10003;|
->
->**All Manifold resource types such as GraphQL and JSON are fully supported with Kotlin, however Manifold Java
->Extension features such as @Jailbreak, unit expressions, and the preprocessor are specific to the Java compiler.  
-
 ## Configuring Dependencies
 
 Manifold components are structured to support both static and dynamic use.  For instance, the Manifold _core_ component
@@ -369,37 +289,17 @@ exclusive to compile-time or that does not provide any features exclusive to com
 with a _compile-only_ scope. Conversely, the `manifold-science` library does not define any features exclusive to
 compile-time, so you always use it with default scoping so it is packaged with your executable artifact. 
 
-### Static Configuration (default)
+### 
 
 * Add the `-Xplugin:Manifold` javac argument
 * If using Kotlin or other alternative JVM language, put Manifold resources in a separate Java compiled module and add
 `-Amanifold.source.<file-ext>=<type-name-regex>` javac arguments to explicitly compile the resources. See
 [Explicit Resource Compilation](#explicit-resource-compilation) below.
-* Use _compile-only_ (Gradle) or _provided_ (Maven) scoping for Manifold dependencies exclusive to compile-time features
-* Use default scoping for "rt" dependencies and any dependencies that are needed at runtime
+* IntelliJ: use _annotationProcessor_ scoping with IntelliJ for Manifold dependencies exclusive to compile-time features
+* Android Studio: use _compile-only_ scoping for Manifold dependencies exclusive to compile-time features
+* Use default scoping for "rt" dependencies and other dependencies that are needed at runtime
 
 See [Setup]() for examples of using Manifold statically.
-
->`static` is the recommended configuration for most projects. Using it results in smaller, faster, more versatile
->projects.
-   
-### Dynamic Configuration
-
-* Add the `-Xplugin:Manifold dynamic` javac argument
-* Use default scoping for Manifold dependencies, there is no need to add dependencies to "rt" modules.
-
-See [Setup]() for examples of using Manifold dynamically.
-
-### Mixed Configuration
-
-* Add the `-Xplugin:Manifold` javac argument
-* Use default scoping for Manifold dependencies, there is no need to add dependencies to "rt" modules.
-* You can statically compile as much or as little as preferred.
-
-See [Setup]() for examples using Manifold both statically and dynamically.
-
->Note, the only difference between dynamic and mixed configuration is the `dynamic` Manifold plugin argument, which
->prevents Manifold from compiling resource types to disk.
  
 ### Runtime Dependencies
 
@@ -410,10 +310,8 @@ static {
   IBootstrap.dasBoot();
 }
 ``` 
-The `dasBoot()` call invokes all registered `IBootstrap` services. The number and nature of the implementations
-depends on what your application does with manifold. For instance, if you are using manifold *dynamically*, this call
-initializes the dynamic compilation services among other tasks. Most projects, however, use manifold *statically* which
-means `dasBoot()` typically does only the following:
+The `dasBoot()` call invokes all registered `IBootstrap` services. For most projects `dasBoot()` typically does only the
+following:
 
 1. Disables the Java 9 warning "An illegal reflective access operation has occurred", because that message has a history
 of unnecessarily alarming users. This is a noop when running on Java 8 / Android.
@@ -451,10 +349,7 @@ files.
 
 This scheme is unsuitable, however, for modules intended for use as a dependency or library where the set of resources that
 needs to be compiled may include more than the ones used inside the module. For instance, an API that defines a query
-model in terms of GraphQL files may not use any of the resource files directly, but a module using the API would. Although
-Manifold can still work in situations like this (see [Modes](#modes) above), it does so by compiling types *dynamically* at
-runtime, which entails a performance bump the first time each type loads. If need be, you can avoid the runtime compilation
-cost using _explicit_ static compilation with `javac` command line options.
+model in terms of GraphQL files may not use any of the resource files directly, but a module using the API would.
 
 Similar to javac's source file list, Manifold provides `-Akey=value` javac command line options to explicitly compile
 resources either by _type name_ using regular expressions or by _file name_ using file system paths. Constraining by
@@ -589,39 +484,6 @@ Although Manifold could use the entire class path as the domain of potential res
 performance. That's why you must opt-in your module's resources for external use. It bears repeating, if you
 statically compile all the resources intended for use outside your project, you _**do not**_ need to opt-in your JAR for
 processing -- the resources are already available as .class files.
-
-# Modes
-
-Manifold may be used in one of two modes which you control as an optional argument to the Manifold plugin for javac:
-
-* **static**: `-Xplugin:Manifold` (default) compiles resource types statically at compile-time
-
-* **dynamic**: `-Xplugin:Manifold dynamic` compiles resource types _dynamically_ at _runtime_
-(alternatively `-Xplugin:"Manifold dynamic"`, some tools may require quotes)
-
-> **Warning!!!** Dynamic mode is designed for special use-cases. Do not use dynamic mode in your project unless your it
-> is purely for experimentation purposes, or you have consulted with Manifold engineering regarding your project's needs.
-
-General information considering the static v. dynamic mode:
-
-* Both modes operate _lazily_: a type is not compiled unless it is used. For example, if you are using the [JSON manifold](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json), 
-only the JSON files you reference in your code will be processed and compiled. This means Manifold will not try to
-compile resources your project does not expect to use directly as types.
-
-* Even if you use static mode, you can still reference type manifold classes dynamically e.g., _reflectively_.
-In such a case Manifold will dynamically compile the referenced class as if you were operating in dynamic mode. In
-general, your code will work regardless of the mode you're using, hence the general recommendation to stay with static
-mode where you get the best of both worlds. 
-
-* Dynamic mode requires `tools.jar` at runtime for **Java 8**.
-
-* Static mode is generally faster at runtime since it pre-compiles all the type manifold resources along with Java 
-sources when you build your project
-
-* Static mode automatically supports **incremental compilation** and **hotswap debugging** of modified resources in IntelliJ
-   
-> You can use `javac` command line arguments to statically compile a set of specified types whether you use
-> them directly in your code e.g., if type-safe resources are part of an API.  See [Explicit Resource Compilation](#explicit-resource-compilation).
  
 # Dumping Source
 
@@ -637,11 +499,6 @@ javac -Amanifold.source.target=<my-directory> ...
 ```
 >Note, you are responsible for managing the directory in your build configuration. For instance, for the "clean" build
 >target, it is your responsibility to delete the contents of the directory.
-
-# Programming Language Manifolds
-
-todo: use the Javascript manifold as a simple impl, and the Gosu manifold as a more complex one as reference material for
-this section  
 
 # Embedding with Fragments (experimental)
 
