@@ -67,7 +67,19 @@ public class Main {
 ```
 
 This basic interface factory pattern can be used anywhere late-bound compilation is desirable.
- 
+
+> A note of caution.
+> 
+> Manifold is designed as a Javac _compiler_ plugin, which means all the primary features of manifold are designed for compile-time.
+> However, Dark Java performs its magic at runtime; it uses manifold's compilation services dynamically. Although manifold
+> was originally designed to operate in either mode, static or dynamic, it is now moving away from dynamic support. As a
+> consequence, newer features are not tested for dynamic compatibility. Pure Java code as Dark Java will continue to work
+> fine, but dark code combining Java + manifold features such as manifold-delegation or manifold-tuples may not work as
+> desired.
+> 
+> Be careful out there!
+> 
+
 # IDE Support 
 
 Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
