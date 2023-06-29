@@ -17,6 +17,7 @@
 package manifold.sql.test.config;
 
 import manifold.rt.api.util.StreamUtil;
+import manifold.rt.api.util.TempFileUtil;
 import manifold.sql.rt.api.DbLocationProvider;
 
 import java.io.File;
@@ -36,20 +37,18 @@ public class MyDbLocationProvider implements DbLocationProvider
     String dbFileResourcePath = args[0];
     String vendor = args.length > 1 ? args[1] : null;
 
-    String tempDir = System.getProperty( "java.io.tmpdir" );
-    if( tempDir.endsWith( "/" ) || tempDir.endsWith( "\\" ) )
-    {
-      tempDir = tempDir.substring( 0, tempDir.length() - 1 );
-    }
-
-    File tempDbFile = new File( tempDir + dbFileResourcePath );
-    tempDbFile.getParentFile().mkdirs();
+    File tempDbFile = TempFileUtil.makeTempFile( dbFileResourcePath, true );
+    //noinspection ResultOfMethodCallIgnored
     tempDbFile.delete();
     try( InputStream in = getClass().getResourceAsStream( dbFileResourcePath );
-         FileOutputStream out = new FileOutputStream( tempDir + dbFileResourcePath ) )
+         FileOutputStream out = new FileOutputStream( tempDbFile ) )
     {
+      if( in == null )
+      {
+        throw new IOException( "Db resource: " + dbFileResourcePath + ", was not found" );
+      }
+
       StreamUtil.copy( in, out );
-      tempDbFile.deleteOnExit();
 
       String jdbcPath = tempDbFile.getAbsolutePath();
       if( vendor != null && vendor.equalsIgnoreCase( "h2" ) )

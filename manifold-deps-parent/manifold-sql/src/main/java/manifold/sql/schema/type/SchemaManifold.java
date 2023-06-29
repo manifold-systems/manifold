@@ -37,7 +37,8 @@ import java.util.*;
 
 public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 {
-  public static final List<String> EXTS = Collections.singletonList( "dbconfig" );
+  public static final String DBCONFIG_EXT = "dbconfig";
+  public static final List<String> EXTS = Collections.singletonList( DBCONFIG_EXT );
 
   @Override
   public void init( IModule module )
@@ -99,7 +100,7 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 
   public Schema getSchema( IFile file )
   {
-    // get schema from the corresponding SchemaManifold
+    // get schema from the corresponding SchemaModel
 
     Set<String> fqns = getModule().getPathCache().getFqnForFile( file );
     if( fqns.isEmpty() )

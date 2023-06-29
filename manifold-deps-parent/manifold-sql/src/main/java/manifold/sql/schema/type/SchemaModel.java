@@ -21,12 +21,14 @@ import manifold.api.type.AbstractSingleFileModel;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
+import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaProvider;
 import manifold.sql.schema.api.SchemaTable;
+import manifold.util.concurrent.LocklessLazyVar;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -35,7 +37,7 @@ import java.util.Set;
 public class SchemaModel extends AbstractSingleFileModel
 {
   private final SchemaManifold _schemaManifold;
-  private Schema _schema;
+  private LocklessLazyVar<Schema> _schema;
   private DbConfigImpl _dbConfig;
   private SchemaParentType _type;
 
@@ -49,7 +51,7 @@ public class SchemaModel extends AbstractSingleFileModel
 
   private void init()
   {
-    _schema = loadSchema();
+    _schema = LocklessLazyVar.make( () -> loadSchema() );
     _type = new SchemaParentType( this );
   }
 
@@ -79,7 +81,7 @@ public class SchemaModel extends AbstractSingleFileModel
 
   Schema getSchema()
   {
-    return _schema;
+    return _schema.get();
   }
 
   SchemaParentType getType()
@@ -91,11 +93,13 @@ public class SchemaModel extends AbstractSingleFileModel
   public void updateFile( IFile file )
   {
     super.updateFile( file );
+    ConnectionProvider.findFirst().closeDataSource( _dbConfig );
     init();
   }
 
   SchemaTable getTable( String simpleName )
   {
-    return _schema.getTable( _schema.getOriginalName( simpleName ) );
+    Schema schema = getSchema();
+    return schema.getTable( schema.getOriginalName( simpleName ) );
   }
 }

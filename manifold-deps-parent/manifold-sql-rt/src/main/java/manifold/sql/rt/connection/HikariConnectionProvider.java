@@ -70,6 +70,13 @@ public class HikariConnectionProvider implements ConnectionProvider
     }
   }
 
+  @Override
+  public void closeDataSource( DbConfig dbConfig )
+  {
+    HikariDataSource dropped = _dataSources.remove( dbConfig.getName() );
+    dropped.close();
+  }
+
   private HikariDataSource makeDataSource( DbConfig dbConfig, String url )
   {
     loadDriverClass( dbConfig );

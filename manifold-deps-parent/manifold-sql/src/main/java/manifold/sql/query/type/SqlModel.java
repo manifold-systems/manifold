@@ -25,7 +25,6 @@ import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.api.Table;
 import manifold.sql.query.api.QueryAnalyzer;
 import manifold.sql.query.api.QueryTable;
 import manifold.util.ManExceptionUtil;
@@ -75,21 +74,16 @@ public class SqlModel extends AbstractSingleFileModel
         .orElseThrow( () -> new RuntimeException( "Missing QueryAnalyzer provider" ) );
       _query = queryAnalyzer.getQuery( ManClassUtil.getShortClassName( getFqn() ), _scope,
         StreamUtil.getContent( reader ) );
+      _issues = _query.getIssues();
     }
     catch( RuntimeException ise )
     {
+      _query = null;
       _issues = new SqlIssueContainer( Collections.singletonList( ise ) );
     }
-    catch( Throwable se )
+    catch( IOException e )
     {
-      if( se instanceof SQLException )
-      {
-        _issues = new SqlIssueContainer( Collections.singletonList( (SQLException)se ) );
-      }
-      else
-      {
-        throw ManExceptionUtil.unchecked( se );
-      }
+      throw new RuntimeException( e );
     }
   }
 
@@ -98,7 +92,7 @@ public class SqlModel extends AbstractSingleFileModel
     SqlScope scope = _sqlManifold.getScopeFinder().findScope( getFile() );
     if( scope == null )
     {
-      scope = SqlScope.makeErrantScope( _sqlManifold, getFqn(), getFile() );
+      scope = SqlScope.makeErrantScope( _sqlManifold.getModule(), getFqn(), getFile() );
     }
     return scope;
   }

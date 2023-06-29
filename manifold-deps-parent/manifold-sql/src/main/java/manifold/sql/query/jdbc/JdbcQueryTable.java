@@ -18,6 +18,7 @@ package manifold.sql.query.jdbc;
 
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.TypeMap;
@@ -26,10 +27,7 @@ import manifold.sql.schema.api.Schema;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JdbcQueryTable implements QueryTable
 {
@@ -38,6 +36,7 @@ public class JdbcQueryTable implements QueryTable
   private final String _name;
   private final Map<String, JdbcQueryColumn> _columns;
   private final List<JdbcQueryParameter> _parameters;
+  private final SqlIssueContainer _issues;
 
   public JdbcQueryTable( SqlScope scope, String simpleName, String query )
   {
@@ -47,6 +46,7 @@ public class JdbcQueryTable implements QueryTable
     _name = simpleName;
     _columns = new LinkedHashMap<>();
     _parameters = new ArrayList<>();
+    _issues = new SqlIssueContainer( new ArrayList<>() );
 
     if( _scope.isErrant() )
     {
@@ -60,7 +60,7 @@ public class JdbcQueryTable implements QueryTable
     }
     catch( SQLException e )
     {
-      throw ManExceptionUtil.unchecked( e );
+      _issues.addIssues( Collections.singletonList( e ) );
     }
   }
 
@@ -154,5 +154,10 @@ public class JdbcQueryTable implements QueryTable
   public TypeMap getTypeMap()
   {
     return _scope.getSchema().getTypeMap();
+  }
+
+  public SqlIssueContainer getIssues()
+  {
+    return _issues;
   }
 }

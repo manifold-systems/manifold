@@ -17,19 +17,11 @@
 package manifold.sql.query.type;
 
 import manifold.api.fs.IFile;
+import manifold.api.host.IModule;
 import manifold.api.util.cache.FqnCache;
 import manifold.internal.javac.IIssue;
-import manifold.json.rt.Json;
-import manifold.rt.api.Bindings;
-import manifold.rt.api.util.ManClassUtil;
-import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.connection.DbConfigImpl;
-import manifold.util.concurrent.LocklessLazyVar;
+import manifold.sql.schema.type.SchemaManifold;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,26 +31,16 @@ import java.util.stream.Collectors;
  */
 public class SqlScopeFinder
 {
-  // Extension of JSON file[s] providing configuration for db connections
-  public static final String DBCONFIG_EXT = "dbconfig";
+  private final IModule _module;
 
-  private final SqlManifold _sqlManifold;
-  private final LocklessLazyVar<Set<SqlScope>> _scopes;
-
-  SqlScopeFinder( SqlManifold sqlManifold )
+  SqlScopeFinder( IModule module )
   {
-    _sqlManifold = sqlManifold;
-    _scopes = LocklessLazyVar.make( () -> findScopes() );
-  }
-
-  Set<SqlScope> getScopes()
-  {
-    return _scopes.get();
+    _module = module;
   }
 
   SqlScope findScope( IFile sqlFile )
   {
-    SqlScope sqlScope = _scopes.get().stream()
+    SqlScope sqlScope = findScopes().stream()
       .filter( scope -> scope.appliesTo( sqlFile ) )
       .findFirst().orElse( null );
 
@@ -77,7 +59,7 @@ public class SqlScopeFinder
 
   private SqlScope findDefaultScope()
   {
-    Set<SqlScope> scopes = getScopes();
+    Set<SqlScope> scopes = findScopes();
     if( scopes.size() == 1 )
     {
       return scopes.stream().findFirst().get();
@@ -95,7 +77,7 @@ public class SqlScopeFinder
 
   private Set<SqlScope> findScopes()
   {
-    FqnCache<IFile> extensionCache = _sqlManifold.getModule().getPathCache().getExtensionCache( DBCONFIG_EXT );
+    FqnCache<IFile> extensionCache = _module.getPathCache().getExtensionCache( SchemaManifold.DBCONFIG_EXT );
     Set<SqlScope> scopes = new HashSet<>();
     extensionCache.visitDepthFirst(
       file ->
@@ -141,6 +123,6 @@ public class SqlScopeFinder
 
   private SqlScope makeScope( IFile configFile )
   {
-    return new SqlScope( _sqlManifold, configFile );
+    return new SqlScope( _module, configFile );
   }
 }

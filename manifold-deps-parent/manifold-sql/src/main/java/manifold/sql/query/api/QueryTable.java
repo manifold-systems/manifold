@@ -17,6 +17,7 @@
 package manifold.sql.query.api;
 
 import manifold.sql.api.Table;
+import manifold.sql.query.type.SqlIssueContainer;
 
 import java.util.List;
 import java.util.Map;
@@ -32,4 +33,6 @@ public interface QueryTable extends Table
   QueryColumn getColumn( String columnName );
 
   List<? extends QueryParameter> getParameters();
+
+  SqlIssueContainer getIssues();
 }

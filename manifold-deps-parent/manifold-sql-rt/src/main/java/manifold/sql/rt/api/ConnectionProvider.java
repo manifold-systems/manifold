@@ -71,6 +71,15 @@ public interface ConnectionProvider
   Connection getConnection( DbConfig dbConfig );
 
   /**
+   * Close the data source from which connections are made.
+   * <p/>
+   * This should be called only from IDE environments where the dbconfig can change while developing.
+   *
+   * @param dbconfig The DbConfig corresponding with the data source.
+   */
+  void closeDataSource( DbConfig dbconfig );
+
+  /**
    * Close all resources.
    */
   void closeAll();

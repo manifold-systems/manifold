@@ -36,7 +36,7 @@ public class SqlManifold extends JavaTypeManifold<SqlModel>
   @Override
   public void init( IModule module )
   {
-    _scopeFinder = new SqlScopeFinder( this );
+    _scopeFinder = new SqlScopeFinder( module );
     init( module, (fqn, files) -> new SqlModel( this, fqn, files ) );
   }
 

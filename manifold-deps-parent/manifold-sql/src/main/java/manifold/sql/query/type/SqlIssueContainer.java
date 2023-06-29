@@ -25,11 +25,10 @@ import java.util.List;
 
 public class SqlIssueContainer implements IIssueContainer
 {
+  public static final SqlIssueContainer EMPTY = new SqlIssueContainer( Collections.emptyList() );
+
   private final List<IIssue> _issues;
 
-  /**
-   *
-   */
   @SuppressWarnings("WeakerAccess")
   public SqlIssueContainer( List<Exception> errors )
   {

@@ -18,12 +18,12 @@ package manifold.sql.query.type;
 
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
+import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.internal.javac.IIssue;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
-import manifold.sql.schema.api.SchemaProvider;
 import manifold.sql.schema.type.SchemaManifold;
 
 import java.util.ArrayList;
@@ -32,45 +32,45 @@ import java.util.Set;
 
 public class SqlScope
 {
-  private final SqlManifold _sqlManifold;
+  private final IModule _module;
   private final List<IIssue> _issues;
-  private final Schema _schema;
+  private final IFile _dbConfigFile;
 
-  SqlScope( SqlManifold sqlManifold, IFile dbConfigFile )
+  SqlScope( IModule module, IFile dbConfigFile )
   {
-    _sqlManifold = sqlManifold;
+    _module = module;
+    _dbConfigFile = dbConfigFile;
     _issues = new ArrayList<>();
-    _schema = findSchema( dbConfigFile );
   }
 
   private Schema findSchema( IFile dbConfigFile )
   {
     // share the schema from the corresponding SchemaManifold
 
-    Set<ITypeManifold> tms = _sqlManifold.getModule().findTypeManifoldsFor( dbConfigFile );
+    Set<ITypeManifold> tms = _module.findTypeManifoldsFor( dbConfigFile );
     SchemaManifold schemaManifold = (SchemaManifold)tms.stream()
       .filter( m -> m instanceof SchemaManifold )
       .findFirst()
       .orElseThrow( () -> new RuntimeException( "Could not find schema manifold for: " + dbConfigFile.getName() ) );
     return schemaManifold.getSchema( dbConfigFile );
 
-// don't make a separate schema
+// don't make a separate schema, it is costly (new jdbc connection + full database metadata extraction)
 //    return SchemaProvider.PROVIDERS.get().stream().map( sp -> sp.getSchema( _dbConfig ) ).filter( schema -> schema != null ).findFirst().orElse( null );
   }
 
   /**
    * Errant config.
    */
-  private SqlScope( SqlManifold sqlManifold )
+  private SqlScope( IModule module )
   {
-    _sqlManifold = sqlManifold;
+    _module = module;
     _issues = new ArrayList<>();
-    _schema = null;
+    _dbConfigFile = null;
   }
 
-  public static SqlScope makeErrantScope( SqlManifold sqlManifold, String fqn, IFile file )
+  public static SqlScope makeErrantScope( IModule module, String fqn, IFile file )
   {
-    SqlScope errantScope = new SqlScope( sqlManifold );
+    SqlScope errantScope = new SqlScope( module );
     errantScope._issues.add( new SqlIssue( IIssue.Kind.Error, "SQL type '" + fqn + "' from file '" + file.getName() + "' is not covered in any .dbconfig files" ) );
     return errantScope;
   }
@@ -88,7 +88,7 @@ public class SqlScope
 
   public Schema getSchema()
   {
-    return _schema;
+    return _dbConfigFile == null ? null : findSchema( _dbConfigFile );
   }
 
   List<IIssue> getIssues()
