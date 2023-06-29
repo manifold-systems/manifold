@@ -29,19 +29,19 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static org.junit.Assert.*;
 
 public class TestSimple
 {
+  private static final String DB_RESOURCE = "/manifold/sql/db/Sales.mv.db";
+
   @BeforeClass
   public static void setup()
   {
     // copy database to temp dir, the url in DbConfig uses it from there
-    String tempDir = System.getProperty( "java.io.tmpdir" );
-    File tempDbFile = new File( tempDir + "manifold/sql/db/Sales.mv.db" );
-    tempDbFile.getParentFile().mkdirs();
-    tempDbFile.deleteOnExit();
-    try( InputStream in = TestSimple.class.getResourceAsStream( "/manifold/sql/db/Sales.mv.db" );
+    File tempDbFile = makeTempFile( DB_RESOURCE );
+    try( InputStream in = TestSimple.class.getResourceAsStream( DB_RESOURCE );
          FileOutputStream out = new FileOutputStream( tempDbFile ) )
     {
       StreamUtil.copy( in, out );
@@ -60,9 +60,8 @@ public class TestSimple
     ConnectionProvider.PROVIDERS.clear();
 
     // delete temp db
-    String tempDir = System.getProperty( "java.io.tmpdir" );
     //noinspection ResultOfMethodCallIgnored
-    new File( tempDir + "/manifold/sql/db/Sales.mv.db" ).delete();
+    makeTempFile( DB_RESOURCE ).delete();
   }
 
   @Test
