@@ -27,18 +27,7 @@ public class TempFileUtil
   public static File makeTempFile( String path, boolean deleteOnExit )
   {
     String tempDir = System.getProperty( "java.io.tmpdir" );
-    if( tempDir.endsWith( "/" ) || tempDir.endsWith( "\\" ) )
-    {
-      if( path.startsWith( "/" ) || path.startsWith( "\\" ) )
-      {
-        path = path.substring( 1 );
-      }
-    }
-    else if( !path.startsWith( "/" ) && !path.startsWith( "\\" ) )
-    {
-      path = '/' + path;
-    }
-    File tempFile = new File( tempDir + path );
+    File tempFile = new File( tempDir, path );
     //noinspection ResultOfMethodCallIgnored
     tempFile.getParentFile().mkdirs();
     if( deleteOnExit )

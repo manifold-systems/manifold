@@ -54,18 +54,21 @@ public class Runner<T extends ResultRow>
         p.init( c );
       }
 
-      PreparedStatement ps = c.prepareStatement( _querySource );
-      int i = 0;
-      for( Object param : _params.values() )
+      try( PreparedStatement ps = c.prepareStatement( _querySource ) )
       {
-        ps.setObject( ++i, param );
+        int i = 0;
+        for( Object param : _params.values() )
+        {
+          ps.setObject( ++i, param );
+        }
+        try( ResultSet resultSet = ps.executeQuery() )
+        {
+          return new Result( resultSet );
+        }
       }
-      ResultSet resultSet = ps.executeQuery();
-      return new Result( resultSet, ps );
     }
     catch( SQLException e )
     {
-      // todo: handle this
       throw ManExceptionUtil.unchecked( e );
     }
   }
@@ -74,13 +77,13 @@ public class Runner<T extends ResultRow>
   {
     private final List<T> _results;
 
-    public Result( ResultSet resultSet, PreparedStatement ps )
+    public Result( ResultSet resultSet )
     {
       _results = new ArrayList<>();
-      rip( resultSet, ps );
+      rip( resultSet );
     }
 
-    private void rip( ResultSet resultSet, PreparedStatement ps )
+    private void rip( ResultSet resultSet )
     {
       try
       {

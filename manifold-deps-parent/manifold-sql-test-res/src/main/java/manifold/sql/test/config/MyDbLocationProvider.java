@@ -25,6 +25,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Expects syntax such as:<br>
+ * <br>
+ * {@code ${#provided /my/db/File.mv.db, h2}}<br>
+ * {@code ${#provided /my/other/db/File.db, sqlite}}<br>
+ * <br>
+ * Where the path is a java resource path.
+ */
 public class MyDbLocationProvider implements DbLocationProvider
 {
   @Override
