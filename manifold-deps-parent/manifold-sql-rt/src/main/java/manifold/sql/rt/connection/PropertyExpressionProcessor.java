@@ -83,6 +83,18 @@ public class PropertyExpressionProcessor
         value = System.getenv( expr );
       }
     }
+    value = makeSureTempDirEndsWithSeparator( expr, value );
+    return value;
+  }
+
+  private static String makeSureTempDirEndsWithSeparator( String expr, String value )
+  {
+    // unix return "/tmp", but windows returns "/temp/", make this consistent wrt ending with separator
+
+    if( expr.equals( "java.io.tmpdir" ) && value != null && !value.endsWith( "/" ) && !value.endsWith( "\\" ) )
+    {
+      value += "/";
+    }
     return value;
   }
 
