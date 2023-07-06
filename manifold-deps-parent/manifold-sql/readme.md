@@ -11,6 +11,7 @@
 
 <p><img src="http://manifold.systems/images/img.png" alt="manifold-sql" width="100%" height="100%"/></p>
 
-Coming soon. . .
+
+## Coming soon. . .
 
 
