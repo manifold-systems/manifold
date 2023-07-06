@@ -124,6 +124,11 @@ public class SqlModel extends AbstractSingleFileModel
     init();
   }
 
+  void addIssue( IIssue.Kind kind, String msg )
+  {
+    _issues.addIssue( kind, msg );
+  }
+
   void addIssue( Exception issue )
   {
     _issues.addIssues( Collections.singletonList( issue ) );

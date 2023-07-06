@@ -30,7 +30,7 @@ public class JdbcQueryColumn implements QueryColumn
   private final JdbcSchemaColumn _schemaColumn;
   private final int _position;
   private final String _name;
-  private final Class<?> _type;
+  private final int _jdbcType;
   private final int _size;
   private final int _scale;
   private final int _displaySize;
@@ -52,14 +52,9 @@ public class JdbcQueryColumn implements QueryColumn
     _name = rsMetaData.getColumnLabel( colIndex );
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
-    int typeId = rsMetaData.getColumnType( colIndex );
-    _type = queryTable.getTypeMap().getType( this, typeId );
-    if( _type == null )
-    {
-      throw new IllegalStateException( "Type is null for query: " + _queryTable.getName() + " column:" + _name );
-    }
+    _jdbcType = rsMetaData.getColumnType( colIndex );
 
-    _isNullable = rsMetaData.isNullable( colIndex ) != ResultSetMetaData.columnNoNulls;
+    _isNullable = rsMetaData.isNullable( colIndex ) == ResultSetMetaData.columnNullable;
 
     _size = rsMetaData.getPrecision( colIndex );
     _scale = rsMetaData.getScale( colIndex );
@@ -81,6 +76,12 @@ public class JdbcQueryColumn implements QueryColumn
     return _schemaTable;
   }
 
+  @Override
+  public int getJdbcType()
+  {
+    return _jdbcType;
+  }
+
   public JdbcSchemaColumn getSchemaColumn()
   {
     return _schemaColumn;
@@ -96,12 +97,6 @@ public class JdbcQueryColumn implements QueryColumn
   public String getName()
   {
     return _name;
-  }
-
-  @Override
-  public Class<?> getType()
-  {
-    return _type;
   }
 
   @Override

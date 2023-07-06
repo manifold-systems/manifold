@@ -21,7 +21,6 @@ import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
-import manifold.sql.rt.api.TypeMap;
 import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.Schema;
 import manifold.util.ManExceptionUtil;
@@ -149,11 +148,6 @@ public class JdbcQueryTable implements QueryTable
   public List<JdbcQueryParameter> getParameters()
   {
     return _parameters;
-  }
-
-  public TypeMap getTypeMap()
-  {
-    return _scope.getSchema().getTypeMap();
   }
 
   public SqlIssueContainer getIssues()

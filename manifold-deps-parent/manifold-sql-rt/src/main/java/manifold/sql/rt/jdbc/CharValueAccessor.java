@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql.api;
+package manifold.sql.rt.jdbc;
 
-import manifold.sql.rt.api.BaseElement;
-import manifold.sql.rt.api.ValueAccessor;
+import java.sql.Types;
 
-public interface DataElement extends BaseElement
+public class CharValueAccessor extends VarcharValueAccessor
 {
-  Table getTable();
-  int getJdbcType();
-  int getScale();
-
-  default Class<?> getType()
+  @Override
+  public int getJdbcType()
   {
-    ValueAccessor accessor = ValueAccessor.get( getJdbcType() );
-    return accessor == null ? null : accessor.getJavaType( this );
+    return Types.CHAR;
   }
 }

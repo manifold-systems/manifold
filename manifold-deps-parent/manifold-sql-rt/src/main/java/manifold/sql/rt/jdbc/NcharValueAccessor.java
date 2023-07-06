@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.rt.jdbc;
 
-public interface RawElement
+import java.sql.Types;
+
+public class NcharValueAccessor extends NvarcharValueAccessor
 {
-  String getName();
-  boolean isNullable();
+  @Override
+  public int getJdbcType()
+  {
+    return Types.NCHAR;
+  }
 }

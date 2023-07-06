@@ -28,7 +28,7 @@ public class JdbcQueryParameter implements QueryParameter
   private final JdbcQueryTable _queryTable;
   private final int _position;
   private final String _name;
-  private Class<?> _type;
+  private final int _jdbcType;
   private final int _size;
   private final int _scale;
   private final boolean _isNullable;
@@ -40,26 +40,48 @@ public class JdbcQueryParameter implements QueryParameter
     _name = name == null ? "p" + paramIndex : name;
     _queryTable = queryTable;
 
-    int typeId;
+    int jdbcType;
     try
     {
-      typeId = paramMetaData.getParameterType( paramIndex );
+      jdbcType = paramMetaData.getParameterType( paramIndex );
     }
-    catch( Exception e )
+    catch( SQLException se )
     {
       // (circus music)
-      // some drivers (SQLite since 3.42) require the parameter value to be set in the prepared statement BEFORE the
-      // call to getParameterType(), so the type can be obtained from the value (?!) instead of inferring the type from
-      // the parameter's context
+      // Some drivers don't provide query parameter types when the parameter's value is not set. For instance, depending
+      // on the version, SQLite will either return VARCHAR for all parameters or it will throw an exception when a parameter
+      // is not set, hence this catch block.
+      //
       preparedStatement.setString( paramIndex, "" );
-      typeId = Types.OTHER;
-      _type = Object.class;
+      jdbcType = Types.OTHER;
     }
-    _type = _type == null ? queryTable.getTypeMap().getType( this, typeId ) : _type;
+
+    _jdbcType = handleUnknownType( jdbcType );
     _size = paramMetaData.getPrecision( paramIndex );
     _scale = paramMetaData.getScale( paramIndex );
     _isNullable = paramMetaData.isNullable( paramIndex ) != ParameterMetaData.parameterNoNulls;
     _isSigned = paramMetaData.isSigned( paramIndex );
+  }
+
+  private int handleUnknownType( int jdbcType )
+  {
+    // Update: sqlite is flaky, see https://github.com/xerial/sqlite-jdbc/issues/928
+    //
+    String databaseProductName = _queryTable.getSchema().getDatabaseProductName();
+    if( "SQLite".equalsIgnoreCase( databaseProductName ) )
+    {
+      // OTHER maps to java.lang.Object, which is less confusing than the VARCHAR type the sqlite driver assigns for all parameters.
+      // For instance, java.lang.Object enables param values like integer foreign key ids to be passed directly in, instead
+      // of confusing users with String type.
+      return Types.OTHER; // maps to java.lang.Object
+    }
+    return jdbcType;
+  }
+
+  @Override
+  public int getJdbcType()
+  {
+    return _jdbcType;
   }
 
   public JdbcQueryTable getTable()
@@ -77,12 +99,6 @@ public class JdbcQueryParameter implements QueryParameter
   public String getName()
   {
     return _name;
-  }
-
-  @Override
-  public Class<?> getType()
-  {
-    return _type;
   }
 
   @Override

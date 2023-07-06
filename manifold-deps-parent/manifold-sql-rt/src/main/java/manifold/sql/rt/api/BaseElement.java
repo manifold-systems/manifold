@@ -14,20 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.sql.api;
+package manifold.sql.rt.api;
 
-import manifold.sql.rt.api.BaseElement;
-import manifold.sql.rt.api.ValueAccessor;
-
-public interface DataElement extends BaseElement
+public interface BaseElement
 {
-  Table getTable();
-  int getJdbcType();
-  int getScale();
-
-  default Class<?> getType()
-  {
-    ValueAccessor accessor = ValueAccessor.get( getJdbcType() );
-    return accessor == null ? null : accessor.getJavaType( this );
-  }
+  String getName();
+  int getPosition();
+  int getSize();
+  boolean isNullable();
 }

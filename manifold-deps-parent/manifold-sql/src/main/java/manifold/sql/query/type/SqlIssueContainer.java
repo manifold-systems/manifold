@@ -54,6 +54,11 @@ public class SqlIssueContainer implements IIssueContainer
     return getIssues();
   }
 
+  public void addIssue( IIssue.Kind kind, String msg )
+  {
+    _issues.add( new SqlIssue( kind, msg ) );
+  }
+
   @SuppressWarnings("WeakerAccess")
   public void addIssues( List<Exception> errors )
   {

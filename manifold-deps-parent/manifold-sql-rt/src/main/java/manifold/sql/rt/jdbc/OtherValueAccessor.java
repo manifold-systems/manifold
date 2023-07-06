@@ -14,20 +14,43 @@
  * limitations under the License.
  */
 
-package manifold.sql.api;
+package manifold.sql.rt.jdbc;
 
 import manifold.sql.rt.api.BaseElement;
 import manifold.sql.rt.api.ValueAccessor;
 
-public interface DataElement extends BaseElement
-{
-  Table getTable();
-  int getJdbcType();
-  int getScale();
+import java.sql.*;
 
-  default Class<?> getType()
+public class OtherValueAccessor implements ValueAccessor
+{
+  @Override
+  public int getJdbcType()
   {
-    ValueAccessor accessor = ValueAccessor.get( getJdbcType() );
-    return accessor == null ? null : accessor.getJavaType( this );
+    return Types.OTHER;
+  }
+
+  @Override
+  public Class<?> getJavaType( BaseElement elem )
+  {
+    return Object.class;
+  }
+
+  @Override
+  public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  {
+    return rs.getObject( elem.getPosition() );
+  }
+
+  @Override
+  public void setParameter( PreparedStatement ps, int pos, Object value ) throws SQLException
+  {
+    if( value == null )
+    {
+      ps.setNull( pos, getJdbcType() );
+    }
+    else
+    {
+      ps.setObject( pos, value );
+    }
   }
 }

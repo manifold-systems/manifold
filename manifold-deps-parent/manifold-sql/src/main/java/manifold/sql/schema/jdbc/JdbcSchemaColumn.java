@@ -19,6 +19,7 @@ package manifold.sql.schema.jdbc;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaTable;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -28,7 +29,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final JdbcSchemaTable _table;
   private final int _position;
   private final String _name;
-  private final Class<?> _type;
+  private final int _jdbcType;
   private final boolean _isNullable;
   private final boolean _isGenerated;
   private final boolean _isPrimaryKeyPart;
@@ -44,7 +45,8 @@ public class JdbcSchemaColumn implements SchemaColumn
     _position = colIndex;
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
-    _isNullable = !"NO".equals( rs.getString( "IS_NULLABLE" ) );
+    _jdbcType = rs.getInt( "DATA_TYPE" );
+    _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );
     _isId = _isPrimaryKeyPart && primaryKey.size() == 1;
@@ -52,9 +54,6 @@ public class JdbcSchemaColumn implements SchemaColumn
     _size = rs.getInt( "COLUMN_SIZE" );
     _decimalDigits = rs.getInt( "DECIMAL_DIGITS" );
     _numPrecRadix = rs.getInt( "NUM_PREC_RADIX" );
-
-    int datatype = rs.getInt( "DATA_TYPE" );
-    _type = jdbcSchemaTable.getSchema().getTypeMap().getType( this, datatype );
   }
 
   @Override
@@ -82,9 +81,9 @@ public class JdbcSchemaColumn implements SchemaColumn
   }
 
   @Override
-  public Class<?> getType()
+  public int getJdbcType()
   {
-    return _type;
+    return _jdbcType;
   }
 
   @Override

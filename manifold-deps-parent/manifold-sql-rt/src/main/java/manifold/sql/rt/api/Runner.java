@@ -29,14 +29,16 @@ import java.util.function.Function;
 public class Runner<T extends ResultRow>
 {
   private final Class<T> _queryClass;
+  private final int[] _jdbcParamTypes;
   private final Bindings _params;
   private final String _querySource;
   private final String _configName;
   private final Function<Bindings, T> _makeResult;
 
-  public Runner( Class<T> queryClass, Bindings params, String querySource, String configName, Function<Bindings, T> makeResult )
+  public Runner( Class<T> queryClass, int[] jdbcParamTypes, Bindings params, String querySource, String configName, Function<Bindings, T> makeResult )
   {
     _queryClass = queryClass;
+    _jdbcParamTypes = jdbcParamTypes;
     _params = params;
     _querySource = querySource;
     _configName = configName;
@@ -59,7 +61,8 @@ public class Runner<T extends ResultRow>
         int i = 0;
         for( Object param : _params.values() )
         {
-          ps.setObject( ++i, param );
+          ValueAccessor accessor = ValueAccessor.get( _jdbcParamTypes[i] );
+          accessor.setParameter( ps, ++i, param );
         }
         try( ResultSet resultSet = ps.executeQuery() )
         {
@@ -87,8 +90,6 @@ public class Runner<T extends ResultRow>
     {
       try
       {
-        TypeMap typeMap = TypeMap.findFirst();
-
         ResultSetMetaData metaData = resultSet.getMetaData();
         for( boolean isOnRow = resultSet.next(); isOnRow; isOnRow = resultSet.next() )
         {
@@ -96,16 +97,9 @@ public class Runner<T extends ResultRow>
           for( int i = 1; i <= metaData.getColumnCount(); i++ )
           {
             String column = metaData.getColumnLabel( i );
-            int datatype = metaData.getColumnType( i );
-            Class<?> type = typeMap.getType( new ResultColumn( metaData, i ), datatype );
-            if( type.isPrimitive() )
-            {
-              row.put( column, resultSet.getObject( i ) );
-            }
-            else
-            {
-              row.put( column, resultSet.getObject( i, type ) );
-            }
+            ValueAccessor accessor = ValueAccessor.get( metaData.getColumnType( i ) );
+            Object value = accessor.getRowValue( resultSet, new ResultColumn( metaData, i ) );
+            row.put( column, value );
           }
           _results.add( _makeResult.apply( row ) );
         }
@@ -123,7 +117,7 @@ public class Runner<T extends ResultRow>
       return _results.iterator();
     }
 
-    private class ResultColumn implements RawElement
+    private class ResultColumn implements BaseElement
     {
       private final ResultSetMetaData _metaData;
       private final int _i;
@@ -148,11 +142,30 @@ public class Runner<T extends ResultRow>
       }
 
       @Override
+      public int getPosition()
+      {
+        return _i;
+      }
+
+      @Override
       public boolean isNullable()
       {
         try
         {
-          return _metaData.isNullable( _i ) != ResultSetMetaData.columnNoNulls;
+          return _metaData.isNullable( _i ) == ResultSetMetaData.columnNullable;
+        }
+        catch( SQLException e )
+        {
+          throw ManExceptionUtil.unchecked( e );
+        }
+      }
+
+      @Override
+      public int getSize()
+      {
+        try
+        {
+          return _metaData.getPrecision( _i );
         }
         catch( SQLException e )
         {

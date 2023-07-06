@@ -17,7 +17,6 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.sql.rt.api.ConnectionProvider;
-import manifold.sql.rt.api.TypeMap;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.rt.api.ConnectionNotifier;
@@ -37,7 +36,8 @@ public class JdbcSchema implements Schema
   private final Map<String, JdbcSchemaTable> _tables;
   private final Map<String, String> _javaToName;
   private final Map<String, String> _nameToJava;
-  private final TypeMap _typeMap;
+  private final String _dbProductName;
+  private final String _dbProductVersion;
 
   public JdbcSchema( DbConfig dbConfig )
   {
@@ -46,11 +46,13 @@ public class JdbcSchema implements Schema
     _tables = new LinkedHashMap<>();
     _javaToName = new LinkedHashMap<>();
     _nameToJava = new LinkedHashMap<>();
-    _typeMap = TypeMap.findFirst();
     loadDriverClass( dbConfig );
     ConnectionProvider cp = ConnectionProvider.findFirst();
     try( Connection c = cp.getConnection( dbConfig ) )
     {
+      _dbProductName = c.getMetaData().getDatabaseProductName();
+      _dbProductVersion = c.getMetaData().getDatabaseProductVersion();
+
       build( c );
     }
     catch( SQLException e )
@@ -160,11 +162,6 @@ public class JdbcSchema implements Schema
     return _tables;
   }
 
-  public TypeMap getTypeMap()
-  {
-    return _typeMap;
-  }
-  
   public String getJavaTypeName( String name )
   {
     return _nameToJava.get( name );
@@ -173,5 +170,17 @@ public class JdbcSchema implements Schema
   public String getOriginalName( String javaName )
   {
     return _javaToName.get( javaName );
+  }
+
+  @Override
+  public String getDatabaseProductName()
+  {
+    return _dbProductName;
+  }
+
+  @Override
+  public String getDatabaseProductVersion()
+  {
+    return _dbProductVersion;
   }
 }

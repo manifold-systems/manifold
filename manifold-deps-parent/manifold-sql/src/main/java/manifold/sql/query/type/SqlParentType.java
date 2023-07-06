@@ -21,9 +21,11 @@ import manifold.api.fs.IFileFragment;
 import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.internal.javac.HostKind;
+import manifold.internal.javac.IIssue;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.sql.api.DataElement;
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
@@ -36,6 +38,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static manifold.api.gen.AbstractSrcClass.Kind.*;
@@ -157,12 +160,30 @@ class SqlParentType
     String configName = _model.getScope().getDbconfig().getName();
     //noinspection unused
     String simpleName = srcClass.getSimpleName();
+    //noinspection unused
+    String jdbcParamTypes = getJdbcParamTypes();
     sb.append(
-      "    return new Runner<Row>(Row.class, paramBindings, \"$query\", \"$configName\", " +
+      "    return new Runner<Row>(Row.class, $jdbcParamTypes, paramBindings, \"$query\", \"$configName\", " +
       "      rowBindings -> new Row() {public Bindings getBindings() { return rowBindings; }}" +
       "    ).run();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
+  }
+
+  private String getJdbcParamTypes()
+  {
+    StringBuilder sb = new StringBuilder( "new int[]{");
+    List<? extends QueryParameter> parameters = getQuery().getParameters();
+    for( int i = 0; i < parameters.size(); i++ )
+    {
+      QueryParameter p = parameters.get( i );
+      if( i > 0 )
+      {
+        sb.append( "," );
+      }
+      sb.append( p.getJdbcType() );
+    }
+    return sb.append( "}" ).toString();
   }
 
   private boolean isValueFragment( HostKind hostKind )
@@ -186,7 +207,13 @@ class SqlParentType
 
     for( QueryParameter param: getQuery().getParameters() )
     {
-      method.addParam( makeIdentifier( param.getName(), false ), new SrcType( param.getType() ) );
+      java.lang.Class<?> type = getType( param );
+      if( type == null )
+      {
+        // errant condition
+        type = Object.class;
+      }
+      method.addParam( makeIdentifier( param.getName(), false ), new SrcType( type ) );
     }
   }
 
@@ -229,7 +256,12 @@ class SqlParentType
 
   private void addQueryGetter( SrcLinkedClass srcClass, QueryColumn column )
   {
-    SrcType type = new SrcType( column.getType() );
+    Class<?> colType = getType( column );
+    if( colType == null )
+    {
+      return;
+    }
+    SrcType type = new SrcType( colType );
     String name = column.getName();
     String propName = makePascalCaseIdentifier( column.getName(), true );
     SrcGetProperty getter = new SrcGetProperty( propName, type )
@@ -237,5 +269,18 @@ class SqlParentType
       .body( "return (${type.getFqName()})getBindings().get(\"$name\");" );
     addActualNameAnnotation( getter, name, true );
     srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+  }
+
+  private java.lang.Class<?> getType( DataElement elem )
+  {
+    java.lang.Class<?> colType = elem.getType();
+    if( colType == null )
+    {
+      String label = elem instanceof QueryColumn ? "column" : "parameter";
+      _model.addIssue( IIssue.Kind.Error,
+        "$label type unknown for query '${getQueryName()}', $label '${elem.getName()}', jdbcType '${elem.getJdbcType()}'" );
+      return null;
+    }
+    return colType;
   }
 }

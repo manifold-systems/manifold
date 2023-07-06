@@ -82,7 +82,7 @@ public class TestSimple
   {
     /*[>MyQuery.sql<] Select * From purchase_order Where customer_id = :c_id */
     StringBuilder actual = new StringBuilder();
-    for( MyQuery.Row row : MyQuery.run( 2 ) )
+    for( MyQuery.Row row : MyQuery.run( 2L ) )
     {
       actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
     }
@@ -101,7 +101,7 @@ public class TestSimple
       "3,2,2023-09-08\n";
 
     StringBuilder actual = new StringBuilder();
-    for( auto row : query.run( 2 ) )
+    for( auto row : query.run( 2L ) )
     {
       actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
     }
