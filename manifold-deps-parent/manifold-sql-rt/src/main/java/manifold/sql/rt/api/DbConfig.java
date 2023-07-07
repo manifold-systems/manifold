@@ -21,38 +21,83 @@ import manifold.rt.api.Bindings;
 import java.util.Properties;
 
 /**
- * Represents config information for connecting to a database. Maps directly to data obtained from a .dbconfig file, or
- * if the config is provided from a DbConfigProvider SPI implementation, it is obtained directly.
+ * Configuration for connecting to a JDBC datasource. Maps directly to JSON data obtained from a {@code .dbconfig} file,
+ * or at runtime if the config is provided from a {@link DbConfigProvider} SPI implementation, it is obtained programmatically.
+ * At compile-time the dbconfig is supplied as a resource file.
  */
 public interface DbConfig
 {
-  /** (Provided) Name corresponding with config file. MyDatabase.dbconfig -> "MyDatabase" **/
+  /**
+   * (Provided) Name corresponding with the dbconfig file: MyDatabase.dbconfig -> "MyDatabase". This name will be the parent
+   * Java type name of db table entities.
+   * <p/>
+   * If the dbconfig does not provide a "schemaName" and the JDBC URL does not indicate a schema, this name is also the
+   * schema name.
+   * <p/>
+   * This name is automatically set by manifold on load of the file, or if this DbConfig was constructed via {@link DbConfigProvider}
+   * SPI, it will be supplied by the implementation.
+   */
   String getName();
 
-  /** (Provided) Location of dbconfig file corresponding with this class */
+  /**
+   * (Optional) The catalog containing the schema. If dbconfig does not provide a "catalogName", all accessible database
+   * catalogs are searched for a schema matching "schemaName", in no particular order. If "catalogName" is the empty string
+   * {@code ""}, this indicates only schemas without a catalog will be considered.
+   * <p/>
+   * Note, it is common for JDBC drivers to support naming the catalog in the URL. In this case the catalog name is unnecessary
+   * in the dbconfig.
+   */
+  String getCatalogName();
+
+  /**
+   * (Optional) The name of the database schema used for this configuration. If no "schemaName" is provided, the dbconfig
+   * file name is used as the schema name. If the file name, does not correspond with a schema in the database, a default
+   * schema may be chosen.
+   * <p/>
+   * Note, it is common for JDBC drivers to support naming the schema in the URL. In this case the schema name is unnecessary
+   * in the dbconfig.
+   */
+  String getSchemaName();
+
+  /**
+   * (Provided: Compile) Location of dbconfig file corresponding with this class. This field is supplied and is relevant
+   * only at compile-time. This is fields is used for logging and debugging.
+   */
   String getPath();
 
-  /** (Optional) Qualified name of Java class serving as a driver, may be null */
-  String getDriverClass();
-
-  /** (Required) JDBC URL for database (run time). If {@link #getBuildUrl()} returns null, this URL is used both for runtime and build time. */
+  /**
+   * (Required: Compile/Run) JDBC URL for database (run time). If {@link #getBuildUrl()} returns null, this URL is used
+   * both for runtime and build time.
+   */
   String getUrl();
 
   /** (Optional) JDBC URL for database (build time). This database may be empty, it is used solely for metadata during compilation. */
   String getBuildUrl();
 
-  /** (Required) The fully qualified package name where schema types will be generated */
+  /**
+   * (Required: Compile) The fully qualified package name where schema .class files will be generated. This field is required
+   * for compile-time only.
+   */
   String getSchemaPackage();
 
-  /** (Optional) Username for database account, may be null */
+  /** (Optional) Username for database account */
   String getUser();
-  /** (Optional) Password for database account, may be null */
+  /** (Optional) Password for database account */
   String getPassword();
 
-  /** (Optional) If true, this dbconfig is applied to SQL queries that do not specify a dbconfig name */
+  /**
+   * (Optional) If true, this dbconfig is applied to SQL resources that do not specify a dbconfig name.
+   * <p/>
+   * To specify a dbconfig
+   * name a .sql file follows the naming convention:<br>
+   * {@code MyQuery.dbconfigName.sql}<br>
+   * <p/>
+   * Embedded SQL follows a similar pattern:<br>
+   * {@code "[>.sql:dbconfigName<] select * from ..."}
+   */
   boolean isDefault();
 
-  /** (Optional) JDBC connection properties in JSON format. See {@link #toProperties()}. */
+  /** (Optional) JDBC connection properties in JSON format. These properties are driver-specific. See {@link #toProperties()}. */
   Bindings getProperties();
 
   /** Returns the build URL if provided, otherwise the runtime URL */

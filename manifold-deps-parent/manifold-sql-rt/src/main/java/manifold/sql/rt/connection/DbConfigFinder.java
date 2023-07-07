@@ -98,6 +98,7 @@ public class DbConfigFinder
     try( Reader reader = new InputStreamReader( stream ) )
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
+      bindings.put( "name", configName );
       return new DbConfigImpl( bindings, DbLocationProvider.Mode.Runtime );
     }
     catch( Exception e )

@@ -27,7 +27,6 @@ import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.query.api.QueryAnalyzer;
 import manifold.sql.query.api.QueryTable;
-import manifold.util.ManExceptionUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -35,8 +34,6 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -172,11 +169,6 @@ public class SqlModel extends AbstractSingleFileModel
 
   private List<IIssue> getIssues()
   {
-    List<IIssue> allIssues = new ArrayList<>();
-    if( _issues != null )
-    {
-      allIssues.addAll( _issues.getIssues() );
-    }
-    return allIssues;
+    return _issues.getIssues();
   }
 }

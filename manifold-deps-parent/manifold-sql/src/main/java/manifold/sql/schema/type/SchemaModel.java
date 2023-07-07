@@ -17,7 +17,11 @@
 package manifold.sql.schema.type;
 
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.type.AbstractSingleFileModel;
+import manifold.api.util.JavacDiagnostic;
+import manifold.internal.javac.IIssue;
+import manifold.internal.javac.SourceJavaFileObject;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
@@ -30,8 +34,12 @@ import manifold.sql.schema.api.SchemaProvider;
 import manifold.sql.schema.api.SchemaTable;
 import manifold.util.concurrent.LocklessLazyVar;
 
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticListener;
+import javax.tools.JavaFileObject;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.List;
 import java.util.Set;
 
 public class SchemaModel extends AbstractSingleFileModel
@@ -40,6 +48,7 @@ public class SchemaModel extends AbstractSingleFileModel
   private LocklessLazyVar<Schema> _schema;
   private DbConfigImpl _dbConfig;
   private SchemaParentType _type;
+  private SchemaIssueContainer _issues;
 
   @SuppressWarnings( "WeakerAccess" )
   public SchemaModel( SchemaManifold schemaManifold, String fqn, Set<IFile> files )
@@ -51,6 +60,7 @@ public class SchemaModel extends AbstractSingleFileModel
 
   private void init()
   {
+    _issues = null;
     _schema = LocklessLazyVar.make( () -> loadSchema() );
     _type = new SchemaParentType( this );
   }
@@ -63,6 +73,7 @@ public class SchemaModel extends AbstractSingleFileModel
       bindings.put( "name", getFile().getBaseName() );
       bindings.put( "path", getFile().getPath().getFileSystemPathString() );
       _dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
+      validate();
       return SchemaProvider.PROVIDERS.get().stream()
         .map( sp -> sp.getSchema( _dbConfig ) )
         .filter( schema -> schema != null )
@@ -71,6 +82,21 @@ public class SchemaModel extends AbstractSingleFileModel
     catch( Exception e )
     {
       throw new RuntimeException( e );
+    }
+  }
+
+  private void validate()
+  {
+    _issues = new SchemaIssueContainer();
+    String url = _dbConfig.getUrl();
+    if( url == null || url.isEmpty() )
+    {
+      _issues.addIssue( IIssue.Kind.Error, "Required \"url\" entry is missing from dbconfig: " + getFile().getName() );
+    }
+    String schemaPackage = _dbConfig.getSchemaPackage();
+    if( schemaPackage == null || schemaPackage.isEmpty() )
+    {
+      _issues.addIssue( IIssue.Kind.Error, "Required \"schemaPackage\" entry is missing from dbconfig: " + getFile().getName() );
     }
   }
 
@@ -101,5 +127,34 @@ public class SchemaModel extends AbstractSingleFileModel
   {
     Schema schema = getSchema();
     return schema.getTable( schema.getOriginalName( simpleName ) );
+  }
+
+  void report( DiagnosticListener<JavaFileObject> errorHandler )
+  {
+    if( errorHandler == null )
+    {
+      return;
+    }
+
+    List<IIssue> issues = _issues.getIssues();
+    if( !issues.isEmpty() )
+    {
+      JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
+      for( IIssue issue : issues )
+      {
+        int offset = issue.getStartOffset();
+        if( getFile() instanceof IFileFragment )
+        {
+          offset += ((IFileFragment)getFile()).getOffset();
+        }
+        Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
+        errorHandler.report( new JavacDiagnostic( file, kind, offset, issue.getLine(), issue.getColumn(), issue.getMessage() ) );
+      }
+    }
+  }
+
+  SchemaIssueContainer getIssueContainer()
+  {
+    return _issues;
   }
 }

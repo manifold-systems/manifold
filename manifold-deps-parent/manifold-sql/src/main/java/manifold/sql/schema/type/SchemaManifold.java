@@ -49,7 +49,7 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
   @Override
   public String getTypeNameForFile( String defaultFqn, IFile file )
   {
-    //## todo: cache this name mapping, it's called A LOT
+    //## todo: cache this name mapping? it's called A LOT
 
     try( Reader reader = new InputStreamReader( file.openInputStream() ) )
     {
@@ -108,7 +108,8 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
       return null;
     }
     String fqn = getTypeNameForFile( fqns.iterator().next(), file );
-    return getModel( fqn ).getSchema();
+    SchemaModel model = getModel( fqn );
+    return model == null ? null : model.getSchema();
   }
 
   @Override
@@ -116,7 +117,7 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
   {
     StringBuilder sb = new StringBuilder();
     model.getType().render( sb, location, getModule(), errorHandler );
-//    model.report( errorHandler );
+    model.report( errorHandler );
     return sb.toString();
   }
 }

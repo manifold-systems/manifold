@@ -20,6 +20,7 @@ import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import java.sql.Connection;
+import java.sql.Driver;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,6 +31,10 @@ public interface ConnectionProvider
 {
   LocklessLazyVar<Set<ConnectionProvider>> PROVIDERS =
     LocklessLazyVar.make( () -> {
+      // first, ensure jdbc drivers are loaded
+      Set<Driver> drivers = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( drivers, Driver.class, ConnectionProvider.class.getClassLoader() );
+
       Set<ConnectionProvider> registered = new HashSet<>();
       ServiceUtil.loadRegisteredServices( registered, ConnectionProvider.class, ConnectionProvider.class.getClassLoader() );
       return registered;
@@ -51,7 +56,7 @@ public interface ConnectionProvider
    * <li>From {@code <configName>.dbconfig} resource file in the {@code <module-name>.config} package (JDK 11+)</li>
    * <li>From {@code <configName>.dbconfig} resource file in the {@code config} package (JDK 8+)</li>
    * <p/>
-   * This method is intended for <b>runtime</b> use.
+   * This method is exclusive to <b>runtime</b> use.
    *
    * @param configName The name of the DbConfig. Does not include a file extension.
    * @param classContext The class initiating the connection. Used for context when searching for the DbConfig as a resource
@@ -63,7 +68,7 @@ public interface ConnectionProvider
   /**
    * Provides a JDBC connection configured with the provided DbConfing.
    * <p/>
-   * This method is intended for <b>build-time</b>.
+   * This method is exclusive to <b>build-time</b> use.
    *
    * @param dbConfig The configuration for the connection
    * @return The JDBC connection

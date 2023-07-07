@@ -29,8 +29,10 @@ import java.util.Set;
 
 /**
  * Each implementation of this interface handles a JDBC type from {@link java.sql.Types} and must be registered as a Java
- * Service Provider. Manifold provides default implementations that are suitable for most use-cases, however these implementations
- * can be overridden by returning a higher priority from {@link #getPriority()}.
+ * Service Provider. The value returned from {@link #getJdbcType()} indicates the JDBC type handled by the SPI implementation.
+ * Manifold provides default implementations that are suitable for most use-cases, however these implementations can be
+ * overridden by custom implementations, a higher priority from {@link #getPriority()} overrides lower priority implementations.
+ * All Manifold implementations default to the lowest priority.
  * <p/>
  * This interface performs the following:<br>
  * - resolves the Java type corresponding with the JDBC type from {@link java.sql.Types}<br>

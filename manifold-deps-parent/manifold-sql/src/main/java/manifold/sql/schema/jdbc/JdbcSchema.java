@@ -46,7 +46,6 @@ public class JdbcSchema implements Schema
     _tables = new LinkedHashMap<>();
     _javaToName = new LinkedHashMap<>();
     _nameToJava = new LinkedHashMap<>();
-    loadDriverClass( dbConfig );
     ConnectionProvider cp = ConnectionProvider.findFirst();
     try( Connection c = cp.getConnection( dbConfig ) )
     {
@@ -70,7 +69,8 @@ public class JdbcSchema implements Schema
 
     DatabaseMetaData metaData = c.getMetaData();
     String schemaName = findSchemaName( metaData );
-    try( ResultSet resultSet = metaData.getTables( null, schemaName, null, new String[]{"TABLE", "VIEW"} ) )
+     try( ResultSet resultSet = metaData.getTables(
+      _dbConfig.getCatalogName(), schemaName, null, new String[]{"TABLE", "VIEW"} ) )
     {
       while( resultSet.next() )
       {
@@ -91,41 +91,34 @@ public class JdbcSchema implements Schema
 
   private String findSchemaName( DatabaseMetaData metaData ) throws SQLException
   {
-    String schemaName = null;
-    try( ResultSet schemas = metaData.getSchemas() )
+    String defaultSchema = null;
+    String catalogName = _dbConfig.getCatalogName();
+    String schemaName = _dbConfig.getSchemaName();
+    try( ResultSet schemas = catalogName != null
+      ? metaData.getSchemas( catalogName, schemaName ) // sqlite throws SQLFeatureNotSupportedException for this one
+      : metaData.getSchemas() )
     {
       while( schemas.next() )
       {
         String schem = schemas.getString( "TABLE_SCHEM" );
+
+        if( schem.equalsIgnoreCase( schemaName ) )
+        {
+          return schem;
+        }
+
         if( schem.equalsIgnoreCase( _name ) )
         {
           return schem;
         }
-        if( schemaName == null || !schem.equalsIgnoreCase( "information_schema" ) )
+
+        if( !schem.equalsIgnoreCase( "information_schema" ) )
         {
-          schemaName = schem;
+          defaultSchema = schem;
         }
       }
     }
-    return schemaName;
-  }
-
-  private void loadDriverClass( DbConfig dbConfig )
-  {
-    String driverClass = dbConfig.getDriverClass();
-    if( driverClass == null || driverClass.isEmpty() )
-    {
-      return;
-    }
-
-    try
-    {
-      Class.forName( driverClass );
-    }
-    catch( ClassNotFoundException e )
-    {
-      throw new RuntimeException( e );
-    }
+    return defaultSchema;
   }
 
   @Override

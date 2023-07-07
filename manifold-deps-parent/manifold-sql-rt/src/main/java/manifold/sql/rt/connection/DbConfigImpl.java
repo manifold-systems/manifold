@@ -67,15 +67,21 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
-  public String getPath()
+  public String getCatalogName()
   {
-    return (String)_bindings.get( "path" );
+    return (String)_bindings.get( "catalogName" );
   }
 
   @Override
-  public String getDriverClass()
+  public String getSchemaName()
   {
-    return (String)_bindings.get( "driverClass" );
+    return (String)_bindings.get( "schemaName" );
+  }
+
+  @Override
+  public String getPath()
+  {
+    return (String)_bindings.get( "path" );
   }
 
   @Override

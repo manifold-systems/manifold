@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.type;
+package manifold.sql.schema.type;
 
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
@@ -23,15 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SqlIssueContainer implements IIssueContainer
+public class SchemaIssueContainer implements IIssueContainer
 {
   private final List<IIssue> _issues;
 
   @SuppressWarnings("WeakerAccess")
-  public SqlIssueContainer( List<Exception> errors )
+  public SchemaIssueContainer()
   {
     _issues = new ArrayList<>();
-    addIssues( errors );
   }
 
   @Override
@@ -58,7 +57,7 @@ public class SqlIssueContainer implements IIssueContainer
 
   public void addIssue( IIssue.Kind kind, String msg )
   {
-    _issues.add( new SqlIssue( kind, msg ) );
+    _issues.add( new SchemaIssue( kind, msg ) );
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -66,13 +65,13 @@ public class SqlIssueContainer implements IIssueContainer
   {
     for( Exception e: errors )
     {
-      _issues.add( new SqlIssue( IIssue.Kind.Error, e.getMessage() ) );
+      _issues.add( new SchemaIssue( IIssue.Kind.Error, e.getMessage() ) );
     }
   }
 
   @Override
   public boolean isEmpty()
   {
-    return _issues == null;
+    return _issues.isEmpty();
   }
 }

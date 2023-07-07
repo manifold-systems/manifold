@@ -79,23 +79,9 @@ public class HikariConnectionProvider implements ConnectionProvider
 
   private HikariDataSource makeDataSource( DbConfig dbConfig, String url )
   {
-    loadDriverClass( dbConfig );
     HikariConfig config = new HikariConfig( dbConfig.toProperties() );
     config.setJdbcUrl( url );
     return new HikariDataSource( config );
-  }
-
-  private void loadDriverClass( DbConfig dbConfig )
-  {
-    try
-    {
-      Class.forName( dbConfig.getDriverClass() );
-    }
-    catch( ClassNotFoundException e )
-    {
-      throw ManExceptionUtil.unchecked(
-        new SQLException( "Could not find JDBC driver class: " + dbConfig.getDriverClass() ) );
-    }
   }
 
   @Override
