@@ -25,7 +25,9 @@ import manifold.internal.javac.IIssue;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.Pair;
 import manifold.sql.api.DataElement;
+import manifold.sql.query.api.ForeignKeyQueryRef;
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
@@ -33,12 +35,14 @@ import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Runner;
 import manifold.sql.rt.api.Query;
 import manifold.sql.rt.api.ResultRow;
+import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static manifold.api.gen.AbstractSrcClass.Kind.*;
@@ -73,15 +77,36 @@ class SqlParentType
     String identifier = makeIdentifier( name, false );
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Interface, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
-      .addInterface( new SrcType( "Query<$identifier.Row>" ) )
+      .addInterface( new SrcType( "Query" ) )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, name, false );
     addImports( srcClass );
-    addQueryResultType( srcClass );
-    addRunMethod( srcClass );
+    addFlatRowType( srcClass );
+    addRunMethods( srcClass );
     addFragmentValueMethod( srcClass );
 
     srcClass.render( sb, 0 );
+  }
+
+  private void addRunMethods( SrcLinkedClass srcClass )
+  {
+    //addRunMethod( srcClass, "runFlat", "FlatRow" );
+
+    Pair<SchemaTable, List<QueryColumn>> primaryTable = getQuery().findPrimaryTable();
+    String rowType;
+    if( primaryTable != null && primaryTable.getSecond().size() == getQuery().getColumns().size() )
+    {
+      // Single table query can be represented directly as TableResult e.g., SELECT * queries.
+      SchemaTable table = primaryTable.getFirst();
+      rowType = getTableFqn( table );
+    }
+    else
+    {
+      rowType = "Row";
+      addRowType( srcClass );
+    }
+
+    addRunMethod( srcClass, "run", rowType );
   }
 
   private QueryTable getQuery()
@@ -130,11 +155,11 @@ class SqlParentType
     return (name == null || name.isEmpty()) ? ANONYMOUS_TYPE + _anonCount++ : name;
   }
 
-  private void addRunMethod( SrcLinkedClass srcClass )
+  private void addRunMethod( SrcLinkedClass srcClass, String methodName, @SuppressWarnings( "unused" ) String rowType )
   {
     SrcMethod method = new SrcMethod( srcClass )
-      .name( "run" )
-      .returns( new SrcType( "Iterable<Row>" ) );
+      .name( methodName )
+      .returns( new SrcType( "Iterable<$rowType>" ) );
     if( _model.getFile() instanceof IFileFragment &&
       isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() ) )
     {
@@ -163,8 +188,8 @@ class SqlParentType
     //noinspection unused
     String jdbcParamTypes = getJdbcParamTypes();
     sb.append(
-      "    return new Runner<Row>(Row.class, $jdbcParamTypes, paramBindings, \"$query\", \"$configName\", " +
-      "      rowBindings -> new Row() {public Bindings getBindings() { return rowBindings; }}" +
+      "    return new Runner<$rowType>($rowType.class, $jdbcParamTypes, paramBindings, \"$query\", \"$configName\", " +
+      "      rowBindings -> new $rowType() {public Bindings getBindings() { return rowBindings; }}" +
       "    ).run();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -173,7 +198,7 @@ class SqlParentType
   private String getJdbcParamTypes()
   {
     StringBuilder sb = new StringBuilder( "new int[]{");
-    List<? extends QueryParameter> parameters = getQuery().getParameters();
+    List<QueryParameter> parameters = getQuery().getParameters();
     for( int i = 0; i < parameters.size(); i++ )
     {
       QueryParameter p = parameters.get( i );
@@ -217,9 +242,9 @@ class SqlParentType
     }
   }
 
-  private void addQueryResultType( SrcLinkedClass enclosingType )
+  private void addFlatRowType( SrcLinkedClass enclosingType )
   {
-    String fqn = enclosingType.getName() + ".Row";
+    String fqn = enclosingType.getName() + ".FlatRow";
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( ResultRow.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
@@ -230,8 +255,123 @@ class SqlParentType
       {
         addQueryGetter( srcClass, column );
       }
+
+      for( ForeignKeyQueryRef fkRef : getQuery().findForeignKeyQueryRefs() )
+      {
+        addFkFetcher( srcClass, fkRef );
+      }
     }
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addRowType( SrcLinkedClass enclosingType )
+  {
+    String fqn = enclosingType.getName() + ".Row";
+    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
+      .addInterface( ResultRow.class.getSimpleName() )
+      .modifiers( Modifier.PUBLIC );
+
+    if( getQuery() != null )
+    {
+      Map<String, QueryColumn> columns = getQuery().getColumns();
+
+      Pair<SchemaTable, List<QueryColumn>> primaryTable = getQuery().findPrimaryTable();
+      if( primaryTable != null )
+      {
+        addPrimaryAccessor( srcClass, primaryTable );
+
+        List<QueryColumn> primaryCols = primaryTable.getSecond();
+        primaryCols.forEach( c -> columns.remove( c.getName() ) );
+      }
+
+      for( ForeignKeyQueryRef fkRef : getQuery().findForeignKeyQueryRefs() )
+      {
+        addFkFetcher( srcClass, fkRef );
+      }
+
+      for( QueryColumn column : columns.values() )
+      {
+        addQueryGetter( srcClass, column );
+      }
+
+      addFlatRowMethod( srcClass );
+    }
+    enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addFlatRowMethod( SrcLinkedClass srcClass )
+  {
+    SrcType type = new SrcType( "FlatRow" );
+    SrcMethod flatRowMethod = new SrcMethod( srcClass )
+      .modifiers( Flags.DEFAULT )
+      .name( "flatRow" )
+      .returns( type )
+      .body( "return new FlatRow() {public Bindings getBindings() { return Row.this.getBindings(); }};" );
+    srcClass.addMethod( flatRowMethod );
+  }
+
+  private void addFkFetcher( SrcLinkedClass srcClass, ForeignKeyQueryRef fkRef )
+  {
+    SchemaTable table = fkRef.getFk().getReferencedTable();
+    String tableFqn = getTableFqn( table );
+
+    SrcType type = new SrcType( tableFqn );
+    String name = fkRef.getName();
+    String propName = makePascalCaseIdentifier( name, true );
+    SrcMethod fkFetchMethod = new SrcMethod( srcClass )
+      .name( "fetch" + propName )
+      .modifiers( Flags.DEFAULT )
+      .returns( type );
+    StringBuilder sb = new StringBuilder( "return fetchFk($tableFqn.class, \"${table.getName()}\", " );
+    List<QueryColumn> queryCols = fkRef.getQueryCols();
+    for( int i = 0; i < queryCols.size(); i++ )
+    {
+      //noinspection unused
+      QueryColumn queryCol = queryCols.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      //noinspection unused
+      String colName = queryCol.getName();
+      sb.append( "new Pair<>(\"$colName\", getBindings().get(\"$colName\"))" );
+    }
+    sb.append( ");" );
+    fkFetchMethod.body( sb.toString() );
+    addActualNameAnnotation( fkFetchMethod, name, true );
+    srcClass.addMethod( fkFetchMethod );
+  }
+
+  private void addPrimaryAccessor( SrcLinkedClass srcClass, Pair<SchemaTable, List<QueryColumn>> primaryTable )
+  {
+    SchemaTable table = primaryTable.getFirst();
+    String tableName = getTableSimpleTypeName( table );
+    String tableFqn = getTableFqn( table );
+
+    String propName = tableName;
+    if( getQuery().getColumns().keySet().stream()
+      .map( n -> makePascalCaseIdentifier( n, true ) ).anyMatch( n -> n.equals( tableName ) ) )
+    {
+      // disambiguate primary table obj and query column
+      propName += "Ref";
+    }
+    SrcType type = new SrcType( tableFqn );
+    SrcGetProperty getter = new SrcGetProperty( propName, type )
+      .modifiers( Flags.DEFAULT )
+      .body( "return new $tableFqn() {@Override public Bindings getBindings() {return Row.this.getBindings(); }};" );
+    srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+  }
+
+  private String getTableSimpleTypeName( SchemaTable table )
+  {
+    return table.getSchema().getJavaTypeName( table.getName() );
+  }
+
+  private String getTableFqn( SchemaTable table )
+  {
+    String schemaPackage = _model.getScope().getDbconfig().getSchemaPackage();
+    String configName = table.getSchema().getDbConfig().getName();
+    return schemaPackage + "." + configName + "." + getTableSimpleTypeName( table );
   }
 
   private void addImports( SrcLinkedClass srcClass )
@@ -276,6 +416,7 @@ class SqlParentType
     java.lang.Class<?> colType = elem.getType();
     if( colType == null )
     {
+      //noinspection unused
       String label = elem instanceof QueryColumn ? "column" : "parameter";
       _model.addIssue( IIssue.Kind.Error,
         "$label type unknown for query '${getQueryName()}', $label '${elem.getName()}', jdbcType '${elem.getJdbcType()}'" );

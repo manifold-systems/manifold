@@ -16,6 +16,8 @@
 
 package manifold.rt.api.util;
 
+import java.util.Objects;
+
 /**
  * A simple class to type-safely model a pair of values.
  * @param <F> type of first value
@@ -68,11 +70,11 @@ public class Pair<F, S>
 
     Pair pair = (Pair)o;
 
-    if( _first != null ? !_first.equals( pair._first ) : pair._first != null )
+    if( !Objects.equals( _first, pair._first ) )
     {
       return false;
     }
-    return _second != null ? _second.equals( pair._second ) : pair._second == null;
+    return Objects.equals( _second, pair._second );
   }
 
   public int hashCode()
@@ -115,7 +117,7 @@ public class Pair<F, S>
 
     public static class First<F>
     {
-      private F _first;
+      private final F _first;
 
       private First( F left )
       {

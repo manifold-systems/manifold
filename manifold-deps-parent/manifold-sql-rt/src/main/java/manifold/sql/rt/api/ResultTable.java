@@ -14,30 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.api;
+package manifold.sql.rt.api;
 
-import manifold.rt.api.util.Pair;
-import manifold.sql.api.Table;
-import manifold.sql.query.type.SqlIssueContainer;
-import manifold.sql.schema.api.SchemaTable;
-
-import java.util.List;
-import java.util.Map;
-
-public interface QueryTable extends Table
+/**
+ * Common base type for db table types (generated from the schema).
+ */
+public interface ResultTable extends ResultRow
 {
-  String getQuerySource();
-
-  @Override
-  Map<String, QueryColumn> getColumns();
-
-  @Override
-  QueryColumn getColumn( String columnName );
-
-  List<QueryParameter> getParameters();
-
-  Pair<SchemaTable, List<QueryColumn>> findPrimaryTable();
-  List<ForeignKeyQueryRef> findForeignKeyQueryRefs();
-
-  SqlIssueContainer getIssues();
 }

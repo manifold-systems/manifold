@@ -16,28 +16,13 @@
 
 package manifold.sql.query.api;
 
-import manifold.rt.api.util.Pair;
-import manifold.sql.api.Table;
-import manifold.sql.query.type.SqlIssueContainer;
-import manifold.sql.schema.api.SchemaTable;
+import manifold.sql.schema.api.SchemaForeignKey;
 
 import java.util.List;
-import java.util.Map;
 
-public interface QueryTable extends Table
+public interface ForeignKeyQueryRef
 {
-  String getQuerySource();
-
-  @Override
-  Map<String, QueryColumn> getColumns();
-
-  @Override
-  QueryColumn getColumn( String columnName );
-
-  List<QueryParameter> getParameters();
-
-  Pair<SchemaTable, List<QueryColumn>> findPrimaryTable();
-  List<ForeignKeyQueryRef> findForeignKeyQueryRefs();
-
-  SqlIssueContainer getIssues();
+  String getName();
+  SchemaForeignKey getFk();
+  List<QueryColumn> getQueryCols();
 }

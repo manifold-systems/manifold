@@ -16,7 +16,6 @@
 
 package manifold.sql.schema.api;
 
-import manifold.sql.api.Column;
 import manifold.sql.api.Table;
 
 import java.util.List;
@@ -24,17 +23,22 @@ import java.util.Map;
 
 public interface SchemaTable extends Table
 {
-  Column getId();
-  List<Column> getForeignKeys();
-  List<Column> getPrimaryKey();
+  SchemaColumn getId();
+  Map<SchemaTable, List<SchemaForeignKey>> getForeignKeys();
+  List<SchemaColumn> getPrimaryKey();
+  String getDescription();
 
   Kind getKind();
 
   @Override
-  Map<String, ? extends SchemaColumn> getColumns();
+  Map<String, SchemaColumn> getColumns();
 
   @Override
   SchemaColumn getColumn( String columnName );
+
+  void resolve();
+
+  List<SchemaColumn> getNonNullColumns();
 
   enum Kind
   {

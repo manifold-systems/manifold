@@ -22,11 +22,12 @@ import java.util.Map;
 
 public interface Schema
 {
+  String getCatalog();
   String getName();
   DbConfig getDbConfig();
   boolean hasTable( String name );
   SchemaTable getTable( String name);
-  Map<String, ? extends SchemaTable> getTables();
+  Map<String, SchemaTable> getTables();
   String getJavaTypeName( String name );
   String getOriginalName( String pascalName );
 

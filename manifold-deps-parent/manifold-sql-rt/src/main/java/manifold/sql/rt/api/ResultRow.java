@@ -17,12 +17,36 @@
 package manifold.sql.rt.api;
 
 import manifold.ext.rt.api.IBindingsBacked;
+import manifold.rt.api.util.Pair;
 
 /**
  * Base interface for all query result types type-safely reflecting query fields and structure.
- * <p/>
- * This interface exists primarily for custom extension methods.
  */
 public interface ResultRow extends IBindingsBacked
 {
+  default String display()
+  {
+    StringBuilder row = new StringBuilder();
+    for( Object value: getBindings().values() )
+    {
+      if( row.length() > 0 )
+      {
+        row.append( ", " );
+      }
+      if( value instanceof String )
+      {
+        value = "\"" + value + "\"";
+      }
+      row.append( value );
+    }
+    return row.toString();
+  }
+
+  default <T extends ResultTable> T fetchFk( Class<T> cls, String tableName, Pair<String,?>... values )
+  {
+    //todo: add a CRUD SPI and implement a "simple" one;  this method's impl is the 'R' (read) part: SELECT * FROM <tableName> WHERE values0 = ?, values1 = ?, etc.
+    // note, the queries should be parameterized so the values can be passed in as parameter values using setObject()
+    // note, maybe add a simple-ish cache for this that is also maintained for inserts, updates, and deletes
+    return null;
+  }
 }

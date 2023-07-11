@@ -16,8 +16,8 @@
 
 package manifold.sql.schema.jdbc;
 
-import manifold.sql.api.Column;
-import manifold.sql.schema.api.Schema;
+import manifold.sql.schema.api.SchemaColumn;
+import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
 
 import java.sql.*;
@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class JdbcSchemaTable implements SchemaTable
 {
@@ -32,16 +33,16 @@ public class JdbcSchemaTable implements SchemaTable
   private final String _name;
   private final String _description;
   private final Kind _kind;
-  private final Map<String, JdbcSchemaColumn> _columns;
+  private final Map<String, SchemaColumn> _columns;
   private final JdbcSchemaColumn _colId;
-  private final ArrayList<JdbcSchemaColumn> _primaryKeys;
-  private final JdbcForeignKeyData _foreignKey;
-  private List<JdbcSchemaColumn> _foreignKeys;
+  private final ArrayList<SchemaColumn> _primaryKeys;
+  private final JdbcForeignKeyMetadata _foreignKeyData;
+  private Map<SchemaTable, List<SchemaForeignKey>> _foreignKeys;
 
 
-  public JdbcSchemaTable( Connection c, Schema owner, DatabaseMetaData metaData, ResultSet resultSet ) throws SQLException
+  public JdbcSchemaTable( JdbcSchema owner, DatabaseMetaData metaData, ResultSet resultSet ) throws SQLException
   {
-    _schema = (JdbcSchema)owner;
+    _schema = owner;
     _name = resultSet.getString( "TABLE_NAME" );
     _description = resultSet.getString( "REMARKS" );
     _kind = Kind.get( resultSet.getString( "TABLE_TYPE" ) );
@@ -51,7 +52,9 @@ public class JdbcSchemaTable implements SchemaTable
     }
 
     List<String> primaryKey = new ArrayList<>();
-    try( ResultSet primaryKeys = metaData.getPrimaryKeys( null, null, _name ) )
+    String catalogName = _schema.getDbConfig().getCatalogName();
+    String schemaName = _schema.getName();
+    try( ResultSet primaryKeys = metaData.getPrimaryKeys( catalogName, schemaName, _name ) )
     {
       while( primaryKeys.next() )
       {
@@ -60,17 +63,18 @@ public class JdbcSchemaTable implements SchemaTable
       }
     }
 
-    try( ResultSet foreignKeys = metaData.getImportedKeys( null, null, _name ) )
+    try( ResultSet foreignKeys = metaData.getImportedKeys( catalogName, schemaName, _name ) )
     {
-      List<JdbcForeignKeyData.KeyPart> keyParts = new ArrayList<>();
+      List<JdbcForeignKeyMetadata.KeyPart> keyParts = new ArrayList<>();
       while( foreignKeys.next() )
       {
+        String fkName = foreignKeys.getString( "FK_NAME" );
         String fkColumnName = foreignKeys.getString( "FKCOLUMN_NAME" );
         String pkColumnName = foreignKeys.getString( "PKCOLUMN_NAME" );
         String pkTableName = foreignKeys.getString( "PKTABLE_NAME" );
-        keyParts.add( new JdbcForeignKeyData.KeyPart( fkColumnName, pkColumnName, pkTableName ) );
+        keyParts.add( new JdbcForeignKeyMetadata.KeyPart( fkName, fkColumnName, pkColumnName, pkTableName ) );
       }
-      _foreignKey = new JdbcForeignKeyData( this, keyParts );
+      _foreignKeyData = new JdbcForeignKeyMetadata( this, keyParts );
     }
 
     _columns = new LinkedHashMap<>();
@@ -119,41 +123,52 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
-  public Map<String, JdbcSchemaColumn> getColumns()
+  public Map<String, SchemaColumn> getColumns()
   {
     return _columns;
   }
 
   @Override
-  public JdbcSchemaColumn getColumn( String columnName )
+  public SchemaColumn getColumn( String columnName )
   {
     return _columns.get( columnName );
   }
 
   @Override
-  public Column getId()
+  public JdbcSchemaColumn getId()
   {
     return _colId;
   }
 
   @Override
-  public List<Column> getForeignKeys()
+  public Map<SchemaTable, List<SchemaForeignKey>> getForeignKeys()
   {
-    //noinspection unchecked
-    return (List)_foreignKeys;
+    return _foreignKeys;
   }
 
   @Override
-  public List<Column> getPrimaryKey()
+  public List<SchemaColumn> getPrimaryKey()
   {
-    //noinspection unchecked
-    return (List)_primaryKeys;
+    return _primaryKeys;
   }
 
-  void resolve()
+  @Override
+  public String getDescription()
+  {
+    return _description;
+  }
+
+  @Override
+  public void resolve()
   {
     // resolve foreign keys
-    List<JdbcSchemaColumn> keys = _foreignKey.resolve( _schema );
-    _foreignKeys = keys;
+    _foreignKeys = _foreignKeyData.resolve( _schema );
+  }
+
+  public List<SchemaColumn> getNonNullColumns()
+  {
+    return getColumns().values().stream()
+      .filter( c -> !c.isNullable() )
+      .collect( Collectors.toList() );
   }
 }

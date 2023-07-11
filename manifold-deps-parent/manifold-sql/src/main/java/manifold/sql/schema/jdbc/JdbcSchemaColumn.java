@@ -17,7 +17,6 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.sql.schema.api.SchemaColumn;
-import manifold.sql.schema.api.SchemaTable;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -57,7 +56,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   }
 
   @Override
-  public SchemaTable getTable()
+  public JdbcSchemaTable getTable()
   {
     return _table;
   }

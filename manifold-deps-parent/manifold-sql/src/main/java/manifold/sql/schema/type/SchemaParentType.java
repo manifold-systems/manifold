@@ -21,14 +21,16 @@ import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
+import manifold.rt.api.util.Pair;
 import manifold.sql.rt.api.SchemaBuilder;
-import manifold.sql.rt.api.SchemaType;
+import manifold.sql.rt.api.ResultTable;
 import manifold.sql.schema.api.*;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
@@ -194,9 +196,10 @@ class SchemaParentType
 
   private void addImports( SrcLinkedClass srcClass )
   {
+    srcClass.addImport( Pair.class );
     srcClass.addImport( Bindings.class );
     srcClass.addImport( DataBindings.class );
-    srcClass.addImport( SchemaType.class );
+    srcClass.addImport( ResultTable.class );
     srcClass.addImport( SchemaBuilder.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( ActualName.class );
@@ -208,7 +211,7 @@ class SchemaParentType
     String identifier = _model.getSchema().getJavaTypeName( table.getName() );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( SchemaType.class.getSimpleName() )
+      .addInterface( ResultTable.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, table.getName(), false );
     addBuilder( srcClass, table );
@@ -218,6 +221,15 @@ class SchemaParentType
     {
       addMember( srcClass, member );
     }
+
+    for( List<SchemaForeignKey> fkEntry : table.getForeignKeys().values() )
+    {
+      for( SchemaForeignKey fk : fkEntry )
+      {
+        addFkFetcher( srcClass, fk );
+      }
+    }
+
     //## todo
 //    addLoaderMethodsForForiegnKeys();
     enclosingType.addInnerClass( srcClass );
@@ -253,6 +265,50 @@ class SchemaParentType
 ////      addSourcePositionAnnotation( srcClass, member, name, setter );
 ////    }
 //    srcInterface.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
+  }
+
+  private void addFkFetcher( SrcLinkedClass srcClass, SchemaForeignKey fk )
+  {
+    SchemaTable table = fk.getReferencedTable();
+    String tableFqn = getTableFqn( table );
+
+    SrcType type = new SrcType( tableFqn );
+    String name = fk.getName();
+    String propName = makePascalCaseIdentifier( name, true );
+    SrcMethod fkFetchMethod = new SrcMethod( srcClass )
+      .name( "fetch" + propName )
+      .modifiers( Flags.DEFAULT )
+      .returns( type );
+    StringBuilder sb = new StringBuilder( "return fetchFk($tableFqn.class, \"${table.getName()}\", " );
+    List<SchemaColumn> columns = fk.getColumns();
+    for( int i = 0; i < columns.size(); i++ )
+    {
+      //noinspection unused
+      SchemaColumn column = columns.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      //noinspection unused
+      String colName = column.getName();
+      sb.append( "new Pair<>(\"$colName\", getBindings().get(\"$colName\"))" );
+    }
+    sb.append( ");" );
+    fkFetchMethod.body( sb.toString() );
+    addActualNameAnnotation( fkFetchMethod, name, true );
+    srcClass.addMethod( fkFetchMethod );
+  }
+
+  private String getTableFqn( SchemaTable table )
+  {
+    String schemaPackage = _model.getDbConfig().getSchemaPackage();
+    String configName = table.getSchema().getDbConfig().getName();
+    return schemaPackage + "." + configName + "." + getTableSimpleTypeName( table );
+  }
+
+  private String getTableSimpleTypeName( SchemaTable table )
+  {
+    return table.getSchema().getJavaTypeName( table.getName() );
   }
 
   private SrcType makeSrcType( SrcLinkedClass owner, Class<?> type, boolean typeParam )

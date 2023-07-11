@@ -18,9 +18,7 @@ package manifold.sql.rt.api;
 
 /**
  * A base class for all SQL queries. This interface exists primarily for custom extension methods.
- *
- * @param <R> The query result type mirroring the fields and structure of the query
  */
-public interface Query<R extends ResultRow>
+public interface Query
 {
 }

@@ -20,6 +20,7 @@ import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.rt.api.ConnectionNotifier;
+import manifold.sql.schema.api.SchemaTable;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
@@ -31,9 +32,8 @@ import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 public class JdbcSchema implements Schema
 {
   private final String _name;
-
   private final DbConfig _dbConfig;
-  private final Map<String, JdbcSchemaTable> _tables;
+  private final Map<String, SchemaTable> _tables;
   private final Map<String, String> _javaToName;
   private final Map<String, String> _nameToJava;
   private final String _dbProductName;
@@ -42,7 +42,6 @@ public class JdbcSchema implements Schema
   public JdbcSchema( DbConfig dbConfig )
   {
     _dbConfig = dbConfig;
-    _name = dbConfig.getName();
     _tables = new LinkedHashMap<>();
     _javaToName = new LinkedHashMap<>();
     _nameToJava = new LinkedHashMap<>();
@@ -52,7 +51,10 @@ public class JdbcSchema implements Schema
       _dbProductName = c.getMetaData().getDatabaseProductName();
       _dbProductVersion = c.getMetaData().getDatabaseProductVersion();
 
-      build( c );
+      DatabaseMetaData metaData = c.getMetaData();
+      _name = findSchemaName( metaData );
+
+      build( c, metaData );
     }
     catch( SQLException e )
     {
@@ -60,21 +62,19 @@ public class JdbcSchema implements Schema
     }
   }
 
-  private void build( Connection c ) throws SQLException
+  private void build( Connection c, DatabaseMetaData metaData ) throws SQLException
   {
     for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
     {
       p.init( c );
     }
 
-    DatabaseMetaData metaData = c.getMetaData();
-    String schemaName = findSchemaName( metaData );
      try( ResultSet resultSet = metaData.getTables(
-      _dbConfig.getCatalogName(), schemaName, null, new String[]{"TABLE", "VIEW"} ) )
+      _dbConfig.getCatalogName(), _name, null, new String[]{"TABLE", "VIEW"} ) )
     {
       while( resultSet.next() )
       {
-        JdbcSchemaTable table = new JdbcSchemaTable( c, this, metaData, resultSet );
+        JdbcSchemaTable table = new JdbcSchemaTable( this, metaData, resultSet );
         String name = table.getName();
         _tables.put( name, table );
         String javaName = makePascalCaseIdentifier( name, true );
@@ -83,13 +83,13 @@ public class JdbcSchema implements Schema
       }
     }
 
-    for( JdbcSchemaTable table : _tables.values() )
+    for( SchemaTable table : _tables.values() )
     {
       table.resolve();
     }
   }
 
-  private String findSchemaName( DatabaseMetaData metaData ) throws SQLException
+  String findSchemaName( DatabaseMetaData metaData ) throws SQLException
   {
     String defaultSchema = null;
     String catalogName = _dbConfig.getCatalogName();
@@ -107,7 +107,7 @@ public class JdbcSchema implements Schema
           return schem;
         }
 
-        if( schem.equalsIgnoreCase( _name ) )
+        if( schem.equalsIgnoreCase( getDbConfig().getName() ) )
         {
           return schem;
         }
@@ -119,6 +119,12 @@ public class JdbcSchema implements Schema
       }
     }
     return defaultSchema;
+  }
+
+  @Override
+  public String getCatalog()
+  {
+    return getDbConfig().getCatalogName();
   }
 
   @Override
@@ -139,9 +145,9 @@ public class JdbcSchema implements Schema
   }
 
   @Override
-  public JdbcSchemaTable getTable( String name )
+  public SchemaTable getTable( String name )
   {
-    JdbcSchemaTable table = _tables.get( name );
+    SchemaTable table = _tables.get( name );
     if( table == null )
     {
       table = _tables.get( getOriginalName( name ) );
@@ -150,7 +156,7 @@ public class JdbcSchema implements Schema
   }
 
   @Override
-  public Map<String, JdbcSchemaTable> getTables()
+  public Map<String, SchemaTable> getTables()
   {
     return _tables;
   }

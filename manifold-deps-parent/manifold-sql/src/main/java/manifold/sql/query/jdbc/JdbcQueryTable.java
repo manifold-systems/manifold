@@ -16,25 +16,32 @@
 
 package manifold.sql.query.jdbc;
 
+import manifold.rt.api.util.Pair;
+import manifold.sql.query.api.ForeignKeyQueryRef;
 import manifold.sql.query.api.QueryColumn;
+import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.Schema;
+import manifold.sql.schema.api.SchemaColumn;
+import manifold.sql.schema.api.SchemaForeignKey;
+import manifold.sql.schema.api.SchemaTable;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class JdbcQueryTable implements QueryTable
 {
   private final SqlScope _scope;
   private final String _source;
   private final String _name;
-  private final Map<String, JdbcQueryColumn> _columns;
-  private final List<JdbcQueryParameter> _parameters;
+  private final Map<String, QueryColumn> _columns;
+  private final List<QueryParameter> _parameters;
   private final SqlIssueContainer _issues;
 
   public JdbcQueryTable( SqlScope scope, String simpleName, String query )
@@ -114,6 +121,117 @@ public class JdbcQueryTable implements QueryTable
     }
   }
 
+  /**
+   * Find the table object that has all its non-null columns represented in the query columns.
+   * <p/>
+   * This feature enables, for example, [SELECT * FROM foo ...] query results to consist of Entities instead of column
+   * values.
+   * <p/>
+   * @return All query columns that correspond with the selected primary table, or null if no table is fully covered. The
+   * resulting columns are sufficient to create a valid instance of the entity corresponding with the table.
+   */
+  public Pair<SchemaTable, List<QueryColumn>> findPrimaryTable()
+  {
+    Map<SchemaTable, List<QueryColumn>> map = queryColumnsBySchemaTable();
+    for( Map.Entry<SchemaTable, List<QueryColumn>> entry : map.entrySet() )
+    {
+      SchemaTable schemaTable = entry.getKey();
+      List<QueryColumn> queryCols = entry.getValue();
+
+      if( allNonNullColumnsRepresented( schemaTable, queryCols ) )
+      {
+        return new Pair<>( schemaTable, queryCols );
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Of the query columns <i>not</i> corresponding with the primary table (if one exists, see findPrimaryTable() above), finds
+   * the columns fully covering foreign keys, represented as {@link JdbcForeignKeyQueryRef}. The idea is to provide {@code get<foreign-key-ref>()}
+   * methods. For example, a {@code city_id} foreign key would result in a {@code getCityRef()} method return a {@code City}
+   * entity.
+   */
+  public List<ForeignKeyQueryRef> findForeignKeyQueryRefs()
+  {
+    Map<String, QueryColumn> columns = getColumns();
+    Pair<SchemaTable, List<QueryColumn>> coveredTable = findPrimaryTable();
+    if( coveredTable != null )
+    {
+      // remove primary table columns from search
+      coveredTable.getSecond().forEach( c -> columns.remove( c.getName() ) );
+    }
+
+    List<ForeignKeyQueryRef> fkRefs = new ArrayList<>();
+    Set<QueryColumn> taken = new HashSet<>();
+    for( QueryColumn col: columns.values() )
+    {
+      if( taken.contains( col ) )
+      {
+        continue;
+      }
+      SchemaTable schemaTable = col.getSchemaTable();
+      if( schemaTable != null )
+      {
+        findFkRefs( schemaTable, columns.values(), fkRefs, taken );
+      }
+    }
+    return fkRefs;
+  }
+
+  private void findFkRefs( SchemaTable schemaTable, Collection<QueryColumn> columns,
+                           List<ForeignKeyQueryRef> fkRefs, Set<QueryColumn> taken )
+  {
+    Collection<List<SchemaForeignKey>> foreignKeys = schemaTable.getForeignKeys().values();
+    for( List<SchemaForeignKey> fks : foreignKeys )
+    {
+      List<QueryColumn> fkQueryCols = new ArrayList<>();
+      for( SchemaForeignKey fk : fks )
+      {
+        for( QueryColumn queryCol : columns )
+        {
+          List<SchemaColumn> fkCols = fk.getColumns();
+          SchemaColumn schemaColumn = queryCol.getSchemaColumn();
+          if( schemaColumn != null && fkCols.contains( schemaColumn ) )
+          {
+            taken.add( queryCol );
+            fkQueryCols.add( queryCol );
+            if( fkQueryCols.size() == fkCols.size() )
+            {
+              // fk is covered by query cols, add it
+              fkRefs.add( new JdbcForeignKeyQueryRef( fk, fkQueryCols ) );
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  private Map<SchemaTable, List<QueryColumn>> queryColumnsBySchemaTable()
+  {
+    Map<SchemaTable, List<QueryColumn>> map = new HashMap<>();
+    for( QueryColumn col: getColumns().values() )
+    {
+      SchemaTable schemaTable = col.getSchemaTable();
+      if( schemaTable != null )
+      {
+        map.computeIfAbsent( schemaTable, __ -> new ArrayList<>() )
+          .add( col );
+      }
+    }
+    return map;
+  }
+
+  private boolean allNonNullColumnsRepresented( SchemaTable schemaTable, List<QueryColumn> queryCols )
+  {
+    Set<SchemaColumn> queriedSchemaCols = queryCols.stream()
+      .map( c -> c.getSchemaColumn() )
+      .filter( c -> c != null )
+      .collect( Collectors.toSet() );
+    return queriedSchemaCols.containsAll( schemaTable.getNonNullColumns() );
+  }
+
   @Override
   public String getQuerySource()
   {
@@ -133,9 +251,9 @@ public class JdbcQueryTable implements QueryTable
   }
 
   @Override
-  public Map<String, JdbcQueryColumn> getColumns()
+  public Map<String, QueryColumn> getColumns()
   {
-    return _columns;
+    return new LinkedHashMap<>( _columns );
   }
 
   @Override
@@ -145,7 +263,7 @@ public class JdbcQueryTable implements QueryTable
   }
 
   @Override
-  public List<JdbcQueryParameter> getParameters()
+  public List<QueryParameter> getParameters()
   {
     return _parameters;
   }

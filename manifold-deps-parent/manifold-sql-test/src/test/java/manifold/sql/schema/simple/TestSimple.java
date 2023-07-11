@@ -29,6 +29,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import manifold.sql.schema.simple.H2Sales.*;
+
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static org.junit.Assert.*;
 
@@ -68,11 +70,11 @@ public class TestSimple
   public void testSimple()
   {
     StringBuilder sb = new StringBuilder();
-    for( Foo.Row r : Foo.run() )
+    for( PurchaseOrder po : Foo.run() )
     {
       // just make sure the results can be navigated
-      assertNotNull( r.getId() + " " + r.getCustomerId() + " " + r.getOrderDate() );
-      sb.append( r.getId() + " " + r.getCustomerId() + " " + r.getOrderDate() );
+      assertNotNull( po.getId() + " " + po.getCustomerId() + " " + po.getOrderDate() );
+      sb.append( po.getId() + " " + po.getCustomerId() + " " + po.getOrderDate() );
     }
     assertTrue( sb.length() > 0 );
   }
@@ -82,9 +84,9 @@ public class TestSimple
   {
     /*[>MyQuery.sql<] Select * From purchase_order Where customer_id = :c_id */
     StringBuilder actual = new StringBuilder();
-    for( MyQuery.Row row : MyQuery.run( 2L ) )
+    for( PurchaseOrder po : MyQuery.run( 2L ) )
     {
-      actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
+      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
     String expected =
       "1,2,2023-11-10\n" +
@@ -101,9 +103,40 @@ public class TestSimple
       "3,2,2023-09-08\n";
 
     StringBuilder actual = new StringBuilder();
+    actual = new StringBuilder();
+    for( PurchaseOrder po : query.run( 2L ) )
+    {
+      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
+    }
+    assertEquals( expected, actual.toString() );
+  }
+
+  @Test
+  public void testStringJoinQueryWithParameters()
+  {
+    auto query = "[>.sql<] Select purchase_order.id, purchase_order.customer_id, purchase_order.order_date, c.name From purchase_order Join customer c on purchase_order.customer_id = c.id Where purchase_order.customer_id = :c_id";
+    String expected =
+      "1,2,2023-11-10,Cheryl Dunno\n" +
+      "3,2,2023-09-08,Cheryl Dunno\n";
+
+    StringBuilder actual = new StringBuilder();
     for( auto row : query.run( 2L ) )
     {
-      actual.append( row.getId() ).append( "," ).append( row.getCustomerId() ).append( "," ).append( row.getOrderDate() ).append( "\n" );
+      auto flatRow = row.flatRow();
+      actual.append( flatRow.getId() ).append( "," )
+        .append( flatRow.getCustomerId() ).append( "," )
+        .append( flatRow.getOrderDate() ).append( "," )
+        .append( flatRow.getName() ).append( "\n" );
+    }
+    assertEquals( expected, actual.toString() );
+
+    actual = new StringBuilder();
+    for( auto row : query.run( 2L ) )
+    {
+      actual.append( row.getPurchaseOrder().getId() ).append( "," )
+        .append( row.getPurchaseOrder().getCustomerId() ).append( "," )
+        .append( row.getPurchaseOrder().getOrderDate() ).append( "," )
+        .append( row.getName() ).append( "\n" );
     }
     assertEquals( expected, actual.toString() );
   }

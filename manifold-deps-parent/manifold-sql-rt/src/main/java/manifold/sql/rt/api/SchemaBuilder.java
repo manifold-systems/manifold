@@ -18,7 +18,7 @@ package manifold.sql.rt.api;
 
 import manifold.ext.rt.api.IBindingsBacked;
 
-public interface SchemaBuilder<T extends SchemaType> extends IBindingsBacked
+public interface SchemaBuilder<T extends ResultTable> extends IBindingsBacked
 {
   T build();
 }

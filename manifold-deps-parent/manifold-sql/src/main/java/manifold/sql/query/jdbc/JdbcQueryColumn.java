@@ -17,17 +17,18 @@
 package manifold.sql.query.jdbc;
 
 import manifold.sql.query.api.QueryColumn;
-import manifold.sql.schema.jdbc.JdbcSchemaColumn;
-import manifold.sql.schema.jdbc.JdbcSchemaTable;
+import manifold.sql.query.api.QueryTable;
+import manifold.sql.schema.api.SchemaColumn;
+import manifold.sql.schema.api.SchemaTable;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 public class JdbcQueryColumn implements QueryColumn
 {
-  private final JdbcQueryTable _queryTable;
-  private final JdbcSchemaTable _schemaTable;
-  private final JdbcSchemaColumn _schemaColumn;
+  private final QueryTable _queryTable;
+  private final SchemaTable _schemaTable;
+  private final SchemaColumn _schemaColumn;
   private final int _position;
   private final String _name;
   private final int _jdbcType;
@@ -47,7 +48,7 @@ public class JdbcQueryColumn implements QueryColumn
     String tableName = rsMetaData.getTableName( colIndex );
     _schemaTable = tableName == null || tableName.isEmpty()
       ? null // null if query column is not a table column eg. calculated
-      : (JdbcSchemaTable)_queryTable.getSchema().getTable( tableName );
+      : _queryTable.getSchema().getTable( tableName );
 
     _name = rsMetaData.getColumnLabel( colIndex );
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
@@ -66,12 +67,12 @@ public class JdbcQueryColumn implements QueryColumn
   }
 
   @Override
-  public JdbcQueryTable getTable()
+  public QueryTable getTable()
   {
     return _queryTable;
   }
 
-  public JdbcSchemaTable getSchemaTable()
+  public SchemaTable getSchemaTable()
   {
     return _schemaTable;
   }
@@ -82,7 +83,7 @@ public class JdbcQueryColumn implements QueryColumn
     return _jdbcType;
   }
 
-  public JdbcSchemaColumn getSchemaColumn()
+  public SchemaColumn getSchemaColumn()
   {
     return _schemaColumn;
   }
@@ -116,7 +117,7 @@ public class JdbcQueryColumn implements QueryColumn
     return _scale;
   }
 
-  public JdbcQueryTable getQueryTable()
+  public QueryTable getQueryTable()
   {
     return _queryTable;
   }

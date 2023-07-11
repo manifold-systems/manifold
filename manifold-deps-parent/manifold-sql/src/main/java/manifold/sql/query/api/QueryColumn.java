@@ -18,6 +18,7 @@ package manifold.sql.query.api;
 
 import manifold.sql.api.Column;
 import manifold.sql.schema.api.SchemaColumn;
+import manifold.sql.schema.api.SchemaTable;
 
 public interface QueryColumn extends Column
 {
@@ -27,4 +28,6 @@ public interface QueryColumn extends Column
   boolean isCurrency();
   boolean isReadOnly();
   boolean isSigned();
+
+  SchemaTable getSchemaTable();
 }

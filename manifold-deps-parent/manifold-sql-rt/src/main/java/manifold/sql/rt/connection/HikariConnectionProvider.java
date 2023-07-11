@@ -34,6 +34,7 @@ public class HikariConnectionProvider implements ConnectionProvider
   @Override
   public Connection getConnection( String configName, Class<?> classContext )
   {
+    //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( configName, __ -> {
       DbConfig dbConfig = DbConfigFinder.instance().findConfig( configName, classContext );
       if( dbConfig == null )
@@ -58,6 +59,7 @@ public class HikariConnectionProvider implements ConnectionProvider
   @Override
   public Connection getConnection( DbConfig dbConfig )
   {
+    //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
       makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
     try
