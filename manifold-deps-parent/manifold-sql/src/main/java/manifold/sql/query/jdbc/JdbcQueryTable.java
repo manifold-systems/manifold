@@ -122,15 +122,15 @@ public class JdbcQueryTable implements QueryTable
   }
 
   /**
-   * Find the table object that has all its non-null columns represented in the query columns.
+   * Find the selected table object that has all its non-null columns selected in the query columns.
    * <p/>
    * This feature enables, for example, [SELECT * FROM foo ...] query results to consist of Entities instead of column
    * values.
    * <p/>
-   * @return All query columns that correspond with the selected primary table, or null if no table is fully covered. The
-   * resulting columns are sufficient to create a valid instance of the entity corresponding with the table.
+   * @return All query columns that correspond with the primary selected table, or null if no table is fully covered. The
+   * resulting columns are sufficient to create a valid instance of the entity corresponding with the selected table.
    */
-  public Pair<SchemaTable, List<QueryColumn>> findPrimaryTable()
+  public Pair<SchemaTable, List<QueryColumn>> findSelectedTable()
   {
     Map<SchemaTable, List<QueryColumn>> map = queryColumnsBySchemaTable();
     for( Map.Entry<SchemaTable, List<QueryColumn>> entry : map.entrySet() )
@@ -147,7 +147,7 @@ public class JdbcQueryTable implements QueryTable
   }
 
   /**
-   * Of the query columns <i>not</i> corresponding with the primary table (if one exists, see findPrimaryTable() above), finds
+   * Of the query columns <i>not</i> corresponding with the selected table (if one exists, see findSelectedTable() above), finds
    * the columns fully covering foreign keys, represented as {@link JdbcForeignKeyQueryRef}. The idea is to provide {@code get<foreign-key-ref>()}
    * methods. For example, a {@code city_id} foreign key would result in a {@code getCityRef()} method return a {@code City}
    * entity.
@@ -155,10 +155,10 @@ public class JdbcQueryTable implements QueryTable
   public List<ForeignKeyQueryRef> findForeignKeyQueryRefs()
   {
     Map<String, QueryColumn> columns = getColumns();
-    Pair<SchemaTable, List<QueryColumn>> coveredTable = findPrimaryTable();
+    Pair<SchemaTable, List<QueryColumn>> coveredTable = findSelectedTable();
     if( coveredTable != null )
     {
-      // remove primary table columns from search
+      // remove selected table columns from search
       coveredTable.getSecond().forEach( c -> columns.remove( c.getName() ) );
     }
 

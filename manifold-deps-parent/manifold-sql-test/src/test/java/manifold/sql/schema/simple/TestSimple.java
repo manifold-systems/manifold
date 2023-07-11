@@ -82,7 +82,9 @@ public class TestSimple
   @Test
   public void testCommentQueryWithParameters()
   {
-    /*[>MyQuery.sql<] Select * From purchase_order Where customer_id = :c_id */
+    /*[>MyQuery.sql<]
+      Select * From purchase_order Where customer_id = :c_id
+    */
     StringBuilder actual = new StringBuilder();
     for( PurchaseOrder po : MyQuery.run( 2L ) )
     {

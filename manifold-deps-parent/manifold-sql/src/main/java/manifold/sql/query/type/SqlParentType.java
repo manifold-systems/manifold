@@ -25,6 +25,7 @@ import manifold.internal.javac.IIssue;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManEscapeUtil;
 import manifold.rt.api.util.Pair;
 import manifold.sql.api.DataElement;
 import manifold.sql.query.api.ForeignKeyQueryRef;
@@ -92,12 +93,12 @@ class SqlParentType
   {
     //addRunMethod( srcClass, "runFlat", "FlatRow" );
 
-    Pair<SchemaTable, List<QueryColumn>> primaryTable = getQuery().findPrimaryTable();
+    Pair<SchemaTable, List<QueryColumn>> selectedTable = getQuery().findSelectedTable();
     String rowType;
-    if( primaryTable != null && primaryTable.getSecond().size() == getQuery().getColumns().size() )
+    if( selectedTable != null && selectedTable.getSecond().size() == getQuery().getColumns().size() )
     {
       // Single table query can be represented directly as TableResult e.g., SELECT * queries.
-      SchemaTable table = primaryTable.getFirst();
+      SchemaTable table = selectedTable.getFirst();
       rowType = getTableFqn( table );
     }
     else
@@ -181,6 +182,7 @@ class SqlParentType
 
     //noinspection unused
     String query = getQuery() == null ? "errant query" : getQuery().getQuerySource();
+    query = ManEscapeUtil.escapeForJavaStringLiteral( query );
     //noinspection unused
     String configName = _model.getScope().getDbconfig().getName();
     //noinspection unused
@@ -275,13 +277,13 @@ class SqlParentType
     {
       Map<String, QueryColumn> columns = getQuery().getColumns();
 
-      Pair<SchemaTable, List<QueryColumn>> primaryTable = getQuery().findPrimaryTable();
-      if( primaryTable != null )
+      Pair<SchemaTable, List<QueryColumn>> selectedTable = getQuery().findSelectedTable();
+      if( selectedTable != null )
       {
-        addPrimaryAccessor( srcClass, primaryTable );
+        addSelectedTableAccessor( srcClass, selectedTable );
 
-        List<QueryColumn> primaryCols = primaryTable.getSecond();
-        primaryCols.forEach( c -> columns.remove( c.getName() ) );
+        List<QueryColumn> selectedCols = selectedTable.getSecond();
+        selectedCols.forEach( c -> columns.remove( c.getName() ) );
       }
 
       for( ForeignKeyQueryRef fkRef : getQuery().findForeignKeyQueryRefs() )
@@ -342,17 +344,20 @@ class SqlParentType
     srcClass.addMethod( fkFetchMethod );
   }
 
-  private void addPrimaryAccessor( SrcLinkedClass srcClass, Pair<SchemaTable, List<QueryColumn>> primaryTable )
+  private void addSelectedTableAccessor( SrcLinkedClass srcClass, Pair<SchemaTable, List<QueryColumn>> selectedTable )
   {
-    SchemaTable table = primaryTable.getFirst();
+    SchemaTable table = selectedTable.getFirst();
     String tableName = getTableSimpleTypeName( table );
     String tableFqn = getTableFqn( table );
 
     String propName = tableName;
-    if( getQuery().getColumns().keySet().stream()
-      .map( n -> makePascalCaseIdentifier( n, true ) ).anyMatch( n -> n.equals( tableName ) ) )
+    boolean tableNameMatchesColumnNameOfRemainingColumns = getQuery().getColumns().values().stream()
+      .filter( c -> !selectedTable.getSecond().contains( c ) )
+      .map( c -> makePascalCaseIdentifier( c.getName(), true ) )
+      .anyMatch( name -> name.equalsIgnoreCase( tableName ) );
+    if( tableNameMatchesColumnNameOfRemainingColumns )
     {
-      // disambiguate primary table obj and query column
+      // disambiguate selected table obj and query column
       propName += "Ref";
     }
     SrcType type = new SrcType( tableFqn );

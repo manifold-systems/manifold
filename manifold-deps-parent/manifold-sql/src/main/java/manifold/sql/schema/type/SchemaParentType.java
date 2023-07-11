@@ -254,7 +254,17 @@ class SchemaParentType
 //    StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
     SrcGetProperty getter = new SrcGetProperty( propName, getterType );
     getter.modifiers( Flags.DEFAULT );
-    getter.body( "return (${getterType.getFqName()})getBindings().get(\"$colName\");" );
+    if( type == String.class )
+    {
+      // handling string specially because retarded SQLite reports table columns are VARCHAR for stuff like TIMESTAMP,
+      // but query results are reported to have the actual type TIMESTAMP, so must coerce to string here :(
+      getter.body( "Object value = getBindings().get(\"$colName\");" +
+                   "return value == null ? null : String.valueOf(value);" );
+    }
+    else
+    {
+      getter.body( "return (${getterType.getFqName()})getBindings().get(\"$colName\");" );
+    }
     addActualNameAnnotation( getter, name, true );
     srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
 

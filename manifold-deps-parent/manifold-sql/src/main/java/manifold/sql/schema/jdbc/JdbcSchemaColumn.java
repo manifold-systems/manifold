@@ -17,10 +17,12 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.sql.schema.api.SchemaColumn;
+import manifold.util.ReflectUtil;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.List;
 
 public class JdbcSchemaColumn implements SchemaColumn
@@ -45,6 +47,17 @@ public class JdbcSchemaColumn implements SchemaColumn
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
     _jdbcType = rs.getInt( "DATA_TYPE" );
+//    try
+//    {
+//      // this value is the SQL type name like VARCHAR(50) etc., although sometimes it aligns with JDBC types like TIMESTAMP
+//      String typeName = rs.getString( "TYPE_NAME" );
+//      if( typeName != null )
+//      {
+//        _jdbcType = (int)ReflectUtil.field( Types.class, typeName ).getStatic();
+//      }
+//    }
+//    catch( Exception ignore )
+//    {}
     _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );

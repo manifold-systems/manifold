@@ -36,7 +36,7 @@ public interface QueryTable extends Table
 
   List<QueryParameter> getParameters();
 
-  Pair<SchemaTable, List<QueryColumn>> findPrimaryTable();
+  Pair<SchemaTable, List<QueryColumn>> findSelectedTable();
   List<ForeignKeyQueryRef> findForeignKeyQueryRefs();
 
   SqlIssueContainer getIssues();

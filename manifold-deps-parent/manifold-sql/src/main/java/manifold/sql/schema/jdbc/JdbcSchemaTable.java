@@ -79,7 +79,7 @@ public class JdbcSchemaTable implements SchemaTable
 
     _columns = new LinkedHashMap<>();
     _primaryKeys = new ArrayList<>();
-    try( ResultSet colResults = metaData.getColumns( null, null, _name, null ) )
+    try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
       JdbcSchemaColumn id = null;
