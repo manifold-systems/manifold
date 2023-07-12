@@ -256,14 +256,17 @@ class SchemaParentType
     getter.modifiers( Flags.DEFAULT );
     if( type == String.class )
     {
-      // handling string specially because retarded SQLite reports table columns are VARCHAR for stuff like TIMESTAMP,
-      // but query results are reported to have the actual type TIMESTAMP, so must coerce to string here :(
+      // handling string specially because retarded SQLite table metadata maps types like TIMESTAMP to VARCHAR,
+      // but query metadata is correctly typed as TIMESTAMP, must coerce to string here :(
       getter.body( "Object value = getBindings().get(\"$colName\");" +
                    "return value == null ? null : String.valueOf(value);" );
     }
     else
     {
-      getter.body( "return (${getterType.getFqName()})getBindings().get(\"$colName\");" );
+      StringBuilder retType = new StringBuilder();
+      getterType.render( retType, 0, false ); // calling render to include array "[]"
+
+      getter.body( "return ($retType)getBindings().get(\"$colName\");" );
     }
     addActualNameAnnotation( getter, name, true );
     srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );

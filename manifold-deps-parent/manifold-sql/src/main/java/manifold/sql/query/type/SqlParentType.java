@@ -407,11 +407,14 @@ class SqlParentType
       return;
     }
     SrcType type = new SrcType( colType );
+    StringBuilder retType = new StringBuilder();
+    type.render( retType, 0, false ); // calling render to include array "[]"
+
     String name = column.getName();
     String propName = makePascalCaseIdentifier( column.getName(), true );
     SrcGetProperty getter = new SrcGetProperty( propName, type )
       .modifiers( Flags.DEFAULT )
-      .body( "return (${type.getFqName()})getBindings().get(\"$name\");" );
+      .body( "return ($retType)getBindings().get(\"$name\");" );
     addActualNameAnnotation( getter, name, true );
     srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
   }
