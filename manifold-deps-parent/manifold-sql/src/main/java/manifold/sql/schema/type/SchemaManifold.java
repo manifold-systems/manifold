@@ -93,7 +93,7 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
    * Override so that getModel() can be called within this package (see SchemaScope)
    */
   @Override
-  protected SchemaModel getModel( String fqn )
+  public SchemaModel getModel( String fqn )
   {
     return super.getModel( fqn );
   }
@@ -107,8 +107,10 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
     {
       return null;
     }
-    String fqn = getTypeNameForFile( fqns.iterator().next(), file );
-    SchemaModel model = getModel( fqn );
+    SchemaModel model = fqns.stream()
+      .map( fqn -> getModel( getTypeNameForFile( fqn, file ) ) )
+      .filter( m -> m != null )
+      .findFirst().orElse( null );
     return model == null ? null : model.getSchema();
   }
 

@@ -33,6 +33,12 @@ public class SchemaIssueContainer implements IIssueContainer
     _issues = new ArrayList<>();
   }
 
+  public SchemaIssueContainer( List<Exception> errors )
+  {
+    _issues = new ArrayList<>();
+    addIssues( errors );
+  }
+
   @Override
   public List<IIssue> getIssues()
   {

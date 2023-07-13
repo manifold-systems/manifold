@@ -160,8 +160,7 @@ class GqlScope
           Set<String> fqnForFile = _gqlManifold.getModule().getPathCache().getFqnForFile( schemaFile );
           if( fqnForFile != null && !fqnForFile.isEmpty() )
           {
-            _gqlManifold.getModel( fqnForFile.iterator().next() );
-            if( _schemaDefinition != null )
+            if( fqnForFile.stream().anyMatch( fqn -> { _gqlManifold.getModel( fqn ); return _schemaDefinition != null; } ) )
             {
               return;
             }

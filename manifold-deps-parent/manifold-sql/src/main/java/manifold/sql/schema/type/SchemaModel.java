@@ -37,8 +37,10 @@ import manifold.util.concurrent.LocklessLazyVar;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -75,14 +77,23 @@ public class SchemaModel extends AbstractSingleFileModel
       _dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
       validate();
       return SchemaProvider.PROVIDERS.get().stream()
-        .map( sp -> sp.getSchema( _dbConfig ) )
+        .map( sp -> {
+          try {
+            return sp.getSchema( _dbConfig );
+          }
+          catch( Exception e ) {
+            _issues = new SchemaIssueContainer( Collections.singletonList( e ) );
+          }
+          return null;
+        } )
         .filter( schema -> schema != null )
         .findFirst().orElse( null );
     }
-    catch( Exception e )
+    catch( IOException e )
     {
-      throw new RuntimeException( e );
+      _issues = new SchemaIssueContainer( Collections.singletonList( e ) );
     }
+    return null;
   }
 
   private void validate()
@@ -153,7 +164,7 @@ public class SchemaModel extends AbstractSingleFileModel
     }
   }
 
-  SchemaIssueContainer getIssueContainer()
+  public SchemaIssueContainer getIssueContainer()
   {
     return _issues;
   }

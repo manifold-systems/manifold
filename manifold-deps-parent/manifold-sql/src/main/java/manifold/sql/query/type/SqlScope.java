@@ -24,10 +24,13 @@ import manifold.internal.javac.IIssue;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
+import manifold.sql.schema.type.SchemaIssueContainer;
 import manifold.sql.schema.type.SchemaManifold;
+import manifold.sql.schema.type.SchemaModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class SqlScope
@@ -52,10 +55,25 @@ public class SqlScope
       .filter( m -> m instanceof SchemaManifold )
       .findFirst()
       .orElseThrow( () -> new RuntimeException( "Could not find schema manifold for: " + dbConfigFile.getName() ) );
+    addIssuesFromSchemaModel( dbConfigFile, schemaManifold );
     return schemaManifold.getSchema( dbConfigFile );
 
 // don't make a separate schema, it is costly (new jdbc connection + full database metadata extraction)
 //    return SchemaProvider.PROVIDERS.get().stream().map( sp -> sp.getSchema( _dbConfig ) ).filter( schema -> schema != null ).findFirst().orElse( null );
+  }
+
+  private void addIssuesFromSchemaModel( IFile dbConfigFile, SchemaManifold schemaManifold )
+  {
+    Set<String> fqnForFile = schemaManifold.getModule().getPathCache().getFqnForFile( dbConfigFile );
+    if( !fqnForFile.isEmpty() )
+    {
+      SchemaModel schemaModel = schemaManifold.getModel( schemaManifold.getTypeNameForFile( fqnForFile.iterator().next(), dbConfigFile ) );
+      SchemaIssueContainer issueContainer = schemaModel == null ? null : schemaModel.getIssueContainer();
+      if( issueContainer != null && !issueContainer.isEmpty() )
+      {
+        _issues.addAll( issueContainer.getIssues() );
+      }
+    }
   }
 
   /**
@@ -140,5 +158,28 @@ public class SqlScope
   public boolean isErrant()
   {
     return getDbconfig().getBuildUrlOtherwiseRuntimeUrl() == null;
+  }
+
+  /**
+   * When in an IDE, PathCache mappings for dbconfig files will contain two entries, one with a fqn mirroring the resource
+   * path, the other mirroring the schema package (the actual type name of the generated dbconfig schema class). Ultimately,
+   * this causes two SqlScope instances to exist in the PathCache, both referring to the same dbconfig. Therefore, the
+   * equals/hashCode impls must account for this so that Sets don't contain duplicates e.g., to fulfill the rule about
+   * if one dbconfig exists, it is the considered the default. (two of the same dbconfig breaks this)
+   */
+  @Override
+  public boolean equals( Object o )
+  {
+    if( this == o ) return true;
+    if( !(o instanceof SqlScope) ) return false;
+    SqlScope sqlScope = (SqlScope)o;
+    return _dbConfigFile != null && sqlScope._dbConfigFile != null &&
+      Objects.equals( _dbConfigFile.getPath(), sqlScope._dbConfigFile.getPath() );
+  }
+
+  @Override
+  public int hashCode()
+  {
+    return Objects.hash( _dbConfigFile );
   }
 }

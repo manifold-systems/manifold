@@ -59,7 +59,7 @@ class SchemaParentType
   @SuppressWarnings( "unused" )
   boolean hasChild( String childName )
   {
-    return getSchema().hasTable( childName );
+    return getSchema() != null && getSchema().hasTable( childName );
   }
 
   private Schema getSchema()
@@ -69,7 +69,7 @@ class SchemaParentType
 
   SchemaTable getChild( String childName )
   {
-    return getSchema().getTable( childName );
+    return getSchema() == null ? null : getSchema().getTable( childName );
   }
 
   void render( StringBuilder sb, JavaFileManager.Location location, IModule module, DiagnosticListener<JavaFileObject> errorHandler )
@@ -84,6 +84,11 @@ class SchemaParentType
 
   private void addInnerTypes( SrcLinkedClass srcClass )
   {
+    if( getSchema() == null )
+    {
+      return;
+    }
+
     for( SchemaTable type: getSchema().getTables().values() )
     {
       addInnerObjectType( type, srcClass );
@@ -208,7 +213,7 @@ class SchemaParentType
 
   private void addInnerObjectType( SchemaTable table, SrcLinkedClass enclosingType )
   {
-    String identifier = _model.getSchema().getJavaTypeName( table.getName() );
+    String identifier = getSchema().getJavaTypeName( table.getName() );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( ResultTable.class.getSimpleName() )

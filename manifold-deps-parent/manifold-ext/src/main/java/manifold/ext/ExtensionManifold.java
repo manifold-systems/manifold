@@ -186,7 +186,10 @@ public class ExtensionManifold extends JavaTypeManifold<Model> implements ITypeP
     Set<String> fqnForFile = getModule().getPathCache().getFqnForFile( file );
     for( String fqn: fqnForFile )
     {
-      return ManClassUtil.getPackage( fqn );
+      if( fqn.contains( EXTENSIONS_PACKAGE + '.' ) )
+      {
+        return ManClassUtil.getPackage( fqn );
+      }
     }
     return null;
   }

@@ -76,7 +76,10 @@ public class HikariConnectionProvider implements ConnectionProvider
   public void closeDataSource( DbConfig dbConfig )
   {
     HikariDataSource dropped = _dataSources.remove( dbConfig.getName() );
-    dropped.close();
+    if( dropped != null )
+    {
+      dropped.close();
+    }
   }
 
   private HikariDataSource makeDataSource( DbConfig dbConfig, String url )

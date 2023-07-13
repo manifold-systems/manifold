@@ -193,12 +193,8 @@ public class PathCache
 
   private void addToReverseMap( IFile file, String fqn )
   {
-    Set<String> fqns = _reverseMap.get( file );
-    if( fqns == null )
-    {
-      _reverseMap.put( file, fqns = new ConcurrentHashSet<>() );
-    }
-    fqns.add( fqn );
+    _reverseMap.computeIfAbsent( file, __ -> new ConcurrentHashSet<>() )
+      .add( fqn );
   }
 
   public void clear()
