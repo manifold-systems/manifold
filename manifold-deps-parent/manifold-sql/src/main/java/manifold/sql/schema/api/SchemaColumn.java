@@ -23,6 +23,7 @@ public interface SchemaColumn extends Column
   SchemaTable getTable();
   boolean isId();
   boolean isPrimaryKeyPart();
+  boolean isAutoIncrement();
   boolean isGenerated();
   String getDefaultValue();
   Column getForeignKey();

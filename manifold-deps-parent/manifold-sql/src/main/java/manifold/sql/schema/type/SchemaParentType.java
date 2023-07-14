@@ -95,6 +95,34 @@ class SchemaParentType
     }
   }
 
+  private void addInnerObjectType( SchemaTable table, SrcLinkedClass enclosingType )
+  {
+    String identifier = getSchema().getJavaTypeName( table.getName() );
+    String fqn = getFqn() + '.' + identifier;
+    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
+      .addInterface( ResultTable.class.getSimpleName() )
+      .modifiers( Modifier.PUBLIC );
+    addActualNameAnnotation( srcClass, table.getName(), false );
+    addCreateMethod( srcClass, table );
+    addBuilderType( srcClass, table );
+    addBuilderMethod( srcClass, table );
+
+    for( SchemaColumn member: table.getColumns().values() )
+    {
+      addMember( srcClass, member );
+    }
+
+    for( List<SchemaForeignKey> fkEntry : table.getForeignKeys().values() )
+    {
+      for( SchemaForeignKey fk : fkEntry )
+      {
+        addFkFetcher( srcClass, fk );
+      }
+    }
+
+    enclosingType.addInnerClass( srcClass );
+  }
+
   private void addBuilderMethod( SrcLinkedClass srcClass, SchemaTable table )
   {
     SrcMethod method = new SrcMethod( srcClass )
@@ -129,6 +157,35 @@ class SchemaParentType
     method.body( sb.toString() );
   }
 
+  private void addCreateMethod( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    String tableName = srcClass.getSimpleName();
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "create" )
+      .returns( new SrcType( tableName ) );
+    addRequiredParameters( srcClass, table, method );
+    srcClass.addMethod( method );
+
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings args = new DataBindings(new ConcurrentHashMap());\n" );
+    int i = 0;
+    for( SchemaColumn col: table.getColumns().values() )
+    {
+      if( isRequired( col ) )
+      {
+        //noinspection unused
+        String colName = col.getName();
+        SrcParameter param = method.getParameters().get( i++ );
+        //noinspection unused
+        String paramName = param.getSimpleName();
+        sb.append( "      args.put(\"$colName\", $paramName);\n" );
+      }
+    }
+    sb.append( "      return new $tableName() { @Override public Bindings getBindings() { return args; } };" );
+    method.body( sb.toString() );
+  }
+
   private void addRequiredParameters( SrcLinkedClass owner, SchemaTable table, AbstractSrcMethod method )
   {
     for( SchemaColumn col: table.getColumns().values() )
@@ -141,7 +198,7 @@ class SchemaParentType
     }
   }
 
-  private void addBuilder( SrcLinkedClass enclosingType, SchemaTable table )
+  private void addBuilderType( SrcLinkedClass enclosingType, SchemaTable table )
   {
     String fqn = enclosingType.getName() + ".Builder";
     SrcLinkedClass srcInterface = new SrcLinkedClass( fqn, enclosingType, Interface )
@@ -196,7 +253,10 @@ class SchemaParentType
 
   private boolean isRequired( SchemaColumn col )
   {
-    return !col.isNullable() && !col.isGenerated() && col.getDefaultValue() == null;
+    return !col.isNullable() &&
+      !col.isGenerated() &&
+      !col.isAutoIncrement() &&
+      col.getDefaultValue() == null;
   }
 
   private void addImports( SrcLinkedClass srcClass )
@@ -209,35 +269,6 @@ class SchemaParentType
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
-  }
-
-  private void addInnerObjectType( SchemaTable table, SrcLinkedClass enclosingType )
-  {
-    String identifier = getSchema().getJavaTypeName( table.getName() );
-    String fqn = getFqn() + '.' + identifier;
-    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( ResultTable.class.getSimpleName() )
-      .modifiers( Modifier.PUBLIC );
-    addActualNameAnnotation( srcClass, table.getName(), false );
-    addBuilder( srcClass, table );
-    addBuilderMethod( srcClass, table );
-
-    for( SchemaColumn member: table.getColumns().values() )
-    {
-      addMember( srcClass, member );
-    }
-
-    for( List<SchemaForeignKey> fkEntry : table.getForeignKeys().values() )
-    {
-      for( SchemaForeignKey fk : fkEntry )
-      {
-        addFkFetcher( srcClass, fk );
-      }
-    }
-
-    //## todo
-//    addLoaderMethodsForForiegnKeys();
-    enclosingType.addInnerClass( srcClass );
   }
 
   private void addMember( SrcLinkedClass srcInterface, SchemaColumn member )
@@ -253,10 +284,6 @@ class SchemaParentType
     String propName = makePascalCaseIdentifier( name, true );
     //noinspection unused
     String colName = makeIdentifier( member.getName() );
-//    //noinspection unused
-//    StringBuilder propertyType = getterType.render( new StringBuilder(), 0, false );
-//    //noinspection unused
-//    StringBuilder componentType = getComponentType( getterType ).render( new StringBuilder(), 0, false );
     SrcGetProperty getter = new SrcGetProperty( propName, getterType );
     getter.modifiers( Flags.DEFAULT );
     if( type == String.class )
@@ -275,14 +302,6 @@ class SchemaParentType
     }
     addActualNameAnnotation( getter, name, true );
     srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
-
-//    SrcSetProperty setter = new SrcSetProperty( propName, setterType );
-//    addActualNameAnnotation( setter, name, true );
-////    if( member != null )
-////    {
-////      addSourcePositionAnnotation( srcClass, member, name, setter );
-////    }
-//    srcInterface.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
   }
 
   private void addFkFetcher( SrcLinkedClass srcClass, SchemaForeignKey fk )

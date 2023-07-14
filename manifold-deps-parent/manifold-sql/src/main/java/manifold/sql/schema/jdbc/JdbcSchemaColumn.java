@@ -31,6 +31,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final String _name;
   private final int _jdbcType;
   private final boolean _isNullable;
+  private final boolean _isAutoIncrement;
   private final boolean _isGenerated;
   private final boolean _isPrimaryKeyPart;
   private final boolean _isId;
@@ -47,6 +48,7 @@ public class JdbcSchemaColumn implements SchemaColumn
     _name = rs.getString( "COLUMN_NAME" );
     _jdbcType = oneOffCorrections( rs.getInt( "DATA_TYPE" ), rs, _table.getSchema().getDatabaseProductName() );
     _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
+    _isAutoIncrement = "YES".equals( rs.getString( "IS_AUTOINCREMENT" ) );
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );
     _isId = _isPrimaryKeyPart && primaryKey.size() == 1;
@@ -102,6 +104,12 @@ public class JdbcSchemaColumn implements SchemaColumn
   public boolean isPrimaryKeyPart()
   {
     return _isPrimaryKeyPart;
+  }
+
+  @Override
+  public boolean isAutoIncrement()
+  {
+    return _isAutoIncrement;
   }
 
   @Override
