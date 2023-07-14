@@ -20,10 +20,12 @@ import manifold.sql.schema.api.Schema;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.SchemaProvider;
 
+import java.sql.SQLException;
+
 public class JdbcSchemaProvider implements SchemaProvider
 {
   @Override
-  public Schema getSchema( DbConfig dbConfig )
+  public Schema getSchema( DbConfig dbConfig ) throws SQLException
   {
     return new JdbcSchema( dbConfig );
   }

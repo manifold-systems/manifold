@@ -57,19 +57,12 @@ public class HikariConnectionProvider implements ConnectionProvider
   }
 
   @Override
-  public Connection getConnection( DbConfig dbConfig )
+  public Connection getConnection( DbConfig dbConfig ) throws SQLException
   {
     //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
       makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
-    try
-    {
-      return ds.getConnection();
-    }
-    catch( SQLException e )
-    {
-      throw ManExceptionUtil.unchecked( e );
-    }
+    return ds.getConnection();
   }
 
   @Override

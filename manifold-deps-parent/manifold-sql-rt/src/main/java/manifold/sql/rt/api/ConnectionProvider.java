@@ -21,6 +21,7 @@ import manifold.util.concurrent.LocklessLazyVar;
 
 import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,7 +74,7 @@ public interface ConnectionProvider
    * @param dbConfig The configuration for the connection
    * @return The JDBC connection
    */
-  Connection getConnection( DbConfig dbConfig );
+  Connection getConnection( DbConfig dbConfig ) throws SQLException;
 
   /**
    * Close the data source from which connections are made.

@@ -76,18 +76,21 @@ public class SchemaModel extends AbstractSingleFileModel
       bindings.put( "path", getFile().getPath().getFileSystemPathString() );
       _dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
       validate();
-      return SchemaProvider.PROVIDERS.get().stream()
-        .map( sp -> {
-          try {
-            return sp.getSchema( _dbConfig );
+      for( SchemaProvider sp : SchemaProvider.PROVIDERS.get() )
+      {
+        try
+        {
+          Schema schema = sp.getSchema( _dbConfig );
+          if( schema != null )
+          {
+            return schema;
           }
-          catch( Exception e ) {
-            _issues = new SchemaIssueContainer( Collections.singletonList( e ) );
-          }
-          return null;
-        } )
-        .filter( schema -> schema != null )
-        .findFirst().orElse( null );
+        }
+        catch( Exception e )
+        {
+          _issues = new SchemaIssueContainer( Collections.singletonList( e ) );
+        }
+      }
     }
     catch( IOException e )
     {

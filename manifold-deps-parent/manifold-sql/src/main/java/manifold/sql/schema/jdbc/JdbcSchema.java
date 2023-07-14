@@ -21,7 +21,6 @@ import manifold.sql.rt.api.DbConfig;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.SchemaTable;
-import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
 import java.util.LinkedHashMap;
@@ -39,7 +38,7 @@ public class JdbcSchema implements Schema
   private final String _dbProductName;
   private final String _dbProductVersion;
 
-  public JdbcSchema( DbConfig dbConfig )
+  public JdbcSchema( DbConfig dbConfig ) throws SQLException
   {
     _dbConfig = dbConfig;
     _tables = new LinkedHashMap<>();
@@ -56,9 +55,13 @@ public class JdbcSchema implements Schema
 
       build( c, metaData );
     }
-    catch( SQLException e )
+    catch( SQLException se )
     {
-      throw ManExceptionUtil.unchecked( e );
+      throw se;
+    }
+    catch( Exception e )
+    {
+      throw new SQLException( e );
     }
   }
 

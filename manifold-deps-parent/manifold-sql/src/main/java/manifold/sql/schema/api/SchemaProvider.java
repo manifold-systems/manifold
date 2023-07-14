@@ -20,6 +20,7 @@ import manifold.rt.api.util.ServiceUtil;
 import manifold.sql.rt.api.DbConfig;
 import manifold.util.concurrent.LocklessLazyVar;
 
+import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,5 +33,5 @@ public interface SchemaProvider
       return registered;
     } );
 
-  Schema getSchema( DbConfig dbConfig );
+  Schema getSchema( DbConfig dbConfig ) throws SQLException;
 }
