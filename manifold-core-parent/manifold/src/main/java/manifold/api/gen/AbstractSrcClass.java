@@ -227,6 +227,10 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 
   public T addImport( Class cls )
   {
+    if( cls.getEnclosingClass() != null )
+    {
+      return addImport( cls.getCanonicalName() );
+    }
     return addImport( cls.getTypeName() );
   }
 

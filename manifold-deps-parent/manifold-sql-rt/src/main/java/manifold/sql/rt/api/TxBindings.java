@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2023 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,30 @@
 
 package manifold.sql.rt.api;
 
-import manifold.ext.rt.api.IBindingsBacked;
+import manifold.rt.api.Bindings;
 
-/**
- * Base interface for all query result types type-safely reflecting query fields and structure.
- */
-public interface ResultRow extends IBindingsBacked
+import java.util.Set;
+
+public interface TxBindings extends Bindings
 {
-  TxBindings getBindings();
+  TableRow getOwner();
+  void setOwner( TableRow owner );
 
-  default <T extends TableRow> T fetchFk( QueryContext<T> ctx )
-  {
-    return CrudProvider.instance().read( ctx );
-  }
+  TxScope getBinder();
+
+  boolean isForInsert();
+  boolean isForUpdate();
+  boolean isForDelete();
+
+  void setDelete( boolean value );
+
+  void holdValues( Bindings generatedKeys );
+  void dropHeldValues();
+
+  void commit();
+
+  Set<Entry<String, Object>> changedEntrySet();
+  Set<Entry<String, Object>> initialStateEntrySet();
+
+  Object getInitialValue( String name );
 }

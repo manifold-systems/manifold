@@ -16,48 +16,38 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
-import java.util.function.Function;
 
 public class Runner<T extends ResultRow>
 {
-  private final Class<T> _queryClass;
-  private final int[] _jdbcParamTypes;
-  private final Bindings _params;
-  private final String _querySource;
-  private final String _configName;
-  private final Function<Bindings, T> _makeRow;
+  private final QueryContext<T> _ctx;
+  private final String _sqlQuery;
 
-  public Runner( Class<T> queryClass, int[] jdbcParamTypes, Bindings params, String querySource, String configName, Function<Bindings, T> makeRow )
+  public Runner( QueryContext<T> ctx, String sqlQuery )
   {
-    _queryClass = queryClass;
-    _jdbcParamTypes = jdbcParamTypes;
-    _params = params;
-    _querySource = querySource;
-    _configName = configName;
-    _makeRow = makeRow;
+    _ctx = ctx;
+    _sqlQuery = sqlQuery;
   }
 
   @SuppressWarnings( "unused" )
   public Result<T> run()
   {
     ConnectionProvider cp = ConnectionProvider.findFirst();
-    try( Connection c = cp.getConnection( _configName, _queryClass ) )
+    try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
     {
       for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
       {
         p.init( c );
       }
 
-      try( PreparedStatement ps = c.prepareStatement( _querySource ) )
+      try( PreparedStatement ps = c.prepareStatement( _sqlQuery ) )
       {
         setParameters( ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          return new Result<T>( resultSet, _makeRow );
+          return new Result<T>( _ctx.getBinder(), resultSet, _ctx.getRowMaker() );
         }
       }
     }
@@ -70,9 +60,9 @@ public class Runner<T extends ResultRow>
   private void setParameters( PreparedStatement ps ) throws SQLException
   {
     int i = 0;
-    for( Object param : _params.values() )
+    for( Object param : _ctx.getParams().values() )
     {
-      ValueAccessor accessor = ValueAccessor.get( _jdbcParamTypes[i] );
+      ValueAccessor accessor = ValueAccessor.get( _ctx.getJdbcParamTypes()[i] );
       accessor.setParameter( ps, ++i, param );
     }
   }

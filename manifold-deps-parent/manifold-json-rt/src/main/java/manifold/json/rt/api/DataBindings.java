@@ -17,9 +17,11 @@
 package manifold.json.rt.api;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.rt.api.Bindings;
+import manifold.util.concurrent.LockingLazyVar;
 
 /**
  * A simple name/value bindings impl.
@@ -32,6 +34,11 @@ public class DataBindings implements Bindings
    * Stores name/value bindings.
    */
   private Map<String, Object> _map;
+
+  /**
+   * For adding metadata about this bindings
+   */
+  private LockingLazyVar<Bindings> _metadata = LockingLazyVar.make( () -> new DataBindings( new ConcurrentHashMap<>() ) );
 
   /**
    * Uses provided {@code Map} to store bindings.
@@ -65,6 +72,12 @@ public class DataBindings implements Bindings
   public DataBindings( int size )
   {
     this( new LinkedHashMap<>( size ) );
+  }
+
+  @Override
+  public Bindings getMetadata()
+  {
+    return _metadata.get();
   }
 
   /**

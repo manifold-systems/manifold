@@ -2230,7 +2230,7 @@ public class ExtensionTransformer extends TreeTranslator
   */
   private void unproxyStructuralArgsIfDefaultMethod( JCTree.JCMethodDecl tree )
   {
-    if( !tree.sym.isDefault() )
+    if( tree.sym == null || !tree.sym.isDefault() )
     {
       return;
     }

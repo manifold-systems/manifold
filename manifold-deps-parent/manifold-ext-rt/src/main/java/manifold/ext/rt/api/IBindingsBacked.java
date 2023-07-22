@@ -31,4 +31,22 @@ public interface IBindingsBacked
    * The {@link Bindings} object used to store name/value pairs corresponding with getter/setter methods.
    */
   Bindings getBindings();
+
+  default String display()
+  {
+    StringBuilder row = new StringBuilder();
+    for( Object value: getBindings().values() )
+    {
+      if( row.length() > 0 )
+      {
+        row.append( ", " );
+      }
+      if( value instanceof String )
+      {
+        value = "\"" + value + "\"";
+      }
+      row.append( value );
+    }
+    return row.toString();
+  }
 }

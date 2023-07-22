@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2023 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
-package manifold.js.rt;
+package manifold.sql.rt.connection;
 
-import manifold.rt.api.Bindings;
-import java.util.concurrent.ConcurrentHashMap;
+import manifold.sql.rt.api.SchemaType;
+import manifold.sql.rt.api.TxScope;
+import manifold.sql.rt.api.TxScopeProvider;
 
-class ThreadSafeBindings extends ConcurrentHashMap<String, Object> implements Bindings {}
+public class BasicTxScopeProvider implements TxScopeProvider
+{
+  @Override
+  public TxScope create( Class<? extends SchemaType> schemaClass )
+  {
+    return new BasicTxScope( schemaClass );
+  }
+}

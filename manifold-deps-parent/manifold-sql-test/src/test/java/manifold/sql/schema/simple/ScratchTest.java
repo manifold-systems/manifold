@@ -20,6 +20,8 @@ import manifold.ext.rt.api.auto;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.queries.Foo;
+import manifold.sql.rt.api.TxScope;
+import manifold.sql.rt.api.TxScopeProvider;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -34,7 +36,7 @@ import manifold.sql.schema.simple.H2Sales.*;
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static org.junit.Assert.*;
 
-public class TestSimple
+public class ScratchTest
 {
   private static final String DB_RESOURCE = "/manifold/sql/db/Sales.mv.db";
 
@@ -43,7 +45,7 @@ public class TestSimple
   {
     // copy database to temp dir, the url in DbConfig uses it from there
     File tempDbFile = makeTempFile( DB_RESOURCE );
-    try( InputStream in = TestSimple.class.getResourceAsStream( DB_RESOURCE );
+    try( InputStream in = ScratchTest.class.getResourceAsStream( DB_RESOURCE );
          FileOutputStream out = new FileOutputStream( tempDbFile ) )
     {
       StreamUtil.copy( in, out );
@@ -70,7 +72,8 @@ public class TestSimple
   public void testSimple()
   {
     StringBuilder sb = new StringBuilder();
-    for( PurchaseOrder po : Foo.run() )
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    for( PurchaseOrder po : Foo.run( txScope ) )
     {
       // just make sure the results can be navigated
       assertNotNull( po.getId() + " " + po.getCustomerId() + " " + po.getOrderDate() );
@@ -86,7 +89,8 @@ public class TestSimple
       Select * From purchase_order Where customer_id = :c_id
     */
     StringBuilder actual = new StringBuilder();
-    for( PurchaseOrder po : MyQuery.run( 2L ) )
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    for( PurchaseOrder po : MyQuery.run( txScope, 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -106,7 +110,8 @@ public class TestSimple
 
     StringBuilder actual = new StringBuilder();
     actual = new StringBuilder();
-    for( PurchaseOrder po : query.run( 2L ) )
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    for( PurchaseOrder po : query.run( txScope, 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -122,7 +127,8 @@ public class TestSimple
       "3,2,2023-09-08,Cheryl Dunno\n";
 
     StringBuilder actual = new StringBuilder();
-    for( auto row : query.run( 2L ) )
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    for( auto row : query.run( txScope, 2L ) )
     {
       auto flatRow = row.flatRow();
       actual.append( flatRow.getId() ).append( "," )
@@ -133,7 +139,8 @@ public class TestSimple
     assertEquals( expected, actual.toString() );
 
     actual = new StringBuilder();
-    for( auto row : query.run( 2L ) )
+    TxScope binder2 = TxScopeProvider.newScope( H2Sales.class );
+    for( auto row : query.run( binder2, 2L ) )
     {
       actual.append( row.getPurchaseOrder().getId() ).append( "," )
         .append( row.getPurchaseOrder().getCustomerId() ).append( "," )

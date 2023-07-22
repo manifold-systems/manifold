@@ -28,9 +28,13 @@ import static manifold.sql.rt.api.DbLocationProvider.PROVIDED;
 
 /**
  * Substitutes {@code ${<property-ref>}} expressions with corresponding values from system properties, environment vars,
- * and special references starting with {@code #}.
- * <p/>
- * Example: {@code ${java.io.tmpdir}/mydir/myfile.abc} -> {@code c:/tmp/mydir/myfile.abc}
+ * and special references starting with {@code #} via custom {@link DbLocationProvider} implementations.<br>
+ * <br>
+ * Example: {@code ${java.io.tmpdir}/mydir/myfile.abc} -> {@code c:/tmp/mydir/myfile.abc}<br>
+ * <br>
+ * You can implement the {@link DbLocationProvider} SPI to handle {@code #<your-tag>} expressions:<br>
+ * <br>
+ * Example: {@code #mytag /mydir/myfile.abc, myinfo} -> {@code my url}
  */
 public class PropertyExpressionProcessor
 {

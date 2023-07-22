@@ -16,13 +16,34 @@
 
 package manifold.sql.rt.api;
 
-import manifold.ext.rt.api.IBindingsBacked;
+import java.util.Map;
+import java.util.Set;
 
-public interface SchemaBuilder<T extends TableRow> extends IBindingsBacked
+public class TableInfo
 {
-  T build();
+  private final String _ddlTableName;
+  private final Set<String> _pkCols;
+  private final Map<String, Integer> _allColsWithJdbcType;
 
-  @Override
-  TxBindings getBindings();
+  public TableInfo( String ddlTableName, Set<String> pkCols, Map<String,Integer> allColsWithJdbcType )
+  {
+    _ddlTableName = ddlTableName;
+    _pkCols = pkCols;
+    _allColsWithJdbcType = allColsWithJdbcType;
+  }
+
+  public String getDdlTableName()
+  {
+    return _ddlTableName;
+  }
+
+  public Set<String> getPkCols()
+  {
+    return _pkCols;
+  }
+
+  public Map<String, Integer> getAllColsWithJdbcType()
+  {
+    return _allColsWithJdbcType;
+  }
 }
-

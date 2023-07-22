@@ -18,6 +18,14 @@
       <artifactId>manifold-json-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-strings</artifactId>
+      <version>${project.version}</version>
+      <!-- not inherited -->
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
     <!-- HikariCP is default db connection pool -->
     <dependency>
       <groupId>com.zaxxer</groupId>

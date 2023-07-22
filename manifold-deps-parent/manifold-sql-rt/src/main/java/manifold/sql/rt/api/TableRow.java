@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 - Manifold Systems LLC
+ * Copyright (c) 2023 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.rt.api;
-
-import java.util.Map;
+package manifold.sql.rt.api;
 
 /**
- * Name/Value bindings
+ * Common base type for db table types (generated from the schema).
  */
-public interface Bindings extends Map<String, Object>
+public interface TableRow extends ResultRow
 {
-  /**
-   * Supports maintaining metadata about this instance
-   */
-  Bindings getMetadata();
+  TableInfo tableInfo();
 }

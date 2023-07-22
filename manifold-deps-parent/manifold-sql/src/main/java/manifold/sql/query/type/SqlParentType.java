@@ -27,15 +27,13 @@ import manifold.rt.api.*;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.ManEscapeUtil;
 import manifold.rt.api.util.Pair;
+import manifold.sql.api.Column;
 import manifold.sql.api.DataElement;
 import manifold.sql.query.api.ForeignKeyQueryRef;
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
-import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.api.Runner;
-import manifold.sql.rt.api.Query;
-import manifold.sql.rt.api.ResultRow;
+import manifold.sql.rt.api.*;
 import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
@@ -160,6 +158,7 @@ class SqlParentType
   {
     SrcMethod method = new SrcMethod( srcClass )
       .name( methodName )
+      .addParam( "txScope", TxScope.class )
       .returns( new SrcType( "Iterable<$rowType>" ) );
     if( _model.getFile() instanceof IFileFragment &&
       isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() ) )
@@ -172,16 +171,22 @@ class SqlParentType
     }
     addRequiredParameters( method );
     StringBuilder sb = new StringBuilder();
-    sb.append( "    DataBindings paramBindings = new DataBindings(new ConcurrentHashMap());\n" );
+    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    int i = 0;
     for( SrcParameter param : method.getParameters() )
     {
+      if( i++ == 0 )
+      {
+        // skip txScope param
+        continue;
+      }
       //noinspection unused
       String paramName = makeIdentifier( param.getSimpleName(), false );
       sb.append( "    paramBindings.put(\"$paramName\", $paramName);\n" );
     }
 
-    //noinspection unused
-    String query = getQuery() == null ? "errant query" : getQuery().getQuerySource();
+    String query = getQuery() == null ? "<errant query>" : getQuery().getQuerySource();
+    //noinspection UnusedAssignment
     query = ManEscapeUtil.escapeForJavaStringLiteral( query );
     //noinspection unused
     String configName = _model.getScope().getDbconfig().getName();
@@ -190,8 +195,9 @@ class SqlParentType
     //noinspection unused
     String jdbcParamTypes = getJdbcParamTypes();
     sb.append(
-      "    return new Runner<$rowType>($rowType.class, $jdbcParamTypes, paramBindings, \"$query\", \"$configName\", " +
-      "      rowBindings -> new $rowType() {public Bindings getBindings() { return rowBindings; }}" +
+      "    return new Runner<$rowType>(new QueryContext<>(txScope, $rowType.class, null, ${getJdbcParamTypes()}, paramBindings, \"$configName\",\n" +
+      "      rowBindings -> new $rowType() {public TxBindings getBindings() { return rowBindings; }}),\n" +
+      "      \"$query\"\n" +
       "    ).run();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -204,6 +210,21 @@ class SqlParentType
     for( int i = 0; i < parameters.size(); i++ )
     {
       QueryParameter p = parameters.get( i );
+      if( i > 0 )
+      {
+        sb.append( "," );
+      }
+      sb.append( p.getJdbcType() );
+    }
+    return sb.append( "}" ).toString();
+  }
+
+  private String getJdbcParamTypes( List<QueryColumn> parameters )
+  {
+    StringBuilder sb = new StringBuilder( "new int[]{");
+    for( int i = 0; i < parameters.size(); i++ )
+    {
+      Column p = parameters.get( i );
       if( i > 0 )
       {
         sb.append( "," );
@@ -308,7 +329,7 @@ class SqlParentType
       .modifiers( Flags.DEFAULT )
       .name( "flatRow" )
       .returns( type )
-      .body( "return new FlatRow() {public Bindings getBindings() { return Row.this.getBindings(); }};" );
+      .body( "return new FlatRow() {public TxBindings getBindings() { return Row.this.getBindings(); }};" );
     srcClass.addMethod( flatRowMethod );
   }
 
@@ -324,21 +345,21 @@ class SqlParentType
       .name( "fetch" + propName )
       .modifiers( Flags.DEFAULT )
       .returns( type );
-    StringBuilder sb = new StringBuilder( "return fetchFk($tableFqn.class, \"${table.getName()}\", " );
-    List<QueryColumn> queryCols = fkRef.getQueryCols();
-    for( int i = 0; i < queryCols.size(); i++ )
+    //noinspection unused
+    String jdbcParamTypes = getJdbcParamTypes( fkRef.getQueryCols() );
+    //noinspection unused
+    String configName = _model.getScope().getDbconfig().getName();
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    for( QueryColumn col : fkRef.getQueryCols() )
     {
       //noinspection unused
-      QueryColumn queryCol = queryCols.get( i );
-      if( i > 0 )
-      {
-        sb.append( ", " );
-      }
-      //noinspection unused
-      String colName = queryCol.getName();
-      sb.append( "new Pair<>(\"$colName\", getBindings().get(\"$colName\"))" );
+      Column referencedCol = col.getSchemaColumn().getForeignKey();
+      sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(${col.getName()}));\n" );
     }
-    sb.append( ");" );
+    sb.append( "    return fetchFk(new QueryContext<$tableFqn>(getBindings().getBinder(), $tableFqn.class,\n" +
+      "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
+      "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
     srcClass.addMethod( fkFetchMethod );
@@ -347,23 +368,41 @@ class SqlParentType
   private void addSelectedTableAccessor( SrcLinkedClass srcClass, Pair<SchemaTable, List<QueryColumn>> selectedTable )
   {
     SchemaTable table = selectedTable.getFirst();
-    String tableName = getTableSimpleTypeName( table );
-    String tableFqn = getTableFqn( table );
+    String tableSimpleName = getTableSimpleTypeName( table );
 
-    String propName = tableName;
+    String propName = tableSimpleName;
     boolean tableNameMatchesColumnNameOfRemainingColumns = getQuery().getColumns().values().stream()
       .filter( c -> !selectedTable.getSecond().contains( c ) )
       .map( c -> makePascalCaseIdentifier( c.getName(), true ) )
-      .anyMatch( name -> name.equalsIgnoreCase( tableName ) );
+      .anyMatch( name -> name.equalsIgnoreCase( tableSimpleName ) );
     if( tableNameMatchesColumnNameOfRemainingColumns )
     {
       // disambiguate selected table obj and query column
       propName += "Ref";
     }
-    SrcType type = new SrcType( tableFqn );
+
+    String tableType = getTableFqn( table );
+    SrcType type = new SrcType( tableType );
     SrcGetProperty getter = new SrcGetProperty( propName, type )
-      .modifiers( Flags.DEFAULT )
-      .body( "return new $tableFqn() {@Override public Bindings getBindings() {return Row.this.getBindings(); }};" );
+      .modifiers( Flags.DEFAULT );
+
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings initialState = new DataBindings();\n" );
+    sb.append( "    TxBindings rowBindings = Row.this.getBindings();\n" );
+    for( QueryColumn queryColumn : selectedTable.getSecond() )
+    {
+      //noinspection unused
+      String schemaName = queryColumn.getSchemaColumn().getName();
+      //noinspection unused
+      String queryName = queryColumn.getName();
+      sb.append( "    initialState.put(\"$schemaName\", rowBindings.get(\"$queryName\"));\n" );
+    }
+    sb.append( "    BasicTxBindings tableBindings = new BasicTxBindings(rowBindings.getBinder(), TxKind.Update, initialState);\n" );
+    sb.append( "    $tableType tablePart = new $tableType() {@Override public TxBindings getBindings() {return tableBindings; }};\n" );
+    sb.append( "    rowBindings.setOwner(tablePart);\n" );
+    sb.append( "    return tablePart;" );
+    getter.body( sb.toString() );
+
     srcClass.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
   }
 
@@ -374,9 +413,10 @@ class SqlParentType
 
   private String getTableFqn( SchemaTable table )
   {
-    String schemaPackage = _model.getScope().getDbconfig().getSchemaPackage();
+//    String schemaPackage = _model.getScope().getDbconfig().getSchemaPackage();
     String configName = table.getSchema().getDbConfig().getName();
-    return schemaPackage + "." + configName + "." + getTableSimpleTypeName( table );
+//    return schemaPackage + "." + configName + "." + getTableSimpleTypeName( table );
+    return configName + "." + getTableSimpleTypeName( table );
   }
 
   private void addImports( SrcLinkedClass srcClass )
@@ -385,18 +425,23 @@ class SqlParentType
     srcClass.addImport( ResultRow.class );
     srcClass.addImport( Runner.class );
     srcClass.addImport( Bindings.class );
+    srcClass.addImport( TxScope.class );
+    srcClass.addImport( TxBindings.class );
+    srcClass.addImport( BasicTxBindings.class );
+    srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
+    srcClass.addImport( QueryContext.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( FragmentValue.class );
-    importSchemaTypes( srcClass );
+    importSchemaType( srcClass );
   }
 
-  private void importSchemaTypes( SrcLinkedClass srcClass )
+  private void importSchemaType( SrcLinkedClass srcClass )
   {
     DbConfig dbconfig = _model.getScope().getDbconfig();
-    srcClass.addStaticImport( dbconfig.getSchemaPackage() + '.' + dbconfig.getName() + ".*" );
+    srcClass.addImport( dbconfig.getSchemaPackage() + '.' + dbconfig.getName() );
   }
 
   private void addQueryGetter( SrcLinkedClass srcClass, QueryColumn column )

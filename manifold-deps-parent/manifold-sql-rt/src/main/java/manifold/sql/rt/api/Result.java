@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.util.ManExceptionUtil;
@@ -29,17 +30,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
-public class Result<T extends ResultRow> implements Iterable<T>
-{
-  private final List<T> _results;
+import static manifold.sql.rt.api.BasicTxBindings.TxKind.Update;
 
-  public Result( ResultSet resultSet, Function<Bindings, T> makeRow )
+public class Result<R extends IBindingsBacked> implements Iterable<R>
+{
+  private final List<R> _results;
+
+  public Result( TxScope txScope, ResultSet resultSet, Function<TxBindings, R> makeRow )
   {
     _results = new ArrayList<>();
-    rip( resultSet, makeRow );
+    rip( resultSet, rowBindings -> new BasicTxBindings( txScope, Update, rowBindings ), makeRow );
   }
 
-  private void rip( ResultSet resultSet, Function<Bindings, T> makeRow )
+  public Result( ResultSet resultSet, Function<Bindings, R> makeRow )
+  {
+    _results = new ArrayList<>();
+    rip( resultSet, rowBindings -> rowBindings, makeRow );
+  }
+
+  private <B extends Bindings> void rip( ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
   {
     try
     {
@@ -54,18 +63,22 @@ public class Result<T extends ResultRow> implements Iterable<T>
           Object value = accessor.getRowValue( resultSet, new ResultColumn( metaData, i ) );
           row.put( column, value );
         }
-        _results.add( makeRow.apply( row ) );
+        R resultRow = makeRow.apply( makeBindings.apply( row ) );
+        if( resultRow instanceof TableRow )
+        {
+          ((TableRow)resultRow).getBindings().setOwner( (TableRow)resultRow );
+        }
+        _results.add( resultRow );
       }
     }
     catch( SQLException e )
     {
-      //## todo: handle
       throw ManExceptionUtil.unchecked( e );
     }
   }
 
   @Override
-  public Iterator<T> iterator()
+  public Iterator<R> iterator()
   {
     return _results.iterator();
   }
@@ -103,7 +116,7 @@ public class Result<T extends ResultRow> implements Iterable<T>
       header.append( title ).append( "\n" );
     }
     StringBuilder rows = new StringBuilder();
-    for( T value: _results )
+    for( R value: _results )
     {
       rows.append( value.display() ).append( "\n" );
     }

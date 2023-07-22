@@ -32,14 +32,15 @@ public class JdbcSchemaForeignKey implements SchemaForeignKey
   {
     _referencedTable = referencedTable;
     _columns = columns;
-    if( fkName != null )
-    {
-      _name = fkName;
-    }
-    else
-    {
+//todo: fkName can be pretty bad, sometimes generated like with H2 you get names like "Constraint432"
+//    if( fkName != null )
+//    {
+//      _name = fkName;
+//    }
+//    else
+//    {
       _name = assignName();
-    }
+//    }
   }
 
   private String assignName()
