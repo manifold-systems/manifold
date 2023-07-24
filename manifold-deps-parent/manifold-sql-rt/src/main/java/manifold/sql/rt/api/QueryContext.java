@@ -41,7 +41,7 @@ public class QueryContext<T extends ResultRow>
     _makeRow = makeRow;
   }
 
-  public TxScope getBinder()
+  public TxScope getTxScope()
   {
     return _txScope;
   }

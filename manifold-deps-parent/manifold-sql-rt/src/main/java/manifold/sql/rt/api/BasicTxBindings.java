@@ -46,7 +46,7 @@ public class BasicTxBindings implements TxBindings
   private final LockingLazyVar<Bindings> _metadata;
 
   private TableRow _owner;
-  private final TxScope _txScope;
+  private final OperableTxScope _txScope;
   private TxKind _txKind;
   private boolean _delete;
 
@@ -61,7 +61,7 @@ public class BasicTxBindings implements TxBindings
       throw new NullPointerException();
     }
 
-    _txScope = txScope;
+    _txScope = (OperableTxScope)txScope;
     _txKind = txKind;
     _initialState = initialState;
     _changes = new ConcurrentHashMap<>();
@@ -80,7 +80,7 @@ public class BasicTxBindings implements TxBindings
     _owner = owner;
   }
 
-  public TxScope getBinder()
+  public TxScope getTxScope()
   {
     return _txScope;
   }
@@ -100,18 +100,50 @@ public class BasicTxBindings implements TxBindings
   @Override
   public boolean isForDelete()
   {
-    return _delete && _txKind != TxKind.Insert;
-  }
-
-  public boolean isZombie()
-  {
-    return _delete && _txKind == TxKind.Insert;
+    return _delete;
   }
 
   @Override
   public void setDelete( boolean value )
   {
+    if( _delete == value )
+    {
+      return;
+    }
+
     _delete = value;
+
+    switch( _txKind )
+    {
+      case Update:
+        if( _delete )
+        {
+          // add for deletion
+          _txScope.addRow( getOwner() );
+        }
+        else if( _changes.isEmpty() )
+        {
+          // no changes for update, was only there for deletion, no reason for it to remain
+          _txScope.removeRow( getOwner() );
+        }
+        break;
+
+      case Insert:
+        if( _delete )
+        {
+          // newly created row is not in db, just remove it from txScope
+          _txScope.removeRow( getOwner() );
+        }
+        else
+        {
+          // add created row back to txScope
+          _txScope.addRow( getOwner() );
+        }
+        break;
+
+      default:
+        throw new UnsupportedOperationException( "Can't delete, TxKind is " + _txKind );
+    }
   }
 
   @Override
@@ -160,6 +192,11 @@ public class BasicTxBindings implements TxBindings
       throw new IllegalArgumentException( "Non-raw bindings: " + value );
     }
 
+    if( isForDelete() )
+    {
+      throw new RuntimeException( "Illegal operation, instance pending deletion" );
+    }
+
     checkKey( name );
     Object existing;
     if( _initialState.containsKey( name ) &&
@@ -183,6 +220,7 @@ public class BasicTxBindings implements TxBindings
     return _changes.put( name, value );
   }
 
+  @SuppressWarnings( "NullableProblems" )
   public void putAll( Map<? extends String, ?> toMerge )
   {
     if( toMerge == null )

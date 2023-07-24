@@ -26,20 +26,22 @@ public class UpdateContext<T extends ResultRow>
   private final String _configName;
   private final String _ddlTableName;
   private final Set<String> _pkCols;
+  private final Set<String> _ukCols;
   private final Map<String, Integer> _allColsWithJdbcType;
 
   public UpdateContext( TxScope txScope, T table, String ddlTableName, String configName,
-                        Set<String> pkCols, Map<String,Integer> allColsWithJdbcType )
+                        Set<String> pkCols, Set<String> ukCols, Map<String,Integer> allColsWithJdbcType )
   {
     _txScope = txScope;
     _table = table;
     _ddlTableName = ddlTableName;
     _configName = configName;
     _pkCols = pkCols;
+    _ukCols = ukCols;
     _allColsWithJdbcType = allColsWithJdbcType;
   }
 
-  public TxScope getBinder()
+  public TxScope getTxScope()
   {
     return _txScope;
   }
@@ -57,6 +59,12 @@ public class UpdateContext<T extends ResultRow>
   public Set<String> getPkCols()
   {
     return _pkCols;
+  }
+
+  /** a non-null unique key */
+  public Set<String> getUkCols()
+  {
+    return _ukCols;
   }
 
   public Map<String, Integer> getAllColsWithJdbcType()

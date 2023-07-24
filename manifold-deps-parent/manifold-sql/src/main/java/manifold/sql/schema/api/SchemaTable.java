@@ -26,6 +26,7 @@ public interface SchemaTable extends Table
   SchemaColumn getId();
   Map<SchemaTable, List<SchemaForeignKey>> getForeignKeys();
   List<SchemaColumn> getPrimaryKey();
+  Map<String, List<SchemaColumn>> getNonNullUniqueKeys();
   String getDescription();
 
   Kind getKind();

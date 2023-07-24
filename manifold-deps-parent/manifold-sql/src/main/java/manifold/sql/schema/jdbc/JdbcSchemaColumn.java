@@ -23,6 +23,8 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class JdbcSchemaColumn implements SchemaColumn
 {
@@ -34,14 +36,15 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final boolean _isAutoIncrement;
   private final boolean _isGenerated;
   private final boolean _isPrimaryKeyPart;
-  private final boolean _isId;
+  private final String _nonNullUniqueKeyName;
+  private final boolean _isNonNullUniqueId;
   private final String _defaultValue;
   private final int _decimalDigits;
   private final int _numPrecRadix;
   private JdbcSchemaColumn _fk;
   private final int _size;
 
-  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey ) throws SQLException
+  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey, Map<String, Set<String>> uniqueKeys ) throws SQLException
   {
     _position = colIndex;
     _table = jdbcSchemaTable;
@@ -51,7 +54,12 @@ public class JdbcSchemaColumn implements SchemaColumn
     _isAutoIncrement = "YES".equals( rs.getString( "IS_AUTOINCREMENT" ) );
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );
-    _isId = _isPrimaryKeyPart && primaryKey.size() == 1;
+    _nonNullUniqueKeyName = uniqueKeys.entrySet().stream()
+      .filter( e -> e.getValue().contains( _name ) )
+      .map( e -> e.getKey() )
+      .findFirst().orElse( null );
+    boolean isNonNullUniqueSoloKey = uniqueKeys.values().stream().anyMatch( cols -> cols.contains( _name ) && cols.size() == 1 );
+    _isNonNullUniqueId = _isPrimaryKeyPart && primaryKey.size() == 1 || isNonNullUniqueSoloKey;
     _defaultValue = rs.getString( "COLUMN_DEF" );
     _size = rs.getInt( "COLUMN_SIZE" );
     _decimalDigits = rs.getInt( "DECIMAL_DIGITS" );
@@ -95,15 +103,21 @@ public class JdbcSchemaColumn implements SchemaColumn
   }
 
   @Override
-  public boolean isId()
+  public boolean isNonNullUniqueId()
   {
-    return _isId;
+    return _isNonNullUniqueId;
   }
 
   @Override
   public boolean isPrimaryKeyPart()
   {
     return _isPrimaryKeyPart;
+  }
+
+  @Override
+  public String getNonNullUniqueKeyName()
+  {
+    return _nonNullUniqueKeyName;
   }
 
   @Override

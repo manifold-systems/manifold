@@ -17,15 +17,10 @@
 package manifold.sql.rt.api;
 
 import java.sql.SQLException;
-import java.util.Set;
 
 public interface TxScope
 {
   DbConfig getDbConfig();
-
-  Set<TableRow> getRows();
-  void addRow( TableRow item );
-  void removeRow( TableRow item );
 
   boolean commit() throws SQLException;
 }

@@ -21,10 +21,7 @@ import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class JdbcSchemaTable implements SchemaTable
@@ -34,8 +31,9 @@ public class JdbcSchemaTable implements SchemaTable
   private final String _description;
   private final Kind _kind;
   private final Map<String, SchemaColumn> _columns;
-  private final JdbcSchemaColumn _colId;
+  private final JdbcSchemaColumn _nonNullUniqueId;
   private final ArrayList<SchemaColumn> _primaryKeys;
+  private final Map<String, List<SchemaColumn>> _nonNullUniqueKeys; // does not include pk
   private final JdbcForeignKeyMetadata _foreignKeyData;
   private Map<SchemaTable, List<SchemaForeignKey>> _foreignKeys;
 
@@ -63,6 +61,17 @@ public class JdbcSchemaTable implements SchemaTable
       }
     }
 
+    Map<String, Set<String>> uniqueKeys = new LinkedHashMap<>();
+    try( ResultSet indexInfo = metaData.getIndexInfo( catalogName, schemaName, _name, true, true ) )
+    {
+      while( indexInfo.next() )
+      {
+        String indexName = indexInfo.getString( "INDEX_NAME" );
+        uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
+          .add( indexInfo.getString( "COLUMN_NAME" ) );
+      }
+    }
+
     try( ResultSet foreignKeys = metaData.getImportedKeys( catalogName, schemaName, _name ) )
     {
       List<JdbcForeignKeyMetadata.KeyPart> keyParts = new ArrayList<>();
@@ -79,29 +88,67 @@ public class JdbcSchemaTable implements SchemaTable
 
     _columns = new LinkedHashMap<>();
     _primaryKeys = new ArrayList<>();
+    _nonNullUniqueKeys = new LinkedHashMap<>();
     try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
       JdbcSchemaColumn id = null;
       while( colResults.next() )
       {
-        JdbcSchemaColumn col = new JdbcSchemaColumn( ++i, this, colResults, primaryKey );
+        JdbcSchemaColumn col = new JdbcSchemaColumn( ++i, this, colResults, primaryKey, uniqueKeys );
         _columns.put( col.getName(), col );
-        if( col.isId() )
+        if( col.isNonNullUniqueId() )
         {
-          if( id != null )
+          if( id == null || id.isPrimaryKeyPart() )
           {
-            throw new IllegalStateException();
+            // if there is a pk, ensure that is the id, otherwise first non-null unique key is the id
+            id = col;
           }
-          id = col;
         }
         if( col.isPrimaryKeyPart() )
         {
           _primaryKeys.add( col );
         }
+
+        buildNonNullUniqueKeys( col );
       }
-      _colId = id;
+      _nonNullUniqueId = id;
     }
+  }
+
+  private void buildNonNullUniqueKeys( JdbcSchemaColumn col )
+  {
+    String nonNullUniqueKeyName = col.getNonNullUniqueKeyName();
+    if( nonNullUniqueKeyName != null )
+    {
+      _nonNullUniqueKeys.computeIfAbsent( nonNullUniqueKeyName, __ -> new ArrayList<>() )
+        .add( col );
+    }
+
+    // now remove nullable keys and the pk, we want non-null keys other than the pk in this map
+
+    Set<String> removeKeys = new HashSet<>();
+    for( String keyName : _nonNullUniqueKeys.keySet() )
+    {
+      List<SchemaColumn> cols = _nonNullUniqueKeys.get( keyName );
+      for( SchemaColumn schemaColumn : cols )
+      {
+        if( schemaColumn.isNullable() )
+        {
+          // remove nullable keys
+          removeKeys.add( keyName );
+          break;
+        }
+      }
+
+      if( !removeKeys.contains( keyName ) &&
+        cols.stream().allMatch( c -> c.isPrimaryKeyPart() ) )
+      {
+        // don't want the pk in this map
+        removeKeys.add( keyName );
+      }
+    }
+    removeKeys.forEach( key -> _nonNullUniqueKeys.remove( key ) );
   }
 
   @Override
@@ -137,7 +184,7 @@ public class JdbcSchemaTable implements SchemaTable
   @Override
   public JdbcSchemaColumn getId()
   {
-    return _colId;
+    return _nonNullUniqueId;
   }
 
   @Override
@@ -150,6 +197,12 @@ public class JdbcSchemaTable implements SchemaTable
   public List<SchemaColumn> getPrimaryKey()
   {
     return _primaryKeys;
+  }
+
+  @Override
+  public Map<String, List<SchemaColumn>> getNonNullUniqueKeys()
+  {
+    return _nonNullUniqueKeys;
   }
 
   @Override

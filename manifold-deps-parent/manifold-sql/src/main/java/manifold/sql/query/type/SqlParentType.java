@@ -357,7 +357,7 @@ class SqlParentType
       Column referencedCol = col.getSchemaColumn().getForeignKey();
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(${col.getName()}));\n" );
     }
-    sb.append( "    return fetchFk(new QueryContext<$tableFqn>(getBindings().getBinder(), $tableFqn.class,\n" +
+    sb.append( "    return CrudProvider.instance().read(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
       "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
@@ -397,7 +397,7 @@ class SqlParentType
       String queryName = queryColumn.getName();
       sb.append( "    initialState.put(\"$schemaName\", rowBindings.get(\"$queryName\"));\n" );
     }
-    sb.append( "    BasicTxBindings tableBindings = new BasicTxBindings(rowBindings.getBinder(), TxKind.Update, initialState);\n" );
+    sb.append( "    BasicTxBindings tableBindings = new BasicTxBindings(rowBindings.getTxScope(), TxKind.Update, initialState);\n" );
     sb.append( "    $tableType tablePart = new $tableType() {@Override public TxBindings getBindings() {return tableBindings; }};\n" );
     sb.append( "    rowBindings.setOwner(tablePart);\n" );
     sb.append( "    return tablePart;" );
@@ -430,6 +430,7 @@ class SqlParentType
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
+    srcClass.addImport( CrudProvider.class );
     srcClass.addImport( QueryContext.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( ActualName.class );

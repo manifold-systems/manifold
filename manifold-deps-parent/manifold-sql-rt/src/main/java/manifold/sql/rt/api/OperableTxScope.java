@@ -16,30 +16,20 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
+import manifold.sql.rt.api.TableRow;
+import manifold.sql.rt.api.TxScope;
 
 import java.util.Set;
 
-public interface TxBindings extends Bindings
+/**
+ * This interface is for internal use.
+ * <p/>
+ * All TxScope SPI implementations must implement this interface.
+ */
+public interface OperableTxScope extends TxScope
 {
-  TableRow getOwner();
-  void setOwner( TableRow owner );
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
-
-  void setDelete( boolean value );
-
-  void holdValues( Bindings generatedKeys );
-  void dropHeldValues();
-
-  void commit();
-
-  Set<Entry<String, Object>> changedEntrySet();
-  Set<Entry<String, Object>> initialStateEntrySet();
-
-  Object getInitialValue( String name );
+  Set<TableRow> getRows();
+  void addRow( TableRow item );
+  void removeRow( TableRow item );
+  boolean containsRow( TableRow item );
 }

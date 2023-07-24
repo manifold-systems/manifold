@@ -24,9 +24,4 @@ import manifold.ext.rt.api.IBindingsBacked;
 public interface ResultRow extends IBindingsBacked
 {
   TxBindings getBindings();
-
-  default <T extends TableRow> T fetchFk( QueryContext<T> ctx )
-  {
-    return CrudProvider.instance().read( ctx );
-  }
 }

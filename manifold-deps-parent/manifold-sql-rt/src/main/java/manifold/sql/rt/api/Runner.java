@@ -47,7 +47,7 @@ public class Runner<T extends ResultRow>
         setParameters( ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          return new Result<T>( _ctx.getBinder(), resultSet, _ctx.getRowMaker() );
+          return new Result<T>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
         }
       }
     }

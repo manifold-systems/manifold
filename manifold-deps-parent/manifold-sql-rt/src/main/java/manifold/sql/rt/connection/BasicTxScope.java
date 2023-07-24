@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  */
-class BasicTxScope implements TxScope
+class BasicTxScope implements OperableTxScope
 {
   private final DbConfig _dbConfig;
   private final Set<TableRow> _rows;
@@ -95,6 +95,20 @@ class BasicTxScope implements TxScope
   }
 
   @Override
+  public boolean containsRow( TableRow item )
+  {
+    _lock.readLock().lock();
+    try
+    {
+      return _rows.contains( item );
+    }
+    finally
+    {
+      _lock.readLock().unlock();
+    }
+  }
+
+  @Override
   public boolean commit() throws SQLException
   {
     _lock.writeLock().lock();
@@ -122,12 +136,9 @@ class BasicTxScope implements TxScope
 
           for( TableRow row : _rows )
           {
-            //todo: also consider adding a logger and start logging stuff, beginning with maybe getting metadata from the
-            // result set and comparing jdbc types with schema jdbc types and logging any differences
-
             TableInfo ti = row.tableInfo();
             UpdateContext<TableRow> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
-              ti.getPkCols(), ti.getAllColsWithJdbcType() );
+              ti.getPkCols(), ti.getUkCols(), ti.getAllColsWithJdbcType() );
 
             if( row.getBindings().isForInsert() )
             {

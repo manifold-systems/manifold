@@ -14,32 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.schema.crud;
 
-import manifold.rt.api.Bindings;
-
-import java.util.Set;
-
-public interface TxBindings extends Bindings
+public class FkFetchTest
 {
-  TableRow getOwner();
-  void setOwner( TableRow owner );
+  //todo: first, make comprehensive sample db for tests, port mysql sakila + data to h2
 
-  TxScope getTxScope();
+  // test fk fetch from table row
 
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  // test fk fetch from query row
 
-  void setDelete( boolean value );
-
-  void holdValues( Bindings generatedKeys );
-  void dropHeldValues();
-
-  void commit();
-
-  Set<Entry<String, Object>> changedEntrySet();
-  Set<Entry<String, Object>> initialStateEntrySet();
-
-  Object getInitialValue( String name );
+  // test fk fetch from selected table row from mixed query row
 }

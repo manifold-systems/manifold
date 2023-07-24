@@ -21,10 +21,9 @@ import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.rt.api.TxScopeProvider;
+import manifold.sql.rt.api.OperableTxScope;
 import manifold.sql.schema.simple.ScratchTest;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,8 +33,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import manifold.sql.schema.simple.H2Sales;
 import manifold.sql.schema.simple.H2Sales.*;
@@ -44,8 +42,8 @@ public class CrudTest
 {
   private static final String DB_RESOURCE = "/manifold/sql/db/Sales.mv.db";
 
-  @BeforeClass
-  public static void setup()
+  @Before
+  public void setup()
   {
     // copy database to temp dir, the url in DbConfig uses it from there
     File tempDbFile = makeTempFile( DB_RESOURCE );
@@ -60,8 +58,8 @@ public class CrudTest
     }
   }
 
-  @AfterClass
-  public static void cleanup()
+  @After
+  public void cleanup()
   {
     // close db connections
     ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
@@ -73,13 +71,61 @@ public class CrudTest
   }
 
   @Test
+  public void testCreate() throws SQLException
+  {
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    PurchaseOrder po = PurchaseOrder.create( txScope );
+    po.setCustomerId( 2L );
+    po.setOrderDate( LocalDate.now() );
+
+    txScope.commit();
+    assertTrue( po.getId() > 0 );
+  }
+
+  @Test
+  public void testRead()
+  {
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    PurchaseOrder po = PurchaseOrder.read( txScope, 1L );
+
+    String expected = "1, 2, 2023-11-10";
+    assertEquals( expected, po.display() );
+  }
+
+  @Test
+  public void testUpdate() throws SQLException
+  {
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    PurchaseOrder po = PurchaseOrder.read( txScope, 1L );
+    assertEquals( 2L, (long)po.getCustomerId() );
+    po.setCustomerId( 1L );
+    LocalDate now = LocalDate.now();
+    po.setOrderDate( now );
+
+    txScope.commit();
+    String expected = "1, 1, " + now;
+    assertEquals( expected, po.display() );
+  }
+
+  @Test
+  public void testDelete() throws SQLException
+  {
+    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
+    Item po = Item.read( txScope, 10L );
+    po.delete( true );
+    txScope.commit();
+    po = Item.read( txScope, 10L );
+    assertNull( po );
+  }
+
+  @Test
   public void testUpdateFromQuery() throws SQLException
   {
-    auto query = "[>.sql<] Select * From purchase_order Where customer_id = :c_id";
+    auto query = "[>.sql<] Select * From purchase_order Where id = :id";
     StringBuilder actual = new StringBuilder();
     LocalDate now = LocalDate.now();
     TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( PurchaseOrder po : query.run( txScope, 2L ) )
+    for( PurchaseOrder po : query.run( txScope, 1L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
       Customer customer = po.fetchCustomerId();
@@ -89,26 +135,22 @@ public class CrudTest
       po.setOrderDate( now );
     }
 
-    String expected =
-      "1,2,2023-11-10\n" +
-        "3,2,2023-09-08\n";
+    String expected = "1,2,2023-11-10\n";
     assertEquals( expected, actual.toString() );
 
     // commit changes
     txScope.commit();
-    assertTrue( txScope.getRows().isEmpty() );
+    assertTrue( ((OperableTxScope)txScope).getRows().isEmpty() );
 
     // requery and test that changes were committed
     actual = new StringBuilder();
-    for( PurchaseOrder po : query.run( txScope, 2L ) )
+    for( PurchaseOrder po : query.run( txScope, 1L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
 
     expected =
-      "1,2," + now +"\n" +
-        "3,2," + now +"\n";
+      "1,2," + now + "\n";
     assertEquals( expected, actual.toString() );
   }
-
 }

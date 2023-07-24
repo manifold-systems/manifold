@@ -132,11 +132,12 @@ public class BasicCrudProvider implements CrudProvider
         setQueryParameters( ctx, ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> ts = new Result<>( ctx.getBinder(), resultSet, ctx.getRowMaker() );
+          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
           Iterator<T> iterator = ts.iterator();
           if( !iterator.hasNext() )
           {
-            throw new SQLException( "Read failed. Empty result set for:\n" + sql );
+            // not found
+            return null;
           }
           T result = iterator.next();
           if( iterator.hasNext() )
@@ -203,6 +204,10 @@ public class BasicCrudProvider implements CrudProvider
       {
         whereColumns = ctx.getPkCols();
       }
+      else if( !ctx.getUkCols().isEmpty() )
+      {
+        whereColumns = ctx.getUkCols();
+      }
       else
       {
         whereColumns = allColNames;
@@ -221,7 +226,7 @@ public class BasicCrudProvider implements CrudProvider
       }
       else
       {
-        throw new SQLException( "Expecting primary key or provided columns for WHERE clause." );
+        throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
       try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
@@ -261,7 +266,7 @@ public class BasicCrudProvider implements CrudProvider
     }
     else
     {
-      throw new SQLException( "Expecting primary key or provided columns for WHERE clause." );
+      throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
     }
 
   }
@@ -280,7 +285,7 @@ public class BasicCrudProvider implements CrudProvider
     }
     else
     {
-      throw new SQLException( "Expecting primary key or provided columns for WHERE clause." );
+      throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
     }
   }
 
@@ -324,6 +329,10 @@ public class BasicCrudProvider implements CrudProvider
       {
         whereColumns = ctx.getPkCols();
       }
+      else if( !ctx.getUkCols().isEmpty() )
+      {
+        whereColumns = ctx.getUkCols();
+      }
       else
       {
         whereColumns = allColNames;
@@ -343,7 +352,7 @@ public class BasicCrudProvider implements CrudProvider
       }
       else
       {
-        throw new SQLException( "Expecting primary key or provided columns for WHERE clause." );
+        throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
       try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )

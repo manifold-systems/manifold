@@ -21,8 +21,9 @@ import manifold.sql.api.Column;
 public interface SchemaColumn extends Column
 {
   SchemaTable getTable();
-  boolean isId();
+  boolean isNonNullUniqueId();
   boolean isPrimaryKeyPart();
+  String getNonNullUniqueKeyName();
   boolean isAutoIncrement();
   boolean isGenerated();
   String getDefaultValue();

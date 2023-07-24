@@ -23,6 +23,7 @@ import manifold.json.rt.api.*;
 import manifold.rt.api.*;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.api.OperableTxScope;
 import manifold.sql.schema.api.*;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -105,6 +106,8 @@ class SchemaParentType
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, table.getName(), false );
     addCreateMethod( srcClass, table );
+    addReadMethod( srcClass, table );
+    addDeleteMethod( srcClass, table );
     addBuilderType( srcClass, table );
     addBuilderMethod( srcClass, table );
     addTableInfoMethod( srcClass, table );
@@ -143,11 +146,23 @@ class SchemaParentType
     {
       //noinspection unused
       String pkColName = pkCol.getName();
-      sb.append( "      pkCols.add(\"$pkColName\");\n" );
+      sb.append( "      pkCols.add(\"$pkColName\");\n\n" );
+    }
+    sb.append( "      Set<String> ukCols = new HashSet<>();\n" );
+    for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
+    {
+      // just need one
+      for( SchemaColumn ukCol : entry.getValue() )
+      {
+        //noinspection unused
+        String ukColName = ukCol.getName();
+        sb.append( "      ukCols.add(\"$ukColName\");\n\n" );
+      }
+      break;
     }
     //noinspection unused
     String ddlTableName = table.getName();
-    sb.append( "      return new TableInfo(\"$ddlTableName\", pkCols, allCols);\n" );
+    sb.append( "      return new TableInfo(\"$ddlTableName\", pkCols, ukCols, allCols);\n" );
     sb.append( "    });\n" );
     tableInfoField.initializer( sb.toString() );
     srcClass.addField( tableInfoField );
@@ -225,7 +240,7 @@ class SchemaParentType
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n");
     sb.append( "      $tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return bindings; } };\n" );
     sb.append( "      tableRow.getBindings().setOwner(tableRow);\n" );
-    sb.append( "      txScope.addRow(tableRow);\n" );
+    sb.append( "      ((OperableTxScope)txScope).addRow(tableRow);\n" );
     sb.append( "      return tableRow;" );
     method.body( sb.toString() );
   }
@@ -264,7 +279,7 @@ class SchemaParentType
     method.body(
       "$tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return Builder.this.getBindings(); } };\n" +
         "    tableRow.getBindings().setOwner(tableRow);\n" +
-        "    tableRow.getBindings().getBinder().addRow(tableRow);\n" +
+        "    ((OperableTxScope)tableRow.getBindings().getTxScope()).addRow(tableRow);\n" +
         "    return tableRow;" );
   }
 
@@ -310,6 +325,7 @@ class SchemaParentType
   {
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxBindings.class );
+    srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
@@ -357,6 +373,84 @@ class SchemaParentType
     }
   }
 
+  // Foo foo = Foo.create(txScope, ...);
+  // Foo foo = Foo.read(txScope, ...);
+  // foo.delete();
+  //...
+  // txScope.commit();
+
+  private void addReadMethod( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    String tableFqn = getTableFqn( table );
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "read" )
+      .returns( new SrcType( tableFqn ) )
+      .addParam( "txScope", TxScope.class );
+    List<SchemaColumn> whereCols = addSelectParameters( srcClass, table, method );
+    if( whereCols.isEmpty() )
+    {
+      // no pk and no pk, no read method, instead use type-safe sql query :)
+      return;
+    }
+
+    //noinspection unused
+    String jdbcParamTypes = getJdbcParamTypes( whereCols );
+    //noinspection unused
+    String configName = _model.getDbConfig().getName();
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    for( SchemaColumn col : whereCols )
+    {
+      //noinspection unused
+      String paramName = makePascalCaseIdentifier( col.getName(), false );
+      sb.append( "    paramBindings.put(\"${col.getName()}\", $paramName);\n" );
+    }
+    sb.append( "    return CrudProvider.instance().read(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
+      "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
+      "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+  }
+
+  private List<SchemaColumn> addSelectParameters( SrcLinkedClass owner, SchemaTable table, AbstractSrcMethod method )
+  {
+    List<SchemaColumn> pk = table.getPrimaryKey();
+    if( !pk.isEmpty() )
+    {
+      for( SchemaColumn col : pk )
+      {
+        SrcType srcType = makeSrcType( owner, col.getType(), false, true );
+        method.addParam( makePascalCaseIdentifier( col.getName(), false ), srcType );
+      }
+      return pk;
+    }
+    else
+    {
+      int i = 0;
+      for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
+      {
+        for( SchemaColumn col : entry.getValue() )
+        {
+          SrcType srcType = makeSrcType( owner, col.getType(), false, true );
+          method.addParam( makePascalCaseIdentifier( col.getName(), false ), srcType );
+        }
+        return entry.getValue();
+      }
+    }
+    return Collections.emptyList();
+  }
+
+  private void addDeleteMethod( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Flags.DEFAULT )
+      .name( "delete" )
+      .addParam( "delete", boolean.class );
+    method.body( "getBindings().setDelete(delete);" );
+    srcClass.addMethod( method );
+  }
+
   private void addOneToManyFetcher( SrcLinkedClass srcClass, SchemaForeignKey fkToThis )
   {
     //todo: add fetch<fk-to-this>List() method
@@ -399,7 +493,7 @@ class SchemaParentType
     //noinspection unused
     String configName = _model.getDbConfig().getName();
     sb.append( "    return CrudProvider.instance().read(" +
-      "new QueryContext<$tableFqn>(getBindings().getBinder(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
+      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
