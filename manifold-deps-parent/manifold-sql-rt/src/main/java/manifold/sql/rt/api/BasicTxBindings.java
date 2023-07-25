@@ -152,6 +152,17 @@ public class BasicTxBindings implements TxBindings
     _onHold.putAll( valuesToHold );
   }
 
+  public void holdValue( String name, Object value )
+  {
+    _onHold.put( name, value );
+  }
+
+  @Override
+  public Object getHeldValue( String name )
+  {
+    return _onHold.get( name );
+  }
+
   @Override
   public void dropHeldValues()
   {

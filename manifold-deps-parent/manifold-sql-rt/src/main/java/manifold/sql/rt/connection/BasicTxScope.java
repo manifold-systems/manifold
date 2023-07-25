@@ -21,9 +21,7 @@ import manifold.sql.rt.api.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -132,30 +130,11 @@ class BasicTxScope implements OperableTxScope
           }
 
           c.setAutoCommit( false );
-          CrudProvider crud = CrudProvider.instance();
 
+          Set<TableRow> visited = new HashSet<>();
           for( TableRow row : _rows )
           {
-            TableInfo ti = row.tableInfo();
-            UpdateContext<TableRow> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
-              ti.getPkCols(), ti.getUkCols(), ti.getAllColsWithJdbcType() );
-
-            if( row.getBindings().isForInsert() )
-            {
-              crud.create( c, ctx );
-            }
-            else if( row.getBindings().isForUpdate() )
-            {
-              crud.update( c, ctx );
-            }
-            else if( row.getBindings().isForDelete() )
-            {
-              crud.delete( c, ctx );
-            }
-            else
-            {
-              throw new SQLException( "Unexpected bindings kind, neither of insert/update/delete" );
-            }
+            doCrud( c, row, new LinkedHashMap<>(), visited );
           }
 
           c.commit();
@@ -165,7 +144,6 @@ class BasicTxScope implements OperableTxScope
             row.getBindings().commit();
           }
 
-          // reset, but the rows still point to this TxScope should fresh changes occur on them
           _rows.clear();
 
           return true;
@@ -186,6 +164,97 @@ class BasicTxScope implements OperableTxScope
     finally
     {
       _lock.writeLock().unlock();
+    }
+  }
+
+  private void doCrud( Connection c, TableRow row, Map<TableRow, Set<FkDep>> unresolvedDeps, Set<TableRow> visited ) throws SQLException
+  {
+    if( visited.contains( row ) )
+    {
+      return;
+    }
+    visited.add( row );
+
+    doFkDependenciesFirst( c, row, unresolvedDeps, visited );
+
+    CrudProvider crud = CrudProvider.instance();
+
+    TableInfo ti = row.tableInfo();
+    UpdateContext<TableRow> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
+      ti.getPkCols(), ti.getUkCols(), ti.getAllColsWithJdbcType() );
+
+    if( row.getBindings().isForInsert() )
+    {
+      crud.create( c, ctx );
+    }
+    else if( row.getBindings().isForUpdate() )
+    {
+      crud.update( c, ctx );
+    }
+    else if( row.getBindings().isForDelete() )
+    {
+      crud.delete( c, ctx );
+    }
+    else
+    {
+      throw new SQLException( "Unexpected bindings kind, neither of insert/update/delete" );
+    }
+    patchUnresolvedDeps( unresolvedDeps.get( row ) );
+  }
+
+  private void patchUnresolvedDeps( Set<FkDep> unresolvedDeps ) throws SQLException
+  {
+    for( FkDep dep : unresolvedDeps )
+    {
+      Object pkId = dep.pkRow.getBindings().getHeldValue( dep.pkName );
+      if( pkId == null )
+      {
+        throw new SQLException( "pk value is null" );
+      }
+      dep.fkRow.getBindings().holdValue( dep.fkName, pkId );
+    }
+  }
+
+  private void doFkDependenciesFirst( Connection c, TableRow row, Map<TableRow, Set<FkDep>> unresolvedDeps, Set<TableRow> visited ) throws SQLException
+  {
+    for( Map.Entry<String, Object> entry : row.getBindings().entrySet() )
+    {
+      Object value = entry.getValue();
+      if( value instanceof TableRow )
+      {
+        TableRow pkTableRow = (TableRow)value;
+        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, pkTableRow.tableInfo().getPkCols().iterator().next() );
+
+        doCrud( c, pkTableRow, unresolvedDeps, visited );
+
+        // patch fk
+        Object pkId = pkTableRow.getBindings().getHeldValue( fkDep.pkName );
+        if( pkId != null )
+        {
+          row.getBindings().holdValue( fkDep.fkName, pkId );
+        }
+        else
+        {
+          unresolvedDeps.computeIfAbsent( pkTableRow, __ -> new LinkedHashSet<>() )
+            .add( fkDep );
+        }
+      }
+    }
+  }
+
+  private static class FkDep
+  {
+    final TableRow fkRow;
+    final String fkName;
+    final TableRow pkRow;
+    final String pkName;
+
+    public FkDep( TableRow fkRow, String fkName, TableRow pkRow, String pkName )
+    {
+      this.fkRow = fkRow;
+      this.fkName = fkName;
+      this.pkRow = pkRow;
+      this.pkName = pkName;
     }
   }
 }

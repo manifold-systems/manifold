@@ -27,6 +27,6 @@ public interface SchemaColumn extends Column
   boolean isAutoIncrement();
   boolean isGenerated();
   String getDefaultValue();
-  Column getForeignKey();
+  SchemaColumn getForeignKey();
   int getNumPrecRadix();
 }

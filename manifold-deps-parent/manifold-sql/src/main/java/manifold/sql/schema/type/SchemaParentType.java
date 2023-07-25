@@ -370,6 +370,24 @@ class SchemaParentType
       setter.body( "getBindings().put(\"$colName\", ${'$'}value);" );
       addActualNameAnnotation( setter, name, true );
       srcInterface.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
+
+      SchemaColumn pkCol = col.getForeignKey();
+      if( pkCol != null && pkCol.isNonNullUniqueId() )
+      {
+        // add setXxx(Xxx) to set a foreign key id from a table instance
+        // if the table instance's pk is null, the table instance is not yet inserted, as a consequence the fk id value
+        // is temporarily set to the table instance where the TxScope will make that work by inserting the table instance
+        // first
+
+        String tableFqn = getTableFqn( pkCol.getTable() );
+        SrcSetProperty fkSetter = new SrcSetProperty( propName, new SrcType( tableFqn ) );
+        getter.modifiers( Flags.DEFAULT );
+        //noinspection unused
+        String pkPropName = makePascalCaseIdentifier( pkCol.getName(), true );
+        getter.body( "getBindings().put(\"$colName\", ${'$'}value.get$pkPropName() != null ? ${'$'}value.get$pkPropName() : ${'$'}value);" );
+        addActualNameAnnotation( setter, name, true );
+        srcInterface.addSetProperty( fkSetter ).modifiers( Modifier.PUBLIC );
+      }
     }
   }
 

@@ -34,12 +34,13 @@ public interface TxBindings extends Bindings
   void setDelete( boolean value );
 
   void holdValues( Bindings generatedKeys );
+  void holdValue( String name, Object value );
+  Object getHeldValue( String name );
   void dropHeldValues();
 
   void commit();
-
-  Set<Entry<String, Object>> changedEntrySet();
   Set<Entry<String, Object>> initialStateEntrySet();
+  Set<Entry<String, Object>> changedEntrySet();
 
   Object getInitialValue( String name );
 }
