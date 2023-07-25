@@ -84,6 +84,12 @@ public class SqlScriptParser
             new StringBuilder( _script ).insert( _pos-3, " [*]" ).toString() );
         }
       }
+      else if( word.equalsIgnoreCase( "SEPARATOR" ) )
+      {
+        // handle  SEPARATOR ';'  case
+        while( eatComments() || eatWhitespace() );
+        matchStringLiteral();
+      }
       matchNonWord();
     }
     String command = _script.substring( pos, isEof() ? _script.length() : _pos );
@@ -244,6 +250,26 @@ public class SqlScriptParser
       }
     }
     return sb.toString();
+  }
+
+  private String matchStringLiteral()
+  {
+    if( isEof() )
+    {
+      return "";
+    }
+
+    if( match( '\'' ) )
+    {
+      StringBuilder sb = new StringBuilder();
+      while( !match( '\'' ) )
+      {
+        sb.append( ch() );
+        next();
+      }
+      return sb.toString();
+    }
+    return null;
   }
 
   private String matchNonWord()

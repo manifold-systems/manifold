@@ -1,0 +1,5 @@
+{
+  "url": "jdbc:h2:file:${java.io.tmpdir}manifold/sql/db/h2-sakila",
+  "buildUrl": "jdbc:h2:file:${#provided /manifold/sql/db/h2-sakila.mv.db, h2}",
+  "schemaPackage": "manifold.sql.schema.simple"
+}
