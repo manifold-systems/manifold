@@ -204,6 +204,11 @@ class BasicTxScope implements OperableTxScope
 
   private void patchUnresolvedDeps( Set<FkDep> unresolvedDeps ) throws SQLException
   {
+    if( unresolvedDeps == null )
+    {
+      return;
+    }
+
     for( FkDep dep : unresolvedDeps )
     {
       Object pkId = dep.pkRow.getBindings().getHeldValue( dep.pkName );

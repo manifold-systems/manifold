@@ -361,15 +361,15 @@ class SchemaParentType
     propType.render( retType, 0, false ); // calling render to include array "[]"
     getter.body( "return ($retType)getBindings().get(\"$colName\");" );
     addActualNameAnnotation( getter, name, true );
-    srcInterface.addGetProperty( getter ).modifiers( Modifier.PUBLIC );
+    srcInterface.addGetProperty( getter );
 
     if( !col.isGenerated() && !col.isAutoIncrement() )
     {
-      SrcSetProperty setter = new SrcSetProperty( propName, propType );
-      setter.modifiers( Flags.DEFAULT );
+      SrcSetProperty setter = new SrcSetProperty( propName, propType )
+        .modifiers( Flags.DEFAULT );
       setter.body( "getBindings().put(\"$colName\", ${'$'}value);" );
       addActualNameAnnotation( setter, name, true );
-      srcInterface.addSetProperty( setter ).modifiers( Modifier.PUBLIC );
+      srcInterface.addSetProperty( setter );
 
       SchemaColumn pkCol = col.getForeignKey();
       if( pkCol != null && pkCol.isNonNullUniqueId() )
@@ -380,13 +380,15 @@ class SchemaParentType
         // first
 
         String tableFqn = getTableFqn( pkCol.getTable() );
-        SrcSetProperty fkSetter = new SrcSetProperty( propName, new SrcType( tableFqn ) );
-        getter.modifiers( Flags.DEFAULT );
+        SrcMethod fkSetter = new SrcMethod( srcInterface )
+          .modifiers( Flags.DEFAULT )
+          .name( "set" + propName )
+          .addParam( "${'$'}value", new SrcType( tableFqn ) );
         //noinspection unused
-        String pkPropName = makePascalCaseIdentifier( pkCol.getName(), true );
-        getter.body( "getBindings().put(\"$colName\", ${'$'}value.get$pkPropName() != null ? ${'$'}value.get$pkPropName() : ${'$'}value);" );
-        addActualNameAnnotation( setter, name, true );
-        srcInterface.addSetProperty( fkSetter ).modifiers( Modifier.PUBLIC );
+        String pkColName = pkCol.getName();
+        fkSetter.body( "getBindings().put(\"$colName\", (${'$'}value != null && ${'$'}value.getBindings().get(\"$pkColName\") != null) ? ${'$'}value.getBindings().get(\"$pkColName\") : ${'$'}value);" );
+        addActualNameAnnotation( fkSetter, name, true );
+        srcInterface.addMethod( fkSetter );
       }
     }
   }
