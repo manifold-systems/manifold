@@ -422,7 +422,8 @@ public interface ManAttr
     {
       if( ((tree.selected instanceof JCTree.JCIdent && isType( ((JCTree.JCIdent)tree.selected).sym )) ||
         (tree.selected instanceof JCTree.JCFieldAccess) && isType( ((JCTree.JCFieldAccess)tree.selected).sym )) &&
-        tree.sym instanceof Symbol.VarSymbol )
+        tree.sym instanceof Symbol.VarSymbol &&
+        tree.name.equals( tree.type.tsym.getSimpleName() ) )
       {
         getLogger().popDiagnosticHandler( deferredAttrDiagHandler );
         tree.sym = null;
