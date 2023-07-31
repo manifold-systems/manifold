@@ -41,9 +41,19 @@ public class SrcType extends SrcAnnotated<SrcType>
 
   public SrcType( Class type )
   {
-    this( new TypeNameParser(
-      (type.isPrimitive() && type.isArray()) ? type.getTypeName() : type.getName() ).parse() );
+    this( new TypeNameParser( isPrimitiveArray( type ) ? type.getTypeName() : type.getName() ).parse() );
     _isPrimitive = type.isPrimitive();
+  }
+
+  private static boolean isPrimitiveArray( Class type )
+  {
+    Class compType = null;
+    while( type.isArray() )
+    {
+      compType = type.getComponentType();
+      type = compType;
+    }
+    return compType != null && compType.isPrimitive();
   }
 
   public SrcType( String fqn )

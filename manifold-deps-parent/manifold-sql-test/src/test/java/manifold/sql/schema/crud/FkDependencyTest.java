@@ -22,6 +22,7 @@ import manifold.sql.rt.api.TxScope;
 import manifold.sql.rt.api.TxScopeProvider;
 import manifold.sql.schema.simple.H2Sakila;
 import manifold.sql.schema.simple.H2Sakila.*;
+import org.junit.Test;
 
 import java.sql.SQLException;
 
@@ -29,6 +30,7 @@ import static org.junit.Assert.*;
 
 public class FkDependencyTest extends H2SakilaTest
 {
+  @Test
   public void testOneDependency() throws SQLException
   {
     TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );

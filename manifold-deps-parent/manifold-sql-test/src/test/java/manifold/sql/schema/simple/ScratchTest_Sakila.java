@@ -28,8 +28,8 @@ public class ScratchTest_Sakila extends H2SakilaTest
   @Test
   public void testSomeInterestingQueries()
   {
-    Stores s = "[>Stores.sql:H2Sakila<] Select * From store";
     TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
+    Stores s = "[>Stores.sql:H2Sakila<] Select * From store";
     for( Store r : s.run( txScope ) )
     {
       System.out.println( r.display() );
@@ -67,5 +67,11 @@ public class ScratchTest_Sakila extends H2SakilaTest
     auto one = "[>.sql:H2Sakila<] select 1 from dual";
     auto run = one.run(txScope);
     run.forEach( r -> System.out.println(r.display()));
+
+
+    for( Staff staff: "[>.sql:H2Sakila<] select * from staff".run( txScope ) )
+    {
+      System.out.println( staff.display() );
+    }
   }
 }
