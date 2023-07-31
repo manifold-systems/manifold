@@ -210,7 +210,7 @@ public class JdbcQueryTable implements QueryTable
 
   private Map<SchemaTable, List<QueryColumn>> queryColumnsBySchemaTable()
   {
-    Map<SchemaTable, List<QueryColumn>> map = new HashMap<>();
+    Map<SchemaTable, List<QueryColumn>> map = new LinkedHashMap<>();
     for( QueryColumn col: getColumns().values() )
     {
       SchemaTable schemaTable = col.getSchemaTable();

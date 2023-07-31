@@ -17,12 +17,6 @@
       <artifactId>manifold-sql-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <dependency>
-      <groupId>systems.manifold</groupId>
-      <artifactId>manifold-sql-test-res</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
 <!--    <dependency>-->
 <!--      <groupId>org.xerial</groupId>-->
 <!--      <artifactId>sqlite-jdbc</artifactId>-->
@@ -62,12 +56,6 @@
               <artifactId>manifold-sql</artifactId>
               <version>${project.version}</version>
             </path>
-            <path>
-              <groupId>systems.manifold</groupId>
-              <artifactId>manifold-sql-test-res</artifactId>
-              <version>${project.version}</version>
-            </path>
-
             <!--            <path>-->
 <!--              <groupId>org.xerial</groupId>-->
 <!--              <artifactId>sqlite-jdbc</artifactId>-->

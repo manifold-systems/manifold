@@ -20,6 +20,7 @@ import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.api.util.JavacDiagnostic;
+import manifold.api.util.cache.FqnCache;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.json.rt.Json;
@@ -43,6 +44,7 @@ import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 public class SchemaModel extends AbstractSingleFileModel
 {
@@ -74,7 +76,9 @@ public class SchemaModel extends AbstractSingleFileModel
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
       bindings.put( "name", getFile().getBaseName() );
       bindings.put( "path", getFile().getPath().getFileSystemPathString() );
-      _dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
+      Function<String, FqnCache<IFile>> resByExt = ext ->
+        _schemaManifold.getModule().getPathCache().getExtensionCache( ext );
+      _dbConfig = new DbConfigImpl( resByExt, bindings, DbLocationProvider.Mode.CompileTime );
       validate();
       for( SchemaProvider sp : SchemaProvider.PROVIDERS.get() )
       {

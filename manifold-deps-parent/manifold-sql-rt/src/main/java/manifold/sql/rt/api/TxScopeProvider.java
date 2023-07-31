@@ -35,7 +35,7 @@ public interface TxScopeProvider
   LocklessLazyVar<TxScopeProvider> BY_PRIORITY =
     LocklessLazyVar.make( () ->
       PROVIDERS.get().stream().max( Comparator.comparingInt( TxScopeProvider::getPriority ) )
-        .orElseThrow( () -> new IllegalStateException() ) );
+        .orElseThrow( () -> new IllegalStateException( "No " + TxScopeProvider.class.getSimpleName() + "'s found." ) ) );
 
   static TxScope newScope( Class<? extends SchemaType> schemaClass )
   {

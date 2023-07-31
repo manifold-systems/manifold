@@ -46,8 +46,17 @@ public class JdbcSchemaForeignKey implements SchemaForeignKey
   private String assignName()
   {
     return _columns.size() == 1
-      ? _columns.get( 0 ).getName()
-      : _referencedTable.getName();
+      ? removeId( _columns.get( 0 ).getName() )
+      : _referencedTable.getName() + "_ref";
+  }
+
+  private String removeId( String name )
+  {
+    if( name.toLowerCase().endsWith( "_id" ) )
+    {
+      name = name.substring( 0, name.length() - "_id".length() ) + "_ref";
+    }
+    return name;
   }
 
   public String getName()

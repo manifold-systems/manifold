@@ -17,6 +17,7 @@
 package manifold.sql.rt.connection;
 
 import manifold.ext.rt.api.IBindingsBacked;
+import manifold.rt.api.util.Pair;
 import manifold.sql.rt.api.*;
 import manifold.util.ManExceptionUtil;
 
@@ -59,31 +60,39 @@ public class BasicCrudProvider implements CrudProvider
       int jdbcType = ctx.getAllColsWithJdbcType().get( entry.getKey() );
       ValueAccessor accessor = ValueAccessor.get( jdbcType );
       Object value = entry.getValue();
+      value = patchFk( value, entry.getKey(), ctx.getTable().getBindings() );
       accessor.setParameter( ps, ++i, value );
     }
   }
 
-//  private void fetchGeneratedColumns( String[] genColNames, PreparedStatement ps, DataBindings target ) throws SQLException
-//  {
-//    if( genColNames != null && genColNames.length > 0 )
-//    {
-//      try( ResultSet resultSet = ps.getGeneratedKeys() )
-//      {
-//        Result<IBindingsBacked> generatedKeys = new Result<>( resultSet, rowBindings -> () -> rowBindings );
-//        Iterator<IBindingsBacked> iterator = generatedKeys.iterator();
-//        if( !iterator.hasNext() )
-//        {
-//          throw new SQLException( "Failed to fetch generated keys: " + Arrays.toString( genColNames ) );
-//        }
-//        IBindingsBacked row = iterator.next();
-//        target.putAll( row.getBindings() );
-//        if( iterator.hasNext() )
-//        {
-//          throw new SQLException( "Should be only one row of generated key values for insert" );
-//        }
-//      }
-//    }
-//  }
+  private static Object patchFk( Object value, String colName, TxBindings bindings )
+  {
+    // We assign a Pair<TableRow, String> to an fk column when the tablerow is not yet inserted.
+    // Normally this is resolved by TxScope commit logic, ordering inserts according to fk dependencies, however if there
+    // is a cycle, the Pair value remains. In that case, if the fk is not nullable, we must assign a temporary value here.
+    // The TxScope commit logic resolves the actual fk value.
+
+    if( value instanceof Pair )
+    {
+      if( !(((Pair<?, ?>)value).getFirst() instanceof TableRow) )
+      {
+        throw new IllegalStateException( "Expecting a TableRow ref on fk: " + colName );
+      }
+
+      Object heldFkValue = bindings.getHeldValue( colName );
+      if( heldFkValue != null )
+      {
+        // value obtained via ordered inserts from TxScope
+        value = heldFkValue;
+      }
+      else
+      {
+        // temporary foreign key value for deferred constraint, to avoid NOT NULL enforcement that is not deferred
+        value = 0;
+      }
+    }
+    return value;
+  }
 
   private String makeInsertStmt( String ddlTableName, TableRow table )
   {

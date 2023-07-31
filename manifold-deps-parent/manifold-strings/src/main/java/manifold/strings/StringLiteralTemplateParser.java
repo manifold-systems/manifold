@@ -55,7 +55,7 @@ public class StringLiteralTemplateParser
   private static boolean isFilterFromTemplateParsing( String stringValue )
   {
     // don't allow string templates in fragments e.g., interferes with graphql and awkward to use @DisableStringLiteralTemplates
-    return stringValue.startsWith( FragmentProcessor.FRAGMENT_START ) ||
+    return stringValue.trim().startsWith( FragmentProcessor.FRAGMENT_START ) ||
            stringValue.startsWith( '"' + FragmentProcessor.FRAGMENT_START ) ||
            stringValue.startsWith( "\"\"\"" ) && stringValue.contains( FragmentProcessor.FRAGMENT_START );
   }

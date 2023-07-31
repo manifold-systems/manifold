@@ -56,6 +56,10 @@ public class DecimalValueAccessor implements ValueAccessor
     {
       ps.setBigDecimal( pos, (BigDecimal)value );
     }
+    else if( value instanceof Number )
+    {
+      ps.setBigDecimal( pos, BigDecimal.valueOf( ((Number)value).doubleValue() ) );
+    }
     else
     {
       ps.setObject( pos, value, getJdbcType() );

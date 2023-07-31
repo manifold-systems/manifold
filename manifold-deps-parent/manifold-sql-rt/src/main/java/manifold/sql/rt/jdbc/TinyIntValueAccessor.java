@@ -52,9 +52,9 @@ public class TinyIntValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Byte )
+    else if( value instanceof Number )
     {
-      ps.setByte( pos, (byte)value );
+      ps.setByte( pos, ((Number)value).byteValue() );
     }
     else
     {

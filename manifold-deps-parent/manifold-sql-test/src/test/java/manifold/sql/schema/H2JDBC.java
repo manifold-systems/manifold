@@ -83,7 +83,7 @@ public class H2JDBC
         }
       }
 //      Statement stmt = c.createStatement();
-//      try( Reader reader = new InputStreamReader( H2JDBC.class.getResourceAsStream( "/samples/h2/Sales.sql" ) ) )
+//      try( Reader reader = new InputStreamReader( H2JDBC.class.getResourceAsStream( "/samples/h2/h2-sales-ddl.sql" ) ) )
 //      {
 //        String script = StreamUtil.getContent( reader );
 //        List<String> commands = SqlScriptParser.getCommands( script );

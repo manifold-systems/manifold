@@ -981,7 +981,7 @@ public class ManAttr_8 extends Attr implements ManAttr
    */
   public void visitLiteral( JCTree.JCLiteral tree )
   {
-    if( tree.typetag == CLASS && tree.value.toString().startsWith( "[>" ) )
+    if( tree.typetag == CLASS && tree.value.toString().startsWith( FragmentProcessor.FRAGMENT_START ) )
     {
       Type type = getFragmentValueType( tree );
       if( type != null )

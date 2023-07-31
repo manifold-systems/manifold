@@ -17,57 +17,18 @@
 package manifold.sql.schema.simple;
 
 import manifold.ext.rt.api.auto;
-import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.H2SalesTest;
 import manifold.sql.queries.Foo;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.rt.api.TxScopeProvider;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import org.junit.*;
 
 import manifold.sql.schema.simple.H2Sales.*;
 
-import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static org.junit.Assert.*;
 
-public class ScratchTest
+public class ScratchTest extends H2SalesTest
 {
-  private static final String DB_RESOURCE = "/manifold/sql/db/Sales.mv.db";
-
-  @BeforeClass
-  public static void setup()
-  {
-    // copy database to temp dir, the url in DbConfig uses it from there
-    File tempDbFile = makeTempFile( DB_RESOURCE );
-    try( InputStream in = ScratchTest.class.getResourceAsStream( DB_RESOURCE );
-         FileOutputStream out = new FileOutputStream( tempDbFile ) )
-    {
-      StreamUtil.copy( in, out );
-    }
-    catch( IOException e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  @AfterClass
-  public static void cleanup()
-  {
-    // close db connections
-    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
-    ConnectionProvider.PROVIDERS.clear();
-
-    // delete temp db
-    //noinspection ResultOfMethodCallIgnored
-    makeTempFile( DB_RESOURCE ).delete();
-  }
-
   @Test
   public void testSimple()
   {
@@ -76,8 +37,8 @@ public class ScratchTest
     for( PurchaseOrder po : Foo.run( txScope ) )
     {
       // just make sure the results can be navigated
-      assertNotNull( po.getId() + " " + po.getCustomerId() + " " + po.getOrderDate() );
-      sb.append( po.getId() + " " + po.getCustomerId() + " " + po.getOrderDate() );
+      assertNotNull( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
+      sb.append( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
     }
     assertTrue( sb.length() > 0 );
   }
@@ -92,7 +53,7 @@ public class ScratchTest
     TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
     for( PurchaseOrder po : MyQuery.run( txScope, 2L ) )
     {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
+      actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
     String expected =
       "1,2,2023-11-10\n" +
@@ -113,7 +74,7 @@ public class ScratchTest
     TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
     for( PurchaseOrder po : query.run( txScope, 2L ) )
     {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
+      actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
     assertEquals( expected, actual.toString() );
   }
@@ -143,7 +104,7 @@ public class ScratchTest
     for( auto row : query.run( binder2, 2L ) )
     {
       actual.append( row.getPurchaseOrder().getId() ).append( "," )
-        .append( row.getPurchaseOrder().getCustomerId() ).append( "," )
+        .append( row.getPurchaseOrder().getCustomerRef().getId() ).append( "," )
         .append( row.getPurchaseOrder().getOrderDate() ).append( "," )
         .append( row.getName() ).append( "\n" );
     }

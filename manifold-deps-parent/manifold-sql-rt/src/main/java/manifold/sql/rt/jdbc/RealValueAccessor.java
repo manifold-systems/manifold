@@ -52,9 +52,9 @@ public class RealValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Float )
+    else if( value instanceof Number )
     {
-      ps.setFloat( pos, (float)value );
+      ps.setFloat( pos, ((Number)value).floatValue() );
     }
     else
     {

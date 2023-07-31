@@ -20,9 +20,6 @@ import manifold.ext.rt.api.IBindingsBacked;
 
 public interface SchemaBuilder<T extends TableRow> extends IBindingsBacked
 {
-  T build();
-
-  @Override
-  TxBindings getBindings();
+  T build( TxScope txScope );
 }
 

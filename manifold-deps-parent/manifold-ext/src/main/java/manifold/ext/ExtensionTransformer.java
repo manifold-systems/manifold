@@ -1225,7 +1225,7 @@ public class ExtensionTransformer extends TreeTranslator
   private JCTree replaceStringLiteral( JCTree.JCLiteral tree )
   {
     String literal = (String)tree.getValue();
-    if( !literal.contains( FragmentProcessor.FRAGMENT_START ) ||
+    if( !literal.trim().startsWith( FragmentProcessor.FRAGMENT_START ) ||
       !literal.contains( FragmentProcessor.FRAGMENT_END ) )
     {
       return tree;

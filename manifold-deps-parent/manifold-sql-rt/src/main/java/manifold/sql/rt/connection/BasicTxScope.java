@@ -17,6 +17,7 @@
 package manifold.sql.rt.connection;
 
 import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.Pair;
 import manifold.sql.rt.api.*;
 
 import java.sql.Connection;
@@ -199,10 +200,15 @@ class BasicTxScope implements OperableTxScope
     {
       throw new SQLException( "Unexpected bindings kind, neither of insert/update/delete" );
     }
-    patchUnresolvedDeps( unresolvedDeps.get( row ) );
+    patchUnresolvedFkDeps( c, ctx, crud, unresolvedDeps.get( row ) );
   }
 
-  private void patchUnresolvedDeps( Set<FkDep> unresolvedDeps ) throws SQLException
+  /**
+   * Note, unresolved fk dependencies happen when there are fk cycles e.g., Foo has fk on Bar's pk, Bar has fk on Foo's pk
+   * If the database platform supports Deferrable constraints, the fk constraints are not enforced until commit ("Initially Deferred"),
+   * which enables the handling of cycles by allowing a null value for an fk before commit.
+   */
+  private void patchUnresolvedFkDeps( Connection c, UpdateContext<TableRow> ctx, CrudProvider crud, Set<FkDep> unresolvedDeps ) throws SQLException
   {
     if( unresolvedDeps == null )
     {
@@ -216,7 +222,22 @@ class BasicTxScope implements OperableTxScope
       {
         throw new SQLException( "pk value is null" );
       }
-      dep.fkRow.getBindings().holdValue( dep.fkName, pkId );
+
+      // update the fk column that was null initially due to fk cycle
+      TxBindings fkBindings = dep.fkRow.getBindings();
+      Object priorPkId = fkBindings.put( dep.fkName, pkId );
+      try
+      {
+        // re-update with same values + fkId
+        crud.update( c, ctx );
+      }
+      finally
+      {
+        // put old value back into changes (s/b Pair<TableRow, String>)
+        fkBindings.put( dep.fkName, priorPkId );
+        // put id into hold values because it should not take effect until commit
+        fkBindings.holdValue( dep.fkName, pkId );
+      }
     }
   }
 
@@ -225,10 +246,12 @@ class BasicTxScope implements OperableTxScope
     for( Map.Entry<String, Object> entry : row.getBindings().entrySet() )
     {
       Object value = entry.getValue();
-      if( value instanceof TableRow )
+      if( value instanceof Pair )
       {
-        TableRow pkTableRow = (TableRow)value;
-        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, pkTableRow.tableInfo().getPkCols().iterator().next() );
+        //noinspection unchecked
+        Pair<TableRow, String> pair = (Pair)value;
+        TableRow pkTableRow = pair.getFirst();
+        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, pair.getSecond() );
 
         doCrud( c, pkTableRow, unresolvedDeps, visited );
 
@@ -236,10 +259,14 @@ class BasicTxScope implements OperableTxScope
         Object pkId = pkTableRow.getBindings().getHeldValue( fkDep.pkName );
         if( pkId != null )
         {
+          // pkTableRow was inserted, assign fk value now, this is assigned as an INSERT param in BasicCrudProvider when
+          // the value of the param is a ref: Pair<TableRow, String>
           row.getBindings().holdValue( fkDep.fkName, pkId );
         }
         else
         {
+          // pkTableRow not inserted yet, presumably due to a fk cycle, assign a temp fk value as INSERT param and resolve
+          // the fk assignment later
           unresolvedDeps.computeIfAbsent( pkTableRow, __ -> new LinkedHashSet<>() )
             .add( fkDep );
         }

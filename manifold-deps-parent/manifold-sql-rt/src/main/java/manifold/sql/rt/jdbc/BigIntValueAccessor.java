@@ -52,9 +52,9 @@ public class BigIntValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Long )
+    else if( value instanceof Number )
     {
-      ps.setLong( pos, (long)value );
+      ps.setLong( pos, ((Number)value).longValue() );
     }
     else
     {

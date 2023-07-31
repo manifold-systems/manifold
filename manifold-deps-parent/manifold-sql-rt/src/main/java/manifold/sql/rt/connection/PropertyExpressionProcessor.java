@@ -16,6 +16,8 @@
 
 package manifold.sql.rt.connection;
 
+import manifold.api.fs.IFile;
+import manifold.api.util.cache.FqnCache;
 import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.DbLocationProvider.Mode;
 
@@ -25,6 +27,7 @@ import java.util.StringTokenizer;
 import java.util.function.Function;
 
 import static manifold.sql.rt.api.DbLocationProvider.PROVIDED;
+import static manifold.sql.rt.api.DbLocationProvider.UNHANDLED;
 
 /**
  * Substitutes {@code ${<property-ref>}} expressions with corresponding values from system properties, environment vars,
@@ -38,7 +41,7 @@ import static manifold.sql.rt.api.DbLocationProvider.PROVIDED;
  */
 public class PropertyExpressionProcessor
 {
-  public static String process( String source, Mode mode, Function<String, String> exprHandler )
+  public static String process( Function<String, FqnCache<IFile>> resByExt, String source, Mode mode, Function<String, String> exprHandler )
   {
     if( source == null )
     {
@@ -51,7 +54,7 @@ public class PropertyExpressionProcessor
       if( end > 0 )
       {
         String expr = source.substring( start+2, end ).trim();
-        String value = eval( expr, mode, exprHandler );
+        String value = eval( resByExt, expr, mode, exprHandler );
         if( value != null )
         {
           source = new StringBuilder( source ).replace( start, end+1, value ).toString();
@@ -70,9 +73,9 @@ public class PropertyExpressionProcessor
     return source;
   }
 
-  private static String eval( String expr, Mode mode, Function<String, String> exprHandler )
+  private static String eval( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode, Function<String, String> exprHandler )
   {
-    String value = evalProvided( expr, mode );
+    String value = evalProvided( resByExt, expr, mode );
     if( value != null )
     {
       return value;
@@ -102,15 +105,23 @@ public class PropertyExpressionProcessor
     return value;
   }
 
-  private static String evalProvided( String expr, Mode mode )
+  private static String evalProvided( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode )
   {
-    if( !expr.startsWith( PROVIDED + ' ' ) )
+    if( !expr.startsWith( PROVIDED ) )
     {
       return null;
     }
 
+    int sp = expr.indexOf( ' ', 1 );
+    if( sp < 0 )
+    {
+      return null;
+    }
+
+    String tag = expr.substring( 1, sp );
+
     List<String> args = new ArrayList<>();
-    String rest = expr.substring( PROVIDED.length() ).trim();
+    String rest = expr.substring( sp + 1 ).trim();
     for( StringTokenizer tokenizer = new StringTokenizer( rest, "," ); tokenizer.hasMoreTokens(); )
     {
       String arg = tokenizer.nextToken().trim();
@@ -119,10 +130,10 @@ public class PropertyExpressionProcessor
     String[] argsArray = args.toArray( new String[0] );
     for( DbLocationProvider p : DbLocationProvider.PROVIDERS.get() )
     {
-      String location = p.getLocation( mode, argsArray );
-      if( location != null )
+      Object location = p.getLocation( resByExt, mode, tag, argsArray );
+      if( location != UNHANDLED )
       {
-        return location;
+        return String.valueOf( location );
       }
     }
     return null;

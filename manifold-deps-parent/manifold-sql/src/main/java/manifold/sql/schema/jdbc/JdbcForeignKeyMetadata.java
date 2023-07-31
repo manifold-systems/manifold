@@ -21,10 +21,7 @@ import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class JdbcForeignKeyMetadata
 {
@@ -39,8 +36,8 @@ public class JdbcForeignKeyMetadata
 
   public Map<SchemaTable, List<SchemaForeignKey>> resolve( JdbcSchema schema )
   {
-    Map<SchemaTable, List<SchemaForeignKey>> foreignKeys = new HashMap<>();
-    Map<Pair<String, SchemaTable>, List<SchemaColumn>> foreignKeyColumns = new HashMap<>();
+    Map<SchemaTable, List<SchemaForeignKey>> foreignKeys = new LinkedHashMap<>();
+    Map<Pair<String, SchemaTable>, List<SchemaColumn>> foreignKeyColumns = new LinkedHashMap<>();
     for( KeyPart part : _keyParts )
     {
       SchemaColumn fromColumn = _table.getColumn( part.getFromColName() );

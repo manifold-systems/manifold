@@ -52,9 +52,9 @@ public class IntegerValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Integer )
+    else if( value instanceof Number )
     {
-      ps.setInt( pos, (int)value );
+      ps.setInt( pos, ((Number)value).intValue() );
     }
     else
     {

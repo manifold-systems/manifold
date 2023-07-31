@@ -19,11 +19,12 @@ package manifold.sql.schema.type;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
+import manifold.api.util.cache.FqnCache;
+import manifold.internal.javac.JavacPlugin;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.connection.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
@@ -34,6 +35,10 @@ import javax.tools.JavaFileObject;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
+import java.util.function.Function;
+
+import static manifold.sql.rt.api.DbLocationProvider.Mode.CompileTime;
+import static manifold.sql.rt.api.DbLocationProvider.Mode.DesignTime;
 
 public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 {
@@ -53,8 +58,10 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 
     try( Reader reader = new InputStreamReader( file.openInputStream() ) )
     {
+      Function<String, FqnCache<IFile>> resByExt = ext ->
+        getModule().getPathCache().getExtensionCache( ext );
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
-      DbConfigImpl dbConfig = new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
+      DbConfigImpl dbConfig = new DbConfigImpl( resByExt, bindings, JavacPlugin.instance() != null ? CompileTime : DesignTime );
       String schemaPackage = dbConfig.getSchemaPackage();
       if( schemaPackage == null )
       {

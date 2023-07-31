@@ -99,7 +99,7 @@ public class DbConfigFinder
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
       bindings.put( "name", configName );
-      return new DbConfigImpl( bindings, DbLocationProvider.Mode.Runtime );
+      return new DbConfigImpl( null, bindings, DbLocationProvider.Mode.Runtime );
     }
     catch( Exception e )
     {

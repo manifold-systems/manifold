@@ -17,140 +17,76 @@
 package manifold.sql.schema.crud;
 
 import manifold.ext.rt.api.auto;
-import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.H2SakilaTest;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.rt.api.TxScopeProvider;
-import manifold.sql.rt.api.OperableTxScope;
-import manifold.sql.schema.simple.ScratchTest;
 import org.junit.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
-import java.time.LocalDate;
 
-import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static org.junit.Assert.*;
 
-import manifold.sql.schema.simple.H2Sales;
-import manifold.sql.schema.simple.H2Sales.*;
+import manifold.sql.schema.simple.H2Sakila;
+import manifold.sql.schema.simple.H2Sakila.*;
 
-public class CrudTest
+public class CrudTest extends H2SakilaTest
 {
-  private static final String DB_RESOURCE = "/manifold/sql/db/Sales.mv.db";
-
-  @Before
-  public void setup()
-  {
-    // copy database to temp dir, the url in DbConfig uses it from there
-    File tempDbFile = makeTempFile( DB_RESOURCE );
-    try( InputStream in = ScratchTest.class.getResourceAsStream( DB_RESOURCE );
-         FileOutputStream out = new FileOutputStream( tempDbFile ) )
-    {
-      StreamUtil.copy( in, out );
-    }
-    catch( IOException e )
-    {
-      throw new RuntimeException( e );
-    }
-  }
-
-  @After
-  public void cleanup()
-  {
-    // close db connections
-    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
-    ConnectionProvider.PROVIDERS.clear();
-
-    // delete temp db
-    //noinspection ResultOfMethodCallIgnored
-    makeTempFile( DB_RESOURCE ).delete();
-  }
-
   @Test
   public void testCreate() throws SQLException
   {
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    PurchaseOrder po = PurchaseOrder.create( txScope );
-    po.setCustomerId( 2L );
-    po.setOrderDate( LocalDate.now() );
+    TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
 
+    Country hi = Country.create(txScope, "mycountry");
     txScope.commit();
-    assertTrue( po.getId() > 0 );
+    // test that country_id was assigned after the insert
+    assertTrue( hi.getCountryId() > 0 );
+
+    auto row = "[>.sql:H2Sakila<] SELECT country_id FROM Country where country = 'mycountry'"
+      .run( txScope ).iterator().next();
+    assertEquals( row.getCountryId(), hi.getCountryId() );
   }
 
   @Test
-  public void testRead()
+  public void testRead() throws SQLException
   {
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    PurchaseOrder po = PurchaseOrder.read( txScope, 1L );
+    TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
+    Country hi = Country.create(txScope, "mycountry");
+    txScope.commit();
 
-    String expected = "1, 2, 2023-11-10";
-    assertEquals( expected, po.display() );
+    Country readHi = Country.read( txScope, hi.getCountryId() );
+    assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
   @Test
   public void testUpdate() throws SQLException
   {
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    PurchaseOrder po = PurchaseOrder.read( txScope, 1L );
-    assertEquals( 2L, (long)po.getCustomerId() );
-    po.setCustomerId( 1L );
-    LocalDate now = LocalDate.now();
-    po.setOrderDate( now );
-
+    TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
+    Country hi = Country.create(txScope, "mycountry");
     txScope.commit();
-    String expected = "1, 1, " + now;
-    assertEquals( expected, po.display() );
+    // test that country_id was assigned after the insert
+    assertTrue( hi.getCountryId() > 0 );
+
+    hi.setCountry( "mycountry2" );
+    txScope.commit();
+
+    Country readHi = Country.read( txScope, hi.getCountryId() );
+    assertEquals( "mycountry2", hi.getCountry() );
   }
 
   @Test
   public void testDelete() throws SQLException
   {
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    Item po = Item.read( txScope, 10L );
-    po.delete( true );
+    TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
+    Country hi = Country.create(txScope, "mycountry");
     txScope.commit();
-    po = Item.read( txScope, 10L );
-    assertNull( po );
-  }
+    // test that country_id was assigned after the insert
+    assertTrue( hi.getCountryId() > 0 );
 
-  @Test
-  public void testUpdateFromQuery() throws SQLException
-  {
-    auto query = "[>.sql<] Select * From purchase_order Where id = :id";
-    StringBuilder actual = new StringBuilder();
-    LocalDate now = LocalDate.now();
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( PurchaseOrder po : query.run( txScope, 1L ) )
-    {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
-      Customer customer = po.fetchCustomerId();
-      System.out.println( customer.display() );
+    long countryId = hi.getCountryId();
 
-      // make changes
-      po.setOrderDate( now );
-    }
-
-    String expected = "1,2,2023-11-10\n";
-    assertEquals( expected, actual.toString() );
-
-    // commit changes
+    hi.delete( true );
     txScope.commit();
-    assertTrue( ((OperableTxScope)txScope).getRows().isEmpty() );
-
-    // requery and test that changes were committed
-    actual = new StringBuilder();
-    for( PurchaseOrder po : query.run( txScope, 1L ) )
-    {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
-    }
-
-    expected =
-      "1,2," + now + "\n";
-    assertEquals( expected, actual.toString() );
+    Country readHi = Country.read( txScope, countryId );
+    assertNull( readHi );
   }
 }

@@ -33,7 +33,7 @@ public class SQLiteJdbc_FromFile
     try
     {
       File tempDbFile;
-      try( InputStream stream = SQLiteJdbc_FromFile.class.getResourceAsStream( "/samples/sqlite/sakila-sqlite.db" ) )
+      try( InputStream stream = SQLiteJdbc_FromFile.class.getResourceAsStream( "/samples/sqlite/sqlite-sakila.db" ) )
       {
         tempDbFile = File.createTempFile( "sakila-sqlite-", ".db" );
         try( OutputStream out = new FileOutputStream( tempDbFile ) )

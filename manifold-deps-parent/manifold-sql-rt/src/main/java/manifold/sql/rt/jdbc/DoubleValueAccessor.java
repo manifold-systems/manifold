@@ -52,9 +52,9 @@ public class DoubleValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Double )
+    else if( value instanceof Number )
     {
-      ps.setDouble( pos, (double)value );
+      ps.setDouble( pos, ((Number)value).doubleValue() );
     }
     else
     {

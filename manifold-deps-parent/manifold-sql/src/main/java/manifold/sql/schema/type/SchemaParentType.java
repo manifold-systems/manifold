@@ -21,6 +21,7 @@ import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
+import manifold.rt.api.util.Pair;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
@@ -81,6 +82,7 @@ class SchemaParentType
       .addInterface( SchemaType.class );
     addImports( srcClass );
     addInnerTypes( srcClass );
+    addFkColAssignMethod( srcClass );
     srcClass.render( sb, 0 );
   }
 
@@ -107,25 +109,33 @@ class SchemaParentType
     addActualNameAnnotation( srcClass, table.getName(), false );
     addCreateMethod( srcClass, table );
     addReadMethod( srcClass, table );
-    addDeleteMethod( srcClass, table );
+    addDeleteMethod( srcClass );
     addBuilderType( srcClass, table );
     addBuilderMethod( srcClass, table );
     addTableInfoMethod( srcClass, table );
 
-    for( SchemaColumn member: table.getColumns().values() )
-    {
-      addProperty( srcClass, member );
-    }
-
-    for( List<SchemaForeignKey> fkEntry : table.getForeignKeys().values() )
-    {
-      for( SchemaForeignKey fk : fkEntry )
-      {
-        addFkFetcher( srcClass, fk );
-      }
-    }
+    addProperties( table, srcClass );
 
     enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addProperties( SchemaTable table, SrcLinkedClass srcClass )
+  {
+    for( Map.Entry<SchemaTable, List<SchemaForeignKey>> entry : table.getForeignKeys().entrySet() )
+    {
+      List<SchemaForeignKey> fk = entry.getValue();
+      for( SchemaForeignKey sfk : fk )
+      {
+        addFkProperty( srcClass, sfk );
+      }
+    }
+    for( SchemaColumn col: table.getColumns().values() )
+    {
+      if( col.getForeignKey() == null )
+      {
+        addProperty( srcClass, col );
+      }
+    }
   }
 
   private void addTableInfoMethod( SrcLinkedClass srcClass, SchemaTable table )
@@ -180,7 +190,6 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "builder" )
-      .addParam( "txScope", TxScope.class )
       .returns( new SrcType( "Builder" ) );
     addRequiredParameters( srcClass, table, method );
     srcClass.addMethod( method );
@@ -189,24 +198,10 @@ class SchemaParentType
     sb.append( "return new Builder() {\n" );
     sb.append( "        Bindings _bindings = new DataBindings(new ConcurrentHashMap<>());\n" );
     sb.append( "        {\n" );
-    int i = 0;
-    for( SchemaColumn col: table.getColumns().values() )
-    {
-      if( isRequired( col ) )
-      {
-        //noinspection unused
-        String colName = col.getName();
-        SrcParameter param = method.getParameters().get( i++ );
-        //noinspection unused
-        String paramName = param.getSimpleName();
-        sb.append( "          _bindings.put(\"$colName\", $paramName);\n" );
-      }
-    }
-    sb.append( "          _bindings = new BasicTxBindings(txScope, TxKind.Insert, _bindings);\n" );
+    initFromParameters( table, sb, "_bindings" );
     sb.append( "        }\n" );
-
-    sb.append( "        @Override public TxBindings getBindings() { return (TxBindings)_bindings; }\n" );
-
+    
+    sb.append( "        @Override public Bindings getBindings() { return _bindings; }\n" );
     sb.append( "      };" );
     method.body( sb.toString() );
   }
@@ -224,19 +219,7 @@ class SchemaParentType
 
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings args = new DataBindings(new ConcurrentHashMap<>());\n" );
-    int i = 0;
-    for( SchemaColumn col: table.getColumns().values() )
-    {
-      if( isRequired( col ) )
-      {
-        //noinspection unused
-        String colName = col.getName();
-        SrcParameter param = method.getParameters().get( i++ );
-        //noinspection unused
-        String paramName = param.getSimpleName();
-        sb.append( "      args.put(\"$colName\", $paramName);\n" );
-      }
-    }
+    initFromParameters( table, sb, "args" );
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n");
     sb.append( "      $tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return bindings; } };\n" );
     sb.append( "      tableRow.getBindings().setOwner(tableRow);\n" );
@@ -245,11 +228,66 @@ class SchemaParentType
     method.body( sb.toString() );
   }
 
-  private void addRequiredParameters( SrcLinkedClass owner, SchemaTable table, AbstractSrcMethod method )
+  private void initFromParameters( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar )
   {
+    Set<SchemaColumn> fkCovered = new HashSet<>();
+    for( Map.Entry<SchemaTable, List<SchemaForeignKey>> entry : table.getForeignKeys().entrySet() )
+    {
+      List<SchemaForeignKey> fk = entry.getValue();
+      for( SchemaForeignKey sfk : fk )
+      {
+        List<SchemaColumn> fkCols = sfk.getColumns();
+        if( fkCols.stream().anyMatch( c -> isRequired( c ) ) )
+        {
+          //noinspection unused
+          String fkParamName = makePascalCaseIdentifier( sfk.getName(), false );
+          for( SchemaColumn fkCol : fkCols )
+          {
+            //noinspection unused
+            String colName = fkCol.getName();
+            //noinspection unused
+            String keyColName = fkCol.getForeignKey().getName();
+            sb.append( "assignFkBindingValues($fkParamName, \"$fkParamName\", \"$keyColName\", \"$colName\", $bindingsVar);" );
+          }
+          fkCovered.addAll( fkCols );
+        }
+      }
+    }
     for( SchemaColumn col: table.getColumns().values() )
     {
-      if( isRequired( col ) )
+      if( isRequired( col ) && !fkCovered.contains( col ) )
+      {
+        //noinspection unused
+        String colName = col.getName();
+        //noinspection unused
+        String paramName = makePascalCaseIdentifier( col.getName(), false );
+        sb.append( "$bindingsVar.put(\"$colName\", $paramName);\n" );
+      }
+    }
+  }
+
+  private void addRequiredParameters( SrcLinkedClass owner, SchemaTable table, AbstractSrcMethod method )
+  {
+    Set<SchemaColumn> fkCovered = new HashSet<>();
+    for( Map.Entry<SchemaTable, List<SchemaForeignKey>> entry : table.getForeignKeys().entrySet() )
+    {
+      List<SchemaForeignKey> fk = entry.getValue();
+      for( SchemaForeignKey sfk : fk )
+      {
+        List<SchemaColumn> fkCols = sfk.getColumns();
+        if( fkCols.stream().anyMatch( c -> isRequired( c ) ) )
+        {
+          fkCovered.addAll( fkCols );
+          String tableFqn = getTableFqn( sfk.getReferencedTable() );
+          SrcType srcType = new SrcType( tableFqn );
+          method.addParam( makePascalCaseIdentifier( sfk.getName(), false ), srcType );
+        }
+      }
+    }
+
+    for( SchemaColumn col: table.getColumns().values() )
+    {
+      if( isRequired( col ) && !fkCovered.contains( col ) )
       {
         SrcType srcType = makeSrcType( owner, col.getType(), false, true );
         method.addParam( makePascalCaseIdentifier( col.getName(), false ), srcType );
@@ -273,14 +311,16 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcInterface )
       .modifiers( Flags.DEFAULT )
       .name( "build" )
+      .addParam( "txScope", TxScope.class )
       .returns( new SrcType( tableName ) );
     srcInterface.addMethod( method );
 
     method.body(
-      "$tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return Builder.this.getBindings(); } };\n" +
-        "    tableRow.getBindings().setOwner(tableRow);\n" +
-        "    ((OperableTxScope)tableRow.getBindings().getTxScope()).addRow(tableRow);\n" +
-        "    return tableRow;" );
+        "BasicTxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, Builder.this.getBindings());\n" +
+        "$tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return bindings; } };\n" +
+        "tableRow.getBindings().setOwner(tableRow);\n" +
+        "((OperableTxScope)txScope).addRow(tableRow);\n" +
+        "return tableRow;" );
   }
 
   private void addWithMethods( SrcLinkedClass srcClass, SchemaTable table )
@@ -336,12 +376,77 @@ class SchemaParentType
     srcClass.addImport( CrudProvider.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( LinkedHashMap.class );
+    srcClass.addImport( Pair.class );
     srcClass.addImport( Map.class );
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
     srcClass.addImport( LocklessLazyVar.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
+  }
+
+  private void addFkProperty( SrcLinkedClass srcClass, SchemaForeignKey sfk )
+  {
+    SchemaTable table = sfk.getReferencedTable();
+    String tableFqn = getTableFqn( table );
+
+    SrcType type = new SrcType( tableFqn );
+    String name = sfk.getName();
+    String propName = makePascalCaseIdentifier( name, true );
+    SrcMethod fkFetchMethod = new SrcMethod( srcClass )
+      .name( "get" + propName )
+      .modifiers( Flags.DEFAULT )
+      .returns( type );
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    for( SchemaColumn col : sfk.getColumns() )
+    {
+      //noinspection unused
+      Column referencedCol = col.getForeignKey();
+      sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(\"${col.getName()}\"));\n" );
+    }
+
+    //noinspection unused
+    String jdbcParamTypes = getJdbcParamTypes( sfk.getColumns() );
+    //noinspection unused
+    String configName = _model.getDbConfig().getName();
+    sb.append( "    return CrudProvider.instance().read(" +
+      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
+      "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
+    fkFetchMethod.body( sb.toString() );
+    addActualNameAnnotation( fkFetchMethod, name, true );
+    srcClass.addMethod( fkFetchMethod );
+
+    SrcMethod fkSetter = new SrcMethod( srcClass )
+      .modifiers( Flags.DEFAULT )
+      .name( "set" + propName )
+      .addParam( "ref", new SrcType( tableFqn ) );
+    for( SchemaColumn fkCol : sfk.getColumns() )
+    {
+      //noinspection unused
+      String colName = fkCol.getName();
+      //noinspection unused
+      String keyColName = fkCol.getForeignKey().getName();
+      fkSetter.body( "assignFkBindingValues(ref, \"$propName\", \"$keyColName\", \"$colName\", getBindings());" );
+    }
+    addActualNameAnnotation( fkSetter, name, true );
+    srcClass.addMethod( fkSetter );
+  }
+
+  private void addFkColAssignMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PRIVATE | Modifier.STATIC )
+      .name( "assignFkBindingValues" )
+      .addParam( "ref", new SrcType( TableRow.class ) )
+      .addParam( "propName", new SrcType( String.class ) )
+      .addParam( "keyColName", new SrcType( String.class ) )
+      .addParam( "colName", new SrcType( String.class ) )
+      .addParam( "Bdings", new SrcType( Bindings.class ) );
+      method.body( "if(ref == null) throw new NullPointerException(\"Expecting non-null value for: \" + propName );\n" +
+        "Object kyColValue = ref.getBindings().get(keyColName);\n" +
+        "Bdings.put(colName, kyColValue != null ? kyColValue : new Pair<>(ref, keyColName));" );
+    srcClass.addMethod( method );
   }
 
   private void addProperty( SrcLinkedClass srcInterface, SchemaColumn col )
@@ -370,26 +475,6 @@ class SchemaParentType
       setter.body( "getBindings().put(\"$colName\", ${'$'}value);" );
       addActualNameAnnotation( setter, name, true );
       srcInterface.addSetProperty( setter );
-
-      SchemaColumn pkCol = col.getForeignKey();
-      if( pkCol != null && pkCol.isNonNullUniqueId() )
-      {
-        // add setXxx(Xxx) to set a foreign key id from a table instance
-        // if the table instance's pk is null, the table instance is not yet inserted, as a consequence the fk id value
-        // is temporarily set to the table instance where the TxScope will make that work by inserting the table instance
-        // first
-
-        String tableFqn = getTableFqn( pkCol.getTable() );
-        SrcMethod fkSetter = new SrcMethod( srcInterface )
-          .modifiers( Flags.DEFAULT )
-          .name( "set" + propName )
-          .addParam( "${'$'}value", new SrcType( tableFqn ) );
-        //noinspection unused
-        String pkColName = pkCol.getName();
-        fkSetter.body( "getBindings().put(\"$colName\", (${'$'}value != null && ${'$'}value.getBindings().get(\"$pkColName\") != null) ? ${'$'}value.getBindings().get(\"$pkColName\") : ${'$'}value);" );
-        addActualNameAnnotation( fkSetter, name, true );
-        srcInterface.addMethod( fkSetter );
-      }
     }
   }
 
@@ -447,7 +532,6 @@ class SchemaParentType
     }
     else
     {
-      int i = 0;
       for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
       {
         for( SchemaColumn col : entry.getValue() )
@@ -461,7 +545,7 @@ class SchemaParentType
     return Collections.emptyList();
   }
 
-  private void addDeleteMethod( SrcLinkedClass srcClass, SchemaTable table )
+  private void addDeleteMethod( SrcLinkedClass srcClass )
   {
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Flags.DEFAULT )
@@ -475,49 +559,6 @@ class SchemaParentType
   {
     //todo: add fetch<fk-to-this>List() method
     // Note, we have to reconcile changes to the the fk fields from referring table rows, any
-  }
-
-  private void addFkSetter( SrcLinkedClass srcClass, SchemaForeignKey fk )
-  {
-    //todo: add setter for foreign keys
-    //todo: if the fk is auto-generated/incremented and the set value is newly created, set the fk column value to the reference value
-    // then the TxScope can handle the setting of the actual id by inserting the fk reference first and then getting the id and assigning it as an on-hold value
-    // Also, must handle the case where the value is created, assigned to this fk, then deleted.
-  }
-  private void addFkFetcher( SrcLinkedClass srcClass, SchemaForeignKey fk )
-  {
-    //todo: if the fk is auto-generated/incremented and is set and is a newly created value, it will be assigned directly
-    // to the fk-id field, just return that here
-
-    SchemaTable table = fk.getReferencedTable();
-    String tableFqn = getTableFqn( table );
-
-    SrcType type = new SrcType( tableFqn );
-    String name = fk.getName();
-    String propName = makePascalCaseIdentifier( name, true );
-    SrcMethod fkFetchMethod = new SrcMethod( srcClass )
-      .name( "fetch" + propName )
-      .modifiers( Flags.DEFAULT )
-      .returns( type );
-    StringBuilder sb = new StringBuilder();
-    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
-    for( SchemaColumn col : fk.getColumns() )
-    {
-      //noinspection unused
-      Column referencedCol = col.getForeignKey();
-      sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(\"${col.getName()}\"));\n" );
-    }
-
-    //noinspection unused
-    String jdbcParamTypes = getJdbcParamTypes( fk.getColumns() );
-    //noinspection unused
-    String configName = _model.getDbConfig().getName();
-    sb.append( "    return CrudProvider.instance().read(" +
-      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
-      "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
-    fkFetchMethod.body( sb.toString() );
-    addActualNameAnnotation( fkFetchMethod, name, true );
-    srcClass.addMethod( fkFetchMethod );
   }
 
   private String getJdbcParamTypes( List<SchemaColumn> parameters )

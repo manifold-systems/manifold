@@ -20,9 +20,9 @@ public class FkFetchTest
 {
   //todo: first, make comprehensive sample db for tests, port mysql sakila + data to h2
 
-  // test fk fetch from table row
+  // test fk fetch from table row (these are getXxxRef() now)
 
-  // test fk fetch from query row
+  // test fk fetch from query row (these are getXxxRef() now)
 
-  // test fk fetch from selected table row from mixed query row
+  // test fk fetch from selected table row from mixed query row (these are getXxxRef() now)
 }

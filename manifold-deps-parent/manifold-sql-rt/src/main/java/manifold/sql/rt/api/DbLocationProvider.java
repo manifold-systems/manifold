@@ -16,15 +16,19 @@
 
 package manifold.sql.rt.api;
 
+import manifold.api.fs.IFile;
+import manifold.api.util.cache.FqnCache;
 import manifold.rt.api.util.ServiceUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 public interface DbLocationProvider
 {
-  String PROVIDED = "#provided";
+  String PROVIDED = "#";
+  Object UNHANDLED = new Object() {};
 
   LocklessLazyVar<Set<DbLocationProvider>> PROVIDERS =
     LocklessLazyVar.make( () -> {
@@ -33,7 +37,7 @@ public interface DbLocationProvider
       return registered;
     } );
 
-  enum Mode {CompileTime, Runtime, Unknown}
+  enum Mode {CompileTime, DesignTime, Runtime, Unknown}
 
-  String getLocation( Mode mode, String... args );
+  Object getLocation( Function<String, FqnCache<IFile>> resByExt, Mode mode, String tag, String... args );
 }

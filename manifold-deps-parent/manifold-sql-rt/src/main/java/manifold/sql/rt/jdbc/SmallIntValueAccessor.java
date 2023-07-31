@@ -52,9 +52,9 @@ public class SmallIntValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
-    else if( value instanceof Short )
+    else if( value instanceof Number )
     {
-      ps.setShort( pos, (short)value );
+      ps.setShort( pos, ((Number)value).shortValue() );
     }
     else
     {

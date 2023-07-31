@@ -108,9 +108,9 @@ public class FragmentProcessor
       return null;
     }
 
-    if( FRAGMENT_START.charAt( 0 ) == chars.charAt( index++ ) &&
-        FRAGMENT_START.charAt( 1 ) == chars.charAt( index++ ) )
+    if( chars.startsWith( FRAGMENT_START, index ) )
     {
+      index += FRAGMENT_START.length();
       index = skipSpaces( chars, index, end );
       String name;
       if( isString && index < end && chars.charAt( index ) == '.' )
@@ -144,10 +144,9 @@ public class FragmentProcessor
               index += (schema == null ? 0 : schema.length());
               index = skipSpaces( chars, index, end );
             }
-            if( index + 1 < end &&
-              FRAGMENT_END.charAt( 0 ) == chars.charAt( index++ ) &&
-              FRAGMENT_END.charAt( 1 ) == chars.charAt( index++ ) )
+            if( index + 1 < end && chars.startsWith( FRAGMENT_END, index ) )
             {
+              index += FRAGMENT_END.length();
               String content = chars.substring( index, end );
               name = isString ? handleAnonymousName( name, content ) : name;
               return new Fragment( pos + index, schema, makeBaseName( name, exts ), exts.get( exts.size() - 1 ), hostKind, content );
