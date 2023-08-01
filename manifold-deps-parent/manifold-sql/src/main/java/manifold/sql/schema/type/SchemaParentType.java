@@ -21,7 +21,6 @@ import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
-import manifold.rt.api.util.Pair;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
@@ -302,10 +301,10 @@ class SchemaParentType
       .addInterface( new SrcType( SchemaBuilder.class.getSimpleName() ).addTypeParam( getTableFqn( table ) ) );
     enclosingType.addInnerClass( srcInterface );
     addWithMethods( srcInterface, table );
-    addBuildMethod( enclosingType, srcInterface, table );
+    addBuildMethod( srcInterface, table );
   }
 
-  private void addBuildMethod( SrcLinkedClass enclosingType, SrcLinkedClass srcInterface, SchemaTable table )
+  private void addBuildMethod( SrcLinkedClass srcInterface, SchemaTable table )
   {
     String tableName = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcInterface )
@@ -332,11 +331,11 @@ class SchemaParentType
         continue;
       }
 
-      addWithMethod( srcClass, col, table );
+      addWithMethod( srcClass, col );
     }
   }
 
-  private void addWithMethod( SrcLinkedClass srcClass, SchemaColumn col, SchemaTable table )
+  private void addWithMethod( SrcLinkedClass srcClass, SchemaColumn col )
   {
     //noinspection unused
     String actualName = col.getName();
@@ -376,7 +375,7 @@ class SchemaParentType
     srcClass.addImport( CrudProvider.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( LinkedHashMap.class );
-    srcClass.addImport( Pair.class );
+    srcClass.addImport( KeyRef.class );
     srcClass.addImport( Map.class );
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
@@ -442,10 +441,10 @@ class SchemaParentType
       .addParam( "propName", new SrcType( String.class ) )
       .addParam( "keyColName", new SrcType( String.class ) )
       .addParam( "colName", new SrcType( String.class ) )
-      .addParam( "Bdings", new SrcType( Bindings.class ) );
+      .addParam( "bindings", new SrcType( Bindings.class ) );
       method.body( "if(ref == null) throw new NullPointerException(\"Expecting non-null value for: \" + propName );\n" +
-        "Object kyColValue = ref.getBindings().get(keyColName);\n" +
-        "Bdings.put(colName, kyColValue != null ? kyColValue : new Pair<>(ref, keyColName));" );
+        "Object keyColValue = ref.getBindings().get(keyColName);\n" +
+        "bindings.put(colName, keyColValue != null ? keyColValue : new KeyRef(ref, keyColName));" );
     srcClass.addMethod( method );
   }
 

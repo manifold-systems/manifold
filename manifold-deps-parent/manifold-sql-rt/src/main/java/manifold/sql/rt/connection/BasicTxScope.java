@@ -246,12 +246,11 @@ class BasicTxScope implements OperableTxScope
     for( Map.Entry<String, Object> entry : row.getBindings().entrySet() )
     {
       Object value = entry.getValue();
-      if( value instanceof Pair )
+      if( value instanceof KeyRef )
       {
-        //noinspection unchecked
-        Pair<TableRow, String> pair = (Pair)value;
-        TableRow pkTableRow = pair.getFirst();
-        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, pair.getSecond() );
+        KeyRef ref = (KeyRef)value;
+        TableRow pkTableRow = ref.getRef();
+        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, ref.getKeyColName() );
 
         doCrud( c, pkTableRow, unresolvedDeps, visited );
 
@@ -260,7 +259,7 @@ class BasicTxScope implements OperableTxScope
         if( pkId != null )
         {
           // pkTableRow was inserted, assign fk value now, this is assigned as an INSERT param in BasicCrudProvider when
-          // the value of the param is a ref: Pair<TableRow, String>
+          // the value of the param is a KeyRef
           row.getBindings().holdValue( fkDep.fkName, pkId );
         }
         else

@@ -89,7 +89,7 @@ public class SqlScope
   public static SqlScope makeErrantScope( IModule module, String fqn, IFile file )
   {
     SqlScope errantScope = new SqlScope( module );
-    errantScope._issues.add( new SqlIssue( IIssue.Kind.Error, "SQL type '" + fqn + "' from file '" + file.getName() + "' is not covered in any .dbconfig files" ) );
+    errantScope._issues.add( new SqlIssue( IIssue.Kind.Error, 0, "SQL type '" + fqn + "' from file '" + file.getName() + "' is not covered in any .dbconfig files" ) );
     return errantScope;
   }
 

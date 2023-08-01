@@ -28,18 +28,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class BasicTxBindings implements TxBindings
 {
   /**
-   * Initial state
+   * Persisted state
    */
-  private final Bindings _initialState;
+  private final Bindings _persistedState;
 
   /**
-   * Written changes
+   * Uncommitted changes
    */
   private final Map<String, Object> _changes;
 
   /**
-   * On hold data is assigned on {@link #commit()}
-   * e.g., generated keys after insert/update added to results only after successful commit
+   * On hold state is assigned during {@link #commit()} such as generated keys.
+   * This state is assigned to persisted state only after {@link TxScope#commit()}.
    */
   private final Map<String, Object> _onHold;
 
@@ -53,18 +53,36 @@ public class BasicTxBindings implements TxBindings
   public enum TxKind {Insert, Update, Unknown}
 
   /**
+   * Creates a new bindings for a new instance of a TableRow, such as a schema table or query result table.
+   * <p/>
+   * The {@code txKind} not only indicates the operational context of the TableRow, it also signals the type of initial
+   * state of the bindings. For instance, the {@code Insert} kind implies the object has no persisted state because it is
+   * entirely new, thus the {@code initialState} is a set of uncommitted changes. Similarly, the {@code Update} kind must
+   * involve an existing TableRow, the state of which reflects its persisted state from the data source.
    */
   public BasicTxBindings( TxScope txScope, TxKind txKind, Bindings initialState )
   {
     if( initialState == null )
     {
-      throw new NullPointerException();
+      throw new NullPointerException( "initialState is null" );
     }
 
     _txScope = (OperableTxScope)txScope;
     _txKind = txKind;
-    _initialState = initialState;
     _changes = new ConcurrentHashMap<>();
+    switch( _txKind )
+    {
+      case Insert:
+        _persistedState = new DataBindings( new ConcurrentHashMap<>() );
+        _changes.putAll( initialState );
+        break;
+      case Update:
+        _persistedState = initialState;
+        break;
+      case Unknown:
+      default:
+        throw new IllegalArgumentException( "TxKind '" + txKind + "' not supported here" );
+    }
     _onHold = new ConcurrentHashMap<>();
     _metadata = LockingLazyVar.make( () -> new DataBindings( new ConcurrentHashMap<>() ) );
   }
@@ -175,16 +193,16 @@ public class BasicTxBindings implements TxBindings
     // commit is called _after_ a successful commit on the TxScope
     if( _delete )
     {
-      _initialState.clear();
+      _persistedState.clear();
       _changes.clear();
       _onHold.clear();
       _txKind = TxKind.Unknown;
       return;
     }
 
-    _initialState.putAll( _changes );
+    _persistedState.putAll( _changes );
     _changes.clear();
-    _initialState.putAll( _onHold );
+    _persistedState.putAll( _onHold );
     _onHold.clear();
 
     _txKind = TxKind.Update;
@@ -210,10 +228,10 @@ public class BasicTxBindings implements TxBindings
 
     checkKey( name );
     Object existing;
-    if( _initialState.containsKey( name ) &&
-      Objects.equals( existing = _initialState.get( name ), value ) )
+    if( _persistedState.containsKey( name ) &&
+      Objects.equals( existing = _persistedState.get( name ), value ) )
     {
-      // remove the key from changes if same as initial state, avoids unnecessary updates
+      // remove the key from changes if same as persisted state, avoids unnecessary updates
       _changes.remove( name );
       if( _changes.isEmpty() )
       {
@@ -255,37 +273,37 @@ public class BasicTxBindings implements TxBindings
   {
     checkKey( key );
     return _changes.containsKey( key ) ||
-      _initialState.containsKey( key );
+      _persistedState.containsKey( key );
   }
 
   public boolean containsValue( Object value )
   {
-    return _changes.containsValue( value ) || _initialState.containsValue( value );
+    return _changes.containsValue( value ) || _persistedState.containsValue( value );
   }
 
   public Set<Entry<String, Object>> entrySet()
   {
     Set<Entry<String, Object>> entrySet = new HashSet<>( _changes.entrySet() );
-    _initialState.entrySet().stream()
+    _persistedState.entrySet().stream()
       .filter( e -> !_changes.containsKey( e.getKey() ) )
       .forEach( e -> entrySet.add( e ) );
     return entrySet;
   }
 
-  public Set<Entry<String, Object>> changedEntrySet()
+  public Set<Entry<String, Object>> uncommittedChangesEntrySet()
   {
     return _changes.entrySet();
   }
 
-  public Set<Entry<String, Object>> initialStateEntrySet()
+  public Set<Entry<String, Object>> persistedStateEntrySet()
   {
-    return _initialState.entrySet();
+    return _persistedState.entrySet();
   }
 
   @Override
-  public Object getInitialValue( String name )
+  public Object getPersistedStateValue( String name )
   {
-    return _initialState.get( name );
+    return _persistedState.get( name );
   }
 
   public Object get( Object key )
@@ -293,19 +311,28 @@ public class BasicTxBindings implements TxBindings
     checkKey( key );
     if( _changes.containsKey( (String)key ) )
     {
-      return _changes.get( key );
+      Object value = _changes.get( key );
+      if( value instanceof KeyRef )
+      {
+        value = ((KeyRef)value).getRef();
+        if( ((TableRow)value).getBindings().isForDelete() )
+        {
+          value = null;
+        }
+      }
+      return value;
     }
-    return _initialState.get( key );
+    return _persistedState.get( key );
   }
 
   public boolean isEmpty()
   {
-    return _changes.isEmpty() && _initialState.isEmpty();
+    return _changes.isEmpty() && _persistedState.isEmpty();
   }
 
   public Set<String> keySet()
   {
-    Set<String> keySet = new ConcurrentHashSet<>( _initialState.keySet() );
+    Set<String> keySet = new ConcurrentHashSet<>( _persistedState.keySet() );
     keySet.addAll( _changes.keySet() );
     return keySet;
   }
@@ -323,7 +350,7 @@ public class BasicTxBindings implements TxBindings
     }
     else
     {
-      priorValue = _initialState.get( key );
+      priorValue = _persistedState.get( key );
     }
     _changes.put( (String)key, null );
     return priorValue;
@@ -337,7 +364,7 @@ public class BasicTxBindings implements TxBindings
   public Collection<Object> values()
   {
     List<Object> values = new ArrayList<>( _changes.values() );
-    _initialState.entrySet().stream()
+    _persistedState.entrySet().stream()
       .filter( e -> !_changes.containsKey( e.getKey() ) )
       .forEach( e -> values.add( e.getValue() ) );
     return values;

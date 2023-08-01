@@ -72,13 +72,8 @@ public class BasicCrudProvider implements CrudProvider
     // is a cycle, the Pair value remains. In that case, if the fk is not nullable, we must assign a temporary value here.
     // The TxScope commit logic resolves the actual fk value.
 
-    if( value instanceof Pair )
+    if( value instanceof KeyRef )
     {
-      if( !(((Pair<?, ?>)value).getFirst() instanceof TableRow) )
-      {
-        throw new IllegalStateException( "Expecting a TableRow ref on fk: " + colName );
-      }
-
       Object heldFkValue = bindings.getHeldValue( colName );
       if( heldFkValue != null )
       {
@@ -190,7 +185,7 @@ public class BasicCrudProvider implements CrudProvider
       StringBuilder sql = new StringBuilder();
       sql.append( "UPDATE " ).append( ctx.getDdlTableName() ).append( " SET\n" );
       int i = 0;
-      Set<Map.Entry<String, Object>> changeEntries = table.getBindings().changedEntrySet();
+      Set<Map.Entry<String, Object>> changeEntries = table.getBindings().uncommittedChangesEntrySet();
       if( changeEntries.isEmpty() )
       {
         throw new SQLException( "Expecting changed entries." );
@@ -253,7 +248,7 @@ public class BasicCrudProvider implements CrudProvider
   private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps ) throws SQLException
   {
     int paramIndex = 0;
-    Set<Map.Entry<String, Object>> changeEntries = ctx.getTable().getBindings().changedEntrySet();
+    Set<Map.Entry<String, Object>> changeEntries = ctx.getTable().getBindings().uncommittedChangesEntrySet();
     if( changeEntries.isEmpty() )
     {
       throw new SQLException( "Expecting changed entries." );
@@ -269,7 +264,7 @@ public class BasicCrudProvider implements CrudProvider
       for( String whereColumn : whereColumns )
       {
         ValueAccessor accessor = ValueAccessor.get( ctx.getAllColsWithJdbcType().get( whereColumn ) );
-        Object value = ctx.getTable().getBindings().getInitialValue( whereColumn );
+        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
         accessor.setParameter( ps, ++paramIndex, value );
       }
     }
@@ -288,7 +283,7 @@ public class BasicCrudProvider implements CrudProvider
       for( String whereColumn : whereColumns )
       {
         ValueAccessor accessor = ValueAccessor.get( ctx.getAllColsWithJdbcType().get( whereColumn ) );
-        Object value = ctx.getTable().getBindings().getInitialValue( whereColumn );
+        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
         accessor.setParameter( ps, ++paramIndex, value );
       }
     }

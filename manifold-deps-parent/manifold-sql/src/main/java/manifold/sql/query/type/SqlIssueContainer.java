@@ -19,6 +19,7 @@ package manifold.sql.query.type;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,10 +27,12 @@ import java.util.stream.Collectors;
 public class SqlIssueContainer implements IIssueContainer
 {
   private final List<IIssue> _issues;
+  private final String _productName;
 
   @SuppressWarnings("WeakerAccess")
-  public SqlIssueContainer( List<Exception> errors )
+  public SqlIssueContainer( String productName, List<Exception> errors )
   {
+    _productName = productName;
     _issues = new ArrayList<>();
     addIssues( errors );
   }
@@ -56,9 +59,9 @@ public class SqlIssueContainer implements IIssueContainer
       .collect( Collectors.toList() );
   }
 
-  public void addIssue( IIssue.Kind kind, String msg )
+  public void addIssue( IIssue.Kind kind, int offset, String msg )
   {
-    _issues.add( new SqlIssue( kind, msg ) );
+    _issues.add( new SqlIssue( kind, offset, msg ) );
   }
 
   @SuppressWarnings("WeakerAccess")
@@ -66,8 +69,38 @@ public class SqlIssueContainer implements IIssueContainer
   {
     for( Exception e: errors )
     {
-      _issues.add( new SqlIssue( IIssue.Kind.Error, e.getMessage() ) );
+      int offset = findOffset( e );
+      _issues.add( new SqlIssue( IIssue.Kind.Error, offset, e.getMessage() ) );
     }
+  }
+
+  private int findOffset( Exception e )
+  {
+    switch( _productName.toLowerCase() )
+    {
+      case "h2":
+        return findOffset_h2( e );
+      default:
+        return 0;
+    }
+  }
+
+  private int findOffset_h2( Exception e )
+  {
+    if( e instanceof SQLException )
+    {
+      String msg = e.getMessage();
+      int start = msg.indexOf( '"' ) + 1;
+      if( start > 0 )
+      {
+        int marker = msg.indexOf( "[*]" );
+        if( marker >= 0 )
+        {
+          return marker - start;
+        }
+      }
+    }
+    return 0;
   }
 
   @Override

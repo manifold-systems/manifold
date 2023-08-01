@@ -472,7 +472,7 @@ class SqlParentType
     {
       //noinspection unused
       String label = elem instanceof QueryColumn ? "column" : "parameter";
-      _model.addIssue( IIssue.Kind.Error,
+      _model.addIssue( IIssue.Kind.Error, 0,
         "$label type unknown for query '${getQueryName()}', $label '${elem.getName()}', jdbcType '${elem.getJdbcType()}'" );
       return null;
     }

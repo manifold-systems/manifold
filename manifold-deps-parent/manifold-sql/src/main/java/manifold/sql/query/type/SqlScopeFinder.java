@@ -116,7 +116,7 @@ public class SqlScopeFinder
       }
       for( SqlScope s : scopes )
       {
-        s.getIssues().add( new SqlIssue( IIssue.Kind.Warning, "Multiple default scopes found: " + defaultNamesList ) );
+        s.getIssues().add( new SqlIssue( IIssue.Kind.Warning, 0, "Multiple default scopes found: " + defaultNamesList ) );
       }
     }
   }

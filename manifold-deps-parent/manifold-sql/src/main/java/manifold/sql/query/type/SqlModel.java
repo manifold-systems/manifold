@@ -76,7 +76,7 @@ public class SqlModel extends AbstractSingleFileModel
     catch( RuntimeException ise )
     {
       _query = null;
-      _issues = new SqlIssueContainer( Collections.singletonList( ise ) );
+      _issues = new SqlIssueContainer( _scope.getSchema().getDatabaseProductName(), Collections.singletonList( ise ) );
     }
     catch( IOException e )
     {
@@ -121,9 +121,9 @@ public class SqlModel extends AbstractSingleFileModel
     init();
   }
 
-  void addIssue( IIssue.Kind kind, String msg )
+  void addIssue( IIssue.Kind kind, int offset, String msg )
   {
-    _issues.addIssue( kind, msg );
+    _issues.addIssue( kind, offset, msg );
   }
 
   void addIssue( Exception issue )

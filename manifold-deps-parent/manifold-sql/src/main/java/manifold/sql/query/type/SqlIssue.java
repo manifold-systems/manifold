@@ -22,11 +22,13 @@ public class SqlIssue extends RuntimeException implements IIssue
 {
   private final Kind _kind;
   private final String _msg;
+  private final int _offset;
 
-  SqlIssue( Kind kind, String msg )
+  SqlIssue( Kind kind, int offset, String msg )
   {
     super( msg );
     _kind = kind;
+    _offset = offset;
     _msg = msg;
   }
 
@@ -39,7 +41,7 @@ public class SqlIssue extends RuntimeException implements IIssue
   @Override
   public int getStartOffset()
   {
-    return 0;
+    return _offset;
   }
 
   @Override

@@ -52,7 +52,7 @@ public class JdbcQueryTable implements QueryTable
     _name = simpleName;
     _columns = new LinkedHashMap<>();
     _parameters = new ArrayList<>();
-    _issues = new SqlIssueContainer( new ArrayList<>() );
+    _issues = new SqlIssueContainer( _scope.getSchema().getDatabaseProductName(), new ArrayList<>() );
 
     if( _scope.isErrant() )
     {
@@ -82,7 +82,7 @@ public class JdbcQueryTable implements QueryTable
     return procSource.toString();
   }
 
-  private void build( Connection c, List<ParamInfo> paramNames )
+  private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
     for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
     {
@@ -105,7 +105,6 @@ public class JdbcQueryTable implements QueryTable
       int paramCount = paramMetaData.getParameterCount();
       if( !paramNames.isEmpty() && paramCount != paramNames.size() )
       {
-        //## todo: this should be compile error
         throw new SQLException( "Parameter name count does not match '?' param count. Query: " + _name + "\n" + _source );
       }
       for( int i = 1; i <= paramCount; i++ )
@@ -114,10 +113,6 @@ public class JdbcQueryTable implements QueryTable
         JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, preparedStatement );
         _parameters.add( param );
       }
-    }
-    catch( SQLException e )
-    {
-      throw ManExceptionUtil.unchecked( e );
     }
   }
 

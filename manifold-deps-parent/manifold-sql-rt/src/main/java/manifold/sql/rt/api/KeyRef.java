@@ -16,31 +16,24 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
-
-import java.util.Set;
-
-public interface TxBindings extends Bindings
+public class KeyRef
 {
-  TableRow getOwner();
-  void setOwner( TableRow owner );
+  private final TableRow _ref;
+  private final String _keyColName;
 
-  TxScope getTxScope();
+  public KeyRef( TableRow ref, String keyColName )
+  {
+    _ref = ref;
+    _keyColName = keyColName;
+  }
 
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  public TableRow getRef()
+  {
+    return _ref;
+  }
 
-  void setDelete( boolean value );
-
-  void holdValues( Bindings generatedKeys );
-  void holdValue( String name, Object value );
-  Object getHeldValue( String name );
-  void dropHeldValues();
-
-  void commit();
-  Set<Entry<String, Object>> persistedStateEntrySet();
-  Set<Entry<String, Object>> uncommittedChangesEntrySet();
-
-  Object getPersistedStateValue( String name );
+  public String getKeyColName()
+  {
+    return _keyColName;
+  }
 }
