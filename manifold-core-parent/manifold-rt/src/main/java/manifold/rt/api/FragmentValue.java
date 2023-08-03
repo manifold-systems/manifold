@@ -23,8 +23,7 @@ import java.lang.annotation.RetentionPolicy;
  * Use this annotation in generated code to handle a file fragment embedded in a String literal:
  * <pre>
  *   // Sample code using embedded SQL
- *   var qb = "[>.sql<] SELECT name, age FROM contact WHERE age > #age</]>";
- *   var query = qb.builder(30).build();
+ *   var query = "[>.sql<] SELECT name, age FROM contact WHERE age > :age";
  * </pre>
  * <pre>
  * // Generated from Manifold
