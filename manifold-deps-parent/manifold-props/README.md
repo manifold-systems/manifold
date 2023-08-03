@@ -461,11 +461,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-props-rt:2023.1.12'
+     implementation 'systems.manifold:manifold-props-rt:2023.1.13'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-props:2023.1.12'
-     testAnnotationProcessor 'systems.manifold:manifold-props:2023.1.12'
+     annotationProcessor 'systems.manifold:manifold-props:2023.1.13'
+     testAnnotationProcessor 'systems.manifold:manifold-props:2023.1.13'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -501,7 +501,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.12</manifold.version>
+        <manifold.version>2023.1.13</manifold.version>
     </properties>
     
     <dependencies>
@@ -550,10 +550,10 @@ with javadoc.
 # Javadoc
 
 `manifold-props`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2023.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2023.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props/2023.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props/2023.1.13)
 
 `manifold-props-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2023.1.12/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2023.1.12)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-props-rt/2023.1.13/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-props-rt/2023.1.13)
 
 # License
 
