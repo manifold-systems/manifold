@@ -17,16 +17,23 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
+
+import java.io.File;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.util.ArrayList;
 
 import manifold.rt.api.NoBootstrap;
 import manifold.rt.api.IBootstrap;
+import manifold.rt.api.util.ManClassUtil;
+
+import javax.tools.JavaFileObject;
 
 
 /**
@@ -75,7 +82,45 @@ class BootstrapInserter extends TreeTranslator
            !JavacPlugin.instance().isNoBootstrapping() &&
            isExtensionsEnabled() &&
            !alreadyHasBootstrap( tree ) &&
+           !isSideCarClass( tree ) &&
            !skipForOtherReasons( tree );
+  }
+
+  private boolean isSideCarClass( JCTree.JCClassDecl tree )
+  {
+    if( tree.sym.getEnclosingElement() instanceof Symbol.ClassSymbol )
+    {
+      return false;
+    }
+
+    JavaFileObject sourceFile = tree.sym.sourcefile;
+    if( sourceFile == null )
+    {
+      return false;
+    }
+
+    URI uri = sourceFile.toUri();
+    String fileName;
+    try
+    {
+      fileName = new File( uri ).getName();
+    }
+    catch( Exception e )
+    {
+      return false;
+    }
+
+    if( !fileName.toLowerCase().endsWith( ".java" ) )
+    {
+      return false;
+    }
+    fileName = fileName.substring( 0, fileName.toLowerCase().indexOf( ".java" ) );
+    if( !ManClassUtil.isJavaIdentifier( fileName ) )
+    {
+      return false;
+    }
+
+    return !fileName.equals( tree.sym.getSimpleName().toString() );
   }
 
   /**
