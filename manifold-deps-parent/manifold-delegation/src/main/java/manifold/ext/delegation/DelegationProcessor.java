@@ -1291,7 +1291,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       if( tree.meth instanceof JCIdent )
       {
         MethodSymbol sym = (MethodSymbol)((JCIdent)tree.meth).sym;
-        if( sym.isStatic() )
+        if( sym == null || sym.isStatic() )
         {
           return;
         }
@@ -1611,14 +1611,20 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
     private Symbol getLinkFieldRef( JCExpression lhs )
     {
-      if( lhs instanceof JCIdent && ((JCIdent)lhs).sym.getAnnotation( link.class ) != null )
+      if( lhs instanceof JCIdent )
       {
-        return ((JCIdent)lhs).sym;
+        Symbol lhsSym = ((JCIdent)lhs).sym;
+        if( lhsSym != null && lhsSym.getAnnotation( link.class ) != null )
+        {
+          return lhsSym;
+        }
       }
+
       if( lhs instanceof JCFieldAccess && ((JCFieldAccess)lhs).sym.getAnnotation( link.class ) != null )
       {
         return ((JCFieldAccess)lhs).sym;
       }
+
       if( lhs instanceof JCParens )
       {
         return getLinkFieldRef( ((JCParens)lhs).expr );
