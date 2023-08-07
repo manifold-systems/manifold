@@ -46,6 +46,11 @@ public class ReflectionRuntimeMethods
     return (int)invoke_Object( receiver, name, paramTypes, args );
   }
 
+  public static int invoke_short( Object receiver, String name, Class[] paramTypes, Object[] args )
+  {
+    return (int)invoke_Object( receiver, name, paramTypes, args );
+  }
+
   public static long invoke_long( Object receiver, String name, Class[] paramTypes, Object[] args )
   {
     return (long)invoke_Object( receiver, name, paramTypes, args );
@@ -85,6 +90,11 @@ public class ReflectionRuntimeMethods
   public static char invokeStatic_char( Class cls, String name, Class[] paramTypes, Object[] args )
   {
     return (char)invokeStatic_Object( cls, name, paramTypes, args );
+  }
+
+  public static int invokeStatic_short( Class cls, String name, Class[] paramTypes, Object[] args )
+  {
+    return (int)invokeStatic_Object( cls, name, paramTypes, args );
   }
 
   public static int invokeStatic_int( Class cls, String name, Class[] paramTypes, Object[] args )
