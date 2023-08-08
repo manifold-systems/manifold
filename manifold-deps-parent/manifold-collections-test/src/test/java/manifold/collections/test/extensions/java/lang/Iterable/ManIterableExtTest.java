@@ -204,7 +204,7 @@ public class ManIterableExtTest extends ExtensionManifoldTest {
 
   public void testReversed() {
     Iterable<String> iter = makeTestIterable();
-    assertEquals(Arrays.asList("luca", "carson", "kyle", "scott"), iter.reversed());
+    assertEquals(Arrays.asList("luca", "carson", "kyle", "scott"), (List)iter.reversed());
   }
 
   public void testSingle() {

@@ -429,9 +429,9 @@ public class ManIterableExt
   }
 
   /**
-   * Returns a list with elements in reversed order.
+   * Returns a collection with elements in reversed order.
    */
-  public static <T> List<T> reversed( @This Iterable<T> thiz )
+  public static <T> Collection<T> reversed( @This Iterable<T> thiz )
   {
     List<T> list = thiz.toList();
     if( list.size() <= 1 )
