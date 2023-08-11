@@ -46,7 +46,7 @@ public class ScratchTest extends H2SalesTest
   @Test
   public void testCommentQueryWithParameters()
   {
-    /*[>MyQuery.sql<]
+    /*[MyQuery.sql/]
       Select * From purchase_order Where customer_id = :c_id
     */
     StringBuilder actual = new StringBuilder();
@@ -64,7 +64,7 @@ public class ScratchTest extends H2SalesTest
   @Test
   public void testStringQueryWithParameters()
   {
-    auto query = "[>.sql<] Select * From purchase_order Where customer_id = :c_id";
+    auto query = "[.sql/] Select * From purchase_order Where customer_id = :c_id";
     String expected =
       "1,2,2023-11-10\n" +
       "3,2,2023-09-08\n";
@@ -82,7 +82,7 @@ public class ScratchTest extends H2SalesTest
   @Test
   public void testStringJoinQueryWithParameters()
   {
-    auto query = "[>.sql<] Select purchase_order.id, purchase_order.customer_id, purchase_order.order_date, c.name From purchase_order Join customer c on purchase_order.customer_id = c.id Where purchase_order.customer_id = :c_id";
+    auto query = "[.sql/] Select purchase_order.id, purchase_order.customer_id, purchase_order.order_date, c.name From purchase_order Join customer c on purchase_order.customer_id = c.id Where purchase_order.customer_id = :c_id";
     String expected =
       "1,2,2023-11-10,Cheryl Dunno\n" +
       "3,2,2023-09-08,Cheryl Dunno\n";
@@ -114,13 +114,13 @@ public class ScratchTest extends H2SalesTest
   @Test
   public void testStringWithUnhandledExtResolvesToPlainString()
   {
-    String y = "[>.nope<] Select * From purchase_order Where customer_id = :c_id";
-    assertEquals( "[>.nope<] Select * From purchase_order Where customer_id = :c_id", y );
+    String y = "[.nope/] Select * From purchase_order Where customer_id = :c_id";
+    assertEquals( "[.nope/] Select * From purchase_order Where customer_id = :c_id", y );
   }
 
   @Test
   public void testCommentWithUnhandledExtDoesNothing()
   {
-    /*[>Foo.nope<] Select * From purchase_order Where customer_id = :c_id */
+    /*[Foo.nope/] Select * From purchase_order Where customer_id = :c_id */
   }
 }

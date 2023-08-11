@@ -29,7 +29,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
   public void testSomeInterestingQueries()
   {
     TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
-    Stores s = "[>Stores.sql:H2Sakila<] Select * From store";
+    Stores s = "[Stores.sql:H2Sakila/] Select * From store";
     for( Store r : s.run( txScope ) )
     {
       System.out.println( r.display() );
@@ -37,7 +37,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println( r.getManagerStaffRef().display() );
     }
 
-    /* [>ActorWithMostFilms.sql:H2Sakila<]
+    /* [ActorWithMostFilms.sql:H2Sakila/]
       SELECT first_name, last_name, count(*) films
       FROM actor AS a
       JOIN film_actor AS fa USING (actor_id)
@@ -49,7 +49,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    /* [>CumulativeRevenueAllStores.sql:H2Sakila<]
+    /* [CumulativeRevenueAllStores.sql:H2Sakila/]
       SELECT payment_date, amount, sum(amount) OVER (ORDER BY payment_date)
       FROM (
         SELECT CAST(payment_date AS DATE) AS payment_date, SUM(amount) AS amount
@@ -64,12 +64,12 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    auto one = "[>.sql:H2Sakila<] select 1 from dual";
+    auto one = "[.sql:H2Sakila/] select 1 from dual";
     auto run = one.run(txScope);
     run.forEach( r -> System.out.println(r.display()));
 
 
-    for( Staff staff: "[>.sql:H2Sakila<] select * from staff".run( txScope ) )
+    for( Staff staff: "[.sql:H2Sakila/] select * from staff".run( txScope ) )
     {
       System.out.println( staff.display() );
     }

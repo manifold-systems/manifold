@@ -28,8 +28,8 @@ import manifold.api.util.fingerprint.Fingerprint;
  */
 public class FragmentProcessor
 {
-  public static final String FRAGMENT_START = "[>";
-  public static final String FRAGMENT_END = "<]";
+  public static final String FRAGMENT_START = "[";
+  public static final String FRAGMENT_END = "/]";
   public static final char SCHEMA_NAME_SEPARATOR = ':';
 
   private final static FragmentProcessor INSTANCE = new FragmentProcessor();

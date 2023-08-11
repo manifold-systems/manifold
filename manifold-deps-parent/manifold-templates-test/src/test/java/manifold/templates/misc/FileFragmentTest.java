@@ -26,7 +26,7 @@ public class FileFragmentTest
   @Test
   public void testFileFragment()
   {
-    /*[>MyFragmentTest.html.mtl<]
+    /*[MyFragmentTest.html.mtl/]
     <%@ params(String name) %>
     <!DOCTYPE html>
     <html lang="en">

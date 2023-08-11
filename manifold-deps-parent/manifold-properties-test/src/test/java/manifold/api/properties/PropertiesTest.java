@@ -34,7 +34,7 @@ public class PropertiesTest extends TestCase
 
   public void testFragrment()
   {
-    //[>MyPropertiesRightHere.properties<] Foo=bar
+    //[MyPropertiesRightHere.properties/] Foo=bar
     assertEquals( "bar", MyPropertiesRightHere.Foo );
   }
 }

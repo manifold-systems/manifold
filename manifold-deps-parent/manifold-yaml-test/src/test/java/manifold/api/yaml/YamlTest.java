@@ -113,7 +113,7 @@ public class YamlTest extends TestCase
 
   public void testFragmentValue()
   {
-    /*[>MyYamlObject.yaml<]
+    /*[MyYamlObject.yaml/]
     name: Scott
     location:
       planet: fubar

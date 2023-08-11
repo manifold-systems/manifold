@@ -23,11 +23,11 @@ public class FragmentProcessorTest extends TestCase
   public void testFragmentParserLine()
   {
     FragmentProcessor fragmentProcessor = FragmentProcessor.instance();
-    FragmentProcessor.Fragment fragment = fragmentProcessor.parseFragment( 0, "//[>MyType.graphql<]", HostKind.LINE_COMMENT );
+    FragmentProcessor.Fragment fragment = fragmentProcessor.parseFragment( 0, "//[MyType.graphql/]", HostKind.LINE_COMMENT );
     assertEquals( "MyType", fragment.getName() );
     assertEquals( "graphql", fragment.getExt() );
     assertNull( fragment.getScope() );
-    fragment = fragmentProcessor.parseFragment( 0, "//[>MyType.graphql:myschema<]", HostKind.LINE_COMMENT );
+    fragment = fragmentProcessor.parseFragment( 0, "//[MyType.graphql:myschema/]", HostKind.LINE_COMMENT );
     assertEquals( "MyType", fragment.getName() );
     assertEquals( "graphql", fragment.getExt() );
     assertEquals( "myschema", fragment.getScope() );

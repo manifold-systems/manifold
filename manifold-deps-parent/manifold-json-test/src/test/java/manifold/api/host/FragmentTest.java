@@ -31,7 +31,7 @@ public class FragmentTest extends TestCase
 
   public void testFragmentFromSource()
   {
-    /*[>MyObject.json<]
+    /*[MyObject.json/]
     {
       "name": "Scott",
       "location": {

@@ -114,7 +114,7 @@ public class QueryTest
   @Test
   public void testEmbeddedQuery()
   {
-    /* [> MyEmbedded.graphql <]
+    /* [ MyEmbedded.graphql /]
     query MyOneAnimal($id: ID!) {
       animal(id: $id) {
         id
@@ -126,7 +126,7 @@ public class QueryTest
     MyEmbedded.MyOneAnimal myOneAnimal = MyEmbedded.MyOneAnimal.builder( "1" ).build();
     assertNotNull( myOneAnimal );
 
-    /**[>MyEmbedded2.graphql<]
+    /**[MyEmbedded2.graphql/]
     query MyOneAnimal2($id: ID!) {
       animal(id: $id) {
         id
@@ -142,7 +142,7 @@ public class QueryTest
   @Test
   public void testStringLiteralQuery()
   {
-    Foo value = "[>Foo.graphql<] query MyOneAnimal($id: ID!) { animal(id: $id) { id name } }";
+    Foo value = "[Foo.graphql/] query MyOneAnimal($id: ID!) { animal(id: $id) { id name } }";
     Foo.MyOneAnimal myOneAnimal = value.builder( "1" ).build();
     assertNotNull( myOneAnimal );
   }
@@ -150,7 +150,7 @@ public class QueryTest
   @Test
   public void testAnonymousStringLiteralQuery()
   {
-    Object value = "[>.graphql<] query MyOneAnimal2($id: ID!) { animal(id: $id) { id name } }";
+    Object value = "[.graphql/] query MyOneAnimal2($id: ID!) { animal(id: $id) { id name } }";
     assertTrue( value.getClass().getSimpleName().startsWith( "Fragment_" ) ); //See ANONYMOUS_FRAGMENT_PREFIX in internal pkg
   }
 
