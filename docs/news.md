@@ -160,7 +160,7 @@ Manifold **Javascript** changes
 * using a shared global scope per thread to avoid expensive js initialization 
 * each program/class/template has its own scope which in turn delegates to the shared scope 
 * support javascript type-safely embedded in a string literal via file **fragments** e.g., 
-`int value = (int) "[>.js<] 3 + 4 + 5";` 
+`int value = (int) "[.js/] 3 + 4 + 5";` 
 * this is more a **proof of concept** to demonstrate: 
 1. the relative simplicity to enable any manifold resource for literal embedding 
 2. GraphQL is not the only manifold that can be embedded in a literal 

@@ -517,7 +517,7 @@ Javascript:
 ```java
 public class MyJavaClass {
   void foo() {
-    /*[>Barker.js<]
+    /*[Barker.js/]
     function callBark(aBarker) {
       aBarker.bark();
     }
@@ -538,13 +538,13 @@ public class MyJavaClass {
 }
 ``` 
 Notice the Javascript is embedded in a multiline comment. This is how you embed any kind of resource fragment as a type
-declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. A fragment must use `[>` and `<]` at the beginning of the comment to delimit the type name and extension.  A fragment
+declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. A fragment must use `[` and `/]` at the beginning of the comment to delimit the type name and extension.  A fragment
 covers the remainder of the comment and must follow the format of the declared extension.
 
 You can embed any Manifold enabled resource as a fragment type declaration.  Here's another example using JSON:
 ```java
 void foo() {
-  /*[>Planet.json<]
+  /*[Planet.json/]
   {
     "name": "Earth",
     "system": {
@@ -593,7 +593,7 @@ Sometimes it's more convenient to use a fragment as a *value* as opposed to a ty
 create a GraphQL query as a fragment value and assign it to a variable:
  
 ```java 
-var moviesByGenre = "[>.graphql<] query MoviesByGenre($genre: genre) { movies(genre: $genre) { title } }";
+var moviesByGenre = "[.graphql/] query MoviesByGenre($genre: genre) { movies(genre: $genre) { title } }";
 var query = moviesByGenre.builder().withGenre(Action).build();
 var actionMovies = query.request(ENDPOINT).post();
 ``` 

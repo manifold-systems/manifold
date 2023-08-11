@@ -93,7 +93,7 @@ public interface DbConfig
    * {@code MyQuery.dbconfigName.sql}<br>
    * <p/>
    * Embedded SQL follows a similar pattern:<br>
-   * {@code "[>.sql:dbconfigName<] select * from ..."}
+   * {@code "[.sql:dbconfigName/] select * from ..."}
    */
   boolean isDefault();
 

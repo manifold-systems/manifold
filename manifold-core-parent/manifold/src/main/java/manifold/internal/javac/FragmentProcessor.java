@@ -40,17 +40,17 @@ public class FragmentProcessor
     return INSTANCE;
   }
 
-  /*[>Foo.graphql<]
+  /*[Foo.graphql/]
       query Persons {
         name
         address
       }
   */
-  /*[>Foo.graphql<] query Persons { name address }*/
-  //[>Foo.graphql<] query Persons { name address }
+  /*[Foo.graphql/] query Persons { name address }*/
+  //[Foo.graphql/] query Persons { name address }
 
   /**
-   * [>Foo.graphql<] query Persons { name address }
+   * [Foo.graphql/] query Persons { name address }
    */
   void processComment( JavaFileObject sourceFile, int pos, String comment, Tokens.Comment.CommentStyle style )
   {
@@ -115,7 +115,7 @@ public class FragmentProcessor
       String name;
       if( isString && index < end && chars.charAt( index ) == '.' )
       {
-        // Name is optional if fragment is in a String literal e.g., "[>.sql<] blah blah" // just the dot is ok
+        // Name is optional if fragment is in a String literal e.g., "[.sql/] blah blah" // just the dot is ok
         //(note the reason why the dot is needed for anonymity is so multi-extension names can be distinguished
         //esp. for template languages e.g., .html.mtl)
         name = "";

@@ -534,7 +534,7 @@ resource file.
 A fragment can be either a *declaration* or an *expression*.  A fragment declaration is embedded in a multi-line
 comment like this:
 ```java
-/*[>MyQuery.graphql<]
+/*[MyQuery.graphql/]
 query Movies($title: String, $genre: Genre, $releaseDate: Date) {
     movies(title: $title, genre: $genre, releaseDate: $releaseDate) {
         id
@@ -553,12 +553,12 @@ For a project configured for [multiple schemas](#configuring-for-multiple-schema
 declaration must also specify the scope of the schema. For the example above, if the schema for the `movies` query were
 in a scope named *"my_movies"*, the declaration encodes this name like so:
 ```
-[>MyQuery.graphql:my_movies<]
+[MyQuery.graphql:my_movies/]
 ```
  
 A fragment *expression* is embedded in a String literal:
 ```java
-var query = "[>.graphql<] query MovieQuery($genre: Genre){ movies(genre: $genre){ genre } }";
+var query = "[.graphql/] query MovieQuery($genre: Genre){ movies(genre: $genre){ genre } }";
 var result = query.builder().build().request("").post();
 result.getMovies().forEach( e -> e.getGenre() );
 ```
@@ -567,7 +567,7 @@ For a project configured for [multiple schemas](#configuring-for-multiple-schema
 expression must also specify the scope of the schema. For the example above, if the schema for the `movies` query were
 in a scope named *"my_movies"*, the expression encodes this name like so:
 ```
-[>.graphql:my_movies<]
+[.graphql:my_movies/]
 ```
 
 With Java [text block](https://openjdk.java.net/jeps/378) String literals you can author multi-line fragment
