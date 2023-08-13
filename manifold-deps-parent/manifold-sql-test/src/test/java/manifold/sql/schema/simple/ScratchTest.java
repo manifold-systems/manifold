@@ -19,8 +19,6 @@ package manifold.sql.schema.simple;
 import manifold.ext.rt.api.auto;
 import manifold.sql.H2SalesTest;
 import manifold.sql.queries.Foo;
-import manifold.sql.rt.api.TxScope;
-import manifold.sql.rt.api.TxScopeProvider;
 import org.junit.*;
 
 import manifold.sql.schema.simple.H2Sales.*;
@@ -33,8 +31,7 @@ public class ScratchTest extends H2SalesTest
   public void testSimple()
   {
     StringBuilder sb = new StringBuilder();
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( PurchaseOrder po : Foo.run( txScope ) )
+    for( PurchaseOrder po : Foo.run() )
     {
       // just make sure the results can be navigated
       assertNotNull( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
@@ -50,8 +47,7 @@ public class ScratchTest extends H2SalesTest
       Select * From purchase_order Where customer_id = :c_id
     */
     StringBuilder actual = new StringBuilder();
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( PurchaseOrder po : MyQuery.run( txScope, 2L ) )
+    for( PurchaseOrder po : MyQuery.run( 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -71,8 +67,7 @@ public class ScratchTest extends H2SalesTest
 
     StringBuilder actual = new StringBuilder();
     actual = new StringBuilder();
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( PurchaseOrder po : query.run( txScope, 2L ) )
+    for( PurchaseOrder po : query.run( 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -88,8 +83,7 @@ public class ScratchTest extends H2SalesTest
       "3,2,2023-09-08,Cheryl Dunno\n";
 
     StringBuilder actual = new StringBuilder();
-    TxScope txScope = TxScopeProvider.newScope( H2Sales.class );
-    for( auto row : query.run( txScope, 2L ) )
+    for( auto row : query.run( 2L ) )
     {
       auto flatRow = row.flatRow();
       actual.append( flatRow.getId() ).append( "," )
@@ -100,8 +94,7 @@ public class ScratchTest extends H2SalesTest
     assertEquals( expected, actual.toString() );
 
     actual = new StringBuilder();
-    TxScope binder2 = TxScopeProvider.newScope( H2Sales.class );
-    for( auto row : query.run( binder2, 2L ) )
+    for( auto row : query.run( 2L ) )
     {
       actual.append( row.getPurchaseOrder().getId() ).append( "," )
         .append( row.getPurchaseOrder().getCustomerRef().getId() ).append( "," )

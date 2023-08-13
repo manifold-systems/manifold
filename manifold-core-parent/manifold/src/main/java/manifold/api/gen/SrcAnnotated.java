@@ -197,6 +197,20 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     return _parameters;
   }
 
+  public void forwardParameters( StringBuilder sb )
+  {
+    List<SrcParameter> parameters = getParameters();
+    for( int i = 0; i < parameters.size(); i++ )
+    {
+      SrcParameter param = parameters.get( i );
+      if( i > 0 )
+      {
+        sb.append( ", " );
+      }
+      sb.append( param.getSimpleName() );
+    }
+  }
+
   public T withUserData( String tag, Object value )
   {
     if( _userData.isEmpty() )

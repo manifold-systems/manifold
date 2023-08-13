@@ -18,8 +18,6 @@ package manifold.sql.schema.simple;
 
 import manifold.ext.rt.api.auto;
 import manifold.sql.H2SakilaTest;
-import manifold.sql.rt.api.TxScope;
-import manifold.sql.rt.api.TxScopeProvider;
 import manifold.sql.schema.simple.H2Sakila.*;
 import org.junit.Test;
 
@@ -28,9 +26,8 @@ public class ScratchTest_Sakila extends H2SakilaTest
   @Test
   public void testSomeInterestingQueries()
   {
-    TxScope txScope = TxScopeProvider.newScope( H2Sakila.class );
     Stores s = "[Stores.sql:H2Sakila/] Select * From store";
-    for( Store r : s.run( txScope ) )
+    for( Store r : s.run() )
     {
       System.out.println( r.display() );
       System.out.println( r.getAddressRef().display() );
@@ -45,7 +42,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       ORDER BY films DESC
       LIMIT 1;
     */
-    for (ActorWithMostFilms.Row row : ActorWithMostFilms.run(txScope)) {
+    for (ActorWithMostFilms.Row row : ActorWithMostFilms.run()) {
       System.out.println(row.display());
     }
 
@@ -58,18 +55,18 @@ public class ScratchTest_Sakila extends H2SakilaTest
       ) p
       ORDER BY payment_date;
     */
-    for (CumulativeRevenueAllStores.Row row : CumulativeRevenueAllStores.run(txScope)) {
+    for (CumulativeRevenueAllStores.Row row : CumulativeRevenueAllStores.run()) {
       System.out.println(row.getPaymentDate());
       System.out.println(row.getSumAmount_Over_OrderByPaymentDate());
       System.out.println(row.display());
     }
 
     auto one = "[.sql:H2Sakila/] select 1 from dual";
-    auto run = one.run(txScope);
+    auto run = one.run();
     run.forEach( r -> System.out.println(r.display()));
 
 
-    for( Staff staff: "[.sql:H2Sakila/] select * from staff".run( txScope ) )
+    for( Staff staff: "[.sql:H2Sakila/] select * from staff".run() )
     {
       System.out.println( staff.display() );
     }

@@ -34,6 +34,7 @@ import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.connection.DefaultTxScopeProvider;
 import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
@@ -89,8 +90,6 @@ class SqlParentType
 
   private void addRunMethods( SrcLinkedClass srcClass )
   {
-    //addRunMethod( srcClass, "runFlat", "FlatRow" );
-
     Pair<SchemaTable, List<QueryColumn>> selectedTable = getQuery().findSelectedTable();
     String rowType;
     if( selectedTable != null && selectedTable.getSecond().size() == getQuery().getColumns().size() )
@@ -105,7 +104,7 @@ class SqlParentType
       addRowType( srcClass );
     }
 
-    addRunMethod( srcClass, "run", rowType );
+    addRunMethods( srcClass, rowType );
   }
 
   private QueryTable getQuery()
@@ -154,23 +153,31 @@ class SqlParentType
     return (name == null || name.isEmpty()) ? ANONYMOUS_TYPE + _anonCount++ : name;
   }
 
-  private void addRunMethod( SrcLinkedClass srcClass, String methodName, @SuppressWarnings( "unused" ) String rowType )
+  private void addRunMethods( SrcLinkedClass srcClass, @SuppressWarnings( "unused" ) String rowType )
   {
+    //noinspection unused
+    String configName = _model.getScope().getDbconfig().getName();
+
     SrcMethod method = new SrcMethod( srcClass )
-      .name( methodName )
-      .addParam( "txScope", TxScope.class )
+      .name( "run" )
+      .modifiers( isFragment() ? Flags.DEFAULT : Modifier.STATIC )
       .returns( new SrcType( "Iterable<$rowType>" ) );
-    if( _model.getFile() instanceof IFileFragment &&
-      isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() ) )
-    {
-      method.modifiers( Flags.DEFAULT );
-    }
-    else
-    {
-      method.modifiers( Modifier.STATIC );
-    }
     addRequiredParameters( method );
     StringBuilder sb = new StringBuilder();
+    sb.append( "return run(DefaultTxScopeProvider.instance().defaultScope($configName.class)" );
+    sb.append( method.getParameters().isEmpty() ? "" : ", " );
+    method.forwardParameters( sb );
+    sb.append( ");" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+
+    method = new SrcMethod( srcClass )
+      .name( "run" )
+      .modifiers( isFragment() ? Flags.DEFAULT : Modifier.STATIC )
+      .addParam( "txScope", TxScope.class )
+      .returns( new SrcType( "Iterable<$rowType>" ) );
+    addRequiredParameters( method );
+    sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
     int i = 0;
     for( SrcParameter param : method.getParameters() )
@@ -189,8 +196,6 @@ class SqlParentType
     //noinspection UnusedAssignment
     query = ManEscapeUtil.escapeForJavaStringLiteral( query );
     //noinspection unused
-    String configName = _model.getScope().getDbconfig().getName();
-    //noinspection unused
     String simpleName = srcClass.getSimpleName();
     //noinspection unused
     String jdbcParamTypes = getJdbcParamTypes();
@@ -201,6 +206,12 @@ class SqlParentType
       "    ).run();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
+  }
+
+  private boolean isFragment()
+  {
+    return _model.getFile() instanceof IFileFragment &&
+      isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() );
   }
 
   private String getJdbcParamTypes()
@@ -426,6 +437,7 @@ class SqlParentType
     srcClass.addImport( Runner.class );
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxScope.class );
+    srcClass.addImport( DefaultTxScopeProvider.class );
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );

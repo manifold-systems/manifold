@@ -86,6 +86,30 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     _typeVars.add( typeVar );
   }
 
+  public T throwsList( Class<? extends Throwable>... list )
+  {
+    if( list != null )
+    {
+      for( Class<? extends Throwable> t : list )
+      {
+        addThrowType( new SrcType( t ) );
+      }
+    }
+    return (T)this;
+  }
+
+  public T throwsList( SrcType... list )
+  {
+    if( list != null )
+    {
+      for( SrcType t : list )
+      {
+        addThrowType( t );
+      }
+    }
+    return (T)this;
+  }
+
   public void addThrowType( SrcType type )
   {
     if( _throwTypes.isEmpty() )

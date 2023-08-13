@@ -24,6 +24,7 @@ import manifold.rt.api.*;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
+import manifold.sql.rt.connection.DefaultTxScopeProvider;
 import manifold.sql.schema.api.*;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -31,6 +32,7 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -78,11 +80,45 @@ class SchemaParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Modifier.PUBLIC )
-      .addInterface( SchemaType.class );
+      .addInterface( new SrcType( SchemaType.class.getSimpleName() ) );
     addImports( srcClass );
+    addDefaultScopeMethod( srcClass );
+    addCommitMethod( srcClass );
+    addNewScopeMethod( srcClass );
     addInnerTypes( srcClass );
     addFkColAssignMethod( srcClass );
     srcClass.render( sb, 0 );
+  }
+
+  private void addDefaultScopeMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PRIVATE | Modifier.STATIC )
+      .name( "defaultScope" )
+      .returns( new SrcType( TxScope.class.getSimpleName() ) );
+    method.body( "return DefaultTxScopeProvider.instance().defaultScope(${srcClass.getName()}.class);" );
+    srcClass.addMethod( method );
+  }
+
+  private void addCommitMethod( SrcLinkedClass srcClass )
+  {
+    //noinspection unchecked
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "commit" )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().commit();" );
+    srcClass.addMethod( method );
+  }
+
+  private void addNewScopeMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "newScope" )
+      .returns( new SrcType( TxScope.class.getSimpleName() ) );
+    method.body( "return TxScopeProvider.newScope(${srcClass.getName()}.class);" );
+    srcClass.addMethod( method );
   }
 
   private void addInnerTypes( SrcLinkedClass srcClass )
@@ -106,8 +142,8 @@ class SchemaParentType
       .addInterface( TableRow.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, table.getName(), false );
-    addCreateMethod( srcClass, table );
-    addReadMethod( srcClass, table );
+    addCreateMethods( srcClass, table );
+    addReadMethods( srcClass, table );
     addDeleteMethod( srcClass );
     addBuilderType( srcClass, table );
     addBuilderMethod( srcClass, table );
@@ -139,7 +175,7 @@ class SchemaParentType
 
   private void addTableInfoMethod( SrcLinkedClass srcClass, SchemaTable table )
   {
-    SrcField tableInfoField = new SrcField( "myTableInfo", new SrcType( LocklessLazyVar.class ).addTypeParam( TableInfo.class ) );
+    SrcField tableInfoField = new SrcField( "myTableInfo", new SrcType( LocklessLazyVar.class.getSimpleName() ).addTypeParam( TableInfo.class ) );
     StringBuilder sb = new StringBuilder( "LocklessLazyVar.make(() -> {\n" );
     sb.append( "      Map<String, Integer> allCols = new LinkedHashMap<>();\n" );
     for( Map.Entry<String, SchemaColumn> entry : table.getColumns().entrySet() )
@@ -205,18 +241,32 @@ class SchemaParentType
     method.body( sb.toString() );
   }
 
-  private void addCreateMethod( SrcLinkedClass srcClass, SchemaTable table )
+  private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table )
   {
     String tableName = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "create" )
+      .returns( new SrcType( tableName ) );
+    addRequiredParameters( srcClass, table, method );
+    StringBuilder sb = new StringBuilder();
+    sb.append( "return create(defaultScope()" );
+    sb.append( method.getParameters().isEmpty() ? "" : ", " );
+    method.forwardParameters( sb );
+    sb.append( ");" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+
+
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "create" )
       .returns( new SrcType( tableName ) )
-      .addParam( "txScope", TxScope.class );
+      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) );
     addRequiredParameters( srcClass, table, method );
     srcClass.addMethod( method );
 
-    StringBuilder sb = new StringBuilder();
+    sb = new StringBuilder();
     sb.append( "DataBindings args = new DataBindings(new ConcurrentHashMap<>());\n" );
     initFromParameters( table, sb, "args" );
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n");
@@ -301,19 +351,25 @@ class SchemaParentType
       .addInterface( new SrcType( SchemaBuilder.class.getSimpleName() ).addTypeParam( getTableFqn( table ) ) );
     enclosingType.addInnerClass( srcInterface );
     addWithMethods( srcInterface, table );
-    addBuildMethod( srcInterface, table );
+    addBuildMethods( srcInterface, table );
   }
 
-  private void addBuildMethod( SrcLinkedClass srcInterface, SchemaTable table )
+  private void addBuildMethods( SrcLinkedClass srcInterface, SchemaTable table )
   {
     String tableName = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcInterface )
       .modifiers( Flags.DEFAULT )
       .name( "build" )
-      .addParam( "txScope", TxScope.class )
-      .returns( new SrcType( tableName ) );
+      .returns( new SrcType( tableName ) )
+      .body( "return build(defaultScope());" );
     srcInterface.addMethod( method );
 
+    method = new SrcMethod( srcInterface )
+      .modifiers( Flags.DEFAULT )
+      .name( "build" )
+      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+      .returns( new SrcType( tableName ) );
+    srcInterface.addMethod( method );
     method.body(
         "BasicTxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, Builder.this.getBindings());\n" +
         "$tableName tableRow = new $tableName() { @Override public TxBindings getBindings() { return bindings; } };\n" +
@@ -364,15 +420,19 @@ class SchemaParentType
   {
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxBindings.class );
+    srcClass.addImport( TxScope.class );
     srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( TableRow.class );
     srcClass.addImport( TableInfo.class );
+    srcClass.addImport( SchemaType.class );
     srcClass.addImport( SchemaBuilder.class );
     srcClass.addImport( QueryContext.class );
     srcClass.addImport( CrudProvider.class );
+    srcClass.addImport( TxScopeProvider.class );
+    srcClass.addImport( DefaultTxScopeProvider.class );
     srcClass.addImport( ConcurrentHashMap.class );
     srcClass.addImport( LinkedHashMap.class );
     srcClass.addImport( KeyRef.class );
@@ -380,6 +440,7 @@ class SchemaParentType
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
     srcClass.addImport( LocklessLazyVar.class );
+    srcClass.addImport( SQLException.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
   }
@@ -483,26 +544,39 @@ class SchemaParentType
   //...
   // txScope.commit();
 
-  private void addReadMethod( SrcLinkedClass srcClass, SchemaTable table )
+  private void addReadMethods( SrcLinkedClass srcClass, SchemaTable table )
   {
     String tableFqn = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "read" )
-      .returns( new SrcType( tableFqn ) )
-      .addParam( "txScope", TxScope.class );
+      .returns( new SrcType( tableFqn ) );
     List<SchemaColumn> whereCols = addSelectParameters( srcClass, table, method );
     if( whereCols.isEmpty() )
     {
       // no pk and no pk, no read method, instead use type-safe sql query :)
       return;
     }
+    StringBuilder sb = new StringBuilder();
+    sb.append( "return read(defaultScope()" );
+    sb.append( method.getParameters().isEmpty() ? "" : ", " );
+    method.forwardParameters( sb );
+    sb.append( ");" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
 
+
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "read" )
+      .returns( new SrcType( tableFqn ) )
+      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) );
+    whereCols = addSelectParameters( srcClass, table, method );
     //noinspection unused
     String jdbcParamTypes = getJdbcParamTypes( whereCols );
     //noinspection unused
     String configName = _model.getDbConfig().getName();
-    StringBuilder sb = new StringBuilder();
+    sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
     for( SchemaColumn col : whereCols )
     {
