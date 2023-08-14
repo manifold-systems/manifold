@@ -20,6 +20,9 @@ import manifold.sql.rt.api.SchemaType;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.rt.api.TxScopeProvider;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Default scope is ThreadLocal per Schema type.
  */
@@ -27,7 +30,8 @@ public class DefaultTxScopeProvider
 {
   private static DefaultTxScopeProvider INSTANCE;
 
-  private final ThreadLocal<TxScope> _defaultScope = new ThreadLocal<>();
+  private final ThreadLocal<Map<Class<? extends SchemaType>, TxScope>> _defaultScopes =
+    ThreadLocal.withInitial( () -> new LinkedHashMap<>() );
 
   private DefaultTxScopeProvider()
   {
@@ -38,15 +42,21 @@ public class DefaultTxScopeProvider
     return INSTANCE == null ? INSTANCE = new DefaultTxScopeProvider() : INSTANCE;
   }
 
+  @SuppressWarnings( "unused" )
   public TxScope defaultScope( Class<? extends SchemaType> schemaClass )
   {
-    TxScope defaultScope = _defaultScope.get();
+    Map<Class<? extends SchemaType>, TxScope> defaultScopes = _defaultScopes.get();
+    TxScope defaultScope = defaultScopes.get( schemaClass );
     if( defaultScope == null )
     {
       defaultScope = TxScopeProvider.newScope( schemaClass );
-      _defaultScope.set( defaultScope );
+      defaultScopes.put( schemaClass, defaultScope );
     }
     return defaultScope;
   }
 
+  public void clear()
+  {
+    _defaultScopes.remove();
+  }
 }

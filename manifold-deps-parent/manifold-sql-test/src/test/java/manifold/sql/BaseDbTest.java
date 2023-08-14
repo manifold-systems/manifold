@@ -18,6 +18,7 @@ package manifold.sql;
 
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.rt.connection.DefaultTxScopeProvider;
 import manifold.sql.schema.simple.ScratchTest;
 
 import java.io.File;
@@ -42,6 +43,7 @@ public abstract class BaseDbTest
     try( InputStream in = ScratchTest.class.getResourceAsStream( db_resource );
          FileOutputStream out = new FileOutputStream( tempDbFile ) )
     {
+      //noinspection ConstantConditions
       StreamUtil.copy( in, out );
     }
     catch( IOException e )
@@ -55,20 +57,22 @@ public abstract class BaseDbTest
     // close db connections
     ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
     ConnectionProvider.PROVIDERS.clear();
-//
-//    // delete temp db
-//    File file = makeTempFile( "/Runtime" + db_resource );
-//    if( !file.delete() )
-//    {
-//      throw new RuntimeException( "Could not delete temporary file: " + file );
-//    }
-//
-//    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
-//    // note, this happens frequently in CI testing
-//    Path path = Paths.get( file.toURI() );
-//    while( !Files.notExists( path ) )
-//    {
-//      synchronized( this ) { wait( 100 ); };
-//    }
+
+    // clear default tx scopes
+    DefaultTxScopeProvider.instance().clear();
+
+    // delete temp db
+    File file = makeTempFile( "/Runtime" + db_resource );
+    if( !file.delete() )
+    {
+      throw new RuntimeException( "Could not delete temporary file: " + file );
+    }
+
+    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
+    Path path = Paths.get( file.toURI() );
+    while( !Files.notExists( path ) )
+    {
+      synchronized( this ) { wait( 100 ); };
+    }
   }
 }
