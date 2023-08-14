@@ -17,14 +17,13 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.internal.javac.IFinishedCompilingListener;
-import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.rt.api.Dependencies;
 
 public class ConnectionProviderCloser implements IFinishedCompilingListener
 {
   @Override
   public void closing()
   {
-    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
-    ConnectionProvider.PROVIDERS.clear();
+    Dependencies.instance().getConnectionProvider().closeAll();
   }
 }

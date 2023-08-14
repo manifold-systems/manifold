@@ -16,20 +16,7 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
-
-import java.util.HashSet;
-import java.util.Set;
-
 public interface DbConfigProvider
 {
-  LocklessLazyVar<Set<DbConfigProvider>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<DbConfigProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, DbConfigProvider.class, DbConfigProvider.class.getClassLoader() );
-      return registered;
-    } );
-
   DbConfig loadDbConfig( String configName, Class<?> ctx );
 }

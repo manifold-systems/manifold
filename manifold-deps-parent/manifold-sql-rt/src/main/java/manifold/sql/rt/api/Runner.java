@@ -34,20 +34,15 @@ public class Runner<T extends ResultRow>
   @SuppressWarnings( "unused" )
   public Result<T> run()
   {
-    ConnectionProvider cp = ConnectionProvider.findFirst();
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
     {
-      for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
-      {
-        p.init( c );
-      }
-
       try( PreparedStatement ps = c.prepareStatement( _sqlQuery ) )
       {
         setParameters( ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          return new Result<T>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
+          return new Result<>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
         }
       }
     }
@@ -60,9 +55,10 @@ public class Runner<T extends ResultRow>
   private void setParameters( PreparedStatement ps ) throws SQLException
   {
     int i = 0;
+    ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     for( Object param : _ctx.getParams().values() )
     {
-      ValueAccessor accessor = ValueAccessor.get( _ctx.getJdbcParamTypes()[i] );
+      ValueAccessor accessor = accProvider.get( _ctx.getJdbcParamTypes()[i] );
       accessor.setParameter( ps, ++i, param );
     }
   }

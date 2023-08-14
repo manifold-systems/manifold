@@ -34,7 +34,7 @@ import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.rt.api.*;
-import manifold.sql.rt.connection.DefaultTxScopeProvider;
+import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
@@ -368,7 +368,7 @@ class SqlParentType
       Column referencedCol = col.getSchemaColumn().getForeignKey();
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(${col.getName()}));\n" );
     }
-    sb.append( "    return CrudProvider.instance().read(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
+    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().read(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
       "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );

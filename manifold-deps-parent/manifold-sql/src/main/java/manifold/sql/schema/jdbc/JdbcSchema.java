@@ -18,8 +18,8 @@ package manifold.sql.schema.jdbc;
 
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
 import manifold.sql.schema.api.Schema;
-import manifold.sql.rt.api.ConnectionNotifier;
 import manifold.sql.schema.api.SchemaTable;
 
 import java.sql.*;
@@ -44,7 +44,7 @@ public class JdbcSchema implements Schema
     _tables = new LinkedHashMap<>();
     _javaToName = new LinkedHashMap<>();
     _nameToJava = new LinkedHashMap<>();
-    ConnectionProvider cp = ConnectionProvider.findFirst();
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( dbConfig ) )
     {
       _dbProductName = c.getMetaData().getDatabaseProductName();
@@ -67,11 +67,6 @@ public class JdbcSchema implements Schema
 
   private void build( Connection c, DatabaseMetaData metaData ) throws SQLException
   {
-    for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
-    {
-      p.init( c );
-    }
-
      try( ResultSet resultSet = metaData.getTables(
       _dbConfig.getCatalogName(), _name, null, new String[]{"TABLE", "VIEW"} ) )
     {

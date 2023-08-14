@@ -16,42 +16,7 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
-
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Set;
-
 public interface TxScopeProvider
 {
-  LocklessLazyVar<Set<TxScopeProvider>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<TxScopeProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, TxScopeProvider.class, TxScopeProvider.class.getClassLoader() );
-      return registered;
-    } );
-
-  LocklessLazyVar<TxScopeProvider> BY_PRIORITY =
-    LocklessLazyVar.make( () ->
-      PROVIDERS.get().stream().max( Comparator.comparingInt( TxScopeProvider::getPriority ) )
-        .orElseThrow( () -> new IllegalStateException( "No " + TxScopeProvider.class.getSimpleName() + "'s found." ) ) );
-
-  static TxScope newScope( Class<? extends SchemaType> schemaClass )
-  {
-    return BY_PRIORITY.get().create( schemaClass );
-  }
-
-
-  TxScope create( Class<? extends SchemaType> schemaClass );
-
-
-  /**
-   * Greater = higher priority. Higher priority overrides lower. Default implementations are lowest priority. They can be
-   * overridden.
-   */
-  default int getPriority()
-  {
-    return Integer.MIN_VALUE;
-  }
+  TxScope newScope( Class<? extends SchemaType> schemaClass );
 }

@@ -16,44 +16,12 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
-
 import java.sql.Connection;
-import java.util.*;
-import java.util.function.Supplier;
 
 public interface CrudProvider
 {
-  LocklessLazyVar<Set<CrudProvider>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<CrudProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, CrudProvider.class, CrudProvider.class.getClassLoader() );
-      return registered;
-    } );
-
-  LocklessLazyVar<CrudProvider> BY_PRIORITY =
-    LocklessLazyVar.make( () ->
-      PROVIDERS.get().stream().max( Comparator.comparingInt( CrudProvider::getPriority ) )
-        .orElseThrow( () -> new IllegalStateException() ) );
-
-  static CrudProvider instance()
-  {
-    return BY_PRIORITY.get();
-  }
-
-
   <T extends TableRow> void create( Connection c, UpdateContext<T> ctx );
   <T extends TableRow> T read( QueryContext<T> ctx );
   <T extends TableRow> void update( Connection c, UpdateContext<T> ctx );
   <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx );
-
-  /**
-   * Greater = higher priority. Higher priority overrides lower. Default implementations are lowest priority. They can be
-   * overridden.
-   */
-  default int getPriority()
-  {
-    return Integer.MIN_VALUE;
-  }
 }

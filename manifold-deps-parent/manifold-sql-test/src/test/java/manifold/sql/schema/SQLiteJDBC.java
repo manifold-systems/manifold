@@ -17,7 +17,7 @@
 package manifold.sql.schema;
 
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.connection.SqlScriptParser;
+import manifold.sql.rt.util.SqlScriptParser;
 import manifold.util.ManExceptionUtil;
 
 import java.io.InputStreamReader;

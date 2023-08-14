@@ -22,7 +22,7 @@ import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.internal.javac.IIssue;
 import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.connection.DbConfigImpl;
+import manifold.sql.rt.impl.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.type.SchemaIssueContainer;
 import manifold.sql.schema.type.SchemaManifold;

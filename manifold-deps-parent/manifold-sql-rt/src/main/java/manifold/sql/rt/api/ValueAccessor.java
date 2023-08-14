@@ -16,23 +16,13 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
 
 /**
- * Each implementation of this interface handles a JDBC type from {@link java.sql.Types} and must be registered as a Java
- * Service Provider. The value returned from {@link #getJdbcType()} indicates the JDBC type handled by the SPI implementation.
- * Manifold provides default implementations that are suitable for most use-cases, however these implementations can be
- * overridden by custom implementations, a higher priority from {@link #getPriority()} overrides lower priority implementations.
- * All Manifold implementations default to the lowest priority.
+ * The value returned from {@link #getJdbcType()} indicates the JDBC type handled by the implementation.
+ * Manifold provides default implementations that are suitable for most use-cases.
  * <p/>
  * This interface performs the following:<br>
  * - resolves the Java type corresponding with the JDBC type from {@link java.sql.Types}<br>
@@ -42,46 +32,10 @@ import java.util.Set;
  */
 public interface ValueAccessor
 {
-  LocklessLazyVar<Set<ValueAccessor>> ACCESSORS =
-    LocklessLazyVar.make( () -> {
-      Set<ValueAccessor> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, ValueAccessor.class, ValueAccessor.class.getClassLoader() );
-      return registered;
-    } );
-
-  LocklessLazyVar<Map<Integer, ValueAccessor>> BY_JDBC_TYPE =
-    LocklessLazyVar.make( () -> {
-        Map<Integer, ValueAccessor> map = new HashMap<>();
-        for( ValueAccessor acc : ACCESSORS.get() )
-        {
-          int jdbcType = acc.getJdbcType();
-          ValueAccessor existing = map.get( jdbcType );
-          if( existing == null || existing.getPriority() < acc.getPriority() )
-          {
-            map.put( jdbcType, acc );
-          }
-        }
-        return map;
-      } );
-
-  static ValueAccessor get( int jdbcType )
-  {
-    return BY_JDBC_TYPE.get().get( jdbcType );
-  }
-
   /**
    * @return The {@link java.sql.Types} id this accessor handles.
    */
   int getJdbcType();
-
-  /**
-   * Greater = higher priority. Higher priority overrides lower. Default implementations are lowest priority. They can be
-   * overridden.
-   */
-  default int getPriority()
-  {
-    return Integer.MIN_VALUE;
-  }
 
   /**
    * @return The resulting type of the value in Java code. Note this type may not correspond with SQL-to-Java type mappings

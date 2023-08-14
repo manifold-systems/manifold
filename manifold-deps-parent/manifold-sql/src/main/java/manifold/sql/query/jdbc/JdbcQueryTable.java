@@ -24,12 +24,11 @@ import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
-import manifold.sql.rt.api.ConnectionNotifier;
+import manifold.sql.rt.api.Dependencies;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
-import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
 import java.util.*;
@@ -59,7 +58,7 @@ public class JdbcQueryTable implements QueryTable
       return;
     }
 
-    ConnectionProvider cp = ConnectionProvider.findFirst();
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( scope.getDbconfig() ) )
     {
       build( c, paramNames );
@@ -84,11 +83,6 @@ public class JdbcQueryTable implements QueryTable
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
-    for( ConnectionNotifier p : ConnectionNotifier.PROVIDERS.get() )
-    {
-      p.init( c );
-    }
-
     try( PreparedStatement preparedStatement = c.prepareStatement( _source ) )
     {
       // todo: handle warnings, make them compiler warnings

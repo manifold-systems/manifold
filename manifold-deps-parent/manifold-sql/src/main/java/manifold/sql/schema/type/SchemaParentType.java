@@ -24,7 +24,7 @@ import manifold.rt.api.*;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
-import manifold.sql.rt.connection.DefaultTxScopeProvider;
+import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.api.*;
 import manifold.util.concurrent.LocklessLazyVar;
 
@@ -117,7 +117,7 @@ class SchemaParentType
       .modifiers( Modifier.PUBLIC | Modifier.STATIC )
       .name( "newScope" )
       .returns( new SrcType( TxScope.class.getSimpleName() ) );
-    method.body( "return TxScopeProvider.newScope(${srcClass.getName()}.class);" );
+    method.body( "return ${Dependencies.class.getName()}.instance().getTxScopeProvider().newScope(${srcClass.getName()}.class);" );
     srcClass.addMethod( method );
   }
 
@@ -177,7 +177,7 @@ class SchemaParentType
   {
     SrcField tableInfoField = new SrcField( "myTableInfo", new SrcType( LocklessLazyVar.class.getSimpleName() ).addTypeParam( TableInfo.class ) );
     StringBuilder sb = new StringBuilder( "LocklessLazyVar.make(() -> {\n" );
-    sb.append( "      Map<String, Integer> allCols = new LinkedHashMap<>();\n" );
+    sb.append( "      LinkedHashMap<String, Integer> allCols = new LinkedHashMap<>();\n" );
     for( Map.Entry<String, SchemaColumn> entry : table.getColumns().entrySet() )
     {
       //noinspection unused
@@ -186,14 +186,14 @@ class SchemaParentType
       int jdbcType = entry.getValue().getJdbcType();
       sb.append( "      allCols.put(\"$colName\", $jdbcType);\n");
     }
-    sb.append( "      Set<String> pkCols = new HashSet<>();\n" );
+    sb.append( "      HashSet<String> pkCols = new HashSet<>();\n" );
     for( SchemaColumn pkCol : table.getPrimaryKey() )
     {
       //noinspection unused
       String pkColName = pkCol.getName();
       sb.append( "      pkCols.add(\"$pkColName\");\n\n" );
     }
-    sb.append( "      Set<String> ukCols = new HashSet<>();\n" );
+    sb.append( "      HashSet<String> ukCols = new HashSet<>();\n" );
     for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
     {
       // just need one
@@ -470,7 +470,7 @@ class SchemaParentType
     String jdbcParamTypes = getJdbcParamTypes( sfk.getColumns() );
     //noinspection unused
     String configName = _model.getDbConfig().getName();
-    sb.append( "    return CrudProvider.instance().read(" +
+    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().read(" +
       "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
@@ -584,7 +584,7 @@ class SchemaParentType
       String paramName = makePascalCaseIdentifier( col.getName(), false );
       sb.append( "    paramBindings.put(\"${col.getName()}\", $paramName);\n" );
     }
-    sb.append( "    return CrudProvider.instance().read(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
+    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().read(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
       "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     method.body( sb.toString() );

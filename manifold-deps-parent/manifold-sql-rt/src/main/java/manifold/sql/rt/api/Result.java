@@ -56,10 +56,11 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
       for( boolean isOnRow = resultSet.next(); isOnRow; isOnRow = resultSet.next() )
       {
         DataBindings row = new DataBindings();
+        ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
         for( int i = 1; i <= metaData.getColumnCount(); i++ )
         {
           String column = metaData.getColumnLabel( i );
-          ValueAccessor accessor = ValueAccessor.get( metaData.getColumnType( i ) );
+          ValueAccessor accessor = accProvider.get( metaData.getColumnType( i ) );
           Object value = accessor.getRowValue( resultSet, new ResultColumn( metaData, i ) );
           row.put( column, value );
         }

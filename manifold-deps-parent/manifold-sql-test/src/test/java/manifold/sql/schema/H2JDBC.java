@@ -16,14 +16,9 @@
 
 package manifold.sql.schema;
 
-import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.connection.SqlScriptParser;
 import manifold.util.ManExceptionUtil;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.sql.*;
-import java.util.List;
 
 public class H2JDBC
 {

@@ -17,8 +17,8 @@
 package manifold.sql;
 
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.ConnectionProvider;
-import manifold.sql.rt.connection.DefaultTxScopeProvider;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.simple.ScratchTest;
 
 import java.io.File;
@@ -54,9 +54,8 @@ public abstract class BaseDbTest
 
   void _cleanup( String db_resource ) throws InterruptedException
   {
-    // close db connections
-    ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
-    ConnectionProvider.PROVIDERS.clear();
+    // close and clear db connections
+    Dependencies.instance().getConnectionProvider().closeAll();
 
     // clear default tx scopes
     DefaultTxScopeProvider.instance().clear();
@@ -72,7 +71,7 @@ public abstract class BaseDbTest
     Path path = Paths.get( file.toURI() );
     while( !Files.notExists( path ) )
     {
-      synchronized( this ) { wait( 100 ); };
+      synchronized( this ) { wait( 100 ); }
     }
   }
 }

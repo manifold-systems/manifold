@@ -16,38 +16,14 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
-
 import java.sql.Connection;
-import java.sql.Driver;
 import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Implementors provide JDBC connections for all manifold-sql JDBC operations.
  */
 public interface ConnectionProvider
 {
-  LocklessLazyVar<Set<ConnectionProvider>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      // first, ensure jdbc drivers are loaded
-      Set<Driver> drivers = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( drivers, Driver.class, ConnectionProvider.class.getClassLoader() );
-
-      Set<ConnectionProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, ConnectionProvider.class, ConnectionProvider.class.getClassLoader() );
-      return registered;
-    } );
-
-  static ConnectionProvider findFirst()
-  {
-    return ConnectionProvider.PROVIDERS.get().stream()
-      .findFirst()
-      .orElseThrow( () -> new RuntimeException( "Could not find SQL connection provider" ) );
-  }
-
   /**
    * Provides a JDBC connection corresponding with the {@code configName} {@link DbConfig} and optional {@code classContext}.
    * A standard implementation sources the {@code configName} DbConfig in the following order:

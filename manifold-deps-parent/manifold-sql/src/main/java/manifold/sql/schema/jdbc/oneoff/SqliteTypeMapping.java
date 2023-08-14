@@ -24,15 +24,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Sqlite is pretty much a mess with getting types correctly mapped.<br>
- * - <a href="https://github.com/xerial/sqlite-jdbc/issues/928">issue 928</a><br>
- * - <a href="https://github.com/xerial/sqlite-jdbc/issues/933">issue 933</a><br>
- * - <a href="https://github.com/xerial/sqlite-jdbc/issues/935">issue 935</a><br>
- * - <a href="https://github.com/xerial/sqlite-jdbc/issues/937">issue 937</a><br>
+ * Sqlite is pretty much a mess regarding schema types reflecting result set types. The former is barely typed, lots of
+ * strings etc., while the latter is more specific. However, since schema types correspond with schema column types, we have
+ * to do better.
  * <p/>
- * Here is an attempt to at least get schema columns properly typed. The logic used here is taken from, ironically, the
- * sqlite JDBC3ResultSet#getColumnType() implementation, which unlike DatabaseMetadata#getColumns() + getString("DATA_TYPE"),
- * gets it mostly right.
+ * Here is an attempt to improve the situation. The logic used here is taken from, ironically, the sqlite JDBC3ResultSet#getColumnType()
+ * implementation, which unlike DatabaseMetadata#getColumns() + getString("DATA_TYPE"), gets it mostly right.
  */
 public class SqliteTypeMapping
 {

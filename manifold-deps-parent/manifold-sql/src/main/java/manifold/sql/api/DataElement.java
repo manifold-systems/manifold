@@ -17,6 +17,7 @@
 package manifold.sql.api;
 
 import manifold.sql.rt.api.BaseElement;
+import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.api.ValueAccessor;
 
 public interface DataElement extends BaseElement
@@ -27,7 +28,7 @@ public interface DataElement extends BaseElement
 
   default Class<?> getType()
   {
-    ValueAccessor accessor = ValueAccessor.get( getJdbcType() );
+    ValueAccessor accessor = Dependencies.instance().getValueAccessorProvider().get( getJdbcType() );
     return accessor == null ? null : accessor.getJavaType( this );
   }
 }

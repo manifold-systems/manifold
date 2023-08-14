@@ -18,24 +18,16 @@ package manifold.sql.rt.api;
 
 import manifold.api.fs.IFile;
 import manifold.api.util.cache.FqnCache;
-import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * Note, implementers must chain/forward to the default provider to fall back on existing behavior.
+ */
 public interface DbLocationProvider
 {
   String PROVIDED = "#";
   Object UNHANDLED = new Object() {};
-
-  LocklessLazyVar<Set<DbLocationProvider>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<DbLocationProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, DbLocationProvider.class, DbLocationProvider.class.getClassLoader() );
-      return registered;
-    } );
 
   enum Mode {CompileTime, DesignTime, Runtime, Unknown}
 

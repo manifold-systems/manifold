@@ -26,10 +26,10 @@ import manifold.internal.javac.SourceJavaFileObject;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbLocationProvider;
-import manifold.sql.rt.connection.DbConfigImpl;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.impl.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaProvider;
 import manifold.sql.schema.api.SchemaTable;
@@ -137,7 +137,7 @@ public class SchemaModel extends AbstractSingleFileModel
   public void updateFile( IFile file )
   {
     super.updateFile( file );
-    ConnectionProvider.findFirst().closeDataSource( _dbConfig );
+    Dependencies.instance().getConnectionProvider().closeDataSource( _dbConfig );
     init();
   }
 
