@@ -55,20 +55,20 @@ public abstract class BaseDbTest
     // close db connections
     ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
     ConnectionProvider.PROVIDERS.clear();
-
-    // delete temp db
-    File file = makeTempFile( "/Runtime" + db_resource );
-    if( !file.delete() )
-    {
-      throw new RuntimeException( "Could not delete temporary file: " + file );
-    }
-
-    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
-    // note, this happens frequently in CI testing
-    Path path = Paths.get( file.toURI() );
-    while( !Files.notExists( path ) )
-    {
-      synchronized( this ) { wait( 100 ); };
-    }
+//
+//    // delete temp db
+//    File file = makeTempFile( "/Runtime" + db_resource );
+//    if( !file.delete() )
+//    {
+//      throw new RuntimeException( "Could not delete temporary file: " + file );
+//    }
+//
+//    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
+//    // note, this happens frequently in CI testing
+//    Path path = Paths.get( file.toURI() );
+//    while( !Files.notExists( path ) )
+//    {
+//      synchronized( this ) { wait( 100 ); };
+//    }
   }
 }
