@@ -325,7 +325,7 @@ interface TA extends Student, Teacher {
 
   public TaPart(Student student) {
     this.student = student;
-    this.teacher = new Teacher(student, "Math"); // the student is the teacher
+    this.teacher = new TeacherPart(student, "Math"); // the student is the teacher
   }
 }
 ```
