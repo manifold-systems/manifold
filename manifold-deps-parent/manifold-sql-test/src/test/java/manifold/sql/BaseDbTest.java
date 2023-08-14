@@ -19,14 +19,14 @@ package manifold.sql;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.schema.simple.ScratchTest;
-import org.junit.After;
-import org.junit.Before;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.SQLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 
@@ -50,16 +50,25 @@ public abstract class BaseDbTest
     }
   }
 
-  void _cleanup( String db_resource ) throws SQLException
+  void _cleanup( String db_resource ) throws InterruptedException
   {
     // close db connections
     ConnectionProvider.PROVIDERS.get().forEach( p -> p.closeAll() );
     ConnectionProvider.PROVIDERS.clear();
 
     // delete temp db
-    if( !makeTempFile( "/Runtime" + db_resource ).delete() )
+    File file = makeTempFile( "/Runtime" + db_resource );
+    if( !file.delete() )
     {
-      throw new RuntimeException( "Could not delete temporary file: " + db_resource );
+      throw new RuntimeException( "Could not delete temporary file: " + file );
+    }
+
+    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
+    // note, this happens frequently in CI testing
+    Path path = Paths.get( file.toURI() );
+    while( !Files.notExists( path ) )
+    {
+      synchronized( this ) { wait( 100 ); };
     }
   }
 }

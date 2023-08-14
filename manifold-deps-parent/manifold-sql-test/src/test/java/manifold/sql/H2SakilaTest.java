@@ -19,8 +19,6 @@ package manifold.sql;
 import org.junit.After;
 import org.junit.Before;
 
-import java.sql.SQLException;
-
 public abstract class H2SakilaTest extends BaseDbTest
 {
   private static final String DB_RESOURCE = "/samples/db/h2-sakila.mv.db";
@@ -32,7 +30,7 @@ public abstract class H2SakilaTest extends BaseDbTest
   }
 
   @After
-  public void cleanup() throws SQLException
+  public void cleanup() throws Exception
   {
     _cleanup( DB_RESOURCE );
   }
