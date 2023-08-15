@@ -27,7 +27,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
   public void testSomeInterestingQueries()
   {
     Stores s = "[Stores.sql:H2Sakila/] Select * From store";
-    for( Store r : s.run() )
+    for( Store r : s.fetch() )
     {
       System.out.println( r.display() );
       System.out.println( r.getAddressRef().display() );
@@ -42,7 +42,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       ORDER BY films DESC
       LIMIT 1;
     */
-    for (ActorWithMostFilms.Row row : ActorWithMostFilms.run()) {
+    for (ActorWithMostFilms.Row row : ActorWithMostFilms.fetch()) {
       System.out.println(row.display());
     }
 
@@ -55,18 +55,17 @@ public class ScratchTest_Sakila extends H2SakilaTest
       ) p
       ORDER BY payment_date;
     */
-    for (CumulativeRevenueAllStores.Row row : CumulativeRevenueAllStores.run()) {
+    for (CumulativeRevenueAllStores.Row row : CumulativeRevenueAllStores.fetch()) {
       System.out.println(row.getPaymentDate());
       System.out.println(row.getSumAmount_Over_OrderByPaymentDate());
       System.out.println(row.display());
     }
 
-    auto one = "[.sql:H2Sakila/] select 1 from dual";
-    auto run = one.run();
-    run.forEach( r -> System.out.println(r.display()));
+    auto one = "[.sql:H2Sakila/] select 1 from dual".fetchOne();
+    System.out.println(one.display());
 
 
-    for( Staff staff: "[.sql:H2Sakila/] select * from staff".run() )
+    for( Staff staff: "[.sql:H2Sakila/] select * from staff".fetch() )
     {
       System.out.println( staff.display() );
     }

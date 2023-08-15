@@ -141,7 +141,7 @@ public class BasicCrudProvider implements CrudProvider
           T result = iterator.next();
           if( iterator.hasNext() )
           {
-            throw new SQLException( "Expecting one result row" );
+            throw new SQLException( "Results contain more than one row." );
           }
           return result;
         }

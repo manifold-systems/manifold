@@ -82,13 +82,13 @@ class SqlParentType
     addActualNameAnnotation( srcClass, name, false );
     addImports( srcClass );
     addFlatRowType( srcClass );
-    addRunMethods( srcClass );
+    addFetchMethods( srcClass );
     addFragmentValueMethod( srcClass );
 
     srcClass.render( sb, 0 );
   }
 
-  private void addRunMethods( SrcLinkedClass srcClass )
+  private void addFetchMethods( SrcLinkedClass srcClass )
   {
     Pair<SchemaTable, List<QueryColumn>> selectedTable = getQuery().findSelectedTable();
     String rowType;
@@ -104,7 +104,7 @@ class SqlParentType
       addRowType( srcClass );
     }
 
-    addRunMethods( srcClass, rowType );
+    addFetchMethods( srcClass, rowType );
   }
 
   private QueryTable getQuery()
@@ -153,18 +153,24 @@ class SqlParentType
     return (name == null || name.isEmpty()) ? ANONYMOUS_TYPE + _anonCount++ : name;
   }
 
-  private void addRunMethods( SrcLinkedClass srcClass, @SuppressWarnings( "unused" ) String rowType )
+  private void addFetchMethods( SrcLinkedClass srcClass, @SuppressWarnings( "unused" ) String rowType )
+  {
+    addFetchMethods( srcClass, rowType, "fetch", "Iterable<$rowType>" );
+    addFetchMethods( srcClass, rowType, "fetchOne", rowType );
+  }
+  private void addFetchMethods( SrcLinkedClass srcClass, @SuppressWarnings( "unused" ) String rowType,
+                                String methodName, @SuppressWarnings( "unused" ) String returnType )
   {
     //noinspection unused
     String configName = _model.getScope().getDbconfig().getName();
 
     SrcMethod method = new SrcMethod( srcClass )
-      .name( "run" )
+      .name( methodName )
       .modifiers( isFragment() ? Flags.DEFAULT : Modifier.STATIC )
-      .returns( new SrcType( "Iterable<$rowType>" ) );
+      .returns( new SrcType( returnType ) );
     addRequiredParameters( method );
     StringBuilder sb = new StringBuilder();
-    sb.append( "return run(DefaultTxScopeProvider.instance().defaultScope($configName.class)" );
+    sb.append( "return $methodName(DefaultTxScopeProvider.instance().defaultScope($configName.class)" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
     method.forwardParameters( sb );
     sb.append( ");" );
@@ -172,10 +178,10 @@ class SqlParentType
     srcClass.addMethod( method );
 
     method = new SrcMethod( srcClass )
-      .name( "run" )
+      .name( methodName )
       .modifiers( isFragment() ? Flags.DEFAULT : Modifier.STATIC )
       .addParam( "txScope", TxScope.class )
-      .returns( new SrcType( "Iterable<$rowType>" ) );
+      .returns( new SrcType( returnType ) );
     addRequiredParameters( method );
     sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
@@ -203,7 +209,7 @@ class SqlParentType
       "    return new Runner<$rowType>(new QueryContext<>(txScope, $rowType.class, null, ${getJdbcParamTypes()}, paramBindings, \"$configName\",\n" +
       "      rowBindings -> new $rowType() {public TxBindings getBindings() { return rowBindings; }}),\n" +
       "      \"$query\"\n" +
-      "    ).run();" );
+      "    ).$methodName();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }

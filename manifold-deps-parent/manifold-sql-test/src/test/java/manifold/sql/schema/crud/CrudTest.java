@@ -42,7 +42,7 @@ public class CrudTest extends H2SakilaTest
     assertTrue( hi.getCountryId() > 0 );
 
     auto row = "[.sql:H2Sakila/] SELECT country_id FROM Country where country = 'mycountry'"
-      .run( txScope ).iterator().next();
+      .fetchOne( txScope );
     assertEquals( row.getCountryId(), hi.getCountryId() );
   }
 

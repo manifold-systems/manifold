@@ -19,6 +19,7 @@ package manifold.sql.rt.api;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.*;
+import java.util.Iterator;
 
 public class Runner<T extends ResultRow>
 {
@@ -32,7 +33,7 @@ public class Runner<T extends ResultRow>
   }
 
   @SuppressWarnings( "unused" )
-  public Result<T> run()
+  public Result<T> fetch()
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
@@ -43,6 +44,38 @@ public class Runner<T extends ResultRow>
         try( ResultSet resultSet = ps.executeQuery() )
         {
           return new Result<>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
+        }
+      }
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @SuppressWarnings( "unused" )
+  public T fetchOne()
+  {
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+    try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
+    {
+      try( PreparedStatement ps = c.prepareStatement( _sqlQuery ) )
+      {
+        setParameters( ps );
+        try( ResultSet resultSet = ps.executeQuery() )
+        {
+          Result<T> rs = new Result<>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
+          Iterator<T> iterator = rs.iterator();
+          if( !iterator.hasNext() )
+          {
+            return null;
+          }
+          T one = iterator.next();
+          if( iterator.hasNext() )
+          {
+            throw new SQLException( "Results contain more than one row." );
+          }
+          return one;
         }
       }
     }

@@ -31,7 +31,7 @@ public class ScratchTest extends H2SalesTest
   public void testSimple()
   {
     StringBuilder sb = new StringBuilder();
-    for( PurchaseOrder po : Foo.run() )
+    for( PurchaseOrder po : Foo.fetch() )
     {
       // just make sure the results can be navigated
       assertNotNull( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
@@ -47,7 +47,7 @@ public class ScratchTest extends H2SalesTest
       Select * From purchase_order Where customer_id = :c_id
     */
     StringBuilder actual = new StringBuilder();
-    for( PurchaseOrder po : MyQuery.run( 2L ) )
+    for( PurchaseOrder po : MyQuery.fetch( 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -67,7 +67,7 @@ public class ScratchTest extends H2SalesTest
 
     StringBuilder actual = new StringBuilder();
     actual = new StringBuilder();
-    for( PurchaseOrder po : query.run( 2L ) )
+    for( PurchaseOrder po : query.fetch( 2L ) )
     {
       actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
@@ -83,7 +83,7 @@ public class ScratchTest extends H2SalesTest
       "3,2,2023-09-08,Cheryl Dunno\n";
 
     StringBuilder actual = new StringBuilder();
-    for( auto row : query.run( 2L ) )
+    for( auto row : query.fetch( 2L ) )
     {
       auto flatRow = row.flatRow();
       actual.append( flatRow.getId() ).append( "," )
@@ -94,7 +94,7 @@ public class ScratchTest extends H2SalesTest
     assertEquals( expected, actual.toString() );
 
     actual = new StringBuilder();
-    for( auto row : query.run( 2L ) )
+    for( auto row : query.fetch( 2L ) )
     {
       actual.append( row.getPurchaseOrder().getId() ).append( "," )
         .append( row.getPurchaseOrder().getCustomerRef().getId() ).append( "," )
