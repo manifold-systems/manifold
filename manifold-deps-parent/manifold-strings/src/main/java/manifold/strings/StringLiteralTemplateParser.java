@@ -22,6 +22,11 @@ import java.util.List;
 import java.util.function.IntPredicate;
 import manifold.internal.javac.FragmentProcessor;
 
+import static manifold.internal.javac.FragmentProcessor.FRAGMENT_END;
+import static manifold.internal.javac.FragmentProcessor.FRAGMENT_START;
+import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
+
 public class StringLiteralTemplateParser
 {
   private final String _stringValue;
@@ -44,20 +49,36 @@ public class StringLiteralTemplateParser
    */
   public static List<Expr> parse( IntPredicate $escapeMatcher, boolean simpleExprDisabled, String stringValue )
   {
-    if( isFilterFromTemplateParsing( stringValue ) )
+    if( isFragment( stringValue ) )
     {
+      // Don't allow string templates in fragments.
+      // It otherwise interferes with manifold-graphql, encourages sql injection with manifold-sql, and is generally an
+      // awkward mix.
       return Collections.emptyList();
     }
 
     return new StringLiteralTemplateParser( $escapeMatcher, simpleExprDisabled, stringValue ).parse();
   }
 
-  private static boolean isFilterFromTemplateParsing( String stringValue )
+  private static boolean isFragment( String stringValue )
   {
-    // don't allow string templates in fragments e.g., interferes with graphql and awkward to use @DisableStringLiteralTemplates
-    return stringValue.trim().startsWith( FragmentProcessor.FRAGMENT_START ) ||
-           stringValue.startsWith( '"' + FragmentProcessor.FRAGMENT_START ) ||
-           stringValue.startsWith( "\"\"\"" ) && stringValue.contains( FragmentProcessor.FRAGMENT_START );
+    boolean isFragment = false;
+    if( stringValue.length() >= FRAGMENT_START.length() + FRAGMENT_END.length() + 2 ) // shortest possible fragment
+    {
+      if( stringValue.charAt( 0 ) != '"' )
+      {
+        isFragment = FragmentProcessor.instance().parseFragment( 0, '"' + stringValue, DOUBLE_QUOTE_LITERAL ) != null;
+      }
+      else if( stringValue.startsWith( "\"\"\"" ) )
+      {
+        isFragment = FragmentProcessor.instance().parseFragment( 0, stringValue, TEXT_BLOCK_LITERAL ) != null;
+      }
+      else if( stringValue.charAt( 0 ) == '"' )
+      {
+        isFragment = FragmentProcessor.instance().parseFragment( 0, stringValue, DOUBLE_QUOTE_LITERAL ) != null;
+      }
+    }
+    return isFragment;
   }
 
   private StringLiteralTemplateParser( IntPredicate $escapeMatcher, boolean simpleExprDisabled, String stringValue )
