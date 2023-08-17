@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-parent</artifactId>
-    <version>2023.1.16-SNAPSHOT</version>
+    <version>2023.1.16</version>
   </parent>
 
   <artifactId>manifold-javadoc-agent</artifactId>
