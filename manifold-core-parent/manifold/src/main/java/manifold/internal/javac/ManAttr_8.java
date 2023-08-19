@@ -63,6 +63,7 @@ public class ManAttr_8 extends Attr implements ManAttr
   private final Stack<JCTree.JCMethodInvocation> _applys;
   private final Stack<JCTree.JCAnnotatedType> _annotatedTypes;
   private final Stack<JCTree.JCMethodDecl> _methodDefs;
+  private final Stack<JCTree.JCBinary> _binaryExprs;
   private final Set<JCTree.JCMethodInvocation> _visitedAutoMethodCalls = new HashSet<>();
 
   public static ManAttr_8 instance( Context ctx )
@@ -84,6 +85,7 @@ public class ManAttr_8 extends Attr implements ManAttr
     _applys = new Stack<>();
     _annotatedTypes = new Stack<>();
     _methodDefs = new Stack<>();
+    _binaryExprs = new Stack<>();
     _syms = Symtab.instance( ctx );
 
     // Override logger to handle final field assignment for @Jailbreak
@@ -896,10 +898,20 @@ public class ManAttr_8 extends Attr implements ManAttr
       return;
     }
 
-    ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", DiagnosticPosition.class, Type.class );
-    ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
-    Type left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
-    Type right = (Type)checkNonVoid.invoke( tree.rhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
+    Type left;
+    Type right;
+    pushBinary( tree );
+    try
+    {
+      ReflectUtil.LiveMethodRef checkNonVoid = ReflectUtil.method( chk(), "checkNonVoid", DiagnosticPosition.class, Type.class );
+      ReflectUtil.LiveMethodRef attribExpr = ReflectUtil.method( this, "attribExpr", JCTree.class, Env.class );
+      left = (Type)checkNonVoid.invoke( tree.lhs.pos(), attribExpr.invoke( tree.lhs, getEnv() ) );
+      right = (Type)checkNonVoid.invoke( tree.rhs.pos(), attribExpr.invoke( tree.rhs, getEnv() ) );
+    }
+    finally
+    {
+      popBinary( tree );
+    }
 
     if( handleOperatorOverloading( tree, left, right ) )
     {
@@ -909,6 +921,20 @@ public class ManAttr_8 extends Attr implements ManAttr
 
     // Everything after left/right operand attribution (see super.visitBinary())
     _visitBinary_Rest( tree, left, right );
+  }
+
+  private void pushBinary( JCTree.JCBinary tree )
+  {
+    _binaryExprs.push( tree );
+  }
+  private JCTree.JCBinary popBinary( JCTree.JCBinary tree )
+  {
+    JCTree.JCBinary expr = _binaryExprs.pop();
+    if( expr != tree )
+    {
+      throw new IllegalStateException();
+    }
+    return expr;
   }
 
   private void _visitBinary_Rest( JCTree.JCBinary tree, Type left, Type right )
@@ -981,7 +1007,10 @@ public class ManAttr_8 extends Attr implements ManAttr
    */
   public void visitLiteral( JCTree.JCLiteral tree )
   {
-    if( tree.typetag == CLASS && tree.value.toString().startsWith( FragmentProcessor.FRAGMENT_START ) )
+    if( tree.typetag == CLASS &&
+      tree.value.toString().startsWith( FragmentProcessor.FRAGMENT_START ) &&
+      tree.value.toString().contains( FragmentProcessor.FRAGMENT_END ) &&
+      _binaryExprs.isEmpty() ) // fragments are not supported with '+' concatenation
     {
       Type type = getFragmentValueType( tree );
       if( type != null )

@@ -1231,6 +1231,12 @@ public class ExtensionTransformer extends TreeTranslator
       return tree;
     }
 
+    if( _tp.getParent( tree ) instanceof JCTree.JCBinary )
+    {
+      // fragments not supported with string '+' concatenation
+      return tree;
+    }
+
     JCTree.JCClassDecl enclosingClass = getEnclosingClass( tree );
 
     CharSequence source = ParserFactoryFiles.getSource( enclosingClass.sym.sourcefile );
