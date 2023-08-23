@@ -84,6 +84,12 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
     return _results.iterator();
   }
 
+  @SuppressWarnings( "unused" )
+  public List<R> toList()
+  {
+    return _results;
+  }
+
   @Override
   public boolean equals( Object o )
   {

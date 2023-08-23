@@ -149,6 +149,14 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     return (T)this;
   }
 
+  public T insertParam( String name, SrcType type, int pos )
+  {
+    SrcParameter param = new SrcParameter( name, type );
+    param.setOwner( this );
+    _parameters.add( pos, param );
+    return (T)this;
+  }
+
   public List<SrcAnnotationExpression> getAnnotations()
   {
     return _annotations;

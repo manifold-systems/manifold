@@ -24,9 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class BasicCrudProvider implements CrudProvider
 {
@@ -118,7 +116,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> T read( QueryContext<T> ctx )
+  public <T extends TableRow> T readOne( QueryContext<T> ctx )
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
@@ -153,7 +151,35 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  // todo: fk columns = values, where clause = child table col names
+  @SuppressWarnings( "unused" )
+  public <T extends TableRow> List<T> readMany( QueryContext<T> ctx )
+  {
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+    try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
+    {
+      // todo: put a cache on this
+
+      String sql = makeReadStatement( ctx );
+      try( PreparedStatement ps = c.prepareStatement( sql ) )
+      {
+        setQueryParameters( ctx, ps );
+        try( ResultSet resultSet = ps.executeQuery() )
+        {
+          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
+          List<T> result = new ArrayList<>();
+          for( T t : ts )
+          {
+            result.add( t );
+          }
+          return result;
+        }
+      }
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
 
   private <T extends TableRow> String makeReadStatement( QueryContext<T> ctx )
   {

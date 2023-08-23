@@ -57,7 +57,7 @@ public class DataBindings implements Bindings
   }
 
   /**
-   * Default constructor uses a {@code HashMap}.
+   * Default constructor uses a {@code LinkedHashMap} to maintain the nature order of entries.
    */
   public DataBindings()
   {
@@ -65,7 +65,7 @@ public class DataBindings implements Bindings
   }
 
   /**
-   * Construct with initial size.
+   * Construct with initial size. Uses a {@code LinkedHashMap} to maintain the nature order of entries.
    *
    * @param size the initial size of the bindings
    */

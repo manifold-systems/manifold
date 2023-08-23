@@ -35,7 +35,7 @@ public class SmallIntValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Short.class : short.class;
+    return elem.canBeNull() ? Short.class : short.class;
   }
 
   @Override

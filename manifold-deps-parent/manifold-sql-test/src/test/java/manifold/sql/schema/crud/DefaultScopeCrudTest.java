@@ -38,7 +38,7 @@ public class DefaultScopeCrudTest extends H2SakilaTest
 
     auto row = "[.sql:H2Sakila/] SELECT country_id FROM Country where country = 'mycountry'"
       .fetchOne();
-    assertEquals( row.getCountryId(), hi.getCountryId() );
+    assertEquals( row.getCountryId(), (long)hi.getCountryId() );
   }
 
   @Test

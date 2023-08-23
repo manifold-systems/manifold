@@ -39,7 +39,7 @@ public class BitValueAccessor implements ValueAccessor
     {
       return byte[].class;
     }
-    return elem.isNullable() ? Boolean.class : boolean.class;
+    return elem.canBeNull() ? Boolean.class : boolean.class;
   }
 
   @Override

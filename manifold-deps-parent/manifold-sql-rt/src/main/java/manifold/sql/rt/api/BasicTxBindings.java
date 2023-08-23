@@ -19,11 +19,9 @@ package manifold.sql.rt.api;
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
-import manifold.util.concurrent.ConcurrentHashSet;
 import manifold.util.concurrent.LockingLazyVar;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class BasicTxBindings implements TxBindings
 {
@@ -69,11 +67,11 @@ public class BasicTxBindings implements TxBindings
 
     _txScope = (OperableTxScope)txScope;
     _txKind = txKind;
-    _changes = new ConcurrentHashMap<>();
+    _changes = new LinkedHashMap<>();
     switch( _txKind )
     {
       case Insert:
-        _persistedState = new DataBindings( new ConcurrentHashMap<>() );
+        _persistedState = new DataBindings();
         _changes.putAll( initialState );
         break;
       case Update:
@@ -83,8 +81,8 @@ public class BasicTxBindings implements TxBindings
       default:
         throw new IllegalArgumentException( "TxKind '" + txKind + "' not supported here" );
     }
-    _onHold = new ConcurrentHashMap<>();
-    _metadata = LockingLazyVar.make( () -> new DataBindings( new ConcurrentHashMap<>() ) );
+    _onHold = new LinkedHashMap<>();
+    _metadata = LockingLazyVar.make( () -> new DataBindings() );
   }
 
   @Override
@@ -332,7 +330,7 @@ public class BasicTxBindings implements TxBindings
 
   public Set<String> keySet()
   {
-    Set<String> keySet = new ConcurrentHashSet<>( _persistedState.keySet() );
+    Set<String> keySet = new LinkedHashSet<>( _persistedState.keySet() );
     keySet.addAll( _changes.keySet() );
     return keySet;
   }

@@ -25,6 +25,8 @@ import java.util.List;
 public class JdbcSchemaForeignKey implements SchemaForeignKey
 {
   private final String _name;
+  private final String _qualifiedName;
+  private final String _actualName;
   private final SchemaTable _referencedTable;
   private final List<SchemaColumn> _columns;
 
@@ -32,43 +34,94 @@ public class JdbcSchemaForeignKey implements SchemaForeignKey
   {
     _referencedTable = referencedTable;
     _columns = columns;
-//todo: fkName can be pretty bad, sometimes generated like with H2 you get names like "Constraint432"
-//    if( fkName != null )
+    _actualName = fkName;
+    String baseName = makeFkName( fkName );
+    _name = baseName + "_ref";
+    _qualifiedName = makeQualifiedName( baseName );
+  }
+
+  private String makeQualifiedName( String baseName )
+  {
+    // Note, qualified name is used exclusively for naming of fetch<FK>Refs methods,
+    // thus table name is redundant, much better to remove it in this case. e.g.,
+    // blog.fetchBlogCommentRefs()  vs.  blog.fetchCommentRefs()
+    baseName = baseName.equalsIgnoreCase( _referencedTable.getName() ) ? "" : baseName + "_";
+    return baseName + getOwnTable().getName() + "_ref";
+  }
+
+  private String makeFkName( String fkName )
+  {
+    if( fkName.toLowerCase().startsWith( "fk_" ) )
+    {
+      // remove 'fk_' prefix
+      fkName = fkName.substring( "fk_".length() );
+    }
+
+    if( !isFkNameAcceptable( fkName ) )
+    {
+      fkName = assignName();
+    }
+    return fkName;
+  }
+
+  private boolean isFkNameAcceptable( String fkName )
+  {
+    // feels like we can always make more suitable name using the table name + the column name
+    // for instance, store_staff vs. store_manager_staff, the latter is ours.
+    // generally, fkName can be pretty bad, sometimes generated like: with H2 you get names like "Constraint432"
+    return false;
+
+//    if( fkName == null || fkName.isEmpty() )
 //    {
-//      _name = fkName;
+//      return false;
 //    }
-//    else
-//    {
-      _name = assignName();
-//    }
+//    char lastChar = fkName.charAt( fkName.length() - 1 );
+//    // if the last char is a digit, it's probably a generated name like 'Constraint432', which is not acceptable
+//    return !Character.isDigit( lastChar );
   }
 
   private String assignName()
   {
+    // todo: make this configurable
+
     return _columns.size() == 1
       ? removeId( _columns.get( 0 ).getName() )
-      : _referencedTable.getName() + "_ref";
+      : _referencedTable.getName();
   }
 
-  private String removeId( String name )
+  public static String removeId( String name )
   {
     if( name.toLowerCase().endsWith( "_id" ) )
     {
-      name = name.substring( 0, name.length() - "_id".length() ) + "_ref";
+      name = name.substring( 0, name.length() - "_id".length() );
     }
     return name;
   }
 
+  @Override
   public String getName()
   {
     return _name;
   }
 
+  public String getQualifiedName()
+  {
+    return _qualifiedName;
+  }
+
+  @Override
+  public String getActualName()
+  {
+    return _actualName;
+  }
+
+  @Override
   public SchemaTable getReferencedTable()
   {
     return _referencedTable;
   }
 
+  @Override
   public List<SchemaColumn> getColumns()
   {
     return _columns;

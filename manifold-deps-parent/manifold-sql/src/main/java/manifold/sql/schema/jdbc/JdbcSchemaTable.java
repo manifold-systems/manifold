@@ -16,6 +16,7 @@
 
 package manifold.sql.schema.jdbc;
 
+import manifold.rt.api.util.Pair;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
@@ -35,8 +36,9 @@ public class JdbcSchemaTable implements SchemaTable
   private final ArrayList<SchemaColumn> _primaryKeys;
   private final Map<String, List<SchemaColumn>> _nonNullUniqueKeys; // does not include pk
   private final JdbcForeignKeyMetadata _foreignKeyData;
-  private Map<SchemaTable, List<SchemaForeignKey>> _foreignKeys;
-
+  private final Map<SchemaTable, List<SchemaForeignKey>> _foreignKeys;
+  private final Set<SchemaForeignKey> _oneToMany;
+  private final Set<Pair<SchemaColumn, SchemaColumn>> _manyToMany;
 
   public JdbcSchemaTable( JdbcSchema owner, DatabaseMetaData metaData, ResultSet resultSet ) throws SQLException
   {
@@ -88,7 +90,10 @@ public class JdbcSchemaTable implements SchemaTable
 
     _columns = new LinkedHashMap<>();
     _primaryKeys = new ArrayList<>();
+    _foreignKeys = new LinkedHashMap<>();
     _nonNullUniqueKeys = new LinkedHashMap<>();
+    _oneToMany = new LinkedHashSet<>();
+    _manyToMany = new LinkedHashSet<>();
     try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
@@ -212,10 +217,76 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
-  public void resolve()
+  public void resolveForeignKeys()
   {
     // resolve foreign keys
-    _foreignKeys = _foreignKeyData.resolve( _schema );
+    _foreignKeys.putAll( _foreignKeyData.resolve( _schema ) );
+  }
+
+  @Override
+  public void resolveFkRelations()
+  {
+    // resolve one-to-many, many-to-many
+    for( List<SchemaForeignKey> fkDefs : _foreignKeys.values() )
+    {
+      for( SchemaForeignKey fkDef : fkDefs )
+      {
+        JdbcSchemaTable referencedTable = (JdbcSchemaTable)fkDef.getReferencedTable();
+        List<SchemaColumn> fkColumns = fkDef.getColumns();
+        if( fkColumns.stream().noneMatch( c -> c.isNonNullUniqueId() ) ) // uniqueness implies _not_ an x-to-many
+        {
+          // infer fk as many-to-many if fk is part of non-null unique key and all the key's cols are fk parts
+          Pair<SchemaColumn, SchemaColumn> manyToManyKey = getManyToManyKey( fkDef );
+          if( manyToManyKey != null )
+          {
+            referencedTable._manyToMany.add( manyToManyKey );
+          }
+          else
+          {
+            referencedTable._oneToMany.add( fkDef );
+          }
+        }
+      }
+    }
+  }
+
+  private Pair<SchemaColumn, SchemaColumn> getManyToManyKey( SchemaForeignKey fkDef )
+  {
+    List<SchemaColumn> pk = getPrimaryKey();
+    if( isManyToMany( fkDef, pk ) )
+    {
+      return new Pair<>( pk.get( 0 ), pk.get( 1 ) );
+    }
+    for( List<SchemaColumn> ukColumns : getNonNullUniqueKeys().values() )
+    {
+      if( isManyToMany( fkDef, ukColumns ) )
+      {
+        return new Pair<>( ukColumns.get( 0 ), ukColumns.get( 1 ) );
+      }
+    }
+    return null;
+  }
+
+  private boolean isManyToMany( SchemaForeignKey sfk, List<SchemaColumn> pkColumns )
+  {
+    List<SchemaColumn> fkColumns = sfk.getColumns();
+    //noinspection SlowListContainsAll
+    return (pkColumns.size() > fkColumns.size() && pkColumns.containsAll( fkColumns ) &&
+      pkColumns.stream().allMatch( c -> c.getForeignKey() != null )
+    // following conditions narrow many-to-many to cases involving two fks having only one column and
+    // where both fks must reference difference tables to avoid issues with self referencing many-to-many relationships.
+    && pkColumns.size() == 2 &&
+      pkColumns.get( 0 ).getForeignKey().getTable() != pkColumns.get( 1 ).getForeignKey().getTable());// this check for size==2 is just here to simplify many to many
+  }
+
+  public Set<SchemaForeignKey> getOneToMany()
+  {
+    return _oneToMany;
+  }
+
+  public Set<Pair<SchemaColumn, SchemaColumn>> getManyToMany()
+  {
+    return _manyToMany;
   }
 
   public List<SchemaColumn> getNonNullColumns()

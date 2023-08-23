@@ -25,7 +25,6 @@ import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.impl.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
 
@@ -36,9 +35,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
 import java.util.function.Function;
-
-import static manifold.sql.rt.api.DbLocationProvider.Mode.CompileTime;
-import static manifold.sql.rt.api.DbLocationProvider.Mode.DesignTime;
 
 public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 {
@@ -58,11 +54,10 @@ public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 
     try( Reader reader = new InputStreamReader( file.openInputStream() ) )
     {
-      Function<String, FqnCache<IFile>> resByExt = ext ->
-        getModule().getPathCache().getExtensionCache( ext );
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
-      DbConfigImpl dbConfig = new DbConfigImpl( resByExt, bindings, JavacPlugin.instance() != null ? CompileTime : DesignTime );
-      String schemaPackage = dbConfig.getSchemaPackage();
+      // do NOT! create a DbConfigImpl here, way too expensive re processing url, making temp files for db, etc., destroys IDE perf
+      // just get the string from the json bindings and gtfo
+      String schemaPackage = (String)bindings.get( "schemaPackage" );
       if( schemaPackage == null )
       {
         throw new RuntimeException( "Missing 'schemaPackage' from DbConfig file: " + file );

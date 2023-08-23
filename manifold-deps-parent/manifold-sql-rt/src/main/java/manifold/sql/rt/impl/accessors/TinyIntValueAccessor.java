@@ -35,7 +35,7 @@ public class TinyIntValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Byte.class : byte.class;
+    return elem.canBeNull() ? Byte.class : byte.class;
   }
 
   @Override

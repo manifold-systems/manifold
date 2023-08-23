@@ -21,6 +21,13 @@ import java.util.List;
 public interface SchemaForeignKey
 {
   String getName();
+  String getQualifiedName();
+  String getActualName();
   SchemaTable getReferencedTable();
   List<SchemaColumn> getColumns();
+
+  default SchemaTable getOwnTable()
+  {
+    return getColumns().get( 0 ).getTable();
+  }
 }

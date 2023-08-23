@@ -35,7 +35,7 @@ public class IntegerValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Integer.class : int.class;
+    return elem.canBeNull() ? Integer.class : int.class;
   }
 
   @Override

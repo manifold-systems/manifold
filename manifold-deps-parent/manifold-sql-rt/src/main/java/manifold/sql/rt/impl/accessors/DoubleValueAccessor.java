@@ -35,7 +35,7 @@ public class DoubleValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Double.class : double.class;
+    return elem.canBeNull() ? Double.class : double.class;
   }
 
   @Override

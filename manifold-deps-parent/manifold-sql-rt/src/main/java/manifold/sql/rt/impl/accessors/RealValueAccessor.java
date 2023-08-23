@@ -35,7 +35,7 @@ public class RealValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Float.class : float.class;
+    return elem.canBeNull() ? Float.class : float.class;
   }
 
   @Override

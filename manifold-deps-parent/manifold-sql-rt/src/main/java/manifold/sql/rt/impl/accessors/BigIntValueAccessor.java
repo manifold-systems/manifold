@@ -35,7 +35,7 @@ public class BigIntValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Long.class : long.class;
+    return elem.canBeNull() ? Long.class : long.class;
   }
 
   @Override

@@ -32,24 +32,32 @@ public class FkDependencyTest extends H2SakilaTest
   public void testOneDependency() throws SQLException
   {
     Country country = Country.builder( "westamerica" ).build();
-    City city = City.builder( country, "flippinton" ).build();
+    City city = City.builder( "flippinton", country ).build();
+
+    // pk is initially null
+    assertNull( country.getCountryId() );
+    assertNull( city.getCityId() );
 
     H2Sakila.commit();
 
     // country's pk was written into country after the commit
     assertTrue( country.getCountryId() > 0 );
     // city's pk was written into city after the commit
-    assertTrue( country.getCountryId() > 0 );
+    assertTrue( city.getCityId() > 0 );
     // country's pk was written into city's fk after the commit
-    assertEquals( country.getCountryId(), city.getCountryRef().getCountryId() );
+    assertEquals( country.getCountryId(), city.getCountryId() );
 
     // check that the rows are in the db
     Country readCountry = Country.read( country.getCountryId() );
     assertNotNull( readCountry );
+    // also sanity check from direct sql
+    Country countryFromSql = "[.sql:H2Sakila/] select * from country where country_id = :country_id".fetchOne( country.getCountryId() );
+    assertEquals( country.getCountryId(), countryFromSql.getCountryId() );
+
     assertEquals( country.getCountryId(), readCountry.getCountryId() );
     City readCity = City.read( city.getCityId() );
     assertNotNull( readCity );
     assertEquals( city.getCityId(), readCity.getCityId() );
-    assertEquals( country.getCountryId(), readCity.getCountryRef().getCountryId() );
+    assertEquals( country.getCountryId(), readCity.getCountryId() );
   }
 }

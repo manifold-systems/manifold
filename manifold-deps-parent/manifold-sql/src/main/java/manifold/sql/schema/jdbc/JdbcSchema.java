@@ -83,7 +83,12 @@ public class JdbcSchema implements Schema
 
     for( SchemaTable table : _tables.values() )
     {
-      table.resolve();
+      table.resolveForeignKeys();
+    }
+
+    for( SchemaTable table : _tables.values() )
+    {
+      table.resolveFkRelations();
     }
   }
 

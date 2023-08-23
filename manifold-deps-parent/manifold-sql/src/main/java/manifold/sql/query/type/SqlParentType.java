@@ -41,9 +41,9 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static manifold.api.gen.AbstractSrcClass.Kind.*;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
@@ -184,7 +184,7 @@ class SqlParentType
       .returns( new SrcType( returnType ) );
     addRequiredParameters( method );
     sb = new StringBuilder();
-    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    sb.append( "DataBindings paramBindings = new DataBindings();\n" );
     int i = 0;
     for( SrcParameter param : method.getParameters() )
     {
@@ -367,14 +367,14 @@ class SqlParentType
     //noinspection unused
     String configName = _model.getScope().getDbconfig().getName();
     StringBuilder sb = new StringBuilder();
-    sb.append( "DataBindings paramBindings = new DataBindings(new ConcurrentHashMap<>());\n" );
+    sb.append( "DataBindings paramBindings = new DataBindings();\n" );
     for( QueryColumn col : fkRef.getQueryCols() )
     {
       //noinspection unused
       Column referencedCol = col.getSchemaColumn().getForeignKey();
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(${col.getName()}));\n" );
     }
-    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().read(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
+    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
       "\"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
@@ -450,7 +450,7 @@ class SqlParentType
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( CrudProvider.class );
     srcClass.addImport( QueryContext.class );
-    srcClass.addImport( ConcurrentHashMap.class );
+    srcClass.addImport( LinkedHashMap.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( FragmentValue.class );

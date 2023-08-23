@@ -35,7 +35,7 @@ public class BooleanValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return elem.isNullable() ? Boolean.class : boolean.class;
+    return elem.canBeNull() ? Boolean.class : boolean.class;
   }
 
   @Override

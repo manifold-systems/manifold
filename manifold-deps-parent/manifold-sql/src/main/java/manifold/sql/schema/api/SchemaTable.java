@@ -16,10 +16,12 @@
 
 package manifold.sql.schema.api;
 
+import manifold.rt.api.util.Pair;
 import manifold.sql.api.Table;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface SchemaTable extends Table
 {
@@ -37,9 +39,13 @@ public interface SchemaTable extends Table
   @Override
   SchemaColumn getColumn( String columnName );
 
-  void resolve();
+  void resolveForeignKeys();
+  void resolveFkRelations();
 
   List<SchemaColumn> getNonNullColumns();
+
+  Set<SchemaForeignKey> getOneToMany();
+  Set<Pair<SchemaColumn, SchemaColumn>> getManyToMany();
 
   enum Kind
   {

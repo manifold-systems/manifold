@@ -22,4 +22,29 @@ public interface BaseElement
   int getPosition();
   int getSize();
   boolean isNullable();
+
+  default boolean isGenerated()
+  {
+    return false;
+  }
+
+  default boolean isAutoIncrement()
+  {
+    return false;
+  }
+
+  /**
+   * Returns true if the column's value can be null, particularly in the interim between create and commit where generated
+   * or auto-increment schema columns are not yet unassigned values from the db.
+   */
+  default boolean canBeNull()
+  {
+    return isNullable() || isGenerated() || isAutoIncrement() ||
+      getForeignKey() != null && getForeignKey().canBeNull(); // a newly created ref could be assigned to the fk
+  }
+
+  default BaseElement getForeignKey()
+  {
+    return null;
+  }
 }
