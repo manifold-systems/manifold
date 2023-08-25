@@ -472,18 +472,24 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return;
       }
 
-      checkSuperclass( classDecl );
-
-      if( getAnnotationMirror( classDecl.sym, enter_finish.class ) != null )
+      if( hasSelfField( classDecl ) )
       {
         // already processed, probably an annotation processing round
         return;
       }
-      addAnnotation( classDecl.sym, enter_finish.class );
+
+      checkSuperclass( classDecl );
 
       addSelfField( classDecl );
       addCoveredField( classDecl );
       overrideDefaultInterfaceMethods( classDecl );
+    }
+
+    private boolean hasSelfField( JCClassDecl classDecl )
+    {
+      return classDecl.defs.stream()
+        .anyMatch( def -> def instanceof JCVariableDecl &&
+          SELF_FIELD.equals( ((JCVariableDecl)def).name.toString() ) );
     }
 
     private void checkSuperclass( JCClassDecl classDecl )
