@@ -307,6 +307,12 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         JCExpression enter_start = memberAccess( make, enter_start.class.getName() );
         addAnnotations( tree, List.of( make.Annotation( enter_start, List.nil() ) ) );
 
+        if( writeOnlyHasPrivateReadAccess( tree, var, val, get, set, make ) )
+        {
+          // a @get was added
+          get = getAnnotation( tree, get.class );
+        }
+
         if( (modifiers & (PUBLIC | PROTECTED | PRIVATE)) == 0 )
         {
           // default @var fields to PUBLIC, they must use PropOption.Package if they really want it
@@ -494,6 +500,21 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           tree.getModifiers().annotations = List.from( annos );
         }
       }
+    }
+
+    private boolean writeOnlyHasPrivateReadAccess(
+      JCVariableDecl tree, JCAnnotation var, JCAnnotation val, JCAnnotation get, JCAnnotation set, TreeMaker make )
+    {
+      if( set != null && get == null && var == null && val == null )
+      {
+        // A lone @set property requires a private @get so the class innards can access the property
+        JCExpression privateGet = memberAccess( make, get.class.getName() );
+        addAnnotations( tree,
+          List.of( make.Annotation( privateGet,
+            List.of( memberAccess( make, PropOption.class.getName() + ".Private" ) ) ) ) );
+        return true;
+      }
+      return false;
     }
 
     //  @propgen(name = "foo", 1)

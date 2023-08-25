@@ -34,4 +34,11 @@ public class Foo
     privateProp = value;
     return privateProp;
   }
+
+  public void testWriteOnlyPrivateAccess()
+  {
+    // test read access from @set write-only property foo
+    // (a @get(Private) is generated)
+    String read = foo;
+  }
 }
