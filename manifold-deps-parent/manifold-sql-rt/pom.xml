@@ -32,6 +32,12 @@
       <artifactId>HikariCP</artifactId>
       <version>4.0.3</version>
     </dependency>
+    <!-- jetbrains annotations used for null safety wrt schema and query API while in the IDE -->
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>24.0.1</version>
+    </dependency>
   </dependencies>
 
   <build>

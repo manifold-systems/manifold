@@ -29,6 +29,7 @@ import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
 import manifold.util.concurrent.LocklessLazyVar;
+import org.jetbrains.annotations.NotNull;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -163,7 +164,8 @@ class SchemaParentType
 
     SrcConstructor ctor = new SrcConstructor( srcClass )
       .modifiers( Modifier.PRIVATE )
-      .addParam( "bindings", TxBindings.class )
+      .addParam( new SrcParameter( "bindings", TxBindings.class )
+        .addAnnotation( NotNull.class.getSimpleName() ) )
       .body( "_bindings = bindings;" );
     srcClass.addConstructor( ctor );
 
@@ -323,7 +325,8 @@ class SchemaParentType
       .modifiers( Modifier.STATIC )
       .name( "create" )
       .returns( new SrcType( tableName ) )
-      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) );
+      .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+        .addAnnotation( NotNull.class.getSimpleName() ) );
     if( fkRefs )
     {
       addRequiredParametersUsingFkRefs( table, method );
@@ -441,7 +444,12 @@ class SchemaParentType
         {
           // Add column param
 
-          method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+          SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+          if( !col.getType().isPrimitive() )
+          {
+            param.addAnnotation( NotNull.class.getSimpleName() );
+          }
+          method.addParam( param );
         }
       }
     }
@@ -454,7 +462,8 @@ class SchemaParentType
     {
       String tableFqn = getTableFqn( sfk.getReferencedTable() );
       SrcType srcType = new SrcType( tableFqn );
-      method.addParam( makePascalCaseIdentifier( sfk.getName(), false ), srcType );
+      method.addParam( new SrcParameter( makePascalCaseIdentifier( sfk.getName(), false ), srcType )
+        .addAnnotation( NotNull.class.getSimpleName() ) );
     }
   }
 
@@ -484,7 +493,12 @@ class SchemaParentType
     {
       if( isRequired( col ) )
       {
-        method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+        SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+        if( !col.getType().isPrimitive() )
+        {
+          param.addAnnotation( NotNull.class.getSimpleName() );
+        }
+        method.addParam( param );
       }
     }
   }
@@ -512,7 +526,8 @@ class SchemaParentType
     method = new SrcMethod( srcInterface )
       .modifiers( Flags.DEFAULT )
       .name( "build" )
-      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+      .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+        .addAnnotation( NotNull.class.getSimpleName() ) )
       .returns( new SrcType( tableName ) );
     srcInterface.addMethod( method );
     method.body(
@@ -616,6 +631,7 @@ class SchemaParentType
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
     srcClass.addImport( SQLException.class );
+    srcClass.addImport( NotNull.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
   }
@@ -760,7 +776,8 @@ class SchemaParentType
       .modifiers( Modifier.STATIC )
       .name( "read" )
       .returns( new SrcType( tableFqn ) )
-      .addParam( "txScope", new SrcType( TxScope.class.getSimpleName() ) );
+      .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+        .addAnnotation( NotNull.class.getSimpleName() ) );
     whereCols = addSelectParameters( table, method );
     //noinspection unused
     String jdbcParamTypes = getJdbcParamTypes( whereCols );
