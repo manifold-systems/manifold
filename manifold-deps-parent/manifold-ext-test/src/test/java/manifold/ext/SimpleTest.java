@@ -236,6 +236,11 @@ public class SimpleTest extends TestCase
     assertTrue( ClassWithConstants.OBJ_VALUE2 instanceof ClassWithConstants );
   }
 
+  public void testAbstractEnum()
+  {
+    assertEquals( AbstractEnum.A, AbstractEnum.A.myExtensionMethod() );
+  }
+
   public void testAnnotatedParameters()
   {
     Double dub = 1.2;

@@ -52,6 +52,18 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
     return (T)this;
   }
 
+  public T addAnnotation( Class<?> anno )
+  {
+    _annotations.add( new SrcAnnotationExpression( anno ) );
+    return (T)this;
+  }
+
+  public T addAnnotation( String fqn )
+  {
+    _annotations.add( new SrcAnnotationExpression( fqn ) );
+    return (T)this;
+  }
+
   public T modifiers( long modifiers )
   {
     _modifiers = modifiers;

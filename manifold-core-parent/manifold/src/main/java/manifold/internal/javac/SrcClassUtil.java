@@ -26,6 +26,7 @@ import com.sun.tools.javac.util.Pair;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.NullType;
 import javax.tools.DiagnosticListener;
@@ -39,6 +40,8 @@ import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 
+import static com.sun.tools.javac.code.Flags.ABSTRACT;
+import static com.sun.tools.javac.code.Flags.DEFAULT;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static manifold.util.JreUtil.isJava8;
 
@@ -74,12 +77,12 @@ public class SrcClassUtil
     if( enclosing == null )
     {
       srcClass = new SrcClass( fqn, getKindFrom( classSymbol ), location, module, errorHandler )
-        .modifiers( classSymbol.getModifiers() );
+        .modifiers( getClassSymbolModifiers( classSymbol ) );
     }
     else
     {
       srcClass = new SrcClass( fqn, enclosing, getKindFrom( classSymbol ) )
-        .modifiers( classSymbol.getModifiers() );
+        .modifiers( getClassSymbolModifiers( classSymbol ) );
     }
     if( classSymbol.getEnclosingElement() instanceof Symbol.PackageSymbol && compilationUnit != null )
     {
@@ -143,6 +146,23 @@ public class SrcClassUtil
       addDefaultCtorForEnum( classSymbol, srcClass, members );
     }
     return srcClass;
+  }
+
+  private static Set<javax.lang.model.element.Modifier> getClassSymbolModifiers( Symbol.ClassSymbol classSymbol )
+  {
+    long modifiers = classSymbol.flags() & ~DEFAULT;
+    if( classSymbol.isEnum() )
+    {
+      // enums can be weirdly internally abstract where it can have abstract methods that are implemented anonymously.
+      // However, since an enum's instances are limited to its values, it does not declare itself as abstract even though
+      // internally it is recorded as such.
+      // public enum MyEnum {
+      //    A() { String foo() {return "hi";} };
+      //    abstract String foo();
+      // }
+      modifiers = modifiers & ~ABSTRACT;
+    }
+    return Flags.asModifierSet( modifiers );
   }
 
   /*
@@ -303,7 +323,7 @@ public class SrcClassUtil
     String name = method.flatName().toString();
     SrcMethod srcMethod = new SrcMethod( srcClass, name.equals( "<init>" ) );
     addAnnotations( srcMethod, method );
-    srcMethod.modifiers( method.getModifiers() );
+    srcMethod.modifiers( getModifiers( method ) );
     if( (method.flags() & Flags.VARARGS) != 0 )
     {
       srcMethod.modifiers( srcMethod.getModifiers() | 0x00000080 ); // Modifier.VARARGS
@@ -373,6 +393,17 @@ public class SrcClassUtil
         new SrcRawStatement()
           .rawText( bodyStmt ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  private static Set<javax.lang.model.element.Modifier> getModifiers( Symbol.MethodSymbol method )
+  {
+    long flags = method.flags();
+    if( method.owner.getKind() == ElementKind.ENUM )
+    {
+      // abstract enum methods can't really be abstract
+      flags = flags & ~ABSTRACT;
+    }
+    return Flags.asModifierSet( (flags & DEFAULT) != 0 ? flags & ~ABSTRACT : flags );
   }
 
   /**
