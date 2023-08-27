@@ -90,6 +90,15 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     typeProcessor.addTaskListener( this );
   }
 
+  @Override
+  public InitOrder initOrder( ICompilerComponent compilerComponent )
+  {
+    // Properties must be processed before DelegationProcessor so that manifold-props is fully supported with manifold-delegation
+    return compilerComponent.getClass().getName().equals( "manifold.ext.props.PropertyProcessor" )
+      ? InitOrder.After
+      : InitOrder.NA;
+  }
+
   BasicJavacTask getJavacTask()
   {
     return _javacTask;
