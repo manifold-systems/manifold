@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static manifold.ext.props.rt.api.PropOption.Private;
+import static manifold.ext.props.rt.api.PropOption.Protected;
 
 public class FromClassFile
 {
@@ -55,6 +56,9 @@ public class FromClassFile
   @get @set String readwriteBackingProp2 = "readwriteBackingProp2";
   @val String readonlyBackingProp = "readonlyBackingProp";
   @set String writeonlyBackingProp;
+
+  //https://github.com/manifold-systems/manifold/issues/483
+  @var(Protected) String protectedReadWriteUsingPropOption = "protectedReadWriteUsingPropOption";
 
   @var final String finalBackingProp = "finalBackingProp";
 
