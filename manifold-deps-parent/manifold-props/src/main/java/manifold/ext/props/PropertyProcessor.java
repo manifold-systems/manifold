@@ -316,7 +316,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         if( (modifiers & (PUBLIC | PROTECTED | PRIVATE)) == 0 )
         {
           // default @var fields to PUBLIC, they must use PropOption.Package if they really want it
-          tree.getModifiers().flags |= PUBLIC;
+          tree.getModifiers().flags = modifiers |= PUBLIC;
         }
 
         boolean isAbstract = getAnnotation( tree, Abstract.class ) != null;
