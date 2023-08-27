@@ -4,7 +4,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2023.1.18-SNAPSHOT</version>
+    <version>2023.1.19-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-highjump-test</artifactId>
