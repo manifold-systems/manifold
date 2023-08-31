@@ -1,0 +1,4 @@
+{
+  "url": "jdbc:sqlite:${#resource /samples/db/sqlite-sakila.db, sqlite-sakila.db}",
+  "schemaPackage": "manifold.sql.schema.simple.sqlite"
+}

@@ -14,71 +14,77 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql.schema.sqlite;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.H2SakilaTest;
-import manifold.sql.schema.simple.H2Sakila;
-import manifold.sql.schema.simple.H2Sakila.*;
+import manifold.sql.SqliteSakilaTest;
+import manifold.sql.rt.api.TxScope;
+import manifold.sql.schema.simple.sqlite.SqliteSakila;
+import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;
 
 import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class DefaultScopeCrudTest extends H2SakilaTest
+public class CrudTest extends SqliteSakilaTest
 {
   @Test
   public void testCreate() throws SQLException
   {
-    Country hi = Country.create( "mycountry" );
-    H2Sakila.commit();
+    TxScope txScope = SqliteSakila.newScope();
+
+    Country hi = Country.create( txScope, "mycountry" );
+    txScope.commit();
     // test that country_id was assigned after the insert
     assertTrue( hi.getCountryId() > 0 );
 
-    auto row = "[.sql:H2Sakila/] SELECT country_id FROM Country where country = 'mycountry'"
-      .fetchOne();
-    assertEquals( row.getCountryId(), (long)hi.getCountryId() );
+    auto row = "[.sql:SqliteSakila/] SELECT country_id FROM Country where country = 'mycountry'"
+      .fetchOne( txScope );
+    assertEquals( row.getCountryId(), hi.getCountryId() );
   }
 
   @Test
   public void testRead() throws SQLException
   {
-    Country hi = Country.create( "mycountry" );
-    H2Sakila.commit();
+    TxScope txScope = SqliteSakila.newScope();
+    Country hi = Country.create( txScope, "mycountry" );
+    txScope.commit();
 
-    Country readHi = Country.read( hi.getCountryId() );
+    Country readHi = Country.read( txScope, hi.getCountryId() );
     assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
   @Test
   public void testUpdate() throws SQLException
   {
-    Country hi = Country.create( "mycountry" );
-    H2Sakila.commit();
+    TxScope txScope = SqliteSakila.newScope();
+    Country hi = Country.create( txScope, "mycountry" );
+    txScope.commit();
     // test that country_id was assigned after the insert
     assertTrue( hi.getCountryId() > 0 );
 
     hi.setCountry( "mycountry2" );
-    H2Sakila.commit();
+    txScope.commit();
 
-    Country readHi = Country.read( hi.getCountryId() );
+    Country readHi = Country.read( txScope, hi.getCountryId() );
     assertEquals( "mycountry2", hi.getCountry() );
   }
 
   @Test
   public void testDelete() throws SQLException
   {
-    Country hi = Country.create( "mycountry" );
-    H2Sakila.commit();
+    TxScope txScope = SqliteSakila.newScope();
+    Country hi = Country.create( txScope, "mycountry" );
+    txScope.commit();
     // test that country_id was assigned after the insert
     assertTrue( hi.getCountryId() > 0 );
 
-    long countryId = hi.getCountryId();
+    int countryId = hi.getCountryId();
 
     hi.delete( true );
-    H2Sakila.commit();
-    Country readHi = Country.read( countryId );
+    txScope.commit();
+    Country readHi = Country.read( txScope, countryId );
     assertNull( readHi );
   }
 }

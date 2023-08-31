@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql;
 
-public class FkFetchTest
+import org.junit.After;
+import org.junit.Before;
+
+public abstract class SqliteSakilaTest extends BaseDbTest
 {
-  //todo: first, make comprehensive sample db for tests, port mysql sakila + data to h2
+  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
 
-  // test fk fetch from table row (these are getXxxRef() now)
+  @Before
+  public void setup()
+  {
+    _setup( DB_RESOURCE );
+  }
 
-  // test fk fetch from query row (these are getXxxRef() now)
-
-  // test fk fetch from selected table row from mixed query row (these are getXxxRef() now)
+  @After
+  public void cleanup() throws Exception
+  {
+    _cleanup( DB_RESOURCE );
+  }
 }

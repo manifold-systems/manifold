@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql.schema.sqlite;
 
-import manifold.sql.H2SakilaTest;
-import manifold.sql.schema.simple.H2Sakila;
-import manifold.sql.schema.simple.H2Sakila.*;
+import manifold.sql.SqliteSakilaTest;
+import manifold.sql.schema.simple.sqlite.SqliteSakila;
+import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;
 
 import java.sql.SQLException;
@@ -26,7 +26,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class ManyToManyTest extends H2SakilaTest
+public class ManyToManyTest extends SqliteSakilaTest
 {
   @Test
   public void testManyToMany() throws SQLException
@@ -40,7 +40,7 @@ public class ManyToManyTest extends H2SakilaTest
     FilmCategory myFilmOtherCategory = FilmCategory.create( myFilm, myOtherCat );
     FilmCategory myOtherFilmCategory = FilmCategory.create( myOtherFilm, myCat );
 
-    H2Sakila.commit();
+    SqliteSakila.commit();
 
     List<Category> categories = myFilm.fetchCategoryRefs();
     assertEquals( 2, categories.size() );

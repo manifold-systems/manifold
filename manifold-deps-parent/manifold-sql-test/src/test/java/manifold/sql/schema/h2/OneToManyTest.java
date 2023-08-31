@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql.schema.h2;
 
 import manifold.sql.H2SakilaTest;
-import manifold.sql.schema.simple.H2Sakila;
-import manifold.sql.schema.simple.H2Sakila.*;
+import manifold.sql.schema.simple.h2.H2Sakila;
+import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
 
 import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class OneToManyTest extends H2SakilaTest
 {

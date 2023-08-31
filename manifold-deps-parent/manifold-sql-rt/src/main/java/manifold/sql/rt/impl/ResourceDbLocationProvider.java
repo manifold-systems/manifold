@@ -21,13 +21,20 @@ import manifold.api.util.cache.FqnCache;
 import manifold.rt.api.util.StreamUtil;
 import manifold.rt.api.util.TempFileUtil;
 import manifold.sql.rt.api.DbLocationProvider;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
+import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 import static manifold.sql.rt.api.DbLocationProvider.Mode.*;
 
 /**
@@ -63,6 +70,7 @@ public class ResourceDbLocationProvider implements DbLocationProvider
 
     String dbFileResourcePath = args[0];
     String name = args.length > 1 ? args[1] : null;
+    String extra = args.length > 2 ? args[2] : null;
 
     // add prefix to temp file to prevent compile-time, design-time, and run-time usages collide,
     // each will have its own copy of the db
@@ -71,9 +79,10 @@ public class ResourceDbLocationProvider implements DbLocationProvider
     {
       dbFileResourcePath = "/" + dbFileResourcePath;
     }
-    File tempDbFile = TempFileUtil.makeTempFile( prefix + dbFileResourcePath, true );
-    //noinspection ResultOfMethodCallIgnored
-    tempDbFile.delete();
+
+    String tempDir = makeTempDirName( dbFileResourcePath );
+    deleteTempDbDir( mode, dbFileResourcePath );
+    File tempDbFile = TempFileUtil.makeTempFile( "/" + prefix + "/" + tempDir + dbFileResourcePath, true );
     IFile resFile = maybeGetCompileTimeResource( resByExt, mode, dbFileResourcePath );
     try( InputStream in = resFile != null
       ? resFile.openInputStream()
@@ -93,9 +102,70 @@ public class ResourceDbLocationProvider implements DbLocationProvider
         File f = new File( tempDbFile.getParent(), name );
         jdbcPath = f.getAbsolutePath().replace( '\\', '/' );
       }
+      if( extra != null )
+      {
+        jdbcPath += extra;
+      }
       return jdbcPath;
     }
     catch( IOException e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
+
+  @NotNull
+  public static String makeTempDirName( String dbFileResourcePath )
+  {
+    String tempDir;
+    int slashPos = dbFileResourcePath.lastIndexOf( "/" );
+    if( slashPos < 0 )
+    {
+      slashPos = dbFileResourcePath.lastIndexOf( "\\" );
+    }
+
+    if( slashPos >= 0 )
+    {
+      tempDir = dbFileResourcePath.substring( slashPos + 1 );
+    }
+    else
+    {
+      tempDir = dbFileResourcePath;
+    }
+    return tempDir;
+  }
+
+  public static void deleteTempDbDir( Mode mode, String dbFileResourcePath )
+  {
+    // delete temp db directory
+    File file = makeTempFile( "/" + mode + "/" + makeTempDirName( dbFileResourcePath ) );
+    if( !file.exists() )
+    {
+      return;
+    }
+    
+    try( Stream<Path> pathStream = Files.walk( file.toPath() ) )
+    {
+      //noinspection ResultOfMethodCallIgnored
+      pathStream.sorted( Comparator.reverseOrder() )
+        .map( Path::toFile )
+        .forEach( File::delete );
+
+      // wait for file to delete from the fs, to prevent tests from clobbering one another
+      long now = System.nanoTime();
+      Path path = Paths.get( file.toURI() );
+      while( !Files.notExists( path ) )
+      {
+        if( System.nanoTime() - now > 10 * 1_000_000_000L )
+        {
+          // bail after 10s
+          throw new RuntimeException( "Could not delete temp db directory: " + path );
+        }
+        //noinspection BusyWait
+        Thread.sleep( 100 );
+      }
+    }
+    catch( Exception e )
     {
       throw new RuntimeException( e );
     }

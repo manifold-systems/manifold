@@ -17,17 +17,19 @@
 package manifold.sql.rt.impl;
 
 import manifold.ext.rt.api.IBindingsBacked;
+import manifold.json.rt.api.DataBindings;
+import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.*;
 import manifold.util.ManExceptionUtil;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 
 public class BasicCrudProvider implements CrudProvider
 {
+
+  public static final String SQLITE_LAST_INSERT_ROWID = "last_insert_rowid()";
+
   @SuppressWarnings( "unused" )
   public <T extends TableRow> void create( Connection c, UpdateContext<T> ctx )
   {
@@ -40,7 +42,7 @@ public class BasicCrudProvider implements CrudProvider
       try( PreparedStatement ps = c.prepareStatement( sql, allColumnNames ) )
       {
         setInsertParameters( ctx, ps );
-        executeAndFetchRow( ps, table.getBindings() );
+        executeAndFetchRow( c, ctx, ps, table.getBindings() );
       }
     }
     catch( SQLException e )
@@ -257,7 +259,7 @@ public class BasicCrudProvider implements CrudProvider
       try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
       {
         setUpdateParameters( ctx, whereColumns, ps );
-        executeAndFetchRow( ps, table.getBindings() );
+        executeAndFetchRow( c, ctx, ps, table.getBindings() );
       }
     }
     catch( SQLException e )
@@ -316,7 +318,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private void executeAndFetchRow( PreparedStatement ps, TxBindings table ) throws SQLException
+  private <T extends TableRow> void executeAndFetchRow( Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table ) throws SQLException
   {
     int result = ps.executeUpdate();
     if( result != 1 )
@@ -324,22 +326,109 @@ public class BasicCrudProvider implements CrudProvider
       throw new SQLException( "Expecting a single row result for Update/Insert, got " + result );
     }
 
-    // here getGeneratedKeys() returns ALL columns because PreparedStatement was created with all columns names as gen keys
+    // here getGeneratedKeys() returns ALL columns because PreparedStatement was created with all column names as gen keys
+    // this is necessary to retrieve columns that are autoincrement, generated, default values, etc.
+    Bindings reflectedRow = DataBindings.EMPTY_BINDINGS;
     try( ResultSet resultSet = ps.getGeneratedKeys() )
     {
       Result<IBindingsBacked> resultRow = new Result<>( resultSet, rowBindings -> () -> rowBindings );
       Iterator<IBindingsBacked> iterator = resultRow.iterator();
-      if( !iterator.hasNext() )
-      {
-        throw new SQLException( "Expecting a single row, found none." );
-      }
-      IBindingsBacked updatedRow = iterator.next();
       if( iterator.hasNext() )
       {
-        throw new SQLException( "Expecting a single row, found more." );
+        reflectedRow = iterator.next().getBindings();
+        if( iterator.hasNext() )
+        {
+          throw new SQLException( "Expecting a single row, found more." );
+        }
       }
-      table.holdValues( updatedRow.getBindings() );
     }
+    catch( SQLFeatureNotSupportedException ignore )
+    {
+    }
+
+    if( reflectedRow.isEmpty() && ctx.getPkCols().isEmpty() )
+    {
+      // no pk means there's no way to fetch the inserted row
+      //todo: throw here instead?
+      return;
+    }
+
+    // some drivers (sqlite) don't fetch the gen key columns supplied in the prepared statement, so we issue a Select
+    reflectedRow = maybeFetchInsertedRow( c, ctx, table, reflectedRow );
+    if( reflectedRow.isEmpty() )
+    {
+      throw new SQLException( "Failed to reflect newly inserted row." );
+    }
+
+    table.holdValues( reflectedRow );
+  }
+
+  private <T extends TableRow> Bindings maybeFetchInsertedRow(
+    Connection c, UpdateContext<T> ctx, TxBindings bindings, Bindings reflectedRow ) throws SQLException
+  {
+    DataBindings params = new DataBindings();
+    int[] paramTypes;
+    if( reflectedRow.containsKey( SQLITE_LAST_INSERT_ROWID ) )
+    {
+      // specific to sqlite :\
+      // all sqlite tables (except those marked WITHOUT ROWID) have a built-in "rowid" column
+      // otherwise sqlite ignores all the columns we specify for generated keys when creating a PreparedStatement
+      params.put( "_rowid_", reflectedRow.get( SQLITE_LAST_INSERT_ROWID ) );
+      paramTypes = new int[] {Types.INTEGER};
+    }
+    else if( reflectedRow.isEmpty() )
+    {
+      // ps.getGeneratedKeys() totally failed, lets hope the pk was manually entered...
+
+      Set<String> pkCols = ctx.getPkCols();
+      if( pkCols.isEmpty() )
+      {
+        // no pk, can't query
+        return reflectedRow;
+      }
+
+      Map<String, Integer> jdbcTypes = ctx.getAllColsWithJdbcType();
+      paramTypes = new int[pkCols.size()];
+      int i = 0;
+      for( String pkCol : pkCols )
+      {
+        Object pkValue = bindings.get( pkCol );
+        if( pkValue == null )
+        {
+          // null pk value means we can't query for the inserted row, game over
+          return reflectedRow;
+        }
+        params.put( pkCol, pkValue );
+        paramTypes[i++] = jdbcTypes.get( pkCol );
+      }
+    }
+    else
+    {
+      return reflectedRow;
+    }
+
+    QueryContext<T> queryContext = new QueryContext<>( ctx.getTxScope(), null, ctx.getDdlTableName(),
+      paramTypes, params, ctx.getConfigName(), null );
+    String sql = makeReadStatement( queryContext );
+    try( PreparedStatement ps = c.prepareStatement( sql ) )
+    {
+      setQueryParameters( queryContext, ps );
+      try( ResultSet resultSet = ps.executeQuery() )
+      {
+        Result<IBindingsBacked> resultRow = new Result<>( resultSet, rowBindings -> () -> rowBindings );
+        Iterator<IBindingsBacked> iterator = resultRow.iterator();
+        if( !iterator.hasNext() )
+        {
+          throw new SQLException( "Expecting a single row, found none." );
+        }
+        reflectedRow = iterator.next().getBindings();
+        if( iterator.hasNext() )
+        {
+          throw new SQLException( "Expecting a single row, found more." );
+        }
+      }
+    }
+    return reflectedRow;
   }
 
   public <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx )

@@ -1,4 +1,4 @@
 {
   "url": "jdbc:h2:file:${#resource /samples/db/h2-sakila.mv.db, h2-sakila}",
-  "schemaPackage": "manifold.sql.schema.simple"
+  "schemaPackage": "manifold.sql.schema.simple.h2"
 }

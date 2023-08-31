@@ -20,6 +20,8 @@ import manifold.rt.api.util.Pair;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
@@ -27,6 +29,8 @@ import java.util.stream.Collectors;
 
 public class JdbcSchemaTable implements SchemaTable
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchemaTable.class );
+
   private final JdbcSchema _schema;
   private final String _name;
   private final String _description;
@@ -51,6 +55,23 @@ public class JdbcSchemaTable implements SchemaTable
       throw new IllegalStateException( "Unexpected table kind for: " + _name );
     }
 
+    List<String> columnTypes = new ArrayList<>();
+    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
+    {
+      for( int i = 0; i < preparedStatement.getMetaData().getColumnCount(); i++ )
+      {
+        try
+        {
+          columnTypes.add( preparedStatement.getMetaData().getColumnClassName( i + 1 ) );
+        }
+        catch( SQLException se )
+        {
+          LOGGER.warn( "getColumnClassName() failed.", se );
+          columnTypes.add( Object.class.getName() );
+        }
+      }
+    }
+
     List<String> primaryKey = new ArrayList<>();
     String catalogName = _schema.getDbConfig().getCatalogName();
     String schemaName = _schema.getName();
@@ -68,9 +89,12 @@ public class JdbcSchemaTable implements SchemaTable
     {
       while( indexInfo.next() )
       {
-        String indexName = indexInfo.getString( "INDEX_NAME" );
-        uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
-          .add( indexInfo.getString( "COLUMN_NAME" ) );
+        if( !indexInfo.getBoolean( "NON_UNIQUE" ) )
+        {
+          String indexName = indexInfo.getString( "INDEX_NAME" );
+          uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
+            .add( indexInfo.getString( "COLUMN_NAME" ) );
+        }
       }
     }
 
@@ -100,7 +124,8 @@ public class JdbcSchemaTable implements SchemaTable
       JdbcSchemaColumn id = null;
       while( colResults.next() )
       {
-        JdbcSchemaColumn col = new JdbcSchemaColumn( ++i, this, colResults, primaryKey, uniqueKeys );
+        i++;
+        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnTypes.get( i-1 ) );
         _columns.put( col.getName(), col );
         if( col.isNonNullUniqueId() )
         {

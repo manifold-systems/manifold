@@ -39,6 +39,7 @@ public class JdbcQueryColumn implements QueryColumn
   private final boolean _isCurrency;
   private final boolean _isReadOnly;
   private final boolean _isSigned;
+  private final String _columnType;
 
   public JdbcQueryColumn( int colIndex, JdbcQueryTable queryTable, ResultSetMetaData rsMetaData ) throws SQLException
   {
@@ -54,6 +55,7 @@ public class JdbcQueryColumn implements QueryColumn
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
     _jdbcType = rsMetaData.getColumnType( colIndex );
+    _columnType = rsMetaData.getColumnClassName( colIndex );
 
     _isNullable = rsMetaData.isNullable( colIndex ) == ResultSetMetaData.columnNullable;
 
@@ -81,6 +83,12 @@ public class JdbcQueryColumn implements QueryColumn
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  @Override
+  public String getColumnClassName()
+  {
+    return _columnType;
   }
 
   public SchemaColumn getSchemaColumn()

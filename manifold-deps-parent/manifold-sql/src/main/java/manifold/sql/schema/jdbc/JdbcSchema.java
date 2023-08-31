@@ -21,6 +21,8 @@ import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.LinkedHashMap;
@@ -30,6 +32,8 @@ import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 
 public class JdbcSchema implements Schema
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchema.class );
+
   private final String _name;
   private final DbConfig _dbConfig;
   private final Map<String, SchemaTable> _tables;
@@ -61,6 +65,7 @@ public class JdbcSchema implements Schema
     }
     catch( Exception e )
     {
+      LOGGER.warn( "Suspicious exception.", e );
       throw new SQLException( e );
     }
   }
@@ -115,9 +120,14 @@ public class JdbcSchema implements Schema
           return schem;
         }
 
-        if( !schem.equalsIgnoreCase( "information_schema" ) )
+        if( !schem.equalsIgnoreCase( "information_schema" ) &&
+          !schem.equalsIgnoreCase( "system_lobs" ) )
         {
           defaultSchema = schem;
+          if( defaultSchema.equalsIgnoreCase( "public" ) )
+          {
+            break;
+          }
         }
       }
     }

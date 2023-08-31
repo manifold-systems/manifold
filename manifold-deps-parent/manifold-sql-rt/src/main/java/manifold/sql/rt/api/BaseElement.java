@@ -33,6 +33,11 @@ public interface BaseElement
     return false;
   }
 
+  default String getColumnClassName()
+  {
+    return Object.class.getTypeName();
+  }
+
   /**
    * Returns true if the column's value can be null, particularly in the interim between create and commit where generated
    * or auto-increment schema columns are not yet unassigned values from the db.

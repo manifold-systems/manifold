@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema;
+package manifold.sql.scripts.junk;
 
 import manifold.util.ManExceptionUtil;
+import manifold.util.ReflectUtil;
 
+import java.lang.reflect.Field;
 import java.sql.*;
 
 public class H2JDBC
@@ -45,6 +47,9 @@ public class H2JDBC
 //      resultSet.close();
 
       DatabaseMetaData metaData = c.getMetaData();
+
+      printAllDataTypes( metaData );
+
       try( ResultSet resultSet = metaData.getTables( null, "PUBLIC", null, new String[]{"TABLE", "VIEW"} ); )
       {
         while( resultSet.next() )
@@ -122,6 +127,35 @@ public class H2JDBC
     {
       System.err.println( e.getClass().getName() + ": " + e.getMessage() );
       throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  private static void printAllDataTypes( DatabaseMetaData metaData ) throws SQLException, IllegalAccessException
+  {
+    try( ResultSet typeInfo = metaData.getTypeInfo() )
+    {
+      StringBuilder createTable = new StringBuilder( "create table all_types (\n");
+      int i = 0;
+      while( typeInfo.next() )
+      {
+        i++;
+        String typeName = typeInfo.getString( "TYPE_NAME" );
+        int dataType = typeInfo.getInt( "DATA_TYPE" );
+        String jdbcDataType = null;
+        for( Field f : Types.class.getFields() )
+        {
+          int value = (int)f.get( null );
+          if( dataType == value )
+          {
+            jdbcDataType = f.getName();
+          }
+        }
+        createTable.append( String.format( "    col_%-2d   %-30s -- $jdbcDataType($dataType)\n", i, typeName ) );
+        System.out.println( typeName + " :           " + jdbcDataType + "(" + dataType + ")" );
+      }
+      createTable.append( ");\n" );
+      System.out.println( createTable );
+      
     }
   }
 }

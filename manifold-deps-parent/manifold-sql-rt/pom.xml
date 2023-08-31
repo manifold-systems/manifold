@@ -12,6 +12,10 @@
 
   <name>Manifold :: SQL Runtime</name>
 
+  <properties>
+    <slf4j.version>2.0.7</slf4j.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>systems.manifold</groupId>
@@ -31,6 +35,11 @@
       <groupId>com.zaxxer</groupId>
       <artifactId>HikariCP</artifactId>
       <version>4.0.3</version>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>${slf4j.version}</version>
     </dependency>
     <!-- jetbrains annotations used for null safety wrt schema and query API while in the IDE -->
     <dependency>

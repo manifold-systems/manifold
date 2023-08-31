@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql.schema.h2;
 
 import manifold.sql.H2SakilaTest;
 
-import manifold.sql.schema.simple.H2Sakila;
-import manifold.sql.schema.simple.H2Sakila.*;
+import manifold.sql.schema.simple.h2.H2Sakila;
+import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
 
 import java.sql.SQLException;

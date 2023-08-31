@@ -17,17 +17,16 @@
 package manifold.sql;
 
 import manifold.rt.api.util.StreamUtil;
+import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.impl.DefaultTxScopeProvider;
-import manifold.sql.schema.simple.ScratchTest;
+import manifold.sql.rt.impl.ResourceDbLocationProvider;
+import manifold.sql.schema.h2.ScratchTest;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 
@@ -39,7 +38,9 @@ public abstract class BaseDbTest
     // Note that "/Runtime" is necessary due to the url's use of #resource,
     // which distinguishes between run-time, compile-time, design-time
 
-    File tempDbFile = makeTempFile( "/Runtime" + db_resource );
+    String tempDir = ResourceDbLocationProvider.makeTempDirName( db_resource );
+    File tempDbFile = makeTempFile( "/" + DbLocationProvider.Mode.Runtime.name() + "/" + tempDir + db_resource );
+
     try( InputStream in = ScratchTest.class.getResourceAsStream( db_resource );
          FileOutputStream out = new FileOutputStream( tempDbFile ) )
     {
@@ -52,7 +53,7 @@ public abstract class BaseDbTest
     }
   }
 
-  void _cleanup( String db_resource ) throws InterruptedException
+  void _cleanup( String db_resource ) throws InterruptedException, IOException
   {
     // close and clear db connections
     Dependencies.instance().getConnectionProvider().closeAll();
@@ -61,17 +62,6 @@ public abstract class BaseDbTest
     DefaultTxScopeProvider.instance().clear();
 
     // delete temp db
-    File file = makeTempFile( "/Runtime" + db_resource );
-    if( !file.delete() )
-    {
-      throw new RuntimeException( "Could not delete temporary file: " + file );
-    }
-
-    // wait for file to actually be removed from the file system, to avoid clobbering a subsequent test
-    Path path = Paths.get( file.toURI() );
-    while( !Files.notExists( path ) )
-    {
-      synchronized( this ) { wait( 100 ); }
-    }
+    ResourceDbLocationProvider.deleteTempDbDir( DbLocationProvider.Mode.Runtime, db_resource );
   }
 }

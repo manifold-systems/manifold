@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.simple;
+package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
 import manifold.sql.H2SalesTest;
 import manifold.sql.queries.Foo;
 import org.junit.*;
 
-import manifold.sql.schema.simple.H2Sales.*;
+import manifold.sql.schema.simple.h2.H2Sales.*;
 
 import static org.junit.Assert.*;
 

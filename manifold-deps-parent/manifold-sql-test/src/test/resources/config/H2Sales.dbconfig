@@ -1,5 +1,5 @@
 {
   "url": "jdbc:h2:file:${#resource /samples/db/h2-sales.mv.db, h2-sales}",
-  "schemaPackage": "manifold.sql.schema.simple",
+  "schemaPackage": "manifold.sql.schema.simple.h2",
   "isDefault": true
 }

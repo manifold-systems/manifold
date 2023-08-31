@@ -29,6 +29,18 @@
     </dependency>
 
     <dependency>
+      <groupId>org.xerial</groupId>
+      <artifactId>sqlite-jdbc</artifactId>
+      <version>3.40.1.0</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>2.0.7</version>
+    </dependency>
+    
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
@@ -48,6 +60,7 @@
           <compilerArgs>
             <!-- Configure manifold plugin -->
             <arg>-Xplugin:Manifold</arg>
+            <arg>-J-Dorg.slf4j.simpleLogger.defaultLogLevel=warn</arg>
           </compilerArgs>
           <!-- Add the processor path for the plugin -->
           <annotationProcessorPaths>
@@ -56,16 +69,21 @@
               <artifactId>manifold-sql</artifactId>
               <version>${project.version}</version>
             </path>
-            <!--            <path>-->
-<!--              <groupId>org.xerial</groupId>-->
-<!--              <artifactId>sqlite-jdbc</artifactId>-->
-<!--              <version>3.42.0.0</version>-->
-<!--            </path>-->
-            <dependency>
+            <path>
               <groupId>com.h2database</groupId>
               <artifactId>h2</artifactId>
               <version>2.1.214</version>
-            </dependency>
+            </path>
+            <path>
+              <groupId>org.xerial</groupId>
+              <artifactId>sqlite-jdbc</artifactId>
+              <version>3.40.1.0</version>
+            </path>
+            <path>
+              <groupId>org.slf4j</groupId>
+              <artifactId>slf4j-simple</artifactId>
+              <version>2.0.7</version>
+            </path>
           </annotationProcessorPaths>
         </configuration>
       </plugin>

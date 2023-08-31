@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.simple;
+package manifold.sql.util;
 
 import manifold.rt.api.util.ManIdentifierUtil;
 import org.junit.Test;

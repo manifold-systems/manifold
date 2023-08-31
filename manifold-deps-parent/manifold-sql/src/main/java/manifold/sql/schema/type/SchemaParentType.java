@@ -601,7 +601,8 @@ class SchemaParentType
     return !col.isNullable() &&
       !col.isGenerated() &&
       !col.isAutoIncrement() &&
-      col.getDefaultValue() == null;
+      col.getDefaultValue() == null &&
+      !col.isSqliteRowId();
   }
 
   private void addImports( SrcLinkedClass srcClass )

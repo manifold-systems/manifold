@@ -24,6 +24,7 @@ public interface DataElement extends BaseElement
 {
   Table getTable();
   int getJdbcType();
+  String getColumnClassName();
   int getScale();
 
   default Class<?> getType()

@@ -14,20 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.crud;
+package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
 import manifold.sql.H2SakilaTest;
 import manifold.sql.rt.api.TxScope;
-import manifold.sql.rt.api.TxScopeProvider;
 import org.junit.*;
 
 import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-import manifold.sql.schema.simple.H2Sakila;
-import manifold.sql.schema.simple.H2Sakila.*;
+import manifold.sql.schema.simple.h2.H2Sakila;
+import manifold.sql.schema.simple.h2.H2Sakila.*;
 
 public class CrudTest extends H2SakilaTest
 {

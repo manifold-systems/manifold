@@ -18,6 +18,8 @@ package manifold.sql.schema.api;
 
 import manifold.sql.api.Column;
 
+import java.sql.Types;
+
 public interface SchemaColumn extends Column
 {
   SchemaTable getTable();
@@ -29,4 +31,11 @@ public interface SchemaColumn extends Column
   String getDefaultValue();
   SchemaColumn getForeignKey();
   int getNumPrecRadix();
+
+  default boolean isSqliteRowId()
+  {
+    // a generated, auto-increment id, but since sqlite is retarded at all levels...
+    return getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "sqlite" ) &&
+        isNonNullUniqueId() && isPrimaryKeyPart() && getJdbcType() == Types.INTEGER;
+  }
 }

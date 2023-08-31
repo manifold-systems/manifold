@@ -41,10 +41,11 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final String _defaultValue;
   private final int _decimalDigits;
   private final int _numPrecRadix;
+  private final String _columnType;
   private JdbcSchemaColumn _fk;
   private final int _size;
 
-  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey, Map<String, Set<String>> uniqueKeys ) throws SQLException
+  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey, Map<String, Set<String>> uniqueKeys, String columnType ) throws SQLException
   {
     _position = colIndex;
     _table = jdbcSchemaTable;
@@ -64,6 +65,7 @@ public class JdbcSchemaColumn implements SchemaColumn
     _size = rs.getInt( "COLUMN_SIZE" );
     _decimalDigits = rs.getInt( "DECIMAL_DIGITS" );
     _numPrecRadix = rs.getInt( "NUM_PREC_RADIX" );
+    _columnType = columnType;
   }
 
   private int oneOffCorrections( int jdbcType, ResultSet rs, String productName ) throws SQLException
@@ -100,6 +102,11 @@ public class JdbcSchemaColumn implements SchemaColumn
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  public String getColumnClassName()
+  {
+    return _columnType;
   }
 
   @Override

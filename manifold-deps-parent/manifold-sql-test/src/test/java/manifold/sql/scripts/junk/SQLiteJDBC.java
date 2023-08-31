@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema;
+package manifold.sql.scripts.junk;
 
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.util.SqlScriptParser;
