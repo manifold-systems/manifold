@@ -1088,41 +1088,38 @@ public class ManAttr_17 extends Attr implements ManAttr
 
   private Type getFragmentValueType( JCTree.JCLiteral tree )
   {
-    try
+    int endPosition = tree.pos().getEndPosition( getEnv().toplevel.endPositions );
+    if( endPosition < 0 )
     {
-      CharSequence source = ParserFactoryFiles.getSource( getEnv().toplevel.sourcefile );
-      CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
-        tree.pos().getEndPosition( getEnv().toplevel.endPositions ) );
-      FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-        tree.pos().getStartPosition(), chars.toString(),
-        chars.length() > 3 && chars.charAt( 1 ) == '"'
-        ? TEXT_BLOCK_LITERAL
-        : DOUBLE_QUOTE_LITERAL );
-      if( fragment != null )
+      // this is almost certainly harmless, since it is indicative of an intermediate compiler pass
+      //getLogger().note( tree.pos().getStartPosition(), "proc.messager", "No end position for string literal manifold fragment: \n\"" + tree.getValue() + "\"" );
+      return _syms.stringType.constType( tree.value );
+    }
+
+    CharSequence source = ParserFactoryFiles.getSource( getEnv().toplevel.sourcefile );
+    CharSequence chars = source.subSequence( tree.pos().getStartPosition(), endPosition );
+    FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
+      tree.pos().getStartPosition(), chars.toString(),
+      chars.length() > 3 && chars.charAt( 1 ) == '"'
+      ? TEXT_BLOCK_LITERAL
+      : DOUBLE_QUOTE_LITERAL );
+    if( fragment != null )
+    {
+      String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();
+      Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, fragClass );
+      for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
       {
-        String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();
-        Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, fragClass );
-        for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+        if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
         {
-          if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
+          Type type = getFragmentValueType( annotation );
+          if( type != null )
           {
-            Type type = getFragmentValueType( annotation );
-            if( type != null )
-            {
-              return type;
-            }
+            return type;
           }
         }
-        getLogger().rawWarning( tree.pos().getStartPosition(),
-          "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
       }
-    }
-    catch( Exception e )
-    {
       getLogger().rawWarning( tree.pos().getStartPosition(),
-        "Error parsing Manifold fragment.\n" +
-        e.getClass().getSimpleName() + ": " + e.getMessage() + "\n" +
-        (e.getStackTrace().length > 0 ? e.getStackTrace()[0].toString() : "") );
+        "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
     }
     return _syms.stringType.constType( tree.value );
   }

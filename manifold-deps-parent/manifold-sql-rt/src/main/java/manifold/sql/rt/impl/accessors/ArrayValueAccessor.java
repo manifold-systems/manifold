@@ -97,6 +97,10 @@ public class ArrayValueAccessor implements ValueAccessor
     {
       ps.setNull( pos, getJdbcType() );
     }
+    else if( array instanceof Array )
+    {
+      ps.setArray( pos, (Array)array );
+    }
     else
     {
       Class<?> arrayType = array.getClass();
