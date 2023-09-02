@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.h2;
 
-import manifold.sql.H2SakilaTest;
+import manifold.sql.DdlResourceFileTest;
 
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class FkDependencyTest extends H2SakilaTest
+public class FkDependencyTest extends DdlResourceFileTest
 {
   @Test
   public void testOneDependency() throws SQLException

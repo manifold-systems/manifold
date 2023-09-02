@@ -16,25 +16,30 @@
 
 package manifold.sql.schema.h2.fragments;
 
-import manifold.sql.H2SakilaTest;
+import manifold.sql.DdlResourceFileTest;
 import org.junit.Test;
 
+import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
-import org.junit.Test;
+
+import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class CommentFragmentTest extends H2SakilaTest
+public class CommentFragmentTest extends DdlResourceFileTest
 {
   /**[ObjectJavadocCommentQuery.sql:H2Sakila/]
     Select * From country Where country_id = :country_id
    */
   @Test
-  public void testObjectJavadocCommentQuery()
+  public void testObjectJavadocCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+    
     Country country = ObjectJavadocCommentQuery.fetchOne( 1L );
+    assertEquals( "MyCountry", country.getCountry() );
     assertEquals( 1, (long)country.getCountryId() );
-    assertEquals( "Afghanistan", country.getCountry() );
     assertNotNull( country.getLastUpdate() );
   }
 
@@ -42,21 +47,27 @@ public class CommentFragmentTest extends H2SakilaTest
     Select * From country Where country_id = :country_id
    */
   @Test
-  public void testObjectMultilineCommentQuery()
+  public void testObjectMultilineCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     Country country = ObjectMultilineCommentQuery.fetchOne( 1L );
+    assertEquals( "MyCountry", country.getCountry() );
     assertEquals( 1, (long)country.getCountryId() );
-    assertEquals( "Afghanistan", country.getCountry() );
     assertNotNull( country.getLastUpdate() );
   }
 
   @Test
-  public void testObjectLineCommentQuery()
+  public void testObjectLineCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     //[ObjectLineCommentQuery.sql:H2Sakila/] Select * From country Where country_id = :country_id
     Country country = ObjectLineCommentQuery.fetchOne( 1L );
     assertEquals( 1, (long)country.getCountryId() );
-    assertEquals( "Afghanistan", country.getCountry() );
+    assertEquals( "MyCountry", country.getCountry() );
     assertNotNull( country.getLastUpdate() );
   }
 
@@ -64,27 +75,36 @@ public class CommentFragmentTest extends H2SakilaTest
     Select country From country Where country_id = :country_id
    */
   @Test
-  public void testRowJavadocCommentQuery()
+  public void testRowJavadocCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     RowJavadocCommentQuery.Row row = RowJavadocCommentQuery.fetchOne( 1L );
-    assertEquals( "Afghanistan", row.getCountry() );
+    assertEquals( "MyCountry", row.getCountry() );
   }
 
   /*[RowMultilineCommentQuery.sql:H2Sakila/]
     Select country From country Where country_id = :country_id
    */
   @Test
-  public void testRowMultilineCommentQuery()
+  public void testRowMultilineCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     RowMultilineCommentQuery.Row row = RowMultilineCommentQuery.fetchOne( 1L );
-    assertEquals( "Afghanistan", row.getCountry() );
+    assertEquals( "MyCountry", row.getCountry() );
   }
 
   @Test
-  public void testRowLineCommentQuery()
+  public void testRowLineCommentQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     //[RowLineCommentQuery.sql:H2Sakila/] Select country From country Where country_id = :country_id
     RowLineCommentQuery.Row row = RowLineCommentQuery.fetchOne( 1L );
-    assertEquals( "Afghanistan", row.getCountry() );
+    assertEquals( "MyCountry", row.getCountry() );
   }
 }

@@ -17,63 +17,81 @@
 package manifold.sql.schema.h2.fragments;
 
 import manifold.ext.rt.api.auto;
-
-import manifold.sql.H2SakilaTest;
+import manifold.sql.DdlResourceFileTest;
+import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
 
+import java.sql.SQLException;
+
 import static org.junit.Assert.*;
 
-public class StringLiteralFragmentTest extends H2SakilaTest
+public class StringLiteralFragmentTest extends DdlResourceFileTest
 {
   @Test
-  public void testAnonymousObjectStringLiteralQuery()
+  public void testAnonymousObjectStringLiteralQuery() throws SQLException
   {
-    auto query = "[.sql:H2Sakila/] Select * From country Where country_id = :country_id";
-    Country country = query.fetchOne( 1L );
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
+    auto query = "[.sql:H2Sakila/] Select * From country Where country = :country";
+    Country country = query.fetchOne( "MyCountry" );
+    assertEquals( "MyCountry", country.getCountry() );
     assertEquals( 1, (long)country.getCountryId() );
-    assertEquals( "Afghanistan", country.getCountry() );
     assertNotNull( country.getLastUpdate() );
   }
 
   @Test
-  public void testNamedObjectStringLiteralQuery()
+  public void testNamedObjectStringLiteralQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     NamedObjectStringLiteralQuery query =
-      "[NamedObjectStringLiteralQuery.sql:H2Sakila/] Select * From country Where country_id = :country_id";
-    Country country = query.fetchOne( 1L );
+      "[NamedObjectStringLiteralQuery.sql:H2Sakila/] Select * From country Where country = :country";
+    Country country = query.fetchOne( "MyCountry" );
+    assertEquals( "MyCountry", country.getCountry() );
     assertEquals( 1, (long)country.getCountryId() );
-    assertEquals( "Afghanistan", country.getCountry() );
     assertNotNull( country.getLastUpdate() );
   }
 
   @Test
-  public void testAnonymousRowStringLiteralQuery()
+  public void testAnonymousRowStringLiteralQuery() throws SQLException
   {
-    auto query = "[.sql:H2Sakila/] Select country From country Where country_id = :country_id";
-    auto row = query.fetchOne( 1L );
-    assertEquals( "Afghanistan", row.getCountry() );
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
+    auto query = "[.sql:H2Sakila/] Select country From country Where country = :country";
+    auto row = query.fetchOne( "MyCountry" );
+    assertEquals( "MyCountry", row.getCountry() );
   }
 
   @Test
-  public void testNamedRowStringLiteralQuery()
+  public void testNamedRowStringLiteralQuery() throws SQLException
   {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
     NamedRowStringLiteralQuery query =
-      "[NamedRowStringLiteralQuery.sql:H2Sakila/] Select country From country Where country_id = :country_id";
-    NamedRowStringLiteralQuery.Row row = query.fetchOne( 1L );
-    assertEquals( "Afghanistan", row.getCountry() );
+      "[NamedRowStringLiteralQuery.sql:H2Sakila/] Select country From country Where country = :country";
+    NamedRowStringLiteralQuery.Row row = query.fetchOne( "MyCountry" );
+    assertEquals( "MyCountry", row.getCountry() );
   }
 
   @Test
-  public void testStringLiteralQueryInForStmt()
+  public void testStringLiteralQueryInForStmt() throws SQLException
   {
+    Country.create( "MyCountry" );
+    Country.create( "YourCountry" );
+    H2Sakila.commit();
+
     int count = 0;
     for( Country country : "[.sql:H2Sakila/] Select * From country".fetch() )
     {
       assertTrue( country.getCountryId() > 0 );
       count++;
     }
-    assertTrue( count > 0 );
+    assertEquals( 2, count );
     assertEquals( "[.sql:H2Sakila/] Select Count(country_id) From country".fetchOne().getCountCountryId(), count );
   }
 }

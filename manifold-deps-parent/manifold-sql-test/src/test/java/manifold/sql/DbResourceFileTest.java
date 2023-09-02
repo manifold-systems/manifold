@@ -30,9 +30,14 @@ import java.io.InputStream;
 
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
 
-public abstract class BaseDbTest
+/**
+ * Copies fresh db resource file to temp directory, all connections and tx scopes
+ * are closed after each test method. Effectively, each test method has a brand-new
+ * copy of the original db resource file.
+ */
+public abstract class DbResourceFileTest
 {
-  void _setup( String db_resource )
+  protected void _setup( String db_resource )
   {
     // Copy database to temp dir, the url in DbConfig uses it from there.
     // Note that "/Runtime" is necessary due to the url's use of #resource,
@@ -53,7 +58,7 @@ public abstract class BaseDbTest
     }
   }
 
-  void _cleanup( String db_resource ) throws InterruptedException, IOException
+  protected void _cleanup( String db_resource )
   {
     // close and clear db connections
     Dependencies.instance().getConnectionProvider().closeAll();

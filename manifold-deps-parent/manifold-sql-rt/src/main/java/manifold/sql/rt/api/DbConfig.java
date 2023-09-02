@@ -18,6 +18,7 @@ package manifold.sql.rt.api;
 
 import manifold.rt.api.Bindings;
 
+import java.sql.Connection;
 import java.util.Properties;
 
 /**
@@ -133,4 +134,6 @@ public interface DbConfig
 
     return props;
   }
+
+  void init( Connection connection, String url );
 }

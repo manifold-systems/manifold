@@ -17,7 +17,7 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.H2SakilaTest;
+import manifold.sql.DdlResourceFileTest;
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class DefaultScopeCrudTest extends H2SakilaTest
+public class DefaultScopeCrudTest extends DdlResourceFileTest
 {
   @Test
   public void testCreate() throws SQLException

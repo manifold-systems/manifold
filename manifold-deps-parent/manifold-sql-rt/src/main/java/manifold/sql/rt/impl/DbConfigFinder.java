@@ -57,6 +57,12 @@ public class DbConfigFinder implements DbConfigProvider
     } );
   }
 
+  @Override
+  public void clear()
+  {
+    _configs.clear();
+  }
+
   private static DbConfig findConfig( String module, String configName, Class<?> ctx )
   {
     InputStream stream = findConfigInCurrentDir( configName );

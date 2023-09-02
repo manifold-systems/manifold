@@ -17,7 +17,7 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.H2SalesTest;
+import manifold.sql.schema.h2.base.H2SalesTest;
 import manifold.sql.queries.Foo;
 import org.junit.*;
 

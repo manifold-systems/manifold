@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql;
+package manifold.sql.schema.h2.base;
 
+import manifold.sql.DbResourceFileTest;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class SqliteSakilaTest extends BaseDbTest
+public abstract class H2SalesTest extends DbResourceFileTest
 {
-  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
+  private static final String DB_RESOURCE = "/samples/db/h2-sales.mv.db";
 
   @Before
   public void setup()
@@ -30,7 +31,7 @@ public abstract class SqliteSakilaTest extends BaseDbTest
   }
 
   @After
-  public void cleanup() throws Exception
+  public void cleanup()
   {
     _cleanup( DB_RESOURCE );
   }

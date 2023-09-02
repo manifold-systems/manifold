@@ -24,6 +24,11 @@ import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbLocationProvider.Mode;
 import manifold.sql.rt.util.PropertyExpressionProcessor;
 
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static manifold.sql.rt.api.DbLocationProvider.Mode.Unknown;
@@ -33,6 +38,7 @@ public class DbConfigImpl implements DbConfig
   public static final DbConfig EMPTY = new DbConfigImpl( null, DataBindings.EMPTY_BINDINGS, Unknown );
 
   private final Bindings _bindings;
+  private final Map<String, List<Consumer<Connection>>> _initializers;
 
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode )
   {
@@ -47,20 +53,34 @@ public class DbConfigImpl implements DbConfig
    */
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, Function<String, String> exprHandler )
   {
+    _initializers = new HashMap<>();
     processUrl( resByExt, bindings, mode, "url", exprHandler );
     processUrl( resByExt, bindings, mode, "buildUrl", exprHandler );
     _bindings = bindings;
   }
 
-  private static void processUrl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, String key, Function<String, String> exprHandler )
+  private void processUrl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, String key, Function<String, String> exprHandler )
   {
     String url = (String)bindings.get( key );
     if( url == null )
     {
       return;
     }
-    url = PropertyExpressionProcessor.process( resByExt, url, mode, exprHandler );
-    bindings.put( key, url );
+    PropertyExpressionProcessor.Result result = PropertyExpressionProcessor.process( resByExt, url, mode, exprHandler );
+    bindings.put( key, result.url );
+    _initializers.put( result.url, result.initializers ); // for testing purposes
+  }
+
+  @Override
+  public void init( Connection connection, String url )
+  {
+    // this is for testing purposes e.g., dynamically creating a db from a ddl script before the db is accessed
+
+    List<Consumer<Connection>> consumers = _initializers.get( url );
+    for( Consumer<Connection> consumer : consumers )
+    {
+      consumer.accept( connection );
+    }
   }
 
   @Override

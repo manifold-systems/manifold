@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.h2;
 
-import manifold.sql.H2SakilaTest;
+import manifold.sql.DdlResourceFileTest;
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
@@ -26,7 +26,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class ManyToManyTest extends H2SakilaTest
+public class ManyToManyTest extends DdlResourceFileTest
 {
   @Test
   public void testManyToMany() throws SQLException

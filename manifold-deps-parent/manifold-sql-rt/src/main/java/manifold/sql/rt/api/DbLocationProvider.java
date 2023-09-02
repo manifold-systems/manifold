@@ -18,7 +18,10 @@ package manifold.sql.rt.api;
 
 import manifold.api.fs.IFile;
 import manifold.api.util.cache.FqnCache;
+import manifold.rt.api.util.Pair;
 
+import java.sql.Connection;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -31,5 +34,5 @@ public interface DbLocationProvider
 
   enum Mode {CompileTime, DesignTime, Runtime, Unknown}
 
-  Object getLocation( Function<String, FqnCache<IFile>> resByExt, Mode mode, String tag, String... args );
+  Pair<Object, Consumer<Connection>> getLocation( Function<String, FqnCache<IFile>> resByExt, Mode mode, String tag, String... args );
 }

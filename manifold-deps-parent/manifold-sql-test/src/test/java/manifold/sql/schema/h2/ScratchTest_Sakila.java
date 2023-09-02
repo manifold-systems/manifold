@@ -17,8 +17,8 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.H2SakilaTest;
-import manifold.sql.schema.simple.h2.H2Sakila.*;
+import manifold.sql.schema.h2.base.H2SakilaTest;
+import manifold.sql.schema.simple.h2.H2Sakila_db.*;
 import org.junit.Test;
 
 public class ScratchTest_Sakila extends H2SakilaTest
@@ -26,7 +26,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
   @Test
   public void testSomeInterestingQueries()
   {
-    Stores s = "[Stores.sql:H2Sakila/] Select * From store";
+    Stores s = "[Stores.sql:H2Sakila_db/] Select * From store";
     for( Store r : s.fetch() )
     {
       System.out.println( r.display() );
@@ -34,7 +34,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println( r.getManagerStaffRef().display() );
     }
 
-    /* [ActorWithMostFilms.sql:H2Sakila/]
+    /* [ActorWithMostFilms.sql:H2Sakila_db/]
       SELECT first_name, last_name, count(*) films
       FROM actor AS a
       JOIN film_actor AS fa USING (actor_id)
@@ -46,7 +46,7 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    /* [CumulativeRevenueAllStores.sql:H2Sakila/]
+    /* [CumulativeRevenueAllStores.sql:H2Sakila_db/]
       SELECT payment_date, amount, sum(amount) OVER (ORDER BY payment_date)
       FROM (
         SELECT CAST(payment_date AS DATE) AS payment_date, SUM(amount) AS amount
@@ -61,11 +61,11 @@ public class ScratchTest_Sakila extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    auto one = "[.sql:H2Sakila/] select 1 from dual".fetchOne();
+    auto one = "[.sql:H2Sakila_db/] select 1 from dual".fetchOne();
     System.out.println(one.display());
 
 
-    for( Staff staff: "[.sql:H2Sakila/] select * from staff".fetch() )
+    for( Staff staff: "[.sql:H2Sakila_db/] select * from staff".fetch() )
     {
       System.out.println( staff.display() );
     }

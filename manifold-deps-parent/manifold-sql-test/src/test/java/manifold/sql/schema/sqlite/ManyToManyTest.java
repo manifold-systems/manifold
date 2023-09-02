@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.sqlite;
 
-import manifold.sql.SqliteSakilaTest;
+import manifold.sql.schema.sqlite.base.SqliteSakilaTest;
 import manifold.sql.schema.simple.sqlite.SqliteSakila;
 import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;

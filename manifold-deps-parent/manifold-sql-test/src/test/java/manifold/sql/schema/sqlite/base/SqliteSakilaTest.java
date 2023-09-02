@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql;
+package manifold.sql.schema.sqlite.base;
 
+import manifold.sql.DbResourceFileTest;
 import org.junit.After;
 import org.junit.Before;
 
-public abstract class H2SalesTest extends BaseDbTest
+public abstract class SqliteSakilaTest extends DbResourceFileTest
 {
-  private static final String DB_RESOURCE = "/samples/db/h2-sales.mv.db";
+  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
 
   @Before
   public void setup()

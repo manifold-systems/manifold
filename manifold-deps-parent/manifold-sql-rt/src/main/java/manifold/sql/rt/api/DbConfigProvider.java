@@ -19,4 +19,5 @@ package manifold.sql.rt.api;
 public interface DbConfigProvider
 {
   DbConfig loadDbConfig( String configName, Class<?> ctx );
+  void clear();
 }

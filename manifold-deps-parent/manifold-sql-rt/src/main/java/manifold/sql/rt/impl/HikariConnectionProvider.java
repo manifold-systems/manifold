@@ -48,20 +48,26 @@ public class HikariConnectionProvider implements ConnectionProvider
   public Connection getConnection( String configName, Class<?> classContext )
   {
     //noinspection resource
+    DbConfig[] dbConfig = {null};
     HikariDataSource ds = _dataSources.computeIfAbsent( configName, __ -> {
-      DbConfig dbConfig = Dependencies.instance().getDbConfigProvider().loadDbConfig( configName, classContext );
-      if( dbConfig == null )
+      dbConfig[0] = Dependencies.instance().getDbConfigProvider().loadDbConfig( configName, classContext );
+      if( dbConfig[0] == null )
       {
         throw ManExceptionUtil.unchecked(
           new SQLException( "Could not find DbConfig for \"" + configName + "\", " +
             "class context: " + classContext.getTypeName() ) );
       }
 
-      return makeDataSource( dbConfig, dbConfig.getUrl() );
+      return makeDataSource( dbConfig[0], dbConfig[0].getUrl() );
     } );
     try
     {
-      return ds.getConnection();
+      Connection connection = ds.getConnection();
+      if( dbConfig[0] != null )
+      {
+        dbConfig[0].init( connection, dbConfig[0].getUrl() );
+      }
+      return connection;
     }
     catch( SQLException e )
     {
@@ -75,7 +81,9 @@ public class HikariConnectionProvider implements ConnectionProvider
     //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
       makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
-    return ds.getConnection();
+    Connection connection = ds.getConnection();
+    dbConfig.init( connection, dbConfig.getBuildUrlOtherwiseRuntimeUrl() );
+    return connection;
   }
 
   @Override

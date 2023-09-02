@@ -18,13 +18,16 @@ package manifold.sql.rt.util;
 
 import manifold.api.fs.IFile;
 import manifold.api.util.cache.FqnCache;
+import manifold.rt.api.util.Pair;
 import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.DbLocationProvider.Mode;
 import manifold.sql.rt.api.Dependencies;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static manifold.sql.rt.api.DbLocationProvider.PROVIDED;
@@ -42,12 +45,26 @@ import static manifold.sql.rt.api.DbLocationProvider.UNHANDLED;
  */
 public class PropertyExpressionProcessor
 {
-  public static String process( Function<String, FqnCache<IFile>> resByExt, String source, Mode mode, Function<String, String> exprHandler )
+  public static class Result
+  {
+    public String url;
+    public List<Consumer<Connection>> initializers;
+
+    public Result( String url, List<Consumer<Connection>> initializers )
+    {
+      this.url = url;
+      this.initializers = initializers;
+    }
+  }
+
+  public static Result process( Function<String, FqnCache<IFile>> resByExt, String source, Mode mode, Function<String, String> exprHandler )
   {
     if( source == null )
     {
       return null;
     }
+
+    List<Consumer<Connection>> initializers = new ArrayList<>();
 
     for( int start = source.indexOf( "${" ); start >=0; start = source.indexOf( "${", start ) )
     {
@@ -55,10 +72,14 @@ public class PropertyExpressionProcessor
       if( end > 0 )
       {
         String expr = source.substring( start+2, end ).trim();
-        String value = eval( resByExt, expr, mode, exprHandler );
-        if( value != null )
+        Pair<String, Consumer<Connection>> value = eval( resByExt, expr, mode, exprHandler );
+        if( value.getFirst() != null )
         {
-          source = new StringBuilder( source ).replace( start, end+1, value ).toString();
+          source = new StringBuilder( source ).replace( start, end+1, value.getFirst() ).toString();
+          if( value.getSecond() != null )
+          {
+            initializers.add( value.getSecond() );
+          }
         }
         else
         {
@@ -71,18 +92,18 @@ public class PropertyExpressionProcessor
         break;
       }
     }
-    return source;
+    return new Result( source, initializers );
   }
 
-  private static String eval( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode, Function<String, String> exprHandler )
+  private static Pair<String, Consumer<Connection>> eval( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode, Function<String, String> exprHandler )
   {
-    String value = evalProvided( resByExt, expr, mode );
-    if( value != null )
+    Pair<String, Consumer<Connection>> result = evalProvided( resByExt, expr, mode );
+    if( result != null )
     {
-      return value;
+      return result;
     }
 
-    value = exprHandler == null ? null : exprHandler.apply( expr );
+    String value = exprHandler == null ? null : exprHandler.apply( expr );
     if( value == null )
     {
       value = System.getProperty( expr );
@@ -92,7 +113,7 @@ public class PropertyExpressionProcessor
       }
     }
     value = makeSureTempDirEndsWithSeparator( expr, value );
-    return value;
+    return new Pair<>( value, null );
   }
 
   private static String makeSureTempDirEndsWithSeparator( String expr, String value )
@@ -106,7 +127,7 @@ public class PropertyExpressionProcessor
     return value;
   }
 
-  private static String evalProvided( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode )
+  private static Pair<String, Consumer<Connection>> evalProvided( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode )
   {
     if( !expr.startsWith( PROVIDED ) )
     {
@@ -132,10 +153,10 @@ public class PropertyExpressionProcessor
     DbLocationProvider dbLocProvider = Dependencies.instance().getDbLocationProvider();
     if( dbLocProvider != null )
     {
-      Object location = dbLocProvider.getLocation( resByExt, mode, tag, argsArray );
-      if( location != UNHANDLED )
+      Pair<Object, Consumer<Connection>> location = dbLocProvider.getLocation( resByExt, mode, tag, argsArray );
+      if( location.getFirst() != UNHANDLED )
       {
-        return String.valueOf( location );
+        return new Pair<>( String.valueOf( location.getFirst() ), location.getSecond() );
       }
     }
     return null;
