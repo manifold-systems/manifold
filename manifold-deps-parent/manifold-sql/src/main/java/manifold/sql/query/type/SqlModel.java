@@ -27,6 +27,7 @@ import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.query.api.QueryAnalyzer;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.schema.api.Schema;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -64,6 +65,11 @@ public class SqlModel extends AbstractSingleFileModel
 
   private void analyze()
   {
+    if( _scope.isErrant() )
+    {
+      return;
+    }
+
     try( Reader reader = new InputStreamReader( getFile().openInputStream() ) )
     {
       QueryAnalyzer queryAnalyzer = QueryAnalyzer.PROVIDERS.get().stream()
@@ -76,7 +82,8 @@ public class SqlModel extends AbstractSingleFileModel
     catch( RuntimeException ise )
     {
       _query = null;
-      _issues = new SqlIssueContainer( _scope.getSchema().getDatabaseProductName(), Collections.singletonList( ise ) );
+      Schema schema = _scope.getSchema();
+      _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(), Collections.singletonList( ise ) );
     }
     catch( IOException e )
     {

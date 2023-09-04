@@ -60,6 +60,7 @@ public class DefaultValueAccessorProvider implements ValueAccessorProvider
       DoubleValueAccessor.class,
       FloatValueAccessor.class,
       IntegerValueAccessor.class,
+      JavaObjectValueAccessor.class,
       LongNvarcharValueAccessor.class,
       BigIntValueAccessor.class,
       LongVarBinaryValueAccessor.class,

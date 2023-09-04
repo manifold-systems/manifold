@@ -296,14 +296,21 @@ public abstract class ResourceFileTypeManifold<M extends IModel> extends BaseSer
     {
       for( String fqn: fqns )
       {
-        fqn = getTypeNameForFile( fqn, file );
+        try
+        {
+          fqn = getTypeNameForFile( fqn, file );
+        }
+        catch( Exception ignore )
+        {
+          // parse exceptions may result if the type is defined inside the file e.g., SQL schema package
+        }
         if( fqn != null )
         {
           aliasedFqns.add( fqn );
         }
       }
     }
-    return aliasedFqns.toArray( new String[aliasedFqns.size()] );
+    return aliasedFqns.toArray( new String[0] );
   }
 
   private void maybeAddHostArrayClass( Set<String> fqns )

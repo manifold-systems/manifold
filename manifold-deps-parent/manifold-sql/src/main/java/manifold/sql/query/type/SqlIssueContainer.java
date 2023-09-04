@@ -76,6 +76,12 @@ public class SqlIssueContainer implements IIssueContainer
 
   private int findOffset( Exception e )
   {
+    if( _productName == null )
+    {
+      // errant schema
+      return 0;
+    }
+
     switch( _productName.toLowerCase() )
     {
       case "h2":

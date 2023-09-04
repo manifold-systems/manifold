@@ -130,7 +130,7 @@ public class H2JDBC
     }
   }
 
-  private static void printAllDataTypes( DatabaseMetaData metaData ) throws SQLException, IllegalAccessException
+  public static void printAllDataTypes( DatabaseMetaData metaData ) throws SQLException, IllegalAccessException
   {
     try( ResultSet typeInfo = metaData.getTypeInfo() )
     {

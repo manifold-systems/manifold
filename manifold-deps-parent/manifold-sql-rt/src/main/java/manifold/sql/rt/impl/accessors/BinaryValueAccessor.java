@@ -35,13 +35,13 @@ public class BinaryValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return byte[].class;
+    return getClassForColumnClassName( elem, byte[].class );
   }
 
   @Override
-  public byte[] getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
-    return rs.getBytes( elem.getPosition() );
+    return rs.getObject( elem.getPosition() );
   }
 
   @Override

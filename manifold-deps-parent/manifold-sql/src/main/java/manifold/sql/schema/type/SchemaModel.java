@@ -136,6 +136,12 @@ public class SchemaModel extends AbstractSingleFileModel
   @Override
   public void updateFile( IFile file )
   {
+    if( _dbConfig == null )
+    {
+      // likely due to parse errors in the dbconfig file e.g., during editing in an IDE
+      return;
+    }
+
     super.updateFile( file );
     Dependencies.instance().getConnectionProvider().closeDataSource( _dbConfig );
     init();

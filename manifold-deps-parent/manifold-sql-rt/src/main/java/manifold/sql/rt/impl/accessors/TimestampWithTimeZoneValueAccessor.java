@@ -24,7 +24,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.time.OffsetDateTime;
-import java.time.OffsetTime;
 
 public class TimestampWithTimeZoneValueAccessor implements ValueAccessor
 {
@@ -41,9 +40,9 @@ public class TimestampWithTimeZoneValueAccessor implements ValueAccessor
   }
 
   @Override
-  public OffsetTime getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public OffsetDateTime getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
-    return rs.getObject( elem.getPosition(), OffsetTime.class );
+    return rs.getObject( elem.getPosition(), OffsetDateTime.class );
   }
 
   @Override

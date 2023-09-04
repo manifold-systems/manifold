@@ -33,7 +33,14 @@
       <artifactId>sqlite-jdbc</artifactId>
       <version>3.40.1.0</version>
     </dependency>
-    
+
+    <!-- for testing H2's GEOMETRY type -->
+    <dependency>
+      <groupId>org.locationtech.jts</groupId>
+      <artifactId>jts-core</artifactId>
+      <version>1.19.0</version>
+    </dependency>
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
@@ -74,6 +81,12 @@
               <groupId>com.h2database</groupId>
               <artifactId>h2</artifactId>
               <version>2.1.214</version>
+            </path>
+            <!-- for testing H2's GEOMETRY type -->
+            <path>
+              <groupId>org.locationtech.jts</groupId>
+              <artifactId>jts-core</artifactId>
+              <version>1.19.0</version>
             </path>
             <path>
               <groupId>org.xerial</groupId>

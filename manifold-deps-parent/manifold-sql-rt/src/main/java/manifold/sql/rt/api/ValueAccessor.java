@@ -16,6 +16,9 @@
 
 package manifold.sql.rt.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +35,8 @@ import java.sql.SQLException;
  */
 public interface ValueAccessor
 {
+  Logger LOGGER = LoggerFactory.getLogger( ValueAccessor.class );
+
   /**
    * @return The {@link java.sql.Types} id this accessor handles.
    */
@@ -62,4 +67,24 @@ public interface ValueAccessor
    * @throws SQLException
    */
   void setParameter( PreparedStatement ps, int pos, Object value ) throws SQLException;
+
+  /**
+   * Use column class name
+   */
+  default Class<?> getClassForColumnClassName( BaseElement elem, Class<?> defaultClass )
+  {
+    String className = elem.getColumnClassName();
+    if( className != null && !className.equals( Object.class.getTypeName() ) )
+    {
+      try
+      {
+        return Class.forName( className );
+      }
+      catch( ClassNotFoundException cnfe )
+      {
+        LOGGER.warn( "Failed to access class '" + className + "' for '" + getClass().getSimpleName() + "'", cnfe );
+      }
+    }
+    return defaultClass;
+  }
 }

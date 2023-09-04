@@ -25,10 +25,37 @@ import java.io.Reader;
 import java.sql.*;
 import java.util.List;
 
+import static manifold.sql.scripts.junk.H2JDBC.printAllDataTypes;
+
 public class SQLiteJDBC
 {
 
-  public static void main( String args[] )
+  public static void main( String[] args )
+  {
+//    scratchStuff();
+    printAllTypes();
+  }
+
+  private static void printAllTypes()
+  {
+
+    try
+    {
+      Connection c = DriverManager.getConnection( "jdbc:sqlite:c:/temp/sqlite-empty.db" );
+      System.out.println( "Opened database successfully" );
+
+      DatabaseMetaData metaData = c.getMetaData();
+
+      printAllDataTypes( metaData );
+    }
+    catch( Exception e )
+    {
+      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  private static void scratchStuff()
   {
     try
     {

@@ -20,6 +20,7 @@ import manifold.rt.api.util.Pair;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,23 +54,6 @@ public class JdbcSchemaTable implements SchemaTable
     if( _kind == null )
     {
       throw new IllegalStateException( "Unexpected table kind for: " + _name );
-    }
-
-    List<String> columnTypes = new ArrayList<>();
-    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
-    {
-      for( int i = 0; i < preparedStatement.getMetaData().getColumnCount(); i++ )
-      {
-        try
-        {
-          columnTypes.add( preparedStatement.getMetaData().getColumnClassName( i + 1 ) );
-        }
-        catch( SQLException se )
-        {
-          LOGGER.warn( "getColumnClassName() failed.", se );
-          columnTypes.add( Object.class.getName() );
-        }
-      }
     }
 
     List<String> primaryKey = new ArrayList<>();
@@ -118,6 +102,8 @@ public class JdbcSchemaTable implements SchemaTable
     _nonNullUniqueKeys = new LinkedHashMap<>();
     _oneToMany = new LinkedHashSet<>();
     _manyToMany = new LinkedHashSet<>();
+    List<String> columnClassNames = getColumnClassNames( metaData );
+
     try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
@@ -125,7 +111,7 @@ public class JdbcSchemaTable implements SchemaTable
       while( colResults.next() )
       {
         i++;
-        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnTypes.get( i-1 ) );
+        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ) );
         _columns.put( col.getName(), col );
         if( col.isNonNullUniqueId() )
         {
@@ -144,6 +130,28 @@ public class JdbcSchemaTable implements SchemaTable
       }
       _nonNullUniqueId = id;
     }
+  }
+
+  @NotNull
+  private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
+  {
+    List<String> columnClassNames = new ArrayList<>();
+    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
+    {
+      for( int i = 0; i < preparedStatement.getMetaData().getColumnCount(); i++ )
+      {
+        try
+        {
+          columnClassNames.add( preparedStatement.getMetaData().getColumnClassName( i + 1 ) );
+        }
+        catch( SQLException se )
+        {
+          LOGGER.warn( "getColumnClassName() failed.", se );
+          columnClassNames.add( Object.class.getName() );
+        }
+      }
+    }
+    return columnClassNames;
   }
 
   private void buildNonNullUniqueKeys( JdbcSchemaColumn col )

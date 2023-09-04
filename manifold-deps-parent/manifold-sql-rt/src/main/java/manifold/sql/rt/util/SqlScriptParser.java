@@ -92,7 +92,8 @@ public class SqlScriptParser
       }
       matchNonWord();
     }
-    String command = _script.substring( pos, isEof() ? _script.length() : _pos );
+    String command = _script.substring( pos, isEof() ? _script.length() : _pos - 1 ); // -1 to remove the ';'
+    command = command.trim();
     if( !command.isEmpty() )
     {
       _commands.add( command );

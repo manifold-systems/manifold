@@ -1,0 +1,4 @@
+{
+  "url": "jdbc:sqlite:file:${#resource_script /samples/ddl/sqlite-all-types-table-ddl.sql, sqlite-all-types}",
+  "schemaPackage": "manifold.sql.schema.simple.sqlite"
+}

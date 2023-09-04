@@ -68,6 +68,11 @@ class BasicTxScope implements OperableTxScope
       throw new IllegalArgumentException( "Item is null" );
     }
 
+    if( containsRow( item  ) )
+    {
+      return;
+    }
+
     _lock.writeLock().lock();
     try
     {

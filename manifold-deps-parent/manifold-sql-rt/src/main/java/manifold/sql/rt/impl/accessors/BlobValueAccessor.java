@@ -37,22 +37,33 @@ public class BlobValueAccessor implements ValueAccessor
   }
 
   @Override
-  public byte[] getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
-    Blob blob = rs.getBlob( elem.getPosition() );
-    if( blob == null )
+    Object res = rs.getObject( elem.getPosition() );
+    if( res == null )
     {
       return null;
     }
 
-    try
+    if( res instanceof byte[] )
     {
-      return blob.getBytes( 1, (int)blob.length() );
+      return res;
     }
-    finally
+
+    if( res instanceof Blob )
     {
-      blob.free();
+      Blob blob = (Blob)res;
+      try
+      {
+        return blob.getBytes( 1, (int)blob.length() );
+      }
+      finally
+      {
+        blob.free();
+      }
     }
+
+    throw new SQLException( "Expecting a blob or byte array, but found: " + res.getClass() );
   }
 
   @Override

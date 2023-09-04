@@ -32,15 +32,7 @@ public class OtherValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    try
-    {
-      String className = elem.getColumnClassName();
-      return className == null ? Object.class : Class.forName( className );
-    }
-    catch( ClassNotFoundException e )
-    {
-      return Object.class;
-    }
+    return getClassForColumnClassName( elem, Object.class );
   }
 
   @Override

@@ -24,14 +24,18 @@ import manifold.util.ManExceptionUtil;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 import static manifold.sql.rt.api.BasicTxBindings.TxKind.Update;
 
+/**
+ * Fetches all rows from a provided {@code ResultSet} into a {@code List}. The list is indirectly accessible this
+ * class' {@code Iterable} implementation. It is also directly accessible via the {@link #toList()} method.
+ *
+ * @param <R> the formal type of the result set. For instance, a SQL schema table type such as {@code Customer}, or a
+ * {@code Row} of a SQL query type derived from .sql resource file or embedded .sql resource.
+ */
 public class Result<R extends IBindingsBacked> implements Iterable<R>
 {
   private final List<R> _results;
@@ -39,29 +43,34 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
   public Result( TxScope txScope, ResultSet resultSet, Function<TxBindings, R> makeRow )
   {
     _results = new ArrayList<>();
-    rip( resultSet, rowBindings -> new BasicTxBindings( txScope, Update, rowBindings ), makeRow );
+    rip( null, resultSet, rowBindings -> new BasicTxBindings( txScope, Update, rowBindings ), makeRow );
   }
 
   public Result( ResultSet resultSet, Function<Bindings, R> makeRow )
   {
+    this( null, resultSet, makeRow );
+  }
+  public Result( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<Bindings, R> makeRow )
+  {
     _results = new ArrayList<>();
-    rip( resultSet, rowBindings -> rowBindings, makeRow );
+    rip( allColsWithJdbcType, resultSet, rowBindings -> rowBindings, makeRow );
   }
 
-  private <B extends Bindings> void rip( ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
+  private <B extends Bindings> void rip( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
   {
     try
     {
       ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
       ResultSetMetaData metaData = resultSet.getMetaData();
+      int columnCount = metaData.getColumnCount();
+      ValueAccessor[] accessors = buildAccessors( allColsWithJdbcType, accProvider, metaData, columnCount );
       for( boolean isOnRow = resultSet.next(); isOnRow; isOnRow = resultSet.next() )
       {
         DataBindings row = new DataBindings();
-        for( int i = 1; i <= metaData.getColumnCount(); i++ )
+        for( int i = 1; i <= columnCount; i++ )
         {
           String column = metaData.getColumnLabel( i );
-          ValueAccessor accessor = accProvider.get( metaData.getColumnType( i ) );
-          Object value = accessor.getRowValue( resultSet, new ResultColumn( metaData, i ) );
+          Object value = accessors[i-1].getRowValue( resultSet, new ResultColumn( metaData, i ) );
           row.put( column, value );
         }
         R resultRow = makeRow.apply( makeBindings.apply( row ) );
@@ -76,6 +85,33 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
     {
       throw ManExceptionUtil.unchecked( e );
     }
+  }
+
+  private static ValueAccessor[] buildAccessors( Map<String, Integer> allColsWithJdbcType, ValueAccessorProvider accProvider, ResultSetMetaData metaData, int columnCount ) throws SQLException
+  {
+    ValueAccessor[] accessors = new ValueAccessor[columnCount];
+    for( int i = 0; i < columnCount; i++ )
+    {
+      Integer jdbcType = null;
+      if( allColsWithJdbcType != null )
+      {
+        // prefer the schema table's declared type for the queried column,
+        // it is essential that the type is assignable to the corresponding property return / param types
+        String colName = metaData.getColumnName( i+1 );
+        if( colName != null )
+        {
+          jdbcType = allColsWithJdbcType.get( colName );
+        }
+      }
+
+      if( jdbcType == null )
+      {
+        jdbcType = metaData.getColumnType( i+1 );
+      }
+
+      accessors[i] = accProvider.get( jdbcType );
+    }
+    return accessors;
   }
 
   @Override

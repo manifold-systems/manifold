@@ -331,7 +331,8 @@ public class BasicCrudProvider implements CrudProvider
     Bindings reflectedRow = DataBindings.EMPTY_BINDINGS;
     try( ResultSet resultSet = ps.getGeneratedKeys() )
     {
-      Result<IBindingsBacked> resultRow = new Result<>( resultSet, rowBindings -> () -> rowBindings );
+      Result<IBindingsBacked> resultRow =
+        new Result<>( ctx.getAllColsWithJdbcType(), resultSet, rowBindings -> () -> rowBindings );
       Iterator<IBindingsBacked> iterator = resultRow.iterator();
       if( iterator.hasNext() )
       {
@@ -371,14 +372,15 @@ public class BasicCrudProvider implements CrudProvider
     if( reflectedRow.containsKey( SQLITE_LAST_INSERT_ROWID ) )
     {
       // specific to sqlite :\
-      // all sqlite tables (except those marked WITHOUT ROWID) have a built-in "rowid" column
-      // otherwise sqlite ignores all the columns we specify for generated keys when creating a PreparedStatement
+      // all sqlite tables (except those marked WITHOUT ROWID) have a built-in "rowid" column.
+      // sqlite ignores all the columns we specify for generated keys when creating a PreparedStatement and instead sends
+      // the "last_insert_rowid()" column. Thanks, sqlite, for ignoring literally everything.
       params.put( "_rowid_", reflectedRow.get( SQLITE_LAST_INSERT_ROWID ) );
       paramTypes = new int[] {Types.INTEGER};
     }
     else if( reflectedRow.isEmpty() )
     {
-      // ps.getGeneratedKeys() totally failed, lets hope the pk was manually entered...
+      // ps.getGeneratedKeys() totally failed, lets hope the pk is provided manually...
 
       Set<String> pkCols = ctx.getPkCols();
       if( pkCols.isEmpty() )
@@ -415,7 +417,7 @@ public class BasicCrudProvider implements CrudProvider
       setQueryParameters( queryContext, ps );
       try( ResultSet resultSet = ps.executeQuery() )
       {
-        Result<IBindingsBacked> resultRow = new Result<>( resultSet, rowBindings -> () -> rowBindings );
+        Result<IBindingsBacked> resultRow = new Result<>( ctx.getAllColsWithJdbcType(), resultSet, rowBindings -> () -> rowBindings );
         Iterator<IBindingsBacked> iterator = resultRow.iterator();
         if( !iterator.hasNext() )
         {

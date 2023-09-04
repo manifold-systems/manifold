@@ -51,7 +51,8 @@ public class JdbcQueryTable implements QueryTable
     _name = simpleName;
     _columns = new LinkedHashMap<>();
     _parameters = new ArrayList<>();
-    _issues = new SqlIssueContainer( _scope.getSchema().getDatabaseProductName(), new ArrayList<>() );
+    Schema schema = _scope.getSchema();
+    _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(), new ArrayList<>() );
 
     if( _scope.isErrant() )
     {

@@ -89,6 +89,11 @@ public class SqliteTypeMapping
       return Types.TIMESTAMP;
     }
 
+    if( "TIME".equals( sqlType ) )
+    {
+      return Types.TIME;
+    }
+
     if( "INT".equals( sqlType )
       || "INTEGER".equals( sqlType )
       || "MEDIUMINT".equals( sqlType ) )
@@ -142,6 +147,12 @@ public class SqliteTypeMapping
       return Types.VARCHAR;
     }
 
+    if( "VARBINARY".equals( sqlType )
+      || "VARYING BINARY".equals( sqlType ) )
+    {
+      return Types.VARBINARY;
+    }
+
     if( "BINARY".equals( sqlType ) )
     {
       return Types.BINARY;
@@ -150,6 +161,11 @@ public class SqliteTypeMapping
     if( "BLOB".equals( sqlType ) )
     {
       return Types.BLOB;
+    }
+
+    if( "JAVA_OBJECT".equals( sqlType ) )
+    {
+      return Types.OTHER;
     }
 
     return null;

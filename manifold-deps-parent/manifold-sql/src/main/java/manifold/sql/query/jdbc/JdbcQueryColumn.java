@@ -54,8 +54,8 @@ public class JdbcQueryColumn implements QueryColumn
     _name = rsMetaData.getColumnLabel( colIndex );
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
-    _jdbcType = rsMetaData.getColumnType( colIndex );
-    _columnType = rsMetaData.getColumnClassName( colIndex );
+    _jdbcType = _schemaColumn != null ? _schemaColumn.getJdbcType() : rsMetaData.getColumnType( colIndex );
+    _columnType = _schemaColumn != null ? _schemaColumn.getColumnClassName() : rsMetaData.getColumnClassName( colIndex );
 
     _isNullable = rsMetaData.isNullable( colIndex ) == ResultSetMetaData.columnNullable;
 

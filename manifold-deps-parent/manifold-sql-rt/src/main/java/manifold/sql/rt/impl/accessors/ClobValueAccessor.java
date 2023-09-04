@@ -39,20 +39,36 @@ public class ClobValueAccessor implements ValueAccessor
   @Override
   public String getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
-    Clob clob = rs.getClob( elem.getPosition() );
-    if( clob == null )
+    Object res = rs.getObject( elem.getPosition() );
+    if( res == null )
     {
       return null;
     }
 
-    try
+    if( res instanceof String )
     {
-      return clob.getSubString( 1, (int)clob.length() );
+      return (String)res;
     }
-    finally
+
+    if( res instanceof Clob )
     {
-      clob.free();
+      Clob clob = (Clob)res;
+      try
+      {
+        return clob.getSubString( 1, (int)clob.length() );
+      }
+      finally
+      {
+        clob.free();
+      }
     }
+
+    if( res instanceof char[] )
+    {
+      return String.valueOf( (char[])res );
+    }
+
+    throw new SQLException( "Expecting a clob or String, but found: " + res.getClass() );
   }
 
   @Override
