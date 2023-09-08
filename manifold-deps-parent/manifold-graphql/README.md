@@ -208,8 +208,8 @@ for (var movie : actionMovies) {
 >```
 > Configure dependencies like this:
 > ```groovy
-> implementation 'systems.manifold:manifold-props-rt:2023.1.22'
-> annotationProcessor 'systems.manifold:manifold-props:2023.1.22'
+> implementation 'systems.manifold:manifold-props-rt:2023.1.23'
+> annotationProcessor 'systems.manifold:manifold-props:2023.1.23'
 >``` 
 > See complete [setup docs](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props#maven) for details.
 
@@ -668,11 +668,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-graphql-rt:2023.1.22'
+     implementation 'systems.manifold:manifold-graphql-rt:2023.1.23'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-graphql:2023.1.22'
-     testAnnotationProcessor 'systems.manifold:manifold-graphql:2023.1.22'
+     annotationProcessor 'systems.manifold:manifold-graphql:2023.1.23'
+     testAnnotationProcessor 'systems.manifold:manifold-graphql:2023.1.23'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -708,7 +708,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.22</manifold.version>
+        <manifold.version>2023.1.23</manifold.version>
     </properties>
     
     <dependencies>
@@ -752,10 +752,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-graphql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2023.1.22/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2023.1.22)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql/2023.1.23/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql/2023.1.23)
 
 `manifold-graphql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2023.1.22/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2023.1.22)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-graphql-rt/2023.1.23/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-graphql-rt/2023.1.23)
 
 # License
 
