@@ -291,15 +291,14 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       //       ReflectUtil.invokeDefault
       //     else
       //       Iface.super.method()
-      for( JCExpression expr: classDecl.implementing )
+      java.util.List<Type> interfaces = classDecl.implementing.stream().map( e -> e.type ).collect( Collectors.toList() );
+      sortInterfaces( interfaces );
+      for( Type iface: interfaces )
       {
-        Type exprType = expr.type;
-        if( exprType.isErroneous() || !exprType.isInterface() )
+        if( iface.isErroneous() || !iface.isInterface() )
         {
           continue;
         }
-        //noinspection UnnecessaryLocalVariable
-        Type iface = exprType;
         ArrayList<MethodSymbol> defaultMethods = new ArrayList<>();
         findDefaultMethodsToForward( classDecl, iface, new HashSet<>(), defaultMethods );
         Set<NamedMethodType> seen = new HashSet<>();
@@ -348,7 +347,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           result.add( (MethodSymbol)m );
         }
       } );
-      ((ClassSymbol)iface.tsym).getInterfaces().forEach( t -> findDefaultMethodsToForward( classDecl, t, seen, result ) );
+      List<Type> interfaces = ((ClassSymbol)iface.tsym).getInterfaces();
+      interfaces = sortInterfaces( interfaces );
+      interfaces.forEach( t -> findDefaultMethodsToForward( classDecl, t, seen, result ) );
     }
 
     private void generateDefaultMethodForwarder( JCClassDecl classDecl, ClassType iface, NamedMethodType namedMt )
@@ -1806,6 +1807,32 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     return rs.resolveInternalField( pos, env, qual, name );
   }
 
+  /**
+   * Sorts interfaces by type assignability where sub-interfaces precede super-intrefaces.
+   * This order ensures the overriding method trumps the overridden method involving covariant
+   * return types. Where the delegating class must implement the more specific return type.
+   */
+  private void sortInterfaces( java.util.List<? extends Type> interfaces )
+  {
+    interfaces.sort( (t1, t2) -> {
+      Type et2 = getTypes().erasure( t2 );
+      Type et1 = getTypes().erasure( t1 );
+      if( getTypes().isSameType( et1, et2 ) )
+      {
+        return 0;
+      }
+      return getTypes().isAssignable( et1, et2 )
+        ? -1
+        : getTypes().isAssignable( et2, et1 ) ? 1 : 0;
+    } );
+  }
+  private List<Type> sortInterfaces( List<Type> interfaces )
+  {
+    ArrayList<Type> sorted = new ArrayList<>( interfaces );
+    sortInterfaces( sorted );
+    return List.from( sorted );
+  }
+
   private static boolean isPartClass( Symbol sym )
   {
     Attribute.Compound partAnno = getAnnotationMirror( sym, part.class );
@@ -1884,6 +1911,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       _generatedMethods = new ArrayList<>();
       _methodTypes = new HashMap<>();
       _interfaces = new ArrayList<>( linkdInterfaces );
+      sortInterfaces( _interfaces );
       _share = share;
     }
 
