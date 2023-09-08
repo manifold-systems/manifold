@@ -54,4 +54,9 @@ public class SrcRawExpression extends SrcExpression<SrcRawExpression>
     sb.append( _text );
     return sb;
   }
+
+  public String toString()
+  {
+    return _text;
+  }
 }

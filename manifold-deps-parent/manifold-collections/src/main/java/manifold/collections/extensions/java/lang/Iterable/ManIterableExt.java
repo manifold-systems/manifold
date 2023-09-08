@@ -28,11 +28,8 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import manifold.ext.rt.api.Extension;
-import manifold.ext.rt.api.This;
-import manifold.ext.rt.api.IndexedConsumer;
-import manifold.ext.rt.api.IndexedFunction;
-import manifold.ext.rt.api.IndexedPredicate;
+
+import manifold.ext.rt.api.*;
 import manifold.rt.api.util.Pair;
 
 
@@ -430,7 +427,11 @@ public class ManIterableExt
 
   /**
    * Returns a collection with elements in reversed order.
+   * <p/>
+   * Note, this method expires with JDK 21 because it interferes with new methods: {@code SequencedCollection#reversed()}
+   * and {@code List#reversed()}.These new methods provide the same functionality, but only for SequencedCollection.
    */
+  @Expires(21)
   public static <T> Collection<T> reversed( @This Iterable<T> thiz )
   {
     List<T> list = thiz.toList();

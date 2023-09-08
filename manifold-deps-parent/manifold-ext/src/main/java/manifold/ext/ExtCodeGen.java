@@ -30,6 +30,7 @@ import manifold.api.type.ITypeManifold;
 import manifold.api.util.JavacDiagnostic;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.ForwardingExtensionMethod;
+import manifold.ext.rt.api.Expires;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.ThisClass;
@@ -37,6 +38,7 @@ import manifold.internal.javac.ClassSymbols;
 import manifold.internal.javac.JavacPlugin;
 import manifold.rt.api.Array;
 import manifold.rt.api.util.Pair;
+import manifold.util.JreUtil;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -203,8 +205,6 @@ class ExtCodeGen
       for( Iterator<String> iterator = allExtensions.iterator(); iterator.hasNext(); )
       {
         String extensionFqn = iterator.next();
-        //## todo: if fqn (the extension class) is source file, delegate the call to makeSrcClassStub() to the host somehow
-        //## todo: so that IJ can use it's virtual file, otherwise this uses the file on disk, which does not have local changes
         SrcClass srcExtension = ClassSymbols.instance( getModule() ).makeSrcClassStub( extensionFqn ); // _location );
         if( srcExtension != null )
         {
@@ -636,6 +636,14 @@ class ExtCodeGen
   {
     if( !Modifier.isStatic( (int)method.getModifiers() ) || Modifier.isPrivate( (int)method.getModifiers() ) )
     {
+      return false;
+    }
+
+    SrcAnnotationExpression expires = method.getAnnotation( Expires.class );
+    if( expires != null &&
+      JreUtil.JAVA_VERSION >= Integer.parseInt( expires.getArgument( "value" ).getValue().toString() ) )
+    {
+      // on or past the method's expiration jdk
       return false;
     }
 

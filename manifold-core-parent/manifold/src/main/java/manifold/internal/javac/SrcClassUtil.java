@@ -136,7 +136,7 @@ public class SrcClassUtil
         }
         else if( sym instanceof Symbol.MethodSymbol )
         {
-          if( !isEnumMethod( sym ) )
+          if( !isEnumMethod( sym ) && !isExpired( sym ) )
           {
             addMethod( module, srcClass, (Symbol.MethodSymbol)sym, javacTask );
           }
@@ -904,6 +904,22 @@ public class SrcClassUtil
       }
       srcAnnotated.addAnnotation( annoExpr );
     }
+  }
+
+  private boolean isExpired( Symbol symbol )
+  {
+    for( Attribute.Compound annotationMirror: symbol.getAnnotationMirrors() )
+    {
+      String fqn = annotationMirror.getAnnotationType().toString();
+      if( fqn.equals( "manifold.ext.rt.api.Expires" ) )
+      {
+        for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
+        {
+          return JreUtil.JAVA_VERSION >= (int)value.snd.getValue();
+        }
+      }
+    }
+    return false;
   }
 
   private SrcType makeTypeVarType( Symbol.TypeVariableSymbol typeVar )
