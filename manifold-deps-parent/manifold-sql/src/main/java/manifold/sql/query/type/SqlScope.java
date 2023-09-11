@@ -38,6 +38,7 @@ public class SqlScope
   private final IModule _module;
   private final List<IIssue> _issues;
   private final IFile _dbConfigFile;
+  private Schema _schema;
 
   SqlScope( IModule module, IFile dbConfigFile )
   {
@@ -106,7 +107,9 @@ public class SqlScope
 
   public Schema getSchema()
   {
-    return _dbConfigFile == null ? null : findSchema( _dbConfigFile );
+    return _schema == null
+      ? _schema = _dbConfigFile == null ? null : findSchema( _dbConfigFile )
+      : _schema;
   }
 
   List<IIssue> getIssues()

@@ -24,6 +24,7 @@ import manifold.api.util.JavacDiagnostic;
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.SourceJavaFileObject;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.query.api.QueryAnalyzer;
 import manifold.sql.query.api.QueryTable;
@@ -70,20 +71,22 @@ public class SqlModel extends AbstractSingleFileModel
       return;
     }
 
+    String content = null;
     try( Reader reader = new InputStreamReader( getFile().openInputStream() ) )
     {
       QueryAnalyzer queryAnalyzer = QueryAnalyzer.PROVIDERS.get().stream()
         .findFirst()
         .orElseThrow( () -> new RuntimeException( "Missing QueryAnalyzer provider" ) );
-      _query = queryAnalyzer.getQuery( ManClassUtil.getShortClassName( getFqn() ), _scope,
-        StreamUtil.getContent( reader ) );
+      content = StreamUtil.getContent( reader );
+      _query = queryAnalyzer.getQuery( ManClassUtil.getShortClassName( getFqn() ), _scope, content );
       _issues = _query.getIssues();
     }
     catch( RuntimeException ise )
     {
       _query = null;
       Schema schema = _scope.getSchema();
-      _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(), Collections.singletonList( ise ) );
+      _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(),
+        Collections.singletonList( ise ), ManStringUtil.isCrLf( content ) );
     }
     catch( IOException e )
     {

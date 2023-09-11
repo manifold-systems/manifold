@@ -16,6 +16,7 @@
 
 package manifold.sql.query.jdbc;
 
+import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.api.ForeignKeyQueryRef;
 import manifold.sql.query.api.QueryColumn;
@@ -52,7 +53,8 @@ public class JdbcQueryTable implements QueryTable
     _columns = new LinkedHashMap<>();
     _parameters = new ArrayList<>();
     Schema schema = _scope.getSchema();
-    _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(), new ArrayList<>() );
+    _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(),
+      new ArrayList<>(), ManStringUtil.isCrLf( _source ) );
 
     if( _scope.isErrant() )
     {

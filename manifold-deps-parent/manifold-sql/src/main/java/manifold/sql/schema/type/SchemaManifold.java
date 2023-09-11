@@ -19,14 +19,14 @@ package manifold.sql.schema.type;
 import manifold.api.fs.IFile;
 import manifold.api.host.IModule;
 import manifold.api.type.JavaTypeManifold;
-import manifold.api.util.cache.FqnCache;
-import manifold.internal.javac.JavacPlugin;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -34,10 +34,11 @@ import javax.tools.JavaFileObject;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.*;
-import java.util.function.Function;
 
 public class SchemaManifold extends JavaTypeManifold<SchemaModel>
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( SchemaManifold.class );
+
   public static final String DBCONFIG_EXT = "dbconfig";
   public static final List<String> EXTS = Collections.singletonList( DBCONFIG_EXT );
 

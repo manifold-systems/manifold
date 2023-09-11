@@ -4456,6 +4456,11 @@ public class ManStringUtil
       .toString();
   }
 
+  public static boolean isCrLf( String str )
+  {
+    return str != null && str.contains( "\r\n" );
+  }
+
   // Chomping
   //-----------------------------------------------------------------------
 

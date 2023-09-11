@@ -23,6 +23,8 @@ import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbLocationProvider.Mode;
 import manifold.sql.rt.util.PropertyExpressionProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.util.HashMap;
@@ -35,6 +37,8 @@ import static manifold.sql.rt.api.DbLocationProvider.Mode.Unknown;
 
 public class DbConfigImpl implements DbConfig
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( DbConfigImpl.class );
+
   public static final DbConfig EMPTY = new DbConfigImpl( null, DataBindings.EMPTY_BINDINGS, Unknown );
 
   private final Bindings _bindings;
@@ -57,6 +61,24 @@ public class DbConfigImpl implements DbConfig
     processUrl( resByExt, bindings, mode, "url", exprHandler );
     processUrl( resByExt, bindings, mode, "buildUrl", exprHandler );
     _bindings = bindings;
+    assignDefaults();
+  }
+
+  private void assignDefaults()
+  {
+    if( _bindings.isEmpty() )
+    {
+      // empty bindings indicates EMPTY bindings, such as DataBindings.EMPTY_BINDINGS,
+      // which are immutable
+      return;
+    }
+
+    String schemaPackage = getSchemaPackage();
+    if( schemaPackage == null || schemaPackage.isEmpty() )
+    {
+      _bindings.put( "schemaPackage", DbConfig.DEFAULT_SCHEMA_PKG );
+      LOGGER.info( "No 'schemaPackage' defined in DbConfig: '" + getName() + "'. Using default: '" + schemaPackage + "'." );
+    }
   }
 
   private void processUrl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, String key, Function<String, String> exprHandler )

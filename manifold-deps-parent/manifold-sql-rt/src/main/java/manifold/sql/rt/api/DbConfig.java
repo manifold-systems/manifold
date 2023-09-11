@@ -28,6 +28,8 @@ import java.util.Properties;
  */
 public interface DbConfig
 {
+  String DEFAULT_SCHEMA_PKG = "sql.schema.types";
+
   /**
    * (Provided) Name corresponding with the dbconfig file: MyDatabase.dbconfig -> "MyDatabase". This name will be the parent
    * Java type name of db table entities.
@@ -76,8 +78,10 @@ public interface DbConfig
   String getBuildUrl();
 
   /**
-   * (Required: Compile) The fully qualified package name where schema .class files will be generated. This field is required
-   * for compile-time only.
+   * (Optional) The fully qualified package name where schema .class files will be generated.
+   * If not provided, the default package will be used: {@link #DEFAULT_SCHEMA_PKG}.
+   * <p/>
+   * This property is used exclusively for compile time.
    */
   String getSchemaPackage();
 

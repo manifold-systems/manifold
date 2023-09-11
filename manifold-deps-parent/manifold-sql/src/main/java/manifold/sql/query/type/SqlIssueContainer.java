@@ -28,13 +28,15 @@ public class SqlIssueContainer implements IIssueContainer
 {
   private final List<IIssue> _issues;
   private final String _productName;
+  private final boolean _isQueryCrLf;
 
   @SuppressWarnings("WeakerAccess")
-  public SqlIssueContainer( String productName, List<Exception> errors )
+  public SqlIssueContainer( String productName, List<Exception> errors, boolean isQueryCrLf )
   {
     _productName = productName;
     _issues = new ArrayList<>();
     addIssues( errors );
+    _isQueryCrLf = isQueryCrLf;
   }
 
   @Override
@@ -96,6 +98,14 @@ public class SqlIssueContainer implements IIssueContainer
     if( e instanceof SQLException )
     {
       String msg = e.getMessage();
+      if( msg == null )
+      {
+        return 0;
+      }
+
+      // for some reason h2 replaces line separators in the message with a *literal* unicode line separators :\
+      msg = msg.replace( "\\000a", _isQueryCrLf ? "\r\n" : "\n" );
+
       int start = msg.indexOf( '"' ) + 1;
       if( start > 0 )
       {
