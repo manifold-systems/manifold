@@ -334,6 +334,17 @@ public class BasicTest extends TestCase
     assertEquals( 2, b );
   }
 
+  public void testTupleAsArgument()
+  {
+    auto t = passTuple( (a: 1, b: 2) );
+    assertEquals( 1, t.a );
+    assertEquals( 2, t.b );
+  }
+  public <T extends Tuple> T passTuple( T tuple )
+  {
+    return tuple;
+  }
+
   public void testDefaultTupleNames()
   {
     LocalDate now = LocalDate.now();

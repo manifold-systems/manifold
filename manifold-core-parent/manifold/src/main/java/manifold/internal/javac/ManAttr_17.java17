@@ -642,6 +642,7 @@ public class ManAttr_17 extends Attr implements ManAttr
       ((JCTree.JCParens)parent).expr = newTuple;
     }
     ReflectUtil.field( this, "result" ).set( tupleTypeSym.type );
+    tree.type = tupleTypeSym.type;
     return true;
   }
 
