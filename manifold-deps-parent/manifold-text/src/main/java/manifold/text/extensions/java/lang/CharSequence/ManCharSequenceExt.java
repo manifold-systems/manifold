@@ -17,6 +17,8 @@
 package manifold.text.extensions.java.lang.CharSequence;
 
 import java.util.Collection;
+
+import manifold.ext.rt.api.Expires;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 import manifold.ext.rt.api.CharPredicate;
@@ -245,6 +247,7 @@ public class ManCharSequenceExt
   /**
    * Returns {@code true} if this char sequence is empty (contains no characters).
    */
+  @Expires( 15 )
   public static boolean isEmpty( @This CharSequence thiz )
   {
     return thiz.length() == 0;

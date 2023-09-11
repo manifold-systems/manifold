@@ -18,6 +18,7 @@ package manifold.collections.extensions.java.util.stream.Stream;
 
 import java.util.function.Supplier;
 
+import manifold.ext.rt.api.Expires;
 import manifold.ext.rt.api.Extension;
 import manifold.ext.rt.api.This;
 
@@ -29,6 +30,7 @@ import java.util.stream.Stream;
 @Extension
 public class ManifoldStreamCollectionsExt
 {
+  @Expires( 16 )
   public static <T> List<T> toList(@This Stream<T> thiz)
   {
     return thiz.collect(Collectors.toList());
