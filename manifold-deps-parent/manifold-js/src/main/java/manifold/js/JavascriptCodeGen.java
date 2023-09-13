@@ -22,6 +22,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcClass;
 import manifold.api.type.ResourceFileTypeManifold;
 import manifold.internal.javac.SourceJavaFileObject;
@@ -103,7 +104,12 @@ class JavascriptCodeGen
       for( ParseError error : programNode.getErrorList() )
       {
         Token token = error.getToken();
-        errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, token.getOffset(), token.getLineNumber(), token.getCol(), error.getMessage() ) );
+        int offset = token.getOffset();
+        if( _file instanceof IFileFragment )
+        {
+          offset += ((IFileFragment)_file).getOffset();
+        }
+        errorHandler.report( new JavacDiagnostic( file, Diagnostic.Kind.ERROR, offset, token.getLineNumber(), token.getCol(), error.getMessage() ) );
       }
     }
   }

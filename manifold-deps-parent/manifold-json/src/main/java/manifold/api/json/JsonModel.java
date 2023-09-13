@@ -19,6 +19,8 @@ package manifold.api.json;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import manifold.api.fs.IFileFragment;
 import manifold.rt.api.ScriptException;
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
@@ -126,8 +128,13 @@ public class JsonModel extends AbstractSingleFileModel
     JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
     for( IIssue issue : issues )
     {
+      int offset = issue.getStartOffset();
+      if( getFile() instanceof IFileFragment )
+      {
+        offset += ((IFileFragment)getFile()).getOffset();
+      }
       Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
-      errorHandler.report( new JavacDiagnostic( file, kind, issue.getStartOffset(), issue.getLine(), issue.getColumn(), issue.getMessage() ) );
+      errorHandler.report( new JavacDiagnostic( file, kind, offset, issue.getLine(), issue.getColumn(), issue.getMessage() ) );
     }
   }
 

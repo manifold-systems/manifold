@@ -23,6 +23,7 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
+import manifold.api.fs.IFileFragment;
 import manifold.api.host.IManifoldHost;
 import manifold.api.type.AbstractSingleFileModel;
 import manifold.internal.javac.IIssue;
@@ -90,8 +91,13 @@ class TemplateModel extends AbstractSingleFileModel
     JavaFileObject file = new SourceJavaFileObject( getFile().toURI() );
     for( IIssue issue: _issues.getIssues() )
     {
+      int offset = issue.getStartOffset();
+      if( getFile() instanceof IFileFragment )
+      {
+        offset += ((IFileFragment)getFile()).getOffset();
+      }
       Diagnostic.Kind kind = issue.getKind() == IIssue.Kind.Error ? Diagnostic.Kind.ERROR : Diagnostic.Kind.WARNING;
-      errorHandler.report( new JavacDiagnostic( file, kind, issue.getStartOffset(), issue.getLine(), issue.getColumn(), issue.getMessage() ) );
+      errorHandler.report( new JavacDiagnostic( file, kind, offset, issue.getLine(), issue.getColumn(), issue.getMessage() ) );
     }
   }
 
