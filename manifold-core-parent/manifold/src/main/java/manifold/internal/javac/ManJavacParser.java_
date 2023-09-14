@@ -28,7 +28,6 @@ import com.sun.tools.javac.tree.JCTree.JCVariableDecl;
 import com.sun.tools.javac.tree.TreeInfo;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.*;
-import manifold.util.ReflectUtil;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -40,8 +39,6 @@ import java.util.stream.Collectors;
 
 
 import static com.sun.tools.javac.parser.Tokens.TokenKind.*;
-import static com.sun.tools.javac.tree.JCTree.Tag.IDENT;
-import static com.sun.tools.javac.tree.JCTree.Tag.VARDEF;
 
 /**
  * !!! IMPORTANT !!!
@@ -68,6 +65,8 @@ public class ManJavacParser extends JavacParser
   private static Field field_parseModuleInfo = null;
   private static Field field_PATTERN_MATCHING_IN_INSTANCEOF = null;
   private static Field field_TYPE_ANNOTATIONS = null;
+  private static Field field_PATTERN_SWITCH = null;
+  private static Field field_UNNAMED_VARIABLES = null;
   private static Method method_selectExprMode = null;
   private static Method method_checkSourceLevel = null;
   private static Method method_BindingPattern_15 = null;
@@ -76,6 +75,7 @@ public class ManJavacParser extends JavacParser
   private static Method method_reportSyntaxError = null;
   private static Method method_peekToken = null;
   private static Method method_unannotatedType = null;
+  private static Method method_parsePattern = null;
   private static int java_ver = 0;
   static
   {
@@ -166,6 +166,17 @@ public class ManJavacParser extends JavacParser
 
       java_ver = 17;
 
+      // Java 21+
+      field_UNNAMED_VARIABLES = featureClass.getDeclaredField( "UNNAMED_VARIABLES" );
+      field_UNNAMED_VARIABLES.setAccessible( true );
+
+      field_PATTERN_SWITCH = featureClass.getDeclaredField( "PATTERN_SWITCH" );
+      field_PATTERN_SWITCH.setAccessible( true );
+
+      method_parsePattern = JavacParser.class.getDeclaredMethod( "parsePattern", int.class, JCModifiers.class, JCExpression.class, boolean.class, boolean.class);
+      method_parsePattern.setAccessible( true );
+
+      java_ver = 21;
     }
     catch( Exception ignore )
     {
@@ -176,11 +187,11 @@ public class ManJavacParser extends JavacParser
   private final AbstractEndPosTable _endPosTable;
 
   public ManJavacParser( ParserFactory fac,
-                         Lexer S,
-                         boolean keepDocComments,
-                         boolean keepLineMap,
-                         boolean keepEndPositions,
-                         boolean parseModuleInfo )
+                          Lexer S,
+                          boolean keepDocComments,
+                          boolean keepLineMap,
+                          boolean keepEndPositions,
+                          boolean parseModuleInfo )
   {
     super( fac, S, keepDocComments, keepLineMap, keepEndPositions );
     _names = fac.names;
@@ -266,55 +277,73 @@ public class ManJavacParser extends JavacParser
         int pos = token.pos;
         nextToken();
 
-        JCModifiers mods = optFinal(0);
-        JCExpression type;
-        if( java_ver >= 16 ) {
-          try {
-            type = (JCExpression)method_unannotatedType.invoke( this, false );
-          } catch( Exception e ) { throw new RuntimeException( e ); }
+        JCTree pattern;
+        if (token.kind == LPAREN) {
+            checkSourceLevel_PatternSwitch();
+            pattern = _parsePattern(token.pos, null, null, false, false);
         } else {
-          type = parseType();
-        }
-        JCTree pattern = type;
+            int patternPos = token.pos;
+            JCModifiers mods = optFinal(0);
+            int typePos = token.pos;
+            JCExpression type;
+            if( java_ver >= 16 ) {
+              try {
+                type = (JCExpression)method_unannotatedType.invoke( this, false );
+              } catch( Exception e ) { throw new RuntimeException( e ); }
+            } else {
+              type = parseType();
+            }
+            pattern = type;
 
-        if (token.kind == IDENTIFIER) {
-          checkSourceLevel_InstanceOf();
-          try {
-            if( java_ver >= 16 )
-            {
-              JCVariableDecl var = toP(F.at(token.pos).VarDef(mods, ident(), type, null));
-              pattern = toP( (JCTree)method_BindingPattern_16.invoke( F.at( token.pos ), var ) );
+            if (token.kind == IDENTIFIER) {
+              checkSourceLevel_InstanceOf();
+              try {
+                if( java_ver >= 21 )
+                {
+                  pattern = _parsePattern(patternPos, mods, type, false, false);
+                }
+                else if( java_ver >= 17 )
+                {
+                  JCVariableDecl var = toP(F.at(token.pos).VarDef(mods, ident(), type, null));
+                  pattern = toP( (JCTree)method_BindingPattern_16.invoke( F.at( token.pos ), var ) );
+                }
+                else
+                {
+                  pattern = toP( (JCTree)method_BindingPattern_15.invoke( F.at( token.pos ), ident(), pattern ) );
+                }
+              } catch( Exception ignore ) {
+                // a Java release prior to BindingPattern will have a compile error from the extra identifier
+              }
+            } else if (java_ver >= 21 && token.kind == LPAREN) {
+              checkSourceLevel_InstanceOf();
+              pattern = _parsePattern(patternPos, mods, type, false, false);
+            } else if (java_ver >= 21 && token.kind == UNDERSCORE) {
+              checkSourceLevel_UnnamedVariables();
+              pattern = _parsePattern(patternPos, mods, type, false, false);
+            } else if( java_ver >= 16 ) {
+              checkNoMods( mods.flags & ~Flags.DEPRECATED );
+              if( mods.annotations.nonEmpty() ) {
+                checkSourceLevel_Type_Annotations( mods.annotations.head.pos );
+                List<JCTree.JCAnnotation> typeAnnos = List.from(
+                  mods.annotations.stream()
+                    .map( decl -> {
+                      JCTree.JCAnnotation typeAnno = F.at( decl.pos )
+                        .TypeAnnotation( decl.annotationType,
+                          decl.args );
+                      try
+                      {
+                        ((AbstractEndPosTable)field_endPosTable.get( ManJavacParser.this )).replaceTree( decl, typeAnno );
+                      } catch( Exception e ) { throw new IllegalStateException( e ); }
+                      return typeAnno;
+                    } ).collect( Collectors.toList() ) );
+                try {
+                  type = (JCExpression)method_insertAnnotationsToMostInner.invoke( this, type, typeAnnos, false );
+                } catch( Exception e ) { throw new RuntimeException( e ); }
+              }
+              pattern = type;
             }
-            else
-            {
-              pattern = toP( (JCTree)method_BindingPattern_15.invoke( F.at( token.pos ), ident(), pattern ) );
-            }
-          } catch( Exception ignore ) {
-            // a Java release prior to BindingPattern will have a compile error from the extra identifier
-          }
-        } else if( java_ver >= 16 ) {
-          checkNoMods( mods.flags & ~Flags.DEPRECATED );
-          if( mods.annotations.nonEmpty() ) {
-            checkSourceLevel_Type_Annotations( mods.annotations.head.pos );
-            List<JCTree.JCAnnotation> typeAnnos = List.from(
-              mods.annotations.stream()
-                .map( decl -> {
-                  JCTree.JCAnnotation typeAnno = F.at( decl.pos )
-                    .TypeAnnotation( decl.annotationType,
-                      decl.args );
-                  try
-                  {
-                    ((AbstractEndPosTable)field_endPosTable.get( ManJavacParser.this )).replaceTree( decl, typeAnno );
-                  } catch( Exception e ) { throw new IllegalStateException( e ); }
-                  return typeAnno;
-                } ).collect( Collectors.toList() ) );
-            try {
-              type = (JCExpression)method_insertAnnotationsToMostInner.invoke( this, type, typeAnnos, false );
-            } catch( Exception e ) { throw new RuntimeException( e ); }
-          }
-          pattern = type;
+            odStack[top] = F.at(pos).TypeTest(odStack[top], pattern);
         }
-        odStack[top] = F.at(pos).TypeTest(odStack[top], pattern);
       }
       else
       {
@@ -355,6 +384,28 @@ public class ManJavacParser extends JavacParser
     if( method_checkSourceLevel != null ) {
       try{
         method_checkSourceLevel.invoke(token.pos, field_PATTERN_MATCHING_IN_INSTANCEOF);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private void checkSourceLevel_UnnamedVariables()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_UNNAMED_VARIABLES);
+      } catch( Exception e ) {
+        // oh well, don't let this ruin anyone's day
+      }
+    }
+  }
+
+  private void checkSourceLevel_PatternSwitch()
+  {
+    if( method_checkSourceLevel != null ) {
+      try{
+        method_checkSourceLevel.invoke(token.pos, field_PATTERN_SWITCH);
       } catch( Exception e ) {
         // oh well, don't let this ruin anyone's day
       }
@@ -447,7 +498,7 @@ public class ManJavacParser extends JavacParser
     {
       return tupleExpr;
     }
-    
+
     return super.term3();
   }
 
@@ -660,6 +711,18 @@ public class ManJavacParser extends JavacParser
     try
     {
       return (boolean)method_peekToken.invoke( this, i, filter );
+    }
+    catch( Throwable t )
+    {
+      throw new RuntimeException( t );
+    }
+  }
+
+  private /*JCPattern*/ JCTree _parsePattern(int pos, JCModifiers mods, JCExpression parsedType, boolean allowVar, boolean checkGuard)
+  {
+    try
+    {
+      return (JCTree)method_parsePattern.invoke( this, pos, mods, parsedType, allowVar, checkGuard );
     }
     catch( Throwable t )
     {
