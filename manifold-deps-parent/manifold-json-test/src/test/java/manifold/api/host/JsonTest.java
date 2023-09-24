@@ -786,4 +786,10 @@ public class JsonTest extends TestCase
       assertEquals("innerFoo", s.innerFoo());
     }
   }
+
+  public void testNonIdentifierStart()
+  {
+    MyPerson person = MyPerson.fromSource();
+    assertEquals( "https://robohash.org/ddhwrkua.png", person.getAvatarUrls().get_48x48() );
+  }
 }

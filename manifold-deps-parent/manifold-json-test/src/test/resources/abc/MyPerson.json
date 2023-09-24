@@ -1,0 +1,15 @@
+{
+  "self": "https://org.atlassian.net/rest/api/3/user?accountId=<suppressed>",
+  "accountId": "<suppressed>",
+  "accountType": "atlassian",
+  "emailAddress": "<suppressed>",
+  "avatarUrls": {
+    "48x48": "https://robohash.org/ddhwrkua.png",
+    "24x24": "https://robohash.org/bjwyhktg.png",
+    "16x16": "https://robohash.org/llpiietk.png",
+    "32x32": "https://robohash.org/cyccvxck.png"
+  },
+  "displayName": "<suppressed>",
+  "active": false,
+  "locale": "en_US"
+}

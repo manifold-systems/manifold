@@ -157,7 +157,7 @@ public abstract class MapStructExt implements ICallHandler
         getLen++;
         c = Character.toUpperCase( name.charAt( getLen ) );
       }
-      if( Character.isUpperCase( c ) )
+      if( Character.isUpperCase( c ) || !Character.isAlphabetic( c ) )
       {
         if( actualName != null )
         {
