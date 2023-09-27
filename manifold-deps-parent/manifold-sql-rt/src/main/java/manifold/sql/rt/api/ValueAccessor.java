@@ -19,9 +19,7 @@ package manifold.sql.rt.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * The value returned from {@link #getJdbcType()} indicates the JDBC type handled by the implementation.
@@ -69,11 +67,20 @@ public interface ValueAccessor
   void setParameter( PreparedStatement ps, int pos, Object value ) throws SQLException;
 
   /**
+   * Supply a parameter expression. Normally, this is just {@code ?}, however some JDBC drivers and database systems
+   * require explicit casts when using certain data types. For instance, Postgres requires casts for several types e.g.,
+   * Boolean to bit; there is no other way to get a value from Java into a Postgres bit column.
+   */
+  default String getParameterExpression( DatabaseMetaData metaData, Object value, ColumnInfo ci )
+  {
+    return "?";
+  }
+
+  /**
    * Use column class name
    */
-  default Class<?> getClassForColumnClassName( BaseElement elem, Class<?> defaultClass )
+  default Class<?> getClassForColumnClassName( String className, Class<?> defaultClass )
   {
-    String className = elem.getColumnClassName();
     if( className != null && !className.equals( Object.class.getTypeName() ) )
     {
       try

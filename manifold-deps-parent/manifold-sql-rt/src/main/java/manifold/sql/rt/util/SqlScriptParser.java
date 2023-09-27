@@ -58,7 +58,9 @@ public class SqlScriptParser
     int blockDepth = 0;
     while( !isEof() )
     {
+      //noinspection StatementWithEmptyBody
       while( eatComments() || eatWhitespace() );
+
       if( match( ';' ) )
       {
         if( blockDepth == 0 )
@@ -67,7 +69,13 @@ public class SqlScriptParser
         }
       }
       String word = matchWord();
-      if( word.equalsIgnoreCase( "BEGIN" ) )
+      if( is$$Quote( word ) )
+      {
+        // Postgres uses '$$' as a quote. Syntax is actually $[word]$ e.g., $myquote$ is considered a custom quote character.
+        // Used mostly for function body quoting. Postgres...
+        eatUntil( word );
+      }
+      else if( word.equalsIgnoreCase( "BEGIN" ) )
       {
         blockDepth++;
       }
@@ -77,11 +85,25 @@ public class SqlScriptParser
       }
       else if( word.equalsIgnoreCase( "END" ) )
       {
-        blockDepth--;
-        if( blockDepth < 0 )
+        boolean isReallyEND = true;
+        if( !isEof() && ch() == ' ' )
         {
-          throw new IllegalStateException( "Unbalanced BEGIN/CASE END (see [*])\n\n" +
-            new StringBuilder( _script ).insert( _pos-3, " [*]" ).toString() );
+          next();
+          String endWhat = matchWord();
+          if( endWhat.equalsIgnoreCase( "IF" ) || endWhat.equalsIgnoreCase( "LOOP" ) )
+          {
+            isReallyEND = false;
+          }
+        }
+
+        if( isReallyEND )
+        {
+          blockDepth--;
+          if( blockDepth < 0 )
+          {
+            throw new IllegalStateException( "Unbalanced BEGIN/CASE END (see [*])\n\n" +
+              new StringBuilder( _script ).insert( _pos - 3, " [*]" ).toString() );
+          }
         }
       }
       else if( word.equalsIgnoreCase( "SEPARATOR" ) )
@@ -98,6 +120,11 @@ public class SqlScriptParser
     {
       _commands.add( command );
     }
+  }
+
+  private boolean is$$Quote( String word )
+  {
+    return word.length() > 1 && word.startsWith( "$" ) && word.endsWith( "$" );
   }
 
   private boolean eatWhitespace()
@@ -118,18 +145,23 @@ public class SqlScriptParser
 
   private boolean eatMultiLineComment()
   {
+    return eatBetweenTokens( "/*", "*/" );
+  }
+
+  private boolean eatBetweenTokens( String open, String close )
+  {
     boolean comment = false;
     while( !isEof() )
     {
       if( comment )
       {
-        if( match( "*/" ) )
+        if( match( close ) )
         {
           return true;
         }
         next();
       }
-      else if( match( "/*" ) )
+      else if( match( open ) )
       {
         comment = true;
       }
@@ -137,6 +169,20 @@ public class SqlScriptParser
       {
         break;
       }
+    }
+    return false;
+  }
+
+  private boolean eatUntil( String close )
+  {
+    boolean comment = false;
+    while( !isEof() )
+    {
+      if( match( close ) )
+      {
+        return true;
+      }
+      next();
     }
     return false;
   }

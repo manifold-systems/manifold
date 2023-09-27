@@ -35,7 +35,7 @@ public class BinaryValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return getClassForColumnClassName( elem, byte[].class );
+    return getClassForColumnClassName( elem.getColumnClassName(), byte[].class );
   }
 
   @Override

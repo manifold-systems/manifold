@@ -173,6 +173,12 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
+  public String getDbDdl()
+  {
+    return (String)_bindings.get( "dbDdl" );
+  }
+
+  @Override
   public boolean equals( Object o )
   {
     if( this == o ) return true;

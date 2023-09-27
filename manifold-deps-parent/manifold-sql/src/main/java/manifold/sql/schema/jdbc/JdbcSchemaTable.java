@@ -138,7 +138,8 @@ public class JdbcSchemaTable implements SchemaTable
     List<String> columnClassNames = new ArrayList<>();
     try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
     {
-      for( int i = 0; i < preparedStatement.getMetaData().getColumnCount(); i++ )
+      int columnCount = preparedStatement.getMetaData().getColumnCount();
+      for( int i = 0; i < columnCount; i++ )
       {
         try
         {

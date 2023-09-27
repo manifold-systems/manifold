@@ -52,6 +52,45 @@ class ResultColumn implements BaseElement
   }
 
   @Override
+  public int getJdbcType()
+  {
+    try
+    {
+      return _metaData.getColumnType( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    try
+    {
+      return _metaData.getColumnTypeName( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public String getColumnClassName()
+  {
+    try
+    {
+      return _metaData.getColumnClassName( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
   public boolean isNullable()
   {
     try
@@ -70,6 +109,19 @@ class ResultColumn implements BaseElement
     try
     {
       return _metaData.getPrecision( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public int getScale()
+  {
+    try
+    {
+      return _metaData.getScale( _pos );
     }
     catch( SQLException e )
     {

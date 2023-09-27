@@ -17,12 +17,10 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.BaseElement;
+import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 public class BitValueAccessor implements ValueAccessor
 {
@@ -37,7 +35,7 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
-      return byte[].class;
+      return String.class;
     }
     return elem.canBeNull() ? Boolean.class : boolean.class;
   }
@@ -47,7 +45,7 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
-      return rs.getBytes( elem.getPosition() );
+      return rs.getString( elem.getPosition() );
     }
     boolean value = rs.getBoolean( elem.getPosition() );
     return !value && rs.wasNull() ? null : value;
@@ -70,7 +68,61 @@ public class BitValueAccessor implements ValueAccessor
     }
     else
     {
-      ps.setObject( pos, value, Types.BOOLEAN );
+      ps.setObject( pos, value, getJdbcType() );
     }
+  }
+
+  @Override
+  public String getParameterExpression( DatabaseMetaData metaData, Object value, ColumnInfo ci )
+  {
+    // This is a special case for Postgres. It requires casts for some data types such as `bit` :\
+    // See OtherValueAccessor for more of the same.
+    // Note, SQL cast expr does not work here, hence the literal value expressions.
+    try
+    {
+      if( metaData.getDatabaseProductName().equalsIgnoreCase( "postgresql" ) )
+      {
+        if( !ci.getSqlType().toLowerCase().contains( "bool" ) )
+        {
+          // note, checking for "bool" because postgres assigns "bit" jdbc type to "bool" sql types,
+          // and then throws exceptions about this :\
+
+          // "bit" types must be manually parameterized with postgres :(  Could there be a suckier database? oh wait, sqlite.
+          return coerce( value, ci );
+        }
+      }
+    }
+    catch( SQLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    return "?";
+  }
+
+  private String coerce( Object value, ColumnInfo ci ) throws SQLException
+  {
+    if( value == null )
+    {
+      return "NULL";
+    }
+    if( value instanceof Boolean )
+    {
+      return "B'" + (((boolean)value) ? '1' : '0') + "'";
+    }
+    if( value instanceof CharSequence )
+    {
+      return "B'" + value + "'" + cast( ci );
+    }
+    throw new SQLException( "Unexpected type for BIT: " + value.getClass() );
+  }
+
+  private String cast( ColumnInfo ci )
+  {
+    Integer size = ci.getSize();
+    if( size != null && size.intValue() > 0 )
+    {
+      return "::" + ci.getSqlType() + "(" + size.intValue() + ")";
+    }
+    return "";
   }
 }

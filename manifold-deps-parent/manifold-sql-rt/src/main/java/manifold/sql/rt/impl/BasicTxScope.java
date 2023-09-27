@@ -182,7 +182,7 @@ class BasicTxScope implements OperableTxScope
 
     TableInfo ti = row.tableInfo();
     UpdateContext<TableRow> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
-      ti.getPkCols(), ti.getUkCols(), ti.getAllColsWithJdbcType() );
+      ti.getPkCols(), ti.getUkCols(), ti.getAllCols() );
 
     if( row.getBindings().isForInsert() )
     {

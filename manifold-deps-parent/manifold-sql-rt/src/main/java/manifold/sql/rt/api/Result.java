@@ -50,20 +50,20 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
   {
     this( null, resultSet, makeRow );
   }
-  public Result( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<Bindings, R> makeRow )
+  public Result( Map<String, ColumnInfo> allCols, ResultSet resultSet, Function<Bindings, R> makeRow )
   {
     _results = new ArrayList<>();
-    rip( allColsWithJdbcType, resultSet, rowBindings -> rowBindings, makeRow );
+    rip( allCols, resultSet, rowBindings -> rowBindings, makeRow );
   }
 
-  private <B extends Bindings> void rip( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
+  private <B extends Bindings> void rip( Map<String, ColumnInfo> allCols, ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
   {
     try
     {
       ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
       ResultSetMetaData metaData = resultSet.getMetaData();
       int columnCount = metaData.getColumnCount();
-      ValueAccessor[] accessors = buildAccessors( allColsWithJdbcType, accProvider, metaData, columnCount );
+      ValueAccessor[] accessors = buildAccessors( allCols, accProvider, metaData, columnCount );
       for( boolean isOnRow = resultSet.next(); isOnRow; isOnRow = resultSet.next() )
       {
         DataBindings row = new DataBindings();
@@ -87,20 +87,22 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
     }
   }
 
-  private static ValueAccessor[] buildAccessors( Map<String, Integer> allColsWithJdbcType, ValueAccessorProvider accProvider, ResultSetMetaData metaData, int columnCount ) throws SQLException
+  private static ValueAccessor[] buildAccessors( Map<String, ColumnInfo> allCols, ValueAccessorProvider accProvider, ResultSetMetaData metaData, int columnCount ) throws SQLException
   {
     ValueAccessor[] accessors = new ValueAccessor[columnCount];
     for( int i = 0; i < columnCount; i++ )
     {
       Integer jdbcType = null;
-      if( allColsWithJdbcType != null )
+      if( allCols != null )
       {
         // prefer the schema table's declared type for the queried column,
         // it is essential that the type is assignable to the corresponding property return / param types
         String colName = metaData.getColumnName( i+1 );
         if( colName != null )
         {
-          jdbcType = allColsWithJdbcType.get( colName );
+          ColumnInfo columnInfo = allCols.get( colName );
+          // can be null e.g., sqlite's "last_insert_rowid()" bullshit
+          jdbcType = columnInfo == null ? null : columnInfo.getJdbcType();
         }
       }
 

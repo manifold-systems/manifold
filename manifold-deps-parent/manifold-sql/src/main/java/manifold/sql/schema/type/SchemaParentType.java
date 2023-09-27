@@ -36,6 +36,7 @@ import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.*;
 
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
@@ -199,15 +200,21 @@ class SchemaParentType
   {
     SrcField tableInfoField = new SrcField( "myTableInfo", new SrcType( LocklessLazyVar.class.getSimpleName() ).addTypeParam( TableInfo.class ) );
     StringBuilder sb = new StringBuilder( "LocklessLazyVar.make(() -> {\n" );
-    sb.append( "      LinkedHashMap<String, Integer> allCols = new LinkedHashMap<>();\n" );
+
+    sb.append( "      LinkedHashMap<String, ColumnInfo> allCols = new LinkedHashMap<>();\n" );
     for( Map.Entry<String, SchemaColumn> entry : table.getColumns().entrySet() )
     {
       //noinspection unused
       String colName = entry.getKey();
       //noinspection unused
       int jdbcType = entry.getValue().getJdbcType();
-      sb.append( "      allCols.put(\"$colName\", $jdbcType);\n");
+      //noinspection unused
+      String sqlType = entry.getValue().getSqlType();
+      //noinspection unused
+      Integer size = entry.getValue().getSize();
+      sb.append( "      allCols.put(\"$colName\", new ColumnInfo(\"$colName\", $jdbcType, \"$sqlType\", $size));\n");
     }
+
     sb.append( "      HashSet<String> pkCols = new HashSet<>();\n" );
     for( SchemaColumn pkCol : table.getPrimaryKey() )
     {
@@ -215,6 +222,7 @@ class SchemaParentType
       String pkColName = pkCol.getName();
       sb.append( "      pkCols.add(\"$pkColName\");\n\n" );
     }
+
     sb.append( "      HashSet<String> ukCols = new HashSet<>();\n" );
     for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
     {
@@ -227,6 +235,7 @@ class SchemaParentType
       }
       break;
     }
+
     //noinspection unused
     String ddlTableName = table.getName();
     sb.append( "      return new TableInfo(\"$ddlTableName\", pkCols, ukCols, allCols);\n" );
@@ -602,7 +611,28 @@ class SchemaParentType
       !col.isGenerated() &&
       !col.isAutoIncrement() &&
       col.getDefaultValue() == null &&
-      !col.isSqliteRowId();
+      !bullshit( col );
+  }
+
+  private boolean bullshit( SchemaColumn col )
+  {
+    // Sqlite: a generated, auto-increment id, but since sqlite is retarded at all levels...
+    boolean isSqliteRowId = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "sqlite" ) &&
+        col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
+    if( isSqliteRowId )
+    {
+      return true;
+    }
+
+    // Postgres: tsvector is always assigned, s/b 'generated always', but sometimes triggers are used :\
+    boolean isPostgresTsvector = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "postgresql" ) &&
+      col.getSqlType().equalsIgnoreCase( "tsvector" );
+    if( isPostgresTsvector )
+    {
+      return true;
+    }
+
+    return false;
   }
 
   private void addImports( SrcLinkedClass srcClass )
@@ -616,6 +646,7 @@ class SchemaParentType
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( TableRow.class );
     srcClass.addImport( TableInfo.class );
+    srcClass.addImport( ColumnInfo.class );
     srcClass.addImport( SchemaType.class );
     srcClass.addImport( SchemaBuilder.class );
     srcClass.addImport( QueryContext.class );
@@ -667,11 +698,11 @@ class SchemaParentType
     }
 
     //noinspection unused
-    String jdbcParamTypes = getJdbcParamTypes( sfk.getColumns() );
+    String columnInfo = getColumnInfo( sfk.getColumns() );
     //noinspection unused
     String configName = _model.getDbConfig().getName();
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(" +
-      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\", " +
+      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $columnInfo, paramBindings, \"$configName\", " +
       "rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
@@ -781,7 +812,7 @@ class SchemaParentType
         .addAnnotation( NotNull.class.getSimpleName() ) );
     whereCols = addSelectParameters( table, method );
     //noinspection unused
-    String jdbcParamTypes = getJdbcParamTypes( whereCols );
+    String columnInfo = getColumnInfo( whereCols );
     //noinspection unused
     String configName = _model.getDbConfig().getName();
     sb = new StringBuilder();
@@ -793,7 +824,7 @@ class SchemaParentType
       sb.append( "    paramBindings.put(\"${col.getName()}\", $paramName);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
-      "      \"${table.getName()}\", $jdbcParamTypes, paramBindings, \"$configName\",\n" +
+      "      \"${table.getName()}\", $columnInfo, paramBindings, \"$configName\",\n" +
       "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -861,7 +892,7 @@ class SchemaParentType
     //noinspection unused
     String tableName = fkToThis.getOwnTable().getName();
     //noinspection unused
-    String jdbcParamTypes = getJdbcParamTypes( fkToThis.getColumns() );
+    String columnInfo = getColumnInfo( fkToThis.getColumns() );
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
     for( SchemaColumn col : fkToThis.getColumns() )
@@ -873,7 +904,7 @@ class SchemaParentType
         .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
-      "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", $jdbcParamTypes, paramBindings, \"$configName\", " +
+      "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", $columnInfo, paramBindings, \"$configName\", " +
       "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -923,7 +954,7 @@ class SchemaParentType
       "where ${makeJoinWhere( fkToMe )}";
 
     //noinspection unused
-    String jdbcParamTypes = getJdbcParamTypes( Collections.singletonList( fkToMe.getForeignKey() ) );
+    String columnInfo = getColumnInfo( Collections.singletonList( fkToMe.getForeignKey() ) );
 
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
@@ -933,7 +964,7 @@ class SchemaParentType
       .append( "      if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
       .append( "      paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     sb.append( "      return new ${Runner.class.getName()}<$tableFqn>(\n" +
-      "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, $jdbcParamTypes, paramBindings, \"$configName\", \n" +
+      "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, $columnInfo, paramBindings, \"$configName\", \n" +
       "          rowBindings -> new $tableFqn.Impl(rowBindings)), \"$sql\")\n" +
       "        .fetch().toList();" );
     method.body( sb.toString() );
@@ -977,17 +1008,18 @@ class SchemaParentType
 //    // removeBlogSubscriber(Subscriber s) { delete() method uses a local delete stmt: delete from BlogSubscriber where blog_id = :blog_id AND subscriber_id = :subscriber_id }
 //  }
 
-  private String getJdbcParamTypes( List<SchemaColumn> parameters )
+  private String getColumnInfo( List<SchemaColumn> parameters )
   {
-    StringBuilder sb = new StringBuilder( "new int[]{");
+    StringBuilder sb = new StringBuilder( "new ColumnInfo[]{");
     for( int i = 0; i < parameters.size(); i++ )
     {
+      //noinspection unused
       Column p = parameters.get( i );
       if( i > 0 )
       {
-        sb.append( "," );
+        sb.append( ", " );
       }
-      sb.append( p.getJdbcType() );
+      sb.append( "new ColumnInfo(\"${p.getName()}\", ${p.getJdbcType()}, \"{p.getSqlType()}\", ${p.getSize()})" );
     }
     return sb.append( "}" ).toString();
   }

@@ -21,7 +21,11 @@ public interface BaseElement
   String getName();
   int getPosition();
   int getSize();
+  int getScale();
   boolean isNullable();
+  int getJdbcType();
+  String getSqlType();
+  String getColumnClassName();
 
   default boolean isGenerated()
   {
@@ -31,11 +35,6 @@ public interface BaseElement
   default boolean isAutoIncrement()
   {
     return false;
-  }
-
-  default String getColumnClassName()
-  {
-    return Object.class.getTypeName();
   }
 
   /**

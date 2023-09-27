@@ -32,6 +32,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final int _position;
   private final String _name;
   private final int _jdbcType;
+  private final String _sqlType;
   private final boolean _isNullable;
   private final boolean _isAutoIncrement;
   private final boolean _isGenerated;
@@ -51,6 +52,7 @@ public class JdbcSchemaColumn implements SchemaColumn
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
     _jdbcType = oneOffCorrections( rs.getInt( "DATA_TYPE" ), rs, _table.getSchema().getDatabaseProductName() );
+    _sqlType = rs.getString( "TYPE_NAME" );
     _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
     _isAutoIncrement = "YES".equals( rs.getString( "IS_AUTOINCREMENT" ) );
     _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
@@ -102,6 +104,12 @@ public class JdbcSchemaColumn implements SchemaColumn
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    return _sqlType;
   }
 
   public String getColumnClassName()

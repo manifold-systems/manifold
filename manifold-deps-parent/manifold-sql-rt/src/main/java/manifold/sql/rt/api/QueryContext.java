@@ -24,18 +24,20 @@ public class QueryContext<T extends ResultRow>
 {
   private final TxScope _txScope;
   private final Class<T> _queryClass;
-  private final int[] _jdbcParamTypes;
+  private final ColumnInfo[] _paramInfo;
   private final Bindings _params;
   private final String _configName;
   private final Function<TxBindings, T> _makeRow;
   private final String _ddlTableName;
 
-  public QueryContext( TxScope txScope, Class<T> queryClass, String ddlTableName, int[] jdbcParamTypes, Bindings params, String configName, Function<TxBindings, T> makeRow )
+  public QueryContext( TxScope txScope, Class<T> queryClass, String ddlTableName,
+                       ColumnInfo[] paramInfo, Bindings params,
+                       String configName, Function<TxBindings, T> makeRow )
   {
     _txScope = txScope;
     _queryClass = queryClass;
     _ddlTableName = ddlTableName;
-    _jdbcParamTypes = jdbcParamTypes;
+    _paramInfo = paramInfo;
     _params = params;
     _configName = configName;
     _makeRow = makeRow;
@@ -56,9 +58,9 @@ public class QueryContext<T extends ResultRow>
     return _ddlTableName;
   }
 
-  public int[] getJdbcParamTypes()
+  public ColumnInfo[] getParamInfo()
   {
-    return _jdbcParamTypes;
+    return _paramInfo;
   }
 
   public Bindings getParams()

@@ -14,27 +14,17 @@
  * limitations under the License.
  */
 
-package manifold.sql.api;
+package manifold.sql.schema.postgres;
 
-import manifold.sql.rt.api.BaseElement;
+import manifold.sql.DdlServerTest;
+import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
-import manifold.sql.rt.api.ValueAccessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public interface DataElement extends BaseElement
+public abstract class PostgresDdlServerTest extends DdlServerTest
 {
-  Logger LOGGER = LoggerFactory.getLogger( DataElement.class );
-
-  Table getTable();
-
-  default Class<?> getType()
+  @Override
+  protected DbConfig getDbConfig()
   {
-    ValueAccessor accessor = Dependencies.instance().getValueAccessorProvider().get( getJdbcType() );
-    if( accessor == null )
-    {
-      LOGGER.error( "No ValueAccessor for type: " + getJdbcType() );
-    }
-    return accessor == null ? null : accessor.getJavaType( this );
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "PostgresSakila", getClass() );
   }
 }

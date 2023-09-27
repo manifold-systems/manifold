@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
-
-import manifold.sql.api.Column;
+package manifold.sql.rt.impl.accessors;
 
 import java.sql.Types;
 
-public interface SchemaColumn extends Column
+public class DistinctValueAccessor extends OtherValueAccessor
 {
-  SchemaTable getTable();
-  boolean isNonNullUniqueId();
-  boolean isPrimaryKeyPart();
-  String getNonNullUniqueKeyName();
-  boolean isAutoIncrement();
-  boolean isGenerated();
-  String getDefaultValue();
-  SchemaColumn getForeignKey();
-  int getNumPrecRadix();
+  @Override
+  public int getJdbcType()
+  {
+    return Types.DISTINCT;
+  }
 }

@@ -1,0 +1,6 @@
+{
+  "url": "jdbc:mysql://localhost:3306/MysqlSakila?user=root&password=password",
+  "schemaPackage": "manifold.sql.schema.simple.mysql",
+
+  "dbDdl": "samples/ddl/mysql-sakila-ddl.sql"
+}

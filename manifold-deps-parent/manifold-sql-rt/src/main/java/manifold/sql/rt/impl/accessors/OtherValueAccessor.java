@@ -17,6 +17,7 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.BaseElement;
+import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
 
 import java.sql.*;
@@ -32,12 +33,17 @@ public class OtherValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return getClassForColumnClassName( elem, Object.class );
+    return getClassForColumnClassName( elem.getColumnClassName(), Object.class );
   }
 
   @Override
   public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
+    Object postgresStrangeness = postgresStrangeness( rs, elem );
+    if( postgresStrangeness != NONE )
+    {
+      return postgresStrangeness;
+    }
     return rs.getObject( elem.getPosition() );
   }
 
@@ -53,4 +59,61 @@ public class OtherValueAccessor implements ValueAccessor
       ps.setObject( pos, value );
     }
   }
+
+  @Override
+  public String getParameterExpression( DatabaseMetaData metaData, Object value, ColumnInfo ci )
+  {
+    // This is a special case for Postgres. It requires casts for some data types :\
+    // See also BitValueAccessor for more of the same.
+    try
+    {
+      if( metaData.getDatabaseProductName().equalsIgnoreCase( "postgresql" ) )
+      {
+        String lcSqlType = ci.getSqlType().toLowerCase();
+        switch( lcSqlType )
+        {
+          case "cidr":
+          case "inet":
+          case "macaddr":
+          case "macaddr8":
+          case "money":
+          case "varbit":
+          case "bit varying":
+            return castParam( value, ci );
+        }
+      }
+    }
+    catch( SQLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    return ValueAccessor.super.getParameterExpression( metaData, value, ci );
+  }
+
+  private String castParam( Object value, ColumnInfo ci )
+  {
+    return "CAST(? AS " + ci.getSqlType() + ")";
+  }
+
+  // note, this is for postgres because it returns PGobject instances for `varbit` etc.,
+  // but for giggles postgres does not return PGobject.class for varbit's java class.
+  private static final Object NONE = new Object() {};
+  private static Object postgresStrangeness( ResultSet rs, BaseElement elem ) throws SQLException
+  {
+    String lcSqlType = elem.getSqlType().toLowerCase();
+    switch( lcSqlType )
+    {
+      case "cidr":
+      case "inet":
+      case "macaddr":
+      case "macaddr8":
+      case "varbit":
+      case "bit varying":
+        return rs.getString( elem.getPosition() );
+      case "money":
+        return rs.getDouble( elem.getPosition() );
+    }
+    return NONE;
+  }
+
 }

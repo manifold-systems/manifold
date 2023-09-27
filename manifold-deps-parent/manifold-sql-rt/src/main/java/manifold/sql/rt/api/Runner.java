@@ -91,7 +91,7 @@ public class Runner<T extends ResultRow>
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     for( Object param : _ctx.getParams().values() )
     {
-      ValueAccessor accessor = accProvider.get( _ctx.getJdbcParamTypes()[i] );
+      ValueAccessor accessor = accProvider.get( _ctx.getParamInfo()[i].getJdbcType() );
       accessor.setParameter( ps, ++i, param );
     }
   }

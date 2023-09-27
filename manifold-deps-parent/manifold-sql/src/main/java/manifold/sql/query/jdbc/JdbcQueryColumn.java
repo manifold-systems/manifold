@@ -32,6 +32,7 @@ public class JdbcQueryColumn implements QueryColumn
   private final int _position;
   private final String _name;
   private final int _jdbcType;
+  private final String _sqlType;
   private final int _size;
   private final int _scale;
   private final int _displaySize;
@@ -55,6 +56,7 @@ public class JdbcQueryColumn implements QueryColumn
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
     _jdbcType = _schemaColumn != null ? _schemaColumn.getJdbcType() : rsMetaData.getColumnType( colIndex );
+    _sqlType = rsMetaData.getColumnTypeName( colIndex );
     _columnType = _schemaColumn != null ? _schemaColumn.getColumnClassName() : rsMetaData.getColumnClassName( colIndex );
 
     _isNullable = rsMetaData.isNullable( colIndex ) == ResultSetMetaData.columnNullable;
@@ -83,6 +85,12 @@ public class JdbcQueryColumn implements QueryColumn
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    return _sqlType;
   }
 
   @Override
