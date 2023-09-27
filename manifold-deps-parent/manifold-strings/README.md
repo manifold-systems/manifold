@@ -85,7 +85,7 @@ out.println("It is ${hour} o'clock"); // prints "It is 5 o'clock"
 
 # Template Files
 
-Template **_files_** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
+Template **_files_** are much more powerful and are documented in [manifold-templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates).
 
 > Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to quickly
 begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
