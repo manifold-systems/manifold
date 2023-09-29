@@ -704,8 +704,22 @@ public class ManIterableExt
    *
    * @param transform function that takes the index of an element and the element itself
    *                  and returns the result of the transform applied to the element.
+   * @deprecated Use {@link #mapIndexedToList(Iterable, IndexedFunction)} instead.
    */
+  @Deprecated
   public static <T, R> List<R> mapIndexed( @This Iterable<T> thiz, IndexedFunction<T, R> transform )
+  {
+    return thiz.mapIndexedTo( new ArrayList<R>( collectionSizeOrDefault( thiz, 10 ) ), transform );
+  }
+
+  /**
+   * Returns a list containing the results of applying the given {@code transform} function
+   * to each element and its index in the original collection.
+   *
+   * @param transform function that takes the index of an element and the element itself
+   *                  and returns the result of the transform applied to the element.
+   */
+  public static <T, R> List<R> mapIndexedToList( @This Iterable<T> thiz, IndexedFunction<T, R> transform )
   {
     return thiz.mapIndexedTo( new ArrayList<R>( collectionSizeOrDefault( thiz, 10 ) ), transform );
   }
@@ -716,8 +730,22 @@ public class ManIterableExt
    *
    * @param transform function that takes the index of an element and the element itself
    *                  and returns the result of the transform applied to the element.
+   * @deprecated Use {@link #mapIndexedNotNullToList(Iterable, IndexedFunction)} instead.
    */
+  @Deprecated
   public static <T, R> List<R> mapIndexedNotNull( @This Iterable<T> thiz, IndexedFunction<T, R> transform )
+  {
+    return thiz.mapIndexedNotNullTo( new ArrayList<R>(), transform );
+  }
+
+  /**
+   * Returns a list containing only the non-null results of applying the given {@code transform} function
+   * to each element and its index in the original collection.
+   *
+   * @param transform function that takes the index of an element and the element itself
+   *                  and returns the result of the transform applied to the element.
+   */
+  public static <T, R> List<R> mapIndexedNotNullToList( @This Iterable<T> thiz, IndexedFunction<T, R> transform )
   {
     return thiz.mapIndexedNotNullTo( new ArrayList<R>(), transform );
   }
@@ -762,8 +790,19 @@ public class ManIterableExt
   /**
    * Returns a list containing only the non-null results of applying the given {@code transform} function
    * to each element in the original collection.
+   * @deprecated Use {@link #mapNotNullToList(Iterable, Function)} instead.
    */
+  @Deprecated
   public static <T, R> List<R> mapNotNull( @This Iterable<T> thiz, Function<T, R> transform )
+  {
+    return thiz.mapNotNullTo( new ArrayList<>(), transform );
+  }
+
+  /**
+   * Returns a list containing only the non-null results of applying the given {@code transform} function
+   * to each element in the original collection.
+   */
+  public static <T, R> List<R> mapNotNullToList( @This Iterable<T> thiz, Function<T, R> transform )
   {
     return thiz.mapNotNullTo( new ArrayList<>(), transform );
   }

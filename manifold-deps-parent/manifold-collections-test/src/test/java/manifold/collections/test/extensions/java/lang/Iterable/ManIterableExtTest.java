@@ -152,9 +152,19 @@ public class ManIterableExtTest extends ExtensionManifoldTest {
     assertEquals(Arrays.asList("0s", "1k", "2c", "3l"), iter.mapIndexed( (i,e) -> ""+i+ e.charAt( 0 ) ));
   }
 
+  public void testMapIndexedToList()  {
+    Iterable<String> iter = makeTestIterable();
+    assertEquals(Arrays.asList("0s", "1k", "2c", "3l"), iter.mapIndexedToList( (i,e) -> ""+i+ e.charAt( 0 ) ));
+  }
+
   public void testMapIndexedNotNull()  {
     Iterable<String> iter = makeTestIterable();
     assertEquals(Arrays.asList("0s", "1k", "2c", "3l"), iter.mapIndexed( (i,e) -> ""+i+ e.charAt( 0 ) ));
+  }
+
+  public void testMapIndexedNotNullToList()  {
+    Iterable<String> iter = makeTestIterable();
+    assertEquals(Arrays.asList("0s", "1k", "2c", "3l"), iter.mapIndexedToList( (i,e) -> ""+i+ e.charAt( 0 ) ));
   }
 
   public void testMapIndexedNotNullTo()  {
@@ -170,6 +180,11 @@ public class ManIterableExtTest extends ExtensionManifoldTest {
   public void testMapNotNull()  {
     Iterable<String> iter = makeTestIterableWithNulls();
     assertEquals(Arrays.asList('s', 'k', 'c', 'l'), iter.mapNotNull( e -> e == null ? null : e.charAt(0) ));
+  }
+
+  public void testMapNotNullToList()  {
+    Iterable<String> iter = makeTestIterableWithNulls();
+    assertEquals(Arrays.asList('s', 'k', 'c', 'l'), iter.mapNotNullToList( e -> e == null ? null : e.charAt(0) ));
   }
 
   public void testMapNotNullTo()  {
