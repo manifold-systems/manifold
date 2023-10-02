@@ -88,12 +88,28 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
     private State( String name, JsonSchemaType parent, IFile file )
     {
-      _name = name;
+      _name = avoidDuplicateNestedClassName( parent, parent, name );
       _parent = parent;
       _file = file;
 
       _issues = Collections.emptyList();
       _resolveState = ResolveState.Unresolved;
+    }
+
+    // Java does not permit an inner class to have the same name as any class in its direct ancestry
+    private String avoidDuplicateNestedClassName( JsonSchemaType ancestor, JsonSchemaType parentOfName, String name )
+    {
+      if( ancestor == null || parentOfName == null || name == null || "definitions".equalsIgnoreCase( name ) )
+      {
+        return name;
+      }
+      String ancestorName = ancestor.getName();
+      if( ancestorName != null && ancestorName.equals( name )  )
+      {
+        // make a different name by qualifying the duplicate nested name with the parent name
+        return parentOfName.getName() + "_" + name;
+      }
+      return avoidDuplicateNestedClassName( ancestor.getParent(), parentOfName, name );
     }
   }
 
