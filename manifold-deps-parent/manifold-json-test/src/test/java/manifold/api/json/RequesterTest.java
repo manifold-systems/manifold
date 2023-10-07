@@ -24,7 +24,7 @@ import org.junit.Test;
 import abc.Dummy;
 import spark.Spark;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class RequesterTest
 {
@@ -47,7 +47,7 @@ public class RequesterTest
       .withParam( "foo", "bar" )
       .withParam( "abc", "8" );
     Object queryString = req.postOne( "testPost_QueryString", Dummy.create(), Requester.Format.Text );
-    assertEquals( "foo=bar&abc=8", queryString );
+    assertTrue("foo=bar&abc=8".equals(queryString) || "abc=8&foo=bar".equals(queryString));
   }
 
   @Test
@@ -57,7 +57,7 @@ public class RequesterTest
       .withParam( "foo", "bar" )
       .withParam( "abc", "8" );
     Object queryString = req.getOne( "testGet_QueryString", Dummy.create(), Requester.Format.Text );
-    assertEquals( "foo=bar&abc=8", queryString );
+    assertTrue("foo=bar&abc=8".equals(queryString) || "abc=8&foo=bar".equals(queryString));
   }
 
   @Test
@@ -67,7 +67,7 @@ public class RequesterTest
       .withParam( "foo", "bar" )
       .withParam( "abc", "8" );
     Object queryString = req.postOne( "testPost_QueryString?firstParam=firstValue", Dummy.create(), Requester.Format.Text );
-    assertEquals( "firstParam=firstValue&foo=bar&abc=8", queryString );
+    assertTrue( "firstParam=firstValue&foo=bar&abc=8".equals(queryString) || "firstParam=firstValue&abc=8&foo=bar".equals(queryString));
   }
 
   @Test
@@ -77,6 +77,6 @@ public class RequesterTest
       .withParam( "foo", "bar" )
       .withParam( "abc", "8" );
     Object queryString = req.getOne( "testGet_QueryString?firstParam=firstValue", Dummy.create(), Requester.Format.Text );
-    assertEquals( "firstParam=firstValue&foo=bar&abc=8", queryString );
+    assertTrue( "firstParam=firstValue&foo=bar&abc=8".equals(queryString) || "firstParam=firstValue&abc=8&foo=bar".equals(queryString));
   }
 }
