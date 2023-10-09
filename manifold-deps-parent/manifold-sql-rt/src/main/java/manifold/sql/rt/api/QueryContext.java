@@ -18,12 +18,14 @@ package manifold.sql.rt.api;
 
 import manifold.rt.api.Bindings;
 
+import java.util.Map;
 import java.util.function.Function;
 
 public class QueryContext<T extends ResultRow>
 {
   private final TxScope _txScope;
   private final Class<T> _queryClass;
+  private final Map<String, ColumnInfo> _allCols;
   private final ColumnInfo[] _paramInfo;
   private final Bindings _params;
   private final String _configName;
@@ -31,12 +33,13 @@ public class QueryContext<T extends ResultRow>
   private final String _ddlTableName;
 
   public QueryContext( TxScope txScope, Class<T> queryClass, String ddlTableName,
-                       ColumnInfo[] paramInfo, Bindings params,
+                       Map<String, ColumnInfo> allCols, ColumnInfo[] paramInfo, Bindings params,
                        String configName, Function<TxBindings, T> makeRow )
   {
     _txScope = txScope;
     _queryClass = queryClass;
     _ddlTableName = ddlTableName;
+    _allCols = allCols;
     _paramInfo = paramInfo;
     _params = params;
     _configName = configName;
@@ -56,6 +59,11 @@ public class QueryContext<T extends ResultRow>
   public String getDdlTableName()
   {
     return _ddlTableName;
+  }
+
+  public Map<String, ColumnInfo> getAllCols()
+  {
+    return _allCols;
   }
 
   public ColumnInfo[] getParamInfo()

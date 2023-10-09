@@ -28,18 +28,29 @@ public class SqlScriptParser
 
   private final String _script;
   private final List<String> _commands;
+  private final boolean _goAsSeparator;
   private int _pos;
 
   public static List<String> getCommands( String script )
   {
-    return new SqlScriptParser( script ).parse( script );
+    return getCommands( script, false );
+  }
+  public static List<String> getCommands( String script, boolean goAsSeparator )
+  {
+    return new SqlScriptParser( script, goAsSeparator ).parse( script );
   }
 
-  private SqlScriptParser( String script )
+  private SqlScriptParser( String script, boolean goAsSeparator )
   {
     _pos = -1;
     _script = script;
+    _goAsSeparator = goAsSeparator;
     _commands = new ArrayList<>();
+  }
+
+  private boolean goAsSeparator()
+  {
+    return _goAsSeparator;
   }
 
   private List<String> parse( String script )
@@ -56,20 +67,34 @@ public class SqlScriptParser
   {
     int pos = _pos;
     int blockDepth = 0;
+    int endCommandPos = -1;
     while( !isEof() )
     {
       //noinspection StatementWithEmptyBody
       while( eatComments() || eatWhitespace() );
 
+
       if( match( ';' ) )
       {
         if( blockDepth == 0 )
         {
+          endCommandPos = _pos - 1;
           break;
         }
       }
+
       String word = matchWord();
-      if( is$$Quote( word ) )
+
+      if( goAsSeparator() && word.equalsIgnoreCase( "GO" ) )
+      {
+        // sql server 'GO' is like a ';' separator
+        if( blockDepth == 0 )
+        {
+          endCommandPos = _pos - 2;
+          break;
+        }
+      }
+      else if( is$$Quote( word ) )
       {
         // Postgres uses '$$' as a quote. Syntax is actually $[word]$ e.g., $myquote$ is considered a custom quote character.
         // Used mostly for function body quoting. Postgres...
@@ -114,7 +139,7 @@ public class SqlScriptParser
       }
       matchNonWord();
     }
-    String command = _script.substring( pos, isEof() ? _script.length() : _pos - 1 ); // -1 to remove the ';'
+    String command = _script.substring( pos, isEof() ? _script.length() : endCommandPos > 0 ? endCommandPos : _pos );
     command = command.trim();
     if( !command.isEmpty() )
     {
@@ -263,7 +288,7 @@ public class SqlScriptParser
       return false;
     }
 
-    if( _script.startsWith( s, _pos ) )
+    if( _script.regionMatches( true, _pos, s, 0, s.length() ) )
     {
       if( !peek )
       {
@@ -280,10 +305,16 @@ public class SqlScriptParser
 
   private String matchWord()
   {
+    return matchWord( false );
+  }
+  private String matchWord( boolean peek )
+  {
     if( isEof() )
     {
       return "";
     }
+
+    int savePos = _pos;
 
     StringBuilder sb = new StringBuilder();
     if( Character.isJavaIdentifierStart( ch() ) )
@@ -295,6 +326,11 @@ public class SqlScriptParser
         sb.append( ch() );
         next();
       }
+    }
+
+    if( peek )
+    {
+      _pos = savePos;
     }
     return sb.toString();
   }

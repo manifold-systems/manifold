@@ -28,6 +28,7 @@ import org.junit.Before;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 
@@ -97,4 +98,24 @@ public abstract class DdlServerTest
     // clear DbConfigs. Forces dbconfig to initialize and exec ddl on first connection
     Dependencies.instance().getDbConfigProvider().clear();
   }
+
+
+  protected void loadData( String dataResourcePath ) throws IOException
+  {
+    try( Reader reader = new InputStreamReader( getClass().getResourceAsStream( dataResourcePath ) ) )
+    {
+      ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+      try( Connection c = cp.getConnection( getDbConfig().getName(), getClass() ) )
+      {
+        String script = StreamUtil.getContent( reader );
+        SqlScriptRunner.runScript( c, script );
+      }
+      catch( SQLException e )
+      {
+        throw new RuntimeException( e );
+      }
+      System.out.println( "Data load successful" );
+    }
+  }
+
 }

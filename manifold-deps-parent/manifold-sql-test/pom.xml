@@ -42,6 +42,18 @@
       <version>42.6.0</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <version>12.4.1.jre8</version>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc_auth</artifactId>
+      <version>12.4.1.x64</version>
+      <type>dll</type>
+    </dependency>
+
     <!-- for testing H2's GEOMETRY type -->
     <dependency>
       <groupId>org.locationtech.jts</groupId>
@@ -110,6 +122,17 @@
               <groupId>com.mysql</groupId>
               <artifactId>mysql-connector-j</artifactId>
               <version>8.0.33</version>
+            </path>
+            <path>
+              <groupId>com.microsoft.sqlserver</groupId>
+              <artifactId>mssql-jdbc</artifactId>
+              <version>12.4.1.jre8</version>
+            </path>
+            <path>
+              <groupId>com.microsoft.sqlserver</groupId>
+              <artifactId>mssql-jdbc_auth</artifactId>
+              <version>12.4.1.x64</version>
+              <type>dll</type>
             </path>
             <path>
               <groupId>org.slf4j</groupId>

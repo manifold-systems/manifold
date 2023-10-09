@@ -19,6 +19,7 @@ package manifold.sql.rt.api;
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.ResultSet;
@@ -40,16 +41,12 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
 {
   private final List<R> _results;
 
-  public Result( TxScope txScope, ResultSet resultSet, Function<TxBindings, R> makeRow )
+  public Result( QueryContext ctx, ResultSet resultSet )
   {
     _results = new ArrayList<>();
-    rip( null, resultSet, rowBindings -> new BasicTxBindings( txScope, Update, rowBindings ), makeRow );
+    rip( ctx.getAllCols(), resultSet, rowBindings -> new BasicTxBindings( ctx.getTxScope(), Update, rowBindings ), ctx.getRowMaker() );
   }
 
-  public Result( ResultSet resultSet, Function<Bindings, R> makeRow )
-  {
-    this( null, resultSet, makeRow );
-  }
   public Result( Map<String, ColumnInfo> allCols, ResultSet resultSet, Function<Bindings, R> makeRow )
   {
     _results = new ArrayList<>();
@@ -69,7 +66,7 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
         DataBindings row = new DataBindings();
         for( int i = 1; i <= columnCount; i++ )
         {
-          String column = metaData.getColumnLabel( i );
+          String column = DbUtil.handleAnonQueryColumn( metaData.getColumnLabel( i ), i );
           Object value = accessors[i-1].getRowValue( resultSet, new ResultColumn( metaData, i ) );
           row.put( column, value );
         }

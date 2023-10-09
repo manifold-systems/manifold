@@ -20,6 +20,7 @@ import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ public class BasicCrudProvider implements CrudProvider
   private final Logger LOGGER = LoggerFactory.getLogger( BasicCrudProvider.class );
 
   public static final String SQLITE_LAST_INSERT_ROWID = "last_insert_rowid()";
-  private static final String MYSQL_GENERATED_KEY = "GENERATED_KEY";
 
   @SuppressWarnings( "unused" )
   public <T extends TableRow> void create( Connection c, UpdateContext<T> ctx )
@@ -40,20 +40,84 @@ public class BasicCrudProvider implements CrudProvider
     try
     {
       T table = ctx.getTable();
-      String[] allColumnNames = ctx.getAllCols().keySet().toArray( new String[0] );
-
       Set<String> skipParams = new HashSet<>();
       String sql = makeInsertStmt( c.getMetaData(), ctx, skipParams );
-      try( PreparedStatement ps = c.prepareStatement( sql, allColumnNames ) )
+      int[] reflectedColumnCount = {0};
+      try( PreparedStatement ps = prepareStatement( c, ctx, sql, reflectedColumnCount ) )
       {
         setInsertParameters( ctx, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings() );
+        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
     {
       throw ManExceptionUtil.unchecked( e );
     }
+  }
+
+  /**
+   * Calls {@code c.prepareStatement(sql, columnNames)} with {@code columnNames} having all columns for the inserted/updated
+   * row. If the driver does not handle that and throws an exception, we try calling {@code c.prepareStatement(...)} again
+   * passing just the pk key column, if applicable. If not, we don't pass any column names. Note, if the driver doesn't
+   * throw an exception from the former call and quietly ignores all the column names and instead just supplies the pk,
+   * we handle that too when we process the call to {@code getGeneratedKeys()}.
+   */
+  private static <T extends TableRow> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
+  {
+    String[] reflectedColumns = reflectedColumns( c, ctx, true );
+    try
+    {
+      return c.prepareStatement( sql, reflectedColumns );
+    }
+    catch( SQLException e )
+    {
+      reflectedColumns = reflectedColumns( c, ctx, false );
+      if( reflectedColumns.length == 0 )
+      {
+        return c.prepareStatement( sql );
+      }
+      return c.prepareStatement( sql, reflectedColumns );
+    }
+    finally
+    {
+      reflectedColumnCount[0] = reflectedColumns.length;
+    }
+  }
+
+  /**
+   * The names of columns that should be returned from the inserted row via {@code getGeneratedKeys()}, this array is passed
+   * into {@code prepareStatement(sql, columnNames)}. Ideally, we want more than the "generated keys" the {@link Connection#prepareStatement(String, String[])}
+   * method sort of documents; the parameter documentation is more loosely defined as <i>an array of column names indicating the
+   * columns that should be returned from the inserted row</i>. Some (good) drivers adhere to this latter description and
+   * return any and all columns asked for, others drivers vary in behavior here.
+   */
+  private static <T extends TableRow> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
+  {
+    String[] reflectedColumnNames = {};
+    if( allColumns )
+    {
+      // ask for all columns since we want the entire record to include whatever generated data that was not included in the insert
+
+      reflectedColumnNames = ctx.getAllCols().keySet().toArray( new String[0] );
+    }
+    else
+    {
+      // ask for pk column, so we can query for the whole record
+
+      if( ctx.getPkCols().size() == 1 )
+      {
+        ColumnInfo pkColumnInfo = ctx.getAllCols().get( ctx.getPkCols().iterator().next() );
+        Boolean required = pkColumnInfo.isRequired();
+        if( required != null && !required )
+        {
+          // some DBs (sql server) only reflect the pk column for getGeneratedKeys() and throw exception if we ask for more
+          // in this case we use the pk to make a separate query for the full record
+          reflectedColumnNames = ctx.getPkCols().toArray( new String[0] );
+        }
+      }
+    }
+
+    return reflectedColumnNames;
   }
 
   private <T extends TableRow> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
@@ -99,7 +163,7 @@ public class BasicCrudProvider implements CrudProvider
     return value;
   }
 
-  private <T extends TableRow> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams )
+  private <T extends TableRow> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     StringBuilder sql = new StringBuilder();
     sql.append( "INSERT INTO " ).append( ctx.getDdlTableName() ).append( "(" );
@@ -112,7 +176,7 @@ public class BasicCrudProvider implements CrudProvider
       {
         sql.append( ", " );
       }
-      sql.append( enquote( colName, metaData ) );
+      sql.append( DbUtil.enquoteIdentifier( colName, metaData ) );
     }
     sql.append( ")" ).append( " VALUES (" );
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
@@ -150,7 +214,7 @@ public class BasicCrudProvider implements CrudProvider
         setQueryParameters( ctx, ps, skipParams );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
+          Result<T> ts = new Result<>( ctx, resultSet );
           Iterator<T> iterator = ts.iterator();
           if( !iterator.hasNext() )
           {
@@ -187,7 +251,7 @@ public class BasicCrudProvider implements CrudProvider
         setQueryParameters( ctx, ps, skipParams );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
+          Result<T> ts = new Result<>( ctx, resultSet );
           List<T> result = new ArrayList<>();
           for( T t : ts )
           {
@@ -203,7 +267,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams )
+  private <T extends TableRow> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     StringBuilder sql = new StringBuilder();
@@ -218,7 +282,7 @@ public class BasicCrudProvider implements CrudProvider
       ColumnInfo paramInfo = ctx.getParamInfo()[i];
       ValueAccessor accessor = accProvider.get( paramInfo.getJdbcType() );
       String expr = accessor.getParameterExpression( metaData, entry.getValue(), paramInfo );
-      sql.append( enquote( entry.getKey(), metaData ) ).append( " = " ).append( expr );
+      sql.append( DbUtil.enquoteIdentifier( entry.getKey(), metaData ) ).append( " = " ).append( expr );
       i++;
       if( !expr.contains( "?" ) )
       {
@@ -253,7 +317,7 @@ public class BasicCrudProvider implements CrudProvider
         String colName = entry.getKey();
         ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( colName ).getJdbcType() );
         String expr = accessor.getParameterExpression( c.getMetaData(), entry.getValue(), ctx.getAllCols().get( colName ) );
-        String qcolName = enquote( colName, c.getMetaData() );
+        String qcolName = DbUtil.enquoteIdentifier( colName, c.getMetaData() );
         sql.append( "$qcolName = " ).append( expr );
         i++;
         if( !expr.contains( "?" ) )
@@ -291,7 +355,7 @@ public class BasicCrudProvider implements CrudProvider
           ValueAccessor accessor = accProvider.get( columnInfo.getJdbcType() );
           String expr = accessor.getParameterExpression(
             c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), columnInfo );
-          String qwhereCol = enquote( whereCol, c.getMetaData() );
+          String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )
           {
@@ -304,10 +368,11 @@ public class BasicCrudProvider implements CrudProvider
         throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
-      try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
+      int[] reflectedColumnCount = {0};
+      try( PreparedStatement ps = prepareStatement( c, ctx, sql.toString(), reflectedColumnCount ) )
       {
         setUpdateParameters( ctx, whereColumns, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings() );
+        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -379,7 +444,8 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void executeAndFetchRow( Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table ) throws SQLException
+  private <T extends TableRow> void executeAndFetchRow(
+    Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table, boolean hasReflectedColumns ) throws SQLException
   {
     int result = ps.executeUpdate();
     if( result != 1 )
@@ -390,26 +456,29 @@ public class BasicCrudProvider implements CrudProvider
     // here getGeneratedKeys() returns ALL columns because PreparedStatement was created with all column names as gen keys
     // this is necessary to retrieve columns that are autoincrement, generated, default values, etc.
     Bindings reflectedRow = DataBindings.EMPTY_BINDINGS;
-    try( ResultSet resultSet = ps.getGeneratedKeys() )
+    if( hasReflectedColumns )
     {
-      Result<IBindingsBacked> resultRow =
-        new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
-      Iterator<IBindingsBacked> iterator = resultRow.iterator();
-      if( iterator.hasNext() )
+      try( ResultSet resultSet = ps.getGeneratedKeys() )
       {
-        reflectedRow = iterator.next().getBindings();
+        Result<IBindingsBacked> resultRow =
+          new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
+        Iterator<IBindingsBacked> iterator = resultRow.iterator();
         if( iterator.hasNext() )
         {
-          throw new SQLException( "Expecting a single row, found more." );
+          reflectedRow = iterator.next().getBindings();
+          if( iterator.hasNext() )
+          {
+            throw new SQLException( "Expecting a single row, found more." );
+          }
         }
       }
-    }
-    catch( SQLFeatureNotSupportedException e )
-    {
-      LOGGER.warn( "getGeneratedKeys() is not supported, attempting to fetch updated row.", e );
+      catch( SQLFeatureNotSupportedException e )
+      {
+        LOGGER.warn( "getGeneratedKeys() is not supported, attempting to fetch updated row.", e );
+      }
     }
 
-    if( reflectedRow.isEmpty() && ctx.getPkCols().isEmpty() )
+    if( isReflectedRowEmpty( reflectedRow ) && ctx.getPkCols().isEmpty() )
     {
       // no pk means there's no way to fetch the inserted row
       //todo: throw here instead?
@@ -418,7 +487,7 @@ public class BasicCrudProvider implements CrudProvider
 
     // some drivers (sqlite) don't fetch the gen key columns supplied in the prepared statement, so we issue a Select
     reflectedRow = maybeFetchInsertedRow( c, ctx, table, reflectedRow );
-    if( reflectedRow.isEmpty() )
+    if( isReflectedRowEmpty( reflectedRow ) )
     {
       throw new SQLException( "Failed to reflect newly inserted row." );
     }
@@ -430,29 +499,22 @@ public class BasicCrudProvider implements CrudProvider
     Connection c, UpdateContext<T> ctx, TxBindings bindings, Bindings reflectedRow ) throws SQLException
   {
     DataBindings params = new DataBindings();
-    ColumnInfo[] ci;
+    ColumnInfo[] ci = null;
     if( reflectedRow.containsKey( SQLITE_LAST_INSERT_ROWID ) )
     {
       // specific to sqlite :\
       // all sqlite tables (except those marked WITHOUT ROWID) have a built-in "rowid" column.
       // sqlite ignores all the columns we specify for generated keys when creating a PreparedStatement and instead sends
-      // the "last_insert_rowid()" column. Thanks, sqlite.
+      // the "last_insert_rowid()" column, which is probably not the pk. Thanks, sqlite, thanks.
       params.put( "_rowid_", reflectedRow.get( SQLITE_LAST_INSERT_ROWID ) );
       ci = new ColumnInfo[] {new ColumnInfo( "_rowid_", Types.INTEGER, "integer", null )};
     }
-    else if( reflectedRow.isEmpty() ||
-      // specific to mysql :\
-      reflectedRow.containsKey( MYSQL_GENERATED_KEY ) )
+    else if( isReflectedRowEmpty( reflectedRow ) && !ctx.getPkCols().isEmpty() )
     {
-      // getGeneratedKeys() failed, lets hope the pk is provided manually...
+      // getGeneratedKeys() failed
+      // let's hope the pk was required input
 
       Set<String> pkCols = ctx.getPkCols();
-      if( pkCols.isEmpty() )
-      {
-        // no pk, can't query
-        return reflectedRow;
-      }
-
       Map<String, ColumnInfo> allCols = ctx.getAllCols();
       ci = new ColumnInfo[pkCols.size()];
       int i = 0;
@@ -461,12 +523,8 @@ public class BasicCrudProvider implements CrudProvider
         Object pkValue = bindings.get( pkCol );
         if( pkValue == null )
         {
-          pkValue = reflectedRow.get( MYSQL_GENERATED_KEY );
-          if( pkValue == null )
-          {
-            // null pk value means we can't query for the inserted row, game over
-            return reflectedRow;
-          }
+          // null pk value means we can't query for the inserted row, game over
+          return reflectedRow;
         }
         else if( pkValue instanceof TableRow ) // from a KeyRef, see BasicTxBindings#get()
         {
@@ -483,12 +541,34 @@ public class BasicCrudProvider implements CrudProvider
         i++;
       }
     }
+    else if( reflectedRow.size() == 1 && ctx.getAllCols().size() > 1 && ctx.getPkCols().size() == 1 )
+    {
+      // this block handles the case where getGeneratedKeys() only returns a single key that may have a db-specific name
+      // like sql server's GENERATED_KEYS or mysql's GENERATED_KEY, etc.
+
+      int i = 0;
+      for( Map.Entry<String, Object> entry : reflectedRow.entrySet() )
+      {
+        String pkCol = ctx.getPkCols().iterator().next();
+        ColumnInfo pkColumnInfo = ctx.getAllCols().get( pkCol );
+        if( pkColumnInfo != null )
+        {
+          ci = new ColumnInfo[] {pkColumnInfo};
+          params.put( pkCol, entry.getValue() );
+          break;
+        }
+      }
+      if( ci == null )
+      {
+        throw new SQLException( "Failed to retrieve generated primary key" );
+      }
+    }
     else
     {
       return reflectedRow;
     }
 
-    QueryContext<T> queryContext = new QueryContext<>( ctx.getTxScope(), null, ctx.getDdlTableName(), ci, params, ctx.getConfigName(), null );
+    QueryContext<T> queryContext = new QueryContext<>( ctx.getTxScope(), null, ctx.getDdlTableName(), null, ci, params, ctx.getConfigName(), null );
     Set<String> skipParams = new HashSet<>();
     String sql = makeReadStatement( c.getMetaData(), queryContext, skipParams );
     try( PreparedStatement ps = c.prepareStatement( sql ) )
@@ -510,6 +590,12 @@ public class BasicCrudProvider implements CrudProvider
       }
     }
     return reflectedRow;
+  }
+
+  private static boolean isReflectedRowEmpty( Bindings reflectedRow )
+  {
+    return reflectedRow.isEmpty() ||
+      reflectedRow.size() == 1 && reflectedRow.entrySet().iterator().next().getValue() == null;
   }
 
   public <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx )
@@ -548,7 +634,7 @@ public class BasicCrudProvider implements CrudProvider
           ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereCol ).getJdbcType() );
           String expr = accessor.getParameterExpression(
             c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
-          String qwhereCol = enquote( whereCol, c.getMetaData() );
+          String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )
           {
@@ -561,7 +647,7 @@ public class BasicCrudProvider implements CrudProvider
         throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
-      try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
+      try( PreparedStatement ps = c.prepareStatement( sql.toString() ) )
       {
         setDeleteParameters( ctx, whereColumns, ps, skipParams );
         int result = ps.executeUpdate();
@@ -589,37 +675,6 @@ public class BasicCrudProvider implements CrudProvider
       }
       ValueAccessor accessor = accProvider.get( ctx.getParamInfo()[i].getJdbcType() );
       accessor.setParameter( ps, ++i, entry.getValue() );
-    }
-  }
-
-  private String enquote( String id, DatabaseMetaData metaData )
-  {
-    // "foo" is a standard SQL identifier (column/table/etc)
-    // [foo] is an identifier in MS SQL
-    // `foo` is an identifier in MySQL
-
-    try
-    {
-      char open;
-      char close;
-      String prod = metaData.getDatabaseProductName();
-      switch( prod.toLowerCase() )
-      {
-        case "microsoft sql server":
-          open = '[';
-          close = ']';
-          break;
-        case "mysql":
-          open = close = '`';
-          break;
-        default:
-          open = close = '"';
-      }
-      return open + id + close;
-    }
-    catch( SQLException e )
-    {
-      throw new RuntimeException( e );
     }
   }
 }

@@ -18,11 +18,23 @@ package manifold.sql.query.jdbc;
 
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaTable;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.util.TablesNamesFinder;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JdbcQueryColumn implements QueryColumn
 {
@@ -46,13 +58,13 @@ public class JdbcQueryColumn implements QueryColumn
   {
     _position = colIndex;
     _queryTable = queryTable;
+    _name = DbUtil.handleAnonQueryColumn( rsMetaData.getColumnLabel( colIndex ), colIndex );
 
-    String tableName = rsMetaData.getTableName( colIndex );
+    String tableName = getTableName( rsMetaData );
     _schemaTable = tableName == null || tableName.isEmpty()
       ? null // null if query column is not a table column eg. calculated
       : _queryTable.getSchema().getTable( tableName );
 
-    _name = rsMetaData.getColumnLabel( colIndex );
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
     _jdbcType = _schemaColumn != null ? _schemaColumn.getJdbcType() : rsMetaData.getColumnType( colIndex );
@@ -68,6 +80,106 @@ public class JdbcQueryColumn implements QueryColumn
     _isCurrency = rsMetaData.isCurrency( colIndex );
     _isReadOnly = rsMetaData.isReadOnly( colIndex );
     _isSigned = rsMetaData.isSigned( colIndex );
+  }
+
+  @Nullable
+  private String getTableName( ResultSetMetaData rsMetaData )
+  {
+    String tableName = null;
+    try
+    {
+      tableName = rsMetaData.getTableName( getPosition() );
+    }
+    catch( SQLException ignore )
+    {
+    }
+    if( tableName == null || tableName.isEmpty() )
+    {
+      // some drivers (SqlServer, Oracle) do not return the table name :\
+      // low effort parse it
+      tableName = parseTableName();
+    }
+    return tableName;
+  }
+
+  private String parseTableName()
+  {
+    try
+    {
+      Set<String> tables = TablesNamesFinder.findTables( _queryTable.getQuerySource() );
+      if( tables.size() == 1 )
+      {
+        String tableName = tables.iterator().next();
+        SchemaTable schemaTable = getSchemaTable( tableName );
+        if( schemaTable != null && schemaTable.getColumn( _name ) != null )
+        {
+          return schemaTable.getName();
+        }
+      }
+      else if( !tables.isEmpty() )
+      {
+        PlainSelect select = (PlainSelect)CCJSqlParserUtil.parse( _queryTable.getQuerySource() );
+        SelectItem<?> selectItem = select.getSelectItem( getPosition()-1 );
+        Expression expr = selectItem.getExpression();
+        if( expr instanceof Column )
+        {
+          Table table = ((Column)expr).getTable();
+          String tableName = table == null ? null : table.getName();
+          if( tableName != null )
+          {
+            SchemaTable schemaTable = getSchemaTable( tableName );
+            if( schemaTable != null )
+            {
+              return schemaTable.getName();
+            }
+          }
+          if( _name.equalsIgnoreCase( ((Column)expr).getColumnName() ) )
+          {
+            return findColumnInTables( _name, tables );
+          }
+          else
+          {
+            LOGGER.error( "Column '" + _name + "' does not match selectItem: '" + ((Column)expr).getColumnName() + "'" );
+          }
+        }
+      }
+    }
+    catch( Exception e )
+    {
+      LOGGER.warn( "Failed to find table name for column: '" + _name + "'" );
+    }
+    return null;
+  }
+
+  private String findColumnInTables( String columnName, Set<String> tables )
+  {
+    List<String> result = tables.stream()
+      .filter( t -> {
+        SchemaTable schemaTable = getSchemaTable( t );
+        return schemaTable != null && schemaTable.getColumn( columnName ) != null;
+      } )
+      .collect( Collectors.toList() );
+    if( result.size() == 1 )
+    {
+      return result.get( 0 );
+    }
+    return null;
+  }
+
+  private SchemaTable getSchemaTable( String tableName )
+  {
+    SchemaTable table = _queryTable.getSchema().getTable( tableName );
+    if( table == null )
+    {
+      tableName = tableName.toLowerCase();
+      table = _queryTable.getSchema().getTable( tableName );
+      if( table == null )
+      {
+        tableName = tableName.toUpperCase();
+        table = _queryTable.getSchema().getTable( tableName );
+      }
+    }
+    return table;
   }
 
   @Override

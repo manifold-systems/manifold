@@ -19,12 +19,17 @@ package manifold.sql.rt.impl.accessors;
 import manifold.sql.rt.api.ValueAccessor;
 import manifold.sql.rt.api.ValueAccessorProvider;
 import manifold.util.concurrent.LocklessLazyVar;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.sql.Types;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class DefaultValueAccessorProvider implements ValueAccessorProvider
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( DefaultValueAccessorProvider.class );
+
   private final LocklessLazyVar<Map<Integer, ValueAccessor>> _byJdbcType =
     LocklessLazyVar.make( () -> {
       LinkedHashMap<Integer, ValueAccessor> map = new LinkedHashMap<>();
@@ -88,6 +93,14 @@ public class DefaultValueAccessorProvider implements ValueAccessorProvider
   @Override
   public ValueAccessor get( int jdbcType )
   {
-    return _byJdbcType.get().get( jdbcType );
+    ValueAccessor valueAccessor = _byJdbcType.get().get( jdbcType );
+    if( valueAccessor == null )
+    {
+      // for example, Sql Server has a sql type 'datetimeoffset' with jdbc type: -155, which is internal to sql server
+      LOGGER.warn( "No direct ValueAccessor implementation found for JDBC type: " + jdbcType + ".\n" +
+        "Using default '" + DistinctValueAccessor.class.getSimpleName() + "'." );
+      valueAccessor = _byJdbcType.get().get( Types.DISTINCT );
+    }
+    return valueAccessor;
   }
 }

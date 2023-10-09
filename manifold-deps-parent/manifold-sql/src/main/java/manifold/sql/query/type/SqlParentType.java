@@ -84,6 +84,7 @@ class SqlParentType
     addFlatRowType( srcClass );
     addFetchMethods( srcClass );
     addFragmentValueMethod( srcClass );
+    addColumnInfoMethod( srcClass );
 
     srcClass.render( sb, 0 );
   }
@@ -204,7 +205,7 @@ class SqlParentType
     //noinspection unused
     String simpleName = srcClass.getSimpleName();
     sb.append(
-      "    return new Runner<$rowType>(new QueryContext<>(txScope, $rowType.class, null, ${getColumnInfo()}, paramBindings, \"$configName\",\n" +
+      "    return new Runner<$rowType>(new QueryContext<>(txScope, $rowType.class, null, columnInfo(), ${getParameterInfo()}, paramBindings, \"$configName\",\n" +
       "      rowBindings -> new $rowType() {public TxBindings getBindings() { return rowBindings; }}),\n" +
       "      \"$query\"\n" +
       "    ).$methodName();" );
@@ -218,8 +219,35 @@ class SqlParentType
       isValueFragment( ((IFileFragment)_model.getFile()).getHostKind() );
   }
 
+  private void addColumnInfoMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "columnInfo" )
+      .returns( "java.util.Map<String, ColumnInfo>" );
+    srcClass.addMethod( method );
+
+    StringBuilder sb = new StringBuilder();
+    sb.append( "    LinkedHashMap<String, ColumnInfo> allCols = new LinkedHashMap<>();\n" );
+    for( Map.Entry<String, QueryColumn> entry : getQuery().getColumns().entrySet() )
+    {
+      //noinspection unused
+      String colName = entry.getKey();
+      QueryColumn col = entry.getValue();
+      //noinspection unused
+      int jdbcType = col.getJdbcType();
+      //noinspection unused
+      String sqlType = col.getSqlType();
+      //noinspection unused
+      Integer size = col.getSize();
+      sb.append( "    allCols.put(\"$colName\", new ColumnInfo(\"$colName\", $jdbcType, \"$sqlType\", $size, null));\n");
+    }
+    sb.append( "    return allCols;" );
+    method.body( sb.toString() );
+  }
+
   @SuppressWarnings( "unused" )
-  private String getColumnInfo()
+  private String getParameterInfo()
   {
     StringBuilder sb = new StringBuilder( "new ColumnInfo[]{");
     List<QueryParameter> parameters = getQuery().getParameters();
@@ -395,7 +423,7 @@ class SqlParentType
       .modifiers( Flags.DEFAULT )
       .returns( type );
     //noinspection unused
-    String columnInfo = getColumnInfo( fkRef.getQueryCols() );
+    String fkColumnInfo = getColumnInfo( fkRef.getQueryCols() );
     //noinspection unused
     String configName = _model.getScope().getDbconfig().getName();
     StringBuilder sb = new StringBuilder();
@@ -407,7 +435,7 @@ class SqlParentType
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(${col.getName()}));\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
-      "\"${table.getName()}\", $columnInfo, paramBindings, \"$configName\",\n" +
+      "\"${table.getName()}\", columnInfo(), $fkColumnInfo, paramBindings, \"$configName\",\n" +
       "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );

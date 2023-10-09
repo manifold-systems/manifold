@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.ResultSetMetaData;
@@ -37,7 +38,7 @@ class ResultColumn implements BaseElement
   {
     try
     {
-      return _metaData.getColumnLabel( _pos );
+      return DbUtil.handleAnonQueryColumn( _metaData.getColumnLabel( _pos ), _pos );
     }
     catch( SQLException e )
     {

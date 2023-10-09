@@ -206,13 +206,14 @@ class SchemaParentType
     {
       //noinspection unused
       String colName = entry.getKey();
+      SchemaColumn col = entry.getValue();
       //noinspection unused
-      int jdbcType = entry.getValue().getJdbcType();
+      int jdbcType = col.getJdbcType();
       //noinspection unused
-      String sqlType = entry.getValue().getSqlType();
+      String sqlType = col.getSqlType();
       //noinspection unused
-      Integer size = entry.getValue().getSize();
-      sb.append( "      allCols.put(\"$colName\", new ColumnInfo(\"$colName\", $jdbcType, \"$sqlType\", $size));\n");
+      Integer size = col.getSize();
+      sb.append( "      allCols.put(\"$colName\", new ColumnInfo(\"$colName\", $jdbcType, \"$sqlType\", $size, ${isRequired(col)}));\n");
     }
 
     sb.append( "      HashSet<String> pkCols = new HashSet<>();\n" );
@@ -702,7 +703,7 @@ class SchemaParentType
     //noinspection unused
     String configName = _model.getDbConfig().getName();
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(" +
-      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", $columnInfo, paramBindings, \"$configName\", " +
+      "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
       "rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
@@ -824,7 +825,7 @@ class SchemaParentType
       sb.append( "    paramBindings.put(\"${col.getName()}\", $paramName);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
-      "      \"${table.getName()}\", $columnInfo, paramBindings, \"$configName\",\n" +
+      "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
       "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -904,7 +905,7 @@ class SchemaParentType
         .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
-      "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", $columnInfo, paramBindings, \"$configName\", " +
+      "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
       "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -964,7 +965,7 @@ class SchemaParentType
       .append( "      if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
       .append( "      paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     sb.append( "      return new ${Runner.class.getName()}<$tableFqn>(\n" +
-      "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, $columnInfo, paramBindings, \"$configName\", \n" +
+      "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", \n" +
       "          rowBindings -> new $tableFqn.Impl(rowBindings)), \"$sql\")\n" +
       "        .fetch().toList();" );
     method.body( sb.toString() );

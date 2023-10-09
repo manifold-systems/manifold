@@ -23,13 +23,19 @@ public class ColumnInfo
   private final String _sqlType;
   // See COLUMN_SIZE in java.sql.DatabaseMetaData
   private final Integer _size; // width for char/bin types, precision for numeric types, null when not applicable
+  private final Boolean _required;
 
   public ColumnInfo( String name, int jdbcType, String sqlType, Integer size )
+  {
+    this( name, jdbcType, sqlType, size, null );
+  }
+  public ColumnInfo( String name, int jdbcType, String sqlType, Integer size, Boolean required )
   {
     _name = name;
     _jdbcType = jdbcType;
     _sqlType = sqlType;
     _size = size;
+    _required = required;
   }
 
   public String getName()
@@ -50,5 +56,10 @@ public class ColumnInfo
   public Integer getSize()
   {
     return _size;
+  }
+
+  public Boolean isRequired()
+  {
+    return _required;
   }
 }

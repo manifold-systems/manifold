@@ -87,7 +87,7 @@ public class BitValueAccessor implements ValueAccessor
           // note, checking for "bool" because postgres assigns "bit" jdbc type to "bool" sql types,
           // and then throws exceptions about this :\
 
-          // "bit" types must be manually parameterized with postgres :(  Could there be a suckier database? oh wait, sqlite.
+          // "bit" types must be manually parameterized with postgres :(
           return coerce( value, ci );
         }
       }

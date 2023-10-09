@@ -86,10 +86,11 @@ public class JdbcQueryTable implements QueryTable
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
-    try( PreparedStatement preparedStatement = c.prepareStatement( _source ) )
+    PreparedStatement ps = c.getMetaData().getDatabaseProductName().toLowerCase().contains( "sql server" )
+    ? c.prepareStatement( _source, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE ) // attempt to make sqlserver support for ResultSetMetaData#getTableName()
+    : c.prepareStatement( _source );
+    try( PreparedStatement preparedStatement = ps )
     {
-      // todo: handle warnings, make them compiler warnings
-
       ResultSetMetaData rsMetaData = preparedStatement.getMetaData();
       int columnCount = rsMetaData.getColumnCount();
       for( int i = 1; i <= columnCount; i++ )

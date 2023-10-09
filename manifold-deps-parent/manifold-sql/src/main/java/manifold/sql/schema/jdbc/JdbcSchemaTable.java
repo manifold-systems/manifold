@@ -76,8 +76,11 @@ public class JdbcSchemaTable implements SchemaTable
         if( !indexInfo.getBoolean( "NON_UNIQUE" ) )
         {
           String indexName = indexInfo.getString( "INDEX_NAME" );
-          uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
-            .add( indexInfo.getString( "COLUMN_NAME" ) );
+          if( indexName != null ) // sql server always includes a null index for some reason
+          {
+            uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
+              .add( indexInfo.getString( "COLUMN_NAME" ) );
+          }
         }
       }
     }

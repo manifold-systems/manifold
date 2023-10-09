@@ -34,8 +34,9 @@ public class SqlScriptRunner
     try
     {
       connection.setAutoCommit( false );
+      boolean goAsSeparator = connection.getMetaData().getDatabaseProductName().toLowerCase().contains( "sql server" );
       Statement stmt = connection.createStatement();
-      List<String> commands = SqlScriptParser.getCommands( script );
+      List<String> commands = SqlScriptParser.getCommands( script, goAsSeparator );
       for( String command : commands )
       {
         stmt.addBatch( command );

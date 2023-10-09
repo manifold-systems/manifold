@@ -43,7 +43,7 @@ public class Runner<T extends ResultRow>
         setParameters( ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          return new Result<>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
+          return new Result<>( _ctx, resultSet );
         }
       }
     }
@@ -64,7 +64,7 @@ public class Runner<T extends ResultRow>
         setParameters( ps );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> rs = new Result<>( _ctx.getTxScope(), resultSet, _ctx.getRowMaker() );
+          Result<T> rs = new Result<>( _ctx, resultSet );
           Iterator<T> iterator = rs.iterator();
           if( !iterator.hasNext() )
           {
