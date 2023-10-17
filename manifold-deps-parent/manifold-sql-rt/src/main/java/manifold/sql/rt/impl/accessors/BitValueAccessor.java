@@ -45,6 +45,11 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
+      String productName = rs.getStatement().getConnection().getMetaData().getDatabaseProductName();
+      if( productName.toLowerCase().contains( "mysql" ) )
+      {
+        return rs.getBigDecimal( elem.getPosition() ).toBigInteger().toString( 2 );
+      }
       return rs.getString( elem.getPosition() );
     }
     boolean value = rs.getBoolean( elem.getPosition() );
@@ -80,7 +85,8 @@ public class BitValueAccessor implements ValueAccessor
     // Note, SQL cast expr does not work here, hence the literal value expressions.
     try
     {
-      if( metaData.getDatabaseProductName().equalsIgnoreCase( "postgresql" ) )
+      String productName = metaData.getDatabaseProductName();
+      if( productName.equalsIgnoreCase( "postgresql" ) || productName.equalsIgnoreCase( "mysql" ) )
       {
         if( !ci.getSqlType().toLowerCase().contains( "bool" ) )
         {
@@ -88,7 +94,7 @@ public class BitValueAccessor implements ValueAccessor
           // and then throws exceptions about this :\
 
           // "bit" types must be manually parameterized with postgres :(
-          return coerce( value, ci );
+          return coerce( productName, value, ci );
         }
       }
     }
@@ -99,7 +105,7 @@ public class BitValueAccessor implements ValueAccessor
     return "?";
   }
 
-  private String coerce( Object value, ColumnInfo ci ) throws SQLException
+  private String coerce( String productName, Object value, ColumnInfo ci ) throws SQLException
   {
     if( value == null )
     {
@@ -111,13 +117,19 @@ public class BitValueAccessor implements ValueAccessor
     }
     if( value instanceof CharSequence )
     {
-      return "B'" + value + "'" + cast( ci );
+      return "B'" + value + "'" + cast( productName, ci );
     }
     throw new SQLException( "Unexpected type for BIT: " + value.getClass() );
   }
 
-  private String cast( ColumnInfo ci )
+  private String cast( String productName, ColumnInfo ci )
   {
+    if( !productName.equalsIgnoreCase( "postgresql" ) )
+    {
+      // only postgres requires a cast
+      return "";
+    }
+
     Integer size = ci.getSize();
     if( size != null && size.intValue() > 0 )
     {

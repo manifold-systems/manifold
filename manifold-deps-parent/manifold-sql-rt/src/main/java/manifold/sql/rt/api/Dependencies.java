@@ -62,6 +62,8 @@ public interface Dependencies
 
   TxScopeProvider getTxScopeProvider();
 
+  TypeProvider getTypeProvider();
+
   ValueAccessorProvider getValueAccessorProvider();
 
   <T> T fetch( Class<T> cls );

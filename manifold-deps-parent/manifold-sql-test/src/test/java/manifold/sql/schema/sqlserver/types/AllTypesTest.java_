@@ -146,6 +146,40 @@ public class AllTypesTest extends SqlserverDdlServerTest
     assertEquals( Datetime_value, a.getColDatetime() );
     assertEquals( Smalldatetime_value, a.getColSmalldatetime() );
     assertEquals( Geography_value, a.getColGeography() );
+
+    a = "[.sql:SqlserverSakila/] SELECT * FROM all_types".fetchOne();
+    {
+      assertEquals( Datetimeoffset_value, a.getColDatetimeoffset() );
+      assertEquals( Time_value, a.getColTime() );
+      assertEquals( Xml_value, a.getColXml() );
+      assertEquals( SqlVariant_value, a.getColSqlVariant() );
+      assertEquals( Uniqueidentifier_value, a.getColUniqueidentifier() );
+      assertEquals( Ntext_value, a.getColNtext() );
+      assertEquals( Nvarchar_value, a.getColNvarchar() );
+      assertEquals( Nchar5_value, a.getColNchar5() );
+      assertEquals( Bit_value, a.getColBit() );
+      assertEquals( Tinyint_value, (byte)a.getColTinyint() );
+      assertEquals( Bigint_value, (long)a.getColBigint() );
+      assertArrayEquals( Image_value, a.getColImage() );
+      assertArrayEquals( Varbinary_value, a.getColVarbinary() );
+      assertArrayEquals( Binary4_value, a.getColBinary4() );
+      assertEquals( Text_value, a.getColText() );
+      assertEquals( Char5_value, a.getColChar5() );
+      assertEquals( Numeric_value, a.getColNumeric() );
+      assertEquals( Decimal_value, a.getColDecimal() );
+      assertEquals( 0, Money_value.compareTo( a.getColMoney() ) );
+      assertEquals( 0, Smallmoney_value.compareTo( a.getColSmallmoney() ) );
+      assertEquals( Int_value, (int)a.getColInt() );
+      assertEquals( Smallint_value, (short)a.getColSmallint() );
+      assertEquals( 0, Float_value, (double)a.getColFloat() );
+      assertEquals( 0, Real_value, (float)a.getColReal() );
+      assertEquals( Varchar_value, a.getColVarchar() );
+      assertEquals( Date_value, a.getColDate() );
+      assertEquals( Datetime2_value, a.getColDatetime2() );
+      assertEquals( Datetime_value, a.getColDatetime() );
+      assertEquals( Smalldatetime_value, a.getColSmalldatetime() );
+      assertArrayEquals( Geography_value, a.getColGeography() );
+    }
   }
   
 //  @Test

@@ -16,11 +16,16 @@
 
 package manifold.sql.rt.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 public class DbUtil
 {
+  private static final Logger LOGGER = LoggerFactory.getLogger( DbUtil.class );
+
   public static String enquoteIdentifier( String id, DatabaseMetaData metaData ) throws SQLException
   {
     // "foo" is a standard SQL identifier (column/table/etc)
@@ -46,7 +51,7 @@ public class DbUtil
     throw new SQLException( "Unexpected identifier quote string: " + quoteStr );
   }
 
-  public static final String handleAnonQueryColumn( String name, int oneBasedIndex )
+  public static String handleAnonQueryColumn( String name, int oneBasedIndex )
   {
     if( name == null || name.isEmpty() )
     {

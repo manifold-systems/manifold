@@ -17,6 +17,7 @@
 package manifold.sql.rt.config;
 
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.impl.accessors.DefaultTypeProvider;
 import manifold.sql.rt.impl.accessors.DefaultValueAccessorProvider;
 import manifold.sql.rt.impl.*;
 
@@ -56,6 +57,12 @@ public class DefaultDependencies implements Dependencies
   public TxScopeProvider getTxScopeProvider()
   {
     return fetch( BasicTxScopeProvider.class );
+  }
+
+  @Override
+  public TypeProvider getTypeProvider()
+  {
+    return new DefaultTypeProvider();
   }
 
   @Override

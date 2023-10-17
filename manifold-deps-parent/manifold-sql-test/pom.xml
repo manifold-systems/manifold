@@ -54,6 +54,12 @@
       <type>dll</type>
     </dependency>
 
+    <dependency>
+      <groupId>com.oracle.database.jdbc</groupId>
+      <artifactId>ojdbc8</artifactId>
+      <version>21.11.0.0</version>
+    </dependency>
+    
     <!-- for testing H2's GEOMETRY type -->
     <dependency>
       <groupId>org.locationtech.jts</groupId>
@@ -133,6 +139,11 @@
               <artifactId>mssql-jdbc_auth</artifactId>
               <version>12.4.1.x64</version>
               <type>dll</type>
+            </path>
+            <path>
+              <groupId>com.oracle.database.jdbc</groupId>
+              <artifactId>ojdbc8</artifactId>
+              <version>21.11.0.0</version>
             </path>
             <path>
               <groupId>org.slf4j</groupId>

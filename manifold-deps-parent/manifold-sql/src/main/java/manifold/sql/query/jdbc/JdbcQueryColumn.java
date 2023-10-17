@@ -18,6 +18,8 @@ package manifold.sql.query.jdbc;
 
 import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.TypeProvider;
 import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaTable;
@@ -30,6 +32,7 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.util.TablesNamesFinder;
 import org.jetbrains.annotations.Nullable;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
@@ -54,7 +57,7 @@ public class JdbcQueryColumn implements QueryColumn
   private final boolean _isSigned;
   private final String _columnType;
 
-  public JdbcQueryColumn( int colIndex, JdbcQueryTable queryTable, ResultSetMetaData rsMetaData ) throws SQLException
+  public JdbcQueryColumn( int colIndex, JdbcQueryTable queryTable, ResultSetMetaData rsMetaData, DatabaseMetaData dbMetadata ) throws SQLException
   {
     _position = colIndex;
     _queryTable = queryTable;
@@ -67,9 +70,21 @@ public class JdbcQueryColumn implements QueryColumn
 
     _schemaColumn = _schemaTable == null ? null : _schemaTable.getColumn( rsMetaData.getColumnName( colIndex ) );
 
-    _jdbcType = _schemaColumn != null ? _schemaColumn.getJdbcType() : rsMetaData.getColumnType( colIndex );
-    _sqlType = rsMetaData.getColumnTypeName( colIndex );
-    _columnType = _schemaColumn != null ? _schemaColumn.getColumnClassName() : rsMetaData.getColumnClassName( colIndex );
+    if( _schemaColumn != null )
+    {
+      // ensure query and schema types are consistent
+
+      _jdbcType = _schemaColumn.getJdbcType();
+      _sqlType = _schemaColumn.getSqlType();
+      _columnType = _schemaColumn.getColumnClassName();
+    }
+    else
+    {
+      TypeProvider typeProvider = Dependencies.instance().getTypeProvider();
+      _jdbcType = typeProvider.getQueryColumnType( colIndex, rsMetaData, dbMetadata );
+      _sqlType = rsMetaData.getColumnTypeName( colIndex );
+      _columnType = rsMetaData.getColumnClassName( colIndex );
+    }
 
     _isNullable = rsMetaData.isNullable( colIndex ) == ResultSetMetaData.columnNullable;
 

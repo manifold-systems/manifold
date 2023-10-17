@@ -94,7 +94,7 @@ public class BasicCrudProvider implements CrudProvider
   private static <T extends TableRow> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
   {
     String[] reflectedColumnNames = {};
-    if( allColumns )
+    if( allColumns && !c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" ) )
     {
       // ask for all columns since we want the entire record to include whatever generated data that was not included in the insert
 

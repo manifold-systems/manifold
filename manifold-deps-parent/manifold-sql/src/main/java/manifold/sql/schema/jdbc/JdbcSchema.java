@@ -65,7 +65,13 @@ public class JdbcSchema implements Schema
         catalogName = findSchemaNameFromCatalogs( metaData );
       }
       _schemaIsCatalog = catalogName != null;
-      _name = _schemaIsCatalog ? catalogName : schemaName;
+      String name = _schemaIsCatalog ? catalogName : schemaName;
+      if( _dbProductName.toLowerCase().contains( "oracle" ) )
+      {
+        // yes, oracle requires uppercase for schema name O_O
+        name = name.toUpperCase();
+      }
+      _name = name;
 
       build( c, metaData );
     }
@@ -82,8 +88,9 @@ public class JdbcSchema implements Schema
 
   private void build( Connection c, DatabaseMetaData metaData ) throws SQLException
   {
-     try( ResultSet resultSet = metaData.getTables(
-      _schemaIsCatalog ? _name : _dbConfig.getCatalogName(), _schemaIsCatalog ? null : _name, null, new String[]{"TABLE", "VIEW"} ) )
+    String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
+    String schema = _schemaIsCatalog ? null : _name;
+    try( ResultSet resultSet = metaData.getTables( catalog, schema, null, new String[]{"TABLE", "VIEW"} ) )
     {
       while( resultSet.next() )
       {

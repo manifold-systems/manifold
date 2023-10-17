@@ -1,0 +1,8 @@
+{
+  "url": "jdbc:oracle:thin:@localhost:1521:XE",
+  "user": "system",
+  "password": "password",
+  "schemaPackage": "manifold.sql.schema.simple.oracle",
+  "schemaName": "SAKILA",
+  "dbDdl": "samples/ddl/oracle-sakila-ddl.sql"
+}

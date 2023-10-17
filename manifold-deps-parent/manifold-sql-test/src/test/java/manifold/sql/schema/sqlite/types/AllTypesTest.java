@@ -78,46 +78,90 @@ public class AllTypesTest extends DdlResourceFileTest
 
     SqliteAllTypes.commit();
 
-    assertEquals( Tinyint_value,                (byte)a.getColTinyint() );
-    assertEquals( Bigint_value,                 (long)a.getColBigint() );
-    assertArrayEquals( Varbinary_value,         a.getColVarbinary() );
-    assertArrayEquals( Binary_value,            a.getColBinary() );
-    assertEquals( Uuid_value,                   a.getColUuid() );
-    assertEquals( Character_value,              a.getColCharacter() );
-    assertEquals( Numeric_value,                a.getColNumeric() );
-    assertEquals( Float_value,                  a.getColFloat(), 0 );
-    assertEquals( Integer_value,                (int)a.getColInteger() );
-    assertEquals( Smallint_value,               (short)a.getColSmallint() );
-    assertEquals( Real_value,                   (float)a.getColReal(), 0 );
-    assertEquals( Double_value,                 a.getColDouble(), 0 );
-    assertEquals( Varchar_value,                a.getColVarchar() );
-    assertEquals( Boolean_value,                a.getColBoolean() );
-    assertEquals( Date_value,                   a.getColDate() );
-    assertEquals( Time_value,                   a.getColTime() );
-    assertEquals( Timestamp_value,              a.getColTimestamp() );
-    assertArrayEquals( Blob_value,              a.getColBlob() );
-    assertEquals( Clob_value,                   a.getColClob() );
+    assertEquals( Tinyint_value, (byte)a.getColTinyint() );
+    assertEquals( Bigint_value, (long)a.getColBigint() );
+    assertArrayEquals( Varbinary_value, a.getColVarbinary() );
+    assertArrayEquals( Binary_value, a.getColBinary() );
+    assertEquals( Uuid_value, a.getColUuid() );
+    assertEquals( Character_value, a.getColCharacter() );
+    assertEquals( Numeric_value, a.getColNumeric() );
+    assertEquals( Float_value, a.getColFloat(), 0 );
+    assertEquals( Integer_value, (int)a.getColInteger() );
+    assertEquals( Smallint_value, (short)a.getColSmallint() );
+    assertEquals( Real_value, (float)a.getColReal(), 0 );
+    assertEquals( Double_value, a.getColDouble(), 0 );
+    assertEquals( Varchar_value, a.getColVarchar() );
+    assertEquals( Boolean_value, a.getColBoolean() );
+    assertEquals( Date_value, a.getColDate() );
+    assertEquals( Time_value, a.getColTime() );
+    assertEquals( Timestamp_value, a.getColTimestamp() );
+    assertArrayEquals( Blob_value, a.getColBlob() );
+    assertEquals( Clob_value, a.getColClob() );
 
 
-    assertEquals( Tinyint_value,                a.getColNotNullTinyint() );
-    assertEquals( Bigint_value,                 a.getColNotNullBigint() );
-    assertArrayEquals( Varbinary_value,         a.getColNotNullVarbinary() );
-    assertArrayEquals( Binary_value,            a.getColNotNullBinary() );
-    assertEquals( Uuid_value,                   a.getColNotNullUuid() );
-    assertEquals( Character_value,              a.getColNotNullCharacter() );
-    assertEquals( Numeric_value,                a.getColNotNullNumeric() );
-    assertEquals( Float_value,                  a.getColNotNullFloat(), 0 );
-    assertEquals( Integer_value,                a.getColNotNullInteger() );
-    assertEquals( Smallint_value,               a.getColNotNullSmallint() );
-    assertEquals( Real_value,                   a.getColNotNullReal(), 0 );
-    assertEquals( Double_value,                 a.getColNotNullDouble(), 0 );
-    assertEquals( Varchar_value,                a.getColNotNullVarchar() );
-    assertEquals( Boolean_value,                a.getColNotNullBoolean() );
-    assertEquals( Date_value,                   a.getColNotNullDate() );
-    assertEquals( Time_value,                   a.getColNotNullTime() );
-    assertEquals( Timestamp_value,              a.getColNotNullTimestamp() );
-    assertArrayEquals( Blob_value,              a.getColNotNullBlob() );
-    assertEquals( Clob_value,                   a.getColNotNullClob() );
+    assertEquals( Tinyint_value, a.getColNotNullTinyint() );
+    assertEquals( Bigint_value, a.getColNotNullBigint() );
+    assertArrayEquals( Varbinary_value, a.getColNotNullVarbinary() );
+    assertArrayEquals( Binary_value, a.getColNotNullBinary() );
+    assertEquals( Uuid_value, a.getColNotNullUuid() );
+    assertEquals( Character_value, a.getColNotNullCharacter() );
+    assertEquals( Numeric_value, a.getColNotNullNumeric() );
+    assertEquals( Float_value, a.getColNotNullFloat(), 0 );
+    assertEquals( Integer_value, a.getColNotNullInteger() );
+    assertEquals( Smallint_value, a.getColNotNullSmallint() );
+    assertEquals( Real_value, a.getColNotNullReal(), 0 );
+    assertEquals( Double_value, a.getColNotNullDouble(), 0 );
+    assertEquals( Varchar_value, a.getColNotNullVarchar() );
+    assertEquals( Boolean_value, a.getColNotNullBoolean() );
+    assertEquals( Date_value, a.getColNotNullDate() );
+    assertEquals( Time_value, a.getColNotNullTime() );
+    assertEquals( Timestamp_value, a.getColNotNullTimestamp() );
+    assertArrayEquals( Blob_value, a.getColNotNullBlob() );
+    assertEquals( Clob_value, a.getColNotNullClob() );
+
+    a = "[.sql:SqliteAllTypes/] SELECT * FROM all_types".fetchOne();
+    {
+      assertEquals( Tinyint_value, (byte)a.getColTinyint() );
+      assertEquals( Bigint_value, (long)a.getColBigint() );
+      assertArrayEquals( Varbinary_value, a.getColVarbinary() );
+      assertArrayEquals( Binary_value, a.getColBinary() );
+      assertEquals( Uuid_value, a.getColUuid() );
+      assertEquals( Character_value, a.getColCharacter() );
+      assertEquals( Numeric_value, a.getColNumeric() );
+      assertEquals( Float_value, a.getColFloat(), 0 );
+      assertEquals( Integer_value, (int)a.getColInteger() );
+      assertEquals( Smallint_value, (short)a.getColSmallint() );
+      assertEquals( Real_value, (float)a.getColReal(), 0 );
+      assertEquals( Double_value, a.getColDouble(), 0 );
+      assertEquals( Varchar_value, a.getColVarchar() );
+      assertEquals( Boolean_value, a.getColBoolean() );
+      assertEquals( Date_value, a.getColDate() );
+      assertEquals( Time_value, a.getColTime() );
+      assertEquals( Timestamp_value, a.getColTimestamp() );
+      assertArrayEquals( Blob_value, a.getColBlob() );
+      assertEquals( Clob_value, a.getColClob() );
+
+
+      assertEquals( Tinyint_value, a.getColNotNullTinyint() );
+      assertEquals( Bigint_value, a.getColNotNullBigint() );
+      assertArrayEquals( Varbinary_value, a.getColNotNullVarbinary() );
+      assertArrayEquals( Binary_value, a.getColNotNullBinary() );
+      assertEquals( Uuid_value, a.getColNotNullUuid() );
+      assertEquals( Character_value, a.getColNotNullCharacter() );
+      assertEquals( Numeric_value, a.getColNotNullNumeric() );
+      assertEquals( Float_value, a.getColNotNullFloat(), 0 );
+      assertEquals( Integer_value, a.getColNotNullInteger() );
+      assertEquals( Smallint_value, a.getColNotNullSmallint() );
+      assertEquals( Real_value, a.getColNotNullReal(), 0 );
+      assertEquals( Double_value, a.getColNotNullDouble(), 0 );
+      assertEquals( Varchar_value, a.getColNotNullVarchar() );
+      assertEquals( Boolean_value, a.getColNotNullBoolean() );
+      assertEquals( Date_value, a.getColNotNullDate() );
+      assertEquals( Time_value, a.getColNotNullTime() );
+      assertEquals( Timestamp_value, a.getColNotNullTimestamp() );
+      assertArrayEquals( Blob_value, a.getColNotNullBlob() );
+      assertEquals( Clob_value, a.getColNotNullClob() );
+    }
   }
 
   @Test

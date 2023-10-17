@@ -77,7 +77,10 @@ public abstract class DdlServerTest
       ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
       try( Connection c = cp.getConnection( dbConfig.getName(), getClass() ) )
       {
-        SqlScriptRunner.runScript( c, script );
+        boolean isOracle = c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" );
+        SqlScriptRunner.runScript( c, script,
+          // this is the only way to let drop user fail and continue running the script
+          isOracle ? (s, e) -> s.toLowerCase().contains( "drop user " ) : null );
       }
       catch( SQLException e )
       {

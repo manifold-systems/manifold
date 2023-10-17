@@ -107,6 +107,14 @@ public class JdbcSchemaTable implements SchemaTable
     _manyToMany = new LinkedHashSet<>();
     List<String> columnClassNames = getColumnClassNames( metaData );
 
+    if( schemaName != null && !schemaName.isEmpty() &&
+      metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    {
+      // there is a bug in oracle driver where metaData.getColumns() fails if the schema is set to anything other than
+      // the logged-in user, so we set that here. We reset it back in the finally block.
+      metaData.getConnection().setSchema( metaData.getUserName() );
+    }
+
     try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
@@ -114,7 +122,7 @@ public class JdbcSchemaTable implements SchemaTable
       while( colResults.next() )
       {
         i++;
-        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ) );
+        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ), metaData );
         _columns.put( col.getName(), col );
         if( col.isNonNullUniqueId() )
         {
@@ -132,6 +140,15 @@ public class JdbcSchemaTable implements SchemaTable
         buildNonNullUniqueKeys( col );
       }
       _nonNullUniqueId = id;
+    }
+    finally
+    {
+      if( schemaName != null && !schemaName.isEmpty() &&
+        metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+      {
+        // set the schema back to the configured schema
+        metaData.getConnection().setSchema( schemaName );
+      }
     }
   }
 

@@ -20,16 +20,19 @@ import manifold.api.fs.IFile;
 import manifold.api.util.cache.FqnCache;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
+import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbLocationProvider.Mode;
 import manifold.sql.rt.util.PropertyExpressionProcessor;
+import manifold.sql.rt.util.SqlScriptRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.SQLException;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -40,9 +43,11 @@ public class DbConfigImpl implements DbConfig
   private static final Logger LOGGER = LoggerFactory.getLogger( DbConfigImpl.class );
 
   public static final DbConfig EMPTY = new DbConfigImpl( null, DataBindings.EMPTY_BINDINGS, Unknown );
+  private static final Set<String> DDL = new LinkedHashSet<>();
 
   private final Bindings _bindings;
   private final Map<String, List<Consumer<Connection>>> _initializers;
+  private transient Function<String, FqnCache<IFile>> _resByExt;
 
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode )
   {
@@ -61,7 +66,14 @@ public class DbConfigImpl implements DbConfig
     processUrl( resByExt, bindings, mode, "url", exprHandler );
     processUrl( resByExt, bindings, mode, "buildUrl", exprHandler );
     _bindings = bindings;
+    _resByExt = resByExt;
     assignDefaults();
+  }
+
+  /** For testing only!! */
+  public DbConfigImpl( Bindings bindings, Mode mode )
+  {
+    this( null, bindings, mode );
   }
 
   private void assignDefaults()
@@ -94,14 +106,63 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
-  public void init( Connection connection, String url )
+  public void init( Connection connection, String url, String schemaName, String ddl ) throws SQLException
   {
-    // this is for testing purposes e.g., dynamically creating a db from a ddl script before the db is accessed
-
     List<Consumer<Connection>> consumers = _initializers.get( url );
     for( Consumer<Connection> consumer : consumers )
     {
+      // this is for testing purposes e.g., dynamically creating a db from a ddl script before the db is accessed
       consumer.accept( connection );
+    }
+
+    if( schemaName != null && !schemaName.isEmpty() )
+    {
+      // for drivers like oracle that don't provide a way to set the schema in the url
+      connection.setSchema( schemaName );
+    }
+
+    // for testing, only relevant during compilation: need to create db.
+    // Note, test execution framework handles DDL loading itself
+    execDdl( connection, ddl );
+  }
+
+  private void execDdl( Connection connection, String ddl ) throws SQLException
+  {
+    if( ddl == null || ddl.isEmpty() || DDL.contains( ddl ) )
+    {
+      return;
+    }
+    DDL.add( ddl );
+
+    if( !ddl.startsWith( "/" ) && !ddl.startsWith( "\\" ) )
+    {
+      ddl = "/" + ddl;
+    }
+
+    IFile ddlFile = null;
+    if( _resByExt != null )
+    {
+      // at compile-time we must find the ddl resource file
+      ddlFile = ResourceDbLocationProvider.maybeGetCompileTimeResource( _resByExt, Mode.CompileTime, ddl );
+      //_resByExt = null;
+    }
+
+    try( InputStream stream = ddlFile == null ? getClass().getResourceAsStream( ddl ) : ddlFile.openInputStream() )
+    {
+      if( stream == null )
+      {
+        throw new RuntimeException( "No resource file found matching: " + ddl );
+      }
+
+      boolean isOracle = connection.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" );
+      String script = StreamUtil.getContent( new InputStreamReader( stream ) );
+      SqlScriptRunner.runScript( connection, script,
+        // this is the only way to let drop user fail and continue running the script with oracle :\
+        isOracle ? (s, e) -> s.toLowerCase().contains( "drop user " ) : null );
+    }
+    catch( Exception e )
+    {
+      throw new SQLException( e );
     }
   }
 

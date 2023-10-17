@@ -47,10 +47,25 @@ public class DateValueAccessor implements ValueAccessor
   }
 
   @Override
-  public LocalDate getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
     Date date = rs.getDate( elem.getPosition() );
-    return date == null ? null : date.toLocalDate();
+    if( date == null )
+    {
+      return null;
+    }
+
+    String sqlType = elem.getSqlType();
+    if( sqlType.equalsIgnoreCase( "year" ) )
+    {
+      return Year.of( date.toLocalDate().getYear() );
+    }
+    if( sqlType.equalsIgnoreCase( "yearmonth" ) )
+    {
+      LocalDate localDate = date.toLocalDate();
+      return YearMonth.of( localDate.getYear(), localDate.getMonth() );
+    }
+    return date.toLocalDate();
   }
 
   @Override

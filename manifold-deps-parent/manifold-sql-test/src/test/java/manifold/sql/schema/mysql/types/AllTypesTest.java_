@@ -22,12 +22,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Year;
+import java.time.temporal.ChronoUnit;
 
 import manifold.sql.schema.simple.mysql.MysqlSakila;
 import manifold.sql.schema.simple.mysql.MysqlSakila.*;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class AllTypesTest
 {
@@ -72,9 +73,9 @@ public class AllTypesTest
   Boolean Bool_value = true;                                 // BOOLEAN(16)
   LocalDate Date_value = LocalDate.now();                    // DATE(91)
   Year Year_value = Year.now();                              // DATE(91)
-  LocalTime Time_value = LocalTime.now();                    // TIME(92)
-  Instant Datetime_value = Instant.now();                    // TIMESTAMP(93)
-  Instant Timestamp_value = Instant.now();                   // TIMESTAMP(93)
+  LocalTime Time_value = LocalTime.now().truncatedTo( ChronoUnit.SECONDS ); // TIME(92)
+  Instant Datetime_value = Instant.now().truncatedTo( ChronoUnit.SECONDS ); // TIMESTAMP(93)
+  Instant Timestamp_value = Datetime_value;                  // TIMESTAMP(93)
 
   @Test
   public void testAllTypesSetValues() throws SQLException
@@ -172,5 +173,53 @@ public class AllTypesTest
     assertEquals(Varbinary4_value, a.getColVarbinary4());
     assertEquals(Varchar64_value, a.getColVarchar64());
     assertEquals(Year_value, a.getColYear());
+
+    a = "[.sql:MysqlSakila/] SELECT * FROM all_types".fetchOne();
+    {
+      assertEquals( Bigint_value, a.getColBigint() );
+      assertEquals( BigintUnsigned_value, a.getColBigintUnsigned() );
+      assertArrayEquals( Binary4_value, a.getColBinary4() );
+      assertEquals( Bit_value, a.getColBit() );
+      assertEquals( Bit8_value, a.getColBit8() );
+      assertArrayEquals( Blob_value, a.getColBlob() );
+      assertEquals( Bool_value, a.getColBool() );
+      assertEquals( Char8_value, a.getColChar8() );
+      assertEquals( Date_value, a.getColDate() );
+      assertEquals( Datetime_value, a.getColDatetime() );
+      assertEquals( 0, Decimal_value.compareTo( a.getColDecimal() ) );
+      assertEquals( Double_value, a.getColDouble() );
+      assertEquals( DoublePrecision_value, a.getColDoublePrecision() );
+      assertEquals( DoublePrecisionUnsigned_value, a.getColDoublePrecisionUnsigned() );
+      assertEquals( DoubleUnsigned_value, a.getColDoubleUnsigned() );
+      assertEquals( Enum_value, a.getColEnum() );
+//      assertEquals( Float_value, a.getColFloat() );
+      assertEquals( Int_value, a.getColInt() );
+      assertEquals( IntUnsigned_value, a.getColIntUnsigned() );
+      assertEquals( Integer_value, a.getColInteger() );
+      assertEquals( IntegerUnsigned_value, a.getColIntegerUnsigned() );
+      assertArrayEquals( LongVarbinary_value, a.getColLongVarbinary() );
+      assertEquals( LongVarchar_value, a.getColLongVarchar() );
+      assertArrayEquals( Longblob_value, a.getColLongblob() );
+      assertEquals( Longtext_value, a.getColLongtext() );
+      assertArrayEquals( Mediumblob_value, a.getColMediumblob() );
+      assertEquals( Mediumint_value, a.getColMediumint() );
+      assertEquals( MediumintUnsigned_value, a.getColMediumintUnsigned() );
+      assertEquals( Mediumtext_value, a.getColMediumtext() );
+      assertEquals( 0, Numeric_value.compareTo( a.getColNumeric() ) );
+      assertEquals( Real_value, a.getColReal() );
+      assertEquals( Set_value, a.getColSet() );
+      assertEquals( Smallint_value, a.getColSmallint() );
+      assertEquals( SmallintUnsigned_value, a.getColSmallintUnsigned() );
+      assertEquals( Text_value, a.getColText() );
+      assertEquals( Time_value, a.getColTime() );
+      assertEquals( Timestamp_value, a.getColTimestamp() );
+      assertArrayEquals( Tinyblob_value, a.getColTinyblob() );
+      assertEquals( Tinyint_value, a.getColTinyint() );
+      assertEquals( TinyintUnsigned_value, a.getColTinyintUnsigned() );
+      assertEquals( Tinytext_value, a.getColTinytext() );
+      assertArrayEquals( Varbinary4_value, a.getColVarbinary4() );
+      assertEquals( Varchar64_value, a.getColVarchar64() );
+      assertEquals( Year_value, a.getColYear() );
+    }
   }
 }

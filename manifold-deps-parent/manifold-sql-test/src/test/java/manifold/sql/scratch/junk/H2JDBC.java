@@ -149,6 +149,19 @@ public class H2JDBC
             jdbcDataType = f.getName();
           }
         }
+        if( typeName.equalsIgnoreCase( "number" ) )
+        {
+          // note, oracle only has one type for all numeric/boolean types: NUMBER
+          
+          int precision = typeInfo.getInt( "PRECISION" );
+          typeName += "(" + precision;
+          int scale = typeInfo.getInt( "MAXIMUM_SCALE" );
+          if( scale < Byte.MAX_VALUE )
+          {
+            typeName += "," + scale;
+          }
+          typeName += ")";
+        }
         createTable.append( String.format( "    col_%-2d   %-30s -- $jdbcDataType($dataType)\n", i, typeName ) );
         System.out.println( typeName + " :           " + jdbcDataType + "(" + dataType + ")" );
       }

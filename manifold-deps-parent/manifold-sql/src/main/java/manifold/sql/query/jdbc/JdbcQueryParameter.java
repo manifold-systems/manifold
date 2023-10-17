@@ -18,11 +18,10 @@ package manifold.sql.query.jdbc;
 
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.api.QueryParameter;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.TypeProvider;
 
-import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 public class JdbcQueryParameter implements QueryParameter
 {
@@ -37,13 +36,13 @@ public class JdbcQueryParameter implements QueryParameter
   private final boolean _isSigned;
   private final String _javaClassNameForGetObject;
 
-  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, PreparedStatement preparedStatement ) throws SQLException
+  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, DatabaseMetaData metaData ) throws SQLException
   {
     _position = paramIndex;
     _name = name == null ? "p" + paramIndex : name;
     _queryTable = queryTable;
 
-    Pair<Integer, Boolean> types = getJdbcType( paramMetaData, paramIndex );
+    Pair<Integer, Boolean> types = getJdbcType( paramMetaData, paramIndex, metaData );
     _jdbcType = types.getFirst();
     boolean isFlakyDriver = types.getSecond();
 
@@ -81,22 +80,14 @@ public class JdbcQueryParameter implements QueryParameter
     _javaClassNameForGetObject = javaClassNameForGetObject;
   }
 
-  private Pair<Integer, Boolean> getJdbcType( ParameterMetaData paramMetaData, int paramIndex ) throws SQLException
+  private Pair<Integer, Boolean> getJdbcType( ParameterMetaData paramMetaData, int paramIndex, DatabaseMetaData dbMetadata ) throws SQLException
   {
     int jdbcType;
     boolean isFlakyDriver = false;
     try
     {
-      jdbcType = paramMetaData.getParameterType( paramIndex );
-
-      // sqlite and mysql are known flakes here. See comment in exception below.
-      String productName = getTable().getSchema().getDatabaseProductName();
-      if( jdbcType == Types.VARCHAR &&
-        ("sqlite".equalsIgnoreCase( productName ) ||
-         "mysql".equalsIgnoreCase( productName )) )
-      {
-        throw new SQLException(); // caught just below
-      }
+      TypeProvider typeProvider = Dependencies.instance().getTypeProvider();
+      jdbcType = typeProvider.getQueryParameterType( paramIndex, paramMetaData, dbMetadata );
     }
     catch( SQLException se )
     {

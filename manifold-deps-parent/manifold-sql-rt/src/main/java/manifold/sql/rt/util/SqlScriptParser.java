@@ -19,6 +19,8 @@ package manifold.sql.rt.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import static manifold.sql.rt.util.SqlScriptParser.ExtraSeparator.*;
+
 /**
  * Use this to extract the list of commands from a SQL Script.
  */
@@ -28,32 +30,43 @@ public class SqlScriptParser
 
   private final String _script;
   private final List<String> _commands;
-  private final boolean _goAsSeparator;
+  private final ExtraSeparator _extraSeparator;
   private int _pos;
+
+  public enum ExtraSeparator
+  {
+    Go,   // sql server
+    Slash // oracle
+  }
 
   public static List<String> getCommands( String script )
   {
-    return getCommands( script, false );
+    return getCommands( script, null );
   }
-  public static List<String> getCommands( String script, boolean goAsSeparator )
+  public static List<String> getCommands( String script, ExtraSeparator extraSeparator )
   {
-    return new SqlScriptParser( script, goAsSeparator ).parse( script );
+    return new SqlScriptParser( script, extraSeparator ).parse();
   }
 
-  private SqlScriptParser( String script, boolean goAsSeparator )
+  private SqlScriptParser( String script, ExtraSeparator extraSeparator )
   {
     _pos = -1;
     _script = script;
-    _goAsSeparator = goAsSeparator;
+    _extraSeparator = extraSeparator;
     _commands = new ArrayList<>();
   }
 
-  private boolean goAsSeparator()
+  private boolean goSeparator()
   {
-    return _goAsSeparator;
+    return _extraSeparator == Go;
   }
 
-  private List<String> parse( String script )
+  private boolean slashSeparator()
+  {
+    return _extraSeparator == Slash;
+  }
+
+  private List<String> parse()
   {
     next();
     while( !isEof() )
@@ -68,13 +81,16 @@ public class SqlScriptParser
     int pos = _pos;
     int blockDepth = 0;
     int endCommandPos = -1;
+    boolean hasWords = false;
+
     while( !isEof() )
     {
       //noinspection StatementWithEmptyBody
       while( eatComments() || eatWhitespace() );
 
 
-      if( match( ';' ) )
+      if( match( ';' ) ||
+        slashSeparator() && match( '/' ) )
       {
         if( blockDepth == 0 )
         {
@@ -85,7 +101,7 @@ public class SqlScriptParser
 
       String word = matchWord();
 
-      if( goAsSeparator() && word.equalsIgnoreCase( "GO" ) )
+      if( goSeparator() && word.equalsIgnoreCase( "GO" ) )
       {
         // sql server 'GO' is like a ';' separator
         if( blockDepth == 0 )
@@ -137,13 +153,21 @@ public class SqlScriptParser
         while( eatComments() || eatWhitespace() );
         matchStringLiteral();
       }
+      else
+      {
+        hasWords = hasWords || !word.isEmpty();
+      }
       matchNonWord();
     }
-    String command = _script.substring( pos, isEof() ? _script.length() : endCommandPos > 0 ? endCommandPos : _pos );
-    command = command.trim();
-    if( !command.isEmpty() )
+
+    if( hasWords )
     {
-      _commands.add( command );
+      String command = _script.substring( pos, isEof() ? _script.length() : endCommandPos > 0 ? endCommandPos : _pos );
+      command = command.trim();
+      if( !command.isEmpty() )
+      {
+        _commands.add( command );
+      }
     }
   }
 
@@ -365,8 +389,11 @@ public class SqlScriptParser
     while( eatWhitespace() || eatComments() );
 
     StringBuilder sb = new StringBuilder();
-    while( !isEof() && ch() != ';' && !Character.isJavaIdentifierStart( ch() ) &&
-      !match( "--", true ) && !match( "/*", true ) )
+    while( !isEof() &&
+           ch() != ';' &&
+           (!slashSeparator() || ch() != '/') &&
+           !Character.isJavaIdentifierStart( ch() ) &&
+           !match( "--", true ) && !match( "/*", true ) )
     {
       sb.append( ch() );
       next();

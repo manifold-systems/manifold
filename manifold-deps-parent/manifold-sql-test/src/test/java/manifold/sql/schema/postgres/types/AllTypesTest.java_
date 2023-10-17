@@ -61,7 +61,7 @@ public class AllTypesTest extends PostgresDdlServerTest
 // accepts via setObject() or setXxx(), all result in type mismatch errors despite getObject() and getXxx() delivering
 // values of those same Java types. As a consequence, these types involve ValueAccessor#getParameterExpression() intervention.
   private static Boolean Bit_value = true;                   // bit (single)
-  private static String Bit5_value = "01101";                // bit5 (many)
+  private static String Bit5_value = "101111101101";                // bit5 (many)
   private static String Varbit_value = "11100100101";        // varbit
   private static String Cidr_value = "192.168.100.128/25";   // cidr
   private static String Inet_value = "192.0.2.1";            // inet
@@ -158,6 +158,44 @@ public class AllTypesTest extends PostgresDdlServerTest
 //    assertEquals( Path_value, a.getColPath() );
 //    assertEquals( Point_value, a.getColPoint() );
 //    assertEquals( Polygon_value, a.getColPolygon() );
+
+    a = "[.sql:PostgresSakila/] SELECT * FROM all_types".fetchOne();
+    {
+      assertEquals( Bigint_value, a.getColBigint() );
+      assertTrue( a.getColBigserial() >= 1L );
+      assertEquals( Bit_value, a.getColBit() );
+      assertEquals( Bit5_value, a.getColBit5() );
+      assertEquals( Varbit_value, a.getColVarbit() );
+      assertEquals( Boolean_value, a.getColBoolean() );
+      assertArrayEquals( Bytea_value, a.getColBytea() );
+      assertEquals( Char5_value, a.getColChar5() );
+      assertEquals( Date_value, a.getColDate() );
+      assertEquals( Double_value, a.getColDouble() );
+      assertEquals( Integer_value, a.getColInteger() );
+      assertEquals( Interval_value, a.getColInterval() );
+      assertEquals( Inet_value, a.getColInet() );
+      assertEquals( Cidr_value, a.getColCidr() );
+      assertEquals( Macaddr_value, a.getColMacaddr() );
+      assertEquals( Money_value, a.getColMoney() );
+      assertEquals( 0, Numeric_value.compareTo( a.getColNumeric() ) );
+      assertEquals( Real_value, a.getColReal() );
+      assertEquals( 1, (int)a.getColSerial() );
+      assertEquals( Smallint_value, a.getColSmallint() );
+      assertEquals( Text_value, a.getColText() );
+      assertEquals( Time_value, a.getColTime() );
+      assertEquals( Timetz_value, a.getColTimetz() );
+      assertEquals( Timestamp_value, a.getColTimestamp() );
+      assertEquals( Timestamptz_value, a.getColTimestamptz() );
+      assertEquals( Varchar_value, a.getColVarchar() );
+      assertEquals( Uuid_value, a.getColUuid() );
+//    assertEquals( Box_value, a.getColBox() );
+//    assertEquals( Circle_value, a.getColCircle() );
+//    assertEquals( Line_value, a.getColLine() );
+//    assertEquals( Lseg_value, a.getColLseg() );
+//    assertEquals( Path_value, a.getColPath() );
+//    assertEquals( Point_value, a.getColPoint() );
+//    assertEquals( Polygon_value, a.getColPolygon() );
+    }
   }
 //
 //  @Test

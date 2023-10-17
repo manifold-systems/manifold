@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
+package manifold.sql.schema.oracle;
 
-import manifold.sql.api.Column;
+import manifold.sql.DdlServerTest;
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
 
-public interface SchemaColumn extends Column
+public abstract class OracleDdlServerTest extends DdlServerTest
 {
-  SchemaTable getTable();
-  boolean isNonNullUniqueId();
-  boolean isPrimaryKeyPart();
-  String getNonNullUniqueKeyName();
-  boolean isAutoIncrement();
-  boolean isGenerated();
-  String getDefaultValue();
-  SchemaColumn getForeignKey();
-  int getNumPrecRadix();
+  @Override
+  protected DbConfig getDbConfig()
+  {
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "OracleSakila", getClass() );
+  }
 }

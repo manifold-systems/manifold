@@ -51,6 +51,7 @@ public class DefaultValueAccessorProvider implements ValueAccessorProvider
 
   public Class<? extends ValueAccessor>[] getAll()
   {
+    //noinspection unchecked
     return new Class[]{
       ArrayValueAccessor.class,
       BinaryValueAccessor.class,
@@ -86,7 +87,12 @@ public class DefaultValueAccessorProvider implements ValueAccessorProvider
       TimeWithTimeZoneValueAccessor.class,
       TinyIntValueAccessor.class,
       VarBinaryValueAccessor.class,
-      VarcharValueAccessor.class
+      VarcharValueAccessor.class,
+
+      Oracle_IntervalYmValueAccessor.class,
+      Oracle_IntervalDsValueAccessor.class,
+      Oracle_TimestampLtzValueAccessor.class,
+      Oracle_TimestampTzValueAccessor.class
     };
   }
 

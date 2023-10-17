@@ -74,7 +74,7 @@ create table all_types (
 -- values of those same Java types. Not supporting these for now. Will add one-off support for casting at some point.
 --
     col_bit                                     bit,                        -- fixed-length bit string
-    col_bit5                                    bit(5),                     -- fixed-length bit string
+    col_bit5                                    bit(12),                     -- fixed-length bit string
     col_varbit                                  varbit,                     -- variable-length bit string
     col_cidr                                    cidr,                       -- IPv4 or IPv6 network address
     col_inet                                    inet,                       -- IPv4 or IPv6 host address

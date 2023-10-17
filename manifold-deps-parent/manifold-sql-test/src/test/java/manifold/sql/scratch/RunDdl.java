@@ -57,7 +57,7 @@ public class RunDdl
       ////////////////////////////////////////////////////////////////////////
 
       stmt = c.createStatement();
-      try( Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/data/h2-sakila-data.sql" ) ) )
+      try( Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/ddl/h2-sakila-ddl.sql" ) ) )
       {
         String script = StreamUtil.getContent( reader );
         List<String> commands = SqlScriptParser.getCommands( script );
