@@ -20,7 +20,6 @@ import manifold.rt.api.util.ServiceUtil;
 import manifold.sql.rt.config.DefaultDependencies;
 import manifold.util.concurrent.LocklessLazyVar;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -59,6 +58,8 @@ public interface Dependencies
   CrudProvider getCrudProvider();
 
   DbLocationProvider getDbLocationProvider();
+
+  DefaultTxScopeProvider getDefaultTxScopeProvider();
 
   TxScopeProvider getTxScopeProvider();
 

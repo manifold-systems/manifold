@@ -17,7 +17,6 @@
 package manifold.sql;
 
 import manifold.sql.rt.api.Dependencies;
-import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import org.junit.After;
 
 /**
@@ -34,7 +33,7 @@ public abstract class DdlResourceFileTest
     Dependencies.instance().getConnectionProvider().closeAll();
 
     // clear default tx scopes
-    DefaultTxScopeProvider.instance().clear();
+    Dependencies.instance().getDefaultTxScopeProvider().clear();
 
     // clear DbConfigs. Forces dbconfig to initialize and exec ddl on first connection
     Dependencies.instance().getDbConfigProvider().clear();

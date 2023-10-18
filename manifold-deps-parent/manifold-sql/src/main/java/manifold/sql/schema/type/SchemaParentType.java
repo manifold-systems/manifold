@@ -25,7 +25,6 @@ import manifold.rt.api.util.Pair;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
-import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -94,7 +93,7 @@ class SchemaParentType
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .name( "defaultScope" )
       .returns( new SrcType( TxScope.class.getSimpleName() ) );
-    method.body( "return DefaultTxScopeProvider.instance().defaultScope(${srcClass.getName()}.class);" );
+    method.body( "return ${Dependencies.class.getName()}.instance().getDefaultTxScopeProvider().defaultScope(${srcClass.getName()}.class);" );
     srcClass.addMethod( method );
   }
 
@@ -654,7 +653,6 @@ class SchemaParentType
     srcClass.addImport( CrudProvider.class );
     srcClass.addImport( Runner.class );
     srcClass.addImport( TxScopeProvider.class );
-    srcClass.addImport( DefaultTxScopeProvider.class );
     srcClass.addImport( KeyRef.class );
     srcClass.addImport( LocklessLazyVar.class );
     srcClass.addImport( Collections.class );

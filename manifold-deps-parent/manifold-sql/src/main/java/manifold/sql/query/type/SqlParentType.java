@@ -34,7 +34,6 @@ import manifold.sql.query.api.QueryColumn;
 import manifold.sql.query.api.QueryParameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.rt.api.*;
-import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.schema.api.SchemaTable;
 
 import javax.tools.DiagnosticListener;
@@ -171,7 +170,7 @@ class SqlParentType
       .returns( new SrcType( returnType ) );
     addRequiredParameters( method );
     StringBuilder sb = new StringBuilder();
-    sb.append( "return $methodName(DefaultTxScopeProvider.instance().defaultScope($configName.class)" );
+    sb.append( "return $methodName(Dependencies.instance().getDefaultTxScopeProvider().defaultScope($configName.class)" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
     method.forwardParameters( sb );
     sb.append( ");" );
@@ -503,7 +502,7 @@ class SqlParentType
     srcClass.addImport( Runner.class );
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxScope.class );
-    srcClass.addImport( DefaultTxScopeProvider.class );
+    srcClass.addImport( Dependencies.class );
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );

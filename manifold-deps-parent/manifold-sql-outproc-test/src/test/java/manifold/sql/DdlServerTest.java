@@ -20,7 +20,6 @@ import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
-import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.rt.util.SqlScriptRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -96,7 +95,7 @@ public abstract class DdlServerTest
     Dependencies.instance().getConnectionProvider().closeAll();
 
     // clear default tx scopes
-    DefaultTxScopeProvider.instance().clear();
+    Dependencies.instance().getDefaultTxScopeProvider().clear();
 
     // clear DbConfigs. Forces dbconfig to initialize and exec ddl on first connection
     Dependencies.instance().getDbConfigProvider().clear();

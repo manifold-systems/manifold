@@ -19,7 +19,6 @@ package manifold.sql;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.Dependencies;
-import manifold.sql.rt.impl.DefaultTxScopeProvider;
 import manifold.sql.rt.impl.ResourceDbLocationProvider;
 import manifold.sql.schema.h2.ScratchTest;
 
@@ -64,7 +63,7 @@ public abstract class DbResourceFileTest
     Dependencies.instance().getConnectionProvider().closeAll();
 
     // clear default tx scopes
-    DefaultTxScopeProvider.instance().clear();
+    Dependencies.instance().getDefaultTxScopeProvider().clear();
 
     // delete temp db
     ResourceDbLocationProvider.deleteTempDbDir( DbLocationProvider.Mode.Runtime, db_resource );

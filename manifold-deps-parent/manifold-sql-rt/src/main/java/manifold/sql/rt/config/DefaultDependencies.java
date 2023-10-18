@@ -54,6 +54,12 @@ public class DefaultDependencies implements Dependencies
   }
 
   @Override
+  public DefaultTxScopeProvider getDefaultTxScopeProvider()
+  {
+    return fetch( ThreadLocalDefaultTxScopeProvider.class );
+  }
+
+  @Override
   public TxScopeProvider getTxScopeProvider()
   {
     return fetch( BasicTxScopeProvider.class );
