@@ -113,6 +113,9 @@ public interface DbConfig
   /** (Optional) The DDL for the database/schema this configuration is using. This is often a DDL dump from the DBMS. */
   String getDbDdl();
 
+  /** (Optional) Return true if using the database driver "in-memory" mode e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
+  boolean isInMemory();
+
   /** Returns the build URL if provided, otherwise the runtime URL */
   default String getBuildUrlOtherwiseRuntimeUrl()
   {

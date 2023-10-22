@@ -163,4 +163,9 @@ public class JdbcQueryParameter implements QueryParameter
   {
     return _isSigned;
   }
+
+  public boolean canBeNull()
+  {
+    return isNullable();
+  }
 }

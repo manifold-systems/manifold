@@ -40,8 +40,8 @@ public class ScratchTest_SakilaTest extends OracleDdlServerTest
     for( Store r : s.fetch() )
     {
       System.out.println( r.display() );
-      System.out.println( r.getAddressRef().display() );
-      System.out.println( r.getManagerStaffRef().display() );
+      System.out.println( r.fetchAddressRef().display() );
+      System.out.println( r.fetchManagerStaffRef().display() );
     }
 
     /* [ActorWithMostFilms.sql:OracleSakila/]

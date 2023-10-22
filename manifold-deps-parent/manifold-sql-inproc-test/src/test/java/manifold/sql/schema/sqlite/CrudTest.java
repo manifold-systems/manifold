@@ -17,7 +17,7 @@
 package manifold.sql.schema.sqlite;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.schema.sqlite.base.SqliteSakilaTest;
+import manifold.sql.schema.sqlite.base.SqliteDdlServerTest;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.schema.simple.sqlite.SqliteSakila;
 import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
@@ -27,7 +27,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class CrudTest extends SqliteSakilaTest
+public class CrudTest extends SqliteDdlServerTest
 {
   @Test
   public void testCreate() throws SQLException
@@ -51,7 +51,7 @@ public class CrudTest extends SqliteSakilaTest
     Country hi = Country.create( txScope, "mycountry" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
@@ -67,7 +67,7 @@ public class CrudTest extends SqliteSakilaTest
     hi.setCountry( "mycountry2" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( "mycountry2", hi.getCountry() );
   }
 
@@ -84,7 +84,7 @@ public class CrudTest extends SqliteSakilaTest
 
     hi.delete( true );
     txScope.commit();
-    Country readHi = Country.read( txScope, countryId );
+    Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );
   }
 }

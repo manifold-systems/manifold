@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.sqlite.base;
+package manifold.sql.schema.h2.base;
 
-import manifold.sql.DbResourceFileTest;
-import org.junit.After;
-import org.junit.Before;
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
 
-public abstract class SqliteSakilaTest extends DbResourceFileTest
+public abstract class H2DdlServerTest extends DdlServerTest
 {
-//  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
-//
-//  @Before
-//  public void setup()
-//  {
-//    _setup( DB_RESOURCE );
-//  }
-//
-//  @After
-//  public void cleanup() throws Exception
-//  {
-//    _cleanup( DB_RESOURCE );
-//  }
+  @Override
+  protected DbConfig getDbConfig()
+  {
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "H2Sakila", getClass() );
+  }
 }

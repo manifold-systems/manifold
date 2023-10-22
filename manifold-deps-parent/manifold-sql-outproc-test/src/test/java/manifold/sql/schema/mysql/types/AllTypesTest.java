@@ -24,13 +24,14 @@ import java.time.LocalTime;
 import java.time.Year;
 import java.time.temporal.ChronoUnit;
 
+import manifold.sql.schema.mysql.MysqlDdlServerTest;
 import manifold.sql.schema.simple.mysql.MysqlSakila;
 import manifold.sql.schema.simple.mysql.MysqlSakila.*;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class AllTypesTest
+public class AllTypesTest extends MysqlDdlServerTest
 {
   Boolean Bit_value = true;                                  // BIT(-7)
   String Bit8_value = "10010110";                            // BIT(-7)
@@ -60,8 +61,8 @@ public class AllTypesTest
   Integer IntegerUnsigned_value = Integer.MAX_VALUE;         // INTEGER(4)
   Integer IntUnsigned_value = Integer.MAX_VALUE;             // INTEGER(4)
   Integer MediumintUnsigned_value = Short.MAX_VALUE + 1;     // INTEGER(4)
-  Short Smallint_value = Short.MAX_VALUE;                    // SMALLINT(5)
-  Short SmallintUnsigned_value = Short.MAX_VALUE;            // SMALLINT(5)
+  Integer Smallint_value = (int)Short.MAX_VALUE;             // SMALLINT(5)
+  Integer SmallintUnsigned_value = (int)Short.MAX_VALUE;     // SMALLINT(5)
   Float Float_value = Float.MAX_VALUE/2;                     // REAL(7)
   Double Double_value = Double.MAX_VALUE;                    // DOUBLE(8)
   Double DoublePrecision_value = Double.MAX_VALUE;           // DOUBLE(8)

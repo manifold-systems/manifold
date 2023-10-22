@@ -16,21 +16,25 @@
 
 package manifold.sql.schema.sqlite;
 
-import manifold.sql.schema.sqlite.base.SqliteSakilaTest;
+import manifold.sql.schema.sqlite.base.SqliteDdlServerTest;
 import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;
 
-public class ScratchTest_SakilaTest extends SqliteSakilaTest
+import java.io.IOException;
+
+public class ScratchTest_SakilaTest extends SqliteDdlServerTest
 {
   @Test
-  public void testSomeInterestingQueries()
+  public void testSomeInterestingQueries() throws IOException
   {
+    loadData( "/samples/data/sqlite-sakila-data.sql" );
+
     Stores s = "[Stores.sql:SqliteSakila/] Select * From store";
     for( Store r : s.fetch() )
     {
       System.out.println( r.display() );
-      System.out.println( r.getAddressRef().display() );
-      System.out.println( r.getManagerStaffRef().display() );
+      System.out.println( r.fetchAddressRef().display() );
+      System.out.println( r.fetchManagerStaffRef().display() );
     }
 
     /* [ActorWithMostFilms.sql:SqliteSakila/]

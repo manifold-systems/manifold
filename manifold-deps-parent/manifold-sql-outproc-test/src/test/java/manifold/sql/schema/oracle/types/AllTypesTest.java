@@ -47,10 +47,10 @@ public class AllTypesTest extends OracleDdlServerTest
   private static final String Nclob_value = "nclob";
   private static final Boolean Number1_value = true;
   private static final Integer Number10_value = 1234567890;
-  private static final Short Number3_value = 123;
+  private static final Integer Number3_value = 123;
   private static final BigDecimal Number38_value = BigDecimal.valueOf( Long.MAX_VALUE );
   private static final BigDecimal Number_value = new BigDecimal( "12345678901234567890.01234567890123456789" );
-  private static final Short Number5_value = 12345;
+  private static final Integer Number5_value = 12345;
   private static final String Nvarchar2_value = "hellothere";
   private static final byte[] Raw_value = {1,2,3,4,5};
   private static final Double Real_value = 3.14;

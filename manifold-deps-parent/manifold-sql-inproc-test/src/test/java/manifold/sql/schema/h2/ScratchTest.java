@@ -34,8 +34,8 @@ public class ScratchTest extends H2SalesTest
     for( PurchaseOrder po : Foo.fetch() )
     {
       // just make sure the results can be navigated
-      assertNotNull( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
-      sb.append( po.getId() + " " + po.getCustomerRef().getId() + " " + po.getOrderDate() );
+      assertNotNull( po.getId() + " " + po.fetchCustomerRef().getId() + " " + po.getOrderDate() );
+      sb.append( po.getId() + " " + po.fetchCustomerRef().getId() + " " + po.getOrderDate() );
     }
     assertTrue( sb.length() > 0 );
   }
@@ -49,7 +49,7 @@ public class ScratchTest extends H2SalesTest
     StringBuilder actual = new StringBuilder();
     for( PurchaseOrder po : MyQuery.fetch( 2L ) )
     {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
+      actual.append( po.getId() ).append( "," ).append( po.fetchCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
     String expected =
       "1,2,2023-11-10\n" +
@@ -69,7 +69,7 @@ public class ScratchTest extends H2SalesTest
     actual = new StringBuilder();
     for( PurchaseOrder po : query.fetch( 2L ) )
     {
-      actual.append( po.getId() ).append( "," ).append( po.getCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
+      actual.append( po.getId() ).append( "," ).append( po.fetchCustomerRef().getId() ).append( "," ).append( po.getOrderDate() ).append( "\n" );
     }
     assertEquals( expected, actual.toString() );
   }
@@ -97,7 +97,7 @@ public class ScratchTest extends H2SalesTest
     for( auto row : query.fetch( 2L ) )
     {
       actual.append( row.getPurchaseOrder().getId() ).append( "," )
-        .append( row.getPurchaseOrder().getCustomerRef().getId() ).append( "," )
+        .append( row.getPurchaseOrder().fetchCustomerRef().getId() ).append( "," )
         .append( row.getPurchaseOrder().getOrderDate() ).append( "," )
         .append( row.getName() ).append( "\n" );
     }

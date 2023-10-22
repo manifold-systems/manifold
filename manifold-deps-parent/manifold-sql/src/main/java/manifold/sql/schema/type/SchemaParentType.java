@@ -676,7 +676,7 @@ class SchemaParentType
     String name = sfk.getName();
     String propName = makePascalCaseIdentifier( name, true );
     SrcMethod fkFetchMethod = new SrcMethod( srcClass )
-      .name( "get" + propName )
+      .name( "fetch" + propName )
       .modifiers( Flags.DEFAULT )
       .returns( type );
     StringBuilder sb = new StringBuilder();
@@ -776,7 +776,7 @@ class SchemaParentType
   }
 
   // Foo foo = Foo.create(txScope, ...);
-  // Foo foo = Foo.read(txScope, ...);
+  // Foo foo = Foo.fetch(txScope, ...);
   // foo.delete();
   //...
   // txScope.commit();
@@ -786,16 +786,16 @@ class SchemaParentType
     String tableFqn = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
-      .name( "read" )
+      .name( "fetch" )
       .returns( new SrcType( tableFqn ) );
     List<SchemaColumn> whereCols = addSelectParameters( table, method );
     if( whereCols.isEmpty() )
     {
-      // no pk and no pk, no read method, instead use type-safe sql query :)
+      // no pk and no uk, no read method, instead use type-safe sql query :)
       return;
     }
     StringBuilder sb = new StringBuilder();
-    sb.append( "return read(defaultScope()" );
+    sb.append( "return fetch(defaultScope()" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
     method.forwardParameters( sb );
     sb.append( ");" );
@@ -805,7 +805,7 @@ class SchemaParentType
 
     method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
-      .name( "read" )
+      .name( "fetch" )
       .returns( new SrcType( tableFqn ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );

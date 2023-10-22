@@ -68,9 +68,11 @@
     <module>manifold-sql</module>
     <module>manifold-sql-rt</module>
     <module>manifold-sql-inproc-test</module>
-<!-- Uncomment this to run out-of-process server tests locally
+
+<!-- [Un]comment this out to add/remove out-of-process server tests locally
      (requires installations for: oracle, sqlserver, postgres, mysql) -->
 <!--    <module>manifold-sql-outproc-test</module>-->
+
     <module>manifold-strings</module>
     <module>manifold-strings-test</module>
     <module>manifold-strings-test-excl</module>

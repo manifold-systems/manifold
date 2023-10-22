@@ -16,23 +16,15 @@
 
 package manifold.sql.schema.sqlite.base;
 
-import manifold.sql.DbResourceFileTest;
-import org.junit.After;
-import org.junit.Before;
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.schema.h2.base.DdlServerTest;
 
-public abstract class SqliteSakilaTest extends DbResourceFileTest
+public abstract class SqliteDdlServerTest extends DdlServerTest
 {
-//  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
-//
-//  @Before
-//  public void setup()
-//  {
-//    _setup( DB_RESOURCE );
-//  }
-//
-//  @After
-//  public void cleanup() throws Exception
-//  {
-//    _cleanup( DB_RESOURCE );
-//  }
+  @Override
+  protected DbConfig getDbConfig()
+  {
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "SqliteSakila", getClass() );
+  }
 }

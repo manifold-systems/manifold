@@ -47,14 +47,14 @@ public class FkDependencyTest extends MysqlDdlServerTest
     assertEquals( country.getCountryId(), city.getCountryId() );
 
     // check that the rows are in the db
-    Country readCountry = Country.read( country.getCountryId() );
+    Country readCountry = Country.fetch( country.getCountryId() );
     assertNotNull( readCountry );
     // also sanity check from direct sql
     Country countryFromSql = "[.sql:MysqlSakila/] select * from country where country_id = :country_id".fetchOne( country.getCountryId() );
     assertEquals( country.getCountryId(), countryFromSql.getCountryId() );
 
     assertEquals( country.getCountryId(), readCountry.getCountryId() );
-    City readCity = City.read( city.getCityId() );
+    City readCity = City.fetch( city.getCityId() );
     assertNotNull( readCity );
     assertEquals( city.getCityId(), readCity.getCityId() );
     assertEquals( country.getCountryId(), readCity.getCountryId() );

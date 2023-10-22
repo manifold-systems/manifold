@@ -56,7 +56,7 @@ public class CrudTest extends PostgresDdlServerTest
     Country hi = Country.create( txScope, "mycountry" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
@@ -72,7 +72,7 @@ public class CrudTest extends PostgresDdlServerTest
     hi.setCountry( "mycountry2" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( "mycountry2", hi.getCountry() );
   }
 
@@ -89,7 +89,7 @@ public class CrudTest extends PostgresDdlServerTest
 
     hi.delete( true );
     txScope.commit();
-    Country readHi = Country.read( txScope, countryId );
+    Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );
   }
 }

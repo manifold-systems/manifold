@@ -126,9 +126,10 @@ public class DbConfigImpl implements DbConfig
     execDdl( connection, ddl );
   }
 
+  // for testing
   private void execDdl( Connection connection, String ddl ) throws SQLException
   {
-    if( ddl == null || ddl.isEmpty() || DDL.contains( ddl ) )
+    if( ddl == null || ddl.isEmpty() || (!isInMemory() && DDL.contains( ddl )) )
     {
       return;
     }
@@ -147,6 +148,8 @@ public class DbConfigImpl implements DbConfig
       //_resByExt = null;
     }
 
+    String productName = connection.getMetaData().getDatabaseProductName().toLowerCase();
+
     try( InputStream stream = ddlFile == null ? getClass().getResourceAsStream( ddl ) : ddlFile.openInputStream() )
     {
       if( stream == null )
@@ -154,14 +157,21 @@ public class DbConfigImpl implements DbConfig
         throw new RuntimeException( "No resource file found matching: " + ddl );
       }
 
-      boolean isOracle = connection.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" );
+      boolean isOracle = productName.contains( "oracle" );
       String script = StreamUtil.getContent( new InputStreamReader( stream ) );
       SqlScriptRunner.runScript( connection, script,
-        // this is the only way to let drop user fail and continue running the script with oracle :\
-        isOracle ? (s, e) -> s.toLowerCase().contains( "drop user " ) : null );
+        isOracle  // let drop user fail and continue running the script (hard otherwise with oracle :\)
+        ? (s, e) -> s.toLowerCase().contains( "drop user " )
+        : null );
     }
     catch( Exception e )
     {
+      if( isInMemory() && e.getMessage().contains( "already exists" ) )
+      {
+        // in-memory test databases (h2, sqlite) are hard to get idempotent ddl,
+        // so we assume "already exits" means the ddl is already there, good enough for tests :\
+        return;
+      }
       throw new SQLException( e );
     }
   }
@@ -237,6 +247,13 @@ public class DbConfigImpl implements DbConfig
   public String getDbDdl()
   {
     return (String)_bindings.get( "dbDdl" );
+  }
+
+  @Override
+  public boolean isInMemory()
+  {
+    Boolean inMemory = (Boolean)_bindings.get( "inMemory" );
+    return inMemory != null && inMemory;
   }
 
   @Override

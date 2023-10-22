@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.h2.fragments;
 
-import manifold.sql.DdlResourceFileTest;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
 import org.junit.Test;
 
 import manifold.sql.schema.simple.h2.H2Sakila;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class CommentFragmentTest extends DdlResourceFileTest
+public class CommentFragmentTest extends H2DdlServerTest
 {
   /**[ObjectJavadocCommentQuery.sql:H2Sakila/]
     Select * From country Where country_id = :country_id

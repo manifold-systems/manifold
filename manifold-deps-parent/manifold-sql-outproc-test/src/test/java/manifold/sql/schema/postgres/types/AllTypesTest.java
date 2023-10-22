@@ -48,7 +48,7 @@ public class AllTypesTest extends PostgresDdlServerTest
   private static Integer Integer_value = Integer.MAX_VALUE;
   private static java.math.BigDecimal Numeric_value = BigDecimal.TEN;
   private static Float Real_value = Float.MAX_VALUE;
-  private static Short Smallint_value = 5000;
+  private static Integer Smallint_value = (int)Short.MAX_VALUE;
   private static String Text_value = "text text text text text text text text text text text text text text text";
   private static LocalTime Time_value = LocalTime.of(1,2,3);
   private static LocalTime Timetz_value = LocalTime.of(4,5,6);

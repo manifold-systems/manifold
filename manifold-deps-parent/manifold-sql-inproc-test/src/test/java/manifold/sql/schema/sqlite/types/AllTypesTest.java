@@ -16,9 +16,9 @@
 
 package manifold.sql.schema.sqlite.types;
 
-import manifold.sql.DdlResourceFileTest;
-import manifold.sql.schema.simple.sqlite.SqliteAllTypes;
-import manifold.sql.schema.simple.sqlite.SqliteAllTypes.*;
+import manifold.sql.schema.simple.sqlite.SqliteSakila;
+import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
+import manifold.sql.schema.sqlite.base.SqliteDdlServerTest;
 import org.junit.Test;
 
 import java.awt.*;
@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-public class AllTypesTest extends DdlResourceFileTest
+public class AllTypesTest extends SqliteDdlServerTest
 {
     private static byte Tinyint_value = (byte)8;
     private static long Bigint_value = Long.MAX_VALUE;
@@ -40,7 +40,7 @@ public class AllTypesTest extends DdlResourceFileTest
     private static BigDecimal Numeric_value = BigDecimal.TEN;
     private static double Float_value = 3.14;
     private static int Integer_value = 82;
-    private static short Smallint_value = 32;
+    private static int Smallint_value = 32;
     private static float Real_value = 4.2f;
     private static double Double_value = 5.2;
     private static String Varchar_value = "varchar";
@@ -76,7 +76,7 @@ public class AllTypesTest extends DdlResourceFileTest
     a.setColBlob( Blob_value );
     a.setColClob( Clob_value );
 
-    SqliteAllTypes.commit();
+    SqliteSakila.commit();
 
     assertEquals( Tinyint_value, (byte)a.getColTinyint() );
     assertEquals( Bigint_value, (long)a.getColBigint() );
@@ -87,7 +87,7 @@ public class AllTypesTest extends DdlResourceFileTest
     assertEquals( Numeric_value, a.getColNumeric() );
     assertEquals( Float_value, a.getColFloat(), 0 );
     assertEquals( Integer_value, (int)a.getColInteger() );
-    assertEquals( Smallint_value, (short)a.getColSmallint() );
+    assertEquals( Smallint_value, (int)a.getColSmallint() );
     assertEquals( Real_value, (float)a.getColReal(), 0 );
     assertEquals( Double_value, a.getColDouble(), 0 );
     assertEquals( Varchar_value, a.getColVarchar() );
@@ -119,7 +119,7 @@ public class AllTypesTest extends DdlResourceFileTest
     assertArrayEquals( Blob_value, a.getColNotNullBlob() );
     assertEquals( Clob_value, a.getColNotNullClob() );
 
-    a = "[.sql:SqliteAllTypes/] SELECT * FROM all_types".fetchOne();
+    a = "[.sql:SqliteSakila/] SELECT * FROM all_types".fetchOne();
     {
       assertEquals( Tinyint_value, (byte)a.getColTinyint() );
       assertEquals( Bigint_value, (long)a.getColBigint() );
@@ -130,7 +130,7 @@ public class AllTypesTest extends DdlResourceFileTest
       assertEquals( Numeric_value, a.getColNumeric() );
       assertEquals( Float_value, a.getColFloat(), 0 );
       assertEquals( Integer_value, (int)a.getColInteger() );
-      assertEquals( Smallint_value, (short)a.getColSmallint() );
+      assertEquals( Smallint_value, (int)a.getColSmallint() );
       assertEquals( Real_value, (float)a.getColReal(), 0 );
       assertEquals( Double_value, a.getColDouble(), 0 );
       assertEquals( Varchar_value, a.getColVarchar() );
@@ -189,7 +189,7 @@ public class AllTypesTest extends DdlResourceFileTest
     a.setColBlob( null );
     a.setColClob( null );
 
-    SqliteAllTypes.commit();
+    SqliteSakila.commit();
 
     assertNull( a.getColTinyint() );
     assertNull( a.getColBigint() );

@@ -17,24 +17,28 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.schema.h2.base.H2SakilaTest;
-import manifold.sql.schema.simple.h2.H2Sakila_db.*;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
+import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
 
-public class ScratchTest_SakilaTest extends H2SakilaTest
+import java.io.IOException;
+
+public class ScratchTest_SakilaTest extends H2DdlServerTest
 {
   @Test
-  public void testSomeInterestingQueries()
+  public void testSomeInterestingQueries() throws IOException
   {
-    Stores s = "[Stores.sql:H2Sakila_db/] Select * From store";
+    loadData( "/samples/data/h2-sakila-data.sql" );
+
+    Stores s = "[Stores.sql:H2Sakila/] Select * From store";
     for( Store r : s.fetch() )
     {
       System.out.println( r.display() );
-      System.out.println( r.getAddressRef().display() );
-      System.out.println( r.getManagerStaffRef().display() );
+      System.out.println( r.fetchAddressRef().display() );
+      System.out.println( r.fetchManagerStaffRef().display() );
     }
 
-    /* [ActorWithMostFilms.sql:H2Sakila_db/]
+    /* [ActorWithMostFilms.sql:H2Sakila/]
       SELECT first_name, last_name, count(*) films
       FROM actor AS a
       JOIN film_actor AS fa USING (actor_id)
@@ -46,7 +50,7 @@ public class ScratchTest_SakilaTest extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    /* [CumulativeRevenueAllStores.sql:H2Sakila_db/]
+    /* [CumulativeRevenueAllStores.sql:H2Sakila/]
       SELECT payment_date, amount, sum(amount) OVER (ORDER BY payment_date)
       FROM (
         SELECT CAST(payment_date AS DATE) AS payment_date, SUM(amount) AS amount
@@ -61,11 +65,11 @@ public class ScratchTest_SakilaTest extends H2SakilaTest
       System.out.println(row.display());
     }
 
-    auto one = "[.sql:H2Sakila_db/] select 1 from dual".fetchOne();
+    auto one = "[.sql:H2Sakila/] select 1 from dual".fetchOne();
     System.out.println(one.display());
 
 
-    for( Staff staff: "[.sql:H2Sakila_db/] select * from staff".fetch() )
+    for( Staff staff: "[.sql:H2Sakila/] select * from staff".fetch() )
     {
       System.out.println( staff.display() );
     }

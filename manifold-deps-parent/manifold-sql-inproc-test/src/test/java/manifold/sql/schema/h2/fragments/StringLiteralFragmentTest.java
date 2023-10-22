@@ -17,7 +17,7 @@
 package manifold.sql.schema.h2.fragments;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.DdlResourceFileTest;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
@@ -26,7 +26,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class StringLiteralFragmentTest extends DdlResourceFileTest
+public class StringLiteralFragmentTest extends H2DdlServerTest
 {
   @Test
   public void testAnonymousObjectStringLiteralQuery() throws SQLException
