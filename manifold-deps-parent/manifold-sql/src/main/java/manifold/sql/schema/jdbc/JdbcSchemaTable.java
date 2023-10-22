@@ -76,8 +76,11 @@ public class JdbcSchemaTable implements SchemaTable
         if( !indexInfo.getBoolean( "NON_UNIQUE" ) )
         {
           String indexName = indexInfo.getString( "INDEX_NAME" );
-          uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
-            .add( indexInfo.getString( "COLUMN_NAME" ) );
+          if( indexName != null ) // sql server always includes a null index for some reason
+          {
+            uniqueKeys.computeIfAbsent( indexName, __ -> new LinkedHashSet<>() )
+              .add( indexInfo.getString( "COLUMN_NAME" ) );
+          }
         }
       }
     }
@@ -104,6 +107,14 @@ public class JdbcSchemaTable implements SchemaTable
     _manyToMany = new LinkedHashSet<>();
     List<String> columnClassNames = getColumnClassNames( metaData );
 
+    if( schemaName != null && !schemaName.isEmpty() &&
+      metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    {
+      // there is a bug in oracle driver where metaData.getColumns() fails if the schema is set to anything other than
+      // the logged-in user, so we set that here. We reset it back in the finally block.
+      metaData.getConnection().setSchema( metaData.getUserName() );
+    }
+
     try( ResultSet colResults = metaData.getColumns( catalogName, schemaName, _name, null ) )
     {
       int i = 0;
@@ -111,7 +122,7 @@ public class JdbcSchemaTable implements SchemaTable
       while( colResults.next() )
       {
         i++;
-        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ) );
+        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ), metaData );
         _columns.put( col.getName(), col );
         if( col.isNonNullUniqueId() )
         {
@@ -130,6 +141,15 @@ public class JdbcSchemaTable implements SchemaTable
       }
       _nonNullUniqueId = id;
     }
+    finally
+    {
+      if( schemaName != null && !schemaName.isEmpty() &&
+        metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+      {
+        // set the schema back to the configured schema
+        metaData.getConnection().setSchema( schemaName );
+      }
+    }
   }
 
   @NotNull
@@ -138,7 +158,8 @@ public class JdbcSchemaTable implements SchemaTable
     List<String> columnClassNames = new ArrayList<>();
     try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
     {
-      for( int i = 0; i < preparedStatement.getMetaData().getColumnCount(); i++ )
+      int columnCount = preparedStatement.getMetaData().getColumnCount();
+      for( int i = 0; i < columnCount; i++ )
       {
         try
         {

@@ -21,7 +21,11 @@ public interface BaseElement
   String getName();
   int getPosition();
   int getSize();
+  int getScale();
   boolean isNullable();
+  int getJdbcType();
+  String getSqlType();
+  String getColumnClassName();
 
   default boolean isGenerated()
   {
@@ -33,14 +37,9 @@ public interface BaseElement
     return false;
   }
 
-  default String getColumnClassName()
-  {
-    return Object.class.getTypeName();
-  }
-
   /**
    * Returns true if the column's value can be null, particularly in the interim between create and commit where generated
-   * or auto-increment schema columns are not yet unassigned values from the db.
+   * or auto-increment schema columns are not yet assigned values from the db.
    */
   default boolean canBeNull()
   {

@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Test that duplicate nested type is renamed to handle Java's limitation",
+  "type": "object",
+  "properties": {
+    "nested": {
+      "type": "object",
+      "properties": {
+        "age": {
+          "type": "integer"
+        },
+        "inBetween": {
+          "type": "object",
+          "properties": {
+            "between": {
+              "type": "integer"
+            },
+            "nested": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

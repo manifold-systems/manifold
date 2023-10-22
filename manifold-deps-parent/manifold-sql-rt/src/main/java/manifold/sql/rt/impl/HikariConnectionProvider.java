@@ -23,7 +23,6 @@ import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
 import manifold.util.ManExceptionUtil;
-import manifold.util.concurrent.LocklessLazyVar;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -47,8 +46,8 @@ public class HikariConnectionProvider implements ConnectionProvider
   @Override
   public Connection getConnection( String configName, Class<?> classContext )
   {
-    //noinspection resource
     DbConfig[] dbConfig = {null};
+    //noinspection resource
     HikariDataSource ds = _dataSources.computeIfAbsent( configName, __ -> {
       dbConfig[0] = Dependencies.instance().getDbConfigProvider().loadDbConfig( configName, classContext );
       if( dbConfig[0] == null )
@@ -65,7 +64,7 @@ public class HikariConnectionProvider implements ConnectionProvider
       Connection connection = ds.getConnection();
       if( dbConfig[0] != null )
       {
-        dbConfig[0].init( connection, dbConfig[0].getUrl() );
+        dbConfig[0].init( connection, dbConfig[0].getUrl(), dbConfig[0].getSchemaName(), null );
       }
       return connection;
     }
@@ -82,7 +81,7 @@ public class HikariConnectionProvider implements ConnectionProvider
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
       makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
     Connection connection = ds.getConnection();
-    dbConfig.init( connection, dbConfig.getBuildUrlOtherwiseRuntimeUrl() );
+    dbConfig.init( connection, dbConfig.getBuildUrlOtherwiseRuntimeUrl(), dbConfig.getSchemaName(), dbConfig.getDbDdl() );
     return connection;
   }
 

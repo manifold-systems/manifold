@@ -19,6 +19,7 @@ package manifold.sql.rt.api;
 import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.ResultSet;
@@ -40,36 +41,32 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
 {
   private final List<R> _results;
 
-  public Result( TxScope txScope, ResultSet resultSet, Function<TxBindings, R> makeRow )
+  public Result( QueryContext ctx, ResultSet resultSet )
   {
     _results = new ArrayList<>();
-    rip( null, resultSet, rowBindings -> new BasicTxBindings( txScope, Update, rowBindings ), makeRow );
+    rip( ctx.getAllCols(), resultSet, rowBindings -> new BasicTxBindings( ctx.getTxScope(), Update, rowBindings ), ctx.getRowMaker() );
   }
 
-  public Result( ResultSet resultSet, Function<Bindings, R> makeRow )
-  {
-    this( null, resultSet, makeRow );
-  }
-  public Result( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<Bindings, R> makeRow )
+  public Result( Map<String, ColumnInfo> allCols, ResultSet resultSet, Function<Bindings, R> makeRow )
   {
     _results = new ArrayList<>();
-    rip( allColsWithJdbcType, resultSet, rowBindings -> rowBindings, makeRow );
+    rip( allCols, resultSet, rowBindings -> rowBindings, makeRow );
   }
 
-  private <B extends Bindings> void rip( Map<String, Integer> allColsWithJdbcType, ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
+  private <B extends Bindings> void rip( Map<String, ColumnInfo> allCols, ResultSet resultSet, Function<DataBindings, B> makeBindings, Function<B, R> makeRow )
   {
     try
     {
       ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
       ResultSetMetaData metaData = resultSet.getMetaData();
       int columnCount = metaData.getColumnCount();
-      ValueAccessor[] accessors = buildAccessors( allColsWithJdbcType, accProvider, metaData, columnCount );
+      ValueAccessor[] accessors = buildAccessors( allCols, accProvider, metaData, columnCount );
       for( boolean isOnRow = resultSet.next(); isOnRow; isOnRow = resultSet.next() )
       {
         DataBindings row = new DataBindings();
         for( int i = 1; i <= columnCount; i++ )
         {
-          String column = metaData.getColumnLabel( i );
+          String column = DbUtil.handleAnonQueryColumn( metaData.getColumnLabel( i ), i );
           Object value = accessors[i-1].getRowValue( resultSet, new ResultColumn( metaData, i ) );
           row.put( column, value );
         }
@@ -87,20 +84,22 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
     }
   }
 
-  private static ValueAccessor[] buildAccessors( Map<String, Integer> allColsWithJdbcType, ValueAccessorProvider accProvider, ResultSetMetaData metaData, int columnCount ) throws SQLException
+  private static ValueAccessor[] buildAccessors( Map<String, ColumnInfo> allCols, ValueAccessorProvider accProvider, ResultSetMetaData metaData, int columnCount ) throws SQLException
   {
     ValueAccessor[] accessors = new ValueAccessor[columnCount];
     for( int i = 0; i < columnCount; i++ )
     {
       Integer jdbcType = null;
-      if( allColsWithJdbcType != null )
+      if( allCols != null )
       {
         // prefer the schema table's declared type for the queried column,
         // it is essential that the type is assignable to the corresponding property return / param types
         String colName = metaData.getColumnName( i+1 );
         if( colName != null )
         {
-          jdbcType = allColsWithJdbcType.get( colName );
+          ColumnInfo columnInfo = allCols.get( colName );
+          // can be null e.g., sqlite's "last_insert_rowid()" bullshit
+          jdbcType = columnInfo == null ? null : columnInfo.getJdbcType();
         }
       }
 

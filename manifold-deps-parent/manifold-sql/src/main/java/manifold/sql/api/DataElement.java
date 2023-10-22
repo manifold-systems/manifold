@@ -19,17 +19,22 @@ package manifold.sql.api;
 import manifold.sql.rt.api.BaseElement;
 import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.api.ValueAccessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public interface DataElement extends BaseElement
 {
+  Logger LOGGER = LoggerFactory.getLogger( DataElement.class );
+
   Table getTable();
-  int getJdbcType();
-  String getColumnClassName();
-  int getScale();
 
   default Class<?> getType()
   {
     ValueAccessor accessor = Dependencies.instance().getValueAccessorProvider().get( getJdbcType() );
+    if( accessor == null )
+    {
+      LOGGER.error( "No ValueAccessor for type: " + getJdbcType() );
+    }
     return accessor == null ? null : accessor.getJavaType( this );
   }
 }

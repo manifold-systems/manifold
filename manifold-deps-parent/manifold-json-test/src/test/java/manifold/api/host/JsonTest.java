@@ -21,6 +21,7 @@ import manifold.util.ReflectUtil;
 
 
 import static abc.Person.*;
+import static java.lang.System.out;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
@@ -791,5 +792,12 @@ public class JsonTest extends TestCase
   {
     MyPerson person = MyPerson.fromSource();
     assertEquals( "https://robohash.org/ddhwrkua.png", person.getAvatarUrls().get_48x48() );
+  }
+
+  public void testDuplicateNestedType()
+  {
+    DuplicateNestedType.nested.inBetween.inBetween_nested nn = DuplicateNestedType.nested.inBetween.inBetween_nested.builder().build();
+    nn.setName( "hi" );
+    assertEquals( "hi", nn.getName() );
   }
 }

@@ -18,6 +18,7 @@ package manifold.sql.rt.api;
 
 import manifold.rt.api.Bindings;
 
+import java.util.Map;
 import java.util.Set;
 
 public interface TxBindings extends Bindings
@@ -39,8 +40,8 @@ public interface TxBindings extends Bindings
   void dropHeldValues();
 
   void commit();
-  Set<Entry<String, Object>> persistedStateEntrySet();
-  Set<Entry<String, Object>> uncommittedChangesEntrySet();
+  Map<String, Object> persistedStateEntrySet();
+  Map<String, Object> uncommittedChangesEntrySet();
 
   Object getPersistedStateValue( String name );
 }

@@ -1,0 +1,6 @@
+{
+  "url": "jdbc:sqlserver://localhost;database=sakila;integratedSecurity=true;encrypt=true;trustServerCertificate=true;selectMethod=cursor",
+  "schemaPackage": "manifold.sql.schema.simple.sqlserver",
+  "schemaName": "dbo",
+  "dbDdl": "samples/ddl/sqlserver-sakila-ddl.sql"
+}

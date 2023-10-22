@@ -288,14 +288,14 @@ public class BasicTxBindings implements TxBindings
     return entrySet;
   }
 
-  public Set<Entry<String, Object>> uncommittedChangesEntrySet()
+  public Map<String, Object> uncommittedChangesEntrySet()
   {
-    return _changes.entrySet();
+    return new LinkedHashMap<>( _changes );
   }
 
-  public Set<Entry<String, Object>> persistedStateEntrySet()
+  public Map<String, Object> persistedStateEntrySet()
   {
-    return _persistedState.entrySet();
+    return new LinkedHashMap<>( _persistedState );
   }
 
   @Override

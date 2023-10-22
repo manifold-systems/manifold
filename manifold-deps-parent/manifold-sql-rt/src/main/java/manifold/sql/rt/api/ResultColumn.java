@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
 
 import java.sql.ResultSetMetaData;
@@ -37,7 +38,7 @@ class ResultColumn implements BaseElement
   {
     try
     {
-      return _metaData.getColumnLabel( _pos );
+      return DbUtil.handleAnonQueryColumn( _metaData.getColumnLabel( _pos ), _pos );
     }
     catch( SQLException e )
     {
@@ -49,6 +50,45 @@ class ResultColumn implements BaseElement
   public int getPosition()
   {
     return _pos;
+  }
+
+  @Override
+  public int getJdbcType()
+  {
+    try
+    {
+      return _metaData.getColumnType( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    try
+    {
+      return _metaData.getColumnTypeName( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public String getColumnClassName()
+  {
+    try
+    {
+      return _metaData.getColumnClassName( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
   }
 
   @Override
@@ -70,6 +110,19 @@ class ResultColumn implements BaseElement
     try
     {
       return _metaData.getPrecision( _pos );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  @Override
+  public int getScale()
+  {
+    try
+    {
+      return _metaData.getScale( _pos );
     }
     catch( SQLException e )
     {

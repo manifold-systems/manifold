@@ -210,7 +210,7 @@ public class ResourceDbLocationProvider implements DbLocationProvider
     }
   }
 
-  private static IFile maybeGetCompileTimeResource( Function<String, FqnCache<IFile>> resByExt, Mode mode, String dbFileResourcePath )
+  public static IFile maybeGetCompileTimeResource( Function<String, FqnCache<IFile>> resByExt, Mode mode, String dbFileResourcePath )
   {
     if( mode == CompileTime || mode == DesignTime )
     {

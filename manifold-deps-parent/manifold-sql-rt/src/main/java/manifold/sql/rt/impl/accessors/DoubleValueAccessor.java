@@ -17,12 +17,10 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.BaseElement;
+import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 public class DoubleValueAccessor implements ValueAccessor
 {
@@ -43,6 +41,16 @@ public class DoubleValueAccessor implements ValueAccessor
   {
     double value = rs.getDouble( elem.getPosition() );
     return value == 0 && rs.wasNull() ? null : value;
+  }
+
+  @Override
+  public String getParameterExpression( DatabaseMetaData metaData, Object value, ColumnInfo ci )
+  {
+    if( ci.getSqlType().equalsIgnoreCase( "money" ) ) // postgres wonk
+    {
+      return value == null ? "NULL" : "CAST('" + value + "' as money)";
+    }
+    return ValueAccessor.super.getParameterExpression( metaData, value, ci );
   }
 
   @Override

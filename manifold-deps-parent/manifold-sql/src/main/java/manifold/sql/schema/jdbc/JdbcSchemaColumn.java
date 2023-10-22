@@ -16,8 +16,9 @@
 
 package manifold.sql.schema.jdbc;
 
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.TypeProvider;
 import manifold.sql.schema.api.SchemaColumn;
-import manifold.sql.schema.jdbc.oneoff.SqliteTypeMapping;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -31,7 +32,8 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final JdbcSchemaTable _table;
   private final int _position;
   private final String _name;
-  private final int _jdbcType;
+  private int _jdbcType;
+  private final String _sqlType;
   private final boolean _isNullable;
   private final boolean _isAutoIncrement;
   private final boolean _isGenerated;
@@ -41,19 +43,19 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final String _defaultValue;
   private final int _decimalDigits;
   private final int _numPrecRadix;
-  private final String _columnType;
+  private String _columnType;
   private JdbcSchemaColumn _fk;
   private final int _size;
 
-  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey, Map<String, Set<String>> uniqueKeys, String columnType ) throws SQLException
+  public JdbcSchemaColumn( int colIndex, JdbcSchemaTable jdbcSchemaTable, ResultSet rs, List<String> primaryKey,
+                           Map<String, Set<String>> uniqueKeys, String columnType, DatabaseMetaData dbMetadata ) throws SQLException
   {
     _position = colIndex;
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
-    _jdbcType = oneOffCorrections( rs.getInt( "DATA_TYPE" ), rs, _table.getSchema().getDatabaseProductName() );
     _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
-    _isAutoIncrement = "YES".equals( rs.getString( "IS_AUTOINCREMENT" ) );
-    _isGenerated = "YES".equals( rs.getString( "IS_GENERATEDCOLUMN" ) );
+    _isAutoIncrement = "YES".equalsIgnoreCase( rs.getString( "IS_AUTOINCREMENT" ) );
+    _isGenerated = "YES".equalsIgnoreCase( rs.getString( "IS_GENERATEDCOLUMN" ) );
     _isPrimaryKeyPart = primaryKey.contains( _name );
     _nonNullUniqueKeyName = uniqueKeys.entrySet().stream()
       .filter( e -> e.getValue().contains( _name ) )
@@ -65,13 +67,10 @@ public class JdbcSchemaColumn implements SchemaColumn
     _size = rs.getInt( "COLUMN_SIZE" );
     _decimalDigits = rs.getInt( "DECIMAL_DIGITS" );
     _numPrecRadix = rs.getInt( "NUM_PREC_RADIX" );
+    TypeProvider typeProvider = Dependencies.instance().getTypeProvider();
+    _jdbcType = typeProvider.getSchemaColumnType( _isNonNullUniqueId, rs, dbMetadata );
+    _sqlType = rs.getString( "TYPE_NAME" );
     _columnType = columnType;
-  }
-
-  private int oneOffCorrections( int jdbcType, ResultSet rs, String productName ) throws SQLException
-  {
-    Integer corrected = new SqliteTypeMapping().getJdbcType( productName, rs );
-    return corrected != null ? corrected : jdbcType;
   }
 
   @Override
@@ -102,6 +101,12 @@ public class JdbcSchemaColumn implements SchemaColumn
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    return _sqlType;
   }
 
   public String getColumnClassName()
@@ -152,6 +157,13 @@ public class JdbcSchemaColumn implements SchemaColumn
   void setForeignKey( JdbcSchemaColumn fk )
   {
     _fk = fk;
+    if( _fk != null )
+    {
+      // fk type must match pk type, otherwise
+      // e.g., oracle, there can be Number/BigDecimal fk types trying to compare with Number(10)/java.lang.Integer pk types etc.
+      _jdbcType = _fk._jdbcType;
+      _columnType = _fk._columnType;
+    }
   }
 
   @Override
@@ -170,5 +182,13 @@ public class JdbcSchemaColumn implements SchemaColumn
   public int getNumPrecRadix()
   {
     return _numPrecRadix;
+  }
+
+  @Override
+  public boolean canBeNull()
+  {
+    // oracle true to form returns NO for "IS_AUTOINCREMENT" even when the column is GENERATED ALWAYS AS IDENTITY,
+    // therefore we have to settle and treat all non-null unique ids as auto-increment, which are 99% of the time :\
+    return SchemaColumn.super.canBeNull() || isNonNullUniqueId();
   }
 }

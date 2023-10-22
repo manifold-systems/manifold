@@ -41,6 +41,7 @@ public class JdbcSchema implements Schema
   private final Map<String, String> _nameToJava;
   private final String _dbProductName;
   private final String _dbProductVersion;
+  private final boolean _schemaIsCatalog;
 
   public JdbcSchema( DbConfig dbConfig ) throws SQLException
   {
@@ -55,7 +56,22 @@ public class JdbcSchema implements Schema
       _dbProductVersion = c.getMetaData().getDatabaseProductVersion();
 
       DatabaseMetaData metaData = c.getMetaData();
-      _name = findSchemaName( metaData );
+
+      String schemaName = findSchemaName( metaData );
+      String catalogName = null;
+      if( schemaName == null )
+      {
+        // mysql, being mysql, provides the schema from the catalogs
+        catalogName = findSchemaNameFromCatalogs( metaData );
+      }
+      _schemaIsCatalog = catalogName != null;
+      String name = _schemaIsCatalog ? catalogName : schemaName;
+      if( _dbProductName.toLowerCase().contains( "oracle" ) )
+      {
+        // yes, oracle requires uppercase for schema name O_O
+        name = name.toUpperCase();
+      }
+      _name = name;
 
       build( c, metaData );
     }
@@ -72,8 +88,9 @@ public class JdbcSchema implements Schema
 
   private void build( Connection c, DatabaseMetaData metaData ) throws SQLException
   {
-     try( ResultSet resultSet = metaData.getTables(
-      _dbConfig.getCatalogName(), _name, null, new String[]{"TABLE", "VIEW"} ) )
+    String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
+    String schema = _schemaIsCatalog ? null : _name;
+    try( ResultSet resultSet = metaData.getTables( catalog, schema, null, new String[]{"TABLE", "VIEW"} ) )
     {
       while( resultSet.next() )
       {
@@ -109,6 +126,40 @@ public class JdbcSchema implements Schema
       while( schemas.next() )
       {
         String schem = schemas.getString( "TABLE_SCHEM" );
+
+        if( schem.equalsIgnoreCase( schemaName ) )
+        {
+          return schem;
+        }
+
+        if( schem.equalsIgnoreCase( getDbConfig().getName() ) )
+        {
+          return schem;
+        }
+
+        if( !schem.equalsIgnoreCase( "information_schema" ) &&
+          !schem.equalsIgnoreCase( "system_lobs" ) )
+        {
+          defaultSchema = schem;
+          if( defaultSchema.equalsIgnoreCase( "public" ) )
+          {
+            break;
+          }
+        }
+      }
+    }
+    return defaultSchema;
+  }
+
+  String findSchemaNameFromCatalogs( DatabaseMetaData metaData ) throws SQLException
+  {
+    String defaultSchema = null;
+    String schemaName = _dbConfig.getSchemaName();
+    try( ResultSet catalogs =  metaData.getCatalogs() )
+    {
+      while( catalogs.next() )
+      {
+        String schem = catalogs.getString( "TABLE_CAT" );
 
         if( schem.equalsIgnoreCase( schemaName ) )
         {

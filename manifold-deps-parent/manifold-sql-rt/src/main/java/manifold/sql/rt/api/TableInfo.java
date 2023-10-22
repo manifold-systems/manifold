@@ -24,14 +24,14 @@ public class TableInfo
   private final String _ddlTableName;
   private final Set<String> _pkCols;
   private final Set<String> _ukCols;
-  private final Map<String, Integer> _allColsWithJdbcType;
+  private final Map<String, ColumnInfo> _allCols;
 
-  public TableInfo( String ddlTableName, Set<String> pkCols, Set<String> ukCols, Map<String,Integer> allColsWithJdbcType )
+  public TableInfo( String ddlTableName, Set<String> pkCols, Set<String> ukCols, Map<String,ColumnInfo> allCols )
   {
     _ddlTableName = ddlTableName;
     _pkCols = pkCols;
     _ukCols = ukCols;
-    _allColsWithJdbcType = allColsWithJdbcType;
+    _allCols = allCols;
   }
 
   public String getDdlTableName()
@@ -50,8 +50,8 @@ public class TableInfo
     return _ukCols;
   }
 
-  public Map<String, Integer> getAllColsWithJdbcType()
+  public Map<String, ColumnInfo> getAllCols()
   {
-    return _allColsWithJdbcType;
+    return _allCols;
   }
 }

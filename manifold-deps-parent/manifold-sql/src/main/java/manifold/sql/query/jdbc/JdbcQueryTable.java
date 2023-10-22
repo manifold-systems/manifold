@@ -86,15 +86,17 @@ public class JdbcQueryTable implements QueryTable
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
-    try( PreparedStatement preparedStatement = c.prepareStatement( _source ) )
+    DatabaseMetaData metaData = c.getMetaData();
+    PreparedStatement ps = metaData.getDatabaseProductName().toLowerCase().contains( "sql server" )
+    ? c.prepareStatement( _source, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE ) // attempt to make sqlserver support for ResultSetMetaData#getTableName()
+    : c.prepareStatement( _source );
+    try( PreparedStatement preparedStatement = ps )
     {
-      // todo: handle warnings, make them compiler warnings
-
       ResultSetMetaData rsMetaData = preparedStatement.getMetaData();
       int columnCount = rsMetaData.getColumnCount();
       for( int i = 1; i <= columnCount; i++ )
       {
-        JdbcQueryColumn col = new JdbcQueryColumn( i, this, rsMetaData );
+        JdbcQueryColumn col = new JdbcQueryColumn( i, this, rsMetaData, metaData );
         _columns.put( col.getName(), col );
       }
 
@@ -107,7 +109,7 @@ public class JdbcQueryTable implements QueryTable
       for( int i = 1; i <= paramCount; i++ )
       {
         String name = paramNames.isEmpty() ? null : paramNames.get( i - 1 ).getName().substring( 1 );
-        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, preparedStatement );
+        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, metaData );
         _parameters.add( param );
       }
     }

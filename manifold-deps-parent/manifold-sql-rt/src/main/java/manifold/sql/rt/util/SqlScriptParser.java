@@ -19,6 +19,8 @@ package manifold.sql.rt.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import static manifold.sql.rt.util.SqlScriptParser.ExtraSeparator.*;
+
 /**
  * Use this to extract the list of commands from a SQL Script.
  */
@@ -28,21 +30,43 @@ public class SqlScriptParser
 
   private final String _script;
   private final List<String> _commands;
+  private final ExtraSeparator _extraSeparator;
   private int _pos;
+
+  public enum ExtraSeparator
+  {
+    Go,   // sql server
+    Slash // oracle
+  }
 
   public static List<String> getCommands( String script )
   {
-    return new SqlScriptParser( script ).parse( script );
+    return getCommands( script, null );
+  }
+  public static List<String> getCommands( String script, ExtraSeparator extraSeparator )
+  {
+    return new SqlScriptParser( script, extraSeparator ).parse();
   }
 
-  private SqlScriptParser( String script )
+  private SqlScriptParser( String script, ExtraSeparator extraSeparator )
   {
     _pos = -1;
     _script = script;
+    _extraSeparator = extraSeparator;
     _commands = new ArrayList<>();
   }
 
-  private List<String> parse( String script )
+  private boolean goSeparator()
+  {
+    return _extraSeparator == Go;
+  }
+
+  private boolean slashSeparator()
+  {
+    return _extraSeparator == Slash;
+  }
+
+  private List<String> parse()
   {
     next();
     while( !isEof() )
@@ -56,18 +80,43 @@ public class SqlScriptParser
   {
     int pos = _pos;
     int blockDepth = 0;
+    int endCommandPos = -1;
+    boolean hasWords = false;
+
     while( !isEof() )
     {
+      //noinspection StatementWithEmptyBody
       while( eatComments() || eatWhitespace() );
-      if( match( ';' ) )
+
+
+      if( match( ';' ) ||
+        slashSeparator() && match( '/' ) )
       {
         if( blockDepth == 0 )
         {
+          endCommandPos = _pos - 1;
           break;
         }
       }
+
       String word = matchWord();
-      if( word.equalsIgnoreCase( "BEGIN" ) )
+
+      if( goSeparator() && word.equalsIgnoreCase( "GO" ) )
+      {
+        // sql server 'GO' is like a ';' separator
+        if( blockDepth == 0 )
+        {
+          endCommandPos = _pos - 2;
+          break;
+        }
+      }
+      else if( is$$Quote( word ) )
+      {
+        // Postgres uses '$$' as a quote. Syntax is actually $[word]$ e.g., $myquote$ is considered a custom quote character.
+        // Used mostly for function body quoting. Postgres...
+        eatUntil( word );
+      }
+      else if( word.equalsIgnoreCase( "BEGIN" ) )
       {
         blockDepth++;
       }
@@ -77,11 +126,25 @@ public class SqlScriptParser
       }
       else if( word.equalsIgnoreCase( "END" ) )
       {
-        blockDepth--;
-        if( blockDepth < 0 )
+        boolean isReallyEND = true;
+        if( !isEof() && ch() == ' ' )
         {
-          throw new IllegalStateException( "Unbalanced BEGIN/CASE END (see [*])\n\n" +
-            new StringBuilder( _script ).insert( _pos-3, " [*]" ).toString() );
+          next();
+          String endWhat = matchWord();
+          if( endWhat.equalsIgnoreCase( "IF" ) || endWhat.equalsIgnoreCase( "LOOP" ) )
+          {
+            isReallyEND = false;
+          }
+        }
+
+        if( isReallyEND )
+        {
+          blockDepth--;
+          if( blockDepth < 0 )
+          {
+            throw new IllegalStateException( "Unbalanced BEGIN/CASE END (see [*])\n\n" +
+              new StringBuilder( _script ).insert( _pos - 3, " [*]" ).toString() );
+          }
         }
       }
       else if( word.equalsIgnoreCase( "SEPARATOR" ) )
@@ -90,14 +153,27 @@ public class SqlScriptParser
         while( eatComments() || eatWhitespace() );
         matchStringLiteral();
       }
+      else
+      {
+        hasWords = hasWords || !word.isEmpty();
+      }
       matchNonWord();
     }
-    String command = _script.substring( pos, isEof() ? _script.length() : _pos - 1 ); // -1 to remove the ';'
-    command = command.trim();
-    if( !command.isEmpty() )
+
+    if( hasWords )
     {
-      _commands.add( command );
+      String command = _script.substring( pos, isEof() ? _script.length() : endCommandPos > 0 ? endCommandPos : _pos );
+      command = command.trim();
+      if( !command.isEmpty() )
+      {
+        _commands.add( command );
+      }
     }
+  }
+
+  private boolean is$$Quote( String word )
+  {
+    return word.length() > 1 && word.startsWith( "$" ) && word.endsWith( "$" );
   }
 
   private boolean eatWhitespace()
@@ -118,18 +194,23 @@ public class SqlScriptParser
 
   private boolean eatMultiLineComment()
   {
+    return eatBetweenTokens( "/*", "*/" );
+  }
+
+  private boolean eatBetweenTokens( String open, String close )
+  {
     boolean comment = false;
     while( !isEof() )
     {
       if( comment )
       {
-        if( match( "*/" ) )
+        if( match( close ) )
         {
           return true;
         }
         next();
       }
-      else if( match( "/*" ) )
+      else if( match( open ) )
       {
         comment = true;
       }
@@ -137,6 +218,20 @@ public class SqlScriptParser
       {
         break;
       }
+    }
+    return false;
+  }
+
+  private boolean eatUntil( String close )
+  {
+    boolean comment = false;
+    while( !isEof() )
+    {
+      if( match( close ) )
+      {
+        return true;
+      }
+      next();
     }
     return false;
   }
@@ -217,7 +312,7 @@ public class SqlScriptParser
       return false;
     }
 
-    if( _script.startsWith( s, _pos ) )
+    if( _script.regionMatches( true, _pos, s, 0, s.length() ) )
     {
       if( !peek )
       {
@@ -234,10 +329,16 @@ public class SqlScriptParser
 
   private String matchWord()
   {
+    return matchWord( false );
+  }
+  private String matchWord( boolean peek )
+  {
     if( isEof() )
     {
       return "";
     }
+
+    int savePos = _pos;
 
     StringBuilder sb = new StringBuilder();
     if( Character.isJavaIdentifierStart( ch() ) )
@@ -249,6 +350,11 @@ public class SqlScriptParser
         sb.append( ch() );
         next();
       }
+    }
+
+    if( peek )
+    {
+      _pos = savePos;
     }
     return sb.toString();
   }
@@ -283,8 +389,11 @@ public class SqlScriptParser
     while( eatWhitespace() || eatComments() );
 
     StringBuilder sb = new StringBuilder();
-    while( !isEof() && ch() != ';' && !Character.isJavaIdentifierStart( ch() ) &&
-      !match( "--", true ) && !match( "/*", true ) )
+    while( !isEof() &&
+           ch() != ';' &&
+           (!slashSeparator() || ch() != '/') &&
+           !Character.isJavaIdentifierStart( ch() ) &&
+           !match( "--", true ) && !match( "/*", true ) )
     {
       sb.append( ch() );
       next();

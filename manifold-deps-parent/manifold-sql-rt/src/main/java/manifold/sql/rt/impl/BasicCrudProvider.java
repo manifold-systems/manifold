@@ -20,13 +20,17 @@ import manifold.ext.rt.api.IBindingsBacked;
 import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.util.DbUtil;
 import manifold.util.ManExceptionUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
 
 public class BasicCrudProvider implements CrudProvider
 {
+  private final Logger LOGGER = LoggerFactory.getLogger( BasicCrudProvider.class );
 
   public static final String SQLITE_LAST_INSERT_ROWID = "last_insert_rowid()";
 
@@ -36,13 +40,13 @@ public class BasicCrudProvider implements CrudProvider
     try
     {
       T table = ctx.getTable();
-      String[] allColumnNames = ctx.getAllColsWithJdbcType().keySet().toArray( new String[0] );
-
-      String sql = makeInsertStmt( ctx.getDdlTableName(), table );
-      try( PreparedStatement ps = c.prepareStatement( sql, allColumnNames ) )
+      Set<String> skipParams = new HashSet<>();
+      String sql = makeInsertStmt( c.getMetaData(), ctx, skipParams );
+      int[] reflectedColumnCount = {0};
+      try( PreparedStatement ps = prepareStatement( c, ctx, sql, reflectedColumnCount ) )
       {
-        setInsertParameters( ctx, ps );
-        executeAndFetchRow( c, ctx, ps, table.getBindings() );
+        setInsertParameters( ctx, ps, skipParams );
+        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -51,13 +55,82 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps ) throws SQLException
+  /**
+   * Calls {@code c.prepareStatement(sql, columnNames)} with {@code columnNames} having all columns for the inserted/updated
+   * row. If the driver does not handle that and throws an exception, we try calling {@code c.prepareStatement(...)} again
+   * passing just the pk key column, if applicable. If not, we don't pass any column names. Note, if the driver doesn't
+   * throw an exception from the former call and quietly ignores all the column names and instead just supplies the pk,
+   * we handle that too when we process the call to {@code getGeneratedKeys()}.
+   */
+  private static <T extends TableRow> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
+  {
+    String[] reflectedColumns = reflectedColumns( c, ctx, true );
+    try
+    {
+      return c.prepareStatement( sql, reflectedColumns );
+    }
+    catch( SQLException e )
+    {
+      reflectedColumns = reflectedColumns( c, ctx, false );
+      if( reflectedColumns.length == 0 )
+      {
+        return c.prepareStatement( sql );
+      }
+      return c.prepareStatement( sql, reflectedColumns );
+    }
+    finally
+    {
+      reflectedColumnCount[0] = reflectedColumns.length;
+    }
+  }
+
+  /**
+   * The names of columns that should be returned from the inserted row via {@code getGeneratedKeys()}, this array is passed
+   * into {@code prepareStatement(sql, columnNames)}. Ideally, we want more than the "generated keys" the {@link Connection#prepareStatement(String, String[])}
+   * method sort of documents; the parameter documentation is more loosely defined as <i>an array of column names indicating the
+   * columns that should be returned from the inserted row</i>. Some (good) drivers adhere to this latter description and
+   * return any and all columns asked for, others drivers vary in behavior here.
+   */
+  private static <T extends TableRow> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
+  {
+    String[] reflectedColumnNames = {};
+    if( allColumns && !c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    {
+      // ask for all columns since we want the entire record to include whatever generated data that was not included in the insert
+
+      reflectedColumnNames = ctx.getAllCols().keySet().toArray( new String[0] );
+    }
+    else
+    {
+      // ask for pk column, so we can query for the whole record
+
+      if( ctx.getPkCols().size() == 1 )
+      {
+        ColumnInfo pkColumnInfo = ctx.getAllCols().get( ctx.getPkCols().iterator().next() );
+        Boolean required = pkColumnInfo.isRequired();
+        if( required != null && !required )
+        {
+          // some DBs (sql server) only reflect the pk column for getGeneratedKeys() and throw exception if we ask for more
+          // in this case we use the pk to make a separate query for the full record
+          reflectedColumnNames = ctx.getPkCols().toArray( new String[0] );
+        }
+      }
+    }
+
+    return reflectedColumnNames;
+  }
+
+  private <T extends TableRow> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     for( Map.Entry<String, Object> entry: ctx.getTable().getBindings().entrySet() )
     {
-      int jdbcType = ctx.getAllColsWithJdbcType().get( entry.getKey() );
+      if( skipParams.contains( entry.getKey() ) )
+      {
+        continue;
+      }
+      int jdbcType = ctx.getAllCols().get( entry.getKey() ).getJdbcType();
       ValueAccessor accessor = accProvider.get( jdbcType );
       Object value = entry.getValue();
       value = patchFk( value, entry.getKey(), ctx.getTable().getBindings() );
@@ -83,18 +156,19 @@ public class BasicCrudProvider implements CrudProvider
       else
       {
         // temporary foreign key value for deferred constraint, to avoid NOT NULL enforcement that is not deferred
+        //todo: handle other data types here
         value = 0;
       }
     }
     return value;
   }
 
-  private String makeInsertStmt( String ddlTableName, TableRow table )
+  private <T extends TableRow> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     StringBuilder sql = new StringBuilder();
-    sql.append( "INSERT INTO " ).append( ddlTableName ).append( "(" );
+    sql.append( "INSERT INTO " ).append( ctx.getDdlTableName() ).append( "(" );
     int i = 0;
-    Set<Map.Entry<String, Object>> entries = table.getBindings().entrySet();
+    Set<Map.Entry<String, Object>> entries = ctx.getTable().getBindings().entrySet();
     for( Map.Entry<String, Object> entry: entries )
     {
       String colName = entry.getKey();
@@ -102,16 +176,24 @@ public class BasicCrudProvider implements CrudProvider
       {
         sql.append( ", " );
       }
-      sql.append( colName );
+      sql.append( DbUtil.enquoteIdentifier( colName, metaData ) );
     }
     sql.append( ")" ).append( " VALUES (" );
-    for( i = 0; i < entries.size(); i++ )
+    ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
+    i = 0;
+    for( Map.Entry<String, Object> entry: entries )
     {
-      if( i > 0 )
+      if( i++ > 0 )
       {
         sql.append( "," );
       }
-      sql.append( '?' );
+      ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( entry.getKey() ).getJdbcType() );
+      String expr = accessor.getParameterExpression( metaData, entry.getValue(), ctx.getAllCols().get( entry.getKey() ) );
+      sql.append( expr );
+      if( !expr.contains( "?" ) )
+      {
+        skipParams.add( entry.getKey() );
+      }
     }
     sql.append( ")" );
     return sql.toString();
@@ -125,13 +207,14 @@ public class BasicCrudProvider implements CrudProvider
     {
       // todo: put a cache on this
 
-      String sql = makeReadStatement( ctx );
+      Set<String> skipParams = new HashSet<>();
+      String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
       try( PreparedStatement ps = c.prepareStatement( sql ) )
       {
-        setQueryParameters( ctx, ps );
+        setQueryParameters( ctx, ps, skipParams );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
+          Result<T> ts = new Result<>( ctx, resultSet );
           Iterator<T> iterator = ts.iterator();
           if( !iterator.hasNext() )
           {
@@ -161,13 +244,14 @@ public class BasicCrudProvider implements CrudProvider
     {
       // todo: put a cache on this
 
-      String sql = makeReadStatement( ctx );
+      Set<String> skipParams = new HashSet<>();
+      String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
       try( PreparedStatement ps = c.prepareStatement( sql ) )
       {
-        setQueryParameters( ctx, ps );
+        setQueryParameters( ctx, ps, skipParams );
         try( ResultSet resultSet = ps.executeQuery() )
         {
-          Result<T> ts = new Result<>( ctx.getTxScope(), resultSet, ctx.getRowMaker() );
+          Result<T> ts = new Result<>( ctx, resultSet );
           List<T> result = new ArrayList<>();
           for( T t : ts )
           {
@@ -183,18 +267,27 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> String makeReadStatement( QueryContext<T> ctx )
+  private <T extends TableRow> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
+    ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     StringBuilder sql = new StringBuilder();
     sql.append( "SELECT * FROM " ).append( ctx.getDdlTableName() ).append( " WHERE " );
     int i = 0;
-    for( String colName : ctx.getParams().keySet() )
+    for( Map.Entry<String, Object> entry : ctx.getParams().entrySet() )
     {
-      if( i++ > 0 )
+      if( i > 0 )
       {
         sql.append( " AND " );
       }
-      sql.append( colName ).append( " = ?" );
+      ColumnInfo paramInfo = ctx.getParamInfo()[i];
+      ValueAccessor accessor = accProvider.get( paramInfo.getJdbcType() );
+      String expr = accessor.getParameterExpression( metaData, entry.getValue(), paramInfo );
+      sql.append( DbUtil.enquoteIdentifier( entry.getKey(), metaData ) ).append( " = " ).append( expr );
+      i++;
+      if( !expr.contains( "?" ) )
+      {
+        skipParams.add( entry.getKey() );
+      }
     }
     return sql.toString();
   }
@@ -208,23 +301,33 @@ public class BasicCrudProvider implements CrudProvider
       StringBuilder sql = new StringBuilder();
       sql.append( "UPDATE " ).append( ctx.getDdlTableName() ).append( " SET\n" );
       int i = 0;
-      Set<Map.Entry<String, Object>> changeEntries = table.getBindings().uncommittedChangesEntrySet();
+      Map<String, Object> changeEntries = table.getBindings().uncommittedChangesEntrySet();
       if( changeEntries.isEmpty() )
       {
         throw new SQLException( "Expecting changed entries." );
       }
-      for( Map.Entry<String, Object> entry : changeEntries )
+      Set<String> skipParams = new HashSet<>();
+      ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
+      for( Map.Entry<String, Object> entry : changeEntries.entrySet() )
       {
-        if( i++ > 0 )
+        if( i > 0 )
         {
           sql.append( ",\n" );
         }
         String colName = entry.getKey();
-        sql.append( "\"$colName\" = ?" );
+        ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( colName ).getJdbcType() );
+        String expr = accessor.getParameterExpression( c.getMetaData(), entry.getValue(), ctx.getAllCols().get( colName ) );
+        String qcolName = DbUtil.enquoteIdentifier( colName, c.getMetaData() );
+        sql.append( "$qcolName = " ).append( expr );
+        i++;
+        if( !expr.contains( "?" ) )
+        {
+          skipParams.add( entry.getKey() );
+        }
       }
       sql.append( "\nWHERE " );
 
-      Set<String> allColNames = ctx.getAllColsWithJdbcType().keySet();
+      Set<String> allColNames = ctx.getAllCols().keySet();
 
       Set<String> whereColumns;
       if( !ctx.getPkCols().isEmpty() )
@@ -248,7 +351,16 @@ public class BasicCrudProvider implements CrudProvider
           {
             sql.append( ", " );
           }
-          sql.append( "\"$whereCol\" = ?" );
+          ColumnInfo columnInfo = ctx.getAllCols().get( whereCol );
+          ValueAccessor accessor = accProvider.get( columnInfo.getJdbcType() );
+          String expr = accessor.getParameterExpression(
+            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), columnInfo );
+          String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
+          sql.append( "$qwhereCol = " ).append( expr );
+          if( !expr.contains( "?" ) )
+          {
+            skipParams.add( whereCol );
+          }
         }
       }
       else
@@ -256,10 +368,11 @@ public class BasicCrudProvider implements CrudProvider
         throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
-      try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
+      int[] reflectedColumnCount = {0};
+      try( PreparedStatement ps = prepareStatement( c, ctx, sql.toString(), reflectedColumnCount ) )
       {
-        setUpdateParameters( ctx, whereColumns, ps );
-        executeAndFetchRow( c, ctx, ps, table.getBindings() );
+        setUpdateParameters( ctx, whereColumns, ps, skipParams );
+        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -268,28 +381,37 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps ) throws SQLException
+  private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
-    int paramIndex = 0;
-    Set<Map.Entry<String, Object>> changeEntries = ctx.getTable().getBindings().uncommittedChangesEntrySet();
+    Map<String, Object> changeEntries = ctx.getTable().getBindings().uncommittedChangesEntrySet();
     if( changeEntries.isEmpty() )
     {
       throw new SQLException( "Expecting changed entries." );
     }
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
-    for( Map.Entry<String, Object> entry : changeEntries )
+    int i = 0;
+    for( Map.Entry<String, Object> entry : changeEntries.entrySet() )
     {
-      ValueAccessor accessor = accProvider.get( ctx.getAllColsWithJdbcType().get( entry.getKey() ) );
+      if( skipParams.contains( entry.getKey() ) )
+      {
+        continue;
+      }
+      ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( entry.getKey() ).getJdbcType() );
       Object value = entry.getValue();
-      accessor.setParameter( ps, ++paramIndex, value );
+      accessor.setParameter( ps, ++i, value );
     }
     if( !whereColumns.isEmpty() )
     {
       for( String whereColumn : whereColumns )
       {
-        ValueAccessor accessor = accProvider.get( ctx.getAllColsWithJdbcType().get( whereColumn ) );
+        if( skipParams.contains( whereColumn ) )
+        {
+          continue;
+        }
+
+        ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
         Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
-        accessor.setParameter( ps, ++paramIndex, value );
+        accessor.setParameter( ps, ++i, value );
       }
     }
     else
@@ -299,17 +421,21 @@ public class BasicCrudProvider implements CrudProvider
 
   }
 
-  private <T extends TableRow> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps ) throws SQLException
+  private <T extends TableRow> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
-    int paramIndex = 0;
+    int i = 0;
     if( !whereColumns.isEmpty() )
     {
       ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
       for( String whereColumn : whereColumns )
       {
-        ValueAccessor accessor = accProvider.get( ctx.getAllColsWithJdbcType().get( whereColumn ) );
+        ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
         Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
-        accessor.setParameter( ps, ++paramIndex, value );
+        if( skipParams.contains( whereColumn ) )
+        {
+          continue;
+        }
+        accessor.setParameter( ps, ++i, value );
       }
     }
     else
@@ -318,7 +444,8 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void executeAndFetchRow( Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table ) throws SQLException
+  private <T extends TableRow> void executeAndFetchRow(
+    Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table, boolean hasReflectedColumns ) throws SQLException
   {
     int result = ps.executeUpdate();
     if( result != 1 )
@@ -329,25 +456,29 @@ public class BasicCrudProvider implements CrudProvider
     // here getGeneratedKeys() returns ALL columns because PreparedStatement was created with all column names as gen keys
     // this is necessary to retrieve columns that are autoincrement, generated, default values, etc.
     Bindings reflectedRow = DataBindings.EMPTY_BINDINGS;
-    try( ResultSet resultSet = ps.getGeneratedKeys() )
+    if( hasReflectedColumns )
     {
-      Result<IBindingsBacked> resultRow =
-        new Result<>( ctx.getAllColsWithJdbcType(), resultSet, rowBindings -> () -> rowBindings );
-      Iterator<IBindingsBacked> iterator = resultRow.iterator();
-      if( iterator.hasNext() )
+      try( ResultSet resultSet = ps.getGeneratedKeys() )
       {
-        reflectedRow = iterator.next().getBindings();
+        Result<IBindingsBacked> resultRow =
+          new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
+        Iterator<IBindingsBacked> iterator = resultRow.iterator();
         if( iterator.hasNext() )
         {
-          throw new SQLException( "Expecting a single row, found more." );
+          reflectedRow = iterator.next().getBindings();
+          if( iterator.hasNext() )
+          {
+            throw new SQLException( "Expecting a single row, found more." );
+          }
         }
       }
-    }
-    catch( SQLFeatureNotSupportedException ignore )
-    {
+      catch( SQLFeatureNotSupportedException e )
+      {
+        LOGGER.warn( "getGeneratedKeys() is not supported, attempting to fetch updated row.", e );
+      }
     }
 
-    if( reflectedRow.isEmpty() && ctx.getPkCols().isEmpty() )
+    if( isReflectedRowEmpty( reflectedRow ) && ctx.getPkCols().isEmpty() )
     {
       // no pk means there's no way to fetch the inserted row
       //todo: throw here instead?
@@ -356,7 +487,7 @@ public class BasicCrudProvider implements CrudProvider
 
     // some drivers (sqlite) don't fetch the gen key columns supplied in the prepared statement, so we issue a Select
     reflectedRow = maybeFetchInsertedRow( c, ctx, table, reflectedRow );
-    if( reflectedRow.isEmpty() )
+    if( isReflectedRowEmpty( reflectedRow ) )
     {
       throw new SQLException( "Failed to reflect newly inserted row." );
     }
@@ -368,29 +499,24 @@ public class BasicCrudProvider implements CrudProvider
     Connection c, UpdateContext<T> ctx, TxBindings bindings, Bindings reflectedRow ) throws SQLException
   {
     DataBindings params = new DataBindings();
-    int[] paramTypes;
+    ColumnInfo[] ci = null;
     if( reflectedRow.containsKey( SQLITE_LAST_INSERT_ROWID ) )
     {
       // specific to sqlite :\
       // all sqlite tables (except those marked WITHOUT ROWID) have a built-in "rowid" column.
       // sqlite ignores all the columns we specify for generated keys when creating a PreparedStatement and instead sends
-      // the "last_insert_rowid()" column. Thanks, sqlite, for ignoring literally everything.
+      // the "last_insert_rowid()" column, which is probably not the pk. Thanks, sqlite, thanks.
       params.put( "_rowid_", reflectedRow.get( SQLITE_LAST_INSERT_ROWID ) );
-      paramTypes = new int[] {Types.INTEGER};
+      ci = new ColumnInfo[] {new ColumnInfo( "_rowid_", Types.INTEGER, "integer", null )};
     }
-    else if( reflectedRow.isEmpty() )
+    else if( isReflectedRowEmpty( reflectedRow ) && !ctx.getPkCols().isEmpty() )
     {
-      // ps.getGeneratedKeys() totally failed, lets hope the pk is provided manually...
+      // getGeneratedKeys() failed
+      // let's hope the pk was required input
 
       Set<String> pkCols = ctx.getPkCols();
-      if( pkCols.isEmpty() )
-      {
-        // no pk, can't query
-        return reflectedRow;
-      }
-
-      Map<String, Integer> jdbcTypes = ctx.getAllColsWithJdbcType();
-      paramTypes = new int[pkCols.size()];
+      Map<String, ColumnInfo> allCols = ctx.getAllCols();
+      ci = new ColumnInfo[pkCols.size()];
       int i = 0;
       for( String pkCol : pkCols )
       {
@@ -400,8 +526,41 @@ public class BasicCrudProvider implements CrudProvider
           // null pk value means we can't query for the inserted row, game over
           return reflectedRow;
         }
+        else if( pkValue instanceof TableRow ) // from a KeyRef, see BasicTxBindings#get()
+        {
+          // in this case an fk is part of the pk, e.g., many-many link tables
+          pkValue = bindings.getHeldValue( pkCol );
+          if( pkValue == null )
+          {
+            // null pk value means we can't query for the inserted row, game over
+            return reflectedRow;
+          }
+        }
         params.put( pkCol, pkValue );
-        paramTypes[i++] = jdbcTypes.get( pkCol );
+        ci[i] = allCols.get( pkCol );
+        i++;
+      }
+    }
+    else if( reflectedRow.size() == 1 && ctx.getAllCols().size() > 1 && ctx.getPkCols().size() == 1 )
+    {
+      // this block handles the case where getGeneratedKeys() only returns a single key that may have a db-specific name
+      // like sql server's GENERATED_KEYS or mysql's GENERATED_KEY, etc.
+
+      int i = 0;
+      for( Map.Entry<String, Object> entry : reflectedRow.entrySet() )
+      {
+        String pkCol = ctx.getPkCols().iterator().next();
+        ColumnInfo pkColumnInfo = ctx.getAllCols().get( pkCol );
+        if( pkColumnInfo != null )
+        {
+          ci = new ColumnInfo[] {pkColumnInfo};
+          params.put( pkCol, entry.getValue() );
+          break;
+        }
+      }
+      if( ci == null )
+      {
+        throw new SQLException( "Failed to retrieve generated primary key" );
       }
     }
     else
@@ -409,15 +568,15 @@ public class BasicCrudProvider implements CrudProvider
       return reflectedRow;
     }
 
-    QueryContext<T> queryContext = new QueryContext<>( ctx.getTxScope(), null, ctx.getDdlTableName(),
-      paramTypes, params, ctx.getConfigName(), null );
-    String sql = makeReadStatement( queryContext );
+    QueryContext<T> queryContext = new QueryContext<>( ctx.getTxScope(), null, ctx.getDdlTableName(), null, ci, params, ctx.getConfigName(), null );
+    Set<String> skipParams = new HashSet<>();
+    String sql = makeReadStatement( c.getMetaData(), queryContext, skipParams );
     try( PreparedStatement ps = c.prepareStatement( sql ) )
     {
-      setQueryParameters( queryContext, ps );
+      setQueryParameters( queryContext, ps, skipParams );
       try( ResultSet resultSet = ps.executeQuery() )
       {
-        Result<IBindingsBacked> resultRow = new Result<>( ctx.getAllColsWithJdbcType(), resultSet, rowBindings -> () -> rowBindings );
+        Result<IBindingsBacked> resultRow = new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
         Iterator<IBindingsBacked> iterator = resultRow.iterator();
         if( !iterator.hasNext() )
         {
@@ -433,6 +592,12 @@ public class BasicCrudProvider implements CrudProvider
     return reflectedRow;
   }
 
+  private static boolean isReflectedRowEmpty( Bindings reflectedRow )
+  {
+    return reflectedRow.isEmpty() ||
+      reflectedRow.size() == 1 && reflectedRow.entrySet().iterator().next().getValue() == null;
+  }
+
   public <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx )
   {  
     try
@@ -440,7 +605,7 @@ public class BasicCrudProvider implements CrudProvider
       StringBuilder sql = new StringBuilder();
       sql.append( "DELETE FROM " ).append( ctx.getDdlTableName() ).append( " WHERE\n" );
 
-      Set<String> allColNames = ctx.getAllColsWithJdbcType().keySet();
+      Set<String> allColNames = ctx.getAllCols().keySet();
 
       Set<String> whereColumns;
       if( !ctx.getPkCols().isEmpty() )
@@ -455,17 +620,26 @@ public class BasicCrudProvider implements CrudProvider
       {
         whereColumns = allColNames;
       }
+      Set<String> skipParams = new HashSet<>();
       if( !whereColumns.isEmpty() )
       {
+        ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
         int i = 0;
-        //noinspection unused
         for( String whereCol: whereColumns )
         {
           if( i++ > 0 )
           {
-            sql.append( ", " );
+            sql.append( " AND " );
           }
-          sql.append( "\"$whereCol\" = ?" );
+          ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereCol ).getJdbcType() );
+          String expr = accessor.getParameterExpression(
+            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
+          String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
+          sql.append( "$qwhereCol = " ).append( expr );
+          if( !expr.contains( "?" ) )
+          {
+            skipParams.add( whereCol );
+          }
         }
       }
       else
@@ -473,9 +647,9 @@ public class BasicCrudProvider implements CrudProvider
         throw new SQLException( "Expecting primary key, unique key, or provided columns for WHERE clause." );
       }
 
-      try( PreparedStatement ps = c.prepareStatement( sql.toString(), allColNames.toArray( new String[0] ) ) )
+      try( PreparedStatement ps = c.prepareStatement( sql.toString() ) )
       {
-        setDeleteParameters( ctx, whereColumns, ps );
+        setDeleteParameters( ctx, whereColumns, ps, skipParams );
         int result = ps.executeUpdate();
         if( result != 1 )
         {
@@ -489,14 +663,18 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps ) throws SQLException
+  private <T extends TableRow> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
-    for( Object param : ctx.getParams().values() )
+    for( Map.Entry<String, Object> entry : ctx.getParams().entrySet() )
     {
-      ValueAccessor accessor = accProvider.get( ctx.getJdbcParamTypes()[i] );
-      accessor.setParameter( ps, ++i, param );
+      if( skipParams.contains( entry.getKey() ) )
+      {
+        continue;
+      }
+      ValueAccessor accessor = accProvider.get( ctx.getParamInfo()[i].getJdbcType() );
+      accessor.setParameter( ps, ++i, entry.getValue() );
     }
   }
 }

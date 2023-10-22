@@ -21,6 +21,8 @@ import manifold.sql.rt.api.ValueAccessor;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.Year;
+import java.time.YearMonth;
 
 public class DateValueAccessor implements ValueAccessor
 {
@@ -33,14 +35,37 @@ public class DateValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
+    if( elem.getSqlType().equalsIgnoreCase( "year" ) )
+    {
+      return Year.class;
+    }
+    if( elem.getSqlType().equalsIgnoreCase( "yearmonth" ) )
+    {
+      return YearMonth.class;
+    }
     return LocalDate.class;
   }
 
   @Override
-  public LocalDate getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
     Date date = rs.getDate( elem.getPosition() );
-    return date == null ? null : date.toLocalDate();
+    if( date == null )
+    {
+      return null;
+    }
+
+    String sqlType = elem.getSqlType();
+    if( sqlType.equalsIgnoreCase( "year" ) )
+    {
+      return Year.of( date.toLocalDate().getYear() );
+    }
+    if( sqlType.equalsIgnoreCase( "yearmonth" ) )
+    {
+      LocalDate localDate = date.toLocalDate();
+      return YearMonth.of( localDate.getYear(), localDate.getMonth() );
+    }
+    return date.toLocalDate();
   }
 
   @Override
@@ -53,6 +78,17 @@ public class DateValueAccessor implements ValueAccessor
     else if( value instanceof LocalDate )
     {
       ps.setDate( pos, Date.valueOf( (LocalDate)value ) );
+    }
+    else if( value instanceof Year )
+    {
+// this should work, but does not for some drivers (MySql)
+//      Date year = Date.valueOf( ((Year)value).atDay( 1 ) );
+//      ps.setDate( pos, year );
+      ps.setShort( pos, (short)((Year)value).getValue() );
+    }
+    else if( value instanceof YearMonth )
+    {
+      ps.setDate( pos, Date.valueOf( ((YearMonth)value).atDay( 1 ) ) );
     }
     else
     {

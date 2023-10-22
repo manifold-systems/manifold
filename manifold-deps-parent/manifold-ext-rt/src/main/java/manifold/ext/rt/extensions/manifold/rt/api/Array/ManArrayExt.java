@@ -81,40 +81,88 @@ public class ManArrayExt
     return copy( array, -1 );
   }
 
+  /**
+   * Copies this array's elements into a new array of the specified {@code newLength}. If {@code newLength} is < 0, the
+   * new array's size matches this array, otherwise the new array is truncated or padded with {@code null} as {@code newLength}
+   * differs from this array's length.
+   *
+   * @param newLength The length of the new array. If < 0, the resulting array's length matches this array, otherwise the
+   *                  resulting array is truncated or padded with {@code null} accordingly.
+   * @return A newly allocated array with elements corresponding with this array.
+   */
   public static @Self Object copy( @This Object array, int newLength )
   {
     int length = Array.getLength( array );
+    newLength = newLength < 0 ? length : newLength;
     Object dest = Array.newInstance( array.getClass().getComponentType(), newLength < 0 ? length : newLength );
     //noinspection SuspiciousSystemArraycopy
-    System.arraycopy( array, 0, dest, 0, length );
+    System.arraycopy( array, 0, dest, 0, Math.min( length, newLength ) );
     return dest;
   }
 
+  /**
+   * Copies the elements of this array to a specified array, truncating or padding with nulls as needed.
+   */
   public static @Self Object copyTo( @This Object array, @Self Object to )
   {
     //noinspection SuspiciousSystemArraycopy
-    System.arraycopy( array, 0, to, 0, Array.getLength( array ) );
+    System.arraycopy( array, 0, to, 0, Math.min( Array.getLength( array ), Array.getLength( to ) ) );
     return to;
   }
 
+  /**
+   * Copies a range of elements from this array to a newly allocated array. Note, if {@code to} < 0, the range contains
+   * the remainder of this array's elements.
+   *
+   * @param from The start point of the range, inclusive.
+   * @param to The endpoint of the range, exclusive. A negative value may be used as a convenience to use this array's endpoint.
+   * @return A newly allocated array containing the specified range of elements from this array.
+   */
   public static @Self Object copyRange( @This Object array, int from, int to )
   {
-    int length = Array.getLength( array );
-    to = to < 0 ? length : to;
-    Object dest = Array.newInstance( array.getClass().getComponentType(), to - from );
+    to = to < 0 ? Array.getLength( array ) : to;
+
+    int rangeLength = to - from;
+    if( rangeLength < 0 )
+    {
+      throw new IllegalArgumentException( from + " > " + to );
+    }
+
+    Object dest = Array.newInstance( array.getClass().getComponentType(), rangeLength );
     //noinspection SuspiciousSystemArraycopy
-    System.arraycopy( array, from, dest, 0, to - from );
+    System.arraycopy( array, from, dest, 0, rangeLength );
     return dest;
   }
 
+  /**
+   * Copies a range of elements from this array to the {@code target} array. Note, if {@code to} < 0, the range contains
+   * the remainder of this array's elements.
+   *
+   * @param from The starting point of the range, inclusive.
+   * @param to The endpoint of the range, exclusive. A negative value may be used as a convenience to use this array's endpoint.
+   * @return The {@code target} array containing the specified range of elements from this array.
+   */
   public static @Self Object copyRangeTo( @This Object array, int from, int to, @Self Object target, int targetIndex )
   {
     to = to < 0 ? Array.getLength( array ) : to;
+
+    int rangeLength = to - from;
+    if( rangeLength < 0 )
+    {
+      throw new IllegalArgumentException( from + " > " + to );
+    }
+
     //noinspection SuspiciousSystemArraycopy
-    System.arraycopy( array, from, target, targetIndex, to - from );
+    System.arraycopy( array, from, target, targetIndex, rangeLength );
     return target;
   }
 
+  /**
+   * Returns a sequential {@link Stream} with this array as its source. Note, this array is assumed to be unmodified
+   * during use
+   *
+   * @return A {@code Stream} for the array
+   */
   public static Stream<@Self(true) Object> stream( @This Object array )
   {
     primitiveCheck( array );

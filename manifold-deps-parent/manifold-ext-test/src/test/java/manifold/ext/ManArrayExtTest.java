@@ -109,6 +109,9 @@ public class ManArrayExtTest extends TestCase
 
     String[] strArrayCopy = strArray.copy( strArray.length + 1 );
     assertArrayEquals( new String[]{"a", "b", "c", "d", null}, strArrayCopy );
+
+    String[] strArrayCopyTruncated = strArray.copy( strArray.length - 1 );
+    assertArrayEquals( new String[]{"a", "b", "c"}, strArrayCopyTruncated );
   }
 
   public void testCopyTo()
@@ -119,6 +122,8 @@ public class ManArrayExtTest extends TestCase
     String[] strArray = {"a", "b", "c", "d"};
     assertArrayEquals( strArray, strArray.copyTo( new String[4] ) );
     assertNotSame( strArray, strArray.copyTo( new String[4] ) );
+
+    assertArrayEquals( new String[] {"a", "b", "c"}, strArray.copyTo( new String[3] ) );
   }
 
   public void testCopyRange()

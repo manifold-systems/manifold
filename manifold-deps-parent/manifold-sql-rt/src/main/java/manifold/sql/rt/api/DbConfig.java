@@ -19,6 +19,7 @@ package manifold.sql.rt.api;
 import manifold.rt.api.Bindings;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 /**
@@ -49,16 +50,20 @@ public interface DbConfig
    * <p/>
    * Note, it is common for JDBC drivers to support naming the catalog in the URL. In this case the catalog name is unnecessary
    * in the dbconfig.
+   * <p/>
+   * Note, some drivers provide schema names as catalog names i.e., catalogs without schemas. For instance, MySql does this.
+   * In this case the catalog names are queried from the database metadata, but used as schema names. Do not provide the
+   * catalog name if it is not the container of the schema.
    */
   String getCatalogName();
 
   /**
    * (Optional) The name of the database schema used for this configuration. If no "schemaName" is provided, the dbconfig
    * file name is used as the schema name. If the file name, does not correspond with a schema in the database, a default
-   * schema may be chosen.
+   * schema will be selected automatically.
    * <p/>
-   * Note, it is common for JDBC drivers to support naming the schema in the URL. In this case the schema name is unnecessary
-   * in the dbconfig.
+   * Note, some drivers provide schema names as catalog names e.g., MySql. In this case the catalog names are queried from
+   * the catalogs of the driver's database metadata.
    */
   String getSchemaName();
 
@@ -74,7 +79,7 @@ public interface DbConfig
    */
   String getUrl();
 
-  /** (Optional) JDBC URL for database (build time). This database may be empty, it is used solely for metadata during compilation. */
+  /** (Optional) JDBC URL for database (build time). This database may be void of data, it is used solely for metadata during compilation. */
   String getBuildUrl();
 
   /**
@@ -105,6 +110,9 @@ public interface DbConfig
   /** (Optional) JDBC connection properties in JSON format. These properties are driver-specific. See {@link #toProperties()}. */
   Bindings getProperties();
 
+  /** (Optional) The DDL for the database/schema this configuration is using. This is often a DDL dump from the DBMS. */
+  String getDbDdl();
+
   /** Returns the build URL if provided, otherwise the runtime URL */
   default String getBuildUrlOtherwiseRuntimeUrl()
   {
@@ -127,7 +135,7 @@ public interface DbConfig
     String user = getUser();
     if( user != null )
     {
-      props.put( "user", user );
+      props.put( "username", user );
     }
 
     String password = getPassword();
@@ -139,5 +147,5 @@ public interface DbConfig
     return props;
   }
 
-  void init( Connection connection, String url );
+  void init( Connection connection, String url, String schemaName, String ddl ) throws SQLException;
 }

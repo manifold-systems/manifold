@@ -18,11 +18,10 @@ package manifold.sql.query.jdbc;
 
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.api.QueryParameter;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.TypeProvider;
 
-import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 public class JdbcQueryParameter implements QueryParameter
 {
@@ -30,56 +29,73 @@ public class JdbcQueryParameter implements QueryParameter
   private final int _position;
   private final String _name;
   private final int _jdbcType;
+  private final String _sqlType;
   private final int _size;
   private final int _scale;
   private final boolean _isNullable;
   private final boolean _isSigned;
   private final String _javaClassNameForGetObject;
 
-  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, PreparedStatement preparedStatement ) throws SQLException
+  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, DatabaseMetaData metaData ) throws SQLException
   {
     _position = paramIndex;
     _name = name == null ? "p" + paramIndex : name;
     _queryTable = queryTable;
 
-    Pair<Integer, Boolean> types = getJdbcType( preparedStatement, paramMetaData, paramIndex );
-    int jdbcType = types.getFirst();
+    Pair<Integer, Boolean> types = getJdbcType( paramMetaData, paramIndex, metaData );
+    _jdbcType = types.getFirst();
     boolean isFlakyDriver = types.getSecond();
 
-    _jdbcType = jdbcType;
-    _size = paramMetaData.getPrecision( paramIndex );
-    _scale = paramMetaData.getScale( paramIndex );
-    _isNullable = paramMetaData.isNullable( paramIndex ) != ParameterMetaData.parameterNoNulls;
-    _isSigned = paramMetaData.isSigned( paramIndex );
-    _javaClassNameForGetObject = isFlakyDriver
-      // vibrant path (dynamically typed systems like sqlite)
-      ? Object.class.getTypeName()
-      // normal path
-      : paramMetaData.getParameterClassName( paramIndex );
+    String sqlType;
+    int size;
+    int scale;
+    boolean isNullable;
+    boolean isSigned;
+    String javaClassNameForGetObject;
+
+    if( isFlakyDriver )
+    {
+      sqlType = "varchar";
+      size = 0;
+      scale = 0;
+      isNullable = true;
+      isSigned = true;
+      javaClassNameForGetObject = Object.class.getTypeName();
+    }
+    else
+    {
+      sqlType = paramMetaData.getParameterTypeName( paramIndex );
+      size = paramMetaData.getPrecision( paramIndex );
+      scale = paramMetaData.getScale( paramIndex );
+      isNullable = paramMetaData.isNullable( paramIndex ) != ParameterMetaData.parameterNoNulls;
+      isSigned = paramMetaData.isSigned( paramIndex );
+      javaClassNameForGetObject = paramMetaData.getParameterClassName( paramIndex );
+    }
+    
+    _sqlType = sqlType;
+    _size = size;
+    _scale = scale;
+    _isNullable = isNullable;
+    _isSigned = isSigned;
+    _javaClassNameForGetObject = javaClassNameForGetObject;
   }
 
-  private Pair<Integer, Boolean> getJdbcType( PreparedStatement preparedStatement, ParameterMetaData paramMetaData, int paramIndex ) throws SQLException
+  private Pair<Integer, Boolean> getJdbcType( ParameterMetaData paramMetaData, int paramIndex, DatabaseMetaData dbMetadata ) throws SQLException
   {
     int jdbcType;
     boolean isFlakyDriver = false;
     try
     {
-      jdbcType = paramMetaData.getParameterType( paramIndex );
-
-      // sqlite is flaky to say the least
-      if( jdbcType == Types.VARCHAR &&
-        "sqlite".equalsIgnoreCase( getTable().getSchema().getDatabaseProductName() ) )
-      {
-        jdbcType = Types.OTHER;
-        isFlakyDriver = true;
-      }
+      TypeProvider typeProvider = Dependencies.instance().getTypeProvider();
+      jdbcType = typeProvider.getQueryParameterType( paramIndex, paramMetaData, dbMetadata );
     }
     catch( SQLException se )
     {
       // (circus music)
       // Some drivers don't provide query parameter types when the parameter's value is not set. For instance, depending
       // on the version, SQLite will either return VARCHAR for all parameters or it will throw an exception when a parameter
-      // is not set, hence this catch block.
+      // is not set, hence this catch block. Mysql throws the borfin exception too unless the "generateSimpleParameterMetadata"
+      // url parameter is set in which case it provides the same crap sandwich as sqlite (as of mysql driver 8.1).
       //
       jdbcType = Types.OTHER;
       isFlakyDriver = true;
@@ -92,6 +108,12 @@ public class JdbcQueryParameter implements QueryParameter
   public int getJdbcType()
   {
     return _jdbcType;
+  }
+
+  @Override
+  public String getSqlType()
+  {
+    return _sqlType;
   }
 
   @Override

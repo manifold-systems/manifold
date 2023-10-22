@@ -85,7 +85,7 @@ out.println("It is ${hour} o'clock"); // prints "It is 5 o'clock"
 
 # Template Files
 
-Template **_files_** are much more powerful and are documented in project [ManTL](http://manifold.systems/manifold-templates.html).
+Template **_files_** are much more powerful and are documented in [manifold-templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates).
 
 > Clone the [Manifold sample Web App project](https://github.com/manifold-systems/manifold-sample-web-app) to quickly
 begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
@@ -163,8 +163,8 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-strings:2023.1.26'
-    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.26'
+    annotationProcessor 'systems.manifold:manifold-strings:2023.1.29'
+    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.29'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -206,7 +206,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.26</manifold.version>
+        <manifold.version>2023.1.29</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->

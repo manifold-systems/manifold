@@ -17,12 +17,10 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.BaseElement;
+import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
+import java.sql.*;
 
 public class BitValueAccessor implements ValueAccessor
 {
@@ -37,7 +35,7 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
-      return byte[].class;
+      return String.class;
     }
     return elem.canBeNull() ? Boolean.class : boolean.class;
   }
@@ -47,7 +45,12 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
-      return rs.getBytes( elem.getPosition() );
+      String productName = rs.getStatement().getConnection().getMetaData().getDatabaseProductName();
+      if( productName.toLowerCase().contains( "mysql" ) )
+      {
+        return rs.getBigDecimal( elem.getPosition() ).toBigInteger().toString( 2 );
+      }
+      return rs.getString( elem.getPosition() );
     }
     boolean value = rs.getBoolean( elem.getPosition() );
     return !value && rs.wasNull() ? null : value;
@@ -70,7 +73,68 @@ public class BitValueAccessor implements ValueAccessor
     }
     else
     {
-      ps.setObject( pos, value, Types.BOOLEAN );
+      ps.setObject( pos, value, getJdbcType() );
     }
+  }
+
+  @Override
+  public String getParameterExpression( DatabaseMetaData metaData, Object value, ColumnInfo ci )
+  {
+    // This is a special case for Postgres. It requires casts for some data types such as `bit` :\
+    // See OtherValueAccessor for more of the same.
+    // Note, SQL cast expr does not work here, hence the literal value expressions.
+    try
+    {
+      String productName = metaData.getDatabaseProductName();
+      if( productName.equalsIgnoreCase( "postgresql" ) || productName.equalsIgnoreCase( "mysql" ) )
+      {
+        if( !ci.getSqlType().toLowerCase().contains( "bool" ) )
+        {
+          // note, checking for "bool" because postgres assigns "bit" jdbc type to "bool" sql types,
+          // and then throws exceptions about this :\
+
+          // "bit" types must be manually parameterized with postgres :(
+          return coerce( productName, value, ci );
+        }
+      }
+    }
+    catch( SQLException e )
+    {
+      throw new RuntimeException( e );
+    }
+    return "?";
+  }
+
+  private String coerce( String productName, Object value, ColumnInfo ci ) throws SQLException
+  {
+    if( value == null )
+    {
+      return "NULL";
+    }
+    if( value instanceof Boolean )
+    {
+      return "B'" + (((boolean)value) ? '1' : '0') + "'";
+    }
+    if( value instanceof CharSequence )
+    {
+      return "B'" + value + "'" + cast( productName, ci );
+    }
+    throw new SQLException( "Unexpected type for BIT: " + value.getClass() );
+  }
+
+  private String cast( String productName, ColumnInfo ci )
+  {
+    if( !productName.equalsIgnoreCase( "postgresql" ) )
+    {
+      // only postgres requires a cast
+      return "";
+    }
+
+    Integer size = ci.getSize();
+    if( size != null && size.intValue() > 0 )
+    {
+      return "::" + ci.getSqlType() + "(" + size.intValue() + ")";
+    }
+    return "";
   }
 }
