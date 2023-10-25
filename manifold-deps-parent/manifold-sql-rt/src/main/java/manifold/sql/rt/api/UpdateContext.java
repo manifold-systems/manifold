@@ -51,6 +51,11 @@ public class UpdateContext<T extends ResultRow>
     return _table;
   }
 
+  public OperableTxBindings getBindings()
+  {
+    return (OperableTxBindings)_table.getBindings();
+  }
+
   public String getDdlTableName()
   {
     return _ddlTableName;

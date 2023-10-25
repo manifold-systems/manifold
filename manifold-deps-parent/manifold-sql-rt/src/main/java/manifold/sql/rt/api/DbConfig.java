@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Configuration for connecting to a JDBC datasource. Maps directly to JSON data obtained from a {@code .dbconfig} file,
+ * Configuration for connecting to a JDBC data source. Maps directly to JSON data obtained from a {@code .dbconfig} file,
  * or at runtime if the config is provided from a {@link DbConfigProvider} SPI implementation, it is obtained programmatically.
  * At compile-time the dbconfig is supplied as a resource file.
  */

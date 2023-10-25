@@ -16,16 +16,14 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
-
-
-public interface TxBindings extends Bindings
+/**
+ * Simple factory that customizes nothing.
+ */
+public class DefaultCustomEntityFactory implements CustomEntityFactory
 {
-  TableRow getOwner();
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  @Override
+  public <T extends TableRow> T newInstance( TxBindings txBindings, Class<T> entityInterface )
+  {
+    return null;
+  }
 }

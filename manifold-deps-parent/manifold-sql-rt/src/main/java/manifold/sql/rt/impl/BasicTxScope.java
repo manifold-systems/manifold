@@ -113,14 +113,14 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public boolean commit() throws SQLException
+  public void commit() throws SQLException
   {
     _lock.writeLock().lock();
     try
     {
       if( _rows.isEmpty() )
       {
-        return false;
+        return;
       }
 
       TableRow first = _rows.stream().findFirst().get();
@@ -142,12 +142,10 @@ class BasicTxScope implements OperableTxScope
 
           for( TableRow row : _rows )
           {
-            row.getBindings().commit();
+            ((OperableTxBindings)row.getBindings()).commit();
           }
 
           _rows.clear();
-
-          return true;
         }
         catch( SQLException e )
         {
@@ -155,12 +153,30 @@ class BasicTxScope implements OperableTxScope
 
           for( TableRow row : _rows )
           {
-            row.getBindings().dropHeldValues();
+            ((OperableTxBindings)row.getBindings()).dropHeldValues();
           }
 
           throw e;
         }
       }
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  @Override
+  public void revert() throws SQLException
+  {
+    _lock.writeLock().lock();
+    try
+    {
+      for( TableRow row : _rows )
+      {
+        ((OperableTxBindings)row.getBindings()).revert();
+      }                   
+      _rows.clear();
     }
     finally
     {
@@ -217,14 +233,14 @@ class BasicTxScope implements OperableTxScope
 
     for( FkDep dep : unresolvedDeps )
     {
-      Object pkId = dep.pkRow.getBindings().getHeldValue( dep.pkName );
+      Object pkId = ((OperableTxBindings)dep.pkRow.getBindings()).getHeldValue( dep.pkName );
       if( pkId == null )
       {
         throw new SQLException( "pk value is null" );
       }
 
       // update the fk column that was null initially due to fk cycle
-      TxBindings fkBindings = dep.fkRow.getBindings();
+      OperableTxBindings fkBindings = (OperableTxBindings)dep.fkRow.getBindings();
       Object priorPkId = fkBindings.put( dep.fkName, pkId );
       try
       {
@@ -255,12 +271,12 @@ class BasicTxScope implements OperableTxScope
         doCrud( c, pkTableRow, unresolvedDeps, visited );
 
         // patch fk
-        Object pkId = pkTableRow.getBindings().getHeldValue( fkDep.pkName );
+        Object pkId = ((OperableTxBindings)pkTableRow.getBindings()).getHeldValue( fkDep.pkName );
         if( pkId != null )
         {
           // pkTableRow was inserted, assign fk value now, this is assigned as an INSERT param in BasicCrudProvider when
           // the value of the param is a KeyRef
-          row.getBindings().holdValue( fkDep.fkName, pkId );
+          ((OperableTxBindings)row.getBindings()).holdValue( fkDep.fkName, pkId );
         }
         else
         {

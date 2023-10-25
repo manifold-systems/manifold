@@ -73,7 +73,11 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
         R resultRow = makeRow.apply( makeBindings.apply( row ) );
         if( resultRow instanceof TableRow )
         {
-          ((TableRow)resultRow).getBindings().setOwner( (TableRow)resultRow );
+          TxBindings bindings = ((TableRow)resultRow).getBindings();
+          if( bindings instanceof OperableTxBindings )
+          {
+            ((OperableTxBindings)bindings).setOwner( (TableRow)resultRow );
+          }
         }
         _results.add( resultRow );
       }

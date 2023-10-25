@@ -138,7 +138,7 @@ class SchemaParentType
       .addInterface( TableRow.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
     addActualNameAnnotation( srcClass, table.getName(), false );
-    addImplClass( srcClass );
+    addBindingsHostClass( srcClass );
     addCreateMethods( srcClass, table );
     addReadMethods( srcClass, table );
     addDeleteMethod( srcClass );
@@ -151,9 +151,9 @@ class SchemaParentType
     enclosingType.addInnerClass( srcClass );
   }
 
-  private void addImplClass( SrcLinkedClass interfaceType )
+  private void addBindingsHostClass( SrcLinkedClass interfaceType )
   {
-    String identifier = "Impl";
+    String identifier = "Host";
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, interfaceType, Class )
       .addInterface( interfaceType.getSimpleName() );
@@ -279,7 +279,7 @@ class SchemaParentType
 
     StringBuilder sb = new StringBuilder();
     sb.append( "return new Builder() {\n" );
-    sb.append( "        Bindings _bindings = new DataBindings();\n" );
+    sb.append( "        ${Bindings.class.getName()} _bindings = new DataBindings();\n" );
     sb.append( "        {\n" );
     if( fkRefs )
     {
@@ -291,7 +291,7 @@ class SchemaParentType
     }
     sb.append( "        }\n" );
 
-    sb.append( "        @Override public Bindings getBindings() { return _bindings; }\n" );
+    sb.append( "        @Override public ${Bindings.class.getName()} getBindings() { return _bindings; }\n" );
     sb.append( "      };" );
     method.body( sb.toString() );
   }
@@ -357,8 +357,9 @@ class SchemaParentType
       initFromParameters( table, sb, "args" );
     }
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n" );
-    sb.append( "      $tableName tableRow = new Impl(bindings);\n" );
-    sb.append( "      tableRow.getBindings().setOwner(tableRow);\n" );
+    sb.append( "      $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" );
+    sb.append( "      $tableName tableRow = customRow != null ? customRow : new Host(bindings);\n" );
+    sb.append( "      ((OperableTxBindings)tableRow.getBindings()).setOwner(tableRow);\n" );
     sb.append( "      ((OperableTxScope)txScope).addRow(tableRow);\n" );
     sb.append( "      return tableRow;" );
     method.body( sb.toString() );
@@ -541,8 +542,9 @@ class SchemaParentType
     srcInterface.addMethod( method );
     method.body(
         "BasicTxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, Builder.this.getBindings());\n" +
-        "        $tableName tableRow = new Impl(bindings);\n" +
-        "        tableRow.getBindings().setOwner(tableRow);\n" +
+        "        $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" +
+        "        $tableName tableRow = customRow != null ? customRow : new Host(bindings);\n" +
+        "        ((OperableTxBindings)tableRow.getBindings()).setOwner(tableRow);\n" +
         "        ((OperableTxScope)txScope).addRow(tableRow);\n" +
         "        return tableRow;" );
   }
@@ -641,6 +643,7 @@ class SchemaParentType
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( TxScope.class );
     srcClass.addImport( OperableTxScope.class );
+    srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
@@ -702,7 +705,10 @@ class SchemaParentType
     String configName = _model.getDbConfig().getName();
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(" +
       "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
-      "rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "rowBindings -> {" +
+      "  $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "  return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "} ));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
     srcClass.addMethod( fkFetchMethod );
@@ -824,7 +830,10 @@ class SchemaParentType
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
       "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
-      "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "      rowBindings -> {" +
+      "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "        return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }
@@ -860,7 +869,7 @@ class SchemaParentType
       .modifiers( Flags.DEFAULT )
       .name( "delete" )
       .addParam( "delete", boolean.class );
-    method.body( "getBindings().setDelete(delete);" );
+    method.body( "((OperableTxBindings)getBindings()).setDelete(delete);" );
     srcClass.addMethod( method );
   }
 
@@ -904,7 +913,10 @@ class SchemaParentType
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
       "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
-      "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "      rowBindings -> {" +
+      "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "        return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }
@@ -964,7 +976,10 @@ class SchemaParentType
       .append( "      paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     sb.append( "      return new ${Runner.class.getName()}<$tableFqn>(\n" +
       "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", \n" +
-      "          rowBindings -> new $tableFqn.Impl(rowBindings)), \"$sql\")\n" +
+      "          rowBindings -> {" +
+      "            $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "            return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "          } ), \"$sql\")\n" +
       "        .fetch().toList();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );

@@ -67,5 +67,7 @@ public interface Dependencies
 
   ValueAccessorProvider getValueAccessorProvider();
 
+  CustomEntityFactory getCustomEntityFactory();
+
   <T> T fetch( Class<T> cls );
 }

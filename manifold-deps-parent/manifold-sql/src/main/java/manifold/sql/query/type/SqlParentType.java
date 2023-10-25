@@ -464,7 +464,7 @@ class SqlParentType
 
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings initialState = new DataBindings();\n" );
-    sb.append( "    TxBindings rowBindings = Row.this.getBindings();\n" );
+    sb.append( "    OperableTxBindings rowBindings = (OperableTxBindings)Row.this.getBindings();\n" );
     for( QueryColumn queryColumn : selectedTable.getSecond() )
     {
       //noinspection unused
@@ -504,6 +504,7 @@ class SqlParentType
     srcClass.addImport( TxScope.class );
     srcClass.addImport( Dependencies.class );
     srcClass.addImport( TxBindings.class );
+    srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );

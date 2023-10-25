@@ -39,14 +39,13 @@ public class BasicCrudProvider implements CrudProvider
   {
     try
     {
-      T table = ctx.getTable();
       Set<String> skipParams = new HashSet<>();
       String sql = makeInsertStmt( c.getMetaData(), ctx, skipParams );
       int[] reflectedColumnCount = {0};
       try( PreparedStatement ps = prepareStatement( c, ctx, sql, reflectedColumnCount ) )
       {
         setInsertParameters( ctx, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
+        executeAndFetchRow( c, ctx, ps, reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -133,12 +132,12 @@ public class BasicCrudProvider implements CrudProvider
       int jdbcType = ctx.getAllCols().get( entry.getKey() ).getJdbcType();
       ValueAccessor accessor = accProvider.get( jdbcType );
       Object value = entry.getValue();
-      value = patchFk( value, entry.getKey(), ctx.getTable().getBindings() );
+      value = patchFk( value, entry.getKey(), ctx.getBindings() );
       accessor.setParameter( ps, ++i, value );
     }
   }
 
-  private static Object patchFk( Object value, String colName, TxBindings bindings )
+  private static Object patchFk( Object value, String colName, OperableTxBindings bindings )
   {
     // We assign a Pair<TableRow, String> to an fk column when the tablerow is not yet inserted.
     // Normally this is resolved by TxScope commit logic, ordering inserts according to fk dependencies, however if there
@@ -297,11 +296,10 @@ public class BasicCrudProvider implements CrudProvider
   {
     try
     {
-      T table = ctx.getTable();
       StringBuilder sql = new StringBuilder();
       sql.append( "UPDATE " ).append( ctx.getDdlTableName() ).append( " SET\n" );
       int i = 0;
-      Map<String, Object> changeEntries = table.getBindings().uncommittedChangesEntrySet();
+      Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
       if( changeEntries.isEmpty() )
       {
         throw new SQLException( "Expecting changed entries." );
@@ -354,7 +352,7 @@ public class BasicCrudProvider implements CrudProvider
           ColumnInfo columnInfo = ctx.getAllCols().get( whereCol );
           ValueAccessor accessor = accProvider.get( columnInfo.getJdbcType() );
           String expr = accessor.getParameterExpression(
-            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), columnInfo );
+            c.getMetaData(), ctx.getBindings().getPersistedStateValue( whereCol ), columnInfo );
           String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )
@@ -372,7 +370,7 @@ public class BasicCrudProvider implements CrudProvider
       try( PreparedStatement ps = prepareStatement( c, ctx, sql.toString(), reflectedColumnCount ) )
       {
         setUpdateParameters( ctx, whereColumns, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
+        executeAndFetchRow( c, ctx, ps, reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -383,7 +381,7 @@ public class BasicCrudProvider implements CrudProvider
 
   private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
-    Map<String, Object> changeEntries = ctx.getTable().getBindings().uncommittedChangesEntrySet();
+    Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
     if( changeEntries.isEmpty() )
     {
       throw new SQLException( "Expecting changed entries." );
@@ -410,7 +408,7 @@ public class BasicCrudProvider implements CrudProvider
         }
 
         ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
-        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
+        Object value = ctx.getBindings().getPersistedStateValue( whereColumn );
         accessor.setParameter( ps, ++i, value );
       }
     }
@@ -430,7 +428,7 @@ public class BasicCrudProvider implements CrudProvider
       for( String whereColumn : whereColumns )
       {
         ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
-        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
+        Object value = ctx.getBindings().getPersistedStateValue( whereColumn );
         if( skipParams.contains( whereColumn ) )
         {
           continue;
@@ -445,7 +443,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   private <T extends TableRow> void executeAndFetchRow(
-    Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table, boolean hasReflectedColumns ) throws SQLException
+    Connection c, UpdateContext<T> ctx, PreparedStatement ps, boolean hasReflectedColumns ) throws SQLException
   {
     int result = ps.executeUpdate();
     if( result != 1 )
@@ -486,17 +484,16 @@ public class BasicCrudProvider implements CrudProvider
     }
 
     // some drivers (sqlite) don't fetch the gen key columns supplied in the prepared statement, so we issue a Select
-    reflectedRow = maybeFetchInsertedRow( c, ctx, table, reflectedRow );
+    reflectedRow = maybeFetchInsertedRow( c, ctx, reflectedRow );
     if( isReflectedRowEmpty( reflectedRow ) )
     {
       throw new SQLException( "Failed to reflect newly inserted row." );
     }
 
-    table.holdValues( reflectedRow );
+    ctx.getBindings().holdValues( reflectedRow );
   }
 
-  private <T extends TableRow> Bindings maybeFetchInsertedRow(
-    Connection c, UpdateContext<T> ctx, TxBindings bindings, Bindings reflectedRow ) throws SQLException
+  private <T extends TableRow> Bindings maybeFetchInsertedRow( Connection c, UpdateContext<T> ctx, Bindings reflectedRow ) throws SQLException
   {
     DataBindings params = new DataBindings();
     ColumnInfo[] ci = null;
@@ -520,7 +517,7 @@ public class BasicCrudProvider implements CrudProvider
       int i = 0;
       for( String pkCol : pkCols )
       {
-        Object pkValue = bindings.get( pkCol );
+        Object pkValue = ctx.getBindings().get( pkCol );
         if( pkValue == null )
         {
           // null pk value means we can't query for the inserted row, game over
@@ -529,7 +526,7 @@ public class BasicCrudProvider implements CrudProvider
         else if( pkValue instanceof TableRow ) // from a KeyRef, see BasicTxBindings#get()
         {
           // in this case an fk is part of the pk, e.g., many-many link tables
-          pkValue = bindings.getHeldValue( pkCol );
+          pkValue = ctx.getBindings().getHeldValue( pkCol );
           if( pkValue == null )
           {
             // null pk value means we can't query for the inserted row, game over
@@ -633,7 +630,7 @@ public class BasicCrudProvider implements CrudProvider
           }
           ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereCol ).getJdbcType() );
           String expr = accessor.getParameterExpression(
-            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
+            c.getMetaData(), ctx.getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
           String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )

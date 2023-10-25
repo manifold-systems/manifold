@@ -21,9 +21,10 @@ import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.util.concurrent.LockingLazyVar;
 
+import java.sql.SQLException;
 import java.util.*;
 
-public class BasicTxBindings implements TxBindings
+public class BasicTxBindings implements OperableTxBindings
 {
   /**
    * Persisted state
@@ -185,10 +186,18 @@ public class BasicTxBindings implements TxBindings
     _onHold.clear();
   }
 
+  /**
+   * Commit is called _after_ a successful commit on the TxScope.
+   * @throws SQLException
+   */
   @Override
-  public void commit()
+  public void commit() throws SQLException
   {
-    // commit is called _after_ a successful commit on the TxScope
+    if( _txKind == TxKind.Unknown )
+    {
+      throw new SQLException( "Cannot commit bindings in 'Unknown' state. Bindings were likely deleted or rolled back from creation." );
+    }
+
     if( _delete )
     {
       _persistedState.clear();
@@ -204,6 +213,24 @@ public class BasicTxBindings implements TxBindings
     _onHold.clear();
 
     _txKind = TxKind.Update;
+  }
+
+  public void revert() throws SQLException
+  {
+    switch( _txKind )
+    {
+      case Insert:
+        _changes.clear();
+        _txKind = TxKind.Unknown;
+        break;
+      case Update:
+        _changes.clear();
+        _delete = false;
+        break;
+      case Unknown:
+      default:
+        throw new SQLException( "Cannot rollback bindings in 'Unknown' state." );
+    }
   }
 
   @Override
@@ -222,6 +249,11 @@ public class BasicTxBindings implements TxBindings
     if( isForDelete() )
     {
       throw new RuntimeException( "Illegal operation, instance pending deletion" );
+    }
+
+    if( _txKind == TxKind.Unknown )
+    {
+      throw new RuntimeException( "Cannot modify bindings in 'Unknown' state. Bindings were likely deleted or rolled back from creation." );
     }
 
     checkKey( name );
@@ -336,7 +368,7 @@ public class BasicTxBindings implements TxBindings
   }
 
   /**
-   * Note, sets the key's value to null in the changes bindings
+   * Note, sets the key's value to null in the changes bindings, to distinguish null values from unset values.
    */
   public Object remove( Object key )
   {
