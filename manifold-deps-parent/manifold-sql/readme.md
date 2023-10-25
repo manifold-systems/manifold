@@ -11,9 +11,9 @@
 
 <p><img src="http://manifold.systems/images/img.png" alt="manifold-sql" width="100%" height="100%"/></p>
 
-<p><img src="http://manifold.systems/images/img2.png" alt="manifold-sql" width="100%" height="100%"/></p>
+<p><img src="http://manifold.systems/images/img_2.png" alt="manifold-sql" width="100%" height="100%"/></p>
 
-<p><img src="http://manifold.systems/images/img1.png" alt="manifold-sql" width="100%" height="100%"/></p>
+<p><img src="http://manifold.systems/images/img_1.png" alt="manifold-sql" width="100%" height="100%"/></p>
 
 ## Coming soon. . .
 
