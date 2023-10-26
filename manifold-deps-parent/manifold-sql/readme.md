@@ -27,10 +27,10 @@ and dependencies to your gradle or maven build.
 
 ### Examples
 
-<img width="600" height="90" align="top" src="../../docs/images/img_3.png">
+<img width="800" height="120" align="top" src="../../docs/images/img_3.png">
 <br>
 <br>
-<img width="440" height="320" align="top" src="../../docs/images/img.png">
+<img width="550" height="400" align="top" src="../../docs/images/img.png">
 <br>
 
 ## Coming _**real**_ soon. . .
