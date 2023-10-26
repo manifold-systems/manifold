@@ -1,20 +1,38 @@
+>**⚠ _Experimental Feature_**
+
 # Manifold : SQL
 
->**⚠ _Experimental Feature_**
-                   
-- Use actual SQL directly and type-safely in your Java code.<br>
-- Inline SQL directly in Java source. Or, use .sql files.<br>
-- Type-safe DDL. Type-safe queries. Type-safe results.<br>
-- No code generator build steps. No ORM shenanigans. No DSL mumbo-jumbo.<br>
-- Full CRUD support with DDL type projections<br>
-- Built-in transaction scoping, commit entity changes as needed<br>
-- Tested with popular JDBC database drivers and SQL dialects.<br>
+![latest](https://img.shields.io/badge/latest-v2023.1.29-darkgreen.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+
+Manifold makes it possible to use raw SQL directly and type-safely from Java code.
+
+Use Manifold simply by adding the Manifold compiler [plugin](https://docs.oracle.com/javase/8/docs/jdk/api/javac/tree/com/sun/source/util/Plugin.html)
+and dependencies to your gradle or maven build.
+
+---
+
+## Features:
+- Use actual SQL directly and type-safely in your Java code<br>
+- _Inline_ SQL directly in Java source, or use .sql files<br>
+- Type-safe DDL - Type-safe queries - Type-safe results<br>
+- Full CRUD support with DDL type projections (entities)<br>
+- No code gen build steps - No ORM shenanigans - No DSL mumbo-jumbo<br>
+- Built-in transaction scoping, commit/revert entity changes as needed<br>
+- Tested with popular JDBC database drivers and SQL dialects<br>
 - Pluggable with simple dependency injection<br>
 - Supports Java 8 - 21 (LTS releases)
 
-![img.png](../../docs/images/img_3.png)
-![img.png](../../docs/images/img.png)
 
-## Coming soon. . .
+
+### Examples
+
+<img width="600" height="90" align="top" src="../../docs/images/img_3.png">
+<br>
+<br>
+<img width="440" height="320" align="top" src="../../docs/images/img.png">
+<br>
+
+## Coming _**real**_ soon. . .
 
 
