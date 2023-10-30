@@ -274,7 +274,7 @@ projects' docs.
 # Platforms
 
 Manifold supports:
-* Java SE (8 - 20)
+* Java SE (8 - 21)
 * [Android](http://manifold.systems/android.html)
 * [Kotlin](http://manifold.systems/kotlin.html) (limited)
 

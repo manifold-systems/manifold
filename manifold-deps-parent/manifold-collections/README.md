@@ -147,7 +147,7 @@ mvn compile
 ## Using this project
 
 The `manifold-collections` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions
-8 - 20.
+8 - 21.
 
 ## Binaries
 
@@ -159,7 +159,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 20), the script takes care of the rest.  
+version (8 - 21), the script takes care of the rest.  
 ```groovy
 plugins {
     id 'java'
