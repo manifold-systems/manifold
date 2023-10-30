@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.schema.customize;
 
-import manifold.rt.api.Bindings;
+import manifold.sql.rt.api.CustomEntity;
+import manifold.sql.schema.simple.h2.H2Sakila.Store;
 
-
-public interface TxBindings extends Bindings
+/**
+ * Following the "Custom" + [entity interface name] naming convention, this interface becomes a super interface for Store.
+ * As such, methods defined here are accessible directly from instances of Store.
+ */
+public interface CustomStore extends CustomEntity<Store>
 {
-  Entity getOwner();
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  default long myCustomMethod()
+  {
+    return self().getStoreId();
+  }
 }

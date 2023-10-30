@@ -113,6 +113,11 @@ public interface DbConfig
   /** (Optional) The DDL for the database/schema this configuration is using. This is often a DDL dump from the DBMS. */
   String getDbDdl();
 
+  /** (Optional) The qualified name of the base interface to be used for generated schema table classes */
+  String getCustomBaseInterface();
+  /** (Optional) The qualified name of the base class to be used for generated schema table classes */
+  String getCustomBaseClass();
+
   /** (Optional) Return true if using the database driver "in-memory" mode e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
   boolean isInMemory();
 

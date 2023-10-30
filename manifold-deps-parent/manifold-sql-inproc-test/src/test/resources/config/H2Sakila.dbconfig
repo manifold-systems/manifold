@@ -2,5 +2,7 @@
   "url": "jdbc:h2:mem:h2_sakila",
   "schemaPackage": "manifold.sql.schema.simple.h2",
   "dbDdl": "/samples/ddl/h2-sakila-ddl.sql",
-  "inMemory": true
+  "inMemory": true,
+  "customBaseInterface": "manifold.sql.schema.customize.MyBaseInterface",
+  "customBaseClass": "manifold.sql.schema.customize.MyBaseClass"
 }

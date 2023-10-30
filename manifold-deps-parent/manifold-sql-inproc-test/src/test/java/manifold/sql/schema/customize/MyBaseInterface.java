@@ -14,18 +14,9 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.schema.customize;
 
-import manifold.rt.api.Bindings;
-
-
-public interface TxBindings extends Bindings
+public interface MyBaseInterface
 {
-  Entity getOwner();
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  String myCustomBaseMethod();
 }

@@ -205,7 +205,15 @@ class SqlParentType
     String simpleName = srcClass.getSimpleName();
     sb.append(
       "    return new Runner<$rowType>(new QueryContext<>(txScope, $rowType.class, null, columnInfo(), ${getParameterInfo()}, paramBindings, \"$configName\",\n" +
-      "      rowBindings -> new $rowType() {public TxBindings getBindings() { return rowBindings; }}),\n" +
+      "      rowBindings -> " );
+    if( rowType.equals( "Row" ) || rowType.endsWith( ".Row" ) ) sb.append(
+      "      new $rowType() {public TxBindings getBindings() { return rowBindings; }}" );
+    else sb.append( " {\n" +
+      "        $rowType customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $rowType.class);\n" +
+      "        return customRow != null ? customRow : new $rowType.${ManClassUtil.getShortClassName(rowType)}Entity(rowBindings);\n" +
+      "      }" );
+    sb.append(
+      " ),\n" +
       "      \"$query\"\n" +
       "    ).$methodName();" );
     method.body( sb.toString() );
@@ -435,7 +443,10 @@ class SqlParentType
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class,\n" +
       "\"${table.getName()}\", columnInfo(), $fkColumnInfo, paramBindings, \"$configName\",\n" +
-      "rowBindings -> new $tableFqn() {public TxBindings getBindings() { return rowBindings; }}));" );
+      "      rowBindings -> {\n" +
+      "          $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "          return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);\n" +
+      "      }));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
     srcClass.addMethod( fkFetchMethod );
@@ -474,8 +485,9 @@ class SqlParentType
       sb.append( "    initialState.put(\"$schemaName\", rowBindings.get(\"$queryName\"));\n" );
     }
     sb.append( "    BasicTxBindings tableBindings = new BasicTxBindings(rowBindings.getTxScope(), TxKind.Update, initialState);\n" );
-    sb.append( "    $tableType tablePart = new $tableType() {@Override public TxBindings getBindings() {return tableBindings; }};\n" );
-    sb.append( "    rowBindings.setOwner(tablePart);\n" );
+    sb.append( "    $tableType tablePart = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(tableBindings, $tableType.class);\n" );
+    sb.append( "    tablePart = tablePart != null ? tablePart : new $tableType.${ManClassUtil.getShortClassName(tableType)}Entity(tableBindings);\n" );
+    sb.append( "    tableBindings.setOwner(tablePart);\n" );
     sb.append( "    return tablePart;" );
     getter.body( sb.toString() );
 

@@ -17,11 +17,15 @@
 package manifold.sql.schema.type;
 
 import com.sun.tools.javac.code.Flags;
+import manifold.api.fs.IFile;
 import manifold.api.gen.*;
 import manifold.api.host.IModule;
+import manifold.api.util.cache.FqnCache;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.Pair;
+import manifold.rt.api.util.StreamUtil;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
@@ -33,11 +37,14 @@ import org.jetbrains.annotations.NotNull;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
 import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
@@ -49,6 +56,8 @@ import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
  */
 class SchemaParentType
 {
+  public static final String ENTITY = "Entity";
+
   private final SchemaModel _model;
 
   SchemaParentType( SchemaModel model )
@@ -135,10 +144,12 @@ class SchemaParentType
     String identifier = getSchema().getJavaTypeName( table.getName() );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( TableRow.class.getSimpleName() )
+      .addInterface( Entity.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
+    extendCustomInterface( srcClass );
+    addCustomBaseInterface( srcClass );
     addActualNameAnnotation( srcClass, table.getName(), false );
-    addBindingsHostClass( srcClass );
+    addEntityClass( srcClass );
     addCreateMethods( srcClass, table );
     addReadMethods( srcClass, table );
     addDeleteMethod( srcClass );
@@ -151,32 +162,94 @@ class SchemaParentType
     enclosingType.addInnerClass( srcClass );
   }
 
-  private void addBindingsHostClass( SrcLinkedClass interfaceType )
+  private void extendCustomInterface( SrcLinkedClass srcClass )
   {
-    String identifier = "Host";
+    FqnCache<IFile> javaFiles = _model.getSchemaManifold().getModule().getPathCache().getExtensionCache( "java" );
+    javaFiles.visitDepthFirst( file -> {
+      if( file == null )
+      {
+        return true;
+      }
+      // custom interface must be top-level and follow naming convention:
+      //   public interface "Custom" + <table interface name> extends CustomEntity<table interface name> e.g.,
+      //   public interface CustomActor extends CustomEntity<Actor> {...}
+      String customSimpleName = "Custom" + srcClass.getSimpleName();
+      if( file.getBaseName().equals( customSimpleName ) )
+      {
+        try
+        {
+          String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
+          if( content.contains( "public interface " + customSimpleName ) && content.contains( srcClass.getName() ) )
+          {
+            srcClass.addInterface( _model.getSchemaManifold().getModule().getPathCache().getFqnForFile( file )
+              .iterator().next() );
+            return false;
+          }
+        }
+        catch( IOException e )
+        {
+          throw new RuntimeException( e );
+        }
+      }
+      return true;
+    } );
+
+  }
+
+  private void addCustomBaseInterface( SrcLinkedClass srcClass )
+  {
+    // check for custom base interface from dbconfig, which is inherited by ALL table interfaces in this config
+
+    String customBaseInterface = _model.getDbConfig().getCustomBaseInterface();
+    if( customBaseInterface != null && !customBaseInterface.isEmpty() )
+    {
+      if( !ManClassUtil.isValidClassName( customBaseInterface ) )
+      {
+        throw new RuntimeException( "Invalid custom class name: '" + customBaseInterface + "'" );
+      }
+
+      srcClass.addInterface( customBaseInterface );
+    }
+  }
+
+  private void addEntityClass( SrcLinkedClass interfaceType )
+  {
+    String identifier = interfaceType.getSimpleName() + ENTITY;
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, interfaceType, Class )
       .addInterface( interfaceType.getSimpleName() );
-
-    SrcField bindingsField = new SrcField( "_bindings", TxBindings.class )
-      .modifiers( Modifier.PRIVATE | Modifier.FINAL );
-    srcClass.addField( bindingsField );
-
+    setSuperClass( srcClass );
     SrcConstructor ctor = new SrcConstructor( srcClass )
-      .modifiers( Modifier.PRIVATE )
+      .modifiers( Modifier.PUBLIC )
       .addParam( new SrcParameter( "bindings", TxBindings.class )
         .addAnnotation( NotNull.class.getSimpleName() ) )
-      .body( "_bindings = bindings;" );
+      .body( "super(bindings);" );
     srcClass.addConstructor( ctor );
 
-    SrcMethod bindingsMethod = new SrcMethod( srcClass )
-      .modifiers( Modifier.PUBLIC )
-      .name( "getBindings" )
-      .returns( TxBindings.class )
-      .body( "return _bindings;" );
-    srcClass.addMethod( bindingsMethod );
-
     interfaceType.addInnerClass( srcClass );
+  }
+
+  @SuppressWarnings( "unused" )
+  private void setSuperClass( SrcLinkedClass srcClass )
+  {
+    // Check for a dbconfig specified custom base class
+
+    String customBaseClass = _model.getDbConfig().getCustomBaseClass();
+    if( customBaseClass != null && !customBaseClass.isEmpty() )
+    {
+      if( !ManClassUtil.isValidClassName( customBaseClass ) )
+      {
+        throw new RuntimeException( "Invalid custom class name: '" + customBaseClass + "'" );
+      }
+
+      srcClass.superClass( customBaseClass );
+    }
+    else
+    {
+      // Default to our base class
+
+      srcClass.superClass( BaseEntity.class );
+    }
   }
 
   private void addProperties( SchemaTable table, SrcLinkedClass srcClass )
@@ -358,10 +431,10 @@ class SchemaParentType
     }
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n" );
     sb.append( "      $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" );
-    sb.append( "      $tableName tableRow = customRow != null ? customRow : new Host(bindings);\n" );
-    sb.append( "      ((OperableTxBindings)tableRow.getBindings()).setOwner(tableRow);\n" );
-    sb.append( "      ((OperableTxScope)txScope).addRow(tableRow);\n" );
-    sb.append( "      return tableRow;" );
+    sb.append( "      $tableName entity = customRow != null ? customRow : new ${ManClassUtil.getShortClassName(tableName)}Entity(bindings);\n" );
+    sb.append( "      ((OperableTxBindings)entity.getBindings()).setOwner(entity);\n" );
+    sb.append( "      ((OperableTxScope)txScope).addRow(entity);\n" );
+    sb.append( "      return entity;" );
     method.body( sb.toString() );
   }
 
@@ -543,10 +616,10 @@ class SchemaParentType
     method.body(
         "BasicTxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, Builder.this.getBindings());\n" +
         "        $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" +
-        "        $tableName tableRow = customRow != null ? customRow : new Host(bindings);\n" +
-        "        ((OperableTxBindings)tableRow.getBindings()).setOwner(tableRow);\n" +
-        "        ((OperableTxScope)txScope).addRow(tableRow);\n" +
-        "        return tableRow;" );
+        "        $tableName entity = customRow != null ? customRow : new ${ManClassUtil.getShortClassName(tableName)}Entity(bindings);\n" +
+        "        ((OperableTxBindings)entity.getBindings()).setOwner(entity);\n" +
+        "        ((OperableTxScope)txScope).addRow(entity);\n" +
+        "        return entity;" );
   }
 
   private void addWithMethods( SrcLinkedClass srcClass, SchemaTable table )
@@ -629,6 +702,7 @@ class SchemaParentType
     // Postgres: tsvector is always assigned, s/b 'generated always', but sometimes triggers are used :\
     boolean isPostgresTsvector = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "postgresql" ) &&
       col.getSqlType().equalsIgnoreCase( "tsvector" );
+    //noinspection RedundantIfStatement
     if( isPostgresTsvector )
     {
       return true;
@@ -647,7 +721,7 @@ class SchemaParentType
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
-    srcClass.addImport( TableRow.class );
+    srcClass.addImport( Entity.class );
     srcClass.addImport( TableInfo.class );
     srcClass.addImport( ColumnInfo.class );
     srcClass.addImport( SchemaType.class );
@@ -694,7 +768,7 @@ class SchemaParentType
       {
         // get assigned ref that is newly created and not committed yet
         sb.append( "    Object maybeRef = getBindings().get(\"${col.getName()}\");\n" )
-          .append( "    if(maybeRef instanceof ${TableRow.class.getSimpleName()}) {return ($tableFqn)maybeRef;}\n" );
+          .append( "    if(maybeRef instanceof ${Entity.class.getSimpleName()}) {return ($tableFqn)maybeRef;}\n" );
       }
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(\"${col.getName()}\"));\n" );
     }
@@ -707,7 +781,7 @@ class SchemaParentType
       "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
       "rowBindings -> {" +
       "  $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
-      "  return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "  return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
       "} ));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
@@ -734,7 +808,7 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .name( "assignFkBindingValues" )
-      .addParam( "ref", new SrcType( TableRow.class ) )
+      .addParam( "ref", new SrcType( Entity.class ) )
       .addParam( "propName", new SrcType( String.class ) )
       .addParam( "keyColName", new SrcType( String.class ) )
       .addParam( "colName", new SrcType( String.class ) )
@@ -762,7 +836,7 @@ class SchemaParentType
     if( col.getForeignKey() != null )
     {
       getter.body( "Object value = getBindings().get(\"$colName\");\n" +
-                   "    return value instanceof ${TableRow.class.getSimpleName()} ? null : ($retType)value;" );
+                   "    return value instanceof ${Entity.class.getSimpleName()} ? null : ($retType)value;" );
     }
     else
     {
@@ -832,7 +906,7 @@ class SchemaParentType
       "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
       "      rowBindings -> {" +
       "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
-      "        return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
       "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -908,14 +982,14 @@ class SchemaParentType
       //noinspection unused
       Column referencedCol = col.getForeignKey();
       sb.append( "    Object value = getBindings().get(\"${col.getName()}\");\n" )
-        .append( "    if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
+        .append( "    if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
         .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
       "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
       "      rowBindings -> {" +
       "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
-      "        return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
       "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -972,13 +1046,13 @@ class SchemaParentType
     //noinspection unused
     SchemaColumn referencedCol = fkToMe.getForeignKey();
     sb.append( "      Object value = getBindings().get(\"${fkToMe.getName()}\");\n" )
-      .append( "      if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
+      .append( "      if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
       .append( "      paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     sb.append( "      return new ${Runner.class.getName()}<$tableFqn>(\n" +
       "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", \n" +
       "          rowBindings -> {" +
       "            $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
-      "            return customRow != null ? customRow : new $tableFqn.Host(rowBindings);" +
+      "            return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
       "          } ), \"$sql\")\n" +
       "        .fetch().toList();" );
     method.body( sb.toString() );

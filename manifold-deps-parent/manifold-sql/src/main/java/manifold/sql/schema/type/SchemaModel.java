@@ -62,6 +62,11 @@ public class SchemaModel extends AbstractSingleFileModel
     init();
   }
 
+  public SchemaManifold getSchemaManifold()
+  {
+    return _schemaManifold;
+  }
+
   private void init()
   {
     _issues = null;

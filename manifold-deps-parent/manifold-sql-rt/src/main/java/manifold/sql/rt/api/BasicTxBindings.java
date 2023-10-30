@@ -44,7 +44,7 @@ public class BasicTxBindings implements OperableTxBindings
 
   private final LockingLazyVar<Bindings> _metadata;
 
-  private TableRow _owner;
+  private Entity _owner;
   private final OperableTxScope _txScope;
   private TxKind _txKind;
   private boolean _delete;
@@ -52,12 +52,12 @@ public class BasicTxBindings implements OperableTxBindings
   public enum TxKind {Insert, Update, Unknown}
 
   /**
-   * Creates a new bindings for a new instance of a TableRow, such as a schema table or query result table.
+   * Creates a new bindings for an entity instance.
    * <p/>
-   * The {@code txKind} not only indicates the operational context of the TableRow, it also signals the type of initial
+   * The {@code txKind} not only indicates the operational context of the entity, it also signals the type of initial
    * state of the bindings. For instance, the {@code Insert} kind implies the object has no persisted state because it is
    * entirely new, thus the {@code initialState} is a set of uncommitted changes. Similarly, the {@code Update} kind must
-   * involve an existing TableRow, the state of which reflects its persisted state from the data source.
+   * involve an existing entity, the state of which reflects its persisted state from the data source.
    */
   public BasicTxBindings( TxScope txScope, TxKind txKind, Bindings initialState )
   {
@@ -87,12 +87,12 @@ public class BasicTxBindings implements OperableTxBindings
   }
 
   @Override
-  public TableRow getOwner()
+  public Entity getOwner()
   {
     return _owner;
   }
   @Override
-  public void setOwner( TableRow owner )
+  public void setOwner( Entity owner )
   {
     _owner = owner;
   }
@@ -345,7 +345,7 @@ public class BasicTxBindings implements OperableTxBindings
       if( value instanceof KeyRef )
       {
         value = ((KeyRef)value).getRef();
-        if( ((TableRow)value).getBindings().isForDelete() )
+        if( ((Entity)value).getBindings().isForDelete() )
         {
           value = null;
         }

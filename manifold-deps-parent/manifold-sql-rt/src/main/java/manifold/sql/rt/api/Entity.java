@@ -16,16 +16,11 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
-
-
-public interface TxBindings extends Bindings
+/**
+ * Common super interface for db table types generated from the DB schema.
+ */
+public interface Entity extends ResultRow
 {
-  Entity getOwner();
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  /** Type information necessary for implementation of CRUD operations. */
+  TableInfo tableInfo();
 }

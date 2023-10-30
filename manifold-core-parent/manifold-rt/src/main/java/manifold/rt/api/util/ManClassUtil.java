@@ -167,6 +167,28 @@ public class ManClassUtil
     }
   }
 
+  public static boolean isValidClassName( String name )
+  {
+    while( name.length() != 0 )
+    {
+      int iDot = name.indexOf( '.' );
+      if( iDot < 0 )
+      {
+        iDot = name.length();
+      }
+      if( !isJavaIdentifier( name.substring( 0, iDot ) ) )
+      {
+        return false;
+      }
+      name = name.substring( iDot );
+      if( name.length() != 0 )
+      {
+        name = name.substring( 1 );
+      }
+    }
+    return true;
+  }
+
   public static Class<?> box( Class<?> type )
   {
     if( type == boolean.class )

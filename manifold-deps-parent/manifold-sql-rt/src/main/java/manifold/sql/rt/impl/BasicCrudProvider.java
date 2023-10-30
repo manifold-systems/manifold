@@ -35,7 +35,7 @@ public class BasicCrudProvider implements CrudProvider
   public static final String SQLITE_LAST_INSERT_ROWID = "last_insert_rowid()";
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> void create( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void create( Connection c, UpdateContext<T> ctx )
   {
     try
     {
@@ -61,7 +61,7 @@ public class BasicCrudProvider implements CrudProvider
    * throw an exception from the former call and quietly ignores all the column names and instead just supplies the pk,
    * we handle that too when we process the call to {@code getGeneratedKeys()}.
    */
-  private static <T extends TableRow> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
+  private static <T extends Entity> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
   {
     String[] reflectedColumns = reflectedColumns( c, ctx, true );
     try
@@ -90,7 +90,7 @@ public class BasicCrudProvider implements CrudProvider
    * columns that should be returned from the inserted row</i>. Some (good) drivers adhere to this latter description and
    * return any and all columns asked for, others drivers vary in behavior here.
    */
-  private static <T extends TableRow> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
+  private static <T extends Entity> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
   {
     String[] reflectedColumnNames = {};
     if( allColumns && !c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" ) )
@@ -119,7 +119,7 @@ public class BasicCrudProvider implements CrudProvider
     return reflectedColumnNames;
   }
 
-  private <T extends TableRow> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
@@ -139,7 +139,7 @@ public class BasicCrudProvider implements CrudProvider
 
   private static Object patchFk( Object value, String colName, OperableTxBindings bindings )
   {
-    // We assign a Pair<TableRow, String> to an fk column when the tablerow is not yet inserted.
+    // We assign a Pair<Entity, String> to an fk column when the entity is not yet inserted.
     // Normally this is resolved by TxScope commit logic, ordering inserts according to fk dependencies, however if there
     // is a cycle, the Pair value remains. In that case, if the fk is not nullable, we must assign a temporary value here.
     // The TxScope commit logic resolves the actual fk value.
@@ -162,7 +162,7 @@ public class BasicCrudProvider implements CrudProvider
     return value;
   }
 
-  private <T extends TableRow> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     StringBuilder sql = new StringBuilder();
     sql.append( "INSERT INTO " ).append( ctx.getDdlTableName() ).append( "(" );
@@ -199,7 +199,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> T readOne( QueryContext<T> ctx )
+  public <T extends Entity> T readOne( QueryContext<T> ctx )
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
@@ -236,7 +236,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> List<T> readMany( QueryContext<T> ctx )
+  public <T extends Entity> List<T> readMany( QueryContext<T> ctx )
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
@@ -266,7 +266,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     StringBuilder sql = new StringBuilder();
@@ -292,7 +292,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> void update( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void update( Connection c, UpdateContext<T> ctx )
   {
     try
     {
@@ -379,7 +379,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
     if( changeEntries.isEmpty() )
@@ -419,7 +419,7 @@ public class BasicCrudProvider implements CrudProvider
 
   }
 
-  private <T extends TableRow> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     if( !whereColumns.isEmpty() )
@@ -442,7 +442,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void executeAndFetchRow(
+  private <T extends Entity> void executeAndFetchRow(
     Connection c, UpdateContext<T> ctx, PreparedStatement ps, boolean hasReflectedColumns ) throws SQLException
   {
     int result = ps.executeUpdate();
@@ -493,7 +493,7 @@ public class BasicCrudProvider implements CrudProvider
     ctx.getBindings().holdValues( reflectedRow );
   }
 
-  private <T extends TableRow> Bindings maybeFetchInsertedRow( Connection c, UpdateContext<T> ctx, Bindings reflectedRow ) throws SQLException
+  private <T extends Entity> Bindings maybeFetchInsertedRow( Connection c, UpdateContext<T> ctx, Bindings reflectedRow ) throws SQLException
   {
     DataBindings params = new DataBindings();
     ColumnInfo[] ci = null;
@@ -523,7 +523,7 @@ public class BasicCrudProvider implements CrudProvider
           // null pk value means we can't query for the inserted row, game over
           return reflectedRow;
         }
-        else if( pkValue instanceof TableRow ) // from a KeyRef, see BasicTxBindings#get()
+        else if( pkValue instanceof Entity ) // from a KeyRef, see BasicTxBindings#get()
         {
           // in this case an fk is part of the pk, e.g., many-many link tables
           pkValue = ctx.getBindings().getHeldValue( pkCol );
@@ -595,7 +595,7 @@ public class BasicCrudProvider implements CrudProvider
       reflectedRow.size() == 1 && reflectedRow.entrySet().iterator().next().getValue() == null;
   }
 
-  public <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void delete( Connection c, UpdateContext<T> ctx )
   {  
     try
     {
@@ -660,7 +660,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();

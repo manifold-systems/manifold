@@ -3433,7 +3433,7 @@ public class ManStringUtil
     Object first = iterator.next();
     if( !iterator.hasNext() )
     {
-      return ManObjectUtil.toString( first );
+      return ManObjectUtil.toString( first, "" );
     }
 
     // two or more elements
@@ -3485,7 +3485,7 @@ public class ManStringUtil
     Object first = iterator.next();
     if( !iterator.hasNext() )
     {
-      return ManObjectUtil.toString( first );
+      return ManObjectUtil.toString( first, "" );
     }
 
     // two or more elements

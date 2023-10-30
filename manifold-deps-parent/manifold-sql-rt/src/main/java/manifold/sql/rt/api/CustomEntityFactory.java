@@ -21,23 +21,24 @@ public interface CustomEntityFactory
   /**
    * Construct a custom entity class that implements {@code entityInterface} replacing the default class.
    * <p/>
-   * The interface is entirely self-implementing minus the {@code getBindings()} method, which must be implemented by
-   * all custom entity classes. Thus, a custom class must provide at least the following functionality:
+   * The interface is self-implementing; default methods delegate to bindings. As a consequence, a custom entity class
+   * can focus on custom behavior and not be concerned about maintaining existing behavior.
+   * <p/>
+   * A typical custom entity class.
    * <pre><code>
    *     import org.example.schema.sampledb.Actor;
    *     import manifold.sql.rt.api.TxBindings;
    *
-   *     public class CustomActor implements Actor {
-   *       private final TxBindings bindings;
+   *     public class CustomActor implements Actor extends BaseEntity {
    *       private CustomActor(TxBindings bindings) {
-   *         this.bindings = bindings;
+   *         super(bindings);
    *       }
-   *       public TxBindings getBindings() {
-   *         return bindings;
-   *       }
+   *
+   *       // your code here...
+   *
    *     } </code></pre>
-   * The custom class may override any of the {@code entityInterface} methods and provide any number of its own features.
-   * <B>However</B>, the class should not add any state other than the TxBindings that is provided.
+   *
+   * A custom class may override any of the {@code entityInterface} methods and provide any number of its own methods.
    *
    * @param txBindings The TxBindings instance the returned class instance receives in its constructor. This instance
    *                   must be maintained by this class and returned from the {@code getBindings()} method.
@@ -45,5 +46,5 @@ public interface CustomEntityFactory
    * @return An instance of the {@code entityInterface} or null the entity is not customized.
    * @param <T> The entity interface to implement.
    */
-  <T extends TableRow> T newInstance( TxBindings txBindings, Class<T> entityInterface );
+  <T extends Entity> T newInstance( TxBindings txBindings, Class<T> entityInterface );
 }

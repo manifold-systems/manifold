@@ -139,7 +139,7 @@ public class ManifoldCollectionExt
 
   public static <E> String join( @This Collection<E> thiz, CharSequence delimiter )
   {
-    return thiz.stream().map( ManObjectUtil::toString ).collect( Collectors.joining( delimiter ) );
+    return thiz.stream().map( obj -> ManObjectUtil.toString( obj, "" ) ).collect( Collectors.joining( delimiter ) );
   }
 
   public static <E> List<E> toList( @This Collection<E> thiz )

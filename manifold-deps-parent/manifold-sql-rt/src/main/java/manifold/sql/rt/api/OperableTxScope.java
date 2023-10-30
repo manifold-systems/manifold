@@ -16,9 +16,6 @@
 
 package manifold.sql.rt.api;
 
-import manifold.sql.rt.api.TableRow;
-import manifold.sql.rt.api.TxScope;
-
 import java.util.Set;
 
 /**
@@ -28,8 +25,8 @@ import java.util.Set;
  */
 public interface OperableTxScope extends TxScope
 {
-  Set<TableRow> getRows();
-  void addRow( TableRow item );
-  void removeRow( TableRow item );
-  boolean containsRow( TableRow item );
+  Set<Entity> getRows();
+  void addRow( Entity item );
+  void removeRow( Entity item );
+  boolean containsRow( Entity item );
 }

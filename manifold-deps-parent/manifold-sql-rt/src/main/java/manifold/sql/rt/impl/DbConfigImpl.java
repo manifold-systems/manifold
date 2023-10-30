@@ -47,7 +47,7 @@ public class DbConfigImpl implements DbConfig
 
   private final Bindings _bindings;
   private final Map<String, List<Consumer<Connection>>> _initializers;
-  private transient Function<String, FqnCache<IFile>> _resByExt;
+  private final transient Function<String, FqnCache<IFile>> _resByExt;
 
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode )
   {
@@ -247,6 +247,17 @@ public class DbConfigImpl implements DbConfig
   public String getDbDdl()
   {
     return (String)_bindings.get( "dbDdl" );
+  }
+
+  @Override
+  public String getCustomBaseInterface()
+  {
+    return (String)_bindings.get( "customBaseInterface" );
+  }
+  @Override
+  public String getCustomBaseClass()
+  {
+    return (String)_bindings.get( "customBaseClass" );
   }
 
   @Override

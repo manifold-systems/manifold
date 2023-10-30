@@ -71,12 +71,12 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
           row.put( column, value );
         }
         R resultRow = makeRow.apply( makeBindings.apply( row ) );
-        if( resultRow instanceof TableRow )
+        if( resultRow instanceof Entity )
         {
-          TxBindings bindings = ((TableRow)resultRow).getBindings();
+          TxBindings bindings = ((Entity)resultRow).getBindings();
           if( bindings instanceof OperableTxBindings )
           {
-            ((OperableTxBindings)bindings).setOwner( (TableRow)resultRow );
+            ((OperableTxBindings)bindings).setOwner( (Entity)resultRow );
           }
         }
         _results.add( resultRow );

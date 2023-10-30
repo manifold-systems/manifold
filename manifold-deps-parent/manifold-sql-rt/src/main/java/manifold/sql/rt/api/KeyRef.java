@@ -18,16 +18,16 @@ package manifold.sql.rt.api;
 
 public class KeyRef
 {
-  private final TableRow _ref;
+  private final Entity _ref;
   private final String _keyColName;
 
-  public KeyRef( TableRow ref, String keyColName )
+  public KeyRef( Entity ref, String keyColName )
   {
     _ref = ref;
     _keyColName = keyColName;
   }
 
-  public TableRow getRef()
+  public Entity getRef()
   {
     return _ref;
   }

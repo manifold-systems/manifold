@@ -16,16 +16,19 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.Bindings;
 
-
-public interface TxBindings extends Bindings
+/**
+ * A base interface for custom entity interfaces. Provides type-safe access to the extended interface via {@link #self()}.
+ * @param <E> The entity interface to customize
+ */
+public interface CustomEntity<E extends Entity & CustomEntity<E>>
 {
-  Entity getOwner();
-
-  TxScope getTxScope();
-
-  boolean isForInsert();
-  boolean isForUpdate();
-  boolean isForDelete();
+  /**
+   * Provides type-safe access to the customized entity interface.
+   * @return The instance of the entity interface.
+   */
+  default E self() {
+    //noinspection unchecked
+    return (E)this;
+  }
 }

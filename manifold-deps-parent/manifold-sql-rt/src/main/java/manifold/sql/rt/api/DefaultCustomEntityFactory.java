@@ -22,7 +22,7 @@ package manifold.sql.rt.api;
 public class DefaultCustomEntityFactory implements CustomEntityFactory
 {
   @Override
-  public <T extends TableRow> T newInstance( TxBindings txBindings, Class<T> entityInterface )
+  public <T extends Entity> T newInstance( TxBindings txBindings, Class<T> entityInterface )
   {
     return null;
   }

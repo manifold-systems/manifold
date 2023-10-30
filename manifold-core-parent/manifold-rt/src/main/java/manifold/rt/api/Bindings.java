@@ -16,6 +16,8 @@
 
 package manifold.rt.api;
 
+import manifold.rt.api.util.ManObjectUtil;
+
 import java.util.Map;
 
 /**
@@ -27,4 +29,42 @@ public interface Bindings extends Map<String, Object>
    * Supports maintaining metadata about this instance
    */
   Bindings getMetadata();
+
+  default String displayEntries()
+  {
+    StringBuilder row = new StringBuilder();
+    for( Map.Entry<String, Object> entry : entrySet() )
+    {
+      if( row.length() > 0 )
+      {
+        row.append( ", " );
+      }
+      row.append( entry.getKey() ).append( ": " );
+      Object value = entry.getValue();
+      if( value instanceof String )
+      {
+        value = "\"" + value + "\"";
+      }
+      row.append( ManObjectUtil.toString( value ) );
+    }
+    return row.toString();
+  }
+
+  default String displayValues()
+  {
+    StringBuilder row = new StringBuilder();
+    for( Object value : values() )
+    {
+      if( row.length() > 0 )
+      {
+        row.append( ", " );
+      }
+      if( value instanceof String )
+      {
+        value = "\"" + value + "\"";
+      }
+      row.append( ManObjectUtil.toString( value ) );
+    }
+    return row.toString();
+  }
 }

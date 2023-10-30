@@ -34,19 +34,6 @@ public interface IBindingsBacked
 
   default String display()
   {
-    StringBuilder row = new StringBuilder();
-    for( Object value: getBindings().values() )
-    {
-      if( row.length() > 0 )
-      {
-        row.append( ", " );
-      }
-      if( value instanceof String )
-      {
-        value = "\"" + value + "\"";
-      }
-      row.append( value );
-    }
-    return row.toString();
+    return getBindings().displayEntries();
   }
 }

@@ -24,7 +24,7 @@ import java.util.Map;
 public interface OperableTxBindings extends TxBindings
 {
   @SuppressWarnings( "unused" )
-  void setOwner( TableRow owner );
+  void setOwner( Entity owner );
 
   void setDelete( boolean value );
 

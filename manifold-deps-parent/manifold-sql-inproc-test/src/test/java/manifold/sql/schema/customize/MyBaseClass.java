@@ -14,12 +14,20 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.schema.customize;
 
-/**
- * Common base type for db table types (generated from the schema).
- */
-public interface TableRow extends ResultRow
+import manifold.sql.rt.api.BaseEntity;
+import manifold.sql.rt.api.TxBindings;
+
+public abstract class MyBaseClass extends BaseEntity implements MyBaseInterface
 {
-  TableInfo tableInfo();
+  public MyBaseClass( TxBindings txBindings )
+  {
+    super( txBindings );
+  }
+
+  public String myCustomBaseMethod()
+  {
+    return "myCustomBaseMethod";
+  }
 }
