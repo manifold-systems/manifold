@@ -1,6 +1,11 @@
-<center>
-  <img src="https://i.imgur.com/No1RPUf.png" width="80%"/>
-</center>
+<br>
+
+<img width="600" height="146" align="top" src="./docs/images/manifold4_yellow.png">
+
+![latest](https://img.shields.io/badge/latest-v2023.1.29-darkgreen.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+
+---
 
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
@@ -324,7 +329,7 @@ Manifold supports:
 
 Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
-## [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+## [Chat](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
