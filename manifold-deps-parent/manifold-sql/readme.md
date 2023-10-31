@@ -32,26 +32,11 @@ to your gradle or maven build.
 
 ### Examples
 
-<style>
-  .sqlimage1 {
-    width: 800px;
-    height: 120px;
-    min-width:800px;
-    object-fit: contain;
-  }
-  .sqlimage2 {
-    width: 550px;
-    height: 400px;
-    min-width:550px;
-    object-fit: contain;
-  }
-</style>
+<br>
+<img src="../../docs/images/img_3.png" style="width: 800px; height: 120px; min-width:800px; object-fit: contain;">
 <br>
 <br>
-<img class="sqlimage1" align="top" src="../../docs/images/img_3.png">
-<br>
-<br>
-<img class="sqlimage2" align="top" src="../../docs/images/img.png">
+<img src="../../docs/images/img.png" style="width: 550px; height: 400px; min-width:550px; object-fit: contain;">
 <br>
 
 ## Coming _**real**_ soon. . .
