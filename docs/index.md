@@ -39,7 +39,16 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 >
 >   // No need to implement MyInterface here, but you can override myInterface as needed
 > }
-> ```
+> ``` 
+ 
+---
+
+>### _**Coming soon...**_
+> 
+>#### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+> Use native SQL and DB schemas of any complexity directly and type-safely from Java code.
+> <br><br>
+> <img width="800" height="120" align="top" src="http://manifold.systems/images/img_3.png">
 
 
 ## What can you do with Manifold?
