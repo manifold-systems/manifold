@@ -32,11 +32,10 @@ to your gradle or maven build.
 
 ### Examples
 
+<img width="800" height="120" align="top" src="../../docs/images/img_3.png">
 <br>
-<img src="../../docs/images/img_3.png" style="width: 800px; height: 120px; min-width:800px; object-fit: contain;">
 <br>
-<br>
-<img src="../../docs/images/img.png" style="width: 550px; height: 400px; min-width:550px; object-fit: contain;">
+<img width="550" height="400" align="top" src="../../docs/images/img.png">
 <br>
 
 ## Coming _**real**_ soon. . .
