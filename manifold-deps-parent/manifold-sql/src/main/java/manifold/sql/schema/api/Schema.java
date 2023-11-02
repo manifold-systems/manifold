@@ -17,6 +17,7 @@
 package manifold.sql.schema.api;
 
 import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.util.DriverInfo;
 
 import java.util.Map;
 
@@ -31,6 +32,5 @@ public interface Schema
   String getJavaTypeName( String name );
   String getOriginalName( String pascalName );
 
-  String getDatabaseProductName();
-  String getDatabaseProductVersion();
+  DriverInfo getDriverInfo();
 }

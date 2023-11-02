@@ -25,6 +25,9 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.function.BiPredicate;
 
+import static manifold.sql.rt.util.DriverInfo.Oracle;
+import static manifold.sql.rt.util.DriverInfo.SqlServer;
+
 public class SqlScriptRunner
 {
   private static final Logger LOGGER = LoggerFactory.getLogger( SqlScriptRunner.class );
@@ -86,12 +89,12 @@ public class SqlScriptRunner
 
   private static SqlScriptParser.ExtraSeparator extraSeparator( Connection c ) throws SQLException
   {
-    String productName = c.getMetaData().getDatabaseProductName().toLowerCase();
-    if( productName.contains( "sql server" ) )
+    DriverInfo driver = DriverInfo.lookup( c.getMetaData() );
+    if( driver == SqlServer )
     {
       return SqlScriptParser.ExtraSeparator.Go;
     }
-    if( productName.contains( "oracle" ) )
+    if( driver == Oracle )
     {
       return SqlScriptParser.ExtraSeparator.Slash;
     }

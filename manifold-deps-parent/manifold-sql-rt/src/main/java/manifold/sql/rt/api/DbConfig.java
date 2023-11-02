@@ -96,14 +96,19 @@ public interface DbConfig
   String getPassword();
 
   /**
-   * (Optional) If true, this dbconfig is applied to SQL resources that do not specify a dbconfig name.
+   * (Optional) If true, this dbconfig is the "default" configuration. The default dbconfig is applied to all SQL resources
+   * not qualified with a dbconfig.
    * <p/>
-   * To specify a dbconfig
-   * name a .sql file follows the naming convention:<br>
-   * {@code MyQuery.dbconfigName.sql}<br>
+   * If there is only one dbconfig in use, it is considered default. Otherwise, if multiple dbconfigs are in use, a SQL
+   * resource not intended for the default dbconfig must qualify its name with the intended dbconfig. As such, if are not
+   * using multiple dbconfigs in your project you can ignore this setting.
    * <p/>
-   * Embedded SQL follows a similar pattern:<br>
-   * {@code "[.sql:dbconfigName/] select * from ..."}
+   * To specify a dbconfig name a .sql file follows the naming convention:<br>
+   * {@code MyQueryFile.MyDbConfig.sql}<br>
+   * <p/>
+   * Inline SQL follows a similar pattern:<br>
+   * {@code "[.sql:MyDbConfig/] select * from ..."}
+   * {@code "[MyQuery.sql:MyDbConfig/] select * from ..."}
    */
   boolean isDefault();
 
@@ -155,5 +160,5 @@ public interface DbConfig
     return props;
   }
 
-  void init( Connection connection, String url, String schemaName, String ddl ) throws SQLException;
+  void init( Connection connection, ExecutionEnv environment ) throws SQLException;
 }

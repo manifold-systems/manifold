@@ -29,6 +29,7 @@ import manifold.rt.api.util.StreamUtil;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
 import manifold.util.concurrent.LocklessLazyVar;
@@ -50,6 +51,8 @@ import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
 import static manifold.rt.api.util.ManIdentifierUtil.makeIdentifier;
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
+import static manifold.sql.rt.util.DriverInfo.Postgres;
+import static manifold.sql.rt.util.DriverInfo.SQLite;
 
 /**
  * The top-level class enclosing all the DDL types corresponding with a ".dbconfig" file.
@@ -692,16 +695,16 @@ class SchemaParentType
   private boolean bullshit( SchemaColumn col )
   {
     // Sqlite: a generated, auto-increment id, but since sqlite is retarded at all levels...
-    boolean isSqliteRowId = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "sqlite" ) &&
-        col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
+    DriverInfo driver = col.getTable().getSchema().getDriverInfo();
+    boolean isSqliteRowId = driver == SQLite &&
+      col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
     if( isSqliteRowId )
     {
       return true;
     }
 
     // Postgres: tsvector is always assigned, s/b 'generated always', but sometimes triggers are used :\
-    boolean isPostgresTsvector = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "postgresql" ) &&
-      col.getSqlType().equalsIgnoreCase( "tsvector" );
+    boolean isPostgresTsvector = driver == Postgres && col.getSqlType().equalsIgnoreCase( "tsvector" );
     //noinspection RedundantIfStatement
     if( isPostgresTsvector )
     {

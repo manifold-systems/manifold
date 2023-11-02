@@ -21,12 +21,15 @@ import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.util.DbUtil;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.util.ManExceptionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class BasicCrudProvider implements CrudProvider
 {
@@ -93,7 +96,7 @@ public class BasicCrudProvider implements CrudProvider
   private static <T extends Entity> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
   {
     String[] reflectedColumnNames = {};
-    if( allColumns && !c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    if( allColumns && DriverInfo.lookup( c.getMetaData() ) != Oracle )
     {
       // ask for all columns since we want the entire record to include whatever generated data that was not included in the insert
 

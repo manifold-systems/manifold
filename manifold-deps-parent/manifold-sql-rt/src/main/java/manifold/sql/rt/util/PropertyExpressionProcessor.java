@@ -20,7 +20,7 @@ import manifold.api.fs.IFile;
 import manifold.api.util.cache.FqnCache;
 import manifold.rt.api.util.Pair;
 import manifold.sql.rt.api.DbLocationProvider;
-import manifold.sql.rt.api.DbLocationProvider.Mode;
+import manifold.sql.rt.api.ExecutionEnv;
 import manifold.sql.rt.api.Dependencies;
 
 import java.sql.Connection;
@@ -57,7 +57,7 @@ public class PropertyExpressionProcessor
     }
   }
 
-  public static Result process( Function<String, FqnCache<IFile>> resByExt, String source, Mode mode, Function<String, String> exprHandler )
+  public static Result process( Function<String, FqnCache<IFile>> resByExt, String source, ExecutionEnv executionEnv, Function<String, String> exprHandler )
   {
     if( source == null )
     {
@@ -72,7 +72,7 @@ public class PropertyExpressionProcessor
       if( end > 0 )
       {
         String expr = source.substring( start+2, end ).trim();
-        Pair<String, Consumer<Connection>> value = eval( resByExt, expr, mode, exprHandler );
+        Pair<String, Consumer<Connection>> value = eval( resByExt, expr, executionEnv, exprHandler );
         if( value.getFirst() != null )
         {
           source = new StringBuilder( source ).replace( start, end+1, value.getFirst() ).toString();
@@ -95,9 +95,9 @@ public class PropertyExpressionProcessor
     return new Result( source, initializers );
   }
 
-  private static Pair<String, Consumer<Connection>> eval( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode, Function<String, String> exprHandler )
+  private static Pair<String, Consumer<Connection>> eval( Function<String, FqnCache<IFile>> resByExt, String expr, ExecutionEnv executionEnv, Function<String, String> exprHandler )
   {
-    Pair<String, Consumer<Connection>> result = evalProvided( resByExt, expr, mode );
+    Pair<String, Consumer<Connection>> result = evalProvided( resByExt, expr, executionEnv );
     if( result != null )
     {
       return result;
@@ -127,7 +127,7 @@ public class PropertyExpressionProcessor
     return value;
   }
 
-  private static Pair<String, Consumer<Connection>> evalProvided( Function<String, FqnCache<IFile>> resByExt, String expr, Mode mode )
+  private static Pair<String, Consumer<Connection>> evalProvided( Function<String, FqnCache<IFile>> resByExt, String expr, ExecutionEnv executionEnv )
   {
     if( !expr.startsWith( PROVIDED ) )
     {
@@ -153,7 +153,7 @@ public class PropertyExpressionProcessor
     DbLocationProvider dbLocProvider = Dependencies.instance().getDbLocationProvider();
     if( dbLocProvider != null )
     {
-      Pair<Object, Consumer<Connection>> location = dbLocProvider.getLocation( resByExt, mode, tag, argsArray );
+      Pair<Object, Consumer<Connection>> location = dbLocProvider.getLocation( resByExt, executionEnv, tag, argsArray );
       if( location.getFirst() != UNHANDLED )
       {
         return new Pair<>( String.valueOf( location.getFirst() ), location.getSecond() );

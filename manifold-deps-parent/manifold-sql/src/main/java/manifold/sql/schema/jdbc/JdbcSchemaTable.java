@@ -20,6 +20,7 @@ import manifold.rt.api.util.Pair;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
+import manifold.sql.rt.util.DriverInfo;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class JdbcSchemaTable implements SchemaTable
 {
@@ -107,8 +110,8 @@ public class JdbcSchemaTable implements SchemaTable
     _manyToMany = new LinkedHashSet<>();
     List<String> columnClassNames = getColumnClassNames( metaData );
 
-    if( schemaName != null && !schemaName.isEmpty() &&
-      metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    DriverInfo driver = DriverInfo.lookup( metaData );
+    if( schemaName != null && !schemaName.isEmpty() && driver == Oracle )
     {
       // there is a bug in oracle driver where metaData.getColumns() fails if the schema is set to anything other than
       // the logged-in user, so we set that here. We reset it back in the finally block.
@@ -143,8 +146,7 @@ public class JdbcSchemaTable implements SchemaTable
     }
     finally
     {
-      if( schemaName != null && !schemaName.isEmpty() &&
-        metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+      if( schemaName != null && !schemaName.isEmpty() && driver == Oracle )
       {
         // set the schema back to the configured schema
         metaData.getConnection().setSchema( schemaName );

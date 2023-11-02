@@ -16,22 +16,9 @@
 
 package manifold.sql.rt.api;
 
-import manifold.api.fs.IFile;
-import manifold.api.util.cache.FqnCache;
-import manifold.rt.api.util.Pair;
-
-import java.sql.Connection;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
-/**
- * Note, implementers must chain/forward to the default provider to fall back on existing behavior.
- */
-public interface DbLocationProvider
-{
-  String PROVIDED = "#";
-  Object UNHANDLED = new Object() {};
-
-  Pair<Object, Consumer<Connection>> getLocation(
-    Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String tag, String... args );
+public enum ExecutionEnv {
+  Compiler,
+  IDE,
+  Runtime,
+  Unknown
 }

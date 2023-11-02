@@ -28,6 +28,7 @@ import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.query.api.QueryAnalyzer;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 
 import javax.tools.Diagnostic;
@@ -85,7 +86,7 @@ public class SqlModel extends AbstractSingleFileModel
     {
       _query = null;
       Schema schema = _scope.getSchema();
-      _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(),
+      _issues = new SqlIssueContainer( schema == null ? DriverInfo.ERRANT : schema.getDriverInfo(),
         Collections.singletonList( ise ), ManStringUtil.isCrLf( content ) );
     }
     catch( IOException e )

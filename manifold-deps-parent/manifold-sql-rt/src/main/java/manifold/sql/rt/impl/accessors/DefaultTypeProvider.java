@@ -17,6 +17,7 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.TypeProvider;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.rt.util.SqliteTypeMapping;
 
 import java.sql.*;
@@ -67,11 +68,9 @@ public class DefaultTypeProvider implements TypeProvider
   {
     int jdbcType = pm.getParameterType( pos );
 
-    // sqlite and mysql are known flakes here. See comment in exception below.
-    String productName = metaData.getDatabaseProductName();
+    // sqlite and mysql are known flakes here. See comment from caller.
     if( jdbcType == Types.VARCHAR &&
-      ("sqlite".equalsIgnoreCase( productName ) ||
-        "mysql".equalsIgnoreCase( productName )) )
+      DriverInfo.lookup( metaData ).flakyParameterMetadata() )
     {
       // the calling code handles this exception and provides default behavior for drivers with flaky parameter metadata
       throw new SQLException();
@@ -131,10 +130,9 @@ public class DefaultTypeProvider implements TypeProvider
     }
   }
 
-  private int oneOffCorrections( int jdbcType, ResultSet rs, DatabaseMetaData dm ) throws SQLException
+  private int oneOffCorrections( int jdbcType, ResultSet rs, DatabaseMetaData metadata ) throws SQLException
   {
-    String productName = dm.getDatabaseProductName();
-    Integer newType = new SqliteTypeMapping().getJdbcType( productName, rs );
+    Integer newType = new SqliteTypeMapping().getJdbcType( metadata, rs );
     return newType != null ? newType : jdbcType;
   }
 }

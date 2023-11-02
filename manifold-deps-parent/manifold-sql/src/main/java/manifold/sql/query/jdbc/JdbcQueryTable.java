@@ -26,6 +26,7 @@ import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
@@ -53,7 +54,7 @@ public class JdbcQueryTable implements QueryTable
     _columns = new LinkedHashMap<>();
     _parameters = new ArrayList<>();
     Schema schema = _scope.getSchema();
-    _issues = new SqlIssueContainer( schema == null ? null : schema.getDatabaseProductName(),
+    _issues = new SqlIssueContainer( schema == null ? DriverInfo.ERRANT : schema.getDriverInfo(),
       new ArrayList<>(), ManStringUtil.isCrLf( _source ) );
 
     if( _scope.isErrant() )
@@ -75,7 +76,7 @@ public class JdbcQueryTable implements QueryTable
   private static String replaceNamesWithQuestion( String source, List<ParamInfo> params )
   {
     StringBuilder procSource = new StringBuilder( source );
-    for( int i = params.size()-1; i >=0; i-- )
+    for( int i = params.size()-1; i >= 0; i-- )
     {
       ParamInfo param = params.get( i );
       String name = param.getName();
@@ -86,21 +87,10 @@ public class JdbcQueryTable implements QueryTable
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
-    DatabaseMetaData metaData = c.getMetaData();
-    PreparedStatement ps = metaData.getDatabaseProductName().toLowerCase().contains( "sql server" )
-    ? c.prepareStatement( _source, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE ) // attempt to make sqlserver support for ResultSetMetaData#getTableName()
-    : c.prepareStatement( _source );
-    try( PreparedStatement preparedStatement = ps )
+    DatabaseMetaData metadata = c.getMetaData();
+    try( PreparedStatement ps = c.prepareStatement( _source ) )
     {
-      ResultSetMetaData rsMetaData = preparedStatement.getMetaData();
-      int columnCount = rsMetaData.getColumnCount();
-      for( int i = 1; i <= columnCount; i++ )
-      {
-        JdbcQueryColumn col = new JdbcQueryColumn( i, this, rsMetaData, metaData );
-        _columns.put( col.getName(), col );
-      }
-
-      ParameterMetaData paramMetaData = preparedStatement.getParameterMetaData();
+      ParameterMetaData paramMetaData = ps.getParameterMetaData();
       int paramCount = paramMetaData.getParameterCount();
       if( !paramNames.isEmpty() && paramCount != paramNames.size() )
       {
@@ -109,9 +99,39 @@ public class JdbcQueryTable implements QueryTable
       for( int i = 1; i <= paramCount; i++ )
       {
         String name = paramNames.isEmpty() ? null : paramNames.get( i - 1 ).getName().substring( 1 );
-        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, metaData );
+        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, metadata );
         _parameters.add( param );
       }
+//todo: remove this code path?...
+// executeQuery is an alternative to parsing the query when the driver does not provide the table name for the query column
+// Going with parsing for now since executing the query involves shenanigans with parameters and such.
+//      executeQueryIfRequired( metadata, ps );
+
+      ResultSetMetaData rsMetaData = ps.getMetaData();
+      int columnCount = rsMetaData.getColumnCount();
+      for( int i = 1; i <= columnCount; i++ )
+      {
+        JdbcQueryColumn col = new JdbcQueryColumn( i, this, rsMetaData, metadata );
+        _columns.put( col.getName(), col );
+      }
+    }
+  }
+
+  private void executeQueryIfRequired( DatabaseMetaData metadata, PreparedStatement ps ) throws SQLException
+  {
+    DriverInfo driverInfo = DriverInfo.lookup( metadata );
+    if( driverInfo.requiresQueryExecForTableName() )
+    {
+      // most drivers do NOT require query exec to get the table corresponding with the query column,
+      // so far only Oracle and SqlServer need to execute the query :\
+
+      List<QueryParameter> parameters = getParameters();
+      for( int i = 0; i < parameters.size(); i++ )
+      {
+        QueryParameter p = parameters.get( i );
+        ps.setNull( i+1, p.getJdbcType() );
+      }
+      ps.executeQuery();
     }
   }
 

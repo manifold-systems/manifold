@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static manifold.sql.rt.api.ExecutionEnv.*;
+
 public class HikariConnectionProvider implements ConnectionProvider
 {
   private final Map<String, HikariDataSource> _dataSources = new ConcurrentHashMap<>();
@@ -64,7 +66,7 @@ public class HikariConnectionProvider implements ConnectionProvider
       Connection connection = ds.getConnection();
       if( dbConfig[0] != null )
       {
-        dbConfig[0].init( connection, dbConfig[0].getUrl(), dbConfig[0].getSchemaName(), null );
+        dbConfig[0].init( connection, Runtime );
       }
       return connection;
     }
@@ -81,7 +83,7 @@ public class HikariConnectionProvider implements ConnectionProvider
     HikariDataSource ds = _dataSources.computeIfAbsent( dbConfig.getName(), __ ->
       makeDataSource( dbConfig, dbConfig.getBuildUrlOtherwiseRuntimeUrl() ) );
     Connection connection = ds.getConnection();
-    dbConfig.init( connection, dbConfig.getBuildUrlOtherwiseRuntimeUrl(), dbConfig.getSchemaName(), dbConfig.getDbDdl() );
+    dbConfig.init( connection, Compiler );
     return connection;
   }
 

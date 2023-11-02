@@ -19,6 +19,7 @@ package manifold.sql.schema.jdbc;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
 import org.slf4j.Logger;
@@ -29,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class JdbcSchema implements Schema
 {
@@ -39,8 +41,7 @@ public class JdbcSchema implements Schema
   private final Map<String, SchemaTable> _tables;
   private final Map<String, String> _javaToName;
   private final Map<String, String> _nameToJava;
-  private final String _dbProductName;
-  private final String _dbProductVersion;
+  private final DriverInfo _driverInfo;
   private final boolean _schemaIsCatalog;
 
   public JdbcSchema( DbConfig dbConfig ) throws SQLException
@@ -52,8 +53,7 @@ public class JdbcSchema implements Schema
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( dbConfig ) )
     {
-      _dbProductName = c.getMetaData().getDatabaseProductName();
-      _dbProductVersion = c.getMetaData().getDatabaseProductVersion();
+      _driverInfo = DriverInfo.lookup( c.getMetaData().getDriverName() );
 
       DatabaseMetaData metaData = c.getMetaData();
 
@@ -66,7 +66,7 @@ public class JdbcSchema implements Schema
       }
       _schemaIsCatalog = catalogName != null;
       String name = _schemaIsCatalog ? catalogName : schemaName;
-      if( _dbProductName.toLowerCase().contains( "oracle" ) )
+      if( _driverInfo == Oracle )
       {
         // yes, oracle requires uppercase for schema name O_O
         name = name.toUpperCase();
@@ -197,6 +197,7 @@ public class JdbcSchema implements Schema
     return _name;
   }
 
+  @Override
   public DbConfig getDbConfig()
   {
     return _dbConfig;
@@ -225,25 +226,21 @@ public class JdbcSchema implements Schema
     return _tables;
   }
 
+  @Override
   public String getJavaTypeName( String name )
   {
     return _nameToJava.get( name );
   }
 
+  @Override
   public String getOriginalName( String javaName )
   {
     return _javaToName.get( javaName );
   }
 
   @Override
-  public String getDatabaseProductName()
+  public DriverInfo getDriverInfo()
   {
-    return _dbProductName;
-  }
-
-  @Override
-  public String getDatabaseProductVersion()
-  {
-    return _dbProductVersion;
+    return _driverInfo;
   }
 }
