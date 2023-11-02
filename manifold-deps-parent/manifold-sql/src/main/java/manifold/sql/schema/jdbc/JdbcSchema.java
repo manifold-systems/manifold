@@ -53,7 +53,7 @@ public class JdbcSchema implements Schema
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( dbConfig ) )
     {
-      _driverInfo = DriverInfo.lookup( c.getMetaData().getDriverName() );
+      _driverInfo = DriverInfo.lookup( c.getMetaData() );
 
       DatabaseMetaData metaData = c.getMetaData();
 

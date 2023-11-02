@@ -113,7 +113,7 @@ public enum DriverInfo
     return driver;
   }
 
-  public static DriverInfo lookup( String name )
+  private static DriverInfo lookup( String name )
   {
     if( name == null )
     {
