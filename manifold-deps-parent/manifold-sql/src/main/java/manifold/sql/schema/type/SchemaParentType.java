@@ -34,6 +34,7 @@ import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
 import manifold.util.concurrent.LocklessLazyVar;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -184,8 +185,10 @@ class SchemaParentType
           String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
           if( content.contains( "public interface " + customSimpleName ) && content.contains( srcClass.getName() ) )
           {
-            srcClass.addInterface( _model.getSchemaManifold().getModule().getPathCache().getFqnForFile( file )
-              .iterator().next() );
+            String fqnIface = _model.getSchemaManifold().getModule().getPathCache()
+              .getFqnForFile( file ).iterator().next();
+            srcClass.addInterface( fqnIface );
+            addForwardingStaticMethods( fqnIface );
             return false;
           }
         }
@@ -197,6 +200,13 @@ class SchemaParentType
       return true;
     } );
 
+  }
+
+  private void addForwardingStaticMethods( String fqnIface )
+  {
+    //todo: find all static methods in the custom interface and add the same to the entity interface that forwards to the custom interface
+    // Note, this is necessary because interface static methods are not inherited (although java really should make it work if there are no ambiguities).
+    // Still chewing on this one. For now, just call your methods from your custom interface
   }
 
   private void addCustomBaseInterface( SrcLinkedClass srcClass )
@@ -742,6 +752,7 @@ class SchemaParentType
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
     srcClass.addImport( SQLException.class );
+    srcClass.addImport( Nullable.class );
     srcClass.addImport( NotNull.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
@@ -759,6 +770,8 @@ class SchemaParentType
       .name( "fetch" + propName )
       .modifiers( Flags.DEFAULT )
       .returns( type );
+    boolean isNullable = sfk.getColumns().stream().allMatch( c -> c.isNullable() );
+    fkFetchMethod.addAnnotation( isNullable ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
     List<SchemaColumn> columns = sfk.getColumns();
@@ -792,8 +805,13 @@ class SchemaParentType
 
     SrcMethod fkSetter = new SrcMethod( srcClass )
       .modifiers( Flags.DEFAULT )
-      .name( "set" + propName )
-      .addParam( "ref", new SrcType( tableFqn ) );
+      .name( "set" + propName );
+    SrcParameter param = new SrcParameter( "ref", new SrcType( tableFqn ) );
+    fkSetter.addParam( param );
+    if( !isNullable )
+    {
+      param.addAnnotation( NotNull.class.getSimpleName() );
+    }
     for( SchemaColumn fkCol : sfk.getColumns() )
     {
       //noinspection unused
@@ -832,8 +850,9 @@ class SchemaParentType
     //noinspection unused
     String colName = makeIdentifier( name );
 
-    SrcGetProperty getter = new SrcGetProperty( propName, propType );
-    getter.modifiers( Flags.DEFAULT );
+    SrcGetProperty getter = new SrcGetProperty( propName, propType )
+      .modifiers( Flags.DEFAULT );
+    getter.addAnnotation( col.isNullable() ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
     StringBuilder retType = new StringBuilder();
     propType.render( retType, 0, false ); // calling render to include array "[]"
     if( col.getForeignKey() != null )
@@ -852,6 +871,10 @@ class SchemaParentType
     {
       SrcSetProperty setter = new SrcSetProperty( propName, propType )
         .modifiers( Flags.DEFAULT );
+      if( !col.isNullable() )
+      {
+        setter.getParameters().get( 0 ).addAnnotation( NotNull.class.getSimpleName() );
+      }
       setter.body( "getBindings().put(\"$colName\", ${'$'}value);" );
       addActualNameAnnotation( setter, name, true );
       srcInterface.addSetProperty( setter );
@@ -871,7 +894,7 @@ class SchemaParentType
       .modifiers( Modifier.STATIC )
       .name( "fetch" )
       .returns( new SrcType( tableFqn ) );
-    List<SchemaColumn> whereCols = addSelectParameters( table, method );
+    List<SchemaColumn> whereCols = addFetchParameters( table, method );
     if( whereCols.isEmpty() )
     {
       // no pk and no uk, no read method, instead use type-safe sql query :)
@@ -892,7 +915,7 @@ class SchemaParentType
       .returns( new SrcType( tableFqn ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );
-    whereCols = addSelectParameters( table, method );
+    whereCols = addFetchParameters( table, method );
     //noinspection unused
     String columnInfo = getColumnInfo( whereCols );
     //noinspection unused
@@ -915,29 +938,36 @@ class SchemaParentType
     srcClass.addMethod( method );
   }
 
-  private List<SchemaColumn> addSelectParameters( SchemaTable table, AbstractSrcMethod method )
+  private List<SchemaColumn> addFetchParameters( SchemaTable table, AbstractSrcMethod method )
   {
     List<SchemaColumn> pk = table.getPrimaryKey();
     if( !pk.isEmpty() )
     {
-      for( SchemaColumn col : pk )
-      {
-        method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
-      }
+      addParameters( method, pk );
       return pk;
     }
     else
     {
       for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
       {
-        for( SchemaColumn col : entry.getValue() )
-        {
-          method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
-        }
+        addParameters( method, entry.getValue() );
         return entry.getValue();
       }
     }
     return Collections.emptyList();
+  }
+
+  private static void addParameters( AbstractSrcMethod method, List<SchemaColumn> keyCols )
+  {
+    for( SchemaColumn col : keyCols )
+    {
+      SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+      if( !col.isNullable() )
+      {
+        param.addAnnotation( NotNull.class.getSimpleName() );
+      }
+      method.addParam( param );
+    }
   }
 
   private void addDeleteMethod( SrcLinkedClass srcClass )
