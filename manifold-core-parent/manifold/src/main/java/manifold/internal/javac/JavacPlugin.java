@@ -1355,7 +1355,7 @@ public class JavacPlugin implements Plugin, TaskListener
     for( Iterator<FileFragmentResource> iterator = _fileFragmentResources.iterator(); iterator.hasNext(); )
     {
       FileFragmentResource fragment = iterator.next();
-      if( fragment.embed( e ) )
+      if( fragment.inline( e ) )
       {
         iterator.remove();
       }
@@ -1392,7 +1392,7 @@ public class JavacPlugin implements Plugin, TaskListener
       _content = content;
     }
 
-    private boolean embed( TaskEvent e )
+    private boolean inline( TaskEvent e )
     {
       JavaFileObject sourceFile = e.getSourceFile();
       if( !sourceFile.equals( _sourceFile ) )

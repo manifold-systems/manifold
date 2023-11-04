@@ -25,7 +25,7 @@ begin experimenting with GraphQL using Manifold.
 * [Types](#type)
 * [Scalar Types](#scalar-types)
 * [Configuring for Multiple Schemas](#configuring-for-multiple-schemas)
-* [Embedding Queries with Fragments](#embedding-queries-with-fragments)
+* [Inlining Queries with Fragments](#inlining-queries-with-fragments)
 * [IDE Support](#ide-support)
 * [Setup](#setup)
 * [Javadoc](#javadoc)
@@ -370,7 +370,7 @@ The manifold API fully supports GraphQL scalars and also provides a host of non-
 _Scalar Types_ below.
  
 ### `fragment`
-Not to be confused with [Manifold Fragments](#embedding-queries-with-fragments), a GraphQL fragment is generally a query
+Not to be confused with [Manifold Fragments](#inlining-queries-with-fragments), a GraphQL fragment is generally a query
 you can directly reference inside other queries so you don't have to copy and paste the same set of fields. Instead you
 simply reference the name of the fragment. This not only helps reduce the size of queries, but also prevents copy/paste
 errors and makes your queries more readable.
@@ -523,15 +523,15 @@ Manifold supports both the newer and legacy formats.
 >If you are using the JS-GraphQL IntelliJ plugin, you may have noticed it also uses .graphqlconfig files. You can
 > use the same files with Manifold as well.
 
-# Embedding Queries with Fragments
+# Inlining Queries with Fragments
 
 >Note, this is a completely separate feature from GraphQL fragments and does not involve the `fragment` keyword
 
-You can now *embed* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
-means you can embed a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
+You can now *inline* resource content such as GraphQL directly in Java source as a type-safe resource _**fragment**_. This
+means you can inline a type-safe GraphQL query exactly where you use it in your Java code -- no need to create a separate
 resource file.
 
-A fragment can be either a *declaration* or an *expression*.  A fragment declaration is embedded in a multi-line
+A fragment can be either a *declaration* or an *expression*.  A fragment declaration is inlined as a multi-line
 comment like this:
 ```java
 /*[MyQuery.graphql/]
@@ -556,7 +556,7 @@ in a scope named *"my_movies"*, the declaration encodes this name like so:
 [MyQuery.graphql:my_movies/]
 ```
  
-A fragment *expression* is embedded in a String literal:
+A fragment *expression* is inlined using a String literal:
 ```java
 var query = "[.graphql/] query MovieQuery($genre: Genre){ movies(genre: $genre){ genre } }";
 var result = query.builder().build().request("").post();
@@ -577,10 +577,10 @@ expressions like this:
 
 >**IntelliJ and Android Studio users...**
 >
->Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of embedded
+>Get the [JS GraphQL plugin](https://plugins.jetbrains.com/plugin/8097-js-graphql) for rich editing of inlined
 >GraphQL fragments, it pairs exceptionally well with the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold).
 
-Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental).
+Read more about fragments in the [core Manifold docs](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#inlining-with-fragments-experimental).
 
 # IDE Support 
 

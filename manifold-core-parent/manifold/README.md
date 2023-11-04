@@ -15,7 +15,7 @@ interfaces, annotations, etc.
 * [Anatomy of a Type Manifold](#anatomy-of-a-type-manifold)
 * [Explicit Resource Compilation](#explicit-resource-compilation)
 * [Dumping Source](#dumping-source)
-* [Embedding with _Fragments_ (experimental)](#embedding-with-fragments-experimental)
+* [Inlining with _Fragments_ (experimental)](#inlining-with-fragments-experimental)
 * [IDE Support](#ide-support)
 * [Projects](#projects)
 * [Setup](#setup)
@@ -500,19 +500,19 @@ javac -Amanifold.source.target=<my-directory> ...
 >Note, you are responsible for managing the directory in your build configuration. For instance, for the "clean" build
 >target, it is your responsibility to delete the contents of the directory.
 
-# Embedding with Fragments (experimental)
+# Inlining with Fragments (experimental)
 
-You can now *embed* resource content such as JSON, GraphQL, XML, YAML, CSV, etc. directly in a Java source file as a **type-safe**
+You can now *inline* resource content such as JSON, GraphQL, XML, YAML, CSV, etc. directly in a Java source file as a **type-safe**
 resource fragment.  A fragment has the same format and grammar as a resource file and, if used with the Manifold
 IDE plugins, can be authored with rich editor features like code highlighting, parser feedback, code completion, etc.
-This means you can directly embed resources closer to where you use them in your code.  Write a query in the query language
+This means you can directly inline resources closer to where you use them in your code.  Write a query in the query language
 your application uses directly in the Java method that uses the query.
 
-You can embed a fragment as a *declaration* or a *value*.
+You can inline a fragment as a *declaration* or a *value*.
 
 ## Type Declaration
 
-You can type-safely embed resources directly in your Java code as declarations.  Here's a simple example using
+You can type-safely inline resources directly in your Java code as declarations.  Here's a simple example using
 Javascript:
 ```java
 public class MyJavaClass {
@@ -537,11 +537,11 @@ public class MyJavaClass {
   }
 }
 ``` 
-Notice the Javascript is embedded in a multiline comment. This is how you embed any kind of resource fragment as a type
+Notice the Javascript is inlined in a multiline comment. This is how you inline any kind of resource fragment as a type
 declaration.  Here the Javascript type is declared as `Barker` with a `.js` extension indicating the resource type. A fragment must use `[` and `/]` at the beginning of the comment to delimit the type name and extension.  A fragment
 covers the remainder of the comment and must follow the format of the declared extension.
 
-You can embed any Manifold enabled resource as a fragment type declaration.  Here's another example using JSON:
+You can inline any Manifold enabled resource as a fragment type declaration.  Here's another example using JSON:
 ```java
 void foo() {
   /*[Planet.json/]
@@ -576,8 +576,8 @@ void foo() {
 ```
  
 ## Scoping 
-A fragment can be embedded anywhere in your code.  The type declared in the fragment is scoped to the package of the
-enclosing class.  Thus in the example `Barker` is accessible anywhere in the enclosing `foo` method *as well as* foo's
+A fragment can be inlined anywhere in your code.  The type declared in the fragment is scoped to the package of the
+enclosing class.  Thus, in the example `Barker` is accessible anywhere in the enclosing `foo` method *as well as* foo's
 declaring class and other classes in its package.
 
 >Even though the declared type is package scoped, for the sake of readability it is best to define the fragment
@@ -598,7 +598,7 @@ var query = moviesByGenre.builder().withGenre(Action).build();
 var actionMovies = query.request(ENDPOINT).post();
 ``` 
 
-Here a GraphQL query is embedded directly in a String literal as a fragment *value*.  The resulting type is based on
+Here a GraphQL query is inlined within a String literal as a fragment *value*.  The resulting type is based on
 the fragment type in use.  In this case the GraphQL type manifold provides a special type with the single purpose of
 exposing a query `builder` method matching the one the `MoviesByGenre` query defines.
 

@@ -81,7 +81,7 @@ public abstract class SingleModuleManifoldHost extends AbstractManifoldHost
   public void addTypeSystemListenerAsWeakRef( Object ctx, ITypeSystemListener listener )
   {
     // Full type system monitoring is only necessary for an environment like an IDE where types change.
-    // Compilation and runtime environments should only care about *creation* events e.g., from a type embedded via @Type.
+    // Compilation and runtime environments should only care about *creation* events e.g., from a type inlined via @Type.
     _typeRefreshHandler.addTypeSystemListenerAsWeakRef( listener );
   }
 

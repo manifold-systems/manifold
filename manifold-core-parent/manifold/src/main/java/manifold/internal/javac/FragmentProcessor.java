@@ -23,8 +23,8 @@ import javax.tools.JavaFileObject;
 import manifold.api.util.fingerprint.Fingerprint;
 
 /**
- * Process embedded type fragments. Dynamically adds virtual resource files to the type system as they are encountered,
- * thus enabling native resource types to be embedded in Java source.
+ * Process inlined type fragments. Dynamically adds virtual resource files to the type system as they are encountered,
+ * thus enabling native resource types to be inlined in Java source.
  */
 public class FragmentProcessor
 {

@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 import manifold.internal.javac.HostKind;
 
 /**
- * A fragment of a file that is to be treated separate from the enclosing file.  Facilitates embedding structured
+ * A fragment of a file that is to be treated separate from the enclosing file.  Facilitates inlining structured
  * content in a Java source file as opposed to using a separate resource file.
  */
 public interface IFileFragment extends IFile

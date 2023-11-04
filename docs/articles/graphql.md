@@ -226,18 +226,18 @@ var result = query.request("https://api.github.com/graphql")
 This example demonstrates how you can configure a request with a security token using the Bearer authentication scheme.
 Note Bearer authentication should only be used over HTTPS (SSL).
 
-# Embedding Queries
+# Inlining Queries
 
-If you like to experiment with bleeding edge technology, have a look at Manifold [fragments](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#embedding-with-fragments-experimental).
-This new experimental feature lets you embed resources directly and *type-safely* into your Java source. It is
+If you like to experiment with bleeding edge technology, have a look at Manifold [fragments](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold#inlining-with-fragments-experimental).
+This new experimental feature lets you inline resources directly and *type-safely* into your Java source. It is
 particularly effective for single-use GraphQL queries where you edit and maintain a query definition closer to where it
 is used in code.
 
-It's pretty simple. You embed a query definition in a comment like this:
+It's pretty simple. You inline a query definition as a comment like this:
 
 <p><img src="http://manifold.systems/images/fragment_declaration.png" alt="declaration fragment" width="80%" height="80%"/></p>
 
-The `[MyQuery.graphql/]` tag tells Java this is an embedded fragment of resource type *graphql* with name *MyQuery*, as
+The `[MyQuery.graphql/]` tag tells Java this is an inlined fragment of resource type *graphql* with name *MyQuery*, as
 if it were defined in a resource file of the same name. As such, you reference the fragment by its declared name,
 *MyQuery*.
 

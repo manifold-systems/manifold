@@ -187,13 +187,13 @@ There's much more to cover.  Future articles in this series will address:
 
 As a bonus for reading this far, I'll touch on one of Manifold's latest features...
 
-A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can 
-use `$` to embed a simple variable:
+A **String template** lets you use the `$` character to inline a Java expression directly within a String.  You can 
+use `$` to inline a simple variable:
 ```java
 int hour = 8;
 String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
 ```
-Or you can embed an expression of any complexity in curly braces:
+Or you can inline an expression of any complexity in curly braces:
 ```java
 LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
