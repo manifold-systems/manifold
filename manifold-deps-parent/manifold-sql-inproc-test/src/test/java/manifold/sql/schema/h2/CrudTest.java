@@ -17,7 +17,6 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.DdlResourceFileTest;
 import manifold.sql.rt.api.TxScope;
 import manifold.sql.schema.h2.base.H2DdlServerTest;
 import org.junit.*;
@@ -86,7 +85,7 @@ public class CrudTest extends H2DdlServerTest
 
     hi.delete( true );
     txScope.commit();
-    Country readHi = Country.fetch( txScope, countryId );
-    assertNull( readHi );
+    Country fetchHi = Country.fetch( txScope, countryId );
+    assertNull( fetchHi );
   }
 }

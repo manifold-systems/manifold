@@ -26,8 +26,10 @@ import manifold.internal.javac.SourceJavaFileObject;
 import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.query.api.QueryAnalyzer;
+import manifold.sql.api.Statement;
+import manifold.sql.query.api.Command;
 import manifold.sql.query.api.QueryTable;
+import manifold.sql.query.api.SqlAnalyzer;
 import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 
@@ -46,7 +48,7 @@ public class SqlModel extends AbstractSingleFileModel
   private final SqlManifold _sqlManifold;
   private SqlScope _scope;
   private SqlParentType _type;
-  private QueryTable _query;
+  private Statement _sqlStatement;
   private SqlIssueContainer _issues;
 
   @SuppressWarnings("WeakerAccess")
@@ -62,7 +64,18 @@ public class SqlModel extends AbstractSingleFileModel
     _issues = null;
     _scope = assignScope();
     analyze();
-    _type = new SqlParentType( this );
+    _type = isCommand()
+      ? new CommandParentType( this )
+      : new QueryParentType( this );
+  }
+
+  public boolean isQuery()
+  {
+    return getSqlStatement() instanceof QueryTable;
+  }
+  public boolean isCommand()
+  {
+    return getSqlStatement() instanceof Command;
   }
 
   private void analyze()
@@ -75,16 +88,16 @@ public class SqlModel extends AbstractSingleFileModel
     String content = null;
     try( Reader reader = new InputStreamReader( getFile().openInputStream() ) )
     {
-      QueryAnalyzer queryAnalyzer = QueryAnalyzer.PROVIDERS.get().stream()
+      SqlAnalyzer sqlAnalyzer = SqlAnalyzer.PROVIDERS.get().stream()
         .findFirst()
-        .orElseThrow( () -> new RuntimeException( "Missing QueryAnalyzer provider" ) );
+        .orElseThrow( () -> new RuntimeException( "Missing SqlAnalyzer provider" ) );
       content = StreamUtil.getContent( reader );
-      _query = queryAnalyzer.getQuery( ManClassUtil.getShortClassName( getFqn() ), _scope, content );
-      _issues = _query.getIssues();
+      _sqlStatement = sqlAnalyzer.makeStatement( ManClassUtil.getShortClassName( getFqn() ), _scope, content );
+      _issues = _sqlStatement.getIssues();
     }
     catch( RuntimeException ise )
     {
-      _query = null;
+      _sqlStatement = null;
       Schema schema = _scope.getSchema();
       _issues = new SqlIssueContainer( schema == null ? DriverInfo.ERRANT : schema.getDriverInfo(),
         Collections.singletonList( ise ), ManStringUtil.isCrLf( content ) );
@@ -110,9 +123,9 @@ public class SqlModel extends AbstractSingleFileModel
     return _scope;
   }
 
-  QueryTable getQuery()
+  Statement getSqlStatement()
   {
-    return _query;
+    return _sqlStatement;
   }
 
   SqlParentType getType()

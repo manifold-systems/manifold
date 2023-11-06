@@ -19,6 +19,8 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class SimpleTest extends TestCase
 {
+  public void testNothing() {}
+
   public void testMe()
   {
     "this is impossible".echo();

@@ -26,7 +26,7 @@ public interface DataElement extends BaseElement
 {
   Logger LOGGER = LoggerFactory.getLogger( DataElement.class );
 
-  Table getTable();
+  Statement getOwner();
 
   default Class<?> getType()
   {

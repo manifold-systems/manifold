@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
+package manifold.sql.api;
 
-import manifold.sql.api.Column;
-
-public interface SchemaColumn extends Column
+public interface Parameter extends DataElement
 {
-  SchemaTable getOwner();
-  boolean isNonNullUniqueId();
-  boolean isPrimaryKeyPart();
-  String getNonNullUniqueKeyName();
-  boolean isAutoIncrement();
-  boolean isGenerated();
-  String getDefaultValue();
-  SchemaColumn getForeignKey();
-  int getNumPrecRadix();
+  boolean isSigned();
 }

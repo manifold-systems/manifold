@@ -38,6 +38,7 @@ import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Flags.INTERFACE;
 import static com.sun.tools.javac.code.TypeTag.ERROR;
+import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.util.JreUtil.isJava8;
 
 public interface ManAttr
@@ -1028,6 +1029,30 @@ public interface ManAttr
     }
 
     return null;
+  }
+
+  static boolean checkConcatenation( JCTree.JCLiteral tree, CharSequence chars, HostKind hostKind, Log logger )
+  {
+    if( hostKind == DOUBLE_QUOTE_LITERAL )
+    {
+      char prev = 0;
+      for( int i = 1; i < chars.length()-1; i++ )
+      {
+        char c = chars.charAt( i );
+        if( c == '"' && prev != '\\' )
+        {
+          if( logger != null )
+          {
+              logger.error( tree.pos().getStartPosition(), "proc.messager",
+              "Manifold fragments are not supported with string concatenation. " +
+                "Either make this one string literal, or consider using a multiline comment to host it instead." );
+          }
+          return true;
+        }
+        prev = c;
+      }
+    }
+    return false;
   }
 
   static boolean isSynthetic( Symbol.MethodSymbol m )

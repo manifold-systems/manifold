@@ -20,7 +20,7 @@ import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.api.ForeignKeyQueryRef;
 import manifold.sql.query.api.QueryColumn;
-import manifold.sql.query.api.QueryParameter;
+import manifold.sql.api.Parameter;
 import manifold.sql.query.api.QueryTable;
 import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
@@ -36,13 +36,15 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static manifold.sql.util.StatementUtil.replaceNamesWithQuestion;
+
 public class JdbcQueryTable implements QueryTable
 {
   private final SqlScope _scope;
   private final String _source;
   private final String _name;
   private final Map<String, QueryColumn> _columns;
-  private final List<QueryParameter> _parameters;
+  private final List<Parameter> _parameters;
   private final SqlIssueContainer _issues;
 
   public JdbcQueryTable( SqlScope scope, String simpleName, String query )
@@ -73,18 +75,6 @@ public class JdbcQueryTable implements QueryTable
     }
   }
 
-  private static String replaceNamesWithQuestion( String source, List<ParamInfo> params )
-  {
-    StringBuilder procSource = new StringBuilder( source );
-    for( int i = params.size()-1; i >= 0; i-- )
-    {
-      ParamInfo param = params.get( i );
-      String name = param.getName();
-      procSource.replace( param.getPos(), param.getPos() + name.length(), "?" );
-    }
-    return procSource.toString();
-  }
-
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
   {
     DatabaseMetaData metadata = c.getMetaData();
@@ -99,7 +89,7 @@ public class JdbcQueryTable implements QueryTable
       for( int i = 1; i <= paramCount; i++ )
       {
         String name = paramNames.isEmpty() ? null : paramNames.get( i - 1 ).getName().substring( 1 );
-        JdbcQueryParameter param = new JdbcQueryParameter( i, name, this, paramMetaData, metadata );
+        JdbcParameter param = new JdbcParameter( i, name, this, paramMetaData, metadata );
         _parameters.add( param );
       }
 //todo: remove this code path?...
@@ -125,10 +115,10 @@ public class JdbcQueryTable implements QueryTable
       // most drivers do NOT require query exec to get the table corresponding with the query column,
       // so far only Oracle and SqlServer need to execute the query :\
 
-      List<QueryParameter> parameters = getParameters();
+      List<Parameter> parameters = getParameters();
       for( int i = 0; i < parameters.size(); i++ )
       {
-        QueryParameter p = parameters.get( i );
+        Parameter p = parameters.get( i );
         ps.setNull( i+1, p.getJdbcType() );
       }
       ps.executeQuery();
@@ -247,7 +237,7 @@ public class JdbcQueryTable implements QueryTable
   }
 
   @Override
-  public String getQuerySource()
+  public String getSqlSource()
   {
     return _source;
   }
@@ -277,7 +267,7 @@ public class JdbcQueryTable implements QueryTable
   }
 
   @Override
-  public List<QueryParameter> getParameters()
+  public List<Parameter> getParameters()
   {
     return _parameters;
   }

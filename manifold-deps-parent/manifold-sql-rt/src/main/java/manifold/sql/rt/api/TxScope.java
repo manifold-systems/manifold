@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
@@ -24,7 +25,7 @@ import java.sql.SQLException;
  * Tx scopes manage persistence of changed state. The {@link #commit()} method persists changes to the data source
  * whenever needed and as often as needed.
  * <p/>
- * Note, if entity types and queries are not used with an explicit TxScope, a default scope is provided. The default scope
+ * If entity types and queries are not used with an explicit TxScope, a default scope is provided. The default scope
  * is a dependency, which can be customized.
  */
 public interface TxScope
@@ -59,4 +60,43 @@ public interface TxScope
    * @throws SQLException
    */
   void revert() throws SQLException;
+
+  /**
+   * Add change[s] that are to be executed during the next call to {@link #commit()}.
+   * <p/>
+   * This method is primarily intended for executing raw {@link SqlCommand}s as opposed to operations on
+   * entities, which are handled automatically.
+   *
+   * <pre><code>
+   * public void eraseHistoryNewerThan(Instant newerThan) {
+   *   // The SQL delete statement executes the next time scope.commit() is called
+   *   MyDatabase.addRawChange(txScope ->
+   *     "[.sql] Delete From history Where created_on >= :newerThan"
+   *       .execute(txScope, dateValue));
+   * }
+   * . . .
+   * // commit all entity changes and changes via addRawChange()
+   * MyDatabase.commit();
+   * </code></pre>
+   *
+   * @param rawChange Raw change to be executed during the next call to {@link #commit()}. The change should normally
+   * involve a {@link SqlCommand} execution.
+   */
+  void addRawChange( ScopeConsumer rawChange );
+
+  @FunctionalInterface
+  interface ScopeConsumer
+  {
+    void accept( RawChangeCtx ctx ) throws SQLException;
+  }
+
+  /**
+   * This interface also ensures a raw change is not unintentionally committed to another TxScope
+   */
+  interface RawChangeCtx
+  {
+    TxScope getTxScope();
+    Connection getConnection();
+  }
+
 }

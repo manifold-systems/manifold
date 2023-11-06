@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.jdbc;
+package manifold.sql.api;
 
-import manifold.sql.query.api.QueryTable;
-import manifold.sql.query.api.QueryAnalyzer;
-import manifold.sql.query.type.SqlScope;
+import manifold.sql.query.type.SqlIssueContainer;
 
-public class JdbcQueryAnalyzer implements QueryAnalyzer
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+
+public interface Statement
 {
-  @Override
-  public QueryTable getQuery( String queryName, SqlScope scope, String querySource )
+  String getName();
+  String getSqlSource();
+  SqlIssueContainer getIssues();
+  default List<Parameter> getParameters()
   {
-    return new JdbcQueryTable( scope, queryName, querySource );
+    return emptyList();
   }
 }

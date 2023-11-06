@@ -16,9 +16,8 @@
 
 package manifold.sql.query.api;
 
-import manifold.sql.api.DataElement;
+import manifold.sql.api.Statement;
 
-public interface QueryParameter extends DataElement
+public interface Command extends Statement
 {
-  boolean isSigned();
 }

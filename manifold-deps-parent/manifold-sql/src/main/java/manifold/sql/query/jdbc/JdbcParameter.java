@@ -17,15 +17,19 @@
 package manifold.sql.query.jdbc;
 
 import manifold.rt.api.util.Pair;
-import manifold.sql.query.api.QueryParameter;
+import manifold.sql.api.Statement;
+import manifold.sql.api.Parameter;
 import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.api.TypeProvider;
 
-import java.sql.*;
+import java.sql.DatabaseMetaData;
+import java.sql.ParameterMetaData;
+import java.sql.SQLException;
+import java.sql.Types;
 
-public class JdbcQueryParameter implements QueryParameter
+public class JdbcParameter<S extends Statement> implements Parameter
 {
-  private final JdbcQueryTable _queryTable;
+  private final S _owner;
   private final int _position;
   private final String _name;
   private final int _jdbcType;
@@ -36,11 +40,11 @@ public class JdbcQueryParameter implements QueryParameter
   private final boolean _isSigned;
   private final String _javaClassNameForGetObject;
 
-  public JdbcQueryParameter( int paramIndex, String name, JdbcQueryTable queryTable, ParameterMetaData paramMetaData, DatabaseMetaData metaData ) throws SQLException
+  public JdbcParameter( int paramIndex, String name, S owner, ParameterMetaData paramMetaData, DatabaseMetaData metaData ) throws SQLException
   {
     _position = paramIndex;
     _name = name == null ? "p" + paramIndex : name;
-    _queryTable = queryTable;
+    _owner = owner;
 
     Pair<Integer, Boolean> types = getJdbcType( paramMetaData, paramIndex, metaData );
     _jdbcType = types.getFirst();
@@ -80,7 +84,7 @@ public class JdbcQueryParameter implements QueryParameter
     _javaClassNameForGetObject = javaClassNameForGetObject;
   }
 
-  private Pair<Integer, Boolean> getJdbcType( ParameterMetaData paramMetaData, int paramIndex, DatabaseMetaData dbMetadata ) throws SQLException
+  private Pair<Integer, Boolean> getJdbcType( ParameterMetaData paramMetaData, int paramIndex, DatabaseMetaData dbMetadata )
   {
     int jdbcType;
     boolean isFlakyDriver = false;
@@ -123,9 +127,9 @@ public class JdbcQueryParameter implements QueryParameter
   }
 
   @Override
-  public JdbcQueryTable getTable()
+  public S getOwner()
   {
-    return _queryTable;
+    return _owner;
   }
 
   @Override

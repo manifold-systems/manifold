@@ -52,6 +52,7 @@ import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
 import static manifold.rt.api.util.ManIdentifierUtil.makeIdentifier;
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
+import static manifold.sql.rt.api.TxScope.*;
 import static manifold.sql.rt.util.DriverInfo.Postgres;
 import static manifold.sql.rt.util.DriverInfo.SQLite;
 
@@ -90,14 +91,25 @@ class SchemaParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Modifier.PUBLIC )
-      .addInterface( new SrcType( SchemaType.class.getSimpleName() ) );
+      .addInterface( SchemaType.class.getSimpleName() );
     addImports( srcClass );
-    addDefaultScopeMethod( srcClass );
-    addCommitMethod( srcClass );
-    addNewScopeMethod( srcClass );
+    addTxScopeMethods( srcClass );
     addInnerTypes( srcClass );
     addFkColAssignMethod( srcClass );
     srcClass.render( sb, 0 );
+  }
+
+  private void addTxScopeMethods( SrcLinkedClass srcClass )
+  {
+    addNewScopeMethod( srcClass );
+
+    addDefaultScopeMethod( srcClass );
+
+    // these methods implement TxScope as static methods e.g., MyDatabase.commit() is shorthand for MyDatabase.defaultScope().commit()
+    addGetDbConfigMethod( srcClass );
+    addCommitMethod( srcClass );
+    addRevertMethod( srcClass );
+    addRawChangeMethod( srcClass );
   }
 
   private void addDefaultScopeMethod( SrcLinkedClass srcClass )
@@ -105,8 +117,19 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .name( "defaultScope" )
-      .returns( new SrcType( TxScope.class.getSimpleName() ) );
-    method.body( "return ${Dependencies.class.getName()}.instance().getDefaultTxScopeProvider().defaultScope(${srcClass.getName()}.class);" );
+      .returns( new SrcType( TxScope.class.getSimpleName() ) )
+      .body( "return ${Dependencies.class.getName()}.instance().getDefaultTxScopeProvider()" +
+        ".defaultScope(${srcClass.getName()}.class);" );
+    srcClass.addMethod( method );
+  }
+
+  private void addGetDbConfigMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "getDbConfig" )
+      .returns( DbConfig.class )
+      .body( "return defaultScope().getDbConfig();" );
     srcClass.addMethod( method );
   }
 
@@ -117,6 +140,27 @@ class SchemaParentType
       .name( "commit" )
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
       .body( "defaultScope().commit();" );
+    srcClass.addMethod( method );
+  }
+
+  private void addRevertMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "revert" )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().revert();" );
+    srcClass.addMethod( method );
+  }
+
+  private void addRawChangeMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "addRawChange" )
+      .addParam( "rawChange", ScopeConsumer.class.getSimpleName() )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().addRawChange(rawChange);" );
     srcClass.addMethod( method );
   }
 
@@ -705,7 +749,7 @@ class SchemaParentType
   private boolean bullshit( SchemaColumn col )
   {
     // Sqlite: a generated, auto-increment id, but since sqlite is retarded at all levels...
-    DriverInfo driver = col.getTable().getSchema().getDriverInfo();
+    DriverInfo driver = col.getOwner().getSchema().getDriverInfo();
     boolean isSqliteRowId = driver == SQLite &&
       col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
     if( isSqliteRowId )
@@ -729,6 +773,7 @@ class SchemaParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( TxScope.class );
+    srcClass.addImport( ScopeConsumer.class );
     srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
@@ -1039,7 +1084,7 @@ class SchemaParentType
   {
     SchemaColumn fkToMe;
     SchemaColumn fkToOther;
-    if( uk.getFirst().getForeignKey().getTable() == table )
+    if( uk.getFirst().getForeignKey().getOwner() == table )
     {
       fkToMe = uk.getFirst();
       fkToOther = uk.getSecond();
@@ -1052,7 +1097,7 @@ class SchemaParentType
 
     // e.g., select * from CATEGORY join FILM_CATEGORY on CATEGORY.CATEGORY_ID = FILM_CATEGORY.CATEGORY_ID where FILM_CATEGORY.FILM_ID = :FILM_ID;
     //noinspection unused
-    String tableFqn = getTableFqn( fkToOther.getForeignKey().getTable() );
+    String tableFqn = getTableFqn( fkToOther.getForeignKey().getOwner() );
     //noinspection unused
     String propName = makePascalCaseIdentifier( JdbcSchemaForeignKey.removeId( fkToOther.getName() ) + "_ref", true );
     SrcMethod method = new SrcMethod( srcClass )
@@ -1060,11 +1105,11 @@ class SchemaParentType
       .name( "fetch${propName}s" )
       .returns( new SrcType( "List<$tableFqn>" ) );
     //noinspection unused
-    String configName = fkToOther.getForeignKey().getTable().getSchema().getDbConfig().getName();
+    String configName = fkToOther.getForeignKey().getOwner().getSchema().getDbConfig().getName();
     //noinspection unused
-    String otherTable = fkToOther.getForeignKey().getTable().getName();
+    String otherTable = fkToOther.getForeignKey().getOwner().getName();
     //noinspection unused
-    String linkTable = fkToOther.getTable().getName();
+    String linkTable = fkToOther.getOwner().getName();
 
     //noinspection unused
     String sql = "select * from $otherTable " +
@@ -1097,8 +1142,8 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToOther.getForeignKey();
-    sb.append( refCol.getTable().getName() ).append( '.' ).append( refCol.getName() ).append( " = " )
-      .append( fkToOther.getTable().getName() ).append( '.' ).append( fkToOther.getName() );
+    sb.append( refCol.getOwner().getName() ).append( '.' ).append( refCol.getName() ).append( " = " )
+      .append( fkToOther.getOwner().getName() ).append( '.' ).append( fkToOther.getName() );
     return sb.toString();
   }
 
@@ -1107,7 +1152,7 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToMe.getForeignKey();
-    sb.append( fkToMe.getTable().getName() ).append( '.' ).append( fkToMe.getName() ).append( " = ?" );
+    sb.append( fkToMe.getOwner().getName() ).append( '.' ).append( fkToMe.getName() ).append( " = ?" );
     return sb.toString();
   }
 

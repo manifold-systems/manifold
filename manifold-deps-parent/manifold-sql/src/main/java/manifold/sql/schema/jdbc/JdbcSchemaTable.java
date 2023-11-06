@@ -17,6 +17,7 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.rt.api.util.Pair;
+import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
@@ -38,6 +39,7 @@ public class JdbcSchemaTable implements SchemaTable
   private final JdbcSchema _schema;
   private final String _name;
   private final String _description;
+  private final String _tableDdl;
   private final Kind _kind;
   private final Map<String, SchemaColumn> _columns;
   private final JdbcSchemaColumn _nonNullUniqueId;
@@ -108,6 +110,7 @@ public class JdbcSchemaTable implements SchemaTable
     _nonNullUniqueKeys = new LinkedHashMap<>();
     _oneToMany = new LinkedHashSet<>();
     _manyToMany = new LinkedHashSet<>();
+    _tableDdl = null; // todo: generate DDL from metadata
     List<String> columnClassNames = getColumnClassNames( metaData );
 
     DriverInfo driver = DriverInfo.lookup( metaData );
@@ -273,6 +276,18 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
+  public String getSqlSource()
+  {
+    return _tableDdl;
+  }
+
+  @Override
+  public SqlIssueContainer getIssues()
+  {
+    return null;
+  }
+
+  @Override
   public void resolveForeignKeys()
   {
     // resolve foreign keys
@@ -332,7 +347,7 @@ public class JdbcSchemaTable implements SchemaTable
     // following conditions narrow many-to-many to cases involving two fks having only one column and
     // where both fks must reference difference tables to avoid issues with self referencing many-to-many relationships.
     && pkColumns.size() == 2 &&
-      pkColumns.get( 0 ).getForeignKey().getTable() != pkColumns.get( 1 ).getForeignKey().getTable());// this check for size==2 is just here to simplify many to many
+      pkColumns.get( 0 ).getForeignKey().getOwner() != pkColumns.get( 1 ).getForeignKey().getOwner());// this check for size==2 is just here to simplify many to many
   }
 
   public Set<SchemaForeignKey> getOneToMany()

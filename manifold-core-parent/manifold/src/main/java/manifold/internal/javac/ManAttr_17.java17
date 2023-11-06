@@ -1099,11 +1099,16 @@ public class ManAttr_17 extends Attr implements ManAttr
 
     CharSequence source = ParserFactoryFiles.getSource( getEnv().toplevel.sourcefile );
     CharSequence chars = source.subSequence( tree.pos().getStartPosition(), endPosition );
-    FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-      tree.pos().getStartPosition(), chars.toString(),
-      chars.length() > 3 && chars.charAt( 1 ) == '"'
+    HostKind hostKind = chars.length() > 3 && chars.charAt( 1 ) == '"'
       ? TEXT_BLOCK_LITERAL
-      : DOUBLE_QUOTE_LITERAL );
+      : DOUBLE_QUOTE_LITERAL;
+    if( ManAttr.checkConcatenation( tree, chars, hostKind, getLogger() ) )
+    {
+      // string concat not supported with fragments
+      return _syms.stringType.constType( tree.value );
+    }
+
+    FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment( tree.pos().getStartPosition(), chars.toString(), hostKind );
     if( fragment != null )
     {
       String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();

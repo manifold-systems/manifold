@@ -14,19 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
+package manifold.sql.rt.api;
 
-import manifold.sql.api.Column;
-
-public interface SchemaColumn extends Column
+/**
+ * Base class for all non-Select SQL statements. This interface exists primarily for custom extension methods.
+ */
+public interface SqlCommand
 {
-  SchemaTable getOwner();
-  boolean isNonNullUniqueId();
-  boolean isPrimaryKeyPart();
-  String getNonNullUniqueKeyName();
-  boolean isAutoIncrement();
-  boolean isGenerated();
-  String getDefaultValue();
-  SchemaColumn getForeignKey();
-  int getNumPrecRadix();
 }

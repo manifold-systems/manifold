@@ -17,20 +17,21 @@
 package manifold.sql.query.api;
 
 import manifold.rt.api.util.ServiceUtil;
+import manifold.sql.api.Statement;
 import manifold.sql.query.type.SqlScope;
 import manifold.util.concurrent.LocklessLazyVar;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public interface QueryAnalyzer
+public interface SqlAnalyzer
 {
-  LocklessLazyVar<Set<QueryAnalyzer>> PROVIDERS =
+  LocklessLazyVar<Set<SqlAnalyzer>> PROVIDERS =
     LocklessLazyVar.make( () -> {
-      Set<QueryAnalyzer> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, QueryAnalyzer.class, QueryAnalyzer.class.getClassLoader() );
+      Set<SqlAnalyzer> registered = new HashSet<>();
+      ServiceUtil.loadRegisteredServices( registered, SqlAnalyzer.class, SqlAnalyzer.class.getClassLoader() );
       return registered;
     } );
 
-  QueryTable getQuery( String queryName, SqlScope scope, String querySource );
+  Statement makeStatement( String queryName, SqlScope scope, String sql );
 }

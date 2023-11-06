@@ -1242,11 +1242,17 @@ public class ExtensionTransformer extends TreeTranslator
     CharSequence source = ParserFactoryFiles.getSource( enclosingClass.sym.sourcefile );
     CharSequence chars = source.subSequence( tree.pos().getStartPosition(),
       tree.pos().getEndPosition( ((JCTree.JCCompilationUnit)_tp.getCompilationUnit()).endPositions ) );
+    HostKind hostKind = chars.length() > 3 && chars.charAt( 1 ) == '"'
+      ? TEXT_BLOCK_LITERAL
+      : DOUBLE_QUOTE_LITERAL;
+    if( ManAttr.checkConcatenation( tree, chars, hostKind, null ) )
+    {
+      // string concat not supported with fragments
+      return tree;
+    }
+
     FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment(
-      tree.pos().getStartPosition(), chars.toString(),
-      chars.length() > 3 && chars.charAt( 1 ) == '"'
-        ? TEXT_BLOCK_LITERAL
-        : DOUBLE_QUOTE_LITERAL );
+      tree.pos().getStartPosition(), chars.toString(), hostKind );
     if( fragment != null && isHandledFileExtension( fragment.getExt() ) )
     {
       String fragClass = enclosingClass.sym.packge().toString() + '.' + fragment.getName();

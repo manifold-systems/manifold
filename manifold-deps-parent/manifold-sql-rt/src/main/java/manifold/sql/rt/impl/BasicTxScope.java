@@ -31,12 +31,14 @@ class BasicTxScope implements OperableTxScope
   private final DbConfig _dbConfig;
   private final Set<Entity> _rows;
   private final ReentrantReadWriteLock _lock;
+  private final List<ScopeConsumer> _rawChanges;
 
   public BasicTxScope( Class<? extends SchemaType> schemaClass )
   {
     _dbConfig = Dependencies.instance().getDbConfigProvider()
       .loadDbConfig( ManClassUtil.getShortClassName( schemaClass ), schemaClass );
     _rows = new LinkedHashSet<>();
+    _rawChanges = new ArrayList<>();
     _lock = new ReentrantReadWriteLock();
   }
 
@@ -113,20 +115,40 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
+  public void addRawChange( ScopeConsumer change )
+  {
+    if( change == null )
+    {
+      throw new IllegalArgumentException( "'change' is null" );
+    }
+
+    _lock.writeLock().lock();
+    try
+    {
+      _rawChanges.add( change );
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  @Override
   public void commit() throws SQLException
   {
     _lock.writeLock().lock();
     try
     {
-      if( _rows.isEmpty() )
+      if( _rows.isEmpty() && _rawChanges.isEmpty() )
       {
+        // no changes to commit
         return;
       }
 
-      Entity first = _rows.stream().findFirst().get();
+      Object commitItem = _rows.isEmpty() ? _rawChanges.get( 0 ) : _rows.stream().findFirst().get();
 
       ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-      try( Connection c = cp.getConnection( getDbConfig().getName(), first.getClass() ) )
+      try( Connection c = cp.getConnection( getDbConfig().getName(), commitItem.getClass() ) )
       {
         try
         {
@@ -138,6 +160,10 @@ class BasicTxScope implements OperableTxScope
             doCrud( c, row, new LinkedHashMap<>(), visited );
           }
 
+          for( ScopeConsumer rawChange : _rawChanges )
+          {
+            executeRawChange( c, rawChange );
+          }
           c.commit();
 
           for( Entity row : _rows )
@@ -146,6 +172,7 @@ class BasicTxScope implements OperableTxScope
           }
 
           _rows.clear();
+          _rawChanges.clear();
         }
         catch( SQLException e )
         {
@@ -166,6 +193,25 @@ class BasicTxScope implements OperableTxScope
     }
   }
 
+  private void executeRawChange( Connection c, ScopeConsumer rawChange ) throws SQLException
+  {
+    rawChange.accept(
+      new RawChangeCtx()
+      {
+        @Override
+        public TxScope getTxScope()
+        {
+          return BasicTxScope.this;
+        }
+
+        @Override
+        public Connection getConnection()
+        {
+          return c;
+        }
+      } );
+  }
+
   @Override
   public void revert() throws SQLException
   {
@@ -177,6 +223,7 @@ class BasicTxScope implements OperableTxScope
         ((OperableTxBindings)row.getBindings()).revert();
       }                   
       _rows.clear();
+      _rawChanges.clear();
     }
     finally
     {

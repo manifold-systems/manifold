@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.api;
+package manifold.sql.util;
 
-import manifold.sql.api.Column;
+import manifold.sql.query.jdbc.ParamInfo;
 
-public interface SchemaColumn extends Column
+import java.util.List;
+
+public class StatementUtil
 {
-  SchemaTable getOwner();
-  boolean isNonNullUniqueId();
-  boolean isPrimaryKeyPart();
-  String getNonNullUniqueKeyName();
-  boolean isAutoIncrement();
-  boolean isGenerated();
-  String getDefaultValue();
-  SchemaColumn getForeignKey();
-  int getNumPrecRadix();
+  public static String replaceNamesWithQuestion( String source, List<ParamInfo> params )
+  {
+    StringBuilder procSource = new StringBuilder( source );
+    for( int i = params.size()-1; i >= 0; i-- )
+    {
+      ParamInfo param = params.get( i );
+      String name = param.getName();
+      procSource.replace( param.getPos(), param.getPos() + name.length(), "?" );
+    }
+    return procSource.toString();
+  }
 }
