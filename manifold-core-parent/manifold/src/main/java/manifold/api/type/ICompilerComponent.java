@@ -17,6 +17,7 @@
 package manifold.api.type;
 
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.util.JCDiagnostic;
 import manifold.internal.javac.TypeProcessor;
 
 /**
@@ -50,11 +51,14 @@ public interface ICompilerComponent
 
   /**
    * Suppresses the compiler warning/error specified by {@code issueKey}.
+   *
+   * @param pos
    * @param issueKey The compiler warning/error in question. These are the javac coded message keys such as those
    *                 beginning with "compiler.err.".
+   * @param args
    * @return Returns {@code true} if the message should be suppressed.
    */
-  default boolean isSuppressed( String issueKey )
+  default boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String issueKey, Object[] args )
   {
     return false;
   }

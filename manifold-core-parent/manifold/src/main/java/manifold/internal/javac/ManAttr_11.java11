@@ -510,6 +510,14 @@ public class ManAttr_11 extends Attr implements ManAttr
   }
 
   @Override
+  public void visitReference( JCTree.JCMemberReference tree )
+  {
+    super.visitReference( tree );
+
+    checkReference( tree );
+  }
+
+  @Override
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );

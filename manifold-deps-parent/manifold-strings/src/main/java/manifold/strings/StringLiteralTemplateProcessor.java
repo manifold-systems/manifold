@@ -51,7 +51,7 @@ import manifold.util.concurrent.LocklessLazyVar;
 
 public class StringLiteralTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
-  private static final String SIMPLE_EXPR_DISABLED = "manifold.strings.simple.disabled";
+  public static final String SIMPLE_EXPR_DISABLED = "manifold.strings.simple.disabled";
 
   private TypeProcessor _tp;
   private BasicJavacTask _javacTask;
@@ -392,6 +392,17 @@ public class StringLiteralTemplateProcessor extends TreeTranslator implements IC
   private void replaceNames( JCTree.JCExpression expr, int offset )
   {
     expr.accept( new NameReplacer( _javacTask, offset ) );
+  }
+
+  @Override
+  public boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String issueKey, Object[] args )
+  {
+    if( issueKey.contains( "unmatched.processor.options" ) && args != null && args.length == 1 )
+    {
+      // filter the warning for unmatched processor option
+      return args[0].toString().contains( SIMPLE_EXPR_DISABLED );
+    }
+    return ICompilerComponent.super.isSuppressed( pos, issueKey, args );
   }
 
   private static class EscapeMatcher implements IntPredicate

@@ -497,6 +497,14 @@ public class ManAttr_8 extends Attr implements ManAttr
   }
 
   @Override
+  public void visitReference( JCTree.JCMemberReference tree )
+  {
+    super.visitReference( tree );
+
+    checkReference( tree );
+  }
+  
+  @Override
   public void visitIdent( JCTree.JCIdent tree )
   {
     super.visitIdent( tree );
