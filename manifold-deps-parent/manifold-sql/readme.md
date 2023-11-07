@@ -4,15 +4,16 @@
 
 ![latest](https://img.shields.io/badge/latest-v2023.1.30-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
-![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red)
+![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red&link=https%3A%2F%2Fgithub.com%2Fmanifold-systems%2Fmanifold)
 
 
-Manifold provides a simple alternative to conventional JDBC abstractions that makes it possible to use native SQL
-directly and type-safely from Java code.
 
-- Entity types are automatically derived from JDBC metadata at compile-time, fully relational/FK aware, CRUD, etc.
+Manifold provides a simple yet powerful alternative to conventional JDBC abstractions that makes it possible to use
+native SQL directly and type-safely from Java code.
+
 - Query types are instantly available as you type native SQL of any complexity in your IDE
 - Query results are type-safe and type-rich and simple to use (see examples below)
+- Entity types are automatically derived from JDBC metadata via compiler plugin, fully relational/FK aware, CRUD, etc.
 - No ORM, No DSLs, No annotations, and No code generation build steps
 
 Use Manifold simply by adding the Manifold compiler [plugin](https://github.com/manifold-systems/manifold) and dependencies
@@ -24,7 +25,7 @@ to your gradle or maven build.
 - Use actual SQL directly and type-safely in your Java code<br>
 - _Inline_ SQL directly in Java source, or use .sql files<br>
 - Type-safe DDL &bull; Type-safe queries &bull; Type-safe results<br>
-- Full CRUD support with DDL type projections (entities)<br>
+- Full CRUD support with DB schema type projections, without writing a line of code<br>
 - No code gen build steps &bull; No ORM shenanigans &bull; No DSL mumbo-jumbo<br>
 - Managed transaction scoping, commit/revert entity changes as needed<br>
 - Pluggable architecture with simple dependency injection<br>
