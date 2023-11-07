@@ -2,7 +2,7 @@
 
 # Manifold : SQL
 
-![latest](https://img.shields.io/badge/latest-v2023.1.29-darkgreen.svg)
+![latest](https://img.shields.io/badge/latest-v2023.1.30-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 
 Manifold provides a simple alternative to conventional JDBC abstractions that makes it possible to use native SQL

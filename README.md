@@ -2,7 +2,7 @@
 
 <img width="500" height="121" align="top" src="./docs/images/manifold4_red.png">
 
-![latest](https://img.shields.io/badge/latest-v2023.1.29-darkgreen.svg)
+![latest](https://img.shields.io/badge/latest-v2023.1.30-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 
 ---
