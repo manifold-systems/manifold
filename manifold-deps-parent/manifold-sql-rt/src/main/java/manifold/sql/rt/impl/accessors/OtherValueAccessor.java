@@ -19,8 +19,11 @@ package manifold.sql.rt.impl.accessors;
 import manifold.sql.rt.api.BaseElement;
 import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
+import manifold.sql.rt.util.DriverInfo;
 
 import java.sql.*;
+
+import static manifold.sql.rt.util.DriverInfo.Postgres;
 
 public class OtherValueAccessor implements ValueAccessor
 {
@@ -67,7 +70,8 @@ public class OtherValueAccessor implements ValueAccessor
     // See also BitValueAccessor for more of the same.
     try
     {
-      if( metaData.getDatabaseProductName().equalsIgnoreCase( "postgresql" ) )
+      DriverInfo driver = DriverInfo.lookup( metaData );
+      if( driver == Postgres )
       {
         String lcSqlType = ci.getSqlType().toLowerCase();
         switch( lcSqlType )

@@ -19,10 +19,7 @@ package manifold.sql.scratch.junk;
 import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.ConnectionProvider;
-import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.api.DbLocationProvider;
-import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.*;
 import manifold.sql.rt.impl.DbConfigImpl;
 import manifold.util.ManExceptionUtil;
 
@@ -109,6 +106,6 @@ public class OracleJDBC extends CommonJDBC
       throw new RuntimeException( e );
     }
     bindings.put( "name", "OracleSakila" );
-    return new DbConfigImpl( bindings, DbLocationProvider.Mode.CompileTime );
+    return new DbConfigImpl( bindings, ExecutionEnv.Compiler );
   }
 }

@@ -20,9 +20,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
- * Use this annotation in generated code to handle a file fragment embedded in a String literal:
+ * Use this annotation in generated code to handle a file fragment inlined in a String literal:
  * <pre>
- *   // Sample code using embedded SQL
+ *   // Sample code using inlined SQL
  *   var query = "[.sql/] SELECT name, age FROM contact WHERE age > :age";
  * </pre>
  * <pre>

@@ -21,9 +21,9 @@ import java.util.List;
 
 public interface CrudProvider
 {
-  <T extends TableRow> void create( Connection c, UpdateContext<T> ctx );
-  <T extends TableRow> T readOne( QueryContext<T> ctx );
-  <T extends TableRow> List<T> readMany( QueryContext<T> ctx );
-  <T extends TableRow> void update( Connection c, UpdateContext<T> ctx );
-  <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx );
+  <T extends Entity> void create( Connection c, UpdateContext<T> ctx );
+  <T extends Entity> T readOne( QueryContext<T> ctx );
+  <T extends Entity> List<T> readMany( QueryContext<T> ctx );
+  <T extends Entity> void update( Connection c, UpdateContext<T> ctx );
+  <T extends Entity> void delete( Connection c, UpdateContext<T> ctx );
 }

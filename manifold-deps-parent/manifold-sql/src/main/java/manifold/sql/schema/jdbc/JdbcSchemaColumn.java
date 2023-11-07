@@ -74,7 +74,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   }
 
   @Override
-  public JdbcSchemaTable getTable()
+  public JdbcSchemaTable getOwner()
   {
     return _table;
   }

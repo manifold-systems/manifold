@@ -19,8 +19,12 @@ package manifold.sql.rt.impl.accessors;
 import manifold.sql.rt.api.BaseElement;
 import manifold.sql.rt.api.ColumnInfo;
 import manifold.sql.rt.api.ValueAccessor;
+import manifold.sql.rt.util.DriverInfo;
 
 import java.sql.*;
+
+import static manifold.sql.rt.util.DriverInfo.MySQL;
+import static manifold.sql.rt.util.DriverInfo.Postgres;
 
 public class BitValueAccessor implements ValueAccessor
 {
@@ -45,8 +49,8 @@ public class BitValueAccessor implements ValueAccessor
   {
     if( elem.getSize() > 1 )
     {
-      String productName = rs.getStatement().getConnection().getMetaData().getDatabaseProductName();
-      if( productName.toLowerCase().contains( "mysql" ) )
+      DriverInfo d = DriverInfo.lookup( rs.getStatement().getConnection().getMetaData() );
+      if( d == MySQL )
       {
         return rs.getBigDecimal( elem.getPosition() ).toBigInteger().toString( 2 );
       }
@@ -85,8 +89,8 @@ public class BitValueAccessor implements ValueAccessor
     // Note, SQL cast expr does not work here, hence the literal value expressions.
     try
     {
-      String productName = metaData.getDatabaseProductName();
-      if( productName.equalsIgnoreCase( "postgresql" ) || productName.equalsIgnoreCase( "mysql" ) )
+      DriverInfo driver = DriverInfo.lookup( metaData );
+      if( driver == Postgres || driver == MySQL )
       {
         if( !ci.getSqlType().toLowerCase().contains( "bool" ) )
         {
@@ -94,7 +98,7 @@ public class BitValueAccessor implements ValueAccessor
           // and then throws exceptions about this :\
 
           // "bit" types must be manually parameterized with postgres :(
-          return coerce( productName, value, ci );
+          return coerce( driver, value, ci );
         }
       }
     }
@@ -105,7 +109,7 @@ public class BitValueAccessor implements ValueAccessor
     return "?";
   }
 
-  private String coerce( String productName, Object value, ColumnInfo ci ) throws SQLException
+  private String coerce( DriverInfo driver, Object value, ColumnInfo ci ) throws SQLException
   {
     if( value == null )
     {
@@ -117,14 +121,14 @@ public class BitValueAccessor implements ValueAccessor
     }
     if( value instanceof CharSequence )
     {
-      return "B'" + value + "'" + cast( productName, ci );
+      return "B'" + value + "'" + cast( driver, ci );
     }
     throw new SQLException( "Unexpected type for BIT: " + value.getClass() );
   }
 
-  private String cast( String productName, ColumnInfo ci )
+  private String cast( DriverInfo driver, ColumnInfo ci )
   {
-    if( !productName.equalsIgnoreCase( "postgresql" ) )
+    if( driver != Postgres )
     {
       // only postgres requires a cast
       return "";

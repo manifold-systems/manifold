@@ -67,5 +67,8 @@ public interface Dependencies
 
   ValueAccessorProvider getValueAccessorProvider();
 
+  @SuppressWarnings( "unused" ) // used from generated code
+  CustomEntityFactory getCustomEntityFactory();
+
   <T> T fetch( Class<T> cls );
 }

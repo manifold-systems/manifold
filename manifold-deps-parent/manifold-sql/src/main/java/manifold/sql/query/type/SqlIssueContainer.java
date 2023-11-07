@@ -18,6 +18,7 @@ package manifold.sql.query.type;
 
 import manifold.internal.javac.IIssue;
 import manifold.internal.javac.IIssueContainer;
+import manifold.sql.rt.util.DriverInfo;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -27,13 +28,13 @@ import java.util.stream.Collectors;
 public class SqlIssueContainer implements IIssueContainer
 {
   private final List<IIssue> _issues;
-  private final String _productName;
+  private final DriverInfo _driver;
   private final boolean _isQueryCrLf;
 
   @SuppressWarnings("WeakerAccess")
-  public SqlIssueContainer( String productName, List<Exception> errors, boolean isQueryCrLf )
+  public SqlIssueContainer( DriverInfo driver, List<Exception> errors, boolean isQueryCrLf )
   {
-    _productName = productName;
+    _driver = driver;
     _issues = new ArrayList<>();
     addIssues( errors );
     _isQueryCrLf = isQueryCrLf;
@@ -78,15 +79,15 @@ public class SqlIssueContainer implements IIssueContainer
 
   private int findOffset( Exception e )
   {
-    if( _productName == null )
+    if( _driver == null )
     {
       // errant schema
       return 0;
     }
 
-    switch( _productName.toLowerCase() )
+    switch( _driver )
     {
-      case "h2":
+      case H2:
         return findOffset_h2( e );
       default:
         return 0;

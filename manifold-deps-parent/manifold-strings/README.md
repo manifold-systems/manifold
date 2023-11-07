@@ -2,13 +2,13 @@
 
 # Basics
 
-A **String template** lets you use the `$` character to embed a Java expression directly into a String.  You can use `$`
-to embed a simple variable:
+A **String template** lets you use the `$` character to inline a Java expression directly into a String.  You can use `$`
+to inline a simple variable:
 ```java
 int hour = 8;
 String time = "It is $hour o'clock";  // prints "It is 8 o'clock"
 ```
-Or you can embed an expression of any complexity in curly braces:
+Or you can inline an expression of any complexity in curly braces:
 ```java
 LocalTime localTime = LocalTime.now();
 String ltime = "It is ${localTime.getHour()}:${localTime.getMinute()}"; // prints "It is 8:39"
@@ -131,7 +131,7 @@ mvn compile
 ## Using this project
 
 The `manifold-strings` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 20.
+versions 8 - 21.
 
 ## Binaries
 
@@ -143,7 +143,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 20), the script takes care of the rest. 
+version (8 - 21), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -163,8 +163,8 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-strings:2023.1.29'
-    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.29'
+    annotationProcessor 'systems.manifold:manifold-strings:2023.1.30'
+    testAnnotationProcessor 'systems.manifold:manifold-strings:2023.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -206,7 +206,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.29</manifold.version>
+        <manifold.version>2023.1.30</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->

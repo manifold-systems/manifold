@@ -28,6 +28,6 @@ public interface SchemaForeignKey
 
   default SchemaTable getOwnTable()
   {
-    return getColumns().get( 0 ).getTable();
+    return getColumns().get( 0 ).getOwner();
   }
 }

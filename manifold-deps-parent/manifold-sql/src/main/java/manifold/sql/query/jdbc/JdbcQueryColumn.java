@@ -121,7 +121,7 @@ public class JdbcQueryColumn implements QueryColumn
   {
     try
     {
-      Set<String> tables = TablesNamesFinder.findTables( _queryTable.getQuerySource() );
+      Set<String> tables = TablesNamesFinder.findTables( _queryTable.getSqlSource() );
       if( tables.size() == 1 )
       {
         String tableName = tables.iterator().next();
@@ -133,7 +133,7 @@ public class JdbcQueryColumn implements QueryColumn
       }
       else if( !tables.isEmpty() )
       {
-        PlainSelect select = (PlainSelect)CCJSqlParserUtil.parse( _queryTable.getQuerySource() );
+        PlainSelect select = (PlainSelect)CCJSqlParserUtil.parse( _queryTable.getSqlSource() );
         SelectItem<?> selectItem = select.getSelectItem( getPosition()-1 );
         Expression expr = selectItem.getExpression();
         if( expr instanceof Column )
@@ -198,7 +198,7 @@ public class JdbcQueryColumn implements QueryColumn
   }
 
   @Override
-  public QueryTable getTable()
+  public QueryTable getOwner()
   {
     return _queryTable;
   }

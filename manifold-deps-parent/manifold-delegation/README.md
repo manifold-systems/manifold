@@ -432,7 +432,7 @@ mvn compile
 ## Using this project
 
 The `manifold-delegation` dependency works with all build tooling, including Maven and Gradle. It fully supports Java
-versions 8 - 20.
+versions 8 - 21.
 
 This project consists of two modules:
 * `manifold-delegation`
@@ -452,7 +452,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired JDK
-LTS release (8 - 20) or latest JDK release, the script takes care of the rest.
+LTS release (8 - 21) or latest JDK release, the script takes care of the rest.
 ```groovy
 plugins {
     id 'java'
@@ -470,11 +470,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-delegation-rt:2023.1.29'
+     implementation 'systems.manifold:manifold-delegation-rt:2023.1.30'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-delegation:2023.1.29'
-     testAnnotationProcessor 'systems.manifold:manifold-delegation:2023.1.29'
+     annotationProcessor 'systems.manifold:manifold-delegation:2023.1.30'
+     testAnnotationProcessor 'systems.manifold:manifold-delegation:2023.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -510,7 +510,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.29</manifold.version>
+        <manifold.version>2023.1.30</manifold.version>
     </properties>
     
     <dependencies>
@@ -554,10 +554,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-delegation`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2023.1.30)
 
 `manifold-delegation-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2023.1.30)
 
 # License
 

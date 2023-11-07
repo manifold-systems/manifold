@@ -27,8 +27,8 @@ import manifold.json.rt.Json;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.ExecutionEnv;
 import manifold.sql.rt.impl.DbConfigImpl;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaProvider;
@@ -62,6 +62,11 @@ public class SchemaModel extends AbstractSingleFileModel
     init();
   }
 
+  public SchemaManifold getSchemaManifold()
+  {
+    return _schemaManifold;
+  }
+
   private void init()
   {
     _issues = null;
@@ -78,7 +83,7 @@ public class SchemaModel extends AbstractSingleFileModel
       bindings.put( "path", getFile().getPath().getFileSystemPathString() );
       Function<String, FqnCache<IFile>> resByExt = ext ->
         _schemaManifold.getModule().getPathCache().getExtensionCache( ext );
-      _dbConfig = new DbConfigImpl( resByExt, bindings, DbLocationProvider.Mode.CompileTime );
+      _dbConfig = new DbConfigImpl( resByExt, bindings, ExecutionEnv.Compiler );
       validate();
       for( SchemaProvider sp : SchemaProvider.PROVIDERS.get() )
       {

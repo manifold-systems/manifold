@@ -1,4 +1,6 @@
 {
-  "url": "jdbc:sqlite:${#resource /samples/db/sqlite-sakila.db, sqlite-sakila.db}",
-  "schemaPackage": "manifold.sql.schema.simple.sqlite"
+  "url": "jdbc:sqlite::memory:",
+  "schemaPackage": "manifold.sql.schema.simple.sqlite",
+  "dbDdl": "samples/ddl/sqlite-sakila-ddl.sql",
+  "inMemory": true
 }

@@ -56,7 +56,7 @@ public class AllTypesTest extends SqlserverDdlServerTest
   private static final BigDecimal Money_value = BigDecimal.TEN;
   private static final BigDecimal Smallmoney_value = BigDecimal.TEN;
   private static final int Int_value = Integer.MAX_VALUE;
-  private static final short Smallint_value = Short.MAX_VALUE;
+  private static final int Smallint_value = Short.MAX_VALUE;
   private static final double Float_value = Double.MAX_VALUE;
   private static final float Real_value = Float.MAX_VALUE;
   private static final String Varchar_value = "varchar";
@@ -137,7 +137,7 @@ public class AllTypesTest extends SqlserverDdlServerTest
     assertEquals( Money_value, a.getColMoney() );
     assertEquals( Smallmoney_value, a.getColSmallmoney() );
     assertEquals( Int_value, (int)a.getColInt() );
-    assertEquals( Smallint_value, (short)a.getColSmallint() );
+    assertEquals( Smallint_value, (int)a.getColSmallint() );
     assertEquals( 0, Float_value, (double)a.getColFloat() );
     assertEquals( 0, Real_value, (float)a.getColReal() );
     assertEquals( Varchar_value, a.getColVarchar() );
@@ -170,7 +170,7 @@ public class AllTypesTest extends SqlserverDdlServerTest
       assertEquals( 0, Money_value.compareTo( a.getColMoney() ) );
       assertEquals( 0, Smallmoney_value.compareTo( a.getColSmallmoney() ) );
       assertEquals( Int_value, (int)a.getColInt() );
-      assertEquals( Smallint_value, (short)a.getColSmallint() );
+      assertEquals( Smallint_value, (int)a.getColSmallint() );
       assertEquals( 0, Float_value, (double)a.getColFloat() );
       assertEquals( 0, Real_value, (float)a.getColReal() );
       assertEquals( Varchar_value, a.getColVarchar() );

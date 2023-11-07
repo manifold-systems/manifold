@@ -22,17 +22,17 @@ import org.junit.Before;
 
 public abstract class H2SakilaTest extends DbResourceFileTest
 {
-  private static final String DB_RESOURCE = "/samples/db/h2-sakila.mv.db";
-
-  @Before
-  public void setup()
-  {
-    _setup( DB_RESOURCE );
-  }
-
-  @After
-  public void cleanup()
-  {
-    _cleanup( DB_RESOURCE );
-  }
+//  private static final String DB_RESOURCE = "/samples/db/h2-sakila.mv.db";
+//
+//  @Before
+//  public void setup()
+//  {
+//    _setup( DB_RESOURCE );
+//  }
+//
+//  @After
+//  public void cleanup()
+//  {
+//    _cleanup( DB_RESOURCE );
+//  }
 }

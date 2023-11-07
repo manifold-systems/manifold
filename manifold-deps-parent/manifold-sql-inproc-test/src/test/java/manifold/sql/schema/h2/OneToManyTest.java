@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.h2;
 
-import manifold.sql.DdlResourceFileTest;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.junit.Test;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class OneToManyTest extends DdlResourceFileTest
+public class OneToManyTest extends H2DdlServerTest
 {
   @Test
   public void testOneToMany() throws SQLException

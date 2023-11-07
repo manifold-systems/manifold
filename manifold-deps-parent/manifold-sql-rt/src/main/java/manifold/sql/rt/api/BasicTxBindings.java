@@ -21,9 +21,10 @@ import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.util.concurrent.LockingLazyVar;
 
+import java.sql.SQLException;
 import java.util.*;
 
-public class BasicTxBindings implements TxBindings
+public class BasicTxBindings implements OperableTxBindings
 {
   /**
    * Persisted state
@@ -43,7 +44,7 @@ public class BasicTxBindings implements TxBindings
 
   private final LockingLazyVar<Bindings> _metadata;
 
-  private TableRow _owner;
+  private Entity _owner;
   private final OperableTxScope _txScope;
   private TxKind _txKind;
   private boolean _delete;
@@ -51,12 +52,12 @@ public class BasicTxBindings implements TxBindings
   public enum TxKind {Insert, Update, Unknown}
 
   /**
-   * Creates a new bindings for a new instance of a TableRow, such as a schema table or query result table.
+   * Creates a new bindings for an entity instance.
    * <p/>
-   * The {@code txKind} not only indicates the operational context of the TableRow, it also signals the type of initial
+   * The {@code txKind} not only indicates the operational context of the entity, it also signals the type of initial
    * state of the bindings. For instance, the {@code Insert} kind implies the object has no persisted state because it is
    * entirely new, thus the {@code initialState} is a set of uncommitted changes. Similarly, the {@code Update} kind must
-   * involve an existing TableRow, the state of which reflects its persisted state from the data source.
+   * involve an existing entity, the state of which reflects its persisted state from the data source.
    */
   public BasicTxBindings( TxScope txScope, TxKind txKind, Bindings initialState )
   {
@@ -86,12 +87,12 @@ public class BasicTxBindings implements TxBindings
   }
 
   @Override
-  public TableRow getOwner()
+  public Entity getOwner()
   {
     return _owner;
   }
   @Override
-  public void setOwner( TableRow owner )
+  public void setOwner( Entity owner )
   {
     _owner = owner;
   }
@@ -185,10 +186,18 @@ public class BasicTxBindings implements TxBindings
     _onHold.clear();
   }
 
+  /**
+   * Commit is called _after_ a successful commit on the TxScope.
+   * @throws SQLException
+   */
   @Override
-  public void commit()
+  public void commit() throws SQLException
   {
-    // commit is called _after_ a successful commit on the TxScope
+    if( _txKind == TxKind.Unknown )
+    {
+      throw new SQLException( "Cannot commit bindings in 'Unknown' state. Bindings were likely deleted or rolled back from creation." );
+    }
+
     if( _delete )
     {
       _persistedState.clear();
@@ -204,6 +213,24 @@ public class BasicTxBindings implements TxBindings
     _onHold.clear();
 
     _txKind = TxKind.Update;
+  }
+
+  public void revert() throws SQLException
+  {
+    switch( _txKind )
+    {
+      case Insert:
+        _changes.clear();
+        _txKind = TxKind.Unknown;
+        break;
+      case Update:
+        _changes.clear();
+        _delete = false;
+        break;
+      case Unknown:
+      default:
+        throw new SQLException( "Cannot rollback bindings in 'Unknown' state." );
+    }
   }
 
   @Override
@@ -222,6 +249,11 @@ public class BasicTxBindings implements TxBindings
     if( isForDelete() )
     {
       throw new RuntimeException( "Illegal operation, instance pending deletion" );
+    }
+
+    if( _txKind == TxKind.Unknown )
+    {
+      throw new RuntimeException( "Cannot modify bindings in 'Unknown' state. Bindings were likely deleted or rolled back from creation." );
     }
 
     checkKey( name );
@@ -313,7 +345,7 @@ public class BasicTxBindings implements TxBindings
       if( value instanceof KeyRef )
       {
         value = ((KeyRef)value).getRef();
-        if( ((TableRow)value).getBindings().isForDelete() )
+        if( ((Entity)value).getBindings().isForDelete() )
         {
           value = null;
         }
@@ -336,7 +368,7 @@ public class BasicTxBindings implements TxBindings
   }
 
   /**
-   * Note, sets the key's value to null in the changes bindings
+   * Note, sets the key's value to null in the changes bindings, to distinguish null values from unset values.
    */
   public Object remove( Object key )
   {

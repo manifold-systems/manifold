@@ -3,19 +3,14 @@ package manifold.graphql.sample;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 
 import manifold.graphql.rt.api.GqlType;
 import manifold.graphql.rt.api.GqlBuilder;
-import manifold.rt.api.Bindings;
 import manifold.rt.api.DisableStringLiteralTemplates;
 import manifold.graphql.rt.api.request.Executor;
-import manifold.json.rt.api.Requester;
 import org.junit.Test;
 
 
-import static java.lang.System.out;
 import static manifold.graphql.sample.movies.Genre.*;
 import static manifold.graphql.sample.movies.*;
 import static manifold.graphql.sample.queries.*;
@@ -112,9 +107,9 @@ public class QueryTest
   }
 
   @Test
-  public void testEmbeddedQuery()
+  public void testInlinedQuery()
   {
-    /* [ MyEmbedded.graphql /]
+    /* [ MyInlined.graphql /]
     query MyOneAnimal($id: ID!) {
       animal(id: $id) {
         id
@@ -123,10 +118,10 @@ public class QueryTest
         nationality
       }
     }*/
-    MyEmbedded.MyOneAnimal myOneAnimal = MyEmbedded.MyOneAnimal.builder( "1" ).build();
+    MyInlined.MyOneAnimal myOneAnimal = MyInlined.MyOneAnimal.builder( "1" ).build();
     assertNotNull( myOneAnimal );
 
-    /**[MyEmbedded2.graphql/]
+    /**[MyInlined2.graphql/]
     query MyOneAnimal2($id: ID!) {
       animal(id: $id) {
         id
@@ -135,7 +130,7 @@ public class QueryTest
         nationality
       }
     }*/
-    MyEmbedded2.MyOneAnimal2 myOneAnimal2 = MyEmbedded2.MyOneAnimal2.builder( "1" ).build();
+    MyInlined2.MyOneAnimal2 myOneAnimal2 = MyInlined2.MyOneAnimal2.builder( "1" ).build();
     assertNotNull( myOneAnimal2 );
   }
 

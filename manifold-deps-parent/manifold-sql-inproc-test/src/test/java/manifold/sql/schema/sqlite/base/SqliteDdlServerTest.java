@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.api;
+package manifold.sql.schema.sqlite.base;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.sql.query.type.SqlScope;
-import manifold.util.concurrent.LocklessLazyVar;
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
+import manifold.sql.schema.h2.base.DdlServerTest;
 
-import java.util.HashSet;
-import java.util.Set;
-
-public interface QueryAnalyzer
+public abstract class SqliteDdlServerTest extends DdlServerTest
 {
-  LocklessLazyVar<Set<QueryAnalyzer>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<QueryAnalyzer> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, QueryAnalyzer.class, QueryAnalyzer.class.getClassLoader() );
-      return registered;
-    } );
-
-  QueryTable getQuery( String queryName, SqlScope scope, String querySource );
+  @Override
+  protected DbConfig getDbConfig()
+  {
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "SqliteSakila", getClass() );
+  }
 }

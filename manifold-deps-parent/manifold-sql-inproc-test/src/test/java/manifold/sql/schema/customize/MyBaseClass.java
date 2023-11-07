@@ -14,11 +14,20 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.api;
+package manifold.sql.schema.customize;
 
-import manifold.sql.api.DataElement;
+import manifold.sql.rt.api.BaseEntity;
+import manifold.sql.rt.api.TxBindings;
 
-public interface QueryParameter extends DataElement
+public abstract class MyBaseClass extends BaseEntity implements MyBaseInterface
 {
-  boolean isSigned();
+  public MyBaseClass( TxBindings txBindings )
+  {
+    super( txBindings );
+  }
+
+  public String myCustomBaseMethod()
+  {
+    return "myCustomBaseMethod";
+  }
 }

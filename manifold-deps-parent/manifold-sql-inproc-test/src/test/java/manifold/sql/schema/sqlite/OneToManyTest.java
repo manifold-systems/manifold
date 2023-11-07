@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.sqlite;
 
-import manifold.sql.schema.sqlite.base.SqliteSakilaTest;
+import manifold.sql.schema.sqlite.base.SqliteDdlServerTest;
 import manifold.sql.schema.simple.sqlite.SqliteSakila;
 import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.*;
 
-public class OneToManyTest extends SqliteSakilaTest
+public class OneToManyTest extends SqliteDdlServerTest
 {
   @Test
   public void testOneToMany() throws SQLException

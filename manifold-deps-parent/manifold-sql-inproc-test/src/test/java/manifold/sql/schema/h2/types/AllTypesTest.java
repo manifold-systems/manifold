@@ -16,9 +16,9 @@
 
 package manifold.sql.schema.h2.types;
 
-import manifold.sql.DdlResourceFileTest;
-import manifold.sql.schema.simple.h2.H2AllTypes;
-import manifold.sql.schema.simple.h2.H2AllTypes.*;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
+import manifold.sql.schema.simple.h2.H2Sakila;
+import manifold.sql.schema.simple.h2.H2Sakila.*;
 import org.h2.api.Interval;
 import org.junit.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -36,7 +36,7 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 
-public class AllTypesTest extends DdlResourceFileTest
+public class AllTypesTest extends H2DdlServerTest
 {
     private static byte Tinyint_value = (byte)8;
     private static long Bigint_value = Long.MAX_VALUE;
@@ -47,7 +47,7 @@ public class AllTypesTest extends DdlResourceFileTest
     private static BigDecimal Numeric_value = BigDecimal.TEN;
     private static double Float_value = 3.14;
     private static int Integer_value = 82;
-    private static short Smallint_value = 32;
+    private static int Smallint_value = 32;
     private static float Real_value = 4.2f;
     private static double Double_value = 5.2;
     private static String Varchar_value = "varchar";
@@ -55,7 +55,7 @@ public class AllTypesTest extends DdlResourceFileTest
     private static boolean Boolean_value = true;
     private static LocalDate Date_value = LocalDate.of( 2023, 9, 3 );
     private static LocalTime Time_value = LocalTime.of( 12, 56 );
-    private static Instant Timestamp_value = Instant.now();
+    private static Instant Timestamp_value = LocalDateTime.of( 1987, 6, 17, 10, 0 ).toInstant( ZoneOffset.UTC );
     private static Interval IntervalYear_value = Interval.ofYears( 5 );
     private static Interval IntervalMonth_value = Interval.ofMonths( 5 );
     private static Interval IntervalDay_value = Interval.ofDays( 5 );
@@ -125,7 +125,7 @@ public class AllTypesTest extends DdlResourceFileTest
     a.setColTimeWithTimeZone( TimeWithTimeZone_value );
     a.setColTimestampWithTimeZone( TimestampWithTimeZone_value );
 
-    H2AllTypes.commit();
+    H2Sakila.commit();
 
     assertEquals( Tinyint_value,                (byte)a.getColTinyint() );
     assertEquals( Bigint_value,                 (long)a.getColBigint() );
@@ -136,7 +136,7 @@ public class AllTypesTest extends DdlResourceFileTest
     assertEquals( Numeric_value,                a.getColNumeric() );
     assertEquals( Float_value,                  a.getColFloat(), 0 );
     assertEquals( Integer_value,                (int)a.getColInteger() );
-    assertEquals( Smallint_value,               (short)a.getColSmallint() );
+    assertEquals( Smallint_value,               (int)a.getColSmallint() );
     assertEquals( Real_value,                   (float)a.getColReal(), 0 );
     assertEquals( Double_value,                 a.getColDouble(), 0 );
     assertEquals( Varchar_value,                a.getColVarchar() );
@@ -257,7 +257,7 @@ public class AllTypesTest extends DdlResourceFileTest
     a.setColTimeWithTimeZone( null );
     a.setColTimestampWithTimeZone( null );
 
-    H2AllTypes.commit();
+    H2Sakila.commit();
 
     assertNull( a.getColTinyint() );
     assertNull( a.getColBigint() );

@@ -29,14 +29,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 class BasicTxScope implements OperableTxScope
 {
   private final DbConfig _dbConfig;
-  private final Set<TableRow> _rows;
+  private final Set<Entity> _rows;
   private final ReentrantReadWriteLock _lock;
+  private final List<ScopeConsumer> _rawChanges;
 
   public BasicTxScope( Class<? extends SchemaType> schemaClass )
   {
     _dbConfig = Dependencies.instance().getDbConfigProvider()
       .loadDbConfig( ManClassUtil.getShortClassName( schemaClass ), schemaClass );
     _rows = new LinkedHashSet<>();
+    _rawChanges = new ArrayList<>();
     _lock = new ReentrantReadWriteLock();
   }
 
@@ -47,7 +49,7 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public Set<TableRow> getRows()
+  public Set<Entity> getRows()
   {
     _lock.readLock().lock();
     try
@@ -61,7 +63,7 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public void addRow( TableRow item )
+  public void addRow( Entity item )
   {
     if( item == null )
     {
@@ -85,7 +87,7 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public void removeRow( TableRow item )
+  public void removeRow( Entity item )
   {
     _lock.writeLock().lock();
     try
@@ -99,7 +101,7 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public boolean containsRow( TableRow item )
+  public boolean containsRow( Entity item )
   {
     _lock.readLock().lock();
     try
@@ -113,49 +115,72 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
-  public boolean commit() throws SQLException
+  public void addRawChange( ScopeConsumer change )
+  {
+    if( change == null )
+    {
+      throw new IllegalArgumentException( "'change' is null" );
+    }
+
+    _lock.writeLock().lock();
+    try
+    {
+      _rawChanges.add( change );
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  @Override
+  public void commit() throws SQLException
   {
     _lock.writeLock().lock();
     try
     {
-      if( _rows.isEmpty() )
+      if( _rows.isEmpty() && _rawChanges.isEmpty() )
       {
-        return false;
+        // no changes to commit
+        return;
       }
 
-      TableRow first = _rows.stream().findFirst().get();
+      Object commitItem = _rows.isEmpty() ? _rawChanges.get( 0 ) : _rows.stream().findFirst().get();
 
       ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-      try( Connection c = cp.getConnection( getDbConfig().getName(), first.getClass() ) )
+      try( Connection c = cp.getConnection( getDbConfig().getName(), commitItem.getClass() ) )
       {
         try
         {
           c.setAutoCommit( false );
 
-          Set<TableRow> visited = new HashSet<>();
-          for( TableRow row : _rows )
+          Set<Entity> visited = new HashSet<>();
+          for( Entity row : _rows )
           {
             doCrud( c, row, new LinkedHashMap<>(), visited );
           }
 
+          for( ScopeConsumer rawChange : _rawChanges )
+          {
+            executeRawChange( c, rawChange );
+          }
           c.commit();
 
-          for( TableRow row : _rows )
+          for( Entity row : _rows )
           {
-            row.getBindings().commit();
+            ((OperableTxBindings)row.getBindings()).commit();
           }
 
           _rows.clear();
-
-          return true;
+          _rawChanges.clear();
         }
         catch( SQLException e )
         {
           c.rollback();
 
-          for( TableRow row : _rows )
+          for( Entity row : _rows )
           {
-            row.getBindings().dropHeldValues();
+            ((OperableTxBindings)row.getBindings()).dropHeldValues();
           }
 
           throw e;
@@ -168,7 +193,45 @@ class BasicTxScope implements OperableTxScope
     }
   }
 
-  private void doCrud( Connection c, TableRow row, Map<TableRow, Set<FkDep>> unresolvedDeps, Set<TableRow> visited ) throws SQLException
+  private void executeRawChange( Connection c, ScopeConsumer rawChange ) throws SQLException
+  {
+    rawChange.accept(
+      new RawChangeCtx()
+      {
+        @Override
+        public TxScope getTxScope()
+        {
+          return BasicTxScope.this;
+        }
+
+        @Override
+        public Connection getConnection()
+        {
+          return c;
+        }
+      } );
+  }
+
+  @Override
+  public void revert() throws SQLException
+  {
+    _lock.writeLock().lock();
+    try
+    {
+      for( Entity row : _rows )
+      {
+        ((OperableTxBindings)row.getBindings()).revert();
+      }                   
+      _rows.clear();
+      _rawChanges.clear();
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  private void doCrud( Connection c, Entity row, Map<Entity, Set<FkDep>> unresolvedDeps, Set<Entity> visited ) throws SQLException
   {
     if( visited.contains( row ) )
     {
@@ -181,7 +244,7 @@ class BasicTxScope implements OperableTxScope
     CrudProvider crud = Dependencies.instance().getCrudProvider();
 
     TableInfo ti = row.tableInfo();
-    UpdateContext<TableRow> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
+    UpdateContext<Entity> ctx = new UpdateContext<>( this, row, ti.getDdlTableName(), _dbConfig.getName(),
       ti.getPkCols(), ti.getUkCols(), ti.getAllCols() );
 
     if( row.getBindings().isForInsert() )
@@ -208,7 +271,7 @@ class BasicTxScope implements OperableTxScope
    * If the database platform supports Deferrable constraints, the fk constraints are not enforced until commit ("Initially Deferred"),
    * which enables the handling of cycles by allowing a null value for an fk before commit.
    */
-  private void patchUnresolvedFkDeps( Connection c, UpdateContext<TableRow> ctx, CrudProvider crud, Set<FkDep> unresolvedDeps ) throws SQLException
+  private void patchUnresolvedFkDeps( Connection c, UpdateContext<Entity> ctx, CrudProvider crud, Set<FkDep> unresolvedDeps ) throws SQLException
   {
     if( unresolvedDeps == null )
     {
@@ -217,14 +280,14 @@ class BasicTxScope implements OperableTxScope
 
     for( FkDep dep : unresolvedDeps )
     {
-      Object pkId = dep.pkRow.getBindings().getHeldValue( dep.pkName );
+      Object pkId = ((OperableTxBindings)dep.pkRow.getBindings()).getHeldValue( dep.pkName );
       if( pkId == null )
       {
         throw new SQLException( "pk value is null" );
       }
 
       // update the fk column that was null initially due to fk cycle
-      TxBindings fkBindings = dep.fkRow.getBindings();
+      OperableTxBindings fkBindings = (OperableTxBindings)dep.fkRow.getBindings();
       Object priorPkId = fkBindings.put( dep.fkName, pkId );
       try
       {
@@ -233,7 +296,7 @@ class BasicTxScope implements OperableTxScope
       }
       finally
       {
-        // put old value back into changes (s/b Pair<TableRow, String>)
+        // put old value back into changes (s/b Pair<Entity, String>)
         fkBindings.put( dep.fkName, priorPkId );
         // put id into hold values because it should not take effect until commit
         fkBindings.holdValue( dep.fkName, pkId );
@@ -241,7 +304,7 @@ class BasicTxScope implements OperableTxScope
     }
   }
 
-  private void doFkDependenciesFirst( Connection c, TableRow row, Map<TableRow, Set<FkDep>> unresolvedDeps, Set<TableRow> visited ) throws SQLException
+  private void doFkDependenciesFirst( Connection c, Entity row, Map<Entity, Set<FkDep>> unresolvedDeps, Set<Entity> visited ) throws SQLException
   {
     for( Map.Entry<String, Object> entry : row.getBindings().entrySet() )
     {
@@ -249,24 +312,24 @@ class BasicTxScope implements OperableTxScope
       if( value instanceof KeyRef )
       {
         KeyRef ref = (KeyRef)value;
-        TableRow pkTableRow = ref.getRef();
-        FkDep fkDep = new FkDep( row, entry.getKey(), pkTableRow, ref.getKeyColName() );
+        Entity pkEntity = ref.getRef();
+        FkDep fkDep = new FkDep( row, entry.getKey(), pkEntity, ref.getKeyColName() );
 
-        doCrud( c, pkTableRow, unresolvedDeps, visited );
+        doCrud( c, pkEntity, unresolvedDeps, visited );
 
         // patch fk
-        Object pkId = pkTableRow.getBindings().getHeldValue( fkDep.pkName );
+        Object pkId = ((OperableTxBindings)pkEntity.getBindings()).getHeldValue( fkDep.pkName );
         if( pkId != null )
         {
-          // pkTableRow was inserted, assign fk value now, this is assigned as an INSERT param in BasicCrudProvider when
+          // pkEntity was inserted, assign fk value now, this is assigned as an INSERT param in BasicCrudProvider when
           // the value of the param is a KeyRef
-          row.getBindings().holdValue( fkDep.fkName, pkId );
+          ((OperableTxBindings)row.getBindings()).holdValue( fkDep.fkName, pkId );
         }
         else
         {
-          // pkTableRow not inserted yet, presumably due to a fk cycle, assign a temp fk value as INSERT param and resolve
+          // pkEntity not inserted yet, presumably due to a fk cycle, assign a temp fk value as INSERT param and resolve
           // the fk assignment later
-          unresolvedDeps.computeIfAbsent( pkTableRow, __ -> new LinkedHashSet<>() )
+          unresolvedDeps.computeIfAbsent( pkEntity, __ -> new LinkedHashSet<>() )
             .add( fkDep );
         }
       }
@@ -275,12 +338,12 @@ class BasicTxScope implements OperableTxScope
 
   private static class FkDep
   {
-    final TableRow fkRow;
+    final Entity fkRow;
     final String fkName;
-    final TableRow pkRow;
+    final Entity pkRow;
     final String pkName;
 
-    public FkDep( TableRow fkRow, String fkName, TableRow pkRow, String pkName )
+    public FkDep( Entity fkRow, String fkName, Entity pkRow, String pkName )
     {
       this.fkRow = fkRow;
       this.fkName = fkName;

@@ -73,7 +73,7 @@ mvn compile
 ## Using this project
 
 The `manifold-image` dependency works with all build tooling, including Maven and Gradle. It also works with Java
-versions 8 - 20.
+versions 8 - 21.
 
 ## Binaries
 
@@ -87,7 +87,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 20), the script takes care of the rest. 
+version (8 - 21), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -105,11 +105,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2023.1.29'
+    compileOnly 'systems.manifold:manifold-rt:2023.1.30'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-image:2023.1.29'
-    testAnnotationProcessor 'systems.manifold:manifold-image:2023.1.29'
+    annotationProcessor 'systems.manifold:manifold-image:2023.1.30'
+    testAnnotationProcessor 'systems.manifold:manifold-image:2023.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -153,7 +153,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.29</manifold.version>
+        <manifold.version>2023.1.30</manifold.version>
     </properties>
 
     <dependencies>
@@ -207,7 +207,7 @@ module my.image.app {
 # Javadoc
 
 `manifold-image`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2023.1.30)
 
 # License
 

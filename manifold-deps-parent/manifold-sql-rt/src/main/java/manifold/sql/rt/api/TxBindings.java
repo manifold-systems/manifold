@@ -18,30 +18,14 @@ package manifold.sql.rt.api;
 
 import manifold.rt.api.Bindings;
 
-import java.util.Map;
-import java.util.Set;
 
 public interface TxBindings extends Bindings
 {
-  TableRow getOwner();
-  void setOwner( TableRow owner );
+  Entity getOwner();
 
   TxScope getTxScope();
 
   boolean isForInsert();
   boolean isForUpdate();
   boolean isForDelete();
-
-  void setDelete( boolean value );
-
-  void holdValues( Bindings generatedKeys );
-  void holdValue( String name, Object value );
-  Object getHeldValue( String name );
-  void dropHeldValues();
-
-  void commit();
-  Map<String, Object> persistedStateEntrySet();
-  Map<String, Object> uncommittedChangesEntrySet();
-
-  Object getPersistedStateValue( String name );
 }

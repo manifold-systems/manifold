@@ -28,8 +28,8 @@ import javax.tools.Diagnostic;
 
 public class ManLog_11 extends Log
 {
-  private Map<DiagnosticHandler, LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>>> _suspendedIssues;
-  private LocklessLazyVar<Class<?>> _extensionTransformerClass;
+  private final Map<DiagnosticHandler, LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>>> _suspendedIssues;
+  private final LocklessLazyVar<Class<?>> _extensionTransformerClass;
 
   public static Log instance( Context ctx )
   {
@@ -150,17 +150,17 @@ public class ManLog_11 extends Log
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( null, source, pos, (String)ReflectUtil.field( errorKey, "code" ).get(), ReflectUtil.field( errorKey, "args" ).get() ) );
     }
-    else if( !isSuppressedError( errorKey.key() ) )
+    else if( !isSuppressed( pos, errorKey.key(), errorKey.getArgs() ) )
     {
       super.error( pos, errorKey );
     }
   }
 
-  private boolean isSuppressedError( String key )
+  private boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String key, Object[] args )
   {
     for( ICompilerComponent cc: JavacPlugin.instance().getTypeProcessor().getCompilerComponents() )
     {
-      if( cc.isSuppressed( key ) )
+      if( cc.isSuppressed( pos, key, args ) )
       {
         return true;
       }
@@ -180,6 +180,12 @@ public class ManLog_11 extends Log
       issue.getDiagnosticSource().getFile() instanceof GeneratedJavaStubFileObject )
     {
       // ignore non-errors from generated source
+      return;
+    }
+
+    if( isSuppressed( issue.getDiagnosticPosition(), issue.getCode(), issue.getArgs() ) )
+    {
+      // suppressed from a compiler component
       return;
     }
 
@@ -207,7 +213,6 @@ public class ManLog_11 extends Log
       return false;
     }
 
-    //noinspection ConstantConditions
     return (boolean)ReflectUtil.method( _extensionTransformerClass.get(), "isJailbreakReceiver",
       JCTree.JCFieldAccess.class ).invokeStatic( pos );
   }

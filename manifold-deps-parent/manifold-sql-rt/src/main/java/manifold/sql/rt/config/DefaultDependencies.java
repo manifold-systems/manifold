@@ -77,6 +77,12 @@ public class DefaultDependencies implements Dependencies
     return fetch( DefaultValueAccessorProvider.class );
   }
 
+  @Override
+  public CustomEntityFactory getCustomEntityFactory()
+  {
+    return new DefaultCustomEntityFactory();
+  }
+
   public <T> T fetch( Class<T> cls )
   {
     //noinspection unchecked

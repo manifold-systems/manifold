@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package manifold.sql.rt.api;
+package manifold.sql.schema.h2.base;
 
-/**
- * Common base type for db table types (generated from the schema).
- */
-public interface TableRow extends ResultRow
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
+
+public abstract class H2DdlServerTest extends DdlServerTest
 {
-  TableInfo tableInfo();
+  @Override
+  protected DbConfig getDbConfig()
+  {
+    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "H2Sakila", getClass() );
+  }
 }

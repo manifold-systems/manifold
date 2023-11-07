@@ -50,8 +50,8 @@ import javax.tools.Diagnostic;
 
 public class ManLog_8 extends Log
 {
-  private Map<DiagnosticHandler, LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>>> _suspendedIssues;
-  private LocklessLazyVar<Class<?>> _extensionTransformerClass;
+  private final Map<DiagnosticHandler, LinkedHashMap<JCTree, Stack<Stack<JCDiagnostic>>>> _suspendedIssues;
+  private final LocklessLazyVar<Class<?>> _extensionTransformerClass;
 
   public static Log instance( Context ctx )
   {
@@ -165,17 +165,25 @@ public class ManLog_8 extends Log
       //## todo: the error message can't be converted to a warning, make up a custom warning
       // report( diags.warning( source, pos, key, args ) );
     }
-    else if( !isSuppressedError( key ) )
+    else if( !isSuppressed( pos, key, args ) )
     {
       super.error( pos, key, args );
     }
   }
 
-  private boolean isSuppressedError( String key )
+  public void warning( JCDiagnostic.DiagnosticPosition pos, String key, Object... args )
+  {
+    if( !isSuppressed( pos, key, args ) )
+    {
+      super.warning( pos, key, args );
+    }
+  }
+
+  private boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String key, Object[] args )
   {
     for( ICompilerComponent cc: JavacPlugin.instance().getTypeProcessor().getCompilerComponents() )
     {
-      if( cc.isSuppressed( key ) )
+      if( cc.isSuppressed( pos, key, args ) )
       {
         return true;
       }
@@ -195,6 +203,12 @@ public class ManLog_8 extends Log
       issue.getDiagnosticSource().getFile() instanceof GeneratedJavaStubFileObject )
     {
       // ignore warnings from generated source
+      return;
+    }
+
+    if( isSuppressed( issue.getDiagnosticPosition(), issue.getCode(), issue.getArgs() ) )
+    {
+      // suppressed from a compiler component
       return;
     }
 
@@ -222,7 +236,6 @@ public class ManLog_8 extends Log
       return false;
     }
 
-    //noinspection ConstantConditions
     return (boolean)ReflectUtil.method( _extensionTransformerClass.get(), "isJailbreakReceiver",
       JCTree.JCFieldAccess.class ).invokeStatic( pos );
   }

@@ -22,6 +22,7 @@ import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.StreamUtil;
 import manifold.rt.api.util.TempFileUtil;
 import manifold.sql.rt.api.DbLocationProvider;
+import manifold.sql.rt.api.ExecutionEnv;
 import manifold.sql.rt.util.SqlScriptRunner;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,7 +41,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static manifold.rt.api.util.TempFileUtil.makeTempFile;
-import static manifold.sql.rt.api.DbLocationProvider.Mode.*;
+import static manifold.sql.rt.api.ExecutionEnv.*;
 
 /**
  * DbLocationProvider for: {@code #resource} and {@code #resource_script}. This functionality is primarily aimed at testing
@@ -67,31 +68,31 @@ public class ResourceDbLocationProvider implements DbLocationProvider
   public static final String RESOURCE_SCRIPT = "resource_script";
 
   @Override
-  public Pair<Object, Consumer<Connection>> getLocation( Function<String, FqnCache<IFile>> resByExt, Mode mode, String tag, String... args )
+  public Pair<Object, Consumer<Connection>> getLocation( Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String tag, String... args )
   {
     if( tag.equals( RESOURCE ) )
     {
-      return resource( false, resByExt, mode, args );
+      return resource( false, resByExt, executionEnv, args );
     }
     else if( tag.equals( RESOURCE_SCRIPT ) )
     {
-      return resourceScript( resByExt, mode, args );
+      return resourceScript( resByExt, executionEnv, args );
     }
 
     return new Pair<>( UNHANDLED, null );
   }
 
-  private Pair<Object, Consumer<Connection>> resourceScript( Function<String, FqnCache<IFile>> resByExt, Mode mode, String[] args )
+  private Pair<Object, Consumer<Connection>> resourceScript( Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String[] args )
   {
     if( args.length < 2 )
     {
       throw new RuntimeException( "Expecting at least two arguments: <resource path>, <file name>" );
     }
 
-    return resource( true, resByExt, mode, args );
+    return resource( true, resByExt, executionEnv, args );
   }
 
-  private Pair<Object, Consumer<Connection>> resource( boolean isScript, Function<String, FqnCache<IFile>> resByExt, Mode mode, String[] args )
+  private Pair<Object, Consumer<Connection>> resource( boolean isScript, Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String[] args )
   {
     if( args.length < 1 )
     {
@@ -104,16 +105,16 @@ public class ResourceDbLocationProvider implements DbLocationProvider
 
     // add prefix to temp file to prevent compile-time, design-time, and run-time usages collide,
     // each will have its own copy of the db
-    String prefix = "/" + mode;
+    String prefix = "/" + executionEnv;
     if( !dbFileResourcePath.startsWith( "/" ) && !dbFileResourcePath.startsWith( File.separator ) )
     {
       dbFileResourcePath = "/" + dbFileResourcePath;
     }
 
     String tempDir = makeTempDirName( dbFileResourcePath );
-    deleteTempDbDir( mode, dbFileResourcePath );
+    deleteTempDbDir( executionEnv, dbFileResourcePath );
     File tempDbFile = TempFileUtil.makeTempFile( "/" + prefix + "/" + tempDir + dbFileResourcePath, true );
-    IFile resFile = maybeGetCompileTimeResource( resByExt, mode, dbFileResourcePath );
+    IFile resFile = maybeGetCompileTimeResource( resByExt, executionEnv, dbFileResourcePath );
     try( InputStream in = resFile != null
       ? resFile.openInputStream()
       : getClass().getResourceAsStream( dbFileResourcePath );
@@ -174,10 +175,10 @@ public class ResourceDbLocationProvider implements DbLocationProvider
     return tempDir;
   }
 
-  public static void deleteTempDbDir( Mode mode, String dbFileResourcePath )
+  public static void deleteTempDbDir( ExecutionEnv executionEnv, String dbFileResourcePath )
   {
     // delete temp db directory
-    File file = makeTempFile( "/" + mode + "/" + makeTempDirName( dbFileResourcePath ) );
+    File file = makeTempFile( "/" + executionEnv + "/" + makeTempDirName( dbFileResourcePath ) );
     if( !file.exists() )
     {
       return;
@@ -210,9 +211,9 @@ public class ResourceDbLocationProvider implements DbLocationProvider
     }
   }
 
-  public static IFile maybeGetCompileTimeResource( Function<String, FqnCache<IFile>> resByExt, Mode mode, String dbFileResourcePath )
+  public static IFile maybeGetCompileTimeResource( Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String dbFileResourcePath )
   {
-    if( mode == CompileTime || mode == DesignTime )
+    if( executionEnv == Compiler || executionEnv == IDE )
     {
       IFile[] resFile = {null};
       int idot = dbFileResourcePath.lastIndexOf( '.' );

@@ -21,12 +21,15 @@ import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.util.DbUtil;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.util.ManExceptionUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class BasicCrudProvider implements CrudProvider
 {
@@ -35,18 +38,17 @@ public class BasicCrudProvider implements CrudProvider
   public static final String SQLITE_LAST_INSERT_ROWID = "last_insert_rowid()";
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> void create( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void create( Connection c, UpdateContext<T> ctx )
   {
     try
     {
-      T table = ctx.getTable();
       Set<String> skipParams = new HashSet<>();
       String sql = makeInsertStmt( c.getMetaData(), ctx, skipParams );
       int[] reflectedColumnCount = {0};
       try( PreparedStatement ps = prepareStatement( c, ctx, sql, reflectedColumnCount ) )
       {
         setInsertParameters( ctx, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
+        executeAndFetchRow( c, ctx, ps, reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -62,7 +64,7 @@ public class BasicCrudProvider implements CrudProvider
    * throw an exception from the former call and quietly ignores all the column names and instead just supplies the pk,
    * we handle that too when we process the call to {@code getGeneratedKeys()}.
    */
-  private static <T extends TableRow> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
+  private static <T extends Entity> PreparedStatement prepareStatement( Connection c, UpdateContext<T> ctx, String sql, int[] reflectedColumnCount ) throws SQLException
   {
     String[] reflectedColumns = reflectedColumns( c, ctx, true );
     try
@@ -91,10 +93,10 @@ public class BasicCrudProvider implements CrudProvider
    * columns that should be returned from the inserted row</i>. Some (good) drivers adhere to this latter description and
    * return any and all columns asked for, others drivers vary in behavior here.
    */
-  private static <T extends TableRow> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
+  private static <T extends Entity> String[] reflectedColumns( Connection c, UpdateContext<T> ctx, boolean allColumns ) throws SQLException
   {
     String[] reflectedColumnNames = {};
-    if( allColumns && !c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    if( allColumns && DriverInfo.lookup( c.getMetaData() ) != Oracle )
     {
       // ask for all columns since we want the entire record to include whatever generated data that was not included in the insert
 
@@ -120,7 +122,7 @@ public class BasicCrudProvider implements CrudProvider
     return reflectedColumnNames;
   }
 
-  private <T extends TableRow> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setInsertParameters( UpdateContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
@@ -133,14 +135,14 @@ public class BasicCrudProvider implements CrudProvider
       int jdbcType = ctx.getAllCols().get( entry.getKey() ).getJdbcType();
       ValueAccessor accessor = accProvider.get( jdbcType );
       Object value = entry.getValue();
-      value = patchFk( value, entry.getKey(), ctx.getTable().getBindings() );
+      value = patchFk( value, entry.getKey(), ctx.getBindings() );
       accessor.setParameter( ps, ++i, value );
     }
   }
 
-  private static Object patchFk( Object value, String colName, TxBindings bindings )
+  private static Object patchFk( Object value, String colName, OperableTxBindings bindings )
   {
-    // We assign a Pair<TableRow, String> to an fk column when the tablerow is not yet inserted.
+    // We assign a Pair<Entity, String> to an fk column when the entity is not yet inserted.
     // Normally this is resolved by TxScope commit logic, ordering inserts according to fk dependencies, however if there
     // is a cycle, the Pair value remains. In that case, if the fk is not nullable, we must assign a temporary value here.
     // The TxScope commit logic resolves the actual fk value.
@@ -163,7 +165,7 @@ public class BasicCrudProvider implements CrudProvider
     return value;
   }
 
-  private <T extends TableRow> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     StringBuilder sql = new StringBuilder();
     sql.append( "INSERT INTO " ).append( ctx.getDdlTableName() ).append( "(" );
@@ -200,7 +202,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> T readOne( QueryContext<T> ctx )
+  public <T extends Entity> T readOne( QueryContext<T> ctx )
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
@@ -237,7 +239,7 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> List<T> readMany( QueryContext<T> ctx )
+  public <T extends Entity> List<T> readMany( QueryContext<T> ctx )
   {
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
     try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
@@ -267,7 +269,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> String makeReadStatement( DatabaseMetaData metaData, QueryContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     StringBuilder sql = new StringBuilder();
@@ -293,15 +295,14 @@ public class BasicCrudProvider implements CrudProvider
   }
 
   @SuppressWarnings( "unused" )
-  public <T extends TableRow> void update( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void update( Connection c, UpdateContext<T> ctx )
   {
     try
     {
-      T table = ctx.getTable();
       StringBuilder sql = new StringBuilder();
       sql.append( "UPDATE " ).append( ctx.getDdlTableName() ).append( " SET\n" );
       int i = 0;
-      Map<String, Object> changeEntries = table.getBindings().uncommittedChangesEntrySet();
+      Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
       if( changeEntries.isEmpty() )
       {
         throw new SQLException( "Expecting changed entries." );
@@ -354,7 +355,7 @@ public class BasicCrudProvider implements CrudProvider
           ColumnInfo columnInfo = ctx.getAllCols().get( whereCol );
           ValueAccessor accessor = accProvider.get( columnInfo.getJdbcType() );
           String expr = accessor.getParameterExpression(
-            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), columnInfo );
+            c.getMetaData(), ctx.getBindings().getPersistedStateValue( whereCol ), columnInfo );
           String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )
@@ -372,7 +373,7 @@ public class BasicCrudProvider implements CrudProvider
       try( PreparedStatement ps = prepareStatement( c, ctx, sql.toString(), reflectedColumnCount ) )
       {
         setUpdateParameters( ctx, whereColumns, ps, skipParams );
-        executeAndFetchRow( c, ctx, ps, table.getBindings(), reflectedColumnCount[0] > 0 );
+        executeAndFetchRow( c, ctx, ps, reflectedColumnCount[0] > 0 );
       }
     }
     catch( SQLException e )
@@ -381,9 +382,9 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setUpdateParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
-    Map<String, Object> changeEntries = ctx.getTable().getBindings().uncommittedChangesEntrySet();
+    Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
     if( changeEntries.isEmpty() )
     {
       throw new SQLException( "Expecting changed entries." );
@@ -410,7 +411,7 @@ public class BasicCrudProvider implements CrudProvider
         }
 
         ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
-        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
+        Object value = ctx.getBindings().getPersistedStateValue( whereColumn );
         accessor.setParameter( ps, ++i, value );
       }
     }
@@ -421,7 +422,7 @@ public class BasicCrudProvider implements CrudProvider
 
   }
 
-  private <T extends TableRow> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setDeleteParameters( UpdateContext<T> ctx, Set<String> whereColumns, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     if( !whereColumns.isEmpty() )
@@ -430,7 +431,7 @@ public class BasicCrudProvider implements CrudProvider
       for( String whereColumn : whereColumns )
       {
         ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereColumn ).getJdbcType() );
-        Object value = ctx.getTable().getBindings().getPersistedStateValue( whereColumn );
+        Object value = ctx.getBindings().getPersistedStateValue( whereColumn );
         if( skipParams.contains( whereColumn ) )
         {
           continue;
@@ -444,8 +445,8 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void executeAndFetchRow(
-    Connection c, UpdateContext<T> ctx, PreparedStatement ps, TxBindings table, boolean hasReflectedColumns ) throws SQLException
+  private <T extends Entity> void executeAndFetchRow(
+    Connection c, UpdateContext<T> ctx, PreparedStatement ps, boolean hasReflectedColumns ) throws SQLException
   {
     int result = ps.executeUpdate();
     if( result != 1 )
@@ -486,17 +487,16 @@ public class BasicCrudProvider implements CrudProvider
     }
 
     // some drivers (sqlite) don't fetch the gen key columns supplied in the prepared statement, so we issue a Select
-    reflectedRow = maybeFetchInsertedRow( c, ctx, table, reflectedRow );
+    reflectedRow = maybeFetchInsertedRow( c, ctx, reflectedRow );
     if( isReflectedRowEmpty( reflectedRow ) )
     {
       throw new SQLException( "Failed to reflect newly inserted row." );
     }
 
-    table.holdValues( reflectedRow );
+    ctx.getBindings().holdValues( reflectedRow );
   }
 
-  private <T extends TableRow> Bindings maybeFetchInsertedRow(
-    Connection c, UpdateContext<T> ctx, TxBindings bindings, Bindings reflectedRow ) throws SQLException
+  private <T extends Entity> Bindings maybeFetchInsertedRow( Connection c, UpdateContext<T> ctx, Bindings reflectedRow ) throws SQLException
   {
     DataBindings params = new DataBindings();
     ColumnInfo[] ci = null;
@@ -520,16 +520,16 @@ public class BasicCrudProvider implements CrudProvider
       int i = 0;
       for( String pkCol : pkCols )
       {
-        Object pkValue = bindings.get( pkCol );
+        Object pkValue = ctx.getBindings().get( pkCol );
         if( pkValue == null )
         {
           // null pk value means we can't query for the inserted row, game over
           return reflectedRow;
         }
-        else if( pkValue instanceof TableRow ) // from a KeyRef, see BasicTxBindings#get()
+        else if( pkValue instanceof Entity ) // from a KeyRef, see BasicTxBindings#get()
         {
           // in this case an fk is part of the pk, e.g., many-many link tables
-          pkValue = bindings.getHeldValue( pkCol );
+          pkValue = ctx.getBindings().getHeldValue( pkCol );
           if( pkValue == null )
           {
             // null pk value means we can't query for the inserted row, game over
@@ -598,7 +598,7 @@ public class BasicCrudProvider implements CrudProvider
       reflectedRow.size() == 1 && reflectedRow.entrySet().iterator().next().getValue() == null;
   }
 
-  public <T extends TableRow> void delete( Connection c, UpdateContext<T> ctx )
+  public <T extends Entity> void delete( Connection c, UpdateContext<T> ctx )
   {  
     try
     {
@@ -633,7 +633,7 @@ public class BasicCrudProvider implements CrudProvider
           }
           ValueAccessor accessor = accProvider.get( ctx.getAllCols().get( whereCol ).getJdbcType() );
           String expr = accessor.getParameterExpression(
-            c.getMetaData(), ctx.getTable().getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
+            c.getMetaData(), ctx.getBindings().getPersistedStateValue( whereCol ), ctx.getAllCols().get( whereCol ) );
           String qwhereCol = DbUtil.enquoteIdentifier( whereCol, c.getMetaData() );
           sql.append( "$qwhereCol = " ).append( expr );
           if( !expr.contains( "?" ) )
@@ -663,7 +663,7 @@ public class BasicCrudProvider implements CrudProvider
     }
   }
 
-  private <T extends TableRow> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
+  private <T extends Entity> void setQueryParameters( QueryContext<T> ctx, PreparedStatement ps, Set<String> skipParams ) throws SQLException
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();

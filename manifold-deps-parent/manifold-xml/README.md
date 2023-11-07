@@ -288,7 +288,7 @@ mvn compile
 
 ## Using this project
 
-The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 20.
+The `manifold-xml` dependency works with all build tooling, including Maven and Gradle. It also works with Java versions 8 - 21.
 
 This project consists of two modules:
 * `manifold-xml`
@@ -310,7 +310,7 @@ If you are *not* using Maven or Gradle, you can download the latest binaries [he
 >Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
-version (8 - 20), the script takes care of the rest. 
+version (8 - 21), the script takes care of the rest. 
 ```groovy
 plugins {
     id 'java'
@@ -328,11 +328,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-xml-rt:2023.1.29'
+    implementation 'systems.manifold:manifold-xml-rt:2023.1.30'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-xml:2023.1.29'
-    testAnnotationProcessor 'systems.manifold:manifold-xml:2023.1.29'
+    annotationProcessor 'systems.manifold:manifold-xml:2023.1.30'
+    testAnnotationProcessor 'systems.manifold:manifold-xml:2023.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -368,7 +368,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.29</manifold.version>
+        <manifold.version>2023.1.30</manifold.version>
     </properties>
     
     <dependencies>
@@ -412,10 +412,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-xml`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml/2023.1.30)
 
 `manifold-xml-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-xml-rt/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-xml-rt/2023.1.30)
 
 
 # License

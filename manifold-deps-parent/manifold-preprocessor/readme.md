@@ -408,7 +408,7 @@ mvn compile
 ## Using this project
 
 The `manifold-preprocessor` dependency works with all build tooling, including Maven and Gradle. It supports JDK
-versions 8 - 20 and supports `-source` compatibility with any Java version.  Note this dependency is exclusive to
+versions 8 - 21 and supports `-source` compatibility with any Java version.  Note this dependency is exclusive to
 compile-time use, there is no runtime impact.
 
 ## Binaries
@@ -439,8 +439,8 @@ repositories {
 dependencies {
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.29'
-    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.29'
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.30'
+    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.30'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -476,7 +476,7 @@ rootProject.name = 'MyPreprocessorProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.29</manifold.version>
+        <manifold.version>2023.1.30</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
@@ -518,7 +518,7 @@ with javadoc.
 # Javadoc
 
 `manifold-preprocessor`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2023.1.29/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2023.1.29)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2023.1.30/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2023.1.30)
 
 
 # License

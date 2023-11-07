@@ -139,9 +139,9 @@ Manifold version 2019.1.8 is available for download on [Maven Central](https://s
 ## Manifold 2019.1.7 released (8 July 2019)
 
 Manifold **core** changes 
-* support a **file fragment** as an r-value embedded in a Java String literal [a la F# type provider](https://fsharp.github.io/FSharp.Data/library/JsonProvider.html) 
+* support a **file fragment** as an r-value inlined in a Java String literal [a la F# type provider](https://fsharp.github.io/FSharp.Data/library/JsonProvider.html) 
 * support Manifold fragments values in Java 13 **text blocks** 
-* this change is part of the broader [file fragment](http://manifold.systems/docs.html#embedding-with-fragments) set of
+* this change is part of the broader [file fragment](http://manifold.systems/docs.html#inlining-with-fragments) set of
 changes supporting fragments in comments as type declarations and in String literals as values, to bring type-safe
 resources closer to your code 
  
@@ -152,18 +152,18 @@ Manifold **JSON** changes
 // Conveniently access the *data* in Preson.json directly and type-safely
 Person person = Person.fromSource();
 ``` 
-* enable JSON/YAML **fragments** e.g, as type-safe embedded comments, use `fromSource()` to gain type-safe access to resource data 
+* enable JSON/YAML **fragments** e.g, as type-safe inlined comments, use `fromSource()` to gain type-safe access to resource data 
  
 Manifold **Javascript** changes 
 * replace the deprecated nashorn dependency with latest **rhino** 
 * remove ScriptEngine usage, instead go straight to rhino 
 * using a shared global scope per thread to avoid expensive js initialization 
 * each program/class/template has its own scope which in turn delegates to the shared scope 
-* support javascript type-safely embedded in a string literal via file **fragments** e.g., 
+* support javascript type-safely inlined as a string literal via file **fragments** e.g., 
 `int value = (int) "[.js/] 3 + 4 + 5";` 
 * this is more a **proof of concept** to demonstrate: 
-1. the relative simplicity to enable any manifold resource for literal embedding 
-2. GraphQL is not the only manifold that can be embedded in a literal 
+1. the relative simplicity to enable any manifold resource for literal inlining 
+2. GraphQL is not the only manifold that can be inlined in a literal 
 3. to prepare for more languages such a **R** 
 4. to get the general feature in place and ready for java 13 where **text blocks** facilitate multiline scripts (intellij's **injection editing** makes this quite attractive) 
  

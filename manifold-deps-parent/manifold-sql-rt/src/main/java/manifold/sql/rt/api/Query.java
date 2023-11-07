@@ -17,7 +17,7 @@
 package manifold.sql.rt.api;
 
 /**
- * A base class for all SQL queries. This interface exists primarily for custom extension methods.
+ * A base type for all SQL queries. This interface exists primarily for custom extension methods.
  */
 public interface Query
 {

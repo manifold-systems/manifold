@@ -17,8 +17,8 @@
 package manifold.sql;
 
 import manifold.rt.api.util.StreamUtil;
-import manifold.sql.rt.api.DbLocationProvider;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.api.ExecutionEnv;
 import manifold.sql.rt.impl.ResourceDbLocationProvider;
 import manifold.sql.schema.h2.ScratchTest;
 
@@ -43,7 +43,7 @@ public abstract class DbResourceFileTest
     // which distinguishes between run-time, compile-time, design-time
 
     String tempDir = ResourceDbLocationProvider.makeTempDirName( db_resource );
-    File tempDbFile = makeTempFile( "/" + DbLocationProvider.Mode.Runtime.name() + "/" + tempDir + db_resource );
+    File tempDbFile = makeTempFile( "/" + ExecutionEnv.Runtime.name() + "/" + tempDir + db_resource );
 
     try( InputStream in = ScratchTest.class.getResourceAsStream( db_resource );
          FileOutputStream out = new FileOutputStream( tempDbFile ) )
@@ -66,6 +66,6 @@ public abstract class DbResourceFileTest
     Dependencies.instance().getDefaultTxScopeProvider().clear();
 
     // delete temp db
-    ResourceDbLocationProvider.deleteTempDbDir( DbLocationProvider.Mode.Runtime, db_resource );
+    ResourceDbLocationProvider.deleteTempDbDir( ExecutionEnv.Runtime, db_resource );
   }
 }

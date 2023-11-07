@@ -17,6 +17,7 @@
 package manifold.exceptions;
 
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.util.JCDiagnostic;
 import manifold.api.type.ICompilerComponent;
 import manifold.internal.javac.JavacPlugin;
 import manifold.internal.javac.TypeProcessor;
@@ -29,7 +30,7 @@ public class CheckedExceptionSuppressor implements ICompilerComponent
   }
 
   @Override
-  public boolean isSuppressed( String issueKey )
+  public boolean isSuppressed( JCDiagnostic.DiagnosticPosition pos, String issueKey, Object[] args )
   {
     return JavacPlugin.instance() != null &&
            issueKey != null &&

@@ -17,8 +17,8 @@
 package manifold.sql.schema.h2;
 
 import manifold.ext.rt.api.auto;
-import manifold.sql.DdlResourceFileTest;
 import manifold.sql.rt.api.TxScope;
+import manifold.sql.schema.h2.base.H2DdlServerTest;
 import org.junit.*;
 
 import java.sql.SQLException;
@@ -28,7 +28,7 @@ import static org.junit.Assert.*;
 import manifold.sql.schema.simple.h2.H2Sakila;
 import manifold.sql.schema.simple.h2.H2Sakila.*;
 
-public class CrudTest extends DdlResourceFileTest
+public class CrudTest extends H2DdlServerTest
 {
   @Test
   public void testCreate() throws SQLException
@@ -52,7 +52,7 @@ public class CrudTest extends DdlResourceFileTest
     Country hi = Country.create( txScope, "mycountry" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
@@ -68,7 +68,7 @@ public class CrudTest extends DdlResourceFileTest
     hi.setCountry( "mycountry2" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( "mycountry2", hi.getCountry() );
   }
 
@@ -85,7 +85,7 @@ public class CrudTest extends DdlResourceFileTest
 
     hi.delete( true );
     txScope.commit();
-    Country readHi = Country.read( txScope, countryId );
-    assertNull( readHi );
+    Country fetchHi = Country.fetch( txScope, countryId );
+    assertNull( fetchHi );
   }
 }

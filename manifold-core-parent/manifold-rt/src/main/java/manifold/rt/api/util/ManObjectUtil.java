@@ -17,6 +17,7 @@
 package manifold.rt.api.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * <p>This class is directly derived from org.apache.commons.lang.ObjectUtils and is
@@ -254,7 +255,7 @@ public class ManObjectUtil
    */
   public static String toString( Object obj )
   {
-    return obj == null ? "" : obj.toString();
+    return toString( obj, "null" );
   }
 
   /**
@@ -279,7 +280,50 @@ public class ManObjectUtil
    */
   public static String toString( Object obj, String nullStr )
   {
-    return obj == null ? nullStr : obj.toString();
+    return obj == null
+      ? nullStr
+      : obj.getClass().isArray()
+        ? arrayToString( obj )
+        : obj.toString();
+  }
+
+  public static String arrayToString( Object array )
+  {
+    if( array == null )
+    {
+      return "null";
+    }
+
+    Class<?> componentType = array.getClass().getComponentType();
+    if( componentType.isPrimitive() )
+    {
+      switch( componentType.getTypeName() )
+      {
+        case "byte":
+          return Arrays.toString( (byte[])array );
+        case "short":
+          return Arrays.toString( (short[])array );
+        case "int":
+          return Arrays.toString( (int[])array );
+        case "long":
+          return Arrays.toString( (long[])array );
+        case "float":
+          return Arrays.toString( (float[])array );
+        case "double":
+          return Arrays.toString( (double[])array );
+        case "char":
+          return Arrays.toString( (char[])array );
+        case "boolean":
+          return Arrays.toString( (boolean[])array );
+        default:
+          throw new IllegalStateException();
+      }
+    }
+    else if( !componentType.isArray() )
+    {
+      return Arrays.toString( (Object[])array );
+    }
+    return Arrays.deepToString( (Object[])array );
   }
 
   // Min/Max

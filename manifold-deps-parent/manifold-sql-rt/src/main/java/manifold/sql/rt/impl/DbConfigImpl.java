@@ -22,7 +22,8 @@ import manifold.json.rt.api.DataBindings;
 import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.api.DbLocationProvider.Mode;
+import manifold.sql.rt.api.ExecutionEnv;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.rt.util.PropertyExpressionProcessor;
 import manifold.sql.rt.util.SqlScriptRunner;
 import org.slf4j.Logger;
@@ -36,7 +37,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static manifold.sql.rt.api.DbLocationProvider.Mode.Unknown;
+import static manifold.sql.rt.api.ExecutionEnv.*;
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class DbConfigImpl implements DbConfig
 {
@@ -47,11 +49,11 @@ public class DbConfigImpl implements DbConfig
 
   private final Bindings _bindings;
   private final Map<String, List<Consumer<Connection>>> _initializers;
-  private transient Function<String, FqnCache<IFile>> _resByExt;
+  private final transient Function<String, FqnCache<IFile>> _resByExt;
 
-  public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode )
+  public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, ExecutionEnv executionEnv )
   {
-    this( resByExt, bindings, mode, null );
+    this( resByExt, bindings, executionEnv, null );
   }
 
   /**
@@ -60,20 +62,20 @@ public class DbConfigImpl implements DbConfig
    * @param bindings JSON bindings from a .dbconfig file
    * @param exprHandler An optional handler to evaluate expressions in URL fields
    */
-  public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, Function<String, String> exprHandler )
+  public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, ExecutionEnv executionEnv, Function<String, String> exprHandler )
   {
     _initializers = new HashMap<>();
-    processUrl( resByExt, bindings, mode, "url", exprHandler );
-    processUrl( resByExt, bindings, mode, "buildUrl", exprHandler );
+    processUrl( resByExt, bindings, executionEnv, "url", exprHandler );
+    processUrl( resByExt, bindings, executionEnv, "buildUrl", exprHandler );
     _bindings = bindings;
     _resByExt = resByExt;
     assignDefaults();
   }
 
   /** For testing only!! */
-  public DbConfigImpl( Bindings bindings, Mode mode )
+  public DbConfigImpl( Bindings bindings, ExecutionEnv executionEnv )
   {
-    this( null, bindings, mode );
+    this( null, bindings, executionEnv );
   }
 
   private void assignDefaults()
@@ -93,42 +95,48 @@ public class DbConfigImpl implements DbConfig
     }
   }
 
-  private void processUrl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, Mode mode, String key, Function<String, String> exprHandler )
+  private void processUrl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, ExecutionEnv executionEnv, String key, Function<String, String> exprHandler )
   {
     String url = (String)bindings.get( key );
     if( url == null )
     {
       return;
     }
-    PropertyExpressionProcessor.Result result = PropertyExpressionProcessor.process( resByExt, url, mode, exprHandler );
+    PropertyExpressionProcessor.Result result = PropertyExpressionProcessor.process( resByExt, url, executionEnv, exprHandler );
     bindings.put( key, result.url );
     _initializers.put( result.url, result.initializers ); // for testing purposes
   }
 
   @Override
-  public void init( Connection connection, String url, String schemaName, String ddl ) throws SQLException
+  public void init( Connection connection, ExecutionEnv env ) throws SQLException
   {
-    List<Consumer<Connection>> consumers = _initializers.get( url );
+    List<Consumer<Connection>> consumers =
+      _initializers.get( env == Compiler || env == IDE ? getBuildUrlOtherwiseRuntimeUrl() : getUrl() );
     for( Consumer<Connection> consumer : consumers )
     {
       // this is for testing purposes e.g., dynamically creating a db from a ddl script before the db is accessed
       consumer.accept( connection );
     }
 
+    String schemaName = getSchemaName();
     if( schemaName != null && !schemaName.isEmpty() )
     {
       // for drivers like oracle that don't provide a way to set the schema in the url
       connection.setSchema( schemaName );
     }
 
-    // for testing, only relevant during compilation: need to create db.
-    // Note, test execution framework handles DDL loading itself
-    execDdl( connection, ddl );
+    if( env == Compiler || env == IDE )
+    {
+      // for testing, only relevant during compilation: need to create db from ddl
+      // Note, test execution framework handles DDL loading explicitly, again this is only relevant during compilation for testing
+      execDdl( connection, getDbDdl() );
+    }
   }
 
+  // for testing
   private void execDdl( Connection connection, String ddl ) throws SQLException
   {
-    if( ddl == null || ddl.isEmpty() || DDL.contains( ddl ) )
+    if( ddl == null || ddl.isEmpty() || (!isInMemory() && DDL.contains( ddl )) )
     {
       return;
     }
@@ -143,9 +151,10 @@ public class DbConfigImpl implements DbConfig
     if( _resByExt != null )
     {
       // at compile-time we must find the ddl resource file
-      ddlFile = ResourceDbLocationProvider.maybeGetCompileTimeResource( _resByExt, Mode.CompileTime, ddl );
+      ddlFile = ResourceDbLocationProvider.maybeGetCompileTimeResource( _resByExt, ExecutionEnv.Compiler, ddl );
       //_resByExt = null;
     }
+
 
     try( InputStream stream = ddlFile == null ? getClass().getResourceAsStream( ddl ) : ddlFile.openInputStream() )
     {
@@ -154,14 +163,21 @@ public class DbConfigImpl implements DbConfig
         throw new RuntimeException( "No resource file found matching: " + ddl );
       }
 
-      boolean isOracle = connection.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" );
       String script = StreamUtil.getContent( new InputStreamReader( stream ) );
+      DriverInfo driver = DriverInfo.lookup( connection.getMetaData() );
       SqlScriptRunner.runScript( connection, script,
-        // this is the only way to let drop user fail and continue running the script with oracle :\
-        isOracle ? (s, e) -> s.toLowerCase().contains( "drop user " ) : null );
+        driver == Oracle  // let drop user fail and continue running the script (hard otherwise with oracle :\)
+        ? (s, e) -> s.toLowerCase().contains( "drop user " )
+        : null );
     }
     catch( Exception e )
     {
+      if( isInMemory() && e.getMessage().contains( "already exists" ) )
+      {
+        // in-memory test databases (h2, sqlite) are hard to get idempotent ddl,
+        // so we assume "already exits" means the ddl is already there, good enough for tests :\
+        return;
+      }
       throw new SQLException( e );
     }
   }
@@ -237,6 +253,24 @@ public class DbConfigImpl implements DbConfig
   public String getDbDdl()
   {
     return (String)_bindings.get( "dbDdl" );
+  }
+
+  @Override
+  public String getCustomBaseInterface()
+  {
+    return (String)_bindings.get( "customBaseInterface" );
+  }
+  @Override
+  public String getCustomBaseClass()
+  {
+    return (String)_bindings.get( "customBaseClass" );
+  }
+
+  @Override
+  public boolean isInMemory()
+  {
+    Boolean inMemory = (Boolean)_bindings.get( "inMemory" );
+    return inMemory != null && inMemory;
   }
 
   @Override

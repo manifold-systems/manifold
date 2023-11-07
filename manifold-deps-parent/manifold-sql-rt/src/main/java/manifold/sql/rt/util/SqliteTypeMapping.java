@@ -16,12 +16,15 @@
 
 package manifold.sql.rt.util;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static manifold.sql.rt.util.DriverInfo.SQLite;
 
 /**
  * Sqlite is pretty much a mess regarding schema types reflecting result set types. The former is barely typed, lots of
@@ -31,20 +34,15 @@ import java.util.regex.Pattern;
  * Here is an attempt to improve the situation. The logic used here is taken from, ironically, the sqlite JDBC3ResultSet#getColumnType()
  * implementation, which unlike DatabaseMetadata#getColumns() + getString("DATA_TYPE"), gets it mostly right.
  *
- * todo: Utilize the new TypeProvider API to provide jdbc types in a more pluggable fashion, instead of bolted on like this
+ * todo: make another dependency interface for this?
  */
 public class SqliteTypeMapping
 {
   private static final Pattern COLUMN_TYPENAME = Pattern.compile( "([^(]*)" );
 
-  public String getProductName()
+  public Integer getJdbcType( DatabaseMetaData metadata, ResultSet rs ) throws SQLException
   {
-    return "sqlite";
-  }
-
-  public Integer getJdbcType( String productName, ResultSet rs ) throws SQLException
-  {
-    if( !productName.equalsIgnoreCase( getProductName() ) )
+    if( DriverInfo.lookup( metadata ) != SQLite )
     {
       return null;
     }

@@ -32,7 +32,6 @@ public interface DbLocationProvider
   String PROVIDED = "#";
   Object UNHANDLED = new Object() {};
 
-  enum Mode {CompileTime, DesignTime, Runtime, Unknown}
-
-  Pair<Object, Consumer<Connection>> getLocation( Function<String, FqnCache<IFile>> resByExt, Mode mode, String tag, String... args );
+  Pair<Object, Consumer<Connection>> getLocation(
+    Function<String, FqnCache<IFile>> resByExt, ExecutionEnv executionEnv, String tag, String... args );
 }

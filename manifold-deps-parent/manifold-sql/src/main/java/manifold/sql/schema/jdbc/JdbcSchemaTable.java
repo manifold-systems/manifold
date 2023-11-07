@@ -17,9 +17,11 @@
 package manifold.sql.schema.jdbc;
 
 import manifold.rt.api.util.Pair;
+import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
+import manifold.sql.rt.util.DriverInfo;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +30,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static manifold.sql.rt.util.DriverInfo.Oracle;
+
 public class JdbcSchemaTable implements SchemaTable
 {
   private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchemaTable.class );
@@ -35,6 +39,7 @@ public class JdbcSchemaTable implements SchemaTable
   private final JdbcSchema _schema;
   private final String _name;
   private final String _description;
+  private final String _tableDdl;
   private final Kind _kind;
   private final Map<String, SchemaColumn> _columns;
   private final JdbcSchemaColumn _nonNullUniqueId;
@@ -105,10 +110,11 @@ public class JdbcSchemaTable implements SchemaTable
     _nonNullUniqueKeys = new LinkedHashMap<>();
     _oneToMany = new LinkedHashSet<>();
     _manyToMany = new LinkedHashSet<>();
+    _tableDdl = null; // todo: generate DDL from metadata
     List<String> columnClassNames = getColumnClassNames( metaData );
 
-    if( schemaName != null && !schemaName.isEmpty() &&
-      metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+    DriverInfo driver = DriverInfo.lookup( metaData );
+    if( schemaName != null && !schemaName.isEmpty() && driver == Oracle )
     {
       // there is a bug in oracle driver where metaData.getColumns() fails if the schema is set to anything other than
       // the logged-in user, so we set that here. We reset it back in the finally block.
@@ -143,8 +149,7 @@ public class JdbcSchemaTable implements SchemaTable
     }
     finally
     {
-      if( schemaName != null && !schemaName.isEmpty() &&
-        metaData.getDatabaseProductName().toLowerCase().contains( "oracle" ) )
+      if( schemaName != null && !schemaName.isEmpty() && driver == Oracle )
       {
         // set the schema back to the configured schema
         metaData.getConnection().setSchema( schemaName );
@@ -271,6 +276,18 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
+  public String getSqlSource()
+  {
+    return _tableDdl;
+  }
+
+  @Override
+  public SqlIssueContainer getIssues()
+  {
+    return null;
+  }
+
+  @Override
   public void resolveForeignKeys()
   {
     // resolve foreign keys
@@ -330,7 +347,7 @@ public class JdbcSchemaTable implements SchemaTable
     // following conditions narrow many-to-many to cases involving two fks having only one column and
     // where both fks must reference difference tables to avoid issues with self referencing many-to-many relationships.
     && pkColumns.size() == 2 &&
-      pkColumns.get( 0 ).getForeignKey().getTable() != pkColumns.get( 1 ).getForeignKey().getTable());// this check for size==2 is just here to simplify many to many
+      pkColumns.get( 0 ).getForeignKey().getOwner() != pkColumns.get( 1 ).getForeignKey().getOwner());// this check for size==2 is just here to simplify many to many
   }
 
   public Set<SchemaForeignKey> getOneToMany()

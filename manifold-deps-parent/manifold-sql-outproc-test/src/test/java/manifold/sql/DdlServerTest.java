@@ -20,6 +20,7 @@ import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.rt.util.SqlScriptRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -30,6 +31,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
+
+import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 /**
  * Before each test method, drops and recreates db (or schema) based on a DDL resource file specified by "dbDdl" entry
@@ -76,7 +79,7 @@ public abstract class DdlServerTest
       ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
       try( Connection c = cp.getConnection( dbConfig.getName(), getClass() ) )
       {
-        boolean isOracle = c.getMetaData().getDatabaseProductName().toLowerCase().contains( "oracle" );
+        boolean isOracle = DriverInfo.lookup( c.getMetaData() ) == Oracle;
         SqlScriptRunner.runScript( c, script,
           // this is the only way to let drop user fail and continue running the script
           isOracle ? (s, e) -> s.toLowerCase().contains( "drop user " ) : null );

@@ -21,7 +21,7 @@ import manifold.rt.api.Bindings;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.DbConfigProvider;
-import manifold.sql.rt.api.DbLocationProvider;
+import manifold.sql.rt.api.ExecutionEnv;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
@@ -44,17 +44,7 @@ public class DbConfigFinder implements DbConfigProvider
 
   public DbConfig loadDbConfig( String configName, Class<?> ctx )
   {
-    return _configs.computeIfAbsent( configName, __ -> {
-      // find a *.dbconfig file
-      Object module = JreUtil.isJava8() || ctx == null
-        ? null
-        : ReflectUtil.method( (Object)ctx, "getModule" ).invoke();
-      String moduleName = module != null && (boolean)ReflectUtil.method( module, "isNamed" ).invoke()
-        ? (String)ReflectUtil.method( module, "getName" ).invoke()
-        : null;
-      moduleName = moduleName == null ? null : moduleName.replace( '.', '_' );
-      return findConfig( moduleName, configName, ctx );
-    } );
+    return _configs.computeIfAbsent( configName, __ -> findConfig( configName, ctx ) );
   }
 
   @Override
@@ -63,12 +53,12 @@ public class DbConfigFinder implements DbConfigProvider
     _configs.clear();
   }
 
-  private static DbConfig findConfig( String module, String configName, Class<?> ctx )
+  private DbConfig findConfig( String configName, Class<?> ctx )
   {
     InputStream stream = findConfigInCurrentDir( configName );
     if( stream == null && ctx != null )
     {
-      stream = findConfigAsResource( module, configName, ctx );
+      stream = findConfigAsResource( configName, ctx );
     }
     if( stream == null )
     {
@@ -79,7 +69,7 @@ public class DbConfigFinder implements DbConfigProvider
     {
       Bindings bindings = (Bindings)Json.fromJson( StreamUtil.getContent( reader ) );
       bindings.put( "name", configName );
-      return new DbConfigImpl( null, bindings, DbLocationProvider.Mode.Runtime );
+      return new DbConfigImpl( null, bindings, ExecutionEnv.Runtime );
     }
     catch( Exception e )
     {
@@ -87,7 +77,7 @@ public class DbConfigFinder implements DbConfigProvider
     }
   }
 
-  private static InputStream findConfigInCurrentDir( String configName )
+  private InputStream findConfigInCurrentDir( String configName )
   {
     // look for file in /config of current dir, failing that look in current dir
     File file = new File( "./config/" + configName + DBCONFIG_EXT );
@@ -109,9 +99,10 @@ public class DbConfigFinder implements DbConfigProvider
     }
   }
 
-  private static InputStream findConfigAsResource( String module, String configName, Class<?> ctx )
+  private InputStream findConfigAsResource( String configName, Class<?> ctx )
   {
     // look for resource file in /<module-name>/config, or just /config if no module
+    String module = getModuleName( ctx );
     InputStream stream = ctx.getResourceAsStream(
       '/' + (module == null || module.isEmpty() ? "config/" : module + "/config/") + configName + DBCONFIG_EXT );
     if( stream == null )
@@ -124,4 +115,17 @@ public class DbConfigFinder implements DbConfigProvider
     }
     return stream;
   }
+
+  private String getModuleName( Class<?> ctx )
+  {
+    Object module = JreUtil.isJava8() || ctx == null
+      ? null
+      : ReflectUtil.method( (Object)ctx, "getModule" ).invoke();
+    String moduleName = module != null && (boolean)ReflectUtil.method( module, "isNamed" ).invoke()
+      ? (String)ReflectUtil.method( module, "getName" ).invoke()
+      : null;
+    moduleName = moduleName == null ? null : moduleName.replace( '.', '_' );
+    return moduleName;
+  }
+
 }

@@ -1,6 +1,11 @@
-<center>
-  <img src="https://i.imgur.com/No1RPUf.png" width="80%"/>
-</center>
+<br>
+
+<img width="500" height="121" align="top" src="./docs/images/manifold4_red.png">
+
+![latest](https://img.shields.io/badge/latest-v2023.1.30-darkgreen.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+
+---
 
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
@@ -22,7 +27,7 @@ Manifold is a Java compiler plugin. It supplements Java with:
 * [A preprocessor](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-preprocessor)
 * ...and more
 
-All fully supported in JDK LTS releases 8 - 20 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
+All fully supported in JDK LTS releases 8 - 21 + latest with comprehensive IDE support in **IntelliJ IDEA** and **Android Studio**.
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
 ># _**What's New...**_
@@ -40,6 +45,15 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 >   // No need to implement MyInterface here, but you can override myInterface as needed
 > }
 > ```
+
+---
+
+>### _**Coming soon...**_
+>
+>#### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+> Use native SQL and DB schemas of any complexity directly and type-safely from Java code.
+> <br><br>
+> <img width="800" height="120" align="top" src="./docs/images/img_3.png">
 
 
 ## What can you do with Manifold?
@@ -227,7 +241,7 @@ List<URL> urls = strings.stream()
 ```
 
 ### [String Templates](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-strings)
-Embed variables and expressions in String literals, no more clunky string concat! [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/string_interpolation.mp4)
+Inline variables and expressions in String literals, no more clunky string concat! [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/string_interpolation.mp4)
 ```java
 int hour = 15;
 // Simple variable access with '$'
@@ -318,13 +332,13 @@ by the core framework. Each project consists of one or more **dependencies** you
 ## Platforms
 
 Manifold supports:
-* Java SE (8 - 20)
+* Java SE (8 - 21)
 * [Android](http://manifold.systems/android.html)
 * [Kotlin](http://manifold.systems/kotlin.html) (limited)
 
 Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
-## [Forum](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+## [Chat](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 

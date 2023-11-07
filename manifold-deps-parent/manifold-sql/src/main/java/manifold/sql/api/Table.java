@@ -20,11 +20,9 @@ import manifold.sql.schema.api.Schema;
 
 import java.util.Map;
 
-public interface Table
+public interface Table extends Statement
 {
   Schema getSchema();
-
-  String getName();
 
   Map<String, ? extends Column> getColumns();
 

@@ -22,17 +22,17 @@ import org.junit.Before;
 
 public abstract class SqliteSakilaTest extends DbResourceFileTest
 {
-  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
-
-  @Before
-  public void setup()
-  {
-    _setup( DB_RESOURCE );
-  }
-
-  @After
-  public void cleanup() throws Exception
-  {
-    _cleanup( DB_RESOURCE );
-  }
+//  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
+//
+//  @Before
+//  public void setup()
+//  {
+//    _setup( DB_RESOURCE );
+//  }
+//
+//  @After
+//  public void cleanup() throws Exception
+//  {
+//    _cleanup( DB_RESOURCE );
+//  }
 }

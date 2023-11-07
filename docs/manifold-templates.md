@@ -127,7 +127,7 @@ constructs such as statements, expressions, comments, and directives.
 
 ## Statements
 
-ManTL lets you control output of a template with Java language statements.  You embed statements or statement fragments 
+ManTL lets you control output of a template with Java language statements.  You inline statements or statement fragments 
 in a template using this syntax:
 
 ```jsp

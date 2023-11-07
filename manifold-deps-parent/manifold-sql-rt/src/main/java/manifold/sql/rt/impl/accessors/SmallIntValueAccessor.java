@@ -24,7 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-public class SmallIntValueAccessor implements ValueAccessor
+public class SmallIntValueAccessor extends IntegerValueAccessor
 {
   @Override
   public int getJdbcType()
@@ -32,33 +32,37 @@ public class SmallIntValueAccessor implements ValueAccessor
     return Types.SMALLINT;
   }
 
-  @Override
-  public Class<?> getJavaType( BaseElement elem )
-  {
-    return elem.canBeNull() ? Short.class : short.class;
-  }
+  // Note, we treat SMALLINT as INTEGER because Short type requires casting of int values including integral literals.
+  // As a consequence, short doesn't really provide much in terms of a statically enforceable constraint. Casting causes
+  // confusion and just sucks, so we favor the int type here via extending IntegerValueAccessor.
 
-  @Override
-  public Short getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
-  {
-    short value = rs.getShort( elem.getPosition() );
-    return value == 0 && rs.wasNull() ? null : value;
-  }
-
-  @Override
-  public void setParameter( PreparedStatement ps, int pos, Object value ) throws SQLException
-  {
-    if( value == null )
-    {
-      ps.setNull( pos, getJdbcType() );
-    }
-    else if( value instanceof Number )
-    {
-      ps.setShort( pos, ((Number)value).shortValue() );
-    }
-    else
-    {
-      ps.setObject( pos, value, getJdbcType() );
-    }
-  }
+//  @Override
+//  public Class<?> getJavaType( BaseElement elem )
+//  {
+//    return elem.canBeNull() ? Short.class : short.class;
+//  }
+//
+//  @Override
+//  public Short getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+//  {
+//    short value = rs.getShort( elem.getPosition() );
+//    return value == 0 && rs.wasNull() ? null : value;
+//  }
+//
+//  @Override
+//  public void setParameter( PreparedStatement ps, int pos, Object value ) throws SQLException
+//  {
+//    if( value == null )
+//    {
+//      ps.setNull( pos, getJdbcType() );
+//    }
+//    else if( value instanceof Number )
+//    {
+//      ps.setShort( pos, ((Number)value).shortValue() );
+//    }
+//    else
+//    {
+//      ps.setObject( pos, value, getJdbcType() );
+//    }
+//  }
 }

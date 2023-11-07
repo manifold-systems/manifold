@@ -33,7 +33,7 @@ import static com.sun.tools.javac.parser.Tokens.TokenKind.STRINGLITERAL;
 /**
  * Override ParserFactory to:<br>
  * - facilitate a pluggable Java preprocessor<br>
- * - handle embedded file fragments in comment tokens<br>
+ * - handle inlined file fragments in comment tokens<br>
  */
 public class ManParserFactory_8 extends ParserFactory implements ParserFactoryFiles
 {

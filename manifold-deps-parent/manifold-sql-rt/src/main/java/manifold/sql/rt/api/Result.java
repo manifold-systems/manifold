@@ -35,7 +35,7 @@ import static manifold.sql.rt.api.BasicTxBindings.TxKind.Update;
  * class' {@code Iterable} implementation. It is also directly accessible via the {@link #toList()} method.
  *
  * @param <R> the formal type of the result set. For instance, a SQL schema table type such as {@code Customer}, or a
- * {@code Row} of a SQL query type derived from .sql resource file or embedded .sql resource.
+ * {@code Row} of a SQL query type derived from .sql resource file or inlined .sql resource.
  */
 public class Result<R extends IBindingsBacked> implements Iterable<R>
 {
@@ -71,9 +71,13 @@ public class Result<R extends IBindingsBacked> implements Iterable<R>
           row.put( column, value );
         }
         R resultRow = makeRow.apply( makeBindings.apply( row ) );
-        if( resultRow instanceof TableRow )
+        if( resultRow instanceof Entity )
         {
-          ((TableRow)resultRow).getBindings().setOwner( (TableRow)resultRow );
+          TxBindings bindings = ((Entity)resultRow).getBindings();
+          if( bindings instanceof OperableTxBindings )
+          {
+            ((OperableTxBindings)bindings).setOwner( (Entity)resultRow );
+          }
         }
         _results.add( resultRow );
       }

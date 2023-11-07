@@ -51,7 +51,7 @@ public class CrudTest extends MysqlDdlServerTest
     Country hi = Country.create( txScope, "mycountry" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( readHi.getCountryId(), hi.getCountryId() );
   }
 
@@ -67,7 +67,7 @@ public class CrudTest extends MysqlDdlServerTest
     hi.setCountry( "mycountry2" );
     txScope.commit();
 
-    Country readHi = Country.read( txScope, hi.getCountryId() );
+    Country readHi = Country.fetch( txScope, hi.getCountryId() );
     assertEquals( "mycountry2", hi.getCountry() );
   }
 
@@ -80,11 +80,11 @@ public class CrudTest extends MysqlDdlServerTest
     // test that country_id was assigned after the insert
     assertTrue( hi.getCountryId() > 0 );
 
-    short countryId = hi.getCountryId();
+    int countryId = hi.getCountryId();
 
     hi.delete( true );
     txScope.commit();
-    Country readHi = Country.read( txScope, countryId );
+    Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );
   }
 }

@@ -16,7 +16,7 @@
 
 package manifold.sql.schema.sqlite;
 
-import manifold.sql.schema.sqlite.base.SqliteSakilaTest;
+import manifold.sql.schema.sqlite.base.SqliteDdlServerTest;
 import manifold.sql.schema.simple.sqlite.SqliteSakila;
 import manifold.sql.schema.simple.sqlite.SqliteSakila.*;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import java.sql.SQLException;
 
 import static org.junit.Assert.*;
 
-public class FkDependencyTest extends SqliteSakilaTest
+public class FkDependencyTest extends SqliteDdlServerTest
 {
   @Test
   public void testOneDependency() throws SQLException
@@ -47,14 +47,14 @@ public class FkDependencyTest extends SqliteSakilaTest
     assertEquals( country.getCountryId(), city.getCountryId() );
 
     // check that the rows are in the db
-    Country readCountry = Country.read( country.getCountryId() );
+    Country readCountry = Country.fetch( country.getCountryId() );
     assertNotNull( readCountry );
     // also sanity check from direct sql
     Country countryFromSql = "[.sql:SqliteSakila/] select * from country where country_id = :country_id".fetchOne( country.getCountryId() );
     assertEquals( country.getCountryId(), countryFromSql.getCountryId() );
 
     assertEquals( country.getCountryId(), readCountry.getCountryId() );
-    City readCity = City.read( city.getCityId() );
+    City readCity = City.fetch( city.getCityId() );
     assertNotNull( readCity );
     assertEquals( city.getCityId(), readCity.getCityId() );
     assertEquals( country.getCountryId(), readCity.getCountryId() );

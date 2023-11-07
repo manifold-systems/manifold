@@ -17,6 +17,7 @@
 package manifold.sql.rt.impl.accessors;
 
 import manifold.sql.rt.api.TypeProvider;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.rt.util.SqliteTypeMapping;
 
 import java.sql.*;
@@ -67,11 +68,9 @@ public class DefaultTypeProvider implements TypeProvider
   {
     int jdbcType = pm.getParameterType( pos );
 
-    // sqlite and mysql are known flakes here. See comment in exception below.
-    String productName = metaData.getDatabaseProductName();
+    // sqlite and mysql are known flakes here. See comment from caller.
     if( jdbcType == Types.VARCHAR &&
-      ("sqlite".equalsIgnoreCase( productName ) ||
-        "mysql".equalsIgnoreCase( productName )) )
+      DriverInfo.lookup( metaData ).flakyParameterMetadata() )
     {
       // the calling code handles this exception and provides default behavior for drivers with flaky parameter metadata
       throw new SQLException();
@@ -86,7 +85,7 @@ public class DefaultTypeProvider implements TypeProvider
 
   /**
    * Some databases have only one integral type e.g., Oracle's NUMBER, that maps to jdbc NUMERIC type, which maps to Java's
-   * BigDecimal. Here we refine the jdbc type according to size.
+   * BigDecimal. Here we generalize the mapping of NUMERIC types according to size.
    */
   private int findNumberType( int jdbcType, int size, int decimalDigits )
   {
@@ -105,34 +104,35 @@ public class DefaultTypeProvider implements TypeProvider
         case 1:
           return Types.BOOLEAN;
 
-        // popular size for Tinyint (oracle)
+        // popular size for TINYINT (esp. oracle's NUMBER)
         case 2:
-          return Types.TINYINT;
+          return Types.TINYINT; // Byte
 
-        // popular range for Smallint (oracle)
+        // popular range for SMALLINT (esp. oracle's NUMBER)
         case 3: case 4: case 5:
-        return Types.SMALLINT;
+//        return Types.SMALLINT; // Short
+          // Fall through to INTEGER because Short type requires casting of int values including integral literals.
+          // As a consequence, short doesn't really provide much in terms of a statically enforceable constraint.
 
-        // popular range for Integer (oracle)
+        // popular range for INTEGER (esp. oracle's NUMBER)
         case 6: case 7: case 8: case 9: case 10:
-        return Types.INTEGER;
+        return Types.INTEGER; // Integer
 
-        // popular range for Bigint
+        // popular range for BIGINT
         // note sqlserver claims 18 is the size of NUMERIC, which is supposed to map to BigDecimal :\
         case 11: case 12: case 13: case 14: case 15: case 16: case 17:
-        return Types.BIGINT;
+        return Types.BIGINT; // Long
 
-        // Otherwise Numeric (BigDecimal)
+        // Otherwise, NUMERIC
         default:
-          return jdbcType;
+          return jdbcType; // BigDecimal
       }
     }
   }
 
-  private int oneOffCorrections( int jdbcType, ResultSet rs, DatabaseMetaData dm ) throws SQLException
+  private int oneOffCorrections( int jdbcType, ResultSet rs, DatabaseMetaData metadata ) throws SQLException
   {
-    String productName = dm.getDatabaseProductName();
-    Integer newType = new SqliteTypeMapping().getJdbcType( productName, rs );
+    Integer newType = new SqliteTypeMapping().getJdbcType( metadata, rs );
     return newType != null ? newType : jdbcType;
   }
 }

@@ -20,7 +20,7 @@ import manifold.sql.api.Column;
 
 public interface SchemaColumn extends Column
 {
-  SchemaTable getTable();
+  SchemaTable getOwner();
   boolean isNonNullUniqueId();
   boolean isPrimaryKeyPart();
   String getNonNullUniqueKeyName();

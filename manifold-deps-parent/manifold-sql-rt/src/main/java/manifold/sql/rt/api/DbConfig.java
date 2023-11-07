@@ -23,7 +23,7 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Configuration for connecting to a JDBC datasource. Maps directly to JSON data obtained from a {@code .dbconfig} file,
+ * Configuration for connecting to a JDBC data source. Maps directly to JSON data obtained from a {@code .dbconfig} file,
  * or at runtime if the config is provided from a {@link DbConfigProvider} SPI implementation, it is obtained programmatically.
  * At compile-time the dbconfig is supplied as a resource file.
  */
@@ -96,14 +96,19 @@ public interface DbConfig
   String getPassword();
 
   /**
-   * (Optional) If true, this dbconfig is applied to SQL resources that do not specify a dbconfig name.
+   * (Optional) If true, this dbconfig is the "default" configuration. The default dbconfig is applied to all SQL resources
+   * not qualified with a dbconfig.
    * <p/>
-   * To specify a dbconfig
-   * name a .sql file follows the naming convention:<br>
-   * {@code MyQuery.dbconfigName.sql}<br>
+   * If there is only one dbconfig in use, it is considered default. Otherwise, if multiple dbconfigs are in use, a SQL
+   * resource not intended for the default dbconfig must qualify its name with the intended dbconfig. As such, if are not
+   * using multiple dbconfigs in your project you can ignore this setting.
    * <p/>
-   * Embedded SQL follows a similar pattern:<br>
-   * {@code "[.sql:dbconfigName/] select * from ..."}
+   * To specify a dbconfig name a .sql file follows the naming convention:<br>
+   * {@code MyQueryFile.MyDbConfig.sql}<br>
+   * <p/>
+   * Inline SQL follows a similar pattern:<br>
+   * {@code "[.sql:MyDbConfig/] select * from ..."}
+   * {@code "[MyQuery.sql:MyDbConfig/] select * from ..."}
    */
   boolean isDefault();
 
@@ -112,6 +117,14 @@ public interface DbConfig
 
   /** (Optional) The DDL for the database/schema this configuration is using. This is often a DDL dump from the DBMS. */
   String getDbDdl();
+
+  /** (Optional) The qualified name of the base interface to be used for generated schema table classes */
+  String getCustomBaseInterface();
+  /** (Optional) The qualified name of the base class to be used for generated schema table classes */
+  String getCustomBaseClass();
+
+  /** (Optional) Return true if using the database and driver in-process (in-memory) e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
+  boolean isInMemory();
 
   /** Returns the build URL if provided, otherwise the runtime URL */
   default String getBuildUrlOtherwiseRuntimeUrl()
@@ -147,5 +160,5 @@ public interface DbConfig
     return props;
   }
 
-  void init( Connection connection, String url, String schemaName, String ddl ) throws SQLException;
+  void init( Connection connection, ExecutionEnv environment ) throws SQLException;
 }

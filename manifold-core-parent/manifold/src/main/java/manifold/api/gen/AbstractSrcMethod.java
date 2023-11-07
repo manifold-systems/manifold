@@ -86,7 +86,8 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     _typeVars.add( typeVar );
   }
 
-  public T throwsList( Class<? extends Throwable>... list )
+  @SafeVarargs
+  public final T throwsList( Class<? extends Throwable>... list )
   {
     if( list != null )
     {

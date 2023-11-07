@@ -1,4 +1,0 @@
-{
-  "url": "jdbc:h2:file:${#resource_script /samples/ddl/h2-all-types-table-ddl.sql, h2-all-types}",
-  "schemaPackage": "manifold.sql.schema.simple.h2"
-}

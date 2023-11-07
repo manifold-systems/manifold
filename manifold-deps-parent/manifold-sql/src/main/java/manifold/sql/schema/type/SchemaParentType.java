@@ -17,38 +17,52 @@
 package manifold.sql.schema.type;
 
 import com.sun.tools.javac.code.Flags;
+import manifold.api.fs.IFile;
 import manifold.api.gen.*;
 import manifold.api.host.IModule;
+import manifold.api.util.cache.FqnCache;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
+import manifold.rt.api.util.ManClassUtil;
 import manifold.rt.api.util.Pair;
+import manifold.rt.api.util.StreamUtil;
 import manifold.sql.api.Column;
 import manifold.sql.rt.api.*;
 import manifold.sql.rt.api.OperableTxScope;
+import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
 import manifold.util.concurrent.LocklessLazyVar;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
 import static manifold.api.gen.AbstractSrcClass.Kind.Interface;
 import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
 import static manifold.rt.api.util.ManIdentifierUtil.makeIdentifier;
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
+import static manifold.sql.rt.api.TxScope.*;
+import static manifold.sql.rt.util.DriverInfo.Postgres;
+import static manifold.sql.rt.util.DriverInfo.SQLite;
 
 /**
  * The top-level class enclosing all the DDL types corresponding with a ".dbconfig" file.
  */
 class SchemaParentType
 {
+  public static final String ENTITY = "Entity";
+
   private final SchemaModel _model;
 
   SchemaParentType( SchemaModel model )
@@ -77,14 +91,25 @@ class SchemaParentType
     SrcLinkedClass srcClass = new SrcLinkedClass( getFqn(), Class, _model.getFile(), location, module, errorHandler )
       .addAnnotation( new SrcAnnotationExpression( DisableStringLiteralTemplates.class.getSimpleName() ) )
       .modifiers( Modifier.PUBLIC )
-      .addInterface( new SrcType( SchemaType.class.getSimpleName() ) );
+      .addInterface( SchemaType.class.getSimpleName() );
     addImports( srcClass );
-    addDefaultScopeMethod( srcClass );
-    addCommitMethod( srcClass );
-    addNewScopeMethod( srcClass );
+    addTxScopeMethods( srcClass );
     addInnerTypes( srcClass );
     addFkColAssignMethod( srcClass );
     srcClass.render( sb, 0 );
+  }
+
+  private void addTxScopeMethods( SrcLinkedClass srcClass )
+  {
+    addNewScopeMethod( srcClass );
+
+    addDefaultScopeMethod( srcClass );
+
+    // these methods implement TxScope as static methods e.g., MyDatabase.commit() is shorthand for MyDatabase.defaultScope().commit()
+    addGetDbConfigMethod( srcClass );
+    addCommitMethod( srcClass );
+    addRevertMethod( srcClass );
+    addRawChangeMethod( srcClass );
   }
 
   private void addDefaultScopeMethod( SrcLinkedClass srcClass )
@@ -92,8 +117,19 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .name( "defaultScope" )
-      .returns( new SrcType( TxScope.class.getSimpleName() ) );
-    method.body( "return ${Dependencies.class.getName()}.instance().getDefaultTxScopeProvider().defaultScope(${srcClass.getName()}.class);" );
+      .returns( new SrcType( TxScope.class.getSimpleName() ) )
+      .body( "return ${Dependencies.class.getName()}.instance().getDefaultTxScopeProvider()" +
+        ".defaultScope(${srcClass.getName()}.class);" );
+    srcClass.addMethod( method );
+  }
+
+  private void addGetDbConfigMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "getDbConfig" )
+      .returns( DbConfig.class )
+      .body( "return defaultScope().getDbConfig();" );
     srcClass.addMethod( method );
   }
 
@@ -104,6 +140,27 @@ class SchemaParentType
       .name( "commit" )
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
       .body( "defaultScope().commit();" );
+    srcClass.addMethod( method );
+  }
+
+  private void addRevertMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "revert" )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().revert();" );
+    srcClass.addMethod( method );
+  }
+
+  private void addRawChangeMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "addRawChange" )
+      .addParam( "rawChange", ScopeConsumer.class.getSimpleName() )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().addRawChange(rawChange);" );
     srcClass.addMethod( method );
   }
 
@@ -135,10 +192,12 @@ class SchemaParentType
     String identifier = getSchema().getJavaTypeName( table.getName() );
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Interface )
-      .addInterface( TableRow.class.getSimpleName() )
+      .addInterface( Entity.class.getSimpleName() )
       .modifiers( Modifier.PUBLIC );
+    extendCustomInterface( srcClass );
+    addCustomBaseInterface( srcClass );
     addActualNameAnnotation( srcClass, table.getName(), false );
-    addImplClass( srcClass );
+    addEntityClass( srcClass );
     addCreateMethods( srcClass, table );
     addReadMethods( srcClass, table );
     addDeleteMethod( srcClass );
@@ -151,32 +210,103 @@ class SchemaParentType
     enclosingType.addInnerClass( srcClass );
   }
 
-  private void addImplClass( SrcLinkedClass interfaceType )
+  private void extendCustomInterface( SrcLinkedClass srcClass )
   {
-    String identifier = "Impl";
+    FqnCache<IFile> javaFiles = _model.getSchemaManifold().getModule().getPathCache().getExtensionCache( "java" );
+    javaFiles.visitDepthFirst( file -> {
+      if( file == null )
+      {
+        return true;
+      }
+      // custom interface must be top-level and follow naming convention:
+      //   public interface "Custom" + <table interface name> extends CustomEntity<table interface name> e.g.,
+      //   public interface CustomActor extends CustomEntity<Actor> {...}
+      String customSimpleName = "Custom" + srcClass.getSimpleName();
+      if( file.getBaseName().equals( customSimpleName ) )
+      {
+        try
+        {
+          String content = StreamUtil.getContent( new InputStreamReader( file.openInputStream(), UTF_8 ) );
+          if( content.contains( "public interface " + customSimpleName ) && content.contains( srcClass.getName() ) )
+          {
+            String fqnIface = _model.getSchemaManifold().getModule().getPathCache()
+              .getFqnForFile( file ).iterator().next();
+            srcClass.addInterface( fqnIface );
+            addForwardingStaticMethods( fqnIface );
+            return false;
+          }
+        }
+        catch( IOException e )
+        {
+          throw new RuntimeException( e );
+        }
+      }
+      return true;
+    } );
+
+  }
+
+  private void addForwardingStaticMethods( String fqnIface )
+  {
+    //todo: find all static methods in the custom interface and add the same to the entity interface that forwards to the custom interface
+    // Note, this is necessary because interface static methods are not inherited (although java really should make it work if there are no ambiguities).
+    // Still chewing on this one. For now, just call your methods from your custom interface
+  }
+
+  private void addCustomBaseInterface( SrcLinkedClass srcClass )
+  {
+    // check for custom base interface from dbconfig, which is inherited by ALL table interfaces in this config
+
+    String customBaseInterface = _model.getDbConfig().getCustomBaseInterface();
+    if( customBaseInterface != null && !customBaseInterface.isEmpty() )
+    {
+      if( !ManClassUtil.isValidClassName( customBaseInterface ) )
+      {
+        throw new RuntimeException( "Invalid custom class name: '" + customBaseInterface + "'" );
+      }
+
+      srcClass.addInterface( customBaseInterface );
+    }
+  }
+
+  private void addEntityClass( SrcLinkedClass interfaceType )
+  {
+    String identifier = interfaceType.getSimpleName() + ENTITY;
     String fqn = getFqn() + '.' + identifier;
     SrcLinkedClass srcClass = new SrcLinkedClass( fqn, interfaceType, Class )
       .addInterface( interfaceType.getSimpleName() );
-
-    SrcField bindingsField = new SrcField( "_bindings", TxBindings.class )
-      .modifiers( Modifier.PRIVATE | Modifier.FINAL );
-    srcClass.addField( bindingsField );
-
+    setSuperClass( srcClass );
     SrcConstructor ctor = new SrcConstructor( srcClass )
-      .modifiers( Modifier.PRIVATE )
+      .modifiers( Modifier.PUBLIC )
       .addParam( new SrcParameter( "bindings", TxBindings.class )
         .addAnnotation( NotNull.class.getSimpleName() ) )
-      .body( "_bindings = bindings;" );
+      .body( "super(bindings);" );
     srcClass.addConstructor( ctor );
 
-    SrcMethod bindingsMethod = new SrcMethod( srcClass )
-      .modifiers( Modifier.PUBLIC )
-      .name( "getBindings" )
-      .returns( TxBindings.class )
-      .body( "return _bindings;" );
-    srcClass.addMethod( bindingsMethod );
-
     interfaceType.addInnerClass( srcClass );
+  }
+
+  @SuppressWarnings( "unused" )
+  private void setSuperClass( SrcLinkedClass srcClass )
+  {
+    // Check for a dbconfig specified custom base class
+
+    String customBaseClass = _model.getDbConfig().getCustomBaseClass();
+    if( customBaseClass != null && !customBaseClass.isEmpty() )
+    {
+      if( !ManClassUtil.isValidClassName( customBaseClass ) )
+      {
+        throw new RuntimeException( "Invalid custom class name: '" + customBaseClass + "'" );
+      }
+
+      srcClass.superClass( customBaseClass );
+    }
+    else
+    {
+      // Default to our base class
+
+      srcClass.superClass( BaseEntity.class );
+    }
   }
 
   private void addProperties( SchemaTable table, SrcLinkedClass srcClass )
@@ -279,7 +409,7 @@ class SchemaParentType
 
     StringBuilder sb = new StringBuilder();
     sb.append( "return new Builder() {\n" );
-    sb.append( "        Bindings _bindings = new DataBindings();\n" );
+    sb.append( "        ${Bindings.class.getName()} _bindings = new DataBindings();\n" );
     sb.append( "        {\n" );
     if( fkRefs )
     {
@@ -291,7 +421,7 @@ class SchemaParentType
     }
     sb.append( "        }\n" );
 
-    sb.append( "        @Override public Bindings getBindings() { return _bindings; }\n" );
+    sb.append( "        @Override public ${Bindings.class.getName()} getBindings() { return _bindings; }\n" );
     sb.append( "      };" );
     method.body( sb.toString() );
   }
@@ -357,10 +487,11 @@ class SchemaParentType
       initFromParameters( table, sb, "args" );
     }
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n" );
-    sb.append( "      $tableName tableRow = new Impl(bindings);\n" );
-    sb.append( "      tableRow.getBindings().setOwner(tableRow);\n" );
-    sb.append( "      ((OperableTxScope)txScope).addRow(tableRow);\n" );
-    sb.append( "      return tableRow;" );
+    sb.append( "      $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" );
+    sb.append( "      $tableName entity = customRow != null ? customRow : new ${ManClassUtil.getShortClassName(tableName)}Entity(bindings);\n" );
+    sb.append( "      ((OperableTxBindings)entity.getBindings()).setOwner(entity);\n" );
+    sb.append( "      ((OperableTxScope)txScope).addRow(entity);\n" );
+    sb.append( "      return entity;" );
     method.body( sb.toString() );
   }
 
@@ -541,10 +672,11 @@ class SchemaParentType
     srcInterface.addMethod( method );
     method.body(
         "BasicTxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, Builder.this.getBindings());\n" +
-        "        $tableName tableRow = new Impl(bindings);\n" +
-        "        tableRow.getBindings().setOwner(tableRow);\n" +
-        "        ((OperableTxScope)txScope).addRow(tableRow);\n" +
-        "        return tableRow;" );
+        "        $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" +
+        "        $tableName entity = customRow != null ? customRow : new ${ManClassUtil.getShortClassName(tableName)}Entity(bindings);\n" +
+        "        ((OperableTxBindings)entity.getBindings()).setOwner(entity);\n" +
+        "        ((OperableTxScope)txScope).addRow(entity);\n" +
+        "        return entity;" );
   }
 
   private void addWithMethods( SrcLinkedClass srcClass, SchemaTable table )
@@ -617,16 +749,17 @@ class SchemaParentType
   private boolean bullshit( SchemaColumn col )
   {
     // Sqlite: a generated, auto-increment id, but since sqlite is retarded at all levels...
-    boolean isSqliteRowId = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "sqlite" ) &&
-        col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
+    DriverInfo driver = col.getOwner().getSchema().getDriverInfo();
+    boolean isSqliteRowId = driver == SQLite &&
+      col.isNonNullUniqueId() && col.isPrimaryKeyPart() && col.getJdbcType() == Types.INTEGER;
     if( isSqliteRowId )
     {
       return true;
     }
 
     // Postgres: tsvector is always assigned, s/b 'generated always', but sometimes triggers are used :\
-    boolean isPostgresTsvector = col.getTable().getSchema().getDatabaseProductName().equalsIgnoreCase( "postgresql" ) &&
-      col.getSqlType().equalsIgnoreCase( "tsvector" );
+    boolean isPostgresTsvector = driver == Postgres && col.getSqlType().equalsIgnoreCase( "tsvector" );
+    //noinspection RedundantIfStatement
     if( isPostgresTsvector )
     {
       return true;
@@ -640,11 +773,13 @@ class SchemaParentType
     srcClass.addImport( Bindings.class );
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( TxScope.class );
+    srcClass.addImport( ScopeConsumer.class );
     srcClass.addImport( OperableTxScope.class );
+    srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
     srcClass.addImport( BasicTxBindings.TxKind.class );
     srcClass.addImport( DataBindings.class );
-    srcClass.addImport( TableRow.class );
+    srcClass.addImport( Entity.class );
     srcClass.addImport( TableInfo.class );
     srcClass.addImport( ColumnInfo.class );
     srcClass.addImport( SchemaType.class );
@@ -662,6 +797,7 @@ class SchemaParentType
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
     srcClass.addImport( SQLException.class );
+    srcClass.addImport( Nullable.class );
     srcClass.addImport( NotNull.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
@@ -676,9 +812,11 @@ class SchemaParentType
     String name = sfk.getName();
     String propName = makePascalCaseIdentifier( name, true );
     SrcMethod fkFetchMethod = new SrcMethod( srcClass )
-      .name( "get" + propName )
+      .name( "fetch" + propName )
       .modifiers( Flags.DEFAULT )
       .returns( type );
+    boolean isNullable = sfk.getColumns().stream().allMatch( c -> c.isNullable() );
+    fkFetchMethod.addAnnotation( isNullable ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
     List<SchemaColumn> columns = sfk.getColumns();
@@ -691,7 +829,7 @@ class SchemaParentType
       {
         // get assigned ref that is newly created and not committed yet
         sb.append( "    Object maybeRef = getBindings().get(\"${col.getName()}\");\n" )
-          .append( "    if(maybeRef instanceof ${TableRow.class.getSimpleName()}) {return ($tableFqn)maybeRef;}\n" );
+          .append( "    if(maybeRef instanceof ${Entity.class.getSimpleName()}) {return ($tableFqn)maybeRef;}\n" );
       }
       sb.append( "    paramBindings.put(\"${referencedCol.getName()}\", getBindings().get(\"${col.getName()}\"));\n" );
     }
@@ -702,15 +840,23 @@ class SchemaParentType
     String configName = _model.getDbConfig().getName();
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(" +
       "new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
-      "rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "rowBindings -> {" +
+      "  $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "  return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
+      "} ));" );
     fkFetchMethod.body( sb.toString() );
     addActualNameAnnotation( fkFetchMethod, name, true );
     srcClass.addMethod( fkFetchMethod );
 
     SrcMethod fkSetter = new SrcMethod( srcClass )
       .modifiers( Flags.DEFAULT )
-      .name( "set" + propName )
-      .addParam( "ref", new SrcType( tableFqn ) );
+      .name( "set" + propName );
+    SrcParameter param = new SrcParameter( "ref", new SrcType( tableFqn ) );
+    fkSetter.addParam( param );
+    if( !isNullable )
+    {
+      param.addAnnotation( NotNull.class.getSimpleName() );
+    }
     for( SchemaColumn fkCol : sfk.getColumns() )
     {
       //noinspection unused
@@ -728,7 +874,7 @@ class SchemaParentType
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.PRIVATE | Modifier.STATIC )
       .name( "assignFkBindingValues" )
-      .addParam( "ref", new SrcType( TableRow.class ) )
+      .addParam( "ref", new SrcType( Entity.class ) )
       .addParam( "propName", new SrcType( String.class ) )
       .addParam( "keyColName", new SrcType( String.class ) )
       .addParam( "colName", new SrcType( String.class ) )
@@ -749,14 +895,15 @@ class SchemaParentType
     //noinspection unused
     String colName = makeIdentifier( name );
 
-    SrcGetProperty getter = new SrcGetProperty( propName, propType );
-    getter.modifiers( Flags.DEFAULT );
+    SrcGetProperty getter = new SrcGetProperty( propName, propType )
+      .modifiers( Flags.DEFAULT );
+    getter.addAnnotation( col.isNullable() ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
     StringBuilder retType = new StringBuilder();
     propType.render( retType, 0, false ); // calling render to include array "[]"
     if( col.getForeignKey() != null )
     {
       getter.body( "Object value = getBindings().get(\"$colName\");\n" +
-                   "    return value instanceof ${TableRow.class.getSimpleName()} ? null : ($retType)value;" );
+                   "    return value instanceof ${Entity.class.getSimpleName()} ? null : ($retType)value;" );
     }
     else
     {
@@ -769,6 +916,10 @@ class SchemaParentType
     {
       SrcSetProperty setter = new SrcSetProperty( propName, propType )
         .modifiers( Flags.DEFAULT );
+      if( !col.isNullable() )
+      {
+        setter.getParameters().get( 0 ).addAnnotation( NotNull.class.getSimpleName() );
+      }
       setter.body( "getBindings().put(\"$colName\", ${'$'}value);" );
       addActualNameAnnotation( setter, name, true );
       srcInterface.addSetProperty( setter );
@@ -776,7 +927,7 @@ class SchemaParentType
   }
 
   // Foo foo = Foo.create(txScope, ...);
-  // Foo foo = Foo.read(txScope, ...);
+  // Foo foo = Foo.fetch(txScope, ...);
   // foo.delete();
   //...
   // txScope.commit();
@@ -786,16 +937,16 @@ class SchemaParentType
     String tableFqn = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
-      .name( "read" )
+      .name( "fetch" )
       .returns( new SrcType( tableFqn ) );
-    List<SchemaColumn> whereCols = addSelectParameters( table, method );
+    List<SchemaColumn> whereCols = addFetchParameters( table, method );
     if( whereCols.isEmpty() )
     {
-      // no pk and no pk, no read method, instead use type-safe sql query :)
+      // no pk and no uk, no read method, instead use type-safe sql query :)
       return;
     }
     StringBuilder sb = new StringBuilder();
-    sb.append( "return read(defaultScope()" );
+    sb.append( "return fetch(defaultScope()" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
     method.forwardParameters( sb );
     sb.append( ");" );
@@ -805,11 +956,11 @@ class SchemaParentType
 
     method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
-      .name( "read" )
+      .name( "fetch" )
       .returns( new SrcType( tableFqn ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );
-    whereCols = addSelectParameters( table, method );
+    whereCols = addFetchParameters( table, method );
     //noinspection unused
     String columnInfo = getColumnInfo( whereCols );
     //noinspection unused
@@ -824,34 +975,44 @@ class SchemaParentType
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readOne(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
       "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
-      "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "      rowBindings -> {" +
+      "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
+      "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }
 
-  private List<SchemaColumn> addSelectParameters( SchemaTable table, AbstractSrcMethod method )
+  private List<SchemaColumn> addFetchParameters( SchemaTable table, AbstractSrcMethod method )
   {
     List<SchemaColumn> pk = table.getPrimaryKey();
     if( !pk.isEmpty() )
     {
-      for( SchemaColumn col : pk )
-      {
-        method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
-      }
+      addParameters( method, pk );
       return pk;
     }
     else
     {
       for( Map.Entry<String, List<SchemaColumn>> entry : table.getNonNullUniqueKeys().entrySet() )
       {
-        for( SchemaColumn col : entry.getValue() )
-        {
-          method.addParam( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
-        }
+        addParameters( method, entry.getValue() );
         return entry.getValue();
       }
     }
     return Collections.emptyList();
+  }
+
+  private static void addParameters( AbstractSrcMethod method, List<SchemaColumn> keyCols )
+  {
+    for( SchemaColumn col : keyCols )
+    {
+      SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+      if( !col.isNullable() )
+      {
+        param.addAnnotation( NotNull.class.getSimpleName() );
+      }
+      method.addParam( param );
+    }
   }
 
   private void addDeleteMethod( SrcLinkedClass srcClass )
@@ -860,7 +1021,7 @@ class SchemaParentType
       .modifiers( Flags.DEFAULT )
       .name( "delete" )
       .addParam( "delete", boolean.class );
-    method.body( "getBindings().setDelete(delete);" );
+    method.body( "((OperableTxBindings)getBindings()).setDelete(delete);" );
     srcClass.addMethod( method );
   }
 
@@ -899,12 +1060,15 @@ class SchemaParentType
       //noinspection unused
       Column referencedCol = col.getForeignKey();
       sb.append( "    Object value = getBindings().get(\"${col.getName()}\");\n" )
-        .append( "    if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
+        .append( "    if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
         .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
       "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
-      "      rowBindings -> new $tableFqn.Impl(rowBindings)));" );
+      "      rowBindings -> {" +
+      "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
+      "      } ));" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }
@@ -920,7 +1084,7 @@ class SchemaParentType
   {
     SchemaColumn fkToMe;
     SchemaColumn fkToOther;
-    if( uk.getFirst().getForeignKey().getTable() == table )
+    if( uk.getFirst().getForeignKey().getOwner() == table )
     {
       fkToMe = uk.getFirst();
       fkToOther = uk.getSecond();
@@ -933,7 +1097,7 @@ class SchemaParentType
 
     // e.g., select * from CATEGORY join FILM_CATEGORY on CATEGORY.CATEGORY_ID = FILM_CATEGORY.CATEGORY_ID where FILM_CATEGORY.FILM_ID = :FILM_ID;
     //noinspection unused
-    String tableFqn = getTableFqn( fkToOther.getForeignKey().getTable() );
+    String tableFqn = getTableFqn( fkToOther.getForeignKey().getOwner() );
     //noinspection unused
     String propName = makePascalCaseIdentifier( JdbcSchemaForeignKey.removeId( fkToOther.getName() ) + "_ref", true );
     SrcMethod method = new SrcMethod( srcClass )
@@ -941,11 +1105,11 @@ class SchemaParentType
       .name( "fetch${propName}s" )
       .returns( new SrcType( "List<$tableFqn>" ) );
     //noinspection unused
-    String configName = fkToOther.getForeignKey().getTable().getSchema().getDbConfig().getName();
+    String configName = fkToOther.getForeignKey().getOwner().getSchema().getDbConfig().getName();
     //noinspection unused
-    String otherTable = fkToOther.getForeignKey().getTable().getName();
+    String otherTable = fkToOther.getForeignKey().getOwner().getName();
     //noinspection unused
-    String linkTable = fkToOther.getTable().getName();
+    String linkTable = fkToOther.getOwner().getName();
 
     //noinspection unused
     String sql = "select * from $otherTable " +
@@ -960,11 +1124,14 @@ class SchemaParentType
     //noinspection unused
     SchemaColumn referencedCol = fkToMe.getForeignKey();
     sb.append( "      Object value = getBindings().get(\"${fkToMe.getName()}\");\n" )
-      .append( "      if(value instanceof ${TableRow.class.getSimpleName()}) return Collections.emptyList();\n" )
+      .append( "      if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
       .append( "      paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
     sb.append( "      return new ${Runner.class.getName()}<$tableFqn>(\n" +
       "          new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", \n" +
-      "          rowBindings -> new $tableFqn.Impl(rowBindings)), \"$sql\")\n" +
+      "          rowBindings -> {" +
+      "            $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "            return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
+      "          } ), \"$sql\")\n" +
       "        .fetch().toList();" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
@@ -975,8 +1142,8 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToOther.getForeignKey();
-    sb.append( refCol.getTable().getName() ).append( '.' ).append( refCol.getName() ).append( " = " )
-      .append( fkToOther.getTable().getName() ).append( '.' ).append( fkToOther.getName() );
+    sb.append( refCol.getOwner().getName() ).append( '.' ).append( refCol.getName() ).append( " = " )
+      .append( fkToOther.getOwner().getName() ).append( '.' ).append( fkToOther.getName() );
     return sb.toString();
   }
 
@@ -985,7 +1152,7 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToMe.getForeignKey();
-    sb.append( fkToMe.getTable().getName() ).append( '.' ).append( fkToMe.getName() ).append( " = ?" );
+    sb.append( fkToMe.getOwner().getName() ).append( '.' ).append( fkToMe.getName() ).append( " = ?" );
     return sb.toString();
   }
 

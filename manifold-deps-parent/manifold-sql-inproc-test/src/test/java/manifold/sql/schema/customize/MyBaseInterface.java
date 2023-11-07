@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-package manifold.sql.query.jdbc;
+package manifold.sql.schema.customize;
 
-import manifold.sql.query.api.QueryTable;
-import manifold.sql.query.api.QueryAnalyzer;
-import manifold.sql.query.type.SqlScope;
-
-public class JdbcQueryAnalyzer implements QueryAnalyzer
+public interface MyBaseInterface
 {
-  @Override
-  public QueryTable getQuery( String queryName, SqlScope scope, String querySource )
-  {
-    return new JdbcQueryTable( scope, queryName, querySource );
-  }
+  String myCustomBaseMethod();
 }
