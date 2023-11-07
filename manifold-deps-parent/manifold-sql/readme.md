@@ -4,8 +4,7 @@
 
 ![latest](https://img.shields.io/badge/latest-v2023.1.30-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
-![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red&link=https%3A%2F%2Fgithub.com%2Fmanifold-systems%2Fmanifold)
-
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red)](https://github.com/manifold-systems/manifold)
 
 
 Manifold provides a simple yet powerful alternative to conventional JDBC abstractions that makes it possible to use
