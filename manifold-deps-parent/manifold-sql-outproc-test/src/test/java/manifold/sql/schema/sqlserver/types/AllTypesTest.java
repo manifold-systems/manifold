@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
@@ -61,9 +62,9 @@ public class AllTypesTest extends SqlserverDdlServerTest
   private static final float Real_value = Float.MAX_VALUE;
   private static final String Varchar_value = "varchar";
   private static final LocalDate Date_value = LocalDate.now();
-  private static final Instant Datetime2_value = Instant.now().truncatedTo( ChronoUnit.MINUTES );
-  private static final Instant Datetime_value = Instant.now().truncatedTo( ChronoUnit.MINUTES );
-  private static final Instant Smalldatetime_value = Instant.now().truncatedTo( ChronoUnit.MINUTES );
+  private static final LocalDateTime Datetime2_value = LocalDateTime.now().truncatedTo( ChronoUnit.MINUTES );
+  private static final LocalDateTime Datetime_value = LocalDateTime.now().truncatedTo( ChronoUnit.MINUTES );
+  private static final LocalDateTime Smalldatetime_value = LocalDateTime.now().truncatedTo( ChronoUnit.MINUTES );
   private static final byte[] Geography_value; // todo: should be com.microsoft.sqlserver.jdbc.Geography, not byte[]
   static
   {

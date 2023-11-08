@@ -18,10 +18,7 @@ package manifold.sql.schema.mysql.types;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.Year;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 
 import manifold.sql.schema.mysql.MysqlDdlServerTest;
@@ -75,8 +72,8 @@ public class AllTypesTest extends MysqlDdlServerTest
   LocalDate Date_value = LocalDate.now();                    // DATE(91)
   Year Year_value = Year.now();                              // DATE(91)
   LocalTime Time_value = LocalTime.now().truncatedTo( ChronoUnit.SECONDS ); // TIME(92)
-  Instant Datetime_value = Instant.now().truncatedTo( ChronoUnit.SECONDS ); // TIMESTAMP(93)
-  Instant Timestamp_value = Datetime_value;                  // TIMESTAMP(93)
+  LocalDateTime Datetime_value = LocalDateTime.now().truncatedTo( ChronoUnit.SECONDS ); // TIMESTAMP(93)
+  LocalDateTime Timestamp_value = Datetime_value;            // TIMESTAMP(93)
 
   @Test
   public void testAllTypesSetValues() throws SQLException

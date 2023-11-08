@@ -38,7 +38,7 @@ public class AllTypesTest extends OracleDdlServerTest
   private static final byte[] Blob_value = {1,2,3,4,5,6,7,8};
   private static final String Char_value = "a";
   private static final String Clob_value = "clob";
-  private static final Instant Date_value = Instant.now().truncatedTo( ChronoUnit.MINUTES );
+  private static final LocalDateTime Date_value = LocalDateTime.now().truncatedTo( ChronoUnit.SECONDS );
   private static final Double Float_value = 3.14;
   private static final Duration Intervalds_value = Duration.ofHours( 10 ).plusMinutes( 5 );
   private static final Period Intervalym_value = Period.ofYears( 2 ).plusMonths( 5 );
@@ -54,7 +54,7 @@ public class AllTypesTest extends OracleDdlServerTest
   private static final String Nvarchar2_value = "hellothere";
   private static final byte[] Raw_value = {1,2,3,4,5};
   private static final Double Real_value = 3.14;
-  private static final Instant Timestamp_value = Instant.now().truncatedTo( ChronoUnit.MINUTES );
+  private static final LocalDateTime Timestamp_value = LocalDateTime.now().truncatedTo( ChronoUnit.SECONDS );
   private static final LocalDateTime TimestampWithLocalTimeZone_value = LocalDateTime.now();
   private static final OffsetDateTime TimestampWithTimeZone_value = OffsetDateTime.now();
   private static final String Varchar2_value = "therehello";

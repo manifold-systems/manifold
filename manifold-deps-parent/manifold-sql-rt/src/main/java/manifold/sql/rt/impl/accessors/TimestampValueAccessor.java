@@ -21,6 +21,7 @@ import manifold.sql.rt.api.ValueAccessor;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public class TimestampValueAccessor implements ValueAccessor
 {
@@ -33,14 +34,14 @@ public class TimestampValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    return Instant.class;
+    return LocalDateTime.class;
   }
 
   @Override
-  public Instant getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  public LocalDateTime getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
     Timestamp timestamp = rs.getTimestamp( elem.getPosition() );
-    return timestamp == null ? null : timestamp.toInstant();
+    return timestamp == null ? null : timestamp.toLocalDateTime();
   }
 
   @Override
@@ -49,6 +50,10 @@ public class TimestampValueAccessor implements ValueAccessor
     if( value == null )
     {
       ps.setNull( pos, getJdbcType() );
+    }
+    else if( value instanceof LocalDateTime )
+    {
+      ps.setTimestamp( pos, Timestamp.valueOf( (LocalDateTime)value ) );
     }
     else if( value instanceof Instant )
     {

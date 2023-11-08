@@ -47,7 +47,7 @@ public class AllTypesTest extends SqliteDdlServerTest
     private static boolean Boolean_value = true;
     private static LocalDate Date_value = LocalDate.of( 2023, 9, 3 );
     private static LocalTime Time_value = LocalTime.of( 12, 56 );
-    private static Instant Timestamp_value = Instant.now();
+    private static LocalDateTime Timestamp_value = LocalDateTime.now();
     private static byte[] Blob_value = "blob".getBytes();
     private static String Clob_value = "clob";
 
