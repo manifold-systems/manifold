@@ -55,7 +55,7 @@ IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 An inline query can also be declarative using comment delimiters. Here the `Payments` query type is defined and used
 in the same scope. Notice, the type name, `Payments.sql`. The format follows the file name format where the type name
 precedes the type _kind_. In this case the name is `Payments` and the kind is `sql`. As such SQL types can be defined
-in resource files as well as inlined types. Read more about type kinds [here](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold).
+in resource files as well as inlined types.
 
 <img width="550" height="287" align="top" src="../../docs/images/img2.png">
 <br>
