@@ -45,7 +45,7 @@ in all SQL commands including `Insert`, `Update`, `Delete` as well as `Select`.
 
 ---
 You can inline SQL queries and commands in both standard Strings Literals and Text Blocks. This query demonstrates how
-you can use native SQL to produce result sets of any type. Notice, both Java and SQL syntax is highlighted. The Manifold
+you can use native SQL to produce result sets of any type. Notice both Java and SQL syntax is highlighted. The Manifold
 IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 
 <img width="450" height="337" align="top" src="../../docs/images/img.png">
@@ -53,8 +53,8 @@ IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 
 ---
 An inline query can also be declarative using comment delimiters. Here the `Payments` query type is defined and used
-in the same scope. Notice, the type name, `Payments.sql`. The format follows the file name format where the type name
-precedes the type _kind_. In this case the name is `Payments` and the kind is `sql`. As such SQL types can be defined
+in the same scope. Notice the type name, `Payments.sql`. The format follows the file naming convention where the type name
+precedes the type _domain_. In this case the name is `Payments` and the domain is `sql`. As such SQL types can be defined
 in resource files as well as inlined types.
 
 <img width="550" height="287" align="top" src="../../docs/images/img2.png">
