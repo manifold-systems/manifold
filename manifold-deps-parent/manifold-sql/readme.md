@@ -75,6 +75,8 @@ connection is used only for static analysis during compilation, the database can
 Using metadata acquired directly from a JDBC connection guarantees the schema entities, SQL queries, and commands you use
 are 100% type-safe and compatible with your database. Additionally, it allows Manifold SQL to target a much wider range
 of database products.
+           
+## Full documentation on the way. . .
 
 ## Coming _**real**_ soon. . .
                                    
