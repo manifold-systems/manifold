@@ -22,7 +22,7 @@ to your gradle or maven build.
 
 ---
 
-## Features:
+## Features
 - Use native SQL directly and type-safely in your Java code<br>
 - _Inline_ SQL directly in Java source, or use .sql files<br>
 - Type-safe DDL &bull; Type-safe queries &bull; Type-safe results<br>
@@ -30,11 +30,11 @@ to your gradle or maven build.
 - No code gen build steps &bull; No ORM shenanigans &bull; No DSL mumbo-jumbo<br>
 - Managed transaction scoping, commit/revert entity changes as needed<br>
 - Pluggable architecture with simple dependency injection<br>
-- Tested with popular JDBC database drivers and SQL dialects<br>
+- Tested with popular JDBC database drivers and SQL dialects, so far these include H2, MySQL, Oracle, Postgres, SQL Server, and SQLite, with more on the way.<br>
 - Comprehensive IDE support (IntelliJ IDEA, Android Studio)
 - Supports Java 8 - 21 (LTS releases)
 
-### Examples
+## Examples
 
 If all of a table's non-null columns are selected, such as with `select *` queries, the entity type is used in the result
 row. Also, notice the use of the type-safe, injection-safe query parameter `:release_year`. Parameters are available
@@ -60,6 +60,13 @@ in resource files as well as inlined types.
 <img width="550" height="287" align="top" src="../../docs/images/img2.png">
 <br>
 
+---
+With IntelliJ you can even execute your Manifold SQL queries directly against sample data, analyze query execution plans,
+and a lot more.
+
+<img width="550" height="550" align="top" src="../../docs/images/img4.png">
+<br>
+
 ## How does it work?
  
 Manifold SQL plugs into the java compiler using the `jdk.compiler.Plugin` SPI. This hook enables the framework to intercept
@@ -75,7 +82,7 @@ connection is used only for static analysis during compilation, the database can
 Using metadata acquired directly from a JDBC connection guarantees the schema entities, SQL queries, and commands you use
 are 100% type-safe and compatible with your database. Additionally, it allows Manifold SQL to target a much wider range
 of database products.
-           
+ 
 ## Full documentation on the way. . .
 
 ## Coming _**real**_ soon. . .
