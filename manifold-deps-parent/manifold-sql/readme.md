@@ -45,7 +45,7 @@ in all SQL commands including `Insert`, `Update`, `Delete` as well as `Select`.
 
 ---
 You can inline SQL queries and commands in both standard Strings Literals and Text Blocks. This query demonstrates how
-you can use native SQL to produce result sets of any type. Notice both Java and SQL syntax is highlighted. The Manifold
+you can use native SQL to produce result sets of any type. Notice both Java and SQL syntax are highlighted. The Manifold
 IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 
 <img width="450" height="337" align="top" src="../../docs/images/img.png">
