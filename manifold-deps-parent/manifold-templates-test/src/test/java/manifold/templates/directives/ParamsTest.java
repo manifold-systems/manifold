@@ -1,6 +1,7 @@
 package manifold.templates.directives;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import org.junit.Test;
 import directives.params.*;
 
@@ -23,7 +24,7 @@ public class ParamsTest
   @Test
   public void importedParamWorks()
   {
-    HashSet<Integer> ages = new HashSet<>();
+    HashSet<Integer> ages = new LinkedHashSet<>();
     ages.add( 1 );
     ages.add( 2 );
     ages.add( 3 );
