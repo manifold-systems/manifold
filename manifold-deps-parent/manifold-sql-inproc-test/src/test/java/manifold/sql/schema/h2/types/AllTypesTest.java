@@ -55,7 +55,7 @@ public class AllTypesTest extends H2DdlServerTest
     private static boolean Boolean_value = true;
     private static LocalDate Date_value = LocalDate.of( 2023, 9, 3 );
     private static LocalTime Time_value = LocalTime.of( 12, 56 );
-    private static Instant Timestamp_value = LocalDateTime.of( 1987, 6, 17, 10, 0 ).toInstant( ZoneOffset.UTC );
+    private static LocalDateTime Timestamp_value = LocalDateTime.of( 1987, 6, 17, 10, 0 );
     private static Interval IntervalYear_value = Interval.ofYears( 5 );
     private static Interval IntervalMonth_value = Interval.ofMonths( 5 );
     private static Interval IntervalDay_value = Interval.ofDays( 5 );

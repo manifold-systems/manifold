@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
@@ -52,8 +52,8 @@ public class AllTypesTest extends PostgresDdlServerTest
   private static String Text_value = "text text text text text text text text text text text text text text text";
   private static LocalTime Time_value = LocalTime.of(1,2,3);
   private static LocalTime Timetz_value = LocalTime.of(4,5,6);
-  private static Instant Timestamp_value = Instant.now();
-  private static Instant Timestamptz_value = Instant.now();
+  private static LocalDateTime Timestamp_value = LocalDateTime.now();
+  private static LocalDateTime Timestamptz_value = LocalDateTime.now();
   private static String Varchar_value = "varchar";
   private static UUID Uuid_value = UUID.randomUUID();
 
