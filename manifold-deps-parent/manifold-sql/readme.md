@@ -14,8 +14,8 @@ use native SQL _directly_ and _type-safely_ from Java code.
 
 - Query types are instantly available as you type native SQL of any complexity in your Java code
 - Query results are type-safe and type-rich and simple to use (see examples below)
-- Entity types are automatically derived from JDBC metadata via compiler plugin, fully relational/FK aware, CRUD, etc.
-- No ORM, No DSLs, No annotations, and No code generation build steps
+- Schema types are derived on-the-fly from your database, fully relational/FK aware, CRUD, etc.
+- No ORM, No DSL, No wiring, and No code generation build steps
 
 Use Manifold simply by adding the javac `-Xplugin:Manifold` argument and `manifold-sql` and `manifold-sql-rt` dependencies
 to your gradle or maven build.
@@ -28,7 +28,7 @@ to your gradle or maven build.
 - Type-safe DDL &bull; Type-safe queries &bull; Type-safe results<br>
 - Full CRUD support with DB schema type projections, without writing a line of code<br>
 - No code gen build steps &bull; No ORM shenanigans &bull; No DSL mumbo-jumbo<br>
-- Managed transaction scoping, commit/revert entity changes as needed<br>
+- Managed transaction scoping, commit/revert changes as needed<br>
 - Pluggable architecture with simple dependency injection<br>
 - Tested with popular JDBC database drivers and SQL dialects, so far these include H2, MySQL, Oracle, Postgres, SQL Server, and SQLite, with more on the way.<br>
 - Comprehensive IDE support (IntelliJ IDEA, Android Studio)
@@ -36,15 +36,15 @@ to your gradle or maven build.
 
 ## Examples
 
-If all of a table's non-null columns are selected, such as with `select *` queries, the entity type is used in the result
-row. Also, notice the use of the type-safe, injection-safe query parameter `:release_year`. Parameters are available
-in all SQL commands including `Insert`, `Update`, `Delete` as well as `Select`.
+If all of a table's non-null columns are selected, such as with `select *` queries, the _schema_ type is used in the result,
+as opposed to a _row_ type. Also, notice the use of the type-safe, injection-safe query parameter `:release_year`. Parameters
+are available in all SQL commands including `Insert`, `Update`, `Delete` as well as `Select`.
 
 <img width="600" height="96" align="top" src="../../docs/images/img_3.png">
 <br>
 
 ---
-You can inline SQL queries and commands in both standard Strings Literals and Text Blocks. This query demonstrates how
+You can inline SQL queries and commands in both standard String Literals and Text Blocks. This query demonstrates how
 you can use native SQL to produce result sets of any type. Notice both Java and SQL syntax are highlighted. The Manifold
 IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 
@@ -53,9 +53,10 @@ IntelliJ IDEA plugin integrates comprehensively with IDEA's SQL features.
 
 ---
 An inline query can also be declarative using comment delimiters. Here the `Payments` query type is defined and used
-in the same scope. Notice the type name, `Payments.sql`. The format follows the file naming convention where the type name
-precedes the type _domain_. In this case the name is `Payments` and the domain is `sql`. As such SQL types can be defined
-in resource files as well as inlined types.
+in the same local scope. Notice the type declaration, `Payments.sql`. The format follows the file `name`.`extension` convention
+where the full type name includes both the name and the type _domain_. In this case the name is `Payments` and the domain
+is `sql`. As with other Manifold type domains (aka type _manifolds_) such as JSON, XML, & GraphQL, SQL types can be inlined
+or defined in resource files using the same naming convention.
 
 <img width="550" height="287" align="top" src="../../docs/images/img2.png">
 <br>
@@ -70,19 +71,18 @@ and a lot more.
 ## How does it work?
  
 Manifold SQL plugs into the java compiler using the `jdk.compiler.Plugin` SPI. This hook enables the framework to intercept
-the compiler's type resolver so that it can produce schema and query types on-demand as the compiler encounters them. This
-aspect of the framework can be thought of as a _just-in-time_ type generator. It makes automatic entity projection and inline,
-type-safe SQL a reality. Similar features in other languages include Type Providers in F#, Source Generators in C#, and 
-Gosu's Open Type System.
+the compiler's type resolver so that it can generate types on-demand as the compiler encounters them. This unique aspect
+of the framework can be thought of as _just-in-time_ type generation. It is what makes on-the-fly schema type projection
+and inline, type-safe SQL a reality. 
      
 A standard JDBC connection supplies the metadata backing the schema and query types. This is configurable using a simple
 JSON `.dbconfig` file, which provides a JDBC URL, driver properties, and other optional settings. Importantly, since the
-connection is used only for static analysis during compilation, the database can be void of data.
-                                                      
-Using metadata acquired directly from a JDBC connection guarantees the schema entities, SQL queries, and commands you use
-are 100% type-safe and compatible with your database. Additionally, it allows Manifold SQL to target a much wider range
-of database products.
- 
+connection is used only for static analysis during compilation, the database can be void of data; only the database schema
+is required. Using metadata acquired directly from the database guarantees the schema types, SQL queries, and commands
+you use are _always_ 100% type-safe and compatible with your database.
+                        
+> Similar features in other languages include Type Providers in F#, Source Generators in C#, and Gosu's Open Type System.
+
 ## Full documentation on the way. . .
 
 ## Coming _**real**_ soon. . .
