@@ -383,6 +383,11 @@ class SchemaParentType
 
   private void addBuilderMethod( SrcLinkedClass srcClass, SchemaTable table )
   {
+    if( table.getKind() != SchemaTable.Kind.Table )
+    {
+      return;
+    }
+
     addBuilderMethod( srcClass, table, true );
     addBuilderMethod( srcClass, table, false );
   }
@@ -433,6 +438,11 @@ class SchemaParentType
   }
   private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table, boolean fkRefs )
   {
+    if( table.getKind() != SchemaTable.Kind.Table )
+    {
+      return;
+    }
+
     if( fkRefs && !hasRequiredForeignKeys( table ) )
     {
       return;
@@ -645,6 +655,11 @@ class SchemaParentType
 
   private void addBuilderType( SrcLinkedClass enclosingType, SchemaTable table )
   {
+    if( table.getKind() != SchemaTable.Kind.Table )
+    {
+      return;
+    }
+
     String fqn = enclosingType.getName() + ".Builder";
     SrcLinkedClass srcInterface = new SrcLinkedClass( fqn, enclosingType, Interface )
       .addInterface( new SrcType( SchemaBuilder.class.getSimpleName() ).addTypeParam( getTableFqn( table ) ) );
@@ -926,20 +941,88 @@ class SchemaParentType
     }
   }
 
-  // Foo foo = Foo.create(txScope, ...);
-  // Foo foo = Foo.fetch(txScope, ...);
-  // foo.delete();
-  //...
-  // txScope.commit();
-
   private void addReadMethods( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    addFetchPkParamsMethods( srcClass, table );
+    addFetchByRequiredParamMethods( srcClass, table );
+  }
+
+  // Foo.fetchBy(...);
+  private void addFetchByRequiredParamMethods( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    for( SchemaColumn col: table.getColumns().values() )
+    {
+      if( isRequired( col ) )
+      {
+        addFetchByRequiredParamMethod( srcClass, table, col );
+      }
+    }
+  }
+  private void addFetchByRequiredParamMethod( SrcLinkedClass srcClass, SchemaTable table, SchemaColumn reqCol )
+  {
+    //noinspection unused
+    String tableFqn = getTableFqn( table );
+    String propName = makePascalCaseIdentifier( reqCol.getName(), true );
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "fetchBy$propName" )
+      .returns( new SrcType( "List<$tableFqn>" ) );
+    String paramName = makePascalCaseIdentifier( reqCol.getName(), false );
+    SrcParameter param = new SrcParameter( paramName, reqCol.getType() );
+    if( !reqCol.getType().isPrimitive() )
+    {
+      param.addAnnotation( NotNull.class.getSimpleName() );
+    }
+    method.addParam( param );
+    List<SchemaColumn> whereCols = Collections.singletonList( reqCol );
+    StringBuilder sb = new StringBuilder();
+    sb.append( "return fetchBy$propName(defaultScope()" );
+    sb.append( method.getParameters().isEmpty() ? "" : ", " );
+    method.forwardParameters( sb );
+    sb.append( ");" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+
+
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.STATIC )
+      .name( "fetchBy$propName" )
+      .returns( new SrcType( "List<$tableFqn>" ) )
+      .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+        .addAnnotation( NotNull.class.getSimpleName() ) );
+    param = new SrcParameter( paramName, reqCol.getType() );
+    if( !reqCol.getType().isPrimitive() )
+    {
+      param.addAnnotation( NotNull.class.getSimpleName() );
+    }
+    method.addParam( param );
+    //noinspection unused
+    String columnInfo = getColumnInfo( whereCols );
+    //noinspection unused
+    String configName = _model.getDbConfig().getName();
+    sb = new StringBuilder();
+    sb.append( "DataBindings paramBindings = new DataBindings();\n" );
+    sb.append( "    paramBindings.put(\"${reqCol.getName()}\", $paramName);\n" );
+    sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
+      "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
+      "      rowBindings -> {" +
+      "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+      "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);" +
+      "      } ));" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+  }
+
+  // Foo.fetch(...);
+  // Foo.fetch(txScope, ...);
+  private void addFetchPkParamsMethods( SrcLinkedClass srcClass, SchemaTable table )
   {
     String tableFqn = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "fetch" )
       .returns( new SrcType( tableFqn ) );
-    List<SchemaColumn> whereCols = addFetchParameters( table, method );
+    List<SchemaColumn> whereCols = addPkParameters( table, method );
     if( whereCols.isEmpty() )
     {
       // no pk and no uk, no read method, instead use type-safe sql query :)
@@ -960,7 +1043,7 @@ class SchemaParentType
       .returns( new SrcType( tableFqn ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );
-    whereCols = addFetchParameters( table, method );
+    whereCols = addPkParameters( table, method );
     //noinspection unused
     String columnInfo = getColumnInfo( whereCols );
     //noinspection unused
@@ -983,7 +1066,7 @@ class SchemaParentType
     srcClass.addMethod( method );
   }
 
-  private List<SchemaColumn> addFetchParameters( SchemaTable table, AbstractSrcMethod method )
+  private List<SchemaColumn> addPkParameters( SchemaTable table, AbstractSrcMethod method )
   {
     List<SchemaColumn> pk = table.getPrimaryKey();
     if( !pk.isEmpty() )
