@@ -82,7 +82,7 @@ public class CrudTest extends SqliteDdlServerTest
 
     int countryId = hi.getCountryId();
 
-    hi.delete( true );
+    hi.delete();
     txScope.commit();
     Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );

@@ -123,7 +123,7 @@ public interface DbConfig
   /** (Optional) The qualified name of the base class to be used for generated schema table classes */
   String getCustomBaseClass();
 
-  /** (Optional) Return true if using the database and driver in-process (in-memory) e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
+  /** (Optional) true if using the database and driver in-process (in-memory) e.g., jdbc:h2:mem or jdbc:sqlite::memory:. */
   boolean isInMemory();
 
   /** Returns the build URL if provided, otherwise the runtime URL */

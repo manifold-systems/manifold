@@ -83,7 +83,7 @@ public class CrudTest extends OracleDdlServerTest
 
     BigDecimal countryId = hi.getCountryId();
 
-    hi.delete( true );
+    hi.delete();
     txScope.commit();
     Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );

@@ -87,7 +87,7 @@ public class CrudTest extends PostgresDdlServerTest
 
     int countryId = hi.getCountryId();
 
-    hi.delete( true );
+    hi.delete();
     txScope.commit();
     Country readHi = Country.fetch( txScope, countryId );
     assertNull( readHi );

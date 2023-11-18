@@ -83,7 +83,7 @@ public class CrudTest extends H2DdlServerTest
 
     long countryId = hi.getCountryId();
 
-    hi.delete( true );
+    hi.delete();
     txScope.commit();
     Country fetchHi = Country.fetch( txScope, countryId );
     assertNull( fetchHi );

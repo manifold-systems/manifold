@@ -200,7 +200,7 @@ class SchemaParentType
     addEntityClass( srcClass );
     addCreateMethods( srcClass, table );
     addReadMethods( srcClass, table );
-    addDeleteMethod( srcClass );
+    addDeleteMethods( srcClass );
     addBuilderType( srcClass, table );
     addBuilderMethod( srcClass, table );
     addTableInfoMethod( srcClass, table );
@@ -1098,14 +1098,19 @@ class SchemaParentType
     }
   }
 
-  private void addDeleteMethod( SrcLinkedClass srcClass )
+  private void addDeleteMethods( SrcLinkedClass srcClass )
   {
-    SrcMethod method = new SrcMethod( srcClass )
+    SrcMethod delete = new SrcMethod( srcClass )
       .modifiers( Flags.DEFAULT )
-      .name( "delete" )
-      .addParam( "delete", boolean.class );
-    method.body( "((OperableTxBindings)getBindings()).setDelete(delete);" );
-    srcClass.addMethod( method );
+      .name( "delete" );
+    delete.body( "((OperableTxBindings)getBindings()).setDelete(true);" );
+    srcClass.addMethod( delete );
+
+    SrcMethod undelete = new SrcMethod( srcClass )
+      .modifiers( Flags.DEFAULT )
+      .name( "undelete" );
+    undelete.body( "((OperableTxBindings)getBindings()).setDelete(false);" );
+    srcClass.addMethod( undelete );
   }
 
   private void addOneToManyMethods( SchemaTable table, SrcLinkedClass srcClass )

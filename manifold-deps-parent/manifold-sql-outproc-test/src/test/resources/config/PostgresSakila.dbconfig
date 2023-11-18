@@ -1,6 +1,7 @@
 {
-  "url": "jdbc:postgresql://localhost:5432/sakila?user=postgres&password=password",
+  "url": "jdbc:postgresql://localhost:5432/sakila",
+  "user": "postgres",
+  "password": "password",
   "schemaPackage": "manifold.sql.schema.simple.postgres",
-
   "dbDdl": "samples/ddl/postgres-sakila-ddl.sql"
 }

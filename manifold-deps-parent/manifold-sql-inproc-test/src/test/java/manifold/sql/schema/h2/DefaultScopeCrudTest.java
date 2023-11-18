@@ -76,7 +76,7 @@ public class DefaultScopeCrudTest extends H2DdlServerTest
 
     long countryId = hi.getCountryId();
 
-    hi.delete( true );
+    hi.delete();
     H2Sakila.commit();
     Country readHi = Country.fetch( countryId );
     assertNull( readHi );
