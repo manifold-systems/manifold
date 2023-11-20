@@ -32,7 +32,7 @@ import manifold.sql.api.DataElement;
 import manifold.sql.api.Parameter;
 import manifold.sql.query.api.Command;
 import manifold.sql.rt.api.*;
-import manifold.sql.rt.api.TxScope.RawChangeCtx;
+import manifold.sql.rt.api.TxScope.SqlChangeCtx;
 
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
@@ -128,7 +128,7 @@ class CommandParentType extends SqlParentType
     SrcMethod method = new SrcMethod( srcClass )
       .name( methodName )
       .modifiers( isFragment() ? Flags.DEFAULT : Modifier.STATIC )
-      .addParam( "ctx", RawChangeCtx.class.getSimpleName() )
+      .addParam( "ctx", SqlChangeCtx.class.getSimpleName() )
       .throwsList( SQLException.class )
       .returns( new SrcType( returnType ) );
     addParameters( method );
@@ -249,7 +249,7 @@ class CommandParentType extends SqlParentType
     srcClass.addImport( ColumnInfo.class );
     srcClass.addImport( Executor.class );
     srcClass.addImport( OperableTxScope.class );
-    srcClass.addImport( RawChangeCtx.class );
+    srcClass.addImport( SqlChangeCtx.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( FragmentValue.class );

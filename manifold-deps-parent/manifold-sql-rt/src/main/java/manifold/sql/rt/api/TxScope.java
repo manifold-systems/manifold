@@ -70,30 +70,30 @@ public interface TxScope
    * <pre><code>
    * public void eraseHistoryNewerThan(Instant newerThan) {
    *   // The SQL delete statement executes the next time scope.commit() is called
-   *   MyDatabase.addRawChange(txScope ->
+   *   MyDatabase.addSqlChange(txScope ->
    *     "[.sql] Delete From history Where created_on >= :newerThan"
    *       .execute(txScope, dateValue));
    * }
    * . . .
-   * // commit all entity changes and changes via addRawChange()
+   * // commit all entity changes and changes via addSqlChange()
    * MyDatabase.commit();
    * </code></pre>
    *
-   * @param rawChange Raw change to be executed during the next call to {@link #commit()}. The change should normally
+   * @param sqlChange Raw change to be executed during the next call to {@link #commit()}. The change should normally
    * involve a {@link SqlCommand} execution.
    */
-  void addRawChange( ScopeConsumer rawChange );
+  void addSqlChange( ScopeConsumer sqlChange );
 
   @FunctionalInterface
   interface ScopeConsumer
   {
-    void accept( RawChangeCtx ctx ) throws SQLException;
+    void accept( SqlChangeCtx ctx ) throws SQLException;
   }
 
   /**
    * This interface also ensures a raw change is not unintentionally committed to another TxScope
    */
-  interface RawChangeCtx
+  interface SqlChangeCtx
   {
     TxScope getTxScope();
     Connection getConnection();

@@ -36,7 +36,7 @@ public class RawCommandTest extends H2DdlServerTest
     H2Sakila.commit();
 
     // delete
-    H2Sakila.addRawChange( ctx -> {
+    H2Sakila.addSqlChange( ctx -> {
       "[.sql:H2Sakila/] DELETE FROM country WHERE country = 'mycountry'".execute( ctx );
     } );
 
@@ -53,7 +53,7 @@ public class RawCommandTest extends H2DdlServerTest
     H2Sakila.commit();
 
     // delete
-    H2Sakila.addRawChange( ctx -> {
+    H2Sakila.addSqlChange( ctx -> {
       "[.sql:H2Sakila/] DELETE FROM country WHERE country = :country".execute( ctx, "mycountry" );
     } );
 
@@ -64,7 +64,7 @@ public class RawCommandTest extends H2DdlServerTest
   }
 
   @Test
-  public void testMixRawChangesAndEntityChanges() throws SQLException
+  public void testMixSqlChangesAndEntityChanges() throws SQLException
   {
     Country country = Country.create( "mycountry" );
     Country country2 = Country.create( "mycountry2" );
@@ -72,7 +72,7 @@ public class RawCommandTest extends H2DdlServerTest
 
     // next commit combines an entity change with city and an update raw command
     City city = City.create( "myCity", country );
-    H2Sakila.addRawChange( ctx -> {
+    H2Sakila.addSqlChange( ctx -> {
       // [MyUpdate.sql:H2Sakila/] UPDATE country SET country = :country || country WHERE country LIKE :prefix || '%'
       MyUpdate.execute( ctx, "yourcountry", "mycountry" );
     } );
@@ -97,7 +97,7 @@ public class RawCommandTest extends H2DdlServerTest
     txScope.commit();
 
     // delete
-    txScope.addRawChange( ctx -> {
+    txScope.addSqlChange( ctx -> {
       "[.sql:H2Sakila/] DELETE FROM country WHERE country = 'mycountry'".execute( ctx );
     } );
 

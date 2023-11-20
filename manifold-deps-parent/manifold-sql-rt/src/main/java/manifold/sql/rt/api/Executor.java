@@ -28,11 +28,11 @@ import java.sql.SQLException;
 public class Executor
 {
   private final String _sqlCommand;
-  private final TxScope.RawChangeCtx _ctx;
+  private final TxScope.SqlChangeCtx _ctx;
   private final ColumnInfo[] _paramInfo;
   private final DataBindings _paramBindings;
 
-  public Executor( TxScope.RawChangeCtx ctx, ColumnInfo[] paramInfo, DataBindings paramBindings, String sqlCommand )
+  public Executor( TxScope.SqlChangeCtx ctx, ColumnInfo[] paramInfo, DataBindings paramBindings, String sqlCommand )
   {
     _ctx = ctx;
     _paramInfo = paramInfo;
@@ -46,7 +46,7 @@ public class Executor
     Connection txConnextion = _ctx.getConnection();
     if( txConnextion == null )
     {
-      throw new SQLException( "Connection is null. Raw commands must execute using `addRawChange()`." );
+      throw new SQLException( "Connection is null. Raw commands must execute using `addSqlChange()`." );
     }
 
     try( PreparedStatement ps = txConnextion.prepareStatement( _sqlCommand ) )

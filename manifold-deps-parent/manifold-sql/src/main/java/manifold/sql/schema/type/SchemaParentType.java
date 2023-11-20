@@ -109,7 +109,7 @@ class SchemaParentType
     addGetDbConfigMethod( srcClass );
     addCommitMethod( srcClass );
     addRevertMethod( srcClass );
-    addRawChangeMethod( srcClass );
+    addSqlChangeMethod( srcClass );
   }
 
   private void addDefaultScopeMethod( SrcLinkedClass srcClass )
@@ -153,14 +153,14 @@ class SchemaParentType
     srcClass.addMethod( method );
   }
 
-  private void addRawChangeMethod( SrcLinkedClass srcClass )
+  private void addSqlChangeMethod( SrcLinkedClass srcClass )
   {
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.PUBLIC | Modifier.STATIC )
-      .name( "addRawChange" )
-      .addParam( "rawChange", ScopeConsumer.class.getSimpleName() )
+      .name( "addSqlChange" )
+      .addParam( "sqlChange", ScopeConsumer.class.getSimpleName() )
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
-      .body( "defaultScope().addRawChange(rawChange);" );
+      .body( "defaultScope().addSqlChange(sqlChange);" );
     srcClass.addMethod( method );
   }
 
