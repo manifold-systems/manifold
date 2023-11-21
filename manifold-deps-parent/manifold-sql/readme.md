@@ -21,6 +21,10 @@ Use Manifold simply by adding the javac `-Xplugin:Manifold` argument and `manifo
 to your gradle or maven build.
 
 ---
+                                
+asdf
+
+![look!](../../docs/images/look.mp4)
 
 ## Features
 - Use native SQL directly and type-safely in your Java code<br>
