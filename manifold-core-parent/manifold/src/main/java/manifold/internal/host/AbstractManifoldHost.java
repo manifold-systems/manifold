@@ -16,6 +16,7 @@
 
 package manifold.internal.host;
 
+import manifold.api.fs.IFile;
 import manifold.api.host.IManifoldHost;
 import manifold.api.service.BaseService;
 
@@ -33,6 +34,13 @@ public abstract class AbstractManifoldHost extends BaseService implements IManif
 //    }
 //    // compile-time
     return RuntimeManifoldHost.class.getClassLoader();
+  }
+
+  @Override
+  public ClassLoader getClassLoaderForFile( IFile file )
+  {
+    // Only module-based IDE hosts handle this
+    return null;
   }
 
   public boolean isPathIgnored( String path )

@@ -16,6 +16,7 @@
 
 package manifold.api.host;
 
+import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.fs.IFileSystem;
 import manifold.api.service.IService;
@@ -33,6 +34,8 @@ import manifold.internal.javac.JavaParser;
 public interface IManifoldHost extends IService
 {
   ClassLoader getActualClassLoader();
+
+  ClassLoader getClassLoaderForFile( IFile file );
 
   IModule getSingleModule();
 

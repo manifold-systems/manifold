@@ -16,20 +16,16 @@
 
 package manifold.preprocessor.definitions;
 
+import manifold.api.fs.IFile;
 import manifold.preprocessor.api.SymbolProvider;
 import manifold.rt.api.util.ServiceUtil;
-import manifold.util.concurrent.LocklessLazyVar;
+import manifold.util.concurrent.ConcurrentWeakHashMap;
 
 import java.util.*;
 
 public class ServiceDefinitions extends Definitions
 {
-  public static final LocklessLazyVar<Set<SymbolProvider>> REGISTERED_SYMBOL_PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<SymbolProvider> registered = new HashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, SymbolProvider.class, ServiceDefinitions.class.getClassLoader() );
-      return registered;
-    } );
+  public static final Map<ClassLoader, Set<SymbolProvider>> REGISTERED_SYMBOL_PROVIDERS = new ConcurrentWeakHashMap<>();
 
   private final Definitions _rootDefinitions;
 
@@ -53,19 +49,55 @@ public class ServiceDefinitions extends Definitions
   @Override
   public boolean isDefined( String def )
   {
-    Set<SymbolProvider> providers = REGISTERED_SYMBOL_PROVIDERS.get();
+    Set<SymbolProvider> providers = getSymbolProviders( getSourceFile() );
     return providers.stream().anyMatch( p -> p.isDefined( getRootDefinitions(), getSourceFile(), def ) );
   }
 
   @Override
   public String getValue( String def )
   {
-    Set<SymbolProvider> providers = REGISTERED_SYMBOL_PROVIDERS.get();
+    Set<SymbolProvider> providers = getSymbolProviders( getSourceFile() );
     return providers.stream()
       .filter( p -> p.isDefined( getRootDefinitions(), getSourceFile(), def ) )
       .map( p -> p.getValue( getRootDefinitions(), getSourceFile(), def ) )
       .map( v -> v == null ? "" : v )
       .findFirst()
       .orElse( null );
+  }
+
+  public static Set<SymbolProvider> getSymbolProviders( IFile sourceFile )
+  {
+    ClassLoader currentLoader = Thread.currentThread().getContextClassLoader();
+    ClassLoader cl = null;
+    if( sourceFile != null )
+    {
+      cl = sourceFile.getFileSystem().getHost().getClassLoaderForFile( sourceFile );
+      if( cl != null )
+      {
+        // a non-null cl here is an IDE module class loader
+        Thread.currentThread().setContextClassLoader( cl );
+      }
+    }
+    else
+    {
+      cl = currentLoader;
+    }
+
+    try
+    {
+      // cl can't be null as a key to a ConcurrentHashMap, the non-null value we use here is inconsequential so long as it's stable
+      cl = cl == null ? ServiceDefinitions.class.getClassLoader() : cl;
+
+      return REGISTERED_SYMBOL_PROVIDERS.computeIfAbsent( cl, __ -> {
+        Set<SymbolProvider> registered = new HashSet<>();
+        ServiceUtil.loadRegisteredServices( registered, SymbolProvider.class, ServiceDefinitions.class.getClassLoader() );
+        return registered;
+      } );
+    }
+    finally
+    {
+
+      Thread.currentThread().setContextClassLoader( currentLoader );
+    }
   }
 }
