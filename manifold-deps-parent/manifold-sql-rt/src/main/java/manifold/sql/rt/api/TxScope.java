@@ -64,7 +64,7 @@ public interface TxScope
   /**
    * Add change[s] that are to be executed during the next call to {@link #commit()}.
    * <p/>
-   * This method is primarily intended for executing raw {@link SqlCommand}s as opposed to operations on
+   * This method is primarily intended for executing {@link SqlCommand}s as opposed to CRUD operations on
    * entities, which are handled automatically.
    *
    * <pre><code>

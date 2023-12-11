@@ -16,39 +16,11 @@
 
 package manifold.sql.rt.api;
 
-import manifold.rt.api.util.ServiceUtil;
-import manifold.sql.rt.config.DefaultDependencies;
-import manifold.util.concurrent.LocklessLazyVar;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 public interface Dependencies
 {
-  LocklessLazyVar<Set<Dependencies>> PROVIDERS =
-    LocklessLazyVar.make( () -> {
-      Set<Dependencies> registered = new LinkedHashSet<>();
-      ServiceUtil.loadRegisteredServices( registered, Dependencies.class, Dependencies.class.getClassLoader() );
-      return registered;
-    } );
-
   static Dependencies instance()
   {
-    if( PROVIDERS.get().isEmpty() )
-    {
-      throw new RuntimeException( "Could not find Dependencies service provider" );
-    }
-
-    Dependencies result = null;
-    for( Dependencies dependencies : PROVIDERS.get() )
-    {
-      // favor non-default dependencies
-      if( result == null || result instanceof DefaultDependencies )
-      {
-        result = dependencies;
-      }
-    }
-    return result;
+    return DependenciesLookup.INSTANCE.get();
   }
 
   DbConfigProvider getDbConfigProvider();
@@ -70,5 +42,5 @@ public interface Dependencies
   @SuppressWarnings( "unused" ) // used from generated code
   CustomEntityFactory getCustomEntityFactory();
 
-  <T> T fetch( Class<T> cls );
+  <T> T getOrCreate( Class<T> cls );
 }

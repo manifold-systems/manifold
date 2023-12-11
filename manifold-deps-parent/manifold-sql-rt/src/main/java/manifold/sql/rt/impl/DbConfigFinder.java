@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.util.*;
 
 /**
+ * loads DbConfig from .dbconfig file
  */
 public class DbConfigFinder implements DbConfigProvider
 {

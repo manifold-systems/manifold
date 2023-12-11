@@ -31,38 +31,37 @@ public class DefaultDependencies implements Dependencies
   @Override
   public DbConfigProvider getDbConfigProvider()
   {
-    // loads config from .dbconfig file
-    return fetch( DbConfigFinder.class );
+    return getOrCreate( DbConfigFinder.class );
   }
 
   @Override
   public ConnectionProvider getConnectionProvider()
   {
-    return fetch( HikariConnectionProvider.class );
+    return getOrCreate( HikariConnectionProvider.class );
   }
 
   @Override
   public CrudProvider getCrudProvider()
   {
-    return fetch( BasicCrudProvider.class );
+    return getOrCreate( BasicCrudProvider.class );
   }
 
   @Override
   public DbLocationProvider getDbLocationProvider()
   {
-    return fetch( ResourceDbLocationProvider.class );
+    return getOrCreate( ResourceDbLocationProvider.class );
   }
 
   @Override
   public DefaultTxScopeProvider getDefaultTxScopeProvider()
   {
-    return fetch( ThreadLocalDefaultTxScopeProvider.class );
+    return getOrCreate( ThreadLocalDefaultTxScopeProvider.class );
   }
 
   @Override
   public TxScopeProvider getTxScopeProvider()
   {
-    return fetch( BasicTxScopeProvider.class );
+    return getOrCreate( BasicTxScopeProvider.class );
   }
 
   @Override
@@ -74,7 +73,7 @@ public class DefaultDependencies implements Dependencies
   @Override
   public ValueAccessorProvider getValueAccessorProvider()
   {
-    return fetch( DefaultValueAccessorProvider.class );
+    return getOrCreate( DefaultValueAccessorProvider.class );
   }
 
   @Override
@@ -83,7 +82,7 @@ public class DefaultDependencies implements Dependencies
     return new DefaultCustomEntityFactory();
   }
 
-  public <T> T fetch( Class<T> cls )
+  public <T> T getOrCreate( Class<T> cls )
   {
     //noinspection unchecked
     return (T)_instances

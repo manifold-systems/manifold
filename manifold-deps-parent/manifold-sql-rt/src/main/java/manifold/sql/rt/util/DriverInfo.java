@@ -72,7 +72,7 @@ public enum DriverInfo
     if( _driversInUse.computeIfAbsent( name, __ -> new LinkedHashSet<>() )
           .add( version ) )
     {
-      LOGGER.info( "Diver in use: '" + name + "' version: " + version +
+      LOGGER.info( "Driver in use: '" + name + "' version: " + version +
         " DB: " + metadata.getDatabaseProductName() + " DB version: " + metadata.getDatabaseProductVersion() );
     }
   }

@@ -26,7 +26,7 @@ public interface ConnectionProvider
 {
   /**
    * Provides a JDBC connection corresponding with the {@code configName} {@link DbConfig} and optional {@code classContext}.
-   * A standard implementation sources the {@code configName} DbConfig in the following order:
+   * A standard implementation searches the {@code configName} DbConfig in the following order:
    * <li>Consult {@link DbConfigProvider} implementations</li>
    * <li>From {@code <configName>.dbconfig} file in the {@code /config} subdir of the current directory (runtime only)</li>
    * <li>From {@code <configName>.dbconfig} file in the current directory (runtime only)</li>

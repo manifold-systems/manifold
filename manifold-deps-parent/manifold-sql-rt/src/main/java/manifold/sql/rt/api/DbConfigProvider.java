@@ -18,6 +18,27 @@ package manifold.sql.rt.api;
 
 public interface DbConfigProvider
 {
+  /**
+   * This default implementation loads the file with base file name {@code configName} and extension {@code .dbconfig}
+   * in the context of class {@code ctx}.
+   * <p/>
+   * The following locations are searched in order:<br>
+   * <pre><code>
+   * - ./<user.dir>/config <br>
+   * - ./<user.dir> <br>
+   * - ./<current-module-name>/<resource-path>/config <br>
+   * - ./<resource-path>/config <br>
+   * </code></pre>
+   * @param configName The base name of the .dbconfig file.
+   * @param ctx A class providing context, such as current module
+   * @return An instance of {@link DbConfig} reflecting the settings in the .dbconfig file, or null if the file was not
+   * found.
+   */
   DbConfig loadDbConfig( String configName, Class<?> ctx );
+
+
+  /**
+   * Clears caching of DbConfig instances. For tests.
+   */
   void clear();
 }

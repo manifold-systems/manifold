@@ -22,13 +22,10 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 
 /**
- * The value returned from {@link #getJdbcType()} indicates the JDBC type handled by the implementation.
- * Manifold provides default implementations that are suitable for most use-cases.
- * <p/>
  * This interface performs the following:<br>
- * - resolves the Java type corresponding with the JDBC type from {@link java.sql.Types}<br>
- * - sets query parameter values<br>
- * - gets query result values<br>
+ * - provides Java types to be used for JDBC columns and parameters in Manifold's schema and SQL APIs
+ * - sets query parameter values to JDBC<br>
+ * - gets query result values from JDBC<br>
  * <br>
  */
 public interface ValueAccessor
@@ -36,23 +33,27 @@ public interface ValueAccessor
   Logger LOGGER = LoggerFactory.getLogger( ValueAccessor.class );
 
   /**
-   * @return The {@link java.sql.Types} id this accessor handles.
+   * Indicates the JDBC type handled by this implementation.
+   *
+   * @return The {@link java.sql.Types} id this accessor handles. This type must be unique among other {@code ValueAccessor}
+   * instances returned from {@link ValueAccessorProvider#get}.
    */
   int getJdbcType();
 
   /**
-   * @return The resulting type of the value in Java code. Note this type may not correspond with SQL-to-Java type mappings
-   * from the JDBC specification. For instance, although {@code java.sql.Types#CLOB} maps to {@code java.sql.CLOB} (appendix
-   * table B.3 from the JDBC 4.2 specification) the actual type generated for {@code CLOB} is {@code String}.
+   * Provides the Java type to be used for JDBC columns and parameters in the Manifold SQL APIs.
+   *
+   * @param elem A schema column, query column, parameter, or other value bearing element.
+   * @return The Java type to use for {@code elem} in the Manifold SQL APIs.
    */
   Class<?> getJavaType( BaseElement elem );
 
   /**
-   * Returns a query result value corresponding with a {@code elem} from {@code rs}.
+   * Returns a query result value corresponding with an {@code elem} from result set, {@code rs}.
    * @param rs The result set containing rows of column values
-   * @param elem The query column from which to find a value
+   * @param elem The query column containing the value
    * @return The value corresponding with {@code elem}. Note, the type of the value must match the Java type returned from
-   * {@code elem.getType()}.
+   * {@code elem.getJdbcType()}.
    * @throws SQLException
    */
   Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException;

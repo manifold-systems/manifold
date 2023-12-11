@@ -20,8 +20,8 @@ package manifold.sql.rt.api;
  * This is a _dependency_ interface. See {@link Dependencies}.
  * <p/>
  * Implement this interface to provide the default scope used in method signatures not providing a TxScope parameter.
- * For instance, the built-in one is the {@code ThreadLocalDefaultTxScopeProvider}. For a web application, it could be
- * changed to a {@code SessionDefaultTxScopeProvider}.
+ * For instance, the default {@code ThreadLocalDefaultTxScopeProvider}. For a web application, it could be changed to a
+ * {@code RequestDefaultTxScopeProvider}.
  */
 public interface DefaultTxScopeProvider
 {

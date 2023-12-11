@@ -16,9 +16,17 @@
 
 package manifold.sql.rt.util;
 
+import manifold.rt.api.util.StreamUtil;
+import manifold.sql.rt.api.ConnectionProvider;
+import manifold.sql.rt.api.DbConfig;
+import manifold.sql.rt.api.Dependencies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -84,6 +92,29 @@ public class SqlScriptRunner
     finally
     {
       connection.setAutoCommit( autoCommit );
+    }
+  }
+
+  public static void runScript( String dataResourcePath, DbConfig dbconfig, Class<?> ctxClass) throws IOException
+  {
+    InputStream is = ctxClass.getResourceAsStream( dataResourcePath );
+    if( is == null )
+    {
+      throw new IOException( "Could not find resource file: '" + dataResourcePath + "'" );
+    }
+    try( Reader reader = new InputStreamReader( is ) )
+    {
+      ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+      try( Connection c = cp.getConnection( dbconfig.getName(), ctxClass ) )
+      {
+        String script = StreamUtil.getContent( reader );
+        runScript( c, script );
+      }
+      catch( SQLException e )
+      {
+        throw new RuntimeException( e );
+      }
+      LOGGER.info( "SQL script run successful: '" + dataResourcePath + "'" );
     }
   }
 

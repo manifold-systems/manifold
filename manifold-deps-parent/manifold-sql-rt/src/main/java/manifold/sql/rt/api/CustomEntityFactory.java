@@ -19,18 +19,18 @@ package manifold.sql.rt.api;
 public interface CustomEntityFactory
 {
   /**
-   * Construct a custom entity class that implements {@code entityInterface} replacing the default class.
+   * Constructs classes implementing the entity API interfaces.
    * <p/>
-   * The interface is self-implementing; default methods delegate to bindings. As a consequence, a custom entity class
-   * can focus on custom behavior and not be concerned about maintaining existing behavior.
+   * Entity interfaces are self-implementing; default methods delegate to bindings. As such, a custom entity class
+   * can focus on custom behavior and not be concerned about delegating existing behavior.
    * <p/>
    * A typical custom entity class.
    * <pre><code>
-   *     import org.example.schema.sampledb.Actor;
-   *     import manifold.sql.rt.api.TxBindings;
+   *     import org.example.schema.mydatabase.Actor;
+   *     import manifold.sql.rt.api.*;
    *
-   *     public class CustomActor implements Actor extends BaseEntity {
-   *       private CustomActor(TxBindings bindings) {
+   *     public class MyActor extends BaseEntity implements Actor {
+   *       private MyActor(TxBindings bindings) {
    *         super(bindings);
    *       }
    *
