@@ -97,11 +97,6 @@ these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your 
 # Documentation
 
 <!-- TOC -->
-* [Manifold : SQL](#manifold--sql)
-* [Features](#features)
-* [Examples](#examples)
-* [How does it work?](#how-does-it-work)
-* [Documentation](#documentation)
 * [Getting started](#getting-started)
 * [Step 1. Add Manifold SQL to your build](#step-1-add-manifold-sql-to-your-build)
   * [Gradle](#gradle)
