@@ -1,20 +1,19 @@
 >&#9888; **_Experimental Feature_**
 
-# Manifold : SQL
+# Manifold SQL
 
 ![latest](https://img.shields.io/badge/latest-v2023.1.31-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red)](https://github.com/manifold-systems/manifold)
 
 
-Manifold SQL is a lightweight alternative to Java persistence frameworks. Use it to enable native SQL directly and type-safely
-from Java. Type-safety is guaranteed by using your database metadata to build _just-in-time_ types for schemas and queries.   
+Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code. 
      
 <img width="600" height="96" align="top" src="../../docs/images/img_3.png">
 
 - Query types are instantly available as you type native SQL of any complexity in your Java code
-- Query results are type-safe and type-rich and simple to use (see examples below)
-- Entity types are automatically derived from your database, providing CRUD, decoupled TX, and more.
+- Query results are type-safe and API-rich and simple to use (see examples below)
+- Entity types are automatically derived from your database, providing type-safe CRUD, decoupled TX, and more.
 - No ORM, No DSL, No wiring, and No code generation build steps
                  
 Use Manifold SQL simply by adding the javac `-Xplugin:Manifold` argument and `manifold-sql` and `manifold-sql-rt` dependencies
@@ -23,11 +22,11 @@ to your gradle or maven build. See [Step 1. Add Manifold SQL to your build](#ste
 ---
 
 # Features
-- Use native SQL directly and type-safely in your Java project<br>
+- Use native SQL _directly_ and _type-safely_ in your Java project<br>
 - Type-safe schemas &nbsp;&bull;&nbsp; Type-safe queries &nbsp;&bull;&nbsp; Type-safe results<br>
 - CRUD with schema types derived automatically from your database<br>
-- Automatic transaction scoping, commit/revert changes as needed<br>
-- No ORM &nbsp;&bull;&nbsp; No DSL &nbsp;&bull;&nbsp; No code gen steps <br>
+- Decoupled transaction scoping, make changes on your own timeline<br>
+- No ORM &nbsp;&bull;&nbsp; No DSL &nbsp;&bull;&nbsp; No code gen steps<br>
 - Pluggable architecture with simple dependency injection<br>
 - Tested with popular JDBC database drivers and SQL dialects<br>
 - Comprehensive IDE support (IntelliJ IDEA, Android Studio)
@@ -63,11 +62,13 @@ Here the `Payments` query type is defined and used in the same local scope. Noti
 follows the file `name`.`extension` convention. The type name is `Payments` and the type domain is `sql`.
 
 ---
-With IntelliJ you can even execute your Manifold SQL queries directly against sample data, analyze query execution plans,
-and a lot more.
+With IntelliJ you can interactively execute parameterized SQL queries in your code directly against test data, analyze
+query execution plans, and a lot more.
 
 <img width="550" height="550" align="top" src="../../docs/images/img4.png">
 <br>
+
+While IntelliJ is not required to use Manifold SQL, it can boost your development experience significantly.  
 
 ---
 CRUD operations and transactions are a pleasure with Manifold SQL. Easily make and commit changes however you like.
@@ -75,10 +76,10 @@ CRUD operations and transactions are a pleasure with Manifold SQL. Easily make a
 <img width="500" height="450" align="top" src="../../docs/images/crud.png">
 <br>
 
-Here `Sakila` is the name of the database schema in use. Note, this example calls `commit()` three times to demonstrate
-the flexibility of decoupled transactions. See [transaction scopes](#transaction-scopes).
+`Sakila` is the name of the user-defined database configuration file, which is used to name the schema Java type referenced
+here. Note, this example calls `commit()` three times to demonstrate the flexibility of decoupled transactions. See [transaction scopes](#transaction-scopes).
 
->The [Manifold SQL sample project](https://github.com/manifold-systems/manifold-sql-sample-project) contains many of the
+>**ⓘ** The [Manifold SQL sample project](https://github.com/manifold-systems/manifold-sql-sample-project) contains many of the
 examples used here. Clone it and start experimenting!
 
 # How does it work?
@@ -127,9 +128,12 @@ these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your 
     * [Update](#update)
     * [Delete](#delete)
   * [Transaction scopes](#transaction-scopes)
+    * [Default transaction scope](#default-transaction-scope)
+    * [`commit()`](#commit)
+    * [Have it your way](#have-it-your-way)
   * [DML & DDL commands](#dml--ddl-commands)
   * [Customizations](#customizations)
-  * [Dependencies](#dependencies)
+  * [Dependency interfaces](#dependency-interfaces)
     * [DbConfigProvider](#dbconfigprovider)
     * [ConnectionProvider](#connectionprovider)
     * [CrudProvider](#crudprovider)
@@ -146,6 +150,7 @@ these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your 
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
+* [Comms](#comms)
 <!-- TOC -->
 
 # Getting started
@@ -159,7 +164,7 @@ Be productive with Manifold SQL in three easy steps.
 2. Configure your database connection 
 3. Begin writing incredible code!
 
-It's really that simple.
+Let's get into it!
 
 # Step 1. Add Manifold SQL to your build 
 
@@ -175,9 +180,9 @@ Sample build files for Gradle and Maven follow.
 
 ## Gradle
 
->Note, if you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
+>**ⓘ** If you are targeting **Android**, please see the [Android](http://manifold.systems/android.html) docs.
 
->Note, if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
+>**ⓘ** if you are using **Kotlin**, please see the [Kotlin](http://manifold.systems/kotlin.html) docs.
 
 Here is a sample `build.gradle` script. Change `targetCompatibility` and `sourceCompatibility` to your desired Java
 version (8 - 21), the script takes care of the rest.
@@ -322,8 +327,7 @@ If you experience problems using a JDBC driver with Manifold SQL, please let us 
 | _other_    | report issues, your feedback is important! |
 
 The architecture is designed for [customization](#customizations), you can tweak or completely replace almost every aspect
-of its behavior. Start a discussion on [slack](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
-if you have questions, or if you prefer email, [info@manifold.systems](mailto:info@manifold.systems).
+of its behavior.
 
 # Step 2. Configure your database connection 
             
@@ -595,7 +599,7 @@ to use `MyOtherDatabase.dbconfig` with `Sales.sql`, add the dbconfig name as a s
 `org/example/queries/Sales.MyOtherDatabase.sql`
 ```
 
->Note, inline SQL follows a similar pattern, but because it supports anonymous types the dbconfig name is appended.
+>**ⓘ** Inline SQL follows a similar pattern, but because it supports anonymous types the dbconfig name is appended.
 >```java
 >"[.sql:MyOtherDatabase/] select * from ..."
 >```
@@ -626,7 +630,7 @@ selected columns.
 Execute a query using the `fetch` method. In this example `fetch()` returns multiple rows that are iterable using the
 `for` statement.
 
->Pro Tip: Include [manifold-props](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+>**ⓘ** Include [manifold-props](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 >in your project for more concise usage of get/set property methods.
 > ```java
 > out.println(row.getFirstName() + "," + row.getLastName() + "," + row.getEmail());
@@ -656,11 +660,11 @@ Rental rental = FindRental.fetchOne(inv.getInventoryId(), cust.getCustomerId());
 LocalDateTime returnDate = rental.getReturnDate();  
 ```
 This example demonstrates that when the selected columns of a query contain all the non-null columns of a selected table,
-such as with `select *` queries, the query results contain _entity_ types, rather than _Row_ types.
+such as with `select *` queries, the query results consist of _entity_ instances instead of _Row_ instances.
 
-Notice the `fetchOne` method used here matches the parameters in the query and returns just one item, the `Rental`.
+Notice the `fetchOne` method matches the parameters in the query and returns just one item, the `Rental`.
 
-Parameters are both type-safe and injection safe. 
+Parameters are both type-safe and injection-safe. 
 
 ### Inline SQL
 
@@ -675,9 +679,9 @@ for(StaffInfo.Row row : "[StaffInfo.sql/] SELECT first_name, last_name, email FR
 }
 ```
 
-Notice the `[StaffInfo.sql/]` prefix in the query string. Manifold uses this convention to qualify inlined resources. It
+Notice the `[StaffInfo.sql/]` prefix in the query string. Manifold uses this syntax to identify inlined resources. It
 instructs the compiler plugin to treat the content of the literal value as an embedded resource file. Thus, the `StaffInfo.sql`
-name indicates the content is native SQL and is generated as type `StaffInfo`.
+name indicates the content is native SQL and is generated as type `StaffInfo` relative to the enclosing scope.
 
 You can also inline SQL anonymously by eliminating the name. Here is the same example, but without the `StaffInfo` name.
 ```java
@@ -815,7 +819,7 @@ You can write CRUD (Create, Read, Update, Delete) operations using [native SQL c
 SELECT, UPDATE, and DELETE. However, these operations tend to be repetitive, resulting in a lot of error-prone, boilerplate
 code. Entity interfaces provide an API to simplify common CRUD operations.  
 
->It is possible to customize CRUD operations by overriding the default implementation. See [CrudProvider](#crudprovider).
+>**ⓘ** It is possible to customize CRUD operations by overriding the default implementation. See [CrudProvider](#crudprovider).
 
 ### Create
 
@@ -914,19 +918,54 @@ Sakila.addSqlChange(ctx -> {
 
 ---
 
-Entity interfaces, such as `Film` and `Language`, always belong to a _transaction scope_. A transaction scope has one job,
-namely to _commit_ changes to the database.
+Entity instances, such as `Film` and `Language`, always belong to a _transaction scope_. The purpose of the transaction
+scope is to decouple entity changes from the database transaction. That is, the timeline and scoping of entity changes
+are separated from the timeline and scoping of persisting entity changes.
 
-Whenever you create, update, or delete an entity, it is added to its transaction scope as a change. When you are
-ready to commit changes, you simply call the transaction scope's `commit` method. This method completely manages the
+Initially, when you read an entity from storage using a query or fetch method, the transaction scope has no reference to
+it because it hasn't changed. Only when you create, update, or delete an entity, is it added to the transaction scope as
+a change.
+
+When you are ready to commit changes, you simply call the transaction scope's `commit` method. This method completely manages the
 transaction: it opens and closes the data source connection, translates entity changes to DML operations, and ensures the
-commit is atomic.
+commit is atomic. As a result, the timeline and scoping of entity changes are nicely decoupled from the persistence scope. 
 
-If using the default transaction scope, as a convenience you may call commit using the top-level schema type, which matches
-the name of your dbconfig file.
+### Default transaction scope
+
+Typically, you can happily ignore transaction scopes by using the default transaction scope, which is built into the entity
+API implementation.
+
+Most of the API methods involving a transaction scope make it optional by defining two versions of the method, one with
+a `TxScope` argument and one without. Choosing the one without uses the default `TxScope`, which is a thread-local instance.
+Essentially, the API encapsulates a default transaction scope to make it simple to avoid having to create or use them beyond
+calling `commit`.
+
+For example, all `create` methods have two versions. 
+```java
+Film.create("My Title", myLanguageId);
+Film.create(myTxScope, "My Title", myLanguageId);
+```
+Unless you need to manage your own `TxScope`, you can select the first one, which uses the default scope.
+
+If using the default cope, as a convenience you may call `commit` using the top-level schema type, which matches the name
+of your dbconfig file.
 ```java
 Sakila.commit();
 ```
+This is another example where the API encapsulates the default scope, it also makes good sense to call `commit` from the
+schema name!
+
+The default scope is thread-local to enable the separation and processing of independent transactions in a thread-safe
+manner. Additionally, the default scope is a pluggable dependency, which allows it to be completely replaced or subclassed.
+For example, a default scope more suitable for web requests could be configured to replace the standard default scope.
+See [DefaultTxScopeProvider](#defaulttxscopeprovider).
+
+      
+### `commit()`
+
+As mentioned the `commit` method is the primary function of the transaction scope. It manages the entire database transaction,
+beginning to end. In a nutshell, if there are changes to commit, it opens the data source connection, translates changes
+to ordered DML operations, reconciles entity state, and closes the connection.
 
 If `commit` succeeds, the state of all the entity instances reflects the full state of the corresponding records in storage,
 including all generated, default, auto-increment, and foreign key columns. If `commit` fails, the changes roll back and
@@ -948,9 +987,7 @@ Life continues after the commit for both the entities and the transaction scope.
 scope may span multiple commits, where you can continue to make changes to entities. A subsequent call to commit processes
 changes made after the prior commit, and so on.
           
-Note, the default scope is thread-local to enable the separation and processing of independent transactions in a thread-safe
-manner. Note, the default scope is a pluggable dependency, which allows it to be completely replaced or subclassed.
-For example, a default scope more suitable for web requests could be configured for use.
+### Have it your way
 
 You may also create your own transaction scope _instances_ with the `TxScope#newScope` method.
 ```java
@@ -961,6 +998,7 @@ City otherCityMyCountry = City.create(txScope,, "Ottawa", canada);
 . . .
 txScope.commit();
 ```
+Managing your own transaction scopes may be necessary, for example, if you are modifying the same entity in different threads.
 
 Custom `TxScope` implementations via simple dependency injection is another option. This is covered in the [Customizations](#customizations)
 section.
@@ -969,13 +1007,13 @@ section.
 
 ---
 
-SQL files and inline statements not only work with queries, they also work with other kinds of native SQL, including:
+In addition to `select` statements SQL files and inline statements also work with other kinds of native SQL, including:
 - Data Manipulation Language (DML), statements include `insert`, `update`, and `delete`
 - Data Definition Language (DDL), statements such as `create table` and `alter table`
 - Generally, any SQL statement that returns nothing
 
-Since these types of statements make changes to the database, they must execute within a transaction scope, just like
-CRUD operations on entities. This is achieved via `TxScope#addSqlChange`.
+Since these types of statements make changes to the database, they must execute within a [transaction scope](#transaction-scopes),
+just like [CRUD](#crud) operations on entities. This is achieved via `TxScope#addSqlChange`.
 ```java
 String country = "United States";
 . . .
@@ -1220,3 +1258,11 @@ For the versions available, see the [tags on this repository](https://github.com
 # Author
 
 * [Scott McKinney](mailto:scott@manifold.systems)
+
+# Comms
+
+Start a discussion on [slack](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
+
+Report an [issue](https://github.com/manifold-systems/manifold/issues/new/choose).
+
+If you prefer email, [info@manifold.systems](mailto:info@manifold.systems).
