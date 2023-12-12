@@ -38,8 +38,6 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 > Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code.
 >- Java interfaces are instantly available as you type native SQL of any complexity in your Java code or in SQL files
 >- No ORM, No DSL, No wiring, and No code generation build steps
-> 
-> Merry Christmas! 🎅
 > <br><br>
 > <img width="800" height="120" align="top" src="./docs/images/img_3.png">
 
