@@ -439,8 +439,8 @@ repositories {
 dependencies {
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.31'
-    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.31'
+    annotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.32'
+    testAnnotationProcessor 'systems.manifold:manifold-preprocessor:2023.1.32'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -476,7 +476,7 @@ rootProject.name = 'MyPreprocessorProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2023.1.31</manifold.version>
+        <manifold.version>2023.1.32</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
@@ -518,7 +518,7 @@ with javadoc.
 # Javadoc
 
 `manifold-preprocessor`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2023.1.31/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2023.1.31)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-preprocessor/2023.1.32/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-preprocessor/2023.1.32)
 
 
 # License
