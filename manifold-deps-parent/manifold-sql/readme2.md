@@ -627,8 +627,8 @@ file _org/example/queries/StaffInfo.sql_ compiles as interface `org.example.quer
 Notice the results are provided using the `StaffInfo.Row` type. The `Row` interface type-safely reflects all the query's
 selected columns. 
 
-Execute a query using the `fetch` method. In this example `fetch()` returns multiple rows that are iterable using the
-`for` statement.
+Execute a query using one of the `fetch` methods. In this example `fetch()` returns multiple rows that are iterable using
+the `for` statement.
 
 >**ⓘ** Include [manifold-props](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
 >in your project for more concise usage of get/set property methods.
@@ -640,7 +640,7 @@ Execute a query using the `fetch` method. In this example `fetch()` returns mult
 
 ### Entity types
 
-Here's another example utilizing query parameters and an entity type.
+Here's another example utilizing query parameters and an _entity_ type.
 
 `org/example/queries/FindRental.sql`
 ```sql
@@ -660,11 +660,16 @@ Rental rental = FindRental.fetchOne(inv.getInventoryId(), cust.getCustomerId());
 LocalDateTime returnDate = rental.getReturnDate();  
 ```
 This example demonstrates that when the selected columns of a query contain all the non-null columns of a selected table,
-such as with `select *` queries, the query results consist of _entity_ instances instead of _Row_ instances.
+such as with `select *` queries, the query results consist of _entity_ instances instead of _row_ instances.
 
 Notice the `fetchOne` method matches the parameters in the query and returns just one item, the `Rental`.
 
-Parameters are both type-safe and injection-safe. 
+Unlike Row interfaces, entities may participate in CRUD operations and are fully customizable.
+
+Parameters are both type-safe and injection-safe.
+
+See [entities](#entities) for fuller coverage of the subject.
+
 
 ### Inline SQL
 
@@ -692,8 +697,9 @@ for(var row : "[.sql/] SELECT first_name, last_name, email FROM staff".fetch()) 
 Since the SQL query no longer has a name, we must infer its name using the `var` keyword, otherwise it behaves exactly like
 a named SQL statement.
 
->**ⓘ** Manifold's `auto` feature can be used in Java 8 to achieve the same behavior as the `var` keyword. `auto` is also
->a bit more versatile, it can be used with fields and method return types.
+>**ⓘ** Manifold's [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+>feature can be used in Java 8 to achieve the same behavior as the `var` keyword. `auto` is also a bit more versatile, it
+>can be used with fields and method return types.
 
 More involved queries can be defined inside Java text blocks.
 ```java
@@ -724,8 +730,9 @@ import org.example.schema.Sakila.*;
 Rental rental = FindRental.fetchOne(67, 112);
 LocalDateTime returnDate = rental.getReturnDate();  
 ```
-Use a comment when you prefer to separate the SQL query type from code that executes it.
-                 
+Use a comment when you prefer to separate the SQL query type from code that executes it. Also, great for formatting SQL
+with Java versions prior JDK 15 where text blocks are not available as a standard feature.
+
 Use text blocks to make queries more readable and directly executable.
 ```java
 /** Top N rented movies in descending order */
@@ -751,22 +758,36 @@ interfaces to process query results and to perform CRUD (Create, Read, Update, D
 
 Your `.dbconfig` file name is the top-level schema type name. Use this to access all the schema's entity interfaces.
 
-Using our sample dbconfig file we can use the `Country` entity interface like this:
+Using our sample `Sakila.dbconfig` file we can use the `Country` entity interface like this:
 ```java
 import org.example.schema.Sakila.Country;
 ```
-But if you're using more than a couple of tables in a Java file, it's convenient to import all of them.
+Or, import all of Sakila's entity interfaces.
 ```java
 import org.example.schema.Sakila.*;
 ```
 
 ### Entity methods
 
-An entity defines conventional get/set properties corresponding with all the table column names. Additionally, "fetch"
-methods load entities corresponding with foreign keys e.g., `City#fetchCountry()`. One-to-many and many-to-many relations
-are also covered with "fetch" methods. Note, "fetch" methods are lazy, their values are never pre-fetched. One-to-many
-and many-to-many methods never cache values and always query the database. This behavior can be customized, see
-[customizing entity types](#customizing-entity-types).
+An entity defines conventional get/set properties corresponding with all the table column names. 
+```java
+City city = "[.sql/] select * from city where city_id = :city_id".fetchOne(cityId);
+Long countryId = city.getCountryId();
+```
+"fetch" methods load entities corresponding with primary keys, foreign keys, and non-null columns.
+```java
+City city = City.fetch(cityId);
+Country country = city.fetchCountryRef();
+List<City> cities = City.fetchByCountryId(country.getCountryId());
+```
+One-to-many and many-to-many relations are also covered with "fetch" methods.
+```java
+Country country = Country.fetch(countryId);
+for(City c : country.fetchCityRefs()) out.println(c.city);
+```
+
+Note, "fetch" methods are lazy, their values are never pre-fetched. One-to-many and many-to-many methods never cache values
+and always query the database. This behavior is fully customizable, see [customizing entity types](#customizing-entity-types).
 
 As covered in the [CRUD](#crud) section below, entities define static methods for creating, building, and fetching. There
 are also instance methods for deleting and undeleting.
@@ -809,7 +830,9 @@ The Java code generated for the entity API is thoroughly customizable. You can:
   . . .
   Actor actor = getActor();
   actor.myActorMethod();
-  ```
+  ```                                                                                                                           
+- You can add custom methods to _any_ type using [extension classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-classes-via-extension).
+This mode of customization applies to all types, not just Manifold SQL APIs.
                        
 ## CRUD
 
