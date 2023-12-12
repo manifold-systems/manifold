@@ -1,15 +1,17 @@
 <br>
 
-<img width="500" height="121" align="top" src="./docs/images/manifold4_red.png">
+<img width="500" height="121" align="top" src="./docs/images/manifold_green.png">
 
 ![latest](https://img.shields.io/badge/latest-v2023.1.32-darkgreen.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-blue.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red)](https://github.com/manifold-systems/manifold)
 
 ---
 
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
 * Direct, _type-safe_ access to:
+    * [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql) _**(New!)**_
     * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
     * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
       [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
@@ -32,26 +34,12 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 
 ># _**What's New...**_
 > 
->#### [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
-> Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and delegation.
-> ```java
-> class MyClass implements MyInterface {
->   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
->
->   public MyClass(MyInterface myInterface) {
->     this.myInterface = myInterface; // dynamically configure behavior
->   }
->
->   // No need to implement MyInterface here, but you can override myInterface as needed
-> }
-> ```
-
----
-
->### _**Coming soon...**_
->
->#### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
-> Use native SQL and DB schemas of any complexity directly and type-safely from Java code.
+>### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+> Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code.
+>- Java interfaces are instantly available as you type native SQL of any complexity in your Java code or in SQL files
+>- No ORM, No DSL, No wiring, and No code generation build steps
+> 
+> Merry Christmas! 🎅
 > <br><br>
 > <img width="800" height="120" align="top" src="./docs/images/img_3.png">
 
@@ -60,16 +48,29 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 
 ### [Meta-programming](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 Use the framework to gain direct, type-safe access to *any* type of resource, such as
-[**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
+[**SQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql),
 [**JSON**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+[**GraphQL**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql),
 [**XML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml),
 [**YAML**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
 [**CSV**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-csv), and even
 other languages such as [**JavaScript**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js).
 Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 
-**GraphQL:** Use types defined in .graphql files *directly*, no code gen steps! Make GraphQL changes and immediately use
-them with code completion.
+[**SQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql) 
+Use _native_ SQL of any complexity _directly_ and _type-safely_ from Java.
+```java
+Language english =
+  "[.sql/]select * from Language where name = 'English'".fetchOne();
+Film film = Film.builder("My Movie", english)
+  .withDescription("Nice movie")
+  .withReleaseYear(2023)
+  .build();
+MyDatabase.commit();
+```
+
+[**GraphQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql) 
+Use types defined in .graphql files *directly*, no code gen steps! Make GraphQL changes and immediately use them with code completion.
 ```java
 var query = MovieQuery.builder(Action).build();
 var result = query.request("http://com.example/graphql").post();
@@ -82,8 +83,8 @@ for (var movie : actionMovies) {
 }
 ```
 
-**JSON:** Use .json schema files directly and type-safely, no code gen steps! Find usages of .json properties in your
-Java code.
+[**JSON:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json) 
+Use .json schema files directly and type-safely, no code gen steps! Find usages of .json properties in your Java code.
 ```java
 // From User.json
 User user = User.builder("myid", "mypassword", "Scott")
@@ -298,6 +299,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 [Manifold : _Tuples_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)<br>
 
+[Manifold : _SQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql)<br>
 [Manifold : _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)<br>
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)<br>
 [Manifold : _XML_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-xml)<br>
@@ -323,6 +325,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
+>* [Manifold : _Sample SQL App_](https://github.com/manifold-systems/manifold-sql-sample-app)<br>
 >* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)

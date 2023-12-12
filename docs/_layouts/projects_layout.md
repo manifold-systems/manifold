@@ -12,6 +12,7 @@ by the core.
 
 [Manifold : _Core_](https://github.com/manifold-systems/manifold/tree/master/manifold-core-parent/manifold)
 ---
+[Manifold : _SQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql)
 [Manifold :
 _GraphQL_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
 [Manifold : _JSON_](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)
@@ -49,6 +50,7 @@ _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold
 ### Sample Projects
 
 [Sample Project](https://github.com/manifold-systems/manifold-sample-project)
+[SQL Sample App](https://github.com/manifold-systems/manifold-sql-sample-app)
 [GraphQL Sample App](https://github.com/manifold-systems/manifold-sample-graphql-app)
 [EST API Sample App](https://github.com/manifold-systems/manifold-sample-rest-api)
 [Sample Web App](https://github.com/manifold-systems/manifold-sample-web-app)
