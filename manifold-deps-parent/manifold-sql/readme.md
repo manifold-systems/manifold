@@ -37,7 +37,7 @@ to your gradle or maven build. See [Step 1. Add Manifold SQL to your build](#ste
 You can inline SQL queries and commands in both standard String Literals and Text Blocks. This query demonstrates how
 you can use native SQL to produce result sets of any type.
 
-![img.png](../../docs/images/img.png)
+<img width="80%" height="80%" align="top" src="../../docs/images/img.png">
 <br>
 
 Notice both Java and SQL syntax are highlighted. The Manifold IntelliJ IDEA plugin integrates with IDEA's SQL features.
@@ -46,7 +46,7 @@ Notice both Java and SQL syntax are highlighted. The Manifold IntelliJ IDEA plug
 Query results consist of _entity_ instances and/or _row_ instances, depending on whether all required columns are selected.
 As such, `select *` queries conveniently result in entity instances.
 
-![img_3.png](../../docs/images/img_3.png)
+<img width="80%" height="80%" align="top" src="../../docs/images/img_3.png">
 <br>
 
 This query also demonstrates the use of type-safe, injection-safe query parameters. Parameters are supported in all SQL
@@ -55,7 +55,7 @@ commands including `Insert`, `Update`, `Delete` as well as `Select`.
 ---
 An inline query is purely declarative using comment delimiters.
 
-![img2.png](../../docs/images/img2.png)
+<img width="80%" height="80%" align="top" src="../../docs/images/img2.png">
 <br>
 
 Here the `Payments` query type is defined and used in the same local scope. Notice the type declaration, `Payments.sql`
@@ -65,7 +65,7 @@ follows the file `name`.`extension` convention. The type name is `Payments` and 
 With IntelliJ you can interactively execute parameterized SQL queries in your code directly against test data, analyze
 query execution plans, and a lot more.
 
-![img4.png](../../docs/images/img4.png)
+<img width="80%" height="80%" align="top" src="../../docs/images/img4.png">
 <br>
 
 While IntelliJ is not required to use Manifold SQL, it can boost your development experience significantly.  
@@ -73,7 +73,7 @@ While IntelliJ is not required to use Manifold SQL, it can boost your developmen
 ---
 CRUD operations and transactions are a pleasure with Manifold SQL. Easily make and commit changes however you like.
 
-![crud.png](../../docs/images/crud.png)
+<img width="80%" height="80%" align="top" src="../../docs/images/crud.png">
 <br>
 
 `Sakila` is the name of the user-defined database configuration file, which is used to name the schema Java type referenced
