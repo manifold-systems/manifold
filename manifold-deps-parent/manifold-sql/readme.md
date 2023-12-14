@@ -8,8 +8,8 @@
 
 
 Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code. 
-     
-<img width="600" height="96" align="top" src="../../docs/images/img_3.png">
+
+![img_3.png](../../docs/images/img_3.png)
 
 - Query types are instantly available as you type native SQL of any complexity in your Java code
 - Query results are type-safe and API-rich and simple to use (see examples below)
@@ -37,7 +37,7 @@ to your gradle or maven build. See [Step 1. Add Manifold SQL to your build](#ste
 You can inline SQL queries and commands in both standard String Literals and Text Blocks. This query demonstrates how
 you can use native SQL to produce result sets of any type.
 
-<img width="450" height="337" align="top" src="../../docs/images/img.png">
+![img.png](../../docs/images/img.png)
 <br>
 
 Notice both Java and SQL syntax are highlighted. The Manifold IntelliJ IDEA plugin integrates with IDEA's SQL features.
@@ -46,7 +46,7 @@ Notice both Java and SQL syntax are highlighted. The Manifold IntelliJ IDEA plug
 Query results consist of _entity_ instances and/or _row_ instances, depending on whether all required columns are selected.
 As such, `select *` queries conveniently result in entity instances.
 
-<img width="600" height="96" align="top" src="../../docs/images/img_3.png">
+![img_3.png](../../docs/images/img_3.png)
 <br>
 
 This query also demonstrates the use of type-safe, injection-safe query parameters. Parameters are supported in all SQL
@@ -55,7 +55,7 @@ commands including `Insert`, `Update`, `Delete` as well as `Select`.
 ---
 An inline query is purely declarative using comment delimiters.
 
-<img width="550" height="287" align="top" src="../../docs/images/img2.png">
+![img2.png](../../docs/images/img2.png)
 <br>
 
 Here the `Payments` query type is defined and used in the same local scope. Notice the type declaration, `Payments.sql`
@@ -65,7 +65,7 @@ follows the file `name`.`extension` convention. The type name is `Payments` and 
 With IntelliJ you can interactively execute parameterized SQL queries in your code directly against test data, analyze
 query execution plans, and a lot more.
 
-<img width="550" height="550" align="top" src="../../docs/images/img4.png">
+![img4.png](../../docs/images/img4.png)
 <br>
 
 While IntelliJ is not required to use Manifold SQL, it can boost your development experience significantly.  
@@ -73,7 +73,7 @@ While IntelliJ is not required to use Manifold SQL, it can boost your developmen
 ---
 CRUD operations and transactions are a pleasure with Manifold SQL. Easily make and commit changes however you like.
 
-<img width="500" height="450" align="top" src="../../docs/images/crud.png">
+![crud.png](../../docs/images/crud.png)
 <br>
 
 `Sakila` is the name of the user-defined database configuration file, which is used to name the schema Java type referenced
@@ -1248,7 +1248,7 @@ Get the [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) d
 
 <kbd>Settings</kbd> ➜ <kbd>Plugins</kbd> ➜ <kbd>Marketplace</kbd> ➜ search: `Manifold`
 
-<p><img src="../../docs/images/ManifoldPlugin2.png" alt="echo method" width="50%" height="50%"/></p>
+<p><img src="../../docs/images/ManifoldPlugin2.png" alt="echo method" width="75%" height="75%"/></p>
 
 ## IntelliJ IDEA Community Edition vs. IDEA Ultimate
 
