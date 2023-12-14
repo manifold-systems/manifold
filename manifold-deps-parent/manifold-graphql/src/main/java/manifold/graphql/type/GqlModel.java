@@ -32,6 +32,8 @@ import javax.tools.Diagnostic;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileObject;
 
+import graphql.parser.ParserEnvironment;
+import graphql.parser.ParserOptions;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
@@ -127,8 +129,14 @@ public class GqlModel extends AbstractSingleFileModel
 
   private void parse( Reader schemaInput ) throws ParseCancellationException
   {
-    Parser parser = new Parser();
-    Document document = parser.parseDocument( schemaInput );
+    Document document = Parser.parse( ParserEnvironment.newParserEnvironment()
+      .parserOptions( ParserOptions.newParserOptions()
+        .maxTokens( Integer.MAX_VALUE )
+        .maxWhitespaceTokens( Integer.MAX_VALUE )
+        .captureSourceLocation( true )
+        .build() )
+      .document( schemaInput )
+      .build() );
     buildRegistry( document );
   }
 
