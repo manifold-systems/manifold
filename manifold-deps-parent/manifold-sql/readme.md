@@ -37,7 +37,7 @@ to your gradle or maven build. See [Step 1. Add Manifold SQL to your build](#ste
 You can inline SQL queries and commands in both standard String Literals and Text Blocks. This query demonstrates how
 you can use native SQL to produce result sets of any type.
 
-<img width="80%" height="80%" align="top" src="../../docs/images/img.png">
+<img width="60%" height="60%" align="top" src="../../docs/images/img.png">
 <br>
 
 Notice both Java and SQL syntax are highlighted. The Manifold IntelliJ IDEA plugin integrates with IDEA's SQL features.
