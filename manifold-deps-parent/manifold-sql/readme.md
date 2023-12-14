@@ -9,7 +9,7 @@
 
 Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code. 
 
-![img_3.png](../../docs/images/img_3.png)
+<img width="85%" height="85%" align="top" src="../../docs/images/img_3.png">
 
 - Query types are instantly available as you type native SQL of any complexity in your Java code
 - Query results are type-safe and API-rich and simple to use (see examples below)
