@@ -51,7 +51,7 @@ other languages such as [**JavaScript**](https://github.com/manifold-systems/man
 Remove the code gen step in your build process. [&nbsp;**▶**&nbsp;Check&nbsp;it&nbsp;out!](http://manifold.systems/images/graphql.mp4)
 
 [**SQL:**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql) 
-Use _native_ SQL of any complexity _directly_ and _type-safely_ from Java.http://manifold.systems/images
+Use _native_ SQL of any complexity _directly_ and _type-safely_ from your Java code.
 ```java
 Language english =
   "[.sql/]select * from Language where name = 'English'".fetchOne();
