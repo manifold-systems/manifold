@@ -50,7 +50,7 @@ _Collections_](https://github.com/manifold-systems/manifold/tree/master/manifold
 ### Sample Projects
 
 [Sample Project](https://github.com/manifold-systems/manifold-sample-project)
-[SQL Sample App](https://github.com/manifold-systems/manifold-sql-sample-app)
+[SQL Sample App](https://github.com/manifold-systems/manifold-sql-sample-project)
 [GraphQL Sample App](https://github.com/manifold-systems/manifold-sample-graphql-app)
 [EST API Sample App](https://github.com/manifold-systems/manifold-sample-rest-api)
 [Sample Web App](https://github.com/manifold-systems/manifold-sample-web-app)

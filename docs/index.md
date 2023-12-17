@@ -318,7 +318,7 @@ by the core framework. Each project consists of one or more **dependencies** you
 
 >Experiment with sample projects:<br>
 >* [Manifold : _Sample App_](https://github.com/manifold-systems/manifold-sample-project)<br>
->* [Manifold : _Sample SQL App_](https://github.com/manifold-systems/manifold-sql-sample-app)<br>
+>* [Manifold : _Sample SQL App_](https://github.com/manifold-systems/manifold-sql-sample-project)<br>
 >* [Manifold : _Sample GraphQL App_](https://github.com/manifold-systems/manifold-sample-graphql-app)<br>
 >* [Manifold : _Sample REST API App_](https://github.com/manifold-systems/manifold-sample-rest-api)<br>
 >* [Manifold : _Sample Web App_](https://github.com/manifold-systems/manifold-sample-web-app)
