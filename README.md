@@ -35,7 +35,7 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 ># _**What's New...**_
 > 
 >### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
-> Manifold SQL harnesses your database to let you write native, _type-safe_ SQL _directly_ in your Java code.
+> Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.
 >- Query types are instantly available as you type native SQL of any complexity in your Java code
 >- Schema types are automatically derived from your database, providing type-safe CRUD, decoupled TX, and more
 >- No ORM, No DSL, No wiring, and No code generation build steps
