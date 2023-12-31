@@ -57,6 +57,8 @@ public interface ManAttr
   String COMPARE_TO = "compareTo";
   String COMPARE_TO_USING = "compareToUsing";
   String UNARY_MINUS = "unaryMinus";
+  String NOT = "not";
+  String COMPL = "inv";
   String INC = "inc";
   String DEC = "dec";
   Map<Tag, String> BINARY_OP_TO_NAME = new HashMap<Tag, String>()
