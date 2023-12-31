@@ -66,6 +66,14 @@ public interface ManAttr
     put( Tag.MUL, "times" );
     put( Tag.DIV, "div" );
     put( Tag.MOD, "rem" );
+
+    put( Tag.BITAND, "and" );
+    put( Tag.BITOR, "or" );
+    put( Tag.BITXOR, "xor" );
+
+    put( Tag.SL, "shl" );
+    put( Tag.SR, "shr" );
+    put( Tag.USR, "ushr" );
     // note ==, !=, >, >=, <, <=  are covered via ComparableUsing
   }};
 
@@ -842,6 +850,12 @@ public interface ManAttr
       case POSTDEC:
       case PREDEC:
         op = DEC;
+        break;
+      case NOT:
+        op = NOT;
+        break;
+      case COMPL:
+        op = COMPL;
         break;
       default:
         return null;

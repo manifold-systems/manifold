@@ -40,6 +40,15 @@ public class OperatorOverloadTest
     assertTrue( new Fuzz(4.0) == baz / bar );
     assertTrue( new Fuzz(2.0) == baz % boz );
     assertTrue( new Fuzz(-3.0) == -bar );
+    assertTrue( new Fuzz(~3L) == ~bar );
+    assertTrue( new Fuzz(0) == !bar );
+    assertTrue( new Fuzz(1) == !(!bar) );
+    assertTrue( new Fuzz((long)bar._value & (long)baz._value) == (bar & baz) );
+    assertTrue( new Fuzz((long)bar._value | (long)baz._value) == (bar | baz) );
+    assertTrue( new Fuzz((long)bar._value ^ (long)baz._value) == (bar ^ baz) );
+    assertTrue( new Fuzz(3L << 1) == bar << 1 );
+    assertTrue( new Fuzz(3L >> 1) == bar >> 1 );
+    assertTrue( new Fuzz(3L >>> 1) == bar >>> 1 );
   }
 
   @Test
@@ -71,6 +80,42 @@ public class OperatorOverloadTest
     array[0] %= bar;
     assertTrue( new Fuzz( 2.0 ) == array[0] );
     assertTrue( new Fuzz( 2.0 ) == (array[0] %= bar) );
+
+    fuzz = new Fuzz( 5.0 );
+    fuzz &= bar;
+    assertTrue( new Fuzz( 5L & (long)bar._value ) == fuzz );
+    fuzz = new Fuzz( 5.0 );
+    assertTrue( new Fuzz( 5L & (long)bar._value ) == (fuzz &= bar) );
+
+    fuzz = new Fuzz( 5.0 );
+    fuzz |= bar;
+    assertTrue( new Fuzz( 5L | (long)bar._value ) == fuzz );
+    fuzz = new Fuzz( 5.0 );
+    assertTrue( new Fuzz( 5L | (long)bar._value ) == (fuzz |= bar) );
+
+    fuzz = new Fuzz( 5.0 );
+    fuzz ^= bar;
+    assertTrue( new Fuzz( 5L ^ (long)bar._value ) == fuzz );
+    fuzz = new Fuzz( 5.0 );
+    assertTrue( new Fuzz( 5L ^ (long)bar._value ) == (fuzz ^= bar) );
+
+    fuzz = bar;
+    fuzz <<= 1;
+    assertTrue( new Fuzz( (long)bar._value << 1L ) == fuzz );
+    fuzz = bar;
+    assertTrue( new Fuzz( (long)bar._value << 1L ) == (fuzz <<= 1) );
+
+    fuzz = bar;
+    fuzz >>= 1;
+    assertTrue( new Fuzz( (long)bar._value >> 1L ) == fuzz );
+    fuzz = bar;
+    assertTrue( new Fuzz( (long)bar._value >> 1L ) == (fuzz >>= 1) );
+
+    fuzz = bar;
+    fuzz >>>= 1;
+    assertTrue( new Fuzz( (long)bar._value >>> 1L ) == fuzz );
+    fuzz = bar;
+    assertTrue( new Fuzz( (long)bar._value >>> 1L ) == (fuzz >>>= 1) );
   }
 
   @Test
@@ -279,6 +324,16 @@ public class OperatorOverloadTest
       return new Fuzz( -_value );
     }
 
+    public Fuzz inv()
+    {
+      return new Fuzz( ~(long)_value );
+    }
+
+    public Fuzz not()
+    {
+      return new Fuzz( _value == 0 ? 1 : 0 );
+    }
+
     public Fuzz inc()
     {
       return new Fuzz( _value + 1 );
@@ -311,6 +366,31 @@ public class OperatorOverloadTest
     public Fuzz rem( Fuzz op )
     {
       return new Fuzz( _value % op._value);
+    }
+
+    public Fuzz and( Fuzz op )
+    {
+      return new Fuzz( (long)_value & (long)op._value);
+    }
+    public Fuzz or( Fuzz op )
+    {
+      return new Fuzz( (long)_value | (long)op._value);
+    }
+    public Fuzz xor( Fuzz op )
+    {
+      return new Fuzz( (long)_value ^ (long)op._value);
+    }
+    public Fuzz shl( int op )
+    {
+      return new Fuzz( (long)_value << op );
+    }
+    public Fuzz shr( int op )
+    {
+      return new Fuzz( (long)_value >> op );
+    }
+    public Fuzz ushr( int op )
+    {
+      return new Fuzz( (long)_value >>> op );
     }
 
     public char get( int index )

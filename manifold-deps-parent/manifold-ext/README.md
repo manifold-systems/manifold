@@ -1,64 +1,91 @@
 # Manifold : Java Extensions
 
 ## Table of Contents
-* [Extension classes](#extension-classes-via-extension) via `@Extension`
+<!-- TOC -->
+* [Extension Classes via `@Extension`](#extension-classes-via-extension)
   * [The `extensions` Package](#the-extensions-package)
-  * [Extension Methods](#extension-method-basics)
+  * [Extension Methods](#extension-methods)
   * [Generics](#generics)
   * [Inner Classes](#inner-classes)
-  * [Arrays](#extending-arrays)
-  * [Manifold Types](#extending-manifold-types)
+  * [Extension Properties](#extension-properties)
+  * [Extending Arrays](#extending-arrays)
+  * [Extending Manifold Types](#extending-manifold-types)
   * [Static Dispatching](#static-dispatching)
-  * ["Smart" Static Methods](#smart-static-methods-with-thisclass)
-  * [Accessibility & Scopes](#accessibility-and-scope)
-  * [Adding Annotations](#annotation-extensions)
-  * [Adding Interfaces](#extension-interfaces)
+  * ["Smart" static methods with `@ThisClass`](#smart-static-methods-with-thisclass)
+  * [Accessibility and Scope](#accessibility-and-scope)
+  * [Annotation Extensions](#annotation-extensions)
+  * [Extension Interfaces](#extension-interfaces)
   * [Extension Libraries](#extension-libraries)
-  * [Generating Extensions](#generating-extension-classes)
+  * [Generating Extension Classes](#generating-extension-classes)
 * [Operator Overloading](#operator-overloading)
+  * [Defining Operator Methods](#defining-operator-methods)
   * [Arithmetic Operators](#arithmetic-operators)
+  * [Unary Operators](#unary-operators)
+  * [Bitwise Operators](#bitwise-operators)
+  * [Compound Assignment Operators](#compound-assignment-operators)
   * [Relational Operators](#relational-operators)
   * [Equality Operators](#equality-operators)
   * [Index Operator](#index-operator)
+    * [Multidimensional indexing](#multidimensional-indexing)
   * [Unit Operators](#unit-operators)
-  * [Operators by Extension Methods](#operators-by-extension-methods)
+  * [Operators by Extension Methods](#operators-by-extension-methods-)
 * [Unit Expressions](#unit-expressions)
   * [How does it work?](#how-does-it-work)
   * [Operator Precedence](#operator-precedence)
-  * [Type-safe & Simple](#type-safe-and-simple)
+  * [Type-safe and Simple](#type-safe-and-simple)
   * [More Than Units](#more-than-units)
   * [Science & Ranges](#science--ranges)
-* [Structural interfaces](#structural-interfaces-via-structural) with `@Structural`
-  * [Assignability and Variance](#type-assignability-and-variance)
+* [Structural Interfaces via `@Structural`](#structural-interfaces-via-structural)
+  * [Type Assignability and Variance](#type-assignability-and-variance)
   * [Implementation by Field](#implementation-by-field)
   * [Implementation by Extension](#implementation-by-extension)
   * [Implementation by Proxy](#implementation-by-proxy)
-  * [Dynamic Typing](#dynamic-typing-with-icallhandler)
-* [Type-safe reflection](#type-safe-reflection-via-jailbreak) with `@Jailbreak`
-  * [Basics](#using-the-jailbreak-extension)
-    * [Using `jailbreak()`](#using-the-jailbreak-extension)
-* [Type inference with 'auto'](#type-inference-with-auto)
+    * [Using `factoryClass`](#using-factoryclass)
+  * [Dynamic Typing with `ICallHandler`](#dynamic-typing-with-icallhandler)
+* [Type-safe Reflection via `@Jailbreak`](#type-safe-reflection-via-jailbreak)
+  * [Using `@Jailbreak`](#using-jailbreak)
+    * [Basic Use](#basic-use)
+    * [Use With Static Members](#use-with-static-members)
+    * [Use With Types and Constructors](#use-with-types-and-constructors)
+    * [Break JPMS Barriers](#break-jpms-barriers)
+  * [Using the `jailbreak()` Extension](#using-the-jailbreak-extension)
+* [Type inference with `auto`](#type-inference-with-auto)
   * [Multiple return values](#multiple-return-values)
-* [The *Self* type](#the-self-type-with-self) with `@Self`
+  * [On fields](#on-fields)
+  * [On methods](#on-methods)
+  * [Limitations](#limitations)
+    * [LUB method return type](#lub-method-return-type)
+    * [Head recursion](#head-recursion)
+  * [Concerns](#concerns)
+* [The *Self* Type with `@Self`](#the-self-type-with-self)
+  * [Alternative to recursive generics](#alternative-to-recursive-generics)
   * [Builders](#builders)
   * [Self + Generics](#self--generics)
   * [Self + Extensions](#self--extensions)
-* [IDE Support](#ide-support)
+* [IDE Support](#ide-support-)
+  * [Install](#install)
+  * [Sample Project](#sample-project)
 * [Setup](#setup)
-* [Javadoc](#javadoc)
+  * [Building this project](#building-this-project)
+  * [Using this project](#using-this-project)
+  * [Binaries](#binaries)
+  * [Gradle](#gradle)
+  * [Maven](#maven)
+  * [Javadoc agent](#javadoc-agent)
+* [Javadoc](#javadoc-)
 * [License](#license)
 * [Versioning](#versioning)
 * [Author](#author)
+<!-- TOC -->
 
-Add the `manifold-ext` dependency to your project to enable a broad set of functionality to improve your development
+Level up your Java. Add the `manifold-ext` dependency to your project to enable a broad set of functionality to improve your development
 experience with Java.
-Use [extension classes](#extension-classes-via-extension) to add new methods and other features to existing classes.
-Enable types to participate as operands in arithmetic and other expressions with [operator overloading](#operator-overloading).
-Experiment with [unit expressions](#unit-expressions) as a new way to improve readability and to avoid costly
-unit-related errors.
-Escape the rigidity of nominal typing with [structural interfaces](#structural-interfaces-via-structural).
-Avoid the tedium and error-prone nature of Java reflection using [type-safe reflection](#type-safe-reflection-via-jailbreak).
-Utilize the [self](#the-self-type-via-self) type as a simple alternative to recursive generic types.
+
+Use [extension classes](#extension-classes-via-extension) to add new methods and other features to existing classes. Enable types to participate as
+operands in arithmetic and other expressions with [operator overloading](#operator-overloading). Experiment with [unit expressions](#unit-expressions)
+as a new way to improve readability and to avoid costly unit-related errors. Escape the rigidity of nominal typing with
+[structural interfaces](#structural-interfaces-via-structural). Avoid the tedium and error-prone nature of Java reflection using [type-safe reflection](#type-safe-reflection-via-jailbreak).
+Utilize the [self](#the-self-type-via-self) type as a simple alternative to recursive generic types. And a lot more.
  
 # Extension Classes via `@Extension`
 
@@ -218,7 +245,7 @@ for(Entry<String, String> entry: map.entrySet()) {
 }
 ```
 
-# Extension Properties
+## Extension Properties
 
 Classes may be supplemented with [properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props),
 using the extension class mechanism. However, since extension classes do not support adding state to classes using
@@ -667,7 +694,7 @@ See the `manifold-ext-producer-sample` module for a sample type manifold impleme
 # Operator Overloading
 
 The Manifold extension framework plugs into Java to provide seamless operator overloading capability. You can
-type-safely provide arithmetic, relational, index, and [unit](#unit-expressions) operators for any class by implementing
+type-safely provide arithmetic, unary, bitwise, relational, index, and [unit](#unit-expressions) operators for any class by implementing
 one or more predefined operator methods. You can implement operator methods directly in your class or use [extension methods](#extension-classes-via-extension)
 to implement operators for classes you don't otherwise control. For example, using extension methods Manifold provides
 operator implementations for `BigDecimal` so you can write code like this:
@@ -675,66 +702,10 @@ operator implementations for `BigDecimal` so you can write code like this:
 BigDecimal result = bigValue1 + bigValue2;
 ```
 
->Note the [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
-and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
-projects use operator overloading and unit expressions extensively.
-
-## Arithmetic Operators
-
-Any type can support arithmetic operators by implementing one or more of the following operator methods: 
-
-**Arithmetic**
-
-| Operation | Method       |
-|:----------|:-------------|
-| `a + b`   | `a.plus(b)`  |
-| `a - b`   | `a.minus(b)` |
-| `a * b`   | `a.times(b)` |
-| `a / b`   | `a.div(b)`   |
-| `a % b`   | `a.rem(b)`   |
-
-Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve as _commutative_ operators. Thus, if
-`a.plus(b)` fails to resolve, an attempt is made to resolve `b.plus(a)`. Keep this in mind when defining or using
-`plus` and `times` where `a` and `b` have different types.
-
-**Compound assignment**
-
-| Operation | Method           |
-|:----------|:-----------------|
-| `a += b`  | `a = a.plus(b)`  |
-| `a -= b`  | `a = a.minus(b)` |
-| `a *= b`  | `a = a.times(b)` |
-| `a /= b`  | `a = a.div(b)`   |
-| `a %= b`  | `a = a.rem(b)`   |
-
-**Negation**
-
-| Operation | Method           |
-|:----------|:-----------------|
-| `-a`      | `a.unaryMinus()` |
-
-**Increment and decrement**
-
-| Operation | Method           |
-|:----------|:-----------------|
-| `a++`     | `a.inc()`        |
-| `a--`     | `a.dec()`        |
-| `++a`     | `a.inc()`        |
-| `--a`     | `a.dec()`        |
-
-Implementations of `inc()` and `dec()` simply return the result of adding or subtracting `a` and "one". The compiler
-plugin takes care of both assigning the result to `a` and the particulars regarding prefix and postfix operations. For
-instance, `a++` is generated like this:
-```java
-var temp = a;
-a = a.inc();
-temp; // result
-```                                                                         
-                                                 
-### Defining an operator method
+## Defining Operator Methods
 Operator methods do not belong to a class or interface you implement. Instead, you implement them *structurally*
 simply by defining a method with the same signature. Note you can implement several versions of the same
-method differing by parameter type. 
+method differing by parameter type.
 
 Here's a simple example demonstrating how to implement the `+` operator:
 ```java
@@ -762,7 +733,81 @@ public Point plus(int[] coord) {
   return new Point(x + coord[0], y + coord[1]);
 }
 ```
-   
+
+>**ⓘ** The [`manifold-science`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-science)
+and [`manifold-collections`](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-collections)
+projects use operator overloading and unit expressions extensively.
+
+## Arithmetic Operators
+
+Any type can support arithmetic operators by implementing one or more of the following operator methods:
+
+| Operation | Transform    |
+|:----------|:-------------|
+| `a + b`   | `a.plus(b)`  |
+| `a - b`   | `a.minus(b)` |
+| `a * b`   | `a.times(b)` |
+| `a / b`   | `a.div(b)`   |
+| `a % b`   | `a.rem(b)`   |
+
+Note, arithmetic operators are considered "mathy". As such, `+` and `*` resolve as _commutative_ operators. Thus, if
+`a.plus(b)` fails to resolve, an attempt is made to resolve `b.plus(a)`. Keep this in mind when defining or using
+`plus` and `times` where `a` and `b` have different types.
+
+**Increment and Decrement Operators**
+
+| Operation | Transform |
+|:----------|:----------|
+| `a++`     | `a.inc()` |
+| `a--`     | `a.dec()` |
+| `++a`     | `a.inc()` |
+| `--a`     | `a.dec()` |
+
+Implementations of `inc()` and `dec()` simply return the result of adding or subtracting `a` and "one". The compiler
+plugin takes care of both assigning the result to `a` and the particulars regarding prefix and postfix operations. For
+instance, `a++` is generated like this:
+```java
+var temp = a;
+a = a.inc();
+temp; // result
+```
+
+## Unary Operators
+
+| Operation | Transform        |
+|:----------|:-----------------|
+| `-a`      | `a.unaryMinus()` |
+| `~a`      | `a.inv()`        |
+| `!a`      | `a.not()`        |
+
+## Bitwise Operators
+
+| Operation | Transform   |
+|:----------|:------------|
+| `a & b`   | `a.and(b)`  |
+| `a \| b`  | `a.or(b)`   |
+| `a ^ b`   | `a.xor(b)`  |
+| `a << b`  | `a.shl(b)`  |
+| `a >> b`  | `a.shr(b)`  |
+| `a >>> b` | `a.ushr(b)` |
+
+## Compound Assignment Operators
+
+| Operation  | Transform        |
+|:-----------|:-----------------|
+| `a += b`   | `a = a.plus(b)`  |
+| `a -= b`   | `a = a.minus(b)` |
+| `a *= b`   | `a = a.times(b)` |
+| `a /= b`   | `a = a.div(b)`   |
+| `a %= b`   | `a = a.rem(b)`   |
+| `a &= b`   | `a = a.and(b)`   |
+| `a \|= b`  | `a = a.or(b)`    |
+| `a ^= b`   | `a = a.xor(b)`   |
+| `a <<= b`  | `a = a.shl(b)`   |
+| `a >>= b`  | `a = a.shr(b)`   |
+| `a >>>= b` | `a = a.ushr(b)`  |
+
+                                                 
 ## Relational Operators
 
 You can implement relational operators using a combination of the `ComparableUsing` and/or `Comparable` interfaces.
@@ -880,8 +925,8 @@ public boolean equals(Object that) {
          x == ((Point)that).x && y == ((Point)that).y;
 }
 ```
->Note always consider implementing `hashCode()` if you implement `equals()`, otherwise your type may not function
->properly when used with `Map` and other data structures:
+>**ⓘ** Implement `hashCode()` if you implement `equals()`, otherwise your type may not function properly when used with
+> `Map` and other data structures:
 >```java
 >public int hashCode() {
 >  return Objects.hash(x, y); 
