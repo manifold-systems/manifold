@@ -640,7 +640,7 @@ public interface ManAttr
       else
       {
         Type returnType = types().memberType( exprType, overloadOperator ).getReturnType();
-        if( types().isAssignable( exprType, returnType ) )
+        if( types().isAssignable( returnType, exprType ) )
         {
           owntype = returnType;
         }

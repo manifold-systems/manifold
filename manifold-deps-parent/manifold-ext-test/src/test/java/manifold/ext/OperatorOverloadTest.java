@@ -39,10 +39,10 @@ public class OperatorOverloadTest
     assertTrue( new Fuzz(36.0) == bar * baz );
     assertTrue( new Fuzz(4.0) == baz / bar );
     assertTrue( new Fuzz(2.0) == baz % boz );
-    assertTrue( new Fuzz(-3.0) == -bar );
-    assertTrue( new Fuzz(~3L) == ~bar );
-    assertTrue( new Fuzz(0) == !bar );
-    assertTrue( new Fuzz(1) == !(!bar) );
+    assertTrue( new Fuzz2(-3.0) == -bar );
+    assertTrue( new Fuzz2(~3L) == ~bar );
+    assertTrue( new Fuzz2(0) == !bar );
+    assertTrue( new Fuzz2(1) == !(!bar) );
     assertTrue( new Fuzz((long)bar._value & (long)baz._value) == (bar & baz) );
     assertTrue( new Fuzz((long)bar._value | (long)baz._value) == (bar | baz) );
     assertTrue( new Fuzz((long)bar._value ^ (long)baz._value) == (bar ^ baz) );
@@ -309,6 +309,11 @@ public class OperatorOverloadTest
     }
   }
 
+  static class Fuzz2 extends Fuzz {
+    public Fuzz2(double value) {
+      super(value);
+    }
+  }
   static class Fuzz implements ComparableUsing<Fuzz>
   {
     final double _value;
@@ -319,19 +324,19 @@ public class OperatorOverloadTest
       _value = value;
     }
 
-    public Fuzz unaryMinus()
+    public Fuzz2 unaryMinus()
     {
-      return new Fuzz( -_value );
+      return new Fuzz2( -_value );
     }
 
-    public Fuzz inv()
+    public Fuzz2 inv()
     {
-      return new Fuzz( ~(long)_value );
+      return new Fuzz2( ~(long)_value );
     }
 
-    public Fuzz not()
+    public Fuzz2 not()
     {
-      return new Fuzz( _value == 0 ? 1 : 0 );
+      return new Fuzz2( _value == 0 ? 1 : 0 );
     }
 
     public Fuzz inc()
