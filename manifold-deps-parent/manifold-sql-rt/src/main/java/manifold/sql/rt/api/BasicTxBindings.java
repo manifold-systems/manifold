@@ -49,8 +49,6 @@ public class BasicTxBindings implements OperableTxBindings
   private TxKind _txKind;
   private boolean _delete;
 
-  public enum TxKind {Insert, Update, Unknown}
-
   /**
    * Creates a new bindings for an entity instance.
    * <p/>
@@ -111,7 +109,7 @@ public class BasicTxBindings implements OperableTxBindings
   @Override
   public boolean isForUpdate()
   {
-    return _txKind == TxKind.Update && !_delete;
+    return (_txKind == TxKind.Update || _txKind == TxKind.InsertUpdate) && !_delete;
   }
 
   @Override
@@ -133,6 +131,7 @@ public class BasicTxBindings implements OperableTxBindings
     switch( _txKind )
     {
       case Update:
+      case InsertUpdate:
         if( _delete )
         {
           // add for deletion
@@ -215,6 +214,26 @@ public class BasicTxBindings implements OperableTxBindings
     _txKind = TxKind.Update;
   }
 
+  @Override
+  public void failedCommit() throws SQLException
+  {
+    if( _txKind == TxKind.InsertUpdate )
+    {
+      _txKind = TxKind.Insert;
+    }
+    dropHeldValues();
+  }
+
+  @Override
+  public void reuse()
+  {
+    if( _txKind == TxKind.Insert )
+    {
+      _txKind = TxKind.InsertUpdate;
+    }
+  }
+
+  /** For internal use, only to be called from {@link TxScope#revert()} */
   public void revert() throws SQLException
   {
     switch( _txKind )
@@ -271,11 +290,7 @@ public class BasicTxBindings implements OperableTxBindings
       return existing;
     }
 
-    if( _changes.isEmpty() )
-    {
-      // add newly changed item to the txScope
-      _txScope.addRow( getOwner() );
-    }
+    _txScope.addRow( getOwner() );
     return _changes.put( name, value );
   }
 

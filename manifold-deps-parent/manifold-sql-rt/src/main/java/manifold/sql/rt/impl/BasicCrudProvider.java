@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
+import java.util.function.Function;
 
 import static manifold.sql.rt.util.DriverInfo.Oracle;
 
@@ -204,68 +205,96 @@ public class BasicCrudProvider implements CrudProvider
   @SuppressWarnings( "unused" )
   public <T extends Entity> T readOne( QueryContext<T> ctx )
   {
-    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
-    {
-      // todo: put a cache on this
-
-      Set<String> skipParams = new HashSet<>();
-      String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
-      try( PreparedStatement ps = c.prepareStatement( sql ) )
+    return runQueryWithConnection( ctx, c -> {
+      try
       {
-        setQueryParameters( ctx, ps, skipParams );
-        try( ResultSet resultSet = ps.executeQuery() )
+        Set<String> skipParams = new HashSet<>();
+        String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
+        try( PreparedStatement ps = c.prepareStatement( sql ) )
         {
-          Result<T> ts = new Result<>( ctx, resultSet );
-          Iterator<T> iterator = ts.iterator();
-          if( !iterator.hasNext() )
+          setQueryParameters( ctx, ps, skipParams );
+          try( ResultSet resultSet = ps.executeQuery() )
           {
-            // not found
-            return null;
+            Result<T> ts = new Result<>( ctx, resultSet );
+            Iterator<T> iterator = ts.iterator();
+            if( !iterator.hasNext() )
+            {
+              // not found
+              return null;
+            }
+            T result = iterator.next();
+            if( iterator.hasNext() )
+            {
+              throw new SQLException( "Results contain more than one row." );
+            }
+            return result;
           }
-          T result = iterator.next();
-          if( iterator.hasNext() )
-          {
-            throw new SQLException( "Results contain more than one row." );
-          }
-          return result;
         }
       }
-    }
-    catch( SQLException e )
-    {
-      throw ManExceptionUtil.unchecked( e );
-    }
+      catch( SQLException e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    } );
   }
 
   @SuppressWarnings( "unused" )
   public <T extends Entity> List<T> readMany( QueryContext<T> ctx )
   {
-    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
-    {
-      // todo: put a cache on this
-
-      Set<String> skipParams = new HashSet<>();
-      String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
-      try( PreparedStatement ps = c.prepareStatement( sql ) )
+    return runQueryWithConnection( ctx, c -> {
+      try
       {
-        setQueryParameters( ctx, ps, skipParams );
-        try( ResultSet resultSet = ps.executeQuery() )
+        Set<String> skipParams = new HashSet<>();
+        String sql = makeReadStatement( c.getMetaData(), ctx, skipParams );
+        try( PreparedStatement ps = c.prepareStatement( sql ) )
         {
-          Result<T> ts = new Result<>( ctx, resultSet );
-          List<T> result = new ArrayList<>();
-          for( T t : ts )
+          setQueryParameters( ctx, ps, skipParams );
+          try( ResultSet resultSet = ps.executeQuery() )
           {
-            result.add( t );
+            Result<T> ts = new Result<>( ctx, resultSet );
+            List<T> result = new ArrayList<>();
+            for( T t : ts )
+            {
+              result.add( t );
+            }
+            return result;
           }
-          return result;
         }
       }
-    }
-    catch( SQLException e )
+      catch( SQLException e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    } );
+  }
+
+  private <T extends Entity, RT> RT runQueryWithConnection( QueryContext<T> ctx, Function<Connection, RT> query )
+  {
+    OperableTxScope txScope = (OperableTxScope)ctx.getTxScope();
+    Connection activeConnection = txScope.getActiveConnection();
+    if( activeConnection != null )
     {
-      throw ManExceptionUtil.unchecked( e );
+      try
+      {
+        txScope.newSqlChangeCtx( activeConnection ).doCrud();
+        return query.apply( activeConnection );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
+    else
+    {
+      ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+      try( Connection c = cp.getConnection( ctx.getConfigName(), ctx.getQueryClass() ) )
+      {
+        return query.apply( c );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
     }
   }
 

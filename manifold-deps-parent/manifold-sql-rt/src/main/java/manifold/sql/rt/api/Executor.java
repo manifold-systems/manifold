@@ -49,6 +49,7 @@ public class Executor
       throw new SQLException( "Connection is null. Raw commands must execute using `addSqlChange()`." );
     }
 
+    _ctx.doCrud();
     try( PreparedStatement ps = txConnextion.prepareStatement( _sqlCommand ) )
     {
       setParameters( ps );

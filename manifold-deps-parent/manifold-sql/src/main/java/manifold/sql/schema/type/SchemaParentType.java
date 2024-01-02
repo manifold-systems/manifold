@@ -141,6 +141,14 @@ class SchemaParentType
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
       .body( "defaultScope().commit();" );
     srcClass.addMethod( method );
+
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "commit" )
+      .addParam( "changes", ScopeConsumer.class.getSimpleName() )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().commit(changes);" );
+    srcClass.addMethod( method );
   }
 
   private void addRevertMethod( SrcLinkedClass srcClass )
@@ -792,7 +800,7 @@ class SchemaParentType
     srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
-    srcClass.addImport( BasicTxBindings.TxKind.class );
+    srcClass.addImport( TxKind.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( Entity.class );
     srcClass.addImport( TableInfo.class );

@@ -17,9 +17,12 @@
 package manifold.sql.rt.api;
 
 import manifold.util.ManExceptionUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
 import java.util.Iterator;
+import java.util.function.Function;
 
 public class Runner<T extends ResultRow>
 {
@@ -35,8 +38,50 @@ public class Runner<T extends ResultRow>
   @SuppressWarnings( "unused" )
   public Result<T> fetch()
   {
-    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
+    return runQueryWithConnection( c -> runQuery( c ) );
+  }
+
+  @SuppressWarnings( "unused" )
+  public T fetchOne()
+  {
+    return runQueryWithConnection( c -> runQueryOne( c ) );
+  }
+
+  private <RT> RT runQueryWithConnection( Function<Connection, RT> query )
+  {
+    OperableTxScope txScope = (OperableTxScope)_ctx.getTxScope();
+    Connection activeConnection = txScope.getActiveConnection();
+    if( activeConnection != null )
+    {
+      try
+      {
+        TxScope.SqlChangeCtx ctx = txScope.newSqlChangeCtx( activeConnection );
+        ctx.doCrud();
+        return query.apply( activeConnection );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
+    else
+    {
+      ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+      try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
+      {
+        return query.apply( c );
+      }
+      catch( Exception e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
+    }
+  }
+
+  @NotNull
+  private Result<T> runQuery( Connection c )
+  {
+    try
     {
       try( PreparedStatement ps = c.prepareStatement( _sqlQuery ) )
       {
@@ -53,11 +98,10 @@ public class Runner<T extends ResultRow>
     }
   }
 
-  @SuppressWarnings( "unused" )
-  public T fetchOne()
+  @Nullable
+  private T runQueryOne( Connection c )
   {
-    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    try( Connection c = cp.getConnection( _ctx.getConfigName(), _ctx.getQueryClass() ) )
+    try
     {
       try( PreparedStatement ps = c.prepareStatement( _sqlQuery ) )
       {

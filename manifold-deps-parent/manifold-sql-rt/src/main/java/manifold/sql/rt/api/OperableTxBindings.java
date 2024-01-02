@@ -34,10 +34,13 @@ public interface OperableTxBindings extends TxBindings
   void dropHeldValues();
 
   void commit() throws SQLException;
+  void failedCommit() throws SQLException;
   void revert() throws SQLException;
 
   Map<String, Object> persistedStateEntrySet();
   Map<String, Object> uncommittedChangesEntrySet();
 
   Object getPersistedStateValue( String name );
+
+  void reuse();
 }

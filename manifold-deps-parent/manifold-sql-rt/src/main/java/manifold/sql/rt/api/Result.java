@@ -28,7 +28,7 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 
-import static manifold.sql.rt.api.BasicTxBindings.TxKind.Update;
+import static manifold.sql.rt.api.TxKind.Update;
 
 /**
  * Fetches all rows from a provided {@code ResultSet} into a {@code List}. The list is indirectly accessible this

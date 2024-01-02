@@ -508,7 +508,7 @@ class QueryParentType extends SqlParentType
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );
-    srcClass.addImport( BasicTxBindings.TxKind.class );
+    srcClass.addImport( TxKind.class );
     srcClass.addImport( DataBindings.class );
     srcClass.addImport( CrudProvider.class );
     srcClass.addImport( QueryContext.class );

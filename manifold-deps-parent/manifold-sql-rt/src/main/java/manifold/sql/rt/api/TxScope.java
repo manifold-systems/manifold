@@ -40,15 +40,40 @@ public interface TxScope
    * this tx scope is ready to manage more entity changes. Note, if the commit fails, unless {@link #revert()} is called
    * during handling of the SQLException, the state of this tx scope is as it was immediately before the commit.
    * Otherwise, if the commit succeeds, the state of this tx scope is clear of changes.
+   * <p/>
+   * In this mode of commit, queries and fetch methods each execute immediately in separate transactions against a durable
+   * state of the database while entity CRUD operations are collected and executed as a single batch of changes in this
+   * method.
+   * <p/>
+   * To execute both queries and changes within the same transaction, use {@link #commit(ScopeConsumer)} instead.
    *
    * @throws SQLException
    */
   void commit() throws SQLException;
 
   /**
+   * Commits entity changes in this tx scope to the data source specified in {@link #getDbConfig()}. After the commit,
+   * this tx scope is ready to manage more entity changes. Note, if the commit fails, unless {@link #revert()} is called
+   * during handling of the SQLException, the state of this tx scope is as it was immediately before the commit.
+   * Otherwise, if the commit succeeds, the state of this tx scope is clear of changes.
+   * <p/>
+   * In this mode of commit all SQL operations provided with {@code changes} execute together in the same transaction,
+   * directly as they appear in code.
+   * <p/>
+   * Bear in mind this mode of commit creates a connection and leaves it open for the duration of the call to
+   * {@code changes#accept(SqlChangeCtx)}. Alternatively, using the no arg {@link #commit()} mode ensures connections are
+   * open briefly as queries and other direct SQL commands execute immediately in separate transactions, while entity CRUD
+   * operation execute in a single batched transaction during the call to {@code commit()}.
+   *
+   * @param changes May contain any mix of SQL queries, CRUD, and other SQL commands. Executes within a single transaction.
+   *                Persisted directly in order of execution.
+   * @throws SQLException
+   */
+  void commit( ScopeConsumer changes ) throws SQLException;
+
+  /**
    * Reverts all entity changes within this tx scope back to the last commit, or if no commits were made, back to the
    * creation of this tx scope.
-   *
    * <p/>
    * Note, this method is <i>not</i> called when a commit fails. The state of the scope is carefully managed so that
    * it is exactly as it was immediately before commit() was called. This behavior is intended to support another commit
@@ -97,6 +122,8 @@ public interface TxScope
   {
     TxScope getTxScope();
     Connection getConnection();
+
+    void doCrud() throws SQLException;
   }
 
 }

@@ -18,6 +18,7 @@ package manifold.sql.rt.impl;
 
 import manifold.rt.api.util.ManClassUtil;
 import manifold.sql.rt.api.*;
+import manifold.util.concurrent.ConcurrentHashSet;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,14 +31,17 @@ class BasicTxScope implements OperableTxScope
 {
   private final DbConfig _dbConfig;
   private final Set<Entity> _rows;
+  private final Set<Entity> _processedRows;
   private final ReentrantReadWriteLock _lock;
   private final List<ScopeConsumer> _sqlChanges;
+  private Connection _connection;
 
   public BasicTxScope( Class<? extends SchemaType> schemaClass )
   {
     _dbConfig = Dependencies.instance().getDbConfigProvider()
       .loadDbConfig( ManClassUtil.getShortClassName( schemaClass ), schemaClass );
     _rows = new LinkedHashSet<>();
+    _processedRows = new ConcurrentHashSet<>();
     _sqlChanges = new ArrayList<>();
     _lock = new ReentrantReadWriteLock();
   }
@@ -68,6 +72,11 @@ class BasicTxScope implements OperableTxScope
     if( item == null )
     {
       throw new IllegalArgumentException( "Item is null" );
+    }
+
+    if( _processedRows.remove( item ) )
+    {
+      ((OperableTxBindings)item.getBindings()).reuse();
     }
 
     if( containsRow( item  ) )
@@ -150,6 +159,7 @@ class BasicTxScope implements OperableTxScope
       ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
       try( Connection c = cp.getConnection( getDbConfig().getName(), commitItem.getClass() ) )
       {
+        _connection = c;
         try
         {
           c.setAutoCommit( false );
@@ -180,10 +190,14 @@ class BasicTxScope implements OperableTxScope
 
           for( Entity row : _rows )
           {
-            ((OperableTxBindings)row.getBindings()).dropHeldValues();
+            ((OperableTxBindings)row.getBindings()).failedCommit();
           }
 
           throw e;
+        }
+        finally
+        {
+          _connection = null;
         }
       }
     }
@@ -193,28 +207,55 @@ class BasicTxScope implements OperableTxScope
     }
   }
 
+  @Override
+  public void commit( ScopeConsumer change ) throws SQLException
+  {
+    addSqlChange( change );
+    commit();
+  }
+
   private void executeSqlChange( Connection c, ScopeConsumer sqlChange ) throws SQLException
   {
-    sqlChange.accept(
-      new SqlChangeCtx()
-      {
-        @Override
-        public TxScope getTxScope()
-        {
-          return BasicTxScope.this;
-        }
+    sqlChange.accept( newSqlChangeCtx( c ) );
+  }
 
-        @Override
-        public Connection getConnection()
+  @Override
+  public SqlChangeCtx newSqlChangeCtx( Connection c )
+  {
+    return new SqlChangeCtx()
+    {
+      @Override
+      public TxScope getTxScope()
+      {
+        return BasicTxScope.this;
+      }
+
+      @Override
+      public Connection getConnection()
+      {
+        return c;
+      }
+
+      @Override
+      public void doCrud() throws SQLException
+      {
+        Set<Entity> visited = new HashSet<>();
+        for( Entity row : _rows )
         {
-          return c;
+          BasicTxScope.this.doCrud( c, row, new LinkedHashMap<>(), visited );
         }
-      } );
+      }
+    };
   }
 
   @Override
   public void revert() throws SQLException
   {
+    if( _connection != null )
+    {
+      throw new SQLException( "Revert is not supported within a transaction" );
+    }
+
     _lock.writeLock().lock();
     try
     {
@@ -238,6 +279,12 @@ class BasicTxScope implements OperableTxScope
       return;
     }
     visited.add( row );
+
+    if( _processedRows.contains( row ) )
+    {
+      return;
+    }
+    _processedRows.add( row );
 
     doFkDependenciesFirst( c, row, unresolvedDeps, visited );
 
@@ -334,6 +381,12 @@ class BasicTxScope implements OperableTxScope
         }
       }
     }
+  }
+
+  @Override
+  public Connection getActiveConnection()
+  {
+    return _connection;
   }
 
   private static class FkDep

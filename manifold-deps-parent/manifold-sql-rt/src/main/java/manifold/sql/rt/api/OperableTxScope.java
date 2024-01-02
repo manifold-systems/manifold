@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import java.sql.Connection;
 import java.util.Set;
 
 /**
@@ -29,4 +30,6 @@ public interface OperableTxScope extends TxScope
   void addRow( Entity item );
   void removeRow( Entity item );
   boolean containsRow( Entity item );
+  Connection getActiveConnection();
+  SqlChangeCtx newSqlChangeCtx( Connection c );
 }

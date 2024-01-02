@@ -89,6 +89,33 @@ public class RawCommandTest extends H2DdlServerTest
   }
 
   @Test
+  public void testMixSqlChangesAndEntityChanges_DirectCommit() throws SQLException
+  {
+    H2Sakila.commit( ctx -> {
+      Country country = Country.create( "mycountry" );
+      Country country2 = Country.create( "mycountry2" );
+
+      // next commit combines an entity change with city and an update raw command
+      City city = City.create( "myCity", country );
+
+      // [MyUpdate.sql:H2Sakila/] UPDATE country SET country = :country || country WHERE country LIKE :prefix || '%'
+      MyUpdate.execute( ctx, "yourcountry", "mycountry" );
+
+      city = "[.sql:H2Sakila/] select * from city where city = 'myCity'".fetchOne();
+
+      assertNotNull( city.getCityId() );
+      assertNotNull( City.fetch( city.getCityId() ) );
+      city = City.fetchByCity( "myCity" ).get(0);
+
+      country = Country.fetchByCountry( "yourcountrymycountry" ).get(0);
+      assertEquals( "yourcountrymycountry", country.getCountry() );
+    } );
+    // and verify prior commit is durable
+    Country country = Country.fetchByCountry( "yourcountrymycountry" ).get(0);
+    assertEquals( "yourcountrymycountry", country.getCountry() );
+  }
+
+  @Test
   public void testRawCommandExplicitScope() throws SQLException
   {
     TxScope txScope = H2Sakila.newScope();
