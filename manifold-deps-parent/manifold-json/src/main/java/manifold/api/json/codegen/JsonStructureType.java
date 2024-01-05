@@ -590,6 +590,9 @@ public class JsonStructureType extends JsonSchemaType
       }
       renderUnionAccessors( sb, indent, mutable, key, type );
     }
+    // handle case where root type is a union, has no direct members
+    // e.g. {"anyOf": [{"type": "object", "properties": {...}}, {"type": "object", "properties": {...}}]}
+    renderUnionAccessors( sb, indent, mutable, "", DynamicType.instance() );
 
     // Include methods from super interfaces that are inner classes of this type
     // Since Java does not allow a type to extend its own inner classes.  Note such
@@ -712,6 +715,43 @@ public class JsonStructureType extends JsonSchemaType
         }
       }
     }
+    else if( this instanceof JsonUnionType && key.isEmpty() && getParent() == null )
+    {
+      // handle case where root type is a union, has no direct members
+      // e.g. {"anyOf": [{"type": "object", "properties": {...}}, {"type": "object", "properties": {...}}]}
+      // e.g. {"anyOf": [{"type": "array", "items": {...}}, {"type": "array", "items": {...}}]}
+
+      JsonUnionType unionType = (JsonUnionType)this;
+      for( IJsonType constituentType : unionType.getConstituents() )
+      {
+        sb.append( '\n' );
+        indent( sb, indent + 2 );
+        //noinspection DuplicatedCode
+        String specificPropertyType = getConstituentQn( constituentType, type );
+        addSourcePositionAnnotation( sb, indent + 2, key );
+        if( constituentType instanceof JsonSchemaType )
+        {
+          IJsonType constituentQnComponent = getConstituentQnComponent( constituentType );
+          if( constituentQnComponent instanceof JsonSchemaType )
+          {
+            addTypeReferenceAnnotation( sb, indent + 2, (JsonSchemaType)constituentQnComponent );
+          }
+        }
+
+        //noinspection unused
+        String unionName = makeMemberIdentifier( constituentType );
+        if( constituentType instanceof JsonListType )
+        {
+          sb.append("default $specificPropertyType as$unionName() { " +
+                      "return ($specificPropertyType)this; " +
+                    "}\n");
+        }
+        else
+        {
+          sb.append("default $specificPropertyType as$unionName() { return ($specificPropertyType)getBindings(); }\n");
+        }
+      }
+    }
   }
 
   private JsonEnumType getAllOfEnumType()
@@ -808,10 +848,16 @@ public class JsonStructureType extends JsonSchemaType
 
   private void addBuilderMethod( StringBuilder sb, int indent )
   {
+    Map<String, IJsonType> allMembers = getAllMembers();
+    if( isTopLevelUnionTypeOfLists( allMembers ) )
+    {
+      // top-level union type composed of all list types, nothing to build
+      return;
+    }
+
     indent( sb, indent );
     sb.append( "static Builder builder(" );
     Set<String> allRequired = getAllRequired();
-    Map<String, IJsonType> allMembers = getAllMembers();
     addRequiredParams( sb, allRequired, allMembers );
     sb.append( ") {\n" );
     indent += 2;
@@ -836,6 +882,12 @@ public class JsonStructureType extends JsonSchemaType
     indent -= 2;
     indent( sb, indent );
     sb.append( "}\n" );
+  }
+
+  private boolean isTopLevelUnionTypeOfLists( Map<String, IJsonType> allMembers )
+  {
+    return this instanceof JsonUnionType && isParentRoot() && allMembers.isEmpty() &&
+            _state._innerTypes.values().stream().allMatch( t -> t instanceof JsonListType );
   }
 
   private void addCopierMethod( StringBuilder sb, int indent )
@@ -930,10 +982,23 @@ public class JsonStructureType extends JsonSchemaType
 
   private void addCreateMethod( StringBuilder sb, int indent, String typeName )
   {
+    Map<String, IJsonType> allMembers = getAllMembers();
+    if( isTopLevelUnionTypeOfLists( allMembers ) )
+    {
+      // top-level union type composed of all list types
+
+      indent( sb, indent );
+      sb.append( "static " ).append( typeName ).append( " create() {\n" );
+      indent( sb, indent );
+      sb.append( "  return ($typeName)new JsonList(new ArrayList(), Object.class);\n" );
+      indent( sb, indent );
+      sb.append( "}\n" );
+      return;
+    }
+
     indent( sb, indent );
     sb.append( "static " ).append( typeName ).append( " create(" );
     Set<String> allRequired = getAllRequired();
-    Map<String, IJsonType> allMembers = getAllMembers();
     addRequiredParams( sb, allRequired, allMembers );
     sb.append( ") {\n" );
     indent( sb, indent + 2 );

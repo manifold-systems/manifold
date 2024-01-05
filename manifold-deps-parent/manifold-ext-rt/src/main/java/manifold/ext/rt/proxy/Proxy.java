@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 
 import manifold.util.JreUtil;
-import manifold.util.NecessaryEvilUtil;
 import manifold.util.ReflectUtil;
 import sun.reflect.CallerSensitive;
 import sun.reflect.Reflection;
@@ -610,7 +609,7 @@ public class Proxy implements java.io.Serializable {
    * @throws  NullPointerException if {@code cl} is {@code null}
    */
   public static boolean isProxyClass(Class<?> cl) {
-    return Proxy.class.isAssignableFrom(cl) && proxyClassCache.containsValue(cl);
+    return java.lang.reflect.Proxy.class.isAssignableFrom(cl) && proxyClassCache.containsValue(cl);
   }
 
   /**

@@ -1,0 +1,20 @@
+{
+  "anyOf": [
+    {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "properties": {
+        "poo": {
+          "type": "string"
+        }
+      }
+    }
+  ]
+}

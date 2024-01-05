@@ -1591,6 +1591,12 @@ public class ReflectUtil
           return result;
         }
 
+        result = handleNestedProxy( receiver, structMethod, args );
+        if( result != UNHANDLED )
+        {
+          return result;
+        }
+
         throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
           "' does not implement a method structurally compatible with method: " + structMethod );
       }
@@ -1605,6 +1611,25 @@ public class ReflectUtil
       throw ManExceptionUtil.unchecked( t );
     }
 
+  }
+
+  private static Object handleNestedProxy( Object receiver, Method structMethod, Object[] args )
+  {
+    // todo: can't reference manifold.ext.rt.proxy from here, but proxy stuff is a bit sketchy rt now
+    if( receiver.getClass().getTypeName().contains( ".$ManProxy" ) )
+    {
+      // handle nested proxy
+      try
+      {
+        return ((InvocationHandler)ReflectUtil.field( receiver, "h" ).get())
+                .invoke( receiver, structMethod, args );
+      }
+      catch( Throwable t )
+      {
+        throw ManExceptionUtil.unchecked( t );
+      }
+    }
+    return UNHANDLED;
   }
 
   enum Variance

@@ -97,14 +97,17 @@ public class JsonSchemaTransformer
 
   public static boolean isSchema( Bindings bindings )
   {
-           // Ideally the "$schema" element would be required, but JSON Schema does not require it.
+           // Ideally the "$schema" element would be required, but JSON Schema does not require it :/
     return bindings.get( JsonSchemaTransformer.JSCH_SCHEMA ) != null ||
            // As a fallback check for "$id" as this is pretty uniquely Json Schema
            bindings.get( JsonSchemaTransformer.JSCH_ID ) != null ||
            // As a fallback to the fallback, check for: "type": "object" or "type": "array"
            typeMatches( bindings, Type.Object ) || typeMatches( bindings, Type.Array ) ||
-           // As a fallback to the fallback to the fallback, check for: "properties": (lots of use-cases like this unfortunately)
-           bindings.get( JsonSchemaTransformer.JSCH_PROPERTIES ) != null;
+           // As a fallback to the fallback to the fallback, check for: "properties" etc.
+           bindings.get( JsonSchemaTransformer.JSCH_PROPERTIES ) != null ||
+           bindings.get( JsonSchemaTransformer.JSCH_ONE_OF ) != null ||
+            bindings.get( JsonSchemaTransformer.JSCH_ALL_OF ) != null ||
+            bindings.get( JsonSchemaTransformer.JSCH_ANY_OF ) != null;
   }
 
   private static boolean typeMatches( Bindings bindings, Type testType )

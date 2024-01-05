@@ -116,6 +116,7 @@ public abstract class AbstractJsonTypeManifold<T extends JsonModel> extends Java
       .append( "import " ).append( Map.class.getName() ).append( ";\n" )
       .append( "import " ).append( DataBindings.class.getName() ).append( ";\n" )
       .append( "import " ).append( IJsonBindingsBacked.class.getName() ).append( ";\n" )
+      .append( "import " ).append( JsonList.class.getName() ).append( ";\n" )
       .append( "import " ).append( IJsonList.class.getName() ).append( ";\n" )
       .append( "import " ).append( Structural.class.getName() ).append( ";\n" )
       .append( "import " ).append( FragmentValue.class.getName() ).append( ";\n" )

@@ -64,6 +64,11 @@ public class JsonTransformer
 
   public static IJsonType transformJsonObject( IManifoldHost host, String name, IFile source, final JsonSchemaType parent, Object jsonObj )
   {
+    if( source == null && parent == null )
+    {
+      throw new RuntimeException( "Invalid state, both source and parent are null." );
+    }
+
     IJsonType type = null;
 
     if( parent != null )
