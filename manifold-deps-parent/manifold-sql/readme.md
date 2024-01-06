@@ -1009,10 +1009,56 @@ to abandon the changes, revert the changes back to the prior commit, or make adj
 Life continues after the commit for both the entities and the transaction scope. As a result, a transaction
 scope may span multiple commits, where you can continue to make changes to entities. A subsequent call to commit processes
 changes made after the prior commit, and so on.
-          
+
+### Coupled queries
+
+Decoupling changes from the transaction means we are decoupling DB _writes_. As such, the TxScope accumulates write operations
+for execution during the call to `commit()` where all changes execute in a single transaction. But what about the _read_
+operations?
+
+There's no delaying DB reads. Queries must execute immediately because the code depending on query results requires it.
+As a consequence, queries execute directly in separate transactions against a durable state of the database. This works
+out well for many use-cases. Sometimes, however, a query must reflect uncommitted changes from the write transaction, in
+this case it must execute in step with the writes in the same transaction.
+
+There are two options that enable reads and writes to execute in the same transaction.
+
+### 1. `TxScope#addSqlChange(ScopeConsumer)`
+  
+`addSqlChange()` posts a set of changes to the TxScope, which execute when `TxScope.commit()` is called. Changes
+may include any type of SQL command, direct or indirect: entity CRUD operations, entity fetch calls, SQL queries, and
+other native SQL commands.
+
+```java
+Sakila.addSqlChange(ctx -> {
+  insertClients(ctx);
+  for(var row: "[.sql/] SELECT client_id FROM client WHERE secondary_lang = 'english'".fetch()){
+    insertEnglishResources(ctx, row.getClientId());
+  }
+});
+```
+Here the query must access the clients that were inserted/updated within the transaction. When run within a call to
+`addSqlChange()` since there is always a live transaction in context, queries run within that context, provided the query's
+TxScope is the same as the one in `ctx`. In this case, assuming the default TxScope is in use, the query executes in the
+same transaction and reflects the clients inserted from the `insertClients()` call.
+
+Note, entity CRUD operations continue to operate lazily. Only in this case, because queries run in the same context, CRUD
+operations delay execution until the next query is encountered or until no further operations remain. This behavior is necessary
+to include the effects of entity CRUD in coupled query results.  
+
+### 2. `TxScope#commit(ScopeConsumer)`
+   
+Similar to `addSqlChange(ScopeConsumer)`, `commit(ScopeConsumer)` commits a set of SQL operations directly. In fact, it is a shortcut
+for the following:
+```java
+Sakila.addSqlChange(...);
+Sakila.commit();
+```              
+As with `addSqlChange(ScopeConsumer)`, queries execute in the same tx along with writes.
+
 ### Have it your way
 
-You may also create your own transaction scope _instances_ with the `TxScope#newScope` method.
+You can create your own transaction scope _instances_ with the `TxScope#newScope` method.
 ```java
 TxScope txScope = Sakila.newScope();
 . . .
@@ -1030,7 +1076,7 @@ section.
 
 ---
 
-In addition to `select` statements SQL files and inline statements also work with other kinds of native SQL, including:
+In addition to `select` statements, SQL files and inline statements also work with other kinds of native SQL, including:
 - Data Manipulation Language (DML), statements include `insert`, `update`, and `delete`
 - Data Definition Language (DDL), statements such as `create table` and `alter table`
 - Generally, any SQL statement that returns nothing
