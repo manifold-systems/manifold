@@ -96,7 +96,6 @@ access metadata to build just-in-time entity and query APIs. Metadata acquired d
 these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your specific configuration.
                         
 # Documentation
-
 <!-- TOC -->
 * [Getting started](#getting-started)
 * [Step 1. Add Manifold SQL to your build](#step-1-add-manifold-sql-to-your-build)
@@ -130,6 +129,7 @@ these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your 
   * [Transaction scopes](#transaction-scopes)
     * [Default transaction scope](#default-transaction-scope)
     * [`commit()`](#commit)
+    * [Coupled queries](#coupled-queries)
     * [Have it your way](#have-it-your-way)
   * [DML & DDL commands](#dml--ddl-commands)
   * [Customizations](#customizations)
@@ -1023,8 +1023,9 @@ this case it must execute in step with the writes in the same transaction.
 
 There are two options that enable reads and writes to execute in the same transaction.
 
-### 1. `TxScope#addSqlChange(ScopeConsumer)`
-  
+#### 1. `TxScope#addSqlChange(ScopeConsumer)`
+
+---  
 `addSqlChange()` posts a set of changes to the TxScope, which execute when `TxScope.commit()` is called. Changes
 may include any type of SQL command, direct or indirect: entity CRUD operations, entity fetch calls, SQL queries, and
 other native SQL commands.
@@ -1046,8 +1047,9 @@ Note, entity CRUD operations continue to operate lazily. Only in this case, beca
 operations delay execution until the next query is encountered or until no further operations remain. This behavior is necessary
 to include the effects of entity CRUD in coupled query results.  
 
-### 2. `TxScope#commit(ScopeConsumer)`
-   
+#### 2. `TxScope#commit(ScopeConsumer)`
+
+---   
 Similar to `addSqlChange(ScopeConsumer)`, `commit(ScopeConsumer)` commits a set of SQL operations directly. In fact, it is a shortcut
 for the following:
 ```java
