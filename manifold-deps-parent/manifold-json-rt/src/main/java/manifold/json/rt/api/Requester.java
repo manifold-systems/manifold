@@ -174,8 +174,8 @@ public class Requester<T>
   public Requester<T> withBasicAuthorization( String username, String password )
   {
     String authorization = Base64.getEncoder()
-      .encodeToString(( "$username:$password" ).getBytes( StandardCharsets.UTF_8 ) );
-    return withHeader( "Authorization", "Basic $authorization" );
+      .encodeToString(( username + ":" + password ).getBytes( StandardCharsets.UTF_8 ) );
+    return withHeader( "Authorization", "Basic " + authorization );
   }
 
   /**
@@ -194,7 +194,7 @@ public class Requester<T>
   @SuppressWarnings("unused")
   public Requester<T> withAuthorization( String tokenType, String accessToken )
   {
-    return withHeader( "Authorization", "$tokenType $accessToken" );
+    return withHeader( "Authorization", tokenType + " " + accessToken );
   }
 
   /**

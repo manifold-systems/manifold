@@ -180,7 +180,7 @@ public class Executor<T>
   @SuppressWarnings("unused")
   public Executor<T> withAuthorization( String tokenType, String accessToken )
   {
-    return withHeader( "Authorization", "$tokenType $accessToken" );
+    return withHeader( "Authorization", tokenType + " " + accessToken );
   }
   /**
    * The connection timeout setting in milliseconds. If the timeout expires before the connection can be established, a
