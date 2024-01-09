@@ -11,7 +11,7 @@
 ## What is Manifold?
 Manifold is a Java compiler plugin. It supplements Java with:
 * Direct, _type-safe_ access to:
-    * [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql) _**(New!)**_
+    * [SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md) _**(New!)**_
     * [GraphQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql)
     * [JSON & JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
       [YAML](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-yaml),
@@ -40,7 +40,7 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 >- Schema types are automatically derived from your database, providing type-safe CRUD, decoupled TX, and more
 >- No ORM, No DSL, No wiring, and No code generation build steps
 > <br><br>
-> ![img_3.png](./docs/images/img_3.png)
+> [![img_3.png](./docs/images/img_3.png)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 
 
 ## What can you do with Manifold?
