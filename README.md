@@ -34,6 +34,8 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 
 ># _**What's New...**_
 > 
+>[<img width="40%" height="40%" align="top" src="./docs/images/manifoldsql.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+>
 >### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 > Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.
 >- Query types are instantly available as you type native SQL of any complexity in your Java code

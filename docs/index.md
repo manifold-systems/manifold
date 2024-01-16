@@ -27,6 +27,8 @@ All fully supported in JDK LTS releases 8 - 21 + latest with comprehensive IDE s
 Manifold consists of a set of modules, one for each feature. Simply add the Manifold dependencies of your choosing to your existing project and begin taking advantage of them.
 
 ># _**What's New...**_
+>
+> [<img width="300" height="184" align="top" src="http://manifold.systems/images/manifoldsql.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 > 
 >### [Type-safe SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 > Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.

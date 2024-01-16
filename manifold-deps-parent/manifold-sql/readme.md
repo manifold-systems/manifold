@@ -1,5 +1,7 @@
 >&#9888; **_Experimental Feature_**
 
+<img width="70%" height="70%" align="top" src="../../docs/images/manifoldsql.png">
+
 # Manifold SQL
 
 ![latest](https://img.shields.io/badge/latest-v2024.1.1-darkgreen.svg)
@@ -7,7 +9,7 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&color=red)](https://github.com/manifold-systems/manifold)
 
 
-Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code. 
+Manifold SQL lets you write native SQL _directly_ and _type-safely_ in your Java code.
 
 <img width="85%" height="85%" align="top" src="../../docs/images/img_3.png">
 
