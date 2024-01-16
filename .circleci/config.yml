@@ -22,7 +22,7 @@ jobs:
           - v1-dependencies-
       - run: 
           name: Run tests
-          command: mvn test -B
+          command: ./mvnw test -B
       - run:
           name: Save test results
           command: |
