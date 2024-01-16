@@ -38,6 +38,12 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 > <br><br>
 > [<img width="900" height="135" align="top" src="http://manifold.systems/images/img_3.png">](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
 
+## Who is using Manifold?
+
+Sampling of companies using Manifold:
+
+<img width="80%" height="80%" src="./../docs/images/companies.png">
+
 
 ## What can you do with Manifold?
 

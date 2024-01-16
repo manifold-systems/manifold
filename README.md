@@ -43,7 +43,12 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 >- No ORM, No DSL, No wiring, and No code generation build steps
 > <br><br>
 > [![img_3.png](./docs/images/img_3.png)](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql/readme.md)
+                       
+## Who is using Manifold?
 
+Sampling of companies using Manifold:
+
+<img width="80%" height="80%" src="./docs/images/companies.png">
 
 ## What can you do with Manifold?
 

@@ -101,3 +101,9 @@ Sometimes IntelliJ's cache is out of sync with extensions. Generally, whenever I
 of a manifold feature, you can often remedy the problem by making a small change at the use site and then undoing the change.
 Failing that, it is best to close and reload the project. Please report errors of this nature as [issues](https://github.com/manifold-systems/manifold/issues)
 on manifold's github repo.
+
+### Q: Who uses Manifold?
+
+A sampling of companies currently using manifold:
+
+<img width="70%" height="70%" src="./../docs/images/companies.png">
