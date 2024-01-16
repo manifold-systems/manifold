@@ -97,6 +97,7 @@ The module with your extension methods must declare that it should be processed 
 Please see the documentation for making [extension libraries](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#extension-libraries).
 
 ### Q: I defined a new *extension class* with some extension methods, IntelliJ flags usage of them as errors. What's wrong?
-Sometimes IntelliJ's cache is out of sync with extensions. The simplest remedy is to refresh the project from source
-control using the *Refresh* (&#x1f5d8;) tool command:
-<p><img src="http://manifold.systems/images/scm_refresh.png" alt="scm refresh" width="40%" height="40%"/></p>
+Sometimes IntelliJ's cache is out of sync with extensions. Generally, whenever IntelliJ's editor displays an error for legal usage
+of a manifold feature, you can often remedy the problem by making a small change at the use site and then undoing the change.
+Failing that, it is best to close and reload the project. Please report errors of this nature as [issues](https://github.com/manifold-systems/manifold/issues)
+on manifold's github repo.
