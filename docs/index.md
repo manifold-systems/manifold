@@ -42,7 +42,7 @@ Manifold consists of a set of modules, one for each feature. Simply add the Mani
 
 Sampling of companies using Manifold:
 
-<img width="80%" height="80%" src="./../docs/images/companies.png">
+<img width="80%" height="80%" src="http://manifold.systems/images/companies.png">
 
 
 ## What can you do with Manifold?
