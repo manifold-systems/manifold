@@ -1,6 +1,6 @@
 >&#9888; **_Experimental Feature_**
 
-<img width="70%" height="70%" align="top" src="../../docs/images/manifoldsql.png">
+<img width="60%" height="60%" align="top" src="../../docs/images/manifoldsql.png">
 
 # Manifold SQL
 
