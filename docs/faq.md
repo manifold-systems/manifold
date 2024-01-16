@@ -106,4 +106,4 @@ on manifold's github repo.
 
 A sampling of companies currently using manifold:
 
-<img width="70%" height="70%" src="./../docs/images/companies.png">
+<img width="70%" height="70%" src="http://manifold.systems/images/companies.png">
