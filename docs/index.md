@@ -104,7 +104,7 @@ greeting.myMethod(); // Add your own methods to String!
 ```
 
 ### [Delegation](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-delegation)
-Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and delegation.
+Favor composition over inheritance. Use `@link` and `@part` for automatic interface implementation forwarding and _true_ delegation.
 > ```java
 > class MyClass implements MyInterface {
 >   @link MyInterface myInterface; // transfers calls on MyInterface to myInterface
