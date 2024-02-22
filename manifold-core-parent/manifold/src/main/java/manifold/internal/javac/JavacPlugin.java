@@ -203,12 +203,20 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     String JavadocTool_class =
       JreUtil.isJava8() ? "com.sun.tools.javadoc.JavadocTool" : "jdk.javadoc.internal.tool.JavadocTool";
-    JavaCompiler javadocTool = (JavaCompiler)ReflectUtil.method( JavadocTool_class, "instance", Context.class )
-      .invokeStatic( getContext() );
+    JavaCompiler javadocTool;
+    try
+    {
+      javadocTool = (JavaCompiler)ReflectUtil.method( JavadocTool_class, "instance", Context.class )
+              .invokeStatic( getContext() );
+    }
+    catch( Exception e )
+    {
+      return;
+    }
     if( javadocTool != null && javadocTool.getClass().getSimpleName().equals( "JavadocTool" ) )
     {
       // Ensure the JavacPlugin.initialize() method is called immediately before Javadoc Enters the first compilation unit
-      Object manJavadocEnter = ReflectUtil.method( "manifold.internal.javac.ManJavadocEnter_" + (JreUtil.isJava8() ? 8 : 9),
+      Object manJavadocEnter = ReflectUtil.method( "manifold.internal.javac.ManJavadocEnter_" + (JreUtil.isJava8() ? 8 : 11),
         "instance", Context.class ).invokeStatic( getContext() );
       ReflectUtil.field( javadocTool, "javadocEnter" ).set( manJavadocEnter );
     }
