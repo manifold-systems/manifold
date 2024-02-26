@@ -24,6 +24,7 @@ import manifold.api.util.cache.FqnCache;
 import manifold.json.rt.api.*;
 import manifold.rt.api.*;
 import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManEscapeUtil;
 import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.StreamUtil;
 import manifold.sql.api.Column;
@@ -953,6 +954,50 @@ class SchemaParentType
   {
     addFetchPkParamsMethods( srcClass, table );
     addFetchByRequiredParamMethods( srcClass, table );
+    addFetchAllMethods( srcClass, table );
+  }
+
+  private void addFetchAllMethods(SrcLinkedClass srcClass, SchemaTable table )
+  {
+    String tableFqn = getTableFqn( table );
+    SrcMethod method = new SrcMethod( srcClass )
+            .modifiers( Modifier.STATIC )
+            .name( "fetchAll" )
+            .returns( new SrcType( "Iterable<$tableFqn>" ) )
+            .body("return fetchAll(defaultScope());");
+    srcClass.addMethod( method );
+
+    method = new SrcMethod( srcClass )
+            .modifiers( Modifier.STATIC )
+            .name( "fetchAll" )
+            .returns( new SrcType( "Iterable<$tableFqn>" ) )
+            .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
+                    .addAnnotation( NotNull.class.getSimpleName() ) );
+
+            String query = "select * from ${table.getName()}";
+
+            //noinspection UnusedAssignment
+            query = ManEscapeUtil.escapeForJavaStringLiteral( query );
+            //noinspection unused
+            String simpleName = srcClass.getSimpleName();
+            String columnInfo = getColumnInfo( new ArrayList<>( table.getColumns().values() ) );
+            String configName = _model.getDbConfig().getName();
+            StringBuilder sb = new StringBuilder();
+            sb.append(
+                    "    return new Runner<$tableFqn>(" +
+                            "new QueryContext<>(txScope, $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, DataBindings.EMPTY_BINDINGS, \"$configName\",\n" +
+                            "      rowBindings -> " );
+            sb.append(
+                    "{\n" +
+                    "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+                    "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);\n" +
+                    "      }" );
+            sb.append(
+                    " ),\n" +
+                            "      \"$query\"\n" +
+                            "    ).fetch();" );
+            method.body( sb.toString() );
+            srcClass.addMethod( method );
   }
 
   // Foo.fetchBy(...);
