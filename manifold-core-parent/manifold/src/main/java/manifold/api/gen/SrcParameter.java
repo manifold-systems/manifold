@@ -16,6 +16,8 @@
 
 package manifold.api.gen;
 
+import java.util.List;
+
 /**
  */
 public class SrcParameter extends SrcAnnotated<SrcParameter>
@@ -81,7 +83,10 @@ public class SrcParameter extends SrcAnnotated<SrcParameter>
   {
     if( !forSignature )
     {
-      renderAnnotations( sb, 0, true );
+      SrcType paramType = varArgs ? _type.getComponentType() : _type;
+      List<SrcAnnotationExpression> paramTypeAnnos = paramType.getAnnotations();
+
+      renderAnnotations( sb, 0, true, paramTypeAnnos ); // don't duplicate annos on the param _type_
       renderModifiers( sb, false, 0 );
     }
     if( varArgs )

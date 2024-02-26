@@ -271,9 +271,16 @@ public abstract class SrcAnnotated<T extends SrcAnnotated<T>> extends SrcElement
 
   protected void renderAnnotations( StringBuilder sb, int indent, boolean sameLine )
   {
+    renderAnnotations( sb, indent, sameLine, Collections.emptyList() );
+  }
+  protected void renderAnnotations( StringBuilder sb, int indent, boolean sameLine, List<SrcAnnotationExpression> blackList )
+  {
     for( SrcAnnotationExpression anno : _annotations )
     {
-      anno.render( sb, indent, sameLine );
+      if( blackList.stream().noneMatch( e -> e.getAnnotationType().equals( anno.getAnnotationType() ) ) )
+      {
+        anno.render( sb, indent, sameLine );
+      }
     }
   }
 
