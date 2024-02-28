@@ -1,7 +1,11 @@
 # Manifold : YAML
 
-The YAML type manifold provides comprehensive support for YAML (1.2).  You can define a YAML or JSON API with YAML resource
-files (`.yml` and `.yaml` files).  Manifold can derive an API from sample data in YAML format or you can build [JSON Schema](https://json-schema.org/)
+![latest](https://img.shields.io/badge/latest-v2024.1.3-royalblue.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
+
+The YAML type manifold provides comprehensive support for YAML (1.2+). You can define a YAML or JSON API with YAML resource
+files (`.yml` and `.yaml` files).  Manifold can derive an API from sample data in YAML format, or you can build [JSON Schema](https://json-schema.org/)
 APIs directly with YAML.
 
 Manifold lets you use YAML and JSON interchangeably, as such please refer to the [JSON and JSON Schema](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json)

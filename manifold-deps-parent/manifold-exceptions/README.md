@@ -1,5 +1,9 @@
 # Manifold : Exceptions
 
+![latest](https://img.shields.io/badge/latest-v2024.1.3-royalblue.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
+
 Simply add the `manifold-exceptions` dependency to your project. Now checked exceptions behave like unchecked
 exceptions!  No more compiler errors, no more unintentional exception swallowing, no more boilerplate
 try/catch/wrap/rethrow nonsense. This is how most modern JVM languages behave, now you have the option to make Java do

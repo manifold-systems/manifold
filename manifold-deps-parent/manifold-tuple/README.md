@@ -1,6 +1,11 @@
+> **⚠ Experimental Feature**
+
 # Manifold : Tuples
 
-> **⚠ Experimental Feature**
+![latest](https://img.shields.io/badge/latest-v2024.1.3-royalblue.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
+
 
 The tuples feature provides concise expression syntax to group named data items in a lightweight structure.
 ```java

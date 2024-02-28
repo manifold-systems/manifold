@@ -1,6 +1,11 @@
-# Properties for Java
-  
 > **⚠ Experimental Feature**
+
+# Properties for Java
+
+![latest](https://img.shields.io/badge/latest-v2024.1.3-royalblue.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
+  
  
 The `manifold-props` project is a compiler plugin to simplify declaring and using properties in Java. Use it to reduce
 the amount of code you would otherwise write and to improve your overall dev experience with properties. 

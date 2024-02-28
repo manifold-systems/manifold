@@ -1,5 +1,9 @@
 # Manifold : Core
 
+![latest](https://img.shields.io/badge/latest-v2024.1.3-royalblue.svg)
+[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
+
 The core framework plugs directly into the Java compiler via the [Javac plugin API](https://docs.oracle.com/en/java/javase/11/docs/api/jdk.compiler/com/sun/source/util/Plugin.html)
 as a universal *type* adapter to allow for a direct and seamless supply of types and features otherwise inaccessible to
 Java's type system. The core library provides a foundation and plugin SPI to dynamically resolve type names and produce
