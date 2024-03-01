@@ -88,7 +88,7 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
 
     private State( String name, JsonSchemaType parent, IFile file )
     {
-      _name = avoidDuplicateNestedClassName( parent, parent, name );
+      _name = avoidDuplicateNestedClassName( parent, name );
       _parent = parent;
       _file = file;
 
@@ -97,19 +97,48 @@ public abstract class JsonSchemaType implements IJsonParentType, Cloneable
     }
 
     // Java does not permit an inner class to have the same name as any class in its direct ancestry
-    private String avoidDuplicateNestedClassName( JsonSchemaType ancestor, JsonSchemaType parentOfName, String name )
+    private String avoidDuplicateNestedClassName( JsonSchemaType ancestor, String name )
     {
-      if( ancestor == null || parentOfName == null || name == null || "definitions".equalsIgnoreCase( name ) )
+      return avoidDuplicateNestedClassName( ancestor, name, 0 );
+    }
+    private String avoidDuplicateNestedClassName( JsonSchemaType ancestor, String name, int dupSuffix )
+    {
+      if( ancestor == null || name == null || "definitions".equalsIgnoreCase( name ) )
       {
+        if( dupSuffix > 0 )
+        {
+          // make a different name by adding a suffix indicating the rank of duplicate names descending from the
+          // originating ancestor, also avoids conflicts with names above the ancestor that may match this pattern
+          name = name + '_' + dupSuffix;
+        }
         return name;
       }
       String ancestorName = ancestor.getName();
-      if( ancestorName != null && ancestorName.equals( name )  )
+      if( ancestorName != null )
       {
-        // make a different name by qualifying the duplicate nested name with the parent name
-        return parentOfName.getName() + "_" + name;
+        dupSuffix = nestedNameConflictCount( ancestorName, name, dupSuffix );
+        if( ancestorName.equals( name ) )
+        {
+          dupSuffix = 2;
+        }
       }
-      return avoidDuplicateNestedClassName( ancestor.getParent(), parentOfName, name );
+      return avoidDuplicateNestedClassName( ancestor.getParent(), name, dupSuffix );
+    }
+
+    private int nestedNameConflictCount( String ancestorName, String name, int dupSuffix )
+    {
+      if( ancestorName.startsWith( name + '_' ) )
+      {
+        try
+        {
+          int count = Integer.parseInt( ancestorName.substring( name.length() + 1 ) );
+          return Math.max( count, dupSuffix );
+        }
+        catch( Exception ignore )
+        {
+        }
+      }
+      return dupSuffix;
     }
   }
 

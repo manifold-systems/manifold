@@ -796,7 +796,7 @@ public class JsonTest extends TestCase
 
   public void testDuplicateNestedType()
   {
-    DuplicateNestedType.nested.inBetween.inBetween_nested nn = DuplicateNestedType.nested.inBetween.inBetween_nested.builder().build();
+    DuplicateNestedType.nested.inBetween.nested_2 nn = DuplicateNestedType.nested.inBetween.nested_2.builder().build();
     nn.setName( "hi" );
     assertEquals( "hi", nn.getName() );
   }
