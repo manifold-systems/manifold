@@ -606,7 +606,7 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
       if( _kind == Kind.Record && !Modifier.isStatic( (int)field.getModifiers() ) )
       {
         // only static fields allowed in records
-        return;
+        continue;
       }
 
       field.render( sb, indent );
@@ -618,7 +618,11 @@ public class AbstractSrcClass<T extends AbstractSrcClass<T>> extends SrcStatemen
 //    sb.append( "\n" ).append( indent( sb, indent ) ).append( "// methods //\n" );
     for( AbstractSrcMethod method : _methods )
     {
-      method.render( sb, indent );
+      if( _kind == Kind.Record && method.isConstructor() )
+      {
+        continue;
+      }
+      method.render(sb, indent);
     }
   }
 
