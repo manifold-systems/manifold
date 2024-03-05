@@ -23,7 +23,7 @@ import static manifold.ext.delegation.parts.diamond.Teacher.Department.Science;
 
 /**
  * Together PersonPart, StudentPart, TeacherPart, and TaPart form a classic diamond pattern with Person
- * at the top. This test exercises {@code @link(share=true)} in {@link TaPart} to safely handle this use-case.
+ * at the top. This test exercises {@code @link(share=Person.class)} in {@link TaPart} to safely handle this use-case.
  */
 public class DiamondTest extends TestCase
 {

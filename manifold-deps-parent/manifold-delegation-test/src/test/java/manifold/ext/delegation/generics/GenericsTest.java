@@ -132,7 +132,7 @@ public class GenericsTest extends TestCase
 
   static @part class TAPart<L> implements TA<L>
   {
-    @link( share = true ) Student<L> _student;
+    @link(share=Person.class) Student<L> _student;
     @link Teacher<L> _teacher;
 
     public TAPart( Student<L> student )

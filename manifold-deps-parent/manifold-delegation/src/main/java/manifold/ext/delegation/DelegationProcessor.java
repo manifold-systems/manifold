@@ -672,7 +672,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
           lis.forEach( li -> fieldNames.append( fieldNames.length() > 0 ? ", " : "" ).append( li._linkField.name ) );
           for( LinkInfo li: lis )
           {
-            if( !li.isShare() )
+            if( !li.shares( iface ) )
             {
               if( !isInterfaceShared )
               {
@@ -691,7 +691,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private boolean checkSharedLinks( ClassType iface, Set<LinkInfo> lis )
     {
       ArrayList<LinkInfo> sharedLinks = lis.stream()
-        .filter( li -> li.isShare() )
+        .filter( li -> li.shares( iface ) )
         .collect( Collectors.toCollection( () -> new ArrayList<>() ) );
       if( sharedLinks.size() > 1 )
       {
@@ -789,8 +789,9 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private void addLinkedInterfaces( JCAnnotation linkAnno, ClassInfo ci, JCVariableDecl field )
     {
       ArrayList<ClassType> interfaces = new ArrayList<>();
+      ArrayList<ClassType> shared = new ArrayList<>();
       ArrayList<ClassType> fromAnno = new ArrayList<>();
-      boolean share = getInterfacesFromLinkAnno( linkAnno, fromAnno );
+      boolean shareAll = getInterfacesFromLinkAnno( linkAnno, fromAnno, shared );
       if( fromAnno.isEmpty() )
       {
         // derive interfaces from field's declared type
@@ -819,13 +820,13 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
 
       removeDups( interfaces );
 
-      if( share )
+      if( shareAll || !shared.isEmpty() )
       {
         // shared links must be final
         field.getModifiers().flags |= FINAL;
       }
       
-      ci.getLinks().put( field, new LinkInfo( field, interfaces, share ) );
+      ci.getLinks().put( field, new LinkInfo( field, interfaces, shareAll, shared ) );
     }
 
     private void verifyFieldTypeSatisfiesAnnoTypes( JCVariableDecl field, ArrayList<ClassType> interfaces )
@@ -859,7 +860,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
       }
     }
 
-    private boolean getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces )
+    private boolean getInterfacesFromLinkAnno( JCAnnotation linkAnno, ArrayList<ClassType> interfaces, ArrayList<ClassType> share )
     {
       List<JCExpression> args = linkAnno.getArguments();
       if( args.isEmpty() )
@@ -867,30 +868,24 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         return false;
       }
 
-      boolean share = false;
+      boolean shareAll = false;
       Attribute.Compound annoValues = linkAnno.attribute.getValue();
       int i = 0;
       for( Map.Entry<MethodSymbol, Attribute> entry: annoValues.getElementValues().entrySet() )
       {
         MethodSymbol argSym = entry.getKey();
         Attribute value = entry.getValue();
-        if( argSym.name.toString().equals( "share" ) )
+        if( argSym.name.toString().equals( "shareAll" ) )
         {
-          share = (boolean)value.getValue();
+          shareAll = (boolean)value.getValue();
+        }
+        else if( argSym.name.toString().equals( "share" ) )
+        {
+          processClassType( share, value, args.get( i ) );
         }
         else if( argSym.name.toString().equals( "value" ) )
         {
-          if( value instanceof Attribute.Class )
-          {
-            processClassType( (Attribute.Class)value, interfaces, args.get( i ) );
-          }
-          if( value instanceof Attribute.Array )
-          {
-            for( Attribute cls : ((Attribute.Array)value).values )
-            {
-              processClassType( (Attribute.Class)cls, interfaces, args.get( i ) );
-            }
-          }
+          processClassType( interfaces, value, args.get( i ) );
         }
         else
         {
@@ -898,7 +893,22 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
         }
         i++;
       }
-      return share;
+      return shareAll;
+    }
+
+    private void processClassType( ArrayList<ClassType> share, Attribute value, JCExpression expr )
+    {
+      if( value instanceof Attribute.Class )
+      {
+        processClassType( (Attribute.Class) value, share, expr );
+      }
+      if( value instanceof Attribute.Array )
+      {
+        for( Attribute cls : ((Attribute.Array) value).values )
+        {
+          processClassType( (Attribute.Class)cls, share, expr );
+        }
+      }
     }
 
     private void processClassType( Attribute.Class value, ArrayList<ClassType> interfaces, JCExpression location )
@@ -1808,7 +1818,7 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
   }
 
   /**
-   * Sorts interfaces by type assignability where sub-interfaces precede super-intrefaces.
+   * Sorts interfaces by type assignability where sub-interfaces precede super-interfaces.
    * This order ensures the overriding method trumps the overridden method involving covariant
    * return types. Where the delegating class must implement the more specific return type.
    */
@@ -1903,26 +1913,23 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     private final ArrayList<JCMethodDecl> _generatedMethods;
     private final Map<Name, Set<NamedMethodType>> _methodTypes;
     private final ArrayList<ClassType> _interfaces;
-    private final boolean _share;
+    private final ArrayList<ClassType> _shared;
+    private final boolean _shareAll;
 
-    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkdInterfaces, boolean share )
+    LinkInfo( JCVariableDecl linkField, ArrayList<ClassType> linkdInterfaces, boolean shareAll, ArrayList<ClassType> shared )
     {
       _linkField = linkField;
       _generatedMethods = new ArrayList<>();
       _methodTypes = new HashMap<>();
       _interfaces = new ArrayList<>( linkdInterfaces );
       sortInterfaces( _interfaces );
-      _share = share;
+      _shareAll = shareAll;
+      _shared = shared;
     }
 
     public JCVariableDecl getLinkField()
     {
       return _linkField;
-    }
-
-    public boolean isShare()
-    {
-      return _share;
     }
 
     public Collection<JCMethodDecl> getGeneratedMethods()
@@ -1958,6 +1965,11 @@ public class DelegationProcessor implements ICompilerComponent, TaskListener
     {
       Set<NamedMethodType> methodTypes = _methodTypes.computeIfAbsent( name, k -> new HashSet<>() );
       return methodTypes.stream().anyMatch( m -> getTypes().hasSameArgs( m.getType(), mt ) );
+    }
+
+    public boolean shares( ClassType iface )
+    {
+      return _shareAll || _shared.stream().anyMatch( t -> getTypes().isSameType( t, getTypes().erasure( iface ) ) );
     }
   }
 

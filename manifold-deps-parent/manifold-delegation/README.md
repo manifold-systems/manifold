@@ -304,7 +304,7 @@ When super interfaces overlap, a "diamond" relationship results. This is known a
       └────┐┌────┘
            TA
 ```
-Should TA use Student's Person or Teacher's? Use `@link(share=true)` to resolve the ambiguity.
+Should TA use Student's Person or Teacher's? Use `@link(share=Person.class)` to resolve the ambiguity.
 ```java
 interface Teacher extends Person {
   String getDepartment();
@@ -325,7 +325,7 @@ interface TA extends Student, Teacher {
 }
 
 @part class TaPart implements TA {
-  @link(share=true) Student student; // use student as the person
+  @link(share=Person.class) Student student; // use student as the person
   @link Teacher teacher;
 
   public TaPart(Student student) {
@@ -334,10 +334,10 @@ interface TA extends Student, Teacher {
   }
 }
 ```
-The student is the teacher, so TaPart shares the link to student with `@link(share=true)` and student is passed along to
-the Teacher constructor. Without `share=true` a compiler error indicates the overlap with Person. 
+The student is the teacher, so TaPart shares the link to student with `@link(share=Person.class)` and student is passed along to
+the Teacher constructor. Without `share=Person.class` a compiler error indicates the overlap with Person. 
 
->Note, `part` classes are _not_ required with `@link(share=true)`; it works with both forwarding and delegation.
+>Note, `part` classes are _not_ required with `@link(share=...)`; it works with both forwarding and delegation.
 
 # Example
 
@@ -389,7 +389,7 @@ public class DelegationExample {
     public String getMajor() { return major; }
   }
   static @part class TaPart implements TA {
-    @link(share=true) Student student;
+    @link(share=Person.class) Student student;
     @link Teacher teacher;
     public TaPart(Student student) {
       this.student = student;

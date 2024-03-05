@@ -27,7 +27,10 @@ import manifold.ext.delegation.rt.api.link;
  */
 public @part class TaPart implements TA // TA is a "diamond" interface
 {
-  @link(share = true) Student _student; // 'share = true' disambiguates Person shared between TA's Student and Teacher parts
+  // Note, we can also specify specific interfaces instead of shareAll
+  //@link(share=Person.class) Student _student; // 'share=Person.class' disambiguates Person shared between TA's Student and Teacher parts
+
+  @link(shareAll=true) Student _student; // 'shareAll=true' disambiguates Person shared between TA's Student and Teacher parts
   @link Teacher _teacher;
 
 

@@ -54,9 +54,15 @@ public @interface link
   Class<?>[] value() default {};
 
   /**
-   * If true, indicates this link is shared where interface overlap exists with other links. Otherwise, overlapping interfaces
-   * are not linked and the class must implement them directly, or it must be declared abstract. If two or more links declare
-   * to share the same interface, a compiler error results.
+   * Where interface overlap exists with other links, this list of interfaces resolves which links to use. Otherwise,
+   * overlapping interfaces are not linked and the class must implement them directly, or it must be declared abstract.
+   * If two or more links declare to share the same interface, a compiler error results.
    */
-  boolean share() default false;
+  Class<?>[] share() default {};
+
+  /**
+   * If true, indicates this link is shared where interface overlap exists with other links. Similar to {@link #share},
+   * but includes all interfaces from this link that overlap.
+   */
+  boolean shareAll() default false;
 }
