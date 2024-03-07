@@ -18,6 +18,8 @@ package manifold.api.gen;
 
 import com.sun.tools.javac.code.Type;
 import java.lang.reflect.Array;
+import java.util.List;
+
 import manifold.rt.api.util.ManEscapeUtil;
 
 /**
@@ -117,9 +119,23 @@ public abstract class SrcElement
       sb.append( "}" );
       result = sb.toString();
     }
+    else if( value instanceof List )
+    {
+      StringBuilder sb = new StringBuilder();
+      sb.append( "{" );
+      List<?> list = (List<?>)value;
+      int len = list.size();
+      for( int i = 0; i < len; i++ )
+      {
+        Object v = list.get( i );
+        sb.append( i > 0 ? ", " : "" ).append( makeCompileTimeConstantValue( type.getComponentType(), v ) );
+      }
+      sb.append( "}" );
+      result = sb.toString();
+    }
     else if( type != null && type.isEnum() )
     {
-      result = type.getFqName() + '.' + value.toString();
+      result = type.getFqName() + '.' + value;
     }
     else
     {
