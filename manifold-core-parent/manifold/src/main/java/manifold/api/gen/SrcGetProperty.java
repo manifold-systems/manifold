@@ -20,7 +20,7 @@ package manifold.api.gen;
  */
 public class SrcGetProperty extends AbstractSrcMethod<SrcGetProperty>
 {
-  public SrcGetProperty( String name, Class type )
+  public SrcGetProperty( String name, Class<?> type )
   {
     this( null );
     name( "get" + name );
@@ -36,8 +36,12 @@ public class SrcGetProperty extends AbstractSrcMethod<SrcGetProperty>
 
   public SrcGetProperty( String name, SrcType type )
   {
+    this( name, type, false );
+  }
+  public SrcGetProperty( String name, SrcType type, boolean isForBoolean )
+  {
     this( null );
-    name( "get" + name );
+    makeGetterName( name, type, isForBoolean );
     returns( type );
   }
 
@@ -45,4 +49,27 @@ public class SrcGetProperty extends AbstractSrcMethod<SrcGetProperty>
   {
     super( srcClass );
   }
+
+  private void makeGetterName( String name, SrcType type, boolean isForBoolean )
+  {
+    String prefix;
+    if( !isForBoolean || !type.getName().equalsIgnoreCase( "boolean" ) )
+    {
+      prefix = "get";
+    }
+    else
+    {
+      if( name.length() > 2 && name.startsWith( "is" ) && Character.isUpperCase( name.charAt( 2 ) ) )
+      {
+        // if name is "isXxx", just keep it as is for the method
+        prefix = "";
+      }
+      else
+      {
+        prefix = "is";
+      }
+    }
+    name( prefix + name );
+  }
+
 }

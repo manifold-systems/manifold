@@ -919,7 +919,7 @@ class SchemaParentType
     //noinspection unused
     String colName = makeIdentifier( name );
 
-    SrcGetProperty getter = new SrcGetProperty( propName, propType )
+    SrcGetProperty getter = new SrcGetProperty( propName, propType, true )
       .modifiers( Flags.DEFAULT );
     getter.addAnnotation( col.isNullable() ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
     StringBuilder retType = new StringBuilder();

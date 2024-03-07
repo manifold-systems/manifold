@@ -112,7 +112,7 @@ public class AllTypesTest extends SqliteDdlServerTest
     assertEquals( Real_value, a.getColNotNullReal(), 0 );
     assertEquals( Double_value, a.getColNotNullDouble(), 0 );
     assertEquals( Varchar_value, a.getColNotNullVarchar() );
-    assertEquals( Boolean_value, a.getColNotNullBoolean() );
+    assertEquals( Boolean_value, a.isColNotNullBoolean() );
     assertEquals( Date_value, a.getColNotNullDate() );
     assertEquals( Time_value, a.getColNotNullTime() );
     assertEquals( Timestamp_value, a.getColNotNullTimestamp() );
@@ -155,7 +155,7 @@ public class AllTypesTest extends SqliteDdlServerTest
       assertEquals( Real_value, a.getColNotNullReal(), 0 );
       assertEquals( Double_value, a.getColNotNullDouble(), 0 );
       assertEquals( Varchar_value, a.getColNotNullVarchar() );
-      assertEquals( Boolean_value, a.getColNotNullBoolean() );
+      assertEquals( Boolean_value, a.isColNotNullBoolean() );
       assertEquals( Date_value, a.getColNotNullDate() );
       assertEquals( Time_value, a.getColNotNullTime() );
       assertEquals( Timestamp_value, a.getColNotNullTimestamp() );
@@ -225,7 +225,7 @@ public class AllTypesTest extends SqliteDdlServerTest
     assertEquals( Real_value,                   a.getColNotNullReal(), 0 );
     assertEquals( Double_value,                 a.getColNotNullDouble(), 0 );
     assertEquals( Varchar_value,                a.getColNotNullVarchar() );
-    assertEquals( Boolean_value,                a.getColNotNullBoolean() );
+    assertEquals( Boolean_value,                a.isColNotNullBoolean() );
     assertEquals( Date_value,                   a.getColNotNullDate() );
     assertEquals( Time_value,                   a.getColNotNullTime() );
     assertEquals( Timestamp_value,              a.getColNotNullTimestamp() );

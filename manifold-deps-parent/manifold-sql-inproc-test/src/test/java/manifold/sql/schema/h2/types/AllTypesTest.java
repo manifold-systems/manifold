@@ -183,7 +183,7 @@ public class AllTypesTest extends H2DdlServerTest
     assertEquals( Double_value,                 a.getColNotNullDouble(), 0 );
     assertEquals( Varchar_value,                a.getColNotNullVarchar() );
     assertEquals( VarcharIgnorecase_value,      a.getColNotNullVarcharIgnorecase() );
-    assertEquals( Boolean_value,                a.getColNotNullBoolean() );
+    assertEquals( Boolean_value,                a.isColNotNullBoolean() );
     assertEquals( Date_value,                   a.getColNotNullDate() );
     assertEquals( Time_value,                   a.getColNotNullTime() );
     assertEquals( Timestamp_value,              a.getColNotNullTimestamp() );
@@ -315,7 +315,7 @@ public class AllTypesTest extends H2DdlServerTest
     assertEquals( Double_value,                 a.getColNotNullDouble(), 0 );
     assertEquals( Varchar_value,                a.getColNotNullVarchar() );
     assertEquals( VarcharIgnorecase_value,      a.getColNotNullVarcharIgnorecase() );
-    assertEquals( Boolean_value,                a.getColNotNullBoolean() );
+    assertEquals( Boolean_value,                a.isColNotNullBoolean() );
     assertEquals( Date_value,                   a.getColNotNullDate() );
     assertEquals( Time_value,                   a.getColNotNullTime() );
     assertEquals( Timestamp_value,              a.getColNotNullTimestamp() );
