@@ -1005,29 +1005,30 @@ class SchemaParentType
   {
     for( SchemaColumn col: table.getColumns().values() )
     {
-      if( isRequired( col ) )
-      {
+//      if( isRequired( col ) )
+//      {
         addFetchByRequiredParamMethod( srcClass, table, col );
-      }
+//      }
     }
   }
-  private void addFetchByRequiredParamMethod( SrcLinkedClass srcClass, SchemaTable table, SchemaColumn reqCol )
+  private void addFetchByRequiredParamMethod( SrcLinkedClass srcClass, SchemaTable table, SchemaColumn column )
   {
     //noinspection unused
     String tableFqn = getTableFqn( table );
-    String propName = makePascalCaseIdentifier( reqCol.getName(), true );
+    //noinspection unused
+    String propName = makePascalCaseIdentifier( column.getName(), true );
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "fetchBy$propName" )
       .returns( new SrcType( "List<$tableFqn>" ) );
-    String paramName = makePascalCaseIdentifier( reqCol.getName(), false );
-    SrcParameter param = new SrcParameter( paramName, reqCol.getType() );
-    if( !reqCol.getType().isPrimitive() )
+    String paramName = makePascalCaseIdentifier( column.getName(), false );
+    SrcParameter param = new SrcParameter( paramName, column.getType() );
+    if( !column.getType().isPrimitive() && isRequired( column ) )
     {
       param.addAnnotation( NotNull.class.getSimpleName() );
     }
     method.addParam( param );
-    List<SchemaColumn> whereCols = Collections.singletonList( reqCol );
+    List<SchemaColumn> whereCols = Collections.singletonList( column );
     StringBuilder sb = new StringBuilder();
     sb.append( "return fetchBy$propName(defaultScope()" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
@@ -1043,8 +1044,8 @@ class SchemaParentType
       .returns( new SrcType( "List<$tableFqn>" ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );
-    param = new SrcParameter( paramName, reqCol.getType() );
-    if( !reqCol.getType().isPrimitive() )
+    param = new SrcParameter( paramName, column.getType() );
+    if( !column.getType().isPrimitive() && isRequired( column ) )
     {
       param.addAnnotation( NotNull.class.getSimpleName() );
     }
@@ -1055,7 +1056,7 @@ class SchemaParentType
     String configName = _model.getDbConfig().getName();
     sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
-    sb.append( "    paramBindings.put(\"${reqCol.getName()}\", $paramName);\n" );
+    sb.append( "    paramBindings.put(\"${column.getName()}\", $paramName);\n" );
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(new QueryContext<$tableFqn>(txScope, $tableFqn.class,\n" +
       "      \"${table.getName()}\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\",\n" +
       "      rowBindings -> {" +

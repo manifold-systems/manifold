@@ -39,6 +39,10 @@ public class FetchByTest extends H2DdlServerTest
     City otherCityMyCountry = City.create( "Other City", myCountry );
     City otherCityOtherCountry = City.create( "Other City", otherCountry );
 
+    Address address = Address.builder("111 Main St.", "MyDistrict", myCityMyCountry, "555-5555" )
+            .withPostalCode("11111")
+            .build();
+
     H2Sakila.commit();
 
     List<Country> countries = Country.fetchByCountry( "My Country" );
@@ -49,5 +53,10 @@ public class FetchByTest extends H2DdlServerTest
     assertEquals( 2, cities.size() );
     assertEquals( otherCityMyCountry, cities.get( 0 ) );
     assertEquals( otherCityOtherCountry, cities.get( 1 ) );
+
+    // test non-required column, postal_code
+    List<Address> addresses = Address.fetchByPostalCode( "11111" );
+    assertEquals( 1, addresses.size() );
+    assertEquals( "11111", addresses.get( 0 ).getPostalCode() );
   }
 }
