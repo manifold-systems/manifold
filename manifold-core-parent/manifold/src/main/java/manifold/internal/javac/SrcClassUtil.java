@@ -228,8 +228,21 @@ public class SrcClassUtil
 
   private void addInnerClass( IModule module, SrcClass srcClass, Symbol sym, BasicJavacTask javacTask )
   {
-    SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), srcClass, (Symbol.ClassSymbol)sym, null, javacTask, module, null, null, true );
-    srcClass.addInnerClass( innerClass );
+    try
+    {
+      SrcClass innerClass = makeSrcClass( sym.getQualifiedName().toString(), srcClass, (Symbol.ClassSymbol)sym, null, javacTask, module, null, null, true );
+      srcClass.addInnerClass( innerClass );
+    }
+    catch( NullPointerException npe )
+    {
+      //todo:
+      // This happens when an inner class extends a class that is not accessible from Manifold for unknown reasons. An
+      // extension class on java.awt.Component in jdk 21 demonstrates this. Most of the time the inner class can be
+      // ignored bc it is usually private and not referenced in declarations. Anyhow, the inaccessible class should be
+      // made accessible via reflection, one way or another. Make this work.
+      System.err.println( "Warning: Failed to generate inner class: " + sym.getQualifiedName() );
+      npe.printStackTrace( System.err );
+    }
   }
 
   private void addField( SrcClass srcClass, Symbol.VarSymbol sym )
