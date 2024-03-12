@@ -168,7 +168,6 @@ class SchemaParentType
       .modifiers( Modifier.PUBLIC | Modifier.STATIC )
       .name( "addSqlChange" )
       .addParam( "sqlChange", ScopeConsumer.class.getSimpleName() )
-      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
       .body( "defaultScope().addSqlChange(sqlChange);" );
     srcClass.addMethod( method );
   }
