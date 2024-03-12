@@ -100,6 +100,7 @@ public class ManAttr_17 extends Attr implements ManAttr
       JavaCompiler.instance( ctx ),
       AttrRecover.instance( ctx ),
       TransPatterns.instance( ctx ),
+      LambdaToMethod.instance( ctx ),
     };
     for( Object instance: earlyAttrHolders )
     {

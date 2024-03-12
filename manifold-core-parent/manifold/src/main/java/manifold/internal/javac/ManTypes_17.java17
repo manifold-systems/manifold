@@ -85,6 +85,7 @@ public class ManTypes_17 extends Types
     ReflectUtil.field( Attr.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( DeferredAttr.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( Enter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Flow.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Gen.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );
@@ -98,6 +99,7 @@ public class ManTypes_17 extends Types
     ReflectUtil.field( MemberEnter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( RichDiagnosticFormatter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( TreeMaker.instance( context ), TYPES_FIELD ).set( this );
   }
 
   private void reassignEarlyHolders( Context context )
@@ -110,6 +112,7 @@ public class ManTypes_17 extends Types
     ReflectUtil.field( AttrRecover.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( DeferredAttr.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( Enter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Flow.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Gen.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );

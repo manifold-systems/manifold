@@ -17,14 +17,8 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.comp.Annotate;
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.javac.comp.DeferredAttr;
-import com.sun.tools.javac.comp.Enter;
-import com.sun.tools.javac.comp.Flow;
-import com.sun.tools.javac.comp.Infer;
-import com.sun.tools.javac.comp.MemberEnter;
-import com.sun.tools.javac.comp.Resolve;
+import com.sun.tools.javac.code.TypeAnnotations;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.jvm.Gen;
@@ -106,11 +100,11 @@ public class ManLog_8 extends Log
       JavacTrees.instance( ctx ),
       MemberEnter.instance( ctx ),
       Resolve.instance( ctx ),
-//      LambdaToMethod.instance( ctx ),
-//      Lower.instance( ctx ),
-//      MemberEnter.instance( ctx ),
-//      TransTypes.instance( ctx ),
-//      TypeAnnotations.instance( ctx ),
+      LambdaToMethod.instance( ctx ),
+      Lower.instance( ctx ),
+      MemberEnter.instance( ctx ),
+      TransTypes.instance( ctx ),
+      TypeAnnotations.instance( ctx ),
     };
     for( Object instance: earlyAttrHolders )
     {

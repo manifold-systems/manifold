@@ -18,16 +18,7 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.*;
-import com.sun.tools.javac.comp.Annotate;
-import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.javac.comp.DeferredAttr;
-import com.sun.tools.javac.comp.Flow;
-import com.sun.tools.javac.comp.Infer;
-import com.sun.tools.javac.comp.LambdaToMethod;
-import com.sun.tools.javac.comp.Lower;
-import com.sun.tools.javac.comp.MemberEnter;
-import com.sun.tools.javac.comp.TransTypes;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.Gen;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.model.JavacElements;
@@ -91,6 +82,7 @@ public class ManTypes_8 extends Types
     ReflectUtil.field( Attr.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( DeferredAttr.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( Enter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Flow.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Gen.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );
@@ -104,6 +96,7 @@ public class ManTypes_8 extends Types
     ReflectUtil.field( MemberEnter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( RichDiagnosticFormatter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( TreeMaker.instance( context ), TYPES_FIELD ).set( this );
   }
 
   private void reassignEarlyHolders( Context context )
@@ -115,6 +108,7 @@ public class ManTypes_8 extends Types
     ReflectUtil.field( Attr.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Check.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( DeferredAttr.instance( context ), TYPES_FIELD ).set( this );
+    ReflectUtil.field( Enter.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Flow.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Gen.instance( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( Infer.instance( context ), TYPES_FIELD ).set( this );

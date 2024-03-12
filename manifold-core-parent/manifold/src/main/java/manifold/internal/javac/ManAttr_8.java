@@ -107,6 +107,7 @@ public class ManAttr_8 extends Attr implements ManAttr
       TypeAnnotations.instance( ctx ),
       JavacTrees.instance( ctx ),
       JavaCompiler.instance( ctx ),
+      LambdaToMethod.instance( ctx ),
     };
     for( Object instance: earlyAttrHolders )
     {

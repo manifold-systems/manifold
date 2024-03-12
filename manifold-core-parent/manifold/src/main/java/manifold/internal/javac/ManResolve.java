@@ -90,6 +90,7 @@ public class ManResolve extends Resolve
     ReflectUtil.field( Lower.instance( context ), RESOLVE_FIELD ).set( this );
     ReflectUtil.field( Gen.instance( context ), RESOLVE_FIELD ).set( this );
     ReflectUtil.field( Annotate.instance( context ), RESOLVE_FIELD ).set( this );
+    ReflectUtil.field( LambdaToMethod.instance( context ), RESOLVE_FIELD ).set( this );
     ReflectUtil.field( JavacTrees.instance( context ), "resolve" ).set( this );
     ReflectUtil.field( TransTypes.instance( context ), "resolve" ).set( this );
   }

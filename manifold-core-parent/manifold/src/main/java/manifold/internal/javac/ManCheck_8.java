@@ -16,10 +16,8 @@
 
 package manifold.internal.javac;
 
-import com.sun.tools.javac.comp.Annotate;
-import com.sun.tools.javac.comp.AttrContext;
-import com.sun.tools.javac.comp.Check;
-import com.sun.tools.javac.comp.Env;
+import com.sun.tools.javac.comp.*;
+import com.sun.tools.javac.jvm.Gen;
 import com.sun.tools.javac.main.JavaCompiler;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Context;
@@ -50,6 +48,13 @@ public class ManCheck_8 extends Check
 
     ReflectUtil.field( JavaCompiler.instance( ctx ), CHECK_FIELD ).set( this );
     ReflectUtil.field( Annotate.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Enter.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( MemberEnter.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Flow.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Infer.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Lower.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( DeferredAttr.instance( ctx ), CHECK_FIELD ).set( this );
+    ReflectUtil.field( Gen.instance( ctx ), CHECK_FIELD ).set( this );
   }
 
   @Override

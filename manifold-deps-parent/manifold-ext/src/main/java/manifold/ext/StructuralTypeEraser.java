@@ -158,7 +158,16 @@ class StructuralTypeEraser extends Types.UnaryVisitor<Type>
     Type erasedBound;
     if( bound.contains( t ) )
     {
-      erasedBound = visit( _types.erasure( bound ) );
+      // short-circuit recursive type
+      Type erasure = _types.erasure( bound );
+
+      erasedBound = visit( erasure );
+
+      if( _types.isSameType( erasure, erasedBound ) )
+      {
+        // erased type wasn't structural, change back to original recursive type
+        erasedBound = bound;
+      }
     }
     else
     {
