@@ -1,6 +1,6 @@
 # Manifold : String Templates (aka String Interpolation)
 
-![latest](https://img.shields.io/badge/latest-v2024.1.5-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.6-royalblue.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -167,8 +167,8 @@ repositories {
 dependencies {
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-strings:2024.1.5'
-    testAnnotationProcessor 'systems.manifold:manifold-strings:2024.1.5'
+    annotationProcessor 'systems.manifold:manifold-strings:2024.1.6'
+    testAnnotationProcessor 'systems.manifold:manifold-strings:2024.1.6'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -210,7 +210,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.5</manifold.version>
+        <manifold.version>2024.1.6</manifold.version>
     </properties>
 
     <!--Add the -Xplugin:Manifold argument for the javac compiler-->
