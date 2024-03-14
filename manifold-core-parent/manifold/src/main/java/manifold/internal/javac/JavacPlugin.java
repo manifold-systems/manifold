@@ -25,10 +25,8 @@ import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.comp.Attr;
-import com.sun.tools.javac.comp.CompileStates;
-import com.sun.tools.javac.comp.Enter;
-import com.sun.tools.javac.comp.Todo;
+import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.comp.*;
 import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.jvm.ClassWriter;
 import com.sun.tools.javac.main.JavaCompiler;
@@ -409,74 +407,114 @@ public class JavacPlugin implements Plugin, TaskListener
     // Both Java 8 and Java 9 alterations
     //
 
-    // Override javac's Log for error suppression (@Jailbreak too, but that's only if extensions are enabled, see below)
-    ReflectUtil.method( "manifold.internal.javac.ManLog_" + (JreUtil.isJava8() ? 8 : 11),
-      "instance", Context.class ).invokeStatic( getContext() );
-
-    // Override javac's ClassWriter
-    ManClassWriter.instance( getContext() );
-
-    // Override javac's Check
-    ReflectUtil.method( "manifold.internal.javac.ManCheck_" + (JreUtil.isJava11orLater() ? 11 : 8),
-      "instance", Context.class ).invokeStatic( getContext() );
-
-    if( !isExtensionsEnabled() )
+    try
     {
-      // No need to hook up all the extension stuff if it's not enabled
-      return;
+      // Override javac's Log for error suppression (@Jailbreak too, but that's only if extensions are enabled, see below)
+      ReflectUtil.method( "manifold.internal.javac.ManLog_" + (JreUtil.isJava8() ? 8 : 11),
+        "instance", Context.class ).invokeStatic( getContext() );
+
+      // Override javac's ClassWriter
+      ManClassWriter.instance( getContext() );
+
+      // Override javac's Check
+      ReflectUtil.method( "manifold.internal.javac.ManCheck_" + (JreUtil.isJava11orLater() ? 11 : 8),
+        "instance", Context.class ).invokeStatic( getContext() );
+
+      if( !isExtensionsEnabled() )
+      {
+        // No need to hook up all the extension stuff if it's not enabled
+        return;
+      }
+
+      // Override javac's Attr
+      Attr manAttr = (Attr)ReflectUtil.method(
+        "manifold.internal.javac.ManAttr_" +
+          (JreUtil.isJava17orLater()
+           ? 17
+           : JreUtil.isJava11orLater()
+             ? 11
+             : 8 ),
+        "instance", Context.class ).invokeStatic( getContext() );
+
+      // Override javac's Resolve
+      ManResolve.instance( _ctx );
+
+      // Override javac's TransTypes
+      ManTransTypes.instance( _ctx );
+
+      // Override javac's Types
+      ReflectUtil.method( "manifold.internal.javac.ManTypes_" + (JreUtil.isJava17orLater() ? 17 : 8),
+        "instance", Context.class ).invokeStatic( getContext() );
+
+      ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
+
+      if( !JreUtil.isJava8() )
+      {
+        //
+        // Java 9+ specific alterations
+        //
+
+        Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
+        if( module == null )
+        {
+          return;
+        }
+        Set<Symbol> modules = _seenModules.computeIfAbsent( getContext(), k -> new LinkedHashSet<>() );
+        if( modules.contains( module ) )
+        {
+          return;
+        }
+
+        modules.add( module );
+
+        NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
+
+        if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
+        {
+          // Override javac's ClassFinder
+          ReflectUtil.method( "manifold.internal.javac.ManClassFinder_11", "instance", Context.class )
+            .invokeStatic( getContext() );
+        }
+      }
     }
-
-    // Override javac's Attr
-    Attr manAttr = (Attr)ReflectUtil.method(
-      "manifold.internal.javac.ManAttr_" +
-        (JreUtil.isJava17orLater()
-         ? 17
-         : JreUtil.isJava11orLater()
-           ? 11
-           : 8 ),
-      "instance", Context.class ).invokeStatic( getContext() );
-
-    // Override javac's Resolve
-    ManResolve.instance( _ctx );
-
-    // Override javac's TransTypes
-    ManTransTypes.instance( _ctx );
-
-    // Override javac's Types
-    ReflectUtil.method( "manifold.internal.javac.ManTypes_" + (JreUtil.isJava17orLater() ? 17 : 8),
-      "instance", Context.class ).invokeStatic( getContext() );
-
-    ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
-
-    if( !JreUtil.isJava8() )
+    finally
     {
-      //
-      // Java 9+ specific alterations
-      //
-
-      Symbol module = (Symbol)ReflectUtil.field( compilationUnit, "modle" ).get();
-      if( module == null )
-      {
-        return;
-      }
-      Set<Symbol> modules = _seenModules.computeIfAbsent( getContext(), k -> new LinkedHashSet<>() );
-      if( modules.contains( module ) )
-      {
-        return;
-      }
-
-      modules.add( module );
-
-      NecessaryEvilUtil.openModule( getContext(), "jdk.compiler" );
-
-      if( JavacUtil.getSourceNumber() > 8 ) // don't override if -source 8
-      {
-        // Override javac's ClassFinder
-        ReflectUtil.method( "manifold.internal.javac.ManClassFinder_11", "instance", Context.class )
-          .invokeStatic( getContext() );
-      }
+      ensureComprehensiveUse();
     }
     notifyCompilerComponents();
+  }
+
+  private void ensureComprehensiveUse()
+  {
+    // ensure all compiler components are using the following manifold compiler component overrides
+    injectOverride( "log", Log.class, Log.instance( getContext() ) );
+    injectOverride( "chk", Check.class, Check.instance( getContext() ) );
+    injectOverride( "attr", Attr.class, Attr.instance( getContext() ) );
+    injectOverride( "rs", Resolve.class, Resolve.instance( getContext() ) );
+    injectOverride( "resolve", Resolve.class, Resolve.instance( getContext() ) );
+    injectOverride( "types", Types.class, Types.instance( getContext() ) );
+    injectOverride( "transTypes", TransTypes.class, TransTypes.instance( getContext() ) );
+  }
+
+  private void injectOverride( String fieldName, Class<?> fieldType, Object newInstance )
+  {
+    //noinspection unchecked
+    List<Class<?>> compilerClasses = new ArrayList<>( (List<Class<?>>)ReflectUtil.field( fieldType.getClassLoader(), "classes" ).get() );
+    for( Class<?> cls: compilerClasses )
+    {
+      if( cls.getTypeName().startsWith( fieldType.getPackage().getName() ) && !cls.getTypeName().contains( "$" ) )
+      {
+        ReflectUtil.LiveFieldRef field = ReflectUtil.WithNull.field( cls, fieldName );
+        if( field != null && field.getField().getType() == fieldType )
+        {
+          ReflectUtil.LiveMethodRef instanceMethod = ReflectUtil.WithNull.method(cls, "instance", Context.class);
+          if( instanceMethod != null )
+          {
+            field.set( newInstance );
+          }
+        }
+      }
+    }
   }
 
   private void notifyCompilerComponents()
