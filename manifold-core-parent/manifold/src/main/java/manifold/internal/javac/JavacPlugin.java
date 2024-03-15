@@ -42,6 +42,7 @@ import com.sun.tools.javac.util.Log;
 import com.sun.tools.javac.util.RichDiagnosticFormatter;
 
 import java.io.*;
+import java.lang.reflect.Modifier;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -502,15 +503,19 @@ public class JavacPlugin implements Plugin, TaskListener
     List<Class<?>> compilerClasses = new ArrayList<>( (List<Class<?>>)ReflectUtil.field( fieldType.getClassLoader(), "classes" ).get() );
     for( Class<?> cls: compilerClasses )
     {
-      if( cls.getTypeName().startsWith( fieldType.getPackage().getName() ) && !cls.getTypeName().contains( "$" ) )
+      String typeName = cls.getTypeName();
+      if( !cls.isInterface() && !Modifier.isAbstract( cls.getModifiers() ) &&
+          (typeName.startsWith( "com.sun.tools.javac.comp" ) || cls == Log.class) &&
+          !typeName.contains( "$" ) )
       {
-        ReflectUtil.LiveFieldRef field = ReflectUtil.WithNull.field( cls, fieldName );
-        if( field != null && field.getField().getType() == fieldType )
+        ReflectUtil.FieldRef fieldRef = ReflectUtil.field( cls, fieldName );
+        if( fieldRef != null && fieldRef.getField().getType() == fieldType )
         {
-          ReflectUtil.LiveMethodRef instanceMethod = ReflectUtil.WithNull.method(cls, "instance", Context.class);
+          ReflectUtil.MethodRef instanceMethod = ReflectUtil.method( cls, "instance", Context.class );
           if( instanceMethod != null )
           {
-            field.set( newInstance );
+            Object compilerComponent = instanceMethod.invokeStatic( getContext() );
+            fieldRef.set( compilerComponent, newInstance );
           }
         }
       }

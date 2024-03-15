@@ -1107,6 +1107,11 @@ public class ReflectUtil
         throw ManExceptionUtil.unchecked( e );
       }
     }
+
+    public Field getField()
+    {
+      return _field;
+    }
   }
 
   public static class LiveFieldRef

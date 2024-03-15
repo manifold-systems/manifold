@@ -241,7 +241,6 @@ public class SrcClassUtil
       // ignored bc it is usually private and not referenced in declarations. Anyhow, the inaccessible class should be
       // made accessible via reflection, one way or another. Make this work.
       System.err.println( "Warning: Failed to generate inner class: " + sym.getQualifiedName() );
-      npe.printStackTrace( System.err );
     }
   }
 
