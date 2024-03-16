@@ -505,7 +505,7 @@ public class JavacPlugin implements Plugin, TaskListener
     {
       String typeName = cls.getTypeName();
       if( !cls.isInterface() && !Modifier.isAbstract( cls.getModifiers() ) &&
-          (typeName.startsWith( "com.sun.tools.javac.comp" ) || cls == Log.class) &&
+          typeName.startsWith( "com.sun.tools.javac" ) &&
           !typeName.contains( "$" ) )
       {
         ReflectUtil.FieldRef fieldRef = ReflectUtil.field( cls, fieldName );
@@ -514,8 +514,23 @@ public class JavacPlugin implements Plugin, TaskListener
           ReflectUtil.MethodRef instanceMethod = ReflectUtil.method( cls, "instance", Context.class );
           if( instanceMethod != null )
           {
-            Object compilerComponent = instanceMethod.invokeStatic( getContext() );
-            fieldRef.set( compilerComponent, newInstance );
+            Object compilerComponent;
+            try
+            {
+              compilerComponent = instanceMethod.invokeStatic( getContext() );
+            }
+            catch( Exception e )
+            {
+              // Some components are state sensitive during instance() calls and fail if called too early. In the case of
+              // RichDiagnosticFormatter, it expects Log#setDiagnosticFormatter to have been called. We can safely ignore
+              // this type of failure since the component is not intended to be used at this early stage, thus it will
+              // pick up correct manifold overrides during its constructor call later.
+              continue;
+            }
+            if( compilerComponent != null )
+            {
+              fieldRef.set( compilerComponent, newInstance );
+            }
           }
         }
       }
