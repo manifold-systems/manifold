@@ -44,7 +44,7 @@ public class JdbcQueryTable implements QueryTable
   private final SqlScope _scope;
   private final String _source;
   private final String _name;
-  private final String _ddlName;
+  private final String _escapedDdlName;
   private final Map<String, QueryColumn> _columns;
   private final List<Parameter> _parameters;
   private final SqlIssueContainer _issues;
@@ -63,22 +63,22 @@ public class JdbcQueryTable implements QueryTable
 
     if( _scope.isErrant() )
     {
-      _ddlName = _name;
+      _escapedDdlName = _name;
       return;
     }
 
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    String ddlName = _name;
+    String escapedDdlName = _name;
     try( Connection c = cp.getConnection( scope.getDbconfig() ) )
     {
-      ddlName = DbUtil.enquoteIdentifier( _name, c.getMetaData() );
+      escapedDdlName = DbUtil.enquoteIdentifier( _name, c.getMetaData() );
       build( c, paramNames );
     }
     catch( SQLException e )
     {
       _issues.addIssues( Collections.singletonList( e ) );
     }
-    _ddlName = ddlName;
+    _escapedDdlName = escapedDdlName;
   }
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
@@ -262,7 +262,7 @@ public class JdbcQueryTable implements QueryTable
 
   @Override
   public String getEscapedDdlName() {
-    return _ddlName;
+    return _escapedDdlName;
   }
 
   @Override
