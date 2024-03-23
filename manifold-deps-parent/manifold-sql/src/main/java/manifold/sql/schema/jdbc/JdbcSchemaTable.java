@@ -234,11 +234,9 @@ public class JdbcSchemaTable implements SchemaTable
     @Override
     public String getDdlName() {
         try {
-            System.out.println(" -- JDBSchemaTable - getDdlName: " + DbUtil.enquoteIdentifier(_name, _metaData));
             return DbUtil.enquoteIdentifier(_name, _metaData);
         } catch (SQLException e) {
             // TODO handle exception
-            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
