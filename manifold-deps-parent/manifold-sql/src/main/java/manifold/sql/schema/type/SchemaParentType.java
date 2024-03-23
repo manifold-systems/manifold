@@ -1283,8 +1283,8 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToOther.getForeignKey();
-    sb.append( refCol.getOwner().getEscapedName() ).append( '.' ).append( refCol.getName() ).append( " = " )
-      .append( fkToOther.getOwner().getEscapedName() ).append( '.' ).append( fkToOther.getName() );
+    sb.append( refCol.getOwner().getEscapedName() ).append( '.' ).append( refCol.getEscapedName() ).append( " = " )
+      .append( fkToOther.getOwner().getEscapedName() ).append( '.' ).append( fkToOther.getEscapedName() );
     return sb.toString();
   }
 
@@ -1293,7 +1293,7 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToMe.getForeignKey();
-    sb.append( fkToMe.getOwner().getName() ).append( '.' ).append( fkToMe.getName() ).append( " = ?" );
+    sb.append( fkToMe.getOwner().getName() ).append( '.' ).append( fkToMe.getEscapedName() ).append( " = ?" );
     return sb.toString();
   }
 

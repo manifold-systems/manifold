@@ -46,6 +46,7 @@ public class JdbcQueryColumn implements QueryColumn
   private final SchemaColumn _schemaColumn;
   private final int _position;
   private final String _name;
+  private final String _escapedName;
   private final int _jdbcType;
   private final String _sqlType;
   private final int _size;
@@ -62,6 +63,7 @@ public class JdbcQueryColumn implements QueryColumn
     _position = colIndex;
     _queryTable = queryTable;
     _name = DbUtil.handleAnonQueryColumn( rsMetaData.getColumnLabel( colIndex ), colIndex );
+    _escapedName = DbUtil.enquoteIdentifier(_name, dbMetadata);
 
     String tableName = getTableName( rsMetaData );
     _schemaTable = tableName == null || tableName.isEmpty()
@@ -241,6 +243,12 @@ public class JdbcQueryColumn implements QueryColumn
   public String getName()
   {
     return _name;
+  }
+
+  @Override
+  public String getEscapedName()
+  {
+    return _escapedName;
   }
 
   @Override
