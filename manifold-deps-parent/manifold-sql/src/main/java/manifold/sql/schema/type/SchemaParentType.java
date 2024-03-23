@@ -973,7 +973,7 @@ class SchemaParentType
             .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
                     .addAnnotation( NotNull.class.getSimpleName() ) );
 
-            String query = "select * from ${table.getDdlName()}";
+            String query = "select * from ${table.getEscapedName()}";
 
             //noinspection UnusedAssignment
             query = ManEscapeUtil.escapeForJavaStringLiteral( query );
