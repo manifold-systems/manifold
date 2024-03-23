@@ -232,7 +232,7 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
     @Override
-    public String getDdlName() {
+    public String getEscapedDdlName() {
         try {
             return DbUtil.enquoteIdentifier(_name, _metaData);
         } catch (SQLException e) {
