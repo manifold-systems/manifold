@@ -18,6 +18,7 @@ package manifold.sql.api;
 
 import manifold.sql.query.type.SqlIssueContainer;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -25,6 +26,7 @@ import static java.util.Collections.emptyList;
 public interface Statement
 {
   String getName();
+  String getDdlName();
   String getSqlSource();
   SqlIssueContainer getIssues();
   default List<Parameter> getParameters()

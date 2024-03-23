@@ -973,7 +973,7 @@ class SchemaParentType
             .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
                     .addAnnotation( NotNull.class.getSimpleName() ) );
 
-            String query = "select * from ${table.getName()}";
+            String query = "select * from ${table.getDdlName()}";
 
             //noinspection UnusedAssignment
             query = ManEscapeUtil.escapeForJavaStringLiteral( query );
@@ -1248,14 +1248,14 @@ class SchemaParentType
     //noinspection unused
     String configName = fkToOther.getForeignKey().getOwner().getSchema().getDbConfig().getName();
     //noinspection unused
-    String otherTable = fkToOther.getForeignKey().getOwner().getName();
+    String otherTable = fkToOther.getForeignKey().getOwner().getDdlName();
     //noinspection unused
-    String linkTable = fkToOther.getOwner().getName();
+    String linkTable = fkToOther.getOwner().getDdlName();
 
     //noinspection unused
-    String sql = "select * from $otherTable " +
+    String sql = ManEscapeUtil.escapeForJavaStringLiteral("select * from $otherTable " +
       "join $linkTable on ${makeJoinOn( fkToOther )} " +
-      "where ${makeJoinWhere( fkToMe )}";
+      "where ${makeJoinWhere( fkToMe )}");
 
     //noinspection unused
     String columnInfo = getColumnInfo( Collections.singletonList( fkToMe.getForeignKey() ) );
@@ -1283,8 +1283,8 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToOther.getForeignKey();
-    sb.append( refCol.getOwner().getName() ).append( '.' ).append( refCol.getName() ).append( " = " )
-      .append( fkToOther.getOwner().getName() ).append( '.' ).append( fkToOther.getName() );
+    sb.append( refCol.getOwner().getDdlName() ).append( '.' ).append( refCol.getName() ).append( " = " )
+      .append( fkToOther.getOwner().getDdlName() ).append( '.' ).append( fkToOther.getName() );
     return sb.toString();
   }
 

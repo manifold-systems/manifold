@@ -18,6 +18,7 @@ package manifold.sql.schema.jdbc;
 
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.type.SqlIssueContainer;
+import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
@@ -36,6 +37,7 @@ public class JdbcSchemaTable implements SchemaTable
 {
   private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchemaTable.class );
 
+  private final DatabaseMetaData _metaData;
   private final JdbcSchema _schema;
   private final String _name;
   private final String _description;
@@ -52,6 +54,7 @@ public class JdbcSchemaTable implements SchemaTable
 
   public JdbcSchemaTable( JdbcSchema owner, DatabaseMetaData metaData, ResultSet resultSet ) throws SQLException
   {
+    _metaData = metaData;
     _schema = owner;
     _name = resultSet.getString( "TABLE_NAME" );
     _description = resultSet.getString( "REMARKS" );
@@ -161,7 +164,8 @@ public class JdbcSchemaTable implements SchemaTable
   private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
   {
     List<String> columnClassNames = new ArrayList<>();
-    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
+    try( PreparedStatement preparedStatement =
+            metaData.getConnection().prepareStatement("select * from " +  DbUtil.enquoteIdentifier( _name , metaData )) )
     {
       int columnCount = preparedStatement.getMetaData().getColumnCount();
       for( int i = 0; i < columnCount; i++ )
@@ -226,6 +230,18 @@ public class JdbcSchemaTable implements SchemaTable
   {
     return _name;
   }
+
+    @Override
+    public String getDdlName() {
+        try {
+            System.out.println(" -- JDBSchemaTable - getDdlName: " + DbUtil.enquoteIdentifier(_name, _metaData));
+            return DbUtil.enquoteIdentifier(_name, _metaData);
+        } catch (SQLException e) {
+            // TODO handle exception
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
 
   @Override
   public Kind getKind()

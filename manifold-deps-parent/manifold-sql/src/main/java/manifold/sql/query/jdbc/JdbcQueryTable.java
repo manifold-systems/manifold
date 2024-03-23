@@ -26,6 +26,7 @@ import manifold.sql.query.type.SqlIssueContainer;
 import manifold.sql.query.type.SqlScope;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.Dependencies;
+import manifold.sql.rt.util.DbUtil;
 import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaColumn;
@@ -43,6 +44,7 @@ public class JdbcQueryTable implements QueryTable
   private final SqlScope _scope;
   private final String _source;
   private final String _name;
+  private final String _ddlName;
   private final Map<String, QueryColumn> _columns;
   private final List<Parameter> _parameters;
   private final SqlIssueContainer _issues;
@@ -61,18 +63,22 @@ public class JdbcQueryTable implements QueryTable
 
     if( _scope.isErrant() )
     {
+      _ddlName = _name;
       return;
     }
 
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+    String ddlName = _name;
     try( Connection c = cp.getConnection( scope.getDbconfig() ) )
     {
+      ddlName = DbUtil.enquoteIdentifier( _name, c.getMetaData() );
       build( c, paramNames );
     }
     catch( SQLException e )
     {
       _issues.addIssues( Collections.singletonList( e ) );
     }
+    _ddlName = ddlName;
   }
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
@@ -252,6 +258,11 @@ public class JdbcQueryTable implements QueryTable
   public String getName()
   {
     return _name;
+  }
+
+  @Override
+  public String getDdlName() {
+    return _ddlName;
   }
 
   @Override
