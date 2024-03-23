@@ -261,7 +261,8 @@ public class JdbcQueryTable implements QueryTable
   }
 
   @Override
-  public String getEscapedName() {
+  public String getEscapedName()
+  {
     return _escapedName;
   }
 

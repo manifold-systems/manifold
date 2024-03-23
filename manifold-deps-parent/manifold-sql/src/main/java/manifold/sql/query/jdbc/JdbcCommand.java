@@ -105,7 +105,8 @@ public class JdbcCommand implements Command
   }
 
   @Override
-  public String getEscapedName() {
+  public String getEscapedName()
+  {
     return _escapedName;
   }
 

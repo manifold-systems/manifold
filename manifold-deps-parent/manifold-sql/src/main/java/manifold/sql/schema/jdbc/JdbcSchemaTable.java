@@ -231,7 +231,8 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
-  public String getEscapedName() {
+  public String getEscapedName()
+  {
     return _escapedName;
   }
 
