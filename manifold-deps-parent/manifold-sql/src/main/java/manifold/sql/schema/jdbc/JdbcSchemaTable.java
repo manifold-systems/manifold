@@ -164,8 +164,7 @@ public class JdbcSchemaTable implements SchemaTable
   private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
   {
     List<String> columnClassNames = new ArrayList<>();
-    try( PreparedStatement preparedStatement =
-            metaData.getConnection().prepareStatement("select * from " +  DbUtil.enquoteIdentifier( _name , metaData )) )
+    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement("select * from " + _escapedDdlName) )
     {
       int columnCount = preparedStatement.getMetaData().getColumnCount();
       for( int i = 0; i < columnCount; i++ )
