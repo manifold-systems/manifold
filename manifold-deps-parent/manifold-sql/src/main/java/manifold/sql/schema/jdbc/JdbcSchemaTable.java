@@ -39,7 +39,7 @@ public class JdbcSchemaTable implements SchemaTable
 
   private final JdbcSchema _schema;
   private final String _name;
-  private final String _escapedDdlName;
+  private final String _escapedName;
   private final String _description;
   private final String _tableDdl;
   private final Kind _kind;
@@ -62,7 +62,7 @@ public class JdbcSchemaTable implements SchemaTable
     {
       throw new IllegalStateException( "Unexpected table kind for: " + _name );
     }
-    _escapedDdlName =  DbUtil.enquoteIdentifier(_name, metaData);
+    _escapedName =  DbUtil.enquoteIdentifier(_name, metaData);
 
     List<String> primaryKey = new ArrayList<>();
     String catalogName = _schema.getDbConfig().getCatalogName();
@@ -164,7 +164,7 @@ public class JdbcSchemaTable implements SchemaTable
   private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
   {
     List<String> columnClassNames = new ArrayList<>();
-    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement("select * from " + _escapedDdlName) )
+    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement("select * from " + _escapedName) )
     {
       int columnCount = preparedStatement.getMetaData().getColumnCount();
       for( int i = 0; i < columnCount; i++ )
@@ -231,8 +231,8 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @Override
-  public String getEscapedDdlName() {
-    return _escapedDdlName;
+  public String getEscapedName() {
+    return _escapedName;
   }
 
   @Override

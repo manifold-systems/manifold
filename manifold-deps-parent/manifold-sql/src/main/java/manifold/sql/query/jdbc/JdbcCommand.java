@@ -43,7 +43,7 @@ public class JdbcCommand implements Command
   private final SqlScope _scope;
   private final String _source;
   private final String _name;
-  private final String _escapedDdlName;
+  private final String _escapedName;
   private final List<Parameter> _parameters;
   private final SqlIssueContainer _issues;
 
@@ -60,22 +60,22 @@ public class JdbcCommand implements Command
 
     if( _scope.isErrant() )
     {
-      _escapedDdlName = _name;
+      _escapedName = _name;
       return;
     }
 
     ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
-    String ddlName = null;
+    String escapedName = null;
     try( Connection c = cp.getConnection( scope.getDbconfig() ) )
     {
-      ddlName = DbUtil.enquoteIdentifier( _name, c.getMetaData() );
+      escapedName = DbUtil.enquoteIdentifier( _name, c.getMetaData() );
       build( c, paramNames );
     }
     catch( SQLException e )
     {
       _issues.addIssues( Collections.singletonList( e ) );
     }
-    _escapedDdlName = ddlName;
+    _escapedName = escapedName;
   }
 
   private void build( Connection c, List<ParamInfo> paramNames ) throws SQLException
@@ -105,8 +105,8 @@ public class JdbcCommand implements Command
   }
 
   @Override
-  public String getEscapedDdlName() {
-    return _escapedDdlName;
+  public String getEscapedName() {
+    return _escapedName;
   }
 
   @Override

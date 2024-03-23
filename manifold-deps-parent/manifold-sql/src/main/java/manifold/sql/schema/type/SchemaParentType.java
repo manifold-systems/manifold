@@ -1248,9 +1248,9 @@ class SchemaParentType
     //noinspection unused
     String configName = fkToOther.getForeignKey().getOwner().getSchema().getDbConfig().getName();
     //noinspection unused
-    String otherTable = fkToOther.getForeignKey().getOwner().getEscapedDdlName();
+    String otherTable = fkToOther.getForeignKey().getOwner().getEscapedName();
     //noinspection unused
-    String linkTable = fkToOther.getOwner().getEscapedDdlName();
+    String linkTable = fkToOther.getOwner().getEscapedName();
 
     //noinspection unused
     String sql = ManEscapeUtil.escapeForJavaStringLiteral("select * from $otherTable " +
@@ -1283,8 +1283,8 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToOther.getForeignKey();
-    sb.append( refCol.getOwner().getEscapedDdlName() ).append( '.' ).append( refCol.getName() ).append( " = " )
-      .append( fkToOther.getOwner().getEscapedDdlName() ).append( '.' ).append( fkToOther.getName() );
+    sb.append( refCol.getOwner().getEscapedName() ).append( '.' ).append( refCol.getName() ).append( " = " )
+      .append( fkToOther.getOwner().getEscapedName() ).append( '.' ).append( fkToOther.getName() );
     return sb.toString();
   }
 
