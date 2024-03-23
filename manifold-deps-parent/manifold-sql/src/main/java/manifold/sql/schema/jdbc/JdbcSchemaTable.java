@@ -37,9 +37,9 @@ public class JdbcSchemaTable implements SchemaTable
 {
   private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchemaTable.class );
 
-  private final DatabaseMetaData _metaData;
   private final JdbcSchema _schema;
   private final String _name;
+  private final String _escapedDdlName;
   private final String _description;
   private final String _tableDdl;
   private final Kind _kind;
@@ -54,7 +54,6 @@ public class JdbcSchemaTable implements SchemaTable
 
   public JdbcSchemaTable( JdbcSchema owner, DatabaseMetaData metaData, ResultSet resultSet ) throws SQLException
   {
-    _metaData = metaData;
     _schema = owner;
     _name = resultSet.getString( "TABLE_NAME" );
     _description = resultSet.getString( "REMARKS" );
@@ -63,6 +62,7 @@ public class JdbcSchemaTable implements SchemaTable
     {
       throw new IllegalStateException( "Unexpected table kind for: " + _name );
     }
+    _escapedDdlName =  DbUtil.enquoteIdentifier(_name, metaData);
 
     List<String> primaryKey = new ArrayList<>();
     String catalogName = _schema.getDbConfig().getCatalogName();
@@ -231,15 +231,10 @@ public class JdbcSchemaTable implements SchemaTable
     return _name;
   }
 
-    @Override
-    public String getEscapedDdlName() {
-        try {
-            return DbUtil.enquoteIdentifier(_name, _metaData);
-        } catch (SQLException e) {
-            // TODO handle exception
-            throw new RuntimeException(e);
-        }
-    }
+  @Override
+  public String getEscapedDdlName() {
+    return _escapedDdlName;
+  }
 
   @Override
   public Kind getKind()
