@@ -204,8 +204,16 @@ public class ManTypes_17 extends Types
 
   private boolean isSameMethodSym( Symbol memberSym, JCTree.JCMethodDecl methodDef )
   {
-    return methodDef != null && methodDef.sym != null &&
-           isSameType( erasure( methodDef.sym.type ), erasure( memberSym.type ) );
+    try
+    {
+      return methodDef != null && methodDef.sym != null &&
+             isSameType( erasure( methodDef.sym.type ), erasure( memberSym.type ) );
+    }
+    catch( AssertionError ae )
+    {
+      // Can happen when a type in the method signature has the DEFERRED TypeTag set
+      return false;
+    }
   }
 
   private java.util.List<TypeAnnotationPosition> findSelfAnnotationLocation( Symbol sym )
