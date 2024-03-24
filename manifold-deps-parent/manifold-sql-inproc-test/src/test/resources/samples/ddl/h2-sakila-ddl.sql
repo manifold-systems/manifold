@@ -113,6 +113,14 @@ create table all_types (--              SQL Type                           JDBC 
 );
 
 --
+-- Test table having SQL keywords for table name and column names
+--
+create table "select" (
+    "order" IDENTITY NOT NULL PRIMARY KEY,
+    "where" VARCHAR(12) NOT NULL
+);
+
+--
 -- Table structure for table `actor`
 --
 

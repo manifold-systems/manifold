@@ -1293,7 +1293,7 @@ class SchemaParentType
   {
     StringBuilder sb = new StringBuilder();
     SchemaColumn refCol = fkToMe.getForeignKey();
-    sb.append( fkToMe.getOwner().getName() ).append( '.' ).append( fkToMe.getEscapedName() ).append( " = ?" );
+    sb.append( fkToMe.getOwner().getEscapedName() ).append( '.' ).append( fkToMe.getEscapedName() ).append( " = ?" );
     return sb.toString();
   }
 
