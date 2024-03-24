@@ -18,6 +18,7 @@ package manifold.sql.schema.jdbc;
 
 import manifold.rt.api.util.Pair;
 import manifold.sql.query.type.SqlIssueContainer;
+import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
@@ -38,6 +39,7 @@ public class JdbcSchemaTable implements SchemaTable
 
   private final JdbcSchema _schema;
   private final String _name;
+  private final String _escapedName;
   private final String _description;
   private final String _tableDdl;
   private final Kind _kind;
@@ -60,6 +62,7 @@ public class JdbcSchemaTable implements SchemaTable
     {
       throw new IllegalStateException( "Unexpected table kind for: " + _name );
     }
+    _escapedName =  DbUtil.enquoteIdentifier(_name, metaData);
 
     List<String> primaryKey = new ArrayList<>();
     String catalogName = _schema.getDbConfig().getCatalogName();
@@ -161,7 +164,7 @@ public class JdbcSchemaTable implements SchemaTable
   private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
   {
     List<String> columnClassNames = new ArrayList<>();
-    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement( "select * from " + _name ) )
+    try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement("select * from " + _escapedName) )
     {
       int columnCount = preparedStatement.getMetaData().getColumnCount();
       for( int i = 0; i < columnCount; i++ )
@@ -225,6 +228,12 @@ public class JdbcSchemaTable implements SchemaTable
   public String getName()
   {
     return _name;
+  }
+
+  @Override
+  public String getEscapedName()
+  {
+    return _escapedName;
   }
 
   @Override

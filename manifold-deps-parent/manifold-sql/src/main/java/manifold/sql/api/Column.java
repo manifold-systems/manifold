@@ -19,4 +19,6 @@ package manifold.sql.api;
 public interface Column extends DataElement
 {
   String getName();
+
+  String getEscapedName();
 }

@@ -169,7 +169,7 @@ public class BasicCrudProvider implements CrudProvider
   private <T extends Entity> String makeInsertStmt( DatabaseMetaData metaData, UpdateContext<T> ctx, Set<String> skipParams ) throws SQLException
   {
     StringBuilder sql = new StringBuilder();
-    sql.append( "INSERT INTO " ).append( ctx.getDdlTableName() ).append( "(" );
+    sql.append( "INSERT INTO " ).append( DbUtil.enquoteIdentifier( ctx.getDdlTableName(), metaData ) ).append( "(" );
     int i = 0;
     Set<Map.Entry<String, Object>> entries = ctx.getTable().getBindings().entrySet();
     for( Map.Entry<String, Object> entry: entries )
@@ -302,7 +302,7 @@ public class BasicCrudProvider implements CrudProvider
   {
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     StringBuilder sql = new StringBuilder();
-    sql.append( "SELECT * FROM " ).append( ctx.getDdlTableName() ).append( " WHERE " );
+    sql.append( "SELECT * FROM " ).append( DbUtil.enquoteIdentifier(ctx.getDdlTableName(), metaData) ).append( " WHERE " );
     int i = 0;
     for( Map.Entry<String, Object> entry : ctx.getParams().entrySet() )
     {
@@ -329,7 +329,7 @@ public class BasicCrudProvider implements CrudProvider
     try
     {
       StringBuilder sql = new StringBuilder();
-      sql.append( "UPDATE " ).append( ctx.getDdlTableName() ).append( " SET\n" );
+      sql.append( "UPDATE " ).append( DbUtil.enquoteIdentifier(ctx.getDdlTableName(), c.getMetaData()) ).append( " SET\n" );
       int i = 0;
       Map<String, Object> changeEntries = ctx.getBindings().uncommittedChangesEntrySet();
       if( changeEntries.isEmpty() )
@@ -632,7 +632,7 @@ public class BasicCrudProvider implements CrudProvider
     try
     {
       StringBuilder sql = new StringBuilder();
-      sql.append( "DELETE FROM " ).append( ctx.getDdlTableName() ).append( " WHERE\n" );
+      sql.append( "DELETE FROM " ).append( DbUtil.enquoteIdentifier( ctx.getDdlTableName(), c.getMetaData()) ).append( " WHERE\n" );
 
       Set<String> allColNames = ctx.getAllCols().keySet();
 

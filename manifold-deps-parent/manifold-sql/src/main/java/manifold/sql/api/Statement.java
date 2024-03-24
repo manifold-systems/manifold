@@ -25,6 +25,7 @@ import static java.util.Collections.emptyList;
 public interface Statement
 {
   String getName();
+  String getEscapedName();
   String getSqlSource();
   SqlIssueContainer getIssues();
   default List<Parameter> getParameters()

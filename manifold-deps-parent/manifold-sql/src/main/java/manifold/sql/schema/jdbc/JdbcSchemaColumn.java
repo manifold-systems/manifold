@@ -18,6 +18,7 @@ package manifold.sql.schema.jdbc;
 
 import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.api.TypeProvider;
+import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 
 import java.sql.DatabaseMetaData;
@@ -32,6 +33,7 @@ public class JdbcSchemaColumn implements SchemaColumn
   private final JdbcSchemaTable _table;
   private final int _position;
   private final String _name;
+  private final String _escapedName;
   private int _jdbcType;
   private final String _sqlType;
   private final boolean _isNullable;
@@ -53,6 +55,7 @@ public class JdbcSchemaColumn implements SchemaColumn
     _position = colIndex;
     _table = jdbcSchemaTable;
     _name = rs.getString( "COLUMN_NAME" );
+    _escapedName= DbUtil.enquoteIdentifier(_name, dbMetadata);
     _isNullable = rs.getInt( "NULLABLE" ) == DatabaseMetaData.columnNullable;
     _isAutoIncrement = "YES".equalsIgnoreCase( rs.getString( "IS_AUTOINCREMENT" ) );
     _isGenerated = "YES".equalsIgnoreCase( rs.getString( "IS_GENERATEDCOLUMN" ) );
@@ -89,6 +92,12 @@ public class JdbcSchemaColumn implements SchemaColumn
   public String getName()
   {
     return _name;
+  }
+
+  @Override
+  public String getEscapedName()
+  {
+    return _escapedName;
   }
 
   @Override
