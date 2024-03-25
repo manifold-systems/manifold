@@ -38,6 +38,7 @@ import javax.tools.StandardLocation;
 
 import static com.sun.tools.javac.code.Kinds.KindSelector.VAL;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
+import static com.sun.tools.javac.code.TypeTag.DEFERRED;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
 import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 
@@ -425,6 +426,12 @@ public class ManAttr_11 extends Attr implements ManAttr
 
       // remove the constant type e.g., if derived from a constant return value such as "Foo"
       returnExprType = returnExprType.baseType();
+
+      if( returnExprType.hasTag( DEFERRED ) )
+      {
+        // a DEFERRED type can't be compared using lub()
+        return;
+      }
 
       // compute LUB of the previous method return type assignment and this return expr type
       returnExprType = isAutoType( meth.restype.type )
