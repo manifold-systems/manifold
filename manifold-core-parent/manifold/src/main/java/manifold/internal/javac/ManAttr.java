@@ -33,12 +33,15 @@ import java.util.function.Predicate;
 
 import manifold.api.util.IssueMsg;
 import manifold.internal.javac.AbstractBinder.Node;
+import manifold.rt.api.FragmentValue;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
 import static com.sun.tools.javac.code.Flags.INTERFACE;
+import static com.sun.tools.javac.code.TypeTag.CLASS;
 import static com.sun.tools.javac.code.TypeTag.ERROR;
 import static manifold.internal.javac.HostKind.DOUBLE_QUOTE_LITERAL;
+import static manifold.internal.javac.HostKind.TEXT_BLOCK_LITERAL;
 import static manifold.util.JreUtil.isJava8;
 
 public interface ManAttr
@@ -133,6 +136,94 @@ public interface ManAttr
   default Object _pkind()
   {
     return ReflectUtil.method( this, "pkind" ).invoke();
+  }
+
+  default boolean handleFragmentStringLiteral( JCTree.JCLiteral tree )
+  {
+    if( tree.typetag == CLASS &&
+            tree.value.toString().startsWith( FragmentProcessor.FRAGMENT_START ) &&
+            tree.value.toString().contains( FragmentProcessor.FRAGMENT_END ) )
+    {
+      Tree parent = JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
+      if( !(parent instanceof JCTree.JCBinary) ) // fragments are not supported with '+' concatenation
+      {
+        Type type = getFragmentValueType( tree );
+        if( type != null )
+        {
+          tree.type = type;
+          ReflectUtil.field( this, "result" ).set( type );
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  default Type getFragmentValueType( JCTree.JCLiteral tree )
+  {
+    int endPosition = tree.pos().getEndPosition( getEnv().toplevel.endPositions );
+    if( endPosition < 0 )
+    {
+      // this is almost certainly harmless, since it is indicative of an intermediate compiler pass
+      //getLogger().note( tree.pos().getStartPosition(), "proc.messager", "No end position for string literal manifold fragment: \n\"" + tree.getValue() + "\"" );
+      return syms().stringType.constType( tree.value );
+    }
+
+    CharSequence source = ParserFactoryFiles.getSource( getEnv().toplevel.sourcefile );
+    CharSequence chars = source.subSequence( tree.pos().getStartPosition(), endPosition );
+    HostKind hostKind = chars.length() > 3 && chars.charAt( 1 ) == '"'
+            ? TEXT_BLOCK_LITERAL
+            : DOUBLE_QUOTE_LITERAL;
+    if( ManAttr.checkConcatenation( tree, chars, hostKind, getLogger() ) )
+    {
+      // string concat not supported with fragments
+      return syms().stringType.constType( tree.value );
+    }
+
+    FragmentProcessor.Fragment fragment = FragmentProcessor.instance().parseFragment( tree.pos().getStartPosition(), chars.toString(), hostKind );
+    if( fragment != null )
+    {
+      String fragClass = getEnv().toplevel.packge.toString() + '.' + fragment.getName();
+      Symbol.ClassSymbol fragSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, fragClass );
+      for( Attribute.Compound annotation: fragSym.getAnnotationMirrors() )
+      {
+        if( annotation.type.toString().equals( FragmentValue.class.getName() ) )
+        {
+          Type type = getFragmentValueType( annotation );
+          if( type != null )
+          {
+            return type;
+          }
+        }
+      }
+      getLogger().rawWarning( tree.pos().getStartPosition(),
+              "No @" + FragmentValue.class.getSimpleName() + " is provided for metatype '" + fragment.getExt() + "'. The resulting value remains a String literal." );
+    }
+    return syms().stringType.constType( tree.value );
+  }
+
+  default Type getFragmentValueType( Attribute.Compound attribute )
+  {
+    String type = null;
+    for( com.sun.tools.javac.util.Pair<Symbol.MethodSymbol, Attribute> pair: attribute.values )
+    {
+      Name argName = pair.fst.getSimpleName();
+      if( argName.toString().equals( "type" ) )
+      {
+        type = (String)pair.snd.getValue();
+      }
+    }
+
+    if( type != null )
+    {
+      Symbol.ClassSymbol fragValueSym = IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, type );
+      if( fragValueSym != null )
+      {
+        return fragValueSym.type;
+      }
+    }
+
+    return null;
   }
 
   default void patchMethodType( JCTree.JCMethodInvocation tree, Set<JCTree.JCMethodInvocation> visited )

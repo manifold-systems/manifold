@@ -94,4 +94,14 @@ public class StringLiteralFragmentTest extends H2DdlServerTest
     assertEquals( 2, count );
     assertEquals( "[.sql:H2Sakila/] Select Count(country_id) From country".fetchOne().getCountCountryId(), count );
   }
+
+  @Test
+  public void testFragmentCanBeInBinaryExpressionViaItsParent() throws SQLException
+  {
+    Country.create( "MyCountry" );
+    H2Sakila.commit();
+
+    boolean exists = "[.sql:H2Sakila/] Select * From country LIMIT 1".fetchOne() != null;
+    assertTrue( exists );
+  }
 }
