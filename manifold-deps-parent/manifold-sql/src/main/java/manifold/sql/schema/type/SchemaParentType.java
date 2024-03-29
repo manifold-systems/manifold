@@ -769,6 +769,16 @@ class SchemaParentType
       !bullshit( col );
   }
 
+  private boolean mayBeNullBeforeCommit( SchemaColumn col )
+  {
+    return !col.getType().isPrimitive() &&
+           (col.isNullable() ||
+            // these are relevant when entity is not yet committed
+            col.isGenerated() ||
+            col.isAutoIncrement() ||
+            col.getDefaultValue() != null);
+  }
+
   private boolean bullshit( SchemaColumn col )
   {
     // Sqlite: a generated, auto-increment id, but since sqlite is retarded at all levels...
@@ -920,7 +930,10 @@ class SchemaParentType
 
     SrcGetProperty getter = new SrcGetProperty( propName, propType, true )
       .modifiers( Flags.DEFAULT );
-    getter.addAnnotation( col.isNullable() ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
+    if( !col.getType().isPrimitive() )
+    {
+      getter.addAnnotation( mayBeNullBeforeCommit( col ) ? Nullable.class.getSimpleName() : NotNull.class.getSimpleName() );
+    }
     StringBuilder retType = new StringBuilder();
     propType.render( retType, 0, false ); // calling render to include array "[]"
     if( col.getForeignKey() != null )
