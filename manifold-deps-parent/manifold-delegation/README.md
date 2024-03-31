@@ -7,7 +7,7 @@
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
-The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and delegation.
+The `manifold-delegation` project is a compiler plugin that provides language support for call forwarding and _true_ delegation.
 These features are an experimental effort toward interface composition as a practical alternative to implementation inheritance.
 
 Use `@link` to automatically transfer calls to unimplemented interface methods through the fields of a class.
@@ -115,10 +115,11 @@ Output:
 ```text
     16
 ```
-DoublerPart's `@part` annotation enables _true_ delegation in MyClass's link.
+DoublerPart's `@part` annotation enables true delegation in MyClass's link.
 
 The takeaway from this example is DoublerPart's call to `getDown()` calls MyClass's `getDown()`, indicating linked interfaces
-are polymorphic wrt `part` classes. The [Delegation](#delegation) section covers more about the what and how of `@part`.
+are polymorphic wrt `part` classes, thus fulfilling the _true_ qualifier in "true delegation". The [Delegation](#delegation) section
+covers more about the what and how of `@part`.
 
 # Forwarding
 Forwarding uses a separate object to handle unimplemented interface calls. A class implements an interface simply by invoking
@@ -298,10 +299,10 @@ When super interfaces overlap, a "diamond" relationship results. This is known a
 ```text
          Person
            ▲▲
-      ┌────┘└────┐
+          ╱  ╲
    Student    Teacher
-      ▲          ▲
-      └────┐┌────┘
+         ▲    ▲
+          ╲  ╱
            TA
 ```
 Should TA use Student's Person or Teacher's? Use `@link(share=Person.class)` to resolve the ambiguity.
