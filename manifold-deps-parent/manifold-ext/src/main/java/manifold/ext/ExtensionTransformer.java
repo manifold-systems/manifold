@@ -2993,9 +2993,18 @@ public class ExtensionTransformer extends TreeTranslator
       sym = ((JCTree.JCIdent)tree.meth).sym;
     }
 
-    if( sym == null || !sym.hasAnnotations() )
+    if( sym == null )
     {
       return null;
+    }
+
+    if( !sym.hasAnnotations() )
+    {
+      sym = sym.baseSymbol();
+      if( sym == null || !sym.hasAnnotations() )
+      {
+        return null;
+      }
     }
 
     for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
