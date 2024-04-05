@@ -29,6 +29,11 @@ import java.util.function.Predicate;
 @Extension
 public class MyObjectExt
 {
+  public static String myPublicMethod( @This Object thiz )
+  {
+    return "public method";
+  }
+
   protected static String myProtectedMethod( @This Object thiz )
   {
     return "protected method";
