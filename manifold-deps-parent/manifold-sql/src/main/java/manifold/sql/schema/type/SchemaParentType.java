@@ -33,6 +33,7 @@ import manifold.sql.rt.api.OperableTxScope;
 import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.*;
 import manifold.sql.schema.jdbc.JdbcSchemaForeignKey;
+import manifold.sql.util.CombinationUtil;
 import manifold.util.concurrent.LocklessLazyVar;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,6 +47,8 @@ import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
@@ -395,43 +398,24 @@ class SchemaParentType
     {
       return;
     }
-
-    addBuilderMethod( srcClass, table, true );
-    addBuilderMethod( srcClass, table, false );
+    SchemaColumn[] requiredForeignKeys = table.getColumns().values().stream().filter( col -> isRequired( col ) && col.getForeignKey() != null ).toArray(SchemaColumn[]::new);
+    CombinationUtil.createAllCombinations( requiredForeignKeys ).forEach( columnsAsReference -> addBuilderMethod( srcClass, table, columnsAsReference ) );
   }
-  private void addBuilderMethod( SrcLinkedClass srcClass, SchemaTable table, boolean fkRefs )
-  {
-    if( fkRefs && !hasRequiredForeignKeys( table ) )
-    {
-      return;
-    }
 
+  private void addBuilderMethod( SrcLinkedClass srcClass, SchemaTable table, List<SchemaColumn> columnsAsReference )
+  {
     SrcMethod method = new SrcMethod( srcClass )
       .modifiers( Modifier.STATIC )
       .name( "builder" )
       .returns( new SrcType( "Builder" ) );
-    if( fkRefs )
-    {
-      addRequiredParametersUsingFkRefs( table, method );
-    }
-    else
-    {
-      addRequiredParameters( table, method );
-    }
+    addRequiredParameters( table, method, columnsAsReference );
     srcClass.addMethod( method );
 
     StringBuilder sb = new StringBuilder();
     sb.append( "return new Builder() {\n" );
     sb.append( "        ${Bindings.class.getName()} _bindings = new DataBindings();\n" );
     sb.append( "        {\n" );
-    if( fkRefs )
-    {
-      initFromParametersUsingFkRefs( table, sb, "_bindings" );
-    }
-    else
-    {
-      initFromParameters( table, sb, "_bindings" );
-    }
+    initFromParameters( table, sb, "_bindings", columnsAsReference );
     sb.append( "        }\n" );
 
     sb.append( "        @Override public ${Bindings.class.getName()} getBindings() { return _bindings; }\n" );
@@ -441,17 +425,13 @@ class SchemaParentType
 
   private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table )
   {
-    addCreateMethods( srcClass, table, true );
-    addCreateMethods( srcClass, table, false );
+    SchemaColumn[] requiredForeignKeys = table.getColumns().values().stream().filter( col -> isRequired( col ) && col.getForeignKey() != null ).toArray(SchemaColumn[]::new);
+    CombinationUtil.createAllCombinations( requiredForeignKeys ).forEach( columnsAsReference -> addCreateMethods( srcClass, table, columnsAsReference ) );
   }
-  private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table, boolean fkRefs )
+
+  private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table, List<SchemaColumn> columnsAsReference )
   {
     if( table.getKind() != SchemaTable.Kind.Table )
-    {
-      return;
-    }
-
-    if( fkRefs && !hasRequiredForeignKeys( table ) )
     {
       return;
     }
@@ -461,14 +441,7 @@ class SchemaParentType
       .modifiers( Modifier.STATIC )
       .name( "create" )
       .returns( new SrcType( tableName ) );
-    if( fkRefs )
-    {
-      addRequiredParametersUsingFkRefs( table, method );
-    }
-    else
-    {
-      addRequiredParameters( table, method );
-    }
+    addRequiredParameters(table, method, columnsAsReference);
     StringBuilder sb = new StringBuilder();
     sb.append( "return create(defaultScope()" );
     sb.append( method.getParameters().isEmpty() ? "" : ", " );
@@ -484,26 +457,12 @@ class SchemaParentType
       .returns( new SrcType( tableName ) )
       .addParam( new SrcParameter( "txScope", new SrcType( TxScope.class.getSimpleName() ) )
         .addAnnotation( NotNull.class.getSimpleName() ) );
-    if( fkRefs )
-    {
-      addRequiredParametersUsingFkRefs( table, method );
-    }
-    else
-    {
-      addRequiredParameters( table, method );
-    }
+    addRequiredParameters(table, method, columnsAsReference);
     srcClass.addMethod( method );
 
     sb = new StringBuilder();
     sb.append( "DataBindings args = new DataBindings();\n" );
-    if( fkRefs )
-    {
-      initFromParametersUsingFkRefs( table, sb, "args" );
-    }
-    else
-    {
-      initFromParameters( table, sb, "args" );
-    }
+    initFromParameters( table, sb, "args", columnsAsReference );
     sb.append( "      TxBindings bindings = new BasicTxBindings(txScope, TxKind.Insert, args);\n" );
     sb.append( "      $tableName customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(bindings, $tableName.class);\n" );
     sb.append( "      $tableName entity = customRow != null ? customRow : new ${ManClassUtil.getShortClassName(tableName)}Entity(bindings);\n" );
@@ -513,25 +472,15 @@ class SchemaParentType
     method.body( sb.toString() );
   }
 
-  private boolean hasRequiredForeignKeys( SchemaTable table )
-  {
-    // at least one non-null foreign key
-    return table.getForeignKeys().values().stream()
-      .anyMatch( sfks -> sfks.stream()
-        .anyMatch( sfk -> sfk.getColumns().stream()
-          .anyMatch( c -> isRequired( c ) ) ) );
-  }
-
-  private void initFromParametersUsingFkRefs( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar )
+  private void initFromParameters( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar, List<SchemaColumn> columnsAsReference )
   {
     Set<SchemaColumn> fkCovered = new HashSet<>();
-    for( Map.Entry<SchemaTable, List<SchemaForeignKey>> entry : table.getForeignKeys().entrySet() )
+    for( List<SchemaForeignKey> fk : table.getForeignKeys().values() )
     {
-      List<SchemaForeignKey> fk = entry.getValue();
       for( SchemaForeignKey sfk : fk )
       {
         List<SchemaColumn> fkCols = sfk.getColumns();
-        if( fkCols.stream().anyMatch( c -> isRequired( c ) ) )
+        if( fkCols.stream().anyMatch( c -> isRequired( c ) && columnsAsReference.contains(c)) )
         {
           //noinspection unused
           String fkParamName = makePascalCaseIdentifier( sfk.getName(), false );
@@ -560,22 +509,7 @@ class SchemaParentType
     }
   }
 
-  private void initFromParameters( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar )
-  {
-    for( SchemaColumn col: table.getColumns().values() )
-    {
-      if( isRequired( col ) )
-      {
-        //noinspection unused
-        String colName = col.getName();
-        //noinspection unused
-        String paramName = makePascalCaseIdentifier( col.getName(), false );
-        sb.append( "$bindingsVar.put(\"$colName\", $paramName);\n" );
-      }
-    }
-  }
-
-  private void addRequiredParametersUsingFkRefs( SchemaTable table, AbstractSrcMethod method )
+  private void addRequiredParameters( SchemaTable table, AbstractSrcMethod method, List<SchemaColumn> columnsAsReference )
   {
     // Note, parameters are added in order of appearance as they are with just columns, fks consolidate params
 
@@ -584,7 +518,7 @@ class SchemaParentType
     {
       if( isRequired( col ) )
       {
-        if( col.getForeignKey() != null )
+        if( col.getForeignKey() != null && columnsAsReference.contains(col) )
         {
           // Add fk ref param
 
@@ -643,22 +577,6 @@ class SchemaParentType
       }
     }
     return sfkSet;
-  }
-
-  private void addRequiredParameters( SchemaTable table, AbstractSrcMethod method )
-  {
-    for( SchemaColumn col: table.getColumns().values() )
-    {
-      if( isRequired( col ) )
-      {
-        SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
-        if( !col.getType().isPrimitive() )
-        {
-          param.addAnnotation( NotNull.class.getSimpleName() );
-        }
-        method.addParam( param );
-      }
-    }
   }
 
   private void addBuilderType( SrcLinkedClass enclosingType, SchemaTable table )
