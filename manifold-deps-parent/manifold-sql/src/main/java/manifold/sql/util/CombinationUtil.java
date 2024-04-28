@@ -13,7 +13,13 @@ public class CombinationUtil {
     }
 
     /**
-     * Create all possible combinations with the provided elements. A combination doesn't need to use all elements.
+     * Create all possible combinations with the provided elements.
+     * A combinations follows the following rules:
+     * <ul>
+     *     <li>It doesn't need to use all provided elements. Even an empty list is a valid case.</li>
+     *     <li>Only its elements are important, not the order of the elements. [1, 2] is the same as [2, 1] and will only be included once.</li>
+     * </ul>
+     *
      * <p>
      * Example:
      * <ul>
