@@ -6,9 +6,24 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-// See https://github.com/hmkcode/Java/tree/master/java-combinations
 public class CombinationUtil {
 
+    private CombinationUtil(){
+        // hide utility class constructor
+    }
+
+    /**
+     * Create all possible combinations with the provided elements. A combination doesn't need to use all elements.
+     * <p>
+     * Example:
+     * <ul>
+     *     <li>input: {1, 2, 3}</li>
+     *     <li>output: [], [1], [2], [3], [1, 2], [1, 3], [2, 3], [1, 2, 3]</li>
+     * </ul>
+     * @param elements the input elements
+     * @return a list of all possible combinations
+     * @param <T> the type of the elements
+     */
     public static <T> List<List<T>> createAllCombinations(T[] elements) {
         List<List<T>> results = new ArrayList<>();
         results.add(Collections.emptyList());
@@ -16,6 +31,12 @@ public class CombinationUtil {
         return results;
     }
 
+    /**
+     * Helper class to create the combinations. See <a href="https://github.com/hmkcode/Java/tree/master/java-combinations">here</a>
+     * @param elements the elements
+     * @param results the result list.
+     * @param <T>  the type of the elements
+     */
     private static <T> void createAllCombinations(T[] elements, List<List<T>> results) {
         int n = elements.length;
         for (int k = 1; k <= elements.length; k++) {

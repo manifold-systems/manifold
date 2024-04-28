@@ -399,6 +399,7 @@ class SchemaParentType
       return;
     }
     SchemaColumn[] requiredForeignKeys = table.getColumns().values().stream().filter( col -> isRequired( col ) && col.getForeignKey() != null ).toArray(SchemaColumn[]::new);
+    // Create all possible combinations of the required foreign keys. For each combination, present schema columns are added by reference, others by id
     CombinationUtil.createAllCombinations( requiredForeignKeys ).forEach( columnsAsReference -> addBuilderMethod( srcClass, table, columnsAsReference ) );
   }
 
@@ -426,6 +427,7 @@ class SchemaParentType
   private void addCreateMethods( SrcLinkedClass srcClass, SchemaTable table )
   {
     SchemaColumn[] requiredForeignKeys = table.getColumns().values().stream().filter( col -> isRequired( col ) && col.getForeignKey() != null ).toArray(SchemaColumn[]::new);
+    // Create all possible combinations of the required foreign keys. For each combination, present schema columns are added by reference, others by id
     CombinationUtil.createAllCombinations( requiredForeignKeys ).forEach( columnsAsReference -> addCreateMethods( srcClass, table, columnsAsReference ) );
   }
 
@@ -509,6 +511,9 @@ class SchemaParentType
     }
   }
 
+  /**
+   * Add the required parameters. All parameters present in the provided list _columnsAsReference_ are added by reference, others by id.
+   */
   private void addRequiredParameters( SchemaTable table, AbstractSrcMethod method, List<SchemaColumn> columnsAsReference )
   {
     // Note, parameters are added in order of appearance as they are with just columns, fks consolidate params
