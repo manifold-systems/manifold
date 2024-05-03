@@ -251,6 +251,10 @@ rootProject.name = 'MyProject'
     <properties>
         <!-- set latest manifold version here --> 
         <manifold.version>2024.1.12</manifold.version>
+      
+        <!-- use maven.compiler settings for JDK 9+ -->
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
     
     <dependencies>
@@ -278,8 +282,11 @@ rootProject.name = 'MyProject'
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>11</source>
-                    <target>11</target>
+                  
+<!-- use maven.compiler.source/target properties above if using JDK 11+, otherwise use following JDK 8 setting -->
+<!--                <source>1.8</source>-->
+<!--                <target>1.8</target>-->
+                  
                     <encoding>UTF-8</encoding>
                     <compilerArgs>
                         <!-- Add manifold plugin-->

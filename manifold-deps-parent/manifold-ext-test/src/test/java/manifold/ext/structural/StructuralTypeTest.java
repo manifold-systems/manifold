@@ -18,10 +18,11 @@ package manifold.ext.structural;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDateTime;
+import java.util.*;
+
 import junit.framework.TestCase;
 import manifold.ext.rt.api.Structural;
 
@@ -74,8 +75,93 @@ public class StructuralTypeTest extends TestCase
   public void testCallFromBoundedTypeVar()
   {
     Rectangle rectangle = new Rectangle( 1, 2, 3, 4 );
+    // tests structural assignability in type parameters: Rectangle to Coordinate
     HasCoordinate<Rectangle> rectCoord = new HasCoordinate<>( rectangle );
     assertEquals( 1.0, rectCoord.getX() );
+  }
+
+  public void testStructuralAssignability()
+  {
+    NotTestIface notTestIface = new NotTestIfaceImpl();
+    // tests type checked structural assignment
+    TestIface testIface = notTestIface;
+    // tests structural call to method with covariance in return type and contravariance in argument types
+    CharSequence result = testIface.foo( 2, "hi", new ArrayList<String>(){{add("hi");}} );
+    assertEquals( "hi2.0hi", (String)result );
+    LocalDateTime dateTime1 = LocalDateTime.of( 1987, 6, 17, 23, 30 );
+    // tests structural call to method with covariance in return type and contravariance in argument types with generics
+    ChronoLocalDateTime<LocalDate> dateTimeResult = testIface.bar( 2, dateTime1, new ArrayList<String>(){{add("hi");}} );
+    assertEquals( dateTime1, dateTimeResult );
+  }
+
+  public void testStructuralAssignabilityGenerics()
+  {
+    NotCoordinate notCoordinate = new NotCoordinateImpl();
+    // tests type checked structural assignment
+    Coordinate coord = notCoordinate;
+    assertEquals( 1d, coord.getX() );
+    // tests structural assignability in type parameters: NotCoordinate to Coordinate
+    HasCoordinate<NotCoordinate> notCoord = new HasCoordinate<>( notCoordinate ); // no cast required
+    assertEquals( 1d, notCoord.getX() );
+  }
+
+  public static class NotCoordinateImpl implements NotCoordinate
+  {
+    @Override
+    public double getX() {
+      return 1;
+    }
+
+    @Override
+    public double getY() {
+      return 2;
+    }
+
+    @Override
+    public String lol(Integer i) {
+      return null;
+    }
+  }
+
+  interface NotCoordinate
+  {
+    double getX();
+    double getY();
+    String lol( Integer i );
+  }
+
+  public static class NotTestIfaceImpl extends SuperNotTestIfaceImpl implements NotTestIface
+  {
+    @Override
+    public String foo( double d, CharSequence c, List<String> list )
+    {
+      return c.toString() + d + list.get( 0 );
+    }
+  }
+  public static class SuperNotTestIfaceImpl implements SuperNotTestIface
+  {
+    @Override
+    public LocalDateTime bar( int i, ChronoLocalDateTime<LocalDate> dateTime, List<String> list )
+    {
+      return (LocalDateTime)dateTime;
+    }
+  }
+  public interface NotTestIface extends SuperNotTestIface
+  {
+    String foo( double d, CharSequence c, List<String> list );
+  }
+  public interface SuperNotTestIface
+  {
+    LocalDateTime bar( int i, ChronoLocalDateTime<LocalDate> dateTime, List<String> list );
+  }
+  @Structural
+  public interface TestIface extends SuperTestIface
+  {
+    CharSequence foo( int i, String s, List<String> list );
+  }
+  public interface SuperTestIface
+  {
+    ChronoLocalDateTime<LocalDate> bar( int i, LocalDateTime dateTime, List<String> list );
   }
 
   public void testAnonymousClass()

@@ -64,7 +64,7 @@
                   <arg>-Xplugin:Manifold</arg>
                 </compilerArgs>
                 <forceJavacCompilerUse>true</forceJavacCompilerUse> <!-- release plugin needs this -->
-                <fork>true</fork> <!-- When run with -X, dumps a javac script and arg file to target/test-classes.  Very useful for debugging. -->
+                <fork>false</fork> <!-- When run with -X, "true" setting dumps a javac script and arg file to target/test-classes.  Very useful for debugging. -->
                 <testExcludes>
                   <testExclude>**/extensions/abc/benis_png/MyBenis_pngExt_Test.java</testExclude>
                   <testExclude>**/extensions/java/util/List/ListExt_Test.java</testExclude>

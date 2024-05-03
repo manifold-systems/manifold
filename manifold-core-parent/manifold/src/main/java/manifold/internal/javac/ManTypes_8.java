@@ -28,15 +28,16 @@ import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.*;
 
-import java.util.ArrayList;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import com.sun.tools.javac.util.List;
 import manifold.rt.api.anno.any;
 import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
 
-public class ManTypes_8 extends Types
+public class ManTypes_8 extends Types implements ManTypes
 {
   private static final String TYPES_FIELD = "types";
   private static final String SELF_TYPE_NAME = "manifold.ext.rt.api.Self";
@@ -137,6 +138,12 @@ public class ManTypes_8 extends Types
       ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.TypeEnter" ), "instance", Context.class )
         .invokeStatic( context ), TYPES_FIELD ).set( this );
     ReflectUtil.field( TreeMaker.instance( context ), TYPES_FIELD ).set( this );
+  }
+
+  @Override
+  public Types types()
+  {
+    return this;
   }
 
   @Override
@@ -539,6 +546,17 @@ public class ManTypes_8 extends Types
       return true;
     }
     return super.isConvertible( t, s, warn );
+  }
+
+  public boolean isSubtype( Type t, Type s, boolean capture )
+  {
+    if( isAssignableToStructuralType( t, s ) )
+    {
+      // t is structurally assignable to s
+      return true;
+    }
+
+    return super.isSubtype(t, s, capture);
   }
 
   @Override
