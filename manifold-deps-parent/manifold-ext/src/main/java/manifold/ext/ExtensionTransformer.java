@@ -75,6 +75,8 @@ public class ExtensionTransformer extends TreeTranslator
   private final ExtensionManifold _sp;
   private final TypeProcessor _tp;
   private boolean _bridgeMethod;
+  private boolean _lambdaMethod;
+  private JCTree.JCVariableDecl _parameter;
 
   public ExtensionTransformer( ExtensionManifold sp, TypeProcessor typeProcessor )
   {
@@ -546,7 +548,7 @@ public class ExtensionTransformer extends TreeTranslator
   {
     super.visitIdent( tree );
 
-    if( _tp.isGenerate() && !shouldProcessForGeneration() )
+    if( _tp.isGenerate() && !shouldProcessForGeneration() && !(shouldProcessForLambdaGeneration() && _parameter != null) )
     {
       // Don't process tree during GENERATE, unless the tree was generated e.g., a bridge method
       return;
@@ -555,7 +557,7 @@ public class ExtensionTransformer extends TreeTranslator
     if( TypesUtil.isStructuralInterface( _tp.getTypes(), tree.sym ) && !isReceiver( tree ) )
     {
       Symbol.ClassSymbol objectSym = getObjectClass();
-      Tree parent = _tp.getParent( tree );
+      Tree parent = _parameter != null ? _parameter : _tp.getParent( tree );
       JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
       if( parent instanceof JCTree.JCVariableDecl )
       {
@@ -1141,7 +1143,18 @@ public class ExtensionTransformer extends TreeTranslator
 
   public void visitVarDef( JCTree.JCVariableDecl tree )
   {
-    super.visitVarDef( tree );
+    if( shouldProcessForLambdaGeneration() && (tree.getModifiers().flags & PARAMETER) != 0 )
+    {
+      _parameter = tree;
+    }
+    try
+    {
+      super.visitVarDef(tree);
+    }
+    finally
+    {
+      _parameter = null;
+    }
 
     if( _tp.isGenerate() && !shouldProcessForGeneration() )
     {
@@ -2154,10 +2167,20 @@ public class ExtensionTransformer extends TreeTranslator
     return _bridgeMethod;
   }
 
+  private boolean shouldProcessForLambdaGeneration()
+  {
+    return _lambdaMethod;
+  }
+
   private boolean isBridgeMethod( JCTree.JCMethodDecl tree )
   {
     long modifiers = tree.getModifiers().flags;
     return (Flags.BRIDGE & modifiers) != 0;
+  }
+  private boolean isLambdaMethod( JCTree.JCMethodDecl tree )
+  {
+    long modifiers = tree.getModifiers().flags;
+    return (SYNTHETIC & modifiers) != 0;
   }
 
   private Type eraseStructureType( Type type )
@@ -2200,6 +2223,11 @@ public class ExtensionTransformer extends TreeTranslator
       // we process bridge methods during Generation, since they don't exist prior to Generation
       _bridgeMethod = true;
     }
+    if( isLambdaMethod( tree ) )
+    {
+      _lambdaMethod = true;
+    }
+
     try
     {
       if( !_tp.isGenerate() && !_bridgeMethod )
@@ -2208,10 +2236,16 @@ public class ExtensionTransformer extends TreeTranslator
       }
 
       super.visitMethodDef( tree );
+
+      if( _lambdaMethod )
+      {
+        updateMethodSymbolParamTypes( tree );
+      }
     }
     finally
     {
       _bridgeMethod = false;
+      _lambdaMethod = false;
     }
 
     if( _tp.isGenerate() )
@@ -2229,6 +2263,27 @@ public class ExtensionTransformer extends TreeTranslator
 
     verifyExtensionMethod( tree );
     result = tree;
+  }
+
+  private void updateMethodSymbolParamTypes( JCTree.JCMethodDecl tree )
+  {
+    // !! todo: improve "lambda" check
+    if( !tree.getName().toString().contains( "lambda" ) )
+    {
+      return;
+    }
+
+    List<JCTree.JCVariableDecl> params = tree.params;
+    List<Symbol.VarSymbol> newSyms = List.nil();
+    List<Type> newTypes = List.nil();
+    for( int i = 0; i < params.size(); i++ )
+    {
+      JCTree.JCVariableDecl param = params.get(i);
+      newSyms = newSyms.append( param.sym );
+      newTypes = newTypes.append( param.type );
+    }
+    tree.sym.params = newSyms;
+    ((Type.MethodType)tree.sym.type).argtypes = newTypes;
   }
 
   /**

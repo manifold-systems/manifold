@@ -478,12 +478,20 @@ class ExtCodeGen
     }
 
     List params = method.getParameters();
-    for( int i = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0; i < params.size(); i++ )
-    {
-      // exclude This param
 
+    // exclude @This param
+    int firstParam = isInstanceExtensionMethod || hasThisClassAnnotation( method ) ? 1 : 0;
+
+    for( int i = firstParam; i < params.size(); i++ )
+    {
       SrcParameter param = (SrcParameter)params.get( i );
-      srcMethod.addParam( param.getSimpleName(), param.getType() );
+      SrcParameter p = new SrcParameter( param.getSimpleName(), param.getType() );
+      for( SrcAnnotationExpression anno: param.getAnnotations() )
+      {
+        // ensure annotations on parameters such as @NotNull map correctly
+        p.addAnnotation( anno );
+      }
+      srcMethod.addParam( p );
     }
 
     for( Object throwType : method.getThrowTypes() )
