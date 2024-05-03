@@ -179,7 +179,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     renderModifiers( sb,
       getModifiers() & ~Modifier.TRANSIENT,
       (getModifiers() & Flags.DEFAULT) != 0,
-      isNonDefaultNonStaticInterfaceMethod() ? Modifier.PUBLIC : 0 );
+      isAbstractInterfaceMethod() ? Modifier.PUBLIC : 0 );
     renderTypeVars( _typeVars, sb );
     if( _returns != null )
     {
@@ -209,15 +209,15 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
 
   private boolean isAbstractMethod()
   {
-    return Modifier.isAbstract( (int)getModifiers() ) ||
-           isNonDefaultNonStaticInterfaceMethod();
+    return Modifier.isAbstract( (int)getModifiers() ) || isAbstractInterfaceMethod();
   }
 
-  private boolean isNonDefaultNonStaticInterfaceMethod()
+  private boolean isAbstractInterfaceMethod()
   {
     return getOwner() instanceof AbstractSrcClass &&
-           ((AbstractSrcClass)getOwner()).isInterface() &&
+           ((AbstractSrcClass<?>)getOwner()).isInterface() &&
            (getModifiers() & Flags.DEFAULT) == 0 &&
+           (getModifiers() & Flags.PRIVATE) == 0 &&
            (getModifiers() & Flags.STATIC) == 0;
   }
 }
