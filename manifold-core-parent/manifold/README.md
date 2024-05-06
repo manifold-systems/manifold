@@ -32,15 +32,17 @@ interfaces, annotations, etc.
 
 # The Big Picture
 
-You can think of a type manifold as a **_just-in-time_ code generator**. Essentially, the Manifold framework plugs in and
-overrides the compiler's type resolver so that, via the `ITypeManifold` SPI, a type manifold can claim ownership of
-type names as the compiler encounters them and dynamically provide source code corresponding with the types. This core functionality
-serves as a productive alternative to conventional code generation techniques. 
+You can think of a type manifold as a **_just-in-time_ code generator**. Essentially, the Manifold framework plugs in to
+intercept the compiler's type resolver enabling implementors of the type manifold API to claim ownership of type names as
+the compiler encounters them. Essentially, a type manifold uses the API to project Java source code directly into Java's
+type system on demand as the compiler resolves types. It is a classic _pull_ model, as opposed to the less efficient push
+model static code generators must adhere to. This core functionality is a game changing alternative to conventional code
+generation techniques. 
 
 Because the framework plugs directly into the compiler, a code generator written as a type manifold *is no longer
-a separate build step*, it generates code on-demand as the compiler asks for types. This significantly reduces
-the complexity of code generation and enables it to function *incrementally*. Thus, contrary to conventional code generation
-techniques, type manifolds:
+a separate build step*, it generates code on demand as the compiler asks for types. This significantly reduces
+the complexity of code generation and enables it to function *incrementally*. Thus, contrary to conventional code generators,
+type manifolds:
 * require **_zero_ build steps**
 * produce **_zero_ on-disk source code** (but can if desired)
 * are by definition **always in sync** with resources
@@ -57,26 +59,25 @@ features.  Thus, both the JSON and Extension type manifolds can contribute to th
 supplies the main body and the Extension type manifold contributes custom methods and other features provided by [extension classes](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext##extension-classes-via-extension).
 As a consequence any number of type manifolds can operate in concert to form an efficient and powerful type building
 pipeline, therefore, unlike conventional code generators, type manifolds:
-* can easily **cooperate**
+* naturally **cooperate**
 * are inherently **extensible**
 
-The core framework can also be used from IDEs and other tooling to provide consistent, unified access to
-the types and features produced from all type manifolds. For instance, the [Manifold plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold)
-provides comprehensive support for the Manifold framework. All types and features produced from type manifolds and other
-Manifold SPIs are fully supported. You can edit resources such as JSON and GraphQL files and immediately use the changes
-in Java without a compilation step. Features like code completion, resource/code navigation, deterministic usage
-searching, refactoring/renaming, incremental compilation, hotswap debugging, etc. work seamlessly with *all* type
-manifolds past, present, and future. This represents a tremendous leap in productivity compared with the conventional
-code generation world where the burden is on the code generator author or third party to invest in one-off IDE tooling
-projects, which typically results in poor or no IDE representation. Thus another big advantage type manifolds possess
-over conventional code generators is:
+Perhaps most importantly, the core framework is also used from IDEs and other tooling to provide consistent, _unified_ access
+to types and features from type manifolds. For instance, the [Manifold plugin for IntelliJ IDEA](https://plugins.jetbrains.com/plugin/10057-manifold)
+provides comprehensive support for type manifolds and other Manifold APIs. Resources such as SQL, JSON, and
+GraphQL come to life in the IDE. Changes to both resource files and inline resource fragments are type-safely realized
+automatically in code editors without compiling. Features like code completion, resource/code navigation, deterministic usage searching, refactoring/renaming, incremental compilation, hotswap
+debugging, etc. work seamlessly with *all* type manifolds past, present, and future. This represents a tremendous leap in
+productivity compared with conventional code generation where the burden is on the code generator author or third party
+to invest in one-off IDE tooling projects, which typically results in poor or no IDE representation. Thus, another
+critical advantage type manifolds possess over conventional code generators is:
 * a **unified framework**...
 * ...which enables **comprehensive IDE support** and more
 
 To summarize, the Manifold framework provides a clear advantage over conventional code generation techniques. Type
 manifolds do not entail build steps, are always in sync, operate incrementally, and are simple to add to any project.
 They also cooperate naturally to form a powerful type building pipeline, which via the core framework is uniformly
-accessible to IDEs such as IntelliJ IDEA and Android Studio. Putting it all together, the synergy resulting from these improvements has the
+accessible to IDEs such as IntelliJ IDEA and Android Studio. The synergy resulting from these improvements has the
 potential to significantly increase Java developer productivity and to open minds to new possibilities. 
 
 # The API
@@ -265,14 +266,16 @@ com.abc.MyTypeManifold
 
 ```
 
-As you can see building a type manifold can be relatively simple. The image manifold illustrates the basic structure of
-most file-based manifolds. Of course there's much more to the API. Examine the source code for other manifolds such as
-the GraphQL manifold ([manifold-graphql](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-graphql))
-and the JavaScript manifold ([manifold-js](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js)).
-These serve as decent reference implementations for wrapping parsers and binding to existing languages.
+Although this is a simpler example targeting a file based resource, more sophisticated manifolds still follow the same
+basic structure. Indeed, the API is designed to support virtually any type of resource, file based or otherwise, as the
+[SQL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-sql), [JSON](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-json),
+[JavaScript](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-js), and other type
+manifolds demonstrate. These projects cover a wide range of Manifold API usage to integrate with database metadata, parsers,
+templating and programming languages, class extensions, and more. Use them as reference implementations for your own Manifold
+projects.
 
->Note, with Java 9+ with named modules you register a service provider in your `module-info.java` file using the
-`provides` keyword:
+>Note, if you're using named modules with Java 11+ you must register service providers in your `module-info.java` file
+>using the `provides` keyword:
 >```java
 >provides manifold.api.type.ITypeManifold with com.abc.MyTypeManifold
 >```
