@@ -874,7 +874,7 @@ public interface ManAttr
 
   default ArrayList<Node<JCExpression, Tag>> getBindingOperands( JCExpression tree, ArrayList<Node<JCExpression, Tag>> operands )
   {
-    if( tree instanceof JCBinary && tree.getTag() == Tag.APPLY )
+    if( tree instanceof JCBinary && tree.getTag() == Tag.NO_TAG )
     {
       // Binding expr
 

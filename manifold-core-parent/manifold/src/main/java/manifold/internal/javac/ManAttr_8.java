@@ -905,7 +905,7 @@ public class ManAttr_8 extends Attr implements ManAttr
       return;
     }
 
-    if( tree.getTag() == JCTree.Tag.APPLY ) // binding expr
+    if( tree.getTag() == JCTree.Tag.NO_TAG ) // binding expr
     {
       // Handle binding expressions
 

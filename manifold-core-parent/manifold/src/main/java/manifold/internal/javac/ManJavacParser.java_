@@ -470,10 +470,10 @@ public class ManJavacParser extends JavacParser
                               JCExpression od1,
                               JCExpression od2)
   {
-    //Manifold: use APPLY for binding op.
+    //Manifold: use NO_TAG for binding op.
     //It is later changed to MUL after ManAttr processing so the expr will pass safely through javac until it is
     //transformed to a pre/postBind() call.
-    JCTree.Tag optag = topOp == null ? JCTree.Tag.APPLY : optag( topOp );
+    JCTree.Tag optag = topOp == null ? JCTree.Tag.NO_TAG : optag( topOp );
 
     return F.at( pos ).Binary( optag, od1, od2 );
   }

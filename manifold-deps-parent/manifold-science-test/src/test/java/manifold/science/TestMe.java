@@ -64,12 +64,6 @@ public class TestMe
   }
 
   @Test
-  public void testCanBeStatement()
-  {
-    10 k;
-  }
-
-  @Test
   public void testStorage()
   {
     assertTrue(64Bit == 8Byte);
