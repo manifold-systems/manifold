@@ -50,6 +50,19 @@ public class CrudTest extends PostgresDdlServerTest
   }
 
   @Test
+  public void testMerge() throws SQLException
+  {
+    TxScope txScope = PostgresSakila.newScope();
+
+    Abc abc = Abc.create( 2000 );
+    txScope.commit();
+
+    txScope.addSqlChange(ctx->
+    {"[.sql:PostgresSakila/] MERGE INTO abc AS target USING abc ON target.from_id = 1 WHEN MATCHED THEN DO NOTHING".execute(ctx);} );
+    txScope.commit();
+  }
+
+  @Test
   public void testRead() throws SQLException
   {
     TxScope txScope = PostgresSakila.newScope();

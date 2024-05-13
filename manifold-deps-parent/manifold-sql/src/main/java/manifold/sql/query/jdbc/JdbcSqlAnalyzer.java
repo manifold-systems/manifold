@@ -39,7 +39,7 @@ public class JdbcSqlAnalyzer implements SqlAnalyzer
     {
       // treat as query and pass through to JDBC for error handling.
       // todo: Maybe do light parsing to determine type of statement (Insert, Update, Delete, ..., or Select)?
-      isQuery = true;
+      isQuery = sql.trim().toLowerCase().startsWith( "select" );
     }
 
     return isQuery

@@ -97,6 +97,11 @@ create table all_types (
 
 );
 
+create table abc
+(
+    id      serial8 primary key,
+    from_id bigint  not null
+);
 --
 -- Name: actor; Type: TABLE; Schema: public; Owner: postgres; Tablespace:
 --
