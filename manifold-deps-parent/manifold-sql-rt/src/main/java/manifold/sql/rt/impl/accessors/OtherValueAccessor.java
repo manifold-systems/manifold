@@ -80,6 +80,7 @@ public class OtherValueAccessor implements ValueAccessor
           case "inet":
           case "macaddr":
           case "macaddr8":
+          case "jsonb":
           case "money":
           case "varbit":
           case "bit varying":
@@ -104,6 +105,12 @@ public class OtherValueAccessor implements ValueAccessor
   private static final Object NONE = new Object() {};
   private static Object postgresStrangeness( ResultSet rs, BaseElement elem ) throws SQLException
   {
+    DriverInfo driver = DriverInfo.lookup( rs.getStatement().getConnection().getMetaData() );
+    if( driver != Postgres )
+    {
+      return NONE;
+    }
+
     String lcSqlType = elem.getSqlType().toLowerCase();
     switch( lcSqlType )
     {
@@ -111,6 +118,7 @@ public class OtherValueAccessor implements ValueAccessor
       case "inet":
       case "macaddr":
       case "macaddr8":
+      case "jsonb":
       case "varbit":
       case "bit varying":
         return rs.getString( elem.getPosition() );

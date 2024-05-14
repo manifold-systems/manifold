@@ -50,6 +50,34 @@ public class CrudTest extends PostgresDdlServerTest
   }
 
   @Test
+  public void testCreateWithJsonb() throws SQLException
+  {
+    TxScope txScope = PostgresSakila.newScope();
+    String jsonData = "{\"name\": \"bubba\"}";
+    Abc abc = Abc.builder( 123L ).withId( 1L ).withData( jsonData ).build( txScope );
+    txScope.commit();
+    assertTrue(abc.getId() > 0);
+    Abc inserted = Abc.fetch(txScope, abc.getId());
+    assertEquals( jsonData, inserted.getData() );
+    Iterable<Abc> result = "[.sql:PostgresSakila/] select * from abc where data = :data::jsonb".fetch( txScope, jsonData );
+    assertTrue( result.iterator().hasNext() );
+    assertEquals( jsonData, result.iterator().next().getData() );
+  }
+
+  @Test
+  public void testCommandWithJsonb() throws SQLException
+  {
+    TxScope txScope = PostgresSakila.newScope();
+
+    txScope.addSqlChange(ctx -> {
+      "[.sql:PostgresSakila/] insert into abc(from_id, data) values(:from_id, CAST(:data as jsonb)) ".execute( ctx, 123L, "{\"name\": \"bubba\"}" );
+    });
+    txScope.commit();
+    auto row = "[.sql:PostgresSakila/] select data from abc where from_id = 123".fetchOne( txScope );
+    assertEquals( "{\"name\": \"bubba\"}", row.getData() );
+  }
+
+  @Test
   public void testMerge() throws SQLException
   {
     TxScope txScope = PostgresSakila.newScope();

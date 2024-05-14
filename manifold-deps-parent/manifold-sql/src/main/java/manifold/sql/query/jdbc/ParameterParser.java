@@ -54,7 +54,7 @@ public class ParameterParser
       //noinspection StatementWithEmptyBody
       while( eatComments() || eatStrings() || eatEverythingButParamsStringsAndComments() );
 
-      if( match( ':' ) )
+      if( match( ':' ) && !match( ':' ) ) // avoid :: operator (postgres)
       {
         int pos = _pos - 1;
         String word = matchWord();

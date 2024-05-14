@@ -894,7 +894,7 @@ Optional database columns such as `release_year` are assignable using `with` met
 Use type-safe, native SQL queries of any complexity.  Or, use `fetch` methods to load entities.
 
 ```java
-List<Film> films = "[.sql/] select * from film where release_date > :releaseData".fetch(2005);
+Iterable<Film> films = "[.sql/] select * from film where release_date > :releaseData".fetch(2005);
 ```
 Notice the query results above are provided as `Film` entity instances. This means you can execute type-safe queries
 to find entities and then directly perform CRUD operations on the results.

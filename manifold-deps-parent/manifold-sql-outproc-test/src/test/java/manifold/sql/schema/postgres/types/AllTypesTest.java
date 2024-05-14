@@ -22,6 +22,7 @@ import manifold.sql.schema.simple.postgres.PostgresSakila.*;
 import org.junit.Test;
 import org.postgresql.geometric.*;
 import org.postgresql.util.PGInterval;
+import org.postgresql.util.PGobject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,11 +62,13 @@ public class AllTypesTest extends PostgresDdlServerTest
 // accepts via setObject() or setXxx(), all result in type mismatch errors despite getObject() and getXxx() delivering
 // values of those same Java types. As a consequence, these types involve ValueAccessor#getParameterExpression() intervention.
   private static Boolean Bit_value = true;                   // bit (single)
-  private static String Bit5_value = "101111101101";                // bit5 (many)
+  private static String Bit5_value = "101111101101";         // bit5 (many)
   private static String Varbit_value = "11100100101";        // varbit
   private static String Cidr_value = "192.168.100.128/25";   // cidr
   private static String Inet_value = "192.0.2.1";            // inet
   private static String Macaddr_value = "08:00:2b:01:02:03"; // macaddr
+  private static PGobject Json_value = makePGobject( "json", "{\"name\": \"scott\"}"); // json
+  private static String Jsonb_value = "{\"name\": \"scott\"}"; // jsonb
   private static Double Money_value = 1.01;                  // money
 
 //todo:
@@ -82,6 +85,21 @@ public class AllTypesTest extends PostgresDdlServerTest
 //  private static PGpath Path_value = new PGpath(new PGpoint[]{new PGpoint(1,2), new PGpoint(3,4)}, true);
 //  private static PGpoint Point_value = new PGpoint(1,2);
 //  private static PGpolygon Polygon_value = new PGpolygon(new PGpoint[]{new PGpoint(1,2), new PGpoint(3,4), new PGpoint(5,2)});
+
+  private static PGobject makePGobject( String type, String value )
+  {
+    try
+    {
+      PGobject o = new PGobject();
+      o.setType( type );
+      o.setValue( value );
+      return o;
+    }
+    catch( Exception e )
+    {
+      throw new RuntimeException( e );
+    }
+  }
 
   @Test
   public void testAllTypesSetValues() throws SQLException
@@ -103,6 +121,8 @@ public class AllTypesTest extends PostgresDdlServerTest
     a.setColInet( Inet_value );
     a.setColCidr( Cidr_value );
     a.setColMacaddr( Macaddr_value );
+    a.setColJson( Json_value );
+    a.setColJsonb( Jsonb_value );
     a.setColMoney( Money_value );
     a.setColNumeric( Numeric_value );
     a.setColReal( Real_value );
@@ -139,6 +159,8 @@ public class AllTypesTest extends PostgresDdlServerTest
     assertEquals( Inet_value, a.getColInet() );
     assertEquals( Cidr_value, a.getColCidr() );
     assertEquals( Macaddr_value, a.getColMacaddr() );
+    assertEquals( Json_value, a.getColJson() );
+    assertEquals( Jsonb_value, a.getColJsonb() );
     assertEquals( Money_value, a.getColMoney() );
     assertEquals( 0, Numeric_value.compareTo( a.getColNumeric() ) );
     assertEquals( Real_value, a.getColReal() );
@@ -176,6 +198,8 @@ public class AllTypesTest extends PostgresDdlServerTest
       assertEquals( Inet_value, a.getColInet() );
       assertEquals( Cidr_value, a.getColCidr() );
       assertEquals( Macaddr_value, a.getColMacaddr() );
+      assertEquals( Json_value, a.getColJson() );
+      assertEquals( Jsonb_value, a.getColJsonb() );
       assertEquals( Money_value, a.getColMoney() );
       assertEquals( 0, Numeric_value.compareTo( a.getColNumeric() ) );
       assertEquals( Real_value, a.getColReal() );
