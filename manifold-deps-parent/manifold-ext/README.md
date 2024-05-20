@@ -1767,9 +1767,8 @@ public auto nameAge(List<Person> list) {
     .collect(Collectors.toList());
 }
 
-auto result = nameAge(persons);
 for(auto tuple: nameAge(persons)) {
-  out.pringln("name: " + tuple.name + " age: " + tuple.age);
+  out.println("name: " + tuple.name + " age: " + tuple.age);
 }
 ```
 >Note, see [Tuples](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple) for
@@ -1797,6 +1796,11 @@ auto findMinMax(int[] data) {
 Here the combined use of tuples and `auto` provides a clear and concise syntax for type-safely returning multiple values. As with
 fields and local variables, using `auto` on a method infers its return type from its return statements. Additionally,
 for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
+
+>🛈 While record classes can approximate similar functionality, they do so at a significantly higher cost. Records require
+both an explicit type definition and full `new` expression syntax. By contrast, because they are purely structural,
+tuples serve as both implied type definitions and concise expression syntax.
+
 
 ## On fields
 Unlike Java's `var`, you can use `auto` for field type inference.

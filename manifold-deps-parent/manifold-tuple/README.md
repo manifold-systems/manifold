@@ -92,7 +92,12 @@ Here the combined use of tuples and [**auto**](https://github.com/manifold-syste
 provides a clear and concise syntax for type-safely returning multiple values. As with
 fields and local variables, using `auto` on a method infers its return type from its return statements. Additionally,
 for improved readability, in a return statement you can omit the parenthesis otherwise required for tuple expressions.
->Note, you must use `auto` to infer a method return type; Java's `var` only works on local variables.
+
+Note, you must use `auto` to infer a method return type; Java's `var` only works on local variables.
+
+>🛈 While record classes can approximate similar functionality, they do so at a significantly higher cost. Records require
+both an explicit type definition and full `new` expression syntax. By contrast, because they are purely structural,
+tuples serve as both implied type definitions and concise expression syntax.
 
 ## Tuple types 
 
