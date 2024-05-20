@@ -525,6 +525,7 @@ public class ManTypes_17 extends Types implements ManTypes
     {
       return true;
     }
+
     return super.returnTypeSubstitutable( r1, r2, r2res, warner );
   }
 
@@ -552,14 +553,10 @@ public class ManTypes_17 extends Types implements ManTypes
     return super.isConvertible( t, s, warn );
   }
 
-  public boolean isSubtype(Type t, Type s, boolean capture)
+  public boolean isSubtype( Type t, Type s, boolean capture )
   {
-    if( isAssignableToStructuralType( t, s ) )
-    {
-      return true;
-    }
-
-    return super.isSubtype(t, s, capture);
+    return super.isSubtype( t, s, capture ) ||
+      isAssignableToStructuralType( t, s );
   }
 
   @Override

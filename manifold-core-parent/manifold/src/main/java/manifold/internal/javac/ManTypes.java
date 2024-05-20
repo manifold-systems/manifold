@@ -31,6 +31,19 @@ public interface ManTypes
    */
   default boolean isAssignableToStructuralType( Type t, Type s )
   {
+    try
+    {
+      return _isAssignableToStructuralType( t, s );
+    }
+    catch( Throwable e )
+    {
+      // todo: diagnose this
+      //  as a diagnostic, prevent this check from causing an exception to quietly test if it is causing compilation failure
+      return false;
+    }
+  }
+  default boolean _isAssignableToStructuralType( Type t, Type s )
+  {
     t = types().erasure( t );
     s = types().erasure( s );
 

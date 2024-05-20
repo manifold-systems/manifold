@@ -47,7 +47,7 @@ public interface TypesUtil
 
     for( Attribute.Compound annotation : sym.getAnnotationMirrors() )
     {
-      if( annotation.type.toString().equals( STRUCTURAL ) )
+      if( annotation.type != null && annotation.type.toString().equals( STRUCTURAL ) )
       {
         return true;
       }

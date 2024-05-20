@@ -550,13 +550,8 @@ public class ManTypes_8 extends Types implements ManTypes
 
   public boolean isSubtype( Type t, Type s, boolean capture )
   {
-    if( isAssignableToStructuralType( t, s ) )
-    {
-      // t is structurally assignable to s
-      return true;
-    }
-
-    return super.isSubtype(t, s, capture);
+    return super.isSubtype( t, s, capture ) ||
+      isAssignableToStructuralType( t, s );
   }
 
   @Override
