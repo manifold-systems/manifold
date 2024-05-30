@@ -267,17 +267,15 @@ Alternatively, you can use the `copier()` static method for a richer set of feat
 ```java
 User copy = User.copier(user).withName("Bob").copy();
 ```
-`copier()` is a lot like `builder()` but lets you start with an already built object you can modify.  Also like
-`builder()` it maintains the integrity of the schema's declared mutability -- you can't change
-`readOnly` fields after the `copy()` method constructs the object.
+`copier()` is a lot like `builder()` but initializes your object with state from an already built object. Also like
+`builder()` it maintains the integrity of the schema's declared mutability.
 
 ## Properties Marked `readOnly` or `writeOnly` 
 If a property is set to `readOnly` in a schema you can initialize it as a parameter in the `create()` and `builder()`
 methods. A `readOnly` property does not have a corresponding setter method in the API, thus you can't modify it after a
 type is initialized.
 
-Conversely, a `writeOnly` property such as a password is only writable -- you cannot read such a property using a `get`
-method.
+Conversely, a `writeOnly` property such as a password is only writable, you cannot access the property's value.
 
 ## Nullable Properties
 Manifold supports JSON Schema's many curious ways to say that a property can have a `null` value. These include:

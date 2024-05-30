@@ -1406,7 +1406,7 @@ parameter type nor the return type of the method match the interface. After care
 it is clear the methods are call-compatible from the perspective of `Capitalizer`:
 
 ```java
-Capitalizer cap = (Capitalizer) new MyCapitalizer();
+Capitalizer cap = new MyCapitalizer();
 CharSequence properName = cap.capitalize("tigers");
 ```
 
