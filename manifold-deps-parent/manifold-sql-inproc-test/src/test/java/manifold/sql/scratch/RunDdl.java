@@ -41,9 +41,9 @@ public class RunDdl
       System.out.println( "Database open successful" );
 
       ////////////////////////////////////////////////////////////////////////
-      
-      Statement stmt = c.createStatement();
-      try( Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/ddl/h2-sakila-ddl.sql" ) ) )
+
+      try( Statement stmt = c.createStatement();
+           Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/ddl/h2-sakila-ddl.sql" ) ) )
       {
         String script = StreamUtil.getContent( reader );
         List<String> commands = SqlScriptParser.getCommands( script );
@@ -56,8 +56,8 @@ public class RunDdl
 
       ////////////////////////////////////////////////////////////////////////
 
-      stmt = c.createStatement();
-      try( Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/ddl/h2-sakila-ddl.sql" ) ) )
+      try( Statement stmt = c.createStatement();
+           Reader reader = new InputStreamReader( RunDdl.class.getResourceAsStream( "/samples/ddl/h2-sakila-ddl.sql" ) ) )
       {
         String script = StreamUtil.getContent( reader );
         List<String> commands = SqlScriptParser.getCommands( script );

@@ -60,32 +60,36 @@ public class SqlScriptRunner
     try
     {
       connection.setAutoCommit( false );
-      Statement stmt = connection.createStatement();
-      List<String> commands = SqlScriptParser.getCommands( script, extraSeparator( connection ) );
-      for( String command : commands )
+      try( Statement stmt = connection.createStatement() )
       {
-        if( exceptionHandler == null )
+        List<String> commands = SqlScriptParser.getCommands( script, extraSeparator( connection ) );
+        for( String command : commands )
         {
-          stmt.addBatch( command );
-        }
-        else
-        {
-          try
+          if( exceptionHandler == null )
           {
-            stmt.execute( command );
+            //noinspection SqlSourceToSinkFlow
+            stmt.addBatch( command );
           }
-          catch( SQLException e )
+          else
           {
-            if( !exceptionHandler.test( command, e ) )
+            try
             {
-              throw e;
+              //noinspection SqlSourceToSinkFlow
+              stmt.execute( command );
+            }
+            catch( SQLException e )
+            {
+              if( !exceptionHandler.test( command, e ) )
+              {
+                throw e;
+              }
             }
           }
         }
-      }
-      if( exceptionHandler == null )
-      {
-        stmt.executeBatch();
+        if( exceptionHandler == null )
+        {
+          stmt.executeBatch();
+        }
       }
       connection.commit();
     }
