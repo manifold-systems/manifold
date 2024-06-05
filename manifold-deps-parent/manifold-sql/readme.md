@@ -4,7 +4,7 @@
 
 # Manifold SQL
 
-![latest](https://img.shields.io/badge/latest-v2024.1.16-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.17-royalblue.svg)
 [![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -207,9 +207,9 @@ repositories {
 dependencies {
     
      // Manifold dependencies    
-     implementation 'systems.manifold:manifold-sql-rt:2024.1.16'
-     annotationProcessor 'systems.manifold:manifold-sql:2024.1.16'
-     testAnnotationProcessor 'systems.manifold:manifold-sql:2024.1.16'
+     implementation 'systems.manifold:manifold-sql-rt:2024.1.17'
+     annotationProcessor 'systems.manifold:manifold-sql:2024.1.17'
+     testAnnotationProcessor 'systems.manifold:manifold-sql:2024.1.17'
 
      // Add your JDBC driver here, this is just an example using postgres
      implementation 'org.postgresql:postgresql:42.6.0'
@@ -250,7 +250,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.16</manifold.version>
+        <manifold.version>2024.1.17</manifold.version>
       
         <!-- use maven.compiler settings for JDK 9+ -->
         <maven.compiler.source>11</maven.compiler.source>
@@ -1322,10 +1322,10 @@ commands. You'll know instantly whether your SQL is valid and, if not, what is w
 # Javadoc
 
 `manifold-sql`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql/2024.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql/2024.1.16)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql/2024.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql/2024.1.17)
 
 `manifold-sql-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql-rt/2024.1.16/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql-rt/2024.1.16)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-sql-rt/2024.1.17/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-sql-rt/2024.1.17)
 
 # License
 
