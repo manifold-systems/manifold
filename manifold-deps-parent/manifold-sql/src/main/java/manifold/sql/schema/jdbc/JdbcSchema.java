@@ -16,6 +16,7 @@
 
 package manifold.sql.schema.jdbc;
 
+import manifold.rt.api.util.ManIdentifierUtil;
 import manifold.sql.rt.api.ConnectionProvider;
 import manifold.sql.rt.api.DbConfig;
 import manifold.sql.rt.api.Dependencies;
@@ -125,22 +126,24 @@ public class JdbcSchema implements Schema
     {
       while( schemas.next() )
       {
-        String schem = schemas.getString( "TABLE_SCHEM" );
+        String rawName = schemas.getString( "TABLE_SCHEM" );
 
-        if( schem.equalsIgnoreCase( schemaName ) )
+        if( rawName.equalsIgnoreCase( schemaName ) )
         {
-          return schem;
+          return rawName;
         }
 
-        if( schem.equalsIgnoreCase( getDbConfig().getName() ) )
+        String dbConfigFileName = getDbConfig().getName();
+        if( rawName.equalsIgnoreCase( dbConfigFileName ) ||
+          ManIdentifierUtil.makePascalCaseIdentifier( rawName, true ).equalsIgnoreCase( dbConfigFileName ) )
         {
-          return schem;
+          return rawName;
         }
 
-        if( !schem.equalsIgnoreCase( "information_schema" ) &&
-          !schem.equalsIgnoreCase( "system_lobs" ) )
+        if( !rawName.equalsIgnoreCase( "information_schema" ) &&
+          !rawName.equalsIgnoreCase( "system_lobs" ) )
         {
-          defaultSchema = schem;
+          defaultSchema = rawName;
           if( defaultSchema.equalsIgnoreCase( "public" ) )
           {
             break;
@@ -159,22 +162,25 @@ public class JdbcSchema implements Schema
     {
       while( catalogs.next() )
       {
-        String schem = catalogs.getString( "TABLE_CAT" );
+        String rawName = catalogs.getString( "TABLE_CAT" );
 
-        if( schem.equalsIgnoreCase( schemaName ) )
+        if( rawName.equalsIgnoreCase( schemaName ) )
         {
-          return schem;
+          return rawName;
         }
 
-        if( schem.equalsIgnoreCase( getDbConfig().getName() ) )
+
+        String dbConfigFileName = getDbConfig().getName();
+        if( rawName.equalsIgnoreCase( dbConfigFileName ) ||
+          ManIdentifierUtil.makePascalCaseIdentifier( rawName, true ).equalsIgnoreCase( dbConfigFileName ) )
         {
-          return schem;
+          return rawName;
         }
 
-        if( !schem.equalsIgnoreCase( "information_schema" ) &&
-          !schem.equalsIgnoreCase( "system_lobs" ) )
+        if( !rawName.equalsIgnoreCase( "information_schema" ) &&
+          !rawName.equalsIgnoreCase( "system_lobs" ) )
         {
-          defaultSchema = schem;
+          defaultSchema = rawName;
           if( defaultSchema.equalsIgnoreCase( "public" ) )
           {
             break;

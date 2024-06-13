@@ -114,7 +114,7 @@ public class JdbcSchemaTable implements SchemaTable
     _oneToMany = new LinkedHashSet<>();
     _manyToMany = new LinkedHashSet<>();
     _tableDdl = null; // todo: generate DDL from metadata
-    List<String> columnClassNames = getColumnClassNames( metaData );
+    Map<String, String> columnClassNames = getColumnClassNames( metaData );
 
     DriverInfo driver = DriverInfo.lookup( metaData );
     if( schemaName != null && !schemaName.isEmpty() && driver == Oracle )
@@ -131,7 +131,8 @@ public class JdbcSchemaTable implements SchemaTable
       while( colResults.next() )
       {
         i++;
-        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassNames.get( i-1 ), metaData );
+        String columnClassName = columnClassNames.get( colResults.getString( "COLUMN_NAME" ) );
+        JdbcSchemaColumn col = new JdbcSchemaColumn( i, this, colResults, primaryKey, uniqueKeys, columnClassName, metaData );
         _columns.put( col.getName(), col );
         if( col.isNonNullUniqueId() )
         {
@@ -161,9 +162,9 @@ public class JdbcSchemaTable implements SchemaTable
   }
 
   @NotNull
-  private List<String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
+  private Map<String, String> getColumnClassNames( DatabaseMetaData metaData ) throws SQLException
   {
-    List<String> columnClassNames = new ArrayList<>();
+    Map<String, String> columnClassNames = new LinkedHashMap<>();
     try( PreparedStatement preparedStatement = metaData.getConnection().prepareStatement("select * from " + _escapedName) )
     {
       int columnCount = preparedStatement.getMetaData().getColumnCount();
@@ -171,12 +172,13 @@ public class JdbcSchemaTable implements SchemaTable
       {
         try
         {
-          columnClassNames.add( preparedStatement.getMetaData().getColumnClassName( i + 1 ) );
+          String columnName = preparedStatement.getMetaData().getColumnName( i + 1 );
+          String columnClassName = preparedStatement.getMetaData().getColumnClassName( i + 1 );
+          columnClassNames.put( columnName, columnClassName );
         }
         catch( SQLException se )
         {
-          LOGGER.warn( "getColumnClassName() failed.", se );
-          columnClassNames.add( Object.class.getName() );
+          LOGGER.warn( "getColumnClassName() failed for table '" + _escapedName + "' column #" + (i + 1), se );
         }
       }
     }
