@@ -65,8 +65,8 @@ public class JdbcSchemaTable implements SchemaTable
     _escapedName =  DbUtil.enquoteIdentifier(_name, metaData);
 
     List<String> primaryKey = new ArrayList<>();
-    String catalogName = _schema.getDbConfig().getCatalogName();
     String schemaName = _schema.getName();
+    String catalogName = _schema.isCatalogBased() ? schemaName : _schema.getDbConfig().getCatalogName();
     try( ResultSet primaryKeys = metaData.getPrimaryKeys( catalogName, schemaName, _name ) )
     {
       while( primaryKeys.next() )

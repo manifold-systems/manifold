@@ -60,7 +60,7 @@ public interface DbConfig
   /**
    * (Optional) The name of the database schema used for this configuration. If no "schemaName" is provided, the dbconfig
    * file name is used as the schema name. If the file name, does not correspond with a schema in the database, a default
-   * schema will be selected automatically.
+   * schema may be selected automatically.
    * <p/>
    * Note, some drivers provide schema names as catalog names e.g., MySql. In this case the catalog names are queried from
    * the catalogs of the driver's database metadata.

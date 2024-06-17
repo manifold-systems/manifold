@@ -23,6 +23,7 @@ import java.util.Map;
 
 public interface Schema
 {
+  boolean isCatalogBased();
   String getCatalog();
   String getName();
   DbConfig getDbConfig();

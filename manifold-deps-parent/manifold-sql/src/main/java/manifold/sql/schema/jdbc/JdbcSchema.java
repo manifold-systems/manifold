@@ -44,6 +44,8 @@ public class JdbcSchema implements Schema
   private final Map<String, String> _nameToJava;
   private final DriverInfo _driverInfo;
   private final boolean _schemaIsCatalog;
+  private boolean _hasSchemas;
+  private boolean _hasCatalogs;
 
   public JdbcSchema( DbConfig dbConfig ) throws SQLException
   {
@@ -58,19 +60,31 @@ public class JdbcSchema implements Schema
 
       DatabaseMetaData metaData = c.getMetaData();
 
-      String schemaName = findSchemaName( metaData );
+      String schemaName = findSchemaNameAsSchema( metaData );
       String catalogName = null;
       if( schemaName == null )
       {
-        // mysql, being mysql, provides the schema from the catalogs
-        catalogName = findSchemaNameFromCatalogs( metaData );
+        // mysql, being mysql, provides the schema as a catalog
+        catalogName = findSchemaNameAsCatalog( metaData );
       }
       _schemaIsCatalog = catalogName != null;
       String name = _schemaIsCatalog ? catalogName : schemaName;
-      if( _driverInfo == Oracle )
+      if( name == null && (_hasSchemas || _hasCatalogs) )
       {
-        // yes, oracle requires uppercase for schema name O_O
-        name = name.toUpperCase();
+        throw new SQLException( "None of: '" + dbConfig.getName() +
+          "' dbconfig file name, \"schemaName\", or \"catalogName\" match a schema name in " +
+          metaData.getDatabaseProductName() + "." );
+      }
+      if( name != null )
+      {
+        if( _driverInfo == Oracle || metaData.storesUpperCaseIdentifiers() )
+        {
+          name = name.toUpperCase();
+        }
+        else if( metaData.storesLowerCaseIdentifiers() )
+        {
+          name = name.toLowerCase();
+        }
       }
       _name = name;
 
@@ -115,80 +129,101 @@ public class JdbcSchema implements Schema
     }
   }
 
-  String findSchemaName( DatabaseMetaData metaData ) throws SQLException
+  private String findSchemaNameAsSchema( DatabaseMetaData metaData ) throws SQLException
   {
-    String defaultSchema = null;
     String catalogName = _dbConfig.getCatalogName();
     String schemaName = _dbConfig.getSchemaName();
+    String publicName = null;
+    String rawNameMatch = null;
     try( ResultSet schemas = catalogName != null
       ? metaData.getSchemas( catalogName, schemaName ) // sqlite throws SQLFeatureNotSupportedException for this one
       : metaData.getSchemas() )
     {
       while( schemas.next() )
       {
+        _hasSchemas = true;
+
         String rawName = schemas.getString( "TABLE_SCHEM" );
 
         if( rawName.equalsIgnoreCase( schemaName ) )
         {
-          return rawName;
+          // matches "schemaName" property, this has precedence over dbconfig file name match
+          rawNameMatch = rawName;
+          break;
         }
 
-        String dbConfigFileName = getDbConfig().getName();
-        if( rawName.equalsIgnoreCase( dbConfigFileName ) ||
-          ManIdentifierUtil.makePascalCaseIdentifier( rawName, true ).equalsIgnoreCase( dbConfigFileName ) )
+        if( matchesDbConfigFileName( rawName, schemaName ) )
         {
-          return rawName;
+          rawNameMatch = rawName;
+          // continue trying to match against "schemaName" property
         }
 
-        if( !rawName.equalsIgnoreCase( "information_schema" ) &&
-          !rawName.equalsIgnoreCase( "system_lobs" ) )
+        if( rawName.equalsIgnoreCase( "public" ) )
         {
-          defaultSchema = rawName;
-          if( defaultSchema.equalsIgnoreCase( "public" ) )
-          {
-            break;
-          }
+          // if no match is found and a 'public' schema exists, use that (with a warning)
+          publicName = rawName;
         }
       }
     }
-    return defaultSchema;
+    if( rawNameMatch != null )
+    {
+      return rawNameMatch;
+    }
+    if( publicName != null )
+    {
+      LOGGER.warn( "No schema found in database '" + metaData.getDatabaseProductName() +
+        "' that matches dbconfig file name '" + _dbConfig.getName() + "' or 'schemaName', defaulting to 'public' schema." );
+      return publicName;
+    }
+    return null;
   }
 
-  String findSchemaNameFromCatalogs( DatabaseMetaData metaData ) throws SQLException
+  private String findSchemaNameAsCatalog( DatabaseMetaData metaData ) throws SQLException
   {
-    String defaultSchema = null;
-    String schemaName = _dbConfig.getSchemaName();
+    String catalogName = _dbConfig.getCatalogName();
+    catalogName = catalogName == null ? _dbConfig.getSchemaName() : catalogName;
+    String rawNameMatch = null;
     try( ResultSet catalogs =  metaData.getCatalogs() )
     {
       while( catalogs.next() )
       {
+        _hasCatalogs = true;
+
         String rawName = catalogs.getString( "TABLE_CAT" );
 
-        if( rawName.equalsIgnoreCase( schemaName ) )
+        if( rawName.equalsIgnoreCase( catalogName ) )
         {
-          return rawName;
+          // matches "catalogName" property, this has precedence over dbconfig file name match
+          rawNameMatch = rawName;
+          break;
         }
 
-
-        String dbConfigFileName = getDbConfig().getName();
-        if( rawName.equalsIgnoreCase( dbConfigFileName ) ||
-          ManIdentifierUtil.makePascalCaseIdentifier( rawName, true ).equalsIgnoreCase( dbConfigFileName ) )
+        if( matchesDbConfigFileName( rawName, catalogName ) )
         {
-          return rawName;
-        }
-
-        if( !rawName.equalsIgnoreCase( "information_schema" ) &&
-          !rawName.equalsIgnoreCase( "system_lobs" ) )
-        {
-          defaultSchema = rawName;
-          if( defaultSchema.equalsIgnoreCase( "public" ) )
-          {
-            break;
-          }
+          rawNameMatch = rawName;
+          // continue trying to match against "catalogName" property
         }
       }
     }
-    return defaultSchema;
+    return rawNameMatch;
+  }
+
+  private boolean matchesDbConfigFileName( String rawName, String schemaName )
+  {
+    String dbConfigFileName = getDbConfig().getName();
+    if( rawName.equalsIgnoreCase( dbConfigFileName ) ||
+      ManIdentifierUtil.makePascalCaseIdentifier( rawName, true ).equalsIgnoreCase( dbConfigFileName ) )
+    {
+      // matches dbconfig file name
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public boolean isCatalogBased()
+  {
+    return _schemaIsCatalog;
   }
 
   @Override

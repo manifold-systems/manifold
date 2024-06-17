@@ -118,18 +118,52 @@ public class DbConfigImpl implements DbConfig
       consumer.accept( connection );
     }
 
-    String schemaName = getSchemaName();
-    if( schemaName != null && !schemaName.isEmpty() )
-    {
-      // for drivers like oracle that don't provide a way to set the schema in the url
-      connection.setSchema( schemaName );
-    }
+    syncWithConnection( connection );
 
     if( env == Compiler || env == IDE )
     {
       // for testing, only relevant during compilation: need to create db from ddl
       // Note, test execution framework handles DDL loading explicitly, again this is only relevant during compilation for testing
       execDdl( connection, getDbDdl() );
+    }
+  }
+
+  /**
+   * If this dbconfig provides a catalogName and/or a schemaName, assign them _to_ the connection.
+   * Otherwise, if provided from the JDBC URL, assign dbconfig's catalog and/or schema _from_ the connection.
+   */
+  private void syncWithConnection( Connection connection ) throws SQLException
+  {
+    String catalogName = getCatalogName();
+    if( catalogName != null )
+    {
+      // set the connection's catalog
+      connection.setCatalog( catalogName );
+    }
+    else
+    {
+      String catalog = connection.getCatalog();
+      if( catalog != null )
+      {
+        // assign dbconfig catalogName from connection
+        _bindings.put( "catalogName", catalog );
+      }
+    }
+
+    String schemaName = getSchemaName();
+    if( schemaName != null && !schemaName.isEmpty() )
+    {
+      // set the connection's schema
+      connection.setSchema( schemaName );
+    }
+    else
+    {
+      String schema = connection.getSchema();
+      if( schema != null )
+      {
+        // assign dbconfig schemaName from connection
+        _bindings.put( "schemaName", schema );
+      }
     }
   }
 
