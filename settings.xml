@@ -2,8 +2,8 @@
   <servers>
     <server>
       <id>ossrh</id>
-      <username>rsmckinney</username>
-      <password>${env.MAN_PASS_PHRASE}</password>
+      <username>1xLFPIdh</username>
+      <password>${env.MAN_PASSWORD}</password>
     </server>
   </servers>
 
