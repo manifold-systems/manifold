@@ -23,6 +23,7 @@ import manifold.sql.schema.api.SchemaColumn;
 import manifold.sql.schema.api.SchemaForeignKey;
 import manifold.sql.schema.api.SchemaTable;
 import manifold.sql.rt.util.DriverInfo;
+import manifold.sql.schema.jdbc.oneoff.DuckDbForeignKeys;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static manifold.sql.rt.util.DriverInfo.DuckDB;
 import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class JdbcSchemaTable implements SchemaTable
@@ -92,10 +94,16 @@ public class JdbcSchemaTable implements SchemaTable
         }
       }
     }
-
-    try( ResultSet foreignKeys = metaData.getImportedKeys( catalogName, schemaName, _name ) )
+    catch( SQLFeatureNotSupportedException ignore )
     {
-      List<JdbcForeignKeyMetadata.KeyPart> keyParts = new ArrayList<>();
+      // getIndexInfo not supported e.g., DuckDB
+    }
+
+    List<JdbcForeignKeyMetadata.KeyPart> keyParts = new ArrayList<>();
+    try( ResultSet foreignKeys = _schema.getDriverInfo() == DuckDB
+                                 ? DuckDbForeignKeys.getImportedKeys( metaData, catalogName, schemaName, _name )
+                                 : metaData.getImportedKeys( catalogName, schemaName, _name ) )
+    {
       while( foreignKeys.next() )
       {
         String fkName = foreignKeys.getString( "FK_NAME" );
@@ -104,8 +112,12 @@ public class JdbcSchemaTable implements SchemaTable
         String pkTableName = foreignKeys.getString( "PKTABLE_NAME" );
         keyParts.add( new JdbcForeignKeyMetadata.KeyPart( fkName, fkColumnName, pkColumnName, pkTableName ) );
       }
-      _foreignKeyData = new JdbcForeignKeyMetadata( this, keyParts );
     }
+    catch( SQLFeatureNotSupportedException ignore )
+    {
+      // getImportedKeys not supported
+    }
+    _foreignKeyData = new JdbcForeignKeyMetadata( this, keyParts );
 
     _columns = new LinkedHashMap<>();
     _primaryKeys = new ArrayList<>();

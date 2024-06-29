@@ -28,6 +28,7 @@ import java.time.*;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class ArrayValueAccessor implements ValueAccessor
 {
@@ -57,6 +58,7 @@ public class ArrayValueAccessor implements ValueAccessor
       put( URL.class, "DATALINK" );
       put( String.class, "VARCHAR" );
       put( byte[].class, "VARBINARY" );
+      put( UUID.class, "UUID" );
     }};
 
   @Override
@@ -73,6 +75,11 @@ public class ArrayValueAccessor implements ValueAccessor
 
   @Override
   public Object getRowValue( ResultSet rs, BaseElement elem ) throws SQLException
+  {
+    return getArrayRowValue( rs, elem );
+  }
+
+  public static Object getArrayRowValue( ResultSet rs, BaseElement elem ) throws SQLException
   {
     Array array = rs.getArray( elem.getPosition() );
     if( array == null )
@@ -103,35 +110,40 @@ public class ArrayValueAccessor implements ValueAccessor
     }
     else
     {
-      Class<?> arrayType = array.getClass();
-      if( !arrayType.isArray() )
-      {
-        throw new SQLException( "Expecting array type, but found: " + arrayType.getTypeName() );
-      }
-
-      if( arrayType.isPrimitive() )
-      {
-        // For some reason createArrayOf() only takes Object[], not primitive arrays,
-        // so we have to make a boxed version of a primitive array
-        array = makeBoxedArray( array, arrayType );
-        arrayType = array.getClass();
-      }
-
-      Class<?> componentType = arrayType.getComponentType();
-      String jdbcType = COMPONENT_TYPES.get( componentType );
-      Array jdbcArray = ps.getConnection().createArrayOf( jdbcType, (Object[])array );
-      try
-      {
-        ps.setArray( pos, jdbcArray );
-      }
-      finally
-      {
-        jdbcArray.free();
-      }
+      setArrayIndirect( ps, pos, array );
     }
   }
 
-  private Object[] makeBoxedArray( Object primitiveArray, Class<?> valueClass )
+  public static void setArrayIndirect( PreparedStatement ps, int pos, Object array ) throws SQLException
+  {
+    Class<?> arrayType = array.getClass();
+    if( !arrayType.isArray() )
+    {
+      throw new SQLException( "Expecting array type, but found: " + arrayType.getTypeName() );
+    }
+
+    if( arrayType.isPrimitive() )
+    {
+      // For some reason createArrayOf() only takes Object[], not primitive arrays,
+      // so we have to make a boxed version of a primitive array
+      array = makeBoxedArray( array, arrayType );
+      arrayType = array.getClass();
+    }
+
+    Class<?> componentType = arrayType.getComponentType();
+    String jdbcType = COMPONENT_TYPES.get( componentType );
+    Array jdbcArray = ps.getConnection().createArrayOf( jdbcType, (Object[])array );
+    try
+    {
+      ps.setArray( pos, jdbcArray );
+    }
+    finally
+    {
+      jdbcArray.free();
+    }
+  }
+
+  private static Object[] makeBoxedArray( Object primitiveArray, Class<?> valueClass )
   {
     Class boxedType = PrimitiveUtil.getBoxedType( valueClass );
     int len = java.lang.reflect.Array.getLength( primitiveArray );

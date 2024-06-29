@@ -111,6 +111,7 @@ class SchemaParentType
     addCommitMethod( srcClass );
     addRevertMethod( srcClass );
     addSqlChangeMethod( srcClass );
+    addBatchChangeMethod( srcClass );
   }
 
   private void addDefaultScopeMethod( SrcLinkedClass srcClass )
@@ -150,6 +151,14 @@ class SchemaParentType
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
       .body( "defaultScope().commit(changes);" );
     srcClass.addMethod( method );
+
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "commitAsBatch" )
+      .addParam( "changes", BatchScopeConsumer.class.getSimpleName() )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "defaultScope().commitAsBatch(changes);" );
+    srcClass.addMethod( method );
   }
 
   private void addRevertMethod( SrcLinkedClass srcClass )
@@ -169,6 +178,16 @@ class SchemaParentType
       .name( "addSqlChange" )
       .addParam( "sqlChange", ScopeConsumer.class.getSimpleName() )
       .body( "defaultScope().addSqlChange(sqlChange);" );
+    srcClass.addMethod( method );
+  }
+
+  private void addBatchChangeMethod( SrcLinkedClass srcClass )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "addBatchChange" )
+      .addParam( "batchChange", BatchScopeConsumer.class.getSimpleName() )
+      .body( "defaultScope().addBatchChange(batchChange);" );
     srcClass.addMethod( method );
   }
 
@@ -807,6 +826,7 @@ class SchemaParentType
     srcClass.addImport( TxBindings.class );
     srcClass.addImport( TxScope.class );
     srcClass.addImport( ScopeConsumer.class );
+    srcClass.addImport( BatchScopeConsumer.class );
     srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( OperableTxBindings.class );
     srcClass.addImport( BasicTxBindings.class );

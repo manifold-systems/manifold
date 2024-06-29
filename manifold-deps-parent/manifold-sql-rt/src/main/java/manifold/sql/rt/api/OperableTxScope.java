@@ -17,7 +17,9 @@
 package manifold.sql.rt.api;
 
 import java.sql.Connection;
+import java.sql.Statement;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * This interface is for internal use.
@@ -32,4 +34,7 @@ public interface OperableTxScope extends TxScope
   boolean containsRow( Entity item );
   Connection getActiveConnection();
   SqlChangeCtx newSqlChangeCtx( Connection c );
+  BatchSqlChangeCtx newBatchSqlChangeCtx( Connection c );
+
+  void addBatch( Executor exec, Consumer<Statement> consumer );
 }

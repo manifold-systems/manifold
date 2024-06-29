@@ -28,6 +28,7 @@ import java.util.Set;
 
 public enum DriverInfo
 {
+  DuckDB( "DuckDB", false, true ),
   H2( "H2", false, false ),
   MySQL( "MySQL", false, true ),
   Oracle( "Oracle", true, false ),
@@ -121,34 +122,15 @@ public enum DriverInfo
       return ERRANT;
     }
 
-    DriverInfo result;
-    if( name.contains( H2.getDriverBaseName() ) )
+    DriverInfo result = UNTESTED;
+    for( DriverInfo di : DriverInfo.values() )
     {
-      result = H2;
-    }
-    else if( name.contains( MySQL.getDriverBaseName() ) )
-    {
-      result = MySQL;
-    }
-    else if( name.contains( Oracle.getDriverBaseName() ) )
-    {
-      result = Oracle;
-    }
-    else if( name.contains( Postgres.getDriverBaseName() ) )
-    {
-      result = Postgres;
-    }
-    else if( name.contains( SQLite.getDriverBaseName() ) )
-    {
-      result = SQLite;
-    }
-    else if( name.contains( SqlServer.getDriverBaseName() ) )
-    {
-      result = SqlServer;
-    }
-    else
-    {
-      result = UNTESTED;
+      String baseName = di.getDriverBaseName();
+      if( baseName != null && name.contains( baseName ) )
+      {
+        result = di;
+        break;
+      }
     }
     return result;
   }

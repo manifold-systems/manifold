@@ -37,8 +37,12 @@ public class BitValueAccessor implements ValueAccessor
   @Override
   public Class<?> getJavaType( BaseElement elem )
   {
-    if( elem.getSize() > 1 )
+    int size = elem.getSize();
+    if( size > 1 ||
+      // some DBs such as duckdb treat BIT as variable length BITSTRING when no size is present
+      String.class.getTypeName().equals( elem.getColumnClassName() ) )
     {
+      // a bitstring such as "10110011"
       return String.class;
     }
     return elem.canBeNull() ? Boolean.class : boolean.class;

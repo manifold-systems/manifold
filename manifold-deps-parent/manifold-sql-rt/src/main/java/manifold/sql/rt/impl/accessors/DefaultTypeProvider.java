@@ -68,9 +68,9 @@ public class DefaultTypeProvider implements TypeProvider
   {
     int jdbcType = pm.getParameterType( pos );
 
-    // sqlite and mysql are known flakes here. See comment from caller.
-    if( jdbcType == Types.VARCHAR &&
-      DriverInfo.lookup( metaData ).flakyParameterMetadata() )
+    // sqlite, mysql, & duckdb are known flakes here. See comment from caller.
+    if( jdbcType == 0 ||
+      jdbcType == Types.VARCHAR && DriverInfo.lookup( metaData ).flakyParameterMetadata() )
     {
       // the calling code handles this exception and provides default behavior for drivers with flaky parameter metadata
       throw new SQLException();

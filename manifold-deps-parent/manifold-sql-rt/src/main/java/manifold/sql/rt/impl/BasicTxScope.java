@@ -21,9 +21,12 @@ import manifold.sql.rt.api.*;
 import manifold.util.concurrent.ConcurrentHashSet;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 /**
  */
@@ -33,7 +36,9 @@ class BasicTxScope implements OperableTxScope
   private final Set<Entity> _rows;
   private final Set<Entity> _processedRows;
   private final ReentrantReadWriteLock _lock;
-  private final List<ScopeConsumer> _sqlChanges;
+  private final List<BaseConsumer> _sqlChanges;
+  private final List<BatchRunner> _batchRunners;
+  private final Map<String, BatchRunner> _batchedChanges;
   private Connection _connection;
 
   public BasicTxScope( Class<? extends SchemaType> schemaClass )
@@ -43,6 +48,8 @@ class BasicTxScope implements OperableTxScope
     _rows = new LinkedHashSet<>();
     _processedRows = new ConcurrentHashSet<>();
     _sqlChanges = new ArrayList<>();
+    _batchRunners = new ArrayList<>();
+    _batchedChanges = new LinkedHashMap<>();
     _lock = new ReentrantReadWriteLock();
   }
 
@@ -143,6 +150,111 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
+  public void addBatchChange( BatchScopeConsumer change )
+  {
+    if( change == null )
+    {
+      throw new IllegalArgumentException( "'change' is null" );
+    }
+
+    _lock.writeLock().lock();
+    try
+    {
+      _sqlChanges.add( change );
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  private void addBatchRunner( BatchRunner change )
+  {
+    _lock.writeLock().lock();
+    try
+    {
+      _batchRunners.add( change );
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  @Override
+  public void addBatch( Executor exec, Consumer<Statement> stuff )
+  {
+    _lock.writeLock().lock();
+    try
+    {
+      String batchId = ((BatchSqlChangeCtx)exec.getCtx()).getBatchId();
+      String sql = exec.getSqlCommand();
+      _batchedChanges.computeIfAbsent( batchId, __ -> new BatchRunner( batchId, sql ) )
+        .addBatchedItem( stuff );
+    }
+    finally
+    {
+      _lock.writeLock().unlock();
+    }
+  }
+
+  private class BatchRunner implements ScopeConsumer
+  {
+    private final String _batchId;
+    private final String _sql;
+    private final List<Consumer<Statement>> _batchItems;
+
+    private BatchRunner( String batchId, String sql )
+    {
+      // either "_stmt_" for adding many non-parameterized sql statements into one batch, or the class name of a
+      // parameterized sql command statement e.g., inserting many rows into a single table where only params differ
+      _batchId = batchId;
+
+      // sql is necessary only for parameterized PreparedStatements where the sql is static and the parameters vary:
+      // PreparedStatement.setParameters() vs. Statement.addBatch(sql)
+      _sql = batchId.equals( "_stmt_" ) ? null : sql;
+
+      _batchItems = new ArrayList<>();
+      addBatchRunner( this );
+    }
+
+    private void addBatchedItem( Consumer<Statement> batchItem )
+    {
+      _batchItems.add( batchItem );
+    }
+
+    @Override
+    public void accept( SqlChangeCtx ctx ) throws SQLException
+    {
+      if( _batchId.equals( "_stmt_" ) )
+      {
+        // sql commands with no parameters are batched in a single statement
+        try( Statement stmt = ctx.getConnection().createStatement() )
+        {
+          for( Consumer<Statement> batchItem : _batchItems )
+          {
+            batchItem.accept( stmt );
+          }
+          stmt.executeBatch();
+        }
+      }
+      else
+      {
+        // sql commands with parameters are batched one prepared stmt to its many parameter settings
+        try( PreparedStatement ps = ctx.getConnection().prepareStatement( _sql ) )
+        {
+          for( Consumer<Statement> batchItem : _batchItems )
+          {
+            batchItem.accept( ps );
+            ps.addBatch();
+          }
+          ps.executeBatch();
+        }
+      }
+    }
+  }
+
+  @Override
   public void commit() throws SQLException
   {
     _lock.writeLock().lock();
@@ -164,16 +276,29 @@ class BasicTxScope implements OperableTxScope
         {
           c.setAutoCommit( false );
 
-          Set<Entity> visited = new HashSet<>();
-          for( Entity row : _rows )
+          doCrud( c );
+
+          for( BaseConsumer sqlChange : _sqlChanges )
           {
-            doCrud( c, row, new LinkedHashMap<>(), visited );
+            if( sqlChange instanceof BatchScopeConsumer )
+            {
+              // The execution of BatchScopeConsumers results in the creation of BatchRunners.
+              // A BatchScopeConsumer produces a list of "addBatch" calls, that can be either:
+              // - add a set of parameters for a PreparedStatement having a single sql statement, which batches the varying parameterizations on the single sql statement, or
+              // - add a sql command to a Statement, which batches the sql statements as one call
+              // Each set of "addBatch" calls is mapped by an ID within a BatchRunner.
+              // A BatchRunner is itself a ScopeConsumer and executes the addBatch calls immediately after the
+              // BatchScopeConsumer executes as part of executeBatchSqlChange().
+              executeBatchSqlChange( c, (BatchScopeConsumer)sqlChange );
+            }
+            else
+            {
+              executeSqlChange( c, (ScopeConsumer)sqlChange );
+            }
           }
 
-          for( ScopeConsumer sqlChange : _sqlChanges )
-          {
-            executeSqlChange( c, sqlChange );
-          }
+          doCrud( c );
+
           c.commit();
 
           for( Entity row : _rows )
@@ -183,6 +308,8 @@ class BasicTxScope implements OperableTxScope
 
           _rows.clear();
           _sqlChanges.clear();
+          _batchRunners.clear();
+          _batchedChanges.clear();
         }
         catch( SQLException e )
         {
@@ -207,10 +334,37 @@ class BasicTxScope implements OperableTxScope
     }
   }
 
+  private void doCrud( Connection c ) throws SQLException
+  {
+    Set<Entity> visited = new HashSet<>();
+    for( Entity row : _rows )
+    {
+      doCrud( c, row, new LinkedHashMap<>(), visited );
+    }
+  }
+
+  private void executeBatchRunners( Connection c ) throws SQLException
+  {
+    while( !_batchRunners.isEmpty() )
+    {
+      BatchRunner batchChange = _batchRunners.remove( 0 );
+      _batchedChanges.remove( batchChange._batchId );
+
+      executeSqlChange( c, batchChange );
+    }
+  }
+
   @Override
   public void commit( ScopeConsumer change ) throws SQLException
   {
     addSqlChange( change );
+    commit();
+  }
+
+  @Override
+  public void commitAsBatch( BatchScopeConsumer change ) throws SQLException
+  {
+    addBatchChange( change );
     commit();
   }
 
@@ -219,33 +373,22 @@ class BasicTxScope implements OperableTxScope
     sqlChange.accept( newSqlChangeCtx( c ) );
   }
 
+  private void executeBatchSqlChange( Connection c, BatchScopeConsumer sqlChange ) throws SQLException
+  {
+    sqlChange.accept( newBatchSqlChangeCtx( c ) );
+    executeBatchRunners( c );
+  }
+
   @Override
   public SqlChangeCtx newSqlChangeCtx( Connection c )
   {
-    return new SqlChangeCtx()
-    {
-      @Override
-      public TxScope getTxScope()
-      {
-        return BasicTxScope.this;
-      }
+    return new MySqlChangeCtx( c );
+  }
 
-      @Override
-      public Connection getConnection()
-      {
-        return c;
-      }
-
-      @Override
-      public void doCrud() throws SQLException
-      {
-        Set<Entity> visited = new HashSet<>();
-        for( Entity row : _rows )
-        {
-          BasicTxScope.this.doCrud( c, row, new LinkedHashMap<>(), visited );
-        }
-      }
-    };
+  @Override
+  public BatchSqlChangeCtx newBatchSqlChangeCtx( Connection c )
+  {
+    return new MyBatchSqlChangeCtx( c );
   }
 
   @Override
@@ -265,6 +408,8 @@ class BasicTxScope implements OperableTxScope
       }                   
       _rows.clear();
       _sqlChanges.clear();
+      _batchRunners.clear();
+      _batchedChanges.clear();
     }
     finally
     {
@@ -402,6 +547,55 @@ class BasicTxScope implements OperableTxScope
       this.fkName = fkName;
       this.pkRow = pkRow;
       this.pkName = pkName;
+    }
+  }
+
+  private class MySqlChangeCtx implements SqlChangeCtx
+  {
+    private final Connection _c;
+
+    public MySqlChangeCtx( Connection c )
+    {
+      _c = c;
+    }
+
+    @Override
+    public TxScope getTxScope()
+    {
+      return BasicTxScope.this;
+    }
+
+    @Override
+    public Connection getConnection()
+    {
+      return _c;
+    }
+
+    @Override
+    public void doCrud() throws SQLException
+    {
+      BasicTxScope.this.doCrud( _c );
+    }
+  }
+
+  private class MyBatchSqlChangeCtx extends MySqlChangeCtx implements BatchSqlChangeCtx
+  {
+    private String _batchId;
+
+    public MyBatchSqlChangeCtx( Connection c )
+    {
+      super( c );
+    }
+
+    @Override
+    public String getBatchId()
+    {
+      return _batchId;
+    }
+    @Override
+    public void setBatchId( String batchId )
+    {
+      _batchId = batchId;
     }
   }
 }

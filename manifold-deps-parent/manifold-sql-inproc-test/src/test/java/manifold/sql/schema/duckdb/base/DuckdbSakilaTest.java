@@ -14,17 +14,23 @@
  * limitations under the License.
  */
 
-package manifold.sql.schema.oracle;
+package manifold.sql.schema.duckdb.base;
 
-import manifold.sql.DdlServerTest;
-import manifold.sql.rt.api.DbConfig;
-import manifold.sql.rt.api.Dependencies;
+import manifold.sql.DbResourceFileTest;
 
-public abstract class OracleDdlServerTest extends DdlServerTest
+public abstract class DuckdbSakilaTest extends DbResourceFileTest
 {
-  @Override
-  protected DbConfig getDbConfig()
-  {
-    return Dependencies.instance().getDbConfigProvider().loadDbConfig( "OracleSakila", getClass() );
-  }
+//  private static final String DB_RESOURCE = "/samples/db/sqlite-sakila.db";
+//
+//  @Before
+//  public void setup()
+//  {
+//    _setup( DB_RESOURCE );
+//  }
+//
+//  @After
+//  public void cleanup() throws Exception
+//  {
+//    _cleanup( DB_RESOURCE );
+//  }
 }

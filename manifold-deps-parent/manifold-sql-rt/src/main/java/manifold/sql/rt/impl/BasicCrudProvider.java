@@ -30,6 +30,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.function.Function;
 
+import static manifold.sql.rt.util.DriverInfo.DuckDB;
 import static manifold.sql.rt.util.DriverInfo.Oracle;
 
 public class BasicCrudProvider implements CrudProvider
@@ -74,6 +75,22 @@ public class BasicCrudProvider implements CrudProvider
     }
     catch( SQLException e )
     {
+      if( DriverInfo.lookup( c.getMetaData() ) == DuckDB )
+      {
+        // sigh duckdb... no way to get inserted data from insert/update, have to add RETURNING clause :(
+        if( ctx.getTable().getBindings().isForInsert() )
+        {
+          //todo: parse this better to handle trailing comments
+          sql = sql.trim();
+          if( sql.endsWith( ";" ) )
+          {
+            sql = sql.substring( 0, sql.length() - 1 );
+          }
+          sql = sql + " RETURNING *";
+        }
+        return c.prepareStatement( sql );
+      }
+
       reflectedColumns = reflectedColumns( c, ctx, false );
       if( reflectedColumns.length == 0 )
       {
@@ -477,34 +494,60 @@ public class BasicCrudProvider implements CrudProvider
   private <T extends Entity> void executeAndFetchRow(
     Connection c, UpdateContext<T> ctx, PreparedStatement ps, boolean hasReflectedColumns ) throws SQLException
   {
-    int result = ps.executeUpdate();
-    if( result != 1 )
-    {
-      throw new SQLException( "Expecting a single row result for Update/Insert, got " + result );
-    }
-
     // here getGeneratedKeys() returns ALL columns because PreparedStatement was created with all column names as gen keys
     // this is necessary to retrieve columns that are autoincrement, generated, default values, etc.
     Bindings reflectedRow = DataBindings.EMPTY_BINDINGS;
-    if( hasReflectedColumns )
+
+    if( DriverInfo.lookup( c.getMetaData() ) == DuckDB )
     {
-      try( ResultSet resultSet = ps.getGeneratedKeys() )
+      // for duckdb we add a `RETURNING *` clause to get the reflected columns, must use p.execute() instead of executeUpdate() here
+      boolean hasResultSet = ps.execute();
+      if( hasResultSet )
       {
-        Result<IBindingsBacked> resultRow =
-          new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
-        Iterator<IBindingsBacked> iterator = resultRow.iterator();
-        if( iterator.hasNext() )
+        try( ResultSet resultSet = ps.getResultSet() )
         {
-          reflectedRow = iterator.next().getBindings();
+          Result<IBindingsBacked> resultRow =
+            new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
+          Iterator<IBindingsBacked> iterator = resultRow.iterator();
           if( iterator.hasNext() )
           {
-            throw new SQLException( "Expecting a single row, found more." );
+            reflectedRow = iterator.next().getBindings();
+            if( iterator.hasNext() )
+            {
+              throw new SQLException( "Expecting a single row, found more." );
+            }
           }
         }
       }
-      catch( SQLFeatureNotSupportedException e )
+    }
+    else
+    {
+      int result = ps.executeUpdate();
+      if( result != 1 )
       {
-        LOGGER.warn( "getGeneratedKeys() is not supported, attempting to fetch updated row.", e );
+        throw new SQLException( "Expecting a single row result for Update/Insert, got " + result );
+      }
+
+      if( hasReflectedColumns )
+      {
+        try( ResultSet resultSet = ps.getGeneratedKeys() )
+        {
+          Result<IBindingsBacked> resultRow =
+            new Result<>( ctx.getAllCols(), resultSet, rowBindings -> () -> rowBindings );
+          Iterator<IBindingsBacked> iterator = resultRow.iterator();
+          if( iterator.hasNext() )
+          {
+            reflectedRow = iterator.next().getBindings();
+            if( iterator.hasNext() )
+            {
+              throw new SQLException( "Expecting a single row, found more." );
+            }
+          }
+        }
+        catch( SQLFeatureNotSupportedException e )
+        {
+          LOGGER.warn( "getGeneratedKeys() is not supported, attempting to fetch updated row.", e );
+        }
       }
     }
 

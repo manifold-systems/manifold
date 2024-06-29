@@ -32,6 +32,7 @@ import manifold.sql.api.DataElement;
 import manifold.sql.api.Parameter;
 import manifold.sql.query.api.Command;
 import manifold.sql.rt.api.*;
+import manifold.sql.rt.api.TxScope.BatchSqlChangeCtx;
 import manifold.sql.rt.api.TxScope.SqlChangeCtx;
 
 import javax.tools.DiagnosticListener;
@@ -152,8 +153,15 @@ class CommandParentType extends SqlParentType
     command = ManEscapeUtil.escapeForJavaStringLiteral( command );
     //noinspection unused
     String simpleName = srcClass.getSimpleName();
-    sb.append(
-      "    return new Executor(ctx, ${getParameterInfo()}, paramBindings, \"$command\").$methodName();" );
+    if( i == 1 )
+    {
+      sb.append( "    if(ctx instanceof BatchSqlChangeCtx) ((BatchSqlChangeCtx)ctx).setBatchId(\"_stmt_\");\n" );
+    }
+    else
+    {
+      sb.append( "    if(ctx instanceof BatchSqlChangeCtx) ((BatchSqlChangeCtx)ctx).setBatchId(\"${srcClass.getName()}\");\n" );
+    }
+    sb.append( "    return new Executor(ctx, ${getParameterInfo()}, paramBindings, \"$command\").$methodName();\n" );
     method.body( sb.toString() );
     srcClass.addMethod( method );
   }
@@ -250,6 +258,7 @@ class CommandParentType extends SqlParentType
     srcClass.addImport( Executor.class );
     srcClass.addImport( OperableTxScope.class );
     srcClass.addImport( SqlChangeCtx.class );
+    srcClass.addImport( BatchSqlChangeCtx.class );
     srcClass.addImport( ActualName.class );
     srcClass.addImport( DisableStringLiteralTemplates.class );
     srcClass.addImport( FragmentValue.class );

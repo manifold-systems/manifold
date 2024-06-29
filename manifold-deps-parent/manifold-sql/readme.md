@@ -80,6 +80,17 @@ CRUD operations and transactions are a pleasure with Manifold SQL. Easily make a
 
 `Sakila` is the name of the user-defined database configuration file, which is used to name the schema Java type referenced
 here. Note, this example calls `commit()` three times to demonstrate the flexibility of decoupled transactions. See [transaction scopes](#transaction-scopes).
+                        
+---
+SQL injection safe. 
+
+<img width="80%" height="80%" align="top" src="../../docs/images/sqlinjection.png">
+<br>
+
+Inline SQL prohibits unsafe query definitions involving string concatenation and string templating. Instead, injection safety
+is achieved through type-safe APIs and is always resolved internally using conventional JDBC SQL injection safe parameters.
+
+
 
 >**ⓘ** The [Manifold SQL sample project](https://github.com/manifold-systems/manifold-sql-sample-project) contains many of the
 examples used here. Clone it and start experimenting!
@@ -327,6 +338,7 @@ If you experience problems using a JDBC driver with Manifold SQL, please let us 
 
 | Database   | Tested Driver                              |
 |------------|--------------------------------------------|
+| DuckDB     | `org.duckdb:duckdb_jdbc`                   |
 | H2         | `com.h2database:h2`                        |
 | MySQL      | `com.mysql:mysql-connector-j`              |
 | Oracle     | `com.oracle.database.jdbc:ojdbc*`          |

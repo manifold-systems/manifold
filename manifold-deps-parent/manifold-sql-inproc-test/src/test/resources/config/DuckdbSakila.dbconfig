@@ -1,0 +1,6 @@
+{
+  "url": "jdbc:duckdb:",
+  "schemaPackage": "manifold.sql.schema.simple.duckdb",
+  "dbDdl": "samples/ddl/duckdb-sakila-ddl.sql",
+  "inMemory": true
+}

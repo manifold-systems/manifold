@@ -23,12 +23,12 @@ import manifold.sql.rt.api.Dependencies;
 import manifold.sql.rt.util.DriverInfo;
 import manifold.sql.schema.api.Schema;
 import manifold.sql.schema.api.SchemaTable;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 import static manifold.sql.rt.util.DriverInfo.Oracle;
@@ -36,6 +36,8 @@ import static manifold.sql.rt.util.DriverInfo.Oracle;
 public class JdbcSchema implements Schema
 {
   private static final Logger LOGGER = LoggerFactory.getLogger( JdbcSchema.class );
+
+  private static final List<String> TABLE_TYPES = Arrays.asList( "TABLE", "BASE TABLE", "VIEW" );
 
   private final String _name;
   private final DbConfig _dbConfig;
@@ -105,7 +107,7 @@ public class JdbcSchema implements Schema
   {
     String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
     String schema = _schemaIsCatalog ? null : _name;
-    try( ResultSet resultSet = metaData.getTables( catalog, schema, null, new String[]{"TABLE", "VIEW"} ) )
+    try( ResultSet resultSet = metaData.getTables( catalog, schema, null, getTableTableTypes( metaData ) ) )
     {
       while( resultSet.next() )
       {
@@ -127,6 +129,31 @@ public class JdbcSchema implements Schema
     {
       table.resolveFkRelations();
     }
+  }
+
+  @NotNull
+  private static String[] getTableTableTypes( DatabaseMetaData metaData ) throws SQLException
+  {
+    List<String> tableTypes = new ArrayList<>();
+    List<String> allTypes = new ArrayList<>();
+    try( ResultSet rs = metaData.getTableTypes() )
+    {
+      while( rs.next() )
+      {
+        String tableType = rs.getString( "TABLE_TYPE" );
+        allTypes.add( tableType );
+        if( TABLE_TYPES.contains( tableType ) )
+        {
+          tableTypes.add( tableType );
+        }
+      }
+    }
+    if( tableTypes.isEmpty() )
+    {
+      throw new SQLException( "No valid table types found from '" +
+        metaData.getDatabaseProductName() + "': " + allTypes );
+    }
+    return tableTypes.toArray( new String[0] );
   }
 
   private String findSchemaNameAsSchema( DatabaseMetaData metaData ) throws SQLException

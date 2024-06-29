@@ -17,10 +17,12 @@
 package manifold.sql.rt.api;
 
 import manifold.json.rt.api.DataBindings;
+import manifold.util.ManExceptionUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * For internal use, called from generated code. Executes non-Select SQL.
@@ -50,21 +52,66 @@ public class Executor
     }
 
     _ctx.doCrud();
-    try( PreparedStatement ps = txConnextion.prepareStatement( _sqlCommand ) )
+
+    if( _ctx instanceof TxScope.BatchSqlChangeCtx )
     {
-      setParameters( ps );
-      return ps.executeUpdate();
+      if( _paramBindings.isEmpty() )
+      {
+        ((OperableTxScope)_ctx.getTxScope()).addBatch( this, stmt -> addBatchStatement( stmt ) );
+      }
+      else
+      {
+        ((OperableTxScope)_ctx.getTxScope()).addBatch( this, ps -> setParameters( (PreparedStatement)ps ) );
+      }
+      return 0;
+    }
+    else
+    {
+      try( PreparedStatement ps = txConnextion.prepareStatement( _sqlCommand ) )
+      {
+        setParameters( ps );
+        return ps.executeUpdate();
+      }
     }
   }
 
-  private void setParameters( PreparedStatement ps ) throws SQLException
+  private void addBatchStatement( Statement stmt )
+  {
+    try
+    {
+      stmt.addBatch( _sqlCommand );
+    }
+    catch( SQLException e )
+    {
+      throw ManExceptionUtil.unchecked( e );
+    }
+  }
+
+  public TxScope.SqlChangeCtx getCtx()
+  {
+    return _ctx;
+  }
+
+  public String getSqlCommand()
+  {
+    return _sqlCommand;
+  }
+
+  private void setParameters( PreparedStatement ps )
   {
     int i = 0;
     ValueAccessorProvider accProvider = Dependencies.instance().getValueAccessorProvider();
     for( Object param : _paramBindings.values() )
     {
       ValueAccessor accessor = accProvider.get( _paramInfo[i].getJdbcType() );
-      accessor.setParameter( ps, ++i, param );
+      try
+      {
+        accessor.setParameter( ps, ++i, param );
+      }
+      catch( SQLException e )
+      {
+        throw ManExceptionUtil.unchecked( e );
+      }
     }
   }
 }

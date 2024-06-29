@@ -71,6 +71,8 @@ public interface TxScope
    */
   void commit( ScopeConsumer changes ) throws SQLException;
 
+  void commitAsBatch( BatchScopeConsumer change ) throws SQLException;
+
   /**
    * Reverts all entity changes within this tx scope back to the last commit, or if no commits were made, back to the
    * creation of this tx scope.
@@ -108,11 +110,20 @@ public interface TxScope
    * involve a {@link SqlCommand} execution.
    */
   void addSqlChange( ScopeConsumer sqlChange );
+  void addBatchChange( BatchScopeConsumer sqlChange );
+
+  interface BaseConsumer {}
 
   @FunctionalInterface
-  interface ScopeConsumer
+  interface ScopeConsumer extends BaseConsumer
   {
     void accept( SqlChangeCtx ctx ) throws SQLException;
+  }
+
+  @FunctionalInterface
+  interface BatchScopeConsumer extends BaseConsumer
+  {
+    void accept( BatchSqlChangeCtx ctx ) throws SQLException;
   }
 
   /**
@@ -122,8 +133,12 @@ public interface TxScope
   {
     TxScope getTxScope();
     Connection getConnection();
-
     void doCrud() throws SQLException;
   }
 
+  interface BatchSqlChangeCtx extends SqlChangeCtx
+  {
+    String getBatchId();
+    void setBatchId( String batchId );
+  }
 }
