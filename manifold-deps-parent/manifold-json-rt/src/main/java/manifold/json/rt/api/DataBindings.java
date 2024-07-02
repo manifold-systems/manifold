@@ -57,7 +57,7 @@ public class DataBindings implements Bindings
   }
 
   /**
-   * Default constructor uses a {@code LinkedHashMap} to maintain the nature order of entries.
+   * Default constructor uses a {@code LinkedHashMap} to maintain the insert order of entries.
    */
   public DataBindings()
   {

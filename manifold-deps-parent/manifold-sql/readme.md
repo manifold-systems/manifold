@@ -145,6 +145,8 @@ these APIs are _always_ 100% type-safe, in-sync, and tailored for use with your 
     * [Coupled queries](#coupled-queries)
     * [Have it your way](#have-it-your-way)
   * [DML & DDL commands](#dml--ddl-commands)
+  * [Batch commands](#batch-commands)
+  * [Bulk insert](#bulk-insert)
   * [Customizations](#customizations)
   * [Dependency interfaces](#dependency-interfaces)
     * [DbConfigProvider](#dbconfigprovider)
@@ -1111,13 +1113,76 @@ String country = "United States";
 . . .
 Sakila.addSqlChange(ctx -> {
   "[.sql/] DELETE FROM country WHERE country = :country".execute(ctx, country);
-});
+}); 
+. . .
+Sakila.commit();
 ```
 Notice the `execute` method requires the `ctx` parameter, which is supplied exclusively by the transaction scope. This
 ensures SQL commands execute only from calls to `addSqlChange`, which enables such changes to be bundled within the same
 transaction scope as other DML statements and CRUD operations.
 
 This example also illustrates how type-safe, injection-safe SQL parameters can be used with any SQL command.
+
+## Batch commands
+
+---
+
+Batch commands address both performance and atomicity by grouping multiple SQL commands, primarily INSERT and UPDATE, into
+a single database call. Use `TxScope#addBatchChange` to streamline this process with both parameterized and vanilla SQL
+statements.
+                                                                               
+Use `addBatchChange` to batch many invocations of the same parameterized statement as one database call. 
+```java
+List<String> countries = loadCountries)();
+. . .
+Sakila.addBatchChange(ctx -> {
+  for(String country: countries) {
+    "[.sql/] INSERT INTO country (country) VALUES (:name)".execute(ctx, country);
+  }
+}  
+. . .
+Sakila.commit();
+``` 
+
+Use `addBatchChange` to batch many non-parameterized SQL statements as one database call. 
+```java
+Sakila.addBatchChange(ctx -> {
+    "[.sql/] INSERT INTO country (country) VALUES ('Canada')".execute(ctx);
+    "[.sql/] INSERT INTO country (country) VALUES ('Mexico')".execute(ctx);
+    "[.sql/] INSERT INTO country (country) VALUES ('Belize')".execute(ctx);
+    . . .
+  }
+}
+. . .
+Sakila.commit();
+``` 
+
+## Bulk insert
+
+---
+
+Some databases such as DuckDB offer higher performance for bulk inserts. In this case you can use the `append` method on
+table entities to type-safely load bulk data more efficiently.
+
+```java
+LocalDateTime now = LocalDateTime.now();
+Country.append(a -> {
+  a.append(1, "Canada", now);
+  a.append(2, "Mexico", now);
+  a.append(3, "Belize", now);
+  a.append(4, "Brazil", now);
+  . . .
+});
+```
+
+If the `append` call is made within the context of a [transaction scope](#transaction-scopes), the inserts are bound to
+the transaction. For instance, multiple `append` calls within a [addSqlChange](#dml--ddl-commands) or [addBatchChange](#batch-commands)
+are grouped into the same transaction. Otherwise, the inserts automatically commit in a separate transaction directly after
+the call completes.
+
+>&#9888; The `append` call is not a standard JDBC feature, it is available only with select drivers that offer bulk insert
+> capability, such as DuckDB. [Let us know](https://github.com/manifold-systems/manifold/issues/new?assignees=&labels=&projects=&template=feature_request.md)
+> if your driver implements this feature and is not supported in manifold-sql. 
 
 ## Customizations
 

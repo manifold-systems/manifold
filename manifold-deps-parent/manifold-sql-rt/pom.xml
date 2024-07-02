@@ -47,6 +47,13 @@
       <artifactId>annotations</artifactId>
       <version>24.0.1</version>
     </dependency>
+    <!-- duckdb for compile-time only, exclusively for Appender integration -->
+    <dependency>
+      <groupId>org.duckdb</groupId>
+      <artifactId>duckdb_jdbc</artifactId>
+      <version>1.0.0</version>
+      <scope>provided</scope>
+    </dependency>
   </dependencies>
 
   <build>

@@ -17,6 +17,7 @@
 package manifold.sql.rt.api;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -37,4 +38,7 @@ public interface OperableTxScope extends TxScope
   BatchSqlChangeCtx newBatchSqlChangeCtx( Connection c );
 
   void addBatch( Executor exec, Consumer<Statement> consumer );
+
+  // specific to duckdb (for now)
+  <T extends SchemaAppender> void append( Consumer<T> consumer, T appender ) throws SQLException;
 }

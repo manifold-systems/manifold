@@ -46,6 +46,7 @@ import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
+import java.util.function.Consumer;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static manifold.api.gen.AbstractSrcClass.Kind.Class;
@@ -54,8 +55,7 @@ import static manifold.api.gen.SrcLinkedClass.addActualNameAnnotation;
 import static manifold.rt.api.util.ManIdentifierUtil.makeIdentifier;
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 import static manifold.sql.rt.api.TxScope.*;
-import static manifold.sql.rt.util.DriverInfo.Postgres;
-import static manifold.sql.rt.util.DriverInfo.SQLite;
+import static manifold.sql.rt.util.DriverInfo.*;
 
 /**
  * The top-level class enclosing all the DDL types corresponding with a ".dbconfig" file.
@@ -226,6 +226,8 @@ class SchemaParentType
     addActualNameAnnotation( srcClass, table.getName(), false );
     addEntityClass( srcClass );
     addCreateMethods( srcClass, table );
+    addAppendMethod( srcClass, table );
+    addAppenderType( srcClass, table );
     addReadMethods( srcClass, table );
     addDeleteMethods( srcClass );
     addBuilderType( srcClass, table );
@@ -273,6 +275,7 @@ class SchemaParentType
 
   }
 
+  @SuppressWarnings( "unused" )
   private void addForwardingStaticMethods( String fqnIface )
   {
     //todo: find all static methods in the custom interface and add the same to the entity interface that forwards to the custom interface
@@ -532,6 +535,112 @@ class SchemaParentType
     method.body( sb.toString() );
   }
 
+  private void addAppendMethod( SrcLinkedClass srcClass, SchemaTable schemaTable )
+  {
+    if( getSchema().getDriverInfo() != DuckDB )
+    {
+      return;
+    }
+
+    if( schemaTable.getKind() != SchemaTable.Kind.Table )
+    {
+      return;
+    }
+
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "append" )
+      .addParam( "worker", "Consumer<Appender>" )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "${srcClass.getSimpleName()}.append(defaultScope(), worker);" );
+    srcClass.addMethod( method );
+
+    //noinspection unused
+    String schema = getSchema().getName();
+    //noinspection unused
+    String table = schemaTable.getName();
+    method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .name( "append" )
+      .addParam( "txScope", TxScope.class )
+      .addParam( "worker", "Consumer<Appender>" )
+      .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
+      .body( "((OperableTxScope)txScope).append((Consumer)worker, new AppenderImpl(\"$schema\", \"$table\"));" );
+    srcClass.addMethod( method );
+  }
+
+  private void addAppenderType( SrcLinkedClass enclosingType, SchemaTable table )
+  {
+    if( getSchema().getDriverInfo() != DuckDB )
+    {
+      return;
+    }
+
+    if( table.getKind() != SchemaTable.Kind.Table )
+    {
+      return;
+    }
+
+    String fqn = enclosingType.getName() + ".Appender";
+    SrcLinkedClass srcInteface = new SrcLinkedClass( fqn, enclosingType, Interface )
+      .modifiers( Modifier.PUBLIC );
+    addAppendRowInterfaceMethod( srcInteface, table );
+    enclosingType.addInnerClass( srcInteface );
+
+    fqn = enclosingType.getName() + ".AppenderImpl";
+    SrcLinkedClass srcClass = new SrcLinkedClass( fqn, enclosingType, Class )
+      .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+      .superClass( new SrcType( SchemaAppender.class.getSimpleName() ) )
+      .addInterface( srcInteface.getSimpleName() );
+    SrcConstructor ctor = new SrcConstructor( srcClass )
+      .modifiers( Modifier.PRIVATE )
+      .addParam( "schema", String.class )
+      .addParam( "table", String.class )
+      .body( "super(schema, table);" );
+    srcClass.addConstructor( ctor );
+    addAppendRowMethod( srcClass, table );
+    enclosingType.addInnerClass( srcClass );
+  }
+
+  private void addAppendRowInterfaceMethod( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .name( "append" )
+      .returns( srcClass.getSimpleName() );
+    addAllParameters( table, method );
+    srcClass.addMethod( method );
+  }
+  private void addAppendRowMethod( SrcLinkedClass srcClass, SchemaTable table )
+  {
+    SrcMethod method = new SrcMethod( srcClass )
+      .modifiers( Modifier.PUBLIC )
+      .addAnnotation( Override.class )
+      .name( "append" )
+      .returns( "Appender" );
+    addAllParameters( table, method );
+    StringBuilder sb = new StringBuilder();
+    sb.append( "DataBindings args = new DataBindings();\n" );
+    initFromParameters( table, sb, "args", false );
+    sb.append( "      appendRow(args);\n" );
+    sb.append( "      return this;\n" );
+    method.body( sb.toString() );
+    srcClass.addMethod( method );
+  }
+
+  private void addAllParameters( SchemaTable table, AbstractSrcMethod<?> method )
+  {
+    for( SchemaColumn col: table.getColumns().values() )
+    {
+      SrcParameter param = new SrcParameter( makePascalCaseIdentifier( col.getName(), false ), col.getType() );
+      if( !col.getType().isPrimitive() )
+      {
+        param.addAnnotation( NotNull.class.getSimpleName() );
+      }
+      method.addParam( param );
+    }
+  }
+
+  @SuppressWarnings( "BooleanMethodIsAlwaysInverted" )
   private boolean hasRequiredForeignKeys( SchemaTable table )
   {
     // at least one non-null foreign key
@@ -581,9 +690,13 @@ class SchemaParentType
 
   private void initFromParameters( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar )
   {
+    initFromParameters( table, sb, bindingsVar, true );
+  }
+  private void initFromParameters( SchemaTable table, StringBuilder sb, @SuppressWarnings( "unused" ) String bindingsVar, boolean requiredOnly )
+  {
     for( SchemaColumn col: table.getColumns().values() )
     {
-      if( isRequired( col ) )
+      if( !requiredOnly || isRequired( col ) )
       {
         //noinspection unused
         String colName = col.getName();
@@ -594,7 +707,7 @@ class SchemaParentType
     }
   }
 
-  private void addRequiredParametersUsingFkRefs( SchemaTable table, AbstractSrcMethod method )
+  private void addRequiredParametersUsingFkRefs( SchemaTable table, AbstractSrcMethod<?> method )
   {
     // Note, parameters are added in order of appearance as they are with just columns, fks consolidate params
 
@@ -632,7 +745,7 @@ class SchemaParentType
     }
   }
 
-  private void addFkParam( AbstractSrcMethod method, SchemaForeignKey sfk )
+  private void addFkParam( AbstractSrcMethod<?> method, SchemaForeignKey sfk )
   {
     List<SchemaColumn> fkCols = sfk.getColumns();
     if( fkCols.stream().anyMatch( c -> isRequired( c ) ) )
@@ -664,7 +777,7 @@ class SchemaParentType
     return sfkSet;
   }
 
-  private void addRequiredParameters( SchemaTable table, AbstractSrcMethod method )
+  private void addRequiredParameters( SchemaTable table, AbstractSrcMethod<?> method )
   {
     for( SchemaColumn col: table.getColumns().values() )
     {
@@ -836,6 +949,7 @@ class SchemaParentType
     srcClass.addImport( TableInfo.class );
     srcClass.addImport( ColumnInfo.class );
     srcClass.addImport( SchemaType.class );
+    srcClass.addImport( SchemaAppender.class );
     srcClass.addImport( SchemaBuilder.class );
     srcClass.addImport( QueryContext.class );
     srcClass.addImport( CrudProvider.class );
@@ -849,6 +963,7 @@ class SchemaParentType
     srcClass.addImport( Map.class );
     srcClass.addImport( Set.class );
     srcClass.addImport( HashSet.class );
+    srcClass.addImport( Consumer.class );
     srcClass.addImport( SQLException.class );
     srcClass.addImport( Nullable.class );
     srcClass.addImport( NotNull.class );
@@ -991,6 +1106,7 @@ class SchemaParentType
 
   private void addFetchAllMethods(SrcLinkedClass srcClass, SchemaTable table )
   {
+    //noinspection unused
     String tableFqn = getTableFqn( table );
     SrcMethod method = new SrcMethod( srcClass )
             .modifiers( Modifier.STATIC )
@@ -1012,23 +1128,19 @@ class SchemaParentType
             query = ManEscapeUtil.escapeForJavaStringLiteral( query );
             //noinspection unused
             String simpleName = srcClass.getSimpleName();
+            //noinspection unused
             String columnInfo = getColumnInfo( new ArrayList<>( table.getColumns().values() ) );
+            //noinspection unused
             String configName = _model.getDbConfig().getName();
-            StringBuilder sb = new StringBuilder();
-            sb.append(
-                    "    return new Runner<$tableFqn>(" +
-                            "new QueryContext<>(txScope, $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, DataBindings.EMPTY_BINDINGS, \"$configName\",\n" +
-                            "      rowBindings -> " );
-            sb.append(
-                    "{\n" +
-                    "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
-                    "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);\n" +
-                    "      }" );
-            sb.append(
-                    " ),\n" +
-                            "      \"$query\"\n" +
-                            "    ).fetch();" );
-            method.body( sb.toString() );
+            method.body(
+              "    return new Runner<$tableFqn>(" +
+              "new QueryContext<>(txScope, $tableFqn.class, null, myTableInfo.get().getAllCols(), $columnInfo, DataBindings.EMPTY_BINDINGS, \"$configName\",\n" +
+              "      rowBindings -> {\n" +
+              "        $tableFqn customRow = ${Dependencies.class.getName()}.instance().getCustomEntityFactory().newInstance(rowBindings, $tableFqn.class);\n" +
+              "        return customRow != null ? customRow : new $tableFqn.${ManClassUtil.getShortClassName(tableFqn)}Entity(rowBindings);\n" +
+              "      }),\n" +
+              "      \"$query\"\n" +
+              "    ).fetch();" );
             srcClass.addMethod( method );
   }
 
@@ -1152,7 +1264,7 @@ class SchemaParentType
     srcClass.addMethod( method );
   }
 
-  private List<SchemaColumn> addPkParameters( SchemaTable table, AbstractSrcMethod method )
+  private List<SchemaColumn> addPkParameters( SchemaTable table, AbstractSrcMethod<?> method )
   {
     List<SchemaColumn> pk = table.getPrimaryKey();
     if( !pk.isEmpty() )
@@ -1171,7 +1283,7 @@ class SchemaParentType
     return Collections.emptyList();
   }
 
-  private static void addParameters( AbstractSrcMethod method, List<SchemaColumn> keyCols )
+  private static void addParameters( AbstractSrcMethod<?> method, List<SchemaColumn> keyCols )
   {
     for( SchemaColumn col : keyCols )
     {

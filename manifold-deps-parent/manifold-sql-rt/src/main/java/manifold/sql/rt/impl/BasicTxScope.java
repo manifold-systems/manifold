@@ -255,6 +255,22 @@ class BasicTxScope implements OperableTxScope
   }
 
   @Override
+  public <T extends SchemaAppender> void append( Consumer<T> consumer, T appender ) throws SQLException
+  {
+    // duckdb will use the transaction in an existing connection, or it will commit on its own with a new connection
+
+    Connection activeConnection = getActiveConnection();
+    ConnectionProvider cp = Dependencies.instance().getConnectionProvider();
+    try( Connection newConnection = activeConnection == null
+      ? cp.getConnection( getDbConfig().getName(), appender.getClass() )
+      : null )
+    {
+      Connection c = activeConnection == null ? newConnection : activeConnection;
+      appender.execute( c, consumer );
+    }
+  }
+
+  @Override
   public void commit() throws SQLException
   {
     _lock.writeLock().lock();
