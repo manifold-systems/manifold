@@ -107,6 +107,7 @@ public class JdbcSchema implements Schema
   {
     String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
     String schema = _schemaIsCatalog ? null : _name;
+    LOGGER.info( "JdbcSchema building: catalog: " + catalog + ", schema: " + schema );
     try( ResultSet resultSet = metaData.getTables( catalog, schema, null, getTableTableTypes( metaData ) ) )
     {
       while( resultSet.next() )
@@ -118,6 +119,11 @@ public class JdbcSchema implements Schema
         _javaToName.put( javaName, name );
         _nameToJava.put( name, javaName );
       }
+    }
+    catch( SQLException e )
+    {
+      // this is dicey, but some drivers (looking at you duckdb) appear to fail after successfully iterating this resultset
+      LOGGER.warn( "JdbcSchema: build may not have completed.", e );
     }
 
     for( SchemaTable table : _tables.values() )

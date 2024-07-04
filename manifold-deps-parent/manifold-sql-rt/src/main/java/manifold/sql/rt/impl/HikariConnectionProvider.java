@@ -106,8 +106,9 @@ public class HikariConnectionProvider implements ConnectionProvider
 
   private HikariDataSource makeDataSource( DbConfig dbConfig, String url )
   {
-    HikariConfig config = new HikariConfig( dbConfig.toProperties() );
+    HikariConfig config = new HikariConfig();
     config.setJdbcUrl( url );
+    config.setDataSourceProperties( dbConfig.toProperties() );
     return new HikariDataSource( config );
   }
 

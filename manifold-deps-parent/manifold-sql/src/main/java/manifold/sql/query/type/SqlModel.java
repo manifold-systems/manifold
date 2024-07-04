@@ -39,6 +39,7 @@ import javax.tools.JavaFileObject;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -82,6 +83,8 @@ public class SqlModel extends AbstractSingleFileModel
   {
     if( _scope.isErrant() )
     {
+      // the dbconfig has no driver, no way to analyze the SQL
+      _issues = new SqlIssueContainer( DriverInfo.ERRANT, new ArrayList<>(), false );
       return;
     }
 
