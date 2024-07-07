@@ -21,25 +21,29 @@ import manifold.sql.query.api.SqlAnalyzer;
 import manifold.sql.query.type.SqlScope;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.*;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class JdbcSqlAnalyzer implements SqlAnalyzer
 {
+  private static final List<String> _queryStarts = Arrays.asList( "select", "with", "from", "pivot", "unpivot" );
   @Override
   public Statement makeStatement( String queryName, SqlScope scope, String sql )
   {
     boolean isQuery;
     try
     {
-      // using this parser only to distinguish between SELECT statements and NON-SELECT statements
+      // using this parser only to distinguish between query statements and non-query statements
       net.sf.jsqlparser.statement.Statement statement = CCJSqlParserUtil.parse( sql );
-      isQuery = statement instanceof Select;
+      isQuery = statement instanceof Select || statement instanceof Pivot || statement instanceof UnPivot;
     }
     catch( JSQLParserException e )
     {
-      // treat as query and pass through to JDBC for error handling.
-      // todo: Maybe do light parsing to determine type of statement (Insert, Update, Delete, ..., or Select)?
-      isQuery = sql.trim().toLowerCase().startsWith( "select" );
+      // todo: Maybe do light parsing to determine type of statement
+      isQuery = _queryStarts.stream()
+        .anyMatch( start -> sql.trim().toLowerCase().startsWith( start ) );
     }
 
     return isQuery
