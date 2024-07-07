@@ -27,7 +27,7 @@ Execute any type of SQL statement type-safely, either directly or in a batch.
 manifold-sql streamlines DuckDB's additional APIs for a simpler, type-safe dev experience. For instance,
 the Appender API is made straightforward and foolproof.
 
-><p><img src="../images/duckdb_4.png" alt="echo method" width="30%" height="30%"/></p>
+><p><img src="../images/duckdb_4.png" alt="echo method" width="100%" height="100%"/></p>
 
 ---
 Entity types are automatically derived from your database, providing type-safe CRUD, decoupled
