@@ -95,12 +95,12 @@ repositories {
 
 dependencies {
     
-     // Manifold dependencies    
+     // Manifold SQL dependencies    
      implementation 'systems.manifold:manifold-sql-rt:2024.1.23'
      annotationProcessor 'systems.manifold:manifold-sql:2024.1.23'
      testAnnotationProcessor 'systems.manifold:manifold-sql:2024.1.23'
 
-     // Add your JDBC driver here, this is just an example using postgres
+     // DuckDB dependencies
      implementation 'org.duckdb:duckdb_jdbc:1.0.0'
      annotationProcessor 'org.duckdb:duckdb_jdbc:1.0.0'
      testAnnotationProcessor 'org.duckdb:duckdb_jdbc:1.0.0'
