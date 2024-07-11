@@ -561,7 +561,7 @@ class SchemaParentType
     String table = schemaTable.getName();
     method = new SrcMethod( srcClass )
       .modifiers( Modifier.PUBLIC | Modifier.STATIC )
-      .name(  "append" )
+      .name( "append" )
       .addParam( "txScope", TxScope.class )
       .addParam( "worker", "Consumer<Appender>" )
       .throwsList( new SrcType( SQLException.class.getSimpleName() ) )
