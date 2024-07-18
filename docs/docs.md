@@ -413,5 +413,5 @@ Manifold is open source and licensed under the [Apache 2.0](http://www.apache.or
 * [Scott McKinney](mailto:scott@manifold.systems)
 
 # Forum
-Join our [Slack Group](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg) to start
+Join our [Discord server](https://discord.gg/VYUpzA64) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
