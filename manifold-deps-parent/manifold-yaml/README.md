@@ -1,7 +1,7 @@
 # Manifold : YAML
 
 ![latest](https://img.shields.io/badge/latest-v2024.1.23-royalblue.svg)
-[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 The YAML type manifold provides comprehensive support for YAML (1.2+). You can define a YAML or JSON API with YAML resource

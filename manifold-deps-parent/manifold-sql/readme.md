@@ -5,7 +5,7 @@
 # Manifold SQL
 
 ![latest](https://img.shields.io/badge/latest-v2024.1.23-royalblue.svg)
-[![slack](https://img.shields.io/badge/slack-manifold-seagreen.svg?logo=slack)](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg)
+[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 
@@ -1418,7 +1418,7 @@ For the versions available, see the [tags on this repository](https://github.com
 
 # Comms
 
-Start a discussion on [slack](https://join.slack.com/t/manifold-group/shared_invite/zt-e0bq8xtu-93ASQa~a8qe0KDhOoD6Bgg).
+Start a discussion on our [Discord](https://discord.gg/VYUpzA64) server.
 
 Report an [issue](https://github.com/manifold-systems/manifold/issues/new/choose).
 
