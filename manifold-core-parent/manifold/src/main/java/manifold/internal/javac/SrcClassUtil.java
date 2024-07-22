@@ -906,16 +906,36 @@ public class SrcClassUtil
       SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
       for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
       {
-        Type t = value.snd.type;
-        SrcType type = new SrcType( t.toString() );
-        if( t.tsym != null && t.tsym.isEnum() )
-        {
-          type.setEnum( true );
-        }
+        SrcType type = makeSrcType( value );
         annoExpr.addArgument( value.fst.flatName().toString(), type, value.snd.getValue() );
       }
       srcAnnotated.addAnnotation( annoExpr );
     }
+  }
+
+  private static SrcType makeSrcType( Pair<Symbol.MethodSymbol, Attribute> value )
+  {
+    Type t = value.snd.type;
+    SrcType type = new SrcType( t.toString() );
+    if( t.tsym != null )
+    {
+      // If component type is an Enum, ensure it is set as such.
+      // This indicates that unqualified enum values sb qualified with the component type name when rendered.
+
+      Symbol.TypeSymbol tsym = t.tsym;
+      SrcType compType = type;
+      while( t instanceof Type.ArrayType )
+      {
+        t = ((Type.ArrayType)t).getComponentType();
+        tsym = t.tsym;
+        compType = compType.getComponentType();
+      }
+      if( tsym != null && tsym.isEnum() )
+      {
+        compType.setEnum( true );
+      }
+    }
+    return type;
   }
 
   private boolean isExpired( Symbol symbol )
