@@ -2,7 +2,7 @@
 
 # Manifold : Tuples
 
-![latest](https://img.shields.io/badge/latest-v2024.1.24-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.25-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -244,11 +244,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-tuple-rt:2024.1.24'
+    implementation 'systems.manifold:manifold-tuple-rt:2024.1.25'
     testCompile 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2024.1.24'
-    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2024.1.24'
+    annotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2024.1.25'
+    testAnnotationProcessor group: 'systems.manifold', name: 'manifold-tuple', version: '2024.1.25'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -284,7 +284,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.24</manifold.version>
+        <manifold.version>2024.1.25</manifold.version>
     </properties>
     
     <dependencies>
@@ -328,10 +328,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-tuple`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple/2024.1.24/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple/2024.1.24)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple/2024.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple/2024.1.25)
 
 `manifold-tuple-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple-rt/2024.1.24/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple-rt/2024.1.24)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-tuple-rt/2024.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-tuple-rt/2024.1.25)
 
 # License
 
