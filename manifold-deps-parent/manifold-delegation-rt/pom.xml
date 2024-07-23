@@ -5,7 +5,7 @@
   <parent>
     <groupId>systems.manifold</groupId>
     <artifactId>manifold-deps-parent</artifactId>
-    <version>2024.1.25</version>
+    <version>2024.1.25-SNAPSHOT</version>
   </parent>
 
   <artifactId>manifold-delegation-rt</artifactId>
