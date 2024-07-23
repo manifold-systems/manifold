@@ -380,6 +380,14 @@ public class SrcClassUtil
       Type throwType = thrownTypes.get( i );
       srcMethod.addThrowType( makeSrcType( throwType, method, TargetType.THROWS, i ) );
     }
+    if( (method.owner.flags_field & Flags.ANNOTATION) != 0 )
+    {
+      Attribute defaultValue = method.getDefaultValue();
+      if( defaultValue != null )
+      {
+        srcMethod.setDefaultValue( defaultValue.toString() );
+      }
+    }
     String bodyStmt;
     if( srcMethod.isConstructor() && !srcClass.isEnum() )
     {

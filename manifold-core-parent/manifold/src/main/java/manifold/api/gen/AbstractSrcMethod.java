@@ -32,6 +32,7 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
   private List<SrcType> _throwTypes;
   private boolean _isConstructor;
   private boolean _isPrimaryConstructor;
+  private String _defaultValue;
 
   public AbstractSrcMethod( AbstractSrcClass srcClass )
   {
@@ -132,6 +133,15 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     return (T)this;
   }
 
+  public String getDefaultValue()
+  {
+    return _defaultValue;
+  }
+  public void setDefaultValue( String defaultValue )
+  {
+    _defaultValue = defaultValue;
+  }
+
   public SrcType getReturnType()
   {
     return _returns;
@@ -191,6 +201,11 @@ public class AbstractSrcMethod<T extends AbstractSrcMethod<T>> extends SrcStatem
     }
     if( isAbstractMethod() )
     {
+      String defaultValue = getDefaultValue();
+      if( defaultValue != null )
+      {
+        sb.append( " default " ).append( defaultValue );
+      }
       sb.append( ";\n" );
     }
     else
