@@ -1,6 +1,6 @@
 # Manifold : Javascript
 
-![latest](https://img.shields.io/badge/latest-v2024.1.27-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.28-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -192,11 +192,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-js-rt:2024.1.27'
+    implementation 'systems.manifold:manifold-js-rt:2024.1.28'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-js:2024.1.27'
-    testAnnotationProcessor 'systems.manifold:manifold-js:2024.1.27'
+    annotationProcessor 'systems.manifold:manifold-js:2024.1.28'
+    testAnnotationProcessor 'systems.manifold:manifold-js:2024.1.28'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -232,7 +232,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.27</manifold.version>
+        <manifold.version>2024.1.28</manifold.version>
     </properties>
     
     <dependencies>
