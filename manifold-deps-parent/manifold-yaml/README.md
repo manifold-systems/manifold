@@ -1,6 +1,6 @@
 # Manifold : YAML
 
-![latest](https://img.shields.io/badge/latest-v2024.1.25-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.26-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -93,11 +93,11 @@ repositories {
 }
 
 dependencies {
-    implementation 'systems.manifold:manifold-yaml-rt:2024.1.25'
+    implementation 'systems.manifold:manifold-yaml-rt:2024.1.26'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-yaml:2024.1.25'
-    testAnnotationProcessor 'systems.manifold:manifold-yaml:2024.1.25'
+    annotationProcessor 'systems.manifold:manifold-yaml:2024.1.26'
+    testAnnotationProcessor 'systems.manifold:manifold-yaml:2024.1.26'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -133,7 +133,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.25</manifold.version>
+        <manifold.version>2024.1.26</manifold.version>
     </properties>
     
     <dependencies>
@@ -177,10 +177,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-yaml`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml/2024.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml/2024.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml/2024.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml/2024.1.26)
 
 `manifold-yaml-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml-rt/2024.1.25/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml-rt/2024.1.25)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-yaml-rt/2024.1.26/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-yaml-rt/2024.1.26)
 
 
 # License
