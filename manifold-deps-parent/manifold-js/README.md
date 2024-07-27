@@ -107,7 +107,7 @@ Names:
 The end
 ```
 
-For full-featured template engine functionality see project [ManTL](http://manifold.systems/manifold-templates.html).
+For full-featured template engine functionality see project [ManTL](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-templates).
 
 
 # IDE Support 
