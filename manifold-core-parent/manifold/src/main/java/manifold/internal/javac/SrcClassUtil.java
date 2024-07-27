@@ -380,14 +380,9 @@ public class SrcClassUtil
       Type throwType = thrownTypes.get( i );
       srcMethod.addThrowType( makeSrcType( throwType, method, TargetType.THROWS, i ) );
     }
-    if( (method.owner.flags_field & Flags.ANNOTATION) != 0 )
-    {
-      Attribute defaultValue = method.getDefaultValue();
-      if( defaultValue != null )
-      {
-        srcMethod.setDefaultValue( defaultValue.toString() );
-      }
-    }
+
+    setAnnotationDefaultValue( method, srcMethod );
+
     String bodyStmt;
     if( srcMethod.isConstructor() && !srcClass.isEnum() )
     {
@@ -413,6 +408,32 @@ public class SrcClassUtil
         new SrcRawStatement()
           .rawText( bodyStmt ) ) );
     srcClass.addMethod( srcMethod );
+  }
+
+  private void setAnnotationDefaultValue( Symbol.MethodSymbol method, SrcMethod srcMethod )
+  {
+    if( (method.owner.flags_field & Flags.ANNOTATION) == 0 )
+    {
+      // declaring class is not an annotation
+      return;
+    }
+
+    Attribute defaultValue = method.getDefaultValue();
+    if( defaultValue == null )
+    {
+      // annotation method does not have a default value
+      return;
+    }
+
+    String qualifiedValue = defaultValue.toString();
+    if( defaultValue instanceof Attribute.Enum )
+    {
+      // enum constants must be qualified
+
+      Symbol.VarSymbol value = ((Attribute.Enum)defaultValue).getValue();
+      qualifiedValue = value.enclClass() + "." + value;
+    }
+    srcMethod.setDefaultValue( qualifiedValue );
   }
 
   private static Set<javax.lang.model.element.Modifier> getModifiers( Symbol.MethodSymbol method )
