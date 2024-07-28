@@ -16,16 +16,6 @@
       <artifactId>manifold-ext-rt</artifactId>
       <version>${project.version}</version>
     </dependency>
-
-    <!-- spark-core only for use at compile-time and only if using a 'SparkTemplate', hence 'provided' scope -->
-    <dependency>
-      <groupId>com.sparkjava</groupId>
-      <artifactId>spark-core</artifactId>
-      <version>2.6.0</version>
-      <!-- compile-time only, no runtime impact unless you are using Spark Java -->
-      <scope>provided</scope>
-    </dependency>
-
   </dependencies>
 
   <build>
