@@ -55,7 +55,7 @@ setup is sensitive to the version of Java you are using, generally whether you a
 #### Q: Where can I find help?
 
 **Discussions**
-Join our [Discord server](https://discord.gg/VYUpzA64) to start
+Join our [Discord server](https://discord.gg/9x2pCPAASn) to start
 a discussion, ask questions, provide feedback, etc.
 
 **Report A Bug**
@@ -82,7 +82,7 @@ when you load your project.  You can find the latest releases [here](https://git
 IntelliJ's UI. Please refer to the [Maven](http://manifold.systems/docs.html#maven) and [Gradle](http://manifold.systems/docs.html#gradle)
 sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instructions. 
 
-Please [make some noise](https://discord.gg/VYUpzA64) if you can't get it
+Please [make some noise](https://discord.gg/9x2pCPAASn) if you can't get it
 working, chances are you're not alone and help will arrive soon.
 
 #### Q: I defined some useful *extension methods*, but they aren't showing up in my other project. How can I share them as a dependency?

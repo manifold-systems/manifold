@@ -1,7 +1,7 @@
 # Manifold : Exceptions
 
 ![latest](https://img.shields.io/badge/latest-v2024.1.29-royalblue.svg)
-[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
+[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 Simply add the `manifold-exceptions` dependency to your project. Now checked exceptions behave like unchecked

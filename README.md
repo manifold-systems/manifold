@@ -3,7 +3,7 @@
 <img width="500" height="121" align="top" src="./docs/images/manifold_green.png">
 
 ![latest](https://img.shields.io/badge/latest-v2024.1.29-royalblue.svg)
-[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/VYUpzA64)
+[![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
 ---
@@ -352,8 +352,8 @@ Manifold supports:
 
 Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
-## [Chat](https://discord.gg/VYUpzA64)
-Join our [Discord server](https://discord.gg/VYUpzA64) to start
+## [Chat](https://discord.gg/9x2pCPAASn)
+Join our [Discord server](https://discord.gg/9x2pCPAASn) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
 <br>

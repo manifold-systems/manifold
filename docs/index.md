@@ -347,8 +347,8 @@ Manifold supports:
 
 Comprehensive IDE support is also available for IntelliJ IDEA and Android Studio.
 
-## [Chat](https://discord.gg/VYUpzA64)
-Join our [Discord server](https://discord.gg/VYUpzA64) to start
+## [Chat](https://discord.gg/9x2pCPAASn)
+Join our [Discord server](https://discord.gg/9x2pCPAASn) to start
 a discussion, ask questions, provide feedback, etc. Someone is usually there to help.
 
 <br>
