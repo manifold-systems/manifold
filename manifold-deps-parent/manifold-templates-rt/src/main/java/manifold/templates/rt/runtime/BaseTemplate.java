@@ -29,7 +29,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * The base class for all generated template classes.  You can derive your own base class from this one to
- * provide application-specific functionality. See {@link manifold.templates.rt.sparkjava.SparkTemplate}.
+ * provide application-specific functionality.
  */
 public abstract class BaseTemplate
 {

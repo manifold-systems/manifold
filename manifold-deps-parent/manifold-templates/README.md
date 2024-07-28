@@ -33,10 +33,9 @@ begin experimenting with ManTL templates using the Manifold IntelliJ plugin.
     * [`layout`](#layout)
     * [`content`](#layout)
 * [Whitespace](#whitespace)
-* [**Spark** Java Support](#spark-java-support)
+* [**Javalin** Support](#javalin-support)
   * [Hello World!](#hello-world)
   * [Tracing](#tracing)
-  * [Template Base Class](#sparktemplate-base-class)
   * [Sample Application](#sample-application)
 * [Provided Manifold Features](#provided-manifold-features)  
 * [IDE Support](#ide-support)
@@ -607,12 +606,12 @@ whitespace immediately preceding or following the language constructs are includ
 >Note the [`nest`](#nest) directive retains indentation to support use-cases such as *code generation* where whitespace
 >is significant.   
   
-# Spark Java Support
+# Javalin Support
 
-ManTL is designed with web frameworks like [Spark](http://sparkjava.com/) in mind.
+ManTL is designed with web frameworks like [Javalin](http://javalin.io/) in mind.
 
 ## Hello World!
-A simple "Hello World!" Spark application making use of ManTL:
+A simple "Hello World!" Javalin application making use of ManTL:
 
 ```java
 package app;
@@ -621,7 +620,7 @@ import manifold.templates.rt.ManifoldTemplates;
 import views.Index;
 import views.layout.DefaultLayout;
 
-import static spark.Spark.*;
+import io.javalin.Javalin;
 
 public class WebApp { 
   public static void main(String[] args) {
@@ -631,32 +630,24 @@ public class WebApp {
     // Enable tracing
     ManifoldTemplates.trace();
 
+    // Basic Javalin config
+    Javalin app = Javalin.create(config -> {
+      config.staticFiles.add("/public", Location.CLASSPATH);
+      config.http.defaultContentType = "html";
+    });
+
     // Render the Index template
-    get("/", (req, resp) -> Index.render("Hello World!"));
+    app.get("/", ctx -> ctx.result(Index.render("Hello World!")));
   }
 }
 ```
 
 There are two templates in the `resources` directory: `views/Index.html.mtl` and `views/layouts/DefaultLayout.html.mtl`.
 Here the code references the `Index` template directly as a Java class.  This is a powerful aspect of ManTL -- the 
-compiler verifies your links are never broken and you can fully leverage the strength of IntelliJ for deterministic 
+compiler verifies your links are never broken, and you can fully leverage the strength of IntelliJ for deterministic 
 code completion, usage searching, refactoring, navigation, incremental compilation, and hot swap.  
   
-> Note the code takes advantage of the _type-safe_ parameters available in ManTL and no Spark "TemplateEngine" is needed.
-
-### SparkTemplate Base Class
-
-Manifold provides base class `manifold.templates.rt.sparkjava.SparkTemplate` for use with the `extends` directive
-in your templates (or, more commonly, you extend this class and add more of your own application functionality).  This
-class provides various convenience methods to get the HTTP `Request`, `Response`, etc. and it also automatically escapes
-all string content for HTML, to help prevent malicious user input from causing a security issue in your application.
-
-If you wish, you can output raw HTML in a template that extends `manifold.templates.rt.sparkjava.SparkTemplate` using the
-`raw()` function:
-
-```jsp
-  ${raw("<h1>Some Raw HTML</h1>")}
-```
+> Note the code takes advantage of the _type-safe_ parameters available in ManTL and no Javalin "TemplateEngine" is needed.
 
 ### Tracing
 
@@ -671,7 +662,7 @@ After invoking the `trace()` method, every following `render()` call prints the 
 
 ### Sample Application
 
-A sample Spark application is available here:
+A sample Javalin application is available here:
 
 [https://github.com/manifold-systems/manifold-sample-web-app](https://github.com/manifold-systems/manifold-sample-web-app)
 
