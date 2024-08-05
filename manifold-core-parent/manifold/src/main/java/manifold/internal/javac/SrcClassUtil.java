@@ -35,6 +35,7 @@ import javax.tools.JavaFileObject;
 
 import manifold.api.gen.*;
 import manifold.api.host.IModule;
+import manifold.api.util.JavacUtil;
 import manifold.rt.api.util.ManEscapeUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
@@ -976,7 +977,7 @@ public class SrcClassUtil
       {
         for( Pair<Symbol.MethodSymbol, Attribute> value: annotationMirror.values )
         {
-          return JreUtil.JAVA_VERSION >= (int)value.snd.getValue();
+          return JavacUtil.getReleaseNumber() >= (int)value.snd.getValue();
         }
       }
     }

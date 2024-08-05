@@ -28,6 +28,7 @@ import manifold.api.gen.*;
 import manifold.api.host.IModule;
 import manifold.api.type.ITypeManifold;
 import manifold.api.util.JavacDiagnostic;
+import manifold.api.util.JavacUtil;
 import manifold.ext.rt.ExtensionMethod;
 import manifold.ext.rt.ForwardingExtensionMethod;
 import manifold.ext.rt.api.Expires;
@@ -649,7 +650,7 @@ class ExtCodeGen
 
     SrcAnnotationExpression expires = method.getAnnotation( Expires.class );
     if( expires != null &&
-      JreUtil.JAVA_VERSION >= Integer.parseInt( expires.getArgument( "value" ).getValue().toString() ) )
+      JavacUtil.getReleaseNumber() >= Integer.parseInt( expires.getArgument( "value" ).getValue().toString() ) )
     {
       // on or past the method's expiration jdk
       return false;

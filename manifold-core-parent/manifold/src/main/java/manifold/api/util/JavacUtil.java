@@ -18,7 +18,9 @@ package manifold.api.util;
 
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.util.Options;
 import manifold.internal.javac.JavacPlugin;
+import manifold.util.JreUtil;
 
 import javax.lang.model.SourceVersion;
 
@@ -34,5 +36,18 @@ public class JavacUtil
   public static int getSourceNumber()
   {
     return getSourceVersion().ordinal();
+  }
+
+  public static int getReleaseNumber()
+  {
+    String release = Options.instance( JavacPlugin.instance().getContext() ).get( "--release" );
+    try
+    {
+      return Integer.parseInt( release );
+    }
+    catch( NumberFormatException e )
+    {
+      return JreUtil.JAVA_VERSION;
+    }
   }
 }
