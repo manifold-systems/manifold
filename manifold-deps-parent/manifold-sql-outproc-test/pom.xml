@@ -21,7 +21,7 @@
     <dependency>
       <groupId>com.mysql</groupId>
       <artifactId>mysql-connector-j</artifactId>
-      <version>8.0.33</version>
+      <version>8.2.0</version>
     </dependency>
 
     <!-- Only testing postgres locally because it does not provide an embedded option, requires a server   -->
@@ -94,7 +94,7 @@
             <path>
               <groupId>com.mysql</groupId>
               <artifactId>mysql-connector-j</artifactId>
-              <version>8.0.33</version>
+              <version>8.2.0</version>
             </path>
             <path>
               <groupId>com.microsoft.sqlserver</groupId>
