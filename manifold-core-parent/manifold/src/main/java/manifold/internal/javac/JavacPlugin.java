@@ -36,10 +36,7 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.Context;
-import com.sun.tools.javac.util.JCDiagnostic;
-import com.sun.tools.javac.util.Log;
-import com.sun.tools.javac.util.RichDiagnosticFormatter;
+import com.sun.tools.javac.util.*;
 
 import java.io.*;
 import java.lang.reflect.Modifier;
@@ -423,6 +420,8 @@ public class JavacPlugin implements Plugin, TaskListener
 
       if( !isExtensionsEnabled() )
       {
+        setDiagnosticFormatter();
+
         // No need to hook up all the extension stuff if it's not enabled
         return;
       }
@@ -447,7 +446,7 @@ public class JavacPlugin implements Plugin, TaskListener
       ReflectUtil.method( "manifold.internal.javac.ManTypes_" + (JreUtil.isJava17orLater() ? 17 : 8),
         "instance", Context.class ).invokeStatic( getContext() );
 
-      ((Log)ReflectUtil.field( manAttr, "log" ).get()).setDiagnosticFormatter( RichDiagnosticFormatter.instance( _ctx ) );
+      setDiagnosticFormatter();
 
       if( !JreUtil.isJava8() )
       {
@@ -483,6 +482,14 @@ public class JavacPlugin implements Plugin, TaskListener
       ensureComprehensiveUse();
     }
     notifyCompilerComponents();
+  }
+
+  private void setDiagnosticFormatter()
+  {
+    if( Options.instance( getContext() ).isUnset( "diags.legacy" ) )
+    {
+      Log.instance( getContext() ).setDiagnosticFormatter( RichDiagnosticFormatter.instance( getContext() ) );
+    }
   }
 
   private void ensureComprehensiveUse()
