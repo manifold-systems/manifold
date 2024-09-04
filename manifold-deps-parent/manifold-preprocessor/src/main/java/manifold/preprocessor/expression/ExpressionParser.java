@@ -172,6 +172,13 @@ public class ExpressionParser
       }
       return stringLiteral;
     }
+    else if( match( ExpressionTokenType.NumberLiteral, false ) )
+    {
+      int endOffset = _tokenizer.getTokenEnd();
+      String string = _tokenizer.getTokenText().toString();
+      match( ExpressionTokenType.NumberLiteral );
+      return new NumberLiteral( string, offset, endOffset );
+    }
     return new EmptyExpression( offset );
   }
 

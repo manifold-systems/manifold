@@ -16,9 +16,15 @@
 
 package manifold.preprocessor.expression;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import com.sun.tools.javac.util.JCDiagnostic;
+import com.sun.tools.javac.util.Log;
+import manifold.internal.javac.IDynamicJdk;
+import manifold.internal.javac.JavacPlugin;
 import manifold.preprocessor.definitions.Definitions;
 
 import static manifold.preprocessor.expression.ExpressionTokenType.Equals;
@@ -53,8 +59,50 @@ public class EqualityExpression extends Expression
   @Override
   public boolean evaluate( Definitions definitions )
   {
+    if( _lhs instanceof NumberLiteral || _rhs instanceof NumberLiteral )
+    {
+      // use BD comparison when testing equality with numeric operands
+
+      BigDecimal lhsNumber = getNumberValue( _lhs, definitions );
+      if( lhsNumber == null )
+      {
+        generateError( _lhs, definitions );
+        return false;
+      }
+      BigDecimal rhsNumber = getNumberValue( _rhs, definitions );
+      if( rhsNumber == null )
+      {
+        generateError( _rhs, definitions );
+        return false;
+      }
+      return _not != (lhsNumber.compareTo( rhsNumber ) == 0);
+    }
     return _not != (_lhs.evaluate( definitions ) == _rhs.evaluate( definitions ) &&
                     Objects.equals( _lhs.getValue( definitions ), _rhs.getValue( definitions ) ));
+  }
+
+  public BigDecimal getNumberValue( Expression operand, Definitions definitions )
+  {
+    String value = operand.getValue( definitions );
+    try
+    {
+      return new BigDecimal( value.trim() );
+    }
+    catch( NumberFormatException ignore )
+    {
+    }
+    return null;
+  }
+
+  private void generateError( Expression expr, Definitions definitions )
+  {
+    if( JavacPlugin.instance() != null )
+    {
+      String value = expr.getValue( definitions );
+      IDynamicJdk.instance().logError( Log.instance( JavacPlugin.instance().getContext() ),
+        new JCDiagnostic.SimpleDiagnosticPosition( expr.getStartOffset() ),
+        "proc.messager", "Numeric value expected for '" + expr + "', but was '" + value + "'" );
+    }
   }
 
   public String toString()

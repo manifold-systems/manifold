@@ -16,6 +16,8 @@
 
 package manifold.preprocessor.expression;
 
+import java.math.BigDecimal;
+
 import static manifold.preprocessor.expression.ExpressionTokenType.*;
 
 class ExpressionTokenizer
@@ -83,6 +85,21 @@ class ExpressionTokenizer
       case '"':
         _tokenType = StringLiteral;
         _tokenEndOffset = getClosingQuote( _bufferIndex + 1 );
+        break;
+
+      case '0':
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+      case '8':
+      case '9':
+      case '.':
+      case '-':
+        _tokenEndOffset = parseNumber();
         break;
 
       case '(':
@@ -277,5 +294,65 @@ class ExpressionTokenizer
     }
 
     return pos + 1;
+  }
+
+  private int parseNumber()
+  {
+    int pos = _bufferIndex;
+    char c = charAt( pos );
+    boolean dotVisited = false;
+    StringBuilder number = new StringBuilder();
+
+    if( c == '-' )
+    {
+      number.append( c );
+      pos++;
+    }
+
+    while( true )
+    {
+      if( pos >= _bufferEndOffset )
+      {
+        break;
+      }
+
+      c = charAt( pos );
+
+      if( c == '.' )
+      {
+        if( dotVisited )
+        {
+          break;
+        }
+        dotVisited = true;
+      }
+      else if( !(c >= '0' && c <= '9') )
+      {
+        break;
+      }
+      number.append( c );
+      pos++;
+    }
+
+    if( isNumber( number ) )
+    {
+      _tokenType = NumberLiteral;
+      return pos;
+    }
+
+    return _bufferEndOffset;
+  }
+
+  private boolean isNumber( StringBuilder number )
+  {
+    try
+    {
+      new BigDecimal( number.toString() );
+      return true;
+    }
+    catch( NumberFormatException nfe )
+    {
+      return false;
+    }
   }
 }

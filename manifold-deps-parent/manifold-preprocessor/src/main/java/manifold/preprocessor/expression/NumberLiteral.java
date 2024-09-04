@@ -16,38 +16,36 @@
 
 package manifold.preprocessor.expression;
 
-enum ExpressionTokenType
+import manifold.preprocessor.definitions.Definitions;
+
+public class NumberLiteral extends TerminalExpression
 {
-  Whitespace(),
-  StringLiteral(),
-  NumberLiteral(),
-  Identifier(),
-  OpenParen( "(" ),
-  CloseParen( ")" ),
-  And( "&&" ),
-  Or( "||" ),
-  Not( "!" ),
-  Equals( "==" ),
-  NotEquals( "!=" ),
-  gt( ">" ),
-  ge( ">=" ),
-  lt( "<" ),
-  le( "<=" );
+  private final String _rawString;
 
-  private String _token;
-
-  ExpressionTokenType()
+  NumberLiteral( String rawString, int start, int end )
   {
-    this( null );
+    super( start, end );
+    if( rawString == null )
+    {
+      throw new IllegalArgumentException( "Null string not allowed" );
+    }
+    _rawString = rawString;
   }
 
-  ExpressionTokenType( String token )
+  @Override
+  public boolean evaluate( Definitions definitions )
   {
-    _token = token;
+    return true;
   }
 
-  String getToken()
+  @Override
+  public String getValue( Definitions definitions )
   {
-    return _token;
+    return _rawString;
+  }
+
+  public String toString()
+  {
+    return _rawString;
   }
 }

@@ -386,6 +386,18 @@ public class ExpressionTest {
 
     assertEquals( "good", abc );
 
+    #if year.old <= 2020
+      abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    #if year.old > -2020.1
+      abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
     #if year.old > year.current
       abc = "bad";
     #endif
@@ -397,6 +409,50 @@ public class ExpressionTest {
     #endif
 
     assertEquals( "good", abc );
+
+    #if year.old >= 2020
+      abc = "bad";
+    #endif
+
+    assertEquals( "good", abc );
+
+    #if year.old < -2020.1
+      abc = "bad";
+    #endif
+
+    assertEquals( "good", abc );
+  }
+
+  @Test
+  public void testEqualityExprWithNumbers()
+  {
+    String abc = "bad";
+    #if year.old != year.current
+    abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    abc = "bad";
+    #if year.old == 1976
+    abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    abc = "bad";
+    #if year.old == 1976.0
+    abc = "good";
+    #endif
+
+    assertEquals( "good", abc );
+
+    abc = "bad";
+    #if year.old == 1976.1
+    abc = "good";
+    #endif
+
+    assertEquals( "bad", abc );
   }
 
   private boolean assertTrueAndFlip( boolean cond )
