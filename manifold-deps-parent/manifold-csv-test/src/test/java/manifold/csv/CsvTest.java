@@ -25,6 +25,7 @@ import abc.csv.insurance_sample_comma;
 import abc.csv.insurance_sample_comma.insurance_sample_commaItem;
 import abc.csv.Cake;
 import abc.csv.Cake.CakeItem;
+import abc.csv.MissingLastColumn;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
@@ -37,9 +38,7 @@ import java.time.LocalTime;
 
 import org.junit.Test;
 
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class CsvTest
 {
@@ -101,5 +100,24 @@ public class CsvTest
       assertEquals(data[i][1], item.getAge());
       assertEquals(data[i][2], item.getCake());
     }
+  }
+
+  @Test
+  public void testMissingLastColumn()
+  {
+    MissingLastColumn items = MissingLastColumn.fromSource();
+    assertEquals( 3, items.size() );
+
+    assertEquals( "", items.get( 0 ).getCol1() );
+    assertEquals( 1, (int)items.get( 0 ).getCol2() );
+    assertEquals( "", items.get( 0 ).getCol3() );
+
+    assertEquals( "", items.get( 1 ).getCol1() );
+    assertEquals( 2, (int)items.get( 1 ).getCol2() );
+    assertEquals( "", items.get( 1 ).getCol3() );
+
+    assertEquals( "", items.get( 2 ).getCol1() );
+    assertNull( items.get( 2 ).getCol2() );
+    assertEquals( "", items.get( 2 ).getCol3() );
   }
 }

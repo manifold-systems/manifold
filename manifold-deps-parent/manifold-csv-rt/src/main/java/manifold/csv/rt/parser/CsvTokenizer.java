@@ -164,7 +164,7 @@ public class CsvTokenizer
                       : _content.charAt( _pos - 1 ) == '\r'
                         ? _pos - 1
                         : _pos;
-            int length = end - offset;
+            int length = end > offset ? end - offset : 0;
             boolean emptyLine = length <= 0 && (_prevToken == null || _prevToken.isLastInRecord());
             if( !emptyLine )
             {
