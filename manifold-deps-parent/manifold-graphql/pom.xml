@@ -33,7 +33,7 @@
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
-      <version>20.1</version>
+      <version>20.9</version>
     </dependency>
     <!-- antlr needed for handling antlr parse exceptions emitted from graphql parser -->
     <dependency>
