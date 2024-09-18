@@ -110,14 +110,14 @@ public class CsvTest
 
     assertEquals( "", items.get( 0 ).getCol1() );
     assertEquals( 1, (int)items.get( 0 ).getCol2() );
-    assertEquals( "", items.get( 0 ).getCol3() );
+    assertEquals( 3, (int)items.get( 0 ).getCol3() );
 
     assertEquals( "", items.get( 1 ).getCol1() );
     assertEquals( 2, (int)items.get( 1 ).getCol2() );
-    assertEquals( "", items.get( 1 ).getCol3() );
+    assertNull( items.get( 1 ).getCol3() );
 
     assertEquals( "", items.get( 2 ).getCol1() );
     assertNull( items.get( 2 ).getCol2() );
-    assertEquals( "", items.get( 2 ).getCol3() );
+    assertNull( items.get( 2 ).getCol3() );
   }
 }
