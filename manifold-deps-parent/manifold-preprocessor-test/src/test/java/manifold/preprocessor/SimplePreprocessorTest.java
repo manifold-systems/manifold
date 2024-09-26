@@ -114,6 +114,20 @@ public class SimplePreprocessorTest
   }
 
   @Test
+  public void testJavacOptionOverridesBuildProps()
+  {
+    boolean success=false;
+    #if MY_PROP3 == 123
+    fail();
+    #elif MY_PROP3 == 2
+    success = true;
+    #else
+    fail();
+    #endif
+    assertTrue(success);
+  }
+
+  @Test
   public void testMethodBoundary()
   {
     #if BBB

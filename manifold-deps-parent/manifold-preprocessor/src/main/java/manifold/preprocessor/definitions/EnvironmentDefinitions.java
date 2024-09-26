@@ -51,8 +51,8 @@ public class EnvironmentDefinitions
   public static final String ARCH_64 = "ARCH_64";
 
 
-  private static LocklessLazyVar<EnvironmentDefinitions> INSTANCE =
-    LocklessLazyVar.make( () -> new EnvironmentDefinitions() );
+  private static final LocklessLazyVar<EnvironmentDefinitions> INSTANCE =
+    LocklessLazyVar.make( EnvironmentDefinitions::new );
 
   private final Map<String, String> _env;
   
@@ -66,7 +66,7 @@ public class EnvironmentDefinitions
     Map<String, String> map = new HashMap<>();
     addArchitecture( map );
     addOperatingSystem( map );
-    addJavacEnvironment( map );
+    addJavaVersion( map );
     addJpms( map );
     addMisc( map );
     _env = map;
@@ -111,34 +111,10 @@ public class EnvironmentDefinitions
     }
   }
 
-  protected void addJavacEnvironment( Map<String, String> map )
+  protected void addJavaVersion( Map<String, String> map )
   {
-    if( JavacPlugin.instance() == null )
-    {
-      return ;
-    }
-
+    //noinspection resource
     JavacProcessingEnvironment jpe = JavacProcessingEnvironment.instance( JavacPlugin.instance().getContext() );
-    addJavaVersion( map, jpe );
-    addAnnotationOptions( map, jpe );
-  }
-
-  /**
-   * These are the {@code -Akey[=value]} options on the javac commmand line, much like {@code -D}, but for the javac
-   * environment, not the JVM. Intended for use with annotations, but also great for a preprocessor.
-   * See <a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javac.html">Standard Options</a>.
-   */
-  protected void addAnnotationOptions( Map<String, String> map, JavacProcessingEnvironment jpe )
-  {
-    Map<String, String> options = jpe.getOptions();
-    if( options != null )
-    {
-      map.putAll( options );
-    }
-  }
-
-  protected void addJavaVersion( Map<String, String> map, JavacProcessingEnvironment jpe )
-  {
     int version = jpe.getSourceVersion().ordinal();
     makeJavaVersionDefinitions( map, version );
   }

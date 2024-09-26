@@ -38,7 +38,7 @@ public class ManBindingsExtTest extends TestCase
   public void testToFromJson()
   {
     DataBindings empty = new DataBindings();
-    assertEquals( "{\n}", empty.toJson() );
+    assertEquals( "{}", empty.toJson() );
 
     DataBindings sample = makeSampleBindings();
     assertEquals(
@@ -46,8 +46,7 @@ public class ManBindingsExtTest extends TestCase
       "  \"name\": \"Scott\",\n" +
       "  \"age\": 32,\n" +
       "  \"bool\": true,\n" +
-      "  \"empty\": {\n" +
-      "  },\n" +
+      "  \"empty\": {},\n" +
       "  \"list\": [\n" +
       "    \"a\",\n" +
       "    \"b\",\n" +
@@ -58,8 +57,7 @@ public class ManBindingsExtTest extends TestCase
       "      \"name\": \"Scott\",\n" +
       "      \"age\": 32,\n" +
       "      \"bool\": true,\n" +
-      "      \"empty\": {\n" +
-      "      },\n" +
+      "      \"empty\": {},\n" +
       "      \"list\": [\n" +
       "        \"a\",\n" +
       "        \"b\",\n" +
@@ -70,8 +68,7 @@ public class ManBindingsExtTest extends TestCase
       "      \"name\": \"Scott\",\n" +
       "      \"age\": 32,\n" +
       "      \"bool\": true,\n" +
-      "      \"empty\": {\n" +
-      "      },\n" +
+      "      \"empty\": {},\n" +
       "      \"list\": [\n" +
       "        \"a\",\n" +
       "        \"b\",\n" +

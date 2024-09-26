@@ -87,9 +87,10 @@ public class Json
     {
       indent( sb, indent );
     }
-    sb.append( "{\n" );
-    if( thisMap.size() > 0 )
+    sb.append( "{" );
+    if( !thisMap.isEmpty() )
     {
+      sb.append( "\n" );
       for( Object key : thisMap.keySet() )
       {
         indent( sb, indent + 2 );
@@ -113,8 +114,8 @@ public class Json
         appendCommaNewLine( sb, iKey < thisMap.size() - 1 );
         iKey++;
       }
+      indent( sb, indent );
     }
-    indent( sb, indent );
     sb.append( "}" );
   }
 

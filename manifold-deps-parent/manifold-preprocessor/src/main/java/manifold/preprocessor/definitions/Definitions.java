@@ -82,6 +82,23 @@ public class Definitions
 
   protected Definitions loadParentDefinitions()
   {
+    // javac -Akey[=value] args must override build.properties, this is
+    // preferable for build tooling compared with having to write to build.properties
+    // files. ALso, helps with IJ where build.properties should be edited exclusively
+    // by a dev, not the build.
+    return
+      new Definitions( getRoot(), null, getRoot().loadJavacDefinitions() )
+      {
+        @Override
+        protected Definitions loadParentDefinitions()
+        {
+          return getRoot().makeBuildPropertiesDefinitions();
+        }
+      };
+  }
+
+  protected Definitions makeBuildPropertiesDefinitions()
+  {
     if( _definitionsSource != null )
     {
       IFile source = _definitionsSource;
@@ -109,6 +126,11 @@ public class Definitions
           return new ServiceDefinitions( getRoot() );
         }
       };
+  }
+
+  protected Map<String, String> loadJavacDefinitions()
+  {
+    return JavacDefinitions.instance().getEnv();
   }
 
   protected Map<String, String> loadEnvironmentDefinitions()
@@ -151,7 +173,15 @@ public class Definitions
     {
       properties.load( input );
       //noinspection unchecked
-      return new Definitions( getRoot(), source, (Map)properties );
+      return
+        new Definitions( getRoot(), source, (Map)properties )
+        {
+          @Override
+          protected Definitions loadParentDefinitions()
+          {
+            return makeBuildPropertiesDefinitions();
+          }
+        };
     }
     catch( IOException e )
     {
