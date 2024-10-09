@@ -26,7 +26,9 @@ The Manifold [plugins for IntelliJ and Android Studio](https://plugins.jetbrains
 [open source](https://github.com/manifold-systems/manifold-ij) and freely available.
 
 #### Q: Does Manifold work with Maven?  Gradle?
-Yes.  Please refer to the [Setup](http://manifold.systems/docs.html#setup) instructions. 
+Yes.  Please refer to the [Maven](http://manifold.systems/docs.html#maven) and [Gradle](http://manifold.systems/docs.html#gradle)
+sections of the [Setup](https://github.com/manifold-systems/manifold#projects) instructions detailed in the subproject[s]
+you are using. 
 
 #### Q: Does Manifold provide IDE support?
 Yes.  The [Manifold plugin](https://plugins.jetbrains.com/plugin/10057-manifold) provides comprehensive support for
@@ -48,7 +50,8 @@ from JetBrains Marketplace.
 #### Q: How do I get manifold-*fill-in-blank* working with my project? 
 Add the manifold-*fill-in-blank* dependency[s] to your project along with the `-Xplugin:Manifold` javac argument, the
 setup is sensitive to the version of Java you are using, generally whether you are using Java 8 or 9+. See the
-[Setup](http://manifold.systems/docs.html#setup) docs for complete instructions.
+[Setup](https://github.com/manifold-systems/manifold#projects) docs within the manifold-*fill-in-the-blank* subproject for
+complete instructions.
  
 ## Getting Help
 
@@ -80,7 +83,7 @@ when you load your project.  You can find the latest releases [here](https://git
 
 **Important:** If you are using Maven or Gradle, you must update your build files -- do not change the Module dependencies from 
 IntelliJ's UI. Please refer to the [Maven](http://manifold.systems/docs.html#maven) and [Gradle](http://manifold.systems/docs.html#gradle)
-sections of the [Manifold Setup](http://manifold.systems/docs.html#setup) instructions. 
+sections of the [Setup](https://github.com/manifold-systems/manifold#projects) instructions detailed in the subproject[s] you are using.
 
 Please [make some noise](https://discord.gg/9x2pCPAASn) if you can't get it
 working, chances are you're not alone and help will arrive soon.
