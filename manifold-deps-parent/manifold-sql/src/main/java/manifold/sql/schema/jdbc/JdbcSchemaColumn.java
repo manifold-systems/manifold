@@ -21,9 +21,7 @@ import manifold.sql.rt.api.TypeProvider;
 import manifold.sql.rt.util.DbUtil;
 import manifold.sql.schema.api.SchemaColumn;
 
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,9 +69,19 @@ public class JdbcSchemaColumn implements SchemaColumn
     _decimalDigits = rs.getInt( "DECIMAL_DIGITS" );
     _numPrecRadix = rs.getInt( "NUM_PREC_RADIX" );
     TypeProvider typeProvider = Dependencies.instance().getTypeProvider();
-    _jdbcType = typeProvider.getSchemaColumnType( _isNonNullUniqueId, rs, dbMetadata );
+    _jdbcType = getSchemaColumnType( rs, dbMetadata, typeProvider, columnType );
     _sqlType = rs.getString( "TYPE_NAME" );
     _columnType = columnType;
+  }
+
+  private int getSchemaColumnType( ResultSet rs, DatabaseMetaData dbMetadata, TypeProvider typeProvider, String columnType ) throws SQLException
+  {
+    if( columnType.equals( SQLXML.class.getTypeName() ) )
+    {
+      // db2 tries to use its own class, we override that to use SQLXML, here we ensure the jdbc type is consistent with that
+      return Types.SQLXML;
+    }
+    return typeProvider.getSchemaColumnType( _isNonNullUniqueId, rs, dbMetadata );
   }
 
   @Override
@@ -198,6 +206,6 @@ public class JdbcSchemaColumn implements SchemaColumn
   {
     // oracle true to form returns NO for "IS_AUTOINCREMENT" even when the column is GENERATED ALWAYS AS IDENTITY,
     // therefore we have to settle and treat all non-null unique ids as auto-increment, which are 99% of the time :\
-    return SchemaColumn.super.canBeNull() || isNonNullUniqueId();
+    return isNonNullUniqueId() || getForeignKey() != this && SchemaColumn.super.canBeNull();
   }
 }

@@ -110,7 +110,10 @@ public class JdbcSchemaTable implements SchemaTable
         String fkColumnName = foreignKeys.getString( "FKCOLUMN_NAME" );
         String pkColumnName = foreignKeys.getString( "PKCOLUMN_NAME" );
         String pkTableName = foreignKeys.getString( "PKTABLE_NAME" );
-        keyParts.add( new JdbcForeignKeyMetadata.KeyPart( fkName, fkColumnName, pkColumnName, pkTableName ) );
+        if( _schema.hasTable( pkTableName ) ) // prevent FK refs to ALIAS and SYNONYM tables, only allowing direct table FKs, for now
+        {
+          keyParts.add( new JdbcForeignKeyMetadata.KeyPart( fkName, fkColumnName, pkColumnName, pkTableName ) );
+        }
       }
     }
     catch( SQLFeatureNotSupportedException ignore )
@@ -186,6 +189,7 @@ public class JdbcSchemaTable implements SchemaTable
         {
           String columnName = preparedStatement.getMetaData().getColumnName( i + 1 );
           String columnClassName = preparedStatement.getMetaData().getColumnClassName( i + 1 );
+          columnClassName = tailorIfNecessary( columnClassName );
           columnClassNames.put( columnName, columnClassName );
         }
         catch( SQLException se )
@@ -195,6 +199,23 @@ public class JdbcSchemaTable implements SchemaTable
       }
     }
     return columnClassNames;
+  }
+
+  private String tailorIfNecessary( String columnClassName )
+  {
+    try
+    {
+      Class<?> cls = Class.forName( columnClassName );
+      if( SQLXML.class.isAssignableFrom( cls ) )
+      {
+        // driver-specific XML types suck
+        columnClassName = SQLXML.class.getTypeName();
+      }
+    }
+    catch( ClassNotFoundException ignore )
+    {
+    }
+    return columnClassName;
   }
 
   private void buildNonNullUniqueKeys( JdbcSchemaColumn col )

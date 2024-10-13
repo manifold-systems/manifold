@@ -148,6 +148,7 @@ public interface DbConfig
     String user = getUser();
     if( user != null )
     {
+      props.put( "user", user ); // some DBs require "user" eg. db2
       props.put( "username", user );
     }
 

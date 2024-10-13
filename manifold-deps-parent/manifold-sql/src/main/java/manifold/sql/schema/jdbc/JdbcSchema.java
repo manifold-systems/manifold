@@ -108,7 +108,8 @@ public class JdbcSchema implements Schema
     String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
     String schema = _schemaIsCatalog ? null : _name;
     LOGGER.info( "JdbcSchema building: catalog: " + catalog + ", schema: " + schema );
-    try( ResultSet resultSet = metaData.getTables( catalog, schema, null, getTableTableTypes( metaData ) ) )
+    assignTableNames( catalog, schema, metaData );
+    try( ResultSet resultSet = metaData.getTables( catalog, schema, getTableNamePattern(), getTableTableTypes( metaData ) ) )
     {
       while( resultSet.next() )
       {
@@ -135,6 +136,35 @@ public class JdbcSchema implements Schema
     {
       table.resolveFkRelations();
     }
+  }
+
+  private void assignTableNames( String catalog, String schema, DatabaseMetaData metaData )
+  {
+    try( ResultSet resultSet = metaData.getTables( catalog, schema, getTableNamePattern(), getTableTableTypes( metaData ) ) )
+    {
+      while( resultSet.next() )
+      {
+        String name = resultSet.getString( "TABLE_NAME" );
+        String javaName = makePascalCaseIdentifier( name, true );
+        _javaToName.put( javaName, name );
+        _nameToJava.put( name, javaName );
+      }
+    }
+    catch( SQLException e )
+    {
+      // this is dicey, but some drivers (looking at you duckdb) appear to fail after successfully iterating this resultset
+      LOGGER.warn( "JdbcSchema: build may not have completed.", e );
+    }
+  }
+
+  private String getTableNamePattern()
+  {
+    return isDb2() ? "%" : null;
+  }
+
+  private boolean isDb2()
+  {
+    return _driverInfo.getDriversInUse().keySet().stream().anyMatch( k -> k.startsWith( "IBM " ) );
   }
 
   @NotNull
@@ -280,7 +310,7 @@ public class JdbcSchema implements Schema
   @Override
   public boolean hasTable( String name )
   {
-    return _tables.containsKey( name ) || _tables.containsKey( getOriginalName( name ) );
+    return _nameToJava.containsKey( name ) || _javaToName.containsKey( name );
   }
 
   @Override

@@ -1337,17 +1337,24 @@ class SchemaParentType
     String configName = fkToThis.getReferencedTable().getSchema().getDbConfig().getName();
     //noinspection unused
     String tableName = fkToThis.getOwnTable().getName();
+
+    List<SchemaColumn> fkToThisColumns = fkToThis.getColumns();
+
     //noinspection unused
-    String columnInfo = getColumnInfo( fkToThis.getColumns() );
+    String columnInfo = getColumnInfo( fkToThisColumns );
     StringBuilder sb = new StringBuilder();
     sb.append( "DataBindings paramBindings = new DataBindings();\n" );
-    for( SchemaColumn col : fkToThis.getColumns() )
+    if( !fkToThisColumns.isEmpty() )
     {
-      //noinspection unused
-      Column referencedCol = col.getForeignKey();
-      sb.append( "    Object value = getBindings().get(\"${col.getName()}\");\n" )
-        .append( "    if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
-        .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
+      sb.append( "    Object value;" );
+      for( SchemaColumn col : fkToThisColumns )
+      {
+        //noinspection unused
+        Column referencedCol = col.getForeignKey();
+        sb.append( "    value = getBindings().get(\"${col.getName()}\");\n" )
+          .append( "    if(value instanceof ${Entity.class.getSimpleName()}) return Collections.emptyList();\n" )
+          .append( "    paramBindings.put(\"${referencedCol.getName()}\", value);\n" );
+      }
     }
     sb.append( "    return ${Dependencies.class.getName()}.instance().getCrudProvider().readMany(" +
       "      new QueryContext<$tableFqn>(getBindings().getTxScope(), $tableFqn.class, \"$tableName\", myTableInfo.get().getAllCols(), $columnInfo, paramBindings, \"$configName\", " +
