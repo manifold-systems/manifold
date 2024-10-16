@@ -340,13 +340,14 @@ If you experience problems using a JDBC driver with Manifold SQL, please let us 
 
 | Database   | Tested Driver                              |
 |------------|--------------------------------------------|
-| DuckDB     | `org.duckdb:duckdb_jdbc`                   |
-| H2         | `com.h2database:h2`                        |
-| MySQL      | `com.mysql:mysql-connector-j`              |
+| DB2        | `com.ibm.db2.jcc:db2jcc:*`                 |
+| DuckDB     | `org.duckdb:duckdb_jdbc:*`                 |
+| H2         | `com.h2database:h2.*`                      |
+| MySQL      | `com.mysql:mysql-connector-j:*`            |
 | Oracle     | `com.oracle.database.jdbc:ojdbc*`          |
-| Postgres   | `org.postgresql:postgresql`                |
-| SQL Server | `com.microsoft.sqlserver:mssql-jdbc`       |
-| SQLite     | `org.xerial:sqlite-jdbc`                   |
+| Postgres   | `org.postgresql:postgresql:*`              |
+| SQL Server | `com.microsoft.sqlserver:mssql-jdbc:*`     |
+| SQLite     | `org.xerial:sqlite-jdbc:*`                 |
 | _other_    | report issues, your feedback is important! |
 
 The architecture is designed for [customization](#customizations), you can tweak or completely replace almost every aspect
