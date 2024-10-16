@@ -48,7 +48,12 @@
       <artifactId>ojdbc8</artifactId>
       <version>21.11.0.0</version>
     </dependency>
-    
+
+    <dependency>
+      <groupId>com.ibm.db2.jcc</groupId>
+      <artifactId>db2jcc</artifactId>
+      <version>db2jcc4</version>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -111,6 +116,11 @@
               <groupId>com.oracle.database.jdbc</groupId>
               <artifactId>ojdbc8</artifactId>
               <version>21.11.0.0</version>
+            </path>
+            <path>
+              <groupId>com.ibm.db2.jcc</groupId>
+              <artifactId>db2jcc</artifactId>
+              <version>db2jcc4</version>
             </path>
             <path>
               <groupId>org.slf4j</groupId>

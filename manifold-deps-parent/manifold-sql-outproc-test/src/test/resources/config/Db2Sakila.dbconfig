@@ -1,0 +1,11 @@
+{
+  "url": "jdbc:db2://localhost:25000/SAKILA",
+  "user": "SCOTT",
+  "password": "notfar",
+  "schemaName": "SCOTT",
+  "schemaPackage": "manifold.sql.schema.simple.db2",
+  "dbDdl": "samples/ddl/db2-sakila-ddl.sql",
+  "properties": {
+    "retrieveMessagesFromServerOnGetMessage": true
+  }
+}
