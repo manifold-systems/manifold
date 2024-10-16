@@ -1,6 +1,6 @@
 # Manifold : Image
 
-![latest](https://img.shields.io/badge/latest-v2024.1.35-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.36-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -109,11 +109,11 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'systems.manifold:manifold-rt:2024.1.35'
+    compileOnly 'systems.manifold:manifold-rt:2024.1.36'
     testImplementation 'junit:junit:4.12'
     // Add manifold to -processorpath for javac
-    annotationProcessor 'systems.manifold:manifold-image:2024.1.35'
-    testAnnotationProcessor 'systems.manifold:manifold-image:2024.1.35'
+    annotationProcessor 'systems.manifold:manifold-image:2024.1.36'
+    testAnnotationProcessor 'systems.manifold:manifold-image:2024.1.36'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -157,7 +157,7 @@ module MyProject {
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.35</manifold.version>
+        <manifold.version>2024.1.36</manifold.version>
     </properties>
 
     <dependencies>
@@ -211,7 +211,7 @@ module my.image.app {
 # Javadoc
 
 `manifold-image`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2024.1.35/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2024.1.35)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-image/2024.1.36/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-image/2024.1.36)
 
 # License
 

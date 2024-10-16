@@ -2,7 +2,7 @@
 
 # Delegation with links & parts
 
-![latest](https://img.shields.io/badge/latest-v2024.1.35-royalblue.svg)
+![latest](https://img.shields.io/badge/latest-v2024.1.36-royalblue.svg)
 [![chat](https://img.shields.io/badge/discord-manifold-seagreen.svg?logo=discord)](https://discord.gg/9x2pCPAASn)
 [![GitHub Repo stars](https://img.shields.io/github/stars/manifold-systems/manifold?logo=github&style=flat&color=tan)](https://github.com/manifold-systems/manifold)
 
@@ -476,11 +476,11 @@ repositories {
 }
 
 dependencies {
-     implementation 'systems.manifold:manifold-delegation-rt:2024.1.35'
+     implementation 'systems.manifold:manifold-delegation-rt:2024.1.36'
      testImplementation 'junit:junit:4.12'
      // Add manifold to -processorpath for javac
-     annotationProcessor 'systems.manifold:manifold-delegation:2024.1.35'
-     testAnnotationProcessor 'systems.manifold:manifold-delegation:2024.1.35'
+     annotationProcessor 'systems.manifold:manifold-delegation:2024.1.36'
+     testAnnotationProcessor 'systems.manifold:manifold-delegation:2024.1.36'
 }
 
 if (JavaVersion.current() != JavaVersion.VERSION_1_8 &&
@@ -516,7 +516,7 @@ rootProject.name = 'MyProject'
 
     <properties>
         <!-- set latest manifold version here --> 
-        <manifold.version>2024.1.35</manifold.version>
+        <manifold.version>2024.1.36</manifold.version>
     </properties>
     
     <dependencies>
@@ -560,10 +560,10 @@ rootProject.name = 'MyProject'
 # Javadoc
 
 `manifold-delegation`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2024.1.35/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2024.1.35)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation/2024.1.36/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation/2024.1.36)
 
 `manifold-delegation-rt`:<br>
-[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2024.1.35/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2024.1.35)
+[![javadoc](https://javadoc.io/badge2/systems.manifold/manifold-delegation-rt/2024.1.36/javadoc.svg)](https://javadoc.io/doc/systems.manifold/manifold-delegation-rt/2024.1.36)
 
 # License
 
