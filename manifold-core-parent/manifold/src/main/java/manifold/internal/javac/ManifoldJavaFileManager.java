@@ -18,7 +18,9 @@ package manifold.internal.javac;
 
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.file.RelativePath;
+import com.sun.tools.javac.jvm.ClassReader;
 import com.sun.tools.javac.util.Context;
 import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Name;
@@ -270,6 +272,7 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
           JavaFileObject file = findGeneratedFile( fqn, location, tn.getModule(), issueReporter );
           if( file != null && isSourceOk( file, location ) && isCorrectModule( tn.getModule(), location, patchableFiles, file, fqn ) )
           {
+            hackToFixJava8Issue( tn );
             newList.add( file );
           }
         }
@@ -277,6 +280,17 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
       list = newList;
     }
     return list;
+  }
+
+  //todo: revisit
+  // temporary terrible hack for https://github.com/manifold-systems/manifold/issues/627
+  private void hackToFixJava8Issue( TypeName tn )
+  {
+    if( JreUtil.isJava8() && tn.name.equals( "java.util.Map" ) )
+    {
+      // ensure top-level Map class loads before inner class Entry, see https://github.com/manifold-systems/manifold/issues/627
+      Annotate.instance( _ctx ).normal( () -> ClassReader.instance( _ctx ).loadClass( Names.instance( _ctx ).fromString( tn.name ) ) );
+    }
   }
 
   private boolean isSourceOk( JavaFileObject file, Location location )
