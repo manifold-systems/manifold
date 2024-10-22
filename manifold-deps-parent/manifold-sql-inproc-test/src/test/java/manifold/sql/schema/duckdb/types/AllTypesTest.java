@@ -70,17 +70,17 @@ public class AllTypesTest extends DuckdbDdlServerTest
   public void testTypesThatAreWriteBroken() throws SQLException
   {
     // ARRAY
-    Object[] array = (Object[]) "[.sql:DuckdbSakila/] SELECT array_value(1, 2, 3) as arraySample".fetchOne().getArraysample();
+    Object[] array = (Object[]) "[.sql:DuckdbSakila/] SELECT array_value(1, 2, 3) as arraySample".fetchOne().getArraySample();
     for( Object o : array ) {
       out.println(o.getClass());
     }
 
     // STRUCT
-    DuckDBStruct structSample = "[.sql:DuckdbSakila/] SELECT {'x': 1, 'y': 2, 'z': 3} as structSample".fetchOne().getStructsample();
+    DuckDBStruct structSample = "[.sql:DuckdbSakila/] SELECT {'x': 1, 'y': 2, 'z': 3} as structSample".fetchOne().getStructSample();
     structSample.getMap().forEach((key, value) -> out.println(key + ": " + value));
 
     // MAP
-    Map<?,?> mapSample = "[.sql:DuckdbSakila/] SELECT MAP {'x': 1, 'y': 2, 'z': 3} as mapSample".fetchOne().getMapsample();
+    Map<?,?> mapSample = "[.sql:DuckdbSakila/] SELECT MAP {'x': 1, 'y': 2, 'z': 3} as mapSample".fetchOne().getMapSample();
     mapSample.forEach((key, value) -> out.println(key + ": " + value));
 
     // BIT (BITSTRING)

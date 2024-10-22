@@ -305,7 +305,7 @@ public abstract class CompiledTypeProcessor implements TaskListener
 
   public void preserveInnerClassForGenerationPhase( JCTree.JCClassDecl def )
   {
-    if( def == null )
+    if( def == null || def.sym == null )
     {
       return;
     }

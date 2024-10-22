@@ -57,10 +57,50 @@ public class ManIdentifierUtil
     return identifier;
   }
 
+  /**
+   * Return {@code name} following Pascal naming convention. Only alpha-numeric characters are retained.
+   * <p/>
+   * - name -> Name <br>
+   * - NAME -> Name <br>
+   * - thisName -> ThisName <br>
+   * - thisname -> Thisname <br>
+   * - this_name -> ThisName <br>
+   * - this-name -> ThisName <br>
+   * - this*name -> ThisName <br>
+   * - _this_name -> _ThisName <br>
+   * - _this__name -> _This_Name <br>
+   *
+   * @param name Any name
+   * @param firstChar Should the first character be capitalized? (false = camel case)
+   * @return {@code name} following pascal naming convention
+   */
   public static String makePascalCaseIdentifier( String name, boolean firstChar )
   {
-    // pascal case remove underscores, great for transforming DDL names
-    return ManStringUtil.toPascalCase( ManIdentifierUtil.makeIdentifier( name ).toLowerCase(), !firstChar );
+    return ManStringUtil.toPascalCase( isMixedCase( name ) ? makeIdentifier( name ) : makeIdentifier( name ).toLowerCase(), !firstChar );
+  }
+
+  private static boolean isMixedCase( String name )
+  {
+    if( name.contains( "_" ) )
+    {
+      return false;
+    }
+
+    Boolean lower = null;
+    for( int i = 0; i < name.length(); i++ )
+    {
+      char c = name.charAt( i );
+      if( Character.isAlphabetic( c ) )
+      {
+        boolean l = Character.isLowerCase( c );
+        if( lower != null && l != lower )
+        {
+          return true;
+        }
+        lower = l;
+      }
+    }
+    return false;
   }
 
   private static String makeCorrections( StringBuilder sb )

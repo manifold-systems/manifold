@@ -16,6 +16,7 @@
 
 package manifold.sql.rt.api;
 
+import manifold.util.ReflectUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,17 +83,15 @@ public interface ValueAccessor
    */
   default Class<?> getClassForColumnClassName( String className, Class<?> defaultClass )
   {
+    Class<?> result = null;
     if( className != null && !className.equals( Object.class.getTypeName() ) )
     {
-      try
+      result = ReflectUtil.type( className );
+      if( result == null)
       {
-        return Class.forName( className );
-      }
-      catch( ClassNotFoundException cnfe )
-      {
-        LOGGER.warn( "Failed to access class '" + className + "' for '" + getClass().getSimpleName() + "'", cnfe );
+        LOGGER.warn( "Failed to access class '" + className + "' for '" + getClass().getSimpleName() + "'" );
       }
     }
-    return defaultClass;
+    return result == null ? defaultClass : result;
   }
 }

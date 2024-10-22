@@ -16,13 +16,12 @@
 
 package manifold.sql.util;
 
-import manifold.rt.api.util.ManIdentifierUtil;
 import org.junit.Test;
 
 import static manifold.rt.api.util.ManIdentifierUtil.makePascalCaseIdentifier;
 import static org.junit.Assert.*;
 
-public class UtilTest
+public class ManIdentifierUtilTest
 {
   @Test
   public void testPascalCase()
@@ -47,5 +46,13 @@ public class UtilTest
     assertEquals( "cityId", ident );
     ident = makePascalCaseIdentifier( "city#id", true );
     assertEquals( "CityId", ident );
+    ident = makePascalCaseIdentifier( "cityid", false );
+    assertEquals( "cityid", ident );
+    ident = makePascalCaseIdentifier( "cityid", true );
+    assertEquals( "Cityid", ident );
+    ident = makePascalCaseIdentifier( "retainMixedCase", false );
+    assertEquals( "retainMixedCase", ident );
+    ident = makePascalCaseIdentifier( "retainMixedCase", true );
+    assertEquals( "RetainMixedCase", ident );
   }
 }

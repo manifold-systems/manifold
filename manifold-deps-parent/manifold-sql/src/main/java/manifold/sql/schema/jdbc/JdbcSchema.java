@@ -108,7 +108,7 @@ public class JdbcSchema implements Schema
     String catalog = _schemaIsCatalog ? _name : _dbConfig.getCatalogName();
     String schema = _schemaIsCatalog ? null : _name;
     LOGGER.info( "JdbcSchema building: catalog: " + catalog + ", schema: " + schema );
-    assignTableNames( catalog, schema, metaData );
+    assignTableNames( catalog, schema, metaData ); // necessary to assign table names before creating tables due to forward refs
     try( ResultSet resultSet = metaData.getTables( catalog, schema, getTableNamePattern(), getTableTableTypes( metaData ) ) )
     {
       while( resultSet.next() )
@@ -116,9 +116,6 @@ public class JdbcSchema implements Schema
         JdbcSchemaTable table = new JdbcSchemaTable( this, metaData, resultSet );
         String name = table.getName();
         _tables.put( name, table );
-        String javaName = makePascalCaseIdentifier( name, true );
-        _javaToName.put( javaName, name );
-        _nameToJava.put( name, javaName );
       }
     }
     catch( SQLException e )
@@ -140,20 +137,98 @@ public class JdbcSchema implements Schema
 
   private void assignTableNames( String catalog, String schema, DatabaseMetaData metaData )
   {
+    Map<String, List<TableData>> tables = new LinkedHashMap<>();
     try( ResultSet resultSet = metaData.getTables( catalog, schema, getTableNamePattern(), getTableTableTypes( metaData ) ) )
     {
       while( resultSet.next() )
       {
         String name = resultSet.getString( "TABLE_NAME" );
+        String type = resultSet.getString( "TABLE_TYPE" );
         String javaName = makePascalCaseIdentifier( name, true );
-        _javaToName.put( javaName, name );
-        _nameToJava.put( name, javaName );
+        tables.computeIfAbsent( javaName, __ -> new ArrayList<>() )
+          .add( new TableData( name, type ) );
       }
     }
     catch( SQLException e )
     {
       // this is dicey, but some drivers (looking at you duckdb) appear to fail after successfully iterating this resultset
       LOGGER.warn( "JdbcSchema: build may not have completed.", e );
+    }
+
+    for( Map.Entry<String, List<TableData>> entry: tables.entrySet() )
+    {
+      String javaName = entry.getKey();
+      List<TableData> list = entry.getValue();
+      if( list.size() == 1 )
+      {
+        // only one table mapped to the java name, assign the name as usual
+
+        TableData tableData = list.get( 0 );
+        _javaToName.put( javaName, tableData.rawName );
+        _nameToJava.put( tableData.rawName, javaName );
+      }
+      else if( list.size() == 2 && !list.get( 0 ).type.equals( list.get( 1 ).type ) )
+      {
+        // for case where a table and a view resolve to the same java name,
+        // reserve the java name for the table and make a new one for the view
+
+        TableData first = list.get( 0 );
+        TableData second = list.get( 1 );
+        TableData table = null;
+        TableData view = null;
+        if( first.type.toLowerCase().contains( "view" ) )
+        {
+          table = second;
+          view = first;
+        }
+        else if( second.type.toLowerCase().contains( "view" ) )
+        {
+          table = first;
+          view = second;
+        }
+
+        if( view != null )
+        {
+          _javaToName.put( javaName, table.rawName );
+          _nameToJava.put( table.rawName, javaName );
+
+          javaName += "_view";
+          _javaToName.put( javaName, view.rawName );
+          _nameToJava.put( view.rawName, javaName );
+        }
+        else
+        {
+          simpleNameChange( list, javaName );
+        }
+      }
+      else
+      {
+        // more than two tables/views resolve to the same java name, just append _1 etc. to the java names
+        simpleNameChange( list, javaName );
+      }
+    }
+  }
+
+  private void simpleNameChange( List<TableData> list, String javaName )
+  {
+    for( int i = 0; i < list.size(); i++ )
+    {
+      TableData tableData = list.get( i );
+      javaName += "_" + (i+1);
+      _javaToName.put( javaName, tableData.rawName );
+      _nameToJava.put( tableData.rawName, javaName );
+    }
+  }
+
+  private static class TableData
+  {
+    private final String rawName;
+    private final String type;
+
+    TableData( String name, String type )
+    {
+      this.rawName = name;
+      this.type = type;
     }
   }
 
