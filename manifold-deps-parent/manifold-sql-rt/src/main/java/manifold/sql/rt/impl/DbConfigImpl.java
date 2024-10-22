@@ -50,6 +50,7 @@ public class DbConfigImpl implements DbConfig
   private final Bindings _bindings;
   private final Map<String, List<Consumer<Connection>>> _initializers;
   private final transient Function<String, FqnCache<IFile>> _resByExt;
+  private final ExecutionEnv _env;
 
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, ExecutionEnv executionEnv )
   {
@@ -65,6 +66,7 @@ public class DbConfigImpl implements DbConfig
   public DbConfigImpl( Function<String, FqnCache<IFile>> resByExt, Bindings bindings, ExecutionEnv executionEnv, Function<String, String> exprHandler )
   {
     _initializers = new HashMap<>();
+    _env = executionEnv;
     processUrl( resByExt, bindings, executionEnv, "url", exprHandler );
     processUrl( resByExt, bindings, executionEnv, "buildUrl", exprHandler );
     _bindings = bindings;
@@ -108,8 +110,19 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
+  public ExecutionEnv getEnv()
+  {
+    return _env;
+  }
+
+  @Override
   public void init( Connection connection, ExecutionEnv env ) throws SQLException
   {
+    if( _env != env )
+    {
+      throw new RuntimeException( "envs disagree: " + "_env: " + _env + "  env: " + env );
+    }
+
     List<Consumer<Connection>> consumers =
       _initializers.get( env == Compiler || env == IDE ? getBuildUrlOtherwiseRuntimeUrl() : getUrl() );
     for( Consumer<Connection> consumer : consumers )
@@ -259,9 +272,21 @@ public class DbConfigImpl implements DbConfig
   }
 
   @Override
+  public String getBuildUser()
+  {
+    return (String)_bindings.get( "buildUser" );
+  }
+
+  @Override
   public String getPassword()
   {
     return (String)_bindings.get( "password" );
+  }
+
+  @Override
+  public String getBuildPassword()
+  {
+    return (String)_bindings.get( "buildPassword" );
   }
 
   @Override

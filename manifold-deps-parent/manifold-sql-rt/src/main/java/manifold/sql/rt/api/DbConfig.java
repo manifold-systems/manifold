@@ -90,10 +90,14 @@ public interface DbConfig
    */
   String getSchemaPackage();
 
-  /** (Optional) Username for database account */
+  /** (Optional) Username for database account corresponding with url */
   String getUser();
-  /** (Optional) Password for database account */
+  /** (Optional) Password for database account corresponding with url */
   String getPassword();
+  /** (Optional) Username for database account corresponding with buildUrl */
+  String getBuildUser();
+  /** (Optional) Password for database account corresponding with buildUrl */
+  String getBuildPassword();
 
   /**
    * (Optional) If true, this dbconfig is the "default" configuration. The default dbconfig is applied to all SQL resources
@@ -112,6 +116,9 @@ public interface DbConfig
    */
   boolean isDefault();
 
+  /** Executing in Runtime, Compiler, IDE? */
+  ExecutionEnv getEnv();
+  
   /** (Optional) JDBC connection properties in JSON format. These properties are driver-specific. See {@link #toProperties()}. */
   Bindings getProperties();
 
@@ -145,14 +152,16 @@ public interface DbConfig
 
     // override direct user, password if provided
 
-    String user = getUser();
+    String buildUser = getBuildUser();
+    String user = getEnv() == ExecutionEnv.Runtime || buildUser == null ? getUser() : buildUser;
     if( user != null )
     {
       props.put( "user", user ); // some DBs require "user" eg. db2
       props.put( "username", user );
     }
 
-    String password = getPassword();
+    String buildPassword = getBuildPassword();
+    String password = getEnv() == ExecutionEnv.Runtime || buildPassword == null ? getPassword() : buildPassword;
     if( password != null )
     {
       props.put( "password", password );

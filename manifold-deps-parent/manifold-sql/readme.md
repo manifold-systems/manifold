@@ -520,13 +520,25 @@ be used: `sql.schema.types`. Note, this property is used exclusively for compile
 | `user` | `String` | _(optional)_ |
 |--------|----------|--------------|
 
-Username for data source.
+Username for data source. Applies to `url`. Applies to `buildUrl` if `buildUser` is not provided.
 
 ---                         
 | `password` | `String` | _(optional)_ |
 |------------|----------|--------------|
 
-Password for data source.
+Password for data source. Applies to `url`. Applies to `buildUrl` if `buildPassword` is not provided.
+
+---
+| `buildUser` | `String` | _(optional)_ |
+|-------------|----------|--------------|
+
+Username for data source. Applies to `buildUrl`. If not provided, `user` applies to `buildUrl` if provided. 
+
+---                         
+| `buildPassword` | `String` | _(optional)_ |
+|-----------------|----------|--------------|
+
+Password for data source. Applies to `buildUrl`. If not provided, `password` applies to `buildUrl` if provided.
 
 ---         
 | `isDefault` | `boolean` | _(optional)_ |
