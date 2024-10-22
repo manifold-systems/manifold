@@ -30,8 +30,11 @@ public enum HostKind
         return LINE_COMMENT;
       case BLOCK:
         return BLOCK_COMMENT;
-      case JAVADOC:
-        return JAVADOC_COMMENT;
+      default:
+        if( s.name().toLowerCase().contains( "javadoc" ) )
+        {
+          return JAVADOC_COMMENT;
+        }
     }
     throw new IllegalStateException();
   }
