@@ -125,17 +125,22 @@ public class NecessaryEvilUtil
     // Module: java.base
     //
     Object /*Module*/ javaBaseModule = ReflectUtil.method( Class.class, "getModule" ).invoke( String.class );
-    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.misc", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "java.lang", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "java.lang.module", manifoldModule, true, true );
-    addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
-    addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
-
+//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.loader", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.misc", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.module", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "jdk.internal.vm.annotation", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "java.lang", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.invoke", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.module", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( javaBaseModule, "java.lang.reflect", manifoldModule, true, true ); // for jailbreak
+//    addExportsOrOpens.invoke( javaBaseModule, "java.net", manifoldModule, true, true );
+    //noinspection unchecked
+    Set<String> packages = (Set<String>)ReflectUtil.method( javaBaseModule, "getPackages" ).invoke();
+    for( String pkg : packages )
+    {
+      addExportsOrOpens.invoke( javaBaseModule, pkg, manifoldModule, true, true );
+    }
 
     //
     // Module: java.desktop (needed for testing manifold IJ plugin)
@@ -158,19 +163,25 @@ public class NecessaryEvilUtil
     //
     Object /*Module*/ jdkCompilerModule = ReflectUtil.method( Class.class, "getModule" )
       .invoke( ReflectUtil.type( "com.sun.tools.javac.code.Symbol", true ) );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.file", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.jvm", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.main", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.model", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
-    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.api", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.code", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.comp", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.file", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.jvm", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.main", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.model", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.parser", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.platform", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.processing", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.resources", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.tree", manifoldModule, true, true );
+//    addExportsOrOpens.invoke( jdkCompilerModule, "com.sun.tools.javac.util", manifoldModule, true, true );
+    //noinspection unchecked
+    Set<String> packages = (Set<String>)ReflectUtil.method( jdkCompilerModule, "getPackages" ).invoke();
+    for( String pkg : packages )
+    {
+      addExportsOrOpens.invoke( jdkCompilerModule, pkg, manifoldModule, true, true );
+    }
 
     //
     // Module: jdk.javadoc

@@ -24,6 +24,7 @@ import com.sun.source.util.Plugin;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
 import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.code.Source;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.comp.*;
@@ -40,6 +41,7 @@ import com.sun.tools.javac.util.*;
 
 import java.io.*;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -193,6 +195,42 @@ public class JavacPlugin implements Plugin, TaskListener
     hijackJavacFileManager();
     overrideJavacToolEnter();
     task.addTaskListener( this );
+    warnings();
+  }
+
+  private void warnings()
+  {
+    sourceWarning();
+  }
+
+  // Is the --source JDK lower than the compiling JDK?
+  // If so, report a warning if manifold-ext is in use and if the compiling JDK is 17+. Because extension classes on JDK
+  // classes such as String may have issues because although the --source is specified the compiler still loads the String
+  // class directly from the compiling JDK, which includes whatever new changes that may be in String, mainly super types
+  // type refs elsewhere in the class. You see, --source only prevents compiling source code from referencing types, methods, fields, etc.
+  // from the JDK class that are not in the older --source version of the class -- it is just the newer type information that the
+  // compiler prohibits the use of, but the String type itself is still there with all the new stuff in it. Because a
+  // manifold extension on String loads the type to generate the stub source, the generated class has all the new type info
+  // in it, regardless of whatever --source may be.
+  private void sourceWarning()
+  {
+    if( !isExtensionsEnabled() || !JreUtil.isJava9orLater() )
+    {
+      return;
+    }
+
+    String source = Source.instance( getContext() ).name;
+    int sourceValue = new BigDecimal( source ).intValue();
+    if( sourceValue < JreUtil.JAVA_VERSION )
+    {
+      getIssueReporter().reportWarning(
+        "\n" +
+        "Usage of `manifold-ext` compiling with JDK " + JreUtil.JAVA_VERSION + " may not support source version " + source + " if\n" +
+        "your application uses extensions on JRE classes like String, List, etc. Generally,\n" +
+        "with JDK 11 or greater it is best to compile --source X with JDK X. If you experience\n" +
+        "compile errors corresponding with JRE classes, please consider changing your compiler\n" +
+        "to JDK " + source + " or changing --source to " + JreUtil.JAVA_VERSION + ". Otherwise, ignore this message.\n" );
+    }
   }
 
   private void overrideJavacToolEnter()

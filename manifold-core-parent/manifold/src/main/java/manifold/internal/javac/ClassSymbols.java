@@ -152,6 +152,7 @@ public class ClassSymbols
       else
       {
         add( "-source" ); add( "1.8" );
+// much wrath:       add( "-source" ); add( javacPlugin == null ? "1.8" : Source.instance( javacPlugin.getContext() ).name );
       }
     }};
   }

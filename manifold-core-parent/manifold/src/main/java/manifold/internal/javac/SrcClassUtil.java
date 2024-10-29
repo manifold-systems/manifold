@@ -111,6 +111,11 @@ public class SrcClassUtil
     }
     for( Type iface: classSymbol.getInterfaces() )
     {
+      if( iface.tsym.getQualifiedName().toString().startsWith( "java.lang.constant." ) )
+      {
+        // android: for some reason android does not resolve this package, i don't like you android
+        continue;
+      }
       srcClass.addInterface( makeNestedType( iface ) );
     }
     if( withMembers )
@@ -369,6 +374,11 @@ public class SrcClassUtil
     for( int i = 0; i < parameters.size(); i++ )
     {
       Symbol.VarSymbol param = parameters.get( i );
+      if( param.type.toString().equals( "java.lang.AbstractStringBuilder" ) )
+      {
+        // android: doesn't resolve AbstractStringBuilder with extended classes while compiling their source, such as when String is extended locally
+        return;
+      }
       String paramName = recordFields == null ? param.flatName().toString() : recordFields.get( i ).flatName().toString();
       SrcParameter srcParam = new SrcParameter( paramName, makeSrcType( param.type, method, TargetType.METHOD_FORMAL_PARAMETER, i ) );
       srcMethod.addParam( srcParam );
@@ -705,6 +715,11 @@ public class SrcClassUtil
       // Since java 10 we have to keep these out of stubbed java source
       return;
     }
+    if( fqn.startsWith( "jdk.internal.vm.annotation." ) )
+    {
+      // Since java 10 we have to keep these out of stubbed java source
+      return;
+    }
     SrcAnnotationExpression annoExpr = new SrcAnnotationExpression( fqn );
     for( Pair<Symbol.MethodSymbol, Attribute> value: attr.values )
     {
@@ -900,6 +915,16 @@ public class SrcClassUtil
       if( fqn.equals( "jdk.internal.HotSpotIntrinsicCandidate" ) )
       {
         // Since java 10 we have to keep these out of stubbed java source
+        continue;
+      }
+      if( fqn.startsWith( "jdk.internal.vm.annotation." ) )
+      {
+        // Since java 12 we have to keep these out of stubbed java source
+        continue;
+      }
+      if( fqn.startsWith( "<" ) )
+      {
+        // android: avoid errant types such as "<any>"
         continue;
       }
       if( fqn.equals( "jdk.internal.ValueBased" ) )
