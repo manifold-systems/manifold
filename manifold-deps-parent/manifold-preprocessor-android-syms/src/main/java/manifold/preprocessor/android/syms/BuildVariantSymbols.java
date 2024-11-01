@@ -160,7 +160,14 @@ public class BuildVariantSymbols implements SymbolProvider
 
   private String getBuildConfigSourcePath()
   {
+    if( JavacPlugin.instance() == null )
+    {
+      // probably in an IDE, which will have an IDE-specific SymbolProvider service impl for android build variants
+      return null;
+    }
+
     Set<String> sourcePath = JavacPlugin.instance().deriveJavaSourcePath();
+
     String generatedClassesDir = null;
     for( String path: sourcePath )
     {
