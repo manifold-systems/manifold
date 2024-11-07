@@ -341,7 +341,26 @@ options.compilerArgs += ['-Xplugin:Manifold no-bootstrap']
 </compilerArgs>
 ```
 If you need finer grained control over which classes have the static block, you can use the `@NoBootstrap` annotation
-to filter specific classes.
+to filter specific classes or specify package prefixes to exclude in the `no-bootstrap plugin` argument:
+
+```java
+import manifold.rt.api.NoBootstrap;
+
+@NoBootstrap
+public class MyClass {
+}
+```
+
+**Gradle**
+```groovy
+options.compilerArgs += ['-Xplugin:Manifold no-bootstrap my.package my.other.package']
+```  
+**Maven**
+```xml
+<compilerArgs>
+    <arg>-Xplugin:Manifold no-bootstrap my.package my.other.package</arg>
+</compilerArgs>
+```
 
 >Note, compile-only dependencies such as `manifold-preprocessor`, `manifold-exceptions`, and `manifold-strings` don't
 >involve any runtime dependencies, thus if your project's exposure to manifold is limited to these dependencies, the
