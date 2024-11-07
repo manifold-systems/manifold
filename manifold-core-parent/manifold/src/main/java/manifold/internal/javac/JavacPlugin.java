@@ -146,6 +146,7 @@ public class JavacPlugin implements Plugin, TaskListener
   private boolean _initialized;
   private Map<Context, Set<Symbol>> _seenModules;
   private Map<String, Boolean> _argPresent;
+  private List<String> _noBootstrapPackageNames;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
   private Set<URI> _dumpedSourceFiles;
@@ -282,8 +283,48 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     _argPresent = new HashMap<>();
     Arrays.stream( ARGS ).forEach( arg -> _argPresent.put( arg, testForArg( arg, args ) ) );
-    notifyOfInvalidArgs( args, jpe );
-  }
+    
+    String[] argsWithoutPackages = getNoBootstrapPackages( args );
+		
+		notifyOfInvalidArgs( argsWithoutPackages, jpe );
+	}
+	
+	/**
+	 * Parses argument of the form `no-bootstrap my.package my.other.package`.
+	 * @return Array of arguments with no-bootstrap's parameters removed (if any). (Used so notifyOfInvalidArgs doesn't warn about them.)
+	 */
+	private String[] getNoBootstrapPackages( String[] args ) 
+  {
+		_noBootstrapPackageNames = new ArrayList<>( args.length - 1 );
+		
+		List<String> ARGScopy = Arrays.asList( ARGS ); // To avoid using Stream#noneMatch each time
+		
+		List<String> argsList = new ArrayList<>( Arrays.asList( args ) ); // Copy of arguments so we can give a
+		
+		ListIterator<String> iterator = argsList.listIterator();
+		
+		while ( iterator.hasNext() )
+		{
+			if ( !ARG_NO_BOOTSTRAP.equals( iterator.next() ) )
+				continue;
+			
+			// loop over what could be package names following `no-bootstrap`
+			while ( iterator.hasNext() )
+			{
+				final String pkgOrArg = iterator.next();
+				
+				if ( ARGScopy.contains( pkgOrArg ) ) // break on a valid other arg, bookending the parameters list.
+					break;
+				
+				_noBootstrapPackageNames.add( pkgOrArg );
+				
+				iterator.remove(); // Remove parameter from the args list so `notifyOfInvalidArgs` doesn't see it.
+			}
+			break;
+		}
+		
+		return argsList.toArray( String[]::new );
+	}
 
   public JavacManifoldHost getHost()
   {
@@ -1419,11 +1460,25 @@ public class JavacPlugin implements Plugin, TaskListener
       if( classDecl instanceof JCTree.JCClassDecl )
       {
         typesToProcess.add( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName() );
-        insertBootstrap( (JCTree.JCClassDecl)classDecl );
+        if ( !isNoBootstrapPackage( packageQualifier ) )
+					insertBootstrap( (JCTree.JCClassDecl)classDecl );
       }
     }
     _typeProcessor.addTypesToProcess( typesToProcess );
   }
+
+  private boolean isNoBootstrapPackage( String packageQualifier )
+	{
+		for ( String pkgName: _noBootstrapPackageNames )
+		{
+			if ( packageQualifier.startsWith( pkgName ) )
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
   private void processParse( TaskEvent e )
   {
@@ -1449,10 +1504,13 @@ public class JavacPlugin implements Plugin, TaskListener
   {
     return !_argPresent.get( ARG_DYNAMIC );
   }
-
+  
+	/**
+	 * @return True if no &gt;clinit&lt; bootstrap block should ever be injected, false otherwise.
+	 */
   public boolean isNoBootstrapping()
   {
-    return _argPresent.get( ARG_NO_BOOTSTRAP );
+		return _noBootstrapPackageNames.isEmpty() && _argPresent.get( ARG_NO_BOOTSTRAP );
   }
 
   public void registerType( JavaFileObject sourceFile, String scope, int offset, String name, String ext, HostKind hostKind, String content )
