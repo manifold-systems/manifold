@@ -23,6 +23,7 @@ public class JreUtil
   public static final int JAVA_VERSION = getJavaVersion();
   private static Boolean _modular;
   private static Boolean _modularRuntime;
+  private static Boolean _noModule;
 
   private static int getJavaVersion()
   {
@@ -176,6 +177,25 @@ public class JreUtil
       }
     }
     return _modular;
+  }
+
+  public static boolean isJava9NoModule( Object/*Context*/ ctx )
+  {
+    if( _noModule == null )
+    {
+      if( isJava8() )
+      {
+        _noModule = true;
+      }
+      else
+      {
+        //noinspection ConstantConditions
+        Object modulesUtil = ReflectUtil.method( ReflectUtil.type( "com.sun.tools.javac.comp.Modules" ), "instance", ReflectUtil.type( "com.sun.tools.javac.util.Context" ) ).invokeStatic( ctx );
+        Object defModule = ReflectUtil.method( modulesUtil, "getDefaultModule" ).invoke();
+        _noModule = defModule == null || (boolean)ReflectUtil.method( defModule, "isNoModule" ).invoke();
+      }
+    }
+    return _noModule;
   }
 
   public static boolean isJava9Modular_runtime()

@@ -20,6 +20,7 @@ import com.sun.source.util.TreePath;
 import com.sun.tools.javac.api.BasicJavacTask;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.Source;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.tree.JCTree;
@@ -29,17 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import javax.tools.DiagnosticListener;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.StandardLocation;
+import javax.tools.*;
 
 import com.sun.tools.javac.util.Options;
 import manifold.api.fs.IResource;
@@ -91,6 +85,7 @@ public class ClassSymbols
 
       StringWriter errors = new StringWriter();
       BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _fm, null, makeJavacArgs(), null, null );
+      pushModuleSymbol( task );
       if( errors.getBuffer().length() > 0 )
       {
         // report errors to console
@@ -108,13 +103,7 @@ public class ClassSymbols
       BasicJavacTask task = (BasicJavacTask)_javacTool.getTask( errors, _wfm, null, makeJavacArgs(), null, null );
       if( _wfm instanceof ManifoldJavaFileManager )
       {
-        if( JreUtil.isJava9orLater() )
-        {
-          // Java 9+ requires a module when resolving a symbol, it's always 'noModule' with this particular java task
-          Stack stack = new Stack();
-          stack.push( ReflectUtil.field( Symtab.instance( task.getContext() ), "noModule" ).get() );
-          task.getContext().put( ManifoldJavaFileManager.MODULE_CTX, stack );
-        }
+        pushModuleSymbol( task );
         ((ManifoldJavaFileManager)_wfm).setContext( task.getContext() );
       }
 
@@ -127,32 +116,51 @@ public class ClassSymbols
     } );
   }
 
+  private static void pushModuleSymbol( BasicJavacTask task )
+  {
+    if( JreUtil.isJava8() )
+    {
+      return;
+    }
+
+    // module to be in task's context for JavaDynamicJdk_XX#getTypeElement
+    String moduleFieldName = JreUtil.isJava9NoModule( JavacPlugin.instance().getContext() )
+      ? "noModule"
+      : "unnamedModule";
+
+    Context ctx = task.getContext();
+    /*ModuleSymbol*/ Object moduleSym;
+    moduleSym = ReflectUtil.field( Symtab.instance( ctx ), moduleFieldName ).get();
+
+    Stack</*ModuleSymbol*/Object> stack = new Stack<>();
+    stack.push( moduleSym );
+    task.getContext().put( ManifoldJavaFileManager.MODULE_CTX, stack );
+  }
+
   private List<String> makeJavacArgs()
   {
     return new ArrayList<String>() {{
       add( "-proc:none" );
       add( "-Xprefer:source" );
+      add( "-implicit:none" );
 
-      // add "--release 8" if compiling say from Java 11 but targeting Java 8 with "--release 8" which runs against the
-      // actual Java 8 JRE classes, not the Java 11 ones. Otherwise, there is trouble if we bring in JRE 11 sources here,
-      // which have Java 11 features that won't compile with source level 8.
+      // Must work with types compatible with the originating compiler's settings (-source/-target/--release).
+      // Particularly with the --release option, because it produces a class symbol that must reflect the classes available
+      // in the originating JDK e.g., the structure of java.lang.String (super types, method parameters, etc.) must be
+      // available in the originating JDK. Otherwise, if we deliver java.lang.String with JDK 21's new super types to
+      // the originating JDK that is --release 17, it won't compile.
+
       JavacPlugin javacPlugin = JavacPlugin.instance();
       Options options = javacPlugin == null ? null : Options.instance( javacPlugin.getContext() );
       String release = options == null ? null : options.get( "--release" );
-      if( release == null && JreUtil.isJava9orLater() && options != null ) // must be *building* with Java 9+
-      {
-        release = options.get( "-target" );
-        release = release == null ? options.get( "--target" ) : release;
-      }
-      if( "8".equals( release ) || "1.8".equals( release ) )
+      if( release != null )
       {
         add( "--release" );
-        add( "8" );
+        add( release );
       }
-      else
+      else if( javacPlugin != null )
       {
-        add( "-source" ); add( "1.8" );
-// much wrath:       add( "-source" ); add( javacPlugin == null ? "1.8" : Source.instance( javacPlugin.getContext() ).name );
+        add( "-source" ); add( Source.instance( javacPlugin.getContext() ).name );
       }
     }};
   }
@@ -182,12 +190,32 @@ public class ClassSymbols
         {
           fm.setLocation( StandardLocation.PLATFORM_CLASS_PATH, extendBootclasspath( fm.getLocation( StandardLocation.PLATFORM_CLASS_PATH ) ) );
         }
-        _fm = fm;
+        _fm = new MyFm( fm, new Context() );
       }
       catch( IOException e )
       {
         throw new RuntimeException( e );
       }
+    }
+  }
+
+  static class MyFm extends JavacFileManagerBridge
+  {
+    protected MyFm( JavaFileManager fileManager, Context ctx )
+    {
+      super( fileManager, ctx );
+    }
+
+    @Override
+    public JavaFileObject getJavaFileForInput( Location location, String className, JavaFileObject.Kind kind ) throws IOException
+    {
+      if( className.contains( "module-info" ) )
+      {
+        // The Java tasks used in here do not need to be modular, keep javac from finding module-info.java classes.
+        // Note, this is key to making extension classes etc. work with --release mode.
+        return null;
+      }
+      return super.getJavaFileForInput( location, className, kind );
     }
   }
 
