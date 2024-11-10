@@ -18,6 +18,23 @@ Unlikely.  Java internal APIs can and do change from version to version, sometim
 adjusts to changes ahead of Java releases. To date, Manifold has adapted to eight major Java versions since its debut,
 always well in advance of Oracle's official release schedule.  
 
+#### Q: Doesn't Kotlin do all this already?
+No. While there are bits of overlap such as properties, Kotlin does not have most of Manifold's features. Notably,
+it does not offer anything similar to Manifold's core feature, the type manifold, which is the basis for `manifold-sql`,
+`manifold-json`, `manifold-graphql`, `manifold-xml`, and a multitude of others. In addition, most of manifold's extensions
+to the Java language are not present in Kotlin, these include:
+- true delegation
+- structural typing
+- tuples
+- unit expressions
+- extension classes
+- type-safe templates
+- conditional compilation
+- ...and more
+
+Importantly, Kotlin is an entirely separate language from Java, while Manifold is a compiler plugin that supplements Java 
+with new features. Add Manifold to any Java project and incorporate features of your choosing.
+
 #### Q: Is Manifold free?
 Yes, the Manifold project is [open source](https://github.com/manifold-systems/manifold) and publicly available on
 github, free for use via Apache License 2.0.
