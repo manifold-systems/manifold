@@ -146,7 +146,7 @@
           <configuration>
             <compilerArgs>
               <!-- Do not enable bootstrapping here, we don't want to force Manifold runtime on projects -->
-              <arg>-Xplugin:Manifold no-bootstrap</arg>
+              <arg>-Xplugin:Manifold --no-bootstrap</arg>
               <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>-->
               <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED</arg>-->
               <!--<arg>&#45;&#45;add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>-->

@@ -40,7 +40,6 @@ import com.sun.tools.javac.util.*;
 
 import java.io.*;
 import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -92,17 +91,6 @@ import static manifold.api.type.ContributorKind.Supplemental;
  */
 public class JavacPlugin implements Plugin, TaskListener
 {
-  /** dynamic compilation mode */
-  public static final String ARG_DYNAMIC = "dynamic";
-  /** disables &lt;clinit&gt; bootstap */
-  public static final String ARG_NO_BOOTSTRAP = "no-bootstrap";
-  /** all plugin args */
-  public static final String[] ARGS =
-  {
-    ARG_NO_BOOTSTRAP,
-    ARG_DYNAMIC,
-  };
-
   /** javac command line arguments for static compilation */
   private static final String MANIFOLD_SOURCE = "manifold.source";
   private static final String MANIFOLD_SOURCE_TARGET = "manifold.source.target";
@@ -144,7 +132,8 @@ public class JavacPlugin implements Plugin, TaskListener
   private ManifoldJavaFileManager _manFileManager;
   private boolean _initialized;
   private Map<Context, Set<Symbol>> _seenModules;
-  private Map<String, Boolean> _argPresent;
+  private Map<Arg, Set<String>> _argMap;
+  private BootstrapPackages _bootstrapPackages;
   private ArrayList<FileFragmentResource> _fileFragmentResources;
   private Set<String> _javaSourcePath;
   private Set<URI> _dumpedSourceFiles;
@@ -243,60 +232,20 @@ public class JavacPlugin implements Plugin, TaskListener
 
   private void processArgs( JavacProcessingEnvironment jpe, String[] args )
   {
-    _argPresent = new HashMap<>();
-    Arrays.stream( ARGS ).forEach( arg -> _argPresent.put( arg, testForArg( arg, args ) ) );
-    notifyOfInvalidArgs( args, jpe );
+    try
+    {
+      _argMap = Arg.processArgs( args );
+      _bootstrapPackages = new BootstrapPackages( _argMap.get( Arg.bootstrap ), jpe );
+    }
+    catch( Exception e )
+    {
+      jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, e.getMessage() );
+    }
   }
 
   public JavacManifoldHost getHost()
   {
     return _host;
-  }
-
-  private void notifyOfInvalidArgs( String[] args, JavacProcessingEnvironment jpe )
-  {
-    for( String arg: args )
-    {
-      if( Arrays.stream( ARGS ).noneMatch( validArg -> validArg.equals( arg ) ) )
-      {
-        jpe.getMessager().printMessage( Diagnostic.Kind.ERROR, "Unrecognized Manifold plugin argument '" + arg + "'" );
-      }
-    }
-  }
-
-  protected boolean testForArg( String name, String[] args )
-  {
-    boolean isPresent = isArgPresent( name, args );
-
-    if( !isPresent )
-    {
-      // maven doesn't like the -Xplugin:"Manifold strings", it doesn't parse "Manifold string" as plugin name and argument, so we do it here:
-      try
-      {
-        String[] rawArgs = (String[])ReflectUtil.field( _javacTask, "args" ).get();
-        isPresent = Arrays.stream( rawArgs ).anyMatch( arg -> arg.contains( "-Xplugin:" ) && arg.contains( "Manifold" ) && arg.contains( name ) );
-      }
-      catch( Exception ignore )
-      {
-      }
-    }
-    return isPresent;
-  }
-
-  private boolean isArgPresent( String name, String[] args )
-  {
-    if( args == null )
-    {
-      return false;
-    }
-    for( String arg : args )
-    {
-      if( arg != null && arg.equalsIgnoreCase( name ) )
-      {
-        return true;
-      }
-    }
-    return false;
   }
 
   public Context getContext()
@@ -1382,7 +1331,10 @@ public class JavacPlugin implements Plugin, TaskListener
       if( classDecl instanceof JCTree.JCClassDecl )
       {
         typesToProcess.add( packageQualifier + ((JCTree.JCClassDecl)classDecl).getSimpleName() );
-        insertBootstrap( (JCTree.JCClassDecl)classDecl );
+        if( _bootstrapPackages.contains( packageQualifier ) )
+        {
+          insertBootstrap( (JCTree.JCClassDecl)classDecl );
+        }
       }
     }
     _typeProcessor.addTypesToProcess( typesToProcess );
@@ -1410,12 +1362,12 @@ public class JavacPlugin implements Plugin, TaskListener
 
   public boolean isStaticCompile()
   {
-    return !_argPresent.get( ARG_DYNAMIC );
+    return !_argMap.containsKey( Arg.dynamic ) && !_argMap.containsKey( Arg.dynamic_deprecated );
   }
 
   public boolean isNoBootstrapping()
   {
-    return _argPresent.get( ARG_NO_BOOTSTRAP );
+    return _argMap.containsKey( Arg.no_bootstrap ) || _argMap.containsKey( Arg.no_bootstrap_deprecated );
   }
 
   public void registerType( JavaFileObject sourceFile, String scope, int offset, String name, String ext, HostKind hostKind, String content )

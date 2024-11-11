@@ -328,20 +328,39 @@ Java 8 / Android
 `dasBoot()` performs these tasks one time, subsequent calls simply return i.e., there is no performance penalty.
 
 If you know your code will never run on Java 9+ and/or you don't mind the Java 9+ warning message, you can eliminate the
-`dasBoot()` static initializer via the `no-bootstrap plugin` argument:
+`dasBoot()` static initializer via the `--no-bootstrap` plugin argument:
   
 **Gradle**
 ```groovy
-options.compilerArgs += ['-Xplugin:Manifold no-bootstrap']
+options.compilerArgs += ['-Xplugin:Manifold --no-bootstrap']
 ```  
 **Maven**
 ```xml
 <compilerArgs>
-    <arg>-Xplugin:Manifold no-bootstrap</arg>
+    <arg>-Xplugin:Manifold --no-bootstrap</arg>
 </compilerArgs>
 ```
-If you need finer grained control over which classes have the static block, you can use the `@NoBootstrap` annotation
-to filter specific classes.
+If you need finer grained control over which classes have the static block, you can use the `--bootstrap` plugin argument
+and/or use the `@NoBootstrap` annotation to filter specific classes.
+                                                                                    
+#### `--bootstrap` plugin argument
+The --bootstrap argument limits bootstrapping by packages. You can specify either a whitelist or a blacklist using `+` or `-`
+at the head of a package list separated by commas. A whitelist instructs manifold to only add bootstrapping to packages
+rooted in the list, while packages rooted in blacklist will not be bootstrapped, all others will be.
+
+With this Gradle example only classes in packages rooted at `org.example` are bootstrapped.
+```groovy
+options.compilerArgs += ['-Xplugin:Manifold --bootstrap +org.example']
+```  
+This Maven example makes packages rooted in `org.example` and `org.api` exempt from bootstrapping.
+```xml
+<compilerArgs>
+    <arg>-Xplugin:Manifold --bootstrap -org.example,org.api</arg>
+</compilerArgs>
+```
+
+#### `@NoBootstrap`
+A class annotated with `@NoBootstrap` will not have the Manifold bootstrap class initialization block injected.
 
 >Note, compile-only dependencies such as `manifold-preprocessor`, `manifold-exceptions`, and `manifold-strings` don't
 >involve any runtime dependencies, thus if your project's exposure to manifold is limited to these dependencies, the

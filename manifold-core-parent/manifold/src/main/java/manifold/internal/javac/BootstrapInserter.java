@@ -47,8 +47,8 @@ import javax.tools.JavaFileObject;
  * <p/>
  * You can use {@link NoBootstrap} to prevent a class from having the bootstrap block inserted.
  * <p/>
- * You can use the {@code no-bootstrap} Manifold plugin argument to completely disable bootstrap blocks from your
- * project.
+ * You can use the {@code --no-bootstrap} Manifold plugin argument to completely disable bootstrap blocks from your
+ * project. Or, you can be more selective with the {@code --bootstrap +/-packages-list} argument.
  */
 class BootstrapInserter extends TreeTranslator
 {
