@@ -9,7 +9,7 @@
 
 The tuples feature provides concise expression syntax to group named data items in a lightweight structure.
 ```java
-auto t = (name: "Bob", age: "35");
+auto t = (name: "Bob", age: 35);
 System.out.println("Name: " + t.name + " Age: " + t.age);
 
 auto t = (person.name, person.age);
@@ -102,20 +102,39 @@ tuples serve as both implied type definitions and concise expression syntax.
 ## Tuple types 
 
 ### Always inferred
-Tuple expressions are designed as a lightweight utility to group loosely related data items. Because their types are
-purely structural, they tend to be less desirable as they lack the basic qualities of nominal typing. For instance,
-a nominal type such as a class is centrally defined, which enables it to be easily referenced by name, allows it to be
-formally documented, and makes it available for deterministic tooling. Tuple types lack these fundamental capabilities.
+                                                                                                             
+What is nice about tuples is they don't require a separate type definition, a tuple expression naturally conveys its type. On the other hand not having
+a named type means tuples are less suitable where explicit typing is necessary. For instance, using a tuple as a function
+parameter is awkward and less readable compared with using a nominal type like a class. Because they are purely structural, tuple types must be redefined
+wherever they are used whereas a regular Java type is more concisely referenced by name. Thus, as a general rule it is best
+to use tuples where explicit typing is not required.
 
-Another issue with tuple types, again because they are purely structural, is they tend to get quite verbose. And because
-they are not centrally defined, they must be redefined wherever they are used. As a consequence, readability suffers.
+Manifold tuples formalise this rule by requiring tuple types to be inferred, as a purely structural type they are strictly
+anonymous. Consequently, tuple types are always inferred using [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) or `var`.
 
-Manifold works toward solving these problems by altogether hiding tuple types from view. You never directly specify tuple
-types or even see them. They are always inferred using [**auto**](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
-or **var**. If you find yourself "needing" a tuple type, as a method parameter for instance, consider instead defining a
-[structural interface](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural)
-to reflect the tuple's structure. As such the parameter is more readable, better conveys its purpose, and is generally
-more in tune with Java's nominal type system.
+>Note, [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
+> is more versatile than `var`. While `var` is limited to local variables, `auto` can be applied to fields and method return
+> types, as well as locals. `auto` also works with earlier JDKs, including JDK 8. 
+
+Does this mean tuples can't be used as function parameters? Not really. More precisely, it means tuple _types_ can't be used as function
+parameters. Although they are anonymous, tuple types are also structural, which means they are compatible with Manifold's [structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural).
+Tuples can structurally satisfy interfaces annotated with `@Structural`, thus a parameter typed with such an interface can
+be assignable from a tuple.
+
+```java
+auto mm = (min:0, max:10);
+perform(mm);
+
+void perform(MinMax minMax) {
+  out.println(minMax.min + " - " + minMax.max);
+}
+
+@Structural
+interface MinMax {
+  @var int min; // using manifold-props here for brevity :)
+  @var int max; // ...ofc boilerplate getters/setters work too
+}
+```
 
 ### `Tuple` interface
 All tuple types implement the `manifold.tuple.rt.api.Tuple` interface. This can be useful, for example, if you need to
