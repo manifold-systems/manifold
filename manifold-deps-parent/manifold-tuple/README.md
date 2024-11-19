@@ -147,21 +147,7 @@ tuple.
 ```java
 order(Large, (crust:Thick, pepperoni:true));
 
-void order(Size size, Pizza pizza) {...}
-
-@Structural
-interface Pizza {
-  default Shape getShape() {return Round;}
-  default Crust getCrust() {return Thin;}
-  default Sauce getSauce() {return Red;}
-  default boolean isCheese() {return true;}
-  default boolean isPepperoni() {return false;}
-  default boolean isMushrooms() {return false;}
-}
-```
-```java
-// Even better with properties via manifold-props
-@Structural interface Pizza {
+@Structural interface $order {
   @val Shape shape = Round;
   @val Crust crust = Thin;
   @val Sauce sauce = Red;
@@ -169,6 +155,7 @@ interface Pizza {
   @val boolean pepperoni = false;
   @val boolean mushrooms = false;
 }
+void order(Size size, $order options) {...}
 ```
 This technique provides virtual language features for named arguments & optional parameters. Use it as a refreshing
 alternative to telescoping methods/constructors, method overloading, and builders.
