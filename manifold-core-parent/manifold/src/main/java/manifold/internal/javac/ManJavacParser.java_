@@ -490,7 +490,7 @@ public class ManJavacParser extends JavacParser
   protected JCExpression term3()
   {
     //Manifold: handle tuple expression:
-    // tuple-expr: '(' <tuple-item> {, <tuple-item>} ')'
+    // tuple-expr: '(' {<tuple-item> {, <tuple-item>}} ')'
     // tuple-item: <labeled-expr> | <expr>
     // labeled-expr: <label> ':' <expr>
     JCTree.JCExpression tupleExpr = parseTupleExpr();
@@ -512,31 +512,40 @@ public class ManJavacParser extends JavacParser
     {
       accept( LPAREN );
       List<JCExpression> args = List.nil();
-      while( true )
+      if( token.kind != RPAREN )
       {
-        JCExpression arg = args.isEmpty()
-          ? parseExpression() //termRest( term1Rest( term2Rest( term3(), TreeInfo.orPrec ) ) )
-          : parseExpression();
-        if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+        while( true )
         {
-          JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
-          labelMethod.pos = arg.pos;
-          JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
-          label.pos = arg.pos;
-          args = args.append( label );
+          JCExpression arg = args.isEmpty()
+            ? parseExpression() //termRest( term1Rest( term2Rest( term3(), TreeInfo.orPrec ) ) )
+            : parseExpression();
+          if( arg instanceof JCTree.JCIdent && token.kind == COLON )
+          {
+            JCTree.JCIdent labelMethod = F.Ident( _names.fromString( "$manifold_label" ) );
+            labelMethod.pos = arg.pos;
+            JCExpression label = F.Apply( List.nil(), labelMethod, List.of( arg ) );
+            label.pos = arg.pos;
+            args = args.append( label );
+            nextToken();
+            arg = parseExpression();
+          }
+          args = args.append( arg );
+          if( token.kind != COMMA )
+          {
+            break;
+          }
           nextToken();
-          arg = parseExpression();
         }
-        args = args.append( arg );
-        if( token.kind != COMMA )
-        {
-          break;
-        }
-        nextToken();
       }
-
       JCExpression result;
-      if( args.size() > 1 )
+      if( args.isEmpty() )
+      {
+        JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
+        ident.pos = token.pos;
+        result = F.Apply( List.nil(), ident, args );
+        result.pos = token.pos;
+      }
+      else if( args.size() > 1 )
       {
         JCExpression lastArg = args.get( args.size() - 1 );
         JCTree.JCIdent ident = F.Ident( _names.fromString( "$manifold_tuple" ) );
@@ -546,7 +555,7 @@ public class ManJavacParser extends JavacParser
       }
       else
       {
-        result = args.isEmpty() ? null : args.get( 0 );
+        result = args.get( 0 );
       }
       accept( RPAREN );
       JCExpression expr = toP( F.at( pos ).Parens( result ) );

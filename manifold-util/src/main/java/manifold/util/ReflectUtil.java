@@ -1581,41 +1581,53 @@ public class ReflectUtil
   }
   public static Object structuralCallByProxy( Method structMethod, Object proxy, Object receiver, Object... args )
   {
+    Object result;
     Method bestMethod = findBestMethod( structMethod, receiver.getClass() );
     if( bestMethod == null )
     {
       if( proxy != null && structMethod.isDefault() )
       {
-        return invokeDefault( proxy, structMethod, args );
+        result = handleByField( structMethod, proxy, receiver, args );
+        if( result == UNHANDLED )
+        {
+          result = invokeDefault( proxy, structMethod, args );
+        }
       }
       else
       {
-        Object result = handleByField( structMethod, proxy, receiver, args );
-        if( result != UNHANDLED )
+        result = handleByField( structMethod, proxy, receiver, args );
+        if( result == UNHANDLED )
         {
-          return result;
+          result = handleNestedProxy( receiver, structMethod, args );
+          if( result == UNHANDLED )
+          {
+            throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
+              "' does not implement a method structurally compatible with method: " + structMethod );
+          }
         }
-
-        result = handleNestedProxy( receiver, structMethod, args );
-        if( result != UNHANDLED )
-        {
-          return result;
-        }
-
-        throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
-          "' does not implement a method structurally compatible with method: " + structMethod );
       }
     }
-
-    try
+    else
     {
-      return bestMethod.invoke( receiver, args );
+      try
+      {
+        result = bestMethod.invoke( receiver, args );
+      }
+      catch( Throwable t )
+      {
+        throw ManExceptionUtil.unchecked( t );
+      }
     }
-    catch( Throwable t )
-    {
-      throw ManExceptionUtil.unchecked( t );
-    }
+    return coerce( structMethod.getReturnType(), result );
+  }
 
+  private static Object coerce( Class<?> returnType, Object result )
+  {
+    if( result instanceof Number )
+    {
+      return CoerceUtil.coerceBoxed( result, returnType );
+    }
+    return result;
   }
 
   private static Object handleNestedProxy( Object receiver, Method structMethod, Object[] args )
@@ -1761,7 +1773,8 @@ public class ReflectUtil
       List<Method> methods = new ArrayList<>();
       for( Method m : rc.getMethods() )
       {
-        if( m.getName().equals( structMethod.getName() ) )
+        if( m.getName().equals( structMethod.getName() ) ||
+            isGetterRecordAccessorMatch( structMethod, receiverClass, m ) )
         {
           methods.add( m );
         }
@@ -1780,6 +1793,28 @@ public class ReflectUtil
       }
       return null;
     } );
+  }
+
+  private static boolean isGetterRecordAccessorMatch( Method structMethod, Class receiverClass, Method m )
+  {
+    if( !JreUtil.isJava17orLater() || !(Boolean)ReflectUtil.method( (Object)receiverClass, "isRecord" ).invoke() )
+    {
+      return false;
+    }
+
+    if( m.getParameterCount() != 0 || m.getReturnType() == void.class )
+    {
+      return false;
+    }
+
+    String propName = getPropertyNameFromGetter( structMethod );
+    if( propName == null )
+    {
+      return false;
+    }
+    propName = Character.toLowerCase( propName.charAt( 0 ) ) + propName.substring( 1 );
+    return propName.equals( m.getName() ) &&
+      structMethod.getReturnType().isAssignableFrom( m.getReturnType() );
   }
 
   public static class FakeProxy implements InvocationHandler

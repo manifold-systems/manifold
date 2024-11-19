@@ -44,6 +44,11 @@ public class BasicTest extends TestCase
     assertEquals( 5, foo.callHere().myField );
   }
 
+  public void testEmpty()
+  {
+    assertTrue( ().orderedLabels().isEmpty() );
+  }
+
   public void testLocal()
   {
     Foo foo = new Foo();
@@ -408,6 +413,13 @@ public class BasicTest extends TestCase
   {
     String getName();
     void setName(String name);
+  }
+
+  public void testNestedTuples()
+  {
+    auto nested = (size:7, options:(shape:"square"));
+    assertEquals(7, nested.size);
+    assertEquals("square", nested.options.shape);
   }
 
   static class Person

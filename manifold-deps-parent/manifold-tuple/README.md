@@ -49,6 +49,28 @@ for(TupleItem item: t) {
   out.println("Name: " + item.getName() + " Value: " + item.getValue());  
 }
 ```
+Nest tuples.
+```java
+var pizza = (
+  size: Small, 
+  options: (
+    shape: Square, 
+    pepperoni: true
+  )
+);
+out.println(pizza.options.shape);
+```
+Tuples satisfy structural interfaces.
+```java
+Being being = (name:"Scott", age:100);
+
+@Structural
+interface Being {
+  String getName();
+  int getAge();
+  // setters too....
+}
+```
 
 ## Tuple labels
 Data items are optionally labeled.
@@ -101,40 +123,57 @@ tuples serve as both implied type definitions and concise expression syntax.
 
 ## Tuple types 
 
-### Always inferred
-                                                                                                             
 What is nice about tuples is they don't require a separate type definition, a tuple expression naturally conveys its type. On the other hand not having
-a named type means tuples are less suitable where explicit typing is necessary. For instance, using a tuple as a function
-parameter is awkward and less readable compared with using a nominal type like a class. Because they are purely structural, tuple types must be redefined
-wherever they are used whereas a regular Java type is more concisely referenced by name. Thus, as a general rule it is best
-to use tuples where explicit typing is not required.
+a named type means tuple types are not suitable where explicit typing is necessary. For instance, using a tuple type as a function
+parameter is awkward and less readable compared with using a nominal type. Because they are purely structural, tuple types must be redefined
+wherever they are used whereas a regular Java type is more concisely referenced by name. 
 
-Manifold tuples formalise this rule by requiring tuple types to be inferred, as a purely structural type they are strictly
-anonymous. Consequently, tuple types are always inferred using [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) or `var`.
+### Inferred
+
+Rather than supporting an awkward feature with readability concerns, Manifold tuple types are strictly anonymous, thus they
+must be inferred using [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto) or `var`.
 
 >Note, [auto](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#type-inference-with-auto)
 > is more versatile than `var`. While `var` is limited to local variables, `auto` can be applied to fields and method return
 > types, as well as locals. `auto` also works with earlier JDKs, including JDK 8. 
 
-Does this mean tuples can't be used as function parameters? Not really. More precisely, it means tuple _types_ can't be used as function
-parameters. Although they are anonymous, tuple types are also structural, which means they are compatible with Manifold's [structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural).
-Tuples can structurally satisfy interfaces annotated with `@Structural`, thus a parameter typed with such an interface can
-be assignable from a tuple.
+Does this mean tuples can't be used with function parameters? Not at all!
+
+More precisely, it means tuple _types_ can't be used with function parameters. Although they are anonymous, tuple types
+are also structural, which means they are compatible with Manifold's [structural interfaces](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#structural-interfaces-via-structural). Tuples can structurally
+satisfy interfaces annotated with `@Structural`, thus a parameter typed with such an interface can be assignable from a
+tuple.
 
 ```java
-auto mm = (min:0, max:10);
-perform(mm);
+order(Large, (crust:Thick, pepperoni:true));
 
-void perform(MinMax minMax) {
-  out.println(minMax.min + " - " + minMax.max);
-}
+void order(Size size, Pizza pizza) {...}
 
 @Structural
-interface MinMax {
-  @var int min; // using manifold-props here for brevity :)
-  @var int max; // ...ofc boilerplate getters/setters work too
+interface Pizza {
+  default Shape getShape() {return Round;}
+  default Crust getCrust() {return Thin;}
+  default Sauce getSauce() {return Red;}
+  default boolean isCheese() {return true;}
+  default boolean isPepperoni() {return false;}
+  default boolean isMushrooms() {return false;}
 }
 ```
+```java
+// Even better with properties via manifold-props
+@Structural interface Pizza {
+  @val Shape shape = Round;
+  @val Crust crust = Thin;
+  @val Sauce sauce = Red;
+  @val boolean cheese = true;
+  @val boolean pepperoni = false;
+  @val boolean mushrooms = false;
+}
+```
+This technique provides virtual language features for named arguments & optional parameters. Use it as a refreshing
+alternative to telescoping methods/constructors, method overloading, and builders.
+
+Learn more, see [named arguments & optional parameters](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-ext#named-arguments--optional-parameters).
 
 ### `Tuple` interface
 All tuple types implement the `manifold.tuple.rt.api.Tuple` interface. This can be useful, for example, if you need to

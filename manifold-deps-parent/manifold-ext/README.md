@@ -41,11 +41,15 @@
   * [Science & Ranges](#science--ranges)
 * [Structural Interfaces via `@Structural`](#structural-interfaces-via-structural)
   * [Type Assignability and Variance](#type-assignability-and-variance)
-  * [Implementation by Field](#implementation-by-field)
+  * [Satisfying getter/setter methods](#satisfying-gettersetter-methods)
+    * [By field](#by-field)
+    * [By tuple component](#by-tuple-component)
+    * [By record accessor](#by-record-accessor)
   * [Implementation by Extension](#implementation-by-extension)
   * [Implementation by Proxy](#implementation-by-proxy)
     * [Using `factoryClass`](#using-factoryclass)
   * [Dynamic Typing with `ICallHandler`](#dynamic-typing-with-icallhandler)
+* [Named arguments & optional parameters](#named-arguments--optional-parameters)
 * [Type-safe Reflection via `@Jailbreak`](#type-safe-reflection-via-jailbreak)
   * [Using `@Jailbreak`](#using-jailbreak)
     * [Basic Use](#basic-use)
@@ -1423,12 +1427,15 @@ as declared in `Coordinate.getX()`. Because `int` coerces to `double` with no lo
 the method is call-compatible. As a result signature variance holds for primitive types as well as
 reference types.
 
-## Implementation by Field
+## Satisfying getter/setter methods
 
-Another example where classes have wiggle room implementing structural interfaces involves property 
-getter and setter methods, a.k.a. accessors and mutators. Essentially, a property represents a value you 
-can access and/or change. Since a field is basically the same thing a class can implement a getter and/or 
-a setter with a field:
+Conventional getXxx/setXxx methods maybe be structurally satisfied in a number of ways. In addition to matching the methods directly,
+other ways include simple public fields, components of a [tuple expression](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple),
+and accessor methods on records.
+
+### By field
+
+A class can implement a getter and/or a setter with a public field:
 
 ```java
 @Structural
@@ -1441,15 +1448,47 @@ public class Person {
   public String name;
 }
 
-Name person = (Name) new Person();
+Name person = new Person();
 person.setName("Bubba");
 String name = person.getName();
 ```                                                             
 
-Basically a field implements a property method if its name matches the method's name minus the 
-is/get/set prefixes and taking into account field naming conventions. For example, fields `Name`, `name`, 
-and `_name` all match the `getName()` property method and are weighted in that order.
+Generally, an instance field satisfies a getter/setter method if its type matches the method's type, and its name matches the method's
+name minus the `is`/`get`/`set` prefixes and applying Java naming conventions where field `name` matches getter `getName()`.
+Note, a `final` field can only match a getter method, not a setter.
+                          
+### By tuple component
+                                                             
+A tuple implements getter/setter methods with its components.
 
+```java
+@Structural
+public interface Name {
+  String getName();
+  void setName(String name);
+}
+
+Name person = (name:"Scott");
+. . .
+person.setName("Bubba");
+String name = person.getName();
+```
+
+### By record accessor
+
+A record implements getter methods with its accessors.
+
+```java
+@Structural
+public interface Name {
+  String getName();
+}
+
+record Person(String name) {}
+
+Name person = new Person("Scott");
+String name = person.getName();
+```
 
 ## Implementation by Extension
 
@@ -1636,6 +1675,105 @@ main difference is that invocations must be made through structural interfaces a
 the map, otherwise `Map` behaves much like an expando object.
 
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
+
+# Named arguments & optional parameters
+
+Combining named arguments with optional parameters is a useful alternative for flexible and readable function calls. Although
+Java does not provide either feature, we can utilize [tuples](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)
+and [structural interfaces](#structural-interfaces-via-structural) for virtually the same functionality.
+
+Consider a typical telescoping constructor in Java.
+```java
+public class Person {
+  private String name;
+  private int age;
+  private Gender gender;
+  private String address;
+  private String phone;
+
+  // name is the only required parameter, others are optional
+  public Person(String name) {
+    this(name, 0, null, null, null);
+  }
+  
+  public Person(String name, int age) {
+    this(name, age, null, null, null);
+  }
+  
+  public Person(String name, int age, Gender gender) {
+    this(name, age, gender, null, null);
+  }
+  
+  public Person(String name, int age, Gender gender, String address) {
+    this(name, age, gender, address, null);
+  }
+  
+  public Person(String name, int age, Gender gender, String address, String phone) {
+    this.name = name;
+    this.age = age;
+    this.gender = gender;
+    this.address = address;
+    this.phone = phone;
+  }
+  . . .
+}
+```
+While useful, this technique has become known as an "anti-pattern" due to its verbosity, maintenance concerns, and general inadequacy.
+Although the Builder pattern is sometimes used to overcome some of the drawbacks, it too has its own set of problems, mostly
+due to the boilerplate and tedium involved with writing/generating and maintaining them.
+
+Using tuples and structural typing to simulate named arguments and optional parameters offer a cleaner, easier to maintain
+alternative to these strategies.
+
+```java
+public class Person {
+  private String name;
+  private int age;
+  private Gender gender;
+  private String address;
+  private String phone;
+
+  @Structural interface Options {
+    default int getAge() {return 0;}
+    default Gender getGender() {return null;}
+    default String getAddress() {return null;}
+    default String getPhone() {return null;}
+  }
+  public Person(String name, Options options) {
+    this.name = name;
+    this.age = options.getAge();
+    this.gender = options.getGender();
+    this.address = options.getAddress();
+    this.phone = options.getPhone();
+  }
+  
+  . . .
+}
+```
+Since tuples are assignable to structural interfaces, we can utilize them for a powerful named arguments & optional parameters syntax.
+```java
+Person person = new Person("Scott", (age:100, phone:"408-555-1234"));
+```
+Here, we create a `Person` using select options in the order of our choosing. Not only is this syntax more concise
+and easier to read and use, the reduction in boilerplate also relieves the maintenance burden compared with telescoping
+methods and builders.
+
+Note, [properties](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-props)
+can further eliminate Java's boilerplate while increasing readability.
+```java
+@Structural interface Options {                                  
+  @val int age = 0;
+  @val Gender gender = null;
+  @val String address = null;
+  @val String phone = null;
+}
+public Person(Options options) {
+  this.age = options.age;
+  this.gender = options.gender;
+  this.address = options.address;
+  this.phone = options.phone;
+}
+```
 
 # Type-safe Reflection via `@Jailbreak`
 

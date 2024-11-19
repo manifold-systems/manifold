@@ -3,12 +3,17 @@ package manifold.internal.javac;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Pair;
 import manifold.rt.api.util.TypesUtil;
+import manifold.util.JreUtil;
+import manifold.util.ReflectUtil;
 
+import javax.lang.model.element.ElementKind;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -76,11 +81,21 @@ public interface ManTypes
       Set<MethodSymbol> tMethods = new HashSet<>();
       getAllMethods( t, m -> !m.isStatic() && (m.flags() & PUBLIC) != 0, tMethods );
 
-      boolean result = sMethods.stream()
-        .allMatch( m -> tMethods.stream()
-          .anyMatch( tm -> m.flatName().equals( tm.flatName() ) &&
-            types().isAssignable( types().erasure( tm.getReturnType() ), types().erasure( m.getReturnType() ) ) &&
-            hasStructurallyEquivalentArgs( tm, m ) ) );
+      Set<VarSymbol> tFields = new HashSet<>();
+      getAllFields( t, v -> !v.isStatic() && (v.flags() & PUBLIC) != 0, tFields );
+
+      boolean result = true;
+      for( MethodSymbol sm : sMethods )
+      {
+        if( tMethods.stream().noneMatch( tm -> isStructuralMatch( sm, tm ) ) &&
+           tMethods.stream().noneMatch( tm -> isGetterRecordAccessorMatch( sm, tm ) ) &&
+           tFields.stream().noneMatch( tf -> isGetterMatch( sm, tf.flatName().toString(), tf.type ) ) &&
+           tFields.stream().noneMatch( tf -> isSetterFieldMatch( sm, tf ) ) )
+        {
+          result = false;
+          break;
+        }
+      }
       cache.put( pair, result );
       return result;
     }
@@ -88,6 +103,66 @@ public interface ManTypes
     {
       cache.remove( pair );
     }
+  }
+
+  default boolean isStructuralMatch( MethodSymbol sm, MethodSymbol tm )
+  {
+    return sm.flatName().equals( tm.flatName() ) &&
+      types().isAssignable( types().erasure( tm.getReturnType() ), types().erasure( sm.getReturnType() ) ) &&
+      hasStructurallyEquivalentArgs( tm, sm );
+  }
+  default boolean isGetterMatch( MethodSymbol sm, String tName, Type tType )
+  {
+    Symtab symtab = Symtab.instance( JavacPlugin.instance().getContext() );
+    Type returnType = sm.getReturnType();
+    if( returnType == symtab.voidType || !sm.params().isEmpty() )
+    {
+      return false;
+    }
+
+    String smName = sm.flatName().toString();
+    if( smName.length() >= 3 && smName.startsWith( "is" ) && Character.isUpperCase( smName.charAt( 2 ) ) &&
+      (returnType == symtab.booleanType || returnType == types().boxedTypeOrType( symtab.booleanType )) )
+    {
+      smName = smName.substring( 2 ).toLowerCase();
+    }
+    else if( smName.length() >= 4 && smName.startsWith( "get" ) && Character.isUpperCase( smName.charAt( 3 ) ) )
+    {
+      smName = smName.substring( 3 ).toLowerCase();
+    }
+    else
+    {
+      return false;
+    }
+    return smName.equals( tName ) &&
+      types().isAssignable( types().erasure( tType ), types().erasure( returnType ) );
+  }
+  default boolean isSetterFieldMatch( MethodSymbol sm, VarSymbol tf )
+  {
+    if( (tf.flags() & FINAL) != 0 )
+    {
+      return false;
+    }
+
+    Symtab symtab = Symtab.instance( JavacPlugin.instance().getContext() );
+    Type returnType = sm.getReturnType();
+    if( returnType != symtab.voidType || sm.params().size() != 1 )
+    {
+      return false;
+    }
+
+    String smName = sm.flatName().toString();
+    String tfName = tf.flatName().toString();
+    if( smName.length() >= 4 && smName.startsWith( "set" ) && Character.isUpperCase( smName.charAt( 3 ) ) )
+    {
+      smName = smName.substring( 3 ).toLowerCase();
+    }
+    else
+    {
+      return false;
+    }
+    return smName.equals( tfName ) &&
+      types().isAssignable( types().erasure( tf.type ), types().erasure( sm.params().get( 0 ).type ) );
   }
 
   static void getAllMethods( Type t, Predicate<MethodSymbol> filter, Set<MethodSymbol> tMethods )
@@ -110,18 +185,49 @@ public interface ManTypes
     }
   }
 
+  default boolean isGetterRecordAccessorMatch( MethodSymbol sm, MethodSymbol t )
+  {
+    if( !JreUtil.isJava17orLater() )
+    {
+      return false;
+    }
+
+    if( t.getKind() != ReflectUtil.field( ElementKind.class, "RECORD_COMPONENT" ).getStatic() )
+    {
+      return false;
+    }
+
+    return isGetterMatch( sm, t.flatName().toString(), t.getReturnType() );
+  }
+
+  static void getAllFields( Type t, Predicate<VarSymbol> filter, Set<VarSymbol> tFields )
+  {
+    if( !(t instanceof Type.ClassType) )
+    {
+      return;
+    }
+
+    ClassSymbol tsym = (ClassSymbol)t.tsym;
+    for( Symbol sym : IDynamicJdk.instance().getMembers( tsym, m -> m instanceof VarSymbol && filter.test( (VarSymbol)m ) ) )
+    {
+      tFields.add( (VarSymbol)sym );
+    }
+
+    getAllFields( tsym.getSuperclass(), filter, tFields );
+  }
+
   default boolean hasStructurallyEquivalentArgs( MethodSymbol t, MethodSymbol s )
   {
-    List<Symbol.VarSymbol> tParams = t.getParameters();
-    List<Symbol.VarSymbol> sParams = s.getParameters();
+    List<VarSymbol> tParams = t.getParameters();
+    List<VarSymbol> sParams = s.getParameters();
     if( tParams.size() != sParams.size() )
     {
       return false;
     }
     for( int i = 0; i < sParams.size(); i++ )
     {
-      Symbol.VarSymbol sParam = sParams.get( i );
-      Symbol.VarSymbol tParam = tParams.get( i );
+      VarSymbol sParam = sParams.get( i );
+      VarSymbol tParam = tParams.get( i );
       if( !types().isAssignable( sParam.type, tParam.type ) )
       {
         return false;

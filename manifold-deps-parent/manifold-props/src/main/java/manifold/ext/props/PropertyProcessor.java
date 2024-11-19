@@ -434,7 +434,7 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           boolean setFinal = isFinal || hasOption( args, PropOption.Final );
           PropOption setAccess = getAccess( classDecl, args );
 
-          if( tree.init != null && setAbstract )
+          if( tree.init != null && setAbstract && !isInterface( classDecl ) )
           {
             reportError( tree.init, MSG_WRITABLE_ABSTRACT_PROPERTY_CANNOT_HAVE_INITIALIZER.get( tree.name ) );
           }
@@ -486,6 +486,8 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
             {
               pair.snd.add( generatedSetter );
             }
+
+            removeInitializer( tree, classDecl );
           }
         }
         else
@@ -499,6 +501,15 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           annos.remove( set );
           tree.getModifiers().annotations = List.from( annos );
         }
+      }
+    }
+
+    private void removeInitializer( JCVariableDecl tree, JCClassDecl classDecl )
+    {
+      if( tree.init != null && isInterface( classDecl ) && !isStatic( tree ) )
+      {
+        // remove field initializer, it has already been transferred as the return value for default interface getter
+        tree.init = null;
       }
     }
 

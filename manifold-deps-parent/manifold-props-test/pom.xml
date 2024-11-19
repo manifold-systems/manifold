@@ -21,7 +21,7 @@
       <groupId>systems.manifold</groupId>
       <artifactId>manifold-props</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
+      <scope>provided, test</scope>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
