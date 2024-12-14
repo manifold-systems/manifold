@@ -288,8 +288,17 @@ class ManifoldJavaFileManager extends JavacFileManagerBridge<JavaFileManager> im
   {
     if( JreUtil.isJava8() && tn.name.equals( "java.util.Map" ) )
     {
-      // ensure top-level Map class loads before inner class Entry, see https://github.com/manifold-systems/manifold/issues/627
-      Annotate.instance( _ctx ).normal( () -> ClassReader.instance( _ctx ).loadClass( Names.instance( _ctx ).fromString( tn.name ) ) );
+      try
+      {
+        // ensure top-level Map class loads before inner class Entry, see https://github.com/manifold-systems/manifold/issues/627
+        // (using reflection to compile here to enable compiling with jdk 11+ only for building Xxx_11.java11+ source files)
+        Annotate.instance( _ctx ).normal(
+          () -> ReflectUtil.method( ClassReader.instance( _ctx ), "loadClass", Name.class )
+            .invoke( Names.instance( _ctx ).fromString( tn.name ) ) );
+      }
+      catch( Throwable ignore )
+      {
+      }
     }
   }
 
