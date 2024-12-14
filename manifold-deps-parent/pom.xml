@@ -54,6 +54,9 @@
     <module>manifold-json</module>
     <module>manifold-json-rt</module>
     <module>manifold-json-test</module>
+    <module>manifold-params</module>
+    <module>manifold-params-rt</module>
+    <module>manifold-params-test</module>
     <module>manifold-preprocessor</module>
     <module>manifold-preprocessor-android-syms</module>
     <module>manifold-preprocessor-test</module>

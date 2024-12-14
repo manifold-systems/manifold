@@ -1665,11 +1665,12 @@ public class ReflectUtil
       String fieldName = field.getName();
       Class<?> toType = variance == Variance.Covariant ? returnType : field.getType();
       Class<?> fromType = variance == Variance.Covariant ? field.getType() : returnType;
-      if( (toType.isAssignableFrom( fromType ) ||
-        arePrimitiveTypesAssignable( toType, fromType )) &&
-        (fieldName.equals( nameUpper ) ||
-          fieldName.equals( nameLower ) ||
-          fieldName.equals( nameUnder )) )
+      if( ("manifold.rt.api.Null".equals( fromType.getTypeName() ) ||
+           toType.isAssignableFrom( fromType ) ||
+           arePrimitiveTypesAssignable( toType, fromType )) &&
+           (fieldName.equals( nameUpper ) ||
+            fieldName.equals( nameLower ) ||
+            fieldName.equals( nameUnder )) )
       {
         return field;
       }

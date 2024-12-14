@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>systems.manifold</groupId>
+    <artifactId>manifold-deps-parent</artifactId>
+    <version>2024.1.42-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>manifold-params-test</artifactId>
+
+  <name>Manifold :: ParamsTest</name>
+  
+  <dependencies>
+    <dependency>
+      <groupId>systems.manifold</groupId>
+      <artifactId>manifold-params-rt</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+
+        <!-- version 3.8.0+ is necessary to support Java 10+ -->
+        <version>3.8.0</version>
+
+        <configuration>
+          <encoding>UTF-8</encoding>
+          <compilerArgs>
+            <!--Add the Manifold plugin-->
+            <arg>-Xplugin:Manifold</arg>
+          </compilerArgs>
+
+          <!-- Add Manifold compile-time dependencies in the processor path -->
+          <annotationProcessorPaths>
+            <path>
+              <groupId>systems.manifold</groupId>
+              <artifactId>manifold-params</artifactId>
+              <version>${project.version}</version>
+            </path>
+          </annotationProcessorPaths>
+
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

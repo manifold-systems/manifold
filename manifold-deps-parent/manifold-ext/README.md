@@ -1677,6 +1677,7 @@ the map, otherwise `Map` behaves much like an expando object.
 See `manifold.collections.extensions.java.util.Map.MapStructExt.java` for details.
 
 # Named arguments & optional parameters
+>**⚠ _Experimental Feature_**
 
 You can combine named arguments with optional parameters to create flexible and readable function calls. Although Java
 does not provide either feature, we can utilize [tuples](https://github.com/manifold-systems/manifold/tree/master/manifold-deps-parent/manifold-tuple)

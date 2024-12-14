@@ -57,7 +57,7 @@ public class GenericPropTest extends TestCase
 
   public void testFromInterface()
   {
-    IGenericProps props = new GenericPropsImpl();
+    IGenericProps<String> props = new GenericPropsImpl();
 
     List list_Raw = Arrays.asList( "abc", 123 );
     props.list_Raw = list_Raw;
@@ -89,6 +89,8 @@ public class GenericPropTest extends TestCase
     List<String>[] list_String_Array = new List[] {Arrays.asList( "abc", "def" )};
     props.list_String_Array = list_String_Array;
     assertEquals( list_String_Array, props.list_String_Array );
+
+    String t = props._t;
   }
 
   public void testFromImpl()

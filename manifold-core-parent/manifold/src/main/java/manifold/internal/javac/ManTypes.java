@@ -25,7 +25,7 @@ import static com.sun.tools.javac.code.Flags.PUBLIC;
 
 public interface ManTypes
 {
-  ThreadLocal<Map<Pair<Type, Type>, Boolean>> CACHED_PAIRS = ThreadLocal.withInitial( HashMap::new );
+  ThreadLocal<Map<Pair<String, String>, Boolean>> CACHED_PAIRS = ThreadLocal.withInitial( HashMap::new );
 
   Types types();
 
@@ -49,8 +49,8 @@ public interface ManTypes
   }
   default boolean _isAssignableToStructuralType( Type t, Type s )
   {
-    t = types().erasure( t );
-    s = types().erasure( s );
+    t = eraseTypeVars( t );
+    s = eraseTypeVars( s );
 
     if( !(t instanceof Type.ClassType) )
     {
@@ -62,8 +62,8 @@ public interface ManTypes
       return false;
     }
 
-    Map<Pair<Type, Type>, Boolean> cache = CACHED_PAIRS.get();
-    Pair<Type, Type> pair = new Pair<>( t, s );
+    Map<Pair<String, String>, Boolean> cache = CACHED_PAIRS.get();
+    Pair<String, String> pair = new Pair<>( t.toString(), s.toString() );
     if( cache.containsKey( pair ) )
     {
       // short-circuit null, actual result comes from initial frame
@@ -73,7 +73,7 @@ public interface ManTypes
     cache.put( pair, null );
     try
     {
-      // check if all non-default public instance methods in (erased) structural interface `s` are provided in type `t`
+      // check if all non-default public instance methods in (type variable erased) structural interface `s` are provided in type `t`
 
       Set<MethodSymbol> sMethods = new HashSet<>();
       getAllMethods( s, m -> !m.isStatic() && (m.flags() & DEFAULT) == 0 && (m.flags() & PUBLIC) != 0 && (m.flags() & SYNTHETIC) == 0, sMethods );
@@ -96,6 +96,7 @@ public interface ManTypes
           break;
         }
       }
+      result = result && verifyTuple( t, s, tFields );
       cache.put( pair, result );
       return result;
     }
@@ -105,10 +106,54 @@ public interface ManTypes
     }
   }
 
+  // Tuple type cannot have an item field that doesn't match an interface method unless all the interface methods are
+  // matched by other item fields. This is to prevent accidental typos against default methods when using tuples as data
+  // classes.
+  default boolean verifyTuple( Type t, Type s, Set<VarSymbol> tFields )
+  {
+    if( !t.tsym.getSimpleName().toString().contains( "manifold_tuple_" ) )
+    {
+      return true;
+    }
+
+    Set<MethodSymbol> sMethods = new HashSet<>();
+    // All public interface methods, including defaults
+    getAllMethods( s, m -> !m.isStatic() && (m.flags() & PUBLIC) != 0 && (m.flags() & SYNTHETIC) == 0, sMethods );
+    boolean allMatch = true;
+    for( MethodSymbol sm: sMethods )
+    {
+      if( tFields.stream().noneMatch( tf -> isGetterMatch( sm, tf.flatName().toString(), tf.type ) || isSetterFieldMatch( sm, tf ) ) )
+      {
+        allMatch = false;
+        break;
+      }
+    }
+    if( !allMatch )
+    {
+      for( VarSymbol tf: tFields )
+      {
+        if( sMethods.stream().noneMatch( sm -> isGetterMatch( sm, tf.flatName().toString(), tf.type ) ) )
+        {
+          // Tuple type cannot have an item field that doesn't match an interface method unless all the interface methods are
+          // matched by other item fields. This is to prevent accidental typos against default methods when using tuples as data
+          // classes.
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  default Type eraseTypeVars( Type type )
+  {
+//    return types().erasure( type );
+    return RecursiveTypeVarEraser.eraseTypeVars( types(), type );
+//    return type;
+  }
   default boolean isStructuralMatch( MethodSymbol sm, MethodSymbol tm )
   {
     return sm.flatName().equals( tm.flatName() ) &&
-      types().isAssignable( types().erasure( tm.getReturnType() ), types().erasure( sm.getReturnType() ) ) &&
+      types().isAssignable( eraseTypeVars( tm.getReturnType() ), eraseTypeVars( sm.getReturnType() ) ) &&
       hasStructurallyEquivalentArgs( tm, sm );
   }
   default boolean isGetterMatch( MethodSymbol sm, String tName, Type tType )
@@ -135,7 +180,7 @@ public interface ManTypes
       return false;
     }
     return smName.equals( tName ) &&
-      types().isAssignable( types().erasure( tType ), types().erasure( returnType ) );
+      types().isAssignable( eraseTypeVars( tType ), eraseTypeVars( returnType ) );
   }
   default boolean isSetterFieldMatch( MethodSymbol sm, VarSymbol tf )
   {
@@ -162,7 +207,7 @@ public interface ManTypes
       return false;
     }
     return smName.equals( tfName ) &&
-      types().isAssignable( types().erasure( tf.type ), types().erasure( sm.params().get( 0 ).type ) );
+      types().isAssignable( eraseTypeVars( tf.type ), eraseTypeVars( sm.params().get( 0 ).type ) );
   }
 
   static void getAllMethods( Type t, Predicate<MethodSymbol> filter, Set<MethodSymbol> tMethods )
@@ -228,7 +273,7 @@ public interface ManTypes
     {
       VarSymbol sParam = sParams.get( i );
       VarSymbol tParam = tParams.get( i );
-      if( !types().isAssignable( sParam.type, tParam.type ) )
+      if( !types().isAssignable( eraseTypeVars( sParam.type ), eraseTypeVars( tParam.type ) ) )
       {
         return false;
       }

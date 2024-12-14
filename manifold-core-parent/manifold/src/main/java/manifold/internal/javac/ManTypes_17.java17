@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.RichDiagnosticFormatter;
 import com.sun.tools.javac.util.Warner;
+import manifold.rt.api.Null;
 import manifold.rt.api.anno.any;
 import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
@@ -154,7 +155,7 @@ public class ManTypes_17 extends Types implements ManTypes
   @Override
   public boolean isAssignable( Type from, Type to, Warner warn )
   {
-    if( isAssignableToAnyAnnotation( from, to ) )
+    if( isAssignableToAnyAnnotation( from, to ) || isNullType( from ) )
     {
       return true;
     }
@@ -165,6 +166,11 @@ public class ManTypes_17 extends Types implements ManTypes
   {
     return isAnnotation( from ) &&
       any.class.getTypeName().equals( to.tsym.getQualifiedName().toString() );
+  }
+
+  public boolean isNullType( Type t )
+  {
+    return t.tsym != null && Null.class.getTypeName().equals( t.tsym.getQualifiedName().toString() );
   }
 
   private boolean isAnnotation( Type from )
@@ -556,7 +562,15 @@ public class ManTypes_17 extends Types implements ManTypes
   public boolean isSubtype( Type t, Type s, boolean capture )
   {
     return super.isSubtype( t, s, capture ) ||
+      s.isNullOrReference() && isNullType( t ) ||
       isAssignableToStructuralType( t, s );
+  }
+
+  @Override
+  public boolean isSuperType( Type t, Type s )
+  {
+    return super.isSuperType( t, s ) ||
+      t.isNullOrReference() && isNullType( s );
   }
 
   @Override

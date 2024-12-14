@@ -19,23 +19,37 @@ package manifold.internal.javac;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.comp.*;
-import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.jvm.ClassReader;
+import com.sun.tools.javac.model.JavacElements;
+import com.sun.tools.javac.model.JavacTypes;
+import com.sun.tools.javac.tree.*;
 import com.sun.tools.javac.tree.JCTree.JCBinary;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.Tag;
-import com.sun.tools.javac.tree.TreeMaker;
-import com.sun.tools.javac.tree.TreeScanner;
 import com.sun.tools.javac.util.*;
 
+import java.lang.reflect.Array;
+import java.net.URI;
 import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import com.sun.tools.javac.util.List;
+import manifold.api.host.IModule;
+import manifold.api.type.ITypeManifold;
 import manifold.api.util.IssueMsg;
 import manifold.internal.javac.AbstractBinder.Node;
 import manifold.rt.api.FragmentValue;
+import manifold.rt.api.Null;
+import manifold.rt.api.util.ManClassUtil;
+import manifold.rt.api.util.ManStringUtil;
 import manifold.util.JreUtil;
 import manifold.util.ReflectUtil;
+
+import javax.lang.model.element.ElementKind;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 
 import static com.sun.tools.javac.code.Flags.INTERFACE;
 import static com.sun.tools.javac.code.TypeTag.CLASS;
@@ -54,6 +68,15 @@ public interface ManAttr
   Object KindSelector_TYP = JreUtil.isJava8()
     ? ReflectUtil.field( Kinds.class, "TYP" ).getStatic()
     : ReflectUtil.field( Kinds.class.getTypeName() + "$KindSelector", "TYP" ).getStatic();
+  Object KindSelector_PCK = JreUtil.isJava8()
+    ? ReflectUtil.field( Kinds.class, "PCK" ).getStatic()
+    : ReflectUtil.field( Kinds.class.getTypeName() + "$KindSelector", "PCK" ).getStatic();
+  Object KindSelector_VAL = JreUtil.isJava8()
+    ? ReflectUtil.field( Kinds.class, "VAL" ).getStatic()
+    : ReflectUtil.field( Kinds.class.getTypeName() + "$KindSelector", "VAL" ).getStatic();
+  Object KindSelector_MTH = JreUtil.isJava8()
+    ? ReflectUtil.field( Kinds.class, "MTH" ).getStatic()
+    : ReflectUtil.field( Kinds.class.getTypeName() + "$KindSelector", "MTH" ).getStatic();
 
   boolean JAILBREAK_PRIVATE_FROM_SUPERS = true;
 
@@ -913,7 +936,7 @@ public interface ManAttr
 
     // Transform to ManTypeCast to distinguish from non-generated casts, to avoid warnings
     ManTypeCast manTypeCast = new ManTypeCast( castCall.clazz, castCall.expr );
-    manTypeCast.type = type;
+    ((JCTree)manTypeCast).type = type;
     manTypeCast.pos = expression.pos;
     return manTypeCast;
   }
@@ -1230,5 +1253,722 @@ public interface ManAttr
       // avoid cost of exception
       return this;
     }
+  }
+
+  //
+  // Tuple methods
+  //
+
+  default boolean handleTupleType( JCTree.JCMethodInvocation tree )
+  {
+    if( !(tree.meth instanceof JCTree.JCIdent) ||
+      !((JCTree.JCIdent)tree.meth).name.toString().equals( "$manifold_tuple" ) )
+    {
+      handleTupleAsNamedArgs( tree );
+      return false;
+    }
+
+    Env<AttrContext> localEnv = getEnv().dup( tree, ReflectUtil.method( getEnv().info, "dup" ).invoke() );
+//    ListBuffer<Type> argtypesBuf = new ListBuffer<>();
+    List<JCExpression> argsNoLabels = removeLabels( tree.args );
+//    ReflectUtil.method( this, "attribArgs", int.class, List.class, Env.class, ListBuffer.class ).
+//      invoke( VAL, argsNoLabels, localEnv, argtypesBuf );
+    ReflectUtil.method( this, "attribExprs", List.class, Env.class, Type.class ).
+      invoke( argsNoLabels, localEnv, Type.noType );
+
+    Map<JCTree.JCExpression, String> namesByArg = new HashMap<>();
+    Map<String, String> fieldMap = makeTupleFieldMap( tree.args, namesByArg );
+    // sort alphabetically
+    argsNoLabels = List.from( argsNoLabels.stream().sorted( Comparator.comparing( namesByArg::get ) ).collect( Collectors.toList() ) );
+    String pkg = findPackageForTuple();
+    String tupleTypeName = ITupleTypeProvider.INSTANCE.get().makeType( pkg, fieldMap );
+    Tree parent = JavacPlugin.instance().getTypeProcessor().getParent( tree, getEnv().toplevel );
+    Symbol.ClassSymbol tupleTypeSym = findTupleClassSymbol( tupleTypeName );
+    if( tupleTypeSym == null )
+    {
+      //todo: compile error?
+      return false;
+    }
+
+    JCTree.JCNewClass newTuple = makeNewTupleClass( tupleTypeSym.type, tree, argsNoLabels );
+    if( parent instanceof JCTree.JCReturn )
+    {
+      ((JCTree.JCReturn)parent).expr = newTuple;
+    }
+    else if( parent instanceof JCTree.JCParens )
+    {
+      ((JCTree.JCParens)parent).expr = newTuple;
+    }
+    ReflectUtil.field( this, "result" ).set( tupleTypeSym.type );
+    tree.type = tupleTypeSym.type;
+    return true;
+  }
+
+  //
+  // expecting a single tuple expression arg for a method/constructor call eg.
+  //   doit((x:8, y:9, z:10))  or
+  //   foo.doit((x:8, y:9, z:10))  or
+  //   FooType.doit((x:8, y:9, z:10))  or
+  //   new Foo((x:8, y:9, z:10))
+  //
+  default void handleTupleAsNamedArgs( JCExpression tree )
+  {
+    List<JCExpression> treeArgs;
+    if( tree instanceof JCTree.JCMethodInvocation )
+    {
+      treeArgs = ((JCTree.JCMethodInvocation)tree).args;
+    }
+    else if( tree instanceof JCTree.JCNewClass )
+    {
+      treeArgs = ((JCTree.JCNewClass)tree).args;
+    }
+    else
+    {
+      throw new IllegalArgumentException( "Unexpected type for tree: " + tree.getClass().getTypeName() );
+    }
+
+    if( treeArgs.size() != 1 )
+    {
+      // expecting a single tuple expression arg eg.
+      return;
+    }
+
+    JCExpression singleArg = treeArgs.get( 0 );
+    if( !(singleArg instanceof JCTree.JCParens) )
+    {
+      return;
+    }
+    while( singleArg instanceof JCTree.JCParens )
+    {
+      singleArg = ((JCTree.JCParens)singleArg).expr;
+    }
+    if( !(singleArg instanceof JCTree.JCMethodInvocation) ||
+      !(((JCTree.JCMethodInvocation)singleArg).meth instanceof JCTree.JCIdent) ||
+      !((JCTree.JCIdent)((JCTree.JCMethodInvocation)singleArg).meth).name.toString().equals( "$manifold_tuple" ) )
+    {
+      // not a tuple expr
+      return;
+    }
+    JCTree.JCMethodInvocation tupleExpr = (JCTree.JCMethodInvocation)singleArg;
+
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+
+    Type receiverType = findReceiverType( tree );
+    if( receiverType.hasTag( ERROR ) )
+    {
+      return;
+    }
+
+    Map<String, JCExpression> labeledArgs = new LinkedHashMap<>();
+    ArrayList<JCExpression> nonlabeledArgs = new ArrayList<>();
+    for( int i = 0, argsSize = tupleExpr.args.size(); i < argsSize; i++ )
+    {
+      JCTree.JCExpression arg = tupleExpr.args.get( i );
+
+      boolean labeledArg = false;
+      if( arg instanceof JCTree.JCMethodInvocation &&
+        ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent )
+      {
+        JCTree.JCIdent ident = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).meth;
+        if( "$manifold_label".equals( ident.name.toString() ) )
+        {
+          JCTree.JCIdent labelArg = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).args.get( 0 );
+          String name = labelArg.name.toString();
+          if( ++i < tupleExpr.args.size() )
+          {
+            arg = tupleExpr.args.get( i );
+            labeledArgs.put( name, arg );
+            labeledArg = true;
+          }
+          else
+          {
+            break;
+          }
+        }
+      }
+
+      if( !labeledArg )
+      {
+        if( !labeledArgs.isEmpty() )
+        {
+          getLogger().error( arg.pos, "proc.messager", "Non-named arguments must appear before named arguments" );
+        }
+        nonlabeledArgs.add( arg );
+      }
+    }
+
+    String methodName = findMethodName( tree );
+    if( methodName == null )
+    {
+      return;
+    }
+    Iterable<Symbol.ClassSymbol> paramsClasses = getParamsClasses( receiverType, methodName );
+
+
+    nextParamsClass:
+    for( Symbol.ClassSymbol paramsClass : paramsClasses )
+    {
+      Map<String, JCExpression> copyLabeledArgs = new LinkedHashMap<>( labeledArgs );
+      ArrayList<JCExpression> copyNonlabeledArgs = new ArrayList<>( nonlabeledArgs );
+
+      Iterator<Symbol.MethodSymbol> ctors = (Iterator)IDynamicJdk.instance().getMembers( paramsClass, Symbol::isConstructor ).iterator();
+      if( ctors.hasNext() )
+      {
+        Symbol.MethodSymbol ctor = ctors.next();
+        List<String> paramsInOrder = getParamNames( paramsClass.name.toString(), true );
+        if( paramsInOrder.containsAll( copyLabeledArgs.keySet() ) )
+        {
+          ArrayList<JCExpression> args = new ArrayList<>();
+          boolean optional = false;
+          List<Symbol.VarSymbol> params = ctor.params;
+          List<String> paramNames = getParamNames( paramsClass.name.toString(), false );
+          int targetParamsOffset = 0;
+          for( int i = 0; i < params.size(); i++ )
+          {
+            Symbol.VarSymbol param = params.get( i );
+            if( args.isEmpty() && tree instanceof JCTree.JCMethodInvocation )
+            {
+              JCExpression typeVarsExpr = makeTypeVarsExpr( make, (JCTree.JCMethodInvocation)tree, paramsClass.owner.type.tsym.name.toString(), param, receiverType );
+              if( typeVarsExpr != null )
+              {
+                // relays generic type info, needed bc it's not always there in the normal parameters
+                args.add( typeVarsExpr );
+                targetParamsOffset++;
+                continue;
+              }
+            }
+
+            // .class files don't preserve param names, using encoded param names in paramsClass name,
+            // in the list optional params are tagged with an "opt$" prefix
+            String paramName = paramNames.get( i - targetParamsOffset );
+
+            if( paramName.startsWith( "opt$" ) )
+            {
+              if( !optional )
+              {
+                // skip the constructor's $isXxx param
+                optional = true;
+                targetParamsOffset++;
+                continue;
+              }
+              else
+              {
+                paramName = paramName.substring( "opt$".length() );
+              }
+            }
+
+            if( !copyNonlabeledArgs.isEmpty() )
+            {
+              args.add( copyNonlabeledArgs.remove( 0 ) );
+            }
+            else
+            {
+              JCExpression expr = copyLabeledArgs.remove( paramName );
+              if( optional )
+              {
+                args.add( make.Literal( expr != null ) );
+                args.add( expr == null ? makeEmptyValue( param, make ) : expr );
+                optional = false;
+              }
+              else if( expr != null )
+              {
+                args.add( expr );
+              }
+              else
+              {
+                // missing required arg, try next paramsClass
+                break nextParamsClass;
+              }
+            }
+          }
+
+          if( !copyNonlabeledArgs.isEmpty() )
+          {
+            // add remaining to trigger compile error
+            args.addAll( copyNonlabeledArgs );
+          }
+          else if( !copyLabeledArgs.isEmpty() )
+          {
+            // add remaining to trigger compile error
+            args.addAll( copyLabeledArgs.values() );
+          }
+
+          JCTree.JCExpression paramsClassExpr = paramsClass.getTypeParameters().isEmpty()
+            ? make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name )
+            : make.TypeApply( make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name ), List.nil() );
+          List<JCExpression> newCarrier = List.of( make.NewClass( null, List.nil(), paramsClassExpr, List.from( args ), null ) );
+          if( tree instanceof JCTree.JCMethodInvocation )
+          {
+            ((JCTree.JCMethodInvocation)tree).args = newCarrier;
+          }
+          else
+          {
+            ((JCTree.JCNewClass)tree).args = newCarrier;
+          }
+          break;
+        }
+      }
+    }
+  }
+
+  default List<String> getParamNames( String paramsClass, boolean removeOpt$ )
+  {
+    List<String> result = List.nil();
+    StringTokenizer tokenizer = new StringTokenizer( paramsClass, "_" );
+    if( tokenizer.hasMoreTokens() )
+    {
+      // skip method name
+      tokenizer.nextToken();
+    }
+    while( tokenizer.hasMoreTokens() )
+    {
+      String paramName = tokenizer.nextToken();
+      if( removeOpt$ )
+      {
+        if( paramName.startsWith( "opt$" ) )
+        {
+          paramName = paramName.substring( "opt$".length() );
+        }
+      }
+      result = result.append( paramName );
+    }
+    return result;
+  }
+
+  default JCTree.JCExpression makeTypeVarsExpr( TreeMaker make, JCTree.JCMethodInvocation tree, String paramsClassOwner, Symbol.VarSymbol param, Type receiverType )
+  {
+    if( param.name.toString().equals( "$" + ManStringUtil.uncapitalize( paramsClassOwner ) ) )
+    {
+      if( !(tree.meth instanceof JCTree.JCFieldAccess) )
+      {
+        return make.This( getEnclosingClass( tree ).type );
+      }
+      return makeCast( make.Literal( TypeTag.BOT, null ), receiverType );
+    }
+    return null;
+  }
+
+  default Type findReceiverType( JCExpression call )
+  {
+    Env<AttrContext> localEnv = getEnv().dup( call, ReflectUtil.method( getEnv().info, "dup" ).invoke() );
+
+    if( call instanceof JCTree.JCNewClass )
+    {
+      JCTree.JCNewClass tree = (JCTree.JCNewClass)call;
+      JCExpression clazz = tree.clazz; // Class name following `new`
+
+      // Attribute clazz expression
+      return TreeInfo.isEnumInit( getEnv().tree )
+        ? (Type)ReflectUtil.method( this, "attribIdentAsEnumType", Env.class, JCTree.JCIdent.class ).invoke( localEnv, clazz )
+        : (Type)ReflectUtil.method( this, "attribType", JCTree.class, Env.class ).invoke( clazz, localEnv );
+    }
+
+    JCTree.JCMethodInvocation tree = (JCTree.JCMethodInvocation)call;
+    JCExpression meth = tree.meth;
+    if( meth instanceof JCTree.JCFieldAccess )
+    {
+      Type site;
+      if( JreUtil.isJava8() )
+      {
+        JCTree.JCFieldAccess treeMeth = (JCTree.JCFieldAccess)meth;
+        int skind = 0;
+        if( treeMeth.name == names()._this ||
+            treeMeth.name == names()._super ||
+            treeMeth.name == names()._class )
+        {
+          skind = (int)KindSelector_TYP;
+        }
+        else
+        {
+          if( ((int)_pkind() & (int)KindSelector_PCK) != 0 ) skind = skind | (int)KindSelector_PCK;
+          if( ((int)_pkind() & (int)KindSelector_TYP) != 0 ) skind = skind | (int)KindSelector_TYP | (int)KindSelector_PCK;
+          if( ((int)_pkind() & ((int)KindSelector_VAL | (int)KindSelector_MTH)) != 0) skind = skind | (int)KindSelector_VAL | (int)KindSelector_TYP;
+        }
+  
+        // Attribute the qualifier expression, and determine its symbol (if any).
+        // Reflection for:  Type site = attribTree( tree.selected, env, new Attr.ResultInfo( skind, Infer.anyPoly ) );
+        site = (Type)ReflectUtil.method( this, "attribTree", JCTree.class, Env.class, ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" ) )
+          .invoke( treeMeth.selected, localEnv, ReflectUtil.constructor( Attr.class.getTypeName() + "$ResultInfo", Attr.class, int.class, Type.class )
+            .newInstance( this, skind, Infer.anyPoly ) );
+      }
+      else
+      {
+        Class<?> KindSelector = ReflectUtil.type( "com.sun.tools.javac.code.Kinds$KindSelector" );
+        JCTree.JCFieldAccess treeMeth = (JCTree.JCFieldAccess)meth;
+        Object skind = ReflectUtil.field( KindSelector, "NIL" ).getStatic();
+        if( treeMeth.name == names()._this ||
+            treeMeth.name == names()._super ||
+            treeMeth.name == names()._class )
+        {
+          skind = KindSelector_TYP;
+        }
+        else
+        {
+          ReflectUtil.MethodRef of = ReflectUtil.method( KindSelector, "of", Array.newInstance( KindSelector, 0 ).getClass() );
+          if( (boolean)ReflectUtil.method( _pkind(), "contains", KindSelector ).invoke( KindSelector_PCK ) )
+          {
+            skind = of.invokeStatic( new Object[]{Arrays.asList( skind, KindSelector_PCK ).toArray( (Object[])Array.newInstance( KindSelector, 0 ) )} );
+          }
+          if( (boolean)ReflectUtil.method( _pkind(), "contains", KindSelector ).invoke( KindSelector_TYP ) )
+          {
+            skind = of.invokeStatic( new Object[]{Arrays.asList( skind, KindSelector_TYP, KindSelector_PCK ).toArray( (Object[])Array.newInstance( KindSelector, 0 ) )} );
+          }
+          Object KindSelector_VAL_MTH = ReflectUtil.field( KindSelector, "VAL_MTH" ).getStatic();
+          if( (boolean)ReflectUtil.method( _pkind(), "contains", KindSelector ).invoke( KindSelector_VAL_MTH ) )
+          {
+            skind = of.invokeStatic( new Object[]{Arrays.asList( skind, KindSelector_VAL, KindSelector_TYP ).toArray( (Object[])Array.newInstance( KindSelector, 0 ) )} );
+          }
+        }
+
+        // Attribute the qualifier expression, and determine its symbol (if any).
+        // Reflection for:  Type site = attribTree( tree.selected, env, new Attr.ResultInfo( skind, Type.noType ) );
+        site = (Type)ReflectUtil.method( this, "attribTree", JCTree.class, Env.class, ReflectUtil.type( Attr.class.getTypeName() + "$ResultInfo" ) )
+          .invoke( treeMeth.selected, localEnv, ReflectUtil.constructor( Attr.class.getTypeName() + "$ResultInfo", Attr.class, KindSelector, Type.class )
+            .newInstance( this, skind, Type.noType ) );
+      }
+      
+      return site;
+    }
+    else if( meth instanceof JCTree.JCIdent )
+    {
+      //todo: this does not handle the case where the JCIdent is resolved from static import
+      return getEnclosingClass( tree ).type;
+    }
+    return Type.ErrorType.noType;
+  }
+
+  default String findMethodName( JCExpression call )
+  {
+    if( call instanceof JCTree.JCNewClass )
+    {
+      return "constructor";
+    }
+
+    JCTree.JCMethodInvocation tree = (JCTree.JCMethodInvocation)call;
+    JCExpression meth = tree.meth;
+    if( meth instanceof JCTree.JCFieldAccess )
+    {
+      JCTree.JCFieldAccess receiverExpr = (JCTree.JCFieldAccess)meth;
+      return receiverExpr.name.toString();
+    }
+    else if( meth instanceof JCTree.JCIdent )
+    {
+      JCTree.JCIdent receiverExpr = (JCTree.JCIdent)meth;
+      return receiverExpr.name.toString();
+    }
+    return null;
+  }
+
+  default JCExpression makeEmptyValue( Symbol.VarSymbol param, TreeMaker make )
+  {
+    if( param.type.isPrimitive() )
+    {
+      return make.Literal( defaultPrimitiveValue( param.type ) );
+    }
+    return make.Literal( TypeTag.BOT, null );
+  }
+
+  default List<Symbol.ClassSymbol> getParamsClasses( Type receiverType, String methodName )
+  {
+    return getParamsClasses( receiverType, methodName, new HashSet<>() );
+  }
+  default List<Symbol.ClassSymbol> getParamsClasses( Type receiverType, String methodName, Set<Type> seen )
+  {
+    if( seen.contains( receiverType ) || receiverType == null || receiverType.tsym == null || receiverType.hasTag( ERROR ) )
+    {
+      return List.nil();
+    }
+    seen.add( receiverType );
+
+    Iterable<Symbol.ClassSymbol> paramsClasses = (Iterable)IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)receiverType.tsym,
+      m -> m instanceof Symbol.ClassSymbol && m.name.toString().startsWith( "$" + methodName ) );
+    List<Symbol.ClassSymbol> result = List.from( paramsClasses );
+
+    Type superclass = ((Symbol.ClassSymbol)receiverType.tsym).getSuperclass();
+    if( superclass != null )
+    {
+      result.appendList( getParamsClasses( superclass, methodName, seen ) );
+    }
+    List<Type> interfaces = ((Symbol.ClassSymbol)receiverType.tsym).getInterfaces();
+    for( Type iface: interfaces )
+    {
+      result.appendList( getParamsClasses( iface, methodName, seen ) );
+    }
+    return result;
+  }
+
+  default Object defaultPrimitiveValue( Type type )
+  {
+    if( type == syms().intType ||
+      type == syms().shortType )
+    {
+      return 0;
+    }
+    if( type == syms().byteType )
+    {
+      return (byte)0;
+    }
+    if( type == syms().longType )
+    {
+      return 0L;
+    }
+    if( type == syms().floatType )
+    {
+      return 0f;
+    }
+    if( type == syms().doubleType )
+    {
+      return 0d;
+    }
+    if( type == syms().booleanType )
+    {
+      return false;
+    }
+    if( type == syms().charType )
+    {
+      return (char)0;
+    }
+    if( type == syms().botType )
+    {
+      return null;
+    }
+    throw new IllegalArgumentException( "Unsupported primitive type: " + type.tsym.getSimpleName() );
+  }
+
+
+  default void addEnclosingClassOnTupleType( String fqn )
+  {
+    Set<ITypeManifold> typeManifolds = JavacPlugin.instance().getHost().getSingleModule().findTypeManifoldsFor( fqn );
+    ITypeManifold tm = typeManifolds.stream().findFirst().orElse( null );
+    ReflectUtil.method( tm, "addEnclosingSourceFile", String.class, URI.class )
+      .invoke( fqn, getEnv().enclClass.sym.sourcefile.toUri() );
+  }
+
+  // if method overrides another method, use package of overridden method for tuples defined in override method
+  default String findPackageForTuple()
+  {
+    JCTree.JCMethodDecl enclMethod = getEnv().enclMethod;
+    if( enclMethod == null )
+    {
+      return getEnv().toplevel.packge.fullname.toString();
+    }
+    Set<Symbol.MethodSymbol> overriddenMethods = JavacTypes.instance( JavacPlugin.instance().getContext() )
+      .getOverriddenMethods( enclMethod.sym );
+    if( overriddenMethods.isEmpty() )
+    {
+      return getEnv().toplevel.packge.fullname.toString();
+    }
+    Symbol.MethodSymbol overridden = overriddenMethods.iterator().next();
+    return overridden.owner.packge().fullname.toString();
+  }
+
+  default Symbol.ClassSymbol findTupleClassSymbol( String tupleTypeName )
+  {
+    addEnclosingClassOnTupleType( tupleTypeName );
+
+    // First, try to load the class the normal way via FileManager#list()
+
+    Context ctx = JavacPlugin.instance().getContext();
+    Symbol.ClassSymbol sym = IDynamicJdk.instance().getTypeElement( ctx, getEnv().toplevel, tupleTypeName );
+    if( sym != null )
+    {
+      return sym;
+    }
+
+    // Next, since tuples are not files and are therefore not known in advance for #list() to work, we force the
+    // compiler to load it via ClassReader/Finder#includeClassFile()
+
+    IModule compilingModule = JavacPlugin.instance().getHost().getSingleModule();
+    if( compilingModule == null )
+    {
+      return null;
+    }
+    String pkg = ManClassUtil.getPackage( tupleTypeName );
+    Symbol.PackageSymbol pkgSym;
+    if( JreUtil.isJava8() )
+    {
+      pkgSym = JavacElements.instance( ctx ).getPackageElement( pkg );
+    }
+    else
+    {
+      //reflection for:  pkgSym = JavacElements.instance( ctx ).getPackageElement( getEnv().toplevel.modle, pkg );
+      Object moduleSym = ReflectUtil.field( getEnv().toplevel, "modle" ).get();
+      Class<?> moduleElementClass = ReflectUtil.type( "javax.lang.model.element.ModuleElement" );
+      pkgSym = (Symbol.PackageSymbol)ReflectUtil
+        .method( JavacElements.instance( ctx ), "getPackageElement", moduleElementClass, CharSequence.class )
+        .invoke( moduleSym, pkg );
+    }
+    IssueReporter<JavaFileObject> issueReporter = new IssueReporter<>( () -> ctx );
+    String fqn = tupleTypeName.replace( '$', '.' );
+    ManifoldJavaFileManager fm = JavacPlugin.instance().getManifoldFileManager();
+    JavaFileObject file = fm.findGeneratedFile( fqn, StandardLocation.CLASS_PATH, compilingModule, issueReporter );
+    Object classReader = JreUtil.isJava8()
+      ? ClassReader.instance( ctx )
+      : ReflectUtil.method( "com.sun.tools.javac.code.ClassFinder", "instance", Context.class ).invokeStatic( ctx );
+    ReflectUtil.method( classReader, "includeClassFile", Symbol.PackageSymbol.class, JavaFileObject.class )
+      .invoke( pkgSym, file );
+    return IDynamicJdk.instance().getTypeElement( ctx, getEnv().toplevel, tupleTypeName );
+  }
+
+  default List<JCTree.JCExpression> removeLabels( List<JCTree.JCExpression> args )
+  {
+    List<JCTree.JCExpression> filtered = List.nil();
+    for( JCTree.JCExpression arg : args )
+    {
+      if( arg instanceof JCTree.JCMethodInvocation &&
+        ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent )
+      {
+        JCTree.JCIdent ident = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).meth;
+        if( "$manifold_label".equals( ident.name.toString() ) )
+        {
+          continue;
+        }
+      }
+      filtered = filtered.append( arg );
+    }
+    return filtered;
+  }
+
+  default JCTree.JCNewClass makeNewTupleClass( Type tupleType, JCTree.JCExpression treePos, List<JCTree.JCExpression> args )
+  {
+    TreeMaker make = TreeMaker.instance( JavacPlugin.instance().getContext() );
+    JCTree.JCNewClass tree = make.NewClass( null,
+      null, make.QualIdent( tupleType.tsym ), args, null );
+    Resolve rs = (Resolve)ReflectUtil.field( this, "rs" ).get();
+    tree.constructor = (Symbol)ReflectUtil.method( rs, "resolveConstructor",
+      JCDiagnostic.DiagnosticPosition.class, Env.class, Type.class, List.class, List.class ).invoke(
+      treePos.pos(), getEnv(), tupleType, TreeInfo.types( args ), List.<Type>nil() );
+    tree.constructorType = tree.constructor.type;
+    tree.type = tupleType;
+    tree.pos = treePos.pos;
+    return tree;
+  }
+
+  default Map<String, String> makeTupleFieldMap( List<JCTree.JCExpression> args, Map<JCTree.JCExpression, String> argsByName )
+  {
+    Map<String, String> map = new LinkedHashMap<>();
+    int nullNameCount = 0;
+    for( int j = 0, argsSize = args.size(); j < argsSize; j++ )
+    {
+      JCTree.JCExpression arg = args.get( j );
+
+      String name = null;
+
+      if( arg instanceof JCTree.JCMethodInvocation &&
+        ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent )
+      {
+        JCTree.JCIdent ident = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).meth;
+        if( "$manifold_label".equals( ident.name.toString() ) )
+        {
+          JCTree.JCIdent labelArg = (JCTree.JCIdent)((JCTree.JCMethodInvocation)arg).args.get( 0 );
+          name = labelArg.name.toString();
+          if( ++j < args.size() )
+          {
+            arg = args.get( j );
+          }
+          else
+          {
+            break;
+          }
+        }
+      }
+
+      if( name == null )
+      {
+        if( arg instanceof JCTree.JCIdent )
+        {
+          name = ((JCTree.JCIdent)arg).name.toString();
+        }
+        else if( arg instanceof JCTree.JCFieldAccess )
+        {
+          name = ((JCTree.JCFieldAccess)arg).name.toString();
+        }
+        else if( arg instanceof JCTree.JCMethodInvocation )
+        {
+          JCTree.JCExpression meth = ((JCTree.JCMethodInvocation)arg).meth;
+          if( meth instanceof JCTree.JCIdent )
+          {
+            name = getFieldNameFromMethodName( ((JCTree.JCIdent)meth).name.toString() );
+          }
+          else if( meth instanceof JCTree.JCFieldAccess )
+          {
+            name = getFieldNameFromMethodName( ((JCTree.JCFieldAccess)meth).name.toString() );
+          }
+        }
+      }
+      boolean named = name != null;
+      String item = named ? name : "item";
+      if( !named )
+      {
+        item += ++nullNameCount;
+      }
+      name = item;
+      for( int i = 2; map.containsKey( item ); i++ )
+      {
+        item = name + '_' + i;
+      }
+      Type type =
+        arg.type == syms().botType
+        ? inferNullType( named, name )
+        : RecursiveTypeVarEraser.eraseTypeVars( types(), arg.type );
+      String typeName = type.toString();
+      map.put( item, typeName );
+      argsByName.put( arg, item );
+    }
+    return map;
+  }
+
+  default Type inferNullType( boolean named, String itemName )
+  {
+    if( named )
+    {
+      Type pt = resultInfo() == null ? null : (Type)ReflectUtil.field( resultInfo(), "pt" ).get();
+      boolean isStructural = pt instanceof Type.ClassType && pt.tsym.getAnnotation( (Class)ReflectUtil.type( "manifold.ext.rt.api.Structural" ) ) != null;
+      if( isStructural )
+      {
+        for( Symbol m : IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)pt.tsym,
+          m -> m.getKind() == ElementKind.METHOD
+            && m.name.toString().equals( "get" + ManStringUtil.capitalize( itemName ) )
+            && ((Symbol.MethodSymbol)m).params().isEmpty()
+            && ((Symbol.MethodSymbol)m).getReturnType() != Symtab.instance( JavacPlugin.instance().getContext() ).voidType ) )
+        {
+          return ((Symbol.MethodSymbol)m).getReturnType();
+        }
+      }
+    }
+    return IDynamicJdk.instance().getTypeElement( JavacPlugin.instance().getContext(), getEnv().toplevel, Null.class.getTypeName() ).type;
+  }
+
+  /**
+   * Changes method name to a field name like this:
+   * getAddress -> address
+   * callHome -> home
+   * findJDKVersion -> jdkVersion
+   * id -> id
+   */
+  default String getFieldNameFromMethodName( String methodName )
+  {
+    for( int i = 0; i < methodName.length(); i++ )
+    {
+      if( Character.isUpperCase( methodName.charAt( i ) ) )
+      {
+        StringBuilder name = new StringBuilder( methodName.substring( i ) );
+        for( int j = 0; j < name.length(); j++ )
+        {
+          char c = name.charAt( j );
+          if( Character.isUpperCase( c ) &&
+            (j == 0 || j == name.length() - 1 || Character.isUpperCase( name.charAt( j+1 ) )) )
+          {
+            name.setCharAt( j, Character.toLowerCase( c ) );
+          }
+          else
+          {
+            break;
+          }
+        }
+        return name.toString();
+      }
+    }
+    return methodName;
   }
 }

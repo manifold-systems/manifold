@@ -30,6 +30,10 @@ public class RecursiveTypeVarEraser extends Types.UnaryVisitor<Type>
 
   public static Type eraseTypeVars( Types types, Type type )
   {
+    if( type.isPrimitive() )
+    {
+      return type;
+    }
     return new RecursiveTypeVarEraser( types ).visit( type );
   }
 

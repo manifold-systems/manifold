@@ -804,6 +804,46 @@ public class ManJavacParser extends JavacParser
     return reqInit;
   }
 
+  //Manifold: for handling default parameter values
+  //@Override for jdk 8
+  protected JCVariableDecl formalParameter( boolean lambdaParameter )
+  {
+    JCVariableDecl varDecl = super.formalParameter( lambdaParameter );
+    parseDefaultParamValue( varDecl );
+    return varDecl;
+  }
+  //Manifold: for handling default parameter values
+  //@Override for jdk 17
+  protected JCVariableDecl formalParameter(boolean lambdaParameter, boolean recordComponent)
+  {
+    JCVariableDecl varDecl;
+    try
+    {
+      // call super.formalParameter( lambdaParameter, recordComponent )
+      MethodHandle superMethod = MethodHandles.lookup().findSpecial(
+        this.getClass().getSuperclass(), "formalParameter",
+        MethodType.methodType( JCVariableDecl.class, boolean.class, boolean.class ), ManJavacParser.class );
+      varDecl = (JCVariableDecl)superMethod.bindTo( this ).invokeExact( lambdaParameter, recordComponent );
+    }
+    catch( Throwable t )
+    {
+      throw new RuntimeException( t );
+    }
+    parseDefaultParamValue( varDecl );
+    return varDecl;
+  }
+  //Manifold: for handling default parameter values
+  private void parseDefaultParamValue( JCVariableDecl varDecl )
+  {
+    if( token.kind == EQ )
+    {
+      nextToken();
+      JCExpression init = variableInitializer();
+      varDecl.init = init;
+      toP( init );
+    }
+  }
+
   @SuppressWarnings("fallthrough")
   public JCTree.JCStatement parseStatement() {
     JCTree.JCStatement returnStmt = handleMultipleValueReturnAsTuple();

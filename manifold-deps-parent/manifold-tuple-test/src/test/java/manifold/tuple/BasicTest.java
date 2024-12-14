@@ -18,6 +18,7 @@ package manifold.tuple;
 
 import junit.framework.TestCase;
 import manifold.ext.rt.api.Structural;
+import manifold.rt.api.Null;
 import manifold.tuple.nested.DifferentPackage;
 import manifold.ext.rt.api.auto;
 import manifold.tuple.rt.api.Tuple;
@@ -47,6 +48,14 @@ public class BasicTest extends TestCase
   public void testEmpty()
   {
     assertTrue( ().orderedLabels().isEmpty() );
+  }
+
+  public void testNull()
+  {
+    auto tuple = (foo:null);
+    assertNull( tuple.foo );
+    String s = tuple.foo;
+    assertNull( s );
   }
 
   public void testLocal()

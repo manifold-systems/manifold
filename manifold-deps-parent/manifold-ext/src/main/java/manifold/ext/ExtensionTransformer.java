@@ -43,10 +43,7 @@ import manifold.ext.rt.ReflectionRuntimeMethods;
 import manifold.ext.rt.RuntimeMethods;
 import manifold.ext.rt.api.*;
 import manifold.internal.javac.*;
-import manifold.rt.api.Array;
-import manifold.rt.api.FragmentValue;
-import manifold.rt.api.IncrementalCompile;
-import manifold.rt.api.Precompile;
+import manifold.rt.api.*;
 import manifold.rt.api.util.Pair;
 import manifold.rt.api.util.TypesUtil;
 import manifold.util.JreUtil;
@@ -1172,6 +1169,18 @@ public class ExtensionTransformer extends TreeTranslator
         tree.type = ((JCTree.JCAnnotatedType)tree.vartype).underlyingType.type;
         tree.sym.type = _tp.getSymtab().objectType;
       }
+//      else if( tree.vartype.type ==
+//        IDynamicJdk.instance().getTypeElement( _tp.getContext(), _tp.getCompilationUnit(), Null.class.getTypeName() ).type )
+//      {
+//        // if the type is manifold.rt.api.Null, replace with Object
+//        Symbol.ClassSymbol objectSym = getObjectClass();
+//        JCTree.JCIdent objIdent = _tp.getTreeMaker().Ident( objectSym );
+//        tree.type = objectSym.type;
+//        objIdent.type = objectSym.type;
+//        tree.sym.type = objectSym.type;
+//        tree.vartype = objIdent;
+//        tree.sym.type = _tp.getSymtab().objectType;
+//      }
     }
   }
 

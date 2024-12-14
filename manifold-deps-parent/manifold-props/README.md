@@ -337,7 +337,8 @@ Foo.setData("the eagle has landed");
 String data = Foo.getData();
 ```
 
-Note, since interfaces are restricted to read-only static data, static interface properties are limited to `@val` and calculated `@var` static properties.
+Note, since interfaces are restricted to read-only static data, explicit static interface properties using `@val` and `@var`
+are not supported, they are always _inferred_ from static getter/setter interface methods.
 
 
 # L-value benefits

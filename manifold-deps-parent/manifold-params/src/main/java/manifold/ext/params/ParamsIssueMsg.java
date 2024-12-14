@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 - Manifold Systems LLC
+ * Copyright (c) 2023 - Manifold Systems LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,11 @@
  * limitations under the License.
  */
 
-package manifold.ext.props;
+package manifold.ext.params;
 
-import manifold.ext.props.rt.api.var;
-import manifold.ext.props.rt.api.val;
+import manifold.api.util.IssueMsg;
 
-public interface ISomeInterface {
-  // inferred val
-  int getFoo();
-
-  // explicit var
-  @var int varFoo;
-
-  // explicit static properties are not supported, they are inferred from getter/setter
-//  static @val int staticFoo;
-  static int getStaticFoo() { return 2; }
-
-  // use iterface props directly
-  default int useProps() {
-    varFoo = 3;
-    return getFoo() + varFoo + getStaticFoo() + staticFoo;
-  }
+public class ParamsIssueMsg
+{
+  public static final IssueMsg MSG_NO_INTERFACES = new IssueMsg( "'{0}' does not have interfaces in common with '{1}'" );
 }

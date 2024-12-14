@@ -347,6 +347,14 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           }
         }
 
+        if( isInterface( classDecl ) )
+        {
+          // Explicit static interface properties are not supported.
+          // Instead we always infer a static interface property from static getter/setter, add the @Static annotation.
+          // Note, we need the STATIC modifier to be removed here to fix an issue with ambiguous ref...
+          tree.getModifiers().flags &= ~STATIC;
+        }
+
         if( (val != null || (get != null && set == null && var == null)) && !isAbstract && !isInterface( classDecl ) )
         {
           List<JCExpression> args = get == null ? val.args : get.args;
@@ -374,11 +382,13 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
           return;
         }
 
-        if( isInterface( classDecl ) && ((int)tree.getModifiers().flags & STATIC) != 0 )
-        {
-          // preserve the explicit static declaration so we can distinguish static/instance fields in interfaces
-          addAnnotations( tree, List.of( makeStaticAnnotation() ) );
-        }
+// STATIC modifier is added to ALL interface fields, so this is not helpful, instead we just don't support explicit static properties in interfaces,
+// but since you have write explicit getter/setter for static @val/@var in interface, inference is always better anyway
+//        if( isInterface( classDecl ) && ((int)tree.getModifiers().flags & STATIC) != 0 )
+//        {
+//          // preserve the explicit static declaration so we can distinguish static/instance fields in interfaces
+//          addAnnotations( tree, List.of( makeStaticAnnotation() ) );
+//        }
 
         // add getter and/or setter
         // or, if a PRIVATE property and no user-defined accessors exist, no benefit from property, so treat as field
@@ -875,6 +885,9 @@ public class PropertyProcessor implements ICompilerComponent, TaskListener
         // Remove FINAL modifier from property fields in interfaces to enable assignment
         // (note these fields do not exist in bytecode)
         tree.sym.flags_field &= ~FINAL;
+        // Remove STATIC modifier too since the fake property field needs to be able to
+        // use the class' generic type params e.g., interface $foo<T> { @val T myProp; }
+        tree.sym.flags_field &= ~STATIC;
       }
     }
 

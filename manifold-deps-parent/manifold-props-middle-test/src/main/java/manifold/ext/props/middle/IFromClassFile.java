@@ -27,8 +27,9 @@ public interface IFromClassFile
 
 // writable abstract property cannot have initializer
 //  @var String defaultGetter = "hi";
-  
-  @var static int staticNonbackingProp;
+
+// this must be inferred:
+//  @var static int staticNonbackingProp;
 
   static int getStaticNonbackingProp()
   {
