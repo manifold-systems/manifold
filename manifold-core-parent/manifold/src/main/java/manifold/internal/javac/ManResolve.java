@@ -17,8 +17,11 @@
 package manifold.internal.javac;
 
 import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.comp.Annotate;
 import com.sun.tools.javac.comp.Attr;
 import com.sun.tools.javac.comp.AttrContext;
@@ -128,6 +131,58 @@ public class ManResolve extends Resolve
       ReflectUtil.field( ReflectUtil.method( "com.sun.tools.javac.comp.TransPattern", "instance", Context.class )
         .invokeStatic( context ), RESOLVE_FIELD ).set( this );
     }
+  }
+
+  public boolean isAccessible( Env<AttrContext> env, Type site, Symbol sym )
+  {
+    boolean accessible = isAccessible( env, site, sym, false );
+    if( !accessible )
+    {
+      return false;
+    }
+
+    return disambiguatePropertyRef( site, sym );
+  }
+
+  // Here we disambiguate a reference to a property from the implementing class where the property field comes from both
+  // the interface and the super class. The property should always resolve through the super class not the interface.
+  private boolean disambiguatePropertyRef( Type site, Symbol sym )
+  {
+    if( sym instanceof Symbol.VarSymbol && sym.owner.isInterface() &&  // property sym is directly an interface member, not impl on a class
+        site.tsym instanceof ClassSymbol && !site.tsym.isInterface() ) // site sym is a class, not an interface
+    {
+      ClassSymbol siteSym = (ClassSymbol)site.tsym;
+      if( siteSym.getSuperclass() != null ) // site type has a superclass
+      {
+        Types types = Types.instance( JavacPlugin.instance().getContext() );
+        if( types.isSubtype( siteSym.getSuperclass(), sym.owner.type ) ) // site type implements interface
+        {
+        if( !hasAnnotation( sym, "manifold.ext.props.rt.api.Static" ) &&
+            (hasAnnotation( sym, "manifold.ext.props.rt.api.get" ) ||
+             hasAnnotation( sym, "manifold.ext.props.rt.api.set" ) ||
+             hasAnnotation( sym, "manifold.ext.props.rt.api.val" ) ||
+             hasAnnotation( sym, "manifold.ext.props.rt.api.var" )) )
+          {
+            // should always access through super class, not interface
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  private boolean hasAnnotation( Symbol sym, String anno )
+  {
+    for( Attribute.Compound a : sym.getAnnotationMirrors() )
+    {
+      String fqn = a.type.tsym.getQualifiedName().toString();
+      if( fqn.equals( anno ) )
+      {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
