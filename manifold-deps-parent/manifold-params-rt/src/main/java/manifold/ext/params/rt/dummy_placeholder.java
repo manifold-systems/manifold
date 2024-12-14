@@ -5,6 +5,6 @@ package manifold.ext.params.rt;
 // Basically, rather than requiring manifold-rt as a runtime dependency, it's more
 // consistent to use manifold-params-rt for runtime when you use manifold-params for compile time,
 // as is conventional with manifold modules.
-class dummy_placeholder
+public class dummy_placeholder
 {
 }
