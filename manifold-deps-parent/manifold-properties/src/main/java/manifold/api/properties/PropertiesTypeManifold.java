@@ -17,8 +17,6 @@
 package manifold.api.properties;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +25,6 @@ import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import manifold.api.fs.IFile;
-import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.host.IModule;
 import manifold.api.properties.ResourceBundleFiles.Type;
@@ -49,7 +46,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 
   private Model createModel(String _fqn, Set<IFile> files){
     return new Model(getModule().getHost(), _fqn, files ) {
-      protected SrcExpression createExpression( String key, String value ){
+      protected SrcRawExpression createExpression( String key, String value ){
         return resourceBundleFiles.getType(_fqn) == Type.DEFAULT
             ? new SrcRawExpression( ResourceBundelCodeGen.FIELD_RESOURCE_BUNDLE + ".getString(\"" + key + "\")")
             : super.createExpression(key, value);
@@ -88,12 +85,12 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   public boolean isInnerType( String topLevel, String relativeInner )
   {
     Model model = getModel( topLevel );
-    FqnCache<SrcExpression> cache = model == null ? null : model.getCache();
+    FqnCache<SrcRawExpression> cache = model == null ? null : model.getCache();
     if( cache == null )
     {
       return false;
     }
-    FqnCacheNode<SrcExpression> node = cache.getNode( relativeInner );
+    FqnCacheNode<SrcRawExpression> node = cache.getNode( relativeInner );
     return node != null && !node.isLeaf();
   }
 

@@ -23,9 +23,9 @@ import java.util.ResourceBundle;
 
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.util.cache.FqnCache;
 import manifold.util.ReflectUtil;
@@ -37,12 +37,12 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
 {
   public static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
 
-  ResourceBundelCodeGen( FqnCache<SrcExpression> model, IFile file, String fqn )
+  ResourceBundelCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
   {
     super(model, file, fqn);
   }
 
-  protected void extendSrcClass( SrcClass srcClass, FqnCache<SrcExpression> model )
+  protected void extendSrcClass( SrcClass srcClass, FqnCache<SrcRawExpression> model )
   {
     srcClass.imports( ResourceBundle.class, Locale.class, Field.class, Modifier.class , ReflectUtil.class);
 

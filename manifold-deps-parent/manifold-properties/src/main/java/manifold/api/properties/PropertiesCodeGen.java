@@ -28,14 +28,13 @@ import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcExpression;
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcIdentifier;
 import manifold.api.gen.SrcMemberAccessExpression;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcMethodCallExpression;
 import manifold.api.gen.SrcParameter;
-import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcSwitchCase;
@@ -59,10 +58,10 @@ class PropertiesCodeGen
   private static final String FIELD_FILE_URL = "__FILE_URL";
   protected final String _fqn;
   private final String _content;
-  private final FqnCache<SrcExpression> _model;
+  private final FqnCache<SrcRawExpression> _model;
   private IFile _file;
 
-  PropertiesCodeGen( FqnCache<SrcExpression> model, IFile file, String fqn )
+  PropertiesCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
   {
     _model = model;
     _file = file;
@@ -82,7 +81,7 @@ class PropertiesCodeGen
     return make( srcClass, _model );
   }
 
-  private void addLocationAndPropertiesFileUrlField( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
+  private void addLocationAndPropertiesFileUrlField( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     if( _file == null )
     {
@@ -99,11 +98,11 @@ class PropertiesCodeGen
         .initializer( getFile() ) );
   }
 
-  protected void extendSrcClass(SrcClass srcClass, FqnCache<SrcExpression> model) {}
+  protected void extendSrcClass(SrcClass srcClass, FqnCache<SrcRawExpression> model) {}
 
-  private SrcClass make( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
+  private SrcClass make( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
-    for( FqnCacheNode<SrcExpression> childNode: node.getChildren() )
+    for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
       SrcType type = new SrcType( childNode.isLeaf() ? "String" : childNode.getName() );
       SrcField propertyField = new SrcField( srcClass )
@@ -130,7 +129,7 @@ class PropertiesCodeGen
     return srcClass;
   }
 
-  private SrcExpression getFile()
+  private SrcRawExpression getFile()
   {
     try
     {
@@ -142,7 +141,7 @@ class PropertiesCodeGen
     }
   }
 
-  private SrcAnnotationExpression addSourcePositionAnnotation( FqnCacheNode<SrcExpression> node )
+  private SrcAnnotationExpression addSourcePositionAnnotation( FqnCacheNode<SrcRawExpression> node )
   {
     return new SrcAnnotationExpression( SourcePosition.class.getSimpleName() )
       .addArgument( new SrcArgument( new SrcMemberAccessExpression( _fqn, FIELD_FILE_URL ) ).name( "url" ) )
@@ -151,13 +150,13 @@ class PropertiesCodeGen
       .addArgument( "length", int.class, node.getName() == null ? 0 : node.getName().length() );
   }
 
-  private void addMethods( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
+  private void addMethods( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     if( !node.isLeaf() )
     {
       addGetValueByNameMethod( srcClass, node );
 
-      SrcExpression userData = node.getUserData();
+      SrcRawExpression userData = node.getUserData();
       if( userData != null )
       {
         addGetValueMethod( srcClass, node );
@@ -181,7 +180,7 @@ class PropertiesCodeGen
     );
   }
 
-  private void addGetValueByNameMethod( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
+  private void addGetValueByNameMethod( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     srcClass.addMethod(
       new SrcMethod( srcClass )
@@ -198,16 +197,16 @@ class PropertiesCodeGen
 
   }
 
-  private boolean isRootProperty( FqnCacheNode<SrcExpression> node )
+  private boolean isRootProperty( FqnCacheNode<SrcRawExpression> node )
   {
     return node.getParent() == null;
   }
 
-  private SrcSwitchStatement makeGetValueBynameSwitch( FqnCacheNode<SrcExpression> node )
+  private SrcSwitchStatement makeGetValueBynameSwitch( FqnCacheNode<SrcRawExpression> node )
   {
     SrcSwitchStatement stmt = new SrcSwitchStatement();
     stmt.expr( new SrcIdentifier( "propertyName" ) );
-    for( FqnCacheNode<SrcExpression> childNode: node.getChildren() )
+    for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
       stmt.addCase(
         new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
@@ -217,7 +216,7 @@ class PropertiesCodeGen
     return stmt;
   }
 
-  private void addGetValueMethod( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
+  private void addGetValueMethod( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     srcClass.addMethod(
       new SrcMethod( srcClass )
@@ -229,7 +228,7 @@ class PropertiesCodeGen
             .addStatement( new SrcReturnStatement( node.getUserData() ) ) ) );
   }
 
-  private int findOffsetOf( FqnCacheNode<SrcExpression> node )
+  private int findOffsetOf( FqnCacheNode<SrcRawExpression> node )
   {
     String fqn = node.getFqn();
     String prefix = _fqn + '.';
