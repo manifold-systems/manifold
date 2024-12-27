@@ -35,7 +35,7 @@ import manifold.util.ReflectUtil;
  */
 class ResourceBundelCodeGen extends PropertiesCodeGen
 {
-  private static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
+  public static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
 
   ResourceBundelCodeGen( FqnCache<SrcExpression> model, IFile file, String fqn )
   {

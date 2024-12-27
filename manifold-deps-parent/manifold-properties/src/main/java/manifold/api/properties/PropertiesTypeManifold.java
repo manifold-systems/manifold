@@ -51,7 +51,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
     return new Model(getModule().getHost(), _fqn, files ) {
       protected SrcExpression createExpression( String key, String value ){
         return resourceBundleFiles.getType(_fqn) == Type.DEFAULT
-            ? new SrcRawExpression( "_resourceBundle.getString(\"" + key + "\")")
+            ? new SrcRawExpression( ResourceBundelCodeGen.FIELD_RESOURCE_BUNDLE + ".getString(\"" + key + "\")")
             : super.createExpression(key, value);
       }
     };
