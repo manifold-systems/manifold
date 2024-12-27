@@ -29,15 +29,21 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.*;
 import manifold.api.type.ICompilerComponent;
-import manifold.internal.javac.JavacPlugin;
-import manifold.internal.javac.ParentMap;
-import manifold.internal.javac.TypeProcessor;
+import manifold.api.util.JavacDiagnostic;
+import manifold.ext.params.rt.api.spread;
+import manifold.ext.params.rt.manifold_params;
+import manifold.internal.javac.*;
 import manifold.rt.api.Null;
 import manifold.rt.api.util.ManStringUtil;
 import manifold.rt.api.util.Stack;
 
+import javax.tools.Diagnostic;
+import javax.tools.JavaFileObject;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static manifold.ext.params.ParamsIssueMsg.MSG_EXPAND_NO_OPTIONAL_PARAMS;
 
 public class ParamsProcessor implements ICompilerComponent, TaskListener
 {
@@ -63,16 +69,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     // typing and extension methods.
     typeProcessor.addTaskListener( this );
   }
-
-  @Override
-  public InitOrder initOrder( ICompilerComponent compilerComponent )
-  {
-    // ParamsProcessor must be processed Before PropertiesProcessor
-    return compilerComponent.getClass().getName().equals( "manifold.ext.props.PropertyProcessor" )
-      ? InitOrder.Before
-      : InitOrder.NA;
-  }
-
+  
   BasicJavacTask getJavacTask()
   {
     return _javacTask;
@@ -198,7 +195,7 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
     return ICompilerComponent.super.isSuppressed( pos, issueKey, args );
   }
 
-  // Add structural interfaces and forwarding methods
+  // Add data classes reflecting parameters and corresponding method overloads
   //
   private class Enter_Start extends TreeTranslator
   {
@@ -251,9 +248,15 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
         if( param.init != null )
         {
           handleOptionalParams( methodDecl );
-          break;
+          return;
         }
       }
+      //... no optional params in method
+      methodDecl.getModifiers().getAnnotations().stream()
+        .filter( anno -> anno.annotationType.toString().contains( spread.class.getSimpleName() ) )
+        .findFirst()
+        .ifPresent( anno ->
+          reportError( anno, MSG_EXPAND_NO_OPTIONAL_PARAMS.get() ) );
     }
 
     private void handleOptionalParams( JCMethodDecl optParamsMeth )
@@ -263,16 +266,148 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
 
       TreeCopier<?> copier = new TreeCopier<>( make );
 
-//      JCClassDecl structuralInterface = makeStructuralInterface( optParamsMeth, make, copier );
-//      ArrayList<JCTree> defs = _newDefs.peek().snd;
-//      defs.add( structuralInterface );
-
-      JCClassDecl paramsClass = makeParamsClass( optParamsMeth, make, copier );
       ArrayList<JCTree> defs = _newDefs.peek().snd;
-      defs.add( paramsClass );
 
-      JCMethodDecl forwardingMeth = makeForwardingMethod( optParamsMeth, paramsClass, make, copier );
-      defs.add( forwardingMeth );
+      if( shouldSupportNamedArgs( optParamsMeth ) )
+      {
+        JCClassDecl paramsClass = makeParamsClass( optParamsMeth, make, copier );
+        defs.add( paramsClass );
+
+        JCMethodDecl paramsMethod = makeParamsMethod( optParamsMeth, paramsClass, make, copier );
+        defs.add( paramsMethod );
+      }
+
+      if( shouldAddTelescopeMethods( optParamsMeth ) )
+      {
+        ArrayList<JCMethodDecl> telescopeMethods = makeTelescopeMethods( optParamsMeth, make, copier );
+        defs.addAll( telescopeMethods );
+      }
+    }
+
+    private boolean shouldAddTelescopeMethods( JCMethodDecl optParamsMeth )
+    {
+      return true;
+    }
+
+    private boolean shouldSupportNamedArgs( JCMethodDecl optParamsMeth )
+    {
+      return optParamsMeth.getModifiers().getAnnotations().stream()
+        .noneMatch( anno -> anno.annotationType != null &&
+          anno.annotationType.toString().endsWith( spread.class.getSimpleName() ) );
+    }
+
+    private ArrayList<JCMethodDecl> makeTelescopeMethods( JCMethodDecl optParamsMeth, TreeMaker make, TreeCopier<?> copier )
+    {
+      int optParamsCount = 0;
+      for( JCVariableDecl p: optParamsMeth.params )
+      {
+        if( p.init != null )
+        {
+          optParamsCount++;
+        }
+      }
+
+      // start with a method having all the required params and forwarding all default param values,
+      // end with having all the optional params but the last one as required params (since the original method has all the params as required)
+      ArrayList<JCMethodDecl> result = new ArrayList<>();
+      for( int i = 0; i < optParamsCount; i++ )
+      {
+        JCMethodDecl telescopeMethod = makeTelescopeMethod( optParamsMeth, make, copier, i );
+        if( true /*!methodExists( telescopeMethod )*/ )
+        {
+          result.add( telescopeMethod );
+        }
+      }
+      return result;
+    }
+
+    private JCMethodDecl makeTelescopeMethod( JCMethodDecl targetMethod, TreeMaker make, TreeCopier<?> copier, int optParamsInSig )
+    {
+      JCMethodDecl copy = copier.copy( targetMethod );
+
+      ArrayList<JCVariableDecl> reqParams = new ArrayList<>();
+      ArrayList<JCVariableDecl> optParams = new ArrayList<>();
+      for( JCVariableDecl p: copy.params )
+      {
+        if( p.init == null )
+        {
+          reqParams.add( p );
+        }
+        else
+        {
+          optParams.add( p );
+        }
+      }
+
+      List<Name> targetParams = List.from( copy.params.stream().map( e -> e.name ).collect( Collectors.toList() ) );
+
+      // telescope interface methods have default impls that forward to original
+      long flags = targetMethod.getModifiers().flags;
+      if( (flags & Flags.STATIC) == 0 &&
+        (classDecl().mods.flags & Flags.INTERFACE) != 0 )
+      {
+        flags |= Flags.DEFAULT;
+      }
+      copy.mods.flags = flags;
+      // mark with @manifold_params for IJ use
+      JCAnnotation paramsAnno = make.Annotation( memberAccess( make, manifold_params.class.getTypeName() ), List.nil() );
+      copy.mods.annotations = copy.mods.annotations.append( paramsAnno );
+
+      // Params
+      ArrayList<JCVariableDecl> params = new ArrayList<>();
+      ArrayList<JCExpression> args = new ArrayList<JCExpression>()
+      {{
+        addAll( targetParams.stream().map( e -> (JCExpression)null ).collect( Collectors.toList() ) );
+      }};
+      for( JCVariableDecl reqParam: reqParams )
+      {
+        params.add( make.VarDef( make.Modifiers( Flags.PARAMETER ), reqParam.name, reqParam.vartype, null ) );
+        int index = targetParams.indexOf( reqParam.name );
+        args.set( index, make.Ident( reqParam.name ) );
+      }
+      for( int i = 0; i < optParamsInSig; i++ )
+      {
+        JCVariableDecl optParam = optParams.get( i );
+        int index = targetParams.indexOf( optParam.name );
+        params.add( index, optParam );
+        args.set( index, make.Ident( optParam.name ) );
+      }
+      for( int i = optParamsInSig; i < optParams.size(); i++ )
+      {
+        JCVariableDecl defParam = optParams.get( i );
+        int index = targetParams.indexOf( defParam.name );
+        args.set( index, defParam.init );
+        defParam.init = null;
+      }
+      if( args.stream().anyMatch( Objects::isNull ) )
+      {
+        throw new IllegalStateException( "null " );
+      }
+      copy.params = List.from( params );
+
+      // body
+      JCMethodInvocation forwardCall;
+      if( targetMethod.name.equals( getNames().init ) )
+      {
+        forwardCall = make.Apply( List.nil(), make.Ident( getNames()._this ), List.from( args ) );
+      }
+      else
+      {
+        forwardCall = make.Apply( List.nil(), make.Ident( targetMethod.name ), List.from( args ) );
+      }
+      JCStatement stmt;
+      if( targetMethod.restype == null ||
+        (targetMethod.restype instanceof JCPrimitiveTypeTree &&
+          ((JCPrimitiveTypeTree)targetMethod.restype).typetag == TypeTag.VOID) )
+      {
+        stmt = make.Exec( forwardCall );
+      }
+      else
+      {
+        stmt = make.Return( forwardCall );
+      }
+      copy.body = make.Block( 0L, List.of( stmt ) );
+      return copy;
     }
 
 //    // make a structural interface reflecting the parameters of the method
@@ -412,13 +547,14 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       return make.ClassDef( modifiers, name, typeParams, null, List.nil(), fields.append( ctor ) );
     }
 
-    // make an overload of the method we're forwarding to:
+    // make an overload of the method with a single parameter that is the params class we generate here,
+    // and forward to the orginal method:
     //   String foo(String name, int age = 100) {...}
     //   String foo($foo args) {return foo(args.name, args.age);}
-    // where $foo is the structural interface generated above,
+    // where $foo is the params class generated above,
     // so we can call it using tuples for named args and optional params:
     // foo((name:"Scott"));
-    private JCMethodDecl makeForwardingMethod( JCMethodDecl targetMethod, JCClassDecl paramsClass, TreeMaker make, TreeCopier<?> copier )
+    private JCMethodDecl makeParamsMethod( JCMethodDecl targetMethod, JCClassDecl paramsClass, TreeMaker make, TreeCopier<?> copier )
     {
       // Method name & modifiers
       Name name = targetMethod.getName();
@@ -543,5 +679,26 @@ public class ParamsProcessor implements ICompilerComponent, TaskListener
       expr = make.Select( expr, names.fromString( components[i] ) );
     }
     return expr;
+  }
+
+  private void reportWarning( JCTree location, String message )
+  {
+    report( Diagnostic.Kind.WARNING, location, message );
+  }
+
+  private void reportError( JCTree location, String message )
+  {
+    report( Diagnostic.Kind.ERROR, location, message );
+  }
+
+  private void report( Diagnostic.Kind kind, JCTree location, String message )
+  {
+    report( _taskEvent.getSourceFile(), location, kind, message );
+  }
+  public void report( JavaFileObject sourcefile, JCTree tree, Diagnostic.Kind kind, String msg )
+  {
+    IssueReporter<JavaFileObject> reporter = new IssueReporter<>( _javacTask::getContext );
+    JavaFileObject file = sourcefile != null ? sourcefile : Util.getFile( tree, child -> getParent( child ) );
+    reporter.report( new JavacDiagnostic( file, kind, tree.getStartPosition(), 0, 0, msg ) );
   }
 }

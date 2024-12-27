@@ -193,10 +193,9 @@ public class ManLog_8 extends Log
   @Override
   public void report( JCDiagnostic issue )
   {
-    if( issue.getKind().ordinal() > Diagnostic.Kind.ERROR.ordinal() &&
-      issue.getDiagnosticSource().getFile() instanceof GeneratedJavaStubFileObject )
+    if( isWarningInGeneratedSource( issue ) || isPrivateJdkCtorIssue( issue ) )
     {
-      // ignore warnings from generated source
+      // suppress warnings etc. from generated source
       return;
     }
 
@@ -221,6 +220,21 @@ public class ManLog_8 extends Log
       }
       suspendedIssues.get( last ).peek().push( issue );
     }
+  }
+
+  private static boolean isWarningInGeneratedSource( JCDiagnostic issue )
+  {
+    return issue.getKind().ordinal() > Diagnostic.Kind.ERROR.ordinal() &&
+      issue.getDiagnosticSource().getFile() instanceof GeneratedJavaStubFileObject;
+  }
+
+  // when generating stub for JDK class that has private ctor that calls super(...) and targeting older JDK than compiling
+  // JDK, the private ctor is missing from the older JDK's type info (ct.sym file)... so we ignore this error in generated code
+  private boolean isPrivateJdkCtorIssue( JCDiagnostic issue )
+  {
+    return JavacPlugin.instance() != null && issue.getCode() != null &&
+      issue.getCode().endsWith( "cant.apply.symbol" ) &&
+      source.getFile() instanceof GeneratedJavaStubFileObject;
   }
 
   boolean isJailbreakSelect( JCTree.JCFieldAccess pos )
