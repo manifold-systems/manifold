@@ -16,25 +16,26 @@
 
 package manifold.api.properties;
 
-import junit.framework.TestCase;
+import static org.assertj.core.api.Assertions.*;
 
 import abc.MyProperties;
 import gw.lang.SystemProperties;
+import org.junit.jupiter.api.Test;
 
-/**
- */
-public class PropertiesTest extends TestCase
+class PropertiesTest
 {
-  public void testProperties()
+  @Test
+  void testProperties()
   {
-    assertEquals( "Hello", MyProperties.MyProperty.toString() );
-    assertEquals( "Sub Property", MyProperties.MyProperty.Sub );
-    assertNotNull( SystemProperties.java.version );
+    assertThat( MyProperties.MyProperty.toString() ).isEqualTo( "Hello" );
+    assertThat( MyProperties.MyProperty.Sub ).isEqualTo( "Sub Property" );
+    assertThat( SystemProperties.java.version ).isNotNull();
   }
 
-  public void testFragrment()
+  @Test
+  void testFragment()
   {
     //[MyPropertiesRightHere.properties/] Foo=bar
-    assertEquals( "bar", MyPropertiesRightHere.Foo );
+    assertThat( MyPropertiesRightHere.Foo ).isEqualTo( "bar" );
   }
 }

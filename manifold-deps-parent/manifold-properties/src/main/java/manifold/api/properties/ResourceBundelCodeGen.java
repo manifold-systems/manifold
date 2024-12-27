@@ -1,0 +1,87 @@
+/*
+ * Copyright (c) 2018 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package manifold.api.properties;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import manifold.api.fs.IFile;
+import manifold.api.gen.SrcClass;
+import manifold.api.gen.SrcExpression;
+import manifold.api.gen.SrcField;
+import manifold.api.gen.SrcMethod;
+import manifold.api.gen.SrcStatementBlock;
+import manifold.api.util.cache.FqnCache;
+import manifold.util.ReflectUtil;
+
+/**
+ *
+ */
+class ResourceBundelCodeGen extends PropertiesCodeGen
+{
+  private static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
+
+  ResourceBundelCodeGen( FqnCache<SrcExpression> model, IFile file, String fqn )
+  {
+    super(model, file, fqn);
+  }
+
+  protected void addExtraFields( SrcClass srcClass, FqnCache<SrcExpression> model )
+  {
+    srcClass.imports( ResourceBundle.class, Locale.class, Field.class, Modifier.class , ReflectUtil.class);
+
+    srcClass.addField(
+        new SrcField( srcClass )
+            .name( FIELD_RESOURCE_BUNDLE )
+            .modifiers( Modifier.PRIVATE | Modifier.STATIC )
+            .type( ResourceBundle.class )
+            .initializer("ResourceBundle.getBundle(\"" + _fqn + "\", Locale.ROOT);" ) );
+
+    srcClass.addMethod(
+        new SrcMethod(srcClass)
+            .name("setLocale")
+            .modifiers(Modifier.PUBLIC | Modifier.STATIC)
+            .addParam("locale", Locale.class)
+            .body(new SrcStatementBlock()
+                .addStatement(FIELD_RESOURCE_BUNDLE + " = ResourceBundle.getBundle(\"" + _fqn + "\", locale);")
+                .addStatement("resetFields(" + _fqn + ".class, \"\");")
+            ));
+
+    srcClass.addMethod(new SrcMethod(srcClass)
+        .name("resetFields")
+        .modifiers( Modifier.PRIVATE | Modifier.STATIC)
+        .addParam("object", Object.class)
+        .addParam("propName", String.class)
+        .body("Class objectClass = (object instanceof Class ? (Class)object : object.getClass());" +
+            "for(Field field : objectClass.getDeclaredFields()) {" +
+            "  if(!field.getName().startsWith(\"_\")){" +
+            "    String newPropName = \"\".equals(propName)? field.getName() : propName + \".\" + field.getName();" +
+            "    if(String.class.equals(field.getType())){" +
+            "      ReflectUtil.field(objectClass, field.getName()).set(object, " + _fqn + "." + FIELD_RESOURCE_BUNDLE + ".getString(newPropName) );" +
+            "    }else{" +
+            "      try{" +
+            "        resetFields(field.get(object), newPropName);" +
+            "      } catch (IllegalAccessException e) {" +
+            "      }" +
+            "    }" +
+            "  }" +
+            "}"
+        ));
+  }
+}

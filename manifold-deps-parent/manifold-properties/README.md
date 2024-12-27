@@ -32,6 +32,30 @@ Behind the scenes the properties type manifold creates a Java class for the prop
 hierarchy of properties.  As you develop your application, changes you make in the file are immediately available in
 your code with no user intervention in between -- no code gen files and no compiling between changes.
 
+This can also be used for `MessageBundles`. 
+Unlike regular properties, an additional `setLocale` method is generated, 
+enabling you to dynamically change the locale.
+
+`resources/abc/messages.properties`:
+```properties
+hello = Hello
+test.foo = Foo
+```
+`resources/abc/messages_fr.properties`:
+```properties
+hello = Bonjour
+test.foo = Bar
+```
+
+```java
+println(abc.messages.hello); // prints "Hello"
+println(abc.messages.test.foo); // prints "Foo"
+abc.messages.setLocale(Locale.forLanguageTag("fr")); // change locale to French
+println(abc.messages.hello); // prints "Bonjour"
+println(abc.messages.test.foo); // prints "Bar"
+```
+
+
 # IDE Support 
 
 Manifold is fully supported in [IntelliJ IDEA](https://www.jetbrains.com/idea/download) and [Android Studio](https://developer.android.com/studio).
