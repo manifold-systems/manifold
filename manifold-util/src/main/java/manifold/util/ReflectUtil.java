@@ -720,7 +720,7 @@ public class ReflectUtil
       throw new NullPointerException( "Receiver is null" );
     }
 
-    Class<?> cls = receiver.getClass();
+    Class<?> cls = getReceiverClass( receiver );
     try
     {
       List<Field> fields = fields( cls );
@@ -1512,7 +1512,7 @@ public class ReflectUtil
   {
     public static LiveMethodRef method( Object receiver, String name, Class... params )
     {
-      MethodRef ref = ReflectUtil.method( receiver.getClass(), name, params );
+      MethodRef ref = ReflectUtil.method( getReceiverClass( receiver ), name, params );
       if( ref == null )
       {
         return null;
@@ -1522,7 +1522,7 @@ public class ReflectUtil
 
     public static LiveFieldRef field( Object receiver, String name )
     {
-      FieldRef ref = ReflectUtil.field( receiver.getClass(), name );
+      FieldRef ref = ReflectUtil.field( getReceiverClass( receiver ), name );
       if( ref == null )
       {
         return null;
@@ -1569,7 +1569,7 @@ public class ReflectUtil
     MethodRef structMethod = method( structIface, name, params );
     if( structMethod != null )
     {
-      Method bestMethod = findBestMethod( structMethod.getMethod(), receiver.getClass() );
+      Method bestMethod = findBestMethod( structMethod.getMethod(), getReceiverClass( receiver ) );
       return bestMethod == null ? null : new LiveMethodRef( bestMethod, receiver );
     }
     return null;
@@ -1582,7 +1582,7 @@ public class ReflectUtil
   public static Object structuralCallByProxy( Method structMethod, Object proxy, Object receiver, Object... args )
   {
     Object result;
-    Method bestMethod = findBestMethod( structMethod, receiver.getClass() );
+    Method bestMethod = findBestMethod( structMethod, getReceiverClass( receiver ) );
     if( bestMethod == null )
     {
       if( proxy != null && structMethod.isDefault() )
@@ -1601,7 +1601,7 @@ public class ReflectUtil
           result = handleNestedProxy( receiver, structMethod, args );
           if( result == UNHANDLED )
           {
-            throw new RuntimeException( "Receiver type '" + receiver.getClass().getTypeName() +
+            throw new RuntimeException( "Receiver type '" + getReceiverClass( receiver ).getTypeName() +
               "' does not implement a method structurally compatible with method: " + structMethod );
           }
         }
@@ -1633,7 +1633,7 @@ public class ReflectUtil
   private static Object handleNestedProxy( Object receiver, Method structMethod, Object[] args )
   {
     // todo: can't reference manifold.ext.rt.proxy from here, but proxy stuff is a bit sketchy rt now
-    if( receiver.getClass().getTypeName().contains( ".$ManProxy" ) )
+    if( getReceiverClass( receiver ).getTypeName().contains( ".$ManProxy" ) )
     {
       // handle nested proxy
       try
@@ -1729,7 +1729,7 @@ public class ReflectUtil
     String propertyName = getPropertyNameFromGetter( structMethod );
     if( propertyName != null )
     {
-      Field field = findField( propertyName, receiver.getClass(), structMethod.getReturnType(), Variance.Covariant );
+      Field field = findField( propertyName, getReceiverClass( receiver ), structMethod.getReturnType(), Variance.Covariant );
       if( field != null )
       {
         try
@@ -1748,7 +1748,7 @@ public class ReflectUtil
       propertyName = getPropertyNameFromSetter( structMethod );
       if( propertyName != null )
       {
-        Field field = findField( propertyName, receiver.getClass(), structMethod.getParameterTypes()[0], Variance.Contravariant );
+        Field field = findField( propertyName, getReceiverClass( receiver ), structMethod.getParameterTypes()[0], Variance.Contravariant );
         if( field != null )
         {
           try
@@ -1908,6 +1908,11 @@ public class ReflectUtil
       }
     }
     return propertyName;
+  }
+
+  private static Class getReceiverClass( Object receiver )
+  {
+      return receiver instanceof Class ? (Class) receiver : receiver.getClass();
   }
 
   //## not necessary (until Unsafe goes away), using Unsafe.putObjectVolatile() to set 'override' directly

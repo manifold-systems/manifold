@@ -71,20 +71,20 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
         .modifiers( Modifier.PRIVATE | Modifier.STATIC)
         .addParam("object", Object.class)
         .addParam("propName", String.class)
-        .body("Class objectClass = (object instanceof Class ? (Class)object : object.getClass());" +
-            "for(Field field : objectClass.getDeclaredFields()) {" +
-            "  if(!field.getName().startsWith(\"_\")){" +
-            "    String newPropName = \"\".equals(propName)? field.getName() : propName + \".\" + field.getName();" +
-            "    if(String.class.equals(field.getType())){" +
-            "      ReflectUtil.field(objectClass, field.getName()).set(object, " + _fqn + "." + FIELD_RESOURCE_BUNDLE + ".getString(newPropName) );" +
-            "    }else{" +
-            "      try{" +
-            "        resetFields(field.get(object), newPropName);" +
-            "      } catch (IllegalAccessException e) {" +
-            "      }" +
-            "    }" +
-            "  }" +
-            "}"
+        .body("ReflectUtil.fields(object,fieldRef -> !fieldRef.getField().getName().startsWith(\"_\"))\n" +
+            "    .forEach(fieldRef -> {\n" +
+            "        Field field = fieldRef.getField();\n" +
+            "        String newPropName = \"\".equals(propName) ? field.getName() : propName + \".\" + field.getName();\n" +
+            "        if (String.class.equals(field.getType())) {\n" +
+            "            fieldRef.set("  + _fqn + "." + FIELD_RESOURCE_BUNDLE + ".getString(newPropName));\n" +
+            "        } else {\n" +
+            "            try {\n" +
+            "                resetFields(field.get(object), newPropName);\n" +
+            "            } catch (IllegalAccessException e) {\n" +
+            "                throw new RuntimeException(e);\n" +
+            "            }\n" +
+            "        }\n" +
+            "    });\n"
         ));
   }
 }
