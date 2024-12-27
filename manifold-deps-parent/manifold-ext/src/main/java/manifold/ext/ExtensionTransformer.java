@@ -3220,12 +3220,12 @@ public class ExtensionTransformer extends TreeTranslator
     return sym.owner != null && sym.owner.type == _tp.getSymtab().objectType;
   }
 
-  private JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )
+  public static JCExpression memberAccess( TreeMaker make, JavacElements javacElems, String path )
   {
     return memberAccess( make, javacElems, path.split( "\\." ) );
   }
 
-  private JCExpression memberAccess( TreeMaker make, JavacElements node, String... components )
+  public static JCExpression memberAccess( TreeMaker make, JavacElements node, String... components )
   {
     JCExpression expr = make.Ident( node.getName( components[0] ) );
     for( int i = 1; i < components.length; i++ )

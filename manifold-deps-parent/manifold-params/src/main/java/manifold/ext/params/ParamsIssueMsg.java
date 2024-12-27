@@ -20,5 +20,5 @@ import manifold.api.util.IssueMsg;
 
 public class ParamsIssueMsg
 {
-  public static final IssueMsg MSG_NO_INTERFACES = new IssueMsg( "'{0}' does not have interfaces in common with '{1}'" );
+  public static final IssueMsg MSG_EXPAND_NO_OPTIONAL_PARAMS = new IssueMsg( "'@spread' requires one or more optional parameters in the method signature" );
 }

@@ -17,28 +17,37 @@
 package manifold.ext.params;
 
 import junit.framework.TestCase;
+import manifold.ext.params.rt.api.spread;
+import manifold.ext.rt.api.auto;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 
 
 public class ScratchTest extends TestCase
 {
   public void testBasic()
   {
-    String res = optionalParams( (name:"Scott") );
+    String res = optionalParams1( name:"Scott" );
+    assertEquals( "Scott,100", res );
+    res = optionalParams1((name:"Scott"));
     assertEquals( "Scott,100", res );
   }
 
   public void testOverloadGenericInferenceReturn()
   {
-    String res = optionalParams( (id:"Scott", address:"FL") );
+    String res = optionalParams( id:"Scott", address:"FL" );
     assertEquals( "Scott,FL,null", res );
 
-    res = optionalParams( (address:"FL") );
+    res = optionalParams( address:"FL" );
     assertEquals( "null,FL,null", res );
 
-    res = optionalParams( (id:"Scott", address:"FL", phone:"555-555-5555") );
+    res = optionalParams( id:"Scott", address:"FL", phone:"555-555-5555" );
     assertEquals( "Scott,FL,555-555-5555", res );
+    res = optionalParams((id:"Scott", address:"FL", phone:"555-555-5555"));
+    assertEquals( "Scott,FL,555-555-5555", res );
+    res = optionalParams2((null, address:"FL", phone:"555-555-5555"));
+    assertEquals( "null,FL,555-555-5555", res );
   }
 
   public void testGenericClass()
@@ -58,7 +67,7 @@ public class ScratchTest extends TestCase
 
   public void testNull()
   {
-    optionalParams( (name:null) );
+    optionalParams1( name:null );
   }
 
   public void testInterface()
@@ -86,15 +95,47 @@ public class ScratchTest extends TestCase
 
   public void testConstructor()
   {
-    CtorTest<BigDecimal> result = new CtorTest<>( (t:new BigDecimal( 9 )) );
-//    new CtorTest<>( new CtorTest.$constructor_t_foo<>(new BigDecimal( 9 ), "hi") );
-    CtorTest<String> str = new CtorTest<>((foo:"foo"));
+    long l = new CtorTest<>( (t:new BigDecimal( 9 )) ).getT().longValueExact();
+    assertEquals( 9L, l );
+
+    int i = new CtorTest<>( t:9 ).getT();
+    assertEquals( 9, i );
+
+    auto result = new CtorTest<>( foo:"bar", t:8 );
+    int result_t = result.getT();
+    assertEquals( 8, result_t );
+    assertEquals( "bar", result.getFoo() );
+
+    //    auto strr = new CtorTest<>(t:5, fooo:"foo");
+    CtorTest<String> str = new CtorTest<>(foo:"foo");
     assertEquals( "foo", str.getFoo() );
+
     str = new CtorTest<>(());
     assertEquals( "hi", str.getFoo() );
+
+    str = new CtorTest<>();
+    assertEquals( "hi", str.getFoo() );
+    
+    str = new CtorTest<>(5);
+    assertEquals( "sb", str.getFoo() );
   }
 
-  private String optionalParams( String name, int age =100 )
+  public void testExpand()
+  {
+    String result = optionalParams( "111 main st." );
+    assertEquals( "null,111 main st.,null", result );
+
+    result = optionalParams( "myId", "111 main st." );
+    assertEquals( "myId,111 main st.,null", result );
+
+    result = optionalParams( "myId", "111 main st.", "555-5555" );
+    assertEquals( "myId,111 main st.,555-5555", result );
+
+    CtorTest<String> ctorTest = new CtorTest<>();
+    assertEquals( "hi", ctorTest.getFoo() );
+  }
+
+  private String optionalParams1( String name, int age =100 )
   {
     return name + "," + age;
   }
@@ -102,6 +143,11 @@ public class ScratchTest extends TestCase
   private <E extends CharSequence> E optionalParams( E id =null, String address, String phone =null )
   {
     return (E)(id + "," + address + "," + phone);
+  }
+
+  private String optionalParams2(LocalTime time = LocalTime.now(), String address, String phone = null )
+  {
+    return (time + "," + address + "," + phone);
   }
 
   static class Foo<T extends CharSequence>
@@ -159,7 +205,7 @@ public class ScratchTest extends TestCase
     private final T _t;
     private final String _foo;
 
-    CtorTest( T t, String foo ="hi" )
+    CtorTest( T t, String foo ="hello" )
     {
       _t = t;
       _foo = foo;
@@ -169,6 +215,13 @@ public class ScratchTest extends TestCase
     {
       _t = null;
       _foo = foo;
+    }
+
+    @spread
+    CtorTest( int i, StringBuilder sb = new StringBuilder("sb") )
+    {
+      _t = null;
+      _foo = sb.toString();
     }
 
     T getT()

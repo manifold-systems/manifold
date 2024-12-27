@@ -1310,6 +1310,11 @@ public interface ManAttr
   //   foo.doit((x:8, y:9, z:10))  or
   //   FooType.doit((x:8, y:9, z:10))  or
   //   new Foo((x:8, y:9, z:10))
+  //   etc.
+  //
+  //  validates the tuple call and replaces it with a `new <params-class>(...)` expression, which matches the corresponding
+  //  params-method having the params-class its single parameter, where the params class' fields and ctor params mirror
+  //  the method having at least one optional parameter.
   //
   default void handleTupleAsNamedArgs( JCExpression tree )
   {
@@ -1359,13 +1364,13 @@ public interface ManAttr
       return;
     }
 
-    Map<String, JCExpression> labeledArgs = new LinkedHashMap<>();
-    ArrayList<JCExpression> nonlabeledArgs = new ArrayList<>();
+    Map<String, JCExpression> namedArgs = new LinkedHashMap<>();
+    ArrayList<JCExpression> unnamedArgs = new ArrayList<>();
     for( int i = 0, argsSize = tupleExpr.args.size(); i < argsSize; i++ )
     {
       JCTree.JCExpression arg = tupleExpr.args.get( i );
 
-      boolean labeledArg = false;
+      boolean namedArg = false;
       if( arg instanceof JCTree.JCMethodInvocation &&
         ((JCTree.JCMethodInvocation)arg).meth instanceof JCTree.JCIdent )
       {
@@ -1377,8 +1382,8 @@ public interface ManAttr
           if( ++i < tupleExpr.args.size() )
           {
             arg = tupleExpr.args.get( i );
-            labeledArgs.put( name, arg );
-            labeledArg = true;
+            namedArgs.put( name, arg );
+            namedArg = true;
           }
           else
           {
@@ -1387,13 +1392,13 @@ public interface ManAttr
         }
       }
 
-      if( !labeledArg )
+      if( !namedArg )
       {
-        if( !labeledArgs.isEmpty() )
+        if( !namedArgs.isEmpty() )
         {
-          getLogger().error( arg.pos, "proc.messager", "Non-named arguments must appear before named arguments" );
+          getLogger().error( arg.pos, "proc.messager", "Positional arguments must appear before named arguments" );
         }
-        nonlabeledArgs.add( arg );
+        unnamedArgs.add( arg );
       }
     }
 
@@ -1405,18 +1410,24 @@ public interface ManAttr
     Iterable<Symbol.ClassSymbol> paramsClasses = getParamsClasses( receiverType, methodName );
 
 
+    boolean errant;
+    String missingRequiredParam = null;
     nextParamsClass:
-    for( Symbol.ClassSymbol paramsClass : paramsClasses )
+    for( Iterator<Symbol.ClassSymbol> iterator = paramsClasses.iterator(); iterator.hasNext(); )
     {
-      Map<String, JCExpression> copyLabeledArgs = new LinkedHashMap<>( labeledArgs );
-      ArrayList<JCExpression> copyNonlabeledArgs = new ArrayList<>( nonlabeledArgs );
+      errant = false;
+
+      Symbol.ClassSymbol paramsClass = iterator.next();
+
+      Map<String, JCExpression> namedArgsCopy = new LinkedHashMap<>( namedArgs );
+      ArrayList<JCExpression> unnamedArgsCopy = new ArrayList<>( unnamedArgs );
 
       Iterator<Symbol.MethodSymbol> ctors = (Iterator)IDynamicJdk.instance().getMembers( paramsClass, Symbol::isConstructor ).iterator();
       if( ctors.hasNext() )
       {
         Symbol.MethodSymbol ctor = ctors.next();
         List<String> paramsInOrder = getParamNames( paramsClass.name.toString(), true );
-        if( paramsInOrder.containsAll( copyLabeledArgs.keySet() ) )
+        if( paramsInOrder.containsAll( namedArgsCopy.keySet() ) )
         {
           ArrayList<JCExpression> args = new ArrayList<>();
           boolean optional = false;
@@ -1457,59 +1468,90 @@ public interface ManAttr
               }
             }
 
-            if( !copyNonlabeledArgs.isEmpty() )
+            JCExpression expr = unnamedArgsCopy.isEmpty()
+              ? namedArgsCopy.remove( paramName )
+              : unnamedArgsCopy.remove( 0 );
+
+            if( optional )
             {
-              args.add( copyNonlabeledArgs.remove( 0 ) );
+              args.add( make.Literal( expr != null ) );
+              args.add( expr == null ? makeEmptyValue( param, make ) : expr );
+              optional = false;
+            }
+            else if( expr != null )
+            {
+              args.add( expr );
             }
             else
             {
-              JCExpression expr = copyLabeledArgs.remove( paramName );
-              if( optional )
-              {
-                args.add( make.Literal( expr != null ) );
-                args.add( expr == null ? makeEmptyValue( param, make ) : expr );
-                optional = false;
-              }
-              else if( expr != null )
-              {
-                args.add( expr );
-              }
-              else
-              {
-                // missing required arg, try next paramsClass
-                break nextParamsClass;
-              }
+              // missing required arg, try next paramsClass
+              missingRequiredParam = paramName;
+              continue nextParamsClass;
             }
           }
 
-          if( !copyNonlabeledArgs.isEmpty() )
+          missingRequiredParam = null;
+
+          if( !unnamedArgsCopy.isEmpty() )
           {
             // add remaining to trigger compile error
-            args.addAll( copyNonlabeledArgs );
+            args.addAll( unnamedArgsCopy );
+            errant = true;
           }
-          else if( !copyLabeledArgs.isEmpty() )
+          else if( !namedArgsCopy.isEmpty() )
           {
             // add remaining to trigger compile error
-            args.addAll( copyLabeledArgs.values() );
+            args.addAll( namedArgsCopy.values() );
+            errant = true;
           }
 
-          JCTree.JCExpression paramsClassExpr = paramsClass.getTypeParameters().isEmpty()
-            ? make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name )
-            : make.TypeApply( make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name ), List.nil() );
-          List<JCExpression> newCarrier = List.of( make.NewClass( null, List.nil(), paramsClassExpr, List.from( args ), null ) );
-          if( tree instanceof JCTree.JCMethodInvocation )
+          if( !errant || !iterator.hasNext() )
           {
-            ((JCTree.JCMethodInvocation)tree).args = newCarrier;
+            //todo: for the errant condition, instead of settling with the the last one, store these and choose the best one
+            JCExpression paramsClassExpr = paramsClass.getTypeParameters().isEmpty()
+              ? make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name )
+              : make.TypeApply( make.Select( make.Ident( receiverType.tsym.name ), paramsClass.name ), List.nil() );
+            List<JCExpression> newCarrier = List.of( make.NewClass( null, List.nil(), paramsClassExpr, List.from( args ), null ) );
+            if( tree instanceof JCTree.JCMethodInvocation )
+            {
+              ((JCTree.JCMethodInvocation)tree).args = newCarrier;
+            }
+            else
+            {
+              ((JCTree.JCNewClass)tree).args = newCarrier;
+            }
+            break;
           }
-          else
-          {
-            ((JCTree.JCNewClass)tree).args = newCarrier;
-          }
-          break;
+        }
+        else if( !iterator.hasNext() )
+        {
+          putErrorOnBestMatchingMethod( tree.pos, namedArgsCopy, paramsClasses );
         }
       }
     }
+    if( missingRequiredParam != null )
+    {
+      getLogger().error( tree.pos, "proc.messager", "missing required argument: " + missingRequiredParam );
+    }
   }
+
+  default void putErrorOnBestMatchingMethod( int pos, Map<String, JCExpression> namedArgsCopy, Iterable<Symbol.ClassSymbol> paramsClasses )
+  {
+    java.util.List<String> badNamedArgs = Collections.emptyList();
+    for( Symbol.ClassSymbol paramsClass: paramsClasses )
+    {
+      java.util.List<String> paramsInOrder = getParamNames( paramsClass.name.toString(), true );
+      java.util.List<String> candidate = namedArgsCopy.keySet().stream()
+        .filter( e -> !paramsInOrder.contains( e ) )
+        .collect( Collectors.toList() );
+      if( badNamedArgs.isEmpty() || candidate.size() < badNamedArgs.size() )
+      {
+        badNamedArgs = candidate;
+      }
+    }
+    getLogger().error( pos, "proc.messager", "No matching parameters for named argument[s]: '" + String.join( "', '", badNamedArgs ) + "'" );
+  }
+
 
   default List<String> getParamNames( String paramsClass, boolean removeOpt$ )
   {
@@ -1681,7 +1723,7 @@ public interface ManAttr
     seen.add( receiverType );
 
     Iterable<Symbol.ClassSymbol> paramsClasses = (Iterable)IDynamicJdk.instance().getMembers( (Symbol.ClassSymbol)receiverType.tsym,
-      m -> m instanceof Symbol.ClassSymbol && m.name.toString().startsWith( "$" + methodName ) );
+      m -> m instanceof Symbol.ClassSymbol && m.name.toString().startsWith( "$" + methodName + "_" ) );
     List<Symbol.ClassSymbol> result = List.from( paramsClasses );
 
     Type superclass = ((Symbol.ClassSymbol)receiverType.tsym).getSuperclass();
