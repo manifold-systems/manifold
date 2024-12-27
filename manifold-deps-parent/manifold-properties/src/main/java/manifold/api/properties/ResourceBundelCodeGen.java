@@ -46,6 +46,7 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
   {
     srcClass.imports( ResourceBundle.class, Locale.class, Field.class, Modifier.class , ReflectUtil.class);
 
+    // Initialize the ResourceBundle with the default locale.
     srcClass.addField(
         new SrcField( srcClass )
             .name( FIELD_RESOURCE_BUNDLE )
@@ -53,6 +54,7 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
             .type( ResourceBundle.class )
             .initializer("ResourceBundle.getBundle(\"" + _fqn + "\", Locale.ROOT);" ) );
 
+    // Method to set the locale
     srcClass.addMethod(
         new SrcMethod(srcClass)
             .name("setLocale")
@@ -63,6 +65,7 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
                 .addStatement("resetFields(" + _fqn + ".class, \"\");")
             ));
 
+    // This method uses reflection to update all field values to the new one whenever the locale changes.
     srcClass.addMethod(new SrcMethod(srcClass)
         .name("resetFields")
         .modifiers( Modifier.PRIVATE | Modifier.STATIC)

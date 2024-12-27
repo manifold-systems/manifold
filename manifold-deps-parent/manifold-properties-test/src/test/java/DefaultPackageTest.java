@@ -23,7 +23,7 @@ class DefaultPackageTest
   @Test
   void testDefaultPackage()
   {
-    assertThat( DefaultPackageProps.Value1.toString() ).isEqualTo( "value1" );
+    assertThat( DefaultPackageProps.Value1 ).hasToString( "value1" );
     assertThat( DefaultPackageProps.Value1.Sub ).isEqualTo( "sub" );
   }
 }

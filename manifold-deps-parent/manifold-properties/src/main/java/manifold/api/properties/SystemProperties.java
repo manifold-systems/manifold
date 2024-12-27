@@ -37,7 +37,7 @@ public class SystemProperties
 {
   private static final String FQN = "gw.lang.SystemProperties";
 
-  public static Map<String, LocklessLazyVar<Model>> make( IManifoldHost host)
+  public static Map<String, LocklessLazyVar<Model>> make( IManifoldHost host )
   {
     Map<String, LocklessLazyVar<Model>> systemProps = new HashMap<>( 2 );
     systemProps.put( FQN,
