@@ -77,7 +77,7 @@ class PropertiesCodeGen
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
 
-    addExtraFields( srcClass, _model );
+    extendSrcClass( srcClass, _model );
 
     return make( srcClass, _model );
   }
@@ -99,7 +99,7 @@ class PropertiesCodeGen
         .initializer( getFile() ) );
   }
 
-  protected void addExtraFields(SrcClass srcClass, FqnCache<SrcExpression> model) {}
+  protected void extendSrcClass(SrcClass srcClass, FqnCache<SrcExpression> model) {}
 
   private SrcClass make( SrcClass srcClass, FqnCacheNode<SrcExpression> node )
   {

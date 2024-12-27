@@ -42,7 +42,7 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
     super(model, file, fqn);
   }
 
-  protected void addExtraFields( SrcClass srcClass, FqnCache<SrcExpression> model )
+  protected void extendSrcClass( SrcClass srcClass, FqnCache<SrcExpression> model )
   {
     srcClass.imports( ResourceBundle.class, Locale.class, Field.class, Modifier.class , ReflectUtil.class);
 
