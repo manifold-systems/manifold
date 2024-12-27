@@ -35,11 +35,6 @@ public class ResourceBundleFiles {
         resourceBundleFileMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 
-    public void forEachDefaultFile(Consumer<IFile> defaultFileConsumer) {
-        resourceBundleFileMap.forEach(
-            (k1, v1) -> v1.forEach((k2, v2) -> defaultFileConsumer.accept(v2.get(null).get(null).get(null))));
-    }
-
     public Type getType(String topLevelFqn) {
         FqnBundle fqnBundle = new FqnBundle(topLevelFqn);
         Map<String, Map<String, Map<String, Map<String, IFile>>>> bundleMap =
@@ -70,7 +65,6 @@ public class ResourceBundleFiles {
     public enum Type {
         DEFAULT, SPECIFIC, NONE;
     }
-
 
     private static class FqnBundle {
         private final String parentFqn;

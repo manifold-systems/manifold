@@ -102,8 +102,8 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
       String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
-    Type type = resourceBundleFiles.getType(topLevelFqn);
-    switch(type){
+    Type resourceBundleType = resourceBundleFiles.getType(topLevelFqn);
+    switch(resourceBundleType){
       case DEFAULT:
         return new ResourceBundelCodeGen( model.getCache(), files.isEmpty() ? null : files.get(0), topLevelFqn)
             .make(getModule(), location, errorHandler)
