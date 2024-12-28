@@ -41,7 +41,6 @@ import manifold.internal.javac.TypeProcessor;
 
 public class ResourceBundleTemplateProcessor extends TreeTranslator implements ICompilerComponent, TaskListener
 {
-
   private Context _context;
   private TaskEvent _taskEvent;
 
@@ -49,9 +48,7 @@ public class ResourceBundleTemplateProcessor extends TreeTranslator implements I
   public void init( BasicJavacTask javacTask, TypeProcessor typeProcessor )
   {
     _context = javacTask.getContext();
-
     javacTask.addTaskListener( this );
-
   }
 
   @Override
@@ -68,9 +65,6 @@ public class ResourceBundleTemplateProcessor extends TreeTranslator implements I
       return;
     }
     try {
-      if (e.getCompilationUnit() == null) {
-        return;
-      }
       _taskEvent = e;
       ensureInitialized( _taskEvent );
       for ( Tree tree : e.getCompilationUnit().getTypeDecls() ) {
@@ -106,7 +100,6 @@ public class ResourceBundleTemplateProcessor extends TreeTranslator implements I
     public JCExpression replaceWithGetter( JCFieldAccess tree ) {
       // replace foo.bar with foo.getBar()
       MethodSymbol getMethod = resolveGetMethod( tree.selected.type, tree.sym );
-
       TreeMaker make = getTreeMaker();
       JCExpression receiver = tree.selected;
       JCMethodInvocation methodCall = make.Apply( List.nil(), IDynamicJdk.instance().Select(make, receiver, getMethod )
@@ -116,10 +109,6 @@ public class ResourceBundleTemplateProcessor extends TreeTranslator implements I
 
     private MethodSymbol resolveGetMethod( Type type, Symbol field ) {
       Types types = getTypes();
-
-      if ( type instanceof Type.TypeVar ) {
-        type = types.erasure( type );
-      }
       String getterName =  ResourceBundelCodeGen.createGetterForPropertyName( field.getSimpleName().toString() );
       Type fieldType = types.memberType( type, field ); // the type of the field as a member of `type` e.g., a field  of type List<T> inside Bar<T> as seen from class Foo that extends Bar<String> ...
       return ManAttr.getMethodSymbol( types, type, fieldType, getterName, (ClassSymbol)type.tsym, 0 );
@@ -127,7 +116,6 @@ public class ResourceBundleTemplateProcessor extends TreeTranslator implements I
 
     private JCTree.JCMethodInvocation configMethod(JCTree.JCExpression tree, JCTree.JCMethodInvocation methodTree ) {
       methodTree.setPos( tree.pos );
-
       // Concrete type set in attr
       methodTree.type = tree.type;
       return methodTree;
