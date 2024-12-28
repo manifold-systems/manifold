@@ -23,26 +23,28 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.platform.commons.util.ReflectionUtils;
-import resourcebundle.messages;
-import resourcebundle.messages2;
-import resourcebundle.messages3;
+import resourcebundle.Message;
+import resourcebundle.Message2;
+import resourcebundle.Message3;
 
 class ResourceBundleTest
 {
 
   /**
-   * Tests the default values for the message bundle 'resourcebundle.messages' when the default locale is used.
+   * Tests the default values for the message bundle 'resourcebundle.Messages' when the default locale is used.
    */
   @Test
   void testMessagesDefault()
   {
-    assertThat(messages.foo).hasToString("foo");
-    assertThat(messages.App.Hello).isEqualTo("Hello");
-    assertThat(messages.foo.bar.test).isEqualTo("bar");
+    assertThat(Message.foo).hasToString("foo");
+    assertThat(Message.App.Hello).isEqualTo("Hello");
+    assertThat(Message.foo.bar.test).isEqualTo("bar");
+    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar");
+    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar");
   }
 
   /**
-   * Tests the localized values for the message bundle 'resourcebundle.messages'.
+   * Tests the localized values for the message bundle 'resourcebundle.Messages'.
    * Verifies that the values are correctly localized based on the provided language tag.
    *
    * @param languageTag The language tag to test.
@@ -51,11 +53,13 @@ class ResourceBundleTest
   @ValueSource(strings = {"nl", "nl-BE", "nl-NL", "fr-FR", "fr-FR-POSIX"})
   void testMessagesLocalized(String languageTag)
   {
-    messages.setLocale(Locale.forLanguageTag(languageTag));
+    Message.setLocale(Locale.forLanguageTag(languageTag));
 
-    assertThat(messages.foo).hasToString("foo_" + languageTag);
-    assertThat(messages.App.Hello).isEqualTo("Hello_" + languageTag);
-    assertThat(messages.foo.bar.test).isEqualTo("bar_" + languageTag);
+    assertThat(Message.foo).hasToString("foo_" + languageTag);
+    assertThat(Message.App.Hello).isEqualTo("Hello_" + languageTag);
+    assertThat(Message.foo.bar.test).isEqualTo("bar_" + languageTag);
+    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar_" + languageTag);
+    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar_" + languageTag);
   }
 
   /**
@@ -66,11 +70,13 @@ class ResourceBundleTest
   @Test
   void testMessagesLocaleDoesNotExistVariant()
   {
-    messages.setLocale(Locale.forLanguageTag("nl-BE-POSIX"));
+    Message.setLocale(Locale.forLanguageTag("nl-BE-POSIX"));
 
-    assertThat(messages.foo).hasToString("foo_nl-BE");
-    assertThat(messages.App.Hello).isEqualTo("Hello_nl-BE");
-    assertThat(messages.foo.bar.test).isEqualTo("bar_nl-BE");
+    assertThat(Message.foo).hasToString("foo_nl-BE");
+    assertThat(Message.App.Hello).isEqualTo("Hello_nl-BE");
+    assertThat(Message.foo.bar.test).isEqualTo("bar_nl-BE");
+    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar_nl-BE");
+    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar_nl-BE");
   }
 
   /**
@@ -79,37 +85,41 @@ class ResourceBundleTest
    * */
   void testMessagesLocaleDoesNotExistLocale()
   {
-    messages.setLocale(Locale.forLanguageTag("fr"));
+    Message.setLocale(Locale.forLanguageTag("fr"));
 
-    assertThat(messages.foo).hasToString("foo");
-    assertThat(messages.App.Hello).isEqualTo("Hello");
-    assertThat(messages.foo.bar.test).isEqualTo("bar");
+    assertThat(Message.foo).hasToString("foo");
+    assertThat(Message.App.Hello).isEqualTo("Hello");
+    assertThat(Message.foo.bar.test).isEqualTo("bar");
+    assertThat(Message.getValueByName("foo.bar.test")).isEqualTo("bar");
+    assertThat(Message.foo.getValueByName("bar.test")).isEqualTo("bar");
   }
 
   /**
-   * Tests the default values for another message bundle ('resourcebundle.messages2').
+   * Tests the default values for another message bundle ('resourcebundle.Message2').
    * Verifies that the default values are as expected when using the second message bundle.
    */
   @Test
   void testMessagesDefaultSecondMessageBundle()
   {
-    assertThat(messages2.m2.foo).hasToString("foo");
-    assertThat(messages2.m2.App.Hello).isEqualTo("Hello");
-    assertThat(messages2.m2.foo.bar.test).isEqualTo("bar");
+    assertThat(Message2.m2.foo).hasToString("foo");
+    assertThat(Message2.m2.App.Hello).isEqualTo("Hello");
+    assertThat(Message2.m2.foo.bar.test).isEqualTo("bar");
   }
 
   /**
-   * Tests the values for a message bundle that has only the default locale available ('resourcebundle.messages3').
+   * Tests the values for a message bundle that has only the default locale available ('resourcebundle.Message3').
    * This uses the normal properties logic.
    */
   @Test
   void testMessagesWithOnlyDefaultMessageBundleAvailable()
   {
-    assertThat(messages3.m3.foo).hasToString("foo");
-    assertThat(messages3.m3.App.Hello).isEqualTo("Hello");
-    assertThat(messages3.m3.foo.bar.test).isEqualTo("bar");
+    assertThat(Message3.m3.foo).hasToString("foo");
+    assertThat(Message3.m3.App.Hello).isEqualTo("Hello");
+    assertThat(Message3.m3.foo.bar.test).isEqualTo("bar");
+    assertThat(Message3.m3.getValueByName("foo.bar.test")).isEqualTo("bar");
+    assertThat(Message3.m3.foo.getValueByName("bar.test")).isEqualTo("bar");
 
     // verifies that 'setLocale' method does not exist
-    assertThat(ReflectionUtils.findMethod(messages3.class, "setLocale", Locale.class)).isEmpty();
+    assertThat(ReflectionUtils.findMethod(Message3.class, "setLocale", Locale.class)).isEmpty();
   }
 }

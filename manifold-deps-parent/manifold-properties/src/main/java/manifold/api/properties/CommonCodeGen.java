@@ -32,11 +32,13 @@ import manifold.api.gen.SrcClass;
 import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcIdentifier;
+import manifold.api.gen.SrcLinkedClass;
 import manifold.api.gen.SrcMemberAccessExpression;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcMethodCallExpression;
 import manifold.api.gen.SrcParameter;
 import manifold.api.gen.SrcRawExpression;
+import manifold.api.gen.SrcRawStatement;
 import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcSwitchCase;
@@ -49,10 +51,12 @@ import manifold.rt.api.SourcePosition;
 import manifold.rt.api.util.StreamUtil;
 
 import static java.nio.charset.StandardCharsets.*;
+import static manifold.api.gen.AbstractSrcClass.Kind.*;
 
 abstract class CommonCodeGen
 {
   private static final String FIELD_FILE_URL = "__FILE_URL";
+  private static final String PROPERTIES_OBJECT_INTERFACE_NAME = "_PropertiesObjectIntf";
   protected final String _fqn;
   protected final String _content;
   protected final FqnCache<SrcRawExpression> _model;
@@ -72,6 +76,7 @@ abstract class CommonCodeGen
         .imports( SourcePosition.class );
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
+    addObjectInterface( srcClass );
 
     extendSrcClass( srcClass, _model );
 
@@ -95,10 +100,23 @@ abstract class CommonCodeGen
             .initializer( getFile() ) );
   }
 
+  private void addObjectInterface( SrcClass srcClass ) {
+    srcClass.addInnerClass(
+        new SrcLinkedClass( PROPERTIES_OBJECT_INTERFACE_NAME, srcClass, Interface )
+            .modifiers( Modifier.PRIVATE )
+            .addMethod( new SrcMethod( srcClass )
+                .returns( "String" )
+                .name("getValueByName" )
+                .addParam("propertyName", "String" ) ) );
+  }
+
   protected abstract void extendSrcClass(SrcClass srcClass, FqnCache<SrcRawExpression> model);
 
   private SrcClass make( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
+    if( srcClass.getEnclosingClass() != null ){
+        srcClass.addInterface( PROPERTIES_OBJECT_INTERFACE_NAME );
+    }
     for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
       SrcType type = new SrcType(childNode.isLeaf() ? "String" : childNode.getName());
@@ -153,6 +171,7 @@ abstract class CommonCodeGen
     if( !node.isLeaf() )
     {
       addGetValueByNameMethod( srcClass, node );
+      addGetObjectMethod( srcClass, node );
 
       SrcRawExpression userData = node.getUserData();
       addRegularGetter( srcClass, node );
@@ -187,13 +206,22 @@ abstract class CommonCodeGen
             .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
             .returns( new SrcType( "String" ) )
             .addParam( new SrcParameter( "propertyName" ).type( "String" ) )
-            .body(
-                new SrcStatementBlock()
-                    .addStatement( makeGetValueBynameSwitch( node ) )
-                    .addStatement( new SrcReturnStatement( String.class, null ) )
-            )
+            .body( new SrcStatementBlock()
+                .addStatement( makeGetValueBynameSwitch( node ) ) )
     );
+  }
 
+  private void addGetObjectMethod( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
+  {
+    srcClass.addMethod(
+        new SrcMethod( srcClass )
+            .name( "getObject" )
+            .modifiers( Modifier.PRIVATE | (isRootProperty( node ) ? Modifier.STATIC : 0) )
+            .returns( new SrcType( PROPERTIES_OBJECT_INTERFACE_NAME ) )
+            .addParam( new SrcParameter( "propertyName" ).type( "String" ) )
+            .body( new SrcStatementBlock()
+                .addStatement( makeGetObjectSwitch( node ) ) )
+    );
   }
 
   protected boolean isRootProperty( FqnCacheNode<SrcRawExpression> node )
@@ -212,6 +240,32 @@ abstract class CommonCodeGen
               .statement( childNode.getUserData() == null ? new SrcReturnStatement( String.class, null) :
                   new SrcReturnStatement( childNode.getUserData() ) ) );
     }
+    stmt.defaultCase( new SrcRawStatement().rawText(
+      "String[] split = propertyName.split(\"\\\\.\", 2);"
+          + "if (split.length == 2) {"
+          + "  " + PROPERTIES_OBJECT_INTERFACE_NAME + " object = getObject(split[0]);"
+          + "  if (object != null) {"
+          + "    return object.getValueByName(split[1]);"
+          + "  }"
+          + "  return null;"
+          + "}"
+          + "return null;"));
+    return stmt;
+  }
+
+  private SrcSwitchStatement makeGetObjectSwitch( FqnCacheNode<SrcRawExpression> node )
+  {
+    SrcSwitchStatement stmt = new SrcSwitchStatement();
+    stmt.expr( new SrcIdentifier( "propertyName" ) );
+    for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
+    {
+      stmt.addCase(
+          new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
+              .statement( childNode.getUserData() == null || !childNode.getChildren().isEmpty() ?
+                  new SrcReturnStatement( Object.class, childNode.getName() ) :
+                  new SrcReturnStatement( Object.class, null) ) );
+    }
+    stmt.defaultCase( new SrcReturnStatement( String.class, null ) );
     return stmt;
   }
 

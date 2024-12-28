@@ -56,7 +56,7 @@ class ResourceBundelCodeGen extends CommonCodeGen
             .name( FIELD_RESOURCE_BUNDLE )
             .modifiers( Modifier.PRIVATE | Modifier.STATIC )
             .type( ResourceBundle.class )
-            .initializer("ResourceBundle.getBundle(\"" + _fqn + "\", Locale.ROOT);" ) );
+            .initializer("ResourceBundle.getBundle(\"" + _fqn + "\", Locale.ROOT)" ) );
 
     // Method to set the locale
     srcClass.addMethod(
