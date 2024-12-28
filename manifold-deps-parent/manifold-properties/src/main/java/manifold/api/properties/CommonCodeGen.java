@@ -53,7 +53,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  *
  */
-class PropertiesCodeGen
+class CommonCodeGen
 {
   private static final String FIELD_FILE_URL = "__FILE_URL";
   protected final String _fqn;
@@ -61,7 +61,7 @@ class PropertiesCodeGen
   private final FqnCache<SrcRawExpression> _model;
   private IFile _file;
 
-  PropertiesCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
+  CommonCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
   {
     _model = model;
     _file = file;
