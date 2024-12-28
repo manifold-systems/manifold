@@ -23,43 +23,40 @@ import java.net.MalformedURLException;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
 import manifold.api.fs.IFile;
 import manifold.api.fs.IFileFragment;
 import manifold.api.gen.SrcAnnotationExpression;
 import manifold.api.gen.SrcArgument;
 import manifold.api.gen.SrcClass;
-import manifold.api.gen.SrcRawExpression;
+import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcIdentifier;
 import manifold.api.gen.SrcMemberAccessExpression;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcMethodCallExpression;
 import manifold.api.gen.SrcParameter;
+import manifold.api.gen.SrcRawExpression;
 import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
 import manifold.api.gen.SrcSwitchCase;
 import manifold.api.gen.SrcSwitchStatement;
 import manifold.api.gen.SrcType;
 import manifold.api.host.IModule;
-import manifold.rt.api.SourcePosition;
-import manifold.rt.api.util.StreamUtil;
 import manifold.api.util.cache.FqnCache;
 import manifold.api.util.cache.FqnCacheNode;
+import manifold.rt.api.SourcePosition;
+import manifold.rt.api.util.StreamUtil;
 
+import static java.nio.charset.StandardCharsets.*;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-
-/**
- *
- */
-class CommonCodeGen
+abstract class CommonCodeGen
 {
   private static final String FIELD_FILE_URL = "__FILE_URL";
   protected final String _fqn;
-  private final String _content;
-  private final FqnCache<SrcRawExpression> _model;
-  private IFile _file;
+  protected final String _content;
+  protected final FqnCache<SrcRawExpression> _model;
+  protected IFile _file;
 
   CommonCodeGen( FqnCache<SrcRawExpression> model, IFile file, String fqn )
   {
@@ -72,7 +69,7 @@ class CommonCodeGen
   SrcClass make( IModule module, JavaFileManager.Location location, DiagnosticListener<JavaFileObject> errorHandler )
   {
     SrcClass srcClass = new SrcClass( _fqn, SrcClass.Kind.Class, location, module, errorHandler )
-      .imports( SourcePosition.class );
+        .imports( SourcePosition.class );
 
     addLocationAndPropertiesFileUrlField( srcClass, _model );
 
@@ -91,36 +88,35 @@ class CommonCodeGen
     srcClass.addAnnotation( addSourcePositionAnnotation( node ) );
 
     srcClass.addField(
-      new SrcField( srcClass )
-        .name( FIELD_FILE_URL )
-        .modifiers( Modifier.STATIC | Modifier.FINAL )
-        .type( "String" )
-        .initializer( getFile() ) );
+        new SrcField( srcClass )
+            .name( FIELD_FILE_URL )
+            .modifiers( Modifier.STATIC | Modifier.FINAL )
+            .type( "String" )
+            .initializer( getFile() ) );
   }
 
-  protected void extendSrcClass(SrcClass srcClass, FqnCache<SrcRawExpression> model) {}
+  protected abstract void extendSrcClass(SrcClass srcClass, FqnCache<SrcRawExpression> model);
 
   private SrcClass make( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
-      SrcType type = new SrcType( childNode.isLeaf() ? "String" : childNode.getName() );
-      SrcField propertyField = new SrcField( srcClass )
-        .name( childNode.getName() )
-        .modifiers( Modifier.PUBLIC | Modifier.FINAL | (srcClass.getEnclosingClass() == null ? Modifier.STATIC : 0) )
-        .type( type )
-        .initializer( childNode.isLeaf()
-                      ? childNode.getUserData()
-                      : new SrcRawExpression( "new " + type + "()" ) );
-      if( _file != null )
-      {
-        propertyField.addAnnotation( addSourcePositionAnnotation( childNode ) );
+      SrcType type = new SrcType(childNode.isLeaf() ? "String" : childNode.getName());
+      SrcField propertyField = new SrcField(srcClass)
+          .name(childNode.getName())
+          .modifiers(Modifier.PUBLIC | Modifier.FINAL | (srcClass.getEnclosingClass() == null ? Modifier.STATIC : 0))
+          .type(type)
+          .initializer(childNode.isLeaf()
+              ? createPropertyValueField( childNode )
+              : new SrcRawExpression("new " + type + "()"));
+      if (_file != null) {
+        propertyField.addAnnotation(addSourcePositionAnnotation(childNode));
       }
-      srcClass.addField( propertyField );
+      srcClass.addField(propertyField);
       if( !childNode.isLeaf() )
       {
         SrcClass innerSrcClass = new SrcClass( childNode.getName(), srcClass, SrcClass.Kind.Class )
-          .modifiers( Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL );
+            .modifiers( Modifier.PUBLIC | Modifier.STATIC | Modifier.FINAL );
         srcClass.addInnerClass( make( innerSrcClass, childNode ) );
       }
     }
@@ -128,6 +124,8 @@ class CommonCodeGen
 
     return srcClass;
   }
+
+  protected abstract SrcExpression createPropertyValueField( FqnCacheNode<SrcRawExpression> node );
 
   private SrcRawExpression getFile()
   {
@@ -144,10 +142,10 @@ class CommonCodeGen
   private SrcAnnotationExpression addSourcePositionAnnotation( FqnCacheNode<SrcRawExpression> node )
   {
     return new SrcAnnotationExpression( SourcePosition.class.getSimpleName() )
-      .addArgument( new SrcArgument( new SrcMemberAccessExpression( _fqn, FIELD_FILE_URL ) ).name( "url" ) )
-      .addArgument( "feature", new SrcType( "String" ), node.getName() )
-      .addArgument( "offset", int.class, findOffsetOf( node ) )
-      .addArgument( "length", int.class, node.getName() == null ? 0 : node.getName().length() );
+        .addArgument( new SrcArgument( new SrcMemberAccessExpression( _fqn, FIELD_FILE_URL ) ).name( "url" ) )
+        .addArgument( "feature", new SrcType( "String" ), node.getName() )
+        .addArgument( "offset", int.class, findOffsetOf( node ) )
+        .addArgument( "length", int.class, node.getName() == null ? 0 : node.getName().length() );
   }
 
   private void addMethods( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
@@ -157,6 +155,7 @@ class CommonCodeGen
       addGetValueByNameMethod( srcClass, node );
 
       SrcRawExpression userData = node.getUserData();
+      addRegularGetter( srcClass, node );
       if( userData != null )
       {
         addGetValueMethod( srcClass, node );
@@ -168,36 +167,36 @@ class CommonCodeGen
   private void addToString( SrcClass srcClass )
   {
     srcClass.addMethod(
-      new SrcMethod( srcClass )
-        .name( "toString" )
-        .modifiers( Modifier.PUBLIC )
-        .returns( new SrcType( "String" ) )
-        .body(
-          new SrcStatementBlock()
-            .addStatement(
-              new SrcReturnStatement( new SrcMethodCallExpression( "getValue" ) ) )
-        )
+        new SrcMethod( srcClass )
+            .name( "toString" )
+            .modifiers( Modifier.PUBLIC )
+            .returns( new SrcType( "String" ) )
+            .body(
+                new SrcStatementBlock()
+                    .addStatement(
+                        new SrcReturnStatement( new SrcMethodCallExpression( "getValue" ) ) )
+            )
     );
   }
 
   private void addGetValueByNameMethod( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     srcClass.addMethod(
-      new SrcMethod( srcClass )
-        .name( "getValueByName" )
-        .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
-        .returns( new SrcType( "String" ) )
-        .addParam( new SrcParameter( "propertyName" ).type( "String" ) )
-        .body(
-          new SrcStatementBlock()
-            .addStatement( makeGetValueBynameSwitch( node ) )
-            .addStatement( new SrcReturnStatement( String.class, null ) )
-        )
+        new SrcMethod( srcClass )
+            .name( "getValueByName" )
+            .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
+            .returns( new SrcType( "String" ) )
+            .addParam( new SrcParameter( "propertyName" ).type( "String" ) )
+            .body(
+                new SrcStatementBlock()
+                    .addStatement( makeGetValueBynameSwitch( node ) )
+                    .addStatement( new SrcReturnStatement( String.class, null ) )
+            )
     );
 
   }
 
-  private boolean isRootProperty( FqnCacheNode<SrcRawExpression> node )
+  protected boolean isRootProperty( FqnCacheNode<SrcRawExpression> node )
   {
     return node.getParent() == null;
   }
@@ -209,23 +208,25 @@ class CommonCodeGen
     for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
     {
       stmt.addCase(
-        new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
-          .statement( childNode.getUserData() == null ? new SrcReturnStatement( String.class, null) :
-              new SrcReturnStatement( childNode.getUserData() ) ) );
+          new SrcSwitchCase( new SrcType( "String" ), childNode.getName() )
+              .statement( childNode.getUserData() == null ? new SrcReturnStatement( String.class, null) :
+                  new SrcReturnStatement( childNode.getUserData() ) ) );
     }
     return stmt;
   }
 
+  protected abstract void addRegularGetter( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node );
+
   private void addGetValueMethod( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
   {
     srcClass.addMethod(
-      new SrcMethod( srcClass )
-        .name( "getValue" )
-        .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
-        .returns( new SrcType( "String" ) )
-        .body(
-          new SrcStatementBlock()
-            .addStatement( new SrcReturnStatement( node.getUserData() ) ) ) );
+        new SrcMethod( srcClass )
+            .name( "getValue" )
+            .modifiers( Modifier.PUBLIC | (isRootProperty( node ) ? Modifier.STATIC : 0) )
+            .returns( new SrcType( "String" ) )
+            .body(
+                new SrcStatementBlock()
+                    .addStatement( new SrcReturnStatement( node.getUserData() ) ) ) );
   }
 
   private int findOffsetOf( FqnCacheNode<SrcRawExpression> node )

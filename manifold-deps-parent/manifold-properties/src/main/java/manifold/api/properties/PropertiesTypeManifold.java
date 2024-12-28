@@ -24,6 +24,7 @@ import java.util.Set;
 import javax.tools.DiagnosticListener;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcRawExpression;
 import manifold.api.host.IModule;
@@ -37,7 +38,6 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
 {
   private static final Set<String> FILE_EXTENSIONS = Collections.singleton( "properties" );
 
-  private final ResourceBundleFiles resourceBundleFiles = new ResourceBundleFiles();
 
   public void init( IModule module )
   {
@@ -47,7 +47,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   private Model createModel(String _fqn, Set<IFile> files){
     return new Model(getModule().getHost(), _fqn, files ) {
       protected SrcRawExpression createExpression( String key, String value ){
-        return resourceBundleFiles.getType(_fqn) == Type.DEFAULT
+        return ResourceBundleFiles.getType(_fqn) == Type.DEFAULT
             ? new SrcRawExpression( ResourceBundelCodeGen.FIELD_RESOURCE_BUNDLE + ".getString(\"" + key + "\")")
             : super.createExpression(key, value);
       }
@@ -64,7 +64,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   public boolean handlesFile( IFile file )
   {
     if(handlesFileExtension( file.getExtension() ) ) {
-      getFqnForFile(file).ifPresent(fqn -> resourceBundleFiles.addFile(file, fqn));
+      getFqnForFile(file).ifPresent(fqn -> ResourceBundleFiles.addFile(file, fqn));
       return true;
     }
     return false;
@@ -73,7 +73,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
   @Override
   protected Map<String, LocklessLazyVar<Model>> getPeripheralTypes()
   {
-    resourceBundleFiles.removeSingleFileResourceBundles();
+    ResourceBundleFiles.removeSingleFileResourceBundles();
     return SystemProperties.make( getModule().getHost()  );
   }
 
@@ -99,7 +99,7 @@ public class PropertiesTypeManifold extends JavaTypeManifold<Model>
       String existing, Model model, DiagnosticListener<JavaFileObject> errorHandler )
   {
     List<IFile> files = findFilesForType( topLevelFqn );
-    Type resourceBundleType = resourceBundleFiles.getType(topLevelFqn);
+    Type resourceBundleType = ResourceBundleFiles.getType(topLevelFqn);
     switch(resourceBundleType){
       case DEFAULT:
         return new ResourceBundelCodeGen( model.getCache(), files.isEmpty() ? null : files.get(0), topLevelFqn)

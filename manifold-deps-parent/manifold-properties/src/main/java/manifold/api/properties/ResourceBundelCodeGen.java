@@ -23,17 +23,21 @@ import java.util.ResourceBundle;
 
 import manifold.api.fs.IFile;
 import manifold.api.gen.SrcClass;
+import manifold.api.gen.SrcExpression;
 import manifold.api.gen.SrcField;
 import manifold.api.gen.SrcMethod;
 import manifold.api.gen.SrcRawExpression;
+import manifold.api.gen.SrcReturnStatement;
 import manifold.api.gen.SrcStatementBlock;
+import manifold.api.gen.SrcType;
 import manifold.api.util.cache.FqnCache;
+import manifold.api.util.cache.FqnCacheNode;
 import manifold.util.ReflectUtil;
 
 /**
  *
  */
-class ResourceBundelCodeGen extends PropertiesCodeGen
+class ResourceBundelCodeGen extends CommonCodeGen
 {
   public static final String FIELD_RESOURCE_BUNDLE = "_resourceBundle";
 
@@ -62,29 +66,33 @@ class ResourceBundelCodeGen extends PropertiesCodeGen
             .addParam("locale", Locale.class)
             .body(new SrcStatementBlock()
                 .addStatement(FIELD_RESOURCE_BUNDLE + " = ResourceBundle.getBundle(\"" + _fqn + "\", locale);")
-                .addStatement("resetFields(" + _fqn + ".class, \"\");")
             ));
+  }
 
-    // This method uses reflection to update all field values to the new one whenever the locale changes.
-    srcClass.addMethod(new SrcMethod(srcClass)
-        .name("resetFields")
-        .modifiers( Modifier.PRIVATE | Modifier.STATIC)
-        .addParam("object", Object.class)
-        .addParam("propName", String.class)
-        .body("ReflectUtil.fields(object,fieldRef -> !fieldRef.getField().getName().startsWith(\"_\"))\n" +
-            "    .forEach(fieldRef -> {\n" +
-            "        Field field = fieldRef.getField();\n" +
-            "        String newPropName = \"\".equals(propName) ? field.getName() : propName + \".\" + field.getName();\n" +
-            "        if (String.class.equals(field.getType())) {\n" +
-            "            fieldRef.set("  + _fqn + "." + FIELD_RESOURCE_BUNDLE + ".getString(newPropName));\n" +
-            "        } else {\n" +
-            "            try {\n" +
-            "                resetFields(field.get(object), newPropName);\n" +
-            "            } catch (IllegalAccessException e) {\n" +
-            "                throw new RuntimeException(e);\n" +
-            "            }\n" +
-            "        }\n" +
-            "    });\n"
-        ));
+  @Override
+  protected SrcExpression createPropertyValueField( FqnCacheNode<SrcRawExpression> node ) {
+    return new SrcRawExpression("\"\"");
+  }
+
+  @Override
+  protected void addRegularGetter( SrcClass srcClass, FqnCacheNode<SrcRawExpression> node )
+  {
+    for( FqnCacheNode<SrcRawExpression> childNode: node.getChildren() )
+    {
+      if (childNode.getUserData() != null && childNode.getChildren().isEmpty() ) {
+        srcClass.addMethod(
+            new SrcMethod(srcClass)
+                .name(createGetterForPropertyName(childNode.getName()))
+                .modifiers(Modifier.PUBLIC | (isRootProperty(childNode) ? Modifier.STATIC : 0))
+                .returns(new SrcType("String"))
+                .body(
+                    new SrcStatementBlock()
+                        .addStatement(new SrcReturnStatement(childNode.getUserData()))));
+      }
+    }
+  }
+
+  public static String createGetterForPropertyName(String name) {
+    return "get" + name.substring(0, 1).toUpperCase() + name.substring(1);
   }
 }

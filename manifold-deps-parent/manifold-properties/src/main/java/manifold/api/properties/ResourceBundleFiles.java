@@ -1,6 +1,20 @@
-package manifold.api.properties;
+/*
+ * Copyright (c) 2019 - Manifold Systems LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import static manifold.api.properties.ResourceBundleFiles.ResourceBundleProperties.*;
+package manifold.api.properties;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,19 +23,23 @@ import java.util.regex.Pattern;
 
 import manifold.api.fs.IFile;
 
+import static manifold.api.properties.ResourceBundleFiles.ResourceBundleProperties.*;
+
 public class ResourceBundleFiles {
     private static final Pattern RESOURCE_BUNDLE_PATTERN = Pattern.compile(
         String.format("^(?<%s>[a-zA-Z0-9_]+?)(_(?<%s>[a-zA-Z]{2,3})(_(?<%s>[a-zA-Z]{2})(_(?<%s>[a-zA-Z0-9_]+))?)?)?$",
             BUNDLE_NAME, LANGUAGE, COUNTRY, VARIANT));
-    private final Map<String, Map<String, Map<String, Map<String, Map<String, IFile>>>>> resourceBundleFileMap =
-        new HashMap<>();
+    private static final Map<String, Map<String, Map<String, Map<String, Map<String, IFile>>>>>
+        RESOURCE_BUNDLE_FILE_MAP = new HashMap<>();
 
-    public void addFile(IFile file, String fqn) {
+    private ResourceBundleFiles(){}
+
+    public static void addFile(IFile file, String fqn) {
         String bundelName = file.getBaseName();
         Matcher matcher = RESOURCE_BUNDLE_PATTERN.matcher(bundelName);
         if (matcher.matches()) {
             FqnBundle fqnBundle = new FqnBundle(fqn);
-            resourceBundleFileMap.computeIfAbsent(fqnBundle.parentFqn, k -> new HashMap<>())
+            RESOURCE_BUNDLE_FILE_MAP.computeIfAbsent(fqnBundle.parentFqn, k -> new HashMap<>())
                 .computeIfAbsent(fqnBundle.bundleName, k -> new HashMap<>())
                 .computeIfAbsent(fqnBundle.language, k -> new HashMap<>())
                 .computeIfAbsent(fqnBundle.country, k -> new HashMap<>())
@@ -29,15 +47,24 @@ public class ResourceBundleFiles {
         }
     }
 
-    public void removeSingleFileResourceBundles() {
-        resourceBundleFileMap.forEach((k, v) -> v.entrySet().removeIf(entry -> entry.getValue().size() == 1));
-        resourceBundleFileMap.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+    public static void removeSingleFileResourceBundles() {
+        RESOURCE_BUNDLE_FILE_MAP.forEach((k, v) -> v.entrySet().removeIf(entry -> entry.getValue().size() == 1));
+        RESOURCE_BUNDLE_FILE_MAP.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     }
 
-    public Type getType(String topLevelFqn) {
+    public static boolean isHandledResourceBundle(String name){
+        return RESOURCE_BUNDLE_FILE_MAP.entrySet().stream()
+            .anyMatch(entry ->
+                (name.startsWith(entry.getKey() + ".")
+                    && entry.getValue().containsKey(name.replaceFirst(Pattern.quote(entry.getKey() + "."), "")
+                    .split("\\.", 2)[0]))
+                    || (entry.getKey() == null && entry.getValue().containsKey(name.split("\\.", 2)[0])));
+    }
+
+    public static Type getType(String topLevelFqn) {
         FqnBundle fqnBundle = new FqnBundle(topLevelFqn);
         Map<String, Map<String, Map<String, Map<String, IFile>>>> bundleMap =
-            resourceBundleFileMap.get(fqnBundle.getParentFqn());
+            RESOURCE_BUNDLE_FILE_MAP.get(fqnBundle.getParentFqn());
         if (bundleMap == null) {
             return Type.NONE;
         }
