@@ -36,6 +36,7 @@ class ResourceBundleTest
   @Test
   void testMessagesDefault()
   {
+    assertThat(Message.getLocale()).isEqualTo(Locale.ROOT);
     assertThat(Message.foo).hasToString("foo");
     assertThat(Message.App.Hello).isEqualTo("Hello");
     assertThat(Message.foo.bar.test).isEqualTo("bar");
@@ -53,8 +54,10 @@ class ResourceBundleTest
   @ValueSource(strings = {"nl", "nl-BE", "nl-NL", "fr-FR", "fr-FR-POSIX"})
   void testMessagesLocalized(String languageTag)
   {
-    Message.setLocale(Locale.forLanguageTag(languageTag));
+    Locale locale = Locale.forLanguageTag(languageTag);
+    Message.setLocale(locale);
 
+    assertThat(Message.getLocale()).isEqualTo(locale);
     assertThat(Message.foo).hasToString("foo_" + languageTag);
     assertThat(Message.App.Hello).isEqualTo("Hello_" + languageTag);
     assertThat(Message.foo.bar.test).isEqualTo("bar_" + languageTag);
@@ -72,6 +75,7 @@ class ResourceBundleTest
   {
     Message.setLocale(Locale.forLanguageTag("nl-BE-POSIX"));
 
+    assertThat(Message.getLocale()).isEqualTo(Locale.forLanguageTag("nl-BE"));
     assertThat(Message.foo).hasToString("foo_nl-BE");
     assertThat(Message.App.Hello).isEqualTo("Hello_nl-BE");
     assertThat(Message.foo.bar.test).isEqualTo("bar_nl-BE");
@@ -83,10 +87,12 @@ class ResourceBundleTest
    * Verifies that when no match for the message bundle and the locale exist,
    * the default values are used instead.
    * */
+  @Test
   void testMessagesLocaleDoesNotExistLocale()
   {
     Message.setLocale(Locale.forLanguageTag("fr"));
 
+    assertThat(Message.getLocale()).isEqualTo(Locale.ROOT);
     assertThat(Message.foo).hasToString("foo");
     assertThat(Message.App.Hello).isEqualTo("Hello");
     assertThat(Message.foo.bar.test).isEqualTo("bar");
@@ -121,5 +127,7 @@ class ResourceBundleTest
 
     // verifies that 'setLocale' method does not exist
     assertThat(ReflectionUtils.findMethod(Message3.class, "setLocale", Locale.class)).isEmpty();
+    // verifies that 'getLocale' method does not exist
+    assertThat(ReflectionUtils.findMethod(Message3.class, "getLocale")).isEmpty();
   }
 }

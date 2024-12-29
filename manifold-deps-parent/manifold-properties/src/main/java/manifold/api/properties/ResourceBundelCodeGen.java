@@ -19,6 +19,7 @@ package manifold.api.properties;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Locale;
+import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 
 import manifold.api.fs.IFile;
@@ -60,13 +61,21 @@ class ResourceBundelCodeGen extends CommonCodeGen
 
     // Method to set the locale
     srcClass.addMethod(
-        new SrcMethod(srcClass)
+        new SrcMethod( srcClass )
             .name("setLocale")
-            .modifiers(Modifier.PUBLIC | Modifier.STATIC)
-            .addParam("locale", Locale.class)
-            .body(new SrcStatementBlock()
-                .addStatement(FIELD_RESOURCE_BUNDLE + " = ResourceBundle.getBundle(\"" + _fqn + "\", locale);")
+            .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+            .addParam("locale", Locale.class )
+            .body( new SrcStatementBlock()
+                .addStatement(FIELD_RESOURCE_BUNDLE + " = ResourceBundle.getBundle(\"" + _fqn + "\", locale);" )
             ));
+
+    // Method to get the locale
+    srcClass.addMethod(
+        new SrcMethod( srcClass )
+            .name( "getLocale" )
+            .modifiers( Modifier.PUBLIC | Modifier.STATIC )
+            .returns( Locale.class )
+            .body( "return " + FIELD_RESOURCE_BUNDLE + ".getLocale();" ) );
   }
 
   @Override
